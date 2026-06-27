@@ -61,6 +61,22 @@ export const getPublicClinic = createServerFn({ method: "GET" })
       .order("name", { ascending: true });
     if (locationsError) throw locationsError;
 
+    const { data: categories } = await supabase
+      .from("treatment_categories")
+      .select("*")
+      .eq("profile_id", profile.id)
+      .order("sort_order", { ascending: true })
+      .order("name", { ascending: true });
+
+    const treatmentIds = (treatments ?? []).map((t) => t.id);
+    const { data: pricing } = treatmentIds.length
+      ? await supabase
+          .from("treatment_location_pricing")
+          .select("*")
+          .in("treatment_id", treatmentIds)
+          .eq("available", true)
+      : { data: [] as never[] };
+
     return {
       profile,
       treatments: treatments ?? [],
@@ -68,5 +84,7 @@ export const getPublicClinic = createServerFn({ method: "GET" })
       gallery: gallery ?? [],
       testimonials: testimonials ?? [],
       locations: locations ?? [],
+      categories: categories ?? [],
+      pricing: pricing ?? [],
     };
   });
