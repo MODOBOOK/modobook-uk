@@ -58,7 +58,9 @@ function BookPage() {
                   </span>
                   <Badge variant="secondary">£{Number(t.price ?? 0).toFixed(2)}</Badge>
                 </div>
-                <Button className="w-full" onClick={() => alert("Booking flow coming soon")}>Book</Button>
+                <Link to="/m/$slug/book/$treatmentId" params={{ slug, treatmentId: t.id }} className="block">
+                  <Button className="w-full">Book</Button>
+                </Link>
               </CardContent>
             </Card>
           ))}
