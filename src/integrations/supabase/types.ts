@@ -1131,6 +1131,7 @@ export type Database = {
           updated_at: string
         }[]
       }
+      is_active_profile: { Args: { _profile_id: string }; Returns: boolean }
       is_active_profile_path: { Args: { path: string }; Returns: boolean }
       is_object_owner: { Args: { path: string }; Returns: boolean }
       is_profile_owner: { Args: { _profile_id: string }; Returns: boolean }
