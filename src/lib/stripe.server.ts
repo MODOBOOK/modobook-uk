@@ -70,3 +70,45 @@ export async function createRefund(paymentIntentId: string, accountId: string, a
   return stripe.refunds.create(params, { stripeAccount: accountId });
 }
 
+export async function createConnectedPaymentLink(params: {
+  accountId: string;
+  amountCents: number;
+  currency: string;
+  description: string;
+  metadata?: Record<string, string>;
+}) {
+  const stripe = getStripe();
+  const opts = { stripeAccount: params.accountId } as const;
+  const product = await stripe.products.create(
+    { name: params.description.slice(0, 250) || "Payment" },
+    opts,
+  );
+  const price = await stripe.prices.create(
+    {
+      product: product.id,
+      currency: params.currency.toLowerCase(),
+      unit_amount: params.amountCents,
+    },
+    opts,
+  );
+  const link = await stripe.paymentLinks.create(
+    {
+      line_items: [{ price: price.id, quantity: 1 }],
+      metadata: params.metadata,
+    },
+    opts,
+  );
+  return { id: link.id, url: link.url };
+}
+
+export async function retrievePaymentLink(accountId: string, id: string) {
+  const stripe = getStripe();
+  return stripe.paymentLinks.retrieve(id, { stripeAccount: accountId });
+}
+
+export async function deactivatePaymentLink(accountId: string, id: string) {
+  const stripe = getStripe();
+  return stripe.paymentLinks.update(id, { active: false }, { stripeAccount: accountId });
+}
+
+
