@@ -264,6 +264,117 @@ function AvailabilityPage() {
           ))}
         </CardContent>
       </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Ad-hoc rota</CardTitle>
+          <CardDescription>Open one-off extra slots on a specific date (in addition to the weekly schedule).</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <form onSubmit={addOverride} className="grid gap-3 sm:grid-cols-2 md:grid-cols-6 md:items-end">
+            <div>
+              <Label>Date</Label>
+              <Input type="date" value={ovDate} onChange={(e) => setOvDate(e.target.value)} />
+            </div>
+            <div>
+              <Label>Start</Label>
+              <Input type="time" value={ovStart} onChange={(e) => setOvStart(e.target.value)} />
+            </div>
+            <div>
+              <Label>End</Label>
+              <Input type="time" value={ovEnd} onChange={(e) => setOvEnd(e.target.value)} />
+            </div>
+            <div>
+              <Label>Slot (min)</Label>
+              <Input type="number" min={5} step={5} value={ovInterval} onChange={(e) => setOvInterval(e.target.value)} />
+            </div>
+            <div>
+              <Label>Location</Label>
+              <Select value={ovLoc} onValueChange={setOvLoc}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Any location</SelectItem>
+                  {locations.map((l) => <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button type="submit"><Plus className="h-4 w-4 mr-1" />Add</Button>
+          </form>
+          {overrides.length === 0 ? (
+            <div className="text-sm text-muted-foreground">No ad-hoc slots</div>
+          ) : (
+            <div className="space-y-2">
+              {overrides.map((o) => {
+                const loc = locations.find((l) => l.id === o.location_id);
+                return (
+                  <div key={o.id} className="flex items-center justify-between gap-3 rounded border px-3 py-2 text-sm">
+                    <div>
+                      <span className="font-medium">{o.date}</span>
+                      <span className="font-mono ml-3">{o.start_time.slice(0,5)} – {o.end_time.slice(0,5)}</span>
+                      <span className="text-muted-foreground ml-3">every {o.slot_interval} min</span>
+                      {loc && <span className="ml-3 text-xs rounded bg-muted px-2 py-0.5">{loc.name}</span>}
+                    </div>
+                    <Button variant="ghost" size="icon" onClick={() => removeOverride(o.id)}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Close a day</CardTitle>
+          <CardDescription>Block a date so patients cannot book that day.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <form onSubmit={addBlock} className="grid gap-3 sm:grid-cols-2 md:grid-cols-5 md:items-end">
+            <div>
+              <Label>Date</Label>
+              <Input type="date" value={blDate} onChange={(e) => setBlDate(e.target.value)} />
+            </div>
+            <div className="md:col-span-2">
+              <Label>Reason (optional)</Label>
+              <Input value={blReason} onChange={(e) => setBlReason(e.target.value)} placeholder="Holiday, training…" />
+            </div>
+            <div>
+              <Label>Location</Label>
+              <Select value={blLoc} onValueChange={setBlLoc}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">All locations</SelectItem>
+                  {locations.map((l) => <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button type="submit" variant="destructive"><Plus className="h-4 w-4 mr-1" />Close</Button>
+          </form>
+          {blocked.length === 0 ? (
+            <div className="text-sm text-muted-foreground">No closed dates</div>
+          ) : (
+            <div className="space-y-2">
+              {blocked.map((b) => {
+                const loc = locations.find((l) => l.id === b.location_id);
+                return (
+                  <div key={b.id} className="flex items-center justify-between gap-3 rounded border px-3 py-2 text-sm">
+                    <div>
+                      <span className="font-medium">{b.date}</span>
+                      {b.reason && <span className="text-muted-foreground ml-3">{b.reason}</span>}
+                      <span className="ml-3 text-xs rounded bg-muted px-2 py-0.5">{loc ? loc.name : "All locations"}</span>
+                    </div>
+                    <Button variant="ghost" size="icon" onClick={() => removeBlock(b.id)}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
