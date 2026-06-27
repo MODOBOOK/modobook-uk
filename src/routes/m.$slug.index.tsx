@@ -1317,3 +1317,37 @@ function TreatmentRow({
 }
 
 
+
+function HeroCarousel({ urls }: { urls: string[] }) {
+  const [i, setI] = useState(0);
+  useEffect(() => {
+    if (urls.length < 2) return;
+    const t = setInterval(() => setI((x) => (x + 1) % urls.length), 4500);
+    return () => clearInterval(t);
+  }, [urls.length]);
+  return (
+    <div className="relative h-72 w-full overflow-hidden sm:h-[28rem]">
+      {urls.map((u, idx) => (
+        <img
+          key={u + idx}
+          src={u}
+          alt=""
+          className={`absolute inset-0 h-full w-full object-cover object-top transition-opacity duration-700 ${idx === i ? "opacity-100" : "opacity-0"}`}
+        />
+      ))}
+      {urls.length > 1 && (
+        <div className="absolute bottom-3 left-1/2 z-10 flex -translate-x-1/2 gap-1.5">
+          {urls.map((_, idx) => (
+            <button
+              key={idx}
+              type="button"
+              aria-label={`Slide ${idx + 1}`}
+              onClick={() => setI(idx)}
+              className={`h-1.5 rounded-full transition-all ${idx === i ? "w-6 bg-white" : "w-1.5 bg-white/60"}`}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
