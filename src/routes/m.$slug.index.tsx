@@ -174,34 +174,6 @@ function BookPage() {
 
   return (
     <main className="min-h-screen pb-16" style={pageStyle}>
-      {/* Header bar */}
-      <header
-        className="sticky top-0 z-30 w-full border-b"
-        style={{ backgroundColor: headerBg, color: headerText, borderColor: `${headerText}22` }}
-      >
-        <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3">
-          <div className="flex min-w-0 items-center gap-2">
-            {logoUrl ? (
-              <img src={logoUrl} alt={profile.clinic_name} className="h-10 w-auto shrink-0 object-contain sm:h-12" />
-            ) : (
-              <>
-                <div className="grid h-8 w-8 shrink-0 place-items-center rounded text-sm font-bold" style={{ backgroundColor: `${headerText}33` }}>
-                  {profile.clinic_name.charAt(0)}
-                </div>
-                <span className="truncate text-sm font-semibold sm:text-base" style={{ fontFamily: `${headingFont}, ${bodyFont}, system-ui, sans-serif` }}>
-                  {profile.clinic_name}
-                </span>
-              </>
-            )}
-          </div>
-          <nav className="flex shrink-0 items-center gap-3 text-xs sm:gap-4 sm:text-sm">
-            <Link to="/m/$slug" params={{ slug }} className="opacity-90 hover:opacity-100">Book</Link>
-            <Link to="/m/$slug/about" params={{ slug }} className="opacity-90 hover:opacity-100">About</Link>
-            <Link to="/m/$slug/reviews" params={{ slug }} className="opacity-90 hover:opacity-100">Reviews</Link>
-          </nav>
-        </div>
-      </header>
-
       {/* Hero image */}
       <div className="relative">
         {heroUrl ? (
@@ -237,7 +209,8 @@ function BookPage() {
 
 
       {/* Overlapping title card */}
-      <section className="mx-auto -mt-16 max-w-3xl px-4 sm:-mt-24 relative z-10">
+      <section className="relative z-10 mx-auto -mt-20 max-w-3xl px-4 sm:-mt-28">
+
         <div
           className="rounded-3xl border px-5 pb-5 pt-6 shadow-2xl sm:px-8 sm:pt-8"
           style={{ backgroundColor: bgColor, borderColor: `${brand}1a` }}
