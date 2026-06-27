@@ -77,6 +77,12 @@ export const getPublicClinic = createServerFn({ method: "GET" })
           .eq("available", true)
       : { data: [] as never[] };
 
+    const { data: theme } = await supabase
+      .from("clinic_theme")
+      .select("*")
+      .eq("profile_id", profile.id)
+      .maybeSingle();
+
     return {
       profile,
       treatments: treatments ?? [],
@@ -86,5 +92,6 @@ export const getPublicClinic = createServerFn({ method: "GET" })
       locations: locations ?? [],
       categories: categories ?? [],
       pricing: pricing ?? [],
+      theme: theme ?? null,
     };
   });
