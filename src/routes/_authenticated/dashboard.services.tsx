@@ -834,6 +834,8 @@ function ServiceDialog({
                 session_count: sessionCount,
                 allow_split_payment: sessionCount > 1 ? allowSplit : false,
                 rebook_reminder_days: rebookDays.trim() ? Number(rebookDays) : null,
+                color,
+
               });
 
               setSaving(false);
