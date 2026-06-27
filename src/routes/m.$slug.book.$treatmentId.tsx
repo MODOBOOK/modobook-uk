@@ -98,9 +98,40 @@ function BookTreatmentPage() {
   });
   const [submitting, setSubmitting] = useState(false);
 
+  // Patient auth gate: 'pending' until they pick a path
+  const [authChoice, setAuthChoice] = useState<"pending" | "guest" | "signed-in">("pending");
+  const [patientUserId, setPatientUserId] = useState<string | null>(null);
+  const ensure = useServerFn(ensurePatient);
+  const fetchPatient = useServerFn(getMyPatient);
+
+  // If the user is already signed in when arriving here, auto-skip the gate.
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        setPatientUserId(data.session.user.id);
+        setAuthChoice("signed-in");
+        try {
+          await ensure({ data: { fullName: data.session.user.email?.split("@")[0] ?? "Patient", linkSlug: slug } });
+          const p = await fetchPatient();
+          if (p.patient) {
+            setForm((f) => ({
+              ...f,
+              name: f.name || p.patient.full_name || "",
+              email: f.email || p.patient.email || data.session.user.email || "",
+              phone: f.phone || p.patient.phone || "",
+            }));
+          }
+        } catch {/* non-fatal */}
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const dayFn = useServerFn(getDayAvailability);
   const monthFn = useServerFn(getMonthAvailability);
   const reqFn = useServerFn(requestBooking);
+
 
   const monthQuery = useQuery({
     queryKey: ["monthAvail", ctx.profileId, month.getFullYear(), month.getMonth() + 1, locationId],
