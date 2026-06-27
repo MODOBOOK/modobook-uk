@@ -329,7 +329,36 @@ function NewAppointmentPage() {
         </CardContent>
       </Card>
 
+      <Card>
+        <CardHeader><CardTitle>Deposit (optional)</CardTitle></CardHeader>
+        <CardContent className="space-y-3">
+          <label className="flex items-center gap-2 text-sm">
+            <Checkbox checked={sendDeposit} onCheckedChange={(v) => setSendDeposit(!!v)} />
+            <span>Send a Stripe deposit link — auto-cancel if unpaid in time</span>
+          </label>
+          {sendDeposit && (
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Deposit (£)</Label>
+                <Input type="number" inputMode="decimal" step="0.01" min="1"
+                  value={depositAmount} onChange={(e) => setDepositAmount(e.target.value)}
+                  placeholder="25.00" />
+              </div>
+              <div>
+                <Label>Cancel if unpaid in (hours)</Label>
+                <Input type="number" min="1" max="168"
+                  value={depositHours} onChange={(e) => setDepositHours(e.target.value)} />
+              </div>
+              <p className="col-span-2 text-xs text-muted-foreground">
+                A Stripe payment link will be created on your connected account and copied to your clipboard so you can paste it into an email or SMS.
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       <Button onClick={submit} disabled={saving} size="lg" className="w-full">
+
         {saving ? "Creating…" : "Create appointment"}
       </Button>
     </div>
