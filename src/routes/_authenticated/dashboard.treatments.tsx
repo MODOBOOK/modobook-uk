@@ -164,7 +164,7 @@ function TreatmentsPage() {
         toast.success("Treatment created");
       }
       await setConsents({ data: { treatmentId: id, consentTemplateIds: consent_ids } });
-      await setAddons({ data: { treatmentId: id, addonIds: addon_ids } });
+      await setAddons({ data: { treatmentId: id, addons } });
       setOpen(false);
       setEditing(null);
       load();
