@@ -15,6 +15,7 @@ import {
   FileText,
   FileSignature,
   LogOut,
+  Package,
   Menu,
 } from "lucide-react";
 import { useState } from "react";
