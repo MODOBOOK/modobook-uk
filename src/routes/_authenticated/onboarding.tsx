@@ -47,7 +47,7 @@ function OnboardingPage() {
     }
     setSlugChecking(true);
     try {
-      const result = await checkSlugAvailable({ slug });
+      const result = await checkSlugAvailable({ data: { slug } });
       setSlugValid(result.available);
     } catch {
       setSlugValid(false);
@@ -77,18 +77,20 @@ function OnboardingPage() {
     setLoading(true);
     try {
       await createProfile({
-        full_name: form.full_name,
-        clinic_name: form.clinic_name,
-        slug: form.slug,
-        tagline: form.tagline,
-        bio: form.bio,
-        phone: form.phone,
-        address: {
-          line1: form.address_line1,
-          city: form.city,
-          postcode: form.postcode,
+        data: {
+          full_name: form.full_name,
+          clinic_name: form.clinic_name,
+          slug: form.slug,
+          tagline: form.tagline,
+          bio: form.bio,
+          phone: form.phone,
+          address: {
+            line1: form.address_line1,
+            city: form.city,
+            postcode: form.postcode,
+          },
+          brand_color: form.brand_color,
         },
-        brand_color: form.brand_color,
       });
       toast.success("Profile created. Welcome to your dashboard!");
       router.navigate({ to: "/dashboard" });

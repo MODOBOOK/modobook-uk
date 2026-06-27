@@ -9,7 +9,7 @@ import type { Database } from "@/integrations/supabase/types";
 export const Route = createFileRoute("/book/$slug")({
   loader: async ({ params }) => {
     const { slug } = params;
-    const data = await getPublicClinic({ slug });
+    const data = await getPublicClinic({ data: { slug } });
     return data;
   },
   pendingComponent: () => (
