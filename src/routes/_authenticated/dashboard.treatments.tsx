@@ -174,8 +174,10 @@ function TreatmentsPage() {
           <TreatmentDialog
             treatment={editing}
             categoryOptions={categoryOptions}
+            consentTemplates={consentTemplates}
             onSave={handleSave}
           />
+
         </Dialog>
       </div>
 
