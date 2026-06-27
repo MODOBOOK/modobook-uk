@@ -590,6 +590,8 @@ function CategoryTree({
   durationFor,
   brand,
   depth = 0,
+  isSelected,
+  toggleSelect,
 }: {
   nodes: CatNode[];
   slug: string;
@@ -597,6 +599,8 @@ function CategoryTree({
   durationFor: (t: Treatment) => number;
   brand: string;
   depth?: number;
+  isSelected: (id: string) => boolean;
+  toggleSelect: (id: string) => void;
 }) {
   const visible = nodes.filter(
     (n) => n.treatments.length > 0 || n.children.some((c) => countTreatments(c) > 0),
@@ -644,6 +648,8 @@ function CategoryTree({
                   durationFor={durationFor}
                   brand={brand}
                   depth={depth + 1}
+                  isSelected={isSelected}
+                  toggleSelect={toggleSelect}
                 />
               )}
               {node.treatments.map((t) => (
@@ -654,6 +660,8 @@ function CategoryTree({
                   price={priceFor(t)}
                   duration={durationFor(t)}
                   brand={brand}
+                  selected={isSelected(t.id)}
+                  onToggle={() => toggleSelect(t.id)}
                 />
               ))}
             </AccordionContent>
@@ -670,45 +678,66 @@ function TreatmentRow({
   price,
   duration,
   brand,
+  selected,
+  onToggle,
 }: {
   t: Treatment;
   slug: string;
   price: number;
   duration: number;
   brand: string;
+  selected: boolean;
+  onToggle: () => void;
 }) {
   return (
-    <Link
-      to="/m/$slug/book/$treatmentId"
-      params={{ slug, treatmentId: t.id }}
-      className="group flex items-center justify-between gap-3 rounded-xl border bg-card p-3 transition hover:shadow-sm"
+    <div
+      className="group flex items-center gap-3 rounded-xl border bg-card p-3 transition hover:shadow-sm"
+      style={selected ? { borderColor: brand, boxShadow: `0 0 0 1px ${brand}` } : undefined}
     >
-      <div className="min-w-0 flex-1">
-        <div className="truncate font-semibold" style={{ color: brand }}>
-          {t.name}
-        </div>
-        {t.description && (
-          <div className="mt-0.5 line-clamp-2 text-sm text-muted-foreground">
-            {t.description}
-          </div>
-        )}
-        <div className="mt-1.5 flex items-center gap-3 text-sm text-muted-foreground">
-          <span className="inline-flex items-center gap-1">
-            <Clock className="h-3.5 w-3.5" />
-            {duration} min
-          </span>
-          <span className="font-semibold" style={{ color: brand }}>
-            {price === 0 ? "Free" : `£${price.toFixed(2)}`}
-          </span>
-        </div>
-      </div>
-      <div
-        className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-white transition group-hover:scale-105"
-        style={{ backgroundColor: brand }}
-        aria-label="Book"
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-label={selected ? "Remove from selection" : "Add to selection"}
+        className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded border transition"
+        style={selected
+          ? { backgroundColor: brand, borderColor: brand, color: "#fff" }
+          : { borderColor: `${brand}66` }}
       >
-        <ChevronRight className="h-5 w-5" />
-      </div>
-    </Link>
+        {selected && <Check className="h-4 w-4" />}
+      </button>
+      <Link
+        to="/m/$slug/book/$treatmentId"
+        params={{ slug, treatmentId: t.id }}
+        className="flex min-w-0 flex-1 items-center justify-between gap-3"
+      >
+        <div className="min-w-0 flex-1">
+          <div className="truncate font-semibold" style={{ color: brand }}>
+            {t.name}
+          </div>
+          {t.description && (
+            <div className="mt-0.5 line-clamp-2 text-sm text-muted-foreground">
+              {t.description}
+            </div>
+          )}
+          <div className="mt-1.5 flex items-center gap-3 text-sm text-muted-foreground">
+            <span className="inline-flex items-center gap-1">
+              <Clock className="h-3.5 w-3.5" />
+              {duration} min
+            </span>
+            <span className="font-semibold" style={{ color: brand }}>
+              {price === 0 ? "Free" : `£${price.toFixed(2)}`}
+            </span>
+          </div>
+        </div>
+        <div
+          className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-white transition group-hover:scale-105"
+          style={{ backgroundColor: brand }}
+          aria-label="Book now"
+        >
+          <ChevronRight className="h-5 w-5" />
+        </div>
+      </Link>
+    </div>
   );
 }
+
