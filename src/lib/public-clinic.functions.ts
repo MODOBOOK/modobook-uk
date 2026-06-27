@@ -114,7 +114,7 @@ export const getPublicClinic = createServerFn({ method: "GET" })
       categories: categories ?? [],
       pricing: pricing ?? [],
       theme: theme ?? null,
-      reviews: reviews ?? [],
+      reviews: reviewsCombined,
       concernAreas: concernAreas.data ?? [],
       concerns: concerns.data ?? [],
       concernLinks: concernLinks.data ?? [],
