@@ -123,6 +123,8 @@ export const getMultiBookingContext = createServerFn({ method: "GET" })
       rules: rules ?? [],
       theme: theme ?? null,
       brandColor: (profile as { brand_color?: string | null }).brand_color ?? null,
+      termsHtml: (profile as { terms_html?: string | null }).terms_html ?? null,
+      termsRequired: (profile as { terms_required?: boolean | null }).terms_required ?? false,
     };
   });
 
