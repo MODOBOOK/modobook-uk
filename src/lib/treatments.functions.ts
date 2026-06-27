@@ -52,6 +52,10 @@ export const createTreatment = createServerFn({ method: "POST" })
       deductible_window_days?: number;
       category_id?: string | null;
       active?: boolean;
+      session_count?: number;
+      allow_split_payment?: boolean;
+      rebook_reminder_days?: number | null;
+
     }) => input,
   )
   .handler(async ({ data, context }) => {
