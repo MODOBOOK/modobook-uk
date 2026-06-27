@@ -128,7 +128,9 @@ export const getPublicClinic = createServerFn({ method: "GET" })
       concerns: concerns.data ?? [],
       concernLinks: concernLinks.data ?? [],
       modelSlots: modelSlots.data ?? [],
+      addonLinks: addonLinks.data ?? [],
     };
   });
+
 
 
