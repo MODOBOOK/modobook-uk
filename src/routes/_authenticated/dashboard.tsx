@@ -10,6 +10,7 @@ import {
   CalendarDays,
   Users,
   CreditCard,
+  MapPin,
   LogOut,
   Menu,
 } from "lucide-react";
