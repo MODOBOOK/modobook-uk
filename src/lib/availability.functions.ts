@@ -101,3 +101,123 @@ export const listMyAppointments = createServerFn({ method: "GET" })
     if (error) throw error;
     return data ?? [];
   });
+
+// ---------- Ad-hoc overrides (extra open slots on specific dates) ----------
+
+type OverrideInput = {
+  date: string;
+  start_time: string;
+  end_time: string;
+  slot_interval?: number;
+  location_id?: string | null;
+};
+
+export const listAvailabilityOverrides = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const profileId = await getProfileId(supabase, userId);
+    if (!profileId) return [];
+    const { data, error } = await supabase
+      .from("availability_overrides")
+      .select("*")
+      .eq("profile_id", profileId)
+      .order("date")
+      .order("start_time");
+    if (error) throw error;
+    return data ?? [];
+  });
+
+export const addAvailabilityOverride = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: OverrideInput) => input)
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const profileId = await getProfileId(supabase, userId);
+    if (!profileId) throw new Error("Profile not found");
+    const { data: row, error } = await supabase
+      .from("availability_overrides")
+      .insert({
+        profile_id: profileId,
+        date: data.date,
+        start_time: data.start_time,
+        end_time: data.end_time,
+        slot_interval: data.slot_interval ?? 30,
+        location_id: data.location_id ?? null,
+      })
+      .select()
+      .single();
+    if (error) throw error;
+    return row;
+  });
+
+export const deleteAvailabilityOverride = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { id: string }) => input)
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const profileId = await getProfileId(supabase, userId);
+    if (!profileId) throw new Error("Profile not found");
+    const { error } = await supabase
+      .from("availability_overrides")
+      .delete()
+      .eq("id", data.id)
+      .eq("profile_id", profileId);
+    if (error) throw error;
+    return { ok: true };
+  });
+
+// ---------- Blocked dates (close days/slots) ----------
+
+export const listBlockedDates = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const profileId = await getProfileId(supabase, userId);
+    if (!profileId) return [];
+    const { data, error } = await supabase
+      .from("blocked_dates")
+      .select("*")
+      .eq("profile_id", profileId)
+      .order("date");
+    if (error) throw error;
+    return data ?? [];
+  });
+
+export const addBlockedDate = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { date: string; reason?: string; location_id?: string | null }) => input)
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const profileId = await getProfileId(supabase, userId);
+    if (!profileId) throw new Error("Profile not found");
+    const { data: row, error } = await supabase
+      .from("blocked_dates")
+      .insert({
+        profile_id: profileId,
+        date: data.date,
+        reason: data.reason ?? null,
+        location_id: data.location_id ?? null,
+      })
+      .select()
+      .single();
+    if (error) throw error;
+    return row;
+  });
+
+export const deleteBlockedDate = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { id: string }) => input)
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const profileId = await getProfileId(supabase, userId);
+    if (!profileId) throw new Error("Profile not found");
+    const { error } = await supabase
+      .from("blocked_dates")
+      .delete()
+      .eq("id", data.id)
+      .eq("profile_id", profileId);
+    if (error) throw error;
+    return { ok: true };
+  });
+
