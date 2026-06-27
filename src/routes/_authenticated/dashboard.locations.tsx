@@ -20,7 +20,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { MapPin, Pencil, Plus, Star, Trash2 } from "lucide-react";
+import { ExternalLink, MapPin, Pencil, Plus, Star, Trash2 } from "lucide-react";
+import { mapsUrl } from "@/lib/maps";
 import { toast } from "sonner";
 
 type Location = Awaited<ReturnType<typeof listMyLocations>>[number];
