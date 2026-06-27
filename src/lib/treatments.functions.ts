@@ -101,6 +101,7 @@ export const updateTreatment = createServerFn({ method: "POST" })
       is_consultation?: boolean;
       deductible_against?: string[];
       deductible_window_days?: number;
+      category_id?: string | null;
     }) => input,
   )
   .handler(async ({ data, context }) => {
