@@ -6,6 +6,8 @@ import {
   upsertLocation,
   deleteLocation,
 } from "@/lib/locations.functions";
+import { getMyProfile } from "@/lib/profiles.functions";
+import { ImageUploader } from "@/components/ImageUploader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
