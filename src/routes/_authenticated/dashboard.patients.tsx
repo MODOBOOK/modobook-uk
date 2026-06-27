@@ -85,6 +85,7 @@ function PatientsPage() {
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [drawer, setDrawer] = useState<Client | null>(null);
+  const navigate = useNavigate();
 
   async function refresh() {
     const [c, a] = await Promise.all([list(), listAppt()]);
