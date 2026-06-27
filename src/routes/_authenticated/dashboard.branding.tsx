@@ -82,15 +82,18 @@ function ColorField({
 
 function BrandingPage() {
   const fetchTheme = useServerFn(getMyTheme);
+  const fetchProfile = useServerFn(getMyProfile);
   const save = useServerFn(upsertMyTheme);
   const [state, setState] = useState<ClinicThemeInput>({ ...DEFAULTS });
+  const [profileId, setProfileId] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     (async () => {
-      const t = await fetchTheme();
+      const [t, p] = await Promise.all([fetchTheme(), fetchProfile()]);
       if (t) setState({ ...DEFAULTS, ...t });
+      if (p) setProfileId(p.id);
       setLoading(false);
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
