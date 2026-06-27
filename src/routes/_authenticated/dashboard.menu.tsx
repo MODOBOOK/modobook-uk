@@ -40,15 +40,23 @@ export const Route = createFileRoute("/_authenticated/dashboard/menu")({
 
 type Item = { label: string; description: string; to: string; icon: React.ElementType; tone: string; iconColor: string };
 
-// Luxe warm-neutral icon tones — alternating brown/beige/cream
+// Theme-aware icon tones — pull from the practitioner's branding tokens so
+// changing the preset/colours updates every icon chip across the dashboard.
 const T = {
-  espresso: { tone: "bg-[#3a2e26]", iconColor: "text-[#f5ede1]" },
-  mocha:    { tone: "bg-[#7a5a42]", iconColor: "text-[#f5ede1]" },
-  taupe:    { tone: "bg-[#c9b39a]", iconColor: "text-[#3a2e26]" },
-  sand:     { tone: "bg-[#e9dcc8]", iconColor: "text-[#5a4332]" },
-  cream:    { tone: "bg-[#f4ece0]", iconColor: "text-[#6b4f3a]" },
-  ivory:    { tone: "bg-[#faf6ee]", iconColor: "text-[#3a2e26]" },
+  primary:    { tone: "bg-primary",         iconColor: "text-primary-foreground" },
+  accent:     { tone: "bg-accent",          iconColor: "text-accent-foreground" },
+  muted:      { tone: "bg-muted",           iconColor: "text-foreground" },
+  secondary:  { tone: "bg-secondary",       iconColor: "text-secondary-foreground" },
+  outline:    { tone: "bg-card border border-border", iconColor: "text-foreground" },
+  soft:       { tone: "bg-primary/10",      iconColor: "text-primary" },
 };
+const espresso = T.primary;
+const mocha = T.soft;
+const taupe = T.accent;
+const sand = T.muted;
+const cream = T.secondary;
+const ivory = T.outline;
+
 
 const groups: { title: string; items: Item[] }[] = [
   {
