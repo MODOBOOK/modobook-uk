@@ -109,6 +109,7 @@ function LocationsPage() {
           notes: draft.notes ?? null,
           is_primary: !!draft.is_primary,
           active: draft.active !== false,
+          image_url: draft.image_url ?? null,
         },
       });
       toast.success("Location saved");
