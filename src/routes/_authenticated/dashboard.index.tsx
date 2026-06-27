@@ -225,11 +225,11 @@ function DashboardIndex() {
   );
 }
 
-function Stat({ label, value, tone }: { label: string; value: string; tone: string }) {
+function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div>
-      <div className={`text-2xl font-bold ${tone}`}>{value}</div>
-      <div className="text-xs font-medium text-muted-foreground">{label}</div>
+    <div className="px-4 py-5 text-center">
+      <div className="font-serif text-3xl leading-none">{value}</div>
+      <div className="mt-2 text-[10px] font-medium uppercase tracking-[0.2em] text-muted-foreground">{label}</div>
     </div>
   );
 }
@@ -238,23 +238,22 @@ function QuickAction({
   to,
   icon: Icon,
   label,
-  tone,
 }: {
   to: string;
   icon: React.ElementType;
   label: string;
-  tone: string;
 }) {
   return (
     <Link
       to={to}
-      className="group flex flex-col items-center gap-2 rounded-2xl border bg-card p-3 text-center shadow-sm transition active:scale-[0.97]"
+      className="group flex flex-col items-center gap-3 rounded-2xl border border-border/60 bg-card p-5 text-center transition hover:border-accent hover:shadow-luxe active:scale-[0.98]"
     >
-      <div className={`flex h-11 w-11 items-center justify-center rounded-full ${tone}`}>
+      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground transition group-hover:bg-accent group-hover:text-accent-foreground">
         <Icon className="h-5 w-5" />
       </div>
-      <span className="text-xs font-medium leading-tight">{label}</span>
+      <span className="text-xs font-medium tracking-wide">{label}</span>
       <ChevronRight className="hidden" />
     </Link>
   );
 }
+
