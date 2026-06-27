@@ -18,7 +18,6 @@ import {
   ExternalLink,
   Star,
   Check,
-  Check,
   Package as PackageIcon,
 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
