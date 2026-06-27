@@ -94,8 +94,15 @@ function BookTreatmentPage() {
       end: toMinutes(b.end_time),
       locId: b.location_id,
     }));
+    const overrideRules = (dayQuery.data.overrides ?? []).filter(
+      (o) => !locationId || !o.location_id || o.location_id === locationId,
+    );
+    const allRules = [
+      ...dayRules.map((r) => ({ start_time: r.start_time, end_time: r.end_time, slot_interval: r.slot_interval })),
+      ...overrideRules.map((o) => ({ start_time: o.start_time, end_time: o.end_time, slot_interval: o.slot_interval })),
+    ];
     const out: string[] = [];
-    for (const r of dayRules) {
+    for (const r of allRules) {
       const step = r.slot_interval ?? duration;
       const start = toMinutes(r.start_time);
       const end = toMinutes(r.end_time);
@@ -112,6 +119,7 @@ function BookTreatmentPage() {
     }
     return Array.from(new Set(out)).sort();
   }, [dayQuery.data, dayRules, duration, locationId]);
+
 
   async function submit() {
     if (!slot || !form.name || !form.email) {
