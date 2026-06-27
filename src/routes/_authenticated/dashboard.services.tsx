@@ -789,6 +789,25 @@ function ServiceDialog({
             )}
           </div>
 
+          <div className="space-y-1.5">
+            <Label>Calendar colour</Label>
+            <div className="flex flex-wrap gap-2">
+              {PRESET_COLORS.map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => setColor(c)}
+                  className={`h-8 w-8 rounded-full border-2 transition ${color === c ? "ring-2 ring-offset-2 ring-foreground border-white" : "border-white/60"}`}
+                  style={{ backgroundColor: c }}
+                  aria-label={`Pick ${c}`}
+                />
+              ))}
+            </div>
+            <p className="text-[11px] text-muted-foreground">Appointments for this service appear in this colour on your calendar.</p>
+          </div>
+
+
+
           <p className="text-xs text-muted-foreground">
             For consent forms, deposits, staff and media options, edit the service from{" "}
             <Link to="/dashboard/treatments" className="underline">
