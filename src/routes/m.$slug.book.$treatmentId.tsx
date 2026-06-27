@@ -206,33 +206,34 @@ function BookTreatmentPage() {
         <CardHeader>
           <CardTitle className="text-base">Pick a date & time</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <Label htmlFor="date">Date</Label>
-            <Input
-              id="date"
-              type="date"
-              min={today}
-              value={date}
-              onChange={(e) => {
-                setDate(e.target.value);
+        <CardContent className="space-y-5">
+          <div className="flex justify-center">
+            <Calendar
+              mode="single"
+              selected={fromIsoDate(date)}
+              onSelect={(d) => {
+                if (!d) return;
+                setDate(toIsoDate(d));
                 setSlot(null);
               }}
+              disabled={(d) => d < new Date(new Date().setHours(0, 0, 0, 0))}
+              weekStartsOn={1}
+              className="pointer-events-auto rounded-md border p-3"
             />
           </div>
 
           <div>
-            <Label>Available times</Label>
+            <Label className="mb-2 block text-sm font-semibold">Available times</Label>
             {dayQuery.isLoading ? (
               <p className="mt-2 text-sm text-muted-foreground">Loading…</p>
             ) : dayQuery.data?.isBlocked ? (
               <p className="mt-2 text-sm text-muted-foreground">This date is unavailable.</p>
             ) : slots.length === 0 ? (
               <p className="mt-2 text-sm text-muted-foreground">
-                No slots available. The practitioner hasn't set hours for this day, or all times are booked.
+                No slots available. Try another date.
               </p>
             ) : (
-              <div className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-4">
+              <div className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-5">
                 {slots.map((s) => (
                   <Button
                     key={s}
