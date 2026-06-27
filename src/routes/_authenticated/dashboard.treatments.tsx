@@ -1,13 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { getMyTreatments, createTreatment, updateTreatment, deleteTreatment } from "@/lib/treatments.functions";
+import { getMyCategories } from "@/lib/categories.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Plus, Trash2, Pencil } from "lucide-react";
 
@@ -23,23 +25,67 @@ type Treatment = {
   price: number;
   description: string | null;
   active: boolean;
+  category_id: string | null;
 };
+
+type Category = {
+  id: string;
+  name: string;
+  parent_id: string | null;
+  icon: string | null;
+};
+
+type TreatmentForm = {
+  name: string;
+  duration: number;
+  price: number;
+  description: string;
+  category_id: string | null;
+};
+
+function buildCategoryPaths(cats: Category[]) {
+  const byId = new Map(cats.map((c) => [c.id, c]));
+  function path(c: Category): string {
+    const parts: string[] = [];
+    let cur: Category | undefined = c;
+    const seen = new Set<string>();
+    while (cur && !seen.has(cur.id)) {
+      seen.add(cur.id);
+      parts.unshift(cur.name);
+      cur = cur.parent_id ? byId.get(cur.parent_id) : undefined;
+    }
+    return parts.join(" › ");
+  }
+  return cats
+    .map((c) => ({ id: c.id, label: path(c), depth: path(c).split(" › ").length - 1 }))
+    .sort((a, b) => a.label.localeCompare(b.label));
+}
 
 function TreatmentsPage() {
   const list = useServerFn(getMyTreatments);
+  const listCats = useServerFn(getMyCategories);
   const create = useServerFn(createTreatment);
   const update = useServerFn(updateTreatment);
   const remove = useServerFn(deleteTreatment);
   const [items, setItems] = useState<Treatment[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Treatment | null>(null);
 
+  const categoryOptions = useMemo(() => buildCategoryPaths(categories), [categories]);
+  const categoryById = useMemo(() => {
+    const m = new Map<string, { label: string }>();
+    for (const o of categoryOptions) m.set(o.id, { label: o.label });
+    return m;
+  }, [categoryOptions]);
+
   async function load() {
     setLoading(true);
     try {
-      const data = await list({});
+      const [data, cats] = await Promise.all([list({}), listCats({})]);
       setItems(data as Treatment[]);
+      setCategories(cats as Category[]);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to load treatments");
     } finally {
@@ -50,7 +96,7 @@ function TreatmentsPage() {
     load();
   }, []);
 
-  async function handleSave(form: { name: string; duration: number; price: number; description: string }) {
+  async function handleSave(form: TreatmentForm) {
     try {
       if (editing) {
         await update({ data: { id: editing.id, ...form } });
@@ -78,12 +124,28 @@ function TreatmentsPage() {
     }
   }
 
+  // Group treatments by category for display
+  const grouped = useMemo(() => {
+    const map = new Map<string, Treatment[]>();
+    for (const t of items) {
+      const key = t.category_id ?? "__none__";
+      const arr = map.get(key) ?? [];
+      arr.push(t);
+      map.set(key, arr);
+    }
+    return Array.from(map.entries()).sort(([a], [b]) => {
+      if (a === "__none__") return 1;
+      if (b === "__none__") return -1;
+      return (categoryById.get(a)?.label ?? "").localeCompare(categoryById.get(b)?.label ?? "");
+    });
+  }, [items, categoryById]);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-2xl font-bold">Treatments</h1>
-          <p className="text-muted-foreground">Define what patients can book.</p>
+          <p className="text-muted-foreground">Define what patients can book. Assign to categories or sub-categories.</p>
         </div>
         <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) setEditing(null); }}>
           <DialogTrigger asChild>
@@ -91,7 +153,11 @@ function TreatmentsPage() {
               <Plus className="mr-2 h-4 w-4" /> New treatment
             </Button>
           </DialogTrigger>
-          <TreatmentDialog treatment={editing} onSave={handleSave} />
+          <TreatmentDialog
+            treatment={editing}
+            categoryOptions={categoryOptions}
+            onSave={handleSave}
+          />
         </Dialog>
       </div>
 
@@ -100,27 +166,36 @@ function TreatmentsPage() {
       ) : items.length === 0 ? (
         <Card><CardContent className="p-8 text-center text-muted-foreground">No treatments yet. Add your first one.</CardContent></Card>
       ) : (
-        <div className="grid gap-3 md:grid-cols-2">
-          {items.map((t) => (
-            <Card key={t.id}>
-              <CardHeader className="flex flex-row items-start justify-between gap-2 space-y-0">
-                <div>
-                  <CardTitle className="text-base">{t.name}</CardTitle>
-                  <p className="text-sm text-muted-foreground">£{t.price} · {t.duration} min</p>
-                </div>
-                <div className="flex gap-1">
-                  <Button size="icon" variant="ghost" onClick={() => { setEditing(t); setOpen(true); }}>
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button size="icon" variant="ghost" onClick={() => handleDelete(t.id)}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </CardHeader>
-              {t.description && (
-                <CardContent className="text-sm text-muted-foreground">{t.description}</CardContent>
-              )}
-            </Card>
+        <div className="space-y-6">
+          {grouped.map(([catId, treatments]) => (
+            <div key={catId} className="space-y-2">
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                {catId === "__none__" ? "Uncategorised" : categoryById.get(catId)?.label ?? "Unknown"}
+              </h2>
+              <div className="grid gap-3 md:grid-cols-2">
+                {treatments.map((t) => (
+                  <Card key={t.id}>
+                    <CardHeader className="flex flex-row items-start justify-between gap-2 space-y-0">
+                      <div>
+                        <CardTitle className="text-base">{t.name}</CardTitle>
+                        <p className="text-sm text-muted-foreground">£{t.price} · {t.duration} min</p>
+                      </div>
+                      <div className="flex gap-1">
+                        <Button size="icon" variant="ghost" onClick={() => { setEditing(t); setOpen(true); }}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button size="icon" variant="ghost" onClick={() => handleDelete(t.id)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </CardHeader>
+                    {t.description && (
+                      <CardContent className="text-sm text-muted-foreground">{t.description}</CardContent>
+                    )}
+                  </Card>
+                ))}
+              </div>
+            </div>
           ))}
         </div>
       )}
@@ -128,17 +203,27 @@ function TreatmentsPage() {
   );
 }
 
-function TreatmentDialog({ treatment, onSave }: { treatment: Treatment | null; onSave: (f: { name: string; duration: number; price: number; description: string }) => void }) {
+function TreatmentDialog({
+  treatment,
+  categoryOptions,
+  onSave,
+}: {
+  treatment: Treatment | null;
+  categoryOptions: { id: string; label: string; depth: number }[];
+  onSave: (f: TreatmentForm) => void;
+}) {
   const [name, setName] = useState(treatment?.name ?? "");
   const [duration, setDuration] = useState(treatment?.duration ?? 30);
   const [price, setPrice] = useState(treatment?.price ?? 0);
   const [description, setDescription] = useState(treatment?.description ?? "");
+  const [categoryId, setCategoryId] = useState<string>(treatment?.category_id ?? "__none__");
 
   useEffect(() => {
     setName(treatment?.name ?? "");
     setDuration(treatment?.duration ?? 30);
     setPrice(treatment?.price ?? 0);
     setDescription(treatment?.description ?? "");
+    setCategoryId(treatment?.category_id ?? "__none__");
   }, [treatment]);
 
   return (
@@ -150,6 +235,28 @@ function TreatmentDialog({ treatment, onSave }: { treatment: Treatment | null; o
         <div>
           <Label>Name</Label>
           <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Lip filler 1ml" />
+        </div>
+        <div>
+          <Label>Category</Label>
+          <Select value={categoryId} onValueChange={setCategoryId}>
+            <SelectTrigger>
+              <SelectValue placeholder="Uncategorised" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__none__">Uncategorised</SelectItem>
+              {categoryOptions.map((c) => (
+                <SelectItem key={c.id} value={c.id}>
+                  {"\u00A0\u00A0".repeat(c.depth) + c.label.split(" › ").slice(-1)[0]}
+                  <span className="text-xs text-muted-foreground ml-2">{c.label}</span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {categoryOptions.length === 0 && (
+            <p className="text-xs text-muted-foreground mt-1">
+              No categories yet — create them in Dashboard → Categories (supports sub-categories).
+            </p>
+          )}
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
@@ -167,7 +274,20 @@ function TreatmentDialog({ treatment, onSave }: { treatment: Treatment | null; o
         </div>
       </div>
       <DialogFooter>
-        <Button onClick={() => onSave({ name, duration, price, description })} disabled={!name}>Save</Button>
+        <Button
+          onClick={() =>
+            onSave({
+              name,
+              duration,
+              price,
+              description,
+              category_id: categoryId === "__none__" ? null : categoryId,
+            })
+          }
+          disabled={!name}
+        >
+          Save
+        </Button>
       </DialogFooter>
     </DialogContent>
   );
