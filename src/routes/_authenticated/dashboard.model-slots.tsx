@@ -190,6 +190,7 @@ function SlotEditor({ existing, treatments, locations, onClose, onSaved }: {
         price_value: v,
         notes: notes || null,
         active,
+        category: category.trim() || null,
       }});
       toast.success("Saved");
       onSaved();
