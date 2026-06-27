@@ -1,6 +1,19 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+type PackageInput = {
+  name: string;
+  description: string | null;
+  treatment_id: string | null;
+  treatment_ids: string[];
+  session_count: number;
+  price: number;
+  duration_minutes: number | null;
+  expiry_days: number | null;
+  image_url: string | null;
+  active: boolean;
+};
+
 export const listMyPackages = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
@@ -17,14 +30,7 @@ export const listMyPackages = createServerFn({ method: "GET" })
 
 export const createPackage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: {
-    name: string;
-    treatment_id: string | null;
-    session_count: number;
-    price: number;
-    expiry_days: number | null;
-    active: boolean;
-  }) => d)
+  .inputValidator((d: PackageInput) => d)
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { data: profile } = await supabase
@@ -33,10 +39,14 @@ export const createPackage = createServerFn({ method: "POST" })
     const { error } = await supabase.from("packages").insert({
       profile_id: profile.id,
       name: data.name,
+      description: data.description,
       treatment_id: data.treatment_id,
+      treatment_ids: data.treatment_ids,
       session_count: data.session_count,
       price: data.price,
+      duration_minutes: data.duration_minutes,
       expiry_days: data.expiry_days,
+      image_url: data.image_url,
       active: data.active,
     });
     if (error) throw new Error(error.message);
@@ -45,23 +55,19 @@ export const createPackage = createServerFn({ method: "POST" })
 
 export const updatePackage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: {
-    id: string;
-    name: string;
-    treatment_id: string | null;
-    session_count: number;
-    price: number;
-    expiry_days: number | null;
-    active: boolean;
-  }) => d)
+  .inputValidator((d: PackageInput & { id: string }) => d)
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const { error } = await supabase.from("packages").update({
       name: data.name,
+      description: data.description,
       treatment_id: data.treatment_id,
+      treatment_ids: data.treatment_ids,
       session_count: data.session_count,
       price: data.price,
+      duration_minutes: data.duration_minutes,
       expiry_days: data.expiry_days,
+      image_url: data.image_url,
       active: data.active,
     }).eq("id", data.id);
     if (error) throw new Error(error.message);
