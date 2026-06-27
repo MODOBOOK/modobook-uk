@@ -193,12 +193,6 @@ function BookPage() {
                 {profile.tagline && (
                   <p className="mt-1 text-sm text-muted-foreground">{profile.tagline}</p>
                 )}
-                {addressText && (
-                  <p className="mt-2 inline-flex items-start gap-1 text-sm text-muted-foreground">
-                    <MapPin className="mt-0.5 h-4 w-4 flex-shrink-0" />
-                    <span>{addressText}</span>
-                  </p>
-                )}
               </div>
             </div>
 
