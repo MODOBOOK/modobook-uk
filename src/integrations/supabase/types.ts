@@ -470,55 +470,232 @@ export type Database = {
           },
         ]
       }
+      client_files: {
+        Row: {
+          client_id: string
+          created_at: string
+          filename: string | null
+          id: string
+          kind: string
+          profile_id: string
+          url: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          filename?: string | null
+          id?: string
+          kind: string
+          profile_id: string
+          url: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          filename?: string | null
+          id?: string
+          kind?: string
+          profile_id?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_files_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clinic_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_files_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      client_notes: {
+        Row: {
+          body: string
+          client_id: string
+          created_at: string
+          id: string
+          profile_id: string
+          updated_at: string
+        }
+        Insert: {
+          body: string
+          client_id: string
+          created_at?: string
+          id?: string
+          profile_id: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          client_id?: string
+          created_at?: string
+          id?: string
+          profile_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_notes_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clinic_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_notes_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      client_prescriptions: {
+        Row: {
+          client_id: string
+          created_at: string
+          directions: string | null
+          dose: string | null
+          id: string
+          notes: string | null
+          prescribed_on: string | null
+          product: string
+          profile_id: string
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          directions?: string | null
+          dose?: string | null
+          id?: string
+          notes?: string | null
+          prescribed_on?: string | null
+          product: string
+          profile_id: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          directions?: string | null
+          dose?: string | null
+          id?: string
+          notes?: string | null
+          prescribed_on?: string | null
+          product?: string
+          profile_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_prescriptions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clinic_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_prescriptions_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clinic_clients: {
         Row: {
           address: string | null
+          address_line1: string | null
+          address_line2: string | null
           allergies: string | null
+          archived: boolean
           avatar_url: string | null
+          county: string | null
           created_at: string
           dob: string | null
           email: string | null
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
           full_name: string
           gender: string | null
+          gp_address: string | null
+          gp_name: string | null
           group_name: string | null
           has_allergies: boolean
+          how_heard: string | null
           id: string
+          marketing_opt_in: boolean
           notes: string | null
           phone: string | null
+          postcode: string | null
+          preferred_contact: string | null
           profile_id: string
           updated_at: string
         }
         Insert: {
           address?: string | null
+          address_line1?: string | null
+          address_line2?: string | null
           allergies?: string | null
+          archived?: boolean
           avatar_url?: string | null
+          county?: string | null
           created_at?: string
           dob?: string | null
           email?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
           full_name: string
           gender?: string | null
+          gp_address?: string | null
+          gp_name?: string | null
           group_name?: string | null
           has_allergies?: boolean
+          how_heard?: string | null
           id?: string
+          marketing_opt_in?: boolean
           notes?: string | null
           phone?: string | null
+          postcode?: string | null
+          preferred_contact?: string | null
           profile_id: string
           updated_at?: string
         }
         Update: {
           address?: string | null
+          address_line1?: string | null
+          address_line2?: string | null
           allergies?: string | null
+          archived?: boolean
           avatar_url?: string | null
+          county?: string | null
           created_at?: string
           dob?: string | null
           email?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
           full_name?: string
           gender?: string | null
+          gp_address?: string | null
+          gp_name?: string | null
           group_name?: string | null
           has_allergies?: boolean
+          how_heard?: string | null
           id?: string
+          marketing_opt_in?: boolean
           notes?: string | null
           phone?: string | null
+          postcode?: string | null
+          preferred_contact?: string | null
           profile_id?: string
           updated_at?: string
         }
