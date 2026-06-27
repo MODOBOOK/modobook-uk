@@ -41,8 +41,9 @@ function ModoLayout() {
   const accent = theme?.accent_color || brand;
   const headerBg = theme?.header_bg_color || "#ffffff";
   const headerText = theme?.header_text_color || "#0f172a";
-  const footerBg = theme?.footer_bg_color || "#0f172a";
-  const footerText = theme?.footer_text_color || "#ffffff";
+  void theme?.footer_bg_color;
+  void theme?.footer_text_color;
+
   const bgColor = theme?.background_color || "transparent";
   const textColor = theme?.text_color || "inherit";
   const headingFont = theme?.heading_font || "inherit";
@@ -112,12 +113,7 @@ function ModoLayout() {
           </div>
         </header>
         <Outlet />
-        <footer className="mt-16 border-t" style={{ backgroundColor: footerBg, color: footerText }}>
 
-          <div className="mx-auto max-w-5xl px-4 py-6 text-center text-xs opacity-80">
-            Powered by <span className="font-semibold tracking-wide">MODO Book</span>
-          </div>
-        </footer>
       </div>
     </div>
   );
