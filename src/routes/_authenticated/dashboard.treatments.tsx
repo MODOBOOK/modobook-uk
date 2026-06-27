@@ -48,6 +48,7 @@ type TreatmentForm = {
   price: number;
   description: string;
   category_id: string | null;
+  active: boolean;
   consent_ids: string[];
 };
 
