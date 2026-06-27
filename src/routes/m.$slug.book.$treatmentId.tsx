@@ -274,7 +274,7 @@ function BookTreatmentPage() {
             country: form.country,
           },
           notes: form.notes || undefined,
-          basePrice: price,
+          basePrice: effectivePrice,
           patientUserId: patientUserId,
 
         },
