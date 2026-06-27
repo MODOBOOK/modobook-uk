@@ -219,41 +219,41 @@ function BookTreatmentPage() {
   if (confirmed) {
     const origin = typeof window !== "undefined" ? window.location.origin : "";
     return (
-      <main className="mx-auto max-w-xl px-4 py-16 text-center">
-        <CheckCircle2 className="mx-auto mb-4 h-12 w-12 text-green-600" />
-        <h1 className="text-2xl font-bold">Booking confirmed</h1>
-        <p className="mt-2 text-muted-foreground">
-          Your appointment with {ctx.clinicName} is confirmed. A confirmation
-          email has been sent to {form.email}.
-        </p>
-        {confirmed.consents.length > 0 && (
-          <div className="mt-6 rounded-lg border bg-muted/40 p-4 text-left">
-            <p className="text-sm font-semibold">Please complete your consent form(s):</p>
-            <ul className="mt-2 space-y-2 text-sm">
-              {confirmed.consents.map((c) => (
-                <li key={c.token}>
-                  <a
-                    href={`${origin}/c/${c.token}`}
-                    className="text-primary underline"
-                  >
-                    Complete consent form
-                  </a>
-                </li>
-              ))}
-            </ul>
-            <p className="mt-3 text-xs text-muted-foreground">
-              We've also emailed these links to {form.email}.
-            </p>
+      <main className="min-h-screen" style={pageStyle}>
+        <div className="mx-auto max-w-xl px-4 py-16 text-center">
+          <CheckCircle2 className="mx-auto mb-4 h-12 w-12" style={{ color: accent }} />
+          <h1 className="text-2xl font-bold" style={headingStyle}>Booking confirmed</h1>
+          <p className="mt-2 opacity-70">
+            Your appointment with {ctx.clinicName} is confirmed. A confirmation
+            email has been sent to {form.email}.
+          </p>
+          {confirmed.consents.length > 0 && (
+            <div className="mt-6 rounded-lg border bg-muted/40 p-4 text-left">
+              <p className="text-sm font-semibold">Please complete your consent form(s):</p>
+              <ul className="mt-2 space-y-2 text-sm">
+                {confirmed.consents.map((c) => (
+                  <li key={c.token}>
+                    <a href={`${origin}/c/${c.token}`} className="underline" style={{ color: brand }}>
+                      Complete consent form
+                    </a>
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-3 text-xs opacity-70">
+                We've also emailed these links to {form.email}.
+              </p>
+            </div>
+          )}
+          <div className="mt-6">
+            <Link to="/m/$slug" params={{ slug }}>
+              <Button variant="outline">Back to clinic</Button>
+            </Link>
           </div>
-        )}
-        <div className="mt-6">
-          <Link to="/m/$slug" params={{ slug }}>
-            <Button variant="outline">Back to clinic</Button>
-          </Link>
         </div>
       </main>
     );
   }
+
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-10">
