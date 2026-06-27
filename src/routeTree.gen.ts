@@ -12,11 +12,19 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as MSlugRouteImport } from './routes/m.$slug'
 import { Route as BookSlugRouteImport } from './routes/book.$slug'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as MSlugIndexRouteImport } from './routes/m.$slug.index'
 import { Route as AuthenticatedDashboardIndexRouteImport } from './routes/_authenticated/dashboard.index'
+import { Route as MSlugReviewsRouteImport } from './routes/m.$slug.reviews'
+import { Route as MSlugAuthRouteImport } from './routes/m.$slug.auth'
+import { Route as MSlugAccountRouteImport } from './routes/m.$slug.account'
+import { Route as MSlugAboutRouteImport } from './routes/m.$slug.about'
+import { Route as AuthenticatedDashboardReviewsRouteImport } from './routes/_authenticated/dashboard.reviews'
 import { Route as AuthenticatedDashboardCategoriesRouteImport } from './routes/_authenticated/dashboard.categories'
+import { Route as AuthenticatedDashboardBioRouteImport } from './routes/_authenticated/dashboard.bio'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -30,6 +38,11 @@ const AuthenticatedRoute = AuthenticatedRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MSlugRoute = MSlugRouteImport.update({
+  id: '/m/$slug',
+  path: '/m/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BookSlugRoute = BookSlugRouteImport.update({
@@ -47,16 +60,53 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const MSlugIndexRoute = MSlugIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => MSlugRoute,
+} as any)
 const AuthenticatedDashboardIndexRoute =
   AuthenticatedDashboardIndexRouteImport.update({
     id: '/',
     path: '/',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
+const MSlugReviewsRoute = MSlugReviewsRouteImport.update({
+  id: '/reviews',
+  path: '/reviews',
+  getParentRoute: () => MSlugRoute,
+} as any)
+const MSlugAuthRoute = MSlugAuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => MSlugRoute,
+} as any)
+const MSlugAccountRoute = MSlugAccountRouteImport.update({
+  id: '/account',
+  path: '/account',
+  getParentRoute: () => MSlugRoute,
+} as any)
+const MSlugAboutRoute = MSlugAboutRouteImport.update({
+  id: '/about',
+  path: '/about',
+  getParentRoute: () => MSlugRoute,
+} as any)
+const AuthenticatedDashboardReviewsRoute =
+  AuthenticatedDashboardReviewsRouteImport.update({
+    id: '/reviews',
+    path: '/reviews',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
 const AuthenticatedDashboardCategoriesRoute =
   AuthenticatedDashboardCategoriesRouteImport.update({
     id: '/categories',
     path: '/categories',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardBioRoute =
+  AuthenticatedDashboardBioRouteImport.update({
+    id: '/bio',
+    path: '/bio',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
 
@@ -66,16 +116,31 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRouteWithChildren
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/book/$slug': typeof BookSlugRoute
+  '/m/$slug': typeof MSlugRouteWithChildren
+  '/dashboard/bio': typeof AuthenticatedDashboardBioRoute
   '/dashboard/categories': typeof AuthenticatedDashboardCategoriesRoute
+  '/dashboard/reviews': typeof AuthenticatedDashboardReviewsRoute
+  '/m/$slug/about': typeof MSlugAboutRoute
+  '/m/$slug/account': typeof MSlugAccountRoute
+  '/m/$slug/auth': typeof MSlugAuthRoute
+  '/m/$slug/reviews': typeof MSlugReviewsRoute
   '/dashboard/': typeof AuthenticatedDashboardIndexRoute
+  '/m/$slug/': typeof MSlugIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/book/$slug': typeof BookSlugRoute
+  '/dashboard/bio': typeof AuthenticatedDashboardBioRoute
   '/dashboard/categories': typeof AuthenticatedDashboardCategoriesRoute
+  '/dashboard/reviews': typeof AuthenticatedDashboardReviewsRoute
+  '/m/$slug/about': typeof MSlugAboutRoute
+  '/m/$slug/account': typeof MSlugAccountRoute
+  '/m/$slug/auth': typeof MSlugAuthRoute
+  '/m/$slug/reviews': typeof MSlugReviewsRoute
   '/dashboard': typeof AuthenticatedDashboardIndexRoute
+  '/m/$slug': typeof MSlugIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -85,8 +150,16 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRouteWithChildren
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/book/$slug': typeof BookSlugRoute
+  '/m/$slug': typeof MSlugRouteWithChildren
+  '/_authenticated/dashboard/bio': typeof AuthenticatedDashboardBioRoute
   '/_authenticated/dashboard/categories': typeof AuthenticatedDashboardCategoriesRoute
+  '/_authenticated/dashboard/reviews': typeof AuthenticatedDashboardReviewsRoute
+  '/m/$slug/about': typeof MSlugAboutRoute
+  '/m/$slug/account': typeof MSlugAccountRoute
+  '/m/$slug/auth': typeof MSlugAuthRoute
+  '/m/$slug/reviews': typeof MSlugReviewsRoute
   '/_authenticated/dashboard/': typeof AuthenticatedDashboardIndexRoute
+  '/m/$slug/': typeof MSlugIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -96,16 +169,31 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/onboarding'
     | '/book/$slug'
+    | '/m/$slug'
+    | '/dashboard/bio'
     | '/dashboard/categories'
+    | '/dashboard/reviews'
+    | '/m/$slug/about'
+    | '/m/$slug/account'
+    | '/m/$slug/auth'
+    | '/m/$slug/reviews'
     | '/dashboard/'
+    | '/m/$slug/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
     | '/onboarding'
     | '/book/$slug'
+    | '/dashboard/bio'
     | '/dashboard/categories'
+    | '/dashboard/reviews'
+    | '/m/$slug/about'
+    | '/m/$slug/account'
+    | '/m/$slug/auth'
+    | '/m/$slug/reviews'
     | '/dashboard'
+    | '/m/$slug'
   id:
     | '__root__'
     | '/'
@@ -114,8 +202,16 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/onboarding'
     | '/book/$slug'
+    | '/m/$slug'
+    | '/_authenticated/dashboard/bio'
     | '/_authenticated/dashboard/categories'
+    | '/_authenticated/dashboard/reviews'
+    | '/m/$slug/about'
+    | '/m/$slug/account'
+    | '/m/$slug/auth'
+    | '/m/$slug/reviews'
     | '/_authenticated/dashboard/'
+    | '/m/$slug/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -123,6 +219,7 @@ export interface RootRouteChildren {
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   AuthRoute: typeof AuthRoute
   BookSlugRoute: typeof BookSlugRoute
+  MSlugRoute: typeof MSlugRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -148,6 +245,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/m/$slug': {
+      id: '/m/$slug'
+      path: '/m/$slug'
+      fullPath: '/m/$slug'
+      preLoaderRoute: typeof MSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/book/$slug': {
       id: '/book/$slug'
       path: '/book/$slug'
@@ -169,11 +273,53 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/m/$slug/': {
+      id: '/m/$slug/'
+      path: '/'
+      fullPath: '/m/$slug/'
+      preLoaderRoute: typeof MSlugIndexRouteImport
+      parentRoute: typeof MSlugRoute
+    }
     '/_authenticated/dashboard/': {
       id: '/_authenticated/dashboard/'
       path: '/'
       fullPath: '/dashboard/'
       preLoaderRoute: typeof AuthenticatedDashboardIndexRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/m/$slug/reviews': {
+      id: '/m/$slug/reviews'
+      path: '/reviews'
+      fullPath: '/m/$slug/reviews'
+      preLoaderRoute: typeof MSlugReviewsRouteImport
+      parentRoute: typeof MSlugRoute
+    }
+    '/m/$slug/auth': {
+      id: '/m/$slug/auth'
+      path: '/auth'
+      fullPath: '/m/$slug/auth'
+      preLoaderRoute: typeof MSlugAuthRouteImport
+      parentRoute: typeof MSlugRoute
+    }
+    '/m/$slug/account': {
+      id: '/m/$slug/account'
+      path: '/account'
+      fullPath: '/m/$slug/account'
+      preLoaderRoute: typeof MSlugAccountRouteImport
+      parentRoute: typeof MSlugRoute
+    }
+    '/m/$slug/about': {
+      id: '/m/$slug/about'
+      path: '/about'
+      fullPath: '/m/$slug/about'
+      preLoaderRoute: typeof MSlugAboutRouteImport
+      parentRoute: typeof MSlugRoute
+    }
+    '/_authenticated/dashboard/reviews': {
+      id: '/_authenticated/dashboard/reviews'
+      path: '/reviews'
+      fullPath: '/dashboard/reviews'
+      preLoaderRoute: typeof AuthenticatedDashboardReviewsRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
     '/_authenticated/dashboard/categories': {
@@ -183,18 +329,29 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardCategoriesRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
+    '/_authenticated/dashboard/bio': {
+      id: '/_authenticated/dashboard/bio'
+      path: '/bio'
+      fullPath: '/dashboard/bio'
+      preLoaderRoute: typeof AuthenticatedDashboardBioRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
   }
 }
 
 interface AuthenticatedDashboardRouteChildren {
+  AuthenticatedDashboardBioRoute: typeof AuthenticatedDashboardBioRoute
   AuthenticatedDashboardCategoriesRoute: typeof AuthenticatedDashboardCategoriesRoute
+  AuthenticatedDashboardReviewsRoute: typeof AuthenticatedDashboardReviewsRoute
   AuthenticatedDashboardIndexRoute: typeof AuthenticatedDashboardIndexRoute
 }
 
 const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
   {
+    AuthenticatedDashboardBioRoute: AuthenticatedDashboardBioRoute,
     AuthenticatedDashboardCategoriesRoute:
       AuthenticatedDashboardCategoriesRoute,
+    AuthenticatedDashboardReviewsRoute: AuthenticatedDashboardReviewsRoute,
     AuthenticatedDashboardIndexRoute: AuthenticatedDashboardIndexRoute,
   }
 
@@ -217,11 +374,30 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
   AuthenticatedRouteChildren,
 )
 
+interface MSlugRouteChildren {
+  MSlugAboutRoute: typeof MSlugAboutRoute
+  MSlugAccountRoute: typeof MSlugAccountRoute
+  MSlugAuthRoute: typeof MSlugAuthRoute
+  MSlugReviewsRoute: typeof MSlugReviewsRoute
+  MSlugIndexRoute: typeof MSlugIndexRoute
+}
+
+const MSlugRouteChildren: MSlugRouteChildren = {
+  MSlugAboutRoute: MSlugAboutRoute,
+  MSlugAccountRoute: MSlugAccountRoute,
+  MSlugAuthRoute: MSlugAuthRoute,
+  MSlugReviewsRoute: MSlugReviewsRoute,
+  MSlugIndexRoute: MSlugIndexRoute,
+}
+
+const MSlugRouteWithChildren = MSlugRoute._addFileChildren(MSlugRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   AuthRoute: AuthRoute,
   BookSlugRoute: BookSlugRoute,
+  MSlugRoute: MSlugRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

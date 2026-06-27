@@ -179,7 +179,7 @@ export const updatePractitionerBio = createServerFn({ method: "POST" })
 
     const { data: updated, error } = await context.supabase
       .from("profiles")
-      .update(patch)
+      .update(patch as never)
       .eq("user_id", context.userId)
       .select("*")
       .single();
