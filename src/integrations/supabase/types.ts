@@ -553,6 +553,103 @@ export type Database = {
           },
         ]
       }
+      consultations: {
+        Row: {
+          after_photos: Json
+          appointment_id: string | null
+          assessment: Json
+          before_photos: Json
+          completed_at: string | null
+          concerns: Json
+          consent: Json
+          created_at: string
+          current_step: number
+          id: string
+          invoice: Json
+          medical: Json
+          notes: string | null
+          patient_email: string | null
+          patient_id: string | null
+          patient_name: string
+          patient_phone: string | null
+          profile_id: string
+          status: string
+          treatment_log: Json
+          treatment_plan: Json
+          updated_at: string
+        }
+        Insert: {
+          after_photos?: Json
+          appointment_id?: string | null
+          assessment?: Json
+          before_photos?: Json
+          completed_at?: string | null
+          concerns?: Json
+          consent?: Json
+          created_at?: string
+          current_step?: number
+          id?: string
+          invoice?: Json
+          medical?: Json
+          notes?: string | null
+          patient_email?: string | null
+          patient_id?: string | null
+          patient_name: string
+          patient_phone?: string | null
+          profile_id: string
+          status?: string
+          treatment_log?: Json
+          treatment_plan?: Json
+          updated_at?: string
+        }
+        Update: {
+          after_photos?: Json
+          appointment_id?: string | null
+          assessment?: Json
+          before_photos?: Json
+          completed_at?: string | null
+          concerns?: Json
+          consent?: Json
+          created_at?: string
+          current_step?: number
+          id?: string
+          invoice?: Json
+          medical?: Json
+          notes?: string | null
+          patient_email?: string | null
+          patient_id?: string | null
+          patient_name?: string
+          patient_phone?: string | null
+          profile_id?: string
+          status?: string
+          treatment_log?: Json
+          treatment_plan?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consultations_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consultations_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consultations_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       locations: {
         Row: {
           active: boolean
