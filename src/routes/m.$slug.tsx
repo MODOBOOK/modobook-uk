@@ -5,8 +5,8 @@ import { Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/m/$slug")({
   loader: async ({ params }) => {
-    const { profile } = await getPractitionerBio({ data: { slug: params.slug } });
-    return { profile };
+    const { profile, theme } = await getPractitionerBio({ data: { slug: params.slug } });
+    return { profile, theme };
   },
   pendingComponent: () => (
     <div className="flex min-h-screen items-center justify-center">
@@ -25,59 +25,104 @@ export const Route = createFileRoute("/m/$slug")({
       { title: `${loaderData?.profile.clinic_name ?? "Clinic"} · MODO Book` },
       { name: "description", content: loaderData?.profile.tagline ?? "Book treatments on MODO Book." },
     ],
+    links: loaderData?.theme?.favicon_url
+      ? [{ rel: "icon", href: loaderData.theme.favicon_url }]
+      : undefined,
   }),
   component: ModoLayout,
 });
 
 function ModoLayout() {
-  const { profile } = Route.useLoaderData();
+  const { profile, theme } = Route.useLoaderData();
   const { slug } = useParams({ from: "/m/$slug" });
-  const brand = profile.brand_color || "#111827";
+  const brand = theme?.primary_color || profile.brand_color || "#111827";
+  const accent = theme?.accent_color || brand;
+  const headerBg = theme?.header_bg_color || "#ffffff";
+  const headerText = theme?.header_text_color || "#0f172a";
+  const footerBg = theme?.footer_bg_color || "#0f172a";
+  const footerText = theme?.footer_text_color || "#ffffff";
+  const bgColor = theme?.background_color || "transparent";
+  const textColor = theme?.text_color || "inherit";
+  const headingFont = theme?.heading_font || "inherit";
+  const bodyFont = theme?.body_font || "inherit";
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b">
-        <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-4">
-          <Link to="/m/$slug" params={{ slug }} className="flex items-center gap-3">
-            {profile.avatar_url ? (
-              <img src={profile.avatar_url} alt="" className="h-10 w-10 rounded-full object-cover" />
-            ) : (
-              <div className="flex h-10 w-10 items-center justify-center rounded-full text-white" style={{ backgroundColor: brand }}>
-                <span className="text-lg font-bold">{profile.clinic_name?.charAt(0) || "M"}</span>
+    <div
+      className="min-h-screen"
+      style={
+        {
+          backgroundColor: bgColor,
+          color: textColor,
+          fontFamily: bodyFont,
+          ["--brand" as string]: brand,
+          ["--brand-accent" as string]: accent,
+          ["--heading-font" as string]: headingFont,
+        } as React.CSSProperties
+      }
+    >
+      <style>{`
+        .modo-shell h1, .modo-shell h2, .modo-shell h3 { font-family: ${headingFont}; }
+        ${theme?.custom_css ?? ""}
+      `}</style>
+      <div className="modo-shell">
+        <header className="border-b" style={{ backgroundColor: headerBg, color: headerText }}>
+          <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-4">
+            <Link to="/m/$slug" params={{ slug }} className="flex items-center gap-3">
+              {theme?.logo_url ? (
+                <img src={theme.logo_url} alt="" className="h-10 w-auto object-contain" />
+              ) : profile.avatar_url ? (
+                <img src={profile.avatar_url} alt="" className="h-10 w-10 rounded-full object-cover" />
+              ) : (
+                <div
+                  className="flex h-10 w-10 items-center justify-center rounded-full text-white"
+                  style={{ backgroundColor: brand }}
+                >
+                  <span className="text-lg font-bold">{profile.clinic_name?.charAt(0) || "M"}</span>
+                </div>
+              )}
+              <div>
+                <div className="text-sm font-semibold leading-tight">{profile.clinic_name}</div>
+                <div className="text-xs opacity-70">{profile.full_name}</div>
               </div>
-            )}
-            <div>
-              <div className="text-sm font-semibold leading-tight">{profile.clinic_name}</div>
-              <div className="text-xs text-muted-foreground">{profile.full_name}</div>
-            </div>
-          </Link>
-          <nav className="flex items-center gap-1 text-sm">
-            <TabLink slug={slug} to="/m/$slug" label="Book" exact />
-            <TabLink slug={slug} to="/m/$slug/about" label="About" />
-            <TabLink slug={slug} to="/m/$slug/reviews" label="Reviews" />
-            <Link to="/m/$slug/account" params={{ slug }}>
-              <Button size="sm" variant="outline">My account</Button>
             </Link>
-          </nav>
-        </div>
-      </header>
-      <Outlet />
-      <footer className="border-t mt-16">
-        <div className="mx-auto max-w-5xl px-4 py-6 text-center text-xs text-muted-foreground">
-          Powered by <span className="font-semibold tracking-wide">MODO Book</span>
-        </div>
-      </footer>
+            <nav className="flex items-center gap-1 text-sm">
+              <TabLink slug={slug} to="/m/$slug" label="Book" exact />
+              <TabLink slug={slug} to="/m/$slug/about" label="About" />
+              <TabLink slug={slug} to="/m/$slug/reviews" label="Reviews" />
+              <Link to="/m/$slug/account" params={{ slug }}>
+                <Button size="sm" variant="outline">My account</Button>
+              </Link>
+            </nav>
+          </div>
+        </header>
+        <Outlet />
+        <footer className="mt-16 border-t" style={{ backgroundColor: footerBg, color: footerText }}>
+          <div className="mx-auto max-w-5xl px-4 py-6 text-center text-xs opacity-80">
+            Powered by <span className="font-semibold tracking-wide">MODO Book</span>
+          </div>
+        </footer>
+      </div>
     </div>
   );
 }
 
-function TabLink({ slug, to, label, exact }: { slug: string; to: "/m/$slug" | "/m/$slug/about" | "/m/$slug/reviews"; label: string; exact?: boolean }) {
+function TabLink({
+  slug,
+  to,
+  label,
+  exact,
+}: {
+  slug: string;
+  to: "/m/$slug" | "/m/$slug/about" | "/m/$slug/reviews";
+  label: string;
+  exact?: boolean;
+}) {
   return (
     <Link
       to={to}
       params={{ slug }}
       activeOptions={{ exact: !!exact }}
-      className="rounded-md px-3 py-1.5 text-muted-foreground hover:text-foreground [&.active]:bg-muted [&.active]:text-foreground"
+      className="rounded-md px-3 py-1.5 opacity-70 hover:opacity-100 [&.active]:bg-black/5 [&.active]:opacity-100"
     >
       {label}
     </Link>
