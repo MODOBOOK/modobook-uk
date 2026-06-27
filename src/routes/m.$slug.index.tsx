@@ -429,6 +429,14 @@ function BookPage() {
           </div>
         </section>
       )}
+
+      {/* Footer */}
+      <footer
+        className="mt-16 w-full px-4 py-6 text-center text-xs"
+        style={{ backgroundColor: footerBg, color: footerText }}
+      >
+        © {new Date().getFullYear()} {profile.clinic_name} · Powered by MODO Book
+      </footer>
     </main>
   );
 }
