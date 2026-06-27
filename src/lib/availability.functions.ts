@@ -94,7 +94,7 @@ export const listMyAppointments = createServerFn({ method: "GET" })
     if (!profileId) return [];
     const { data, error } = await supabase
       .from("appointments")
-      .select("id, patient_name, patient_email, patient_phone, scheduled_date, start_time, end_time, status, payment_status, total_amount, notes, practitioner_notes, aftercare_html, has_allergies, allergies_text, treatment_id, location_id, treatments(name), locations(name)")
+      .select("id, patient_name, patient_email, patient_phone, scheduled_date, start_time, end_time, status, payment_status, total_amount, notes, practitioner_notes, aftercare_html, has_allergies, allergies_text, treatment_id, location_id, treatments(name, color), locations(name)")
       .eq("profile_id", profileId)
       .order("scheduled_date", { ascending: true })
       .order("start_time", { ascending: true });
