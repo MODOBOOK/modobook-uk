@@ -341,16 +341,20 @@ function BookTreatmentPage() {
               </p>
             ) : (
               <div className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-5">
-                {slots.map((s) => (
-                  <Button
-                    key={s}
-                    variant={slot === s ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setSlot(s)}
-                  >
-                    {fmt(s)}
-                  </Button>
-                ))}
+                {slots.map((s) => {
+                  const selected = slot === s;
+                  return (
+                    <Button
+                      key={s}
+                      variant={selected ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setSlot(s)}
+                      style={selected ? { backgroundColor: brand, borderColor: brand, color: "#fff" } : { color: brand, borderColor: `${brand}55` }}
+                    >
+                      {fmt(s)}
+                    </Button>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -359,8 +363,9 @@ function BookTreatmentPage() {
 
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle className="text-base">Your details</CardTitle>
+          <CardTitle className="text-base" style={headingStyle}>Your details</CardTitle>
         </CardHeader>
+
         <CardContent className="grid gap-4 sm:grid-cols-2">
           <div className="sm:col-span-2">
             <Label htmlFor="name">Full name</Label>
