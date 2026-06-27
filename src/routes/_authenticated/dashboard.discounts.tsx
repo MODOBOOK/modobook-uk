@@ -349,3 +349,90 @@ function CodeRow({ code, treatments, onChanged }: { code: Code; treatments: Trea
     </Card>
   );
 }
+
+function BulkMenuDiscount({ treatments, onSaved }: { treatments: Treat[]; onSaved: () => void }) {
+  const save = useServerFn(setTreatmentDiscount);
+  const [ids, setIds] = useState<string[]>([]);
+  const [pct, setPct] = useState<string>("");
+  const [start, setStart] = useState("");
+  const [end, setEnd] = useState("");
+  const [dows, setDows] = useState<number[]>([]);
+  const [busy, setBusy] = useState(false);
+  const allSelected = ids.length === treatments.length && treatments.length > 0;
+
+  async function apply(activate: boolean) {
+    const targets = ids.length ? ids : treatments.map((t) => t.id);
+    if (!targets.length) { toast.error("Pick at least one treatment"); return; }
+    const p = activate ? Number(pct || "0") : null;
+    if (activate && (!p || p <= 0 || p > 100)) { toast.error("Enter 1–100%"); return; }
+    setBusy(true);
+    try {
+      await Promise.all(targets.map((id) => save({ data: {
+        id,
+        discount_percent: p,
+        discount_starts_at: activate && start ? new Date(start).toISOString() : null,
+        discount_ends_at: activate && end ? new Date(end + "T23:59:59").toISOString() : null,
+        discount_days_of_week: activate && dows.length ? dows : null,
+      }})));
+      toast.success(activate ? `Applied to ${targets.length} treatment${targets.length === 1 ? "" : "s"}` : `Reset ${targets.length}`);
+      onSaved();
+      if (!activate) { setIds([]); setPct(""); setStart(""); setEnd(""); setDows([]); }
+    } catch (e) { toast.error((e as Error).message); }
+    finally { setBusy(false); }
+  }
+
+  return (
+    <Card>
+      <CardHeader className="pb-2"><CardTitle className="text-base">Apply offer to multiple treatments</CardTitle></CardHeader>
+      <CardContent className="space-y-3">
+        <div>
+          <div className="mb-1 flex items-center justify-between">
+            <Label>Treatments</Label>
+            <button type="button" className="text-xs font-medium underline"
+              onClick={() => setIds(allSelected ? [] : treatments.map((t) => t.id))}>
+              {allSelected ? "Clear all" : "Select all"}
+            </button>
+          </div>
+          <div className="max-h-44 space-y-1 overflow-y-auto rounded border p-2">
+            {treatments.length === 0 ? (
+              <p className="px-1 text-xs italic text-muted-foreground">No treatments yet.</p>
+            ) : treatments.map((t) => (
+              <label key={t.id} className="flex items-center gap-2 text-sm">
+                <Checkbox checked={ids.includes(t.id)}
+                  onCheckedChange={(v) => setIds((prev) => v ? [...prev, t.id] : prev.filter((x) => x !== t.id))} />
+                <span className="flex-1">{t.name}</span>
+                <span className="text-xs text-muted-foreground">£{Number(t.price).toFixed(2)}</span>
+              </label>
+            ))}
+          </div>
+          <p className="mt-1 text-xs text-muted-foreground">{ids.length || "All"} selected</p>
+        </div>
+        <div className="grid grid-cols-3 gap-2">
+          <div><Label className="text-xs">% off</Label><Input type="number" min={1} max={100} value={pct} onChange={(e) => setPct(e.target.value)} placeholder="20" /></div>
+          <div><Label className="text-xs">Starts</Label><Input type="date" value={start} onChange={(e) => setStart(e.target.value)} /></div>
+          <div><Label className="text-xs">Ends</Label><Input type="date" value={end} onChange={(e) => setEnd(e.target.value)} /></div>
+        </div>
+        <div>
+          <Label className="mb-1 block text-xs">Days only (optional)</Label>
+          <div className="flex flex-wrap gap-1.5">
+            {DAY_NAMES.map((d, i) => {
+              const on = dows.includes(i);
+              return (
+                <button key={i} type="button"
+                  onClick={() => setDows((prev) => on ? prev.filter((x) => x !== i) : [...prev, i])}
+                  className={`rounded-full border px-3 py-1 text-xs ${on ? "border-emerald-500 bg-emerald-50 text-emerald-700" : "border-muted-foreground/30"}`}>
+                  {d}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button disabled={busy} onClick={() => apply(true)}>{busy ? "Saving…" : "Apply offer"}</Button>
+          <Button variant="outline" disabled={busy} onClick={() => apply(false)}>Reset selected to normal prices</Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
