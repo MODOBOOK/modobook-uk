@@ -75,6 +75,7 @@ const groups: {
 
 function MenuPage() {
   const { profile } = Route.useRouteContext() as { profile: { slug: string; clinic_name?: string | null } };
+  const { admin } = Route.useLoaderData();
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
