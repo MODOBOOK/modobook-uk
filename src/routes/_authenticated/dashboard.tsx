@@ -15,6 +15,7 @@ import {
   FileText,
   FileSignature,
   LogOut,
+  Package,
   Menu,
 } from "lucide-react";
 import { useState } from "react";
@@ -38,6 +39,7 @@ const navItems = [
   { label: "Clinic page", to: "/dashboard/clinic", icon: Store },
   { label: "Branding", to: "/dashboard/branding", icon: Palette },
   { label: "Services", to: "/dashboard/services", icon: Scissors },
+  { label: "Packages", to: "/dashboard/packages", icon: Package },
 
   { label: "Locations", to: "/dashboard/locations", icon: MapPin },
   { label: "Medical forms", to: "/dashboard/medical-forms", icon: FileText },

@@ -18,7 +18,10 @@ import {
   ExternalLink,
   Star,
   ChevronRight,
+  Check,
+  Package as PackageIcon,
 } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { mapsUrl, formatAddress } from "@/lib/maps";
 import type { Database } from "@/integrations/supabase/types";
 import { toast } from "sonner";
@@ -101,6 +104,13 @@ function BookPage() {
   const [locationId, setLocationId] = useState<string | null>(
     locations.length === 1 ? locations[0].id : null,
   );
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const toggleSelect = (id: string) =>
+    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  const isSelected = (id: string) => selectedIds.includes(id);
+  // Clear selection when location changes
+  const setLocAndClear = (id: string | null) => { setLocationId(id); setSelectedIds([]); };
+
 
   const priceFor = (t: Treatment) => {
     if (locationId) {
@@ -348,46 +358,84 @@ function BookPage() {
         </section>
       )}
 
-      {/* Treatments */}
+      {/* Treatments + Packages */}
       {locationId ? (
-        <section className="mx-auto mt-10 max-w-3xl px-4">
-          <h2 className="mb-4 text-xl font-bold" style={headingStyle}>
-            Book a treatment
-          </h2>
-          {visibleTreatments.length === 0 ? (
-            <p className="opacity-70">No treatments available here yet.</p>
-          ) : (
-            <div className="space-y-2">
-              {roots.length > 0 && (
-                <CategoryTree
-                  nodes={roots}
-                  slug={slug}
-                  priceFor={priceFor}
-                  durationFor={durationFor}
-                  brand={brand}
-                />
-              )}
-              {uncategorised.length > 0 && (
-                <div className="mt-4 space-y-2">
+        <section className="mx-auto mt-10 max-w-3xl px-4 pb-32">
+          <Tabs defaultValue="treatments" className="w-full">
+            <TabsList className="grid w-full grid-cols-2" style={{ backgroundColor: `${brand}10` }}>
+              <TabsTrigger value="treatments">Book a treatment</TabsTrigger>
+              <TabsTrigger value="packages" disabled={packages.length === 0}>
+                <PackageIcon className="mr-1.5 h-4 w-4" />
+                Packages {packages.length > 0 ? `(${packages.length})` : ""}
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="treatments" className="mt-4">
+              <p className="mb-3 text-xs opacity-60">
+                Tap a treatment to book now, or tick multiple to book them together.
+              </p>
+              {visibleTreatments.length === 0 ? (
+                <p className="opacity-70">No treatments available here yet.</p>
+              ) : (
+                <div className="space-y-2">
                   {roots.length > 0 && (
-                    <h3 className="text-sm font-semibold uppercase tracking-wide opacity-60">
-                      Other treatments
-                    </h3>
-                  )}
-                  {uncategorised.map((t) => (
-                    <TreatmentRow
-                      key={t.id}
-                      t={t}
+                    <CategoryTree
+                      nodes={roots}
                       slug={slug}
-                      price={priceFor(t)}
-                      duration={durationFor(t)}
+                      priceFor={priceFor}
+                      durationFor={durationFor}
                       brand={brand}
+                      isSelected={isSelected}
+                      toggleSelect={toggleSelect}
                     />
+                  )}
+                  {uncategorised.length > 0 && (
+                    <div className="mt-4 space-y-2">
+                      {roots.length > 0 && (
+                        <h3 className="text-sm font-semibold uppercase tracking-wide opacity-60">
+                          Other treatments
+                        </h3>
+                      )}
+                      {uncategorised.map((t) => (
+                        <TreatmentRow
+                          key={t.id}
+                          t={t}
+                          slug={slug}
+                          price={priceFor(t)}
+                          duration={durationFor(t)}
+                          brand={brand}
+                          selected={isSelected(t.id)}
+                          onToggle={() => toggleSelect(t.id)}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="packages" className="mt-4">
+              {packages.length === 0 ? (
+                <p className="opacity-70">No packages available.</p>
+              ) : (
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {packages.map((p) => (
+                    <Card key={p.id} className="rounded-2xl">
+                      <CardContent className="p-4">
+                        <div className="font-semibold" style={{ color: brand }}>{p.name}</div>
+                        <p className="mt-1 text-sm opacity-70">
+                          {p.session_count} session{p.session_count === 1 ? "" : "s"}
+                        </p>
+                        <p className="mt-2 font-bold" style={{ color: brand }}>
+                          £{Number(p.price ?? 0).toFixed(2)}
+                        </p>
+                      </CardContent>
+                    </Card>
                   ))}
                 </div>
               )}
-            </div>
-          )}
+            </TabsContent>
+          </Tabs>
         </section>
       ) : (
         locations.length > 1 && (
@@ -400,26 +448,37 @@ function BookPage() {
         )
       )}
 
-      {packages.length > 0 && locationId && (
-        <section className="mx-auto mt-10 max-w-3xl px-4">
-          <h2 className="mb-3 text-xl font-bold" style={headingStyle}>
-            Packages
-          </h2>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {packages.map((p) => (
-              <Card key={p.id} className="rounded-2xl">
-                <CardContent className="p-4">
-                  <div className="font-semibold" style={{ color: brand }}>{p.name}</div>
-                  <p className="mt-1 text-sm opacity-70">{p.session_count} sessions</p>
-                  <p className="mt-2 font-bold" style={{ color: brand }}>
-                    £{Number(p.price ?? 0).toFixed(2)}
-                  </p>
-                </CardContent>
-              </Card>
-            ))}
+      {/* Sticky multi-select bar */}
+      {locationId && selectedIds.length > 0 && (
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 px-4 py-3 backdrop-blur" style={{ borderColor: `${brand}33` }}>
+          <div className="mx-auto flex max-w-3xl items-center justify-between gap-3">
+            <div className="text-sm">
+              <div className="font-semibold" style={{ color: brand }}>
+                {selectedIds.length} treatment{selectedIds.length === 1 ? "" : "s"} selected
+              </div>
+              <div className="text-xs opacity-70">
+                Total £
+                {selectedIds
+                  .map((id) => priceFor(treatments.find((t) => t.id === id)!))
+                  .reduce((a, b) => a + b, 0)
+                  .toFixed(2)}
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="ghost" size="sm" onClick={() => setSelectedIds([])}>
+                Clear
+              </Button>
+              <Link to="/m/$slug/book-multi" params={{ slug }} search={{ ids: selectedIds.join(",") }}>
+                <Button size="sm" style={{ backgroundColor: brand, color: "#fff" }}>
+                  Continue →
+                </Button>
+              </Link>
+            </div>
           </div>
-        </section>
+        </div>
       )}
+
+
 
       {/* Footer */}
       <footer
@@ -531,6 +590,8 @@ function CategoryTree({
   durationFor,
   brand,
   depth = 0,
+  isSelected,
+  toggleSelect,
 }: {
   nodes: CatNode[];
   slug: string;
@@ -538,6 +599,8 @@ function CategoryTree({
   durationFor: (t: Treatment) => number;
   brand: string;
   depth?: number;
+  isSelected: (id: string) => boolean;
+  toggleSelect: (id: string) => void;
 }) {
   const visible = nodes.filter(
     (n) => n.treatments.length > 0 || n.children.some((c) => countTreatments(c) > 0),
@@ -585,6 +648,8 @@ function CategoryTree({
                   durationFor={durationFor}
                   brand={brand}
                   depth={depth + 1}
+                  isSelected={isSelected}
+                  toggleSelect={toggleSelect}
                 />
               )}
               {node.treatments.map((t) => (
@@ -595,6 +660,8 @@ function CategoryTree({
                   price={priceFor(t)}
                   duration={durationFor(t)}
                   brand={brand}
+                  selected={isSelected(t.id)}
+                  onToggle={() => toggleSelect(t.id)}
                 />
               ))}
             </AccordionContent>
@@ -611,45 +678,66 @@ function TreatmentRow({
   price,
   duration,
   brand,
+  selected,
+  onToggle,
 }: {
   t: Treatment;
   slug: string;
   price: number;
   duration: number;
   brand: string;
+  selected: boolean;
+  onToggle: () => void;
 }) {
   return (
-    <Link
-      to="/m/$slug/book/$treatmentId"
-      params={{ slug, treatmentId: t.id }}
-      className="group flex items-center justify-between gap-3 rounded-xl border bg-card p-3 transition hover:shadow-sm"
+    <div
+      className="group flex items-center gap-3 rounded-xl border bg-card p-3 transition hover:shadow-sm"
+      style={selected ? { borderColor: brand, boxShadow: `0 0 0 1px ${brand}` } : undefined}
     >
-      <div className="min-w-0 flex-1">
-        <div className="truncate font-semibold" style={{ color: brand }}>
-          {t.name}
-        </div>
-        {t.description && (
-          <div className="mt-0.5 line-clamp-2 text-sm text-muted-foreground">
-            {t.description}
-          </div>
-        )}
-        <div className="mt-1.5 flex items-center gap-3 text-sm text-muted-foreground">
-          <span className="inline-flex items-center gap-1">
-            <Clock className="h-3.5 w-3.5" />
-            {duration} min
-          </span>
-          <span className="font-semibold" style={{ color: brand }}>
-            {price === 0 ? "Free" : `£${price.toFixed(2)}`}
-          </span>
-        </div>
-      </div>
-      <div
-        className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-white transition group-hover:scale-105"
-        style={{ backgroundColor: brand }}
-        aria-label="Book"
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-label={selected ? "Remove from selection" : "Add to selection"}
+        className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded border transition"
+        style={selected
+          ? { backgroundColor: brand, borderColor: brand, color: "#fff" }
+          : { borderColor: `${brand}66` }}
       >
-        <ChevronRight className="h-5 w-5" />
-      </div>
-    </Link>
+        {selected && <Check className="h-4 w-4" />}
+      </button>
+      <Link
+        to="/m/$slug/book/$treatmentId"
+        params={{ slug, treatmentId: t.id }}
+        className="flex min-w-0 flex-1 items-center justify-between gap-3"
+      >
+        <div className="min-w-0 flex-1">
+          <div className="truncate font-semibold" style={{ color: brand }}>
+            {t.name}
+          </div>
+          {t.description && (
+            <div className="mt-0.5 line-clamp-2 text-sm text-muted-foreground">
+              {t.description}
+            </div>
+          )}
+          <div className="mt-1.5 flex items-center gap-3 text-sm text-muted-foreground">
+            <span className="inline-flex items-center gap-1">
+              <Clock className="h-3.5 w-3.5" />
+              {duration} min
+            </span>
+            <span className="font-semibold" style={{ color: brand }}>
+              {price === 0 ? "Free" : `£${price.toFixed(2)}`}
+            </span>
+          </div>
+        </div>
+        <div
+          className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-white transition group-hover:scale-105"
+          style={{ backgroundColor: brand }}
+          aria-label="Book now"
+        >
+          <ChevronRight className="h-5 w-5" />
+        </div>
+      </Link>
+    </div>
   );
 }
+

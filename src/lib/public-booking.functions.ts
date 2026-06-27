@@ -59,6 +59,60 @@ export const getBookingContext = createServerFn({ method: "GET" })
     };
   });
 
+export const getMultiBookingContext = createServerFn({ method: "GET" })
+  .inputValidator((input: { slug: string; treatmentIds: string[] }) => input)
+  .handler(async ({ data }) => {
+    const sb = publicClient();
+    const { data: profile, error: pErr } = await sb
+      .rpc("get_public_profile_by_slug", { p_slug: data.slug.toLowerCase() })
+      .single();
+    if (pErr) throw pErr;
+    if (!profile) throw new Error("Clinic not found");
+
+    const { data: treatments, error: tErr } = await sb
+      .from("treatments")
+      .select("*")
+      .in("id", data.treatmentIds)
+      .eq("profile_id", profile.id)
+      .eq("active", true);
+    if (tErr) throw tErr;
+
+    const { data: locations } = await sb
+      .from("locations")
+      .select("id, profile_id, name, address_line1, address_line2, city, postcode, country, is_primary, display_order, active, created_at, updated_at, image_url")
+      .eq("profile_id", profile.id)
+      .eq("active", true)
+      .order("is_primary", { ascending: false });
+
+    const { data: rules } = await sb
+      .from("availability_rules")
+      .select("*")
+      .eq("profile_id", profile.id);
+
+    const { data: theme } = await sb
+      .from("clinic_theme")
+      .select("*")
+      .eq("profile_id", profile.id)
+      .maybeSingle();
+
+    const { data: pricing } = await sb
+      .from("treatment_location_pricing")
+      .select("*")
+      .in("treatment_id", data.treatmentIds);
+
+    return {
+      profileId: profile.id,
+      clinicName: profile.clinic_name,
+      treatments: treatments ?? [],
+      pricing: pricing ?? [],
+      locations: locations ?? [],
+      rules: rules ?? [],
+      theme: theme ?? null,
+      brandColor: (profile as { brand_color?: string | null }).brand_color ?? null,
+    };
+  });
+
+
 
 export const getDayAvailability = createServerFn({ method: "GET" })
   .inputValidator((input: { profileId: string; date: string; locationId?: string | null }) => input)
@@ -200,3 +254,88 @@ export const requestBooking = createServerFn({ method: "POST" })
     }
     return { id, consents };
   });
+
+function addMinutesToTime(time: string, mins: number) {
+  const [h, m] = time.split(":").map(Number);
+  const total = h * 60 + m + mins;
+  const hh = String(Math.floor(total / 60)).padStart(2, "0");
+  const mm = String(total % 60).padStart(2, "0");
+  return `${hh}:${mm}:00`;
+}
+
+export const requestMultiBooking = createServerFn({ method: "POST" })
+  .inputValidator(
+    (input: {
+      profileId: string;
+      bookings: { treatmentId: string; durationMin: number; priceCents: number }[];
+      locationId?: string | null;
+      date: string;
+      startTime: string;
+      patientName: string;
+      patientEmail: string;
+      patientPhone?: string;
+      patientDob?: string | null;
+      patientAddress?: {
+        line1?: string;
+        line2?: string;
+        city?: string;
+        postcode?: string;
+        country?: string;
+      } | null;
+      notes?: string;
+      patientUserId?: string | null;
+    }) => input,
+  )
+  .handler(async ({ data }) => {
+    const sb = publicClient();
+    let cursor = data.startTime;
+    const created: { id: string; treatmentId: string }[] = [];
+    const consents: { token: string; consent_template_id: string }[] = [];
+    for (const b of data.bookings) {
+      const id = crypto.randomUUID();
+      const end = addMinutesToTime(cursor, b.durationMin);
+      const { error } = await sb.from("appointments").insert({
+        id,
+        profile_id: data.profileId,
+        treatment_id: b.treatmentId,
+        location_id: data.locationId ?? null,
+        scheduled_date: data.date,
+        start_time: cursor,
+        end_time: end,
+        patient_name: data.patientName,
+        patient_email: data.patientEmail,
+        patient_phone: data.patientPhone ?? null,
+        patient_dob: data.patientDob ?? null,
+        patient_address: data.patientAddress ?? null,
+        patient_user_id: data.patientUserId ?? null,
+        notes: data.notes ?? null,
+        status: "confirmed",
+        payment_status: "pending",
+        base_amount: b.priceCents / 100,
+        total_amount: b.priceCents / 100,
+      });
+      if (error) throw new Error(error.message);
+      created.push({ id, treatmentId: b.treatmentId });
+
+      const { data: links } = await sb
+        .from("treatment_consents")
+        .select("consent_template_id")
+        .eq("treatment_id", b.treatmentId);
+      if (links && links.length > 0) {
+        const rows = links.map((l) => ({
+          appointment_id: id,
+          consent_template_id: l.consent_template_id,
+          profile_id: data.profileId,
+        }));
+        const { data: inserted, error: cErr } = await sb
+          .from("appointment_consents")
+          .insert(rows)
+          .select("token, consent_template_id");
+        if (cErr) throw new Error(cErr.message);
+        consents.push(...(inserted ?? []));
+      }
+      cursor = end;
+    }
+    return { appointments: created, consents };
+  });
+
