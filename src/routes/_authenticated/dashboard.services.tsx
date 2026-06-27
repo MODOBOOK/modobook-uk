@@ -70,7 +70,9 @@ type Treat = {
   duration: number;
   price: number;
   category_id: string | null;
+  color?: string | null;
 };
+
 type CatNode = Cat & { children: CatNode[]; treatments: Treat[] };
 
 function buildTree(cats: Cat[], treats: Treat[]): {
