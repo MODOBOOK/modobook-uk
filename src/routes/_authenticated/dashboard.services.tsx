@@ -120,8 +120,8 @@ function ServicesPage() {
   >(null);
   const [svcDialog, setSvcDialog] = useState<{ defaultCatId: string | null } | null>(null);
 
-  const totalCats = (cats.data ?? []).length;
-  const totalSvcs = (treats.data ?? []).length;
+
+
 
   const q = search.trim().toLowerCase();
   const matchTreat = (t: Treat) =>
