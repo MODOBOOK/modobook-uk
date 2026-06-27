@@ -156,14 +156,21 @@ function BookTreatmentPage() {
       }),
   });
 
+  const modelDates = useMemo(
+    () => new Set(modelSlotsForLoc.map((s) => s.slot_date)),
+    [modelSlotsForLoc],
+  );
+
   const isDateUnavailable = (d: Date) => {
     const iso = toIsoDate(d);
+    if (modelMode) return !modelDates.has(iso);
     const data = monthQuery.data;
     if (!data) return false;
     if (data.blockedDates.includes(iso)) return true;
     if (data.overrideDates.includes(iso)) return false;
     return !data.activeDays.includes(d.getDay());
   };
+
 
 
   const dow = useMemo(() => {
