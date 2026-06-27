@@ -225,27 +225,41 @@ function BookPage() {
           </h1>
           {primaryLocation && (
             <p className="mt-2 text-base opacity-70">
-              @{primaryLocation.address_line1}
+              {primaryLocation.address_line1}
               {primaryLocation.city ? <br /> : null}
               {primaryLocation.city}
             </p>
           )}
 
-          {/* Star rating placeholder */}
-          <div className="mt-3 flex items-center gap-2">
-            <div className="flex" style={{ color: accent }}>
-              {Array.from({ length: 5 }).map((_, i) => (
-                <Star key={i} className="h-4 w-4" fill="currentColor" />
-              ))}
-            </div>
-            <Link
-              to="/m/$slug/reviews"
-              params={{ slug }}
-              className="text-sm opacity-70 hover:opacity-100"
-            >
-              (Reviews)
-            </Link>
-          </div>
+          {/* Star rating */}
+          {(() => {
+            const count = reviews.length;
+            const avg = count ? reviews.reduce((a, r) => a + r.rating, 0) / count : 0;
+            const rounded = Math.round(avg);
+            return (
+              <Link
+                to="/m/$slug/reviews"
+                params={{ slug }}
+                className="mt-3 flex items-center gap-2 hover:opacity-80"
+              >
+                <div className="flex" style={{ color: accent }}>
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Star
+                      key={i}
+                      className="h-4 w-4"
+                      fill={count === 0 || i < rounded ? "currentColor" : "none"}
+                    />
+                  ))}
+                </div>
+                <span className="text-sm opacity-70">
+                  {count === 0
+                    ? "Be the first to review"
+                    : `${avg.toFixed(1)} · ${count} review${count === 1 ? "" : "s"}`}
+                </span>
+              </Link>
+            );
+          })()}
+
 
           {/* Action icon row */}
           <div className="mt-5 grid grid-cols-4 gap-2 border-t pt-4" style={{ borderColor: `${brand}22` }}>
