@@ -67,6 +67,7 @@ const groups: { title: string; items: Item[] }[] = [
     title: "Services & forms",
     items: [
       { label: "Services", description: "Treatments, categories, pricing", to: "/dashboard/services", icon: Scissors, ...T.taupe },
+      { label: "Add-ons", description: "Optional extras offered with treatments", to: "/dashboard/treatments", icon: Sparkles, ...T.ivory },
       { label: "Packages", description: "Bundle treatments for patients", to: "/dashboard/packages", icon: Package, ...T.espresso },
       { label: "Discounts", description: "Menu discounts & promo codes", to: "/dashboard/discounts", icon: Percent, ...T.sand },
       { label: "Model slots", description: "Discounted dates & times", to: "/dashboard/model-slots", icon: Sparkles, ...T.mocha },
