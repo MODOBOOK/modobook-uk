@@ -53,9 +53,27 @@ function BookTreatmentPage() {
   const duration = treatment.duration ?? 30;
   const price = Number(treatment.price ?? 0);
 
+  const theme = ctx.theme;
+  const brand = theme?.primary_color || ctx.brandColor || "#1f2a44";
+  const accent = theme?.accent_color || brand;
+  const bgColor = theme?.background_color || "#ffffff";
+  const textColor = theme?.text_color || "#0f172a";
+  const headingFont = theme?.heading_font || "Inter";
+  const bodyFont = theme?.body_font || "Inter";
+  const pageStyle: React.CSSProperties = {
+    backgroundColor: bgColor,
+    color: textColor,
+    fontFamily: `${bodyFont}, system-ui, sans-serif`,
+  };
+  const headingStyle: React.CSSProperties = {
+    fontFamily: `${headingFont}, ${bodyFont}, system-ui, sans-serif`,
+    color: brand,
+  };
+
   const [locationId, setLocationId] = useState<string | null>(
     ctx.locations[0]?.id ?? null,
   );
+
   const today = new Date().toISOString().slice(0, 10);
   const [date, setDate] = useState<string>(today);
   const [month, setMonth] = useState<Date>(new Date());
