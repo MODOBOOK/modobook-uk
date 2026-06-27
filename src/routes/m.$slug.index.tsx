@@ -62,8 +62,10 @@ function countTreatments(n: CatNode): number {
   return n.treatments.length + n.children.reduce((s, c) => s + countTreatments(c), 0);
 }
 
+type Theme = Database["public"]["Tables"]["clinic_theme"]["Row"];
+
 function BookPage() {
-  const { profile, treatments, packages, locations, categories, pricing } =
+  const { profile, treatments, packages, locations, categories, pricing, theme } =
     Route.useLoaderData() as {
       profile: {
         id: string;
@@ -80,12 +82,19 @@ function BookPage() {
       };
       treatments: Treatment[];
       packages: Package[];
-      locations: Location[];
+      locations: (Location & { image_url?: string | null })[];
       categories: Category[];
       pricing: Pricing[];
+      theme: Theme | null;
     };
   const { slug } = useParams({ from: "/m/$slug/" });
-  const brand = profile.brand_color || "#1f2a44";
+  const brand = theme?.primary_color || profile.brand_color || "#1f2a44";
+  const accent = theme?.accent_color || brand;
+  const bgColor = theme?.background_color || "#ffffff";
+  const textColor = theme?.text_color || "#0f172a";
+  const headingFont = theme?.heading_font || "Inter";
+  const bodyFont = theme?.body_font || "Inter";
+  const heroUrl = theme?.hero_image_url || profile.hero_url;
 
   const [locationId, setLocationId] = useState<string | null>(
     locations.length === 1 ? locations[0].id : null,
@@ -123,12 +132,6 @@ function BookPage() {
 
   const primaryLocation =
     locations.find((l) => l.is_primary) ?? locations[0] ?? null;
-  const addressText = primaryLocation
-    ? formatAddress(primaryLocation)
-    : (() => {
-        const a = (profile.address ?? {}) as { line1?: string; city?: string; postcode?: string };
-        return [a.line1, a.city, a.postcode].filter(Boolean).join(", ");
-      })();
 
   const ig = profile.social_links?.instagram;
 
@@ -149,121 +152,148 @@ function BookPage() {
     }
   }
 
+  const pageStyle: React.CSSProperties = {
+    backgroundColor: bgColor,
+    color: textColor,
+    fontFamily: `${bodyFont}, system-ui, sans-serif`,
+    ["--brand" as string]: brand,
+    ["--brand-accent" as string]: accent,
+  };
+  const headingStyle: React.CSSProperties = {
+    fontFamily: `${headingFont}, ${bodyFont}, system-ui, sans-serif`,
+    color: brand,
+  };
+
   return (
-    <main
-      className="pb-16"
-      style={{ ["--brand" as string]: brand } as React.CSSProperties}
-    >
-      {/* Hero */}
+    <main className="min-h-screen pb-16" style={pageStyle}>
+      {/* Hero image */}
       <div className="relative">
-        {profile.hero_url ? (
+        {heroUrl ? (
           <img
-            src={profile.hero_url}
+            src={heroUrl}
             alt=""
-            className="h-72 w-full object-cover sm:h-96"
+            className="h-64 w-full object-cover sm:h-96"
           />
         ) : (
           <div
             className="h-56 w-full sm:h-72"
-            style={{ background: `linear-gradient(135deg, ${brand}, ${brand}cc)` }}
+            style={{ background: `linear-gradient(135deg, ${brand}, ${accent})` }}
           />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
       </div>
 
-      {/* Overlapping profile card */}
-      <section className="mx-auto -mt-12 max-w-3xl px-4">
-        <Card className="overflow-hidden rounded-2xl border-0 shadow-xl">
-          <CardContent className="space-y-4 p-5 sm:p-6">
-            <div className="flex items-start gap-4">
-              {profile.avatar_url ? (
-                <img
-                  src={profile.avatar_url}
-                  alt={profile.full_name ?? profile.clinic_name}
-                  className="-mt-12 h-20 w-20 flex-shrink-0 rounded-full border-4 border-background object-cover shadow-md sm:-mt-14 sm:h-24 sm:w-24"
-                />
-              ) : null}
-              <div className="min-w-0 flex-1">
-                <h1
-                  className="truncate text-2xl font-bold leading-tight sm:text-3xl"
-                  style={{ color: brand }}
-                >
-                  {profile.clinic_name}
-                </h1>
-                {profile.tagline && (
-                  <p className="mt-1 text-sm text-muted-foreground">{profile.tagline}</p>
-                )}
-              </div>
-            </div>
+      {/* Overlapping title card */}
+      <section className="mx-auto -mt-10 max-w-3xl px-4">
+        <div
+          className="rounded-t-3xl px-5 pb-5 pt-6 sm:px-8 sm:pt-8"
+          style={{ backgroundColor: bgColor }}
+        >
+          <h1
+            className="text-3xl font-extrabold leading-tight sm:text-4xl"
+            style={headingStyle}
+          >
+            {profile.clinic_name}
+          </h1>
+          {primaryLocation && (
+            <p className="mt-2 text-base opacity-70">
+              @{primaryLocation.address_line1}
+              {primaryLocation.city ? <br /> : null}
+              {primaryLocation.city}
+            </p>
+          )}
 
-            {/* Action icons */}
-            <div className="grid grid-cols-4 gap-2 border-t pt-4">
-              {ig && (
-                <ActionIcon
-                  href={ig.startsWith("http") ? ig : `https://instagram.com/${ig.replace("@", "")}`}
-                  label="Instagram"
-                  brand={brand}
-                >
-                  <Instagram className="h-5 w-5" />
-                </ActionIcon>
-              )}
-              {primaryLocation && mapsUrl(primaryLocation) && (
-                <ActionIcon href={mapsUrl(primaryLocation)!} label="Directions" brand={brand}>
-                  <MapPin className="h-5 w-5" />
-                </ActionIcon>
-              )}
-              <ActionButton onClick={handleShare} label="Share" brand={brand}>
-                <Share2 className="h-5 w-5" />
-              </ActionButton>
-              <ActionLink to="/m/$slug/about" params={{ slug }} label="About" brand={brand}>
-                <Info className="h-5 w-5" />
-              </ActionLink>
+          {/* Star rating placeholder */}
+          <div className="mt-3 flex items-center gap-2">
+            <div className="flex" style={{ color: accent }}>
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Star key={i} className="h-4 w-4" fill="currentColor" />
+              ))}
             </div>
-          </CardContent>
-        </Card>
+            <Link
+              to="/m/$slug/reviews"
+              params={{ slug }}
+              className="text-sm opacity-70 hover:opacity-100"
+            >
+              (Reviews)
+            </Link>
+          </div>
+
+          {/* Action icon row */}
+          <div className="mt-5 grid grid-cols-4 gap-2 border-t pt-4" style={{ borderColor: `${brand}22` }}>
+            {ig ? (
+              <ActionIcon
+                href={ig.startsWith("http") ? ig : `https://instagram.com/${ig.replace("@", "")}`}
+                label="Instagram"
+                brand={brand}
+              >
+                <Instagram className="h-6 w-6" />
+              </ActionIcon>
+            ) : (
+              <ActionPlaceholder label="Instagram" brand={brand}>
+                <Instagram className="h-6 w-6 opacity-30" />
+              </ActionPlaceholder>
+            )}
+            {primaryLocation && mapsUrl(primaryLocation) ? (
+              <ActionIcon href={mapsUrl(primaryLocation)!} label="Directions" brand={brand}>
+                <MapPin className="h-6 w-6" />
+              </ActionIcon>
+            ) : (
+              <ActionPlaceholder label="Directions" brand={brand}>
+                <MapPin className="h-6 w-6 opacity-30" />
+              </ActionPlaceholder>
+            )}
+            <ActionButton onClick={handleShare} label="Share" brand={brand}>
+              <Share2 className="h-6 w-6" />
+            </ActionButton>
+            <ActionLink to="/m/$slug/about" params={{ slug }} label="About" brand={brand}>
+              <Info className="h-6 w-6" />
+            </ActionLink>
+          </div>
+        </div>
       </section>
 
-      {/* Practitioner / locations */}
+      {/* Team Members / Locations */}
       {locations.length > 0 && (
         <section className="mx-auto mt-8 max-w-3xl px-4">
-          <h2 className="mb-3 text-lg font-bold" style={{ color: brand }}>
-            {locations.length > 1 ? "Choose a location" : "Your practitioner"}
+          <h2 className="mb-4 text-xl font-bold" style={headingStyle}>
+            {locations.length > 1 ? "Team Members" : "Your practitioner"}
           </h2>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
             {locations.map((loc) => {
               const selected = loc.id === locationId;
+              const photo = loc.image_url || profile.avatar_url;
               return (
                 <button
                   key={loc.id}
                   onClick={() => setLocationId(loc.id)}
-                  className="group flex flex-col items-center rounded-2xl border bg-card p-4 text-center transition hover:shadow-md"
-                  style={selected ? { borderColor: brand, boxShadow: `0 0 0 2px ${brand}33` } : undefined}
+                  className="group flex flex-col items-center rounded-2xl p-3 text-center transition hover:bg-black/[0.03]"
+                  style={selected ? { boxShadow: `0 0 0 2px ${brand}` } : undefined}
                 >
-                  {profile.avatar_url ? (
+                  {photo ? (
                     <img
-                      src={profile.avatar_url}
-                      alt={profile.full_name ?? ""}
-                      className="h-24 w-24 rounded-full object-cover"
+                      src={photo}
+                      alt={loc.name}
+                      className="h-24 w-24 rounded-full object-cover sm:h-28 sm:w-28"
                     />
                   ) : (
                     <div
-                      className="flex h-24 w-24 items-center justify-center rounded-full text-2xl font-bold text-white"
+                      className="flex h-24 w-24 items-center justify-center rounded-full text-2xl font-bold text-white sm:h-28 sm:w-28"
                       style={{ backgroundColor: brand }}
                     >
                       {(profile.full_name ?? profile.clinic_name).charAt(0)}
                     </div>
                   )}
-                  <div className="mt-3 font-semibold" style={{ color: brand }}>
+                  <div className="mt-3 text-sm font-semibold leading-tight" style={{ color: brand }}>
                     {profile.full_name ?? "Practitioner"}
                   </div>
-                  <div className="text-sm font-medium uppercase tracking-wide" style={{ color: brand }}>
+                  <div className="text-sm font-bold uppercase leading-tight" style={{ color: brand }}>
                     {loc.name}
                     {loc.is_primary && (
                       <Star className="ml-1 inline h-3 w-3" fill="currentColor" />
                     )}
                   </div>
                   {formatAddress(loc) && (
-                    <div className="mt-1 text-xs text-muted-foreground">
+                    <div className="mt-1 text-xs opacity-70">
                       {formatAddress(loc)}
                     </div>
                   )}
@@ -277,11 +307,11 @@ function BookPage() {
       {/* Treatments */}
       {locationId ? (
         <section className="mx-auto mt-10 max-w-3xl px-4">
-          <h2 className="mb-4 text-xl font-bold" style={{ color: brand }}>
+          <h2 className="mb-4 text-xl font-bold" style={headingStyle}>
             Book a treatment
           </h2>
           {visibleTreatments.length === 0 ? (
-            <p className="text-muted-foreground">No treatments available here yet.</p>
+            <p className="opacity-70">No treatments available here yet.</p>
           ) : (
             <div className="space-y-2">
               {roots.length > 0 && (
@@ -296,7 +326,7 @@ function BookPage() {
               {uncategorised.length > 0 && (
                 <div className="mt-4 space-y-2">
                   {roots.length > 0 && (
-                    <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                    <h3 className="text-sm font-semibold uppercase tracking-wide opacity-60">
                       Other treatments
                     </h3>
                   )}
@@ -318,8 +348,9 @@ function BookPage() {
       ) : (
         locations.length > 1 && (
           <section className="mx-auto mt-8 max-w-3xl px-4">
-            <p className="rounded-2xl border border-dashed bg-muted/30 p-6 text-center text-sm text-muted-foreground">
-              Pick a location above to see available treatments.
+            <p className="rounded-2xl border border-dashed p-6 text-center text-sm opacity-70"
+               style={{ borderColor: `${brand}33` }}>
+              Pick a team member above to see available treatments.
             </p>
           </section>
         )
@@ -327,7 +358,7 @@ function BookPage() {
 
       {packages.length > 0 && locationId && (
         <section className="mx-auto mt-10 max-w-3xl px-4">
-          <h2 className="mb-3 text-xl font-bold" style={{ color: brand }}>
+          <h2 className="mb-3 text-xl font-bold" style={headingStyle}>
             Packages
           </h2>
           <div className="grid gap-3 sm:grid-cols-2">
@@ -335,7 +366,7 @@ function BookPage() {
               <Card key={p.id} className="rounded-2xl">
                 <CardContent className="p-4">
                   <div className="font-semibold" style={{ color: brand }}>{p.name}</div>
-                  <p className="mt-1 text-sm text-muted-foreground">{p.session_count} sessions</p>
+                  <p className="mt-1 text-sm opacity-70">{p.session_count} sessions</p>
                   <p className="mt-2 font-bold" style={{ color: brand }}>
                     £{Number(p.price ?? 0).toFixed(2)}
                   </p>
@@ -348,6 +379,24 @@ function BookPage() {
     </main>
   );
 }
+
+function ActionPlaceholder({
+  label,
+  brand,
+  children,
+}: {
+  label: string;
+  brand: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-col items-center gap-1.5 rounded-xl p-2 text-xs font-medium opacity-50" style={{ color: brand }}>
+      {children}
+      <span>{label}</span>
+    </div>
+  );
+}
+
 
 function ActionIcon({
   href,
