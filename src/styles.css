@@ -152,15 +152,15 @@
   .font-serif,
   .serif {
     font-family: var(--font-serif);
-    font-weight: 600;
-    letter-spacing: -0.02em;
+    font-weight: 400;
+    letter-spacing: -0.015em;
   }
 }
 
 @utility font-serif {
   font-family: var(--font-serif);
-  font-weight: 600;
-  letter-spacing: -0.02em;
+  font-weight: 400;
+  letter-spacing: -0.015em;
 }
 
 @utility shadow-luxe {
