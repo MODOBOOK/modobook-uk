@@ -5,8 +5,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { ChevronLeft, ChevronRight, Save } from "lucide-react";
-import { listMyAppointments, updateAppointmentNotes } from "@/lib/availability.functions";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { ChevronLeft, ChevronRight, Save, AlertTriangle, X } from "lucide-react";
+import { listMyAppointments, updateAppointmentNotes, cancelAppointment, updateAppointmentAftercareAndAllergy } from "@/lib/availability.functions";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/dashboard/bookings")({
