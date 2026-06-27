@@ -242,6 +242,8 @@ function BookTreatmentPage() {
           },
           notes: form.notes || undefined,
           basePrice: price,
+          patientUserId: patientUserId,
+
         },
       });
       setConfirmed({ id: res.id, consents: res.consents ?? [] });
