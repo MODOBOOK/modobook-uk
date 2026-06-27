@@ -178,7 +178,7 @@ function PatientsPage() {
     }
     setSaving(true);
     try {
-      await upsert({ data: form });
+      await upsert({ data: { ...form, has_allergies: !!form.has_allergies, allergies: form.allergies || null } });
       toast.success(editing ? "Client updated" : "Client added");
       setOpen(false);
       refresh();
