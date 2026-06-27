@@ -65,7 +65,7 @@ function countTreatments(n: CatNode): number {
 type Theme = Database["public"]["Tables"]["clinic_theme"]["Row"];
 
 function BookPage() {
-  const { profile, treatments, packages, locations, categories, pricing, theme } =
+  const { profile, treatments, packages, locations, categories, pricing, theme, reviews } =
     Route.useLoaderData() as {
       profile: {
         id: string;
@@ -86,7 +86,9 @@ function BookPage() {
       categories: Category[];
       pricing: Pricing[];
       theme: Theme | null;
+      reviews: { id: string; rating: number }[];
     };
+
   const { slug } = useParams({ from: "/m/$slug/" });
   const brand = theme?.primary_color || profile.brand_color || "#1f2a44";
   const accent = theme?.accent_color || brand;
