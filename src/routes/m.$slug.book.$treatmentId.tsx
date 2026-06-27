@@ -9,11 +9,23 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Calendar } from "@/components/ui/calendar";
 import { Clock, MapPin, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 type Rule = Database["public"]["Tables"]["availability_rules"]["Row"];
 type Loc = Database["public"]["Tables"]["locations"]["Row"];
+
+function toIsoDate(d: Date) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+function fromIsoDate(iso: string) {
+  const [y, m, d] = iso.split("-").map(Number);
+  return new Date(y, m - 1, d);
+}
 
 export const Route = createFileRoute("/m/$slug/book/$treatmentId")({
   loader: ({ params }) => getBookingContext({ data: { slug: params.slug, treatmentId: params.treatmentId } }),
@@ -194,33 +206,34 @@ function BookTreatmentPage() {
         <CardHeader>
           <CardTitle className="text-base">Pick a date & time</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <Label htmlFor="date">Date</Label>
-            <Input
-              id="date"
-              type="date"
-              min={today}
-              value={date}
-              onChange={(e) => {
-                setDate(e.target.value);
+        <CardContent className="space-y-5">
+          <div className="flex justify-center">
+            <Calendar
+              mode="single"
+              selected={fromIsoDate(date)}
+              onSelect={(d) => {
+                if (!d) return;
+                setDate(toIsoDate(d));
                 setSlot(null);
               }}
+              disabled={(d) => d < new Date(new Date().setHours(0, 0, 0, 0))}
+              weekStartsOn={1}
+              className="pointer-events-auto rounded-md border p-3"
             />
           </div>
 
           <div>
-            <Label>Available times</Label>
+            <Label className="mb-2 block text-sm font-semibold">Available times</Label>
             {dayQuery.isLoading ? (
               <p className="mt-2 text-sm text-muted-foreground">Loading…</p>
             ) : dayQuery.data?.isBlocked ? (
               <p className="mt-2 text-sm text-muted-foreground">This date is unavailable.</p>
             ) : slots.length === 0 ? (
               <p className="mt-2 text-sm text-muted-foreground">
-                No slots available. The practitioner hasn't set hours for this day, or all times are booked.
+                No slots available. Try another date.
               </p>
             ) : (
-              <div className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-4">
+              <div className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-5">
                 {slots.map((s) => (
                   <Button
                     key={s}
