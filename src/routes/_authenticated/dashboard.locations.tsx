@@ -293,6 +293,16 @@ function LocationsPage() {
                 />
               </div>
             </div>
+            {profileId && (
+              <ImageUploader
+                label="Location photo (shown to patients)"
+                value={draft.image_url ?? null}
+                onChange={(url) => setDraft((d) => ({ ...d, image_url: url }))}
+                profileId={profileId}
+                folder={`locations`}
+                previewClass="mt-2 h-24 w-24 object-cover rounded-full"
+              />
+            )}
             <div className="space-y-1.5">
               <Label htmlFor="notes">Notes</Label>
               <Textarea
