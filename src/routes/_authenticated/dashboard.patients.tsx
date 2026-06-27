@@ -242,7 +242,22 @@ function PatientsPage() {
                 {group.map((c) => (
                   <button
                     key={c.id}
-                    onClick={() => c.id.startsWith("appt:") ? setDrawer(c) : navigate({ to: "/dashboard/patients/$id", params: { id: c.id } })}
+                    onClick={async () => {
+                      if (!c.id.startsWith("appt:")) {
+                        navigate({ to: "/dashboard/patients/$id", params: { id: c.id } });
+                        return;
+                      }
+                      try {
+                        const row: any = await upsert({ data: {
+                          full_name: c.full_name,
+                          email: c.email || null,
+                          phone: c.phone || null,
+                        }});
+                        navigate({ to: "/dashboard/patients/$id", params: { id: row.id } });
+                      } catch (e) {
+                        toast.error(e instanceof Error ? e.message : "Could not open profile");
+                      }
+                    }}
                     className="flex w-full items-center gap-3 py-3 text-left hover:bg-muted/40"
                   >
                     <div className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-full bg-primary/10 text-sm font-bold text-primary">
