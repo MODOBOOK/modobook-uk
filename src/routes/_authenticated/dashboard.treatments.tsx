@@ -128,18 +128,30 @@ function TreatmentsPage() {
 
   async function handleSave(form: TreatmentForm) {
     try {
-      const { consent_ids, ...rest } = form;
+      const { consent_ids, addon_ids, ...rest } = form;
       let id: string;
       if (editing) {
         await update({ data: { id: editing.id, ...rest } });
         id = editing.id;
         toast.success("Treatment updated");
       } else {
-        const created = await create({ data: rest });
+        // create only accepts the legacy fields; send those, then patch the rest
+        const created = await create({
+          data: {
+            name: rest.name,
+            duration: rest.duration,
+            price: rest.price,
+            description: rest.description,
+            category_id: rest.category_id,
+            active: rest.active,
+          },
+        });
         id = (created as { id: string }).id;
+        await update({ data: { id, ...rest } });
         toast.success("Treatment created");
       }
       await setConsents({ data: { treatmentId: id, consentTemplateIds: consent_ids } });
+      await setAddons({ data: { treatmentId: id, addonIds: addon_ids } });
       setOpen(false);
       setEditing(null);
       load();
@@ -147,6 +159,7 @@ function TreatmentsPage() {
       toast.error(e instanceof Error ? e.message : "Failed to save");
     }
   }
+
 
   async function handleDelete(id: string) {
     if (!confirm("Delete this treatment?")) return;
