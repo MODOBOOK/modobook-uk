@@ -501,12 +501,19 @@ function ServiceRow({
       </div>
       <GripVertical className="h-4 w-4 shrink-0 text-[hsl(var(--accent))]/70" />
 
+      <span
+        className="h-3.5 w-3.5 shrink-0 rounded-full border"
+        style={{ backgroundColor: treat.color || "transparent" }}
+        aria-label="Calendar colour"
+      />
+
       <div className="flex-1 min-w-0">
         <p className="truncate text-sm font-semibold text-[hsl(var(--primary))]">{treat.name}</p>
         <p className="text-xs text-muted-foreground">
           £{treat.price} · {treat.duration} min
         </p>
       </div>
+
       <Link
         to="/dashboard/treatments"
         className="rounded-md p-1.5 text-[hsl(var(--accent))] hover:bg-muted"
