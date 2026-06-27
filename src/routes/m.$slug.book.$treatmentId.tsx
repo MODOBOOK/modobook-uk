@@ -63,7 +63,7 @@ function BookTreatmentPage() {
   const dayRules = useMemo(
     () =>
       ctx.rules.filter(
-        (r) =>
+        (r: Rule) =>
           r.day_of_week === dow &&
           (!locationId || !r.location_id || r.location_id === locationId),
       ),
@@ -175,7 +175,7 @@ function BookTreatmentPage() {
             <CardTitle className="text-base">Location</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-wrap gap-2">
-            {ctx.locations.map((l) => (
+            {ctx.locations.map((l: Loc) => (
               <Button
                 key={l.id}
                 variant={locationId === l.id ? "default" : "outline"}
