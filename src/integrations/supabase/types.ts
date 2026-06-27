@@ -641,6 +641,132 @@ export type Database = {
           },
         ]
       }
+      concern_areas: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          profile_id: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          profile_id: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          profile_id?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "concern_areas_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      concern_treatments: {
+        Row: {
+          concern_id: string
+          profile_id: string
+          sort_order: number
+          treatment_id: string
+        }
+        Insert: {
+          concern_id: string
+          profile_id: string
+          sort_order?: number
+          treatment_id: string
+        }
+        Update: {
+          concern_id?: string
+          profile_id?: string
+          sort_order?: number
+          treatment_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "concern_treatments_concern_id_fkey"
+            columns: ["concern_id"]
+            isOneToOne: false
+            referencedRelation: "concerns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "concern_treatments_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "concern_treatments_treatment_id_fkey"
+            columns: ["treatment_id"]
+            isOneToOne: false
+            referencedRelation: "treatments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      concerns: {
+        Row: {
+          area_id: string
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          profile_id: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          area_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          profile_id: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          area_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          profile_id?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "concerns_area_id_fkey"
+            columns: ["area_id"]
+            isOneToOne: false
+            referencedRelation: "concern_areas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "concerns_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       consent_templates: {
         Row: {
           body_markdown: string
@@ -1246,6 +1372,12 @@ export type Database = {
           bio: string | null
           brand_color: string | null
           cancellation_rules: Json | null
+          chooser_consultation_treatment_id: string | null
+          chooser_enabled: boolean
+          chooser_intro_text: string | null
+          chooser_show_consultation: boolean
+          chooser_show_know: boolean
+          chooser_show_unsure: boolean
           clinic_name: string | null
           created_at: string
           deposit_amount_cents: number | null
@@ -1276,6 +1408,12 @@ export type Database = {
           bio?: string | null
           brand_color?: string | null
           cancellation_rules?: Json | null
+          chooser_consultation_treatment_id?: string | null
+          chooser_enabled?: boolean
+          chooser_intro_text?: string | null
+          chooser_show_consultation?: boolean
+          chooser_show_know?: boolean
+          chooser_show_unsure?: boolean
           clinic_name?: string | null
           created_at?: string
           deposit_amount_cents?: number | null
@@ -1306,6 +1444,12 @@ export type Database = {
           bio?: string | null
           brand_color?: string | null
           cancellation_rules?: Json | null
+          chooser_consultation_treatment_id?: string | null
+          chooser_enabled?: boolean
+          chooser_intro_text?: string | null
+          chooser_show_consultation?: boolean
+          chooser_show_know?: boolean
+          chooser_show_unsure?: boolean
           clinic_name?: string | null
           created_at?: string
           deposit_amount_cents?: number | null
@@ -1328,7 +1472,15 @@ export type Database = {
           user_id?: string
           welcome_intro_html?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_chooser_consultation_treatment_id_fkey"
+            columns: ["chooser_consultation_treatment_id"]
+            isOneToOne: false
+            referencedRelation: "treatments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       treatment_addons: {
         Row: {
@@ -1694,6 +1846,12 @@ export type Database = {
           bio: string
           brand_color: string
           cancellation_rules: Json
+          chooser_consultation_treatment_id: string
+          chooser_enabled: boolean
+          chooser_intro_text: string
+          chooser_show_consultation: boolean
+          chooser_show_know: boolean
+          chooser_show_unsure: boolean
           clinic_name: string
           created_at: string
           deposit_amount_cents: number
