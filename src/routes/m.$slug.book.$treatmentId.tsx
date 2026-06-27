@@ -2,7 +2,7 @@ import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { getBookingContext, getDayAvailability, requestBooking } from "@/lib/public-booking.functions";
+import { getBookingContext, getDayAvailability, getMonthAvailability, requestBooking } from "@/lib/public-booking.functions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -58,13 +58,38 @@ function BookTreatmentPage() {
   );
   const today = new Date().toISOString().slice(0, 10);
   const [date, setDate] = useState<string>(today);
+  const [month, setMonth] = useState<Date>(new Date());
   const [slot, setSlot] = useState<string | null>(null);
   const [confirmed, setConfirmed] = useState<{ id: string } | null>(null);
   const [form, setForm] = useState({ name: "", email: "", phone: "", notes: "" });
   const [submitting, setSubmitting] = useState(false);
 
   const dayFn = useServerFn(getDayAvailability);
+  const monthFn = useServerFn(getMonthAvailability);
   const reqFn = useServerFn(requestBooking);
+
+  const monthQuery = useQuery({
+    queryKey: ["monthAvail", ctx.profileId, month.getFullYear(), month.getMonth() + 1, locationId],
+    queryFn: () =>
+      monthFn({
+        data: {
+          profileId: ctx.profileId,
+          year: month.getFullYear(),
+          month: month.getMonth() + 1,
+          locationId,
+        },
+      }),
+  });
+
+  const isDateUnavailable = (d: Date) => {
+    const iso = toIsoDate(d);
+    const data = monthQuery.data;
+    if (!data) return false;
+    if (data.blockedDates.includes(iso)) return true;
+    if (data.overrideDates.includes(iso)) return false;
+    return !data.activeDays.includes(d.getDay());
+  };
+
 
   const dow = useMemo(() => {
     // Convert YYYY-MM-DD to weekday (0=Sun..6=Sat) without timezone drift
@@ -219,15 +244,22 @@ function BookTreatmentPage() {
             <Calendar
               mode="single"
               selected={fromIsoDate(date)}
+              month={month}
+              onMonthChange={setMonth}
               onSelect={(d) => {
                 if (!d) return;
                 setDate(toIsoDate(d));
                 setSlot(null);
               }}
-              disabled={(d) => d < new Date(new Date().setHours(0, 0, 0, 0))}
+              disabled={(d) => {
+                const startOfToday = new Date(new Date().setHours(0, 0, 0, 0));
+                if (d < startOfToday) return true;
+                return isDateUnavailable(d);
+              }}
               weekStartsOn={1}
               className="pointer-events-auto rounded-md border p-3"
             />
+
           </div>
 
           <div>
