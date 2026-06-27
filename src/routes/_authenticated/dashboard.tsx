@@ -6,7 +6,6 @@ import {
   LayoutDashboard,
   Store,
   Scissors,
-  
   CalendarDays,
   Users,
   CreditCard,
@@ -17,6 +16,8 @@ import {
   LogOut,
   Package,
   Menu,
+  CalendarPlus,
+  Shield,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -37,14 +38,15 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 const navItems = [
   { label: "Dashboard", to: "/dashboard", icon: LayoutDashboard },
   { label: "Clinic page", to: "/dashboard/clinic", icon: Store },
+  { label: "Welcome & policies", to: "/dashboard/policies", icon: Shield },
   { label: "Branding", to: "/dashboard/branding", icon: Palette },
   { label: "Services", to: "/dashboard/services", icon: Scissors },
   { label: "Packages", to: "/dashboard/packages", icon: Package },
-
   { label: "Locations", to: "/dashboard/locations", icon: MapPin },
   { label: "Medical forms", to: "/dashboard/medical-forms", icon: FileText },
   { label: "Consent forms", to: "/dashboard/consent-forms", icon: FileSignature },
   { label: "Availability", to: "/dashboard/availability", icon: CalendarDays },
+  { label: "New appointment", to: "/dashboard/new-appointment", icon: CalendarPlus },
   { label: "Bookings", to: "/dashboard/bookings", icon: Users },
   { label: "Payments", to: "/dashboard/payments", icon: CreditCard },
 ];
