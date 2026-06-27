@@ -176,19 +176,22 @@ function BookingFlowPage() {
 
           {showConsult && (
             <div className="space-y-1.5">
-              <Label>Consultation treatment</Label>
-              <select
-                className="h-10 w-full rounded-md border bg-background px-3 text-sm"
-                value={consultId}
-                onChange={(e) => setConsultId(e.target.value)}
-              >
-                <option value="">— Choose a treatment —</option>
-                {treatments.map((t) => (
-                  <option key={t.id} value={t.id}>{t.name}</option>
+              <Label>Consultation treatments</Label>
+              <div className="max-h-56 overflow-y-auto rounded-md border bg-background p-2 space-y-1">
+                {treatments.length === 0 ? (
+                  <p className="px-2 py-1 text-xs italic text-muted-foreground">Add treatments first.</p>
+                ) : treatments.map((t) => (
+                  <label key={t.id} className="flex items-center gap-2 rounded-md px-2 py-1 text-sm hover:bg-muted">
+                    <Checkbox
+                      checked={consultIds.includes(t.id)}
+                      onCheckedChange={() => toggleId(consultIds, setConsultIds, t.id)}
+                    />
+                    <span>{t.name}</span>
+                  </label>
                 ))}
-              </select>
+              </div>
               <p className="text-xs text-muted-foreground">
-                When patients tap "I need a consultation" they'll be taken straight to this treatment's booking page.
+                When patients tap "Book a consultation now" they'll be able to pick from these treatments.
               </p>
             </div>
           )}
@@ -202,6 +205,41 @@ function BookingFlowPage() {
               rows={2}
             />
           </div>
+
+          <div className="rounded-lg border bg-muted/30 p-3 space-y-3">
+            <Row label="Add a highlight section" hint="Show an extra featured group below the picker.">
+              <Switch checked={extraOn} onCheckedChange={setExtraOn} />
+            </Row>
+            {extraOn && (
+              <>
+                <div className="space-y-1.5">
+                  <Label>Section title</Label>
+                  <Input value={extraTitle} onChange={(e) => setExtraTitle(e.target.value)} placeholder="e.g. This month's featured" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Section description</Label>
+                  <Textarea value={extraBody} onChange={(e) => setExtraBody(e.target.value)} rows={2} placeholder="Short blurb shown under the title." />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Treatments to highlight</Label>
+                  <div className="max-h-56 overflow-y-auto rounded-md border bg-background p-2 space-y-1">
+                    {treatments.length === 0 ? (
+                      <p className="px-2 py-1 text-xs italic text-muted-foreground">Add treatments first.</p>
+                    ) : treatments.map((t) => (
+                      <label key={t.id} className="flex items-center gap-2 rounded-md px-2 py-1 text-sm hover:bg-muted">
+                        <Checkbox
+                          checked={extraIds.includes(t.id)}
+                          onCheckedChange={() => toggleId(extraIds, setExtraIds, t.id)}
+                        />
+                        <span>{t.name}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+
 
           <Button onClick={saveSettings} disabled={savingSettings}>
             {savingSettings ? "Saving…" : "Save settings"}
