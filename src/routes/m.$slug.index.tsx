@@ -615,11 +615,14 @@ function BookPage() {
 
             return (
               <Tabs defaultValue="treatments" className="w-full">
-                <TabsList className="grid w-full grid-cols-2" style={{ backgroundColor: `${brand}10` }}>
-                  <TabsTrigger value="treatments">Book a treatment</TabsTrigger>
+                <TabsList className="grid w-full grid-cols-3" style={{ backgroundColor: `${brand}10` }}>
+                  <TabsTrigger value="treatments">Treatments</TabsTrigger>
                   <TabsTrigger value="packages" disabled={packages.length === 0}>
                     <PackageIcon className="mr-1.5 h-4 w-4" />
                     Packages {packages.length > 0 ? `(${packages.length})` : ""}
+                  </TabsTrigger>
+                  <TabsTrigger value="concerns" disabled={concerns.length === 0}>
+                    By concern {concerns.length > 0 ? `(${concerns.length})` : ""}
                   </TabsTrigger>
                 </TabsList>
 
