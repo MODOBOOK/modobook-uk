@@ -237,10 +237,10 @@ function BookPage() {
 
 
       {/* Overlapping title card */}
-      <section className="mx-auto -mt-10 max-w-3xl px-4">
+      <section className="mx-auto -mt-16 max-w-3xl px-4 sm:-mt-24 relative z-10">
         <div
-          className="rounded-t-3xl px-5 pb-5 pt-6 sm:px-8 sm:pt-8"
-          style={{ backgroundColor: bgColor }}
+          className="rounded-3xl border px-5 pb-5 pt-6 shadow-2xl sm:px-8 sm:pt-8"
+          style={{ backgroundColor: bgColor, borderColor: `${brand}1a` }}
         >
           <h1
             className="text-3xl font-extrabold leading-tight sm:text-4xl"
