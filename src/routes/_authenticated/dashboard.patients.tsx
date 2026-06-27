@@ -101,9 +101,12 @@ function PatientsPage() {
                   </AccordionTrigger>
                   <AccordionContent>
                     <div className="space-y-3 pb-3">
-                      <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
-                        {p.email && <span className="inline-flex items-center gap-1"><Mail className="h-3 w-3" />{p.email}</span>}
-                        {p.phone && <span className="inline-flex items-center gap-1"><Phone className="h-3 w-3" />{p.phone}</span>}
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
+                          {p.email && <span className="inline-flex items-center gap-1"><Mail className="h-3 w-3" />{p.email}</span>}
+                          {p.phone && <span className="inline-flex items-center gap-1"><Phone className="h-3 w-3" />{p.phone}</span>}
+                        </div>
+                        <PatientConsultLink name={p.name} email={p.email} phone={p.phone} />
                       </div>
                       <div className="space-y-2">
                         {p.bookings.map((b) => (
@@ -129,6 +132,7 @@ function PatientsPage() {
                           </div>
                         ))}
                       </div>
+                      <PatientConsultations email={p.email} name={p.name} />
                     </div>
                   </AccordionContent>
                 </AccordionItem>
