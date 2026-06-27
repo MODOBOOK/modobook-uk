@@ -188,18 +188,19 @@ export const deleteModelSlot = createServerFn({ method: "POST" })
 
 export const getPublicModelSlots = createServerFn({ method: "GET" })
   .inputValidator((i: { slug: string }) => i)
-  .handler(async ({ data }) => {
+  .handler(async ({ data: input }) => {
     const sb = publicClient();
     const { data: profile, error: pErr } = await (sb as any)
-      .rpc("get_public_profile_by_slug", { p_slug: data.slug.toLowerCase() }).single();
+      .rpc("get_public_profile_by_slug", { p_slug: input.slug.toLowerCase() }).single();
     if (pErr) throw pErr;
     const today = new Date().toISOString().slice(0, 10);
-    const { data, error } = await (sb as any)
+    const { data: rows, error } = await (sb as any)
       .from("model_slots").select("*")
       .eq("profile_id", profile.id)
       .gte("slot_date", today)
       .order("slot_date", { ascending: true })
       .order("start_time", { ascending: true });
     if (error) throw error;
-    return data ?? [];
+    return rows ?? [];
   });
+
