@@ -124,6 +124,24 @@ function MenuPage() {
         </section>
       ))}
 
+      {admin && (
+        <section className="space-y-2">
+          <h2 className="px-1 text-xs font-bold uppercase tracking-wider text-muted-foreground">Platform</h2>
+          <Link to="/admin" className="block rounded-2xl border bg-card p-3 shadow-sm transition active:scale-[0.99]">
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-slate-900 text-white">
+                <ShieldCheck className="h-5 w-5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-semibold leading-tight">Platform admin</p>
+                <p className="truncate text-xs text-muted-foreground">Practitioners, admins & invites</p>
+              </div>
+              <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
+            </div>
+          </Link>
+        </section>
+      )}
+
       <Button
         variant="outline"
         className="w-full"
