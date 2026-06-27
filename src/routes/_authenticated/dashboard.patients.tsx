@@ -1,204 +1,466 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
+import { listClients, upsertClient, deleteClient } from "@/lib/clients.functions";
 import { listMyAppointments } from "@/lib/availability.functions";
-import { listConsultationsForPatient, createConsultation } from "@/lib/consultations.functions";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
+import { createConsultation, listConsultationsForPatient } from "@/lib/consultations.functions";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import { Loader2, Mail, Phone, Calendar, ClipboardList, Plus } from "lucide-react";
+  Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import {
+  Sheet, SheetContent, SheetHeader, SheetTitle,
+} from "@/components/ui/sheet";
+import {
+  Plus, Search, Upload, Users, Combine, Loader2, Mail, Phone,
+  Calendar, ClipboardList, Pencil, Trash2, ChevronRight, X,
+} from "lucide-react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/dashboard/patients")({
   ssr: false,
   component: PatientsPage,
 });
 
+type Client = {
+  id: string;
+  full_name: string;
+  email: string | null;
+  phone: string | null;
+  dob: string | null;
+  gender: string | null;
+  address: string | null;
+  group_name: string | null;
+  notes: string | null;
+  avatar_url: string | null;
+};
+
 type Appt = Awaited<ReturnType<typeof listMyAppointments>>[number];
 
+function initials(name: string) {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((s) => s[0]?.toUpperCase() ?? "")
+    .join("") || "?";
+}
+
+const EMPTY_FORM: Omit<Client, "id"> = {
+  full_name: "",
+  email: "",
+  phone: "",
+  dob: "",
+  gender: "",
+  address: "",
+  group_name: "",
+  notes: "",
+  avatar_url: "",
+};
+
 function PatientsPage() {
-  const fetchAppointments = useServerFn(listMyAppointments);
+  const list = useServerFn(listClients);
+  const upsert = useServerFn(upsertClient);
+  const remove = useServerFn(deleteClient);
+  const listAppt = useServerFn(listMyAppointments);
+
+  const [clients, setClients] = useState<Client[]>([]);
   const [appts, setAppts] = useState<Appt[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [editing, setEditing] = useState<Client | null>(null);
+  const [form, setForm] = useState<typeof EMPTY_FORM & { id?: string }>(EMPTY_FORM);
+  const [open, setOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [drawer, setDrawer] = useState<Client | null>(null);
 
-  useEffect(() => {
-    (async () => {
-      const data = await fetchAppointments();
-      setAppts(data as Appt[]);
-      setLoading(false);
-    })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  async function refresh() {
+    const [c, a] = await Promise.all([list(), listAppt()]);
+    setClients(c as Client[]);
+    setAppts(a as Appt[]);
+    setLoading(false);
+  }
 
-  const patients = useMemo(() => {
-    const map = new Map<string, { key: string; name: string; email: string; phone: string | null; bookings: Appt[]; last: string }>();
+  useEffect(() => { refresh(); /* eslint-disable-next-line */ }, []);
+
+  // Aggregate appointment-based patients that aren't yet in clients list (read-only)
+  const allEntries = useMemo(() => {
+    const fromClients: Client[] = clients;
+    const knownEmails = new Set(clients.map((c) => (c.email ?? "").toLowerCase()).filter(Boolean));
+    const knownNames = new Set(clients.map((c) => c.full_name.toLowerCase()));
+    const synthetic = new Map<string, Client>();
     for (const a of appts) {
-      const key = (a.patient_email || a.patient_name || "unknown").toLowerCase();
-      const entry = map.get(key) ?? {
-        key,
-        name: a.patient_name || "(no name)",
-        email: a.patient_email || "",
-        phone: a.patient_phone,
-        bookings: [],
-        last: a.scheduled_date,
-      };
-      entry.bookings.push(a);
-      if (a.scheduled_date > entry.last) entry.last = a.scheduled_date;
-      if (!entry.phone && a.patient_phone) entry.phone = a.patient_phone;
-      map.set(key, entry);
+      const email = (a.patient_email ?? "").toLowerCase();
+      const nm = (a.patient_name ?? "").toLowerCase();
+      if (email && knownEmails.has(email)) continue;
+      if (!email && nm && knownNames.has(nm)) continue;
+      const key = email || nm || a.id;
+      if (synthetic.has(key)) continue;
+      synthetic.set(key, {
+        id: `appt:${key}`,
+        full_name: a.patient_name || "(no name)",
+        email: a.patient_email ?? null,
+        phone: a.patient_phone ?? null,
+        dob: null, gender: null, address: null, group_name: null, notes: null, avatar_url: null,
+      });
     }
-    const list = Array.from(map.values());
-    list.forEach((p) => p.bookings.sort((a, b) => (a.scheduled_date < b.scheduled_date ? 1 : -1)));
-    list.sort((a, b) => (a.last < b.last ? 1 : -1));
+    const arr = [...fromClients, ...synthetic.values()];
     const q = search.trim().toLowerCase();
     return q
-      ? list.filter((p) => p.name.toLowerCase().includes(q) || p.email.toLowerCase().includes(q) || (p.phone ?? "").toLowerCase().includes(q))
-      : list;
-  }, [appts, search]);
+      ? arr.filter((c) =>
+          c.full_name.toLowerCase().includes(q) ||
+          (c.email ?? "").toLowerCase().includes(q) ||
+          (c.phone ?? "").toLowerCase().includes(q))
+      : arr;
+  }, [clients, appts, search]);
+
+  const grouped = useMemo(() => {
+    const sorted = [...allEntries].sort((a, b) => a.full_name.localeCompare(b.full_name));
+    const m = new Map<string, Client[]>();
+    for (const c of sorted) {
+      const letter = (c.full_name[0] || "#").toUpperCase();
+      const key = /[A-Z]/.test(letter) ? letter : "#";
+      if (!m.has(key)) m.set(key, []);
+      m.get(key)!.push(c);
+    }
+    return Array.from(m.entries());
+  }, [allEntries]);
+
+  function openAdd() {
+    setForm({ ...EMPTY_FORM });
+    setEditing(null);
+    setOpen(true);
+  }
+  function openEdit(c: Client) {
+    if (c.id.startsWith("appt:")) {
+      // copy into form to save as a real client
+      setForm({
+        full_name: c.full_name,
+        email: c.email ?? "",
+        phone: c.phone ?? "",
+        dob: "", gender: "", address: "", group_name: "", notes: "", avatar_url: "",
+      });
+      setEditing(null);
+    } else {
+      setForm({
+        id: c.id,
+        full_name: c.full_name,
+        email: c.email ?? "",
+        phone: c.phone ?? "",
+        dob: c.dob ?? "",
+        gender: c.gender ?? "",
+        address: c.address ?? "",
+        group_name: c.group_name ?? "",
+        notes: c.notes ?? "",
+        avatar_url: c.avatar_url ?? "",
+      });
+      setEditing(c);
+    }
+    setOpen(true);
+  }
+
+  async function save() {
+    if (!form.full_name.trim()) {
+      toast.error("Name is required");
+      return;
+    }
+    setSaving(true);
+    try {
+      await upsert({ data: form });
+      toast.success(editing ? "Client updated" : "Client added");
+      setOpen(false);
+      refresh();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to save");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleDelete(id: string) {
+    if (!confirm("Delete this client?")) return;
+    await remove({ data: { id } });
+    refresh();
+  }
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Patients</h1>
-        <p className="text-sm text-muted-foreground">
-          Everyone who has booked with you, with their booking history.
-        </p>
+    <div className="mx-auto max-w-3xl space-y-4 pb-12">
+      <header className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+        <div className="min-w-0">
+          <h1 className="truncate text-2xl font-bold">Client List</h1>
+          <p className="text-xs text-muted-foreground">Manage your patient contacts</p>
+        </div>
+        <div className="shrink-0 text-xs text-muted-foreground">
+          {allEntries.length} total
+        </div>
+      </header>
+
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <ActionPill icon={Upload} label="Import Clients" onClick={() => toast.info("CSV import coming soon")} />
+        <ActionPill icon={Plus} label="Add Client" onClick={openAdd} primary />
+        <ActionPill icon={Users} label="Create Group" onClick={() => toast.info("Groups coming soon")} />
+        <ActionPill icon={Combine} label="Merge Duplicates" onClick={() => toast.info("Merge tool coming soon")} />
       </div>
 
-      <Input
-        placeholder="Search by name, email or phone…"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-      />
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search by name, email or number"
+          className="pl-10"
+        />
+      </div>
 
       {loading ? (
         <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin" /></div>
-      ) : patients.length === 0 ? (
-        <Card><CardContent className="py-10 text-center text-sm text-muted-foreground">No patients yet.</CardContent></Card>
+      ) : grouped.length === 0 ? (
+        <Card><CardContent className="py-10 text-center text-sm text-muted-foreground">
+          No clients yet — add your first one above.
+        </CardContent></Card>
       ) : (
-        <Card>
-          <CardContent className="p-0">
-            <Accordion type="multiple" className="w-full">
-              {patients.map((p) => (
-                <AccordionItem key={p.key} value={p.key} className="px-4">
-                  <AccordionTrigger className="hover:no-underline">
-                    <div className="flex w-full items-center justify-between gap-3 pr-2 text-left">
-                      <div className="min-w-0">
-                        <div className="truncate font-medium">{p.name}</div>
-                        <div className="truncate text-xs text-muted-foreground">
-                          {p.email}{p.phone ? ` · ${p.phone}` : ""}
-                        </div>
-                      </div>
-                      <Badge variant="secondary" className="shrink-0">
-                        {p.bookings.length} booking{p.bookings.length === 1 ? "" : "s"}
-                      </Badge>
+        <div className="space-y-4">
+          {grouped.map(([letter, group]) => (
+            <section key={letter}>
+              <div className="border-b py-2 text-sm font-bold text-primary">{letter}</div>
+              <div className="divide-y">
+                {group.map((c) => (
+                  <button
+                    key={c.id}
+                    onClick={() => setDrawer(c)}
+                    className="flex w-full items-center gap-3 py-3 text-left hover:bg-muted/40"
+                  >
+                    <div className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-full bg-primary/10 text-sm font-bold text-primary">
+                      {c.avatar_url ? (
+                        <img src={c.avatar_url} alt="" className="h-full w-full object-cover" />
+                      ) : (
+                        initials(c.full_name)
+                      )}
                     </div>
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <div className="space-y-3 pb-3">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
-                          {p.email && <span className="inline-flex items-center gap-1"><Mail className="h-3 w-3" />{p.email}</span>}
-                          {p.phone && <span className="inline-flex items-center gap-1"><Phone className="h-3 w-3" />{p.phone}</span>}
-                        </div>
-                        <PatientConsultLink name={p.name} email={p.email} phone={p.phone} />
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate font-semibold">{c.full_name}</div>
+                      <div className="truncate text-xs text-muted-foreground">
+                        {c.phone || c.email || "No contact info"}
                       </div>
-                      <div className="space-y-2">
-                        {p.bookings.map((b) => (
-                          <div key={b.id} className="flex flex-wrap items-center justify-between gap-2 rounded-md border p-3 text-sm">
-                            <div>
-                              <div className="font-medium">
-                                {(b as Appt & { treatments?: { name?: string } | null }).treatments?.name ?? "Treatment"}
-                              </div>
-                              <div className="text-xs text-muted-foreground">
-                                <Calendar className="mr-1 inline h-3 w-3" />
-                                {b.scheduled_date} · {String(b.start_time).slice(0, 5)}
-                                {(b as Appt & { locations?: { name?: string } | null }).locations?.name
-                                  ? ` · ${(b as Appt & { locations?: { name?: string } | null }).locations?.name}`
-                                  : ""}
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Badge variant={b.status === "cancelled" ? "destructive" : "outline"}>{b.status}</Badge>
-                              {b.total_amount != null && (
-                                <span className="text-xs">£{Number(b.total_amount).toFixed(2)}</span>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                      <PatientConsultations email={p.email} name={p.name} />
+                      {c.email && c.phone && (
+                        <div className="truncate text-xs text-muted-foreground">{c.email}</div>
+                      )}
                     </div>
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
-          </CardContent>
-        </Card>
+                    <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
+                  </button>
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
       )}
+
+      {/* Add/Edit dialog */}
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+          <DialogHeader><DialogTitle>{editing ? "Edit client" : "Add client"}</DialogTitle></DialogHeader>
+          <div className="grid gap-3">
+            <Field label="Full name" required>
+              <Input value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} />
+            </Field>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Field label="Email"><Input type="email" value={form.email ?? ""} onChange={(e) => setForm({ ...form, email: e.target.value })} /></Field>
+              <Field label="Phone"><Input value={form.phone ?? ""} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></Field>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Field label="Date of birth"><Input type="date" value={form.dob ?? ""} onChange={(e) => setForm({ ...form, dob: e.target.value })} /></Field>
+              <Field label="Gender">
+                <Select value={form.gender ?? ""} onValueChange={(v) => setForm({ ...form, gender: v })}>
+                  <SelectTrigger><SelectValue placeholder="Select…" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="female">Female</SelectItem>
+                    <SelectItem value="male">Male</SelectItem>
+                    <SelectItem value="nonbinary">Non-binary</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                    <SelectItem value="undisclosed">Prefer not to say</SelectItem>
+                  </SelectContent>
+                </Select>
+              </Field>
+            </div>
+            <Field label="Address">
+              <Textarea rows={2} value={form.address ?? ""} onChange={(e) => setForm({ ...form, address: e.target.value })} />
+            </Field>
+            <Field label="Group">
+              <Input placeholder="e.g. VIP, Family" value={form.group_name ?? ""} onChange={(e) => setForm({ ...form, group_name: e.target.value })} />
+            </Field>
+            <Field label="Notes">
+              <Textarea rows={3} value={form.notes ?? ""} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
+            </Field>
+          </div>
+          <DialogFooter>
+            {editing && (
+              <Button variant="ghost" className="text-destructive" onClick={() => { handleDelete(editing.id); setOpen(false); }}>
+                <Trash2 className="mr-2 h-4 w-4" /> Delete
+              </Button>
+            )}
+            <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+            <Button onClick={save} disabled={saving}>{saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Detail drawer */}
+      <Sheet open={!!drawer} onOpenChange={(v) => !v && setDrawer(null)}>
+        <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto rounded-t-2xl sm:max-w-xl sm:rounded-2xl">
+          {drawer && (
+            <PatientDetail
+              client={drawer}
+              appts={appts.filter((a) =>
+                (drawer.email && a.patient_email?.toLowerCase() === drawer.email.toLowerCase()) ||
+                (!drawer.email && a.patient_name?.toLowerCase() === drawer.full_name.toLowerCase())
+              )}
+              onEdit={() => { setDrawer(null); openEdit(drawer); }}
+            />
+          )}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
 
-function PatientConsultLink({ name, email, phone }: { name: string; email: string; phone: string | null }) {
-  const create = useServerFn(createConsultation);
-  const [busy, setBusy] = useState(false);
-  async function start() {
-    setBusy(true);
-    try {
-      const res: any = await create({ data: { patient_name: name, patient_email: email || undefined, patient_phone: phone || undefined } });
-      window.location.href = `/dashboard/consultations/${res.id}`;
-    } finally { setBusy(false); }
-  }
+function ActionPill({ icon: Icon, label, onClick, primary }: {
+  icon: React.ComponentType<{ className?: string }>; label: string; onClick: () => void; primary?: boolean;
+}) {
   return (
-    <Button size="sm" variant="outline" onClick={start} disabled={busy}>
-      {busy ? <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> : <Plus className="mr-1 h-3.5 w-3.5" />}
-      New consultation
-    </Button>
+    <button
+      onClick={onClick}
+      className={`flex flex-col items-center justify-center gap-1 rounded-2xl border px-3 py-3 text-xs font-semibold transition active:scale-95 ${
+        primary ? "bg-primary text-primary-foreground border-primary" : "bg-card hover:bg-muted"
+      }`}
+    >
+      <Icon className="h-5 w-5" />
+      <span className="text-center leading-tight">{label}</span>
+    </button>
   );
 }
 
-function PatientConsultations({ email, name }: { email: string; name: string }) {
-  const list = useServerFn(listConsultationsForPatient);
-  const [rows, setRows] = useState<any[]>([]);
-  const [loaded, setLoaded] = useState(false);
-  useEffect(() => {
-    (async () => {
-      const data: any = await list({ data: { email: email || undefined, name: email ? undefined : name } });
-      setRows(data ?? []);
-      setLoaded(true);
-    })();
-  }, [email, name]); // eslint-disable-line
-  if (!loaded) return null;
-  if (!rows.length) {
-    return <div className="rounded-md border border-dashed bg-muted/30 p-3 text-xs text-muted-foreground">No consultations on file.</div>;
-  }
+function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
   return (
     <div className="space-y-1.5">
-      <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Consultations</div>
-      {rows.map((r) => (
-        <Link
-          key={r.id}
-          to="/dashboard/consultations/$id"
-          params={{ id: r.id }}
-          className="flex items-center justify-between rounded-md border p-2.5 text-sm hover:bg-muted"
-        >
-          <div className="flex items-center gap-2">
-            <ClipboardList className="h-4 w-4 text-primary" />
-            <span>Consultation · {new Date(r.created_at).toLocaleDateString()}</span>
+      <Label className="text-xs">{label}{required && <span className="text-destructive"> *</span>}</Label>
+      {children}
+    </div>
+  );
+}
+
+function PatientDetail({ client, appts, onEdit }: { client: Client; appts: Appt[]; onEdit: () => void }) {
+  const createConsult = useServerFn(createConsultation);
+  const listConsults = useServerFn(listConsultationsForPatient);
+  const [consults, setConsults] = useState<any[]>([]);
+  const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    (async () => {
+      const data: any = await listConsults({ data: { email: client.email || undefined, name: client.email ? undefined : client.full_name } });
+      setConsults(data ?? []);
+    })();
+    // eslint-disable-next-line
+  }, [client.id]);
+
+  async function startConsultation() {
+    setBusy(true);
+    try {
+      const res: any = await createConsult({ data: {
+        patient_name: client.full_name,
+        patient_email: client.email || undefined,
+        patient_phone: client.phone || undefined,
+      } });
+      window.location.href = `/dashboard/consultations/${res.id}`;
+    } finally { setBusy(false); }
+  }
+
+  return (
+    <div className="space-y-4">
+      <SheetHeader>
+        <div className="flex items-center gap-3">
+          <div className="grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-full bg-primary/10 text-base font-bold text-primary">
+            {client.avatar_url ? <img src={client.avatar_url} alt="" className="h-full w-full object-cover" /> : initials(client.full_name)}
           </div>
-          <Badge variant={r.status === "completed" ? "default" : "secondary"} className="text-[10px]">
-            {r.status === "completed" ? "Completed" : `Step ${r.current_step}/8`}
-          </Badge>
-        </Link>
-      ))}
+          <div className="min-w-0 flex-1">
+            <SheetTitle className="truncate text-left">{client.full_name}</SheetTitle>
+            <div className="space-y-0.5 text-left text-xs text-muted-foreground">
+              {client.email && <div className="flex items-center gap-1"><Mail className="h-3 w-3" />{client.email}</div>}
+              {client.phone && <div className="flex items-center gap-1"><Phone className="h-3 w-3" />{client.phone}</div>}
+            </div>
+          </div>
+          {!client.id.startsWith("appt:") && (
+            <Button size="icon" variant="ghost" onClick={onEdit}><Pencil className="h-4 w-4" /></Button>
+          )}
+        </div>
+      </SheetHeader>
+
+      {(client.dob || client.gender || client.address || client.group_name) && (
+        <div className="grid gap-2 rounded-lg border bg-muted/30 p-3 text-xs">
+          {client.dob && <div><span className="font-semibold">DOB:</span> {client.dob}</div>}
+          {client.gender && <div><span className="font-semibold">Gender:</span> {client.gender}</div>}
+          {client.address && <div><span className="font-semibold">Address:</span> {client.address}</div>}
+          {client.group_name && <div><span className="font-semibold">Group:</span> {client.group_name}</div>}
+        </div>
+      )}
+
+      {client.id.startsWith("appt:") && (
+        <Card className="border-dashed bg-muted/30">
+          <CardContent className="flex items-center justify-between gap-3 p-3 text-xs">
+            <span>This patient came from a booking — save them to your client list to add full details.</span>
+            <Button size="sm" onClick={onEdit}>Save</Button>
+          </CardContent>
+        </Card>
+      )}
+
+      <div className="space-y-2">
+        <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Bookings</div>
+        {appts.length === 0 ? (
+          <div className="rounded-md border border-dashed p-3 text-xs text-muted-foreground">No bookings yet.</div>
+        ) : (
+          appts.slice(0, 10).map((b) => (
+            <div key={b.id} className="flex items-center justify-between rounded-md border p-2.5 text-sm">
+              <div className="min-w-0">
+                <div className="truncate font-medium">{(b as any).treatments?.name ?? "Treatment"}</div>
+                <div className="text-xs text-muted-foreground">
+                  <Calendar className="mr-1 inline h-3 w-3" />{b.scheduled_date} · {String(b.start_time).slice(0, 5)}
+                </div>
+              </div>
+              <Badge variant={b.status === "cancelled" ? "destructive" : "outline"}>{b.status}</Badge>
+            </div>
+          ))
+        )}
+      </div>
+
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Consultations</div>
+          <Button size="sm" variant="outline" onClick={startConsultation} disabled={busy}>
+            {busy ? <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> : <Plus className="mr-1 h-3.5 w-3.5" />} New
+          </Button>
+        </div>
+        {consults.length === 0 ? (
+          <div className="rounded-md border border-dashed p-3 text-xs text-muted-foreground">No consultations on file.</div>
+        ) : consults.map((r) => (
+          <Link
+            key={r.id}
+            to="/dashboard/consultations/$id"
+            params={{ id: r.id }}
+            className="flex items-center justify-between rounded-md border p-2.5 text-sm hover:bg-muted"
+          >
+            <span className="flex items-center gap-2"><ClipboardList className="h-4 w-4 text-primary" />Consultation · {new Date(r.created_at).toLocaleDateString()}</span>
+            <Badge variant={r.status === "completed" ? "default" : "secondary"} className="text-[10px]">
+              {r.status === "completed" ? "Completed" : `Step ${r.current_step}/8`}
+            </Badge>
+          </Link>
+        ))}
+      </div>
     </div>
   );
 }
