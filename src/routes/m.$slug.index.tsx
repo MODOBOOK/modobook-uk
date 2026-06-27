@@ -632,6 +632,16 @@ function BookPage() {
                           brand={brand}
                           isSelected={isSelected}
                           toggleSelect={toggleSelect}
+                          catBg={menuCatBg}
+                          catText={menuCatText}
+                          cardBg={menuCardBg}
+                          cardBorder={menuCardBorder}
+                          nameColor={menuNameColor}
+                          priceColor={menuPriceColor}
+                          size={menuSize}
+                          bold={menuTreatmentBold}
+                          categoryBold={menuCategoryBold}
+                          headingFont={headingFont}
                         />
                       )}
                       {tree.uncategorised.length > 0 && (
@@ -651,6 +661,12 @@ function BookPage() {
                               brand={brand}
                               selected={isSelected(t.id)}
                               onToggle={() => toggleSelect(t.id)}
+                              cardBg={menuCardBg}
+                              cardBorder={menuCardBorder}
+                              nameColor={menuNameColor}
+                              priceColor={menuPriceColor}
+                              size={menuSize}
+                              bold={menuTreatmentBold}
                             />
                           ))}
                         </div>
