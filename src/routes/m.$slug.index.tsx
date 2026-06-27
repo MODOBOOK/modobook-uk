@@ -16,7 +16,7 @@ export const Route = createFileRoute("/m/$slug/")({
 });
 
 function BookPage() {
-  const { profile, treatments, packages } = Route.useLoaderData();
+  const { profile, treatments, packages, locations } = Route.useLoaderData() as ReturnType<typeof Route.useLoaderData> & { locations: L[] };
   const { slug } = useParams({ from: "/m/$slug/" });
   const address = (profile.address as { line1?: string; city?: string; postcode?: string } | null) || {};
   const addressText = [address.line1, address.city, address.postcode].filter(Boolean).join(", ");
