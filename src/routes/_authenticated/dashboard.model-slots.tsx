@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { listMyModelSlots, upsertModelSlot, deleteModelSlot } from "@/lib/discounts.functions";
 import { getMyTreatments } from "@/lib/treatments.functions";
-import { getMyLocations } from "@/lib/locations.functions";
+import { listMyLocations } from "@/lib/locations.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -32,7 +32,7 @@ type Loc = { id: string; name: string };
 function ModelSlotsPage() {
   const list = useServerFn(listMyModelSlots);
   const lTreats = useServerFn(getMyTreatments);
-  const lLocs = useServerFn(getMyLocations);
+  const lLocs = useServerFn(listMyLocations);
   const del = useServerFn(deleteModelSlot);
   const [slots, setSlots] = useState<Slot[]>([]);
   const [treats, setTreats] = useState<Treat[]>([]);

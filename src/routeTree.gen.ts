@@ -34,6 +34,7 @@ import { Route as AuthenticatedDashboardPaymentsRouteImport } from './routes/_au
 import { Route as AuthenticatedDashboardPatientsRouteImport } from './routes/_authenticated/dashboard.patients'
 import { Route as AuthenticatedDashboardPackagesRouteImport } from './routes/_authenticated/dashboard.packages'
 import { Route as AuthenticatedDashboardNewAppointmentRouteImport } from './routes/_authenticated/dashboard.new-appointment'
+import { Route as AuthenticatedDashboardModelSlotsRouteImport } from './routes/_authenticated/dashboard.model-slots'
 import { Route as AuthenticatedDashboardMenuRouteImport } from './routes/_authenticated/dashboard.menu'
 import { Route as AuthenticatedDashboardMedicalFormsRouteImport } from './routes/_authenticated/dashboard.medical-forms'
 import { Route as AuthenticatedDashboardLocationsRouteImport } from './routes/_authenticated/dashboard.locations'
@@ -184,6 +185,12 @@ const AuthenticatedDashboardNewAppointmentRoute =
     path: '/new-appointment',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
+const AuthenticatedDashboardModelSlotsRoute =
+  AuthenticatedDashboardModelSlotsRouteImport.update({
+    id: '/model-slots',
+    path: '/model-slots',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
 const AuthenticatedDashboardMenuRoute =
   AuthenticatedDashboardMenuRouteImport.update({
     id: '/menu',
@@ -301,6 +308,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/locations': typeof AuthenticatedDashboardLocationsRoute
   '/dashboard/medical-forms': typeof AuthenticatedDashboardMedicalFormsRoute
   '/dashboard/menu': typeof AuthenticatedDashboardMenuRoute
+  '/dashboard/model-slots': typeof AuthenticatedDashboardModelSlotsRoute
   '/dashboard/new-appointment': typeof AuthenticatedDashboardNewAppointmentRoute
   '/dashboard/packages': typeof AuthenticatedDashboardPackagesRoute
   '/dashboard/patients': typeof AuthenticatedDashboardPatientsRoute
@@ -341,6 +349,7 @@ export interface FileRoutesByTo {
   '/dashboard/locations': typeof AuthenticatedDashboardLocationsRoute
   '/dashboard/medical-forms': typeof AuthenticatedDashboardMedicalFormsRoute
   '/dashboard/menu': typeof AuthenticatedDashboardMenuRoute
+  '/dashboard/model-slots': typeof AuthenticatedDashboardModelSlotsRoute
   '/dashboard/new-appointment': typeof AuthenticatedDashboardNewAppointmentRoute
   '/dashboard/packages': typeof AuthenticatedDashboardPackagesRoute
   '/dashboard/patients': typeof AuthenticatedDashboardPatientsRoute
@@ -385,6 +394,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/locations': typeof AuthenticatedDashboardLocationsRoute
   '/_authenticated/dashboard/medical-forms': typeof AuthenticatedDashboardMedicalFormsRoute
   '/_authenticated/dashboard/menu': typeof AuthenticatedDashboardMenuRoute
+  '/_authenticated/dashboard/model-slots': typeof AuthenticatedDashboardModelSlotsRoute
   '/_authenticated/dashboard/new-appointment': typeof AuthenticatedDashboardNewAppointmentRoute
   '/_authenticated/dashboard/packages': typeof AuthenticatedDashboardPackagesRoute
   '/_authenticated/dashboard/patients': typeof AuthenticatedDashboardPatientsRoute
@@ -429,6 +439,7 @@ export interface FileRouteTypes {
     | '/dashboard/locations'
     | '/dashboard/medical-forms'
     | '/dashboard/menu'
+    | '/dashboard/model-slots'
     | '/dashboard/new-appointment'
     | '/dashboard/packages'
     | '/dashboard/patients'
@@ -469,6 +480,7 @@ export interface FileRouteTypes {
     | '/dashboard/locations'
     | '/dashboard/medical-forms'
     | '/dashboard/menu'
+    | '/dashboard/model-slots'
     | '/dashboard/new-appointment'
     | '/dashboard/packages'
     | '/dashboard/patients'
@@ -512,6 +524,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/locations'
     | '/_authenticated/dashboard/medical-forms'
     | '/_authenticated/dashboard/menu'
+    | '/_authenticated/dashboard/model-slots'
     | '/_authenticated/dashboard/new-appointment'
     | '/_authenticated/dashboard/packages'
     | '/_authenticated/dashboard/patients'
@@ -720,6 +733,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardNewAppointmentRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
+    '/_authenticated/dashboard/model-slots': {
+      id: '/_authenticated/dashboard/model-slots'
+      path: '/model-slots'
+      fullPath: '/dashboard/model-slots'
+      preLoaderRoute: typeof AuthenticatedDashboardModelSlotsRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
     '/_authenticated/dashboard/menu': {
       id: '/_authenticated/dashboard/menu'
       path: '/menu'
@@ -848,6 +868,7 @@ interface AuthenticatedDashboardRouteChildren {
   AuthenticatedDashboardLocationsRoute: typeof AuthenticatedDashboardLocationsRoute
   AuthenticatedDashboardMedicalFormsRoute: typeof AuthenticatedDashboardMedicalFormsRoute
   AuthenticatedDashboardMenuRoute: typeof AuthenticatedDashboardMenuRoute
+  AuthenticatedDashboardModelSlotsRoute: typeof AuthenticatedDashboardModelSlotsRoute
   AuthenticatedDashboardNewAppointmentRoute: typeof AuthenticatedDashboardNewAppointmentRoute
   AuthenticatedDashboardPackagesRoute: typeof AuthenticatedDashboardPackagesRoute
   AuthenticatedDashboardPatientsRoute: typeof AuthenticatedDashboardPatientsRoute
@@ -880,6 +901,8 @@ const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
     AuthenticatedDashboardMedicalFormsRoute:
       AuthenticatedDashboardMedicalFormsRoute,
     AuthenticatedDashboardMenuRoute: AuthenticatedDashboardMenuRoute,
+    AuthenticatedDashboardModelSlotsRoute:
+      AuthenticatedDashboardModelSlotsRoute,
     AuthenticatedDashboardNewAppointmentRoute:
       AuthenticatedDashboardNewAppointmentRoute,
     AuthenticatedDashboardPackagesRoute: AuthenticatedDashboardPackagesRoute,
