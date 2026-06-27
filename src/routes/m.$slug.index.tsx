@@ -82,6 +82,10 @@ function BookPage() {
         brand_color: string | null;
         address: unknown;
         social_links: { instagram?: string; facebook?: string; tiktok?: string } | null;
+        welcome_intro_html?: string | null;
+        deposit_amount_cents?: number | null;
+        deposit_policy_text?: string | null;
+        cancellation_rules?: { hours_before: number; fee_percent: number }[] | null;
       };
       treatments: Treatment[];
       packages: Package[];
