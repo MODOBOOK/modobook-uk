@@ -764,42 +764,57 @@ function TreatmentRow({
   selected: boolean;
   onToggle: () => void;
 }) {
+  const [expanded, setExpanded] = useState(false);
+  const desc = t.description ?? "";
+  const isLong = desc.length > 140;
+  const shown = expanded || !isLong ? desc : desc.slice(0, 140).trimEnd() + " …";
+
   return (
-    <button
-      type="button"
-      onClick={onToggle}
-      aria-pressed={selected}
-      className="group flex w-full items-center gap-3 rounded-xl border bg-card p-3 text-left transition hover:shadow-sm"
+    <div
+      className="group flex w-full items-start gap-4 rounded-2xl border bg-card p-5 transition hover:shadow-sm"
       style={selected ? { borderColor: brand, boxShadow: `0 0 0 1.5px ${brand}` } : undefined}
     >
-      <span
-        className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border transition"
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-pressed={selected}
+        aria-label={selected ? "Deselect" : "Select"}
+        className="mt-1 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full border-2 transition"
         style={selected
           ? { backgroundColor: brand, borderColor: brand, color: "#fff" }
           : { borderColor: `${brand}66` }}
       >
         {selected && <Check className="h-4 w-4" />}
-      </span>
-      <div className="min-w-0 flex-1">
-        <div className="truncate font-semibold" style={{ color: brand }}>
+      </button>
+      <button type="button" onClick={onToggle} className="min-w-0 flex-1 text-left">
+        <div className="text-lg font-extrabold leading-tight sm:text-xl" style={{ color: brand }}>
           {t.name}
         </div>
-        {t.description && (
-          <div className="mt-0.5 line-clamp-2 text-sm text-muted-foreground">
-            {t.description}
+        {desc && (
+          <div className="mt-2 whitespace-pre-line text-[15px] leading-relaxed text-muted-foreground">
+            {shown}
+            {isLong && (
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); setExpanded((v) => !v); }}
+                className="ml-1 font-semibold text-blue-600 hover:underline"
+              >
+                {expanded ? "Show less" : "Read More"}
+              </button>
+            )}
           </div>
         )}
-        <div className="mt-1.5 flex items-center gap-3 text-sm text-muted-foreground">
-          <span className="inline-flex items-center gap-1">
-            <Clock className="h-3.5 w-3.5" />
-            {duration} min
+        <div className="mt-3 flex items-center justify-between gap-3 text-base">
+          <span className="font-bold" style={{ color: "hsl(var(--accent))" }}>
+            {duration}min
           </span>
-          <span className="font-semibold" style={{ color: brand }}>
+          <span className="font-extrabold" style={{ color: brand }}>
             {price === 0 ? "Free" : `£${price.toFixed(2)}`}
           </span>
         </div>
-      </div>
-    </button>
+      </button>
+    </div>
   );
 }
+
 
