@@ -145,6 +145,8 @@ export const updateTreatment = createServerFn({ method: "POST" })
     if (data.session_count !== undefined) update.session_count = data.session_count;
     if (data.allow_split_payment !== undefined) update.allow_split_payment = data.allow_split_payment;
     if (data.rebook_reminder_days !== undefined) update.rebook_reminder_days = data.rebook_reminder_days;
+    if (data.color !== undefined) (update as Record<string, unknown>).color = data.color;
+
 
 
     const { data: treatment, error } = await supabase
