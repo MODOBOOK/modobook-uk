@@ -40,15 +40,18 @@ export const Route = createFileRoute("/_authenticated/dashboard/menu")({
 
 type Item = { label: string; description: string; to: string; icon: React.ElementType; tone: string; iconColor: string };
 
-// Luxe warm-neutral icon tones — alternating brown/beige/cream
+// Theme-aware icon tones — pull from the practitioner's branding tokens so
+// changing the preset/colours updates every icon chip across the dashboard.
 const T = {
-  espresso: { tone: "bg-[#3a2e26]", iconColor: "text-[#f5ede1]" },
-  mocha:    { tone: "bg-[#7a5a42]", iconColor: "text-[#f5ede1]" },
-  taupe:    { tone: "bg-[#c9b39a]", iconColor: "text-[#3a2e26]" },
-  sand:     { tone: "bg-[#e9dcc8]", iconColor: "text-[#5a4332]" },
-  cream:    { tone: "bg-[#f4ece0]", iconColor: "text-[#6b4f3a]" },
-  ivory:    { tone: "bg-[#faf6ee]", iconColor: "text-[#3a2e26]" },
+  espresso: { tone: "bg-primary",                    iconColor: "text-primary-foreground" },
+  mocha:    { tone: "bg-primary/80",                 iconColor: "text-primary-foreground" },
+  taupe:    { tone: "bg-accent",                     iconColor: "text-accent-foreground" },
+  sand:     { tone: "bg-muted",                      iconColor: "text-foreground" },
+  cream:    { tone: "bg-secondary",                  iconColor: "text-secondary-foreground" },
+  ivory:    { tone: "bg-card border border-border",  iconColor: "text-foreground" },
 };
+
+
 
 const groups: { title: string; items: Item[] }[] = [
   {
@@ -165,7 +168,7 @@ function MenuPage() {
           <h2 className="px-2 text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">Platform</h2>
           <Link to="/admin" className="block rounded-2xl border border-muted-foreground/10 bg-card p-4 shadow-sm transition active:scale-[0.99]">
             <div className="flex items-center gap-4">
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#3a2e26] text-[#f5ede1] ring-1 ring-black/5">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground ring-1 ring-black/5">
                 <ShieldCheck className="h-6 w-6" />
               </div>
               <div className="min-w-0 flex-1">
@@ -181,7 +184,7 @@ function MenuPage() {
       <Button
         variant="outline"
         size="lg"
-        className="w-full rounded-full border-[#c9b39a] bg-[#faf6ee] text-[#3a2e26] hover:bg-[#f4ece0] hover:text-[#3a2e26]"
+        className="w-full rounded-full"
         onClick={() => supabase.auth.signOut()}
       >
         <LogOut className="mr-2 h-4 w-4" /> Log out
