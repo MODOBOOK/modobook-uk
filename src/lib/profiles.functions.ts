@@ -95,6 +95,12 @@ export const updateProfile = createServerFn({ method: "POST" })
       chooser_show_consultation?: boolean;
       chooser_consultation_treatment_id?: string | null;
       chooser_intro_text?: string | null;
+      chooser_consultation_treatment_ids?: string[];
+      chooser_extra_enabled?: boolean;
+      chooser_extra_title?: string | null;
+      chooser_extra_body?: string | null;
+      chooser_extra_treatment_ids?: string[];
+
     }) => input,
   )
   .handler(async ({ data, context }) => {
@@ -123,6 +129,12 @@ export const updateProfile = createServerFn({ method: "POST" })
     if (data.chooser_show_consultation !== undefined) update.chooser_show_consultation = data.chooser_show_consultation;
     if (data.chooser_consultation_treatment_id !== undefined) update.chooser_consultation_treatment_id = data.chooser_consultation_treatment_id;
     if (data.chooser_intro_text !== undefined) update.chooser_intro_text = data.chooser_intro_text;
+    if (data.chooser_consultation_treatment_ids !== undefined) update.chooser_consultation_treatment_ids = data.chooser_consultation_treatment_ids;
+    if (data.chooser_extra_enabled !== undefined) update.chooser_extra_enabled = data.chooser_extra_enabled;
+    if (data.chooser_extra_title !== undefined) update.chooser_extra_title = data.chooser_extra_title;
+    if (data.chooser_extra_body !== undefined) update.chooser_extra_body = data.chooser_extra_body;
+    if (data.chooser_extra_treatment_ids !== undefined) update.chooser_extra_treatment_ids = data.chooser_extra_treatment_ids;
+
 
 
     const { data: profile, error } = await supabase

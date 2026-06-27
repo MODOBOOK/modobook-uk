@@ -49,10 +49,18 @@ function BookingFlowPage() {
   const [showKnow, setShowKnow] = useState(p.chooser_show_know !== false);
   const [showUnsure, setShowUnsure] = useState(p.chooser_show_unsure !== false);
   const [showConsult, setShowConsult] = useState(p.chooser_show_consultation !== false);
-  const [consultId, setConsultId] = useState<string>(
-    (p.chooser_consultation_treatment_id as string | null) ?? "",
+  const [consultIds, setConsultIds] = useState<string[]>(
+    Array.isArray(p.chooser_consultation_treatment_ids)
+      ? (p.chooser_consultation_treatment_ids as string[])
+      : (p.chooser_consultation_treatment_id ? [p.chooser_consultation_treatment_id as string] : []),
   );
   const [intro, setIntro] = useState<string>((p.chooser_intro_text as string | null) ?? "");
+  const [extraOn, setExtraOn] = useState(Boolean(p.chooser_extra_enabled));
+  const [extraTitle, setExtraTitle] = useState<string>((p.chooser_extra_title as string | null) ?? "");
+  const [extraBody, setExtraBody] = useState<string>((p.chooser_extra_body as string | null) ?? "");
+  const [extraIds, setExtraIds] = useState<string[]>(
+    Array.isArray(p.chooser_extra_treatment_ids) ? (p.chooser_extra_treatment_ids as string[]) : [],
+  );
   const [savingSettings, setSavingSettings] = useState(false);
 
   const [areas, setAreas] = useState<Area[]>(loaded.chooser.areas as Area[]);
@@ -61,6 +69,10 @@ function BookingFlowPage() {
   const [newAreaName, setNewAreaName] = useState("");
   const [expandedArea, setExpandedArea] = useState<string | null>(null);
   const [expandedConcern, setExpandedConcern] = useState<string | null>(null);
+
+  function toggleId(list: string[], setList: (v: string[]) => void, id: string) {
+    setList(list.includes(id) ? list.filter((x) => x !== id) : [...list, id]);
+  }
 
   async function saveSettings() {
     setSavingSettings(true);
@@ -72,8 +84,13 @@ function BookingFlowPage() {
           chooser_show_know: showKnow,
           chooser_show_unsure: showUnsure,
           chooser_show_consultation: showConsult,
-          chooser_consultation_treatment_id: consultId || null,
+          chooser_consultation_treatment_ids: consultIds,
+          chooser_consultation_treatment_id: consultIds[0] ?? null,
           chooser_intro_text: intro || null,
+          chooser_extra_enabled: extraOn,
+          chooser_extra_title: extraTitle || null,
+          chooser_extra_body: extraBody || null,
+          chooser_extra_treatment_ids: extraIds,
         },
       });
       toast.success("Saved");
@@ -83,6 +100,7 @@ function BookingFlowPage() {
       setSavingSettings(false);
     }
   }
+
 
   async function addArea() {
     if (!newAreaName.trim()) return;
@@ -158,19 +176,22 @@ function BookingFlowPage() {
 
           {showConsult && (
             <div className="space-y-1.5">
-              <Label>Consultation treatment</Label>
-              <select
-                className="h-10 w-full rounded-md border bg-background px-3 text-sm"
-                value={consultId}
-                onChange={(e) => setConsultId(e.target.value)}
-              >
-                <option value="">— Choose a treatment —</option>
-                {treatments.map((t) => (
-                  <option key={t.id} value={t.id}>{t.name}</option>
+              <Label>Consultation treatments</Label>
+              <div className="max-h-56 overflow-y-auto rounded-md border bg-background p-2 space-y-1">
+                {treatments.length === 0 ? (
+                  <p className="px-2 py-1 text-xs italic text-muted-foreground">Add treatments first.</p>
+                ) : treatments.map((t) => (
+                  <label key={t.id} className="flex items-center gap-2 rounded-md px-2 py-1 text-sm hover:bg-muted">
+                    <Checkbox
+                      checked={consultIds.includes(t.id)}
+                      onCheckedChange={() => toggleId(consultIds, setConsultIds, t.id)}
+                    />
+                    <span>{t.name}</span>
+                  </label>
                 ))}
-              </select>
+              </div>
               <p className="text-xs text-muted-foreground">
-                When patients tap "I need a consultation" they'll be taken straight to this treatment's booking page.
+                When patients tap "Book a consultation now" they'll be able to pick from these treatments.
               </p>
             </div>
           )}
@@ -184,6 +205,41 @@ function BookingFlowPage() {
               rows={2}
             />
           </div>
+
+          <div className="rounded-lg border bg-muted/30 p-3 space-y-3">
+            <Row label="Add a highlight section" hint="Show an extra featured group below the picker.">
+              <Switch checked={extraOn} onCheckedChange={setExtraOn} />
+            </Row>
+            {extraOn && (
+              <>
+                <div className="space-y-1.5">
+                  <Label>Section title</Label>
+                  <Input value={extraTitle} onChange={(e) => setExtraTitle(e.target.value)} placeholder="e.g. This month's featured" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Section description</Label>
+                  <Textarea value={extraBody} onChange={(e) => setExtraBody(e.target.value)} rows={2} placeholder="Short blurb shown under the title." />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Treatments to highlight</Label>
+                  <div className="max-h-56 overflow-y-auto rounded-md border bg-background p-2 space-y-1">
+                    {treatments.length === 0 ? (
+                      <p className="px-2 py-1 text-xs italic text-muted-foreground">Add treatments first.</p>
+                    ) : treatments.map((t) => (
+                      <label key={t.id} className="flex items-center gap-2 rounded-md px-2 py-1 text-sm hover:bg-muted">
+                        <Checkbox
+                          checked={extraIds.includes(t.id)}
+                          onCheckedChange={() => toggleId(extraIds, setExtraIds, t.id)}
+                        />
+                        <span>{t.name}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+
 
           <Button onClick={saveSettings} disabled={savingSettings}>
             {savingSettings ? "Saving…" : "Save settings"}
