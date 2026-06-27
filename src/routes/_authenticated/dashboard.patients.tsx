@@ -252,12 +252,20 @@ function PatientsPage() {
                       )}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="truncate font-semibold">{c.full_name}</div>
+                      <div className="flex items-center gap-2">
+                        <span className="truncate font-semibold">{c.full_name}</span>
+                        {c.has_allergies && (
+                          <span className="shrink-0 rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold uppercase text-red-700">⚠ Allergy</span>
+                        )}
+                      </div>
                       <div className="truncate text-xs text-muted-foreground">
                         {c.phone || c.email || "No contact info"}
                       </div>
                       {c.email && c.phone && (
                         <div className="truncate text-xs text-muted-foreground">{c.email}</div>
+                      )}
+                      {c.has_allergies && c.allergies && (
+                        <div className="truncate text-xs font-medium text-red-600">Allergies: {c.allergies}</div>
                       )}
                     </div>
                     <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
