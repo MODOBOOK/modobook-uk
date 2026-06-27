@@ -340,15 +340,42 @@ function BookTreatmentPage() {
         <CardContent className="grid gap-4 sm:grid-cols-2">
           <div className="sm:col-span-2">
             <Label htmlFor="name">Full name</Label>
-            <Input id="name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+            <Input id="name" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
           </div>
           <div>
             <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+            <Input id="email" type="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
           </div>
           <div>
             <Label htmlFor="phone">Phone</Label>
-            <Input id="phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+            <Input id="phone" required value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+          </div>
+          <div>
+            <Label htmlFor="dob">Date of birth</Label>
+            <Input id="dob" type="date" required value={form.dob} onChange={(e) => setForm({ ...form, dob: e.target.value })} />
+          </div>
+          <div className="sm:col-span-2 pt-2 border-t mt-2">
+            <Label className="text-sm font-semibold">Address</Label>
+          </div>
+          <div className="sm:col-span-2">
+            <Label htmlFor="line1">Address line 1</Label>
+            <Input id="line1" value={form.addressLine1} onChange={(e) => setForm({ ...form, addressLine1: e.target.value })} />
+          </div>
+          <div className="sm:col-span-2">
+            <Label htmlFor="line2">Address line 2 (optional)</Label>
+            <Input id="line2" value={form.addressLine2} onChange={(e) => setForm({ ...form, addressLine2: e.target.value })} />
+          </div>
+          <div>
+            <Label htmlFor="city">City</Label>
+            <Input id="city" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
+          </div>
+          <div>
+            <Label htmlFor="postcode">Postcode</Label>
+            <Input id="postcode" value={form.postcode} onChange={(e) => setForm({ ...form, postcode: e.target.value })} />
+          </div>
+          <div className="sm:col-span-2">
+            <Label htmlFor="country">Country</Label>
+            <Input id="country" value={form.country} onChange={(e) => setForm({ ...form, country: e.target.value })} />
           </div>
           <div className="sm:col-span-2">
             <Label htmlFor="notes">Notes (optional)</Label>
@@ -357,8 +384,13 @@ function BookTreatmentPage() {
         </CardContent>
       </Card>
 
-      <Button className="w-full" size="lg" disabled={!slot || submitting} onClick={submit}>
-        {submitting ? "Requesting…" : "Request booking"}
+      <Button
+        className="w-full"
+        size="lg"
+        disabled={!slot || submitting || !form.name || !form.email || !form.phone || !form.dob}
+        onClick={submit}
+      >
+        {submitting ? "Booking…" : "Confirm booking"}
       </Button>
     </main>
   );
