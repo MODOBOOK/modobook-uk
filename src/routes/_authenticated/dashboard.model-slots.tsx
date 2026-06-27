@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { listMyModelSlots, upsertModelSlot, deleteModelSlot } from "@/lib/discounts.functions";
 import { getMyTreatments } from "@/lib/treatments.functions";
 import { listMyLocations } from "@/lib/locations.functions";
+import { getMyProfile, updateProfile } from "@/lib/profiles.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,6 +26,7 @@ type Slot = {
   slot_date: string; start_time: string; end_time: string;
   price_mode: "fixed" | "percent"; price_value: number;
   notes: string | null; booked_appointment_id: string | null; active: boolean;
+  category: string | null;
 };
 type Treat = { id: string; name: string; price: number; duration: number };
 type Loc = { id: string; name: string };
@@ -34,18 +36,35 @@ function ModelSlotsPage() {
   const lTreats = useServerFn(getMyTreatments);
   const lLocs = useServerFn(listMyLocations);
   const del = useServerFn(deleteModelSlot);
+  const lProfile = useServerFn(getMyProfile);
+  const saveProfile = useServerFn(updateProfile);
   const [slots, setSlots] = useState<Slot[]>([]);
   const [treats, setTreats] = useState<Treat[]>([]);
   const [locs, setLocs] = useState<Loc[]>([]);
   const [editing, setEditing] = useState<Slot | "new" | null>(null);
+  const [profileId, setProfileId] = useState<string | null>(null);
+  const [position, setPosition] = useState<"top" | "bottom">("top");
 
   async function refresh() {
-    const [s, t, l] = await Promise.all([list(), lTreats(), lLocs()]);
+    const [s, t, l, p] = await Promise.all([list(), lTreats(), lLocs(), lProfile()]);
     setSlots((s as any) ?? []);
     setTreats((t as any) ?? []);
     setLocs((l as any) ?? []);
+    if (p) {
+      setProfileId((p as any).id);
+      setPosition(((p as any).model_slots_position ?? "top") as "top" | "bottom");
+    }
   }
   useEffect(() => { void refresh(); }, []);
+
+  async function changePosition(next: "top" | "bottom") {
+    if (!profileId) return;
+    setPosition(next);
+    try {
+      await saveProfile({ data: { id: profileId, model_slots_position: next } });
+      toast.success(`Model slots will show at the ${next} of the booking menu`);
+    } catch (e) { toast.error((e as Error).message); }
+  }
 
   const tById = new Map(treats.map((t) => [t.id, t]));
   const lById = new Map(locs.map((l) => [l.id, l]));
@@ -62,6 +81,23 @@ function ModelSlotsPage() {
         </div>
         <Button onClick={() => setEditing("new")}><Plus className="mr-1.5 h-4 w-4" />New model slot</Button>
       </header>
+
+      <Card>
+        <CardContent className="flex flex-wrap items-center justify-between gap-3 p-3">
+          <div>
+            <p className="text-sm font-semibold">Position on booking menu</p>
+            <p className="text-xs text-muted-foreground">Choose whether the Model slots section sits above or below your treatment categories.</p>
+          </div>
+          <Select value={position} onValueChange={(v) => changePosition(v as "top" | "bottom")}>
+            <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="top">Top of menu</SelectItem>
+              <SelectItem value="bottom">Bottom of menu</SelectItem>
+            </SelectContent>
+          </Select>
+        </CardContent>
+      </Card>
+
 
       <div className="space-y-2">
         {slots.map((s) => {
@@ -80,6 +116,9 @@ function ModelSlotsPage() {
                     · {s.start_time.slice(0, 5)}–{s.end_time.slice(0, 5)}
                     {s.location_id && lById.get(s.location_id) ? ` · ${lById.get(s.location_id)!.name}` : ""}
                   </p>
+                  {s.category && (
+                    <p className="mt-0.5 inline-block rounded-full bg-fuchsia-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-fuchsia-700">{s.category}</p>
+                  )}
                   <p className="text-xs">
                     {t && <span className="line-through text-muted-foreground">£{Number(t.price).toFixed(2)}</span>}{" "}
                     <span className="font-semibold text-emerald-600">£{finalPrice.toFixed(2)}</span>{" "}
@@ -129,6 +168,8 @@ function SlotEditor({ existing, treatments, locations, onClose, onSaved }: {
   const [value, setValue] = useState<string>(existing?.price_value?.toString() ?? "");
   const [notes, setNotes] = useState(existing?.notes ?? "");
   const [active, setActive] = useState(existing?.active ?? true);
+  const [category, setCategory] = useState(existing?.category ?? "");
+
 
   const t = treatments.find((x) => x.id === treatmentId);
 
@@ -149,6 +190,7 @@ function SlotEditor({ existing, treatments, locations, onClose, onSaved }: {
         price_value: v,
         notes: notes || null,
         active,
+        category: category.trim() || null,
       }});
       toast.success("Saved");
       onSaved();
@@ -209,6 +251,11 @@ function SlotEditor({ existing, treatments, locations, onClose, onSaved }: {
                 </p>
               )}
             </div>
+          </div>
+          <div>
+            <Label>Category (optional)</Label>
+            <Input value={category} onChange={(e) => setCategory(e.target.value)} placeholder="e.g. Lip filler, Botox, Skin" />
+            <p className="mt-1 text-xs text-muted-foreground">Slots with the same category are grouped together on your booking page.</p>
           </div>
           <div>
             <Label>Notes (optional)</Label>

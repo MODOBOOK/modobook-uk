@@ -148,6 +148,7 @@ export const upsertModelSlot = createServerFn({ method: "POST" })
     price_value: number;
     notes?: string | null;
     active?: boolean;
+    category?: string | null;
   }) => i)
   .handler(async ({ data, context }) => {
     const pid = await ownProfileId(context.supabase, context.userId);
@@ -162,6 +163,7 @@ export const upsertModelSlot = createServerFn({ method: "POST" })
       price_value: data.price_value,
       notes: data.notes ?? null,
       active: data.active ?? true,
+      category: data.category ?? null,
     };
     if (data.id) {
       const { error } = await (context.supabase as any)
