@@ -137,6 +137,10 @@ export const updateTreatment = createServerFn({ method: "POST" })
     if (data.deductible_against !== undefined) update.deductible_against = data.deductible_against;
     if (data.deductible_window_days !== undefined) update.deductible_window_days = data.deductible_window_days;
     if (data.category_id !== undefined) update.category_id = data.category_id;
+    if (data.session_count !== undefined) update.session_count = data.session_count;
+    if (data.allow_split_payment !== undefined) update.allow_split_payment = data.allow_split_payment;
+    if (data.rebook_reminder_days !== undefined) update.rebook_reminder_days = data.rebook_reminder_days;
+
 
     const { data: treatment, error } = await supabase
       .from("treatments")
