@@ -25,6 +25,7 @@ import { Route as MSlugAboutRouteImport } from './routes/m.$slug.about'
 import { Route as AuthenticatedDashboardReviewsRouteImport } from './routes/_authenticated/dashboard.reviews'
 import { Route as AuthenticatedDashboardLocationsRouteImport } from './routes/_authenticated/dashboard.locations'
 import { Route as AuthenticatedDashboardCategoriesRouteImport } from './routes/_authenticated/dashboard.categories'
+import { Route as AuthenticatedDashboardBrandingRouteImport } from './routes/_authenticated/dashboard.branding'
 import { Route as AuthenticatedDashboardBioRouteImport } from './routes/_authenticated/dashboard.bio'
 
 const AuthRoute = AuthRouteImport.update({
@@ -110,6 +111,12 @@ const AuthenticatedDashboardCategoriesRoute =
     path: '/categories',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
+const AuthenticatedDashboardBrandingRoute =
+  AuthenticatedDashboardBrandingRouteImport.update({
+    id: '/branding',
+    path: '/branding',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
 const AuthenticatedDashboardBioRoute =
   AuthenticatedDashboardBioRouteImport.update({
     id: '/bio',
@@ -125,6 +132,7 @@ export interface FileRoutesByFullPath {
   '/book/$slug': typeof BookSlugRoute
   '/m/$slug': typeof MSlugRouteWithChildren
   '/dashboard/bio': typeof AuthenticatedDashboardBioRoute
+  '/dashboard/branding': typeof AuthenticatedDashboardBrandingRoute
   '/dashboard/categories': typeof AuthenticatedDashboardCategoriesRoute
   '/dashboard/locations': typeof AuthenticatedDashboardLocationsRoute
   '/dashboard/reviews': typeof AuthenticatedDashboardReviewsRoute
@@ -141,6 +149,7 @@ export interface FileRoutesByTo {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/book/$slug': typeof BookSlugRoute
   '/dashboard/bio': typeof AuthenticatedDashboardBioRoute
+  '/dashboard/branding': typeof AuthenticatedDashboardBrandingRoute
   '/dashboard/categories': typeof AuthenticatedDashboardCategoriesRoute
   '/dashboard/locations': typeof AuthenticatedDashboardLocationsRoute
   '/dashboard/reviews': typeof AuthenticatedDashboardReviewsRoute
@@ -161,6 +170,7 @@ export interface FileRoutesById {
   '/book/$slug': typeof BookSlugRoute
   '/m/$slug': typeof MSlugRouteWithChildren
   '/_authenticated/dashboard/bio': typeof AuthenticatedDashboardBioRoute
+  '/_authenticated/dashboard/branding': typeof AuthenticatedDashboardBrandingRoute
   '/_authenticated/dashboard/categories': typeof AuthenticatedDashboardCategoriesRoute
   '/_authenticated/dashboard/locations': typeof AuthenticatedDashboardLocationsRoute
   '/_authenticated/dashboard/reviews': typeof AuthenticatedDashboardReviewsRoute
@@ -181,6 +191,7 @@ export interface FileRouteTypes {
     | '/book/$slug'
     | '/m/$slug'
     | '/dashboard/bio'
+    | '/dashboard/branding'
     | '/dashboard/categories'
     | '/dashboard/locations'
     | '/dashboard/reviews'
@@ -197,6 +208,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/book/$slug'
     | '/dashboard/bio'
+    | '/dashboard/branding'
     | '/dashboard/categories'
     | '/dashboard/locations'
     | '/dashboard/reviews'
@@ -216,6 +228,7 @@ export interface FileRouteTypes {
     | '/book/$slug'
     | '/m/$slug'
     | '/_authenticated/dashboard/bio'
+    | '/_authenticated/dashboard/branding'
     | '/_authenticated/dashboard/categories'
     | '/_authenticated/dashboard/locations'
     | '/_authenticated/dashboard/reviews'
@@ -349,6 +362,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardCategoriesRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
+    '/_authenticated/dashboard/branding': {
+      id: '/_authenticated/dashboard/branding'
+      path: '/branding'
+      fullPath: '/dashboard/branding'
+      preLoaderRoute: typeof AuthenticatedDashboardBrandingRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
     '/_authenticated/dashboard/bio': {
       id: '/_authenticated/dashboard/bio'
       path: '/bio'
@@ -361,6 +381,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedDashboardRouteChildren {
   AuthenticatedDashboardBioRoute: typeof AuthenticatedDashboardBioRoute
+  AuthenticatedDashboardBrandingRoute: typeof AuthenticatedDashboardBrandingRoute
   AuthenticatedDashboardCategoriesRoute: typeof AuthenticatedDashboardCategoriesRoute
   AuthenticatedDashboardLocationsRoute: typeof AuthenticatedDashboardLocationsRoute
   AuthenticatedDashboardReviewsRoute: typeof AuthenticatedDashboardReviewsRoute
@@ -370,6 +391,7 @@ interface AuthenticatedDashboardRouteChildren {
 const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
   {
     AuthenticatedDashboardBioRoute: AuthenticatedDashboardBioRoute,
+    AuthenticatedDashboardBrandingRoute: AuthenticatedDashboardBrandingRoute,
     AuthenticatedDashboardCategoriesRoute:
       AuthenticatedDashboardCategoriesRoute,
     AuthenticatedDashboardLocationsRoute: AuthenticatedDashboardLocationsRoute,
