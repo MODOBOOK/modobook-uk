@@ -15,20 +15,24 @@ function DashboardIndex() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground">Welcome back, {profile.full_name || profile.clinic_name}.</p>
+        <p className="text-muted-foreground">
+          Welcome back, {profile.full_name || profile.clinic_name}.
+        </p>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card>
+        <Card className="min-w-0">
           <CardHeader className="pb-2">
             <CardDescription>Booking link</CardDescription>
-            <CardTitle className="text-sm font-medium">{bookingUrl}</CardTitle>
+            <CardTitle className="break-all text-sm font-medium">
+              {bookingUrl}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <Button variant="outline" size="sm" className="w-full" asChild>
               <a href={bookingUrl} target="_blank" rel="noreferrer">
-                <ExternalLink className="mr-2 h-4 w-4" />
-                Open page
+                <ExternalLink className="mr-2 h-4 w-4 shrink-0" />
+                <span className="truncate">Open page</span>
               </a>
             </Button>
           </CardContent>
