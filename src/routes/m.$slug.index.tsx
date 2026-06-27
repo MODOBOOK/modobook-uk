@@ -112,7 +112,7 @@ function BookPage() {
         price_mode: "fixed" | "percent"; price_value: number; notes: string | null;
         category?: string | null;
       }[];
-      addonLinks?: { treatment_id: string; addon_id: string }[];
+      addonLinks?: { treatment_id: string; addon_id: string; discount_percent: number | null; discount_amount: number | null }[];
     };
 
 
@@ -1008,6 +1008,12 @@ function BookPage() {
               <div className="space-y-2 max-h-[55vh] overflow-y-auto">
                 {addons.map((a) => {
                   const checked = addonPicks.has(a.id);
+                  const link = addonLinks.find(
+                    (l) => l.treatment_id === addonPrompt.treatmentId && l.addon_id === a.id,
+                  );
+                  const pct = link?.discount_percent ?? null;
+                  const basePrice = Number(a.price ?? 0);
+                  const finalPrice = pct ? basePrice * (1 - pct / 100) : basePrice;
                   return (
                     <button
                       key={a.id}
@@ -1032,9 +1038,21 @@ function BookPage() {
                           <div className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{a.description}</div>
                         )}
                         <div className="mt-1 text-[11px] text-muted-foreground">+{a.duration} min</div>
+                        {pct ? (
+                          <div className="mt-1 inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
+                            {pct}% off add-on
+                          </div>
+                        ) : null}
                       </div>
-                      <div className="whitespace-nowrap text-sm font-semibold" style={{ color: menuPriceColor }}>
-                        +£{Number(a.price ?? 0).toFixed(2)}
+                      <div className="whitespace-nowrap text-sm font-semibold text-right" style={{ color: menuPriceColor }}>
+                        {pct ? (
+                          <>
+                            <span className="block text-xs text-muted-foreground line-through">+£{basePrice.toFixed(2)}</span>
+                            +£{finalPrice.toFixed(2)}
+                          </>
+                        ) : (
+                          <>+£{basePrice.toFixed(2)}</>
+                        )}
                       </div>
                     </button>
                   );

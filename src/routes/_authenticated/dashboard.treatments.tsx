@@ -8,7 +8,7 @@ import {
   setTreatmentConsents,
   listMyConsentTemplates,
 } from "@/lib/treatment-consents.functions";
-import { getTreatmentAddons, setTreatmentAddons } from "@/lib/treatment-addons.functions";
+import { getTreatmentAddons, setTreatmentAddons, type AddonLink } from "@/lib/treatment-addons.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -58,7 +58,7 @@ type TreatmentForm = {
   category_id: string | null;
   active: boolean;
   consent_ids: string[];
-  addon_ids: string[];
+  addons: AddonLink[];
   addon_mode: "off" | "optional";
   discount_percent: number | null;
   discount_starts_at: string | null;
@@ -141,7 +141,7 @@ function TreatmentsPage() {
 
   async function handleSave(form: TreatmentForm) {
     try {
-      const { consent_ids, addon_ids, ...rest } = form;
+      const { consent_ids, addons, ...rest } = form;
       let id: string;
       if (editing) {
         await update({ data: { id: editing.id, ...rest } });
@@ -164,7 +164,7 @@ function TreatmentsPage() {
         toast.success("Treatment created");
       }
       await setConsents({ data: { treatmentId: id, consentTemplateIds: consent_ids } });
-      await setAddons({ data: { treatmentId: id, addonIds: addon_ids } });
+      await setAddons({ data: { treatmentId: id, addons } });
       setOpen(false);
       setEditing(null);
       load();
@@ -289,7 +289,7 @@ function TreatmentDialog({
   const [description, setDescription] = useState(treatment?.description ?? "");
   const [active, setActive] = useState(treatment?.active ?? true);
   const [consentIds, setConsentIds] = useState<string[]>([]);
-  const [addonIds, setAddonIds] = useState<string[]>([]);
+  const [addons, setAddons] = useState<AddonLink[]>([]);
   const [addonMode, setAddonMode] = useState<"off" | "optional">(
     (treatment?.addon_mode as "off" | "optional") ?? "optional",
   );
@@ -342,11 +342,11 @@ function TreatmentDialog({
         .then((ids) => setConsentIds(ids as string[]))
         .catch(() => setConsentIds([]));
       fetchAddons({ data: { treatmentId: treatment.id } })
-        .then((ids) => setAddonIds(ids as string[]))
-        .catch(() => setAddonIds([]));
+        .then((rows) => setAddons(rows as AddonLink[]))
+        .catch(() => setAddons([]));
     } else {
       setConsentIds([]);
-      setAddonIds([]);
+      setAddons([]);
     }
   }, [treatment, fetchConsents, fetchAddons, initial.parent, initial.sub]);
 
@@ -354,7 +354,14 @@ function TreatmentDialog({
     setConsentIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   }
   function toggleAddon(id: string) {
-    setAddonIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+    setAddons((prev) =>
+      prev.some((a) => a.addon_id === id)
+        ? prev.filter((a) => a.addon_id !== id)
+        : [...prev, { addon_id: id, discount_percent: null, discount_amount: null }],
+    );
+  }
+  function setAddonDiscount(id: string, percent: number | null) {
+    setAddons((prev) => prev.map((a) => (a.addon_id === id ? { ...a, discount_percent: percent } : a)));
   }
 
   const subOptions = childrenOf(parentId);
@@ -506,20 +513,49 @@ function TreatmentDialog({
               {addonCandidates.length === 0 ? (
                 <p className="text-xs text-muted-foreground">Create more treatments to use as add-ons.</p>
               ) : (
-                <div className="space-y-2 max-h-56 overflow-y-auto mt-1">
-                  {addonCandidates.map((a) => (
-                    <label key={a.id} className="flex items-center justify-between gap-2 text-sm rounded-md border px-3 py-2">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <Checkbox checked={addonIds.includes(a.id)} onCheckedChange={() => toggleAddon(a.id)} />
-                        <span className="truncate">{a.name}</span>
+                <div className="space-y-2 max-h-72 overflow-y-auto mt-1">
+                  {addonCandidates.map((a) => {
+                    const link = addons.find((x) => x.addon_id === a.id);
+                    const checked = !!link;
+                    const pct = link?.discount_percent ?? null;
+                    const discounted = checked && pct ? a.price * (1 - pct / 100) : null;
+                    return (
+                      <div key={a.id} className="rounded-md border px-3 py-2 space-y-2">
+                        <div className="flex items-center justify-between gap-2 text-sm">
+                          <label className="flex items-center gap-2 min-w-0 cursor-pointer">
+                            <Checkbox checked={checked} onCheckedChange={() => toggleAddon(a.id)} />
+                            <span className="truncate">{a.name}</span>
+                          </label>
+                          <span className="text-xs text-muted-foreground shrink-0">£{a.price} · {a.duration}m</span>
+                        </div>
+                        {checked && (
+                          <div className="flex items-center gap-2 pl-6">
+                            <Label className="text-xs text-muted-foreground m-0">Discount %</Label>
+                            <Input
+                              type="number"
+                              min={0}
+                              max={100}
+                              value={pct ?? ""}
+                              onChange={(e) =>
+                                setAddonDiscount(a.id, e.target.value === "" ? null : Number(e.target.value))
+                              }
+                              className="h-8 w-20"
+                              placeholder="0"
+                            />
+                            {discounted !== null && (
+                              <span className="text-xs text-muted-foreground">
+                                → £{discounted.toFixed(2)}
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </div>
-                      <span className="text-xs text-muted-foreground shrink-0">£{a.price} · {a.duration}m</span>
-                    </label>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
               <p className="text-xs text-muted-foreground mt-2">
-                On the booking page, after selecting this treatment, customers will see these add-ons with a "No thanks, continue" button. Selected add-ons stack price and duration.
+                After selecting this treatment, customers see these add-ons with a "No thanks" button. Set a per-add-on discount to reward bundling.
               </p>
             </div>
           )}
@@ -561,7 +597,7 @@ function TreatmentDialog({
               category_id: subId ?? parentId,
               active,
               consent_ids: consentIds,
-              addon_ids: addonIds,
+              addons: addons,
               addon_mode: addonMode,
               discount_percent: discountPercent === "" ? null : Number(discountPercent),
               discount_starts_at: discountStartsAt ? new Date(discountStartsAt).toISOString() : null,
