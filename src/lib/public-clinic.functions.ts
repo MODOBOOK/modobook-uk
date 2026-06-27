@@ -55,11 +55,21 @@ export const getPublicClinic = createServerFn({ method: "GET" })
       .order("created_at", { ascending: false });
     if (testimonialError) throw testimonialError;
 
+    const { data: locations, error: locationsError } = await supabase
+      .from("locations")
+      .select("*")
+      .eq("profile_id", profile.id)
+      .eq("active", true)
+      .order("is_primary", { ascending: false })
+      .order("name", { ascending: true });
+    if (locationsError) throw locationsError;
+
     return {
       profile,
       treatments: treatments ?? [],
       packages: packages ?? [],
       gallery: gallery ?? [],
       testimonials: testimonials ?? [],
+      locations: locations ?? [],
     };
   });

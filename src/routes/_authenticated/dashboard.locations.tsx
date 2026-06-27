@@ -20,7 +20,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { MapPin, Pencil, Plus, Star, Trash2 } from "lucide-react";
+import { ExternalLink, MapPin, Pencil, Plus, Star, Trash2 } from "lucide-react";
+import { mapsUrl } from "@/lib/maps";
 import { toast } from "sonner";
 
 type Location = Awaited<ReturnType<typeof listMyLocations>>[number];
@@ -179,6 +180,18 @@ function LocationsPage() {
                   </p>
                 </div>
                 <div className="flex gap-1">
+                  {mapsUrl(loc) && (
+                    <a
+                      href={mapsUrl(loc)!}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title="Open in Maps"
+                    >
+                      <Button variant="ghost" size="icon">
+                        <ExternalLink className="h-4 w-4" />
+                      </Button>
+                    </a>
+                  )}
                   <Button variant="ghost" size="icon" onClick={() => openEdit(loc)}>
                     <Pencil className="h-4 w-4" />
                   </Button>

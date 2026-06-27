@@ -3,10 +3,12 @@ import { getPublicClinic } from "@/lib/public-clinic.functions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Clock, MapPin } from "lucide-react";
+import { Clock, MapPin, ExternalLink, Star } from "lucide-react";
+import { mapsUrl, formatAddress } from "@/lib/maps";
 import type { Database } from "@/integrations/supabase/types";
 type T = Database["public"]["Tables"]["treatments"]["Row"];
 type P = Database["public"]["Tables"]["packages"]["Row"];
+type L = Database["public"]["Tables"]["locations"]["Row"];
 
 export const Route = createFileRoute("/m/$slug/")({
   loader: async ({ params }) => getPublicClinic({ data: { slug: params.slug } }),
@@ -14,7 +16,7 @@ export const Route = createFileRoute("/m/$slug/")({
 });
 
 function BookPage() {
-  const { profile, treatments, packages } = Route.useLoaderData();
+  const { profile, treatments, packages, locations } = Route.useLoaderData() as ReturnType<typeof Route.useLoaderData> & { locations: L[] };
   const { slug } = useParams({ from: "/m/$slug/" });
   const address = (profile.address as { line1?: string; city?: string; postcode?: string } | null) || {};
   const addressText = [address.line1, address.city, address.postcode].filter(Boolean).join(", ");
@@ -78,6 +80,41 @@ function BookPage() {
                 </CardContent>
               </Card>
             ))}
+          </div>
+        </section>
+      )}
+
+      {locations && locations.length > 0 && (
+        <section className="mt-12">
+          <h2 className="mb-4 text-xl font-semibold">Locations</h2>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {locations.map((loc: L) => {
+              const url = mapsUrl(loc);
+              const addr = formatAddress(loc);
+              return (
+                <Card key={loc.id}>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      {loc.name}
+                      {loc.is_primary && <Star className="h-4 w-4 fill-current text-yellow-500" />}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {addr && <p className="text-sm text-muted-foreground">{addr}</p>}
+                    {loc.phone && <p className="text-sm text-muted-foreground">{loc.phone}</p>}
+                    {url && (
+                      <a href={url} target="_blank" rel="noopener noreferrer">
+                        <Button variant="outline" size="sm" className="w-full">
+                          <MapPin className="mr-2 h-4 w-4" />
+                          Open in Maps
+                          <ExternalLink className="ml-2 h-3 w-3" />
+                        </Button>
+                      </a>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         </section>
       )}
