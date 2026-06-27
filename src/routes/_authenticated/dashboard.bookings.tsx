@@ -4,8 +4,10 @@ import { useServerFn } from "@tanstack/react-start";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { listMyAppointments } from "@/lib/availability.functions";
+import { Textarea } from "@/components/ui/textarea";
+import { ChevronLeft, ChevronRight, Save } from "lucide-react";
+import { listMyAppointments, updateAppointmentNotes } from "@/lib/availability.functions";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/dashboard/bookings")({
   ssr: false,
@@ -24,9 +26,11 @@ type Appt = {
   payment_status: string;
   total_amount: number | null;
   notes: string | null;
+  practitioner_notes: string | null;
   treatments: { name: string } | null;
   locations: { name: string } | null;
 };
+
 
 function startOfMonth(d: Date) { return new Date(d.getFullYear(), d.getMonth(), 1); }
 function addMonths(d: Date, n: number) { return new Date(d.getFullYear(), d.getMonth() + n, 1); }
