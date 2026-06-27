@@ -399,7 +399,54 @@ function BookTreatmentPage() {
         </CardContent>
       </Card>
 
+      {authChoice === "pending" ? (
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="text-base" style={headingStyle}>Sign in to continue</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-sm opacity-70">
+              Create an account or sign in to track your appointments, leave reviews and view your notes after each visit.
+            </p>
+            <div className="grid gap-2 sm:grid-cols-3">
+              <Link
+                to="/m/$slug/auth"
+                params={{ slug }}
+                search={{ redirect: typeof window !== "undefined" ? window.location.pathname : undefined }}
+              >
+                <Button className="w-full" style={{ backgroundColor: brand, color: "#fff" }}>
+                  <LogIn className="mr-2 h-4 w-4" /> Sign in
+                </Button>
+              </Link>
+              <Link
+                to="/m/$slug/auth"
+                params={{ slug }}
+                search={{ tab: "signup", redirect: typeof window !== "undefined" ? window.location.pathname : undefined }}
+              >
+                <Button variant="outline" className="w-full" style={{ color: brand, borderColor: `${brand}55` }}>
+                  <UserPlus className="mr-2 h-4 w-4" /> Sign up
+                </Button>
+              </Link>
+              <Button
+                variant="ghost"
+                className="w-full"
+                style={{ color: brand }}
+                onClick={() => setAuthChoice("guest")}
+              >
+                Continue as guest
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+      <>
+      {authChoice === "signed-in" && (
+        <div className="mb-3 flex items-center gap-2 rounded-md border px-3 py-2 text-sm" style={{ borderColor: `${brand}33`, color: brand }}>
+          <UserCheck className="h-4 w-4" /> Signed in — this booking will be saved to your account.
+        </div>
+      )}
       <Card className="mb-6">
+
         <CardHeader>
           <CardTitle className="text-base" style={headingStyle}>Your details</CardTitle>
         </CardHeader>
