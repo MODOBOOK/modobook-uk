@@ -119,14 +119,14 @@ function BrandingPage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
           <h1 className="text-2xl font-semibold">Branding</h1>
           <p className="text-sm text-muted-foreground">
             Colors, typography, logo and hero image shown on your MODO Book page.
           </p>
         </div>
-        <Button onClick={handleSave} disabled={saving}>
+        <Button onClick={handleSave} disabled={saving} className="sm:w-auto">
           {saving ? "Saving…" : "Save changes"}
         </Button>
       </div>
