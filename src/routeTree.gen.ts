@@ -34,6 +34,7 @@ import { Route as AuthenticatedDashboardBrandingRouteImport } from './routes/_au
 import { Route as AuthenticatedDashboardBookingsRouteImport } from './routes/_authenticated/dashboard.bookings'
 import { Route as AuthenticatedDashboardBioRouteImport } from './routes/_authenticated/dashboard.bio'
 import { Route as AuthenticatedDashboardAvailabilityRouteImport } from './routes/_authenticated/dashboard.availability'
+import { Route as MSlugBookTreatmentIdRouteImport } from './routes/m.$slug.book.$treatmentId'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -172,6 +173,11 @@ const AuthenticatedDashboardAvailabilityRoute =
     path: '/availability',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
+const MSlugBookTreatmentIdRoute = MSlugBookTreatmentIdRouteImport.update({
+  id: '/book/$treatmentId',
+  path: '/book/$treatmentId',
+  getParentRoute: () => MSlugRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -198,6 +204,7 @@ export interface FileRoutesByFullPath {
   '/m/$slug/reviews': typeof MSlugReviewsRoute
   '/dashboard/': typeof AuthenticatedDashboardIndexRoute
   '/m/$slug/': typeof MSlugIndexRoute
+  '/m/$slug/book/$treatmentId': typeof MSlugBookTreatmentIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -222,6 +229,7 @@ export interface FileRoutesByTo {
   '/m/$slug/reviews': typeof MSlugReviewsRoute
   '/dashboard': typeof AuthenticatedDashboardIndexRoute
   '/m/$slug': typeof MSlugIndexRoute
+  '/m/$slug/book/$treatmentId': typeof MSlugBookTreatmentIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -250,6 +258,7 @@ export interface FileRoutesById {
   '/m/$slug/reviews': typeof MSlugReviewsRoute
   '/_authenticated/dashboard/': typeof AuthenticatedDashboardIndexRoute
   '/m/$slug/': typeof MSlugIndexRoute
+  '/m/$slug/book/$treatmentId': typeof MSlugBookTreatmentIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -278,6 +287,7 @@ export interface FileRouteTypes {
     | '/m/$slug/reviews'
     | '/dashboard/'
     | '/m/$slug/'
+    | '/m/$slug/book/$treatmentId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -302,6 +312,7 @@ export interface FileRouteTypes {
     | '/m/$slug/reviews'
     | '/dashboard'
     | '/m/$slug'
+    | '/m/$slug/book/$treatmentId'
   id:
     | '__root__'
     | '/'
@@ -329,6 +340,7 @@ export interface FileRouteTypes {
     | '/m/$slug/reviews'
     | '/_authenticated/dashboard/'
     | '/m/$slug/'
+    | '/m/$slug/book/$treatmentId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -516,6 +528,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardAvailabilityRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
+    '/m/$slug/book/$treatmentId': {
+      id: '/m/$slug/book/$treatmentId'
+      path: '/book/$treatmentId'
+      fullPath: '/m/$slug/book/$treatmentId'
+      preLoaderRoute: typeof MSlugBookTreatmentIdRouteImport
+      parentRoute: typeof MSlugRoute
+    }
   }
 }
 
@@ -582,6 +601,7 @@ interface MSlugRouteChildren {
   MSlugAuthRoute: typeof MSlugAuthRoute
   MSlugReviewsRoute: typeof MSlugReviewsRoute
   MSlugIndexRoute: typeof MSlugIndexRoute
+  MSlugBookTreatmentIdRoute: typeof MSlugBookTreatmentIdRoute
 }
 
 const MSlugRouteChildren: MSlugRouteChildren = {
@@ -590,6 +610,7 @@ const MSlugRouteChildren: MSlugRouteChildren = {
   MSlugAuthRoute: MSlugAuthRoute,
   MSlugReviewsRoute: MSlugReviewsRoute,
   MSlugIndexRoute: MSlugIndexRoute,
+  MSlugBookTreatmentIdRoute: MSlugBookTreatmentIdRoute,
 }
 
 const MSlugRouteWithChildren = MSlugRoute._addFileChildren(MSlugRouteChildren)
