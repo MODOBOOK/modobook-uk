@@ -68,7 +68,7 @@ function Reviews() {
   return (
     <main className="mx-auto max-w-3xl px-4 py-10">
       <header className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">Patient reviews</h1>
+        <h1 className="text-3xl font-bold tracking-tight" style={{ color: "var(--brand)", fontFamily: "var(--heading-font)" }}>Patient reviews</h1>
         {allRatings.length > 0 && (
           <div className="mt-2 flex items-center gap-3 text-sm text-muted-foreground">
             <Stars value={Math.round(avg)} />
@@ -78,7 +78,7 @@ function Reviews() {
       </header>
 
       <section className="mb-10">
-        <h2 className="mb-3 text-lg font-semibold">Leave a review</h2>
+        <h2 className="mb-3 text-lg font-semibold" style={{ color: "var(--brand)", fontFamily: "var(--heading-font)" }}>Leave a review</h2>
         {hasSession ? (
           <form onSubmit={handleSubmit} className="space-y-3 rounded-lg border p-4">
             <div className="flex items-center gap-2">

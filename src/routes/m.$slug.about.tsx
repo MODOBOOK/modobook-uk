@@ -49,14 +49,14 @@ function About() {
 
       {profile.bio && (
         <section className="mt-10">
-          <h2 className="mb-3 text-xl font-semibold">Biography</h2>
+          <h2 className="mb-3 text-xl font-semibold" style={{ color: "var(--brand)", fontFamily: "var(--heading-font)" }}>Biography</h2>
           <p className="whitespace-pre-line leading-relaxed text-foreground/90">{profile.bio}</p>
         </section>
       )}
 
       {specialties.length > 0 && (
         <section className="mt-10">
-          <h2 className="mb-3 text-xl font-semibold">Specialties</h2>
+          <h2 className="mb-3 text-xl font-semibold" style={{ color: "var(--brand)", fontFamily: "var(--heading-font)" }}>Specialties</h2>
           <div className="flex flex-wrap gap-2">
             {specialties.map((s: string) => <Badge key={s} variant="secondary">{s}</Badge>)}
           </div>
@@ -65,10 +65,10 @@ function About() {
 
       {quals.length > 0 && (
         <section className="mt-10">
-          <h2 className="mb-3 text-xl font-semibold">Qualifications</h2>
+          <h2 className="mb-3 text-xl font-semibold" style={{ color: "var(--brand)", fontFamily: "var(--heading-font)" }}>Qualifications</h2>
           <ul className="space-y-2">
             {quals.map((q, i) => (
-              <li key={i} className="flex items-start gap-2"><Award className="mt-0.5 h-4 w-4 text-primary" /><span><strong>{q.label}</strong>{q.year ? ` — ${q.year}` : ""}</span></li>
+              <li key={i} className="flex items-start gap-2"><Award className="mt-0.5 h-4 w-4 text-[var(--brand)]" /><span><strong>{q.label}</strong>{q.year ? ` — ${q.year}` : ""}</span></li>
             ))}
           </ul>
         </section>
@@ -76,12 +76,12 @@ function About() {
 
       {timeline.length > 0 && (
         <section className="mt-10">
-          <h2 className="mb-4 text-xl font-semibold">Experience timeline</h2>
-          <div className="space-y-4 border-l-2 border-primary/30 pl-6">
+          <h2 className="mb-4 text-xl font-semibold" style={{ color: "var(--brand)", fontFamily: "var(--heading-font)" }}>Experience timeline</h2>
+          <div className="space-y-4 border-l-2 border-[color:var(--brand)]/30 pl-6">
             {timeline.map((t, i) => (
               <Card key={i}>
                 <CardContent className="py-4">
-                  <div className="text-xs font-semibold uppercase text-primary">{t.year}</div>
+                  <div className="text-xs font-semibold uppercase text-[var(--brand)]">{t.year}</div>
                   <div className="mt-1">{t.label}</div>
                 </CardContent>
               </Card>
