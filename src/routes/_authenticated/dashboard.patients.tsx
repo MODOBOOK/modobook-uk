@@ -1,17 +1,19 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { listMyAppointments } from "@/lib/availability.functions";
+import { listConsultationsForPatient, createConsultation } from "@/lib/consultations.functions";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Loader2, Mail, Phone, Calendar } from "lucide-react";
+import { Loader2, Mail, Phone, Calendar, ClipboardList, Plus } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard/patients")({
   ssr: false,
@@ -101,9 +103,12 @@ function PatientsPage() {
                   </AccordionTrigger>
                   <AccordionContent>
                     <div className="space-y-3 pb-3">
-                      <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
-                        {p.email && <span className="inline-flex items-center gap-1"><Mail className="h-3 w-3" />{p.email}</span>}
-                        {p.phone && <span className="inline-flex items-center gap-1"><Phone className="h-3 w-3" />{p.phone}</span>}
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
+                          {p.email && <span className="inline-flex items-center gap-1"><Mail className="h-3 w-3" />{p.email}</span>}
+                          {p.phone && <span className="inline-flex items-center gap-1"><Phone className="h-3 w-3" />{p.phone}</span>}
+                        </div>
+                        <PatientConsultLink name={p.name} email={p.email} phone={p.phone} />
                       </div>
                       <div className="space-y-2">
                         {p.bookings.map((b) => (
@@ -129,6 +134,7 @@ function PatientsPage() {
                           </div>
                         ))}
                       </div>
+                      <PatientConsultations email={p.email} name={p.name} />
                     </div>
                   </AccordionContent>
                 </AccordionItem>
@@ -137,6 +143,62 @@ function PatientsPage() {
           </CardContent>
         </Card>
       )}
+    </div>
+  );
+}
+
+function PatientConsultLink({ name, email, phone }: { name: string; email: string; phone: string | null }) {
+  const create = useServerFn(createConsultation);
+  const [busy, setBusy] = useState(false);
+  async function start() {
+    setBusy(true);
+    try {
+      const res: any = await create({ data: { patient_name: name, patient_email: email || undefined, patient_phone: phone || undefined } });
+      window.location.href = `/dashboard/consultations/${res.id}`;
+    } finally { setBusy(false); }
+  }
+  return (
+    <Button size="sm" variant="outline" onClick={start} disabled={busy}>
+      {busy ? <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> : <Plus className="mr-1 h-3.5 w-3.5" />}
+      New consultation
+    </Button>
+  );
+}
+
+function PatientConsultations({ email, name }: { email: string; name: string }) {
+  const list = useServerFn(listConsultationsForPatient);
+  const [rows, setRows] = useState<any[]>([]);
+  const [loaded, setLoaded] = useState(false);
+  useEffect(() => {
+    (async () => {
+      const data: any = await list({ data: { email: email || undefined, name: email ? undefined : name } });
+      setRows(data ?? []);
+      setLoaded(true);
+    })();
+  }, [email, name]); // eslint-disable-line
+  if (!loaded) return null;
+  if (!rows.length) {
+    return <div className="rounded-md border border-dashed bg-muted/30 p-3 text-xs text-muted-foreground">No consultations on file.</div>;
+  }
+  return (
+    <div className="space-y-1.5">
+      <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Consultations</div>
+      {rows.map((r) => (
+        <Link
+          key={r.id}
+          to="/dashboard/consultations/$id"
+          params={{ id: r.id }}
+          className="flex items-center justify-between rounded-md border p-2.5 text-sm hover:bg-muted"
+        >
+          <div className="flex items-center gap-2">
+            <ClipboardList className="h-4 w-4 text-primary" />
+            <span>Consultation · {new Date(r.created_at).toLocaleDateString()}</span>
+          </div>
+          <Badge variant={r.status === "completed" ? "default" : "secondary"} className="text-[10px]">
+            {r.status === "completed" ? "Completed" : `Step ${r.current_step}/8`}
+          </Badge>
+        </Link>
+      ))}
     </div>
   );
 }

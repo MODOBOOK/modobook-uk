@@ -1,0 +1,120 @@
+import { createServerFn } from "@tanstack/react-start";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+
+async function getProfileId(supabase: any, userId: string) {
+  const { data } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("user_id", userId)
+    .maybeSingle();
+  return data?.id as string | undefined;
+}
+
+export const listConsultations = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const pid = await getProfileId(supabase, userId);
+    if (!pid) return [];
+    const { data, error } = await supabase
+      .from("consultations")
+      .select("id, patient_name, patient_email, patient_phone, status, current_step, created_at, updated_at, completed_at")
+      .eq("profile_id", pid)
+      .order("updated_at", { ascending: false });
+    if (error) throw error;
+    return data ?? [];
+  });
+
+export const listConsultationsForPatient = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { email?: string; name?: string }) => d)
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const pid = await getProfileId(supabase, userId);
+    if (!pid) return [];
+    let q = supabase
+      .from("consultations")
+      .select("id, patient_name, patient_email, status, current_step, created_at, updated_at, completed_at")
+      .eq("profile_id", pid)
+      .order("updated_at", { ascending: false });
+    if (data.email) q = q.ilike("patient_email", data.email);
+    else if (data.name) q = q.ilike("patient_name", data.name);
+    const { data: rows, error } = await q;
+    if (error) throw error;
+    return rows ?? [];
+  });
+
+export const getConsultation = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string }) => d)
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const pid = await getProfileId(supabase, userId);
+    if (!pid) throw new Error("No profile");
+    const { data: row, error } = await supabase
+      .from("consultations")
+      .select("*")
+      .eq("id", data.id)
+      .eq("profile_id", pid)
+      .maybeSingle();
+    if (error) throw error;
+    if (!row) throw new Error("Not found");
+    return row;
+  });
+
+export const createConsultation = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { patient_name: string; patient_email?: string; patient_phone?: string; appointment_id?: string | null }) => d)
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const pid = await getProfileId(supabase, userId);
+    if (!pid) throw new Error("No profile");
+    const { data: row, error } = await supabase
+      .from("consultations")
+      .insert({
+        profile_id: pid,
+        patient_name: data.patient_name,
+        patient_email: data.patient_email ?? null,
+        patient_phone: data.patient_phone ?? null,
+        appointment_id: data.appointment_id ?? null,
+      })
+      .select("id")
+      .single();
+    if (error) throw error;
+    return row;
+  });
+
+export const updateConsultation = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string; patch: Record<string, any> }) => d)
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const pid = await getProfileId(supabase, userId);
+    if (!pid) throw new Error("No profile");
+    const allowed = [
+      "patient_name","patient_email","patient_phone","status","current_step",
+      "medical","concerns","assessment","before_photos","treatment_plan",
+      "consent","after_photos","treatment_log","invoice","notes","completed_at",
+    ];
+    const patch: Record<string, any> = {};
+    for (const k of allowed) if (k in data.patch) patch[k] = data.patch[k];
+    const { error } = await supabase
+      .from("consultations")
+      .update(patch as any)
+      .eq("id", data.id)
+      .eq("profile_id", pid);
+    if (error) throw error;
+    return { ok: true };
+  });
+
+export const deleteConsultation = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string }) => d)
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const pid = await getProfileId(supabase, userId);
+    if (!pid) throw new Error("No profile");
+    const { error } = await supabase.from("consultations").delete().eq("id", data.id).eq("profile_id", pid);
+    if (error) throw error;
+    return { ok: true };
+  });
