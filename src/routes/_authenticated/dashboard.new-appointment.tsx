@@ -48,6 +48,11 @@ function NewAppointmentPage() {
   const [addrPostcode, setAddrPostcode] = useState("");
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
+  const [sendDeposit, setSendDeposit] = useState(false);
+  const [depositAmount, setDepositAmount] = useState("");
+  const [depositHours, setDepositHours] = useState("24");
+  const createLink = useServerFn(createPaymentLink);
+
 
   useEffect(() => {
     (async () => {
