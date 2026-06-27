@@ -464,10 +464,41 @@ function CategoryRow({
 
 
 
-function ServiceRow({ treat, onDelete }: { treat: Treat; onDelete: () => void }) {
+function ServiceRow({
+  treat,
+  onDelete,
+  onMoveUp,
+  onMoveDown,
+}: {
+  treat: Treat;
+  onDelete: () => void;
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
+}) {
   return (
-    <div className="flex items-center gap-3 py-1">
+    <div className="flex items-center gap-2 py-1">
+      <div className="flex flex-col">
+        <button
+          type="button"
+          onClick={onMoveUp}
+          disabled={!onMoveUp}
+          className="rounded p-0.5 text-muted-foreground hover:bg-muted disabled:opacity-30"
+          aria-label="Move service up"
+        >
+          <ArrowUp className="h-3.5 w-3.5" />
+        </button>
+        <button
+          type="button"
+          onClick={onMoveDown}
+          disabled={!onMoveDown}
+          className="rounded p-0.5 text-muted-foreground hover:bg-muted disabled:opacity-30"
+          aria-label="Move service down"
+        >
+          <ArrowDown className="h-3.5 w-3.5" />
+        </button>
+      </div>
       <GripVertical className="h-4 w-4 shrink-0 text-[hsl(var(--accent))]/70" />
+
       <div className="flex-1 min-w-0">
         <p className="truncate text-sm font-semibold text-[hsl(var(--primary))]">{treat.name}</p>
         <p className="text-xs text-muted-foreground">
