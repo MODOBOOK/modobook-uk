@@ -71,23 +71,27 @@ function ModoLayout() {
           <div className="mx-auto grid max-w-5xl grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-3 py-2.5 sm:px-4 sm:py-4">
             <Link to="/m/$slug" params={{ slug }} className="flex min-w-0 items-center gap-2 sm:gap-3">
               {theme?.logo_url ? (
-                <img src={theme.logo_url} alt="" className="h-9 w-auto shrink-0 object-contain sm:h-10" />
-              ) : profile.avatar_url ? (
-                <img src={profile.avatar_url} alt="" className="h-9 w-9 shrink-0 rounded-full object-cover sm:h-10 sm:w-10" />
+                <img src={theme.logo_url} alt={profile.clinic_name} className="h-10 w-auto shrink-0 object-contain sm:h-12" />
               ) : (
-                <div
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white sm:h-10 sm:w-10"
-                  style={{ backgroundColor: brand }}
-                >
-                  <span className="text-base font-bold sm:text-lg">{profile.clinic_name?.charAt(0) || "M"}</span>
-                </div>
+                <>
+                  {profile.avatar_url ? (
+                    <img src={profile.avatar_url} alt="" className="h-9 w-9 shrink-0 rounded-full object-cover sm:h-10 sm:w-10" />
+                  ) : (
+                    <div
+                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white sm:h-10 sm:w-10"
+                      style={{ backgroundColor: brand }}
+                    >
+                      <span className="text-base font-bold sm:text-lg">{profile.clinic_name?.charAt(0) || "M"}</span>
+                    </div>
+                  )}
+                  <div className="min-w-0">
+                    <div className="truncate text-sm font-semibold leading-tight">{profile.clinic_name}</div>
+                    {profile.full_name && (
+                      <div className="truncate text-xs opacity-70">{profile.full_name}</div>
+                    )}
+                  </div>
+                </>
               )}
-              <div className="min-w-0">
-                <div className="truncate text-sm font-semibold leading-tight">{profile.clinic_name}</div>
-                {profile.full_name && (
-                  <div className="truncate text-xs opacity-70">{profile.full_name}</div>
-                )}
-              </div>
             </Link>
             <nav className="flex shrink-0 items-center gap-0.5 text-sm sm:gap-1">
               <TabLink slug={slug} to="/m/$slug" label="Book" exact />
