@@ -43,19 +43,14 @@ type Item = { label: string; description: string; to: string; icon: React.Elemen
 // Theme-aware icon tones — pull from the practitioner's branding tokens so
 // changing the preset/colours updates every icon chip across the dashboard.
 const T = {
-  primary:    { tone: "bg-primary",         iconColor: "text-primary-foreground" },
-  accent:     { tone: "bg-accent",          iconColor: "text-accent-foreground" },
-  muted:      { tone: "bg-muted",           iconColor: "text-foreground" },
-  secondary:  { tone: "bg-secondary",       iconColor: "text-secondary-foreground" },
-  outline:    { tone: "bg-card border border-border", iconColor: "text-foreground" },
-  soft:       { tone: "bg-primary/10",      iconColor: "text-primary" },
+  espresso: { tone: "bg-primary",                    iconColor: "text-primary-foreground" },
+  mocha:    { tone: "bg-primary/80",                 iconColor: "text-primary-foreground" },
+  taupe:    { tone: "bg-accent",                     iconColor: "text-accent-foreground" },
+  sand:     { tone: "bg-muted",                      iconColor: "text-foreground" },
+  cream:    { tone: "bg-secondary",                  iconColor: "text-secondary-foreground" },
+  ivory:    { tone: "bg-card border border-border",  iconColor: "text-foreground" },
 };
-const espresso = T.primary;
-const mocha = T.soft;
-const taupe = T.accent;
-const sand = T.muted;
-const cream = T.secondary;
-const ivory = T.outline;
+
 
 
 const groups: { title: string; items: Item[] }[] = [
