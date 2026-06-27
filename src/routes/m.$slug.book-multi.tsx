@@ -128,6 +128,9 @@ function MultiBookPage() {
     notes: "",
   });
   const [submitting, setSubmitting] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const termsHtml = (ctx as { termsHtml?: string | null }).termsHtml ?? null;
+  const termsRequired = Boolean((ctx as { termsRequired?: boolean }).termsRequired);
   const [authChoice, setAuthChoice] = useState<"pending" | "guest" | "signed-in">("pending");
   const [patientUserId, setPatientUserId] = useState<string | null>(null);
   const ensure = useServerFn(ensurePatient);
@@ -215,6 +218,10 @@ function MultiBookPage() {
   async function submit() {
     if (!slot || !form.name || !form.email) {
       toast.error("Please fill name, email and pick a time slot");
+      return;
+    }
+    if (termsRequired && !agreedToTerms) {
+      toast.error("Please agree to the terms & conditions to continue");
       return;
     }
     setSubmitting(true);
