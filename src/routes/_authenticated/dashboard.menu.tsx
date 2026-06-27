@@ -16,15 +16,19 @@ import {
   Star,
   HelpCircle,
   ChevronRight,
-
+  ShieldCheck,
   LogOut,
   ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { amIAdmin } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/_authenticated/dashboard/menu")({
   ssr: false,
+  loader: async () => {
+    try { return await amIAdmin(); } catch { return { admin: false }; }
+  },
   component: MenuPage,
 });
 
