@@ -415,7 +415,7 @@ function BookPage() {
 
             <TabsContent value="treatments" className="mt-4">
               <p className="mb-3 text-xs opacity-60">
-                Tap a treatment to book now, or tick multiple to book them together.
+                Tick all the treatments you'd like, then press Book Now.
               </p>
               {visibleTreatments.length === 0 ? (
                 <p className="opacity-70">No treatments available here yet.</p>
