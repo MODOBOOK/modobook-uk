@@ -296,6 +296,127 @@ export type Database = {
           },
         ]
       }
+      clinic_theme: {
+        Row: {
+          accent_color: string
+          background_color: string
+          body_font: string
+          created_at: string
+          custom_css: string | null
+          favicon_url: string | null
+          footer_bg_color: string
+          footer_text_color: string
+          header_bg_color: string
+          header_text_color: string
+          heading_font: string
+          hero_heading: string | null
+          hero_image_url: string | null
+          hero_subheading: string | null
+          id: string
+          logo_url: string | null
+          primary_color: string
+          profile_id: string
+          text_color: string
+          updated_at: string
+        }
+        Insert: {
+          accent_color?: string
+          background_color?: string
+          body_font?: string
+          created_at?: string
+          custom_css?: string | null
+          favicon_url?: string | null
+          footer_bg_color?: string
+          footer_text_color?: string
+          header_bg_color?: string
+          header_text_color?: string
+          heading_font?: string
+          hero_heading?: string | null
+          hero_image_url?: string | null
+          hero_subheading?: string | null
+          id?: string
+          logo_url?: string | null
+          primary_color?: string
+          profile_id: string
+          text_color?: string
+          updated_at?: string
+        }
+        Update: {
+          accent_color?: string
+          background_color?: string
+          body_font?: string
+          created_at?: string
+          custom_css?: string | null
+          favicon_url?: string | null
+          footer_bg_color?: string
+          footer_text_color?: string
+          header_bg_color?: string
+          header_text_color?: string
+          heading_font?: string
+          hero_heading?: string | null
+          hero_image_url?: string | null
+          hero_subheading?: string | null
+          id?: string
+          logo_url?: string | null
+          primary_color?: string
+          profile_id?: string
+          text_color?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clinic_theme_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      consent_templates: {
+        Row: {
+          body_markdown: string
+          created_at: string
+          id: string
+          is_system: boolean
+          name: string
+          profile_id: string | null
+          requires_signature: boolean
+          treatment_type: string | null
+          updated_at: string
+        }
+        Insert: {
+          body_markdown?: string
+          created_at?: string
+          id?: string
+          is_system?: boolean
+          name: string
+          profile_id?: string | null
+          requires_signature?: boolean
+          treatment_type?: string | null
+          updated_at?: string
+        }
+        Update: {
+          body_markdown?: string
+          created_at?: string
+          id?: string
+          is_system?: boolean
+          name?: string
+          profile_id?: string | null
+          requires_signature?: boolean
+          treatment_type?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consent_templates_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       locations: {
         Row: {
           active: boolean
@@ -351,6 +472,47 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "locations_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      medical_form_templates: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_system: boolean
+          name: string
+          profile_id: string | null
+          schema: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_system?: boolean
+          name: string
+          profile_id?: string | null
+          schema?: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_system?: boolean
+          name?: string
+          profile_id?: string | null
+          schema?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medical_form_templates_profile_id_fkey"
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
