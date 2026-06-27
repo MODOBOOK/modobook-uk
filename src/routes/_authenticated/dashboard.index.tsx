@@ -133,17 +133,17 @@ function DashboardIndex() {
 
 
       {/* Booking link */}
-      <Card>
-        <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
+      <Card className="border-border/60">
+        <CardContent className="flex flex-col gap-4 p-6 sm:flex-row sm:items-center">
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Your booking link</p>
-            <p className="mt-1 truncate text-sm font-medium">{bookingUrl}</p>
+            <p className="text-[10px] font-medium uppercase tracking-[0.25em] text-muted-foreground">Your booking link</p>
+            <p className="mt-2 truncate font-serif text-lg">{bookingUrl}</p>
           </div>
           <div className="flex gap-2">
             <Button
               variant="outline"
               size="sm"
-              className="flex-1 sm:flex-none"
+              className="flex-1 rounded-full sm:flex-none"
               onClick={() => {
                 navigator.clipboard.writeText(bookingUrl);
                 toast.success("Link copied");
@@ -151,7 +151,7 @@ function DashboardIndex() {
             >
               <Copy className="mr-1.5 h-4 w-4" /> Copy
             </Button>
-            <Button size="sm" className="flex-1 sm:flex-none" asChild>
+            <Button size="sm" className="flex-1 rounded-full sm:flex-none" asChild>
               <a href={bookingUrl} target="_blank" rel="noreferrer">
                 <ExternalLink className="mr-1.5 h-4 w-4" /> Open
               </a>
@@ -161,11 +161,15 @@ function DashboardIndex() {
       </Card>
 
       {/* Upcoming appointments */}
-      <section className="space-y-3">
-        <div className="flex items-center justify-between px-1">
-          <h2 className="text-base font-bold sm:text-lg">Upcoming appointments</h2>
-          <Link to="/dashboard/bookings" className="text-sm font-medium text-primary">View all</Link>
+      <section className="space-y-4">
+        <div className="flex items-end justify-between px-1">
+          <div>
+            <p className="text-[10px] font-medium uppercase tracking-[0.25em] text-muted-foreground">Schedule</p>
+            <h2 className="mt-1 font-serif text-2xl sm:text-3xl">Upcoming appointments</h2>
+          </div>
+          <Link to="/dashboard/bookings" className="text-xs font-medium uppercase tracking-[0.2em] text-foreground underline-offset-4 hover:underline">View all</Link>
         </div>
+
 
         {loading ? (
           <Card><CardContent className="py-8 text-center text-sm text-muted-foreground">Loading…</CardContent></Card>
