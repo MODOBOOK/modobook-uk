@@ -164,15 +164,49 @@ function BookPage() {
     color: brand,
   };
 
+  const headerBg = theme?.header_bg_color || brand;
+  const headerText = theme?.header_text_color || "#ffffff";
+  const footerBg = theme?.footer_bg_color || brand;
+  const footerText = theme?.footer_text_color || "#ffffff";
+  const heroHeading = theme?.hero_heading;
+  const heroSubheading = theme?.hero_subheading;
+  const logoUrl = theme?.logo_url;
+
   return (
     <main className="min-h-screen pb-16" style={pageStyle}>
+      {/* Header bar */}
+      <header
+        className="sticky top-0 z-30 w-full border-b"
+        style={{ backgroundColor: headerBg, color: headerText, borderColor: `${headerText}22` }}
+      >
+        <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3">
+          <div className="flex min-w-0 items-center gap-2">
+            {logoUrl ? (
+              <img src={logoUrl} alt="" className="h-8 w-8 shrink-0 rounded object-cover" />
+            ) : (
+              <div className="grid h-8 w-8 shrink-0 place-items-center rounded text-sm font-bold" style={{ backgroundColor: `${headerText}33` }}>
+                {profile.clinic_name.charAt(0)}
+              </div>
+            )}
+            <span className="truncate text-sm font-semibold sm:text-base" style={{ fontFamily: `${headingFont}, ${bodyFont}, system-ui, sans-serif` }}>
+              {profile.clinic_name}
+            </span>
+          </div>
+          <nav className="flex shrink-0 items-center gap-3 text-xs sm:gap-4 sm:text-sm">
+            <Link to="/m/$slug" params={{ slug }} className="opacity-90 hover:opacity-100">Book</Link>
+            <Link to="/m/$slug/about" params={{ slug }} className="opacity-90 hover:opacity-100">About</Link>
+            <Link to="/m/$slug/reviews" params={{ slug }} className="opacity-90 hover:opacity-100">Reviews</Link>
+          </nav>
+        </div>
+      </header>
+
       {/* Hero image */}
       <div className="relative">
         {heroUrl ? (
           <img
             src={heroUrl}
             alt=""
-            className="h-64 w-full object-cover sm:h-96"
+            className="h-72 w-full object-cover object-top sm:h-[28rem]"
           />
         ) : (
           <div
@@ -180,7 +214,25 @@ function BookPage() {
             style={{ background: `linear-gradient(135deg, ${brand}, ${accent})` }}
           />
         )}
+        {(heroHeading || heroSubheading) && (
+          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent px-4 py-6 sm:py-10">
+            <div className="mx-auto max-w-3xl text-white">
+              {heroHeading && (
+                <h2
+                  className="text-2xl font-extrabold leading-tight sm:text-4xl"
+                  style={{ fontFamily: `${headingFont}, ${bodyFont}, system-ui, sans-serif` }}
+                >
+                  {heroHeading}
+                </h2>
+              )}
+              {heroSubheading && (
+                <p className="mt-2 max-w-2xl text-sm opacity-90 sm:text-base">{heroSubheading}</p>
+              )}
+            </div>
+          </div>
+        )}
       </div>
+
 
       {/* Overlapping title card */}
       <section className="mx-auto -mt-10 max-w-3xl px-4">
@@ -377,6 +429,14 @@ function BookPage() {
           </div>
         </section>
       )}
+
+      {/* Footer */}
+      <footer
+        className="mt-16 w-full px-4 py-6 text-center text-xs"
+        style={{ backgroundColor: footerBg, color: footerText }}
+      >
+        © {new Date().getFullYear()} {profile.clinic_name} · Powered by MODO Book
+      </footer>
     </main>
   );
 }
