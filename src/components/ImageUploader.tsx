@@ -1,0 +1,106 @@
+import { useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { Upload, X } from "lucide-react";
+
+const TEN_YEARS = 60 * 60 * 24 * 365 * 10;
+
+export function ImageUploader({
+  label,
+  value,
+  onChange,
+  profileId,
+  folder,
+  previewClass = "mt-2 h-16 object-contain rounded",
+}: {
+  label: string;
+  value: string | null | undefined;
+  onChange: (url: string | null) => void;
+  profileId: string;
+  folder: string;
+  previewClass?: string;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  async function handleFile(file: File) {
+    if (!profileId) {
+      toast.error("Profile not ready yet");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image must be under 5MB");
+      return;
+    }
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop()?.toLowerCase() || "png";
+      const path = `${profileId}/${folder}/${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("clinic-assets")
+        .upload(path, file, { upsert: true, contentType: file.type });
+      if (upErr) throw upErr;
+      const { data, error: sErr } = await supabase.storage
+        .from("clinic-assets")
+        .createSignedUrl(path, TEN_YEARS);
+      if (sErr || !data) throw sErr ?? new Error("Failed to sign URL");
+      onChange(data.signedUrl);
+      toast.success("Uploaded");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Upload failed");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  return (
+    <div className="space-y-1.5">
+      <Label>{label}</Label>
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+        <Input
+          placeholder="https://… or upload"
+          value={value ?? ""}
+          onChange={(e) => onChange(e.target.value || null)}
+          className="flex-1"
+        />
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) handleFile(f);
+            e.target.value = "";
+          }}
+        />
+        <div className="flex gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => inputRef.current?.click()}
+            disabled={uploading}
+          >
+            <Upload className="mr-1.5 h-3.5 w-3.5" />
+            {uploading ? "Uploading…" : "Upload"}
+          </Button>
+          {value && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => onChange(null)}
+            >
+              <X className="h-3.5 w-3.5" />
+            </Button>
+          )}
+        </div>
+      </div>
+      {value && <img src={value} alt={label} className={previewClass} />}
+    </div>
+  );
+}

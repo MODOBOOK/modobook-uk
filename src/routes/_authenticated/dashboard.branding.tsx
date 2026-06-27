@@ -2,11 +2,13 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { getMyTheme, upsertMyTheme, type ClinicThemeInput } from "@/lib/theme.functions";
+import { getMyProfile } from "@/lib/profiles.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ImageUploader } from "@/components/ImageUploader";
 import { toast } from "sonner";
 import { Palette } from "lucide-react";
 
@@ -80,15 +82,18 @@ function ColorField({
 
 function BrandingPage() {
   const fetchTheme = useServerFn(getMyTheme);
+  const fetchProfile = useServerFn(getMyProfile);
   const save = useServerFn(upsertMyTheme);
   const [state, setState] = useState<ClinicThemeInput>({ ...DEFAULTS });
+  const [profileId, setProfileId] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     (async () => {
-      const t = await fetchTheme();
+      const [t, p] = await Promise.all([fetchTheme(), fetchProfile()]);
       if (t) setState({ ...DEFAULTS, ...t });
+      if (p) setProfileId(p.id);
       setLoading(false);
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -114,14 +119,14 @@ function BrandingPage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
           <h1 className="text-2xl font-semibold">Branding</h1>
           <p className="text-sm text-muted-foreground">
             Colors, typography, logo and hero image shown on your MODO Book page.
           </p>
         </div>
-        <Button onClick={handleSave} disabled={saving}>
+        <Button onClick={handleSave} disabled={saving} className="sm:w-auto">
           {saving ? "Saving…" : "Save changes"}
         </Button>
       </div>
@@ -193,42 +198,32 @@ function BrandingPage() {
           <CardTitle className="text-base">Logo, favicon & hero image</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-1.5 sm:col-span-2">
-            <Label>Logo URL</Label>
-            <Input
-              placeholder="https://…/logo.png"
-              value={state.logo_url ?? ""}
-              onChange={(e) => set("logo_url", e.target.value || null)}
-            />
-            {state.logo_url && (
-              <img src={state.logo_url} alt="logo" className="mt-2 h-12 object-contain" />
-            )}
-          </div>
-          <div className="space-y-1.5">
-            <Label>Favicon URL</Label>
-            <Input
-              placeholder="https://…/favicon.ico"
-              value={state.favicon_url ?? ""}
-              onChange={(e) => set("favicon_url", e.target.value || null)}
+          <div className="sm:col-span-2">
+            <ImageUploader
+              label="Logo"
+              value={state.logo_url}
+              onChange={(v) => set("logo_url", v)}
+              profileId={profileId}
+              folder="logo"
+              previewClass="mt-2 h-16 object-contain rounded bg-muted/30 p-2"
             />
           </div>
-          <div className="space-y-1.5">
-            <Label>Hero image URL</Label>
-            <Input
-              placeholder="https://…/hero.jpg"
-              value={state.hero_image_url ?? ""}
-              onChange={(e) => set("hero_image_url", e.target.value || null)}
-            />
-          </div>
-          {state.hero_image_url && (
-            <div className="sm:col-span-2">
-              <img
-                src={state.hero_image_url}
-                alt="hero"
-                className="h-40 w-full rounded-md object-cover"
-              />
-            </div>
-          )}
+          <ImageUploader
+            label="Favicon"
+            value={state.favicon_url}
+            onChange={(v) => set("favicon_url", v)}
+            profileId={profileId}
+            folder="favicon"
+            previewClass="mt-2 h-8 w-8 object-contain rounded"
+          />
+          <ImageUploader
+            label="Hero image"
+            value={state.hero_image_url}
+            onChange={(v) => set("hero_image_url", v)}
+            profileId={profileId}
+            folder="hero"
+            previewClass="mt-2 h-40 w-full rounded-md object-cover"
+          />
           <div className="space-y-1.5 sm:col-span-2">
             <Label>Hero heading</Label>
             <Input
