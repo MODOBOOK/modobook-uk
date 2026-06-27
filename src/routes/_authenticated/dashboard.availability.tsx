@@ -12,6 +12,12 @@ import {
   listAvailabilityRules,
   upsertAvailabilityRule,
   deleteAvailabilityRule,
+  listAvailabilityOverrides,
+  addAvailabilityOverride,
+  deleteAvailabilityOverride,
+  listBlockedDates,
+  addBlockedDate,
+  deleteBlockedDate,
 } from "@/lib/availability.functions";
 import { listMyLocations } from "@/lib/locations.functions";
 
