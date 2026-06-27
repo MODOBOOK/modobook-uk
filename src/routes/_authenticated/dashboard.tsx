@@ -25,6 +25,9 @@ import {
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useDashboardThemeStyle } from "@/hooks/use-dashboard-theme";
+
+
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   ssr: false,
