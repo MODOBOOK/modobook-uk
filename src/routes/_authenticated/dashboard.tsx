@@ -50,6 +50,7 @@ const navItems = [
   { label: "New appointment", to: "/dashboard/new-appointment", icon: CalendarPlus },
   { label: "Bookings", to: "/dashboard/bookings", icon: Users },
   { label: "Patients", to: "/dashboard/patients", icon: Users },
+  { label: "Consultations", to: "/dashboard/consultations", icon: ClipboardList },
   { label: "Reviews", to: "/dashboard/reviews", icon: Star },
   { label: "Payments", to: "/dashboard/payments", icon: CreditCard },
 ];
