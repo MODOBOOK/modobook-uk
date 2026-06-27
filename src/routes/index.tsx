@@ -6,8 +6,8 @@ import { Calendar, Link2, Palette, ShieldCheck, CreditCard, Star } from "lucide-
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Aesthetic Bookings | Custom practitioner booking pages" },
-      { name: "description", content: "Create a branded booking page, manage treatments, availability, and take payments with Stripe Connect." },
+      { title: "MODO | Custom practitioner booking pages" },
+      { name: "description", content: "Create a branded MODO booking page, manage treatments, consultations, and take payments with Stripe Connect." },
     ],
   }),
   component: LandingPage,
