@@ -144,9 +144,35 @@ function BookPage() {
     locations.length === 1 ? locations[0].id : null,
   );
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const toggleSelect = (id: string) =>
-    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  const treatById = useMemo(() => new Map(treatments.map((t) => [t.id, t])), [treatments]);
+  const addonsFor = useMemo(() => {
+    const m = new Map<string, string[]>();
+    for (const link of addonLinks) {
+      if (!m.has(link.treatment_id)) m.set(link.treatment_id, []);
+      m.get(link.treatment_id)!.push(link.addon_id);
+    }
+    return m;
+  }, [addonLinks]);
+
+  const [addonPrompt, setAddonPrompt] = useState<{ treatmentId: string; addonIds: string[] } | null>(null);
+  const [addonPicks, setAddonPicks] = useState<Set<string>>(new Set());
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      if (prev.includes(id)) return prev.filter((x) => x !== id);
+      // Adding: check for add-ons
+      const t = treatById.get(id);
+      const mode = (t as { addon_mode?: string } | undefined)?.addon_mode ?? "optional";
+      const candidates = (addonsFor.get(id) ?? []).filter((aid) => treatById.has(aid) && !prev.includes(aid));
+      if (mode === "optional" && candidates.length > 0) {
+        setAddonPicks(new Set());
+        setAddonPrompt({ treatmentId: id, addonIds: candidates });
+      }
+      return [...prev, id];
+    });
+  };
   const isSelected = (id: string) => selectedIds.includes(id);
+
 
   // Chooser flow
   const chooserOn = !!profile.chooser_enabled;
