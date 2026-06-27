@@ -94,13 +94,30 @@ export const listMyAppointments = createServerFn({ method: "GET" })
     if (!profileId) return [];
     const { data, error } = await supabase
       .from("appointments")
-      .select("id, patient_name, patient_email, patient_phone, scheduled_date, start_time, end_time, status, payment_status, total_amount, notes, treatment_id, location_id, treatments(name), locations(name)")
+      .select("id, patient_name, patient_email, patient_phone, scheduled_date, start_time, end_time, status, payment_status, total_amount, notes, practitioner_notes, treatment_id, location_id, treatments(name), locations(name)")
       .eq("profile_id", profileId)
       .order("scheduled_date", { ascending: true })
       .order("start_time", { ascending: true });
     if (error) throw error;
     return data ?? [];
   });
+
+export const updateAppointmentNotes = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { id: string; practitionerNotes: string }) => input)
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const profileId = await getProfileId(supabase, userId);
+    if (!profileId) throw new Error("Profile not found");
+    const { error } = await supabase
+      .from("appointments")
+      .update({ practitioner_notes: data.practitionerNotes })
+      .eq("id", data.id)
+      .eq("profile_id", profileId);
+    if (error) throw error;
+    return { ok: true };
+  });
+
 
 // ---------- Ad-hoc overrides (extra open slots on specific dates) ----------
 
