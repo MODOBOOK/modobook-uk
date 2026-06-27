@@ -112,7 +112,9 @@ function BookPage() {
         price_mode: "fixed" | "percent"; price_value: number; notes: string | null;
         category?: string | null;
       }[];
+      addonLinks?: { treatment_id: string; addon_id: string }[];
     };
+
 
   const { slug } = useParams({ from: "/m/$slug/" });
   const brand = theme?.primary_color || profile.brand_color || "#1f2a44";
