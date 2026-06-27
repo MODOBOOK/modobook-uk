@@ -1132,8 +1132,5 @@ function TreatmentRow({
     </div>
   );
 }
-    </div>
-  );
-}
 
 
