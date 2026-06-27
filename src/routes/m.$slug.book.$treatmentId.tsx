@@ -11,6 +11,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Clock, MapPin, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
+import type { Database } from "@/integrations/supabase/types";
+type Rule = Database["public"]["Tables"]["availability_rules"]["Row"];
+type Loc = Database["public"]["Tables"]["locations"]["Row"];
 
 export const Route = createFileRoute("/m/$slug/book/$treatmentId")({
   loader: ({ params }) => getBookingContext({ data: { slug: params.slug, treatmentId: params.treatmentId } }),
