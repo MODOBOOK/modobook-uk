@@ -117,7 +117,7 @@ function DashboardLayout() {
           </div>
         </header>
 
-        <main className="flex-1 overflow-auto p-4 lg:p-8">
+        <main className="min-w-0 flex-1 overflow-x-hidden p-4 lg:p-8">
           <Outlet />
         </main>
       </div>
