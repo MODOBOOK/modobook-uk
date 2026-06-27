@@ -364,6 +364,136 @@ export type Database = {
           },
         ]
       }
+      patient_practitioner_links: {
+        Row: {
+          created_at: string
+          id: string
+          patient_id: string
+          profile_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          patient_id: string
+          profile_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          patient_id?: string
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_practitioner_links_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_practitioner_links_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patient_reviews: {
+        Row: {
+          appointment_id: string | null
+          approved: boolean
+          body: string
+          created_at: string
+          id: string
+          patient_id: string
+          profile_id: string
+          rating: number
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          appointment_id?: string | null
+          approved?: boolean
+          body: string
+          created_at?: string
+          id?: string
+          patient_id: string
+          profile_id: string
+          rating: number
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          appointment_id?: string | null
+          approved?: boolean
+          body?: string
+          created_at?: string
+          id?: string
+          patient_id?: string
+          profile_id?: string
+          rating?: number
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_reviews_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_reviews_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_reviews_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patients: {
+        Row: {
+          created_at: string
+          date_of_birth: string | null
+          email: string | null
+          full_name: string
+          id: string
+          phone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date_of_birth?: string | null
+          email?: string | null
+          full_name: string
+          id?: string
+          phone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date_of_birth?: string | null
+          email?: string | null
+          full_name?: string
+          id?: string
+          phone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       payments: {
         Row: {
           amount: number
@@ -427,6 +557,7 @@ export type Database = {
           about: string | null
           active: boolean | null
           address: Json | null
+          avatar_url: string | null
           bio: string | null
           brand_color: string | null
           clinic_name: string | null
@@ -436,12 +567,15 @@ export type Database = {
           hero_url: string | null
           id: string
           phone: string | null
+          qualifications: Json
           role: Database["public"]["Enums"]["app_role"]
           slug: string | null
           social_links: Json | null
+          specialties: string[]
           stripe_connect_account_id: string | null
           stripe_connect_onboarding_status: string | null
           tagline: string | null
+          timeline: Json
           updated_at: string
           user_id: string
         }
@@ -449,6 +583,7 @@ export type Database = {
           about?: string | null
           active?: boolean | null
           address?: Json | null
+          avatar_url?: string | null
           bio?: string | null
           brand_color?: string | null
           clinic_name?: string | null
@@ -458,12 +593,15 @@ export type Database = {
           hero_url?: string | null
           id?: string
           phone?: string | null
+          qualifications?: Json
           role?: Database["public"]["Enums"]["app_role"]
           slug?: string | null
           social_links?: Json | null
+          specialties?: string[]
           stripe_connect_account_id?: string | null
           stripe_connect_onboarding_status?: string | null
           tagline?: string | null
+          timeline?: Json
           updated_at?: string
           user_id: string
         }
@@ -471,6 +609,7 @@ export type Database = {
           about?: string | null
           active?: boolean | null
           address?: Json | null
+          avatar_url?: string | null
           bio?: string | null
           brand_color?: string | null
           clinic_name?: string | null
@@ -480,12 +619,15 @@ export type Database = {
           hero_url?: string | null
           id?: string
           phone?: string | null
+          qualifications?: Json
           role?: Database["public"]["Enums"]["app_role"]
           slug?: string | null
           social_links?: Json | null
+          specialties?: string[]
           stripe_connect_account_id?: string | null
           stripe_connect_onboarding_status?: string | null
           tagline?: string | null
+          timeline?: Json
           updated_at?: string
           user_id?: string
         }
