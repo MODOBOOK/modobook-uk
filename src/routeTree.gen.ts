@@ -23,6 +23,7 @@ import { Route as MSlugAuthRouteImport } from './routes/m.$slug.auth'
 import { Route as MSlugAccountRouteImport } from './routes/m.$slug.account'
 import { Route as MSlugAboutRouteImport } from './routes/m.$slug.about'
 import { Route as AuthenticatedDashboardReviewsRouteImport } from './routes/_authenticated/dashboard.reviews'
+import { Route as AuthenticatedDashboardLocationsRouteImport } from './routes/_authenticated/dashboard.locations'
 import { Route as AuthenticatedDashboardCategoriesRouteImport } from './routes/_authenticated/dashboard.categories'
 import { Route as AuthenticatedDashboardBioRouteImport } from './routes/_authenticated/dashboard.bio'
 
@@ -97,6 +98,12 @@ const AuthenticatedDashboardReviewsRoute =
     path: '/reviews',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
+const AuthenticatedDashboardLocationsRoute =
+  AuthenticatedDashboardLocationsRouteImport.update({
+    id: '/locations',
+    path: '/locations',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
 const AuthenticatedDashboardCategoriesRoute =
   AuthenticatedDashboardCategoriesRouteImport.update({
     id: '/categories',
@@ -119,6 +126,7 @@ export interface FileRoutesByFullPath {
   '/m/$slug': typeof MSlugRouteWithChildren
   '/dashboard/bio': typeof AuthenticatedDashboardBioRoute
   '/dashboard/categories': typeof AuthenticatedDashboardCategoriesRoute
+  '/dashboard/locations': typeof AuthenticatedDashboardLocationsRoute
   '/dashboard/reviews': typeof AuthenticatedDashboardReviewsRoute
   '/m/$slug/about': typeof MSlugAboutRoute
   '/m/$slug/account': typeof MSlugAccountRoute
@@ -134,6 +142,7 @@ export interface FileRoutesByTo {
   '/book/$slug': typeof BookSlugRoute
   '/dashboard/bio': typeof AuthenticatedDashboardBioRoute
   '/dashboard/categories': typeof AuthenticatedDashboardCategoriesRoute
+  '/dashboard/locations': typeof AuthenticatedDashboardLocationsRoute
   '/dashboard/reviews': typeof AuthenticatedDashboardReviewsRoute
   '/m/$slug/about': typeof MSlugAboutRoute
   '/m/$slug/account': typeof MSlugAccountRoute
@@ -153,6 +162,7 @@ export interface FileRoutesById {
   '/m/$slug': typeof MSlugRouteWithChildren
   '/_authenticated/dashboard/bio': typeof AuthenticatedDashboardBioRoute
   '/_authenticated/dashboard/categories': typeof AuthenticatedDashboardCategoriesRoute
+  '/_authenticated/dashboard/locations': typeof AuthenticatedDashboardLocationsRoute
   '/_authenticated/dashboard/reviews': typeof AuthenticatedDashboardReviewsRoute
   '/m/$slug/about': typeof MSlugAboutRoute
   '/m/$slug/account': typeof MSlugAccountRoute
@@ -172,6 +182,7 @@ export interface FileRouteTypes {
     | '/m/$slug'
     | '/dashboard/bio'
     | '/dashboard/categories'
+    | '/dashboard/locations'
     | '/dashboard/reviews'
     | '/m/$slug/about'
     | '/m/$slug/account'
@@ -187,6 +198,7 @@ export interface FileRouteTypes {
     | '/book/$slug'
     | '/dashboard/bio'
     | '/dashboard/categories'
+    | '/dashboard/locations'
     | '/dashboard/reviews'
     | '/m/$slug/about'
     | '/m/$slug/account'
@@ -205,6 +217,7 @@ export interface FileRouteTypes {
     | '/m/$slug'
     | '/_authenticated/dashboard/bio'
     | '/_authenticated/dashboard/categories'
+    | '/_authenticated/dashboard/locations'
     | '/_authenticated/dashboard/reviews'
     | '/m/$slug/about'
     | '/m/$slug/account'
@@ -322,6 +335,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardReviewsRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
+    '/_authenticated/dashboard/locations': {
+      id: '/_authenticated/dashboard/locations'
+      path: '/locations'
+      fullPath: '/dashboard/locations'
+      preLoaderRoute: typeof AuthenticatedDashboardLocationsRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
     '/_authenticated/dashboard/categories': {
       id: '/_authenticated/dashboard/categories'
       path: '/categories'
@@ -342,6 +362,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedDashboardRouteChildren {
   AuthenticatedDashboardBioRoute: typeof AuthenticatedDashboardBioRoute
   AuthenticatedDashboardCategoriesRoute: typeof AuthenticatedDashboardCategoriesRoute
+  AuthenticatedDashboardLocationsRoute: typeof AuthenticatedDashboardLocationsRoute
   AuthenticatedDashboardReviewsRoute: typeof AuthenticatedDashboardReviewsRoute
   AuthenticatedDashboardIndexRoute: typeof AuthenticatedDashboardIndexRoute
 }
@@ -351,6 +372,7 @@ const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
     AuthenticatedDashboardBioRoute: AuthenticatedDashboardBioRoute,
     AuthenticatedDashboardCategoriesRoute:
       AuthenticatedDashboardCategoriesRoute,
+    AuthenticatedDashboardLocationsRoute: AuthenticatedDashboardLocationsRoute,
     AuthenticatedDashboardReviewsRoute: AuthenticatedDashboardReviewsRoute,
     AuthenticatedDashboardIndexRoute: AuthenticatedDashboardIndexRoute,
   }
