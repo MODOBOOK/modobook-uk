@@ -170,7 +170,7 @@ export function ConsultationWizard() {
         {step === 5 && <Step5 consent={c.consent} patientName={c.patient_name} onChange={(v: any) => setField("consent", v)} />}
         {step === 6 && <Step6 photos={c.after_photos} onChange={(v: any) => setField("after_photos", v)} />}
         {step === 7 && <Step7 log={c.treatment_log} onChange={(v: any) => setField("treatment_log", v)} />}
-        {step === 8 && <Step8 invoice={c.invoice} email={c.patient_email} onChange={(v) => setField("invoice", v)} onComplete={complete} completed={c.status === "completed"} />}
+        {step === 8 && <Step8 invoice={c.invoice} email={c.patient_email} onChange={(v: any) => setField("invoice", v)} onComplete={complete} completed={c.status === "completed"} />}
       </CardContent></Card>
 
       {/* Sticky nav */}
