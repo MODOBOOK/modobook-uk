@@ -77,7 +77,7 @@ function DashboardLayout() {
   }
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-screen bg-background" style={themeStyle}>
       {/* Desktop sidebar */}
       <aside className="hidden w-72 flex-col border-r border-border/60 bg-sidebar lg:flex">
         <div className="flex h-20 items-center gap-3 border-b border-border/60 px-7">
