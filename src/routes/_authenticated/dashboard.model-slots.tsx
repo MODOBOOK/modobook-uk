@@ -2,7 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { listMyModelSlots, upsertModelSlot, deleteModelSlot } from "@/lib/discounts.functions";
-import { getMyTreatments } from "@/lib/treatments.functions";
+import { getMyTreatments, createTreatment } from "@/lib/treatments.functions";
+import { Checkbox } from "@/components/ui/checkbox";
 import { listMyLocations } from "@/lib/locations.functions";
 import { getMyProfile, updateProfile } from "@/lib/profiles.functions";
 import { Button } from "@/components/ui/button";
@@ -159,7 +160,9 @@ function SlotEditor({ existing, treatments, locations, onClose, onSaved }: {
   onClose: () => void; onSaved: () => void;
 }) {
   const save = useServerFn(upsertModelSlot);
-  const [treatmentId, setTreatmentId] = useState(existing?.treatment_id ?? treatments[0]?.id ?? "");
+  const createT = useServerFn(createTreatment);
+  const [allTreatments, setAllTreatments] = useState<Treat[]>(treatments);
+  const [selectedIds, setSelectedIds] = useState<string[]>(existing ? [existing.treatment_id] : []);
   const [locationId, setLocationId] = useState<string>(existing?.location_id ?? "");
   const [date, setDate] = useState(existing?.slot_date ?? "");
   const [startT, setStartT] = useState(existing?.start_time?.slice(0, 5) ?? "10:00");
@@ -170,46 +173,115 @@ function SlotEditor({ existing, treatments, locations, onClose, onSaved }: {
   const [active, setActive] = useState(existing?.active ?? true);
   const [category, setCategory] = useState(existing?.category ?? "");
 
+  // Inline "create new treatment" state
+  const [showNew, setShowNew] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [newPrice, setNewPrice] = useState("");
+  const [newDuration, setNewDuration] = useState("30");
+  const [creating, setCreating] = useState(false);
 
-  const t = treatments.find((x) => x.id === treatmentId);
+  const isEdit = !!existing;
+
+  function toggle(id: string) {
+    setSelectedIds((cur) => cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]);
+  }
+
+  async function addNewTreatment() {
+    if (!newName.trim()) { toast.error("Treatment name required"); return; }
+    const p = Number(newPrice); const d = Number(newDuration);
+    if (!Number.isFinite(p) || p < 0) { toast.error("Valid price required"); return; }
+    if (!Number.isFinite(d) || d <= 0) { toast.error("Valid duration required"); return; }
+    setCreating(true);
+    try {
+      const t = await createT({ data: { name: newName.trim(), price: p, duration: d } }) as any;
+      const newT: Treat = { id: t.id, name: t.name, price: Number(t.price), duration: t.duration };
+      setAllTreatments((cur) => [...cur, newT]);
+      setSelectedIds((cur) => isEdit ? [newT.id] : [...cur, newT.id]);
+      setNewName(""); setNewPrice(""); setNewDuration("30"); setShowNew(false);
+      toast.success("Treatment added");
+    } catch (e) { toast.error((e as Error).message); }
+    finally { setCreating(false); }
+  }
 
   async function submit() {
-    if (!treatmentId || !date || !startT || !endT) { toast.error("Fill all fields"); return; }
+    if (selectedIds.length === 0) { toast.error("Select at least one treatment"); return; }
+    if (!date || !startT || !endT) { toast.error("Fill date and times"); return; }
     const v = Number(value);
     if (!Number.isFinite(v) || v < 0) { toast.error("Enter a valid price"); return; }
     if (mode === "percent" && v > 100) { toast.error("Percent must be ≤ 100"); return; }
     try {
-      await save({ data: {
-        id: existing?.id,
-        treatment_id: treatmentId,
-        location_id: locationId || null,
-        slot_date: date,
-        start_time: startT,
-        end_time: endT,
-        price_mode: mode,
-        price_value: v,
-        notes: notes || null,
-        active,
-        category: category.trim() || null,
-      }});
-      toast.success("Saved");
+      if (isEdit) {
+        await save({ data: {
+          id: existing!.id,
+          treatment_id: selectedIds[0],
+          location_id: locationId || null,
+          slot_date: date, start_time: startT, end_time: endT,
+          price_mode: mode, price_value: v,
+          notes: notes || null, active, category: category.trim() || null,
+        }});
+      } else {
+        for (const tid of selectedIds) {
+          await save({ data: {
+            treatment_id: tid,
+            location_id: locationId || null,
+            slot_date: date, start_time: startT, end_time: endT,
+            price_mode: mode, price_value: v,
+            notes: notes || null, active, category: category.trim() || null,
+          }});
+        }
+      }
+      toast.success(isEdit ? "Saved" : `Created ${selectedIds.length} slot${selectedIds.length === 1 ? "" : "s"}`);
       onSaved();
     } catch (e) { toast.error((e as Error).message); }
   }
 
+  const previewT = allTreatments.find((x) => x.id === selectedIds[0]);
+
   return (
     <Dialog open onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="max-h-[90vh] overflow-y-auto">
-        <DialogHeader><DialogTitle>{existing ? "Edit model slot" : "New model slot"}</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>{isEdit ? "Edit model slot" : "New model slot"}</DialogTitle></DialogHeader>
         <div className="space-y-3">
           <div>
-            <Label>Treatment</Label>
-            <Select value={treatmentId} onValueChange={setTreatmentId}>
-              <SelectTrigger><SelectValue placeholder="Select…" /></SelectTrigger>
-              <SelectContent>
-                {treatments.map((t) => <SelectItem key={t.id} value={t.id}>{t.name} · £{Number(t.price).toFixed(2)}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            <div className="mb-1 flex items-center justify-between">
+              <Label>{isEdit ? "Treatment" : "Treatments"}</Label>
+              {!showNew && <Button type="button" size="sm" variant="outline" onClick={() => setShowNew(true)}><Plus className="mr-1 h-3.5 w-3.5" />New treatment</Button>}
+            </div>
+            {!isEdit && <p className="mb-2 text-xs text-muted-foreground">Select one or more — a slot will be created for each.</p>}
+            {showNew && (
+              <Card className="mb-2 border-dashed">
+                <CardContent className="space-y-2 p-3">
+                  <Input placeholder="Treatment name" value={newName} onChange={(e) => setNewName(e.target.value)} />
+                  <div className="grid grid-cols-2 gap-2">
+                    <Input type="number" placeholder="Price (£)" value={newPrice} onChange={(e) => setNewPrice(e.target.value)} />
+                    <Input type="number" placeholder="Duration (min)" value={newDuration} onChange={(e) => setNewDuration(e.target.value)} />
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <Button type="button" size="sm" variant="ghost" onClick={() => setShowNew(false)}>Cancel</Button>
+                    <Button type="button" size="sm" onClick={addNewTreatment} disabled={creating}>{creating ? "Adding…" : "Add"}</Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+            {isEdit ? (
+              <Select value={selectedIds[0] ?? ""} onValueChange={(v) => setSelectedIds([v])}>
+                <SelectTrigger><SelectValue placeholder="Select…" /></SelectTrigger>
+                <SelectContent>
+                  {allTreatments.map((t) => <SelectItem key={t.id} value={t.id}>{t.name} · £{Number(t.price).toFixed(2)}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            ) : (
+              <div className="max-h-56 space-y-1 overflow-y-auto rounded-md border p-2">
+                {allTreatments.length === 0 && <p className="p-2 text-xs text-muted-foreground">No treatments yet — add one above.</p>}
+                {allTreatments.map((t) => (
+                  <label key={t.id} className="flex cursor-pointer items-center gap-2 rounded p-1.5 hover:bg-muted">
+                    <Checkbox checked={selectedIds.includes(t.id)} onCheckedChange={() => toggle(t.id)} />
+                    <span className="flex-1 text-sm">{t.name}</span>
+                    <span className="text-xs text-muted-foreground">£{Number(t.price).toFixed(2)}</span>
+                  </label>
+                ))}
+              </div>
+            )}
           </div>
           {locations.length > 0 && (
             <div>
@@ -242,13 +314,16 @@ function SlotEditor({ existing, treatments, locations, onClose, onSaved }: {
             <div>
               <Label>{mode === "fixed" ? "Model price (£)" : "% off"}</Label>
               <Input type="number" value={value} onChange={(e) => setValue(e.target.value)} />
-              {t && (
+              {previewT && selectedIds.length === 1 && (
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Normal £{Number(t.price).toFixed(2)} →{" "}
+                  Normal £{Number(previewT.price).toFixed(2)} →{" "}
                   <span className="font-semibold text-emerald-600">
-                    £{(mode === "fixed" ? Number(value || 0) : Math.max(0, Number(t.price) * (1 - Number(value || 0) / 100))).toFixed(2)}
+                    £{(mode === "fixed" ? Number(value || 0) : Math.max(0, Number(previewT.price) * (1 - Number(value || 0) / 100))).toFixed(2)}
                   </span>
                 </p>
+              )}
+              {selectedIds.length > 1 && (
+                <p className="mt-1 text-xs text-muted-foreground">{mode === "fixed" ? "Same fixed price applied to all selected." : "Same % off applied to each treatment."}</p>
               )}
             </div>
           </div>
@@ -263,7 +338,7 @@ function SlotEditor({ existing, treatments, locations, onClose, onSaved }: {
           </div>
           <div className="flex items-center gap-2"><Switch checked={active} onCheckedChange={setActive} /><span className="text-sm">Active</span></div>
         </div>
-        <DialogFooter><Button onClick={submit}>Save</Button></DialogFooter>
+        <DialogFooter><Button onClick={submit}>{isEdit ? "Save" : `Create ${selectedIds.length || ""} slot${selectedIds.length === 1 ? "" : "s"}`.trim()}</Button></DialogFooter>
       </DialogContent>
     </Dialog>
   );
