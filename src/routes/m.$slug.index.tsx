@@ -1393,8 +1393,9 @@ function TreatmentRow({
             const discounted = hasDisc ? price * (1 - pct / 100) : price;
             return (
               <div className={`whitespace-nowrap ${priceSize} ${bold ? "font-bold" : "font-semibold"}`} style={{ color: priceColor }}>
-                {hasDisc && (
+                {hasDisc && ((t as any).discount_show_was_now !== false) && (
                   <span className="mr-1.5 text-xs font-normal text-muted-foreground line-through">£{price.toFixed(2)}</span>
+
                 )}
                 {discounted === 0 ? "Free" : `£${discounted.toFixed(2)}`}
                 {hasDisc && (
