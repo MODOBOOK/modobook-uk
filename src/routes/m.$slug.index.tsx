@@ -906,6 +906,15 @@ function ActionLink({
   );
 }
 
+type MenuStyleProps = {
+  cardBg: string;
+  cardBorder: string;
+  nameColor: string;
+  priceColor: string;
+  size: "sm" | "md" | "lg";
+  bold: boolean;
+};
+
 function CategoryTree({
   nodes,
   slug,
@@ -915,6 +924,16 @@ function CategoryTree({
   depth = 0,
   isSelected,
   toggleSelect,
+  catBg,
+  catText,
+  cardBg,
+  cardBorder,
+  nameColor,
+  priceColor,
+  size,
+  bold,
+  categoryBold,
+  headingFont,
 }: {
   nodes: CatNode[];
   slug: string;
@@ -924,6 +943,16 @@ function CategoryTree({
   depth?: number;
   isSelected: (id: string) => boolean;
   toggleSelect: (id: string) => void;
+  catBg: string;
+  catText: string;
+  cardBg: string;
+  cardBorder: string;
+  nameColor: string;
+  priceColor: string;
+  size: "sm" | "md" | "lg";
+  bold: boolean;
+  categoryBold: boolean;
+  headingFont: string;
 }) {
   const visible = nodes.filter(
     (n) => n.treatments.length > 0 || n.children.some((c) => countTreatments(c) > 0),
@@ -931,67 +960,86 @@ function CategoryTree({
   if (visible.length === 0) return null;
 
   return (
-    <Accordion
-      type="multiple"
-      className={
-        depth === 0
-          ? "divide-y rounded-2xl border bg-card"
-          : "divide-y border-t"
-      }
-    >
+    <div className={depth === 0 ? "space-y-4" : "space-y-3"}>
       {visible.map((node) => {
         const count = countTreatments(node);
+        const isSub = depth > 0;
         return (
-          <AccordionItem key={node.id} value={node.id} className="border-b-0 px-4">
-            <AccordionTrigger className="py-4 hover:no-underline">
-              <div className="flex-1 text-left">
-                <div
-                  className="text-base font-bold sm:text-lg"
-                  style={{ color: brand }}
-                >
-                  {node.icon ? `${node.icon} ` : ""}
-                  {node.name}
-                </div>
-                {node.description && (
-                  <div className="mt-0.5 text-sm font-normal text-muted-foreground">
-                    {node.description}
+          <Accordion key={node.id} type="single" collapsible defaultValue={node.id}>
+            <AccordionItem value={node.id} className="overflow-hidden rounded-2xl border-0 shadow-sm">
+              <AccordionTrigger
+                className="px-5 py-4 hover:no-underline [&[data-state=open]>svg]:rotate-180"
+                style={
+                  isSub
+                    ? { backgroundColor: `${catBg}1a`, color: catBg }
+                    : { backgroundColor: catBg, color: catText, fontFamily: `${headingFont}, system-ui, sans-serif` }
+                }
+              >
+                <div className="flex-1 text-left">
+                  <div
+                    className={`leading-tight ${isSub ? "text-base" : "text-lg sm:text-xl"} ${categoryBold ? "font-extrabold" : "font-medium"}`}
+                  >
+                    {node.icon ? `${node.icon} ` : ""}
+                    {node.name}
                   </div>
-                )}
-                <div className="mt-1 text-xs font-normal text-muted-foreground">
-                  {count} {count === 1 ? "option" : "options"}
+                  {node.description && (
+                    <div className="mt-0.5 text-xs font-normal opacity-80">{node.description}</div>
+                  )}
+                  <div className="mt-1 text-[11px] font-normal uppercase tracking-wider opacity-70">
+                    {count} {count === 1 ? "option" : "options"}
+                  </div>
                 </div>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="space-y-2 pb-4">
-              {node.children.length > 0 && (
-                <CategoryTree
-                  nodes={node.children}
-                  slug={slug}
-                  priceFor={priceFor}
-                  durationFor={durationFor}
-                  brand={brand}
-                  depth={depth + 1}
-                  isSelected={isSelected}
-                  toggleSelect={toggleSelect}
-                />
-              )}
-              {node.treatments.map((t) => (
-                <TreatmentRow
-                  key={t.id}
-                  t={t}
-                  slug={slug}
-                  price={priceFor(t)}
-                  duration={durationFor(t)}
-                  brand={brand}
-                  selected={isSelected(t.id)}
-                  onToggle={() => toggleSelect(t.id)}
-                />
-              ))}
-            </AccordionContent>
-          </AccordionItem>
+              </AccordionTrigger>
+              <AccordionContent
+                className="space-y-2 px-2 pb-3 pt-3"
+                style={{ backgroundColor: isSub ? "transparent" : `${catBg}08` }}
+              >
+                {node.children.length > 0 && (
+                  <CategoryTree
+                    nodes={node.children}
+                    slug={slug}
+                    priceFor={priceFor}
+                    durationFor={durationFor}
+                    brand={brand}
+                    depth={depth + 1}
+                    isSelected={isSelected}
+                    toggleSelect={toggleSelect}
+                    catBg={catBg}
+                    catText={catText}
+                    cardBg={cardBg}
+                    cardBorder={cardBorder}
+                    nameColor={nameColor}
+                    priceColor={priceColor}
+                    size={size}
+                    bold={bold}
+                    categoryBold={categoryBold}
+                    headingFont={headingFont}
+                  />
+                )}
+                {node.treatments.map((t) => (
+                  <TreatmentRow
+                    key={t.id}
+                    t={t}
+                    slug={slug}
+                    price={priceFor(t)}
+                    duration={durationFor(t)}
+                    brand={brand}
+                    selected={isSelected(t.id)}
+                    onToggle={() => toggleSelect(t.id)}
+                    cardBg={cardBg}
+                    cardBorder={cardBorder}
+                    nameColor={nameColor}
+                    priceColor={priceColor}
+                    size={size}
+                    bold={bold}
+                  />
+                ))}
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         );
       })}
-    </Accordion>
+    </div>
   );
 }
 
@@ -1002,6 +1050,12 @@ function TreatmentRow({
   brand,
   selected,
   onToggle,
+  cardBg,
+  cardBorder,
+  nameColor,
+  priceColor,
+  size,
+  bold,
 }: {
   t: Treatment;
   slug: string;
@@ -1010,56 +1064,74 @@ function TreatmentRow({
   brand: string;
   selected: boolean;
   onToggle: () => void;
-}) {
+} & MenuStyleProps) {
   const [expanded, setExpanded] = useState(false);
   const desc = t.description ?? "";
-  const isLong = desc.length > 140;
-  const shown = expanded || !isLong ? desc : desc.slice(0, 140).trimEnd() + " …";
+  const isLong = desc.length > 110;
+  const shown = expanded || !isLong ? desc : desc.slice(0, 110).trimEnd() + " …";
+
+  const padding = size === "lg" ? "p-4" : size === "md" ? "p-3.5" : "p-3";
+  const nameSize = size === "lg" ? "text-base sm:text-lg" : size === "md" ? "text-[15px] sm:text-base" : "text-sm sm:text-[15px]";
+  const priceSize = size === "lg" ? "text-base" : "text-sm";
+  const checkSize = size === "lg" ? "h-6 w-6" : "h-5 w-5";
 
   return (
     <div
-      className="group flex w-full items-start gap-4 rounded-2xl border bg-card p-5 transition hover:shadow-sm"
-      style={selected ? { borderColor: brand, boxShadow: `0 0 0 1.5px ${brand}` } : undefined}
+      className={`group flex w-full items-start gap-3 rounded-xl border transition hover:shadow-sm ${padding}`}
+      style={{
+        backgroundColor: cardBg,
+        borderColor: selected ? brand : cardBorder,
+        boxShadow: selected ? `0 0 0 1.5px ${brand}` : undefined,
+      }}
     >
       <button
         type="button"
         onClick={onToggle}
         aria-pressed={selected}
         aria-label={selected ? "Deselect" : "Select"}
-        className="mt-1 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full border-2 transition"
-        style={selected
-          ? { backgroundColor: brand, borderColor: brand, color: "#fff" }
-          : { borderColor: `${brand}66` }}
+        className={`mt-0.5 flex flex-shrink-0 items-center justify-center rounded-full border-2 transition ${checkSize}`}
+        style={
+          selected
+            ? { backgroundColor: brand, borderColor: brand, color: "#fff" }
+            : { borderColor: `${brand}66` }
+        }
       >
-        {selected && <Check className="h-4 w-4" />}
+        {selected && <Check className="h-3 w-3" />}
       </button>
       <button type="button" onClick={onToggle} className="min-w-0 flex-1 text-left">
-        <div className="text-lg font-extrabold leading-tight sm:text-xl" style={{ color: brand }}>
-          {t.name}
+        <div className="flex items-start justify-between gap-3">
+          <div className={`leading-tight ${nameSize} ${bold ? "font-bold" : "font-medium"}`} style={{ color: nameColor }}>
+            {t.name}
+          </div>
+          <div className={`whitespace-nowrap ${priceSize} ${bold ? "font-bold" : "font-semibold"}`} style={{ color: priceColor }}>
+            {price === 0 ? "Free" : `£${price.toFixed(2)}`}
+          </div>
+        </div>
+        <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+          <span>{duration} min</span>
         </div>
         {desc && (
-          <div className="mt-2 whitespace-pre-line text-[15px] leading-relaxed text-muted-foreground">
+          <div className="mt-1.5 whitespace-pre-line text-xs leading-relaxed text-muted-foreground">
             {shown}
             {isLong && (
               <button
                 type="button"
-                onClick={(e) => { e.stopPropagation(); setExpanded((v) => !v); }}
-                className="ml-1 font-semibold text-blue-600 hover:underline"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setExpanded((v) => !v);
+                }}
+                className="ml-1 font-semibold hover:underline"
+                style={{ color: brand }}
               >
-                {expanded ? "Show less" : "Read More"}
+                {expanded ? "Show less" : "Read more"}
               </button>
             )}
           </div>
         )}
-        <div className="mt-3 flex items-center justify-between gap-3 text-base">
-          <span className="font-bold" style={{ color: "hsl(var(--accent))" }}>
-            {duration}min
-          </span>
-          <span className="font-extrabold" style={{ color: brand }}>
-            {price === 0 ? "Free" : `£${price.toFixed(2)}`}
-          </span>
-        </div>
       </button>
+    </div>
+  );
+}
     </div>
   );
 }
