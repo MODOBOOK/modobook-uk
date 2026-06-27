@@ -74,25 +74,33 @@ function DashboardLayout() {
   return (
     <div className="flex min-h-screen bg-background">
       {/* Desktop sidebar */}
-      <aside className="hidden w-64 flex-col border-r bg-muted/30 lg:flex">
-        <div className="flex h-16 items-center gap-2 border-b px-6">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <Store className="h-5 w-5" />
+      <aside className="hidden w-72 flex-col border-r border-border/60 bg-sidebar lg:flex">
+        <div className="flex h-20 items-center gap-3 border-b border-border/60 px-7">
+          {profile.avatar_url ? (
+            <img src={profile.avatar_url} alt="" className="h-10 w-10 rounded-full object-cover ring-1 ring-border" />
+          ) : (
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground">
+              <span className="font-serif text-lg">{(profile.clinic_name ?? "M").charAt(0)}</span>
+            </div>
+          )}
+          <div className="min-w-0">
+            <div className="truncate font-serif text-lg leading-tight">{profile.clinic_name || "My Clinic"}</div>
+            <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">MODO Studio</div>
           </div>
-          <span className="truncate text-sm font-semibold">{profile.clinic_name || "My Clinic"}</span>
         </div>
-        <nav className="flex-1 space-y-1 overflow-y-auto p-4">
+        <nav className="flex-1 space-y-0.5 overflow-y-auto px-4 py-6">
           {navItems.map((item) => (
             <NavLink key={item.to} to={item.to} icon={item.icon} label={item.label} />
           ))}
         </nav>
-        <div className="border-t p-4">
-          <Button variant="ghost" className="w-full justify-start" onClick={signOut}>
+        <div className="border-t border-border/60 p-4">
+          <Button variant="ghost" className="w-full justify-start text-muted-foreground hover:text-foreground" onClick={signOut}>
             <LogOut className="mr-2 h-4 w-4" />
             Sign out
           </Button>
         </div>
       </aside>
+
 
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Mobile header — slim, just brand + preview */}
@@ -132,18 +140,22 @@ function DashboardLayout() {
         </header>
 
         {/* Desktop header */}
-        <header className="hidden h-16 items-center justify-between border-b px-8 lg:flex">
-          <div />
-          <Button variant="outline" size="sm" asChild>
+        <header className="hidden h-20 items-center justify-between border-b border-border/60 px-10 lg:flex">
+          <div>
+            <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Studio</div>
+            <div className="font-serif text-2xl leading-tight">{profile.clinic_name || "Dashboard"}</div>
+          </div>
+          <Button variant="outline" size="sm" className="rounded-full px-5" asChild>
             <a href={`/m/${profile.slug}`} target="_blank" rel="noreferrer">
-              Preview MODO Book link
+              Preview booking link
             </a>
           </Button>
         </header>
 
-        <main className="min-w-0 flex-1 overflow-x-hidden p-4 pb-24 lg:p-8 lg:pb-8">
+        <main className="min-w-0 flex-1 overflow-x-hidden p-5 pb-24 lg:p-10 lg:pb-10">
           <Outlet />
         </main>
+
 
         {/* Mobile bottom tab bar */}
         <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t bg-background/95 backdrop-blur lg:hidden">
@@ -185,14 +197,14 @@ function NavLink({
       to={to}
       activeOptions={{ exact: true }}
       className={cn(
-        "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-        "text-muted-foreground hover:bg-muted hover:text-foreground",
-        "[&.active]:bg-primary/10 [&.active]:text-primary",
+        "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-all",
+        "text-muted-foreground hover:bg-sidebar-accent hover:text-foreground",
+        "[&.active]:bg-primary [&.active]:text-primary-foreground [&.active]:shadow-luxe",
       )}
       onClick={onClick}
     >
-      <Icon className="h-4 w-4" />
-      {label}
+      <Icon className="h-4 w-4 opacity-80" />
+      <span className="tracking-wide">{label}</span>
     </Link>
   );
 }

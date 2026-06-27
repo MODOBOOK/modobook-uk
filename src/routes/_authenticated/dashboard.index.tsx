@@ -84,29 +84,30 @@ function DashboardIndex() {
   }, [upcoming]);
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
+    <div className="mx-auto max-w-4xl space-y-8">
       {/* Hero */}
-      <Card className="overflow-hidden border-0 bg-gradient-to-br from-primary/10 via-primary/5 to-background shadow-none">
-        <CardContent className="p-4 sm:p-6">
-          <div className="flex items-center gap-3">
+      <Card className="overflow-hidden border-border/60 shadow-luxe">
+        <CardContent className="relative p-6 sm:p-8">
+          <div className="absolute inset-0 bg-gradient-to-br from-accent/15 via-background to-background" />
+          <div className="relative flex items-center gap-5">
             {profile.avatar_url ? (
               <img
                 src={profile.avatar_url}
                 alt=""
-                className="h-16 w-16 shrink-0 rounded-2xl object-cover sm:h-20 sm:w-20"
+                className="h-20 w-20 shrink-0 rounded-full object-cover ring-1 ring-border sm:h-24 sm:w-24"
               />
             ) : (
-              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-primary text-2xl font-bold text-primary-foreground sm:h-20 sm:w-20">
-                {(profile.clinic_name ?? "M").charAt(0)}
+              <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground ring-1 ring-border sm:h-24 sm:w-24">
+                <span className="font-serif text-3xl">{(profile.clinic_name ?? "M").charAt(0)}</span>
               </div>
             )}
             <div className="min-w-0 flex-1">
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{greeting()}</p>
-              <h1 className="truncate text-xl font-bold leading-tight sm:text-2xl">
+              <p className="text-[10px] font-medium uppercase tracking-[0.25em] text-muted-foreground">{greeting()}</p>
+              <h1 className="mt-1 truncate font-serif text-3xl leading-tight sm:text-4xl">
                 {profile.clinic_name || profile.full_name || "Your clinic"}
               </h1>
               {profile.full_name && profile.clinic_name && (
-                <p className="truncate text-sm text-muted-foreground">{profile.full_name}</p>
+                <p className="mt-1 truncate text-sm italic text-muted-foreground">{profile.full_name}</p>
               )}
             </div>
           </div>
@@ -114,34 +115,35 @@ function DashboardIndex() {
       </Card>
 
       {/* Stats */}
-      <Card>
-        <CardContent className="grid grid-cols-3 gap-2 p-4 text-center">
-          <Stat label="Today" value={String(todayBookings)} tone="text-emerald-600" />
-          <Stat label="Cancelled" value={String(todayCancellations)} tone="text-rose-600" />
-          <Stat label="Next 7 days" value={String(weekCount)} tone="text-primary" />
+      <Card className="border-border/60">
+        <CardContent className="grid grid-cols-3 divide-x divide-border/60 p-0">
+          <Stat label="Today" value={String(todayBookings)} />
+          <Stat label="Cancelled" value={String(todayCancellations)} />
+          <Stat label="Next 7 days" value={String(weekCount)} />
         </CardContent>
       </Card>
 
       {/* Quick actions */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <QuickAction to="/dashboard/new-appointment" icon={CalendarPlus} label="New booking" tone="bg-orange-100 text-orange-600" />
-        <QuickAction to="/dashboard/availability" icon={CalendarDays} label="Availability" tone="bg-blue-100 text-blue-600" />
-        <QuickAction to="/dashboard/services" icon={Sparkles} label="Services" tone="bg-pink-100 text-pink-600" />
-        <QuickAction to="/dashboard/payments" icon={CreditCard} label={profile.stripe_connect_account_id ? "Payments" : "Connect Stripe"} tone="bg-lime-100 text-lime-700" />
+        <QuickAction to="/dashboard/new-appointment" icon={CalendarPlus} label="New booking" />
+        <QuickAction to="/dashboard/availability" icon={CalendarDays} label="Availability" />
+        <QuickAction to="/dashboard/services" icon={Sparkles} label="Services" />
+        <QuickAction to="/dashboard/payments" icon={CreditCard} label={profile.stripe_connect_account_id ? "Payments" : "Connect Stripe"} />
       </div>
 
+
       {/* Booking link */}
-      <Card>
-        <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
+      <Card className="border-border/60">
+        <CardContent className="flex flex-col gap-4 p-6 sm:flex-row sm:items-center">
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Your booking link</p>
-            <p className="mt-1 truncate text-sm font-medium">{bookingUrl}</p>
+            <p className="text-[10px] font-medium uppercase tracking-[0.25em] text-muted-foreground">Your booking link</p>
+            <p className="mt-2 truncate font-serif text-lg">{bookingUrl}</p>
           </div>
           <div className="flex gap-2">
             <Button
               variant="outline"
               size="sm"
-              className="flex-1 sm:flex-none"
+              className="flex-1 rounded-full sm:flex-none"
               onClick={() => {
                 navigator.clipboard.writeText(bookingUrl);
                 toast.success("Link copied");
@@ -149,7 +151,7 @@ function DashboardIndex() {
             >
               <Copy className="mr-1.5 h-4 w-4" /> Copy
             </Button>
-            <Button size="sm" className="flex-1 sm:flex-none" asChild>
+            <Button size="sm" className="flex-1 rounded-full sm:flex-none" asChild>
               <a href={bookingUrl} target="_blank" rel="noreferrer">
                 <ExternalLink className="mr-1.5 h-4 w-4" /> Open
               </a>
@@ -159,11 +161,15 @@ function DashboardIndex() {
       </Card>
 
       {/* Upcoming appointments */}
-      <section className="space-y-3">
-        <div className="flex items-center justify-between px-1">
-          <h2 className="text-base font-bold sm:text-lg">Upcoming appointments</h2>
-          <Link to="/dashboard/bookings" className="text-sm font-medium text-primary">View all</Link>
+      <section className="space-y-4">
+        <div className="flex items-end justify-between px-1">
+          <div>
+            <p className="text-[10px] font-medium uppercase tracking-[0.25em] text-muted-foreground">Schedule</p>
+            <h2 className="mt-1 font-serif text-2xl sm:text-3xl">Upcoming appointments</h2>
+          </div>
+          <Link to="/dashboard/bookings" className="text-xs font-medium uppercase tracking-[0.2em] text-foreground underline-offset-4 hover:underline">View all</Link>
         </div>
+
 
         {loading ? (
           <Card><CardContent className="py-8 text-center text-sm text-muted-foreground">Loading…</CardContent></Card>
@@ -223,11 +229,11 @@ function DashboardIndex() {
   );
 }
 
-function Stat({ label, value, tone }: { label: string; value: string; tone: string }) {
+function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div>
-      <div className={`text-2xl font-bold ${tone}`}>{value}</div>
-      <div className="text-xs font-medium text-muted-foreground">{label}</div>
+    <div className="px-4 py-5 text-center">
+      <div className="font-serif text-3xl leading-none">{value}</div>
+      <div className="mt-2 text-[10px] font-medium uppercase tracking-[0.2em] text-muted-foreground">{label}</div>
     </div>
   );
 }
@@ -236,23 +242,22 @@ function QuickAction({
   to,
   icon: Icon,
   label,
-  tone,
 }: {
   to: string;
   icon: React.ElementType;
   label: string;
-  tone: string;
 }) {
   return (
     <Link
       to={to}
-      className="group flex flex-col items-center gap-2 rounded-2xl border bg-card p-3 text-center shadow-sm transition active:scale-[0.97]"
+      className="group flex flex-col items-center gap-3 rounded-2xl border border-border/60 bg-card p-5 text-center transition hover:border-accent hover:shadow-luxe active:scale-[0.98]"
     >
-      <div className={`flex h-11 w-11 items-center justify-center rounded-full ${tone}`}>
+      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground transition group-hover:bg-accent group-hover:text-accent-foreground">
         <Icon className="h-5 w-5" />
       </div>
-      <span className="text-xs font-medium leading-tight">{label}</span>
+      <span className="text-xs font-medium tracking-wide">{label}</span>
       <ChevronRight className="hidden" />
     </Link>
   );
 }
+
