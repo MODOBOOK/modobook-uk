@@ -319,7 +319,7 @@ function TreatmentDialog({
               </Button>
             </div>
           ) : (
-            <Select value="" onValueChange={(v) => { setParentId(v); setSubId(null); }}>
+            <Select onValueChange={(v) => { setParentId(v); setSubId(null); }}>
               <SelectTrigger>
                 <SelectValue placeholder="Select a category" />
               </SelectTrigger>
@@ -353,7 +353,7 @@ function TreatmentDialog({
                 No sub-categories under this category. Add one in Categories.
               </p>
             ) : (
-              <Select value="" onValueChange={(v) => setSubId(v)}>
+              <Select onValueChange={(v) => setSubId(v)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select a sub category" />
                 </SelectTrigger>
