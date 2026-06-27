@@ -101,9 +101,8 @@ export const updateProfile = createServerFn({ method: "POST" })
       chooser_extra_body?: string | null;
       chooser_extra_treatment_ids?: string[];
       model_slots_position?: "top" | "bottom";
-
-
-
+      terms_html?: string | null;
+      terms_required?: boolean;
     }) => input,
   )
   .handler(async ({ data, context }) => {
@@ -138,6 +137,10 @@ export const updateProfile = createServerFn({ method: "POST" })
     if (data.chooser_extra_body !== undefined) update.chooser_extra_body = data.chooser_extra_body;
     if (data.chooser_extra_treatment_ids !== undefined) update.chooser_extra_treatment_ids = data.chooser_extra_treatment_ids;
     if (data.model_slots_position !== undefined) update.model_slots_position = data.model_slots_position;
+    if (data.terms_html !== undefined) update.terms_html = data.terms_html;
+    if (data.terms_required !== undefined) update.terms_required = data.terms_required;
+
+
 
 
 
