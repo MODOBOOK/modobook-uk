@@ -41,6 +41,7 @@ import { Route as AuthenticatedDashboardClinicRouteImport } from './routes/_auth
 import { Route as AuthenticatedDashboardCategoriesRouteImport } from './routes/_authenticated/dashboard.categories'
 import { Route as AuthenticatedDashboardBrandingRouteImport } from './routes/_authenticated/dashboard.branding'
 import { Route as AuthenticatedDashboardBookingsRouteImport } from './routes/_authenticated/dashboard.bookings'
+import { Route as AuthenticatedDashboardBookingFlowRouteImport } from './routes/_authenticated/dashboard.booking-flow'
 import { Route as AuthenticatedDashboardBioRouteImport } from './routes/_authenticated/dashboard.bio'
 import { Route as AuthenticatedDashboardAvailabilityRouteImport } from './routes/_authenticated/dashboard.availability'
 import { Route as AuthenticatedDashboardConsultationsIndexRouteImport } from './routes/_authenticated/dashboard.consultations.index'
@@ -224,6 +225,12 @@ const AuthenticatedDashboardBookingsRoute =
     path: '/bookings',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
+const AuthenticatedDashboardBookingFlowRoute =
+  AuthenticatedDashboardBookingFlowRouteImport.update({
+    id: '/booking-flow',
+    path: '/booking-flow',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
 const AuthenticatedDashboardBioRoute =
   AuthenticatedDashboardBioRouteImport.update({
     id: '/bio',
@@ -270,6 +277,7 @@ export interface FileRoutesByFullPath {
   '/m/$slug': typeof MSlugRouteWithChildren
   '/dashboard/availability': typeof AuthenticatedDashboardAvailabilityRoute
   '/dashboard/bio': typeof AuthenticatedDashboardBioRoute
+  '/dashboard/booking-flow': typeof AuthenticatedDashboardBookingFlowRoute
   '/dashboard/bookings': typeof AuthenticatedDashboardBookingsRoute
   '/dashboard/branding': typeof AuthenticatedDashboardBrandingRoute
   '/dashboard/categories': typeof AuthenticatedDashboardCategoriesRoute
@@ -307,6 +315,7 @@ export interface FileRoutesByTo {
   '/f/$token': typeof FTokenRoute
   '/dashboard/availability': typeof AuthenticatedDashboardAvailabilityRoute
   '/dashboard/bio': typeof AuthenticatedDashboardBioRoute
+  '/dashboard/booking-flow': typeof AuthenticatedDashboardBookingFlowRoute
   '/dashboard/bookings': typeof AuthenticatedDashboardBookingsRoute
   '/dashboard/branding': typeof AuthenticatedDashboardBrandingRoute
   '/dashboard/categories': typeof AuthenticatedDashboardCategoriesRoute
@@ -348,6 +357,7 @@ export interface FileRoutesById {
   '/m/$slug': typeof MSlugRouteWithChildren
   '/_authenticated/dashboard/availability': typeof AuthenticatedDashboardAvailabilityRoute
   '/_authenticated/dashboard/bio': typeof AuthenticatedDashboardBioRoute
+  '/_authenticated/dashboard/booking-flow': typeof AuthenticatedDashboardBookingFlowRoute
   '/_authenticated/dashboard/bookings': typeof AuthenticatedDashboardBookingsRoute
   '/_authenticated/dashboard/branding': typeof AuthenticatedDashboardBrandingRoute
   '/_authenticated/dashboard/categories': typeof AuthenticatedDashboardCategoriesRoute
@@ -389,6 +399,7 @@ export interface FileRouteTypes {
     | '/m/$slug'
     | '/dashboard/availability'
     | '/dashboard/bio'
+    | '/dashboard/booking-flow'
     | '/dashboard/bookings'
     | '/dashboard/branding'
     | '/dashboard/categories'
@@ -426,6 +437,7 @@ export interface FileRouteTypes {
     | '/f/$token'
     | '/dashboard/availability'
     | '/dashboard/bio'
+    | '/dashboard/booking-flow'
     | '/dashboard/bookings'
     | '/dashboard/branding'
     | '/dashboard/categories'
@@ -466,6 +478,7 @@ export interface FileRouteTypes {
     | '/m/$slug'
     | '/_authenticated/dashboard/availability'
     | '/_authenticated/dashboard/bio'
+    | '/_authenticated/dashboard/booking-flow'
     | '/_authenticated/dashboard/bookings'
     | '/_authenticated/dashboard/branding'
     | '/_authenticated/dashboard/categories'
@@ -731,6 +744,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardBookingsRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
+    '/_authenticated/dashboard/booking-flow': {
+      id: '/_authenticated/dashboard/booking-flow'
+      path: '/booking-flow'
+      fullPath: '/dashboard/booking-flow'
+      preLoaderRoute: typeof AuthenticatedDashboardBookingFlowRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
     '/_authenticated/dashboard/bio': {
       id: '/_authenticated/dashboard/bio'
       path: '/bio'
@@ -779,6 +799,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedDashboardRouteChildren {
   AuthenticatedDashboardAvailabilityRoute: typeof AuthenticatedDashboardAvailabilityRoute
   AuthenticatedDashboardBioRoute: typeof AuthenticatedDashboardBioRoute
+  AuthenticatedDashboardBookingFlowRoute: typeof AuthenticatedDashboardBookingFlowRoute
   AuthenticatedDashboardBookingsRoute: typeof AuthenticatedDashboardBookingsRoute
   AuthenticatedDashboardBrandingRoute: typeof AuthenticatedDashboardBrandingRoute
   AuthenticatedDashboardCategoriesRoute: typeof AuthenticatedDashboardCategoriesRoute
@@ -805,6 +826,8 @@ const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
     AuthenticatedDashboardAvailabilityRoute:
       AuthenticatedDashboardAvailabilityRoute,
     AuthenticatedDashboardBioRoute: AuthenticatedDashboardBioRoute,
+    AuthenticatedDashboardBookingFlowRoute:
+      AuthenticatedDashboardBookingFlowRoute,
     AuthenticatedDashboardBookingsRoute: AuthenticatedDashboardBookingsRoute,
     AuthenticatedDashboardBrandingRoute: AuthenticatedDashboardBrandingRoute,
     AuthenticatedDashboardCategoriesRoute:

@@ -69,7 +69,7 @@ function countTreatments(n: CatNode): number {
 type Theme = Database["public"]["Tables"]["clinic_theme"]["Row"];
 
 function BookPage() {
-  const { profile, treatments, packages, locations, categories, pricing, theme, reviews } =
+  const { profile, treatments, packages, locations, categories, pricing, theme, reviews, concernAreas, concerns, concernLinks } =
     Route.useLoaderData() as {
       profile: {
         id: string;
@@ -87,6 +87,12 @@ function BookPage() {
         deposit_amount_cents?: number | null;
         deposit_policy_text?: string | null;
         cancellation_rules?: { hours_before: number; fee_percent: number }[] | null;
+        chooser_enabled?: boolean | null;
+        chooser_show_know?: boolean | null;
+        chooser_show_unsure?: boolean | null;
+        chooser_show_consultation?: boolean | null;
+        chooser_consultation_treatment_id?: string | null;
+        chooser_intro_text?: string | null;
       };
       treatments: Treatment[];
       packages: Package[];
@@ -95,6 +101,9 @@ function BookPage() {
       pricing: Pricing[];
       theme: Theme | null;
       reviews: { id: string; rating: number }[];
+      concernAreas: { id: string; name: string; sort_order: number }[];
+      concerns: { id: string; area_id: string; name: string; description: string | null }[];
+      concernLinks: { concern_id: string; treatment_id: string }[];
     };
 
   const { slug } = useParams({ from: "/m/$slug/" });
@@ -113,8 +122,25 @@ function BookPage() {
   const toggleSelect = (id: string) =>
     setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   const isSelected = (id: string) => selectedIds.includes(id);
+
+  // Chooser flow
+  const chooserOn = !!profile.chooser_enabled;
+  const showKnow = profile.chooser_show_know !== false;
+  const showUnsure = profile.chooser_show_unsure !== false;
+  const showConsult = profile.chooser_show_consultation !== false;
+  const consultTreatmentId = profile.chooser_consultation_treatment_id ?? null;
+  const [mode, setMode] = useState<null | "know" | "unsure">(null);
+  const [pickedConcernId, setPickedConcernId] = useState<string | null>(null);
+
   // Clear selection when location changes
-  const setLocAndClear = (id: string | null) => { setLocationId(id); setSelectedIds([]); };
+  const setLocAndClear = (id: string | null) => {
+    setLocationId(id);
+    setSelectedIds([]);
+    setMode(null);
+    setPickedConcernId(null);
+  };
+  void setLocAndClear;
+
 
 
   const priceFor = (t: Treatment) => {
