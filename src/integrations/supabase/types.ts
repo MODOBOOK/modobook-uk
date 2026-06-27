@@ -97,8 +97,10 @@ export type Database = {
           patient_email: string
           patient_name: string
           patient_phone: string | null
+          patient_user_id: string | null
           payment_method: string | null
           payment_status: Database["public"]["Enums"]["payment_status"] | null
+          practitioner_notes: string | null
           profile_id: string
           scheduled_date: string
           start_time: string
@@ -124,8 +126,10 @@ export type Database = {
           patient_email: string
           patient_name: string
           patient_phone?: string | null
+          patient_user_id?: string | null
           payment_method?: string | null
           payment_status?: Database["public"]["Enums"]["payment_status"] | null
+          practitioner_notes?: string | null
           profile_id: string
           scheduled_date: string
           start_time: string
@@ -151,8 +155,10 @@ export type Database = {
           patient_email?: string
           patient_name?: string
           patient_phone?: string | null
+          patient_user_id?: string | null
           payment_method?: string | null
           payment_status?: Database["public"]["Enums"]["payment_status"] | null
+          practitioner_notes?: string | null
           profile_id?: string
           scheduled_date?: string
           start_time?: string
