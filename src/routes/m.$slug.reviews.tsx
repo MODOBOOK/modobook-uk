@@ -46,8 +46,8 @@ function Reviews() {
     supabase.auth.getSession().then(({ data }) => setHasSession(!!data.session));
   }
 
-  const allRatings = patientReviews.map((r) => r.rating).concat(testimonials.map((t) => t.rating ?? 5));
-  const avg = allRatings.length ? allRatings.reduce((a, b) => a + b, 0) / allRatings.length : 0;
+  const allRatings: number[] = patientReviews.map((r: { rating: number }) => r.rating).concat(testimonials.map((t: { rating: number | null }) => t.rating ?? 5));
+  const avg = allRatings.length ? allRatings.reduce((a: number, b: number) => a + b, 0) / allRatings.length : 0;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

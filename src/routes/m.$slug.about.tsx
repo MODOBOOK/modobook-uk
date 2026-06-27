@@ -58,7 +58,7 @@ function About() {
         <section className="mt-10">
           <h2 className="mb-3 text-xl font-semibold">Specialties</h2>
           <div className="flex flex-wrap gap-2">
-            {specialties.map((s) => <Badge key={s} variant="secondary">{s}</Badge>)}
+            {specialties.map((s: string) => <Badge key={s} variant="secondary">{s}</Badge>)}
           </div>
         </section>
       )}
