@@ -114,6 +114,16 @@ function BookPage() {
   const headingFont = theme?.heading_font || "Inter";
   const bodyFont = theme?.body_font || "Inter";
   const heroUrl = theme?.hero_image_url || profile.hero_url;
+  // Menu styling
+  const menuCardBg = theme?.menu_card_bg || "#ffffff";
+  const menuCardBorder = theme?.menu_card_border_color || `${brand}1f`;
+  const menuCatBg = theme?.menu_category_bg || brand;
+  const menuCatText = theme?.menu_category_text || "#ffffff";
+  const menuNameColor = theme?.menu_treatment_name_color || brand;
+  const menuPriceColor = theme?.menu_price_color || brand;
+  const menuSize = (theme?.menu_treatment_size as "sm" | "md" | "lg") || "sm";
+  const menuTreatmentBold = theme?.menu_treatment_bold ?? true;
+  const menuCategoryBold = theme?.menu_category_bold ?? true;
 
   const [locationId, setLocationId] = useState<string | null>(
     locations.length === 1 ? locations[0].id : null,
