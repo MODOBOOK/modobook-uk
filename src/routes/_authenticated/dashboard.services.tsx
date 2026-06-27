@@ -384,19 +384,20 @@ function CategoryRow({
 
 function ServiceRow({ treat, onDelete }: { treat: Treat; onDelete: () => void }) {
   return (
-    <div className="flex items-center gap-3 rounded-md border bg-background px-3 py-2">
+    <div className="flex items-center gap-3 py-1">
+      <GripVertical className="h-4 w-4 shrink-0 text-[hsl(var(--accent))]/70" />
       <div className="flex-1 min-w-0">
-        <p className="truncate text-sm font-medium">{treat.name}</p>
+        <p className="truncate text-sm font-semibold text-[hsl(var(--primary))]">{treat.name}</p>
         <p className="text-xs text-muted-foreground">
           £{treat.price} · {treat.duration} min
         </p>
       </div>
       <Link
         to="/dashboard/treatments"
-        className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+        className="rounded-md p-1.5 text-[hsl(var(--accent))] hover:bg-muted"
         aria-label="Edit service"
       >
-        <Pencil className="h-3.5 w-3.5" />
+        <Pencil className="h-4 w-4" />
       </Link>
       <button
         type="button"
@@ -409,6 +410,7 @@ function ServiceRow({ treat, onDelete }: { treat: Treat; onDelete: () => void })
     </div>
   );
 }
+
 
 function CategoryDialog({
   state,
