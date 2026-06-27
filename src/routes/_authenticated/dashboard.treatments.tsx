@@ -597,7 +597,7 @@ function TreatmentDialog({
               category_id: subId ?? parentId,
               active,
               consent_ids: consentIds,
-              addon_ids: addonIds,
+              addons: addons,
               addon_mode: addonMode,
               discount_percent: discountPercent === "" ? null : Number(discountPercent),
               discount_starts_at: discountStartsAt ? new Date(discountStartsAt).toISOString() : null,
