@@ -75,6 +75,7 @@ export const createTreatment = createServerFn({ method: "POST" })
         is_consultation: data.is_consultation ?? false,
         deductible_against: data.deductible_against,
         deductible_window_days: data.deductible_window_days,
+        category_id: data.category_id ?? null,
       })
       .select()
       .single();
