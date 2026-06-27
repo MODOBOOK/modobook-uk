@@ -644,6 +644,7 @@ function ServiceDialog({
     session_count?: number;
     allow_split_payment?: boolean;
     rebook_reminder_days?: number | null;
+    color?: string | null;
   }) => Promise<void>;
 }) {
   const open = !!state;
@@ -655,6 +656,7 @@ function ServiceDialog({
   const [sessionCount, setSessionCount] = useState(1);
   const [allowSplit, setAllowSplit] = useState(false);
   const [rebookDays, setRebookDays] = useState<string>("");
+  const [color, setColor] = useState<string>(PRESET_COLORS[0]);
   const [saving, setSaving] = useState(false);
 
   useMemo(() => {
@@ -667,8 +669,10 @@ function ServiceDialog({
       setSessionCount(1);
       setAllowSplit(false);
       setRebookDays("");
+      setColor(PRESET_COLORS[Math.floor(Math.random() * PRESET_COLORS.length)]);
     }
   }, [open, state]);
+
 
 
   return (
