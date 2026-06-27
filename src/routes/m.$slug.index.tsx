@@ -1144,9 +1144,6 @@ function CategoryTree({
                   {node.description && (
                     <div className="mt-0.5 text-xs font-normal opacity-80">{node.description}</div>
                   )}
-                  <div className="mt-1 text-[11px] font-normal uppercase tracking-wider opacity-70">
-                    {count} {count === 1 ? "option" : "options"}
-                  </div>
                 </div>
               </AccordionTrigger>
               <AccordionContent
