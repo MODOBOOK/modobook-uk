@@ -1103,9 +1103,29 @@ function TreatmentRow({
           <div className={`leading-tight ${nameSize} ${bold ? "font-bold" : "font-medium"}`} style={{ color: nameColor }}>
             {t.name}
           </div>
-          <div className={`whitespace-nowrap ${priceSize} ${bold ? "font-bold" : "font-semibold"}`} style={{ color: priceColor }}>
-            {price === 0 ? "Free" : `£${price.toFixed(2)}`}
-          </div>
+          {(() => {
+            const pct = (t as any).discount_percent as number | null;
+            const startsAt = (t as any).discount_starts_at as string | null;
+            const endsAt = (t as any).discount_ends_at as string | null;
+            const dows = (t as any).discount_days_of_week as number[] | null;
+            const now = new Date();
+            const inWindow = (!startsAt || new Date(startsAt) <= now)
+              && (!endsAt || new Date(endsAt) >= now)
+              && (!dows || dows.length === 0 || dows.includes(now.getDay()));
+            const hasDisc = pct != null && pct > 0 && inWindow && price > 0;
+            const discounted = hasDisc ? price * (1 - pct / 100) : price;
+            return (
+              <div className={`whitespace-nowrap ${priceSize} ${bold ? "font-bold" : "font-semibold"}`} style={{ color: priceColor }}>
+                {hasDisc && (
+                  <span className="mr-1.5 text-xs font-normal text-muted-foreground line-through">£{price.toFixed(2)}</span>
+                )}
+                {discounted === 0 ? "Free" : `£${discounted.toFixed(2)}`}
+                {hasDisc && (
+                  <span className="ml-1 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700">−{pct}%</span>
+                )}
+              </div>
+            );
+          })()}
         </div>
         <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
           <span>{duration} min</span>
