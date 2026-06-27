@@ -16,7 +16,29 @@ export function useDashboardThemeStyle(): CSSProperties {
     staleTime: 30_000,
   });
 
-  if (!theme) return {};
+  const v: Record<string, string> = {};
+  if (theme) buildVars(theme, v);
+
+  // Also push vars onto :root so Radix portals (Dialog, Sheet, Popover, Select)
+  // — which render outside the dashboard wrapper — inherit the practitioner's brand.
+  const serialized = JSON.stringify(v);
+  useEffect(() => {
+    const root = document.documentElement;
+    const applied: string[] = [];
+    for (const [key, val] of Object.entries(v)) {
+      root.style.setProperty(key, val);
+      applied.push(key);
+    }
+    return () => {
+      for (const key of applied) root.style.removeProperty(key);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [serialized]);
+
+  return v as CSSProperties;
+}
+
+function buildVars(theme: any, v: Record<string, string>) {
 
   const v: Record<string, string> = {};
   const set = (k: string, val: unknown) => {
