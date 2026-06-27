@@ -57,5 +57,19 @@ export function useDashboardThemeStyle(): CSSProperties {
     v["--font-sans"] = `"${theme.body_font}", system-ui, sans-serif`;
   }
 
+  // Also push vars onto :root so Radix portals (Dialog, Sheet, Popover, Select)
+  // — which render outside the dashboard wrapper — inherit the practitioner's brand.
+  useEffect(() => {
+    const root = document.documentElement;
+    const applied: string[] = [];
+    for (const [key, val] of Object.entries(v)) {
+      root.style.setProperty(key, val);
+      applied.push(key);
+    }
+    return () => {
+      for (const key of applied) root.style.removeProperty(key);
+    };
+  }, [JSON.stringify(v)]);
+
   return v as CSSProperties;
 }
