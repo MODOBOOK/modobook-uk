@@ -100,6 +100,9 @@ export const updateProfile = createServerFn({ method: "POST" })
       chooser_extra_title?: string | null;
       chooser_extra_body?: string | null;
       chooser_extra_treatment_ids?: string[];
+      model_slots_position?: "top" | "bottom";
+
+
 
     }) => input,
   )
