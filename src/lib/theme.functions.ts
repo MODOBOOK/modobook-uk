@@ -28,6 +28,11 @@ export type ClinicThemeInput = {
   menu_treatment_size?: string | null;
   menu_treatment_bold?: boolean | null;
   menu_category_bold?: boolean | null;
+  // Style preset, booking layout, and hero carousel
+  preset_key?: string | null;
+  layout_key?: string | null;
+  hero_carousel_enabled?: boolean | null;
+  hero_carousel_urls?: string[] | null;
 };
 
 async function getProfileId(
