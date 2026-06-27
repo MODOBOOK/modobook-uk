@@ -151,9 +151,10 @@ export const completeAppointmentCheckout = createServerFn({ method: "POST" })
     }
     const { error } = await context.supabase
       .from("appointments")
-      .update(patch)
+      .update(patch as never)
       .eq("id", data.appointmentId)
       .eq("profile_id", profile.id);
+
     if (error) throw error;
     return { ok: true };
   });
