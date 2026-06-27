@@ -591,6 +591,12 @@ function BookPage() {
                           brand={brand}
                           selected={isSelected(t.id)}
                           onToggle={() => toggleSelect(t.id)}
+                          cardBg={menuCardBg}
+                          cardBorder={menuCardBorder}
+                          nameColor={menuNameColor}
+                          priceColor={menuPriceColor}
+                          size={menuSize}
+                          bold={menuTreatmentBold}
                         />
                       ))}
                     </div>
