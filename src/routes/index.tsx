@@ -82,7 +82,7 @@ function LandingPage() {
               <CardHeader>
                 <CreditCard className="mb-2 h-8 w-8 text-primary" />
                 <CardTitle>Payments in your Stripe</CardTitle>
-                <CardDescription>Connect your own Stripe account. 0% platform fee. Optional Klarna & Clearpay.</CardTitle>
+                <CardDescription>Connect your own Stripe account. 0% platform fee. Optional Klarna & Clearpay.</CardDescription>
               </CardHeader>
             </Card>
             <Card>
