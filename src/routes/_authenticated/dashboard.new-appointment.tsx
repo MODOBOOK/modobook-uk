@@ -59,6 +59,18 @@ function NewAppointmentPage() {
   const [depositHours, setDepositHours] = useState("24");
   const createLink = useServerFn(createPaymentLink);
 
+  type ClientRow = { id: string; full_name: string; email: string | null; phone: string | null; dob: string | null; address: string | null };
+  type TemplateRow = { id: string; name: string };
+  const [clients, setClients] = useState<ClientRow[]>([]);
+  const [clientId, setClientId] = useState<string>("");
+  const [clientPickerOpen, setClientPickerOpen] = useState(false);
+  const [consentTemplates, setConsentTemplates] = useState<TemplateRow[]>([]);
+  const [medicalTemplates, setMedicalTemplates] = useState<TemplateRow[]>([]);
+  const [pickedConsentIds, setPickedConsentIds] = useState<Set<string>>(new Set());
+  const [pickedMedicalIds, setPickedMedicalIds] = useState<Set<string>>(new Set());
+  const fetchClients = useServerFn(listClients);
+  const fetchConsents = useServerFn(listConsentTemplates);
+  const fetchMedical = useServerFn(listMedicalTemplates);
 
   useEffect(() => {
     (async () => {
@@ -75,8 +87,43 @@ function NewAppointmentPage() {
         .eq("profile_id", profile.id)
         .eq("active", true);
       setLocations(l ?? []);
+      try {
+        const [cs, cons, meds] = await Promise.all([
+          fetchClients() as Promise<ClientRow[]>,
+          fetchConsents() as Promise<TemplateRow[]>,
+          fetchMedical() as Promise<TemplateRow[]>,
+        ]);
+        setClients(cs ?? []);
+        setConsentTemplates((cons ?? []).map((r) => ({ id: r.id, name: r.name })));
+        setMedicalTemplates((meds ?? []).map((r) => ({ id: r.id, name: r.name })));
+      } catch { /* ignore */ }
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile.id]);
+
+  const selectedClient = useMemo(() => clients.find((c) => c.id === clientId) ?? null, [clients, clientId]);
+
+  function applyClient(c: ClientRow | null) {
+    setClientId(c?.id ?? "");
+    if (!c) return;
+    setPatientName(c.full_name ?? "");
+    setPatientEmail(c.email ?? "");
+    setPatientPhone(c.phone ?? "");
+    setPatientDob(c.dob ?? "");
+    if (c.address) {
+      setAddrLine1(c.address);
+    }
+    setClientPickerOpen(false);
+  }
+
+  function toggle(setter: React.Dispatch<React.SetStateAction<Set<string>>>, id: string) {
+    setter((prev) => {
+      const n = new Set(prev);
+      if (n.has(id)) n.delete(id); else n.add(id);
+      return n;
+    });
+  }
+
 
   const treatment = treatments.find((t) => t.id === treatmentId);
   const duration = treatment?.duration ?? 30;
