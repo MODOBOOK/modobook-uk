@@ -717,7 +717,6 @@ function CategoryTree({
 
 function TreatmentRow({
   t,
-  slug,
   price,
   duration,
   brand,
@@ -733,54 +732,41 @@ function TreatmentRow({
   onToggle: () => void;
 }) {
   return (
-    <div
-      className="group flex items-center gap-3 rounded-xl border bg-card p-3 transition hover:shadow-sm"
-      style={selected ? { borderColor: brand, boxShadow: `0 0 0 1px ${brand}` } : undefined}
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-pressed={selected}
+      className="group flex w-full items-center gap-3 rounded-xl border bg-card p-3 text-left transition hover:shadow-sm"
+      style={selected ? { borderColor: brand, boxShadow: `0 0 0 1.5px ${brand}` } : undefined}
     >
-      <button
-        type="button"
-        onClick={onToggle}
-        aria-label={selected ? "Remove from selection" : "Add to selection"}
-        className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded border transition"
+      <span
+        className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border transition"
         style={selected
           ? { backgroundColor: brand, borderColor: brand, color: "#fff" }
           : { borderColor: `${brand}66` }}
       >
         {selected && <Check className="h-4 w-4" />}
-      </button>
-      <Link
-        to="/m/$slug/book/$treatmentId"
-        params={{ slug, treatmentId: t.id }}
-        className="flex min-w-0 flex-1 items-center justify-between gap-3"
-      >
-        <div className="min-w-0 flex-1">
-          <div className="truncate font-semibold" style={{ color: brand }}>
-            {t.name}
-          </div>
-          {t.description && (
-            <div className="mt-0.5 line-clamp-2 text-sm text-muted-foreground">
-              {t.description}
-            </div>
-          )}
-          <div className="mt-1.5 flex items-center gap-3 text-sm text-muted-foreground">
-            <span className="inline-flex items-center gap-1">
-              <Clock className="h-3.5 w-3.5" />
-              {duration} min
-            </span>
-            <span className="font-semibold" style={{ color: brand }}>
-              {price === 0 ? "Free" : `£${price.toFixed(2)}`}
-            </span>
-          </div>
+      </span>
+      <div className="min-w-0 flex-1">
+        <div className="truncate font-semibold" style={{ color: brand }}>
+          {t.name}
         </div>
-        <div
-          className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-white transition group-hover:scale-105"
-          style={{ backgroundColor: brand }}
-          aria-label="Book now"
-        >
-          <ChevronRight className="h-5 w-5" />
+        {t.description && (
+          <div className="mt-0.5 line-clamp-2 text-sm text-muted-foreground">
+            {t.description}
+          </div>
+        )}
+        <div className="mt-1.5 flex items-center gap-3 text-sm text-muted-foreground">
+          <span className="inline-flex items-center gap-1">
+            <Clock className="h-3.5 w-3.5" />
+            {duration} min
+          </span>
+          <span className="font-semibold" style={{ color: brand }}>
+            {price === 0 ? "Free" : `£${price.toFixed(2)}`}
+          </span>
         </div>
-      </Link>
-    </div>
+      </div>
+    </button>
   );
 }
 
