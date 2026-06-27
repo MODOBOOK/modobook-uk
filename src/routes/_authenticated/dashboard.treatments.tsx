@@ -289,7 +289,7 @@ function TreatmentDialog({
   const [description, setDescription] = useState(treatment?.description ?? "");
   const [active, setActive] = useState(treatment?.active ?? true);
   const [consentIds, setConsentIds] = useState<string[]>([]);
-  const [addonIds, setAddonIds] = useState<string[]>([]);
+  const [addons, setAddons] = useState<AddonLink[]>([]);
   const [addonMode, setAddonMode] = useState<"off" | "optional">(
     (treatment?.addon_mode as "off" | "optional") ?? "optional",
   );
