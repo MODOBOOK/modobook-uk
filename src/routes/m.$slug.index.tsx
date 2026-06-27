@@ -624,6 +624,49 @@ function BookPage() {
                   <p className="mb-3 text-xs opacity-60">
                     Tick all the treatments you'd like, then press Book Now.
                   </p>
+                  {(() => {
+                    const treatById = new Map(treatments.map((t) => [t.id, t]));
+                    const slots = modelSlots
+                      .filter((s) => !locationId || !s.location_id || s.location_id === locationId)
+                      .filter((s) => treatById.has(s.treatment_id));
+                    if (slots.length === 0) return null;
+                    return (
+                      <div className="mb-5 rounded-2xl border-2 p-3" style={{ borderColor: `${brand}55`, backgroundColor: `${brand}08` }}>
+                        <div className="mb-2 flex items-center gap-2">
+                          <Sparkles className="h-4 w-4" style={{ color: brand }} />
+                          <h3 className="text-sm font-bold" style={{ color: brand }}>Model slots</h3>
+                          <span className="text-xs opacity-60">Discounted dates & times</span>
+                        </div>
+                        <div className="grid gap-2 sm:grid-cols-2">
+                          {slots.map((s) => {
+                            const t = treatById.get(s.treatment_id)!;
+                            const base = priceFor(t);
+                            const final = s.price_mode === "fixed" ? Number(s.price_value) : Math.max(0, base * (1 - Number(s.price_value) / 100));
+                            return (
+                              <div key={s.id} className="rounded-xl border bg-white p-3">
+                                <p className="text-sm font-semibold">{t.name}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {new Date(s.slot_date + "T00:00:00").toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" })} · {s.start_time.slice(0,5)}–{s.end_time.slice(0,5)}
+                                </p>
+                                <p className="mt-1 text-sm">
+                                  <span className="line-through text-muted-foreground">£{base.toFixed(2)}</span>{" "}
+                                  <span className="font-bold text-emerald-600">£{final.toFixed(2)}</span>
+                                </p>
+                                {s.notes && <p className="mt-1 text-xs italic text-muted-foreground">{s.notes}</p>}
+                                <a
+                                  href={`/m/${slug}/book/${t.id}?model=${s.id}`}
+                                  className="mt-2 inline-block rounded-md px-3 py-1.5 text-xs font-semibold text-white"
+                                  style={{ backgroundColor: brand }}
+                                >
+                                  Book this slot
+                                </a>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })()}
                   {visibleTreatments.length === 0 ? (
                     <p className="opacity-70">No treatments available here yet.</p>
                   ) : (
