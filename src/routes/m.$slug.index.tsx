@@ -358,46 +358,84 @@ function BookPage() {
         </section>
       )}
 
-      {/* Treatments */}
+      {/* Treatments + Packages */}
       {locationId ? (
-        <section className="mx-auto mt-10 max-w-3xl px-4">
-          <h2 className="mb-4 text-xl font-bold" style={headingStyle}>
-            Book a treatment
-          </h2>
-          {visibleTreatments.length === 0 ? (
-            <p className="opacity-70">No treatments available here yet.</p>
-          ) : (
-            <div className="space-y-2">
-              {roots.length > 0 && (
-                <CategoryTree
-                  nodes={roots}
-                  slug={slug}
-                  priceFor={priceFor}
-                  durationFor={durationFor}
-                  brand={brand}
-                />
-              )}
-              {uncategorised.length > 0 && (
-                <div className="mt-4 space-y-2">
+        <section className="mx-auto mt-10 max-w-3xl px-4 pb-32">
+          <Tabs defaultValue="treatments" className="w-full">
+            <TabsList className="grid w-full grid-cols-2" style={{ backgroundColor: `${brand}10` }}>
+              <TabsTrigger value="treatments">Book a treatment</TabsTrigger>
+              <TabsTrigger value="packages" disabled={packages.length === 0}>
+                <PackageIcon className="mr-1.5 h-4 w-4" />
+                Packages {packages.length > 0 ? `(${packages.length})` : ""}
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="treatments" className="mt-4">
+              <p className="mb-3 text-xs opacity-60">
+                Tap a treatment to book now, or tick multiple to book them together.
+              </p>
+              {visibleTreatments.length === 0 ? (
+                <p className="opacity-70">No treatments available here yet.</p>
+              ) : (
+                <div className="space-y-2">
                   {roots.length > 0 && (
-                    <h3 className="text-sm font-semibold uppercase tracking-wide opacity-60">
-                      Other treatments
-                    </h3>
-                  )}
-                  {uncategorised.map((t) => (
-                    <TreatmentRow
-                      key={t.id}
-                      t={t}
+                    <CategoryTree
+                      nodes={roots}
                       slug={slug}
-                      price={priceFor(t)}
-                      duration={durationFor(t)}
+                      priceFor={priceFor}
+                      durationFor={durationFor}
                       brand={brand}
+                      isSelected={isSelected}
+                      toggleSelect={toggleSelect}
                     />
+                  )}
+                  {uncategorised.length > 0 && (
+                    <div className="mt-4 space-y-2">
+                      {roots.length > 0 && (
+                        <h3 className="text-sm font-semibold uppercase tracking-wide opacity-60">
+                          Other treatments
+                        </h3>
+                      )}
+                      {uncategorised.map((t) => (
+                        <TreatmentRow
+                          key={t.id}
+                          t={t}
+                          slug={slug}
+                          price={priceFor(t)}
+                          duration={durationFor(t)}
+                          brand={brand}
+                          selected={isSelected(t.id)}
+                          onToggle={() => toggleSelect(t.id)}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="packages" className="mt-4">
+              {packages.length === 0 ? (
+                <p className="opacity-70">No packages available.</p>
+              ) : (
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {packages.map((p) => (
+                    <Card key={p.id} className="rounded-2xl">
+                      <CardContent className="p-4">
+                        <div className="font-semibold" style={{ color: brand }}>{p.name}</div>
+                        <p className="mt-1 text-sm opacity-70">
+                          {p.session_count} session{p.session_count === 1 ? "" : "s"}
+                        </p>
+                        <p className="mt-2 font-bold" style={{ color: brand }}>
+                          £{Number(p.price ?? 0).toFixed(2)}
+                        </p>
+                      </CardContent>
+                    </Card>
                   ))}
                 </div>
               )}
-            </div>
-          )}
+            </TabsContent>
+          </Tabs>
         </section>
       ) : (
         locations.length > 1 && (
@@ -410,26 +448,37 @@ function BookPage() {
         )
       )}
 
-      {packages.length > 0 && locationId && (
-        <section className="mx-auto mt-10 max-w-3xl px-4">
-          <h2 className="mb-3 text-xl font-bold" style={headingStyle}>
-            Packages
-          </h2>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {packages.map((p) => (
-              <Card key={p.id} className="rounded-2xl">
-                <CardContent className="p-4">
-                  <div className="font-semibold" style={{ color: brand }}>{p.name}</div>
-                  <p className="mt-1 text-sm opacity-70">{p.session_count} sessions</p>
-                  <p className="mt-2 font-bold" style={{ color: brand }}>
-                    £{Number(p.price ?? 0).toFixed(2)}
-                  </p>
-                </CardContent>
-              </Card>
-            ))}
+      {/* Sticky multi-select bar */}
+      {locationId && selectedIds.length > 0 && (
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 px-4 py-3 backdrop-blur" style={{ borderColor: `${brand}33` }}>
+          <div className="mx-auto flex max-w-3xl items-center justify-between gap-3">
+            <div className="text-sm">
+              <div className="font-semibold" style={{ color: brand }}>
+                {selectedIds.length} treatment{selectedIds.length === 1 ? "" : "s"} selected
+              </div>
+              <div className="text-xs opacity-70">
+                Total £
+                {selectedIds
+                  .map((id) => priceFor(treatments.find((t) => t.id === id)!))
+                  .reduce((a, b) => a + b, 0)
+                  .toFixed(2)}
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="ghost" size="sm" onClick={() => setSelectedIds([])}>
+                Clear
+              </Button>
+              <Link to="/m/$slug/book-multi" params={{ slug }} search={{ ids: selectedIds.join(",") }}>
+                <Button size="sm" style={{ backgroundColor: brand, color: "#fff" }}>
+                  Continue →
+                </Button>
+              </Link>
+            </div>
           </div>
-        </section>
+        </div>
       )}
+
+
 
       {/* Footer */}
       <footer
