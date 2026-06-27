@@ -48,6 +48,18 @@ export const getBookingContext = createServerFn({ method: "GET" })
       .eq("profile_id", profile.id)
       .maybeSingle();
 
+    const today = new Date().toISOString().slice(0, 10);
+    const { data: modelSlots } = await sb
+      .from("model_slots")
+      .select("id, treatment_id, location_id, slot_date, start_time, end_time, price_mode, price_value, notes, booked_appointment_id, active")
+      .eq("profile_id", profile.id)
+      .eq("treatment_id", data.treatmentId)
+      .eq("active", true)
+      .is("booked_appointment_id", null)
+      .gte("slot_date", today)
+      .order("slot_date", { ascending: true })
+      .order("start_time", { ascending: true });
+
     return {
       profileId: profile.id,
       clinicName: profile.clinic_name,
@@ -56,8 +68,10 @@ export const getBookingContext = createServerFn({ method: "GET" })
       rules: rules ?? [],
       theme: theme ?? null,
       brandColor: (profile as { brand_color?: string | null }).brand_color ?? null,
+      modelSlots: modelSlots ?? [],
     };
   });
+
 
 export const getMultiBookingContext = createServerFn({ method: "GET" })
   .inputValidator((input: { slug: string; treatmentIds: string[] }) => input)
