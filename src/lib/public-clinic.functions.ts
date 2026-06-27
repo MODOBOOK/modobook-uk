@@ -17,10 +17,7 @@ export const getPublicClinic = createServerFn({ method: "GET" })
   .handler(async ({ data }) => {
     const supabase = getServerSupabasePublic();
     const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("slug", data.slug.toLowerCase())
-      .eq("active", true)
+      .rpc("get_public_profile_by_slug", { p_slug: data.slug.toLowerCase() })
       .single();
     if (profileError) throw profileError;
     if (!profile) throw new Error("Clinic not found");
