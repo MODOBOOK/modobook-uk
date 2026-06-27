@@ -58,7 +58,7 @@ type TreatmentForm = {
   category_id: string | null;
   active: boolean;
   consent_ids: string[];
-  addon_ids: string[];
+  addons: AddonLink[];
   addon_mode: "off" | "optional";
   discount_percent: number | null;
   discount_starts_at: string | null;
