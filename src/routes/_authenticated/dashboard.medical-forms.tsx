@@ -181,16 +181,19 @@ function FormsPage() {
                 <AccordionTrigger className="flex-1 py-3 hover:no-underline">
                   <span className="text-base font-bold text-left">{g.cat?.name ?? "Uncategorised"}</span>
                 </AccordionTrigger>
-                {g.cat && (
-                  <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0" onClick={async (e) => {
-                    e.stopPropagation();
-                    if (!confirm(`Delete category "${g.cat.name}"? Forms will become uncategorised.`)) return;
-                    await removeCat({ data: { id: g.cat.id } });
-                    refresh();
-                  }}>
-                    <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
-                  </Button>
-                )}
+                {g.cat && (() => {
+                  const c = g.cat;
+                  return (
+                    <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0" onClick={async (e) => {
+                      e.stopPropagation();
+                      if (!confirm(`Delete category "${c.name}"? Forms will become uncategorised.`)) return;
+                      await removeCat({ data: { id: c.id } });
+                      refresh();
+                    }}>
+                      <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
+                    </Button>
+                  );
+                })()}
               </div>
               <AccordionContent>
                 <div className="space-y-1.5 pb-3">
