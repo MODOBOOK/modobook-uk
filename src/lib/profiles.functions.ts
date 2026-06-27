@@ -89,6 +89,12 @@ export const updateProfile = createServerFn({ method: "POST" })
       deposit_amount_cents?: number;
       deposit_policy_text?: string;
       cancellation_rules?: { hours_before: number; fee_percent: number }[];
+      chooser_enabled?: boolean;
+      chooser_show_know?: boolean;
+      chooser_show_unsure?: boolean;
+      chooser_show_consultation?: boolean;
+      chooser_consultation_treatment_id?: string | null;
+      chooser_intro_text?: string | null;
     }) => input,
   )
   .handler(async ({ data, context }) => {
@@ -111,6 +117,13 @@ export const updateProfile = createServerFn({ method: "POST" })
     if (data.deposit_amount_cents !== undefined) update.deposit_amount_cents = data.deposit_amount_cents;
     if (data.deposit_policy_text !== undefined) update.deposit_policy_text = data.deposit_policy_text;
     if (data.cancellation_rules !== undefined) update.cancellation_rules = data.cancellation_rules as Json;
+    if (data.chooser_enabled !== undefined) update.chooser_enabled = data.chooser_enabled;
+    if (data.chooser_show_know !== undefined) update.chooser_show_know = data.chooser_show_know;
+    if (data.chooser_show_unsure !== undefined) update.chooser_show_unsure = data.chooser_show_unsure;
+    if (data.chooser_show_consultation !== undefined) update.chooser_show_consultation = data.chooser_show_consultation;
+    if (data.chooser_consultation_treatment_id !== undefined) update.chooser_consultation_treatment_id = data.chooser_consultation_treatment_id;
+    if (data.chooser_intro_text !== undefined) update.chooser_intro_text = data.chooser_intro_text;
+
 
     const { data: profile, error } = await supabase
       .from("profiles")

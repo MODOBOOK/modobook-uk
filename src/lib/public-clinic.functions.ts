@@ -89,6 +89,12 @@ export const getPublicClinic = createServerFn({ method: "GET" })
       .eq("profile_id", profile.id)
       .eq("approved", true);
 
+    const [concernAreas, concerns, concernLinks] = await Promise.all([
+      supabase.from("concern_areas").select("*").eq("profile_id", profile.id).order("sort_order"),
+      supabase.from("concerns").select("*").eq("profile_id", profile.id).order("sort_order"),
+      supabase.from("concern_treatments").select("concern_id, treatment_id, sort_order").eq("profile_id", profile.id),
+    ]);
+
     return {
       profile,
       treatments: treatments ?? [],
@@ -100,6 +106,10 @@ export const getPublicClinic = createServerFn({ method: "GET" })
       pricing: pricing ?? [],
       theme: theme ?? null,
       reviews: reviews ?? [],
+      concernAreas: concernAreas.data ?? [],
+      concerns: concerns.data ?? [],
+      concernLinks: concernLinks.data ?? [],
     };
   });
+
 

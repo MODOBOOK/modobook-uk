@@ -14,7 +14,9 @@ import {
   CalendarPlus,
   ClipboardList,
   Star,
+  HelpCircle,
   ChevronRight,
+
   LogOut,
   ExternalLink,
 } from "lucide-react";
@@ -51,7 +53,9 @@ const groups: {
   {
     title: "Bookings",
     items: [
+      { label: "Booking flow", description: "Concern picker shown before treatments", to: "/dashboard/booking-flow", icon: HelpCircle, tone: "bg-cyan-100 text-cyan-700" },
       { label: "Availability", description: "Opening times & ad-hoc slots", to: "/dashboard/availability", icon: CalendarDays, tone: "bg-blue-100 text-blue-600" },
+
       { label: "New appointment", description: "Book in a patient manually", to: "/dashboard/new-appointment", icon: CalendarPlus, tone: "bg-orange-100 text-orange-600" },
       { label: "Consultations", description: "MODO step-by-step patient records", to: "/dashboard/consultations", icon: ClipboardList, tone: "bg-fuchsia-100 text-fuchsia-700" },
       { label: "Reviews", description: "Moderate patient reviews", to: "/dashboard/reviews", icon: Star, tone: "bg-yellow-100 text-yellow-700" },

@@ -69,7 +69,7 @@ function countTreatments(n: CatNode): number {
 type Theme = Database["public"]["Tables"]["clinic_theme"]["Row"];
 
 function BookPage() {
-  const { profile, treatments, packages, locations, categories, pricing, theme, reviews } =
+  const { profile, treatments, packages, locations, categories, pricing, theme, reviews, concernAreas, concerns, concernLinks } =
     Route.useLoaderData() as {
       profile: {
         id: string;
@@ -87,6 +87,12 @@ function BookPage() {
         deposit_amount_cents?: number | null;
         deposit_policy_text?: string | null;
         cancellation_rules?: { hours_before: number; fee_percent: number }[] | null;
+        chooser_enabled?: boolean | null;
+        chooser_show_know?: boolean | null;
+        chooser_show_unsure?: boolean | null;
+        chooser_show_consultation?: boolean | null;
+        chooser_consultation_treatment_id?: string | null;
+        chooser_intro_text?: string | null;
       };
       treatments: Treatment[];
       packages: Package[];
@@ -95,6 +101,9 @@ function BookPage() {
       pricing: Pricing[];
       theme: Theme | null;
       reviews: { id: string; rating: number }[];
+      concernAreas: { id: string; name: string; sort_order: number }[];
+      concerns: { id: string; area_id: string; name: string; description: string | null }[];
+      concernLinks: { concern_id: string; treatment_id: string }[];
     };
 
   const { slug } = useParams({ from: "/m/$slug/" });
@@ -113,8 +122,25 @@ function BookPage() {
   const toggleSelect = (id: string) =>
     setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   const isSelected = (id: string) => selectedIds.includes(id);
+
+  // Chooser flow
+  const chooserOn = !!profile.chooser_enabled;
+  const showKnow = profile.chooser_show_know !== false;
+  const showUnsure = profile.chooser_show_unsure !== false;
+  const showConsult = profile.chooser_show_consultation !== false;
+  const consultTreatmentId = profile.chooser_consultation_treatment_id ?? null;
+  const [mode, setMode] = useState<null | "know" | "unsure">(null);
+  const [pickedConcernId, setPickedConcernId] = useState<string | null>(null);
+
   // Clear selection when location changes
-  const setLocAndClear = (id: string | null) => { setLocationId(id); setSelectedIds([]); };
+  const setLocAndClear = (id: string | null) => {
+    setLocationId(id);
+    setSelectedIds([]);
+    setMode(null);
+    setPickedConcernId(null);
+  };
+  void setLocAndClear;
+
 
 
   const priceFor = (t: Treatment) => {
@@ -401,45 +427,151 @@ function BookPage() {
         </section>
       )}
 
-      {/* Treatments + Packages */}
-      {locationId ? (
-        <section className="mx-auto mt-10 max-w-3xl px-4 pb-32">
-          <Tabs defaultValue="treatments" className="w-full">
-            <TabsList className="grid w-full grid-cols-2" style={{ backgroundColor: `${brand}10` }}>
-              <TabsTrigger value="treatments">Book a treatment</TabsTrigger>
-              <TabsTrigger value="packages" disabled={packages.length === 0}>
-                <PackageIcon className="mr-1.5 h-4 w-4" />
-                Packages {packages.length > 0 ? `(${packages.length})` : ""}
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="treatments" className="mt-4">
-              <p className="mb-3 text-xs opacity-60">
-                Tick all the treatments you'd like, then press Book Now.
-              </p>
-              {visibleTreatments.length === 0 ? (
-                <p className="opacity-70">No treatments available here yet.</p>
+      {/* Chooser gate */}
+      {locationId && chooserOn && !mode && (
+        <section className="mx-auto mt-10 max-w-3xl px-4">
+          <h2 className="mb-1 text-center text-xl font-bold" style={headingStyle}>
+            How can we help today?
+          </h2>
+          {profile.chooser_intro_text && (
+            <p className="mb-5 text-center text-sm opacity-70">{profile.chooser_intro_text}</p>
+          )}
+          <div className="grid gap-3 sm:grid-cols-3">
+            {showKnow && (
+              <ChooserCard
+                title="I know what I want"
+                description="Browse the full treatment menu"
+                brand={brand}
+                onClick={() => setMode("know")}
+              />
+            )}
+            {showUnsure && (
+              <ChooserCard
+                title="I'm unsure what to book"
+                description="Pick a concern and we'll suggest treatments"
+                brand={brand}
+                onClick={() => setMode("unsure")}
+              />
+            )}
+            {showConsult && (
+              consultTreatmentId ? (
+                <Link
+                  to="/m/$slug/book/$treatmentId"
+                  params={{ slug, treatmentId: consultTreatmentId }}
+                  className="block"
+                >
+                  <ChooserCard
+                    title="I need a consultation"
+                    description="Book a one-to-one consultation"
+                    brand={brand}
+                  />
+                </Link>
               ) : (
-                <div className="space-y-2">
-                  {roots.length > 0 && (
-                    <CategoryTree
-                      nodes={roots}
-                      slug={slug}
-                      priceFor={priceFor}
-                      durationFor={durationFor}
-                      brand={brand}
-                      isSelected={isSelected}
-                      toggleSelect={toggleSelect}
-                    />
+                <ChooserCard
+                  title="I need a consultation"
+                  description="Browse to find a consultation"
+                  brand={brand}
+                  onClick={() => setMode("know")}
+                />
+              )
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* Concerns picker (unsure path) */}
+      {locationId && chooserOn && mode === "unsure" && !pickedConcernId && (
+        <section className="mx-auto mt-10 max-w-3xl px-4">
+          <div className="mb-4 flex items-center justify-between">
+            <button onClick={() => setMode(null)} className="text-sm opacity-70 hover:opacity-100">
+              ← Back
+            </button>
+            <button onClick={() => setMode("know")} className="text-sm font-semibold" style={{ color: brand }}>
+              Skip · show full menu
+            </button>
+          </div>
+          <h2 className="mb-4 text-xl font-bold" style={headingStyle}>What's your main concern?</h2>
+          {concernAreas.length === 0 ? (
+            <p className="opacity-70">No concerns set up yet.</p>
+          ) : (
+            <div className="space-y-5">
+              {concernAreas.map((area) => {
+                const areaConcerns = concerns.filter((c) => c.area_id === area.id);
+                if (areaConcerns.length === 0) return null;
+                return (
+                  <div key={area.id}>
+                    <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide opacity-60">{area.name}</h3>
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      {areaConcerns.map((c) => (
+                        <button
+                          key={c.id}
+                          onClick={() => setPickedConcernId(c.id)}
+                          className="rounded-xl border bg-card p-3 text-left transition hover:shadow-md"
+                          style={{ borderColor: `${brand}33` }}
+                        >
+                          <div className="font-semibold" style={{ color: brand }}>{c.name}</div>
+                          {c.description && (
+                            <div className="mt-0.5 text-xs opacity-70">{c.description}</div>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* Treatments + Packages */}
+      {locationId && (!chooserOn || mode === "know" || (mode === "unsure" && pickedConcernId)) ? (
+        <section className="mx-auto mt-10 max-w-3xl px-4 pb-32">
+          {chooserOn && (
+            <div className="mb-4 flex items-center justify-between">
+              <button
+                onClick={() => {
+                  if (mode === "unsure" && pickedConcernId) setPickedConcernId(null);
+                  else setMode(null);
+                }}
+                className="text-sm opacity-70 hover:opacity-100"
+              >
+                ← Back
+              </button>
+              {mode === "unsure" && pickedConcernId && (
+                <button onClick={() => { setMode("know"); setPickedConcernId(null); }} className="text-sm font-semibold" style={{ color: brand }}>
+                  Show full menu
+                </button>
+              )}
+            </div>
+          )}
+          {(() => {
+            // If on concern path, filter to matched treatments
+            const matchedIds =
+              mode === "unsure" && pickedConcernId
+                ? new Set(concernLinks.filter((l) => l.concern_id === pickedConcernId).map((l) => l.treatment_id))
+                : null;
+            const filteredTreatments = matchedIds
+              ? visibleTreatments.filter((t) => matchedIds.has(t.id))
+              : visibleTreatments;
+            const tree = matchedIds ? buildTree(categories, filteredTreatments) : { roots, uncategorised };
+
+            if (matchedIds) {
+              const concernName = concerns.find((c) => c.id === pickedConcernId)?.name;
+              return (
+                <>
+                  {concernName && (
+                    <h2 className="mb-3 text-lg font-bold" style={headingStyle}>
+                      Suggested for: {concernName}
+                    </h2>
                   )}
-                  {uncategorised.length > 0 && (
-                    <div className="mt-4 space-y-2">
-                      {roots.length > 0 && (
-                        <h3 className="text-sm font-semibold uppercase tracking-wide opacity-60">
-                          Other treatments
-                        </h3>
-                      )}
-                      {uncategorised.map((t) => (
+                  {filteredTreatments.length === 0 ? (
+                    <p className="rounded-xl border border-dashed p-6 text-center text-sm opacity-70" style={{ borderColor: `${brand}33` }}>
+                      No treatments matched to this concern yet.
+                    </p>
+                  ) : (
+                    <div className="space-y-2">
+                      {filteredTreatments.map((t) => (
                         <TreatmentRow
                           key={t.id}
                           t={t}
@@ -453,67 +585,123 @@ function BookPage() {
                       ))}
                     </div>
                   )}
-                </div>
-              )}
-            </TabsContent>
+                </>
+              );
+            }
 
-            <TabsContent value="packages" className="mt-4">
-              {packages.length === 0 ? (
-                <p className="opacity-70">No packages available.</p>
-              ) : (
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {packages.map((p) => {
-                    const pkg = p as Package & {
-                      description?: string | null;
-                      treatment_ids?: string[] | null;
-                      duration_minutes?: number | null;
-                      image_url?: string | null;
-                    };
-                    const ids = pkg.treatment_ids ?? (pkg.treatment_id ? [pkg.treatment_id] : []);
-                    const firstTreatmentId = ids[0];
-                    return (
-                      <Card key={p.id} className="overflow-hidden rounded-2xl">
-                        {pkg.image_url && (
-                          <div className="aspect-[16/9] w-full overflow-hidden bg-muted">
-                            <img src={pkg.image_url} alt={p.name} className="h-full w-full object-cover" loading="lazy" />
-                          </div>
-                        )}
-                        <CardContent className="p-4">
-                          <div className="font-semibold" style={{ color: brand }}>{p.name}</div>
-                          {pkg.description && (
-                            <p className="mt-1 line-clamp-3 text-sm opacity-70">{pkg.description}</p>
+            return (
+              <Tabs defaultValue="treatments" className="w-full">
+                <TabsList className="grid w-full grid-cols-2" style={{ backgroundColor: `${brand}10` }}>
+                  <TabsTrigger value="treatments">Book a treatment</TabsTrigger>
+                  <TabsTrigger value="packages" disabled={packages.length === 0}>
+                    <PackageIcon className="mr-1.5 h-4 w-4" />
+                    Packages {packages.length > 0 ? `(${packages.length})` : ""}
+                  </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="treatments" className="mt-4">
+                  <p className="mb-3 text-xs opacity-60">
+                    Tick all the treatments you'd like, then press Book Now.
+                  </p>
+                  {visibleTreatments.length === 0 ? (
+                    <p className="opacity-70">No treatments available here yet.</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {tree.roots.length > 0 && (
+                        <CategoryTree
+                          nodes={tree.roots}
+                          slug={slug}
+                          priceFor={priceFor}
+                          durationFor={durationFor}
+                          brand={brand}
+                          isSelected={isSelected}
+                          toggleSelect={toggleSelect}
+                        />
+                      )}
+                      {tree.uncategorised.length > 0 && (
+                        <div className="mt-4 space-y-2">
+                          {tree.roots.length > 0 && (
+                            <h3 className="text-sm font-semibold uppercase tracking-wide opacity-60">
+                              Other treatments
+                            </h3>
                           )}
-                          <p className="mt-2 text-xs opacity-60">
-                            {p.session_count} session{p.session_count === 1 ? "" : "s"}
-                            {pkg.duration_minutes ? ` · ${pkg.duration_minutes} min each` : ""}
-                          </p>
-                          <div className="mt-3 flex items-center justify-between gap-2">
-                            <p className="font-bold" style={{ color: brand }}>
-                              £{Number(p.price ?? 0).toFixed(2)}
-                            </p>
-                            {firstTreatmentId ? (
-                              <Link
-                                to="/m/$slug/book/$treatmentId"
-                                params={{ slug, treatmentId: firstTreatmentId }}
-                                className="rounded-full px-4 py-1.5 text-sm font-semibold text-white"
-                                style={{ backgroundColor: brand }}
-                              >
-                                Book
-                              </Link>
-                            ) : (
-                              <span className="text-xs opacity-60">Contact to book</span>
+                          {tree.uncategorised.map((t) => (
+                            <TreatmentRow
+                              key={t.id}
+                              t={t}
+                              slug={slug}
+                              price={priceFor(t)}
+                              duration={durationFor(t)}
+                              brand={brand}
+                              selected={isSelected(t.id)}
+                              onToggle={() => toggleSelect(t.id)}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="packages" className="mt-4">
+                  {packages.length === 0 ? (
+                    <p className="opacity-70">No packages available.</p>
+                  ) : (
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      {packages.map((p) => {
+                        const pkg = p as Package & {
+                          description?: string | null;
+                          treatment_ids?: string[] | null;
+                          duration_minutes?: number | null;
+                          image_url?: string | null;
+                        };
+                        const ids = pkg.treatment_ids ?? (pkg.treatment_id ? [pkg.treatment_id] : []);
+                        const firstTreatmentId = ids[0];
+                        return (
+                          <Card key={p.id} className="overflow-hidden rounded-2xl">
+                            {pkg.image_url && (
+                              <div className="aspect-[16/9] w-full overflow-hidden bg-muted">
+                                <img src={pkg.image_url} alt={p.name} className="h-full w-full object-cover" loading="lazy" />
+                              </div>
                             )}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
+                            <CardContent className="p-4">
+                              <div className="font-semibold" style={{ color: brand }}>{p.name}</div>
+                              {pkg.description && (
+                                <p className="mt-1 line-clamp-3 text-sm opacity-70">{pkg.description}</p>
+                              )}
+                              <p className="mt-2 text-xs opacity-60">
+                                {p.session_count} session{p.session_count === 1 ? "" : "s"}
+                                {pkg.duration_minutes ? ` · ${pkg.duration_minutes} min each` : ""}
+                              </p>
+                              <div className="mt-3 flex items-center justify-between gap-2">
+                                <p className="font-bold" style={{ color: brand }}>
+                                  £{Number(p.price ?? 0).toFixed(2)}
+                                </p>
+                                {firstTreatmentId ? (
+                                  <Link
+                                    to="/m/$slug/book/$treatmentId"
+                                    params={{ slug, treatmentId: firstTreatmentId }}
+                                    className="rounded-full px-4 py-1.5 text-sm font-semibold text-white"
+                                    style={{ backgroundColor: brand }}
+                                  >
+                                    Book
+                                  </Link>
+                                ) : (
+                                  <span className="text-xs opacity-60">Contact to book</span>
+                                )}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
+                    </div>
+                  )}
+                </TabsContent>
+              </Tabs>
+            );
+          })()}
         </section>
-      ) : (
+      ) : !locationId ? (
         locations.length > 1 && (
           <section className="mx-auto mt-8 max-w-3xl px-4">
             <p className="rounded-2xl border border-dashed p-6 text-center text-sm opacity-70"
@@ -522,7 +710,8 @@ function BookPage() {
             </p>
           </section>
         )
-      )}
+      ) : null}
+
 
       {/* Sticky multi-select bar */}
       {locationId && selectedIds.length > 0 && (
@@ -567,7 +756,33 @@ function BookPage() {
   );
 }
 
+function ChooserCard({
+  title,
+  description,
+  brand,
+  onClick,
+}: {
+  title: string;
+  description: string;
+  brand: string;
+  onClick?: () => void;
+}) {
+  const inner = (
+    <div
+      className="flex h-full flex-col rounded-2xl border bg-card p-5 text-left transition hover:shadow-lg"
+      style={{ borderColor: `${brand}33` }}
+    >
+      <div className="text-base font-bold leading-tight" style={{ color: brand }}>{title}</div>
+      <div className="mt-1 text-sm opacity-75">{description}</div>
+      <div className="mt-3 text-sm font-semibold" style={{ color: brand }}>Continue →</div>
+    </div>
+  );
+  if (onClick) return <button onClick={onClick} className="block w-full text-left">{inner}</button>;
+  return inner;
+}
+
 function ActionPlaceholder({
+
   label,
   brand,
   children,
