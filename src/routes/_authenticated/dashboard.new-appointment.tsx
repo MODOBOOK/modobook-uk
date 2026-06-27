@@ -214,6 +214,8 @@ function NewAppointmentPage() {
             : null,
           notes: notes || undefined,
           basePrice: Number(treatment.price ?? 0),
+          extraConsentTemplateIds: [...pickedConsentIds],
+          medicalFormTemplateIds: [...pickedMedicalIds],
         },
       });
       const manageUrl = result.manageToken
