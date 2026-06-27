@@ -244,6 +244,53 @@ function BrandingPage() {
 
       <Card>
         <CardHeader>
+          <CardTitle className="text-base">Booking menu styling</CardTitle>
+          <p className="text-xs text-muted-foreground">
+            Controls how categories and treatments look on your customer-facing booking page.
+          </p>
+        </CardHeader>
+        <CardContent className="grid gap-4 sm:grid-cols-2">
+          <ColorField label="Category header background" value={state.menu_category_bg ?? "#111827"} onChange={(v) => set("menu_category_bg", v)} />
+          <ColorField label="Category header text" value={state.menu_category_text ?? "#ffffff"} onChange={(v) => set("menu_category_text", v)} />
+          <ColorField label="Treatment card background" value={state.menu_card_bg ?? "#ffffff"} onChange={(v) => set("menu_card_bg", v)} />
+          <ColorField label="Treatment card border" value={state.menu_card_border_color ?? "#e5e7eb"} onChange={(v) => set("menu_card_border_color", v)} />
+          <ColorField label="Treatment name color" value={state.menu_treatment_name_color ?? state.primary_color ?? "#0f172a"} onChange={(v) => set("menu_treatment_name_color", v)} />
+          <ColorField label="Price color" value={state.menu_price_color ?? state.primary_color ?? "#0f172a"} onChange={(v) => set("menu_price_color", v)} />
+          <div className="space-y-1.5">
+            <Label>Treatment card size</Label>
+            <select
+              className="h-10 w-full rounded-md border bg-background px-3 text-sm"
+              value={state.menu_treatment_size ?? "sm"}
+              onChange={(e) => set("menu_treatment_size", e.target.value)}
+            >
+              <option value="sm">Small (compact)</option>
+              <option value="md">Medium</option>
+              <option value="lg">Large</option>
+            </select>
+          </div>
+          <div className="flex items-end gap-6">
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={state.menu_category_bold ?? true}
+                onChange={(e) => set("menu_category_bold", e.target.checked)}
+              />
+              Bold category titles
+            </label>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={state.menu_treatment_bold ?? true}
+                onChange={(e) => set("menu_treatment_bold", e.target.checked)}
+              />
+              Bold treatment names
+            </label>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <CardTitle className="text-base">Preview</CardTitle>
         </CardHeader>
         <CardContent>
