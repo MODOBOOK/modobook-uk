@@ -84,6 +84,10 @@ export const createTreatment = createServerFn({ method: "POST" })
         deductible_window_days: data.deductible_window_days,
         category_id: data.category_id ?? null,
         active: data.active ?? true,
+        session_count: data.session_count ?? 1,
+        allow_split_payment: data.allow_split_payment ?? false,
+        rebook_reminder_days: data.rebook_reminder_days ?? null,
+
       })
       .select()
       .single();
