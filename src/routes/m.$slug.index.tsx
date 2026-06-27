@@ -25,6 +25,8 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { mapsUrl, formatAddress } from "@/lib/maps";
 import type { Database } from "@/integrations/supabase/types";
 import { toast } from "sonner";
+import { SafeHtml } from "@/components/SafeHtml";
+import { describeCancellationRules } from "@/lib/policy";
 
 type Treatment = Database["public"]["Tables"]["treatments"]["Row"];
 type Package = Database["public"]["Tables"]["packages"]["Row"];
