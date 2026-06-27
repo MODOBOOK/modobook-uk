@@ -60,8 +60,21 @@ function BookTreatmentPage() {
   const [date, setDate] = useState<string>(today);
   const [month, setMonth] = useState<Date>(new Date());
   const [slot, setSlot] = useState<string | null>(null);
-  const [confirmed, setConfirmed] = useState<{ id: string } | null>(null);
-  const [form, setForm] = useState({ name: "", email: "", phone: "", notes: "" });
+  const [confirmed, setConfirmed] = useState<
+    { id: string; consents: { token: string; consent_template_id: string }[] } | null
+  >(null);
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    dob: "",
+    addressLine1: "",
+    addressLine2: "",
+    city: "",
+    postcode: "",
+    country: "",
+    notes: "",
+  });
   const [submitting, setSubmitting] = useState(false);
 
   const dayFn = useServerFn(getDayAvailability);
@@ -165,11 +178,19 @@ function BookTreatmentPage() {
           patientName: form.name,
           patientEmail: form.email,
           patientPhone: form.phone || undefined,
+          patientDob: form.dob || null,
+          patientAddress: {
+            line1: form.addressLine1,
+            line2: form.addressLine2,
+            city: form.city,
+            postcode: form.postcode,
+            country: form.country,
+          },
           notes: form.notes || undefined,
           basePrice: price,
         },
       });
-      setConfirmed({ id: res.id });
+      setConfirmed({ id: res.id, consents: res.consents ?? [] });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Booking failed");
     } finally {
@@ -178,13 +199,35 @@ function BookTreatmentPage() {
   }
 
   if (confirmed) {
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
     return (
       <main className="mx-auto max-w-xl px-4 py-16 text-center">
         <CheckCircle2 className="mx-auto mb-4 h-12 w-12 text-green-600" />
-        <h1 className="text-2xl font-bold">Booking requested</h1>
+        <h1 className="text-2xl font-bold">Booking confirmed</h1>
         <p className="mt-2 text-muted-foreground">
-          {ctx.clinicName} will confirm your appointment by email shortly.
+          Your appointment with {ctx.clinicName} is confirmed. A confirmation
+          email has been sent to {form.email}.
         </p>
+        {confirmed.consents.length > 0 && (
+          <div className="mt-6 rounded-lg border bg-muted/40 p-4 text-left">
+            <p className="text-sm font-semibold">Please complete your consent form(s):</p>
+            <ul className="mt-2 space-y-2 text-sm">
+              {confirmed.consents.map((c) => (
+                <li key={c.token}>
+                  <a
+                    href={`${origin}/c/${c.token}`}
+                    className="text-primary underline"
+                  >
+                    Complete consent form
+                  </a>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-3 text-xs text-muted-foreground">
+              We've also emailed these links to {form.email}.
+            </p>
+          </div>
+        )}
         <div className="mt-6">
           <Link to="/m/$slug" params={{ slug }}>
             <Button variant="outline">Back to clinic</Button>
@@ -297,15 +340,42 @@ function BookTreatmentPage() {
         <CardContent className="grid gap-4 sm:grid-cols-2">
           <div className="sm:col-span-2">
             <Label htmlFor="name">Full name</Label>
-            <Input id="name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+            <Input id="name" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
           </div>
           <div>
             <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+            <Input id="email" type="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
           </div>
           <div>
             <Label htmlFor="phone">Phone</Label>
-            <Input id="phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+            <Input id="phone" required value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+          </div>
+          <div>
+            <Label htmlFor="dob">Date of birth</Label>
+            <Input id="dob" type="date" required value={form.dob} onChange={(e) => setForm({ ...form, dob: e.target.value })} />
+          </div>
+          <div className="sm:col-span-2 pt-2 border-t mt-2">
+            <Label className="text-sm font-semibold">Address</Label>
+          </div>
+          <div className="sm:col-span-2">
+            <Label htmlFor="line1">Address line 1</Label>
+            <Input id="line1" value={form.addressLine1} onChange={(e) => setForm({ ...form, addressLine1: e.target.value })} />
+          </div>
+          <div className="sm:col-span-2">
+            <Label htmlFor="line2">Address line 2 (optional)</Label>
+            <Input id="line2" value={form.addressLine2} onChange={(e) => setForm({ ...form, addressLine2: e.target.value })} />
+          </div>
+          <div>
+            <Label htmlFor="city">City</Label>
+            <Input id="city" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
+          </div>
+          <div>
+            <Label htmlFor="postcode">Postcode</Label>
+            <Input id="postcode" value={form.postcode} onChange={(e) => setForm({ ...form, postcode: e.target.value })} />
+          </div>
+          <div className="sm:col-span-2">
+            <Label htmlFor="country">Country</Label>
+            <Input id="country" value={form.country} onChange={(e) => setForm({ ...form, country: e.target.value })} />
           </div>
           <div className="sm:col-span-2">
             <Label htmlFor="notes">Notes (optional)</Label>
@@ -314,8 +384,13 @@ function BookTreatmentPage() {
         </CardContent>
       </Card>
 
-      <Button className="w-full" size="lg" disabled={!slot || submitting} onClick={submit}>
-        {submitting ? "Requesting…" : "Request booking"}
+      <Button
+        className="w-full"
+        size="lg"
+        disabled={!slot || submitting || !form.name || !form.email || !form.phone || !form.dob}
+        onClick={submit}
+      >
+        {submitting ? "Booking…" : "Confirm booking"}
       </Button>
     </main>
   );

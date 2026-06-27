@@ -130,6 +130,14 @@ export const requestBooking = createServerFn({ method: "POST" })
       patientName: string;
       patientEmail: string;
       patientPhone?: string;
+      patientDob?: string | null;
+      patientAddress?: {
+        line1?: string;
+        line2?: string;
+        city?: string;
+        postcode?: string;
+        country?: string;
+      } | null;
       notes?: string;
       basePrice: number;
     }) => input,
@@ -148,12 +156,35 @@ export const requestBooking = createServerFn({ method: "POST" })
       patient_name: data.patientName,
       patient_email: data.patientEmail,
       patient_phone: data.patientPhone ?? null,
+      patient_dob: data.patientDob ?? null,
+      patient_address: data.patientAddress ?? null,
       notes: data.notes ?? null,
-      status: "pending",
+      status: "confirmed",
       payment_status: "pending",
       base_amount: data.basePrice,
       total_amount: data.basePrice,
     });
     if (error) throw new Error(error.message);
-    return { id };
+
+    // Create one appointment_consent row per consent template attached to the treatment
+    const { data: links } = await sb
+      .from("treatment_consents")
+      .select("consent_template_id")
+      .eq("treatment_id", data.treatmentId);
+
+    const consents: { token: string; consent_template_id: string }[] = [];
+    if (links && links.length > 0) {
+      const rows = links.map((l) => ({
+        appointment_id: id,
+        consent_template_id: l.consent_template_id,
+        profile_id: data.profileId,
+      }));
+      const { data: inserted, error: cErr } = await sb
+        .from("appointment_consents")
+        .insert(rows)
+        .select("token, consent_template_id");
+      if (cErr) throw new Error(cErr.message);
+      consents.push(...(inserted ?? []));
+    }
+    return { id, consents };
   });

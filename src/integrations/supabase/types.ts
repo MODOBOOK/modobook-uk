@@ -14,6 +14,73 @@ export type Database = {
   }
   public: {
     Tables: {
+      appointment_consents: {
+        Row: {
+          appointment_id: string
+          consent_template_id: string
+          created_at: string
+          id: string
+          profile_id: string
+          signature_data: string | null
+          signature_name: string | null
+          signed_at: string | null
+          signed_url: string | null
+          status: string
+          token: string
+          updated_at: string
+        }
+        Insert: {
+          appointment_id: string
+          consent_template_id: string
+          created_at?: string
+          id?: string
+          profile_id: string
+          signature_data?: string | null
+          signature_name?: string | null
+          signed_at?: string | null
+          signed_url?: string | null
+          status?: string
+          token?: string
+          updated_at?: string
+        }
+        Update: {
+          appointment_id?: string
+          consent_template_id?: string
+          created_at?: string
+          id?: string
+          profile_id?: string
+          signature_data?: string | null
+          signature_name?: string | null
+          signed_at?: string | null
+          signed_url?: string | null
+          status?: string
+          token?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_consents_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointment_consents_consent_template_id_fkey"
+            columns: ["consent_template_id"]
+            isOneToOne: false
+            referencedRelation: "consent_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointment_consents_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       appointments: {
         Row: {
           addon_ids: string[] | null
@@ -25,6 +92,8 @@ export type Database = {
           location_id: string | null
           notes: string | null
           package_purchase_id: string | null
+          patient_address: Json | null
+          patient_dob: string | null
           patient_email: string
           patient_name: string
           patient_phone: string | null
@@ -50,6 +119,8 @@ export type Database = {
           location_id?: string | null
           notes?: string | null
           package_purchase_id?: string | null
+          patient_address?: Json | null
+          patient_dob?: string | null
           patient_email: string
           patient_name: string
           patient_phone?: string | null
@@ -75,6 +146,8 @@ export type Database = {
           location_id?: string | null
           notes?: string | null
           package_purchase_id?: string | null
+          patient_address?: Json | null
+          patient_dob?: string | null
           patient_email?: string
           patient_name?: string
           patient_phone?: string | null
@@ -1028,6 +1101,49 @@ export type Database = {
           },
         ]
       }
+      treatment_consents: {
+        Row: {
+          consent_template_id: string
+          created_at: string
+          profile_id: string
+          treatment_id: string
+        }
+        Insert: {
+          consent_template_id: string
+          created_at?: string
+          profile_id: string
+          treatment_id: string
+        }
+        Update: {
+          consent_template_id?: string
+          created_at?: string
+          profile_id?: string
+          treatment_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "treatment_consents_consent_template_id_fkey"
+            columns: ["consent_template_id"]
+            isOneToOne: false
+            referencedRelation: "consent_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treatment_consents_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treatment_consents_treatment_id_fkey"
+            columns: ["treatment_id"]
+            isOneToOne: false
+            referencedRelation: "treatments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       treatment_location_pricing: {
         Row: {
           available: boolean
@@ -1159,6 +1275,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_consent_by_token: {
+        Args: { p_token: string }
+        Returns: {
+          appointment_id: string
+          clinic_name: string
+          consent_id: string
+          patient_name: string
+          requires_signature: boolean
+          scheduled_date: string
+          start_time: string
+          status: string
+          template_body: string
+          template_name: string
+          treatment_name: string
+        }[]
+      }
       get_public_profile_by_slug: {
         Args: { p_slug: string }
         Returns: {
@@ -1188,6 +1320,14 @@ export type Database = {
       is_profile_owner: { Args: { _profile_id: string }; Returns: boolean }
       is_slug_available: {
         Args: { p_exclude_id?: string; p_slug: string }
+        Returns: boolean
+      }
+      submit_consent: {
+        Args: {
+          p_signature_data: string
+          p_signature_name: string
+          p_token: string
+        }
         Returns: boolean
       }
     }

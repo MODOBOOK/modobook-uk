@@ -3,6 +3,11 @@ import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { getMyTreatments, createTreatment, updateTreatment, deleteTreatment } from "@/lib/treatments.functions";
 import { getMyCategories } from "@/lib/categories.functions";
+import {
+  getTreatmentConsents,
+  setTreatmentConsents,
+  listMyConsentTemplates,
+} from "@/lib/treatment-consents.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,8 +15,9 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { Plus, Trash2, Pencil } from "lucide-react";
+import { Plus, Trash2, Pencil, FileText } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard/treatments")({
   ssr: false,
@@ -41,7 +47,10 @@ type TreatmentForm = {
   price: number;
   description: string;
   category_id: string | null;
+  consent_ids: string[];
 };
+
+type ConsentTpl = { id: string; name: string; treatment_type: string | null; is_system: boolean };
 
 function buildCategoryPaths(cats: Category[]) {
   const byId = new Map(cats.map((c) => [c.id, c]));
@@ -67,8 +76,11 @@ function TreatmentsPage() {
   const create = useServerFn(createTreatment);
   const update = useServerFn(updateTreatment);
   const remove = useServerFn(deleteTreatment);
+  const listConsents = useServerFn(listMyConsentTemplates);
+  const setConsents = useServerFn(setTreatmentConsents);
   const [items, setItems] = useState<Treatment[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [consentTemplates, setConsentTemplates] = useState<ConsentTpl[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Treatment | null>(null);
@@ -83,9 +95,10 @@ function TreatmentsPage() {
   async function load() {
     setLoading(true);
     try {
-      const [data, cats] = await Promise.all([list({}), listCats({})]);
+      const [data, cats, tpls] = await Promise.all([list({}), listCats({}), listConsents({})]);
       setItems(data as Treatment[]);
       setCategories(cats as Category[]);
+      setConsentTemplates(tpls as ConsentTpl[]);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to load treatments");
     } finally {
@@ -98,13 +111,18 @@ function TreatmentsPage() {
 
   async function handleSave(form: TreatmentForm) {
     try {
+      const { consent_ids, ...rest } = form;
+      let id: string;
       if (editing) {
-        await update({ data: { id: editing.id, ...form } });
+        await update({ data: { id: editing.id, ...rest } });
+        id = editing.id;
         toast.success("Treatment updated");
       } else {
-        await create({ data: form });
+        const created = await create({ data: rest });
+        id = (created as { id: string }).id;
         toast.success("Treatment created");
       }
+      await setConsents({ data: { treatmentId: id, consentTemplateIds: consent_ids } });
       setOpen(false);
       setEditing(null);
       load();
@@ -156,8 +174,10 @@ function TreatmentsPage() {
           <TreatmentDialog
             treatment={editing}
             categoryOptions={categoryOptions}
+            consentTemplates={consentTemplates}
             onSave={handleSave}
           />
+
         </Dialog>
       </div>
 
@@ -206,17 +226,21 @@ function TreatmentsPage() {
 function TreatmentDialog({
   treatment,
   categoryOptions,
+  consentTemplates,
   onSave,
 }: {
   treatment: Treatment | null;
   categoryOptions: { id: string; label: string; depth: number }[];
+  consentTemplates: ConsentTpl[];
   onSave: (f: TreatmentForm) => void;
 }) {
+  const fetchConsents = useServerFn(getTreatmentConsents);
   const [name, setName] = useState(treatment?.name ?? "");
   const [duration, setDuration] = useState(treatment?.duration ?? 30);
   const [price, setPrice] = useState(treatment?.price ?? 0);
   const [description, setDescription] = useState(treatment?.description ?? "");
   const [categoryId, setCategoryId] = useState<string>(treatment?.category_id ?? "__none__");
+  const [consentIds, setConsentIds] = useState<string[]>([]);
 
   useEffect(() => {
     setName(treatment?.name ?? "");
@@ -224,10 +248,23 @@ function TreatmentDialog({
     setPrice(treatment?.price ?? 0);
     setDescription(treatment?.description ?? "");
     setCategoryId(treatment?.category_id ?? "__none__");
-  }, [treatment]);
+    if (treatment?.id) {
+      fetchConsents({ data: { treatmentId: treatment.id } })
+        .then((ids) => setConsentIds(ids as string[]))
+        .catch(() => setConsentIds([]));
+    } else {
+      setConsentIds([]);
+    }
+  }, [treatment, fetchConsents]);
+
+  function toggleConsent(id: string) {
+    setConsentIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+  }
 
   return (
-    <DialogContent>
+    <DialogContent className="max-h-[90vh] overflow-y-auto">
       <DialogHeader>
         <DialogTitle>{treatment ? "Edit treatment" : "New treatment"}</DialogTitle>
       </DialogHeader>
@@ -247,16 +284,10 @@ function TreatmentDialog({
               {categoryOptions.map((c) => (
                 <SelectItem key={c.id} value={c.id}>
                   {"\u00A0\u00A0".repeat(c.depth) + c.label.split(" › ").slice(-1)[0]}
-                  <span className="text-xs text-muted-foreground ml-2">{c.label}</span>
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-          {categoryOptions.length === 0 && (
-            <p className="text-xs text-muted-foreground mt-1">
-              No categories yet — create them in Dashboard → Categories (supports sub-categories).
-            </p>
-          )}
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
@@ -272,6 +303,38 @@ function TreatmentDialog({
           <Label>Description</Label>
           <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
         </div>
+
+        <div className="rounded-md border p-3">
+          <div className="flex items-center gap-2 mb-2">
+            <FileText className="h-4 w-4 text-muted-foreground" />
+            <Label className="m-0">Consent forms to send on booking</Label>
+          </div>
+          {consentTemplates.length === 0 ? (
+            <p className="text-xs text-muted-foreground">
+              No consent forms yet. Add them in Dashboard → Consent forms.
+            </p>
+          ) : (
+            <div className="space-y-2 max-h-56 overflow-y-auto">
+              {consentTemplates.map((t) => (
+                <label key={t.id} className="flex items-start gap-2 text-sm">
+                  <Checkbox
+                    checked={consentIds.includes(t.id)}
+                    onCheckedChange={() => toggleConsent(t.id)}
+                  />
+                  <span>
+                    {t.name}
+                    {t.is_system && (
+                      <span className="ml-2 text-xs text-muted-foreground">(template)</span>
+                    )}
+                  </span>
+                </label>
+              ))}
+            </div>
+          )}
+          <p className="text-xs text-muted-foreground mt-2">
+            Patients receive a link to complete each selected form after they book.
+          </p>
+        </div>
       </div>
       <DialogFooter>
         <Button
@@ -282,6 +345,7 @@ function TreatmentDialog({
               price,
               description,
               category_id: categoryId === "__none__" ? null : categoryId,
+              consent_ids: consentIds,
             })
           }
           disabled={!name}
@@ -292,3 +356,4 @@ function TreatmentDialog({
     </DialogContent>
   );
 }
+
