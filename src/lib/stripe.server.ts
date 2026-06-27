@@ -103,8 +103,9 @@ export async function createConnectedPaymentLink(params: {
 
 export async function retrievePaymentLink(accountId: string, id: string) {
   const stripe = getStripe();
-  return stripe.paymentLinks.retrieve(id, { stripeAccount: accountId });
+  return stripe.paymentLinks.retrieve(id, {}, { stripeAccount: accountId });
 }
+
 
 export async function deactivatePaymentLink(accountId: string, id: string) {
   const stripe = getStripe();
