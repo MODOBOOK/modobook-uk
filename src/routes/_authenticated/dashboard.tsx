@@ -6,7 +6,7 @@ import {
   LayoutDashboard,
   Store,
   Scissors,
-  FolderTree,
+  
   CalendarDays,
   Users,
   CreditCard,
@@ -37,8 +37,8 @@ const navItems = [
   { label: "Dashboard", to: "/dashboard", icon: LayoutDashboard },
   { label: "Clinic page", to: "/dashboard/clinic", icon: Store },
   { label: "Branding", to: "/dashboard/branding", icon: Palette },
-  { label: "Treatments", to: "/dashboard/treatments", icon: Scissors },
-  { label: "Categories", to: "/dashboard/categories", icon: FolderTree },
+  { label: "Services", to: "/dashboard/services", icon: Scissors },
+
   { label: "Locations", to: "/dashboard/locations", icon: MapPin },
   { label: "Medical forms", to: "/dashboard/medical-forms", icon: FileText },
   { label: "Consent forms", to: "/dashboard/consent-forms", icon: FileSignature },
