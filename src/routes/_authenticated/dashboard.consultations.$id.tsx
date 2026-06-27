@@ -1,0 +1,629 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useRef, useState, useCallback } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { getConsultation, updateConsultation } from "@/lib/consultations.functions";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import {
+  Loader2, ChevronLeft, ChevronRight, Check, Camera, X,
+  HeartPulse, ListChecks, Stethoscope, ClipboardEdit, FileSignature,
+  Images, Syringe, Receipt, ArrowLeft,
+} from "lucide-react";
+import { toast } from "sonner";
+
+export const Route = createFileRoute("/_authenticated/dashboard/consultations/$id")({
+  ssr: false,
+  component: ConsultationWizard,
+});
+
+const STEPS = [
+  { n: 1, label: "Medical", icon: HeartPulse },
+  { n: 2, label: "Concerns", icon: ListChecks },
+  { n: 3, label: "Assessment", icon: Stethoscope },
+  { n: 4, label: "Plan", icon: ClipboardEdit },
+  { n: 5, label: "Consent", icon: FileSignature },
+  { n: 6, label: "After", icon: Images },
+  { n: 7, label: "Treatment", icon: Syringe },
+  { n: 8, label: "Invoice", icon: Receipt },
+] as const;
+
+const MEDICAL_QUESTIONS = [
+  "Pregnant or breastfeeding",
+  "Known allergies",
+  "Currently taking medication",
+  "Bleeding disorders / on blood thinners",
+  "History of cold sores",
+  "Keloid scarring",
+  "Active skin infection",
+  "Autoimmune condition",
+  "Recent botox / filler (last 4 weeks)",
+  "Heart condition",
+  "Diabetes",
+  "Cancer / chemotherapy history",
+];
+
+const CONCERN_OPTIONS = [
+  "Forehead lines", "Frown lines (11s)", "Crow's feet", "Bunny lines",
+  "Lip lines", "Marionette lines", "Nasolabial folds", "Jawline definition",
+  "Cheek volume", "Under-eye hollows", "Lip volume", "Skin texture",
+  "Pigmentation", "Acne / scarring", "Excessive sweating", "Migraines",
+];
+
+export function ConsultationWizard() {
+  const { id } = Route.useParams();
+  const get = useServerFn(getConsultation);
+  const update = useServerFn(updateConsultation);
+
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [c, setC] = useState<any>(null);
+  const [step, setStep] = useState(1);
+  const dirtyRef = useRef<Record<string, any> | null>(null);
+  const saveTimer = useRef<any>(null);
+
+  useEffect(() => {
+    (async () => {
+      const data: any = await get({ data: { id } });
+      setC(data);
+      setStep(data.current_step ?? 1);
+      setLoading(false);
+    })();
+  }, [id]); // eslint-disable-line
+
+  // autosave
+  const queueSave = useCallback((patch: Record<string, any>) => {
+    dirtyRef.current = { ...(dirtyRef.current ?? {}), ...patch };
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(async () => {
+      const p = dirtyRef.current; dirtyRef.current = null;
+      if (!p) return;
+      setSaving(true);
+      try { await update({ data: { id, patch: p } }); } catch (e: any) { toast.error("Save failed"); }
+      finally { setSaving(false); }
+    }, 700);
+  }, [id, update]);
+
+  const setField = (key: string, val: any) => {
+    setC((prev: any) => ({ ...prev, [key]: val }));
+    queueSave({ [key]: val });
+  };
+
+  const goStep = (n: number) => {
+    setStep(n);
+    queueSave({ current_step: n });
+  };
+
+  async function complete() {
+    setSaving(true);
+    try {
+      await update({ data: { id, patch: { status: "completed", completed_at: new Date().toISOString() } } });
+      setC((p: any) => ({ ...p, status: "completed" }));
+      toast.success("Consultation completed");
+    } finally { setSaving(false); }
+  }
+
+  if (loading || !c) {
+    return <div className="flex justify-center py-20"><Loader2 className="h-6 w-6 animate-spin" /></div>;
+  }
+
+  return (
+    <div className="mx-auto max-w-3xl space-y-4 pb-32">
+      {/* Header */}
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <Link to="/dashboard/consultations" className="mb-1 inline-flex items-center text-xs text-muted-foreground hover:text-foreground">
+            <ArrowLeft className="mr-1 h-3 w-3" />All consultations
+          </Link>
+          <h1 className="truncate text-xl font-bold sm:text-2xl">{c.patient_name}</h1>
+          <p className="truncate text-xs text-muted-foreground">
+            {c.patient_email || "no email"} {c.patient_phone ? `· ${c.patient_phone}` : ""}
+          </p>
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          {saving ? (
+            <Badge variant="secondary" className="gap-1"><Loader2 className="h-3 w-3 animate-spin" />Saving</Badge>
+          ) : (
+            <Badge variant="secondary" className="gap-1"><Check className="h-3 w-3" />Saved</Badge>
+          )}
+        </div>
+      </div>
+
+      {/* Step pill scroller */}
+      <div className="-mx-1 overflow-x-auto px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="flex gap-2">
+          {STEPS.map((s) => {
+            const Icon = s.icon;
+            const active = step === s.n;
+            const done = step > s.n || c.status === "completed";
+            return (
+              <button
+                key={s.n}
+                onClick={() => goStep(s.n)}
+                className={`flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition ${
+                  active ? "border-primary bg-primary text-primary-foreground" :
+                  done ? "border-emerald-300 bg-emerald-50 text-emerald-700" :
+                  "border-border bg-card text-muted-foreground"
+                }`}
+              >
+                <span className={`grid h-5 w-5 place-items-center rounded-full text-[10px] font-bold ${
+                  active ? "bg-primary-foreground/20" : done ? "bg-emerald-200" : "bg-muted"
+                }`}>{done && !active ? <Check className="h-3 w-3" /> : s.n}</span>
+                <Icon className="h-3.5 w-3.5" />
+                {s.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <Card><CardContent className="space-y-4 p-4 sm:p-6">
+        {step === 1 && <Step1 medical={c.medical} onChange={(v) => setField("medical", v)} />}
+        {step === 2 && <Step2 concerns={c.concerns} onChange={(v) => setField("concerns", v)} />}
+        {step === 3 && <Step3 assessment={c.assessment} photos={c.before_photos} onChangeAssess={(v) => setField("assessment", v)} onChangePhotos={(v) => setField("before_photos", v)} />}
+        {step === 4 && <Step4 plan={c.treatment_plan} onChange={(v) => setField("treatment_plan", v)} />}
+        {step === 5 && <Step5 consent={c.consent} patientName={c.patient_name} onChange={(v) => setField("consent", v)} />}
+        {step === 6 && <Step6 photos={c.after_photos} onChange={(v) => setField("after_photos", v)} />}
+        {step === 7 && <Step7 log={c.treatment_log} onChange={(v) => setField("treatment_log", v)} />}
+        {step === 8 && <Step8 invoice={c.invoice} email={c.patient_email} onChange={(v) => setField("invoice", v)} onComplete={complete} completed={c.status === "completed"} />}
+      </CardContent></Card>
+
+      {/* Sticky nav */}
+      <div className="fixed inset-x-0 bottom-0 z-30 border-t bg-background/95 px-3 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:px-6">
+        <div className="mx-auto flex max-w-3xl items-center justify-between gap-3">
+          <Button variant="outline" size="sm" disabled={step === 1} onClick={() => goStep(step - 1)}>
+            <ChevronLeft className="mr-1 h-4 w-4" />Back
+          </Button>
+          <span className="text-xs text-muted-foreground">Step {step} of 8</span>
+          {step < 8 ? (
+            <Button size="sm" onClick={() => goStep(step + 1)}>
+              Next<ChevronRight className="ml-1 h-4 w-4" />
+            </Button>
+          ) : (
+            <Button size="sm" onClick={complete} disabled={c.status === "completed"}>
+              {c.status === "completed" ? "Completed" : "Finish"}
+            </Button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ---------- Steps ---------- */
+
+function Step1({ medical, onChange }: { medical: any; onChange: (v: any) => void }) {
+  const answers = medical?.answers ?? {};
+  const notes = medical?.notes ?? "";
+  const toggle = (q: string, v: boolean) => onChange({ ...medical, answers: { ...answers, [q]: v } });
+  return (
+    <div className="space-y-4">
+      <Header n={1} title="Medical history" subtitle="Tick anything that applies." />
+      <div className="grid gap-2">
+        {MEDICAL_QUESTIONS.map((q) => (
+          <label key={q} className="flex cursor-pointer items-center gap-3 rounded-lg border bg-card p-3 active:bg-muted">
+            <Checkbox checked={!!answers[q]} onCheckedChange={(v) => toggle(q, !!v)} />
+            <span className="text-sm">{q}</span>
+          </label>
+        ))}
+      </div>
+      <div className="space-y-1.5">
+        <Label>Additional notes</Label>
+        <Textarea rows={3} value={notes} onChange={(e) => onChange({ ...medical, notes: e.target.value })} placeholder="Allergies, medications, anything relevant…" />
+      </div>
+    </div>
+  );
+}
+
+function Step2({ concerns, onChange }: { concerns: any; onChange: (v: any) => void }) {
+  const selected: string[] = concerns?.selected ?? [];
+  const notes = concerns?.notes ?? "";
+  const toggle = (c: string) => {
+    const s = new Set(selected);
+    s.has(c) ? s.delete(c) : s.add(c);
+    onChange({ ...concerns, selected: Array.from(s) });
+  };
+  return (
+    <div className="space-y-4">
+      <Header n={2} title="Concerns" subtitle="What is the patient looking to address?" />
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+        {CONCERN_OPTIONS.map((c) => (
+          <button
+            key={c}
+            type="button"
+            onClick={() => toggle(c)}
+            className={`rounded-lg border px-3 py-2 text-left text-sm transition ${
+              selected.includes(c) ? "border-primary bg-primary/10 text-primary" : "border-border bg-card"
+            }`}
+          >
+            {c}
+          </button>
+        ))}
+      </div>
+      <div className="space-y-1.5">
+        <Label>Patient's own words</Label>
+        <Textarea rows={3} value={notes} onChange={(e) => onChange({ ...concerns, notes: e.target.value })} placeholder="What does the patient say in their own words?" />
+      </div>
+    </div>
+  );
+}
+
+function Step3({ assessment, photos, onChangeAssess, onChangePhotos }: any) {
+  return (
+    <div className="space-y-4">
+      <Header n={3} title="Assessment" subtitle="Clinical notes, face map and before photos." />
+      <div className="space-y-1.5">
+        <Label>Clinical assessment</Label>
+        <Textarea rows={5} value={assessment?.notes ?? ""} onChange={(e) => onChangeAssess({ ...assessment, notes: e.target.value })} placeholder="Skin condition, muscle tone, asymmetries…" />
+      </div>
+      <FaceMap value={assessment?.face_map ?? []} onChange={(v) => onChangeAssess({ ...assessment, face_map: v })} />
+      <PhotoGrid label="Before photos" photos={photos ?? []} onChange={onChangePhotos} />
+    </div>
+  );
+}
+
+function Step4({ plan, onChange }: any) {
+  return (
+    <div className="space-y-4">
+      <Header n={4} title="Treatment plan" subtitle="What you recommend." />
+      <div className="space-y-1.5">
+        <Label>Recommended treatments & plan</Label>
+        <Textarea rows={8} value={plan?.text ?? ""} onChange={(e) => onChange({ ...plan, text: e.target.value })} placeholder="e.g. Botox – 3 areas (forehead, glabella, crow's feet) – 50 units total. Review in 2 weeks." />
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="space-y-1.5">
+          <Label>Estimated price (£)</Label>
+          <Input type="number" inputMode="decimal" value={plan?.price ?? ""} onChange={(e) => onChange({ ...plan, price: e.target.value })} />
+        </div>
+        <div className="space-y-1.5">
+          <Label>Follow-up in (weeks)</Label>
+          <Input type="number" inputMode="numeric" value={plan?.followup_weeks ?? ""} onChange={(e) => onChange({ ...plan, followup_weeks: e.target.value })} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Step5({ consent, patientName, onChange }: any) {
+  const body = consent?.body ?? defaultConsent(patientName);
+  return (
+    <div className="space-y-4">
+      <Header n={5} title="Treatment consent" subtitle="Patient signs to confirm understanding." />
+      <div className="space-y-1.5">
+        <Label>Consent text</Label>
+        <Textarea rows={9} value={body} onChange={(e) => onChange({ ...consent, body: e.target.value })} />
+      </div>
+      <div className="grid gap-2">
+        {["I confirm I have read and understand the above","I confirm the medical information provided is accurate","I consent to before/after photos being taken for my records"].map((l) => (
+          <label key={l} className="flex cursor-pointer items-start gap-3 rounded-lg border bg-card p-3">
+            <Checkbox checked={!!consent?.[l]} onCheckedChange={(v) => onChange({ ...consent, [l]: !!v })} />
+            <span className="text-sm">{l}</span>
+          </label>
+        ))}
+      </div>
+      <SignaturePad value={consent?.signature ?? null} signedAt={consent?.signed_at} signerName={consent?.signer_name ?? patientName} onChange={(sig, name) => onChange({ ...consent, body, signature: sig, signed_at: sig ? new Date().toISOString() : null, signer_name: name })} />
+    </div>
+  );
+}
+
+function Step6({ photos, onChange }: any) {
+  return (
+    <div className="space-y-4">
+      <Header n={6} title="After photos" subtitle="Capture results right after treatment." />
+      <PhotoGrid label="After photos" photos={photos ?? []} onChange={onChange} />
+    </div>
+  );
+}
+
+function Step7({ log, onChange }: any) {
+  const products: any[] = log?.products ?? [];
+  const update = (i: number, patch: any) => {
+    const next = products.slice(); next[i] = { ...next[i], ...patch };
+    onChange({ ...log, products: next });
+  };
+  const add = () => onChange({ ...log, products: [...products, { name: "", batch: "", expiry: "", dose: "", site: "" }] });
+  const remove = (i: number) => onChange({ ...log, products: products.filter((_, j) => j !== i) });
+  return (
+    <div className="space-y-4">
+      <Header n={7} title="Treatment info" subtitle="Products, batch numbers and dosing." />
+      {products.map((p, i) => (
+        <Card key={i}><CardContent className="space-y-2 p-3">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-muted-foreground">Product {i + 1}</span>
+            <Button size="icon" variant="ghost" onClick={() => remove(i)}><X className="h-4 w-4" /></Button>
+          </div>
+          <Input placeholder="Product name (e.g. Botox 100u)" value={p.name} onChange={(e) => update(i, { name: e.target.value })} />
+          <div className="grid grid-cols-2 gap-2">
+            <Input placeholder="Batch #" value={p.batch} onChange={(e) => update(i, { batch: e.target.value })} />
+            <Input placeholder="Expiry" type="date" value={p.expiry} onChange={(e) => update(i, { expiry: e.target.value })} />
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <Input placeholder="Dose / units" value={p.dose} onChange={(e) => update(i, { dose: e.target.value })} />
+            <Input placeholder="Site / area" value={p.site} onChange={(e) => update(i, { site: e.target.value })} />
+          </div>
+        </CardContent></Card>
+      ))}
+      <Button variant="outline" onClick={add} className="w-full">+ Add product</Button>
+      <Separator />
+      <div className="space-y-1.5">
+        <Label>Aftercare advice given</Label>
+        <Textarea rows={4} value={log?.aftercare ?? ""} onChange={(e) => onChange({ ...log, aftercare: e.target.value })} />
+      </div>
+    </div>
+  );
+}
+
+function Step8({ invoice, email, onChange, onComplete, completed }: any) {
+  return (
+    <div className="space-y-4">
+      <Header n={8} title="Invoice & payment" subtitle="Send the patient a payment link or mark as paid." />
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="space-y-1.5">
+          <Label>Amount (£)</Label>
+          <Input type="number" inputMode="decimal" value={invoice?.amount ?? ""} onChange={(e) => onChange({ ...invoice, amount: e.target.value })} />
+        </div>
+        <div className="space-y-1.5">
+          <Label>Send to email</Label>
+          <Input type="email" value={invoice?.email ?? email ?? ""} onChange={(e) => onChange({ ...invoice, email: e.target.value })} />
+        </div>
+      </div>
+      <div className="space-y-1.5">
+        <Label>Line items / notes</Label>
+        <Textarea rows={4} value={invoice?.notes ?? ""} onChange={(e) => onChange({ ...invoice, notes: e.target.value })} placeholder="e.g. Botox 3 areas – £250" />
+      </div>
+      <div className="space-y-1.5">
+        <Label>Payment link (paste from Stripe)</Label>
+        <Input type="url" placeholder="https://buy.stripe.com/…" value={invoice?.payment_link ?? ""} onChange={(e) => onChange({ ...invoice, payment_link: e.target.value })} />
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <Button variant="outline" onClick={() => onChange({ ...invoice, status: "sent", sent_at: new Date().toISOString() })}>
+          Mark as sent
+        </Button>
+        <Button variant="outline" onClick={() => onChange({ ...invoice, status: "paid", paid_at: new Date().toISOString() })}>
+          Mark as paid
+        </Button>
+        {invoice?.status && <Badge variant="secondary">{invoice.status}</Badge>}
+      </div>
+      <Separator />
+      <Button onClick={onComplete} disabled={completed} className="w-full">
+        {completed ? <><Check className="mr-2 h-4 w-4" />Completed</> : "Complete consultation"}
+      </Button>
+    </div>
+  );
+}
+
+/* ---------- Shared ---------- */
+
+function Header({ n, title, subtitle }: { n: number; title: string; subtitle: string }) {
+  return (
+    <div>
+      <div className="text-xs font-semibold uppercase tracking-wider text-primary">Step {n}</div>
+      <h2 className="text-lg font-semibold">{title}</h2>
+      <p className="text-sm text-muted-foreground">{subtitle}</p>
+    </div>
+  );
+}
+
+function defaultConsent(name: string) {
+  return `I, ${name}, confirm that the treatment has been fully explained to me, including the risks, benefits and alternatives. I have had the opportunity to ask questions and I consent to proceed.`;
+}
+
+async function compressImage(file: File, maxDim = 1280, quality = 0.7): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+        const w = Math.round(img.width * scale);
+        const h = Math.round(img.height * scale);
+        const canvas = document.createElement("canvas");
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return reject("no ctx");
+        ctx.drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL("image/jpeg", quality));
+      };
+      img.onerror = reject;
+      img.src = reader.result as string;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function PhotoGrid({ label, photos, onChange }: { label: string; photos: string[]; onChange: (v: string[]) => void }) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState(false);
+
+  async function onFiles(files: FileList | null) {
+    if (!files?.length) return;
+    setBusy(true);
+    try {
+      const compressed = await Promise.all(Array.from(files).map((f) => compressImage(f)));
+      onChange([...(photos ?? []), ...compressed]);
+    } catch { toast.error("Couldn't process image"); }
+    finally { setBusy(false); if (inputRef.current) inputRef.current.value = ""; }
+  }
+  function remove(i: number) {
+    onChange(photos.filter((_, j) => j !== i));
+  }
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <Label>{label}</Label>
+        <Button size="sm" variant="outline" onClick={() => inputRef.current?.click()} disabled={busy}>
+          {busy ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Camera className="mr-1 h-4 w-4" />}
+          Add photo
+        </Button>
+      </div>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        multiple
+        className="hidden"
+        onChange={(e) => onFiles(e.target.files)}
+      />
+      {photos?.length ? (
+        <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+          {photos.map((src, i) => (
+            <div key={i} className="group relative aspect-square overflow-hidden rounded-lg border bg-muted">
+              <img src={src} alt="" className="h-full w-full object-cover" />
+              <button onClick={() => remove(i)} className="absolute right-1 top-1 grid h-6 w-6 place-items-center rounded-full bg-black/60 text-white opacity-0 transition group-hover:opacity-100 group-active:opacity-100">
+                <X className="h-3 w-3" />
+              </button>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="rounded-lg border border-dashed bg-muted/40 p-6 text-center text-xs text-muted-foreground">
+          No photos yet. Tap "Add photo" to take or upload.
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SignaturePad({ value, signedAt, signerName, onChange }: { value: string | null; signedAt?: string | null; signerName: string; onChange: (sig: string | null, name: string) => void }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const drawing = useRef(false);
+  const lastPt = useRef<{ x: number; y: number } | null>(null);
+  const [name, setName] = useState(signerName ?? "");
+  const [empty, setEmpty] = useState(!value);
+
+  useEffect(() => {
+    const c = canvasRef.current; if (!c) return;
+    const dpr = window.devicePixelRatio || 1;
+    const rect = c.getBoundingClientRect();
+    c.width = rect.width * dpr; c.height = rect.height * dpr;
+    const ctx = c.getContext("2d");
+    if (!ctx) return;
+    ctx.scale(dpr, dpr);
+    ctx.lineWidth = 2; ctx.lineCap = "round"; ctx.strokeStyle = "#111";
+    if (value) {
+      const img = new Image();
+      img.onload = () => ctx.drawImage(img, 0, 0, rect.width, rect.height);
+      img.src = value;
+      setEmpty(false);
+    }
+  }, []); // eslint-disable-line
+
+  function pos(e: any) {
+    const c = canvasRef.current!;
+    const rect = c.getBoundingClientRect();
+    const t = e.touches?.[0];
+    const x = (t ? t.clientX : e.clientX) - rect.left;
+    const y = (t ? t.clientY : e.clientY) - rect.top;
+    return { x, y };
+  }
+  function start(e: any) { e.preventDefault(); drawing.current = true; lastPt.current = pos(e); }
+  function move(e: any) {
+    if (!drawing.current) return;
+    e.preventDefault();
+    const ctx = canvasRef.current!.getContext("2d")!;
+    const p = pos(e);
+    ctx.beginPath();
+    ctx.moveTo(lastPt.current!.x, lastPt.current!.y);
+    ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+    lastPt.current = p;
+    setEmpty(false);
+  }
+  function end() {
+    if (!drawing.current) return;
+    drawing.current = false;
+    onChange(canvasRef.current!.toDataURL("image/png"), name);
+  }
+  function clear() {
+    const c = canvasRef.current!; const ctx = c.getContext("2d")!;
+    ctx.clearRect(0, 0, c.width, c.height);
+    setEmpty(true);
+    onChange(null, name);
+  }
+
+  return (
+    <div className="space-y-2">
+      <Label>Patient signature</Label>
+      <div className="rounded-lg border bg-white">
+        <canvas
+          ref={canvasRef}
+          className="block h-40 w-full touch-none rounded-lg"
+          onMouseDown={start} onMouseMove={move} onMouseUp={end} onMouseLeave={end}
+          onTouchStart={start} onTouchMove={move} onTouchEnd={end}
+        />
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <Input placeholder="Print name" value={name} onChange={(e) => { setName(e.target.value); onChange(value, e.target.value); }} className="max-w-xs" />
+        <Button size="sm" variant="outline" onClick={clear} disabled={empty && !value}>Clear</Button>
+        {signedAt && <Badge variant="secondary">Signed {new Date(signedAt).toLocaleString()}</Badge>}
+      </div>
+    </div>
+  );
+}
+
+/* Simple face map – tap to drop labelled pins on an SVG face outline */
+function FaceMap({ value, onChange }: { value: { x: number; y: number; label: string }[]; onChange: (v: any) => void }) {
+  const svgRef = useRef<SVGSVGElement>(null);
+  function add(e: React.MouseEvent<SVGSVGElement>) {
+    const svg = svgRef.current!;
+    const pt = svg.createSVGPoint();
+    pt.x = e.clientX; pt.y = e.clientY;
+    const m = svg.getScreenCTM()!.inverse();
+    const local = pt.matrixTransform(m);
+    const label = prompt("Pin label (e.g. Frown lines)") ?? "";
+    if (!label.trim()) return;
+    onChange([...(value ?? []), { x: local.x, y: local.y, label }]);
+  }
+  function remove(i: number) {
+    if (!confirm("Remove this pin?")) return;
+    onChange(value.filter((_, j) => j !== i));
+  }
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <Label>Face map</Label>
+        <span className="text-xs text-muted-foreground">Tap to drop a pin</span>
+      </div>
+      <div className="overflow-hidden rounded-lg border bg-muted/30 p-2">
+        <svg ref={svgRef} viewBox="0 0 200 260" className="block w-full" onClick={add}>
+          {/* Face outline */}
+          <ellipse cx="100" cy="120" rx="70" ry="95" fill="#fce7d6" stroke="#c08868" strokeWidth="1.5" />
+          {/* Eyes */}
+          <ellipse cx="72" cy="105" rx="9" ry="5" fill="#fff" stroke="#444" />
+          <ellipse cx="128" cy="105" rx="9" ry="5" fill="#fff" stroke="#444" />
+          <circle cx="72" cy="105" r="2.5" fill="#333" />
+          <circle cx="128" cy="105" r="2.5" fill="#333" />
+          {/* Brows */}
+          <path d="M60 92 Q72 86 84 92" fill="none" stroke="#5a3" strokeWidth="2" />
+          <path d="M116 92 Q128 86 140 92" fill="none" stroke="#5a3" strokeWidth="2" />
+          {/* Nose */}
+          <path d="M100 110 L94 140 Q100 145 106 140 Z" fill="none" stroke="#a76" strokeWidth="1.5" />
+          {/* Lips */}
+          <path d="M82 170 Q100 162 118 170 Q100 180 82 170 Z" fill="#e89a8a" stroke="#a55" />
+          {/* Pins */}
+          {(value ?? []).map((p, i) => (
+            <g key={i} onClick={(e) => { e.stopPropagation(); remove(i); }} className="cursor-pointer">
+              <circle cx={p.x} cy={p.y} r="4" fill="#dc2626" stroke="#fff" strokeWidth="1.5" />
+              <text x={p.x + 6} y={p.y + 3} fontSize="7" fill="#111" style={{ paintOrder: "stroke", stroke: "#fff", strokeWidth: 2 }}>{p.label}</text>
+            </g>
+          ))}
+        </svg>
+      </div>
+      {value?.length ? (
+        <div className="flex flex-wrap gap-1.5">
+          {value.map((p, i) => (
+            <Badge key={i} variant="secondary" className="text-[10px]">{p.label}</Badge>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
