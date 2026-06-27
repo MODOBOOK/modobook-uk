@@ -133,12 +133,12 @@ function ClinicPage() {
                     <CardTitle className="text-lg">{pkg.name}</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm text-muted-foreground">{pkg.description}</p>
+                    <p className="text-sm text-muted-foreground">{pkg.session_count} sessions</p>
                     <div className="mt-4 flex items-end justify-between">
                       <span className="text-2xl font-bold">£{(pkg.price / 100).toFixed(2)}</span>
-                      <span className="text-sm text-muted-foreground">{pkg.credits} credits</span>
+                      <span className="text-sm text-muted-foreground">{pkg.expiry_days ? `Valid for ${pkg.expiry_days} days` : "No expiry"}</span>
                     </div>
-                    <Link to={`/book/${profile.slug}/checkout?package=${pkg.id}`}>
+                    <Link to="/">
                       <Button className="mt-4 w-full" variant="outline" style={{ borderColor: brandColor, color: brandColor }}>
                         Buy package
                       </Button>
@@ -162,7 +162,7 @@ function ClinicPage() {
                         <Star key={i} className="h-4 w-4 fill-primary text-primary" />
                       ))}
                     </div>
-                    <p className="text-sm text-foreground">{t.content}</p>
+                    <p className="text-sm text-foreground">{t.quote}</p>
                     <p className="mt-3 text-xs font-medium text-muted-foreground">{t.author_name}</p>
                   </CardContent>
                 </Card>
