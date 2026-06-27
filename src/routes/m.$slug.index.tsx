@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { getPublicClinic } from "@/lib/public-clinic.functions";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -122,6 +122,11 @@ function BookPage() {
   const headingFont = theme?.heading_font || "Inter";
   const bodyFont = theme?.body_font || "Inter";
   const heroUrl = theme?.hero_image_url || profile.hero_url;
+  const carouselEnabled = !!(theme as { hero_carousel_enabled?: boolean } | null)?.hero_carousel_enabled;
+  const rawCarousel = (theme as { hero_carousel_urls?: unknown } | null)?.hero_carousel_urls;
+  const carouselUrls: string[] = Array.isArray(rawCarousel)
+    ? (rawCarousel as unknown[]).filter((x): x is string => typeof x === "string")
+    : [];
   // Menu styling
   const menuCardBg = theme?.menu_card_bg || "#ffffff";
   const menuCardBorder = theme?.menu_card_border_color || `${brand}1f`;
@@ -235,9 +240,11 @@ function BookPage() {
 
   return (
     <main className="min-h-screen pb-16" style={pageStyle}>
-      {/* Hero image */}
+      {/* Hero image / carousel */}
       <div className="relative">
-        {heroUrl ? (
+        {carouselEnabled && carouselUrls.length > 0 ? (
+          <HeroCarousel urls={carouselUrls} />
+        ) : heroUrl ? (
           <img
             src={heroUrl}
             alt=""
@@ -1310,3 +1317,37 @@ function TreatmentRow({
 }
 
 
+
+function HeroCarousel({ urls }: { urls: string[] }) {
+  const [i, setI] = useState(0);
+  useEffect(() => {
+    if (urls.length < 2) return;
+    const t = setInterval(() => setI((x) => (x + 1) % urls.length), 4500);
+    return () => clearInterval(t);
+  }, [urls.length]);
+  return (
+    <div className="relative h-72 w-full overflow-hidden sm:h-[28rem]">
+      {urls.map((u, idx) => (
+        <img
+          key={u + idx}
+          src={u}
+          alt=""
+          className={`absolute inset-0 h-full w-full object-cover object-top transition-opacity duration-700 ${idx === i ? "opacity-100" : "opacity-0"}`}
+        />
+      ))}
+      {urls.length > 1 && (
+        <div className="absolute bottom-3 left-1/2 z-10 flex -translate-x-1/2 gap-1.5">
+          {urls.map((_, idx) => (
+            <button
+              key={idx}
+              type="button"
+              aria-label={`Slide ${idx + 1}`}
+              onClick={() => setI(idx)}
+              className={`h-1.5 rounded-full transition-all ${idx === i ? "w-6 bg-white" : "w-1.5 bg-white/60"}`}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}

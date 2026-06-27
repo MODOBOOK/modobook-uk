@@ -85,9 +85,14 @@ function ModoLayout() {
                     </div>
                   )}
                   <div className="min-w-0">
-                    <div className="truncate text-sm font-semibold leading-tight">{profile.clinic_name}</div>
+                    <div
+                      className="font-semibold leading-tight break-words [overflow-wrap:anywhere] line-clamp-2"
+                      style={{ fontSize: "clamp(0.75rem, 3.2vw, 0.95rem)" }}
+                    >
+                      {profile.clinic_name}
+                    </div>
                     {profile.full_name && (
-                      <div className="truncate text-xs opacity-70">{profile.full_name}</div>
+                      <div className="truncate text-[11px] opacity-70 sm:text-xs">{profile.full_name}</div>
                     )}
                   </div>
                 </>
