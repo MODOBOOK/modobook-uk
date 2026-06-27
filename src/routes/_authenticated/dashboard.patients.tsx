@@ -313,6 +313,25 @@ function PatientsPage() {
             <Field label="Notes">
               <Textarea rows={3} value={form.notes ?? ""} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
             </Field>
+            <div className="rounded-md border border-red-200 bg-red-50/50 p-3 space-y-2">
+              <label className="flex items-center gap-2 text-sm font-semibold text-red-700">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4"
+                  checked={!!form.has_allergies}
+                  onChange={(e) => setForm({ ...form, has_allergies: e.target.checked })}
+                />
+                ⚠ This patient has allergies
+              </label>
+              {form.has_allergies && (
+                <Textarea
+                  rows={2}
+                  placeholder="List allergies (e.g. penicillin, latex, lidocaine)"
+                  value={form.allergies ?? ""}
+                  onChange={(e) => setForm({ ...form, allergies: e.target.value })}
+                />
+              )}
+            </div>
           </div>
           <DialogFooter>
             {editing && (
