@@ -527,9 +527,64 @@ export type Database = {
           },
         ]
       }
+      treatment_categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          icon: string | null
+          id: string
+          name: string
+          parent_id: string | null
+          profile_id: string
+          slug: string | null
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name: string
+          parent_id?: string | null
+          profile_id: string
+          slug?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name?: string
+          parent_id?: string | null
+          profile_id?: string
+          slug?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "treatment_categories_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "treatment_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treatment_categories_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       treatments: {
         Row: {
           active: boolean | null
+          category_id: string | null
           consent_form_url: string | null
           created_at: string
           deductible_against: string[] | null
@@ -549,6 +604,7 @@ export type Database = {
         }
         Insert: {
           active?: boolean | null
+          category_id?: string | null
           consent_form_url?: string | null
           created_at?: string
           deductible_against?: string[] | null
@@ -568,6 +624,7 @@ export type Database = {
         }
         Update: {
           active?: boolean | null
+          category_id?: string | null
           consent_form_url?: string | null
           created_at?: string
           deductible_against?: string[] | null
@@ -586,6 +643,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "treatments_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "treatment_categories"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "treatments_profile_id_fkey"
             columns: ["profile_id"]
