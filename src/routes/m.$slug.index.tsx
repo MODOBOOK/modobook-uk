@@ -615,11 +615,14 @@ function BookPage() {
 
             return (
               <Tabs defaultValue="treatments" className="w-full">
-                <TabsList className="grid w-full grid-cols-2" style={{ backgroundColor: `${brand}10` }}>
-                  <TabsTrigger value="treatments">Book a treatment</TabsTrigger>
+                <TabsList className="grid w-full grid-cols-3" style={{ backgroundColor: `${brand}10` }}>
+                  <TabsTrigger value="treatments">Treatments</TabsTrigger>
                   <TabsTrigger value="packages" disabled={packages.length === 0}>
                     <PackageIcon className="mr-1.5 h-4 w-4" />
                     Packages {packages.length > 0 ? `(${packages.length})` : ""}
+                  </TabsTrigger>
+                  <TabsTrigger value="concerns" disabled={concerns.length === 0}>
+                    By concern {concerns.length > 0 ? `(${concerns.length})` : ""}
                   </TabsTrigger>
                 </TabsList>
 
@@ -812,6 +815,77 @@ function BookPage() {
                         );
                       })}
                     </div>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="concerns" className="mt-4">
+                  <p className="mb-3 text-xs opacity-60">
+                    Not sure where to start? Pick a concern to see treatments we'd suggest.
+                  </p>
+                  {concernAreas.length === 0 ? (
+                    <p className="opacity-70">No concerns set up yet.</p>
+                  ) : (
+                    <Accordion type="multiple" className="space-y-2">
+                      {concernAreas.map((area) => {
+                        const areaConcerns = concerns.filter((c) => c.area_id === area.id);
+                        if (areaConcerns.length === 0) return null;
+                        return (
+                          <AccordionItem
+                            key={area.id}
+                            value={area.id}
+                            className="rounded-xl border px-3"
+                            style={{ borderColor: `${brand}33` }}
+                          >
+                            <AccordionTrigger className="text-sm font-semibold" style={{ color: brand }}>
+                              {area.name}
+                            </AccordionTrigger>
+                            <AccordionContent>
+                              <div className="space-y-3">
+                                {areaConcerns.map((c) => {
+                                  const matchedIds = new Set(
+                                    concernLinks.filter((l) => l.concern_id === c.id).map((l) => l.treatment_id),
+                                  );
+                                  const matched = visibleTreatments.filter((t) => matchedIds.has(t.id));
+                                  return (
+                                    <div key={c.id} className="rounded-lg border bg-card p-3" style={{ borderColor: `${brand}1f` }}>
+                                      <div className="font-semibold" style={{ color: brand }}>{c.name}</div>
+                                      {c.description && (
+                                        <div className="mt-0.5 text-xs opacity-70">{c.description}</div>
+                                      )}
+                                      {matched.length === 0 ? (
+                                        <p className="mt-2 text-xs opacity-60">No treatments linked yet.</p>
+                                      ) : (
+                                        <div className="mt-2 space-y-1.5">
+                                          <p className="text-[11px] font-semibold uppercase tracking-wider opacity-60">Suggested treatments</p>
+                                          {matched.map((t) => (
+                                            <TreatmentRow
+                                              key={t.id}
+                                              t={t}
+                                              slug={slug}
+                                              price={priceFor(t)}
+                                              duration={durationFor(t)}
+                                              brand={brand}
+                                              selected={isSelected(t.id)}
+                                              onToggle={() => toggleSelect(t.id)}
+                                              cardBg={menuCardBg}
+                                              cardBorder={menuCardBorder}
+                                              nameColor={menuNameColor}
+                                              priceColor={menuPriceColor}
+                                              size={menuSize}
+                                              bold={menuTreatmentBold}
+                                            />
+                                          ))}
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </AccordionContent>
+                          </AccordionItem>
+                        );
+                      })}
+                    </Accordion>
                   )}
                 </TabsContent>
               </Tabs>
