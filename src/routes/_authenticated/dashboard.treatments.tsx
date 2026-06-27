@@ -8,7 +8,7 @@ import {
   setTreatmentConsents,
   listMyConsentTemplates,
 } from "@/lib/treatment-consents.functions";
-import { getTreatmentAddons, setTreatmentAddons } from "@/lib/treatment-addons.functions";
+import { getTreatmentAddons, setTreatmentAddons, type AddonLink } from "@/lib/treatment-addons.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
