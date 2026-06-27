@@ -130,9 +130,10 @@ function TabLink({
       to={to}
       params={{ slug }}
       activeOptions={{ exact: !!exact }}
-      className="rounded-md px-3 py-1.5 opacity-70 hover:opacity-100 [&.active]:bg-black/5 [&.active]:opacity-100"
+      className="rounded-md px-2 py-1.5 text-xs opacity-70 hover:opacity-100 sm:px-3 sm:text-sm [&.active]:bg-black/5 [&.active]:opacity-100"
     >
       {label}
+
     </Link>
   );
 }
