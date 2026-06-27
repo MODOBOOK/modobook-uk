@@ -418,9 +418,12 @@ function BookTreatmentPage() {
         size="lg"
         disabled={!slot || submitting || !form.name || !form.email || !form.phone || !form.dob}
         onClick={submit}
+        style={{ backgroundColor: brand, color: "#fff" }}
       >
         {submitting ? "Booking…" : "Confirm booking"}
       </Button>
+      </div>
     </main>
   );
 }
+
