@@ -1014,7 +1014,7 @@ function CategoryTree({
         const count = countTreatments(node);
         const isSub = depth > 0;
         return (
-          <Accordion key={node.id} type="single" collapsible defaultValue={node.id}>
+          <Accordion key={node.id} type="single" collapsible>
             <AccordionItem value={node.id} className="overflow-hidden rounded-2xl border-0 shadow-sm">
               <AccordionTrigger
                 className="px-5 py-4 hover:no-underline [&[data-state=open]>svg]:rotate-180"
