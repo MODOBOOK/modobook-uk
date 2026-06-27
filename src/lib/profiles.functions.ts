@@ -95,6 +95,12 @@ export const updateProfile = createServerFn({ method: "POST" })
       chooser_show_consultation?: boolean;
       chooser_consultation_treatment_id?: string | null;
       chooser_intro_text?: string | null;
+      chooser_consultation_treatment_ids?: string[];
+      chooser_extra_enabled?: boolean;
+      chooser_extra_title?: string | null;
+      chooser_extra_body?: string | null;
+      chooser_extra_treatment_ids?: string[];
+
     }) => input,
   )
   .handler(async ({ data, context }) => {
