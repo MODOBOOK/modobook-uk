@@ -17,7 +17,7 @@ import {
   Clock,
   ExternalLink,
   Star,
-  ChevronRight,
+  Check,
   Check,
   Package as PackageIcon,
 } from "lucide-react";
