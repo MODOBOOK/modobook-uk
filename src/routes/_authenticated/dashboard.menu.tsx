@@ -12,6 +12,7 @@ import {
   Shield,
   CalendarDays,
   CalendarPlus,
+  ClipboardList,
   Star,
   ChevronRight,
   LogOut,
