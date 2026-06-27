@@ -25,6 +25,9 @@ import {
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useDashboardThemeStyle } from "@/hooks/use-dashboard-theme";
+
+
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   ssr: false,
@@ -66,13 +69,15 @@ function DashboardLayout() {
   const { profile } = Route.useRouteContext();
   const [open, setOpen] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const themeStyle = useDashboardThemeStyle();
+
 
   async function signOut() {
     await supabase.auth.signOut();
   }
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-screen bg-background" style={themeStyle}>
       {/* Desktop sidebar */}
       <aside className="hidden w-72 flex-col border-r border-border/60 bg-sidebar lg:flex">
         <div className="flex h-20 items-center gap-3 border-b border-border/60 px-7">
