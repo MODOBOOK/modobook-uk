@@ -1589,7 +1589,12 @@ export type Database = {
           brand_color: string | null
           cancellation_rules: Json | null
           chooser_consultation_treatment_id: string | null
+          chooser_consultation_treatment_ids: string[]
           chooser_enabled: boolean
+          chooser_extra_body: string | null
+          chooser_extra_enabled: boolean
+          chooser_extra_title: string | null
+          chooser_extra_treatment_ids: string[]
           chooser_intro_text: string | null
           chooser_show_consultation: boolean
           chooser_show_know: boolean
@@ -1625,7 +1630,12 @@ export type Database = {
           brand_color?: string | null
           cancellation_rules?: Json | null
           chooser_consultation_treatment_id?: string | null
+          chooser_consultation_treatment_ids?: string[]
           chooser_enabled?: boolean
+          chooser_extra_body?: string | null
+          chooser_extra_enabled?: boolean
+          chooser_extra_title?: string | null
+          chooser_extra_treatment_ids?: string[]
           chooser_intro_text?: string | null
           chooser_show_consultation?: boolean
           chooser_show_know?: boolean
@@ -1661,7 +1671,12 @@ export type Database = {
           brand_color?: string | null
           cancellation_rules?: Json | null
           chooser_consultation_treatment_id?: string | null
+          chooser_consultation_treatment_ids?: string[]
           chooser_enabled?: boolean
+          chooser_extra_body?: string | null
+          chooser_extra_enabled?: boolean
+          chooser_extra_title?: string | null
+          chooser_extra_treatment_ids?: string[]
           chooser_intro_text?: string | null
           chooser_show_consultation?: boolean
           chooser_show_know?: boolean
@@ -1915,6 +1930,7 @@ export type Database = {
       treatments: {
         Row: {
           active: boolean | null
+          allow_split_payment: boolean
           category_id: string | null
           consent_form_url: string | null
           created_at: string
@@ -1934,12 +1950,15 @@ export type Database = {
           picture_url: string | null
           price: number
           profile_id: string
+          rebook_reminder_days: number | null
+          session_count: number
           sort_order: number
           timing_notes: string | null
           updated_at: string
         }
         Insert: {
           active?: boolean | null
+          allow_split_payment?: boolean
           category_id?: string | null
           consent_form_url?: string | null
           created_at?: string
@@ -1959,12 +1978,15 @@ export type Database = {
           picture_url?: string | null
           price: number
           profile_id: string
+          rebook_reminder_days?: number | null
+          session_count?: number
           sort_order?: number
           timing_notes?: string | null
           updated_at?: string
         }
         Update: {
           active?: boolean | null
+          allow_split_payment?: boolean
           category_id?: string | null
           consent_form_url?: string | null
           created_at?: string
@@ -1984,6 +2006,8 @@ export type Database = {
           picture_url?: string | null
           price?: number
           profile_id?: string
+          rebook_reminder_days?: number | null
+          session_count?: number
           sort_order?: number
           timing_notes?: string | null
           updated_at?: string
@@ -2133,7 +2157,12 @@ export type Database = {
           brand_color: string
           cancellation_rules: Json
           chooser_consultation_treatment_id: string
+          chooser_consultation_treatment_ids: string[]
           chooser_enabled: boolean
+          chooser_extra_body: string
+          chooser_extra_enabled: boolean
+          chooser_extra_title: string
+          chooser_extra_treatment_ids: string[]
           chooser_intro_text: string
           chooser_show_consultation: boolean
           chooser_show_know: boolean
