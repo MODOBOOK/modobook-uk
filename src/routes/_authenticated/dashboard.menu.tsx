@@ -19,6 +19,8 @@ import {
   ShieldCheck,
   LogOut,
   ExternalLink,
+  Percent,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -50,6 +52,8 @@ const groups: {
     items: [
       { label: "Services", description: "Treatments, categories, pricing", to: "/dashboard/services", icon: Scissors, tone: "bg-pink-100 text-pink-600" },
       { label: "Packages", description: "Bundle treatments for patients", to: "/dashboard/packages", icon: Package, tone: "bg-indigo-100 text-indigo-600" },
+      { label: "Discounts", description: "Menu discounts & promo codes", to: "/dashboard/discounts", icon: Percent, tone: "bg-rose-100 text-rose-700" },
+      { label: "Model slots", description: "Discounted dates & times", to: "/dashboard/model-slots", icon: Sparkles, tone: "bg-fuchsia-100 text-fuchsia-700" },
       { label: "Medical forms", description: "Pre-treatment questionnaires", to: "/dashboard/medical-forms", icon: FileText, tone: "bg-amber-100 text-amber-600" },
       { label: "Consent forms", description: "Templates sent at booking", to: "/dashboard/consent-forms", icon: FileSignature, tone: "bg-teal-100 text-teal-600" },
     ],

@@ -173,11 +173,14 @@ export type Database = {
           consent_signed_url: string | null
           created_at: string
           created_by_practitioner: boolean | null
+          discount_amount: number | null
+          discount_code_id: string | null
           end_time: string
           has_allergies: boolean
           id: string
           location_id: string | null
           manage_token: string | null
+          model_slot_id: string | null
           notes: string | null
           package_purchase_id: string | null
           patient_address: Json | null
@@ -208,11 +211,14 @@ export type Database = {
           consent_signed_url?: string | null
           created_at?: string
           created_by_practitioner?: boolean | null
+          discount_amount?: number | null
+          discount_code_id?: string | null
           end_time: string
           has_allergies?: boolean
           id?: string
           location_id?: string | null
           manage_token?: string | null
+          model_slot_id?: string | null
           notes?: string | null
           package_purchase_id?: string | null
           patient_address?: Json | null
@@ -243,11 +249,14 @@ export type Database = {
           consent_signed_url?: string | null
           created_at?: string
           created_by_practitioner?: boolean | null
+          discount_amount?: number | null
+          discount_code_id?: string | null
           end_time?: string
           has_allergies?: boolean
           id?: string
           location_id?: string | null
           manage_token?: string | null
+          model_slot_id?: string | null
           notes?: string | null
           package_purchase_id?: string | null
           patient_address?: Json | null
@@ -271,10 +280,24 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "appointments_discount_code_id_fkey"
+            columns: ["discount_code_id"]
+            isOneToOne: false
+            referencedRelation: "discount_codes"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "appointments_location_id_fkey"
             columns: ["location_id"]
             isOneToOne: false
             referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_model_slot_id_fkey"
+            columns: ["model_slot_id"]
+            isOneToOne: false
+            referencedRelation: "model_slots"
             referencedColumns: ["id"]
           },
           {
@@ -962,6 +985,68 @@ export type Database = {
           },
         ]
       }
+      discount_codes: {
+        Row: {
+          active: boolean
+          amount: number
+          code: string
+          created_at: string
+          days_of_week: number[] | null
+          ends_at: string | null
+          id: string
+          kind: string
+          label: string | null
+          max_uses: number | null
+          profile_id: string
+          starts_at: string | null
+          treatment_ids: string[]
+          updated_at: string
+          uses_count: number
+        }
+        Insert: {
+          active?: boolean
+          amount: number
+          code: string
+          created_at?: string
+          days_of_week?: number[] | null
+          ends_at?: string | null
+          id?: string
+          kind?: string
+          label?: string | null
+          max_uses?: number | null
+          profile_id: string
+          starts_at?: string | null
+          treatment_ids?: string[]
+          updated_at?: string
+          uses_count?: number
+        }
+        Update: {
+          active?: boolean
+          amount?: number
+          code?: string
+          created_at?: string
+          days_of_week?: number[] | null
+          ends_at?: string | null
+          id?: string
+          kind?: string
+          label?: string | null
+          max_uses?: number | null
+          profile_id?: string
+          starts_at?: string | null
+          treatment_ids?: string[]
+          updated_at?: string
+          uses_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discount_codes_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       locations: {
         Row: {
           active: boolean
@@ -1112,6 +1197,86 @@ export type Database = {
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      model_slots: {
+        Row: {
+          active: boolean
+          booked_appointment_id: string | null
+          created_at: string
+          end_time: string
+          id: string
+          location_id: string | null
+          notes: string | null
+          price_mode: string
+          price_value: number
+          profile_id: string
+          slot_date: string
+          start_time: string
+          treatment_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          booked_appointment_id?: string | null
+          created_at?: string
+          end_time: string
+          id?: string
+          location_id?: string | null
+          notes?: string | null
+          price_mode?: string
+          price_value: number
+          profile_id: string
+          slot_date: string
+          start_time: string
+          treatment_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          booked_appointment_id?: string | null
+          created_at?: string
+          end_time?: string
+          id?: string
+          location_id?: string | null
+          notes?: string | null
+          price_mode?: string
+          price_value?: number
+          profile_id?: string
+          slot_date?: string
+          start_time?: string
+          treatment_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "model_slots_booked_appointment_id_fkey"
+            columns: ["booked_appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "model_slots_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "model_slots_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "model_slots_treatment_id_fkey"
+            columns: ["treatment_id"]
+            isOneToOne: false
+            referencedRelation: "treatments"
             referencedColumns: ["id"]
           },
         ]
@@ -1757,6 +1922,10 @@ export type Database = {
           deductible_window_days: number | null
           deposit_amount: number | null
           description: string | null
+          discount_days_of_week: number[] | null
+          discount_ends_at: string | null
+          discount_percent: number | null
+          discount_starts_at: string | null
           duration: number
           id: string
           is_consultation: boolean | null
@@ -1778,6 +1947,10 @@ export type Database = {
           deductible_window_days?: number | null
           deposit_amount?: number | null
           description?: string | null
+          discount_days_of_week?: number[] | null
+          discount_ends_at?: string | null
+          discount_percent?: number | null
+          discount_starts_at?: string | null
           duration: number
           id?: string
           is_consultation?: boolean | null
@@ -1799,6 +1972,10 @@ export type Database = {
           deductible_window_days?: number | null
           deposit_amount?: number | null
           description?: string | null
+          discount_days_of_week?: number[] | null
+          discount_ends_at?: string | null
+          discount_percent?: number | null
+          discount_starts_at?: string | null
           duration?: number
           id?: string
           is_consultation?: boolean | null
@@ -2004,6 +2181,17 @@ export type Database = {
       submit_medical_form: {
         Args: { p_response: Json; p_token: string }
         Returns: boolean
+      }
+      validate_discount_code: {
+        Args: { p_code: string; p_slug: string; p_treatment_ids: string[] }
+        Returns: {
+          amount: number
+          applies_to_treatment_ids: string[]
+          code: string
+          id: string
+          kind: string
+          label: string
+        }[]
       }
     }
     Enums: {

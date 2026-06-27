@@ -19,6 +19,7 @@ import {
   Star,
   Check,
   Package as PackageIcon,
+  Sparkles,
 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { mapsUrl, formatAddress } from "@/lib/maps";
@@ -69,7 +70,7 @@ function countTreatments(n: CatNode): number {
 type Theme = Database["public"]["Tables"]["clinic_theme"]["Row"];
 
 function BookPage() {
-  const { profile, treatments, packages, locations, categories, pricing, theme, reviews, concernAreas, concerns, concernLinks } =
+  const { profile, treatments, packages, locations, categories, pricing, theme, reviews, concernAreas, concerns, concernLinks, modelSlots = [] } =
     Route.useLoaderData() as {
       profile: {
         id: string;
@@ -104,6 +105,11 @@ function BookPage() {
       concernAreas: { id: string; name: string; sort_order: number }[];
       concerns: { id: string; area_id: string; name: string; description: string | null }[];
       concernLinks: { concern_id: string; treatment_id: string }[];
+      modelSlots?: {
+        id: string; treatment_id: string; location_id: string | null;
+        slot_date: string; start_time: string; end_time: string;
+        price_mode: "fixed" | "percent"; price_value: number; notes: string | null;
+      }[];
     };
 
   const { slug } = useParams({ from: "/m/$slug/" });
@@ -619,6 +625,49 @@ function BookPage() {
                   <p className="mb-3 text-xs opacity-60">
                     Tick all the treatments you'd like, then press Book Now.
                   </p>
+                  {(() => {
+                    const treatById = new Map(treatments.map((t) => [t.id, t]));
+                    const slots = modelSlots
+                      .filter((s) => !locationId || !s.location_id || s.location_id === locationId)
+                      .filter((s) => treatById.has(s.treatment_id));
+                    if (slots.length === 0) return null;
+                    return (
+                      <div className="mb-5 rounded-2xl border-2 p-3" style={{ borderColor: `${brand}55`, backgroundColor: `${brand}08` }}>
+                        <div className="mb-2 flex items-center gap-2">
+                          <Sparkles className="h-4 w-4" style={{ color: brand }} />
+                          <h3 className="text-sm font-bold" style={{ color: brand }}>Model slots</h3>
+                          <span className="text-xs opacity-60">Discounted dates & times</span>
+                        </div>
+                        <div className="grid gap-2 sm:grid-cols-2">
+                          {slots.map((s) => {
+                            const t = treatById.get(s.treatment_id)!;
+                            const base = priceFor(t);
+                            const final = s.price_mode === "fixed" ? Number(s.price_value) : Math.max(0, base * (1 - Number(s.price_value) / 100));
+                            return (
+                              <div key={s.id} className="rounded-xl border bg-white p-3">
+                                <p className="text-sm font-semibold">{t.name}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {new Date(s.slot_date + "T00:00:00").toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" })} · {s.start_time.slice(0,5)}–{s.end_time.slice(0,5)}
+                                </p>
+                                <p className="mt-1 text-sm">
+                                  <span className="line-through text-muted-foreground">£{base.toFixed(2)}</span>{" "}
+                                  <span className="font-bold text-emerald-600">£{final.toFixed(2)}</span>
+                                </p>
+                                {s.notes && <p className="mt-1 text-xs italic text-muted-foreground">{s.notes}</p>}
+                                <a
+                                  href={`/m/${slug}/book/${t.id}?model=${s.id}`}
+                                  className="mt-2 inline-block rounded-md px-3 py-1.5 text-xs font-semibold text-white"
+                                  style={{ backgroundColor: brand }}
+                                >
+                                  Book this slot
+                                </a>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })()}
                   {visibleTreatments.length === 0 ? (
                     <p className="opacity-70">No treatments available here yet.</p>
                   ) : (
@@ -1103,9 +1152,29 @@ function TreatmentRow({
           <div className={`leading-tight ${nameSize} ${bold ? "font-bold" : "font-medium"}`} style={{ color: nameColor }}>
             {t.name}
           </div>
-          <div className={`whitespace-nowrap ${priceSize} ${bold ? "font-bold" : "font-semibold"}`} style={{ color: priceColor }}>
-            {price === 0 ? "Free" : `£${price.toFixed(2)}`}
-          </div>
+          {(() => {
+            const pct = (t as any).discount_percent as number | null;
+            const startsAt = (t as any).discount_starts_at as string | null;
+            const endsAt = (t as any).discount_ends_at as string | null;
+            const dows = (t as any).discount_days_of_week as number[] | null;
+            const now = new Date();
+            const inWindow = (!startsAt || new Date(startsAt) <= now)
+              && (!endsAt || new Date(endsAt) >= now)
+              && (!dows || dows.length === 0 || dows.includes(now.getDay()));
+            const hasDisc = pct != null && pct > 0 && inWindow && price > 0;
+            const discounted = hasDisc ? price * (1 - pct / 100) : price;
+            return (
+              <div className={`whitespace-nowrap ${priceSize} ${bold ? "font-bold" : "font-semibold"}`} style={{ color: priceColor }}>
+                {hasDisc && (
+                  <span className="mr-1.5 text-xs font-normal text-muted-foreground line-through">£{price.toFixed(2)}</span>
+                )}
+                {discounted === 0 ? "Free" : `£${discounted.toFixed(2)}`}
+                {hasDisc && (
+                  <span className="ml-1 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700">−{pct}%</span>
+                )}
+              </div>
+            );
+          })()}
         </div>
         <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
           <span>{duration} min</span>
