@@ -1205,6 +1205,7 @@ export type Database = {
         Row: {
           active: boolean
           booked_appointment_id: string | null
+          category: string | null
           created_at: string
           end_time: string
           id: string
@@ -1221,6 +1222,7 @@ export type Database = {
         Insert: {
           active?: boolean
           booked_appointment_id?: string | null
+          category?: string | null
           created_at?: string
           end_time: string
           id?: string
@@ -1237,6 +1239,7 @@ export type Database = {
         Update: {
           active?: boolean
           booked_appointment_id?: string | null
+          category?: string | null
           created_at?: string
           end_time?: string
           id?: string
@@ -1607,6 +1610,7 @@ export type Database = {
           full_name: string | null
           hero_url: string | null
           id: string
+          model_slots_position: string
           phone: string | null
           qualifications: Json
           role: Database["public"]["Enums"]["app_role"]
@@ -1648,6 +1652,7 @@ export type Database = {
           full_name?: string | null
           hero_url?: string | null
           id?: string
+          model_slots_position?: string
           phone?: string | null
           qualifications?: Json
           role?: Database["public"]["Enums"]["app_role"]
@@ -1689,6 +1694,7 @@ export type Database = {
           full_name?: string | null
           hero_url?: string | null
           id?: string
+          model_slots_position?: string
           phone?: string | null
           qualifications?: Json
           role?: Database["public"]["Enums"]["app_role"]
@@ -2174,6 +2180,7 @@ export type Database = {
           full_name: string
           hero_url: string
           id: string
+          model_slots_position: string
           qualifications: Json
           slug: string
           social_links: Json
