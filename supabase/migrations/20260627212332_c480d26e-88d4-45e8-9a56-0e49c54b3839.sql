@@ -1,0 +1,1 @@
+GRANT EXECUTE ON FUNCTION public.is_slug_available(text, uuid) TO anon;
