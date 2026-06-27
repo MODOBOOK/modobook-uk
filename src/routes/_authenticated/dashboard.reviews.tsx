@@ -48,7 +48,7 @@ function ReviewMod() {
     <div className="max-w-3xl space-y-4">
       <div>
         <h1 className="text-2xl font-bold">Patient reviews</h1>
-        <p className="text-sm text-muted-foreground">Approve or hide reviews from your public MODO page.</p>
+        <p className="text-sm text-muted-foreground">Approve or hide reviews from your public MODO Book page.</p>
       </div>
       {reviews.length === 0 ? (
         <p className="text-muted-foreground">No reviews yet.</p>

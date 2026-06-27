@@ -111,7 +111,7 @@ function DashboardLayout() {
           <div className="ml-auto flex items-center gap-2">
             <Button variant="outline" size="sm" asChild>
               <a href={`/m/${profile.slug}`} target="_blank" rel="noreferrer">
-                Preview MODO link
+                Preview MODO Book link
               </a>
             </Button>
           </div>

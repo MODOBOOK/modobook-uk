@@ -45,7 +45,7 @@ function Account() {
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-10">
-      <h1 className="text-3xl font-bold tracking-tight">My MODO account</h1>
+      <h1 className="text-3xl font-bold tracking-tight">My MODO Book account</h1>
       <p className="mt-1 text-muted-foreground">Welcome back{patient?.full_name ? `, ${patient.full_name}` : ""}.</p>
 
       <section className="mt-8">

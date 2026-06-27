@@ -59,7 +59,7 @@ function ClinicPage() {
           </div>
           <Link to="/">
             <Button variant="ghost" size="sm">
-              Powered by MODO
+              Powered by MODO Book
             </Button>
           </Link>
         </div>
@@ -174,7 +174,7 @@ function ClinicPage() {
 
       <footer className="border-t py-6 text-center text-sm text-muted-foreground">
         <Link to="/" className="hover:underline">
-          Create your own booking page with MODO
+          Create your own booking page with MODO Book
         </Link>
       </footer>
     </div>

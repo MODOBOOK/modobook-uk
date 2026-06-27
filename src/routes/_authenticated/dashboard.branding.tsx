@@ -118,7 +118,7 @@ function BrandingPage() {
         <div>
           <h1 className="text-2xl font-semibold">Branding</h1>
           <p className="text-sm text-muted-foreground">
-            Colors, typography, logo and hero image shown on your MODO page.
+            Colors, typography, logo and hero image shown on your MODO Book page.
           </p>
         </div>
         <Button onClick={handleSave} disabled={saving}>
@@ -296,7 +296,7 @@ function BrandingPage() {
               className="px-4 py-3 text-xs"
               style={{ background: state.footer_bg_color, color: state.footer_text_color }}
             >
-              © Your Clinic · Powered by MODO
+              © Your Clinic · Powered by MODO Book
             </div>
           </div>
         </CardContent>

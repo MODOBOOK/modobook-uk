@@ -60,7 +60,7 @@ function BioEditor() {
     <div className="max-w-3xl space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Bio page</h1>
-        <p className="text-sm text-muted-foreground">This appears on your public MODO bio page.</p>
+        <p className="text-sm text-muted-foreground">This appears on your public MODO Book bio page.</p>
       </div>
 
       <Card>

@@ -15,7 +15,7 @@ export const Route = createFileRoute("/m/$slug/reviews")({
   loader: async ({ params }) => getPractitionerReviews({ data: { slug: params.slug } }),
   head: ({ loaderData }) => ({
     meta: [
-      { title: `Reviews · ${loaderData?.profile.clinic_name ?? "Clinic"} · MODO` },
+      { title: `Reviews · ${loaderData?.profile.clinic_name ?? "Clinic"} · MODO Book` },
       { name: "description", content: `Patient reviews for ${loaderData?.profile.clinic_name ?? "this clinic"}.` },
     ],
   }),
