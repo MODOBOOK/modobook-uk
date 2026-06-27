@@ -321,21 +321,29 @@ function ServicesPage() {
 function CategoryRow({
   node,
   depth,
+  siblings,
+  index,
   matchTreat,
   onAddSub,
   onEditCat,
   onDeleteCat,
   onAddService,
   onDeleteTreat,
+  onMoveCat,
+  onMoveTreat,
 }: {
   node: CatNode;
   depth: number;
+  siblings: CatNode[];
+  index: number;
   matchTreat: (t: Treat) => boolean;
   onAddSub: (parentId: string) => void;
   onEditCat: (c: Cat) => void;
   onDeleteCat: (c: Cat) => void;
   onAddService: (catId: string) => void;
   onDeleteTreat: (t: Treat) => void;
+  onMoveCat: (siblings: Cat[], id: string, dir: -1 | 1) => void;
+  onMoveTreat: (siblings: Treat[], id: string, dir: -1 | 1) => void;
 }) {
   const [open, setOpen] = useState(depth === 0);
   const treatsHere = node.treatments.filter(matchTreat);
@@ -344,9 +352,29 @@ function CategoryRow({
   return (
     <div className="border-b-0">
       <div
-        className="flex w-full items-center gap-3 px-4 py-4"
+        className="flex w-full items-center gap-1 px-4 py-4 sm:gap-3"
         style={{ paddingLeft: 16 + depth * 16 }}
       >
+        <div className="flex flex-col">
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onMoveCat(siblings, node.id, -1); }}
+            disabled={index === 0}
+            className="rounded p-0.5 text-muted-foreground hover:bg-muted disabled:opacity-30"
+            aria-label="Move up"
+          >
+            <ArrowUp className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onMoveCat(siblings, node.id, 1); }}
+            disabled={index === siblings.length - 1}
+            className="rounded p-0.5 text-muted-foreground hover:bg-muted disabled:opacity-30"
+            aria-label="Move down"
+          >
+            <ArrowDown className="h-4 w-4" />
+          </button>
+        </div>
         <button
           type="button"
           onClick={() => setOpen((o) => !o)}
@@ -387,23 +415,32 @@ function CategoryRow({
 
       {open && (
         <div className="border-t bg-muted/10">
-          {treatsHere.map((t) => (
+          {treatsHere.map((t, ti) => (
             <div key={t.id} style={{ paddingLeft: 16 + (depth + 1) * 16 }} className="border-b py-2 pr-4">
-              <ServiceRow treat={t} onDelete={() => onDeleteTreat(t)} />
+              <ServiceRow
+                treat={t}
+                onDelete={() => onDeleteTreat(t)}
+                onMoveUp={ti === 0 ? undefined : () => onMoveTreat(treatsHere, t.id, -1)}
+                onMoveDown={ti === treatsHere.length - 1 ? undefined : () => onMoveTreat(treatsHere, t.id, 1)}
+              />
             </div>
           ))}
 
-          {node.children.map((child) => (
+          {node.children.map((child, ci) => (
             <CategoryRow
               key={child.id}
               node={child}
               depth={depth + 1}
+              siblings={node.children}
+              index={ci}
               matchTreat={matchTreat}
               onAddSub={onAddSub}
               onEditCat={onEditCat}
               onDeleteCat={onDeleteCat}
               onAddService={onAddService}
               onDeleteTreat={onDeleteTreat}
+              onMoveCat={onMoveCat}
+              onMoveTreat={onMoveTreat}
             />
           ))}
 
@@ -424,6 +461,7 @@ function CategoryRow({
     </div>
   );
 }
+
 
 
 function ServiceRow({ treat, onDelete }: { treat: Treat; onDelete: () => void }) {
