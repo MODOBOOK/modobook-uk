@@ -184,7 +184,7 @@ function MenuPage() {
       <Button
         variant="outline"
         size="lg"
-        className="w-full rounded-full border-[#c9b39a] bg-[#faf6ee] text-[#3a2e26] hover:bg-[#f4ece0] hover:text-[#3a2e26]"
+        className="w-full rounded-full"
         onClick={() => supabase.auth.signOut()}
       >
         <LogOut className="mr-2 h-4 w-4" /> Log out
