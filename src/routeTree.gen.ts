@@ -29,6 +29,7 @@ import { Route as AuthenticatedDashboardServicesRouteImport } from './routes/_au
 import { Route as AuthenticatedDashboardReviewsRouteImport } from './routes/_authenticated/dashboard.reviews'
 import { Route as AuthenticatedDashboardPoliciesRouteImport } from './routes/_authenticated/dashboard.policies'
 import { Route as AuthenticatedDashboardPaymentsRouteImport } from './routes/_authenticated/dashboard.payments'
+import { Route as AuthenticatedDashboardPatientsRouteImport } from './routes/_authenticated/dashboard.patients'
 import { Route as AuthenticatedDashboardPackagesRouteImport } from './routes/_authenticated/dashboard.packages'
 import { Route as AuthenticatedDashboardNewAppointmentRouteImport } from './routes/_authenticated/dashboard.new-appointment'
 import { Route as AuthenticatedDashboardMedicalFormsRouteImport } from './routes/_authenticated/dashboard.medical-forms'
@@ -148,6 +149,12 @@ const AuthenticatedDashboardPaymentsRoute =
     path: '/payments',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
+const AuthenticatedDashboardPatientsRoute =
+  AuthenticatedDashboardPatientsRouteImport.update({
+    id: '/patients',
+    path: '/patients',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
 const AuthenticatedDashboardPackagesRoute =
   AuthenticatedDashboardPackagesRouteImport.update({
     id: '/packages',
@@ -244,6 +251,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/medical-forms': typeof AuthenticatedDashboardMedicalFormsRoute
   '/dashboard/new-appointment': typeof AuthenticatedDashboardNewAppointmentRoute
   '/dashboard/packages': typeof AuthenticatedDashboardPackagesRoute
+  '/dashboard/patients': typeof AuthenticatedDashboardPatientsRoute
   '/dashboard/payments': typeof AuthenticatedDashboardPaymentsRoute
   '/dashboard/policies': typeof AuthenticatedDashboardPoliciesRoute
   '/dashboard/reviews': typeof AuthenticatedDashboardReviewsRoute
@@ -276,6 +284,7 @@ export interface FileRoutesByTo {
   '/dashboard/medical-forms': typeof AuthenticatedDashboardMedicalFormsRoute
   '/dashboard/new-appointment': typeof AuthenticatedDashboardNewAppointmentRoute
   '/dashboard/packages': typeof AuthenticatedDashboardPackagesRoute
+  '/dashboard/patients': typeof AuthenticatedDashboardPatientsRoute
   '/dashboard/payments': typeof AuthenticatedDashboardPaymentsRoute
   '/dashboard/policies': typeof AuthenticatedDashboardPoliciesRoute
   '/dashboard/reviews': typeof AuthenticatedDashboardReviewsRoute
@@ -312,6 +321,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/medical-forms': typeof AuthenticatedDashboardMedicalFormsRoute
   '/_authenticated/dashboard/new-appointment': typeof AuthenticatedDashboardNewAppointmentRoute
   '/_authenticated/dashboard/packages': typeof AuthenticatedDashboardPackagesRoute
+  '/_authenticated/dashboard/patients': typeof AuthenticatedDashboardPatientsRoute
   '/_authenticated/dashboard/payments': typeof AuthenticatedDashboardPaymentsRoute
   '/_authenticated/dashboard/policies': typeof AuthenticatedDashboardPoliciesRoute
   '/_authenticated/dashboard/reviews': typeof AuthenticatedDashboardReviewsRoute
@@ -348,6 +358,7 @@ export interface FileRouteTypes {
     | '/dashboard/medical-forms'
     | '/dashboard/new-appointment'
     | '/dashboard/packages'
+    | '/dashboard/patients'
     | '/dashboard/payments'
     | '/dashboard/policies'
     | '/dashboard/reviews'
@@ -380,6 +391,7 @@ export interface FileRouteTypes {
     | '/dashboard/medical-forms'
     | '/dashboard/new-appointment'
     | '/dashboard/packages'
+    | '/dashboard/patients'
     | '/dashboard/payments'
     | '/dashboard/policies'
     | '/dashboard/reviews'
@@ -415,6 +427,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/medical-forms'
     | '/_authenticated/dashboard/new-appointment'
     | '/_authenticated/dashboard/packages'
+    | '/_authenticated/dashboard/patients'
     | '/_authenticated/dashboard/payments'
     | '/_authenticated/dashboard/policies'
     | '/_authenticated/dashboard/reviews'
@@ -582,6 +595,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardPaymentsRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
+    '/_authenticated/dashboard/patients': {
+      id: '/_authenticated/dashboard/patients'
+      path: '/patients'
+      fullPath: '/dashboard/patients'
+      preLoaderRoute: typeof AuthenticatedDashboardPatientsRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
     '/_authenticated/dashboard/packages': {
       id: '/_authenticated/dashboard/packages'
       path: '/packages'
@@ -688,6 +708,7 @@ interface AuthenticatedDashboardRouteChildren {
   AuthenticatedDashboardMedicalFormsRoute: typeof AuthenticatedDashboardMedicalFormsRoute
   AuthenticatedDashboardNewAppointmentRoute: typeof AuthenticatedDashboardNewAppointmentRoute
   AuthenticatedDashboardPackagesRoute: typeof AuthenticatedDashboardPackagesRoute
+  AuthenticatedDashboardPatientsRoute: typeof AuthenticatedDashboardPatientsRoute
   AuthenticatedDashboardPaymentsRoute: typeof AuthenticatedDashboardPaymentsRoute
   AuthenticatedDashboardPoliciesRoute: typeof AuthenticatedDashboardPoliciesRoute
   AuthenticatedDashboardReviewsRoute: typeof AuthenticatedDashboardReviewsRoute
@@ -714,6 +735,7 @@ const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
     AuthenticatedDashboardNewAppointmentRoute:
       AuthenticatedDashboardNewAppointmentRoute,
     AuthenticatedDashboardPackagesRoute: AuthenticatedDashboardPackagesRoute,
+    AuthenticatedDashboardPatientsRoute: AuthenticatedDashboardPatientsRoute,
     AuthenticatedDashboardPaymentsRoute: AuthenticatedDashboardPaymentsRoute,
     AuthenticatedDashboardPoliciesRoute: AuthenticatedDashboardPoliciesRoute,
     AuthenticatedDashboardReviewsRoute: AuthenticatedDashboardReviewsRoute,
