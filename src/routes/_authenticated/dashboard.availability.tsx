@@ -12,6 +12,12 @@ import {
   listAvailabilityRules,
   upsertAvailabilityRule,
   deleteAvailabilityRule,
+  listAvailabilityOverrides,
+  addAvailabilityOverride,
+  deleteAvailabilityOverride,
+  listBlockedDates,
+  addBlockedDate,
+  deleteBlockedDate,
 } from "@/lib/availability.functions";
 import { listMyLocations } from "@/lib/locations.functions";
 
@@ -33,13 +39,31 @@ type Rule = {
 
 type Location = { id: string; name: string };
 
+type Override = {
+  id: string;
+  date: string;
+  start_time: string;
+  end_time: string;
+  slot_interval: number;
+  location_id: string | null;
+};
+type Blocked = { id: string; date: string; reason: string | null; location_id: string | null };
+
 function AvailabilityPage() {
   const list = useServerFn(listAvailabilityRules);
   const upsert = useServerFn(upsertAvailabilityRule);
   const del = useServerFn(deleteAvailabilityRule);
   const listLocs = useServerFn(listMyLocations);
+  const listOv = useServerFn(listAvailabilityOverrides);
+  const addOv = useServerFn(addAvailabilityOverride);
+  const delOv = useServerFn(deleteAvailabilityOverride);
+  const listBl = useServerFn(listBlockedDates);
+  const addBl = useServerFn(addBlockedDate);
+  const delBl = useServerFn(deleteBlockedDate);
 
   const [rules, setRules] = useState<Rule[]>([]);
+  const [overrides, setOverrides] = useState<Override[]>([]);
+  const [blocked, setBlocked] = useState<Blocked[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -49,12 +73,25 @@ function AvailabilityPage() {
   const [interval, setInterval] = useState("30");
   const [locationId, setLocationId] = useState<string>("none");
 
+  const today = new Date().toISOString().slice(0, 10);
+  const [ovDate, setOvDate] = useState(today);
+  const [ovStart, setOvStart] = useState("09:00");
+  const [ovEnd, setOvEnd] = useState("13:00");
+  const [ovInterval, setOvInterval] = useState("30");
+  const [ovLoc, setOvLoc] = useState<string>("none");
+
+  const [blDate, setBlDate] = useState(today);
+  const [blReason, setBlReason] = useState("");
+  const [blLoc, setBlLoc] = useState<string>("none");
+
   async function refresh() {
     setLoading(true);
     try {
-      const [r, l] = await Promise.all([list(), listLocs()]);
+      const [r, l, o, b] = await Promise.all([list(), listLocs(), listOv(), listBl()]);
       setRules(r as Rule[]);
       setLocations(l as Location[]);
+      setOverrides(o as Override[]);
+      setBlocked(b as Blocked[]);
     } finally {
       setLoading(false);
     }
@@ -63,6 +100,7 @@ function AvailabilityPage() {
   useEffect(() => {
     refresh();
   }, []);
+
 
   async function addRule(e: React.FormEvent) {
     e.preventDefault();
@@ -94,6 +132,46 @@ function AvailabilityPage() {
     } catch (err: any) {
       toast.error(err?.message ?? "Failed");
     }
+  }
+
+  async function addOverride(e: React.FormEvent) {
+    e.preventDefault();
+    if (ovStart >= ovEnd) { toast.error("End time must be after start"); return; }
+    try {
+      await addOv({
+        data: {
+          date: ovDate, start_time: ovStart, end_time: ovEnd,
+          slot_interval: Number(ovInterval),
+          location_id: ovLoc === "none" ? null : ovLoc,
+        },
+      });
+      toast.success("One-off slot added");
+      await refresh();
+    } catch (err: any) { toast.error(err?.message ?? "Failed"); }
+  }
+  async function removeOverride(id: string) {
+    try { await delOv({ data: { id } }); await refresh(); }
+    catch (err: any) { toast.error(err?.message ?? "Failed"); }
+  }
+
+  async function addBlock(e: React.FormEvent) {
+    e.preventDefault();
+    try {
+      await addBl({
+        data: {
+          date: blDate,
+          reason: blReason || undefined,
+          location_id: blLoc === "none" ? null : blLoc,
+        },
+      });
+      toast.success("Day closed");
+      setBlReason("");
+      await refresh();
+    } catch (err: any) { toast.error(err?.message ?? "Failed"); }
+  }
+  async function removeBlock(id: string) {
+    try { await delBl({ data: { id } }); await refresh(); }
+    catch (err: any) { toast.error(err?.message ?? "Failed"); }
   }
 
   const grouped = DAYS.map((label, i) => ({
@@ -184,6 +262,117 @@ function AvailabilityPage() {
               )}
             </div>
           ))}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Ad-hoc rota</CardTitle>
+          <CardDescription>Open one-off extra slots on a specific date (in addition to the weekly schedule).</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <form onSubmit={addOverride} className="grid gap-3 sm:grid-cols-2 md:grid-cols-6 md:items-end">
+            <div>
+              <Label>Date</Label>
+              <Input type="date" value={ovDate} onChange={(e) => setOvDate(e.target.value)} />
+            </div>
+            <div>
+              <Label>Start</Label>
+              <Input type="time" value={ovStart} onChange={(e) => setOvStart(e.target.value)} />
+            </div>
+            <div>
+              <Label>End</Label>
+              <Input type="time" value={ovEnd} onChange={(e) => setOvEnd(e.target.value)} />
+            </div>
+            <div>
+              <Label>Slot (min)</Label>
+              <Input type="number" min={5} step={5} value={ovInterval} onChange={(e) => setOvInterval(e.target.value)} />
+            </div>
+            <div>
+              <Label>Location</Label>
+              <Select value={ovLoc} onValueChange={setOvLoc}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Any location</SelectItem>
+                  {locations.map((l) => <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button type="submit"><Plus className="h-4 w-4 mr-1" />Add</Button>
+          </form>
+          {overrides.length === 0 ? (
+            <div className="text-sm text-muted-foreground">No ad-hoc slots</div>
+          ) : (
+            <div className="space-y-2">
+              {overrides.map((o) => {
+                const loc = locations.find((l) => l.id === o.location_id);
+                return (
+                  <div key={o.id} className="flex items-center justify-between gap-3 rounded border px-3 py-2 text-sm">
+                    <div>
+                      <span className="font-medium">{o.date}</span>
+                      <span className="font-mono ml-3">{o.start_time.slice(0,5)} – {o.end_time.slice(0,5)}</span>
+                      <span className="text-muted-foreground ml-3">every {o.slot_interval} min</span>
+                      {loc && <span className="ml-3 text-xs rounded bg-muted px-2 py-0.5">{loc.name}</span>}
+                    </div>
+                    <Button variant="ghost" size="icon" onClick={() => removeOverride(o.id)}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Close a day</CardTitle>
+          <CardDescription>Block a date so patients cannot book that day.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <form onSubmit={addBlock} className="grid gap-3 sm:grid-cols-2 md:grid-cols-5 md:items-end">
+            <div>
+              <Label>Date</Label>
+              <Input type="date" value={blDate} onChange={(e) => setBlDate(e.target.value)} />
+            </div>
+            <div className="md:col-span-2">
+              <Label>Reason (optional)</Label>
+              <Input value={blReason} onChange={(e) => setBlReason(e.target.value)} placeholder="Holiday, training…" />
+            </div>
+            <div>
+              <Label>Location</Label>
+              <Select value={blLoc} onValueChange={setBlLoc}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">All locations</SelectItem>
+                  {locations.map((l) => <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button type="submit" variant="destructive"><Plus className="h-4 w-4 mr-1" />Close</Button>
+          </form>
+          {blocked.length === 0 ? (
+            <div className="text-sm text-muted-foreground">No closed dates</div>
+          ) : (
+            <div className="space-y-2">
+              {blocked.map((b) => {
+                const loc = locations.find((l) => l.id === b.location_id);
+                return (
+                  <div key={b.id} className="flex items-center justify-between gap-3 rounded border px-3 py-2 text-sm">
+                    <div>
+                      <span className="font-medium">{b.date}</span>
+                      {b.reason && <span className="text-muted-foreground ml-3">{b.reason}</span>}
+                      <span className="ml-3 text-xs rounded bg-muted px-2 py-0.5">{loc ? loc.name : "All locations"}</span>
+                    </div>
+                    <Button variant="ghost" size="icon" onClick={() => removeBlock(b.id)}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

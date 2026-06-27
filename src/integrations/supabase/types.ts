@@ -121,6 +121,57 @@ export type Database = {
           },
         ]
       }
+      availability_overrides: {
+        Row: {
+          created_at: string
+          date: string
+          end_time: string
+          id: string
+          location_id: string | null
+          profile_id: string
+          slot_interval: number
+          start_time: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          end_time: string
+          id?: string
+          location_id?: string | null
+          profile_id: string
+          slot_interval?: number
+          start_time: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          end_time?: string
+          id?: string
+          location_id?: string | null
+          profile_id?: string
+          slot_interval?: number
+          start_time?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "availability_overrides_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "availability_overrides_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       availability_rules: {
         Row: {
           created_at: string

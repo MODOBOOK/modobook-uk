@@ -55,10 +55,14 @@ export const getDayAvailability = createServerFn({ method: "GET" })
   .inputValidator((input: { profileId: string; date: string; locationId?: string | null }) => input)
   .handler(async ({ data }) => {
     const sb = publicClient();
-    let blocked = sb.from("blocked_dates").select("id").eq("profile_id", data.profileId).eq("date", data.date);
-    if (data.locationId) blocked = blocked.eq("location_id", data.locationId);
-    const { data: blockedRows } = await blocked;
-    const isBlocked = (blockedRows?.length ?? 0) > 0;
+    const { data: blockedRows } = await sb
+      .from("blocked_dates")
+      .select("id,location_id")
+      .eq("profile_id", data.profileId)
+      .eq("date", data.date);
+    const isBlocked = (blockedRows ?? []).some(
+      (b) => !b.location_id || !data.locationId || b.location_id === data.locationId,
+    );
 
     const { data: appts } = await sb
       .from("appointments")
@@ -67,8 +71,15 @@ export const getDayAvailability = createServerFn({ method: "GET" })
       .eq("scheduled_date", data.date)
       .neq("status", "cancelled");
 
-    return { isBlocked, busy: appts ?? [] };
+    const { data: overrides } = await sb
+      .from("availability_overrides")
+      .select("start_time,end_time,slot_interval,location_id")
+      .eq("profile_id", data.profileId)
+      .eq("date", data.date);
+
+    return { isBlocked, busy: appts ?? [], overrides: overrides ?? [] };
   });
+
 
 export const requestBooking = createServerFn({ method: "POST" })
   .inputValidator(
