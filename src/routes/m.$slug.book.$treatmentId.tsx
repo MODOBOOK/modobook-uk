@@ -195,6 +195,11 @@ function BookTreatmentPage() {
   });
 
   const slots = useMemo(() => {
+    if (modelMode) {
+      return modelSlotsForLoc
+        .filter((s) => s.slot_date === date)
+        .map((s) => s.start_time.length === 5 ? `${s.start_time}:00` : s.start_time);
+    }
     if (!dayQuery.data || dayQuery.data.isBlocked) return [];
     const busy = dayQuery.data.busy.map((b) => ({
       start: toMinutes(b.start_time),
@@ -225,7 +230,8 @@ function BookTreatmentPage() {
       }
     }
     return Array.from(new Set(out)).sort();
-  }, [dayQuery.data, dayRules, duration, locationId]);
+  }, [dayQuery.data, dayRules, duration, locationId, modelMode, modelSlotsForLoc, date]);
+
 
 
   async function submit() {
