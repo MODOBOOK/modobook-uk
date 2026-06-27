@@ -7,7 +7,9 @@ import {
   createCategory,
   updateCategory,
   deleteCategory,
+  reorderCategories,
 } from "@/lib/categories.functions";
+
 import {
   getMyTreatments,
   createTreatment,
