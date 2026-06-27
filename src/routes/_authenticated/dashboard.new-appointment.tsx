@@ -166,15 +166,43 @@ function NewAppointmentPage() {
       const manageUrl = result.manageToken
         ? `${window.location.origin}/m/${profile.slug}/manage/${result.manageToken}`
         : null;
+
+      let depositUrl: string | null = null;
+      if (sendDeposit) {
+        const amt = Math.round(parseFloat(depositAmount || "0") * 100);
+        const hrs = Math.max(1, parseInt(depositHours || "24", 10));
+        if (amt >= 100) {
+          try {
+            const link = await createLink({
+              data: {
+                amountCents: amt,
+                description: `Deposit · ${treatment.name} · ${patientName}`,
+                kind: "deposit",
+                appointmentId: result.id,
+                recipientEmail: patientEmail,
+                recipientName: patientName,
+                expiresAt: new Date(Date.now() + hrs * 3600 * 1000).toISOString(),
+              },
+            });
+            depositUrl = (link as { stripe_url: string | null }).stripe_url;
+          } catch (e) {
+            toast.error(`Deposit link failed: ${(e as Error).message}`);
+          }
+        }
+      }
+
       toast.success("Appointment created", {
-        description: manageUrl
-          ? "Patient can manage via the link copied to your clipboard."
+        description: depositUrl
+          ? "Deposit link copied to clipboard — paste in email/SMS to the patient."
+          : manageUrl
+          ? "Manage link copied to clipboard."
           : "Confirmed.",
       });
-      if (manageUrl && navigator.clipboard) {
-        await navigator.clipboard.writeText(manageUrl);
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(depositUrl ?? manageUrl ?? "");
       }
       navigate({ to: "/dashboard/bookings" });
+
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed");
     } finally {
