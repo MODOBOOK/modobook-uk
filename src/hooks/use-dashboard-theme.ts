@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import type { CSSProperties } from "react";
+import { useEffect, type CSSProperties } from "react";
 import { getMyTheme } from "@/lib/theme.functions";
 
 /**
