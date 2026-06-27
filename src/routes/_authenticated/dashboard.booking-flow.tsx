@@ -49,10 +49,18 @@ function BookingFlowPage() {
   const [showKnow, setShowKnow] = useState(p.chooser_show_know !== false);
   const [showUnsure, setShowUnsure] = useState(p.chooser_show_unsure !== false);
   const [showConsult, setShowConsult] = useState(p.chooser_show_consultation !== false);
-  const [consultId, setConsultId] = useState<string>(
-    (p.chooser_consultation_treatment_id as string | null) ?? "",
+  const [consultIds, setConsultIds] = useState<string[]>(
+    Array.isArray(p.chooser_consultation_treatment_ids)
+      ? (p.chooser_consultation_treatment_ids as string[])
+      : (p.chooser_consultation_treatment_id ? [p.chooser_consultation_treatment_id as string] : []),
   );
   const [intro, setIntro] = useState<string>((p.chooser_intro_text as string | null) ?? "");
+  const [extraOn, setExtraOn] = useState(Boolean(p.chooser_extra_enabled));
+  const [extraTitle, setExtraTitle] = useState<string>((p.chooser_extra_title as string | null) ?? "");
+  const [extraBody, setExtraBody] = useState<string>((p.chooser_extra_body as string | null) ?? "");
+  const [extraIds, setExtraIds] = useState<string[]>(
+    Array.isArray(p.chooser_extra_treatment_ids) ? (p.chooser_extra_treatment_ids as string[]) : [],
+  );
   const [savingSettings, setSavingSettings] = useState(false);
 
   const [areas, setAreas] = useState<Area[]>(loaded.chooser.areas as Area[]);
@@ -61,6 +69,10 @@ function BookingFlowPage() {
   const [newAreaName, setNewAreaName] = useState("");
   const [expandedArea, setExpandedArea] = useState<string | null>(null);
   const [expandedConcern, setExpandedConcern] = useState<string | null>(null);
+
+  function toggleId(list: string[], setList: (v: string[]) => void, id: string) {
+    setList(list.includes(id) ? list.filter((x) => x !== id) : [...list, id]);
+  }
 
   async function saveSettings() {
     setSavingSettings(true);
@@ -72,8 +84,13 @@ function BookingFlowPage() {
           chooser_show_know: showKnow,
           chooser_show_unsure: showUnsure,
           chooser_show_consultation: showConsult,
-          chooser_consultation_treatment_id: consultId || null,
+          chooser_consultation_treatment_ids: consultIds,
+          chooser_consultation_treatment_id: consultIds[0] ?? null,
           chooser_intro_text: intro || null,
+          chooser_extra_enabled: extraOn,
+          chooser_extra_title: extraTitle || null,
+          chooser_extra_body: extraBody || null,
+          chooser_extra_treatment_ids: extraIds,
         },
       });
       toast.success("Saved");
@@ -83,6 +100,7 @@ function BookingFlowPage() {
       setSavingSettings(false);
     }
   }
+
 
   async function addArea() {
     if (!newAreaName.trim()) return;
