@@ -1,5 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import {
   Store,
   Scissors,
@@ -21,6 +23,8 @@ import {
   ExternalLink,
   Percent,
   Sparkles,
+  Search,
+  Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -34,45 +38,44 @@ export const Route = createFileRoute("/_authenticated/dashboard/menu")({
   component: MenuPage,
 });
 
-const groups: {
-  title: string;
-  items: { label: string; description: string; to: string; icon: React.ElementType; tone: string }[];
-}[] = [
+type Item = { label: string; description: string; to: string; icon: React.ElementType; tone: string; iconColor: string };
+
+const groups: { title: string; items: Item[] }[] = [
   {
     title: "Your business",
     items: [
-      { label: "Clinic page", description: "Edit your clinic info & hero", to: "/dashboard/clinic", icon: Store, tone: "bg-rose-100 text-rose-600" },
-      { label: "Branding", description: "Colors, fonts, logo & favicon", to: "/dashboard/branding", icon: Palette, tone: "bg-violet-100 text-violet-600" },
-      { label: "Welcome & policies", description: "Intro, deposits, cancellation rules", to: "/dashboard/policies", icon: Shield, tone: "bg-emerald-100 text-emerald-600" },
-      { label: "Locations", description: "Manage clinic addresses", to: "/dashboard/locations", icon: MapPin, tone: "bg-sky-100 text-sky-600" },
+      { label: "Business & Profile", description: "Clinic info, hero image & contacts", to: "/dashboard/clinic", icon: Store, tone: "bg-rose-50", iconColor: "text-rose-500" },
+      { label: "Branding", description: "Colours, fonts, logo & favicon", to: "/dashboard/branding", icon: Palette, tone: "bg-violet-50", iconColor: "text-violet-500" },
+      { label: "Welcome & policies", description: "Intro, deposits, cancellation, T&Cs", to: "/dashboard/policies", icon: Shield, tone: "bg-emerald-50", iconColor: "text-emerald-500" },
+      { label: "Locations", description: "Manage your clinic addresses", to: "/dashboard/locations", icon: MapPin, tone: "bg-sky-50", iconColor: "text-sky-500" },
     ],
   },
   {
     title: "Services & forms",
     items: [
-      { label: "Services", description: "Treatments, categories, pricing", to: "/dashboard/services", icon: Scissors, tone: "bg-pink-100 text-pink-600" },
-      { label: "Packages", description: "Bundle treatments for patients", to: "/dashboard/packages", icon: Package, tone: "bg-indigo-100 text-indigo-600" },
-      { label: "Discounts", description: "Menu discounts & promo codes", to: "/dashboard/discounts", icon: Percent, tone: "bg-rose-100 text-rose-700" },
-      { label: "Model slots", description: "Discounted dates & times", to: "/dashboard/model-slots", icon: Sparkles, tone: "bg-fuchsia-100 text-fuchsia-700" },
-      { label: "Medical forms", description: "Pre-treatment questionnaires", to: "/dashboard/medical-forms", icon: FileText, tone: "bg-amber-100 text-amber-600" },
-      { label: "Consent forms", description: "Templates sent at booking", to: "/dashboard/consent-forms", icon: FileSignature, tone: "bg-teal-100 text-teal-600" },
+      { label: "Services", description: "Treatments, categories, pricing", to: "/dashboard/services", icon: Scissors, tone: "bg-pink-50", iconColor: "text-pink-500" },
+      { label: "Packages", description: "Bundle treatments for patients", to: "/dashboard/packages", icon: Package, tone: "bg-indigo-50", iconColor: "text-indigo-500" },
+      { label: "Discounts", description: "Menu discounts & promo codes", to: "/dashboard/discounts", icon: Percent, tone: "bg-rose-50", iconColor: "text-rose-600" },
+      { label: "Model slots", description: "Discounted dates & times", to: "/dashboard/model-slots", icon: Sparkles, tone: "bg-fuchsia-50", iconColor: "text-fuchsia-500" },
+      { label: "Medical forms", description: "Pre-treatment questionnaires", to: "/dashboard/medical-forms", icon: FileText, tone: "bg-amber-50", iconColor: "text-amber-500" },
+      { label: "Consent forms", description: "Templates sent at booking", to: "/dashboard/consent-forms", icon: FileSignature, tone: "bg-teal-50", iconColor: "text-teal-500" },
     ],
   },
   {
     title: "Bookings",
     items: [
-      { label: "Booking flow", description: "Concern picker shown before treatments", to: "/dashboard/booking-flow", icon: HelpCircle, tone: "bg-cyan-100 text-cyan-700" },
-      { label: "Availability", description: "Opening times & ad-hoc slots", to: "/dashboard/availability", icon: CalendarDays, tone: "bg-blue-100 text-blue-600" },
-
-      { label: "New appointment", description: "Book in a patient manually", to: "/dashboard/new-appointment", icon: CalendarPlus, tone: "bg-orange-100 text-orange-600" },
-      { label: "Consultations", description: "MODO step-by-step patient records", to: "/dashboard/consultations", icon: ClipboardList, tone: "bg-fuchsia-100 text-fuchsia-700" },
-      { label: "Reviews", description: "Moderate patient reviews", to: "/dashboard/reviews", icon: Star, tone: "bg-yellow-100 text-yellow-700" },
+      { label: "Booking flow", description: "Concern picker shown before treatments", to: "/dashboard/booking-flow", icon: HelpCircle, tone: "bg-cyan-50", iconColor: "text-cyan-600" },
+      { label: "Availability", description: "Opening times & ad-hoc slots", to: "/dashboard/availability", icon: CalendarDays, tone: "bg-blue-50", iconColor: "text-blue-500" },
+      { label: "New appointment", description: "Book in a patient manually", to: "/dashboard/new-appointment", icon: CalendarPlus, tone: "bg-orange-50", iconColor: "text-orange-500" },
+      { label: "Consultations", description: "MODO step-by-step records", to: "/dashboard/consultations", icon: ClipboardList, tone: "bg-fuchsia-50", iconColor: "text-fuchsia-600" },
+      { label: "Patients", description: "Client list, history & files", to: "/dashboard/patients", icon: Users, tone: "bg-lime-50", iconColor: "text-lime-600" },
+      { label: "Reviews", description: "Moderate patient reviews", to: "/dashboard/reviews", icon: Star, tone: "bg-yellow-50", iconColor: "text-yellow-600" },
     ],
   },
   {
     title: "Payments",
     items: [
-      { label: "Payments & payouts", description: "Connect Stripe & manage bank details", to: "/dashboard/payments", icon: CreditCard, tone: "bg-lime-100 text-lime-700" },
+      { label: "Payments & payouts", description: "Connect Stripe & manage payouts", to: "/dashboard/payments", icon: CreditCard, tone: "bg-lime-50", iconColor: "text-lime-600" },
     ],
   },
 ];
@@ -80,21 +83,40 @@ const groups: {
 function MenuPage() {
   const { profile } = Route.useRouteContext() as { profile: { slug: string; clinic_name?: string | null } };
   const { admin } = Route.useLoaderData();
+  const [query, setQuery] = useState("");
+
+  const filtered = useMemo(() => {
+    if (!query.trim()) return groups;
+    const q = query.toLowerCase();
+    return groups
+      .map((g) => ({ ...g, items: g.items.filter((i) => i.label.toLowerCase().includes(q) || i.description.toLowerCase().includes(q)) }))
+      .filter((g) => g.items.length > 0);
+  }, [query]);
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
-      <div className="text-center sm:text-left">
-        <h1 className="text-2xl font-bold tracking-tight">Menu</h1>
-        <p className="text-sm text-muted-foreground">Manage every part of your clinic.</p>
+    <div className="mx-auto max-w-2xl space-y-6 px-1">
+      <div className="pt-2 text-center">
+        <h1 className="text-3xl font-extrabold tracking-tight">My Shop</h1>
+        <p className="mt-1 text-sm text-muted-foreground">{profile.clinic_name || "Manage your clinic"}</p>
       </div>
 
-      <Card className="overflow-hidden border-primary/20 bg-gradient-to-br from-primary/5 via-background to-background">
+      <div className="relative">
+        <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="What are you looking for?"
+          className="h-12 rounded-full border-muted-foreground/20 pl-11 pr-4 shadow-sm"
+        />
+      </div>
+
+      <Card className="overflow-hidden rounded-2xl border-primary/20 bg-gradient-to-br from-primary/5 via-background to-background shadow-sm">
         <CardContent className="flex items-center justify-between gap-3 p-4">
           <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Your booking link</p>
-            <p className="mt-1 truncate text-sm font-medium">/m/{profile.slug}</p>
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Your booking link</p>
+            <p className="mt-0.5 truncate text-sm font-semibold">/m/{profile.slug}</p>
           </div>
-          <Button size="sm" asChild>
+          <Button size="sm" asChild className="rounded-full">
             <a href={`/m/${profile.slug}`} target="_blank" rel="noreferrer">
               <ExternalLink className="mr-1.5 h-4 w-4" /> Open
             </a>
@@ -102,25 +124,25 @@ function MenuPage() {
         </CardContent>
       </Card>
 
-      {groups.map((g) => (
-        <section key={g.title} className="space-y-2">
-          <h2 className="px-1 text-xs font-bold uppercase tracking-wider text-muted-foreground">{g.title}</h2>
-          <div className="space-y-2">
+      {filtered.map((g) => (
+        <section key={g.title} className="space-y-3">
+          <h2 className="px-2 text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">{g.title}</h2>
+          <div className="space-y-3">
             {g.items.map((item) => (
               <Link
                 key={item.to}
                 to={item.to}
-                className="block rounded-2xl border bg-card p-3 shadow-sm transition active:scale-[0.99]"
+                className="group block rounded-2xl border border-muted-foreground/10 bg-card p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition hover:border-primary/30 hover:shadow-md active:scale-[0.99]"
               >
-                <div className="flex items-center gap-3">
-                  <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full ${item.tone}`}>
-                    <item.icon className="h-5 w-5" />
+                <div className="flex items-center gap-4">
+                  <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-full ring-1 ring-black/5 ${item.tone}`}>
+                    <item.icon className={`h-6 w-6 ${item.iconColor}`} />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-semibold leading-tight">{item.label}</p>
-                    <p className="truncate text-xs text-muted-foreground">{item.description}</p>
+                    <p className="truncate text-base font-semibold leading-tight">{item.label}</p>
+                    <p className="mt-0.5 truncate text-xs text-muted-foreground">{item.description}</p>
                   </div>
-                  <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
+                  <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground transition group-hover:translate-x-0.5" />
                 </div>
               </Link>
             ))}
@@ -129,16 +151,16 @@ function MenuPage() {
       ))}
 
       {admin && (
-        <section className="space-y-2">
-          <h2 className="px-1 text-xs font-bold uppercase tracking-wider text-muted-foreground">Platform</h2>
-          <Link to="/admin" className="block rounded-2xl border bg-card p-3 shadow-sm transition active:scale-[0.99]">
-            <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-slate-900 text-white">
-                <ShieldCheck className="h-5 w-5" />
+        <section className="space-y-3">
+          <h2 className="px-2 text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">Platform</h2>
+          <Link to="/admin" className="block rounded-2xl border border-muted-foreground/10 bg-card p-4 shadow-sm transition active:scale-[0.99]">
+            <div className="flex items-center gap-4">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-slate-900 text-white ring-1 ring-black/5">
+                <ShieldCheck className="h-6 w-6" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="truncate font-semibold leading-tight">Platform admin</p>
-                <p className="truncate text-xs text-muted-foreground">Practitioners, admins & invites</p>
+                <p className="truncate text-base font-semibold leading-tight">Platform admin</p>
+                <p className="mt-0.5 truncate text-xs text-muted-foreground">Practitioners, admins & invites</p>
               </div>
               <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
             </div>
@@ -148,11 +170,13 @@ function MenuPage() {
 
       <Button
         variant="outline"
-        className="w-full"
+        size="lg"
+        className="w-full rounded-full bg-rose-500 text-white hover:bg-rose-600 hover:text-white border-rose-500"
         onClick={() => supabase.auth.signOut()}
       >
-        <LogOut className="mr-2 h-4 w-4" /> Sign out
+        <LogOut className="mr-2 h-4 w-4" /> Log out
       </Button>
+      <div className="h-4" />
     </div>
   );
 }
