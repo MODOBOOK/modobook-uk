@@ -122,6 +122,11 @@ function BookPage() {
   const headingFont = theme?.heading_font || "Inter";
   const bodyFont = theme?.body_font || "Inter";
   const heroUrl = theme?.hero_image_url || profile.hero_url;
+  const carouselEnabled = !!(theme as { hero_carousel_enabled?: boolean } | null)?.hero_carousel_enabled;
+  const rawCarousel = (theme as { hero_carousel_urls?: unknown } | null)?.hero_carousel_urls;
+  const carouselUrls: string[] = Array.isArray(rawCarousel)
+    ? (rawCarousel as unknown[]).filter((x): x is string => typeof x === "string")
+    : [];
   // Menu styling
   const menuCardBg = theme?.menu_card_bg || "#ffffff";
   const menuCardBorder = theme?.menu_card_border_color || `${brand}1f`;
