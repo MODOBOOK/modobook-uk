@@ -111,38 +111,13 @@ function DashboardLayout() {
         {/* Mobile header — slim, just brand + preview */}
         <header className="flex h-14 items-center justify-between border-b px-4 lg:hidden">
           <div className="flex min-w-0 items-center gap-2">
-            <Sheet open={open} onOpenChange={setOpen}>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="lg:hidden">
-                  <Menu className="h-5 w-5" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="left" className="w-72 p-0">
-                <div className="flex h-16 items-center gap-2 border-b px-4">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                    <Store className="h-5 w-5" />
-                  </div>
-                  <span className="truncate text-sm font-semibold">{profile.clinic_name || "My Clinic"}</span>
-                </div>
-                <nav className="space-y-1 p-4">
-                  {navItems.map((item) => (
-                    <NavLink key={item.to} to={item.to} icon={item.icon} label={item.label} onClick={() => setOpen(false)} />
-                  ))}
-                </nav>
-                <div className="border-t p-4">
-                  <Button variant="ghost" className="w-full justify-start" onClick={signOut}>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Sign out
-                  </Button>
-                </div>
-              </SheetContent>
-            </Sheet>
             <span className="truncate text-sm font-semibold">{profile.clinic_name || "My Clinic"}</span>
           </div>
           <Button variant="outline" size="sm" asChild>
             <a href={`/m/${profile.slug}`} target="_blank" rel="noreferrer">Preview</a>
           </Button>
         </header>
+
 
         {/* Desktop header */}
         <header className="hidden h-20 items-center justify-between border-b border-border/60 px-10 lg:flex">
