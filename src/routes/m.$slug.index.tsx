@@ -240,9 +240,11 @@ function BookPage() {
 
   return (
     <main className="min-h-screen pb-16" style={pageStyle}>
-      {/* Hero image */}
+      {/* Hero image / carousel */}
       <div className="relative">
-        {heroUrl ? (
+        {carouselEnabled && carouselUrls.length > 0 ? (
+          <HeroCarousel urls={carouselUrls} />
+        ) : heroUrl ? (
           <img
             src={heroUrl}
             alt=""
