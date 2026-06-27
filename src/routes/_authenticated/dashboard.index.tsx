@@ -102,9 +102,9 @@ function DashboardIndex() {
             <CardDescription>Copy your booking link and share it with patients.</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center gap-2 rounded-md border bg-muted px-3 py-2 text-sm">
+            <div className="flex items-center gap-2 rounded-md border bg-muted px-3 py-2 text-sm min-w-0">
               <Link2 className="h-4 w-4 shrink-0 text-muted-foreground" />
-              <span className="truncate">{bookingUrl}</span>
+              <span className="truncate min-w-0 flex-1">{bookingUrl}</span>
             </div>
             <Button
               className="mt-4 w-full"
