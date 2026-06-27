@@ -270,7 +270,14 @@ function CodeEditor({ treatments, onSaved, editing, onClose }: {
             <div><Label>{kind === "percent" ? "Percent" : "Amount (£)"}</Label><Input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} /></div>
           </div>
           <div>
-            <Label className="mb-1 block">Treatments (leave empty = all)</Label>
+            <Label className="mb-1 block">Treatments</Label>
+            <div className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
+              <span>Leave empty to apply to all.</span>
+              <button type="button" className="font-medium underline"
+                onClick={() => setTIds(tIds.length === treatments.length ? [] : treatments.map((t) => t.id))}>
+                {tIds.length === treatments.length ? "Clear all" : "Select all"}
+              </button>
+            </div>
             <div className="max-h-40 space-y-1 overflow-y-auto rounded border p-2">
               {treatments.map((t) => (
                 <label key={t.id} className="flex items-center gap-2 text-sm">
@@ -281,6 +288,7 @@ function CodeEditor({ treatments, onSaved, editing, onClose }: {
               ))}
             </div>
           </div>
+
           <div className="grid grid-cols-2 gap-3">
             <div><Label>Starts</Label><Input type="date" value={start} onChange={(e) => setStart(e.target.value)} /></div>
             <div><Label>Ends</Label><Input type="date" value={end} onChange={(e) => setEnd(e.target.value)} /></div>
