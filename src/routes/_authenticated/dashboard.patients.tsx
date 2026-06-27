@@ -41,6 +41,8 @@ type Client = {
   group_name: string | null;
   notes: string | null;
   avatar_url: string | null;
+  has_allergies?: boolean | null;
+  allergies?: string | null;
 };
 
 type Appt = Awaited<ReturnType<typeof listMyAppointments>>[number];
@@ -64,6 +66,8 @@ const EMPTY_FORM: Omit<Client, "id"> = {
   group_name: "",
   notes: "",
   avatar_url: "",
+  has_allergies: false,
+  allergies: "",
 };
 
 function PatientsPage() {
