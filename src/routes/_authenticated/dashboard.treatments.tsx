@@ -129,6 +129,16 @@ function TreatmentsPage() {
     load();
   }, []);
 
+  const search = Route.useSearch();
+  useEffect(() => {
+    if (!search.edit || items.length === 0) return;
+    const t = items.find((x) => x.id === search.edit);
+    if (t) {
+      setEditing(t);
+      setOpen(true);
+    }
+  }, [search.edit, items]);
+
   async function handleSave(form: TreatmentForm) {
     try {
       const { consent_ids, addon_ids, ...rest } = form;
