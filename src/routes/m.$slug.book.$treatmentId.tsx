@@ -507,7 +507,10 @@ function BookTreatmentPage() {
       >
         {submitting ? "Booking…" : "Confirm booking"}
       </Button>
+      </>
+      )}
       </div>
+
     </main>
   );
 }
