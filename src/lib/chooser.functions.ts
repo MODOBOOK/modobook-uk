@@ -66,7 +66,7 @@ export const updateConcernArea = createServerFn({ method: "POST" })
     const update: Record<string, unknown> = {};
     if (data.name !== undefined) update.name = data.name;
     if (data.sort_order !== undefined) update.sort_order = data.sort_order;
-    const { error } = await supabase.from("concern_areas").update(update).eq("id", data.id);
+    const { error } = await supabase.from("concern_areas").update(update as never).eq("id", data.id);
     if (error) throw error;
     return { ok: true };
   });
@@ -108,7 +108,7 @@ export const updateConcern = createServerFn({ method: "POST" })
     if (data.name !== undefined) update.name = data.name;
     if (data.description !== undefined) update.description = data.description;
     if (data.area_id !== undefined) update.area_id = data.area_id;
-    const { error } = await context.supabase.from("concerns").update(update).eq("id", data.id);
+    const { error } = await context.supabase.from("concerns").update(update as never).eq("id", data.id);
     if (error) throw error;
     return { ok: true };
   });
