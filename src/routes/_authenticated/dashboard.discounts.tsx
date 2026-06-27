@@ -71,16 +71,21 @@ function DiscountsPage() {
           <TabsTrigger value="codes"><Tag className="mr-1.5 h-4 w-4" />Discount codes</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="menu" className="mt-4 space-y-3">
-          <p className="text-sm text-muted-foreground">Shows a strikethrough original price with the discounted price on your booking page.</p>
-          {loading && <p className="text-sm text-muted-foreground">Loading…</p>}
-          {treats.map((t) => (
-            <MenuDiscountRow key={t.id} treat={t} onSaved={refresh} />
-          ))}
-          {!loading && treats.length === 0 && (
-            <p className="text-sm text-muted-foreground">No treatments yet. Add some under Services.</p>
-          )}
+        <TabsContent value="menu" className="mt-4 space-y-4">
+          <BulkMenuDiscount treatments={treats} onSaved={refresh} />
+          <div className="space-y-2">
+            <p className="text-sm font-semibold">Per-treatment</p>
+            <p className="text-xs text-muted-foreground">Shows a strikethrough original price with the discounted price on your booking page.</p>
+            {loading && <p className="text-sm text-muted-foreground">Loading…</p>}
+            {treats.map((t) => (
+              <MenuDiscountRow key={t.id} treat={t} onSaved={refresh} />
+            ))}
+            {!loading && treats.length === 0 && (
+              <p className="text-sm text-muted-foreground">No treatments yet. Add some under Services.</p>
+            )}
+          </div>
         </TabsContent>
+
 
         <TabsContent value="codes" className="mt-4 space-y-3">
           <CodeEditor treatments={treats} onSaved={refresh} />
