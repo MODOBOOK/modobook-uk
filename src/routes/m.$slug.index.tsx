@@ -978,9 +978,95 @@ function BookPage() {
       >
         © {new Date().getFullYear()} {profile.clinic_name} · Powered by MODO Book
       </footer>
+
+      {/* Add-on prompt */}
+      {addonPrompt && (() => {
+        const parent = treatById.get(addonPrompt.treatmentId);
+        const addons = addonPrompt.addonIds
+          .map((id) => treatById.get(id))
+          .filter(Boolean) as Treatment[];
+        const close = (apply: boolean) => {
+          if (apply && addonPicks.size > 0) {
+            setSelectedIds((prev) => {
+              const next = [...prev];
+              for (const id of addonPicks) if (!next.includes(id)) next.push(id);
+              return next;
+            });
+          }
+          setAddonPrompt(null);
+          setAddonPicks(new Set());
+        };
+        return (
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-3" onClick={() => close(false)}>
+            <div className="w-full max-w-md rounded-2xl bg-background p-5 shadow-xl" onClick={(e) => e.stopPropagation()}>
+              <div className="mb-1 text-base font-semibold" style={{ color: textColor, fontFamily: headingFont }}>
+                Add to {parent?.name}?
+              </div>
+              <div className="mb-4 text-xs text-muted-foreground">
+                Pick any add-ons below or continue without.
+              </div>
+              <div className="space-y-2 max-h-[55vh] overflow-y-auto">
+                {addons.map((a) => {
+                  const checked = addonPicks.has(a.id);
+                  return (
+                    <button
+                      key={a.id}
+                      type="button"
+                      onClick={() => {
+                        setAddonPicks((prev) => {
+                          const n = new Set(prev);
+                          if (n.has(a.id)) n.delete(a.id); else n.add(a.id);
+                          return n;
+                        });
+                      }}
+                      className="flex w-full items-start justify-between gap-3 rounded-xl border p-3 text-left transition hover:shadow-sm"
+                      style={{
+                        backgroundColor: menuCardBg,
+                        borderColor: checked ? brand : menuCardBorder,
+                        boxShadow: checked ? `0 0 0 1.5px ${brand}` : undefined,
+                      }}
+                    >
+                      <div className="min-w-0">
+                        <div className="text-sm font-medium" style={{ color: menuNameColor }}>{a.name}</div>
+                        {a.description && (
+                          <div className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{a.description}</div>
+                        )}
+                        <div className="mt-1 text-[11px] text-muted-foreground">+{a.duration} min</div>
+                      </div>
+                      <div className="whitespace-nowrap text-sm font-semibold" style={{ color: menuPriceColor }}>
+                        +£{Number(a.price ?? 0).toFixed(2)}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                <button
+                  type="button"
+                  onClick={() => close(false)}
+                  className="rounded-full border px-4 py-2 text-sm"
+                  style={{ borderColor: menuCardBorder, color: textColor }}
+                >
+                  No thanks
+                </button>
+                <button
+                  type="button"
+                  onClick={() => close(true)}
+                  disabled={addonPicks.size === 0}
+                  className="rounded-full px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                  style={{ backgroundColor: brand }}
+                >
+                  Add {addonPicks.size > 0 ? `${addonPicks.size} ` : ""}add-on{addonPicks.size === 1 ? "" : "s"}
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </main>
   );
 }
+
 
 function ChooserCard({
   title,
