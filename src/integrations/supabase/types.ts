@@ -1765,6 +1765,7 @@ export type Database = {
           picture_url: string | null
           price: number
           profile_id: string
+          sort_order: number
           timing_notes: string | null
           updated_at: string
         }
@@ -1785,6 +1786,7 @@ export type Database = {
           picture_url?: string | null
           price: number
           profile_id: string
+          sort_order?: number
           timing_notes?: string | null
           updated_at?: string
         }
@@ -1805,6 +1807,7 @@ export type Database = {
           picture_url?: string | null
           price?: number
           profile_id?: string
+          sort_order?: number
           timing_notes?: string | null
           updated_at?: string
         }

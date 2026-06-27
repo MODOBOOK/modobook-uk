@@ -7,12 +7,16 @@ import {
   createCategory,
   updateCategory,
   deleteCategory,
+  reorderCategories,
 } from "@/lib/categories.functions";
+
 import {
   getMyTreatments,
   createTreatment,
   deleteTreatment,
+  reorderTreatments,
 } from "@/lib/treatments.functions";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -41,7 +45,10 @@ import {
   Search,
   Trash2,
   GripVertical,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
+
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/dashboard/services")({
@@ -104,6 +111,9 @@ function ServicesPage() {
   const removeCat = useServerFn(deleteCategory);
   const createTreat = useServerFn(createTreatment);
   const removeTreat = useServerFn(deleteTreatment);
+  const reorderCats = useServerFn(reorderCategories);
+  const reorderTreats = useServerFn(reorderTreatments);
+
 
   const cats = useQuery({ queryKey: ["my-categories"], queryFn: () => fetchCats() });
   const treats = useQuery({ queryKey: ["my-treatments"], queryFn: () => fetchTreats() });
@@ -151,6 +161,35 @@ function ServicesPage() {
     }
   }
 
+  async function moveCat(siblings: Cat[], id: string, dir: -1 | 1) {
+    const idx = siblings.findIndex((s) => s.id === id);
+    const swap = idx + dir;
+    if (idx < 0 || swap < 0 || swap >= siblings.length) return;
+    const next = siblings.slice();
+    [next[idx], next[swap]] = [next[swap], next[idx]];
+    try {
+      await reorderCats({ data: { ids: next.map((s) => s.id) } });
+      cats.refetch();
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  }
+
+  async function moveTreat(siblings: Treat[], id: string, dir: -1 | 1) {
+    const idx = siblings.findIndex((s) => s.id === id);
+    const swap = idx + dir;
+    if (idx < 0 || swap < 0 || swap >= siblings.length) return;
+    const next = siblings.slice();
+    [next[idx], next[swap]] = [next[swap], next[idx]];
+    try {
+      await reorderTreats({ data: { ids: next.map((s) => s.id) } });
+      treats.refetch();
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  }
+
+
   return (
     <div className="space-y-5">
       <div>
@@ -197,11 +236,13 @@ function ServicesPage() {
         </Card>
       ) : (
         <div className="divide-y rounded-2xl border bg-card">
-          {roots.map((node) => (
+          {roots.map((node, idx) => (
             <CategoryRow
               key={node.id}
               node={node}
               depth={0}
+              siblings={roots}
+              index={idx}
               matchTreat={matchTreat}
               onAddSub={(parentId) => setCatDialog({ mode: "create", parentId })}
               onEditCat={(c) =>
@@ -210,8 +251,11 @@ function ServicesPage() {
               onDeleteCat={handleDeleteCat}
               onAddService={(catId) => setSvcDialog({ defaultCatId: catId })}
               onDeleteTreat={handleDeleteTreat}
+              onMoveCat={moveCat}
+              onMoveTreat={moveTreat}
             />
           ))}
+
 
           {uncategorised.filter(matchTreat).length > 0 && (
             <div className="p-4">
@@ -277,21 +321,29 @@ function ServicesPage() {
 function CategoryRow({
   node,
   depth,
+  siblings,
+  index,
   matchTreat,
   onAddSub,
   onEditCat,
   onDeleteCat,
   onAddService,
   onDeleteTreat,
+  onMoveCat,
+  onMoveTreat,
 }: {
   node: CatNode;
   depth: number;
+  siblings: CatNode[];
+  index: number;
   matchTreat: (t: Treat) => boolean;
   onAddSub: (parentId: string) => void;
   onEditCat: (c: Cat) => void;
   onDeleteCat: (c: Cat) => void;
   onAddService: (catId: string) => void;
   onDeleteTreat: (t: Treat) => void;
+  onMoveCat: (siblings: Cat[], id: string, dir: -1 | 1) => void;
+  onMoveTreat: (siblings: Treat[], id: string, dir: -1 | 1) => void;
 }) {
   const [open, setOpen] = useState(depth === 0);
   const treatsHere = node.treatments.filter(matchTreat);
@@ -300,9 +352,29 @@ function CategoryRow({
   return (
     <div className="border-b-0">
       <div
-        className="flex w-full items-center gap-3 px-4 py-4"
+        className="flex w-full items-center gap-1 px-4 py-4 sm:gap-3"
         style={{ paddingLeft: 16 + depth * 16 }}
       >
+        <div className="flex flex-col">
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onMoveCat(siblings, node.id, -1); }}
+            disabled={index === 0}
+            className="rounded p-0.5 text-muted-foreground hover:bg-muted disabled:opacity-30"
+            aria-label="Move up"
+          >
+            <ArrowUp className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onMoveCat(siblings, node.id, 1); }}
+            disabled={index === siblings.length - 1}
+            className="rounded p-0.5 text-muted-foreground hover:bg-muted disabled:opacity-30"
+            aria-label="Move down"
+          >
+            <ArrowDown className="h-4 w-4" />
+          </button>
+        </div>
         <button
           type="button"
           onClick={() => setOpen((o) => !o)}
@@ -343,23 +415,32 @@ function CategoryRow({
 
       {open && (
         <div className="border-t bg-muted/10">
-          {treatsHere.map((t) => (
+          {treatsHere.map((t, ti) => (
             <div key={t.id} style={{ paddingLeft: 16 + (depth + 1) * 16 }} className="border-b py-2 pr-4">
-              <ServiceRow treat={t} onDelete={() => onDeleteTreat(t)} />
+              <ServiceRow
+                treat={t}
+                onDelete={() => onDeleteTreat(t)}
+                onMoveUp={ti === 0 ? undefined : () => onMoveTreat(treatsHere, t.id, -1)}
+                onMoveDown={ti === treatsHere.length - 1 ? undefined : () => onMoveTreat(treatsHere, t.id, 1)}
+              />
             </div>
           ))}
 
-          {node.children.map((child) => (
+          {node.children.map((child, ci) => (
             <CategoryRow
               key={child.id}
               node={child}
               depth={depth + 1}
+              siblings={node.children}
+              index={ci}
               matchTreat={matchTreat}
               onAddSub={onAddSub}
               onEditCat={onEditCat}
               onDeleteCat={onDeleteCat}
               onAddService={onAddService}
               onDeleteTreat={onDeleteTreat}
+              onMoveCat={onMoveCat}
+              onMoveTreat={onMoveTreat}
             />
           ))}
 
@@ -382,10 +463,42 @@ function CategoryRow({
 }
 
 
-function ServiceRow({ treat, onDelete }: { treat: Treat; onDelete: () => void }) {
+
+function ServiceRow({
+  treat,
+  onDelete,
+  onMoveUp,
+  onMoveDown,
+}: {
+  treat: Treat;
+  onDelete: () => void;
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
+}) {
   return (
-    <div className="flex items-center gap-3 py-1">
+    <div className="flex items-center gap-2 py-1">
+      <div className="flex flex-col">
+        <button
+          type="button"
+          onClick={onMoveUp}
+          disabled={!onMoveUp}
+          className="rounded p-0.5 text-muted-foreground hover:bg-muted disabled:opacity-30"
+          aria-label="Move service up"
+        >
+          <ArrowUp className="h-3.5 w-3.5" />
+        </button>
+        <button
+          type="button"
+          onClick={onMoveDown}
+          disabled={!onMoveDown}
+          className="rounded p-0.5 text-muted-foreground hover:bg-muted disabled:opacity-30"
+          aria-label="Move service down"
+        >
+          <ArrowDown className="h-3.5 w-3.5" />
+        </button>
+      </div>
       <GripVertical className="h-4 w-4 shrink-0 text-[hsl(var(--accent))]/70" />
+
       <div className="flex-1 min-w-0">
         <p className="truncate text-sm font-semibold text-[hsl(var(--primary))]">{treat.name}</p>
         <p className="text-xs text-muted-foreground">
