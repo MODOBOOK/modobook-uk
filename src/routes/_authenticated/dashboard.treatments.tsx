@@ -23,6 +23,7 @@ import { Plus, Trash2, Pencil, FileText, X, Tag, PlusCircle } from "lucide-react
 
 export const Route = createFileRoute("/_authenticated/dashboard/treatments")({
   ssr: false,
+  validateSearch: (s: Record<string, unknown>) => ({ edit: typeof s.edit === "string" ? s.edit : undefined }),
   component: TreatmentsPage,
 });
 
@@ -127,6 +128,16 @@ function TreatmentsPage() {
   useEffect(() => {
     load();
   }, []);
+
+  const search = Route.useSearch();
+  useEffect(() => {
+    if (!search.edit || items.length === 0) return;
+    const t = items.find((x) => x.id === search.edit);
+    if (t) {
+      setEditing(t);
+      setOpen(true);
+    }
+  }, [search.edit, items]);
 
   async function handleSave(form: TreatmentForm) {
     try {
