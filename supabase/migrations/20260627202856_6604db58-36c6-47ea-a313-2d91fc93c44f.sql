@@ -1,0 +1,1 @@
+ALTER TABLE public.treatments ADD COLUMN IF NOT EXISTS color text;

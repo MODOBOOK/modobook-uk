@@ -2121,6 +2121,7 @@ export type Database = {
           active: boolean | null
           allow_split_payment: boolean
           category_id: string | null
+          color: string | null
           consent_form_url: string | null
           created_at: string
           deductible_against: string[] | null
@@ -2149,6 +2150,7 @@ export type Database = {
           active?: boolean | null
           allow_split_payment?: boolean
           category_id?: string | null
+          color?: string | null
           consent_form_url?: string | null
           created_at?: string
           deductible_against?: string[] | null
@@ -2177,6 +2179,7 @@ export type Database = {
           active?: boolean | null
           allow_split_payment?: boolean
           category_id?: string | null
+          color?: string | null
           consent_form_url?: string | null
           created_at?: string
           deductible_against?: string[] | null
