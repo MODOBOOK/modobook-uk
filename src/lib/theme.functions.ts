@@ -59,7 +59,7 @@ export const upsertMyTheme = createServerFn({ method: "POST" })
     if (error) throw error;
 
     // Mirror visible bits onto the public profile so the /m/:slug page reflects them.
-    const profileUpdate: Record<string, string | null> = {};
+    const profileUpdate: { brand_color?: string | null; hero_url?: string | null } = {};
     if (data.primary_color !== undefined) profileUpdate.brand_color = data.primary_color;
     if (data.hero_image_url !== undefined) profileUpdate.hero_url = data.hero_image_url;
     if (Object.keys(profileUpdate).length > 0) {
