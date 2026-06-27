@@ -9,7 +9,7 @@ export const Route = createFileRoute("/_authenticated/dashboard/")({
 
 function DashboardIndex() {
   const { profile } = Route.useRouteContext();
-  const bookingUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/book/${profile.slug}`;
+  const bookingUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/m/${profile.slug}`;
 
   return (
     <div className="space-y-6">
