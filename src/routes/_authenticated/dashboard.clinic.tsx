@@ -15,7 +15,7 @@ export const Route = createFileRoute("/_authenticated/dashboard/clinic")({
 });
 
 function ClinicPage() {
-  const { profile } = Route.useRouteContext() as { profile: { clinic_name: string | null; tagline: string | null; about: string | null; phone: string | null; email: string | null; slug: string } };
+  const { profile } = Route.useRouteContext() as { profile: { id: string; clinic_name: string | null; tagline: string | null; about: string | null; phone: string | null; email: string | null; slug: string } };
   const router = useRouter();
   const update = useServerFn(updateProfile);
   const [clinicName, setClinicName] = useState(profile.clinic_name ?? "");
