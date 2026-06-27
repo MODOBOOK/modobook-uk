@@ -619,10 +619,10 @@ function BookPage() {
                   <TabsTrigger value="treatments">Treatments</TabsTrigger>
                   <TabsTrigger value="packages" disabled={packages.length === 0}>
                     <PackageIcon className="mr-1.5 h-4 w-4" />
-                    Packages {packages.length > 0 ? `(${packages.length})` : ""}
+                    Packages
                   </TabsTrigger>
                   <TabsTrigger value="concerns" disabled={concerns.length === 0}>
-                    By concern {concerns.length > 0 ? `(${concerns.length})` : ""}
+                    By concern
                   </TabsTrigger>
                 </TabsList>
 
