@@ -3,10 +3,12 @@ import { getPublicClinic } from "@/lib/public-clinic.functions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Clock, MapPin } from "lucide-react";
+import { Clock, MapPin, ExternalLink, Star } from "lucide-react";
+import { mapsUrl, formatAddress } from "@/lib/maps";
 import type { Database } from "@/integrations/supabase/types";
 type T = Database["public"]["Tables"]["treatments"]["Row"];
 type P = Database["public"]["Tables"]["packages"]["Row"];
+type L = Database["public"]["Tables"]["locations"]["Row"];
 
 export const Route = createFileRoute("/m/$slug/")({
   loader: async ({ params }) => getPublicClinic({ data: { slug: params.slug } }),
