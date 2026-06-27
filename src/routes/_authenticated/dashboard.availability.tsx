@@ -39,13 +39,31 @@ type Rule = {
 
 type Location = { id: string; name: string };
 
+type Override = {
+  id: string;
+  date: string;
+  start_time: string;
+  end_time: string;
+  slot_interval: number;
+  location_id: string | null;
+};
+type Blocked = { id: string; date: string; reason: string | null; location_id: string | null };
+
 function AvailabilityPage() {
   const list = useServerFn(listAvailabilityRules);
   const upsert = useServerFn(upsertAvailabilityRule);
   const del = useServerFn(deleteAvailabilityRule);
   const listLocs = useServerFn(listMyLocations);
+  const listOv = useServerFn(listAvailabilityOverrides);
+  const addOv = useServerFn(addAvailabilityOverride);
+  const delOv = useServerFn(deleteAvailabilityOverride);
+  const listBl = useServerFn(listBlockedDates);
+  const addBl = useServerFn(addBlockedDate);
+  const delBl = useServerFn(deleteBlockedDate);
 
   const [rules, setRules] = useState<Rule[]>([]);
+  const [overrides, setOverrides] = useState<Override[]>([]);
+  const [blocked, setBlocked] = useState<Blocked[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -55,12 +73,25 @@ function AvailabilityPage() {
   const [interval, setInterval] = useState("30");
   const [locationId, setLocationId] = useState<string>("none");
 
+  const today = new Date().toISOString().slice(0, 10);
+  const [ovDate, setOvDate] = useState(today);
+  const [ovStart, setOvStart] = useState("09:00");
+  const [ovEnd, setOvEnd] = useState("13:00");
+  const [ovInterval, setOvInterval] = useState("30");
+  const [ovLoc, setOvLoc] = useState<string>("none");
+
+  const [blDate, setBlDate] = useState(today);
+  const [blReason, setBlReason] = useState("");
+  const [blLoc, setBlLoc] = useState<string>("none");
+
   async function refresh() {
     setLoading(true);
     try {
-      const [r, l] = await Promise.all([list(), listLocs()]);
+      const [r, l, o, b] = await Promise.all([list(), listLocs(), listOv(), listBl()]);
       setRules(r as Rule[]);
       setLocations(l as Location[]);
+      setOverrides(o as Override[]);
+      setBlocked(b as Blocked[]);
     } finally {
       setLoading(false);
     }
@@ -69,6 +100,7 @@ function AvailabilityPage() {
   useEffect(() => {
     refresh();
   }, []);
+
 
   async function addRule(e: React.FormEvent) {
     e.preventDefault();
