@@ -39,10 +39,7 @@ export const ensurePatient = createServerFn({ method: "POST" })
     if (data.linkSlug) {
       const anon = publicClient();
       const { data: prof } = await anon
-        .from("profiles")
-        .select("id")
-        .eq("slug", data.linkSlug.toLowerCase())
-        .eq("active", true)
+        .rpc("get_public_profile_by_slug", { p_slug: data.linkSlug.toLowerCase() })
         .maybeSingle();
       if (prof) {
         await supabase
