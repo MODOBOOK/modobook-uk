@@ -1,8 +1,10 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getBookingContext, getDayAvailability, getMonthAvailability, requestBooking } from "@/lib/public-booking.functions";
+import { ensurePatient, getMyPatient } from "@/lib/patient.functions";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,11 +12,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
-import { Clock, MapPin, CheckCircle2 } from "lucide-react";
+import { Clock, MapPin, CheckCircle2, LogIn, UserPlus, UserCheck } from "lucide-react";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 type Rule = Database["public"]["Tables"]["availability_rules"]["Row"];
 type Loc = Database["public"]["Tables"]["locations"]["Row"];
+
 
 function toIsoDate(d: Date) {
   const y = d.getFullYear();
@@ -95,9 +98,42 @@ function BookTreatmentPage() {
   });
   const [submitting, setSubmitting] = useState(false);
 
+  // Patient auth gate: 'pending' until they pick a path
+  const [authChoice, setAuthChoice] = useState<"pending" | "guest" | "signed-in">("pending");
+  const [patientUserId, setPatientUserId] = useState<string | null>(null);
+  const ensure = useServerFn(ensurePatient);
+  const fetchPatient = useServerFn(getMyPatient);
+
+  // If the user is already signed in when arriving here, auto-skip the gate.
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        setPatientUserId(data.session.user.id);
+        setAuthChoice("signed-in");
+        try {
+          await ensure({ data: { fullName: data.session.user.email?.split("@")[0] ?? "Patient", linkSlug: slug } });
+          const p = await fetchPatient();
+          const pp = p.patient;
+          if (pp) {
+            setForm((f) => ({
+              ...f,
+              name: f.name || pp.full_name || "",
+              email: f.email || pp.email || data.session.user.email || "",
+              phone: f.phone || pp.phone || "",
+            }));
+          }
+
+        } catch {/* non-fatal */}
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const dayFn = useServerFn(getDayAvailability);
   const monthFn = useServerFn(getMonthAvailability);
   const reqFn = useServerFn(requestBooking);
+
 
   const monthQuery = useQuery({
     queryKey: ["monthAvail", ctx.profileId, month.getFullYear(), month.getMonth() + 1, locationId],
@@ -206,6 +242,8 @@ function BookTreatmentPage() {
           },
           notes: form.notes || undefined,
           basePrice: price,
+          patientUserId: patientUserId,
+
         },
       });
       setConfirmed({ id: res.id, consents: res.consents ?? [] });
@@ -361,7 +399,54 @@ function BookTreatmentPage() {
         </CardContent>
       </Card>
 
+      {authChoice === "pending" ? (
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="text-base" style={headingStyle}>Sign in to continue</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-sm opacity-70">
+              Create an account or sign in to track your appointments, leave reviews and view your notes after each visit.
+            </p>
+            <div className="grid gap-2 sm:grid-cols-3">
+              <Link
+                to="/m/$slug/auth"
+                params={{ slug }}
+                search={{ redirect: typeof window !== "undefined" ? window.location.pathname : undefined }}
+              >
+                <Button className="w-full" style={{ backgroundColor: brand, color: "#fff" }}>
+                  <LogIn className="mr-2 h-4 w-4" /> Sign in
+                </Button>
+              </Link>
+              <Link
+                to="/m/$slug/auth"
+                params={{ slug }}
+                search={{ tab: "signup", redirect: typeof window !== "undefined" ? window.location.pathname : undefined }}
+              >
+                <Button variant="outline" className="w-full" style={{ color: brand, borderColor: `${brand}55` }}>
+                  <UserPlus className="mr-2 h-4 w-4" /> Sign up
+                </Button>
+              </Link>
+              <Button
+                variant="ghost"
+                className="w-full"
+                style={{ color: brand }}
+                onClick={() => setAuthChoice("guest")}
+              >
+                Continue as guest
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+      <>
+      {authChoice === "signed-in" && (
+        <div className="mb-3 flex items-center gap-2 rounded-md border px-3 py-2 text-sm" style={{ borderColor: `${brand}33`, color: brand }}>
+          <UserCheck className="h-4 w-4" /> Signed in — this booking will be saved to your account.
+        </div>
+      )}
       <Card className="mb-6">
+
         <CardHeader>
           <CardTitle className="text-base" style={headingStyle}>Your details</CardTitle>
         </CardHeader>
@@ -422,7 +507,10 @@ function BookTreatmentPage() {
       >
         {submitting ? "Booking…" : "Confirm booking"}
       </Button>
+      </>
+      )}
       </div>
+
     </main>
   );
 }

@@ -4,8 +4,10 @@ import { useServerFn } from "@tanstack/react-start";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { listMyAppointments } from "@/lib/availability.functions";
+import { Textarea } from "@/components/ui/textarea";
+import { ChevronLeft, ChevronRight, Save } from "lucide-react";
+import { listMyAppointments, updateAppointmentNotes } from "@/lib/availability.functions";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/dashboard/bookings")({
   ssr: false,
@@ -24,9 +26,11 @@ type Appt = {
   payment_status: string;
   total_amount: number | null;
   notes: string | null;
+  practitioner_notes: string | null;
   treatments: { name: string } | null;
   locations: { name: string } | null;
 };
+
 
 function startOfMonth(d: Date) { return new Date(d.getFullYear(), d.getMonth(), 1); }
 function addMonths(d: Date, n: number) { return new Date(d.getFullYear(), d.getMonth() + n, 1); }
@@ -120,27 +124,49 @@ function BookingsPage() {
           {selectedAppts.length === 0 ? (
             <div className="text-sm text-muted-foreground">No bookings on this day.</div>
           ) : selectedAppts.map((a) => (
-            <div key={a.id} className="rounded border p-3 text-sm space-y-1">
-              <div className="flex items-center justify-between gap-3">
-                <div className="font-medium">{a.start_time.slice(0,5)} – {a.end_time.slice(0,5)} · {a.patient_name}</div>
-                <div className="flex gap-2">
-                  <Badge variant="outline">{a.status}</Badge>
-                  <Badge variant={a.payment_status === "paid" ? "default" : "secondary"}>{a.payment_status}</Badge>
-                </div>
-              </div>
-              <div className="text-muted-foreground">
-                {a.treatments?.name ?? "Treatment"}
-                {a.locations?.name && ` · ${a.locations.name}`}
-                {a.total_amount != null && ` · £${Number(a.total_amount).toFixed(2)}`}
-              </div>
-              {(a.patient_email || a.patient_phone) && (
-                <div className="text-xs text-muted-foreground">{[a.patient_email, a.patient_phone].filter(Boolean).join(" · ")}</div>
-              )}
-              {a.notes && <div className="text-xs">{a.notes}</div>}
-            </div>
+            <ApptRow key={a.id} a={a} onSaved={(notes) => setAppts((prev) => prev.map((x) => x.id === a.id ? { ...x, practitioner_notes: notes } : x))} />
           ))}
         </CardContent>
       </Card>
     </div>
   );
 }
+
+function ApptRow({ a, onSaved }: { a: Appt; onSaved: (notes: string) => void }) {
+  const update = useServerFn(updateAppointmentNotes);
+  const [notes, setNotes] = useState(a.practitioner_notes ?? "");
+  const [saving, setSaving] = useState(false);
+  return (
+    <div className="rounded border p-3 text-sm space-y-2">
+      <div className="flex items-center justify-between gap-3">
+        <div className="font-medium">{a.start_time.slice(0,5)} – {a.end_time.slice(0,5)} · {a.patient_name}</div>
+        <div className="flex gap-2">
+          <Badge variant="outline">{a.status}</Badge>
+          <Badge variant={a.payment_status === "paid" ? "default" : "secondary"}>{a.payment_status}</Badge>
+        </div>
+      </div>
+      <div className="text-muted-foreground">
+        {a.treatments?.name ?? "Treatment"}
+        {a.locations?.name && ` · ${a.locations.name}`}
+        {a.total_amount != null && ` · £${Number(a.total_amount).toFixed(2)}`}
+      </div>
+      {(a.patient_email || a.patient_phone) && (
+        <div className="text-xs text-muted-foreground">{[a.patient_email, a.patient_phone].filter(Boolean).join(" · ")}</div>
+      )}
+      {a.notes && <div className="text-xs"><span className="font-semibold">Patient notes:</span> {a.notes}</div>}
+      <div className="pt-2 border-t">
+        <div className="text-xs font-semibold mb-1">Notes for patient (visible in their account)</div>
+        <Textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Aftercare advice, follow-up, etc." />
+        <div className="mt-2 flex justify-end">
+          <Button size="sm" disabled={saving} onClick={async () => {
+            setSaving(true);
+            try { await update({ data: { id: a.id, practitionerNotes: notes } }); onSaved(notes); toast.success("Notes saved"); }
+            catch (e) { toast.error((e as Error).message); }
+            finally { setSaving(false); }
+          }}><Save className="h-3.5 w-3.5 mr-1" />Save</Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+

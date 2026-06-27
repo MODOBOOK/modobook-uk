@@ -149,6 +149,7 @@ export const requestBooking = createServerFn({ method: "POST" })
       } | null;
       notes?: string;
       basePrice: number;
+      patientUserId?: string | null;
     }) => input,
   )
   .handler(async ({ data }) => {
@@ -167,6 +168,7 @@ export const requestBooking = createServerFn({ method: "POST" })
       patient_phone: data.patientPhone ?? null,
       patient_dob: data.patientDob ?? null,
       patient_address: data.patientAddress ?? null,
+      patient_user_id: data.patientUserId ?? null,
       notes: data.notes ?? null,
       status: "confirmed",
       payment_status: "pending",
@@ -174,6 +176,7 @@ export const requestBooking = createServerFn({ method: "POST" })
       total_amount: data.basePrice,
     });
     if (error) throw new Error(error.message);
+
 
     // Create one appointment_consent row per consent template attached to the treatment
     const { data: links } = await sb
