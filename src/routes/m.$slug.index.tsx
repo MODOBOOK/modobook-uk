@@ -88,7 +88,7 @@ function BookPage() {
         <section className="mt-12">
           <h2 className="mb-4 text-xl font-semibold">Locations</h2>
           <div className="grid gap-4 sm:grid-cols-2">
-            {locations.map((loc) => {
+            {locations.map((loc: L) => {
               const url = mapsUrl(loc);
               const addr = formatAddress(loc);
               return (
