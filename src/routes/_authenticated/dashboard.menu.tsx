@@ -168,7 +168,7 @@ function MenuPage() {
           <h2 className="px-2 text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">Platform</h2>
           <Link to="/admin" className="block rounded-2xl border border-muted-foreground/10 bg-card p-4 shadow-sm transition active:scale-[0.99]">
             <div className="flex items-center gap-4">
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#3a2e26] text-[#f5ede1] ring-1 ring-black/5">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground ring-1 ring-black/5">
                 <ShieldCheck className="h-6 w-6" />
               </div>
               <div className="min-w-0 flex-1">
