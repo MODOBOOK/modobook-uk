@@ -15,10 +15,7 @@ export const getPractitionerBio = createServerFn({ method: "GET" })
   .handler(async ({ data }) => {
     const supabase = publicClient();
     const { data: profile, error } = await supabase
-      .from("profiles")
-      .select("id, slug, full_name, clinic_name, tagline, bio, about, avatar_url, hero_url, brand_color, address, social_links, specialties, qualifications, timeline, active")
-      .eq("slug", data.slug.toLowerCase())
-      .eq("active", true)
+      .rpc("get_public_profile_by_slug", { p_slug: data.slug.toLowerCase() })
       .maybeSingle();
     if (error) throw error;
     if (!profile) throw new Error("Practitioner not found");
@@ -30,17 +27,14 @@ export const getPractitionerReviews = createServerFn({ method: "GET" })
   .handler(async ({ data }) => {
     const supabase = publicClient();
     const { data: profile, error: pErr } = await supabase
-      .from("profiles")
-      .select("id, slug, clinic_name, full_name, brand_color, active")
-      .eq("slug", data.slug.toLowerCase())
-      .eq("active", true)
+      .rpc("get_public_profile_by_slug", { p_slug: data.slug.toLowerCase() })
       .maybeSingle();
     if (pErr) throw pErr;
     if (!profile) throw new Error("Practitioner not found");
 
     const { data: patientReviews } = await supabase
       .from("patient_reviews")
-      .select("id, rating, title, body, created_at, patient_id")
+      .select("id, rating, title, body, created_at")
       .eq("profile_id", profile.id)
       .eq("approved", true)
       .order("created_at", { ascending: false });

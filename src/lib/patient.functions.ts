@@ -39,10 +39,7 @@ export const ensurePatient = createServerFn({ method: "POST" })
     if (data.linkSlug) {
       const anon = publicClient();
       const { data: prof } = await anon
-        .from("profiles")
-        .select("id")
-        .eq("slug", data.linkSlug.toLowerCase())
-        .eq("active", true)
+        .rpc("get_public_profile_by_slug", { p_slug: data.linkSlug.toLowerCase() })
         .maybeSingle();
       if (prof) {
         await supabase
@@ -97,10 +94,7 @@ export const submitPatientReview = createServerFn({ method: "POST" })
 
     const anon = publicClient();
     const { data: prof, error: pErr } = await anon
-      .from("profiles")
-      .select("id")
-      .eq("slug", data.profileSlug.toLowerCase())
-      .eq("active", true)
+      .rpc("get_public_profile_by_slug", { p_slug: data.profileSlug.toLowerCase() })
       .maybeSingle();
     if (pErr) throw pErr;
     if (!prof) throw new Error("Practitioner not found");

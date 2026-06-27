@@ -143,10 +143,7 @@ export const getTreatmentsBySlug = createServerFn({ method: "GET" })
   .handler(async ({ data }) => {
     const supabase = getServerSupabasePublic();
     const { data: profile, error: pErr } = await supabase
-      .from("profiles")
-      .select("id")
-      .eq("slug", data.slug.toLowerCase())
-      .eq("active", true)
+      .rpc("get_public_profile_by_slug", { p_slug: data.slug.toLowerCase() })
       .single();
     if (pErr) throw pErr;
     const { data: treatments, error } = await supabase

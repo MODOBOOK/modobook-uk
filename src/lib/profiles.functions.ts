@@ -119,10 +119,7 @@ export const getProfileBySlug = createServerFn({ method: "GET" })
   .handler(async ({ data }) => {
     const supabase = getServerSupabasePublic();
     const { data: profile, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("slug", data.slug.toLowerCase())
-      .eq("active", true)
+      .rpc("get_public_profile_by_slug", { p_slug: data.slug.toLowerCase() })
       .single();
     if (error) throw error;
     return profile;
@@ -132,11 +129,12 @@ export const checkSlugAvailable = createServerFn({ method: "GET" })
   .inputValidator((input: { slug: string; excludeOwn?: string }) => input)
   .handler(async ({ data }) => {
     const supabase = getServerSupabasePublic();
-    let query = supabase.from("profiles").select("id").eq("slug", data.slug.toLowerCase());
-    if (data.excludeOwn) query = query.neq("id", data.excludeOwn);
-    const { data: rows, error } = await query.limit(1);
+    const { data: available, error } = await supabase.rpc("is_slug_available", {
+      p_slug: data.slug.toLowerCase(),
+      p_exclude_id: data.excludeOwn,
+    });
     if (error) throw error;
-    return { available: rows.length === 0 };
+    return { available: !!available };
   });
 
 export const updateStripeConnect = createServerFn({ method: "POST" })
