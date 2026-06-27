@@ -134,6 +134,46 @@ function AvailabilityPage() {
     }
   }
 
+  async function addOverride(e: React.FormEvent) {
+    e.preventDefault();
+    if (ovStart >= ovEnd) { toast.error("End time must be after start"); return; }
+    try {
+      await addOv({
+        data: {
+          date: ovDate, start_time: ovStart, end_time: ovEnd,
+          slot_interval: Number(ovInterval),
+          location_id: ovLoc === "none" ? null : ovLoc,
+        },
+      });
+      toast.success("One-off slot added");
+      await refresh();
+    } catch (err: any) { toast.error(err?.message ?? "Failed"); }
+  }
+  async function removeOverride(id: string) {
+    try { await delOv({ data: { id } }); await refresh(); }
+    catch (err: any) { toast.error(err?.message ?? "Failed"); }
+  }
+
+  async function addBlock(e: React.FormEvent) {
+    e.preventDefault();
+    try {
+      await addBl({
+        data: {
+          date: blDate,
+          reason: blReason || undefined,
+          location_id: blLoc === "none" ? null : blLoc,
+        },
+      });
+      toast.success("Day closed");
+      setBlReason("");
+      await refresh();
+    } catch (err: any) { toast.error(err?.message ?? "Failed"); }
+  }
+  async function removeBlock(id: string) {
+    try { await delBl({ data: { id } }); await refresh(); }
+    catch (err: any) { toast.error(err?.message ?? "Failed"); }
+  }
+
   const grouped = DAYS.map((label, i) => ({
     label,
     day: i,
