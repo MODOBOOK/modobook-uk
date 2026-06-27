@@ -1,18 +1,27 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { getPublicClinic } from "@/lib/public-clinic.functions";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Clock, MapPin, ExternalLink, Star, Check } from "lucide-react";
+import {
+  Instagram,
+  MapPin,
+  Share2,
+  Info,
+  Clock,
+  ExternalLink,
+  Star,
+  ChevronRight,
+} from "lucide-react";
 import { mapsUrl, formatAddress } from "@/lib/maps";
 import type { Database } from "@/integrations/supabase/types";
+import { toast } from "sonner";
 
 type Treatment = Database["public"]["Tables"]["treatments"]["Row"];
 type Package = Database["public"]["Tables"]["packages"]["Row"];
@@ -27,10 +36,7 @@ export const Route = createFileRoute("/m/$slug/")({
 
 type CatNode = Category & { children: CatNode[]; treatments: Treatment[] };
 
-function buildTree(categories: Category[], treatments: Treatment[]): {
-  roots: CatNode[];
-  uncategorised: Treatment[];
-} {
+function buildTree(categories: Category[], treatments: Treatment[]) {
   const map = new Map<string, CatNode>();
   categories.forEach((c) => map.set(c.id, { ...c, children: [], treatments: [] }));
   const roots: CatNode[] = [];
@@ -52,10 +58,26 @@ function buildTree(categories: Category[], treatments: Treatment[]): {
   return { roots, uncategorised };
 }
 
+function countTreatments(n: CatNode): number {
+  return n.treatments.length + n.children.reduce((s, c) => s + countTreatments(c), 0);
+}
+
 function BookPage() {
   const { profile, treatments, packages, locations, categories, pricing } =
     Route.useLoaderData() as {
-      profile: { clinic_name: string; tagline: string | null; hero_url: string | null; full_name: string | null; address: unknown };
+      profile: {
+        id: string;
+        clinic_name: string;
+        full_name: string | null;
+        tagline: string | null;
+        hero_url: string | null;
+        avatar_url: string | null;
+        about: string | null;
+        bio: string | null;
+        brand_color: string | null;
+        address: unknown;
+        social_links: { instagram?: string; facebook?: string; tiktok?: string } | null;
+      };
       treatments: Treatment[];
       packages: Package[];
       locations: Location[];
@@ -63,6 +85,7 @@ function BookPage() {
       pricing: Pricing[];
     };
   const { slug } = useParams({ from: "/m/$slug/" });
+  const brand = profile.brand_color || "#1f2a44";
 
   const [locationId, setLocationId] = useState<string | null>(
     locations.length === 1 ? locations[0].id : null,
@@ -70,26 +93,22 @@ function BookPage() {
 
   const priceFor = (t: Treatment) => {
     if (locationId) {
-      const override = pricing.find(
-        (p) => p.treatment_id === t.id && p.location_id === locationId,
-      );
-      if (override?.price_cents != null) return override.price_cents / 100;
+      const o = pricing.find((p) => p.treatment_id === t.id && p.location_id === locationId);
+      if (o?.price_cents != null) return o.price_cents / 100;
     }
     return Number(t.price ?? 0);
   };
   const durationFor = (t: Treatment) => {
     if (locationId) {
-      const override = pricing.find(
-        (p) => p.treatment_id === t.id && p.location_id === locationId,
-      );
-      if (override?.duration_minutes != null) return override.duration_minutes;
+      const o = pricing.find((p) => p.treatment_id === t.id && p.location_id === locationId);
+      if (o?.duration_minutes != null) return o.duration_minutes;
     }
     return t.duration ?? 0;
   };
   const isAvailableAtLocation = (t: Treatment) => {
     if (!locationId) return true;
     const rows = pricing.filter((p) => p.treatment_id === t.id);
-    if (rows.length === 0) return true; // no overrides = available everywhere
+    if (rows.length === 0) return true;
     return rows.some((p) => p.location_id === locationId && p.available);
   };
 
@@ -102,134 +121,230 @@ function BookPage() {
     [categories, visibleTreatments],
   );
 
-  const address = (profile.address as { line1?: string; city?: string; postcode?: string } | null) || {};
-  const addressText = [address.line1, address.city, address.postcode].filter(Boolean).join(", ");
+  const primaryLocation =
+    locations.find((l) => l.is_primary) ?? locations[0] ?? null;
+  const addressText = primaryLocation
+    ? formatAddress(primaryLocation)
+    : (() => {
+        const a = (profile.address ?? {}) as { line1?: string; city?: string; postcode?: string };
+        return [a.line1, a.city, a.postcode].filter(Boolean).join(", ");
+      })();
 
-  const selectedLocation = locations.find((l) => l.id === locationId) ?? null;
+  const ig = profile.social_links?.instagram;
+
+  async function handleShare() {
+    const url = typeof window !== "undefined" ? window.location.href : "";
+    try {
+      if (typeof navigator !== "undefined" && (navigator as Navigator & { share?: (d: ShareData) => Promise<void> }).share) {
+        await (navigator as Navigator & { share: (d: ShareData) => Promise<void> }).share({
+          title: profile.clinic_name,
+          url,
+        });
+      } else if (typeof navigator !== "undefined" && navigator.clipboard) {
+        await navigator.clipboard.writeText(url);
+        toast.success("Link copied");
+      }
+    } catch {
+      /* user cancelled */
+    }
+  }
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-10">
-      {profile.hero_url && (
-        <div className="mb-8 overflow-hidden rounded-2xl">
-          <img src={profile.hero_url} alt="" className="h-64 w-full object-cover sm:h-80" />
-        </div>
-      )}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">{profile.clinic_name}</h1>
-        {profile.tagline && <p className="mt-2 text-lg text-muted-foreground">{profile.tagline}</p>}
-        <div className="mt-3 flex flex-wrap gap-3 text-sm text-muted-foreground">
-          {addressText && <span className="inline-flex items-center gap-1"><MapPin className="h-4 w-4" />{addressText}</span>}
-        </div>
-        <div className="mt-4 flex gap-2">
-          <Link to="/m/$slug/about" params={{ slug }}><Button variant="outline" size="sm">About {profile.full_name?.split(" ")[0] ?? "practitioner"}</Button></Link>
-          <Link to="/m/$slug/reviews" params={{ slug }}><Button variant="outline" size="sm">Read reviews</Button></Link>
-        </div>
+    <main
+      className="pb-16"
+      style={{ ["--brand" as string]: brand } as React.CSSProperties}
+    >
+      {/* Hero */}
+      <div className="relative">
+        {profile.hero_url ? (
+          <img
+            src={profile.hero_url}
+            alt=""
+            className="h-72 w-full object-cover sm:h-96"
+          />
+        ) : (
+          <div
+            className="h-56 w-full sm:h-72"
+            style={{ background: `linear-gradient(135deg, ${brand}, ${brand}cc)` }}
+          />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
       </div>
 
-      {/* Step 1: Location */}
-      <section className="mb-10">
-        <h2 className="mb-3 text-xl font-semibold">
-          {locations.length > 1 ? "1. Choose a location" : "Location"}
-        </h2>
-        {locations.length === 0 ? (
-          <p className="text-muted-foreground">No locations have been set up yet.</p>
-        ) : (
+      {/* Overlapping profile card */}
+      <section className="mx-auto -mt-12 max-w-3xl px-4">
+        <Card className="overflow-hidden rounded-2xl border-0 shadow-xl">
+          <CardContent className="space-y-4 p-5 sm:p-6">
+            <div className="flex items-start gap-4">
+              {profile.avatar_url ? (
+                <img
+                  src={profile.avatar_url}
+                  alt={profile.full_name ?? profile.clinic_name}
+                  className="-mt-12 h-20 w-20 flex-shrink-0 rounded-full border-4 border-background object-cover shadow-md sm:-mt-14 sm:h-24 sm:w-24"
+                />
+              ) : null}
+              <div className="min-w-0 flex-1">
+                <h1
+                  className="truncate text-2xl font-bold leading-tight sm:text-3xl"
+                  style={{ color: brand }}
+                >
+                  {profile.clinic_name}
+                </h1>
+                {profile.tagline && (
+                  <p className="mt-1 text-sm text-muted-foreground">{profile.tagline}</p>
+                )}
+                {addressText && (
+                  <p className="mt-2 inline-flex items-start gap-1 text-sm text-muted-foreground">
+                    <MapPin className="mt-0.5 h-4 w-4 flex-shrink-0" />
+                    <span>{addressText}</span>
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Action icons */}
+            <div className="grid grid-cols-4 gap-2 border-t pt-4">
+              {ig && (
+                <ActionIcon
+                  href={ig.startsWith("http") ? ig : `https://instagram.com/${ig.replace("@", "")}`}
+                  label="Instagram"
+                  brand={brand}
+                >
+                  <Instagram className="h-5 w-5" />
+                </ActionIcon>
+              )}
+              {primaryLocation && mapsUrl(primaryLocation) && (
+                <ActionIcon href={mapsUrl(primaryLocation)!} label="Directions" brand={brand}>
+                  <MapPin className="h-5 w-5" />
+                </ActionIcon>
+              )}
+              <ActionButton onClick={handleShare} label="Share" brand={brand}>
+                <Share2 className="h-5 w-5" />
+              </ActionButton>
+              <ActionLink to="/m/$slug/about" params={{ slug }} label="About" brand={brand}>
+                <Info className="h-5 w-5" />
+              </ActionLink>
+            </div>
+          </CardContent>
+        </Card>
+      </section>
+
+      {/* Practitioner / locations */}
+      {locations.length > 0 && (
+        <section className="mx-auto mt-8 max-w-3xl px-4">
+          <h2 className="mb-3 text-lg font-bold" style={{ color: brand }}>
+            {locations.length > 1 ? "Choose a location" : "Your practitioner"}
+          </h2>
           <div className="grid gap-3 sm:grid-cols-2">
             {locations.map((loc) => {
-              const url = mapsUrl(loc);
-              const addr = formatAddress(loc);
               const selected = loc.id === locationId;
               return (
-                <Card
+                <button
                   key={loc.id}
-                  className={`cursor-pointer transition ${selected ? "border-primary ring-2 ring-primary" : "hover:border-primary/50"}`}
                   onClick={() => setLocationId(loc.id)}
+                  className="group flex flex-col items-center rounded-2xl border bg-card p-4 text-center transition hover:shadow-md"
+                  style={selected ? { borderColor: brand, boxShadow: `0 0 0 2px ${brand}33` } : undefined}
                 >
-                  <CardHeader className="pb-2">
-                    <CardTitle className="flex items-center justify-between text-base">
-                      <span className="flex items-center gap-2">
-                        {loc.name}
-                        {loc.is_primary && <Star className="h-4 w-4 fill-current text-yellow-500" />}
-                      </span>
-                      {selected && <Check className="h-5 w-5 text-primary" />}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    {addr && <p className="text-sm text-muted-foreground">{addr}</p>}
-                    {loc.phone && <p className="text-sm text-muted-foreground">{loc.phone}</p>}
-                    {url && (
-                      <a
-                        href={url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <Button variant="outline" size="sm" className="w-full">
-                          <MapPin className="mr-2 h-4 w-4" />
-                          Open in Maps
-                          <ExternalLink className="ml-2 h-3 w-3" />
-                        </Button>
-                      </a>
+                  {profile.avatar_url ? (
+                    <img
+                      src={profile.avatar_url}
+                      alt={profile.full_name ?? ""}
+                      className="h-24 w-24 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div
+                      className="flex h-24 w-24 items-center justify-center rounded-full text-2xl font-bold text-white"
+                      style={{ backgroundColor: brand }}
+                    >
+                      {(profile.full_name ?? profile.clinic_name).charAt(0)}
+                    </div>
+                  )}
+                  <div className="mt-3 font-semibold" style={{ color: brand }}>
+                    {profile.full_name ?? "Practitioner"}
+                  </div>
+                  <div className="text-sm font-medium uppercase tracking-wide" style={{ color: brand }}>
+                    {loc.name}
+                    {loc.is_primary && (
+                      <Star className="ml-1 inline h-3 w-3" fill="currentColor" />
                     )}
-                  </CardContent>
-                </Card>
+                  </div>
+                  {formatAddress(loc) && (
+                    <div className="mt-1 text-xs text-muted-foreground">
+                      {formatAddress(loc)}
+                    </div>
+                  )}
+                </button>
               );
             })}
           </div>
-        )}
-      </section>
+        </section>
+      )}
 
-      {/* Step 2: Treatments */}
+      {/* Treatments */}
       {locationId ? (
-        <section className="mb-12">
-          <h2 className="mb-3 text-xl font-semibold">
-            {locations.length > 1 ? "2. Choose a treatment" : "Choose a treatment"}
-            {selectedLocation && (
-              <span className="ml-2 text-sm font-normal text-muted-foreground">
-                at {selectedLocation.name}
-              </span>
-            )}
+        <section className="mx-auto mt-10 max-w-3xl px-4">
+          <h2 className="mb-4 text-xl font-bold" style={{ color: brand }}>
+            Book a treatment
           </h2>
           {visibleTreatments.length === 0 ? (
-            <p className="text-muted-foreground">No treatments available at this location.</p>
+            <p className="text-muted-foreground">No treatments available here yet.</p>
           ) : (
-            <>
+            <div className="space-y-2">
               {roots.length > 0 && (
-                <CategoryTree nodes={roots} slug={slug} priceFor={priceFor} durationFor={durationFor} />
+                <CategoryTree
+                  nodes={roots}
+                  slug={slug}
+                  priceFor={priceFor}
+                  durationFor={durationFor}
+                  brand={brand}
+                />
               )}
               {uncategorised.length > 0 && (
-                <div className="mt-6">
-                  {roots.length > 0 && <h3 className="mb-3 text-base font-semibold">Other treatments</h3>}
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    {uncategorised.map((t) => (
-                      <TreatmentCard key={t.id} t={t} slug={slug} price={priceFor(t)} duration={durationFor(t)} />
-                    ))}
-                  </div>
+                <div className="mt-4 space-y-2">
+                  {roots.length > 0 && (
+                    <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                      Other treatments
+                    </h3>
+                  )}
+                  {uncategorised.map((t) => (
+                    <TreatmentRow
+                      key={t.id}
+                      t={t}
+                      slug={slug}
+                      price={priceFor(t)}
+                      duration={durationFor(t)}
+                      brand={brand}
+                    />
+                  ))}
                 </div>
               )}
-            </>
+            </div>
           )}
         </section>
       ) : (
         locations.length > 1 && (
-          <p className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
-            Pick a location above to see available treatments.
-          </p>
+          <section className="mx-auto mt-8 max-w-3xl px-4">
+            <p className="rounded-2xl border border-dashed bg-muted/30 p-6 text-center text-sm text-muted-foreground">
+              Pick a location above to see available treatments.
+            </p>
+          </section>
         )
       )}
 
       {packages.length > 0 && locationId && (
-        <section className="mt-12">
-          <h2 className="mb-4 text-xl font-semibold">Packages</h2>
-          <div className="grid gap-4 sm:grid-cols-2">
+        <section className="mx-auto mt-10 max-w-3xl px-4">
+          <h2 className="mb-3 text-xl font-bold" style={{ color: brand }}>
+            Packages
+          </h2>
+          <div className="grid gap-3 sm:grid-cols-2">
             {packages.map((p) => (
-              <Card key={p.id}>
-                <CardHeader>
-                  <CardTitle className="text-base">{p.name}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground">{p.session_count} sessions</p>
-                  <p className="mt-1 font-semibold">£{Number(p.price ?? 0).toFixed(2)}</p>
+              <Card key={p.id} className="rounded-2xl">
+                <CardContent className="p-4">
+                  <div className="font-semibold" style={{ color: brand }}>{p.name}</div>
+                  <p className="mt-1 text-sm text-muted-foreground">{p.session_count} sessions</p>
+                  <p className="mt-2 font-bold" style={{ color: brand }}>
+                    £{Number(p.price ?? 0).toFixed(2)}
+                  </p>
                 </CardContent>
               </Card>
             ))}
@@ -240,67 +355,153 @@ function BookPage() {
   );
 }
 
+function ActionIcon({
+  href,
+  label,
+  brand,
+  children,
+}: {
+  href: string;
+  label: string;
+  brand: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex flex-col items-center gap-1.5 rounded-xl p-2 text-xs font-medium transition hover:bg-muted"
+      style={{ color: brand }}
+    >
+      {children}
+      <span>{label}</span>
+    </a>
+  );
+}
+
+function ActionButton({
+  onClick,
+  label,
+  brand,
+  children,
+}: {
+  onClick: () => void;
+  label: string;
+  brand: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className="flex flex-col items-center gap-1.5 rounded-xl p-2 text-xs font-medium transition hover:bg-muted"
+      style={{ color: brand }}
+    >
+      {children}
+      <span>{label}</span>
+    </button>
+  );
+}
+
+function ActionLink({
+  to,
+  params,
+  label,
+  brand,
+  children,
+}: {
+  to: "/m/$slug/about";
+  params: { slug: string };
+  label: string;
+  brand: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <Link
+      to={to}
+      params={params}
+      className="flex flex-col items-center gap-1.5 rounded-xl p-2 text-xs font-medium transition hover:bg-muted"
+      style={{ color: brand }}
+    >
+      {children}
+      <span>{label}</span>
+    </Link>
+  );
+}
+
 function CategoryTree({
   nodes,
   slug,
   priceFor,
   durationFor,
+  brand,
   depth = 0,
 }: {
   nodes: CatNode[];
   slug: string;
   priceFor: (t: Treatment) => number;
   durationFor: (t: Treatment) => number;
+  brand: string;
   depth?: number;
 }) {
-  // Hide empty categories (no treatments anywhere in subtree)
-  const hasContent = (n: CatNode): boolean =>
-    n.treatments.length > 0 || n.children.some(hasContent);
-  const visible = nodes.filter(hasContent);
+  const visible = nodes.filter(
+    (n) => n.treatments.length > 0 || n.children.some((c) => countTreatments(c) > 0),
+  );
   if (visible.length === 0) return null;
 
   return (
-    <Accordion type="multiple" className={depth === 0 ? "rounded-lg border" : ""}>
+    <Accordion
+      type="multiple"
+      className={
+        depth === 0
+          ? "divide-y rounded-2xl border bg-card"
+          : "divide-y border-t"
+      }
+    >
       {visible.map((node) => {
-        const count =
-          node.treatments.length +
-          node.children.reduce(
-            (sum, c) => sum + countTreatments(c),
-            0,
-          );
+        const count = countTreatments(node);
         return (
-          <AccordionItem key={node.id} value={node.id} className={depth === 0 ? "border-b last:border-b-0 px-2" : "border-none"}>
-            <AccordionTrigger className="hover:no-underline">
-              <span className="flex flex-1 items-center justify-between pr-2">
-                <span className="text-left font-medium">{node.name}</span>
-                <Badge variant="secondary" className="ml-2">{count}</Badge>
-              </span>
+          <AccordionItem key={node.id} value={node.id} className="border-b-0 px-4">
+            <AccordionTrigger className="py-4 hover:no-underline">
+              <div className="flex-1 text-left">
+                <div
+                  className="text-base font-bold sm:text-lg"
+                  style={{ color: brand }}
+                >
+                  {node.icon ? `${node.icon} ` : ""}
+                  {node.name}
+                </div>
+                {node.description && (
+                  <div className="mt-0.5 text-sm font-normal text-muted-foreground">
+                    {node.description}
+                  </div>
+                )}
+                <div className="mt-1 text-xs font-normal text-muted-foreground">
+                  {count} {count === 1 ? "option" : "options"}
+                </div>
+              </div>
             </AccordionTrigger>
-            <AccordionContent className="space-y-3 pb-3">
-              {node.treatments.length > 0 && (
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {node.treatments.map((t) => (
-                    <TreatmentCard
-                      key={t.id}
-                      t={t}
-                      slug={slug}
-                      price={priceFor(t)}
-                      duration={durationFor(t)}
-                    />
-                  ))}
-                </div>
-              )}
+            <AccordionContent className="space-y-2 pb-4">
               {node.children.length > 0 && (
-                <div className={depth === 0 ? "ml-2 border-l pl-3" : "ml-2 border-l pl-3"}>
-                  <CategoryTree
-                    nodes={node.children}
-                    slug={slug}
-                    priceFor={priceFor}
-                    durationFor={durationFor}
-                    depth={depth + 1}
-                  />
-                </div>
+                <CategoryTree
+                  nodes={node.children}
+                  slug={slug}
+                  priceFor={priceFor}
+                  durationFor={durationFor}
+                  brand={brand}
+                  depth={depth + 1}
+                />
               )}
+              {node.treatments.map((t) => (
+                <TreatmentRow
+                  key={t.id}
+                  t={t}
+                  slug={slug}
+                  price={priceFor(t)}
+                  duration={durationFor(t)}
+                  brand={brand}
+                />
+              ))}
             </AccordionContent>
           </AccordionItem>
         );
@@ -309,38 +510,51 @@ function CategoryTree({
   );
 }
 
-function countTreatments(n: CatNode): number {
-  return n.treatments.length + n.children.reduce((s, c) => s + countTreatments(c), 0);
-}
-
-function TreatmentCard({
+function TreatmentRow({
   t,
   slug,
   price,
   duration,
+  brand,
 }: {
   t: Treatment;
   slug: string;
   price: number;
   duration: number;
+  brand: string;
 }) {
   return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-base">{t.name}</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        {t.description && <p className="text-sm text-muted-foreground">{t.description}</p>}
-        <div className="flex items-center justify-between text-sm">
-          <span className="inline-flex items-center gap-1 text-muted-foreground">
-            <Clock className="h-4 w-4" />{duration} min
-          </span>
-          <Badge variant="secondary">£{price.toFixed(2)}</Badge>
+    <Link
+      to="/m/$slug/book/$treatmentId"
+      params={{ slug, treatmentId: t.id }}
+      className="group flex items-center justify-between gap-3 rounded-xl border bg-card p-3 transition hover:shadow-sm"
+    >
+      <div className="min-w-0 flex-1">
+        <div className="truncate font-semibold" style={{ color: brand }}>
+          {t.name}
         </div>
-        <Link to="/m/$slug/book/$treatmentId" params={{ slug, treatmentId: t.id }} className="block">
-          <Button className="w-full">Book</Button>
-        </Link>
-      </CardContent>
-    </Card>
+        {t.description && (
+          <div className="mt-0.5 line-clamp-2 text-sm text-muted-foreground">
+            {t.description}
+          </div>
+        )}
+        <div className="mt-1.5 flex items-center gap-3 text-sm text-muted-foreground">
+          <span className="inline-flex items-center gap-1">
+            <Clock className="h-3.5 w-3.5" />
+            {duration} min
+          </span>
+          <span className="font-semibold" style={{ color: brand }}>
+            {price === 0 ? "Free" : `£${price.toFixed(2)}`}
+          </span>
+        </div>
+      </div>
+      <div
+        className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-white transition group-hover:scale-105"
+        style={{ backgroundColor: brand }}
+        aria-label="Book"
+      >
+        <ChevronRight className="h-5 w-5" />
+      </div>
+    </Link>
   );
 }
