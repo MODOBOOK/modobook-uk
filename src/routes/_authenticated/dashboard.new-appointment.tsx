@@ -1,9 +1,12 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { getMyProfile } from "@/lib/profiles.functions";
 import { createAppointmentForPatient } from "@/lib/appointments.functions";
 import { createPaymentLink } from "@/lib/payment-links.functions";
+import { listClients } from "@/lib/clients.functions";
+import { listConsentTemplates } from "@/lib/templates.functions";
+import { listMedicalTemplates } from "@/lib/templates.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +15,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Check, ChevronsUpDown, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 
 
@@ -53,6 +59,18 @@ function NewAppointmentPage() {
   const [depositHours, setDepositHours] = useState("24");
   const createLink = useServerFn(createPaymentLink);
 
+  type ClientRow = { id: string; full_name: string; email: string | null; phone: string | null; dob: string | null; address: string | null };
+  type TemplateRow = { id: string; name: string };
+  const [clients, setClients] = useState<ClientRow[]>([]);
+  const [clientId, setClientId] = useState<string>("");
+  const [clientPickerOpen, setClientPickerOpen] = useState(false);
+  const [consentTemplates, setConsentTemplates] = useState<TemplateRow[]>([]);
+  const [medicalTemplates, setMedicalTemplates] = useState<TemplateRow[]>([]);
+  const [pickedConsentIds, setPickedConsentIds] = useState<Set<string>>(new Set());
+  const [pickedMedicalIds, setPickedMedicalIds] = useState<Set<string>>(new Set());
+  const fetchClients = useServerFn(listClients);
+  const fetchConsents = useServerFn(listConsentTemplates);
+  const fetchMedical = useServerFn(listMedicalTemplates);
 
   useEffect(() => {
     (async () => {
@@ -69,8 +87,43 @@ function NewAppointmentPage() {
         .eq("profile_id", profile.id)
         .eq("active", true);
       setLocations(l ?? []);
+      try {
+        const [cs, cons, meds] = await Promise.all([
+          fetchClients() as Promise<ClientRow[]>,
+          fetchConsents() as Promise<TemplateRow[]>,
+          fetchMedical() as Promise<TemplateRow[]>,
+        ]);
+        setClients(cs ?? []);
+        setConsentTemplates((cons ?? []).map((r) => ({ id: r.id, name: r.name })));
+        setMedicalTemplates((meds ?? []).map((r) => ({ id: r.id, name: r.name })));
+      } catch { /* ignore */ }
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile.id]);
+
+  const selectedClient = useMemo(() => clients.find((c) => c.id === clientId) ?? null, [clients, clientId]);
+
+  function applyClient(c: ClientRow | null) {
+    setClientId(c?.id ?? "");
+    if (!c) return;
+    setPatientName(c.full_name ?? "");
+    setPatientEmail(c.email ?? "");
+    setPatientPhone(c.phone ?? "");
+    setPatientDob(c.dob ?? "");
+    if (c.address) {
+      setAddrLine1(c.address);
+    }
+    setClientPickerOpen(false);
+  }
+
+  function toggle(setter: React.Dispatch<React.SetStateAction<Set<string>>>, id: string) {
+    setter((prev) => {
+      const n = new Set(prev);
+      if (n.has(id)) n.delete(id); else n.add(id);
+      return n;
+    });
+  }
+
 
   const treatment = treatments.find((t) => t.id === treatmentId);
   const duration = treatment?.duration ?? 30;
@@ -161,6 +214,8 @@ function NewAppointmentPage() {
             : null,
           notes: notes || undefined,
           basePrice: Number(treatment.price ?? 0),
+          extraConsentTemplateIds: [...pickedConsentIds],
+          medicalFormTemplateIds: [...pickedMedicalIds],
         },
       });
       const manageUrl = result.manageToken
@@ -291,6 +346,45 @@ function NewAppointmentPage() {
         <CardHeader><CardTitle>Patient details</CardTitle></CardHeader>
         <CardContent className="space-y-3">
           <div>
+            <Label>Existing patient</Label>
+            <div className="flex items-center gap-2">
+              <Popover open={clientPickerOpen} onOpenChange={setClientPickerOpen}>
+                <PopoverTrigger asChild>
+                  <Button type="button" variant="outline" role="combobox" className="flex-1 justify-between font-normal">
+                    {selectedClient ? selectedClient.full_name : "Search your clients…"}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                  <Command>
+                    <CommandInput placeholder="Search by name, email…" />
+                    <CommandList>
+                      <CommandEmpty>No patients found.</CommandEmpty>
+                      <CommandGroup>
+                        {clients.map((c) => (
+                          <CommandItem key={c.id} value={`${c.full_name} ${c.email ?? ""} ${c.phone ?? ""}`} onSelect={() => applyClient(c)}>
+                            <Check className={`mr-2 h-4 w-4 ${clientId === c.id ? "opacity-100" : "opacity-0"}`} />
+                            <div className="min-w-0">
+                              <div className="truncate font-medium">{c.full_name}</div>
+                              <div className="truncate text-xs text-muted-foreground">{c.email ?? c.phone ?? ""}</div>
+                            </div>
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+              {selectedClient && (
+                <Button type="button" variant="ghost" size="sm" onClick={() => applyClient(null)}>Clear</Button>
+              )}
+            </div>
+            <p className="mt-1 flex items-center gap-1 text-[11px] text-muted-foreground">
+              <UserPlus className="h-3 w-3" /> Or fill in the fields below to book a new patient.
+            </p>
+          </div>
+
+          <div>
             <Label>Full name *</Label>
             <Input value={patientName} onChange={(e) => setPatientName(e.target.value)} />
           </div>
@@ -328,6 +422,55 @@ function NewAppointmentPage() {
           </div>
         </CardContent>
       </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Send forms with confirmation</CardTitle>
+          <p className="text-xs text-muted-foreground">
+            Forms linked to the treatment send automatically. Tick any extras to include in the patient's confirmation email.
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label className="text-xs uppercase tracking-wide text-muted-foreground">Medical forms</Label>
+            {medicalTemplates.length === 0 ? (
+              <p className="text-xs text-muted-foreground">No medical forms yet. Create one under Forms.</p>
+            ) : (
+              <div className="mt-1 space-y-1">
+                {medicalTemplates.map((m) => (
+                  <label key={m.id} className="flex items-center gap-2 rounded-md border px-3 py-2 text-sm">
+                    <Checkbox
+                      checked={pickedMedicalIds.has(m.id)}
+                      onCheckedChange={() => toggle(setPickedMedicalIds, m.id)}
+                    />
+                    <span className="truncate">{m.name}</span>
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
+          <div>
+            <Label className="text-xs uppercase tracking-wide text-muted-foreground">Consent forms</Label>
+            {consentTemplates.length === 0 ? (
+              <p className="text-xs text-muted-foreground">No consent forms yet.</p>
+            ) : (
+              <div className="mt-1 space-y-1">
+                {consentTemplates.map((c) => (
+                  <label key={c.id} className="flex items-center gap-2 rounded-md border px-3 py-2 text-sm">
+                    <Checkbox
+                      checked={pickedConsentIds.has(c.id)}
+                      onCheckedChange={() => toggle(setPickedConsentIds, c.id)}
+                    />
+                    <span className="truncate">{c.name}</span>
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+
 
       <Card>
         <CardHeader><CardTitle>Deposit (optional)</CardTitle></CardHeader>

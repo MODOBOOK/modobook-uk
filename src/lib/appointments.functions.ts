@@ -27,6 +27,8 @@ export const createAppointmentForPatient = createServerFn({ method: "POST" })
       patientAddress?: Record<string, string> | null;
       notes?: string;
       basePrice: number;
+      extraConsentTemplateIds?: string[];
+      medicalFormTemplateIds?: string[];
     }) => input,
   )
   .handler(async ({ data, context }) => {
@@ -61,18 +63,30 @@ export const createAppointmentForPatient = createServerFn({ method: "POST" })
     });
     if (error) throw new Error(error.message);
 
-    // Auto-create consents
+    // Auto-create consents from treatment links
     const { data: links } = await supabase
       .from("treatment_consents")
       .select("consent_template_id")
       .eq("treatment_id", data.treatmentId);
-    if (links && links.length > 0) {
-      const rows = links.map((l) => ({
+    const consentIds = new Set<string>((links ?? []).map((l) => l.consent_template_id));
+    for (const cid of data.extraConsentTemplateIds ?? []) consentIds.add(cid);
+    if (consentIds.size > 0) {
+      const rows = [...consentIds].map((cid) => ({
         appointment_id: id,
-        consent_template_id: l.consent_template_id,
+        consent_template_id: cid,
         profile_id: profile.id,
       }));
       await supabase.from("appointment_consents").insert(rows);
+    }
+
+    // Manually attach extra medical forms (treatment-linked ones added by trigger)
+    if ((data.medicalFormTemplateIds ?? []).length > 0) {
+      const rows = (data.medicalFormTemplateIds ?? []).map((tid) => ({
+        appointment_id: id,
+        template_id: tid,
+        profile_id: profile.id,
+      }));
+      await supabase.from("appointment_medical_forms").insert(rows);
     }
 
     // Pull manage_token for confirmation link
