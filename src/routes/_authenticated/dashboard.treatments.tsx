@@ -8,6 +8,7 @@ import {
   setTreatmentConsents,
   listMyConsentTemplates,
 } from "@/lib/treatment-consents.functions";
+import { getTreatmentAddons, setTreatmentAddons } from "@/lib/treatment-addons.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -18,7 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Plus, Trash2, Pencil, FileText, X } from "lucide-react";
+import { Plus, Trash2, Pencil, FileText, X, Tag, PlusCircle } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard/treatments")({
   ssr: false,
@@ -33,6 +34,12 @@ type Treatment = {
   description: string | null;
   active: boolean;
   category_id: string | null;
+  addon_mode?: "off" | "optional" | null;
+  discount_percent?: number | null;
+  discount_starts_at?: string | null;
+  discount_ends_at?: string | null;
+  discount_show_was_now?: boolean | null;
+  discount_label?: string | null;
 };
 
 type Category = {
@@ -50,9 +57,17 @@ type TreatmentForm = {
   category_id: string | null;
   active: boolean;
   consent_ids: string[];
+  addon_ids: string[];
+  addon_mode: "off" | "optional";
+  discount_percent: number | null;
+  discount_starts_at: string | null;
+  discount_ends_at: string | null;
+  discount_show_was_now: boolean;
+  discount_label: string | null;
 };
 
 type ConsentTpl = { id: string; name: string; treatment_type: string | null; is_system: boolean };
+
 
 function buildCategoryPaths(cats: Category[]) {
   const byId = new Map(cats.map((c) => [c.id, c]));
@@ -80,6 +95,8 @@ function TreatmentsPage() {
   const remove = useServerFn(deleteTreatment);
   const listConsents = useServerFn(listMyConsentTemplates);
   const setConsents = useServerFn(setTreatmentConsents);
+  const setAddons = useServerFn(setTreatmentAddons);
+
   const [items, setItems] = useState<Treatment[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [consentTemplates, setConsentTemplates] = useState<ConsentTpl[]>([]);
@@ -113,18 +130,30 @@ function TreatmentsPage() {
 
   async function handleSave(form: TreatmentForm) {
     try {
-      const { consent_ids, ...rest } = form;
+      const { consent_ids, addon_ids, ...rest } = form;
       let id: string;
       if (editing) {
         await update({ data: { id: editing.id, ...rest } });
         id = editing.id;
         toast.success("Treatment updated");
       } else {
-        const created = await create({ data: rest });
+        // create only accepts the legacy fields; send those, then patch the rest
+        const created = await create({
+          data: {
+            name: rest.name,
+            duration: rest.duration,
+            price: rest.price,
+            description: rest.description,
+            category_id: rest.category_id,
+            active: rest.active,
+          },
+        });
         id = (created as { id: string }).id;
+        await update({ data: { id, ...rest } });
         toast.success("Treatment created");
       }
       await setConsents({ data: { treatmentId: id, consentTemplateIds: consent_ids } });
+      await setAddons({ data: { treatmentId: id, addonIds: addon_ids } });
       setOpen(false);
       setEditing(null);
       load();
@@ -132,6 +161,7 @@ function TreatmentsPage() {
       toast.error(e instanceof Error ? e.message : "Failed to save");
     }
   }
+
 
   async function handleDelete(id: string) {
     if (!confirm("Delete this treatment?")) return;
@@ -177,8 +207,10 @@ function TreatmentsPage() {
             treatment={editing}
             categories={categories}
             consentTemplates={consentTemplates}
+            allTreatments={items}
             onSave={handleSave}
           />
+
 
         </Dialog>
       </div>
@@ -229,27 +261,45 @@ function TreatmentDialog({
   treatment,
   categories,
   consentTemplates,
+  allTreatments,
   onSave,
 }: {
   treatment: Treatment | null;
   categories: Category[];
   consentTemplates: ConsentTpl[];
+  allTreatments: Treatment[];
   onSave: (f: TreatmentForm) => void;
 }) {
   const fetchConsents = useServerFn(getTreatmentConsents);
+  const fetchAddons = useServerFn(getTreatmentAddons);
   const [name, setName] = useState(treatment?.name ?? "");
   const [duration, setDuration] = useState(treatment?.duration ?? 30);
   const [price, setPrice] = useState(treatment?.price ?? 0);
   const [description, setDescription] = useState(treatment?.description ?? "");
   const [active, setActive] = useState(treatment?.active ?? true);
   const [consentIds, setConsentIds] = useState<string[]>([]);
+  const [addonIds, setAddonIds] = useState<string[]>([]);
+  const [addonMode, setAddonMode] = useState<"off" | "optional">(
+    (treatment?.addon_mode as "off" | "optional") ?? "optional",
+  );
+  const [discountPercent, setDiscountPercent] = useState<number | "">(
+    treatment?.discount_percent ?? "",
+  );
+  const [discountStartsAt, setDiscountStartsAt] = useState<string>(
+    treatment?.discount_starts_at ? treatment.discount_starts_at.slice(0, 16) : "",
+  );
+  const [discountEndsAt, setDiscountEndsAt] = useState<string>(
+    treatment?.discount_ends_at ? treatment.discount_ends_at.slice(0, 16) : "",
+  );
+  const [discountShowWasNow, setDiscountShowWasNow] = useState<boolean>(
+    treatment?.discount_show_was_now ?? true,
+  );
+  const [discountLabel, setDiscountLabel] = useState<string>(treatment?.discount_label ?? "");
 
-  // Two-step category picker: parent category + optional subcategory
   const topLevel = useMemo(() => categories.filter((c) => !c.parent_id), [categories]);
   const childrenOf = (parentId: string | null) =>
     parentId ? categories.filter((c) => c.parent_id === parentId) : [];
 
-  // Resolve initial category/subcategory from treatment.category_id (which may be a sub or parent)
   const initial = useMemo(() => {
     const id = treatment?.category_id ?? null;
     if (!id) return { parent: null as string | null, sub: null as string | null };
@@ -270,22 +320,34 @@ function TreatmentDialog({
     setActive(treatment?.active ?? true);
     setParentId(initial.parent);
     setSubId(initial.sub);
+    setAddonMode((treatment?.addon_mode as "off" | "optional") ?? "optional");
+    setDiscountPercent(treatment?.discount_percent ?? "");
+    setDiscountStartsAt(treatment?.discount_starts_at ? treatment.discount_starts_at.slice(0, 16) : "");
+    setDiscountEndsAt(treatment?.discount_ends_at ? treatment.discount_ends_at.slice(0, 16) : "");
+    setDiscountShowWasNow(treatment?.discount_show_was_now ?? true);
+    setDiscountLabel(treatment?.discount_label ?? "");
     if (treatment?.id) {
       fetchConsents({ data: { treatmentId: treatment.id } })
         .then((ids) => setConsentIds(ids as string[]))
         .catch(() => setConsentIds([]));
+      fetchAddons({ data: { treatmentId: treatment.id } })
+        .then((ids) => setAddonIds(ids as string[]))
+        .catch(() => setAddonIds([]));
     } else {
       setConsentIds([]);
+      setAddonIds([]);
     }
-  }, [treatment, fetchConsents, initial.parent, initial.sub]);
+  }, [treatment, fetchConsents, fetchAddons, initial.parent, initial.sub]);
 
   function toggleConsent(id: string) {
-    setConsentIds((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
-    );
+    setConsentIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  }
+  function toggleAddon(id: string) {
+    setAddonIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   }
 
   const subOptions = childrenOf(parentId);
+  const addonCandidates = allTreatments.filter((t) => t.id !== treatment?.id && t.active);
 
   return (
     <DialogContent className="max-h-[90vh] overflow-y-auto">
@@ -309,29 +371,18 @@ function TreatmentDialog({
           {parentId ? (
             <div className="flex items-center justify-between rounded-md border px-3 py-2 text-sm">
               <span>{categories.find((c) => c.id === parentId)?.name}</span>
-              <Button
-                type="button"
-                size="icon"
-                variant="ghost"
-                onClick={() => { setParentId(null); setSubId(null); }}
-              >
+              <Button type="button" size="icon" variant="ghost" onClick={() => { setParentId(null); setSubId(null); }}>
                 <X className="h-4 w-4" />
               </Button>
             </div>
           ) : (
             <Select onValueChange={(v) => { setParentId(v); setSubId(null); }}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a category" />
-              </SelectTrigger>
+              <SelectTrigger><SelectValue placeholder="Select a category" /></SelectTrigger>
               <SelectContent>
                 {topLevel.length === 0 ? (
-                  <div className="px-3 py-2 text-sm text-muted-foreground">
-                    No categories yet — create one in Categories.
-                  </div>
+                  <div className="px-3 py-2 text-sm text-muted-foreground">No categories yet — create one in Categories.</div>
                 ) : (
-                  topLevel.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                  ))
+                  topLevel.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)
                 )}
               </SelectContent>
             </Select>
@@ -349,18 +400,12 @@ function TreatmentDialog({
                 </Button>
               </div>
             ) : subOptions.length === 0 ? (
-              <p className="text-xs text-muted-foreground">
-                No sub-categories under this category. Add one in Categories.
-              </p>
+              <p className="text-xs text-muted-foreground">No sub-categories under this category. Add one in Categories.</p>
             ) : (
               <Select onValueChange={(v) => setSubId(v)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a sub category" />
-                </SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="Select a sub category" /></SelectTrigger>
                 <SelectContent>
-                  {subOptions.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                  ))}
+                  {subOptions.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
                 </SelectContent>
               </Select>
             )}
@@ -382,28 +427,108 @@ function TreatmentDialog({
           <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
         </div>
 
+        {/* Discount */}
+        <div className="rounded-md border p-3 space-y-3">
+          <div className="flex items-center gap-2">
+            <Tag className="h-4 w-4 text-muted-foreground" />
+            <Label className="m-0">Discount on this treatment</Label>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label className="text-xs text-muted-foreground">% off</Label>
+              <Input
+                type="number"
+                min={0}
+                max={100}
+                placeholder="e.g. 15"
+                value={discountPercent}
+                onChange={(e) => setDiscountPercent(e.target.value === "" ? "" : Number(e.target.value))}
+              />
+            </div>
+            <div>
+              <Label className="text-xs text-muted-foreground">Label (optional)</Label>
+              <Input
+                placeholder="e.g. Spring offer"
+                value={discountLabel}
+                onChange={(e) => setDiscountLabel(e.target.value)}
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label className="text-xs text-muted-foreground">Starts (optional)</Label>
+              <Input type="datetime-local" value={discountStartsAt} onChange={(e) => setDiscountStartsAt(e.target.value)} />
+            </div>
+            <div>
+              <Label className="text-xs text-muted-foreground">Ends (optional)</Label>
+              <Input type="datetime-local" value={discountEndsAt} onChange={(e) => setDiscountEndsAt(e.target.value)} />
+            </div>
+          </div>
+          <label className="flex items-center gap-2 text-sm">
+            <Switch checked={discountShowWasNow} onCheckedChange={setDiscountShowWasNow} />
+            <span>Show was/now price (crossed-out original) on booking page</span>
+          </label>
+          <p className="text-xs text-muted-foreground">
+            Leave % blank to disable. Discount can also stack or compete with promo codes — set the rule in Settings.
+          </p>
+        </div>
+
+        {/* Add-ons */}
+        <div className="rounded-md border p-3 space-y-3">
+          <div className="flex items-center gap-2">
+            <PlusCircle className="h-4 w-4 text-muted-foreground" />
+            <Label className="m-0">Add-ons</Label>
+          </div>
+          <div>
+            <Label className="text-xs text-muted-foreground">Mode</Label>
+            <Select value={addonMode} onValueChange={(v) => setAddonMode(v as "off" | "optional")}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="off">Off — never show add-ons</SelectItem>
+                <SelectItem value="optional">Optional — customer can pick add-ons or press "No thanks"</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {addonMode === "optional" && (
+            <div>
+              <Label className="text-xs text-muted-foreground">Pick add-on treatments</Label>
+              {addonCandidates.length === 0 ? (
+                <p className="text-xs text-muted-foreground">Create more treatments to use as add-ons.</p>
+              ) : (
+                <div className="space-y-2 max-h-56 overflow-y-auto mt-1">
+                  {addonCandidates.map((a) => (
+                    <label key={a.id} className="flex items-center justify-between gap-2 text-sm rounded-md border px-3 py-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Checkbox checked={addonIds.includes(a.id)} onCheckedChange={() => toggleAddon(a.id)} />
+                        <span className="truncate">{a.name}</span>
+                      </div>
+                      <span className="text-xs text-muted-foreground shrink-0">£{a.price} · {a.duration}m</span>
+                    </label>
+                  ))}
+                </div>
+              )}
+              <p className="text-xs text-muted-foreground mt-2">
+                On the booking page, after selecting this treatment, customers will see these add-ons with a "No thanks, continue" button. Selected add-ons stack price and duration.
+              </p>
+            </div>
+          )}
+        </div>
+
         <div className="rounded-md border p-3">
           <div className="flex items-center gap-2 mb-2">
             <FileText className="h-4 w-4 text-muted-foreground" />
             <Label className="m-0">Consent forms to send on booking</Label>
           </div>
           {consentTemplates.length === 0 ? (
-            <p className="text-xs text-muted-foreground">
-              No consent forms yet. Add them in Dashboard → Consent forms.
-            </p>
+            <p className="text-xs text-muted-foreground">No consent forms yet. Add them in Dashboard → Consent forms.</p>
           ) : (
             <div className="space-y-2 max-h-56 overflow-y-auto">
               {consentTemplates.map((t) => (
                 <label key={t.id} className="flex items-start gap-2 text-sm">
-                  <Checkbox
-                    checked={consentIds.includes(t.id)}
-                    onCheckedChange={() => toggleConsent(t.id)}
-                  />
+                  <Checkbox checked={consentIds.includes(t.id)} onCheckedChange={() => toggleConsent(t.id)} />
                   <span>
                     {t.name}
-                    {t.is_system && (
-                      <span className="ml-2 text-xs text-muted-foreground">(template)</span>
-                    )}
+                    {t.is_system && <span className="ml-2 text-xs text-muted-foreground">(template)</span>}
                   </span>
                 </label>
               ))}
@@ -425,6 +550,13 @@ function TreatmentDialog({
               category_id: subId ?? parentId,
               active,
               consent_ids: consentIds,
+              addon_ids: addonIds,
+              addon_mode: addonMode,
+              discount_percent: discountPercent === "" ? null : Number(discountPercent),
+              discount_starts_at: discountStartsAt ? new Date(discountStartsAt).toISOString() : null,
+              discount_ends_at: discountEndsAt ? new Date(discountEndsAt).toISOString() : null,
+              discount_show_was_now: discountShowWasNow,
+              discount_label: discountLabel || null,
             })
           }
           disabled={!name}
@@ -435,5 +567,6 @@ function TreatmentDialog({
     </DialogContent>
   );
 }
+
 
 

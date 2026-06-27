@@ -70,7 +70,7 @@ function countTreatments(n: CatNode): number {
 type Theme = Database["public"]["Tables"]["clinic_theme"]["Row"];
 
 function BookPage() {
-  const { profile, treatments, packages, locations, categories, pricing, theme, reviews, concernAreas, concerns, concernLinks, modelSlots = [] } =
+  const { profile, treatments, packages, locations, categories, pricing, theme, reviews, concernAreas, concerns, concernLinks, modelSlots = [], addonLinks = [] } =
     Route.useLoaderData() as {
       profile: {
         id: string;
@@ -112,7 +112,9 @@ function BookPage() {
         price_mode: "fixed" | "percent"; price_value: number; notes: string | null;
         category?: string | null;
       }[];
+      addonLinks?: { treatment_id: string; addon_id: string }[];
     };
+
 
   const { slug } = useParams({ from: "/m/$slug/" });
   const brand = theme?.primary_color || profile.brand_color || "#1f2a44";
@@ -142,9 +144,35 @@ function BookPage() {
     locations.length === 1 ? locations[0].id : null,
   );
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const toggleSelect = (id: string) =>
-    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  const treatById = useMemo(() => new Map(treatments.map((t) => [t.id, t])), [treatments]);
+  const addonsFor = useMemo(() => {
+    const m = new Map<string, string[]>();
+    for (const link of addonLinks) {
+      if (!m.has(link.treatment_id)) m.set(link.treatment_id, []);
+      m.get(link.treatment_id)!.push(link.addon_id);
+    }
+    return m;
+  }, [addonLinks]);
+
+  const [addonPrompt, setAddonPrompt] = useState<{ treatmentId: string; addonIds: string[] } | null>(null);
+  const [addonPicks, setAddonPicks] = useState<Set<string>>(new Set());
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      if (prev.includes(id)) return prev.filter((x) => x !== id);
+      // Adding: check for add-ons
+      const t = treatById.get(id);
+      const mode = (t as { addon_mode?: string } | undefined)?.addon_mode ?? "optional";
+      const candidates = (addonsFor.get(id) ?? []).filter((aid) => treatById.has(aid) && !prev.includes(aid));
+      if (mode === "optional" && candidates.length > 0) {
+        setAddonPicks(new Set());
+        setAddonPrompt({ treatmentId: id, addonIds: candidates });
+      }
+      return [...prev, id];
+    });
+  };
   const isSelected = (id: string) => selectedIds.includes(id);
+
 
   // Chooser flow
   const chooserOn = !!profile.chooser_enabled;
@@ -950,9 +978,95 @@ function BookPage() {
       >
         © {new Date().getFullYear()} {profile.clinic_name} · Powered by MODO Book
       </footer>
+
+      {/* Add-on prompt */}
+      {addonPrompt && (() => {
+        const parent = treatById.get(addonPrompt.treatmentId);
+        const addons = addonPrompt.addonIds
+          .map((id) => treatById.get(id))
+          .filter(Boolean) as Treatment[];
+        const close = (apply: boolean) => {
+          if (apply && addonPicks.size > 0) {
+            setSelectedIds((prev) => {
+              const next = [...prev];
+              for (const id of addonPicks) if (!next.includes(id)) next.push(id);
+              return next;
+            });
+          }
+          setAddonPrompt(null);
+          setAddonPicks(new Set());
+        };
+        return (
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-3" onClick={() => close(false)}>
+            <div className="w-full max-w-md rounded-2xl bg-background p-5 shadow-xl" onClick={(e) => e.stopPropagation()}>
+              <div className="mb-1 text-base font-semibold" style={{ color: textColor, fontFamily: headingFont }}>
+                Add to {parent?.name}?
+              </div>
+              <div className="mb-4 text-xs text-muted-foreground">
+                Pick any add-ons below or continue without.
+              </div>
+              <div className="space-y-2 max-h-[55vh] overflow-y-auto">
+                {addons.map((a) => {
+                  const checked = addonPicks.has(a.id);
+                  return (
+                    <button
+                      key={a.id}
+                      type="button"
+                      onClick={() => {
+                        setAddonPicks((prev) => {
+                          const n = new Set(prev);
+                          if (n.has(a.id)) n.delete(a.id); else n.add(a.id);
+                          return n;
+                        });
+                      }}
+                      className="flex w-full items-start justify-between gap-3 rounded-xl border p-3 text-left transition hover:shadow-sm"
+                      style={{
+                        backgroundColor: menuCardBg,
+                        borderColor: checked ? brand : menuCardBorder,
+                        boxShadow: checked ? `0 0 0 1.5px ${brand}` : undefined,
+                      }}
+                    >
+                      <div className="min-w-0">
+                        <div className="text-sm font-medium" style={{ color: menuNameColor }}>{a.name}</div>
+                        {a.description && (
+                          <div className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{a.description}</div>
+                        )}
+                        <div className="mt-1 text-[11px] text-muted-foreground">+{a.duration} min</div>
+                      </div>
+                      <div className="whitespace-nowrap text-sm font-semibold" style={{ color: menuPriceColor }}>
+                        +£{Number(a.price ?? 0).toFixed(2)}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                <button
+                  type="button"
+                  onClick={() => close(false)}
+                  className="rounded-full border px-4 py-2 text-sm"
+                  style={{ borderColor: menuCardBorder, color: textColor }}
+                >
+                  No thanks
+                </button>
+                <button
+                  type="button"
+                  onClick={() => close(true)}
+                  disabled={addonPicks.size === 0}
+                  className="rounded-full px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                  style={{ backgroundColor: brand }}
+                >
+                  Add {addonPicks.size > 0 ? `${addonPicks.size} ` : ""}add-on{addonPicks.size === 1 ? "" : "s"}
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </main>
   );
 }
+
 
 function ChooserCard({
   title,
@@ -1279,8 +1393,9 @@ function TreatmentRow({
             const discounted = hasDisc ? price * (1 - pct / 100) : price;
             return (
               <div className={`whitespace-nowrap ${priceSize} ${bold ? "font-bold" : "font-semibold"}`} style={{ color: priceColor }}>
-                {hasDisc && (
+                {hasDisc && ((t as any).discount_show_was_now !== false) && (
                   <span className="mr-1.5 text-xs font-normal text-muted-foreground line-through">£{price.toFixed(2)}</span>
+
                 )}
                 {discounted === 0 ? "Free" : `£${discounted.toFixed(2)}`}
                 {hasDisc && (

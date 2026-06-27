@@ -98,7 +98,7 @@ export const getPublicClinic = createServerFn({ method: "GET" })
     ];
 
 
-    const [concernAreas, concerns, concernLinks, modelSlots] = await Promise.all([
+    const [concernAreas, concerns, concernLinks, modelSlots, addonLinks] = await Promise.all([
       supabase.from("concern_areas").select("*").eq("profile_id", profile.id).order("sort_order"),
       supabase.from("concerns").select("*").eq("profile_id", profile.id).order("sort_order"),
       supabase.from("concern_treatments").select("concern_id, treatment_id, sort_order").eq("profile_id", profile.id),
@@ -107,7 +107,11 @@ export const getPublicClinic = createServerFn({ method: "GET" })
         .eq("profile_id", profile.id).eq("active", true).is("booked_appointment_id", null)
         .gte("slot_date", new Date().toISOString().slice(0, 10))
         .order("slot_date", { ascending: true }),
+      treatmentIds.length
+        ? supabase.from("treatment_addons").select("treatment_id, addon_id").in("treatment_id", treatmentIds)
+        : Promise.resolve({ data: [] as { treatment_id: string; addon_id: string }[] }),
     ]);
+
 
     return {
       profile,
@@ -124,7 +128,9 @@ export const getPublicClinic = createServerFn({ method: "GET" })
       concerns: concerns.data ?? [],
       concernLinks: concernLinks.data ?? [],
       modelSlots: modelSlots.data ?? [],
+      addonLinks: addonLinks.data ?? [],
     };
   });
+
 
 

@@ -121,13 +121,19 @@ export const updateTreatment = createServerFn({ method: "POST" })
       allow_split_payment?: boolean;
       rebook_reminder_days?: number | null;
       color?: string | null;
+      addon_mode?: "off" | "optional";
+      discount_percent?: number | null;
+      discount_starts_at?: string | null;
+      discount_ends_at?: string | null;
+      discount_show_was_now?: boolean;
+      discount_label?: string | null;
     }) => input,
 
 
   )
   .handler(async ({ data, context }) => {
     const { supabase } = context;
-    const update: Database["public"]["Tables"]["treatments"]["Update"] = {};
+    const update: Record<string, unknown> = {};
     if (data.name !== undefined) update.name = data.name;
     if (data.duration !== undefined) update.duration = data.duration;
     if (data.price !== undefined) update.price = data.price;
@@ -145,19 +151,24 @@ export const updateTreatment = createServerFn({ method: "POST" })
     if (data.session_count !== undefined) update.session_count = data.session_count;
     if (data.allow_split_payment !== undefined) update.allow_split_payment = data.allow_split_payment;
     if (data.rebook_reminder_days !== undefined) update.rebook_reminder_days = data.rebook_reminder_days;
-    if (data.color !== undefined) (update as Record<string, unknown>).color = data.color;
-
-
+    if (data.color !== undefined) update.color = data.color;
+    if (data.addon_mode !== undefined) update.addon_mode = data.addon_mode;
+    if (data.discount_percent !== undefined) update.discount_percent = data.discount_percent;
+    if (data.discount_starts_at !== undefined) update.discount_starts_at = data.discount_starts_at;
+    if (data.discount_ends_at !== undefined) update.discount_ends_at = data.discount_ends_at;
+    if (data.discount_show_was_now !== undefined) update.discount_show_was_now = data.discount_show_was_now;
+    if (data.discount_label !== undefined) update.discount_label = data.discount_label;
 
     const { data: treatment, error } = await supabase
       .from("treatments")
-      .update(update)
+      .update(update as never)
       .eq("id", data.id)
       .select()
       .single();
     if (error) throw error;
     return treatment;
   });
+
 
 export const deleteTreatment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
