@@ -2075,18 +2075,24 @@ export type Database = {
         Row: {
           addon_id: string
           created_at: string
+          discount_amount: number | null
+          discount_percent: number | null
           id: string
           treatment_id: string
         }
         Insert: {
           addon_id: string
           created_at?: string
+          discount_amount?: number | null
+          discount_percent?: number | null
           id?: string
           treatment_id: string
         }
         Update: {
           addon_id?: string
           created_at?: string
+          discount_amount?: number | null
+          discount_percent?: number | null
           id?: string
           treatment_id?: string
         }
