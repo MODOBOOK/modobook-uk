@@ -29,6 +29,9 @@ type Appt = {
   total_amount: number | null;
   notes: string | null;
   practitioner_notes: string | null;
+  aftercare_html: string | null;
+  has_allergies: boolean | null;
+  allergies_text: string | null;
   treatments: { name: string } | null;
   locations: { name: string } | null;
 };
