@@ -206,16 +206,42 @@ function NewAppointmentPage() {
               </Select>
             </div>
           )}
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label>Date *</Label>
-              <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-            </div>
-            <div>
-              <Label>Start time *</Label>
-              <Input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
-            </div>
+          <div>
+            <Label>Date *</Label>
+            <Input type="date" value={date} onChange={(e) => { setDate(e.target.value); setStartTime(""); }} />
           </div>
+          {date && (
+            <div>
+              <Label>Available start times *</Label>
+              {loadingSlots ? (
+                <p className="text-sm text-muted-foreground">Loading…</p>
+              ) : slots.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  No available slots for this date{treatment ? "" : " (pick a treatment to filter by duration)"}.
+                  You can still type a time manually below.
+                </p>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {slots.map((s) => (
+                    <Button
+                      key={s}
+                      type="button"
+                      variant={startTime === s ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setStartTime(s)}
+                    >
+                      {s}
+                    </Button>
+                  ))}
+                </div>
+              )}
+              <div className="mt-2">
+                <Label className="text-xs text-muted-foreground">Or set manually</Label>
+                <Input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
+              </div>
+            </div>
+          )}
+
         </CardContent>
       </Card>
 
