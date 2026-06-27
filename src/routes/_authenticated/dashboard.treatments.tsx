@@ -8,6 +8,7 @@ import {
   setTreatmentConsents,
   listMyConsentTemplates,
 } from "@/lib/treatment-consents.functions";
+import { getTreatmentAddons, setTreatmentAddons } from "@/lib/treatment-addons.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -18,7 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Plus, Trash2, Pencil, FileText, X } from "lucide-react";
+import { Plus, Trash2, Pencil, FileText, X, Tag, PlusCircle } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard/treatments")({
   ssr: false,
@@ -33,6 +34,12 @@ type Treatment = {
   description: string | null;
   active: boolean;
   category_id: string | null;
+  addon_mode?: "off" | "optional" | null;
+  discount_percent?: number | null;
+  discount_starts_at?: string | null;
+  discount_ends_at?: string | null;
+  discount_show_was_now?: boolean | null;
+  discount_label?: string | null;
 };
 
 type Category = {
@@ -50,9 +57,17 @@ type TreatmentForm = {
   category_id: string | null;
   active: boolean;
   consent_ids: string[];
+  addon_ids: string[];
+  addon_mode: "off" | "optional";
+  discount_percent: number | null;
+  discount_starts_at: string | null;
+  discount_ends_at: string | null;
+  discount_show_was_now: boolean;
+  discount_label: string | null;
 };
 
 type ConsentTpl = { id: string; name: string; treatment_type: string | null; is_system: boolean };
+
 
 function buildCategoryPaths(cats: Category[]) {
   const byId = new Map(cats.map((c) => [c.id, c]));
