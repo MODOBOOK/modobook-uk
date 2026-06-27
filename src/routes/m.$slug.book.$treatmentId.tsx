@@ -114,14 +114,16 @@ function BookTreatmentPage() {
         try {
           await ensure({ data: { fullName: data.session.user.email?.split("@")[0] ?? "Patient", linkSlug: slug } });
           const p = await fetchPatient();
-          if (p.patient) {
+          const pp = p.patient;
+          if (pp) {
             setForm((f) => ({
               ...f,
-              name: f.name || p.patient.full_name || "",
-              email: f.email || p.patient.email || data.session.user.email || "",
-              phone: f.phone || p.patient.phone || "",
+              name: f.name || pp.full_name || "",
+              email: f.email || pp.email || data.session.user.email || "",
+              phone: f.phone || pp.phone || "",
             }));
           }
+
         } catch {/* non-fatal */}
       }
     })();
