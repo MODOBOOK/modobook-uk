@@ -1797,6 +1797,8 @@ export type Database = {
           stripe_connect_account_id: string | null
           stripe_connect_onboarding_status: string | null
           tagline: string | null
+          terms_html: string | null
+          terms_required: boolean
           timeline: Json
           updated_at: string
           user_id: string
@@ -1839,6 +1841,8 @@ export type Database = {
           stripe_connect_account_id?: string | null
           stripe_connect_onboarding_status?: string | null
           tagline?: string | null
+          terms_html?: string | null
+          terms_required?: boolean
           timeline?: Json
           updated_at?: string
           user_id: string
@@ -1881,6 +1885,8 @@ export type Database = {
           stripe_connect_account_id?: string | null
           stripe_connect_onboarding_status?: string | null
           tagline?: string | null
+          terms_html?: string | null
+          terms_required?: boolean
           timeline?: Json
           updated_at?: string
           user_id?: string
@@ -2339,17 +2345,6 @@ export type Database = {
           bio: string
           brand_color: string
           cancellation_rules: Json
-          chooser_consultation_treatment_id: string
-          chooser_consultation_treatment_ids: string[]
-          chooser_enabled: boolean
-          chooser_extra_body: string
-          chooser_extra_enabled: boolean
-          chooser_extra_title: string
-          chooser_extra_treatment_ids: string[]
-          chooser_intro_text: string
-          chooser_show_consultation: boolean
-          chooser_show_know: boolean
-          chooser_show_unsure: boolean
           clinic_name: string
           created_at: string
           deposit_amount_cents: number
@@ -2357,12 +2352,13 @@ export type Database = {
           full_name: string
           hero_url: string
           id: string
-          model_slots_position: string
           qualifications: Json
           slug: string
           social_links: Json
           specialties: string[]
           tagline: string
+          terms_html: string
+          terms_required: boolean
           timeline: Json
           updated_at: string
           welcome_intro_html: string
