@@ -95,6 +95,8 @@ function TreatmentsPage() {
   const remove = useServerFn(deleteTreatment);
   const listConsents = useServerFn(listMyConsentTemplates);
   const setConsents = useServerFn(setTreatmentConsents);
+  const setAddons = useServerFn(setTreatmentAddons);
+
   const [items, setItems] = useState<Treatment[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [consentTemplates, setConsentTemplates] = useState<ConsentTpl[]>([]);
