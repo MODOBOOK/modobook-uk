@@ -74,25 +74,33 @@ function DashboardLayout() {
   return (
     <div className="flex min-h-screen bg-background">
       {/* Desktop sidebar */}
-      <aside className="hidden w-64 flex-col border-r bg-muted/30 lg:flex">
-        <div className="flex h-16 items-center gap-2 border-b px-6">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <Store className="h-5 w-5" />
+      <aside className="hidden w-72 flex-col border-r border-border/60 bg-sidebar lg:flex">
+        <div className="flex h-20 items-center gap-3 border-b border-border/60 px-7">
+          {profile.avatar_url ? (
+            <img src={profile.avatar_url} alt="" className="h-10 w-10 rounded-full object-cover ring-1 ring-border" />
+          ) : (
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground">
+              <span className="font-serif text-lg">{(profile.clinic_name ?? "M").charAt(0)}</span>
+            </div>
+          )}
+          <div className="min-w-0">
+            <div className="truncate font-serif text-lg leading-tight">{profile.clinic_name || "My Clinic"}</div>
+            <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">MODO Studio</div>
           </div>
-          <span className="truncate text-sm font-semibold">{profile.clinic_name || "My Clinic"}</span>
         </div>
-        <nav className="flex-1 space-y-1 overflow-y-auto p-4">
+        <nav className="flex-1 space-y-0.5 overflow-y-auto px-4 py-6">
           {navItems.map((item) => (
             <NavLink key={item.to} to={item.to} icon={item.icon} label={item.label} />
           ))}
         </nav>
-        <div className="border-t p-4">
-          <Button variant="ghost" className="w-full justify-start" onClick={signOut}>
+        <div className="border-t border-border/60 p-4">
+          <Button variant="ghost" className="w-full justify-start text-muted-foreground hover:text-foreground" onClick={signOut}>
             <LogOut className="mr-2 h-4 w-4" />
             Sign out
           </Button>
         </div>
       </aside>
+
 
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Mobile header — slim, just brand + preview */}
