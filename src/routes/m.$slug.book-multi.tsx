@@ -69,9 +69,10 @@ function MultiBookPage() {
 
   // Preserve user-selected order
   const treatments = useMemo<Treatment[]>(() => {
-    const map = new Map(ctx.treatments.map((t: Treatment) => [t.id, t]));
-    return ids.map((id) => map.get(id)).filter(Boolean) as Treatment[];
+    const map = new Map<string, Treatment>(ctx.treatments.map((t: Treatment) => [t.id, t]));
+    return ids.map((id: string) => map.get(id)).filter(Boolean) as Treatment[];
   }, [ctx.treatments, ids]);
+
 
   const theme = ctx.theme;
   const brand = theme?.primary_color || ctx.brandColor || "#1f2a44";
