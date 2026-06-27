@@ -6,6 +6,8 @@ import {
   upsertLocation,
   deleteLocation,
 } from "@/lib/locations.functions";
+import { getMyProfile } from "@/lib/profiles.functions";
+import { ImageUploader } from "@/components/ImageUploader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -48,10 +50,12 @@ function emptyDraft(): Partial<Location> {
 function LocationsPage() {
   const router = useRouter();
   const fetchLocations = useServerFn(listMyLocations);
+  const fetchProfile = useServerFn(getMyProfile);
   const save = useServerFn(upsertLocation);
   const remove = useServerFn(deleteLocation);
 
   const [locations, setLocations] = useState<Location[]>([]);
+  const [profileId, setProfileId] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<Partial<Location>>(emptyDraft());
@@ -60,8 +64,11 @@ function LocationsPage() {
   async function refresh() {
     setLoading(true);
     try {
-      const rows = await fetchLocations();
+      const [rows, profile] = await Promise.all([fetchLocations(), fetchProfile()]);
       setLocations(rows);
+      if (profile && typeof profile === "object" && "id" in profile) {
+        setProfileId((profile as { id: string }).id);
+      }
     } finally {
       setLoading(false);
     }
@@ -102,6 +109,7 @@ function LocationsPage() {
           notes: draft.notes ?? null,
           is_primary: !!draft.is_primary,
           active: draft.active !== false,
+          image_url: draft.image_url ?? null,
         },
       });
       toast.success("Location saved");
@@ -285,6 +293,16 @@ function LocationsPage() {
                 />
               </div>
             </div>
+            {profileId && (
+              <ImageUploader
+                label="Location photo (shown to patients)"
+                value={draft.image_url ?? null}
+                onChange={(url) => setDraft((d) => ({ ...d, image_url: url }))}
+                profileId={profileId}
+                folder={`locations`}
+                previewClass="mt-2 h-24 w-24 object-cover rounded-full"
+              />
+            )}
             <div className="space-y-1.5">
               <Label htmlFor="notes">Notes</Label>
               <Textarea

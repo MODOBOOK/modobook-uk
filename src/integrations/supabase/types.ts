@@ -551,6 +551,7 @@ export type Database = {
           created_at: string
           display_order: number
           id: string
+          image_url: string | null
           is_primary: boolean
           name: string
           notes: string | null
@@ -568,6 +569,7 @@ export type Database = {
           created_at?: string
           display_order?: number
           id?: string
+          image_url?: string | null
           is_primary?: boolean
           name: string
           notes?: string | null
@@ -585,6 +587,7 @@ export type Database = {
           created_at?: string
           display_order?: number
           id?: string
+          image_url?: string | null
           is_primary?: boolean
           name?: string
           notes?: string | null
