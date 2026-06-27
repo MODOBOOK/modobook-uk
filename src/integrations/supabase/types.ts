@@ -883,10 +883,13 @@ export type Database = {
           header_bg_color: string
           header_text_color: string
           heading_font: string
+          hero_carousel_enabled: boolean | null
+          hero_carousel_urls: Json | null
           hero_heading: string | null
           hero_image_url: string | null
           hero_subheading: string | null
           id: string
+          layout_key: string | null
           logo_url: string | null
           menu_card_bg: string | null
           menu_card_border_color: string | null
@@ -897,6 +900,7 @@ export type Database = {
           menu_treatment_bold: boolean | null
           menu_treatment_name_color: string | null
           menu_treatment_size: string | null
+          preset_key: string | null
           primary_color: string
           profile_id: string
           text_color: string
@@ -914,10 +918,13 @@ export type Database = {
           header_bg_color?: string
           header_text_color?: string
           heading_font?: string
+          hero_carousel_enabled?: boolean | null
+          hero_carousel_urls?: Json | null
           hero_heading?: string | null
           hero_image_url?: string | null
           hero_subheading?: string | null
           id?: string
+          layout_key?: string | null
           logo_url?: string | null
           menu_card_bg?: string | null
           menu_card_border_color?: string | null
@@ -928,6 +935,7 @@ export type Database = {
           menu_treatment_bold?: boolean | null
           menu_treatment_name_color?: string | null
           menu_treatment_size?: string | null
+          preset_key?: string | null
           primary_color?: string
           profile_id: string
           text_color?: string
@@ -945,10 +953,13 @@ export type Database = {
           header_bg_color?: string
           header_text_color?: string
           heading_font?: string
+          hero_carousel_enabled?: boolean | null
+          hero_carousel_urls?: Json | null
           hero_heading?: string | null
           hero_image_url?: string | null
           hero_subheading?: string | null
           id?: string
+          layout_key?: string | null
           logo_url?: string | null
           menu_card_bg?: string | null
           menu_card_border_color?: string | null
@@ -959,6 +970,7 @@ export type Database = {
           menu_treatment_bold?: boolean | null
           menu_treatment_name_color?: string | null
           menu_treatment_size?: string | null
+          preset_key?: string | null
           primary_color?: string
           profile_id?: string
           text_color?: string
