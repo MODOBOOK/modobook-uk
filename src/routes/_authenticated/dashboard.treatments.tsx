@@ -47,7 +47,10 @@ type TreatmentForm = {
   price: number;
   description: string;
   category_id: string | null;
+  consent_ids: string[];
 };
+
+type ConsentTpl = { id: string; name: string; treatment_type: string | null; is_system: boolean };
 
 function buildCategoryPaths(cats: Category[]) {
   const byId = new Map(cats.map((c) => [c.id, c]));
