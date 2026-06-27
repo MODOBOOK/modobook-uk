@@ -197,14 +197,14 @@ function NavLink({
       to={to}
       activeOptions={{ exact: true }}
       className={cn(
-        "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-        "text-muted-foreground hover:bg-muted hover:text-foreground",
-        "[&.active]:bg-primary/10 [&.active]:text-primary",
+        "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-all",
+        "text-muted-foreground hover:bg-sidebar-accent hover:text-foreground",
+        "[&.active]:bg-primary [&.active]:text-primary-foreground [&.active]:shadow-luxe",
       )}
       onClick={onClick}
     >
-      <Icon className="h-4 w-4" />
-      {label}
+      <Icon className="h-4 w-4 opacity-80" />
+      <span className="tracking-wide">{label}</span>
     </Link>
   );
 }
