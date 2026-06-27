@@ -27,8 +27,10 @@ export const getMyTreatments = createServerFn({ method: "GET" })
       .from("treatments")
       .select("*")
       .eq("profile_id", data.id)
+      .order("sort_order", { ascending: true })
       .order("created_at", { ascending: false });
     if (tErr) throw tErr;
+
     return treatments;
   });
 
