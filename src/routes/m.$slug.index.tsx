@@ -104,6 +104,13 @@ function BookPage() {
   const [locationId, setLocationId] = useState<string | null>(
     locations.length === 1 ? locations[0].id : null,
   );
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const toggleSelect = (id: string) =>
+    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  const isSelected = (id: string) => selectedIds.includes(id);
+  // Clear selection when location changes
+  const setLocAndClear = (id: string | null) => { setLocationId(id); setSelectedIds([]); };
+
 
   const priceFor = (t: Treatment) => {
     if (locationId) {
