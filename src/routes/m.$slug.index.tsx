@@ -69,7 +69,7 @@ function countTreatments(n: CatNode): number {
 type Theme = Database["public"]["Tables"]["clinic_theme"]["Row"];
 
 function BookPage() {
-  const { profile, treatments, packages, locations, categories, pricing, theme, reviews, concernAreas, concerns, concernLinks } =
+  const { profile, treatments, packages, locations, categories, pricing, theme, reviews, concernAreas, concerns, concernLinks, modelSlots = [] } =
     Route.useLoaderData() as {
       profile: {
         id: string;
@@ -104,6 +104,11 @@ function BookPage() {
       concernAreas: { id: string; name: string; sort_order: number }[];
       concerns: { id: string; area_id: string; name: string; description: string | null }[];
       concernLinks: { concern_id: string; treatment_id: string }[];
+      modelSlots?: {
+        id: string; treatment_id: string; location_id: string | null;
+        slot_date: string; start_time: string; end_time: string;
+        price_mode: "fixed" | "percent"; price_value: number; notes: string | null;
+      }[];
     };
 
   const { slug } = useParams({ from: "/m/$slug/" });
