@@ -1949,6 +1949,7 @@ export type Database = {
           created_at: string
           deposit_amount_cents: number | null
           deposit_policy_text: string | null
+          discount_stack_mode: string
           email: string | null
           full_name: string | null
           hero_url: string | null
@@ -1993,6 +1994,7 @@ export type Database = {
           created_at?: string
           deposit_amount_cents?: number | null
           deposit_policy_text?: string | null
+          discount_stack_mode?: string
           email?: string | null
           full_name?: string | null
           hero_url?: string | null
@@ -2037,6 +2039,7 @@ export type Database = {
           created_at?: string
           deposit_amount_cents?: number | null
           deposit_policy_text?: string | null
+          discount_stack_mode?: string
           email?: string | null
           full_name?: string | null
           hero_url?: string | null
@@ -2285,6 +2288,7 @@ export type Database = {
       treatments: {
         Row: {
           active: boolean | null
+          addon_mode: string
           allow_split_payment: boolean
           category_id: string | null
           color: string | null
@@ -2296,7 +2300,9 @@ export type Database = {
           description: string | null
           discount_days_of_week: number[] | null
           discount_ends_at: string | null
+          discount_label: string | null
           discount_percent: number | null
+          discount_show_was_now: boolean
           discount_starts_at: string | null
           duration: number
           id: string
@@ -2314,6 +2320,7 @@ export type Database = {
         }
         Insert: {
           active?: boolean | null
+          addon_mode?: string
           allow_split_payment?: boolean
           category_id?: string | null
           color?: string | null
@@ -2325,7 +2332,9 @@ export type Database = {
           description?: string | null
           discount_days_of_week?: number[] | null
           discount_ends_at?: string | null
+          discount_label?: string | null
           discount_percent?: number | null
+          discount_show_was_now?: boolean
           discount_starts_at?: string | null
           duration: number
           id?: string
@@ -2343,6 +2352,7 @@ export type Database = {
         }
         Update: {
           active?: boolean | null
+          addon_mode?: string
           allow_split_payment?: boolean
           category_id?: string | null
           color?: string | null
@@ -2354,7 +2364,9 @@ export type Database = {
           description?: string | null
           discount_days_of_week?: number[] | null
           discount_ends_at?: string | null
+          discount_label?: string | null
           discount_percent?: number | null
+          discount_show_was_now?: boolean
           discount_starts_at?: string | null
           duration?: number
           id?: string
@@ -2518,6 +2530,7 @@ export type Database = {
           created_at: string
           deposit_amount_cents: number
           deposit_policy_text: string
+          discount_stack_mode: string
           full_name: string
           hero_url: string
           id: string
