@@ -84,29 +84,30 @@ function DashboardIndex() {
   }, [upcoming]);
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
+    <div className="mx-auto max-w-4xl space-y-8">
       {/* Hero */}
-      <Card className="overflow-hidden border-0 bg-gradient-to-br from-primary/10 via-primary/5 to-background shadow-none">
-        <CardContent className="p-4 sm:p-6">
-          <div className="flex items-center gap-3">
+      <Card className="overflow-hidden border-border/60 shadow-luxe">
+        <CardContent className="relative p-6 sm:p-8">
+          <div className="absolute inset-0 bg-gradient-to-br from-accent/15 via-background to-background" />
+          <div className="relative flex items-center gap-5">
             {profile.avatar_url ? (
               <img
                 src={profile.avatar_url}
                 alt=""
-                className="h-16 w-16 shrink-0 rounded-2xl object-cover sm:h-20 sm:w-20"
+                className="h-20 w-20 shrink-0 rounded-full object-cover ring-1 ring-border sm:h-24 sm:w-24"
               />
             ) : (
-              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-primary text-2xl font-bold text-primary-foreground sm:h-20 sm:w-20">
-                {(profile.clinic_name ?? "M").charAt(0)}
+              <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground ring-1 ring-border sm:h-24 sm:w-24">
+                <span className="font-serif text-3xl">{(profile.clinic_name ?? "M").charAt(0)}</span>
               </div>
             )}
             <div className="min-w-0 flex-1">
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{greeting()}</p>
-              <h1 className="truncate text-xl font-bold leading-tight sm:text-2xl">
+              <p className="text-[10px] font-medium uppercase tracking-[0.25em] text-muted-foreground">{greeting()}</p>
+              <h1 className="mt-1 truncate font-serif text-3xl leading-tight sm:text-4xl">
                 {profile.clinic_name || profile.full_name || "Your clinic"}
               </h1>
               {profile.full_name && profile.clinic_name && (
-                <p className="truncate text-sm text-muted-foreground">{profile.full_name}</p>
+                <p className="mt-1 truncate text-sm italic text-muted-foreground">{profile.full_name}</p>
               )}
             </div>
           </div>
@@ -114,21 +115,22 @@ function DashboardIndex() {
       </Card>
 
       {/* Stats */}
-      <Card>
-        <CardContent className="grid grid-cols-3 gap-2 p-4 text-center">
-          <Stat label="Today" value={String(todayBookings)} tone="text-emerald-600" />
-          <Stat label="Cancelled" value={String(todayCancellations)} tone="text-rose-600" />
-          <Stat label="Next 7 days" value={String(weekCount)} tone="text-primary" />
+      <Card className="border-border/60">
+        <CardContent className="grid grid-cols-3 divide-x divide-border/60 p-0">
+          <Stat label="Today" value={String(todayBookings)} />
+          <Stat label="Cancelled" value={String(todayCancellations)} />
+          <Stat label="Next 7 days" value={String(weekCount)} />
         </CardContent>
       </Card>
 
       {/* Quick actions */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <QuickAction to="/dashboard/new-appointment" icon={CalendarPlus} label="New booking" tone="bg-orange-100 text-orange-600" />
-        <QuickAction to="/dashboard/availability" icon={CalendarDays} label="Availability" tone="bg-blue-100 text-blue-600" />
-        <QuickAction to="/dashboard/services" icon={Sparkles} label="Services" tone="bg-pink-100 text-pink-600" />
-        <QuickAction to="/dashboard/payments" icon={CreditCard} label={profile.stripe_connect_account_id ? "Payments" : "Connect Stripe"} tone="bg-lime-100 text-lime-700" />
+        <QuickAction to="/dashboard/new-appointment" icon={CalendarPlus} label="New booking" />
+        <QuickAction to="/dashboard/availability" icon={CalendarDays} label="Availability" />
+        <QuickAction to="/dashboard/services" icon={Sparkles} label="Services" />
+        <QuickAction to="/dashboard/payments" icon={CreditCard} label={profile.stripe_connect_account_id ? "Payments" : "Connect Stripe"} />
       </div>
+
 
       {/* Booking link */}
       <Card>
