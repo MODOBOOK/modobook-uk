@@ -83,6 +83,22 @@ export const getMyPatientLinks = createServerFn({ method: "GET" })
     return { links: data ?? [] };
   });
 
+export const getMyAppointments = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data, error } = await context.supabase
+      .from("appointments")
+      .select(
+        "id, scheduled_date, start_time, end_time, status, payment_status, total_amount, notes, practitioner_notes, treatment:treatment_id (name, duration), location:location_id (name, address_line1, city), profile:profile_id (slug, clinic_name, full_name)"
+      )
+      .eq("patient_user_id", context.userId)
+      .order("scheduled_date", { ascending: false })
+      .order("start_time", { ascending: false });
+    if (error) throw error;
+    return { appointments: data ?? [] };
+  });
+
+
 export const submitPatientReview = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(
