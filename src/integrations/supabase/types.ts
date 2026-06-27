@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_invites: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          email: string
+          id: string
+          invited_by: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          invited_by?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          invited_by?: string | null
+        }
+        Relationships: []
+      }
       appointment_consents: {
         Row: {
           appointment_id: string
@@ -1774,11 +1798,66 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      admin_grant_admin_by_email: { Args: { _email: string }; Returns: string }
+      admin_list_admins: {
+        Args: never
+        Returns: {
+          created_at: string
+          email: string
+          user_id: string
+        }[]
+      }
+      admin_list_invites: {
+        Args: never
+        Returns: {
+          accepted_at: string
+          created_at: string
+          email: string
+          id: string
+        }[]
+      }
+      admin_list_practitioners: {
+        Args: never
+        Returns: {
+          active: boolean
+          appointments_count: number
+          clinic_name: string
+          created_at: string
+          email: string
+          full_name: string
+          profile_id: string
+          slug: string
+          treatments_count: number
+          user_id: string
+        }[]
+      }
+      admin_revoke_admin: { Args: { _user_id: string }; Returns: boolean }
       cancel_appointment_by_token: {
         Args: { p_token: string }
         Returns: boolean
@@ -1868,6 +1947,13 @@ export type Database = {
           updated_at: string
           welcome_intro_html: string
         }[]
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
       }
       is_active_profile: { Args: { _profile_id: string }; Returns: boolean }
       is_active_profile_path: { Args: { path: string }; Returns: boolean }
