@@ -152,23 +152,12 @@ function ServicesPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Services</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Services</h1>
         <p className="text-sm text-muted-foreground">
           Organise your services into categories and subcategories. Clients see the same structure on your booking page.
         </p>
-      </div>
-
-      <div className="flex flex-wrap items-center gap-6 text-sm">
-        <div>
-          <span className="font-semibold">Total Categories: </span>
-          <span className="text-primary">{totalCats}</span>
-        </div>
-        <div>
-          <span className="font-semibold">Total Services: </span>
-          <span className="text-primary">{totalSvcs}</span>
-        </div>
       </div>
 
       <div className="relative">
@@ -176,26 +165,25 @@ function ServicesPage() {
         <Input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search for a service"
-          className="pl-9"
+          placeholder="Search for service"
+          className="h-12 rounded-xl pl-10"
         />
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid grid-cols-2 gap-3">
         <Button
-          variant="outline"
-          className="h-12"
+          className="h-12 rounded-full bg-[hsl(var(--primary))] font-semibold text-primary-foreground hover:bg-[hsl(var(--primary))]/90"
           onClick={() => setCatDialog({ mode: "create", parentId: null })}
         >
-          <FolderPlus className="mr-2 h-4 w-4" /> Add Category
+          Add Category
         </Button>
         <Button
-          className="h-12"
+          className="h-12 rounded-full bg-[hsl(var(--primary))] font-semibold text-primary-foreground hover:bg-[hsl(var(--primary))]/90"
           onClick={() => setSvcDialog({ defaultCatId: null })}
           disabled={picker.length === 0}
           title={picker.length === 0 ? "Create a category first" : ""}
         >
-          <Plus className="mr-2 h-4 w-4" /> Add Service
+          Add Service
         </Button>
       </div>
 
@@ -208,7 +196,7 @@ function ServicesPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-2">
+        <div className="divide-y rounded-2xl border bg-card">
           {roots.map((node) => (
             <CategoryRow
               key={node.id}
@@ -226,25 +214,24 @@ function ServicesPage() {
           ))}
 
           {uncategorised.filter(matchTreat).length > 0 && (
-            <Card>
-              <CardContent className="p-4">
-                <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Uncategorised services
-                </p>
-                <div className="space-y-2">
-                  {uncategorised.filter(matchTreat).map((t) => (
-                    <ServiceRow
-                      key={t.id}
-                      treat={t}
-                      onDelete={() => handleDeleteTreat(t)}
-                    />
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+            <div className="p-4">
+              <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Uncategorised services
+              </p>
+              <div className="space-y-2">
+                {uncategorised.filter(matchTreat).map((t) => (
+                  <ServiceRow
+                    key={t.id}
+                    treat={t}
+                    onDelete={() => handleDeleteTreat(t)}
+                  />
+                ))}
+              </div>
+            </div>
           )}
         </div>
       )}
+
 
       <CategoryDialog
         state={catDialog}
