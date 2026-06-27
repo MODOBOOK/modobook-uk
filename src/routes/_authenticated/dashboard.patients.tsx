@@ -1,17 +1,19 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { listMyAppointments } from "@/lib/availability.functions";
+import { listConsultationsForPatient, createConsultation } from "@/lib/consultations.functions";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Loader2, Mail, Phone, Calendar } from "lucide-react";
+import { Loader2, Mail, Phone, Calendar, ClipboardList, Plus } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard/patients")({
   ssr: false,
