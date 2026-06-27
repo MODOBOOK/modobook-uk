@@ -274,3 +274,60 @@ export const deleteBlockedDate = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+// ---------- Blocked TIMES (timed blocks on a single day) ----------
+
+export const listBlockedTimes = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const profileId = await getProfileId(context.supabase, context.userId);
+    if (!profileId) return [];
+    const { data, error } = await context.supabase
+      .from("blocked_times")
+      .select("*")
+      .eq("profile_id", profileId)
+      .order("date")
+      .order("start_time");
+    if (error) throw error;
+    return data ?? [];
+  });
+
+export const addBlockedTime = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    (d: { date: string; start_time: string; end_time: string; reason?: string | null; location_id?: string | null }) => d,
+  )
+  .handler(async ({ data, context }) => {
+    const profileId = await getProfileId(context.supabase, context.userId);
+    if (!profileId) throw new Error("Profile not found");
+    const { data: row, error } = await context.supabase
+      .from("blocked_times")
+      .insert({
+        profile_id: profileId,
+        date: data.date,
+        start_time: data.start_time,
+        end_time: data.end_time,
+        reason: data.reason ?? null,
+        location_id: data.location_id ?? null,
+      })
+      .select()
+      .single();
+    if (error) throw error;
+    return row;
+  });
+
+export const deleteBlockedTime = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string }) => d)
+  .handler(async ({ data, context }) => {
+    const profileId = await getProfileId(context.supabase, context.userId);
+    if (!profileId) throw new Error("Profile not found");
+    const { error } = await context.supabase
+      .from("blocked_times")
+      .delete()
+      .eq("id", data.id)
+      .eq("profile_id", profileId);
+    if (error) throw error;
+    return { ok: true };
+  });
+
+

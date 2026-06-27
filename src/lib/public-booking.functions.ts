@@ -156,8 +156,18 @@ export const getDayAvailability = createServerFn({ method: "GET" })
       .eq("profile_id", data.profileId)
       .eq("date", data.date);
 
-    return { isBlocked, busy: appts ?? [], overrides: overrides ?? [] };
+    const { data: blockedTimes } = await sb
+      .from("blocked_times")
+      .select("start_time,end_time,location_id")
+      .eq("profile_id", data.profileId)
+      .eq("date", data.date);
+    const blockedBusy = (blockedTimes ?? [])
+      .filter((b) => !b.location_id || !data.locationId || b.location_id === data.locationId)
+      .map((b) => ({ start_time: b.start_time, end_time: b.end_time, location_id: b.location_id, status: "blocked" }));
+
+    return { isBlocked, busy: [...(appts ?? []), ...blockedBusy], overrides: overrides ?? [] };
   });
+
 
 export const getMonthAvailability = createServerFn({ method: "GET" })
   .inputValidator((input: { profileId: string; year: number; month: number; locationId?: string | null }) => input)

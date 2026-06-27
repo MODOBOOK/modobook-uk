@@ -1,7 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { getMyProfile } from "@/lib/profiles.functions";
 import { createAppointmentForPatient } from "@/lib/appointments.functions";
+import { createPaymentLink } from "@/lib/payment-links.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,7 +11,9 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
+
 
 export const Route = createFileRoute("/_authenticated/dashboard/new-appointment")({
   ssr: false,
@@ -44,6 +48,11 @@ function NewAppointmentPage() {
   const [addrPostcode, setAddrPostcode] = useState("");
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
+  const [sendDeposit, setSendDeposit] = useState(false);
+  const [depositAmount, setDepositAmount] = useState("");
+  const [depositHours, setDepositHours] = useState("24");
+  const createLink = useServerFn(createPaymentLink);
+
 
   useEffect(() => {
     (async () => {
@@ -75,10 +84,11 @@ function NewAppointmentPage() {
         const dow = new Date(date + "T00:00:00").getDay();
         const matchLoc = (rowLoc: string | null) => !locationId || !rowLoc || rowLoc === locationId;
 
-        const [{ data: rules }, { data: overrides }, { data: blocked }, { data: appts }] = await Promise.all([
+        const [{ data: rules }, { data: overrides }, { data: blocked }, { data: blockedT }, { data: appts }] = await Promise.all([
           supabase.from("availability_rules").select("start_time,end_time,slot_interval,location_id,day_of_week").eq("profile_id", profile.id).eq("day_of_week", dow),
           supabase.from("availability_overrides").select("start_time,end_time,slot_interval,location_id").eq("profile_id", profile.id).eq("date", date),
           supabase.from("blocked_dates").select("location_id").eq("profile_id", profile.id).eq("date", date),
+          supabase.from("blocked_times").select("start_time,end_time,location_id").eq("profile_id", profile.id).eq("date", date),
           supabase.from("appointments").select("start_time,end_time,location_id,status").eq("profile_id", profile.id).eq("scheduled_date", date).neq("status", "cancelled"),
         ]);
 
@@ -89,7 +99,11 @@ function NewAppointmentPage() {
           ...(rules ?? []).filter((r) => matchLoc(r.location_id)),
           ...(overrides ?? []).filter((o) => matchLoc(o.location_id)),
         ];
-        const busy = (appts ?? []).filter((a) => matchLoc(a.location_id));
+        const busy = [
+          ...(appts ?? []).filter((a) => matchLoc(a.location_id)),
+          ...(blockedT ?? []).filter((b) => matchLoc(b.location_id)).map((b) => ({ start_time: b.start_time, end_time: b.end_time, location_id: b.location_id })),
+        ];
+
 
         const toMin = (t: string) => {
           const [h, m] = t.split(":").map(Number); return h * 60 + m;
@@ -152,15 +166,43 @@ function NewAppointmentPage() {
       const manageUrl = result.manageToken
         ? `${window.location.origin}/m/${profile.slug}/manage/${result.manageToken}`
         : null;
+
+      let depositUrl: string | null = null;
+      if (sendDeposit) {
+        const amt = Math.round(parseFloat(depositAmount || "0") * 100);
+        const hrs = Math.max(1, parseInt(depositHours || "24", 10));
+        if (amt >= 100) {
+          try {
+            const link = await createLink({
+              data: {
+                amountCents: amt,
+                description: `Deposit · ${treatment.name} · ${patientName}`,
+                kind: "deposit",
+                appointmentId: result.id,
+                recipientEmail: patientEmail,
+                recipientName: patientName,
+                expiresAt: new Date(Date.now() + hrs * 3600 * 1000).toISOString(),
+              },
+            });
+            depositUrl = (link as { stripe_url: string | null }).stripe_url;
+          } catch (e) {
+            toast.error(`Deposit link failed: ${(e as Error).message}`);
+          }
+        }
+      }
+
       toast.success("Appointment created", {
-        description: manageUrl
-          ? "Patient can manage via the link copied to your clipboard."
+        description: depositUrl
+          ? "Deposit link copied to clipboard — paste in email/SMS to the patient."
+          : manageUrl
+          ? "Manage link copied to clipboard."
           : "Confirmed.",
       });
-      if (manageUrl && navigator.clipboard) {
-        await navigator.clipboard.writeText(manageUrl);
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(depositUrl ?? manageUrl ?? "");
       }
       navigate({ to: "/dashboard/bookings" });
+
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed");
     } finally {
@@ -287,7 +329,36 @@ function NewAppointmentPage() {
         </CardContent>
       </Card>
 
+      <Card>
+        <CardHeader><CardTitle>Deposit (optional)</CardTitle></CardHeader>
+        <CardContent className="space-y-3">
+          <label className="flex items-center gap-2 text-sm">
+            <Checkbox checked={sendDeposit} onCheckedChange={(v) => setSendDeposit(!!v)} />
+            <span>Send a Stripe deposit link — auto-cancel if unpaid in time</span>
+          </label>
+          {sendDeposit && (
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Deposit (£)</Label>
+                <Input type="number" inputMode="decimal" step="0.01" min="1"
+                  value={depositAmount} onChange={(e) => setDepositAmount(e.target.value)}
+                  placeholder="25.00" />
+              </div>
+              <div>
+                <Label>Cancel if unpaid in (hours)</Label>
+                <Input type="number" min="1" max="168"
+                  value={depositHours} onChange={(e) => setDepositHours(e.target.value)} />
+              </div>
+              <p className="col-span-2 text-xs text-muted-foreground">
+                A Stripe payment link will be created on your connected account and copied to your clipboard so you can paste it into an email or SMS.
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       <Button onClick={submit} disabled={saving} size="lg" className="w-full">
+
         {saving ? "Creating…" : "Create appointment"}
       </Button>
     </div>

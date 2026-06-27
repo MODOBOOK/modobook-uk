@@ -170,9 +170,17 @@ export type Database = {
           aftercare_sent_at: string | null
           allergies_text: string | null
           base_amount: number | null
+          checkout_completed_at: string | null
+          checkout_discount_cents: number | null
+          checkout_method: string | null
+          checkout_notes: string | null
           consent_signed_url: string | null
           created_at: string
           created_by_practitioner: boolean | null
+          deposit_due_at: string | null
+          deposit_paid_at: string | null
+          deposit_payment_link_id: string | null
+          deposit_required_cents: number | null
           discount_amount: number | null
           discount_code_id: string | null
           end_time: string
@@ -208,9 +216,17 @@ export type Database = {
           aftercare_sent_at?: string | null
           allergies_text?: string | null
           base_amount?: number | null
+          checkout_completed_at?: string | null
+          checkout_discount_cents?: number | null
+          checkout_method?: string | null
+          checkout_notes?: string | null
           consent_signed_url?: string | null
           created_at?: string
           created_by_practitioner?: boolean | null
+          deposit_due_at?: string | null
+          deposit_paid_at?: string | null
+          deposit_payment_link_id?: string | null
+          deposit_required_cents?: number | null
           discount_amount?: number | null
           discount_code_id?: string | null
           end_time: string
@@ -246,9 +262,17 @@ export type Database = {
           aftercare_sent_at?: string | null
           allergies_text?: string | null
           base_amount?: number | null
+          checkout_completed_at?: string | null
+          checkout_discount_cents?: number | null
+          checkout_method?: string | null
+          checkout_notes?: string | null
           consent_signed_url?: string | null
           created_at?: string
           created_by_practitioner?: boolean | null
+          deposit_due_at?: string | null
+          deposit_paid_at?: string | null
+          deposit_payment_link_id?: string | null
+          deposit_required_cents?: number | null
           discount_amount?: number | null
           discount_code_id?: string | null
           end_time?: string
@@ -279,6 +303,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "appointments_deposit_payment_link_id_fkey"
+            columns: ["deposit_payment_link_id"]
+            isOneToOne: false
+            referencedRelation: "payment_links"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "appointments_discount_code_id_fkey"
             columns: ["discount_code_id"]
@@ -463,6 +494,57 @@ export type Database = {
           },
           {
             foreignKeyName: "blocked_dates_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      blocked_times: {
+        Row: {
+          created_at: string
+          date: string
+          end_time: string
+          id: string
+          location_id: string | null
+          profile_id: string
+          reason: string | null
+          start_time: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          end_time: string
+          id?: string
+          location_id?: string | null
+          profile_id: string
+          reason?: string | null
+          start_time: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          end_time?: string
+          id?: string
+          location_id?: string | null
+          profile_id?: string
+          reason?: string | null
+          start_time?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blocked_times_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "blocked_times_profile_id_fkey"
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
@@ -1700,6 +1782,78 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      payment_links: {
+        Row: {
+          amount_cents: number
+          appointment_id: string | null
+          created_at: string
+          currency: string
+          description: string | null
+          expires_at: string | null
+          id: string
+          kind: string
+          paid_at: string | null
+          profile_id: string
+          recipient_email: string | null
+          recipient_name: string | null
+          status: string
+          stripe_payment_link_id: string | null
+          stripe_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount_cents: number
+          appointment_id?: string | null
+          created_at?: string
+          currency?: string
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          kind?: string
+          paid_at?: string | null
+          profile_id: string
+          recipient_email?: string | null
+          recipient_name?: string | null
+          status?: string
+          stripe_payment_link_id?: string | null
+          stripe_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount_cents?: number
+          appointment_id?: string | null
+          created_at?: string
+          currency?: string
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          kind?: string
+          paid_at?: string | null
+          profile_id?: string
+          recipient_email?: string | null
+          recipient_name?: string | null
+          status?: string
+          stripe_payment_link_id?: string | null
+          stripe_url?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_links_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_links_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       payments: {
         Row: {
