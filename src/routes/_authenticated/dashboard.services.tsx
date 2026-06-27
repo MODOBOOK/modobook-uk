@@ -522,8 +522,10 @@ function ServiceRow({
 
       <Link
         to="/dashboard/treatments"
+        search={{ edit: treat.id }}
         className="rounded-md p-1.5 text-[hsl(var(--accent))] hover:bg-muted"
-        aria-label="Edit service"
+        aria-label="Edit service (price, add-ons, discount, consent forms)"
+        title="Edit · add-ons · discount · consent forms"
       >
         <Pencil className="h-4 w-4" />
       </Link>
