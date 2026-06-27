@@ -55,6 +55,12 @@ export const Route = createFileRoute("/_authenticated/dashboard/services")({
   component: ServicesPage,
 });
 
+const PRESET_COLORS = [
+  "#ef4444", "#f97316", "#f59e0b", "#eab308", "#84cc16",
+  "#10b981", "#06b6d4", "#3b82f6", "#8b5cf6", "#ec4899",
+];
+
+
 type Cat = {
   id: string;
   parent_id: string | null;
@@ -70,7 +76,9 @@ type Treat = {
   duration: number;
   price: number;
   category_id: string | null;
+  color?: string | null;
 };
+
 type CatNode = Cat & { children: CatNode[]; treatments: Treat[] };
 
 function buildTree(cats: Cat[], treats: Treat[]): {
@@ -499,12 +507,19 @@ function ServiceRow({
       </div>
       <GripVertical className="h-4 w-4 shrink-0 text-[hsl(var(--accent))]/70" />
 
+      <span
+        className="h-3.5 w-3.5 shrink-0 rounded-full border"
+        style={{ backgroundColor: treat.color || "transparent" }}
+        aria-label="Calendar colour"
+      />
+
       <div className="flex-1 min-w-0">
         <p className="truncate text-sm font-semibold text-[hsl(var(--primary))]">{treat.name}</p>
         <p className="text-xs text-muted-foreground">
           £{treat.price} · {treat.duration} min
         </p>
       </div>
+
       <Link
         to="/dashboard/treatments"
         className="rounded-md p-1.5 text-[hsl(var(--accent))] hover:bg-muted"
@@ -635,6 +650,7 @@ function ServiceDialog({
     session_count?: number;
     allow_split_payment?: boolean;
     rebook_reminder_days?: number | null;
+    color?: string | null;
   }) => Promise<void>;
 }) {
   const open = !!state;
@@ -646,6 +662,7 @@ function ServiceDialog({
   const [sessionCount, setSessionCount] = useState(1);
   const [allowSplit, setAllowSplit] = useState(false);
   const [rebookDays, setRebookDays] = useState<string>("");
+  const [color, setColor] = useState<string>(PRESET_COLORS[0]);
   const [saving, setSaving] = useState(false);
 
   useMemo(() => {
@@ -658,8 +675,10 @@ function ServiceDialog({
       setSessionCount(1);
       setAllowSplit(false);
       setRebookDays("");
+      setColor(PRESET_COLORS[Math.floor(Math.random() * PRESET_COLORS.length)]);
     }
   }, [open, state]);
+
 
 
   return (
@@ -770,6 +789,25 @@ function ServiceDialog({
             )}
           </div>
 
+          <div className="space-y-1.5">
+            <Label>Calendar colour</Label>
+            <div className="flex flex-wrap gap-2">
+              {PRESET_COLORS.map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => setColor(c)}
+                  className={`h-8 w-8 rounded-full border-2 transition ${color === c ? "ring-2 ring-offset-2 ring-foreground border-white" : "border-white/60"}`}
+                  style={{ backgroundColor: c }}
+                  aria-label={`Pick ${c}`}
+                />
+              ))}
+            </div>
+            <p className="text-[11px] text-muted-foreground">Appointments for this service appear in this colour on your calendar.</p>
+          </div>
+
+
+
           <p className="text-xs text-muted-foreground">
             For consent forms, deposits, staff and media options, edit the service from{" "}
             <Link to="/dashboard/treatments" className="underline">
@@ -796,6 +834,8 @@ function ServiceDialog({
                 session_count: sessionCount,
                 allow_split_payment: sessionCount > 1 ? allowSplit : false,
                 rebook_reminder_days: rebookDays.trim() ? Number(rebookDays) : null,
+                color,
+
               });
 
               setSaving(false);

@@ -55,8 +55,10 @@ export const createTreatment = createServerFn({ method: "POST" })
       session_count?: number;
       allow_split_payment?: boolean;
       rebook_reminder_days?: number | null;
+      color?: string | null;
 
     }) => input,
+
   )
   .handler(async ({ data, context }) => {
     const { supabase } = context;
@@ -87,8 +89,9 @@ export const createTreatment = createServerFn({ method: "POST" })
         session_count: data.session_count ?? 1,
         allow_split_payment: data.allow_split_payment ?? false,
         rebook_reminder_days: data.rebook_reminder_days ?? null,
+        color: data.color ?? null,
+      } as never)
 
-      })
       .select()
       .single();
     if (tErr) throw tErr;
@@ -117,7 +120,9 @@ export const updateTreatment = createServerFn({ method: "POST" })
       session_count?: number;
       allow_split_payment?: boolean;
       rebook_reminder_days?: number | null;
+      color?: string | null;
     }) => input,
+
 
   )
   .handler(async ({ data, context }) => {
@@ -140,6 +145,8 @@ export const updateTreatment = createServerFn({ method: "POST" })
     if (data.session_count !== undefined) update.session_count = data.session_count;
     if (data.allow_split_payment !== undefined) update.allow_split_payment = data.allow_split_payment;
     if (data.rebook_reminder_days !== undefined) update.rebook_reminder_days = data.rebook_reminder_days;
+    if (data.color !== undefined) (update as Record<string, unknown>).color = data.color;
+
 
 
     const { data: treatment, error } = await supabase
