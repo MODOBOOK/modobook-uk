@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/_authenticated/dashboard/consultations")({
+export const Route = createFileRoute("/_authenticated/dashboard/consultations/")({
   ssr: false,
   component: ConsultationsPage,
 });
