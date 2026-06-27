@@ -226,17 +226,21 @@ function TreatmentsPage() {
 function TreatmentDialog({
   treatment,
   categoryOptions,
+  consentTemplates,
   onSave,
 }: {
   treatment: Treatment | null;
   categoryOptions: { id: string; label: string; depth: number }[];
+  consentTemplates: ConsentTpl[];
   onSave: (f: TreatmentForm) => void;
 }) {
+  const fetchConsents = useServerFn(getTreatmentConsents);
   const [name, setName] = useState(treatment?.name ?? "");
   const [duration, setDuration] = useState(treatment?.duration ?? 30);
   const [price, setPrice] = useState(treatment?.price ?? 0);
   const [description, setDescription] = useState(treatment?.description ?? "");
   const [categoryId, setCategoryId] = useState<string>(treatment?.category_id ?? "__none__");
+  const [consentIds, setConsentIds] = useState<string[]>([]);
 
   useEffect(() => {
     setName(treatment?.name ?? "");
@@ -244,10 +248,23 @@ function TreatmentDialog({
     setPrice(treatment?.price ?? 0);
     setDescription(treatment?.description ?? "");
     setCategoryId(treatment?.category_id ?? "__none__");
-  }, [treatment]);
+    if (treatment?.id) {
+      fetchConsents({ data: { treatmentId: treatment.id } })
+        .then((ids) => setConsentIds(ids as string[]))
+        .catch(() => setConsentIds([]));
+    } else {
+      setConsentIds([]);
+    }
+  }, [treatment, fetchConsents]);
+
+  function toggleConsent(id: string) {
+    setConsentIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+  }
 
   return (
-    <DialogContent>
+    <DialogContent className="max-h-[90vh] overflow-y-auto">
       <DialogHeader>
         <DialogTitle>{treatment ? "Edit treatment" : "New treatment"}</DialogTitle>
       </DialogHeader>
@@ -267,16 +284,10 @@ function TreatmentDialog({
               {categoryOptions.map((c) => (
                 <SelectItem key={c.id} value={c.id}>
                   {"\u00A0\u00A0".repeat(c.depth) + c.label.split(" › ").slice(-1)[0]}
-                  <span className="text-xs text-muted-foreground ml-2">{c.label}</span>
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-          {categoryOptions.length === 0 && (
-            <p className="text-xs text-muted-foreground mt-1">
-              No categories yet — create them in Dashboard → Categories (supports sub-categories).
-            </p>
-          )}
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
@@ -292,6 +303,38 @@ function TreatmentDialog({
           <Label>Description</Label>
           <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
         </div>
+
+        <div className="rounded-md border p-3">
+          <div className="flex items-center gap-2 mb-2">
+            <FileText className="h-4 w-4 text-muted-foreground" />
+            <Label className="m-0">Consent forms to send on booking</Label>
+          </div>
+          {consentTemplates.length === 0 ? (
+            <p className="text-xs text-muted-foreground">
+              No consent forms yet. Add them in Dashboard → Consent forms.
+            </p>
+          ) : (
+            <div className="space-y-2 max-h-56 overflow-y-auto">
+              {consentTemplates.map((t) => (
+                <label key={t.id} className="flex items-start gap-2 text-sm">
+                  <Checkbox
+                    checked={consentIds.includes(t.id)}
+                    onCheckedChange={() => toggleConsent(t.id)}
+                  />
+                  <span>
+                    {t.name}
+                    {t.is_system && (
+                      <span className="ml-2 text-xs text-muted-foreground">(template)</span>
+                    )}
+                  </span>
+                </label>
+              ))}
+            </div>
+          )}
+          <p className="text-xs text-muted-foreground mt-2">
+            Patients receive a link to complete each selected form after they book.
+          </p>
+        </div>
       </div>
       <DialogFooter>
         <Button
@@ -302,6 +345,7 @@ function TreatmentDialog({
               price,
               description,
               category_id: categoryId === "__none__" ? null : categoryId,
+              consent_ids: consentIds,
             })
           }
           disabled={!name}
@@ -312,3 +356,4 @@ function TreatmentDialog({
     </DialogContent>
   );
 }
+
