@@ -28,7 +28,7 @@ function ClinicPage() {
   async function save() {
     setSaving(true);
     try {
-      await update({ data: { clinic_name: clinicName, tagline, about, phone, email } });
+      await update({ data: { id: profile.id, clinic_name: clinicName, tagline, about, phone, email } });
       toast.success("Saved");
       router.invalidate();
     } catch (e) {
