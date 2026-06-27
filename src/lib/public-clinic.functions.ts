@@ -83,6 +83,12 @@ export const getPublicClinic = createServerFn({ method: "GET" })
       .eq("profile_id", profile.id)
       .maybeSingle();
 
+    const { data: reviews } = await supabase
+      .from("patient_reviews")
+      .select("id, rating")
+      .eq("profile_id", profile.id)
+      .eq("approved", true);
+
     return {
       profile,
       treatments: treatments ?? [],
@@ -93,5 +99,7 @@ export const getPublicClinic = createServerFn({ method: "GET" })
       categories: categories ?? [],
       pricing: pricing ?? [],
       theme: theme ?? null,
+      reviews: reviews ?? [],
     };
   });
+
