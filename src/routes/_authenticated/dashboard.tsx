@@ -33,6 +33,7 @@ const navItems = [
   { label: "Dashboard", to: "/dashboard", icon: LayoutDashboard },
   { label: "Clinic page", to: "/dashboard/clinic", icon: Store },
   { label: "Treatments", to: "/dashboard/treatments", icon: Scissors },
+  { label: "Categories", to: "/dashboard/categories", icon: FolderTree },
   { label: "Availability", to: "/dashboard/availability", icon: CalendarDays },
   { label: "Bookings", to: "/dashboard/bookings", icon: Users },
   { label: "Payments", to: "/dashboard/payments", icon: CreditCard },
