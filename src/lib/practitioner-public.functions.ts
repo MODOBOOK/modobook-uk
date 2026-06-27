@@ -19,7 +19,12 @@ export const getPractitionerBio = createServerFn({ method: "GET" })
       .maybeSingle();
     if (error) throw error;
     if (!profile) throw new Error("Practitioner not found");
-    return { profile };
+    const { data: theme } = await supabase
+      .from("clinic_theme")
+      .select("*")
+      .eq("profile_id", profile.id)
+      .maybeSingle();
+    return { profile, theme: theme ?? null };
   });
 
 export const getPractitionerReviews = createServerFn({ method: "GET" })
