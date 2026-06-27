@@ -14,16 +14,606 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      appointments: {
+        Row: {
+          addon_ids: string[] | null
+          base_amount: number | null
+          consent_signed_url: string | null
+          created_at: string
+          end_time: string
+          id: string
+          notes: string | null
+          package_purchase_id: string | null
+          patient_email: string
+          patient_name: string
+          patient_phone: string | null
+          payment_method: string | null
+          payment_status: Database["public"]["Enums"]["payment_status"] | null
+          profile_id: string
+          scheduled_date: string
+          start_time: string
+          status: Database["public"]["Enums"]["appointment_status"] | null
+          stripe_payment_intent_id: string | null
+          surcharge_amount: number | null
+          total_amount: number | null
+          treatment_id: string
+          updated_at: string
+        }
+        Insert: {
+          addon_ids?: string[] | null
+          base_amount?: number | null
+          consent_signed_url?: string | null
+          created_at?: string
+          end_time: string
+          id?: string
+          notes?: string | null
+          package_purchase_id?: string | null
+          patient_email: string
+          patient_name: string
+          patient_phone?: string | null
+          payment_method?: string | null
+          payment_status?: Database["public"]["Enums"]["payment_status"] | null
+          profile_id: string
+          scheduled_date: string
+          start_time: string
+          status?: Database["public"]["Enums"]["appointment_status"] | null
+          stripe_payment_intent_id?: string | null
+          surcharge_amount?: number | null
+          total_amount?: number | null
+          treatment_id: string
+          updated_at?: string
+        }
+        Update: {
+          addon_ids?: string[] | null
+          base_amount?: number | null
+          consent_signed_url?: string | null
+          created_at?: string
+          end_time?: string
+          id?: string
+          notes?: string | null
+          package_purchase_id?: string | null
+          patient_email?: string
+          patient_name?: string
+          patient_phone?: string | null
+          payment_method?: string | null
+          payment_status?: Database["public"]["Enums"]["payment_status"] | null
+          profile_id?: string
+          scheduled_date?: string
+          start_time?: string
+          status?: Database["public"]["Enums"]["appointment_status"] | null
+          stripe_payment_intent_id?: string | null
+          surcharge_amount?: number | null
+          total_amount?: number | null
+          treatment_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointments_package_purchase_id_fkey"
+            columns: ["package_purchase_id"]
+            isOneToOne: false
+            referencedRelation: "package_purchases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_treatment_id_fkey"
+            columns: ["treatment_id"]
+            isOneToOne: false
+            referencedRelation: "treatments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      availability_rules: {
+        Row: {
+          created_at: string
+          day_of_week: number
+          end_time: string
+          id: string
+          profile_id: string
+          slot_interval: number
+          start_time: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          day_of_week: number
+          end_time: string
+          id?: string
+          profile_id: string
+          slot_interval?: number
+          start_time: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          day_of_week?: number
+          end_time?: string
+          id?: string
+          profile_id?: string
+          slot_interval?: number
+          start_time?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "availability_rules_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      blocked_dates: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          profile_id: string
+          reason: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          id?: string
+          profile_id: string
+          reason?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          profile_id?: string
+          reason?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blocked_dates_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clinic_gallery: {
+        Row: {
+          caption: string | null
+          created_at: string
+          display_order: number | null
+          id: string
+          image_url: string
+          profile_id: string
+          updated_at: string
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string
+          display_order?: number | null
+          id?: string
+          image_url: string
+          profile_id: string
+          updated_at?: string
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string
+          display_order?: number | null
+          id?: string
+          image_url?: string
+          profile_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clinic_gallery_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clinic_testimonials: {
+        Row: {
+          author_name: string
+          created_at: string
+          display_order: number | null
+          id: string
+          profile_id: string
+          quote: string
+          rating: number | null
+          updated_at: string
+        }
+        Insert: {
+          author_name: string
+          created_at?: string
+          display_order?: number | null
+          id?: string
+          profile_id: string
+          quote: string
+          rating?: number | null
+          updated_at?: string
+        }
+        Update: {
+          author_name?: string
+          created_at?: string
+          display_order?: number | null
+          id?: string
+          profile_id?: string
+          quote?: string
+          rating?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clinic_testimonials_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      package_purchases: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          id: string
+          package_id: string
+          patient_email: string
+          sessions_remaining: number
+          status: string | null
+          stripe_payment_intent_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          package_id: string
+          patient_email: string
+          sessions_remaining: number
+          status?: string | null
+          stripe_payment_intent_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          package_id?: string
+          patient_email?: string
+          sessions_remaining?: number
+          status?: string | null
+          stripe_payment_intent_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "package_purchases_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "packages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      packages: {
+        Row: {
+          active: boolean | null
+          created_at: string
+          expiry_days: number | null
+          id: string
+          name: string
+          price: number
+          profile_id: string
+          session_count: number
+          treatment_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string
+          expiry_days?: number | null
+          id?: string
+          name: string
+          price: number
+          profile_id: string
+          session_count: number
+          treatment_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string
+          expiry_days?: number | null
+          id?: string
+          name?: string
+          price?: number
+          profile_id?: string
+          session_count?: number
+          treatment_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "packages_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "packages_treatment_id_fkey"
+            columns: ["treatment_id"]
+            isOneToOne: false
+            referencedRelation: "treatments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payments: {
+        Row: {
+          amount: number
+          appointment_id: string | null
+          created_at: string
+          id: string
+          package_purchase_id: string | null
+          profile_id: string
+          status: string | null
+          stripe_payment_intent_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          appointment_id?: string | null
+          created_at?: string
+          id?: string
+          package_purchase_id?: string | null
+          profile_id: string
+          status?: string | null
+          stripe_payment_intent_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          appointment_id?: string | null
+          created_at?: string
+          id?: string
+          package_purchase_id?: string | null
+          profile_id?: string
+          status?: string | null
+          stripe_payment_intent_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_package_purchase_id_fkey"
+            columns: ["package_purchase_id"]
+            isOneToOne: false
+            referencedRelation: "package_purchases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          about: string | null
+          active: boolean | null
+          address: Json | null
+          bio: string | null
+          brand_color: string | null
+          clinic_name: string | null
+          created_at: string
+          email: string | null
+          full_name: string | null
+          hero_url: string | null
+          id: string
+          phone: string | null
+          role: Database["public"]["Enums"]["app_role"]
+          slug: string | null
+          social_links: Json | null
+          stripe_connect_account_id: string | null
+          stripe_connect_onboarding_status: string | null
+          tagline: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          about?: string | null
+          active?: boolean | null
+          address?: Json | null
+          bio?: string | null
+          brand_color?: string | null
+          clinic_name?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          hero_url?: string | null
+          id?: string
+          phone?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+          slug?: string | null
+          social_links?: Json | null
+          stripe_connect_account_id?: string | null
+          stripe_connect_onboarding_status?: string | null
+          tagline?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          about?: string | null
+          active?: boolean | null
+          address?: Json | null
+          bio?: string | null
+          brand_color?: string | null
+          clinic_name?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          hero_url?: string | null
+          id?: string
+          phone?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+          slug?: string | null
+          social_links?: Json | null
+          stripe_connect_account_id?: string | null
+          stripe_connect_onboarding_status?: string | null
+          tagline?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      treatment_addons: {
+        Row: {
+          addon_id: string
+          created_at: string
+          id: string
+          treatment_id: string
+        }
+        Insert: {
+          addon_id: string
+          created_at?: string
+          id?: string
+          treatment_id: string
+        }
+        Update: {
+          addon_id?: string
+          created_at?: string
+          id?: string
+          treatment_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "treatment_addons_addon_id_fkey"
+            columns: ["addon_id"]
+            isOneToOne: false
+            referencedRelation: "treatments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treatment_addons_treatment_id_fkey"
+            columns: ["treatment_id"]
+            isOneToOne: false
+            referencedRelation: "treatments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      treatments: {
+        Row: {
+          active: boolean | null
+          consent_form_url: string | null
+          created_at: string
+          deductible_against: string[] | null
+          deductible_window_days: number | null
+          deposit_amount: number | null
+          description: string | null
+          duration: number
+          id: string
+          is_consultation: boolean | null
+          name: string
+          payment_mode: Database["public"]["Enums"]["payment_mode"]
+          picture_url: string | null
+          price: number
+          profile_id: string
+          timing_notes: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean | null
+          consent_form_url?: string | null
+          created_at?: string
+          deductible_against?: string[] | null
+          deductible_window_days?: number | null
+          deposit_amount?: number | null
+          description?: string | null
+          duration: number
+          id?: string
+          is_consultation?: boolean | null
+          name: string
+          payment_mode?: Database["public"]["Enums"]["payment_mode"]
+          picture_url?: string | null
+          price: number
+          profile_id: string
+          timing_notes?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean | null
+          consent_form_url?: string | null
+          created_at?: string
+          deductible_against?: string[] | null
+          deductible_window_days?: number | null
+          deposit_amount?: number | null
+          description?: string | null
+          duration?: number
+          id?: string
+          is_consultation?: boolean | null
+          name?: string
+          payment_mode?: Database["public"]["Enums"]["payment_mode"]
+          picture_url?: string | null
+          price?: number
+          profile_id?: string
+          timing_notes?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "treatments_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_active_profile_path: { Args: { path: string }; Returns: boolean }
+      is_object_owner: { Args: { path: string }; Returns: boolean }
+      is_profile_owner: { Args: { _profile_id: string }; Returns: boolean }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "practitioner" | "admin"
+      appointment_status:
+        | "pending"
+        | "confirmed"
+        | "cancelled"
+        | "completed"
+        | "no_show"
+      payment_mode: "full" | "deposit" | "pay_in_clinic"
+      payment_status: "pending" | "paid" | "refunded" | "failed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +740,17 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["practitioner", "admin"],
+      appointment_status: [
+        "pending",
+        "confirmed",
+        "cancelled",
+        "completed",
+        "no_show",
+      ],
+      payment_mode: ["full", "deposit", "pay_in_clinic"],
+      payment_status: ["pending", "paid", "refunded", "failed"],
+    },
   },
 } as const
