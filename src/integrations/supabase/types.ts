@@ -87,9 +87,11 @@ export type Database = {
           base_amount: number | null
           consent_signed_url: string | null
           created_at: string
+          created_by_practitioner: boolean | null
           end_time: string
           id: string
           location_id: string | null
+          manage_token: string | null
           notes: string | null
           package_purchase_id: string | null
           patient_address: Json | null
@@ -116,9 +118,11 @@ export type Database = {
           base_amount?: number | null
           consent_signed_url?: string | null
           created_at?: string
+          created_by_practitioner?: boolean | null
           end_time: string
           id?: string
           location_id?: string | null
+          manage_token?: string | null
           notes?: string | null
           package_purchase_id?: string | null
           patient_address?: Json | null
@@ -145,9 +149,11 @@ export type Database = {
           base_amount?: number | null
           consent_signed_url?: string | null
           created_at?: string
+          created_by_practitioner?: boolean | null
           end_time?: string
           id?: string
           location_id?: string | null
+          manage_token?: string | null
           notes?: string | null
           package_purchase_id?: string | null
           patient_address?: Json | null
@@ -947,8 +953,11 @@ export type Database = {
           avatar_url: string | null
           bio: string | null
           brand_color: string | null
+          cancellation_rules: Json | null
           clinic_name: string | null
           created_at: string
+          deposit_amount_cents: number | null
+          deposit_policy_text: string | null
           email: string | null
           full_name: string | null
           hero_url: string | null
@@ -965,6 +974,7 @@ export type Database = {
           timeline: Json
           updated_at: string
           user_id: string
+          welcome_intro_html: string | null
         }
         Insert: {
           about?: string | null
@@ -973,8 +983,11 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           brand_color?: string | null
+          cancellation_rules?: Json | null
           clinic_name?: string | null
           created_at?: string
+          deposit_amount_cents?: number | null
+          deposit_policy_text?: string | null
           email?: string | null
           full_name?: string | null
           hero_url?: string | null
@@ -991,6 +1004,7 @@ export type Database = {
           timeline?: Json
           updated_at?: string
           user_id: string
+          welcome_intro_html?: string | null
         }
         Update: {
           about?: string | null
@@ -999,8 +1013,11 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           brand_color?: string | null
+          cancellation_rules?: Json | null
           clinic_name?: string | null
           created_at?: string
+          deposit_amount_cents?: number | null
+          deposit_policy_text?: string | null
           email?: string | null
           full_name?: string | null
           hero_url?: string | null
@@ -1017,6 +1034,7 @@ export type Database = {
           timeline?: Json
           updated_at?: string
           user_id?: string
+          welcome_intro_html?: string | null
         }
         Relationships: []
       }
@@ -1284,6 +1302,29 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cancel_appointment_by_token: {
+        Args: { p_token: string }
+        Returns: boolean
+      }
+      get_appointment_by_manage_token: {
+        Args: { p_token: string }
+        Returns: {
+          cancellation_rules: Json
+          clinic_name: string
+          deposit_policy_text: string
+          end_time: string
+          id: string
+          location_name: string
+          patient_email: string
+          patient_name: string
+          patient_phone: string
+          scheduled_date: string
+          slug: string
+          start_time: string
+          status: string
+          treatment_name: string
+        }[]
+      }
       get_consent_by_token: {
         Args: { p_token: string }
         Returns: {
@@ -1309,8 +1350,11 @@ export type Database = {
           avatar_url: string
           bio: string
           brand_color: string
+          cancellation_rules: Json
           clinic_name: string
           created_at: string
+          deposit_amount_cents: number
+          deposit_policy_text: string
           full_name: string
           hero_url: string
           id: string
@@ -1321,6 +1365,7 @@ export type Database = {
           tagline: string
           timeline: Json
           updated_at: string
+          welcome_intro_html: string
         }[]
       }
       is_active_profile: { Args: { _profile_id: string }; Returns: boolean }
