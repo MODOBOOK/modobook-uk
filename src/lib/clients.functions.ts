@@ -37,6 +37,8 @@ export const upsertClient = createServerFn({ method: "POST" })
     group_name?: string | null;
     notes?: string | null;
     avatar_url?: string | null;
+    has_allergies?: boolean;
+    allergies?: string | null;
   }) => input)
   .handler(async ({ data, context }) => {
     const profileId = await getProfileId(context.supabase, context.userId);
@@ -52,6 +54,8 @@ export const upsertClient = createServerFn({ method: "POST" })
       group_name: data.group_name || null,
       notes: data.notes || null,
       avatar_url: data.avatar_url || null,
+      has_allergies: !!data.has_allergies,
+      allergies: data.allergies || null,
     };
     if (data.id) {
       const { data: row, error } = await context.supabase

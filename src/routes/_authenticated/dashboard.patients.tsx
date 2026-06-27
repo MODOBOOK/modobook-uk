@@ -41,6 +41,8 @@ type Client = {
   group_name: string | null;
   notes: string | null;
   avatar_url: string | null;
+  has_allergies?: boolean | null;
+  allergies?: string | null;
 };
 
 type Appt = Awaited<ReturnType<typeof listMyAppointments>>[number];
@@ -64,6 +66,8 @@ const EMPTY_FORM: Omit<Client, "id"> = {
   group_name: "",
   notes: "",
   avatar_url: "",
+  has_allergies: false,
+  allergies: "",
 };
 
 function PatientsPage() {
@@ -141,12 +145,12 @@ function PatientsPage() {
   }
   function openEdit(c: Client) {
     if (c.id.startsWith("appt:")) {
-      // copy into form to save as a real client
       setForm({
         full_name: c.full_name,
         email: c.email ?? "",
         phone: c.phone ?? "",
         dob: "", gender: "", address: "", group_name: "", notes: "", avatar_url: "",
+        has_allergies: false, allergies: "",
       });
       setEditing(null);
     } else {
@@ -161,6 +165,8 @@ function PatientsPage() {
         group_name: c.group_name ?? "",
         notes: c.notes ?? "",
         avatar_url: c.avatar_url ?? "",
+        has_allergies: !!c.has_allergies,
+        allergies: c.allergies ?? "",
       });
       setEditing(c);
     }
@@ -174,7 +180,7 @@ function PatientsPage() {
     }
     setSaving(true);
     try {
-      await upsert({ data: form });
+      await upsert({ data: { ...form, has_allergies: !!form.has_allergies, allergies: form.allergies || null } });
       toast.success(editing ? "Client updated" : "Client added");
       setOpen(false);
       refresh();
@@ -246,12 +252,20 @@ function PatientsPage() {
                       )}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="truncate font-semibold">{c.full_name}</div>
+                      <div className="flex items-center gap-2">
+                        <span className="truncate font-semibold">{c.full_name}</span>
+                        {c.has_allergies && (
+                          <span className="shrink-0 rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold uppercase text-red-700">⚠ Allergy</span>
+                        )}
+                      </div>
                       <div className="truncate text-xs text-muted-foreground">
                         {c.phone || c.email || "No contact info"}
                       </div>
                       {c.email && c.phone && (
                         <div className="truncate text-xs text-muted-foreground">{c.email}</div>
+                      )}
+                      {c.has_allergies && c.allergies && (
+                        <div className="truncate text-xs font-medium text-red-600">Allergies: {c.allergies}</div>
                       )}
                     </div>
                     <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
@@ -299,6 +313,25 @@ function PatientsPage() {
             <Field label="Notes">
               <Textarea rows={3} value={form.notes ?? ""} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
             </Field>
+            <div className="rounded-md border border-red-200 bg-red-50/50 p-3 space-y-2">
+              <label className="flex items-center gap-2 text-sm font-semibold text-red-700">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4"
+                  checked={!!form.has_allergies}
+                  onChange={(e) => setForm({ ...form, has_allergies: e.target.checked })}
+                />
+                ⚠ This patient has allergies
+              </label>
+              {form.has_allergies && (
+                <Textarea
+                  rows={2}
+                  placeholder="List allergies (e.g. penicillin, latex, lidocaine)"
+                  value={form.allergies ?? ""}
+                  onChange={(e) => setForm({ ...form, allergies: e.target.value })}
+                />
+              )}
+            </div>
           </div>
           <DialogFooter>
             {editing && (

@@ -142,11 +142,15 @@ export type Database = {
       appointments: {
         Row: {
           addon_ids: string[] | null
+          aftercare_html: string | null
+          aftercare_sent_at: string | null
+          allergies_text: string | null
           base_amount: number | null
           consent_signed_url: string | null
           created_at: string
           created_by_practitioner: boolean | null
           end_time: string
+          has_allergies: boolean
           id: string
           location_id: string | null
           manage_token: string | null
@@ -173,11 +177,15 @@ export type Database = {
         }
         Insert: {
           addon_ids?: string[] | null
+          aftercare_html?: string | null
+          aftercare_sent_at?: string | null
+          allergies_text?: string | null
           base_amount?: number | null
           consent_signed_url?: string | null
           created_at?: string
           created_by_practitioner?: boolean | null
           end_time: string
+          has_allergies?: boolean
           id?: string
           location_id?: string | null
           manage_token?: string | null
@@ -204,11 +212,15 @@ export type Database = {
         }
         Update: {
           addon_ids?: string[] | null
+          aftercare_html?: string | null
+          aftercare_sent_at?: string | null
+          allergies_text?: string | null
           base_amount?: number | null
           consent_signed_url?: string | null
           created_at?: string
           created_by_practitioner?: boolean | null
           end_time?: string
+          has_allergies?: boolean
           id?: string
           location_id?: string | null
           manage_token?: string | null
@@ -414,6 +426,7 @@ export type Database = {
       clinic_clients: {
         Row: {
           address: string | null
+          allergies: string | null
           avatar_url: string | null
           created_at: string
           dob: string | null
@@ -421,6 +434,7 @@ export type Database = {
           full_name: string
           gender: string | null
           group_name: string | null
+          has_allergies: boolean
           id: string
           notes: string | null
           phone: string | null
@@ -429,6 +443,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          allergies?: string | null
           avatar_url?: string | null
           created_at?: string
           dob?: string | null
@@ -436,6 +451,7 @@ export type Database = {
           full_name: string
           gender?: string | null
           group_name?: string | null
+          has_allergies?: boolean
           id?: string
           notes?: string | null
           phone?: string | null
@@ -444,6 +460,7 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          allergies?: string | null
           avatar_url?: string | null
           created_at?: string
           dob?: string | null
@@ -451,6 +468,7 @@ export type Database = {
           full_name?: string
           gender?: string | null
           group_name?: string | null
+          has_allergies?: boolean
           id?: string
           notes?: string | null
           phone?: string | null
@@ -678,6 +696,7 @@ export type Database = {
           consent: Json
           created_at: string
           current_step: number
+          has_allergies: boolean
           id: string
           invoice: Json
           medical: Json
@@ -702,6 +721,7 @@ export type Database = {
           consent?: Json
           created_at?: string
           current_step?: number
+          has_allergies?: boolean
           id?: string
           invoice?: Json
           medical?: Json
@@ -726,6 +746,7 @@ export type Database = {
           consent?: Json
           created_at?: string
           current_step?: number
+          has_allergies?: boolean
           id?: string
           invoice?: Json
           medical?: Json
@@ -1613,10 +1634,12 @@ export type Database = {
       get_appointment_by_manage_token: {
         Args: { p_token: string }
         Returns: {
+          aftercare_html: string
           cancellation_rules: Json
           clinic_name: string
           deposit_policy_text: string
           end_time: string
+          has_allergies: boolean
           id: string
           location_name: string
           patient_email: string

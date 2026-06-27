@@ -77,6 +77,21 @@ function ManagePage() {
         </CardContent>
       </Card>
 
+      {(appt as any).has_allergies && (
+        <Card className="border-red-300 bg-red-50">
+          <CardHeader><CardTitle className="text-red-700 text-base">⚠ Allergies on file</CardTitle></CardHeader>
+          <CardContent className="text-sm text-red-700">{(appt as any).allergies_text || "Please notify the practitioner of your allergies on arrival."}</CardContent>
+        </Card>
+      )}
+
+      {(appt as any).aftercare_html && (
+        <Card>
+          <CardHeader><CardTitle className="text-base">Aftercare</CardTitle></CardHeader>
+          <CardContent className="text-sm whitespace-pre-wrap">{(appt as any).aftercare_html}</CardContent>
+        </Card>
+      )}
+
+
       {(rules.length > 0 || appt.deposit_policy_text) && (
         <Card>
           <CardHeader><CardTitle>Policies</CardTitle></CardHeader>
