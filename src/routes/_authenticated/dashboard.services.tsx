@@ -161,6 +161,35 @@ function ServicesPage() {
     }
   }
 
+  async function moveCat(siblings: Cat[], id: string, dir: -1 | 1) {
+    const idx = siblings.findIndex((s) => s.id === id);
+    const swap = idx + dir;
+    if (idx < 0 || swap < 0 || swap >= siblings.length) return;
+    const next = siblings.slice();
+    [next[idx], next[swap]] = [next[swap], next[idx]];
+    try {
+      await reorderCats({ data: { ids: next.map((s) => s.id) } });
+      cats.refetch();
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  }
+
+  async function moveTreat(siblings: Treat[], id: string, dir: -1 | 1) {
+    const idx = siblings.findIndex((s) => s.id === id);
+    const swap = idx + dir;
+    if (idx < 0 || swap < 0 || swap >= siblings.length) return;
+    const next = siblings.slice();
+    [next[idx], next[swap]] = [next[swap], next[idx]];
+    try {
+      await reorderTreats({ data: { ids: next.map((s) => s.id) } });
+      treats.refetch();
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  }
+
+
   return (
     <div className="space-y-5">
       <div>
