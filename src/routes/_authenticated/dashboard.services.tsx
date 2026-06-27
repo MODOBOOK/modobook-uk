@@ -632,6 +632,9 @@ function ServiceDialog({
     price: number;
     description?: string;
     category_id?: string | null;
+    session_count?: number;
+    allow_split_payment?: boolean;
+    rebook_reminder_days?: number | null;
   }) => Promise<void>;
 }) {
   const open = !!state;
@@ -640,6 +643,9 @@ function ServiceDialog({
   const [price, setPrice] = useState(0);
   const [description, setDescription] = useState("");
   const [categoryId, setCategoryId] = useState<string>("__none__");
+  const [sessionCount, setSessionCount] = useState(1);
+  const [allowSplit, setAllowSplit] = useState(false);
+  const [rebookDays, setRebookDays] = useState<string>("");
   const [saving, setSaving] = useState(false);
 
   useMemo(() => {
@@ -649,8 +655,12 @@ function ServiceDialog({
       setPrice(0);
       setDescription("");
       setCategoryId(state?.defaultCatId ?? "__none__");
+      setSessionCount(1);
+      setAllowSplit(false);
+      setRebookDays("");
     }
   }, [open, state]);
+
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
