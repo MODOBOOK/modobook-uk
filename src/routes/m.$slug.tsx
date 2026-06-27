@@ -1,6 +1,8 @@
 import { createFileRoute, Link, Outlet, useParams } from "@tanstack/react-router";
 import { getPractitionerBio } from "@/lib/practitioner-public.functions";
 import { Button } from "@/components/ui/button";
+import { UserCircle2 } from "lucide-react";
+
 import { Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/m/$slug")({
