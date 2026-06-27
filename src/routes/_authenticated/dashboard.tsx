@@ -11,6 +11,9 @@ import {
   Users,
   CreditCard,
   MapPin,
+  Palette,
+  FileText,
+  FileSignature,
   LogOut,
   Menu,
 } from "lucide-react";
@@ -33,9 +36,12 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 const navItems = [
   { label: "Dashboard", to: "/dashboard", icon: LayoutDashboard },
   { label: "Clinic page", to: "/dashboard/clinic", icon: Store },
+  { label: "Branding", to: "/dashboard/branding", icon: Palette },
   { label: "Treatments", to: "/dashboard/treatments", icon: Scissors },
   { label: "Categories", to: "/dashboard/categories", icon: FolderTree },
   { label: "Locations", to: "/dashboard/locations", icon: MapPin },
+  { label: "Medical forms", to: "/dashboard/medical-forms", icon: FileText },
+  { label: "Consent forms", to: "/dashboard/consent-forms", icon: FileSignature },
   { label: "Availability", to: "/dashboard/availability", icon: CalendarDays },
   { label: "Bookings", to: "/dashboard/bookings", icon: Users },
   { label: "Payments", to: "/dashboard/payments", icon: CreditCard },

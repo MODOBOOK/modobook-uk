@@ -23,8 +23,11 @@ import { Route as MSlugAuthRouteImport } from './routes/m.$slug.auth'
 import { Route as MSlugAccountRouteImport } from './routes/m.$slug.account'
 import { Route as MSlugAboutRouteImport } from './routes/m.$slug.about'
 import { Route as AuthenticatedDashboardReviewsRouteImport } from './routes/_authenticated/dashboard.reviews'
+import { Route as AuthenticatedDashboardMedicalFormsRouteImport } from './routes/_authenticated/dashboard.medical-forms'
 import { Route as AuthenticatedDashboardLocationsRouteImport } from './routes/_authenticated/dashboard.locations'
+import { Route as AuthenticatedDashboardConsentFormsRouteImport } from './routes/_authenticated/dashboard.consent-forms'
 import { Route as AuthenticatedDashboardCategoriesRouteImport } from './routes/_authenticated/dashboard.categories'
+import { Route as AuthenticatedDashboardBrandingRouteImport } from './routes/_authenticated/dashboard.branding'
 import { Route as AuthenticatedDashboardBioRouteImport } from './routes/_authenticated/dashboard.bio'
 
 const AuthRoute = AuthRouteImport.update({
@@ -98,16 +101,34 @@ const AuthenticatedDashboardReviewsRoute =
     path: '/reviews',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
+const AuthenticatedDashboardMedicalFormsRoute =
+  AuthenticatedDashboardMedicalFormsRouteImport.update({
+    id: '/medical-forms',
+    path: '/medical-forms',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
 const AuthenticatedDashboardLocationsRoute =
   AuthenticatedDashboardLocationsRouteImport.update({
     id: '/locations',
     path: '/locations',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
+const AuthenticatedDashboardConsentFormsRoute =
+  AuthenticatedDashboardConsentFormsRouteImport.update({
+    id: '/consent-forms',
+    path: '/consent-forms',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
 const AuthenticatedDashboardCategoriesRoute =
   AuthenticatedDashboardCategoriesRouteImport.update({
     id: '/categories',
     path: '/categories',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardBrandingRoute =
+  AuthenticatedDashboardBrandingRouteImport.update({
+    id: '/branding',
+    path: '/branding',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
 const AuthenticatedDashboardBioRoute =
@@ -125,8 +146,11 @@ export interface FileRoutesByFullPath {
   '/book/$slug': typeof BookSlugRoute
   '/m/$slug': typeof MSlugRouteWithChildren
   '/dashboard/bio': typeof AuthenticatedDashboardBioRoute
+  '/dashboard/branding': typeof AuthenticatedDashboardBrandingRoute
   '/dashboard/categories': typeof AuthenticatedDashboardCategoriesRoute
+  '/dashboard/consent-forms': typeof AuthenticatedDashboardConsentFormsRoute
   '/dashboard/locations': typeof AuthenticatedDashboardLocationsRoute
+  '/dashboard/medical-forms': typeof AuthenticatedDashboardMedicalFormsRoute
   '/dashboard/reviews': typeof AuthenticatedDashboardReviewsRoute
   '/m/$slug/about': typeof MSlugAboutRoute
   '/m/$slug/account': typeof MSlugAccountRoute
@@ -141,8 +165,11 @@ export interface FileRoutesByTo {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/book/$slug': typeof BookSlugRoute
   '/dashboard/bio': typeof AuthenticatedDashboardBioRoute
+  '/dashboard/branding': typeof AuthenticatedDashboardBrandingRoute
   '/dashboard/categories': typeof AuthenticatedDashboardCategoriesRoute
+  '/dashboard/consent-forms': typeof AuthenticatedDashboardConsentFormsRoute
   '/dashboard/locations': typeof AuthenticatedDashboardLocationsRoute
+  '/dashboard/medical-forms': typeof AuthenticatedDashboardMedicalFormsRoute
   '/dashboard/reviews': typeof AuthenticatedDashboardReviewsRoute
   '/m/$slug/about': typeof MSlugAboutRoute
   '/m/$slug/account': typeof MSlugAccountRoute
@@ -161,8 +188,11 @@ export interface FileRoutesById {
   '/book/$slug': typeof BookSlugRoute
   '/m/$slug': typeof MSlugRouteWithChildren
   '/_authenticated/dashboard/bio': typeof AuthenticatedDashboardBioRoute
+  '/_authenticated/dashboard/branding': typeof AuthenticatedDashboardBrandingRoute
   '/_authenticated/dashboard/categories': typeof AuthenticatedDashboardCategoriesRoute
+  '/_authenticated/dashboard/consent-forms': typeof AuthenticatedDashboardConsentFormsRoute
   '/_authenticated/dashboard/locations': typeof AuthenticatedDashboardLocationsRoute
+  '/_authenticated/dashboard/medical-forms': typeof AuthenticatedDashboardMedicalFormsRoute
   '/_authenticated/dashboard/reviews': typeof AuthenticatedDashboardReviewsRoute
   '/m/$slug/about': typeof MSlugAboutRoute
   '/m/$slug/account': typeof MSlugAccountRoute
@@ -181,8 +211,11 @@ export interface FileRouteTypes {
     | '/book/$slug'
     | '/m/$slug'
     | '/dashboard/bio'
+    | '/dashboard/branding'
     | '/dashboard/categories'
+    | '/dashboard/consent-forms'
     | '/dashboard/locations'
+    | '/dashboard/medical-forms'
     | '/dashboard/reviews'
     | '/m/$slug/about'
     | '/m/$slug/account'
@@ -197,8 +230,11 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/book/$slug'
     | '/dashboard/bio'
+    | '/dashboard/branding'
     | '/dashboard/categories'
+    | '/dashboard/consent-forms'
     | '/dashboard/locations'
+    | '/dashboard/medical-forms'
     | '/dashboard/reviews'
     | '/m/$slug/about'
     | '/m/$slug/account'
@@ -216,8 +252,11 @@ export interface FileRouteTypes {
     | '/book/$slug'
     | '/m/$slug'
     | '/_authenticated/dashboard/bio'
+    | '/_authenticated/dashboard/branding'
     | '/_authenticated/dashboard/categories'
+    | '/_authenticated/dashboard/consent-forms'
     | '/_authenticated/dashboard/locations'
+    | '/_authenticated/dashboard/medical-forms'
     | '/_authenticated/dashboard/reviews'
     | '/m/$slug/about'
     | '/m/$slug/account'
@@ -335,6 +374,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardReviewsRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
+    '/_authenticated/dashboard/medical-forms': {
+      id: '/_authenticated/dashboard/medical-forms'
+      path: '/medical-forms'
+      fullPath: '/dashboard/medical-forms'
+      preLoaderRoute: typeof AuthenticatedDashboardMedicalFormsRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
     '/_authenticated/dashboard/locations': {
       id: '/_authenticated/dashboard/locations'
       path: '/locations'
@@ -342,11 +388,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardLocationsRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
+    '/_authenticated/dashboard/consent-forms': {
+      id: '/_authenticated/dashboard/consent-forms'
+      path: '/consent-forms'
+      fullPath: '/dashboard/consent-forms'
+      preLoaderRoute: typeof AuthenticatedDashboardConsentFormsRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
     '/_authenticated/dashboard/categories': {
       id: '/_authenticated/dashboard/categories'
       path: '/categories'
       fullPath: '/dashboard/categories'
       preLoaderRoute: typeof AuthenticatedDashboardCategoriesRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/branding': {
+      id: '/_authenticated/dashboard/branding'
+      path: '/branding'
+      fullPath: '/dashboard/branding'
+      preLoaderRoute: typeof AuthenticatedDashboardBrandingRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
     '/_authenticated/dashboard/bio': {
@@ -361,8 +421,11 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedDashboardRouteChildren {
   AuthenticatedDashboardBioRoute: typeof AuthenticatedDashboardBioRoute
+  AuthenticatedDashboardBrandingRoute: typeof AuthenticatedDashboardBrandingRoute
   AuthenticatedDashboardCategoriesRoute: typeof AuthenticatedDashboardCategoriesRoute
+  AuthenticatedDashboardConsentFormsRoute: typeof AuthenticatedDashboardConsentFormsRoute
   AuthenticatedDashboardLocationsRoute: typeof AuthenticatedDashboardLocationsRoute
+  AuthenticatedDashboardMedicalFormsRoute: typeof AuthenticatedDashboardMedicalFormsRoute
   AuthenticatedDashboardReviewsRoute: typeof AuthenticatedDashboardReviewsRoute
   AuthenticatedDashboardIndexRoute: typeof AuthenticatedDashboardIndexRoute
 }
@@ -370,9 +433,14 @@ interface AuthenticatedDashboardRouteChildren {
 const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
   {
     AuthenticatedDashboardBioRoute: AuthenticatedDashboardBioRoute,
+    AuthenticatedDashboardBrandingRoute: AuthenticatedDashboardBrandingRoute,
     AuthenticatedDashboardCategoriesRoute:
       AuthenticatedDashboardCategoriesRoute,
+    AuthenticatedDashboardConsentFormsRoute:
+      AuthenticatedDashboardConsentFormsRoute,
     AuthenticatedDashboardLocationsRoute: AuthenticatedDashboardLocationsRoute,
+    AuthenticatedDashboardMedicalFormsRoute:
+      AuthenticatedDashboardMedicalFormsRoute,
     AuthenticatedDashboardReviewsRoute: AuthenticatedDashboardReviewsRoute,
     AuthenticatedDashboardIndexRoute: AuthenticatedDashboardIndexRoute,
   }
