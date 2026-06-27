@@ -163,13 +163,13 @@ export function ConsultationWizard() {
       </div>
 
       <Card><CardContent className="space-y-4 p-4 sm:p-6">
-        {step === 1 && <Step1 medical={c.medical} onChange={(v) => setField("medical", v)} />}
-        {step === 2 && <Step2 concerns={c.concerns} onChange={(v) => setField("concerns", v)} />}
-        {step === 3 && <Step3 assessment={c.assessment} photos={c.before_photos} onChangeAssess={(v) => setField("assessment", v)} onChangePhotos={(v) => setField("before_photos", v)} />}
-        {step === 4 && <Step4 plan={c.treatment_plan} onChange={(v) => setField("treatment_plan", v)} />}
-        {step === 5 && <Step5 consent={c.consent} patientName={c.patient_name} onChange={(v) => setField("consent", v)} />}
-        {step === 6 && <Step6 photos={c.after_photos} onChange={(v) => setField("after_photos", v)} />}
-        {step === 7 && <Step7 log={c.treatment_log} onChange={(v) => setField("treatment_log", v)} />}
+        {step === 1 && <Step1 medical={c.medical} onChange={(v: any) => setField("medical", v)} />}
+        {step === 2 && <Step2 concerns={c.concerns} onChange={(v: any) => setField("concerns", v)} />}
+        {step === 3 && <Step3 assessment={c.assessment} photos={c.before_photos} onChangeAssess={(v: any) => setField("assessment", v)} onChangePhotos={(v: any) => setField("before_photos", v)} />}
+        {step === 4 && <Step4 plan={c.treatment_plan} onChange={(v: any) => setField("treatment_plan", v)} />}
+        {step === 5 && <Step5 consent={c.consent} patientName={c.patient_name} onChange={(v: any) => setField("consent", v)} />}
+        {step === 6 && <Step6 photos={c.after_photos} onChange={(v: any) => setField("after_photos", v)} />}
+        {step === 7 && <Step7 log={c.treatment_log} onChange={(v: any) => setField("treatment_log", v)} />}
         {step === 8 && <Step8 invoice={c.invoice} email={c.patient_email} onChange={(v) => setField("invoice", v)} onComplete={complete} completed={c.status === "completed"} />}
       </CardContent></Card>
 
