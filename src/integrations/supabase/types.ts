@@ -81,6 +81,64 @@ export type Database = {
           },
         ]
       }
+      appointment_medical_forms: {
+        Row: {
+          appointment_id: string
+          created_at: string
+          id: string
+          profile_id: string
+          response: Json | null
+          status: string
+          submitted_at: string | null
+          template_id: string
+          token: string
+        }
+        Insert: {
+          appointment_id: string
+          created_at?: string
+          id?: string
+          profile_id: string
+          response?: Json | null
+          status?: string
+          submitted_at?: string | null
+          template_id: string
+          token?: string
+        }
+        Update: {
+          appointment_id?: string
+          created_at?: string
+          id?: string
+          profile_id?: string
+          response?: Json | null
+          status?: string
+          submitted_at?: string | null
+          template_id?: string
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_medical_forms_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointment_medical_forms_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointment_medical_forms_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "medical_form_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       appointments: {
         Row: {
           addon_ids: string[] | null
@@ -346,6 +404,62 @@ export type Database = {
           },
           {
             foreignKeyName: "blocked_dates_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clinic_clients: {
+        Row: {
+          address: string | null
+          avatar_url: string | null
+          created_at: string
+          dob: string | null
+          email: string | null
+          full_name: string
+          gender: string | null
+          group_name: string | null
+          id: string
+          notes: string | null
+          phone: string | null
+          profile_id: string
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          avatar_url?: string | null
+          created_at?: string
+          dob?: string | null
+          email?: string | null
+          full_name: string
+          gender?: string | null
+          group_name?: string | null
+          id?: string
+          notes?: string | null
+          phone?: string | null
+          profile_id: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          avatar_url?: string | null
+          created_at?: string
+          dob?: string | null
+          email?: string | null
+          full_name?: string
+          gender?: string | null
+          group_name?: string | null
+          id?: string
+          notes?: string | null
+          phone?: string | null
+          profile_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clinic_clients_profile_id_fkey"
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
@@ -715,38 +829,86 @@ export type Database = {
           },
         ]
       }
+      medical_form_categories: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          profile_id: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          profile_id: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          profile_id?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medical_form_categories_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       medical_form_templates: {
         Row: {
+          category_id: string | null
           created_at: string
           description: string | null
           id: string
+          is_published: boolean
           is_system: boolean
           name: string
           profile_id: string | null
           schema: Json
           updated_at: string
+          validity: string
         }
         Insert: {
+          category_id?: string | null
           created_at?: string
           description?: string | null
           id?: string
+          is_published?: boolean
           is_system?: boolean
           name: string
           profile_id?: string | null
           schema?: Json
           updated_at?: string
+          validity?: string
         }
         Update: {
+          category_id?: string | null
           created_at?: string
           description?: string | null
           id?: string
+          is_published?: boolean
           is_system?: boolean
           name?: string
           profile_id?: string | null
           schema?: Json
           updated_at?: string
+          validity?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "medical_form_templates_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "medical_form_categories"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "medical_form_templates_profile_id_fkey"
             columns: ["profile_id"]
@@ -1328,6 +1490,39 @@ export type Database = {
           },
         ]
       }
+      treatment_medical_forms: {
+        Row: {
+          created_at: string
+          template_id: string
+          treatment_id: string
+        }
+        Insert: {
+          created_at?: string
+          template_id: string
+          treatment_id: string
+        }
+        Update: {
+          created_at?: string
+          template_id?: string
+          treatment_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "treatment_medical_forms_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "medical_form_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treatment_medical_forms_treatment_id_fkey"
+            columns: ["treatment_id"]
+            isOneToOne: false
+            referencedRelation: "treatments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       treatments: {
         Row: {
           active: boolean | null
@@ -1450,6 +1645,22 @@ export type Database = {
           treatment_name: string
         }[]
       }
+      get_medical_form_by_token: {
+        Args: { p_token: string }
+        Returns: {
+          brand_color: string
+          clinic_name: string
+          form_id: string
+          patient_name: string
+          response: Json
+          scheduled_date: string
+          start_time: string
+          status: string
+          template_name: string
+          template_schema: Json
+          treatment_name: string
+        }[]
+      }
       get_public_profile_by_slug: {
         Args: { p_slug: string }
         Returns: {
@@ -1491,6 +1702,10 @@ export type Database = {
           p_signature_name: string
           p_token: string
         }
+        Returns: boolean
+      }
+      submit_medical_form: {
+        Args: { p_response: Json; p_token: string }
         Returns: boolean
       }
     }

@@ -13,6 +13,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as MSlugRouteImport } from './routes/m.$slug'
+import { Route as FTokenRouteImport } from './routes/f.$token'
 import { Route as CTokenRouteImport } from './routes/c.$token'
 import { Route as BookSlugRouteImport } from './routes/book.$slug'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
@@ -64,6 +65,11 @@ const IndexRoute = IndexRouteImport.update({
 const MSlugRoute = MSlugRouteImport.update({
   id: '/m/$slug',
   path: '/m/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FTokenRoute = FTokenRouteImport.update({
+  id: '/f/$token',
+  path: '/f/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CTokenRoute = CTokenRouteImport.update({
@@ -260,6 +266,7 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/book/$slug': typeof BookSlugRoute
   '/c/$token': typeof CTokenRoute
+  '/f/$token': typeof FTokenRoute
   '/m/$slug': typeof MSlugRouteWithChildren
   '/dashboard/availability': typeof AuthenticatedDashboardAvailabilityRoute
   '/dashboard/bio': typeof AuthenticatedDashboardBioRoute
@@ -297,6 +304,7 @@ export interface FileRoutesByTo {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/book/$slug': typeof BookSlugRoute
   '/c/$token': typeof CTokenRoute
+  '/f/$token': typeof FTokenRoute
   '/dashboard/availability': typeof AuthenticatedDashboardAvailabilityRoute
   '/dashboard/bio': typeof AuthenticatedDashboardBioRoute
   '/dashboard/bookings': typeof AuthenticatedDashboardBookingsRoute
@@ -336,6 +344,7 @@ export interface FileRoutesById {
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/book/$slug': typeof BookSlugRoute
   '/c/$token': typeof CTokenRoute
+  '/f/$token': typeof FTokenRoute
   '/m/$slug': typeof MSlugRouteWithChildren
   '/_authenticated/dashboard/availability': typeof AuthenticatedDashboardAvailabilityRoute
   '/_authenticated/dashboard/bio': typeof AuthenticatedDashboardBioRoute
@@ -376,6 +385,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/book/$slug'
     | '/c/$token'
+    | '/f/$token'
     | '/m/$slug'
     | '/dashboard/availability'
     | '/dashboard/bio'
@@ -413,6 +423,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/book/$slug'
     | '/c/$token'
+    | '/f/$token'
     | '/dashboard/availability'
     | '/dashboard/bio'
     | '/dashboard/bookings'
@@ -451,6 +462,7 @@ export interface FileRouteTypes {
     | '/_authenticated/onboarding'
     | '/book/$slug'
     | '/c/$token'
+    | '/f/$token'
     | '/m/$slug'
     | '/_authenticated/dashboard/availability'
     | '/_authenticated/dashboard/bio'
@@ -489,6 +501,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   BookSlugRoute: typeof BookSlugRoute
   CTokenRoute: typeof CTokenRoute
+  FTokenRoute: typeof FTokenRoute
   MSlugRoute: typeof MSlugRouteWithChildren
 }
 
@@ -520,6 +533,13 @@ declare module '@tanstack/react-router' {
       path: '/m/$slug'
       fullPath: '/m/$slug'
       preLoaderRoute: typeof MSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/f/$token': {
+      id: '/f/$token'
+      path: '/f/$token'
+      fullPath: '/f/$token'
+      preLoaderRoute: typeof FTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/c/$token': {
@@ -874,6 +894,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   BookSlugRoute: BookSlugRoute,
   CTokenRoute: CTokenRoute,
+  FTokenRoute: FTokenRoute,
   MSlugRoute: MSlugRouteWithChildren,
 }
 export const routeTree = rootRouteImport
