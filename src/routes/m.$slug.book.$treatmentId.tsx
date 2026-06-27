@@ -244,15 +244,22 @@ function BookTreatmentPage() {
             <Calendar
               mode="single"
               selected={fromIsoDate(date)}
+              month={month}
+              onMonthChange={setMonth}
               onSelect={(d) => {
                 if (!d) return;
                 setDate(toIsoDate(d));
                 setSlot(null);
               }}
-              disabled={(d) => d < new Date(new Date().setHours(0, 0, 0, 0))}
+              disabled={(d) => {
+                const startOfToday = new Date(new Date().setHours(0, 0, 0, 0));
+                if (d < startOfToday) return true;
+                return isDateUnavailable(d);
+              }}
               weekStartsOn={1}
               className="pointer-events-auto rounded-md border p-3"
             />
+
           </div>
 
           <div>
