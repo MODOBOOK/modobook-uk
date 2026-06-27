@@ -28,6 +28,7 @@ import { Route as AuthenticatedDashboardTreatmentsRouteImport } from './routes/_
 import { Route as AuthenticatedDashboardServicesRouteImport } from './routes/_authenticated/dashboard.services'
 import { Route as AuthenticatedDashboardReviewsRouteImport } from './routes/_authenticated/dashboard.reviews'
 import { Route as AuthenticatedDashboardPaymentsRouteImport } from './routes/_authenticated/dashboard.payments'
+import { Route as AuthenticatedDashboardPackagesRouteImport } from './routes/_authenticated/dashboard.packages'
 import { Route as AuthenticatedDashboardMedicalFormsRouteImport } from './routes/_authenticated/dashboard.medical-forms'
 import { Route as AuthenticatedDashboardLocationsRouteImport } from './routes/_authenticated/dashboard.locations'
 import { Route as AuthenticatedDashboardConsentFormsRouteImport } from './routes/_authenticated/dashboard.consent-forms'
@@ -138,6 +139,12 @@ const AuthenticatedDashboardPaymentsRoute =
     path: '/payments',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
+const AuthenticatedDashboardPackagesRoute =
+  AuthenticatedDashboardPackagesRouteImport.update({
+    id: '/packages',
+    path: '/packages',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
 const AuthenticatedDashboardMedicalFormsRoute =
   AuthenticatedDashboardMedicalFormsRouteImport.update({
     id: '/medical-forms',
@@ -215,6 +222,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/consent-forms': typeof AuthenticatedDashboardConsentFormsRoute
   '/dashboard/locations': typeof AuthenticatedDashboardLocationsRoute
   '/dashboard/medical-forms': typeof AuthenticatedDashboardMedicalFormsRoute
+  '/dashboard/packages': typeof AuthenticatedDashboardPackagesRoute
   '/dashboard/payments': typeof AuthenticatedDashboardPaymentsRoute
   '/dashboard/reviews': typeof AuthenticatedDashboardReviewsRoute
   '/dashboard/services': typeof AuthenticatedDashboardServicesRoute
@@ -243,6 +251,7 @@ export interface FileRoutesByTo {
   '/dashboard/consent-forms': typeof AuthenticatedDashboardConsentFormsRoute
   '/dashboard/locations': typeof AuthenticatedDashboardLocationsRoute
   '/dashboard/medical-forms': typeof AuthenticatedDashboardMedicalFormsRoute
+  '/dashboard/packages': typeof AuthenticatedDashboardPackagesRoute
   '/dashboard/payments': typeof AuthenticatedDashboardPaymentsRoute
   '/dashboard/reviews': typeof AuthenticatedDashboardReviewsRoute
   '/dashboard/services': typeof AuthenticatedDashboardServicesRoute
@@ -275,6 +284,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/consent-forms': typeof AuthenticatedDashboardConsentFormsRoute
   '/_authenticated/dashboard/locations': typeof AuthenticatedDashboardLocationsRoute
   '/_authenticated/dashboard/medical-forms': typeof AuthenticatedDashboardMedicalFormsRoute
+  '/_authenticated/dashboard/packages': typeof AuthenticatedDashboardPackagesRoute
   '/_authenticated/dashboard/payments': typeof AuthenticatedDashboardPaymentsRoute
   '/_authenticated/dashboard/reviews': typeof AuthenticatedDashboardReviewsRoute
   '/_authenticated/dashboard/services': typeof AuthenticatedDashboardServicesRoute
@@ -307,6 +317,7 @@ export interface FileRouteTypes {
     | '/dashboard/consent-forms'
     | '/dashboard/locations'
     | '/dashboard/medical-forms'
+    | '/dashboard/packages'
     | '/dashboard/payments'
     | '/dashboard/reviews'
     | '/dashboard/services'
@@ -335,6 +346,7 @@ export interface FileRouteTypes {
     | '/dashboard/consent-forms'
     | '/dashboard/locations'
     | '/dashboard/medical-forms'
+    | '/dashboard/packages'
     | '/dashboard/payments'
     | '/dashboard/reviews'
     | '/dashboard/services'
@@ -366,6 +378,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/consent-forms'
     | '/_authenticated/dashboard/locations'
     | '/_authenticated/dashboard/medical-forms'
+    | '/_authenticated/dashboard/packages'
     | '/_authenticated/dashboard/payments'
     | '/_authenticated/dashboard/reviews'
     | '/_authenticated/dashboard/services'
@@ -524,6 +537,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardPaymentsRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
+    '/_authenticated/dashboard/packages': {
+      id: '/_authenticated/dashboard/packages'
+      path: '/packages'
+      fullPath: '/dashboard/packages'
+      preLoaderRoute: typeof AuthenticatedDashboardPackagesRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
     '/_authenticated/dashboard/medical-forms': {
       id: '/_authenticated/dashboard/medical-forms'
       path: '/medical-forms'
@@ -607,6 +627,7 @@ interface AuthenticatedDashboardRouteChildren {
   AuthenticatedDashboardConsentFormsRoute: typeof AuthenticatedDashboardConsentFormsRoute
   AuthenticatedDashboardLocationsRoute: typeof AuthenticatedDashboardLocationsRoute
   AuthenticatedDashboardMedicalFormsRoute: typeof AuthenticatedDashboardMedicalFormsRoute
+  AuthenticatedDashboardPackagesRoute: typeof AuthenticatedDashboardPackagesRoute
   AuthenticatedDashboardPaymentsRoute: typeof AuthenticatedDashboardPaymentsRoute
   AuthenticatedDashboardReviewsRoute: typeof AuthenticatedDashboardReviewsRoute
   AuthenticatedDashboardServicesRoute: typeof AuthenticatedDashboardServicesRoute
@@ -629,6 +650,7 @@ const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
     AuthenticatedDashboardLocationsRoute: AuthenticatedDashboardLocationsRoute,
     AuthenticatedDashboardMedicalFormsRoute:
       AuthenticatedDashboardMedicalFormsRoute,
+    AuthenticatedDashboardPackagesRoute: AuthenticatedDashboardPackagesRoute,
     AuthenticatedDashboardPaymentsRoute: AuthenticatedDashboardPaymentsRoute,
     AuthenticatedDashboardReviewsRoute: AuthenticatedDashboardReviewsRoute,
     AuthenticatedDashboardServicesRoute: AuthenticatedDashboardServicesRoute,
