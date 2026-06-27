@@ -80,6 +80,43 @@ export const getDayAvailability = createServerFn({ method: "GET" })
     return { isBlocked, busy: appts ?? [], overrides: overrides ?? [] };
   });
 
+export const getMonthAvailability = createServerFn({ method: "GET" })
+  .inputValidator((input: { profileId: string; year: number; month: number; locationId?: string | null }) => input)
+  .handler(async ({ data }) => {
+    const sb = publicClient();
+    const start = new Date(Date.UTC(data.year, data.month - 1, 1));
+    const end = new Date(Date.UTC(data.year, data.month, 0));
+    const startIso = start.toISOString().slice(0, 10);
+    const endIso = end.toISOString().slice(0, 10);
+
+    const { data: rules } = await sb
+      .from("availability_rules")
+      .select("day_of_week,location_id")
+      .eq("profile_id", data.profileId);
+    const { data: blocked } = await sb
+      .from("blocked_dates")
+      .select("date,location_id")
+      .eq("profile_id", data.profileId)
+      .gte("date", startIso)
+      .lte("date", endIso);
+    const { data: overrides } = await sb
+      .from("availability_overrides")
+      .select("date,location_id")
+      .eq("profile_id", data.profileId)
+      .gte("date", startIso)
+      .lte("date", endIso);
+
+    const matchLoc = (rowLoc: string | null) =>
+      !data.locationId || !rowLoc || rowLoc === data.locationId;
+    const activeDays = Array.from(
+      new Set((rules ?? []).filter((r) => matchLoc(r.location_id)).map((r) => r.day_of_week)),
+    );
+    const blockedDates = (blocked ?? []).filter((b) => matchLoc(b.location_id)).map((b) => b.date);
+    const overrideDates = (overrides ?? []).filter((o) => matchLoc(o.location_id)).map((o) => o.date);
+    return { activeDays, blockedDates, overrideDates };
+  });
+
+
 
 export const requestBooking = createServerFn({ method: "POST" })
   .inputValidator(
