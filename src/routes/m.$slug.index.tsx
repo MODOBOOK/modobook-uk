@@ -14,7 +14,7 @@ import {
   MapPin,
   Share2,
   Info,
-  Clock,
+  
   ExternalLink,
   Star,
   Check,
