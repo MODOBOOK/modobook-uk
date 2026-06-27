@@ -18,7 +18,10 @@ import {
   ExternalLink,
   Star,
   ChevronRight,
+  Check,
+  Package as PackageIcon,
 } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { mapsUrl, formatAddress } from "@/lib/maps";
 import type { Database } from "@/integrations/supabase/types";
 import { toast } from "sonner";
