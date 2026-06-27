@@ -182,15 +182,17 @@ function BookPage() {
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3">
           <div className="flex min-w-0 items-center gap-2">
             {logoUrl ? (
-              <img src={logoUrl} alt="" className="h-8 w-8 shrink-0 rounded object-cover" />
+              <img src={logoUrl} alt={profile.clinic_name} className="h-10 w-auto shrink-0 object-contain sm:h-12" />
             ) : (
-              <div className="grid h-8 w-8 shrink-0 place-items-center rounded text-sm font-bold" style={{ backgroundColor: `${headerText}33` }}>
-                {profile.clinic_name.charAt(0)}
-              </div>
+              <>
+                <div className="grid h-8 w-8 shrink-0 place-items-center rounded text-sm font-bold" style={{ backgroundColor: `${headerText}33` }}>
+                  {profile.clinic_name.charAt(0)}
+                </div>
+                <span className="truncate text-sm font-semibold sm:text-base" style={{ fontFamily: `${headingFont}, ${bodyFont}, system-ui, sans-serif` }}>
+                  {profile.clinic_name}
+                </span>
+              </>
             )}
-            <span className="truncate text-sm font-semibold sm:text-base" style={{ fontFamily: `${headingFont}, ${bodyFont}, system-ui, sans-serif` }}>
-              {profile.clinic_name}
-            </span>
           </div>
           <nav className="flex shrink-0 items-center gap-3 text-xs sm:gap-4 sm:text-sm">
             <Link to="/m/$slug" params={{ slug }} className="opacity-90 hover:opacity-100">Book</Link>
@@ -235,10 +237,10 @@ function BookPage() {
 
 
       {/* Overlapping title card */}
-      <section className="mx-auto -mt-10 max-w-3xl px-4">
+      <section className="mx-auto -mt-16 max-w-3xl px-4 sm:-mt-24 relative z-10">
         <div
-          className="rounded-t-3xl px-5 pb-5 pt-6 sm:px-8 sm:pt-8"
-          style={{ backgroundColor: bgColor }}
+          className="rounded-3xl border px-5 pb-5 pt-6 shadow-2xl sm:px-8 sm:pt-8"
+          style={{ backgroundColor: bgColor, borderColor: `${brand}1a` }}
         >
           <h1
             className="text-3xl font-extrabold leading-tight sm:text-4xl"
