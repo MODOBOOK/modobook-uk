@@ -76,8 +76,11 @@ function TreatmentsPage() {
   const create = useServerFn(createTreatment);
   const update = useServerFn(updateTreatment);
   const remove = useServerFn(deleteTreatment);
+  const listConsents = useServerFn(listMyConsentTemplates);
+  const setConsents = useServerFn(setTreatmentConsents);
   const [items, setItems] = useState<Treatment[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [consentTemplates, setConsentTemplates] = useState<ConsentTpl[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Treatment | null>(null);
@@ -92,9 +95,10 @@ function TreatmentsPage() {
   async function load() {
     setLoading(true);
     try {
-      const [data, cats] = await Promise.all([list({}), listCats({})]);
+      const [data, cats, tpls] = await Promise.all([list({}), listCats({}), listConsents({})]);
       setItems(data as Treatment[]);
       setCategories(cats as Category[]);
+      setConsentTemplates(tpls as ConsentTpl[]);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to load treatments");
     } finally {
@@ -107,13 +111,18 @@ function TreatmentsPage() {
 
   async function handleSave(form: TreatmentForm) {
     try {
+      const { consent_ids, ...rest } = form;
+      let id: string;
       if (editing) {
-        await update({ data: { id: editing.id, ...form } });
+        await update({ data: { id: editing.id, ...rest } });
+        id = editing.id;
         toast.success("Treatment updated");
       } else {
-        await create({ data: form });
+        const created = await create({ data: rest });
+        id = (created as { id: string }).id;
         toast.success("Treatment created");
       }
+      await setConsents({ data: { treatmentId: id, consentTemplateIds: consent_ids } });
       setOpen(false);
       setEditing(null);
       load();
