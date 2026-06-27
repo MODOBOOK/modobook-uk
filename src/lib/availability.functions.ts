@@ -118,6 +118,42 @@ export const updateAppointmentNotes = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const cancelAppointment = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string }) => d)
+  .handler(async ({ data, context }) => {
+    const profileId = await getProfileId(context.supabase, context.userId);
+    if (!profileId) throw new Error("Profile not found");
+    const { error } = await context.supabase
+      .from("appointments")
+      .update({ status: "cancelled" })
+      .eq("id", data.id)
+      .eq("profile_id", profileId);
+    if (error) throw error;
+    return { ok: true };
+  });
+
+export const updateAppointmentAftercareAndAllergy = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string; aftercare_html?: string | null; has_allergies?: boolean; allergies_text?: string | null }) => d)
+  .handler(async ({ data, context }) => {
+    const profileId = await getProfileId(context.supabase, context.userId);
+    if (!profileId) throw new Error("Profile not found");
+    const patch: any = {};
+    if ("aftercare_html" in data) patch.aftercare_html = data.aftercare_html;
+    if ("has_allergies" in data) patch.has_allergies = data.has_allergies;
+    if ("allergies_text" in data) patch.allergies_text = data.allergies_text;
+    const { error } = await context.supabase
+      .from("appointments")
+      .update(patch)
+      .eq("id", data.id)
+      .eq("profile_id", profileId);
+    if (error) throw error;
+    return { ok: true };
+  });
+
+
+
 
 // ---------- Ad-hoc overrides (extra open slots on specific dates) ----------
 
