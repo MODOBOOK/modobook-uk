@@ -724,6 +724,52 @@ function ServiceDialog({
               />
             </div>
           </div>
+
+          <div className="rounded-lg border bg-muted/30 p-3 space-y-3">
+            <div className="text-sm font-semibold">Sessions &amp; payment</div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="s-sess">Sessions included</Label>
+                <Input
+                  id="s-sess"
+                  type="number"
+                  min={1}
+                  value={sessionCount}
+                  onChange={(e) => setSessionCount(Math.max(1, Number(e.target.value) || 1))}
+                />
+                <p className="text-[11px] text-muted-foreground">Shown to patients e.g. "3 sessions included".</p>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="s-rebook">Rebook reminder (days after)</Label>
+                <Input
+                  id="s-rebook"
+                  type="number"
+                  min={0}
+                  placeholder="e.g. 30"
+                  value={rebookDays}
+                  onChange={(e) => setRebookDays(e.target.value)}
+                />
+                <p className="text-[11px] text-muted-foreground">Email reminder sent X days after each session.</p>
+              </div>
+            </div>
+            {sessionCount > 1 && (
+              <label className="flex items-start gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  className="mt-1 h-4 w-4"
+                  checked={allowSplit}
+                  onChange={(e) => setAllowSplit(e.target.checked)}
+                />
+                <span>
+                  Allow split payment per session
+                  <span className="block text-[11px] text-muted-foreground">
+                    Patients can pay the per-session amount at each appointment instead of paying in full.
+                  </span>
+                </span>
+              </label>
+            )}
+          </div>
+
           <p className="text-xs text-muted-foreground">
             For consent forms, deposits, staff and media options, edit the service from{" "}
             <Link to="/dashboard/treatments" className="underline">
@@ -731,6 +777,7 @@ function ServiceDialog({
             </Link>
             .
           </p>
+
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={onClose}>
