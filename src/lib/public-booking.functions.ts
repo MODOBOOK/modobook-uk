@@ -59,6 +59,60 @@ export const getBookingContext = createServerFn({ method: "GET" })
     };
   });
 
+export const getMultiBookingContext = createServerFn({ method: "GET" })
+  .inputValidator((input: { slug: string; treatmentIds: string[] }) => input)
+  .handler(async ({ data }) => {
+    const sb = publicClient();
+    const { data: profile, error: pErr } = await sb
+      .rpc("get_public_profile_by_slug", { p_slug: data.slug.toLowerCase() })
+      .single();
+    if (pErr) throw pErr;
+    if (!profile) throw new Error("Clinic not found");
+
+    const { data: treatments, error: tErr } = await sb
+      .from("treatments")
+      .select("*")
+      .in("id", data.treatmentIds)
+      .eq("profile_id", profile.id)
+      .eq("active", true);
+    if (tErr) throw tErr;
+
+    const { data: locations } = await sb
+      .from("locations")
+      .select("id, profile_id, name, address_line1, address_line2, city, postcode, country, is_primary, display_order, active, created_at, updated_at, image_url")
+      .eq("profile_id", profile.id)
+      .eq("active", true)
+      .order("is_primary", { ascending: false });
+
+    const { data: rules } = await sb
+      .from("availability_rules")
+      .select("*")
+      .eq("profile_id", profile.id);
+
+    const { data: theme } = await sb
+      .from("clinic_theme")
+      .select("*")
+      .eq("profile_id", profile.id)
+      .maybeSingle();
+
+    const { data: pricing } = await sb
+      .from("treatment_location_pricing")
+      .select("*")
+      .in("treatment_id", data.treatmentIds);
+
+    return {
+      profileId: profile.id,
+      clinicName: profile.clinic_name,
+      treatments: treatments ?? [],
+      pricing: pricing ?? [],
+      locations: locations ?? [],
+      rules: rules ?? [],
+      theme: theme ?? null,
+      brandColor: (profile as { brand_color?: string | null }).brand_color ?? null,
+    };
+  });
+
+
 
 export const getDayAvailability = createServerFn({ method: "GET" })
   .inputValidator((input: { profileId: string; date: string; locationId?: string | null }) => input)
