@@ -471,14 +471,14 @@ function BookPage() {
                   className="block"
                 >
                   <ChooserCard
-                    title="I need a consultation"
+                    title="Book a consultation now"
                     description="Book a one-to-one consultation"
                     brand={brand}
                   />
                 </Link>
               ) : (
                 <ChooserCard
-                  title="I need a consultation"
+                  title="Book a consultation now"
                   description="Browse to find a consultation"
                   brand={brand}
                   onClick={() => setMode("know")}
