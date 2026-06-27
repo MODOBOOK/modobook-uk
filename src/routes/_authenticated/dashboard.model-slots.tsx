@@ -253,6 +253,11 @@ function SlotEditor({ existing, treatments, locations, onClose, onSaved }: {
             </div>
           </div>
           <div>
+            <Label>Category (optional)</Label>
+            <Input value={category} onChange={(e) => setCategory(e.target.value)} placeholder="e.g. Lip filler, Botox, Skin" />
+            <p className="mt-1 text-xs text-muted-foreground">Slots with the same category are grouped together on your booking page.</p>
+          </div>
+          <div>
             <Label>Notes (optional)</Label>
             <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Photos required, etc." />
           </div>
