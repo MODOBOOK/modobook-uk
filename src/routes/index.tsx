@@ -6,8 +6,8 @@ import { Calendar, Link2, Palette, ShieldCheck, CreditCard, Star } from "lucide-
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "MODO | Custom practitioner booking pages" },
-      { name: "description", content: "Create a branded MODO booking page, manage treatments, consultations, and take payments with Stripe Connect." },
+      { title: "MODO Book | Custom practitioner booking pages" },
+      { name: "description", content: "Create a branded MODO Book booking page, manage treatments, consultations, and take payments with Stripe Connect." },
     ],
   }),
   component: LandingPage,
@@ -22,7 +22,7 @@ function LandingPage() {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
               <Calendar className="h-5 w-5" />
             </div>
-            <span className="text-lg font-semibold tracking-tight">MODO</span>
+            <span className="text-lg font-semibold tracking-tight">MODO Book</span>
           </div>
           <div className="flex items-center gap-3">
             <Link to="/auth">
@@ -67,7 +67,7 @@ function LandingPage() {
             <Card>
               <CardHeader>
                 <Link2 className="mb-2 h-8 w-8 text-primary" />
-                <CardTitle>Your own MODO booking link</CardTitle>
+                <CardTitle>Your own MODO Book link</CardTitle>
                 <CardDescription>Share a simple URL like /m/your-clinic for patients to book 24/7.</CardDescription>
               </CardHeader>
             </Card>
@@ -105,7 +105,7 @@ function LandingPage() {
         <section className="border-t bg-muted/50">
           <div className="mx-auto max-w-7xl px-4 py-12 text-center lg:px-8">
             <h2 className="text-2xl font-semibold tracking-tight">Ready to simplify your bookings?</h2>
-            <p className="mt-2 text-muted-foreground">Join practitioners using MODO for their clinic.</p>
+            <p className="mt-2 text-muted-foreground">Join practitioners using MODO Book for their clinic.</p>
             <div className="mt-6">
               <Link to="/auth">
                 <Button size="lg">Get started free</Button>
@@ -116,7 +116,7 @@ function LandingPage() {
       </main>
 
       <footer className="border-t py-6 text-center text-sm text-muted-foreground">
-        © {new Date().getFullYear()} MODO. Built for practitioners.
+        © {new Date().getFullYear()} MODO Book. Built for practitioners.
       </footer>
     </div>
   );
