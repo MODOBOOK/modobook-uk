@@ -97,8 +97,8 @@ function BookTreatmentPage() {
     const overrideRules = (dayQuery.data.overrides ?? []).filter(
       (o) => !locationId || !o.location_id || o.location_id === locationId,
     );
-    const allRules = [
-      ...dayRules.map((r) => ({ start_time: r.start_time, end_time: r.end_time, slot_interval: r.slot_interval })),
+    const allRules: { start_time: string; end_time: string; slot_interval: number }[] = [
+      ...dayRules.map((r: Rule) => ({ start_time: r.start_time, end_time: r.end_time, slot_interval: r.slot_interval })),
       ...overrideRules.map((o) => ({ start_time: o.start_time, end_time: o.end_time, slot_interval: o.slot_interval })),
     ];
     const out: string[] = [];
