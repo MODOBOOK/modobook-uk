@@ -232,19 +232,20 @@ function BookPage() {
           className="rounded-3xl border px-5 pb-5 pt-6 shadow-2xl sm:px-8 sm:pt-8"
           style={{ backgroundColor: bgColor, borderColor: `${brand}1a` }}
         >
+          {logoUrl && (
+            <img
+              src={logoUrl}
+              alt={profile.clinic_name}
+              className="mb-3 h-14 w-auto object-contain sm:h-16"
+            />
+          )}
           <h1
             className="text-3xl font-extrabold leading-tight sm:text-4xl"
             style={headingStyle}
           >
             {profile.clinic_name}
           </h1>
-          {primaryLocation && (
-            <p className="mt-2 text-base opacity-70">
-              {primaryLocation.address_line1}
-              {primaryLocation.city ? <br /> : null}
-              {primaryLocation.city}
-            </p>
-          )}
+
 
           {/* Star rating */}
           {(() => {
