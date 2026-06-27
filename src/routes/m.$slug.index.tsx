@@ -461,19 +461,52 @@ function BookPage() {
                 <p className="opacity-70">No packages available.</p>
               ) : (
                 <div className="grid gap-3 sm:grid-cols-2">
-                  {packages.map((p) => (
-                    <Card key={p.id} className="rounded-2xl">
-                      <CardContent className="p-4">
-                        <div className="font-semibold" style={{ color: brand }}>{p.name}</div>
-                        <p className="mt-1 text-sm opacity-70">
-                          {p.session_count} session{p.session_count === 1 ? "" : "s"}
-                        </p>
-                        <p className="mt-2 font-bold" style={{ color: brand }}>
-                          £{Number(p.price ?? 0).toFixed(2)}
-                        </p>
-                      </CardContent>
-                    </Card>
-                  ))}
+                  {packages.map((p) => {
+                    const pkg = p as Package & {
+                      description?: string | null;
+                      treatment_ids?: string[] | null;
+                      duration_minutes?: number | null;
+                      image_url?: string | null;
+                    };
+                    const ids = pkg.treatment_ids ?? (pkg.treatment_id ? [pkg.treatment_id] : []);
+                    const firstTreatmentId = ids[0];
+                    return (
+                      <Card key={p.id} className="overflow-hidden rounded-2xl">
+                        {pkg.image_url && (
+                          <div className="aspect-[16/9] w-full overflow-hidden bg-muted">
+                            <img src={pkg.image_url} alt={p.name} className="h-full w-full object-cover" loading="lazy" />
+                          </div>
+                        )}
+                        <CardContent className="p-4">
+                          <div className="font-semibold" style={{ color: brand }}>{p.name}</div>
+                          {pkg.description && (
+                            <p className="mt-1 line-clamp-3 text-sm opacity-70">{pkg.description}</p>
+                          )}
+                          <p className="mt-2 text-xs opacity-60">
+                            {p.session_count} session{p.session_count === 1 ? "" : "s"}
+                            {pkg.duration_minutes ? ` · ${pkg.duration_minutes} min each` : ""}
+                          </p>
+                          <div className="mt-3 flex items-center justify-between gap-2">
+                            <p className="font-bold" style={{ color: brand }}>
+                              £{Number(p.price ?? 0).toFixed(2)}
+                            </p>
+                            {firstTreatmentId ? (
+                              <Link
+                                to="/m/$slug/book/$treatmentId"
+                                params={{ slug, treatmentId: firstTreatmentId }}
+                                className="rounded-full px-4 py-1.5 text-sm font-semibold text-white"
+                                style={{ backgroundColor: brand }}
+                              >
+                                Book
+                              </Link>
+                            ) : (
+                              <span className="text-xs opacity-60">Contact to book</span>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
                 </div>
               )}
             </TabsContent>
