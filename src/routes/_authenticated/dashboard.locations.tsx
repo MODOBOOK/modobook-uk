@@ -180,6 +180,18 @@ function LocationsPage() {
                   </p>
                 </div>
                 <div className="flex gap-1">
+                  {mapsUrl(loc) && (
+                    <a
+                      href={mapsUrl(loc)!}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title="Open in Maps"
+                    >
+                      <Button variant="ghost" size="icon">
+                        <ExternalLink className="h-4 w-4" />
+                      </Button>
+                    </a>
+                  )}
                   <Button variant="ghost" size="icon" onClick={() => openEdit(loc)}>
                     <Pencil className="h-4 w-4" />
                   </Button>
