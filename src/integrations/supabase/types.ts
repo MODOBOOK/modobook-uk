@@ -22,6 +22,7 @@ export type Database = {
           created_at: string
           end_time: string
           id: string
+          location_id: string | null
           notes: string | null
           package_purchase_id: string | null
           patient_email: string
@@ -46,6 +47,7 @@ export type Database = {
           created_at?: string
           end_time: string
           id?: string
+          location_id?: string | null
           notes?: string | null
           package_purchase_id?: string | null
           patient_email: string
@@ -70,6 +72,7 @@ export type Database = {
           created_at?: string
           end_time?: string
           id?: string
+          location_id?: string | null
           notes?: string | null
           package_purchase_id?: string | null
           patient_email?: string
@@ -88,6 +91,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "appointments_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "appointments_package_purchase_id_fkey"
             columns: ["package_purchase_id"]
@@ -117,6 +127,7 @@ export type Database = {
           day_of_week: number
           end_time: string
           id: string
+          location_id: string | null
           profile_id: string
           slot_interval: number
           start_time: string
@@ -127,6 +138,7 @@ export type Database = {
           day_of_week: number
           end_time: string
           id?: string
+          location_id?: string | null
           profile_id: string
           slot_interval?: number
           start_time: string
@@ -137,12 +149,20 @@ export type Database = {
           day_of_week?: number
           end_time?: string
           id?: string
+          location_id?: string | null
           profile_id?: string
           slot_interval?: number
           start_time?: string
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "availability_rules_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "availability_rules_profile_id_fkey"
             columns: ["profile_id"]
@@ -157,6 +177,7 @@ export type Database = {
           created_at: string
           date: string
           id: string
+          location_id: string | null
           profile_id: string
           reason: string | null
           updated_at: string
@@ -165,6 +186,7 @@ export type Database = {
           created_at?: string
           date: string
           id?: string
+          location_id?: string | null
           profile_id: string
           reason?: string | null
           updated_at?: string
@@ -173,11 +195,19 @@ export type Database = {
           created_at?: string
           date?: string
           id?: string
+          location_id?: string | null
           profile_id?: string
           reason?: string | null
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "blocked_dates_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "blocked_dates_profile_id_fkey"
             columns: ["profile_id"]
@@ -259,6 +289,68 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "clinic_testimonials_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      locations: {
+        Row: {
+          active: boolean
+          address_line1: string | null
+          address_line2: string | null
+          city: string | null
+          country: string | null
+          created_at: string
+          display_order: number
+          id: string
+          is_primary: boolean
+          name: string
+          notes: string | null
+          phone: string | null
+          postcode: string | null
+          profile_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          address_line1?: string | null
+          address_line2?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_primary?: boolean
+          name: string
+          notes?: string | null
+          phone?: string | null
+          postcode?: string | null
+          profile_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          address_line1?: string | null
+          address_line2?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_primary?: boolean
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          postcode?: string | null
+          profile_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "locations_profile_id_fkey"
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
@@ -719,6 +811,54 @@ export type Database = {
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      treatment_location_pricing: {
+        Row: {
+          available: boolean
+          created_at: string
+          duration_minutes: number | null
+          id: string
+          location_id: string
+          price_cents: number | null
+          treatment_id: string
+          updated_at: string
+        }
+        Insert: {
+          available?: boolean
+          created_at?: string
+          duration_minutes?: number | null
+          id?: string
+          location_id: string
+          price_cents?: number | null
+          treatment_id: string
+          updated_at?: string
+        }
+        Update: {
+          available?: boolean
+          created_at?: string
+          duration_minutes?: number | null
+          id?: string
+          location_id?: string
+          price_cents?: number | null
+          treatment_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "treatment_location_pricing_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treatment_location_pricing_treatment_id_fkey"
+            columns: ["treatment_id"]
+            isOneToOne: false
+            referencedRelation: "treatments"
             referencedColumns: ["id"]
           },
         ]
