@@ -58,13 +58,38 @@ function BookTreatmentPage() {
   );
   const today = new Date().toISOString().slice(0, 10);
   const [date, setDate] = useState<string>(today);
+  const [month, setMonth] = useState<Date>(new Date());
   const [slot, setSlot] = useState<string | null>(null);
   const [confirmed, setConfirmed] = useState<{ id: string } | null>(null);
   const [form, setForm] = useState({ name: "", email: "", phone: "", notes: "" });
   const [submitting, setSubmitting] = useState(false);
 
   const dayFn = useServerFn(getDayAvailability);
+  const monthFn = useServerFn(getMonthAvailability);
   const reqFn = useServerFn(requestBooking);
+
+  const monthQuery = useQuery({
+    queryKey: ["monthAvail", ctx.profileId, month.getFullYear(), month.getMonth() + 1, locationId],
+    queryFn: () =>
+      monthFn({
+        data: {
+          profileId: ctx.profileId,
+          year: month.getFullYear(),
+          month: month.getMonth() + 1,
+          locationId,
+        },
+      }),
+  });
+
+  const isDateUnavailable = (d: Date) => {
+    const iso = toIsoDate(d);
+    const data = monthQuery.data;
+    if (!data) return false;
+    if (data.blockedDates.includes(iso)) return true;
+    if (data.overrideDates.includes(iso)) return false;
+    return !data.activeDays.includes(d.getDay());
+  };
+
 
   const dow = useMemo(() => {
     // Convert YYYY-MM-DD to weekday (0=Sun..6=Sat) without timezone drift
