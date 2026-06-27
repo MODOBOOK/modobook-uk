@@ -342,11 +342,11 @@ function TreatmentDialog({
         .then((ids) => setConsentIds(ids as string[]))
         .catch(() => setConsentIds([]));
       fetchAddons({ data: { treatmentId: treatment.id } })
-        .then((ids) => setAddonIds(ids as string[]))
-        .catch(() => setAddonIds([]));
+        .then((rows) => setAddons(rows as AddonLink[]))
+        .catch(() => setAddons([]));
     } else {
       setConsentIds([]);
-      setAddonIds([]);
+      setAddons([]);
     }
   }, [treatment, fetchConsents, fetchAddons, initial.parent, initial.sub]);
 
@@ -354,7 +354,14 @@ function TreatmentDialog({
     setConsentIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   }
   function toggleAddon(id: string) {
-    setAddonIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+    setAddons((prev) =>
+      prev.some((a) => a.addon_id === id)
+        ? prev.filter((a) => a.addon_id !== id)
+        : [...prev, { addon_id: id, discount_percent: null, discount_amount: null }],
+    );
+  }
+  function setAddonDiscount(id: string, percent: number | null) {
+    setAddons((prev) => prev.map((a) => (a.addon_id === id ? { ...a, discount_percent: percent } : a)));
   }
 
   const subOptions = childrenOf(parentId);
