@@ -37,7 +37,17 @@ function ConsentFormsPage() {
 
   const [rows, setRows] = useState<Tpl[]>([]);
   const [loading, setLoading] = useState(true);
-  const [editing, setEditing] = useState<Tpl | null>(null);
+  const [editing, setEditing] = useState<(Partial<Tpl> & Pick<Tpl, "name" | "body_markdown">) | null>(null);
+
+  function newBlank() {
+    setEditing({
+      id: undefined,
+      name: "New consent form",
+      treatment_type: "",
+      body_markdown: "# Consent\n\nDescribe the treatment, risks, aftercare, and any contraindications here.\n\nBy signing below, the patient confirms they have read and understood this consent.",
+      requires_signature: true,
+    } as Partial<Tpl> & Pick<Tpl, "name" | "body_markdown">);
+  }
 
   async function refresh() {
     setLoading(true);
