@@ -1,12 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import {
   ChevronLeft,
@@ -19,13 +20,24 @@ import {
   Ban,
   CircleCheck,
   CalendarDays,
+  Copy,
+  Trash2,
+  Mail,
+  Percent,
 } from "lucide-react";
 import {
   listMyAppointments,
   updateAppointmentNotes,
   cancelAppointment,
   updateAppointmentAftercareAndAllergy,
+  listBlockedTimes,
+  addBlockedTime,
+  deleteBlockedTime,
 } from "@/lib/availability.functions";
+import {
+  createPaymentLink,
+  completeAppointmentCheckout,
+} from "@/lib/payment-links.functions";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/dashboard/bookings")({
@@ -53,7 +65,16 @@ type Appt = {
   locations: { name: string } | null;
 };
 
-const HOUR_HEIGHT = 60; // px per hour
+type BlockedTime = {
+  id: string;
+  date: string;
+  start_time: string;
+  end_time: string;
+  reason: string | null;
+  location_id: string | null;
+};
+
+const HOUR_HEIGHT = 60;
 const START_HOUR = 7;
 const END_HOUR = 23;
 const HOURS = Array.from({ length: END_HOUR - START_HOUR + 1 }, (_, i) => START_HOUR + i);
@@ -71,7 +92,6 @@ function parseTime(t: string) {
   const [h, m] = t.split(":").map(Number);
   return h + (m || 0) / 60;
 }
-
 function hexToRgba(hex: string, a: number) {
   const h = hex.replace("#", "");
   const r = parseInt(h.slice(0, 2), 16);
@@ -82,18 +102,29 @@ function hexToRgba(hex: string, a: number) {
 
 function BookingsPage() {
   const list = useServerFn(listMyAppointments);
+  const listBlocks = useServerFn(listBlockedTimes);
   const [appts, setAppts] = useState<Appt[]>([]);
+  const [blocks, setBlocks] = useState<BlockedTime[]>([]);
   const [loading, setLoading] = useState(true);
   const [anchor, setAnchor] = useState(new Date());
   const [actionsOpen, setActionsOpen] = useState(false);
   const [selectedAppt, setSelectedAppt] = useState<Appt | null>(null);
+  const [showPayLink, setShowPayLink] = useState(false);
+  const [showBlock, setShowBlock] = useState(false);
+  const [showUnblock, setShowUnblock] = useState(false);
   const [now, setNow] = useState(new Date());
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  async function refresh() {
+    const [a, b] = await Promise.all([list(), listBlocks()]);
+    setAppts(a as Appt[]);
+    setBlocks(b as BlockedTime[]);
+  }
 
   useEffect(() => {
     (async () => {
       try {
-        setAppts((await list()) as Appt[]);
+        await refresh();
       } finally {
         setLoading(false);
       }
@@ -102,7 +133,6 @@ function BookingsPage() {
     return () => clearInterval(i);
   }, []);
 
-  // scroll to a reasonable hour on mount
   useEffect(() => {
     if (!loading && scrollRef.current) {
       const targetHour = Math.max(START_HOUR, Math.min(END_HOUR, now.getHours() - 1));
@@ -115,7 +145,7 @@ function BookingsPage() {
     [anchor],
   );
 
-  const byDate = useMemo(() => {
+  const apptsByDate = useMemo(() => {
     const m = new Map<string, Appt[]>();
     for (const a of appts) {
       if (a.status === "cancelled") continue;
@@ -124,78 +154,64 @@ function BookingsPage() {
     return m;
   }, [appts]);
 
+  const blocksByDate = useMemo(() => {
+    const m = new Map<string, BlockedTime[]>();
+    for (const b of blocks) {
+      (m.get(b.date) ?? m.set(b.date, []).get(b.date)!).push(b);
+    }
+    return m;
+  }, [blocks]);
+
   const todayStr = ymd(now);
   const totalHeight = (END_HOUR - START_HOUR + 1) * HOUR_HEIGHT;
 
   return (
     <div className="space-y-4 max-w-6xl">
-      {/* Header */}
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => setAnchor(addDays(anchor, -DAYS_VISIBLE))}
-            aria-label="Previous"
-          >
+          <Button variant="outline" size="icon" onClick={() => setAnchor(addDays(anchor, -DAYS_VISIBLE))} aria-label="Previous">
             <ChevronLeft className="h-4 w-4" />
           </Button>
           <div className="flex items-center gap-1 font-semibold text-lg">
             <CalendarDays className="h-4 w-4 text-muted-foreground" />
             {anchor.toLocaleString(undefined, { month: "long", year: "numeric" })}
           </div>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => setAnchor(addDays(anchor, DAYS_VISIBLE))}
-            aria-label="Next"
-          >
+          <Button variant="outline" size="icon" onClick={() => setAnchor(addDays(anchor, DAYS_VISIBLE))} aria-label="Next">
             <ChevronRight className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="sm" onClick={() => setAnchor(new Date())}>
-            Today
-          </Button>
+          <Button variant="ghost" size="sm" onClick={() => setAnchor(new Date())}>Today</Button>
         </div>
         <div className="relative">
-          <Button
-            size="icon"
-            onClick={() => setActionsOpen((v) => !v)}
-            aria-label="Calendar actions"
-          >
+          <Button size="icon" onClick={() => setActionsOpen((v) => !v)} aria-label="Calendar actions">
             <Plus className="h-5 w-5" />
           </Button>
           {actionsOpen && (
             <>
-              <button
-                className="fixed inset-0 z-30"
-                onClick={() => setActionsOpen(false)}
-                aria-label="Close menu"
-              />
-              <div className="absolute right-0 top-12 z-40 flex w-56 flex-col gap-2">
+              <button className="fixed inset-0 z-30" onClick={() => setActionsOpen(false)} aria-label="Close menu" />
+              <div className="absolute right-0 top-12 z-40 flex w-60 flex-col gap-2">
                 <Link to="/dashboard/new-appointment" onClick={() => setActionsOpen(false)}>
                   <Button className="w-full justify-start gap-2 rounded-full bg-orange-200 text-orange-950 hover:bg-orange-300">
-                    <CalendarDays className="h-4 w-4" />
-                    New Appointment
+                    <CalendarDays className="h-4 w-4" /> New Appointment
                   </Button>
                 </Link>
-                <Link to="/dashboard/clinic" onClick={() => setActionsOpen(false)}>
-                  <Button className="w-full justify-start gap-2 rounded-full bg-slate-900 text-white hover:bg-slate-800">
-                    <Link2 className="h-4 w-4" />
-                    Generate Link
-                  </Button>
-                </Link>
-                <Link to="/dashboard/availability" onClick={() => setActionsOpen(false)}>
-                  <Button className="w-full justify-start gap-2 rounded-full bg-rose-300 text-rose-950 hover:bg-rose-400">
-                    <Ban className="h-4 w-4" />
-                    Block a Time
-                  </Button>
-                </Link>
-                <Link to="/dashboard/availability" onClick={() => setActionsOpen(false)}>
-                  <Button className="w-full justify-start gap-2 rounded-full bg-emerald-300 text-emerald-950 hover:bg-emerald-400">
-                    <CircleCheck className="h-4 w-4" />
-                    Unblock a Time
-                  </Button>
-                </Link>
+                <Button
+                  onClick={() => { setActionsOpen(false); setShowPayLink(true); }}
+                  className="w-full justify-start gap-2 rounded-full bg-slate-900 text-white hover:bg-slate-800"
+                >
+                  <Link2 className="h-4 w-4" /> Payment Link
+                </Button>
+                <Button
+                  onClick={() => { setActionsOpen(false); setShowBlock(true); }}
+                  className="w-full justify-start gap-2 rounded-full bg-rose-300 text-rose-950 hover:bg-rose-400"
+                >
+                  <Ban className="h-4 w-4" /> Block a Time
+                </Button>
+                <Button
+                  onClick={() => { setActionsOpen(false); setShowUnblock(true); }}
+                  className="w-full justify-start gap-2 rounded-full bg-emerald-300 text-emerald-950 hover:bg-emerald-400"
+                >
+                  <CircleCheck className="h-4 w-4" /> Unblock a Time
+                </Button>
               </div>
             </>
           )}
@@ -203,28 +219,18 @@ function BookingsPage() {
       </div>
 
       <p className="text-xs text-muted-foreground">
-        {loading ? "Loading…" : `${appts.length} total booking${appts.length === 1 ? "" : "s"}`}
+        {loading ? "Loading…" : `${appts.length} bookings · ${blocks.length} blocked`}
       </p>
 
-      {/* Day headers */}
       <Card className="overflow-hidden">
         <div className="grid border-b" style={{ gridTemplateColumns: `56px repeat(${DAYS_VISIBLE}, 1fr)` }}>
           <div />
           {days.map((d) => {
             const isToday = ymd(d) === todayStr;
             return (
-              <div
-                key={ymd(d)}
-                className={`flex flex-col items-center py-2 ${isToday ? "text-primary" : ""}`}
-              >
-                <span className="text-[11px] uppercase">
-                  {d.toLocaleDateString(undefined, { weekday: "short" })}
-                </span>
-                <span
-                  className={`mt-0.5 inline-flex h-8 w-8 items-center justify-center rounded-md text-sm font-bold ${
-                    isToday ? "bg-primary text-primary-foreground" : ""
-                  }`}
-                >
+              <div key={ymd(d)} className={`flex flex-col items-center py-2 ${isToday ? "text-primary" : ""}`}>
+                <span className="text-[11px] uppercase">{d.toLocaleDateString(undefined, { weekday: "short" })}</span>
+                <span className={`mt-0.5 inline-flex h-8 w-8 items-center justify-center rounded-md text-sm font-bold ${isToday ? "bg-primary text-primary-foreground" : ""}`}>
                   {d.getDate()}
                 </span>
               </div>
@@ -232,65 +238,71 @@ function BookingsPage() {
           })}
         </div>
 
-        {/* Scrollable time grid */}
         <div ref={scrollRef} className="relative max-h-[70vh] overflow-y-auto">
-          <div
-            className="grid relative"
-            style={{
-              gridTemplateColumns: `56px repeat(${DAYS_VISIBLE}, 1fr)`,
-              height: totalHeight,
-            }}
-          >
-            {/* Hour gutter */}
+          <div className="grid relative" style={{ gridTemplateColumns: `56px repeat(${DAYS_VISIBLE}, 1fr)`, height: totalHeight }}>
             <div className="relative border-r">
               {HOURS.map((h) => (
-                <div
-                  key={h}
-                  className="absolute left-0 right-0 pr-1 text-right text-[11px] text-muted-foreground"
-                  style={{ top: (h - START_HOUR) * HOUR_HEIGHT - 6 }}
-                >
+                <div key={h} className="absolute left-0 right-0 pr-1 text-right text-[11px] text-muted-foreground"
+                  style={{ top: (h - START_HOUR) * HOUR_HEIGHT - 6 }}>
                   {String(h).padStart(2, "0")}:00
                 </div>
               ))}
             </div>
 
-            {/* Day columns */}
             {days.map((d) => {
               const key = ymd(d);
               const isToday = key === todayStr;
-              const dayAppts = byDate.get(key) ?? [];
+              const dayAppts = apptsByDate.get(key) ?? [];
+              const dayBlocks = blocksByDate.get(key) ?? [];
               return (
                 <div key={key} className="relative border-r last:border-r-0">
-                  {/* hour lines */}
                   {HOURS.map((h) => (
-                    <div
-                      key={h}
-                      className="absolute left-0 right-0 border-t border-dashed border-muted"
-                      style={{ top: (h - START_HOUR) * HOUR_HEIGHT }}
-                    />
+                    <div key={h} className="absolute left-0 right-0 border-t border-dashed border-muted"
+                      style={{ top: (h - START_HOUR) * HOUR_HEIGHT }} />
                   ))}
-                  {/* Now indicator */}
                   {isToday && (() => {
                     const hr = now.getHours() + now.getMinutes() / 60;
                     if (hr < START_HOUR || hr > END_HOUR + 1) return null;
                     const top = (hr - START_HOUR) * HOUR_HEIGHT;
                     return (
                       <>
-                        <div
-                          className="absolute left-0 right-0 z-10 h-px bg-red-500"
-                          style={{ top }}
-                        />
-                        <div
-                          className="absolute z-10 -translate-y-1/2 rounded-full border border-red-500 bg-background px-1 text-[10px] font-semibold text-red-500"
-                          style={{ top, left: 2 }}
-                        >
-                          {String(now.getHours()).padStart(2, "0")}:
-                          {String(now.getMinutes()).padStart(2, "0")}
+                        <div className="absolute left-0 right-0 z-10 h-px bg-red-500" style={{ top }} />
+                        <div className="absolute z-10 -translate-y-1/2 rounded-full border border-red-500 bg-background px-1 text-[10px] font-semibold text-red-500"
+                          style={{ top, left: 2 }}>
+                          {String(now.getHours()).padStart(2, "0")}:{String(now.getMinutes()).padStart(2, "0")}
                         </div>
                       </>
                     );
                   })()}
-                  {/* Events */}
+
+                  {/* Blocked times (black) */}
+                  {dayBlocks.map((b) => {
+                    const start = parseTime(b.start_time);
+                    const end = parseTime(b.end_time);
+                    const top = (start - START_HOUR) * HOUR_HEIGHT;
+                    const height = Math.max(22, (end - start) * HOUR_HEIGHT - 2);
+                    return (
+                      <button
+                        key={b.id}
+                        onClick={async () => {
+                          if (!confirm(`Unblock ${b.start_time.slice(0,5)}–${b.end_time.slice(0,5)}?`)) return;
+                          try {
+                            await deleteBlockedTime({ data: { id: b.id } });
+                            setBlocks((p) => p.filter((x) => x.id !== b.id));
+                            toast.success("Unblocked — time now open");
+                          } catch (e) { toast.error((e as Error).message); }
+                        }}
+                        className="absolute left-1 right-1 z-[4] overflow-hidden rounded-md bg-slate-900 px-2 py-1 text-left text-[11px] text-white shadow-sm"
+                        style={{ top, height }}
+                        title="Tap to unblock"
+                      >
+                        <div className="truncate font-semibold flex items-center gap-1"><Ban className="h-3 w-3" /> Blocked</div>
+                        <div className="truncate opacity-80">{b.start_time.slice(0,5)}–{b.end_time.slice(0,5)}{b.reason ? ` · ${b.reason}` : ""}</div>
+                      </button>
+                    );
+                  })}
+
+                  {/* Appointments */}
                   {dayAppts.map((a) => {
                     const start = parseTime(a.start_time);
                     const end = parseTime(a.end_time);
@@ -302,13 +314,7 @@ function BookingsPage() {
                         key={a.id}
                         onClick={() => setSelectedAppt(a)}
                         className="absolute left-1 right-1 z-[5] overflow-hidden rounded-md border-l-4 px-2 py-1 text-left text-[11px] shadow-sm transition hover:shadow"
-                        style={{
-                          top,
-                          height,
-                          borderLeftColor: color,
-                          backgroundColor: hexToRgba(color, 0.18),
-                          color: "var(--foreground)",
-                        }}
+                        style={{ top, height, borderLeftColor: color, backgroundColor: hexToRgba(color, 0.18), color: "var(--foreground)" }}
                       >
                         <div className="truncate font-semibold">{a.patient_name}</div>
                         <div className="truncate opacity-80">
@@ -316,8 +322,7 @@ function BookingsPage() {
                         </div>
                         {a.has_allergies && (
                           <div className="mt-0.5 flex items-center gap-1 text-[10px] text-red-600">
-                            <AlertTriangle className="h-2.5 w-2.5" />
-                            Allergies
+                            <AlertTriangle className="h-2.5 w-2.5" /> Allergies
                           </div>
                         )}
                       </button>
@@ -330,18 +335,17 @@ function BookingsPage() {
         </div>
       </Card>
 
+      {/* Appointment Checkout sheet */}
       <Dialog open={!!selectedAppt} onOpenChange={(o) => !o && setSelectedAppt(null)}>
         <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Appointment</DialogTitle>
+            <DialogTitle>Appointment checkout</DialogTitle>
           </DialogHeader>
           {selectedAppt && (
-            <ApptDetails
+            <CheckoutSheet
               a={selectedAppt}
               onPatch={(patch) => {
-                setAppts((prev) =>
-                  prev.map((x) => (x.id === selectedAppt.id ? { ...x, ...patch } : x)),
-                );
+                setAppts((prev) => prev.map((x) => (x.id === selectedAppt.id ? { ...x, ...patch } : x)));
                 setSelectedAppt((s) => (s ? { ...s, ...patch } : s));
               }}
               onClose={() => setSelectedAppt(null)}
@@ -349,104 +353,354 @@ function BookingsPage() {
           )}
         </DialogContent>
       </Dialog>
+
+      <PaymentLinkDialog open={showPayLink} onOpenChange={setShowPayLink} />
+      <BlockTimeDialog
+        open={showBlock}
+        onOpenChange={setShowBlock}
+        onAdded={(b) => setBlocks((p) => [...p, b])}
+      />
+      <UnblockDialog
+        open={showUnblock}
+        onOpenChange={setShowUnblock}
+        blocks={blocks}
+        onRemoved={(id) => setBlocks((p) => p.filter((b) => b.id !== id))}
+      />
     </div>
   );
 }
 
-function ApptDetails({
-  a,
-  onPatch,
-  onClose,
+/* ------------------------------ Sub dialogs ------------------------------ */
+
+function PaymentLinkDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
+  const create = useServerFn(createPaymentLink);
+  const [amount, setAmount] = useState("");
+  const [desc, setDesc] = useState("");
+  const [email, setEmail] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [url, setUrl] = useState<string | null>(null);
+
+  async function submit() {
+    setBusy(true);
+    try {
+      const cents = Math.round(parseFloat(amount || "0") * 100);
+      if (cents < 100) throw new Error("Minimum £1.00");
+      const row = await create({
+        data: {
+          amountCents: cents,
+          description: desc || "Payment",
+          kind: "adhoc",
+          recipientEmail: email || null,
+        },
+      });
+      const u = (row as { stripe_url: string | null }).stripe_url;
+      setUrl(u);
+      if (u && navigator.clipboard) await navigator.clipboard.writeText(u);
+      toast.success("Stripe payment link created — copied to clipboard");
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally { setBusy(false); }
+  }
+
+  function close() {
+    setAmount(""); setDesc(""); setEmail(""); setUrl(null);
+    onOpenChange(false);
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={close}>
+      <DialogContent>
+        <DialogHeader><DialogTitle>Create Stripe payment link</DialogTitle></DialogHeader>
+        {!url ? (
+          <div className="space-y-3">
+            <div>
+              <Label>Amount (£)</Label>
+              <Input type="number" inputMode="decimal" step="0.01" min="1" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="50.00" />
+            </div>
+            <div>
+              <Label>Description</Label>
+              <Input value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="What's this charge for?" />
+            </div>
+            <div>
+              <Label>Send to (optional email)</Label>
+              <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="patient@example.com" />
+            </div>
+            <DialogFooter>
+              <Button variant="ghost" onClick={close}>Cancel</Button>
+              <Button onClick={submit} disabled={busy}>{busy ? "Creating…" : "Create link"}</Button>
+            </DialogFooter>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <p className="text-sm">Payment link is ready. Already copied to your clipboard.</p>
+            <Input readOnly value={url} className="text-xs" />
+            <div className="flex gap-2">
+              <Button variant="outline" className="flex-1" onClick={() => { navigator.clipboard.writeText(url); toast.success("Copied"); }}>
+                <Copy className="h-4 w-4 mr-1" /> Copy
+              </Button>
+              {email && (
+                <a className="flex-1" href={`mailto:${email}?subject=${encodeURIComponent("Payment link")}&body=${encodeURIComponent(url)}`}>
+                  <Button variant="outline" className="w-full"><Mail className="h-4 w-4 mr-1" /> Email</Button>
+                </a>
+              )}
+              <Button asChild className="flex-1"><a href={url} target="_blank" rel="noreferrer">Open</a></Button>
+            </div>
+            <DialogFooter><Button onClick={close}>Done</Button></DialogFooter>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function BlockTimeDialog({
+  open, onOpenChange, onAdded,
+}: { open: boolean; onOpenChange: (v: boolean) => void; onAdded: (b: BlockedTime) => void }) {
+  const add = useServerFn(addBlockedTime);
+  const [date, setDate] = useState(ymd(new Date()));
+  const [endDate, setEndDate] = useState("");
+  const [allDay, setAllDay] = useState(false);
+  const [startTime, setStartTime] = useState("09:00");
+  const [endTime, setEndTime] = useState("17:00");
+  const [reason, setReason] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function submit() {
+    setBusy(true);
+    try {
+      const s = allDay ? "00:00" : startTime;
+      const e = allDay ? "23:59" : endTime;
+      const days: string[] = [];
+      const d0 = new Date(date + "T00:00:00");
+      const d1 = endDate ? new Date(endDate + "T00:00:00") : d0;
+      for (let cur = new Date(d0); cur <= d1; cur.setDate(cur.getDate() + 1)) {
+        days.push(ymd(cur));
+      }
+      for (const day of days) {
+        const row = await add({
+          data: { date: day, start_time: s + ":00", end_time: e + ":00", reason: reason || null },
+        });
+        onAdded(row as BlockedTime);
+      }
+      toast.success(`Blocked ${days.length} ${days.length === 1 ? "slot" : "days"}`);
+      onOpenChange(false);
+      setReason("");
+    } catch (e) { toast.error((e as Error).message); }
+    finally { setBusy(false); }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader><DialogTitle>Block out time</DialogTitle></DialogHeader>
+        <div className="space-y-3">
+          <label className="flex items-center gap-2 text-sm">
+            <Checkbox checked={allDay} onCheckedChange={(v) => setAllDay(!!v)} />
+            <span>Block full day(s)</span>
+          </label>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>Date</Label>
+              <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+            </div>
+            <div>
+              <Label>End date (optional)</Label>
+              <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+            </div>
+          </div>
+          {!allDay && (
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Start</Label>
+                <Input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
+              </div>
+              <div>
+                <Label>End</Label>
+                <Input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
+              </div>
+            </div>
+          )}
+          <div>
+            <Label>Reason (optional)</Label>
+            <Input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Lunch, training, etc." />
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
+            <Button onClick={submit} disabled={busy}>{busy ? "Saving…" : "Block time"}</Button>
+          </DialogFooter>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function UnblockDialog({
+  open, onOpenChange, blocks, onRemoved,
 }: {
-  a: Appt;
-  onPatch: (patch: Partial<Appt>) => void;
-  onClose: () => void;
+  open: boolean; onOpenChange: (v: boolean) => void;
+  blocks: BlockedTime[]; onRemoved: (id: string) => void;
 }) {
+  const del = useServerFn(deleteBlockedTime);
+  const todayIso = ymd(new Date());
+  const upcoming = blocks
+    .filter((b) => b.date >= todayIso)
+    .sort((a, b) => (a.date + a.start_time).localeCompare(b.date + b.start_time));
+
+  async function remove(id: string) {
+    try {
+      await del({ data: { id } });
+      onRemoved(id);
+      toast.success("Time opened back up");
+    } catch (e) { toast.error((e as Error).message); }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[80vh] overflow-y-auto">
+        <DialogHeader><DialogTitle>Unblock time</DialogTitle></DialogHeader>
+        {upcoming.length === 0 ? (
+          <p className="py-6 text-center text-sm text-muted-foreground">No upcoming blocked times.</p>
+        ) : (
+          <div className="space-y-2">
+            {upcoming.map((b) => (
+              <div key={b.id} className="flex items-center justify-between gap-2 rounded-md border bg-muted/40 p-2 text-sm">
+                <div>
+                  <div className="font-semibold">{b.date}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {b.start_time.slice(0,5)}–{b.end_time.slice(0,5)}{b.reason ? ` · ${b.reason}` : ""}
+                  </div>
+                </div>
+                <Button size="sm" variant="ghost" className="text-emerald-700" onClick={() => remove(b.id)}>
+                  <CircleCheck className="h-4 w-4 mr-1" /> Unblock
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/* ------------------------------ Checkout sheet ------------------------------ */
+
+function CheckoutSheet({
+  a, onPatch, onClose,
+}: { a: Appt; onPatch: (p: Partial<Appt>) => void; onClose: () => void }) {
   const update = useServerFn(updateAppointmentNotes);
   const cancel = useServerFn(cancelAppointment);
   const updateAfter = useServerFn(updateAppointmentAftercareAndAllergy);
+  const checkout = useServerFn(completeAppointmentCheckout);
+  const createLink = useServerFn(createPaymentLink);
+
   const [notes, setNotes] = useState(a.practitioner_notes ?? "");
   const [aftercare, setAftercare] = useState(a.aftercare_html ?? "");
   const [hasAllergies, setHasAllergies] = useState(!!a.has_allergies);
   const [allergiesText, setAllergiesText] = useState(a.allergies_text ?? "");
-  const [saving, setSaving] = useState(false);
+  const [discount, setDiscount] = useState("");
+  const [discountKind, setDiscountKind] = useState<"percent" | "amount">("percent");
+  const [checkoutNotes, setCheckoutNotes] = useState("");
+  const [busy, setBusy] = useState(false);
   const cancelled = a.status === "cancelled";
   const color = a.treatments?.color || "#3b82f6";
 
+  const subtotal = Number(a.total_amount ?? 0);
+  const discountValue = (() => {
+    const n = parseFloat(discount || "0");
+    if (!n) return 0;
+    return discountKind === "percent" ? (subtotal * n) / 100 : n;
+  })();
+  const total = Math.max(0, subtotal - discountValue);
+
   async function saveNotes() {
-    setSaving(true);
+    setBusy(true);
     try {
       await update({ data: { id: a.id, practitionerNotes: notes } });
       onPatch({ practitioner_notes: notes });
       toast.success("Notes saved");
-    } catch (e) {
-      toast.error((e as Error).message);
-    } finally {
-      setSaving(false);
-    }
+    } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
   }
-
   async function saveAfter() {
-    setSaving(true);
+    setBusy(true);
     try {
       await updateAfter({
-        data: {
-          id: a.id,
-          aftercare_html: aftercare,
-          has_allergies: hasAllergies,
-          allergies_text: allergiesText || null,
-        },
+        data: { id: a.id, aftercare_html: aftercare, has_allergies: hasAllergies, allergies_text: allergiesText || null },
       });
-      onPatch({
-        aftercare_html: aftercare,
-        has_allergies: hasAllergies,
-        allergies_text: allergiesText || null,
-      });
+      onPatch({ aftercare_html: aftercare, has_allergies: hasAllergies, allergies_text: allergiesText || null });
       toast.success("Aftercare saved");
-    } catch (e) {
-      toast.error((e as Error).message);
-    } finally {
-      setSaving(false);
-    }
+    } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
+  }
+  async function doCancel() {
+    if (!confirm("Cancel this appointment?")) return;
+    setBusy(true);
+    try { await cancel({ data: { id: a.id } }); onPatch({ status: "cancelled" }); toast.success("Cancelled"); onClose(); }
+    catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
   }
 
-  async function doCancel() {
-    if (!confirm("Cancel this appointment? The patient will see it as cancelled.")) return;
-    setSaving(true);
+  async function markPaidWith(method: "card_present" | "cash" | "bank_transfer") {
+    setBusy(true);
     try {
-      await cancel({ data: { id: a.id } });
-      onPatch({ status: "cancelled" });
-      toast.success("Appointment cancelled");
-      onClose();
-    } catch (e) {
-      toast.error((e as Error).message);
-    } finally {
-      setSaving(false);
-    }
+      await checkout({
+        data: {
+          appointmentId: a.id,
+          method,
+          discountCents: Math.round(discountValue * 100),
+          notes: checkoutNotes || null,
+          markPaid: true,
+        },
+      });
+      onPatch({ payment_status: "paid" });
+      toast.success("Marked as paid");
+    } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
+  }
+
+  async function sendStripeLink() {
+    setBusy(true);
+    try {
+      const row = await createLink({
+        data: {
+          amountCents: Math.round(total * 100),
+          description: `${a.treatments?.name ?? "Treatment"} · ${a.patient_name}`,
+          kind: "checkout",
+          appointmentId: a.id,
+          recipientEmail: a.patient_email,
+          recipientName: a.patient_name,
+        },
+      });
+      const url = (row as { stripe_url: string | null }).stripe_url;
+      await checkout({
+        data: {
+          appointmentId: a.id,
+          method: "stripe_link",
+          discountCents: Math.round(discountValue * 100),
+          notes: checkoutNotes || null,
+          markPaid: false,
+        },
+      });
+      if (url && navigator.clipboard) await navigator.clipboard.writeText(url);
+      toast.success("Payment link copied — paste into email/SMS");
+      if (url && a.patient_email) {
+        const subject = encodeURIComponent("Your payment link");
+        const body = encodeURIComponent(`Hi ${a.patient_name},\n\nHere's your secure payment link: ${url}\n\nThanks!`);
+        window.open(`mailto:${a.patient_email}?subject=${subject}&body=${body}`);
+      }
+    } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
   }
 
   return (
     <div className="space-y-3 text-sm">
-      <div
-        className="rounded-md border-l-4 p-2"
-        style={{ borderLeftColor: color, backgroundColor: hexToRgba(color, 0.12) }}
-      >
+      <div className="rounded-md border-l-4 p-2" style={{ borderLeftColor: color, backgroundColor: hexToRgba(color, 0.12) }}>
         <div className="font-semibold">{a.patient_name}</div>
         <div className="text-xs text-muted-foreground">
-          {a.start_time.slice(0, 5)}–{a.end_time.slice(0, 5)} ·{" "}
-          {a.treatments?.name ?? "Treatment"}
+          {a.start_time.slice(0, 5)}–{a.end_time.slice(0, 5)} · {a.treatments?.name ?? "Treatment"}
           {a.locations?.name && ` · ${a.locations.name}`}
         </div>
       </div>
 
       <div className="flex flex-wrap gap-2">
         <Badge variant={cancelled ? "destructive" : "outline"}>{a.status}</Badge>
-        <Badge variant={a.payment_status === "paid" ? "default" : "secondary"}>
-          {a.payment_status}
-        </Badge>
-        {a.total_amount != null && (
-          <Badge variant="outline">£{Number(a.total_amount).toFixed(2)}</Badge>
-        )}
+        <Badge variant={a.payment_status === "paid" ? "default" : "secondary"}>{a.payment_status}</Badge>
+        {a.total_amount != null && <Badge variant="outline">£{Number(a.total_amount).toFixed(2)}</Badge>}
       </div>
 
       {(a.patient_email || a.patient_phone) && (
@@ -456,32 +710,53 @@ function ApptDetails({
       )}
 
       {a.has_allergies && a.allergies_text && (
-        <div className="rounded border border-red-500/40 bg-red-500/5 p-2 text-xs text-red-600 font-semibold">
+        <div className="rounded border border-red-500/40 bg-red-500/5 p-2 text-xs font-semibold text-red-600">
           ⚠ Allergies: {a.allergies_text}
         </div>
       )}
 
-      {a.notes && (
-        <div className="text-xs">
-          <span className="font-semibold">Patient notes:</span> {a.notes}
+      {/* Checkout */}
+      <div className="rounded-lg border bg-card p-3 space-y-3">
+        <div className="flex items-center gap-2 font-semibold"><Percent className="h-4 w-4" /> Checkout</div>
+        <div className="grid grid-cols-[1fr_auto] gap-2">
+          <div>
+            <Label className="text-xs">Discount</Label>
+            <Input type="number" inputMode="decimal" step="0.01" min="0" value={discount} onChange={(e) => setDiscount(e.target.value)} placeholder="0" />
+          </div>
+          <div className="flex flex-col">
+            <Label className="text-xs invisible">.</Label>
+            <div className="flex gap-1">
+              <Button size="sm" variant={discountKind === "percent" ? "default" : "outline"} onClick={() => setDiscountKind("percent")}>%</Button>
+              <Button size="sm" variant={discountKind === "amount" ? "default" : "outline"} onClick={() => setDiscountKind("amount")}>£</Button>
+            </div>
+          </div>
         </div>
-      )}
+        <div>
+          <Label className="text-xs">Notes (internal)</Label>
+          <Textarea rows={2} value={checkoutNotes} onChange={(e) => setCheckoutNotes(e.target.value)} placeholder="Notes for your records" />
+        </div>
+        <div className="border-t pt-2 text-sm">
+          <div className="flex justify-between text-muted-foreground"><span>Subtotal</span><span>£{subtotal.toFixed(2)}</span></div>
+          {discountValue > 0 && <div className="flex justify-between text-emerald-600"><span>Discount</span><span>-£{discountValue.toFixed(2)}</span></div>}
+          <div className="flex justify-between font-bold"><span>Total</span><span>£{total.toFixed(2)}</span></div>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <Button disabled={busy} className="bg-slate-900 text-white hover:bg-slate-800" onClick={sendStripeLink}>
+            <Link2 className="h-4 w-4 mr-1" /> Stripe link
+          </Button>
+          <Button disabled={busy} variant="outline" onClick={() => markPaidWith("card_present")}>Card machine</Button>
+          <Button disabled={busy} variant="outline" onClick={() => markPaidWith("cash")}>Cash</Button>
+          <Button disabled={busy} variant="outline" onClick={() => markPaidWith("bank_transfer")}>Bank transfer</Button>
+        </div>
+      </div>
 
       <div className="pt-2 border-t space-y-2">
         <label className="flex items-center gap-2 text-xs">
-          <Checkbox
-            checked={hasAllergies}
-            onCheckedChange={(v) => setHasAllergies(!!v)}
-          />
+          <Checkbox checked={hasAllergies} onCheckedChange={(v) => setHasAllergies(!!v)} />
           <span className="font-semibold">Patient has allergies</span>
         </label>
         {hasAllergies && (
-          <Input
-            value={allergiesText}
-            onChange={(e) => setAllergiesText(e.target.value)}
-            placeholder="List allergies"
-            className="text-xs"
-          />
+          <Input value={allergiesText} onChange={(e) => setAllergiesText(e.target.value)} placeholder="List allergies" className="text-xs" />
         )}
       </div>
 
@@ -489,41 +764,29 @@ function ApptDetails({
         <div className="text-xs font-semibold mb-1">Internal notes</div>
         <Textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} />
         <div className="mt-2 flex justify-end">
-          <Button size="sm" variant="outline" disabled={saving} onClick={saveNotes}>
-            <Save className="h-3.5 w-3.5 mr-1" />
-            Save notes
+          <Button size="sm" variant="outline" disabled={busy} onClick={saveNotes}>
+            <Save className="h-3.5 w-3.5 mr-1" /> Save notes
           </Button>
         </div>
       </div>
 
       <div className="pt-2 border-t">
         <div className="text-xs font-semibold mb-1">Aftercare</div>
-        <Textarea
-          rows={3}
-          value={aftercare}
-          onChange={(e) => setAftercare(e.target.value)}
-        />
+        <Textarea rows={3} value={aftercare} onChange={(e) => setAftercare(e.target.value)} />
         <div className="mt-2 flex justify-end">
-          <Button size="sm" disabled={saving} onClick={saveAfter}>
-            <Save className="h-3.5 w-3.5 mr-1" />
-            Save aftercare
+          <Button size="sm" disabled={busy} onClick={saveAfter}>
+            <Save className="h-3.5 w-3.5 mr-1" /> Save aftercare
           </Button>
         </div>
       </div>
 
       <DialogFooter>
         {!cancelled && (
-          <Button
-            size="sm"
-            variant="ghost"
-            className="text-destructive"
-            disabled={saving}
-            onClick={doCancel}
-          >
-            <X className="h-3.5 w-3.5 mr-1" />
-            Cancel appointment
+          <Button size="sm" variant="ghost" className="text-destructive" disabled={busy} onClick={doCancel}>
+            <Trash2 className="h-3.5 w-3.5 mr-1" /> Cancel appointment
           </Button>
         )}
+        <Button size="sm" variant="ghost" onClick={onClose}><X className="h-3.5 w-3.5 mr-1" /> Close</Button>
       </DialogFooter>
     </div>
   );
