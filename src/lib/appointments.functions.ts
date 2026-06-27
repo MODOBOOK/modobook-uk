@@ -1,0 +1,107 @@
+import { createServerFn } from "@tanstack/react-start";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { createClient } from "@supabase/supabase-js";
+import type { Database } from "@/integrations/supabase/types";
+
+function publicClient() {
+  return createClient<Database>(
+    process.env.SUPABASE_URL!,
+    process.env.SUPABASE_PUBLISHABLE_KEY!,
+    { auth: { storage: undefined, persistSession: false, autoRefreshToken: false } },
+  );
+}
+
+export const createAppointmentForPatient = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    (input: {
+      treatmentId: string;
+      locationId?: string | null;
+      date: string;
+      startTime: string;
+      endTime: string;
+      patientName: string;
+      patientEmail: string;
+      patientPhone?: string;
+      patientDob?: string | null;
+      patientAddress?: Record<string, string> | null;
+      notes?: string;
+      basePrice: number;
+    }) => input,
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: profile, error: pErr } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("user_id", userId)
+      .single();
+    if (pErr || !profile) throw new Error("Profile not found");
+
+    const id = crypto.randomUUID();
+    const { error } = await supabase.from("appointments").insert({
+      id,
+      profile_id: profile.id,
+      treatment_id: data.treatmentId,
+      location_id: data.locationId ?? null,
+      scheduled_date: data.date,
+      start_time: data.startTime,
+      end_time: data.endTime,
+      patient_name: data.patientName,
+      patient_email: data.patientEmail,
+      patient_phone: data.patientPhone ?? null,
+      patient_dob: data.patientDob ?? null,
+      patient_address: data.patientAddress as Database["public"]["Tables"]["appointments"]["Insert"]["patient_address"],
+      notes: data.notes ?? null,
+      status: "confirmed",
+      payment_status: "pending",
+      base_amount: data.basePrice,
+      total_amount: data.basePrice,
+      created_by_practitioner: true,
+    });
+    if (error) throw new Error(error.message);
+
+    // Auto-create consents
+    const { data: links } = await supabase
+      .from("treatment_consents")
+      .select("consent_template_id")
+      .eq("treatment_id", data.treatmentId);
+    if (links && links.length > 0) {
+      const rows = links.map((l) => ({
+        appointment_id: id,
+        consent_template_id: l.consent_template_id,
+        profile_id: profile.id,
+      }));
+      await supabase.from("appointment_consents").insert(rows);
+    }
+
+    // Pull manage_token for confirmation link
+    const { data: created } = await supabase
+      .from("appointments")
+      .select("manage_token")
+      .eq("id", id)
+      .single();
+
+    return { id, manageToken: created?.manage_token ?? null };
+  });
+
+// Public lookup by manage token (for patient reschedule/cancel page)
+export const getAppointmentByToken = createServerFn({ method: "GET" })
+  .inputValidator((input: { token: string }) => input)
+  .handler(async ({ data }) => {
+    const sb = publicClient();
+    const { data: row, error } = await sb
+      .rpc("get_appointment_by_manage_token", { p_token: data.token })
+      .single();
+    if (error) throw error;
+    return row;
+  });
+
+export const cancelAppointmentByToken = createServerFn({ method: "POST" })
+  .inputValidator((input: { token: string }) => input)
+  .handler(async ({ data }) => {
+    const sb = publicClient();
+    const { data: ok, error } = await sb.rpc("cancel_appointment_by_token", { p_token: data.token });
+    if (error) throw error;
+    return { ok: !!ok };
+  });
