@@ -175,7 +175,7 @@ function TreatmentsPage() {
           </DialogTrigger>
           <TreatmentDialog
             treatment={editing}
-            categoryOptions={categoryOptions}
+            categories={categories}
             consentTemplates={consentTemplates}
             onSave={handleSave}
           />
