@@ -485,15 +485,42 @@ function MultiBookPage() {
                 </div>
               </CardContent>
             </Card>
+            {termsHtml && termsHtml.trim() && (
+              <Card>
+                <CardHeader><CardTitle style={headingStyle}>Terms & Conditions</CardTitle></CardHeader>
+                <CardContent className="space-y-3">
+                  <div
+                    className="prose prose-sm max-w-none rounded-md border bg-muted/30 p-3 max-h-56 overflow-y-auto"
+                    dangerouslySetInnerHTML={{ __html: termsHtml }}
+                  />
+                  <label className="flex items-start gap-2 text-sm cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="mt-0.5 h-4 w-4"
+                      checked={agreedToTerms}
+                      onChange={(e) => setAgreedToTerms(e.target.checked)}
+                    />
+                    <span>
+                      I have read and agree to the Terms & Conditions
+                      {termsRequired && <span className="text-destructive"> *</span>}
+                    </span>
+                  </label>
+                </CardContent>
+              </Card>
+            )}
             <Button
               className="w-full"
               size="lg"
-              disabled={!slot || submitting || !form.name || !form.email || !form.phone || !form.dob}
+              disabled={
+                !slot || submitting || !form.name || !form.email || !form.phone || !form.dob ||
+                (termsRequired && !agreedToTerms)
+              }
               onClick={submit}
               style={{ backgroundColor: brand, color: "#fff" }}
             >
               {submitting ? "Booking…" : `Confirm ${treatments.length} bookings · £${totalPrice.toFixed(2)}`}
             </Button>
+
           </>
         )}
       </div>
