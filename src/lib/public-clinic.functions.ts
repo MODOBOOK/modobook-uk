@@ -98,10 +98,15 @@ export const getPublicClinic = createServerFn({ method: "GET" })
     ];
 
 
-    const [concernAreas, concerns, concernLinks] = await Promise.all([
+    const [concernAreas, concerns, concernLinks, modelSlots] = await Promise.all([
       supabase.from("concern_areas").select("*").eq("profile_id", profile.id).order("sort_order"),
       supabase.from("concerns").select("*").eq("profile_id", profile.id).order("sort_order"),
       supabase.from("concern_treatments").select("concern_id, treatment_id, sort_order").eq("profile_id", profile.id),
+      supabase.from("model_slots")
+        .select("id, treatment_id, location_id, slot_date, start_time, end_time, price_mode, price_value, notes, booked_appointment_id, active")
+        .eq("profile_id", profile.id).eq("active", true).is("booked_appointment_id", null)
+        .gte("slot_date", new Date().toISOString().slice(0, 10))
+        .order("slot_date", { ascending: true }),
     ]);
 
     return {
@@ -118,6 +123,7 @@ export const getPublicClinic = createServerFn({ method: "GET" })
       concernAreas: concernAreas.data ?? [],
       concerns: concerns.data ?? [],
       concernLinks: concernLinks.data ?? [],
+      modelSlots: modelSlots.data ?? [],
     };
   });
 
