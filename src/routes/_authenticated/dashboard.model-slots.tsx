@@ -36,18 +36,35 @@ function ModelSlotsPage() {
   const lTreats = useServerFn(getMyTreatments);
   const lLocs = useServerFn(listMyLocations);
   const del = useServerFn(deleteModelSlot);
+  const lProfile = useServerFn(getMyProfile);
+  const saveProfile = useServerFn(updateProfile);
   const [slots, setSlots] = useState<Slot[]>([]);
   const [treats, setTreats] = useState<Treat[]>([]);
   const [locs, setLocs] = useState<Loc[]>([]);
   const [editing, setEditing] = useState<Slot | "new" | null>(null);
+  const [profileId, setProfileId] = useState<string | null>(null);
+  const [position, setPosition] = useState<"top" | "bottom">("top");
 
   async function refresh() {
-    const [s, t, l] = await Promise.all([list(), lTreats(), lLocs()]);
+    const [s, t, l, p] = await Promise.all([list(), lTreats(), lLocs(), lProfile()]);
     setSlots((s as any) ?? []);
     setTreats((t as any) ?? []);
     setLocs((l as any) ?? []);
+    if (p) {
+      setProfileId((p as any).id);
+      setPosition(((p as any).model_slots_position ?? "top") as "top" | "bottom");
+    }
   }
   useEffect(() => { void refresh(); }, []);
+
+  async function changePosition(next: "top" | "bottom") {
+    if (!profileId) return;
+    setPosition(next);
+    try {
+      await saveProfile({ data: { id: profileId, model_slots_position: next } });
+      toast.success(`Model slots will show at the ${next} of the booking menu`);
+    } catch (e) { toast.error((e as Error).message); }
+  }
 
   const tById = new Map(treats.map((t) => [t.id, t]));
   const lById = new Map(locs.map((l) => [l.id, l]));
@@ -64,6 +81,23 @@ function ModelSlotsPage() {
         </div>
         <Button onClick={() => setEditing("new")}><Plus className="mr-1.5 h-4 w-4" />New model slot</Button>
       </header>
+
+      <Card>
+        <CardContent className="flex flex-wrap items-center justify-between gap-3 p-3">
+          <div>
+            <p className="text-sm font-semibold">Position on booking menu</p>
+            <p className="text-xs text-muted-foreground">Choose whether the Model slots section sits above or below your treatment categories.</p>
+          </div>
+          <Select value={position} onValueChange={(v) => changePosition(v as "top" | "bottom")}>
+            <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="top">Top of menu</SelectItem>
+              <SelectItem value="bottom">Bottom of menu</SelectItem>
+            </SelectContent>
+          </Select>
+        </CardContent>
+      </Card>
+
 
       <div className="space-y-2">
         {slots.map((s) => {
