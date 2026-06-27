@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { RichTextEditor } from "@/components/RichTextEditor";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { Trash2, Plus } from "lucide-react";
 
@@ -34,6 +35,8 @@ function PoliciesPage() {
   const [rules, setRules] = useState<Rule[]>(
     (Array.isArray(profile.cancellation_rules) ? (profile.cancellation_rules as Rule[]) : []) ?? [],
   );
+  const [termsHtml, setTermsHtml] = useState<string>(((profile as { terms_html?: string | null }).terms_html as string | null) ?? "");
+  const [termsRequired, setTermsRequired] = useState<boolean>(Boolean((profile as { terms_required?: boolean | null }).terms_required));
   const [saving, setSaving] = useState(false);
 
   async function save() {
@@ -48,6 +51,8 @@ function PoliciesPage() {
           cancellation_rules: rules
             .filter((r) => Number.isFinite(r.hours_before) && Number.isFinite(r.fee_percent))
             .sort((a, b) => a.hours_before - b.hours_before),
+          terms_html: termsHtml,
+          terms_required: termsRequired,
         },
       });
       toast.success("Policies saved");
