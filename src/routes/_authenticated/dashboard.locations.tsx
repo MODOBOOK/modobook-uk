@@ -50,10 +50,12 @@ function emptyDraft(): Partial<Location> {
 function LocationsPage() {
   const router = useRouter();
   const fetchLocations = useServerFn(listMyLocations);
+  const fetchProfile = useServerFn(getMyProfile);
   const save = useServerFn(upsertLocation);
   const remove = useServerFn(deleteLocation);
 
   const [locations, setLocations] = useState<Location[]>([]);
+  const [profileId, setProfileId] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<Partial<Location>>(emptyDraft());
@@ -62,8 +64,11 @@ function LocationsPage() {
   async function refresh() {
     setLoading(true);
     try {
-      const rows = await fetchLocations();
+      const [rows, profile] = await Promise.all([fetchLocations(), fetchProfile()]);
       setLocations(rows);
+      if (profile && typeof profile === "object" && "id" in profile) {
+        setProfileId((profile as { id: string }).id);
+      }
     } finally {
       setLoading(false);
     }
