@@ -1,0 +1,143 @@
+import { createServerFn } from "@tanstack/react-start";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+
+export const listMyLocations = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (!profile) return [];
+    const { data, error } = await supabase
+      .from("locations")
+      .select("*")
+      .eq("profile_id", profile.id)
+      .order("is_primary", { ascending: false })
+      .order("display_order")
+      .order("created_at");
+    if (error) throw error;
+    return data ?? [];
+  });
+
+type LocationInput = {
+  id?: string;
+  name: string;
+  address_line1?: string | null;
+  address_line2?: string | null;
+  city?: string | null;
+  postcode?: string | null;
+  country?: string | null;
+  phone?: string | null;
+  notes?: string | null;
+  is_primary?: boolean;
+  active?: boolean;
+};
+
+export const upsertLocation = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: LocationInput) => input)
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (!profile) throw new Error("Profile not found");
+
+    if (data.is_primary) {
+      await supabase
+        .from("locations")
+        .update({ is_primary: false })
+        .eq("profile_id", profile.id);
+    }
+
+    const payload = {
+      profile_id: profile.id,
+      name: data.name,
+      address_line1: data.address_line1 ?? null,
+      address_line2: data.address_line2 ?? null,
+      city: data.city ?? null,
+      postcode: data.postcode ?? null,
+      country: data.country ?? null,
+      phone: data.phone ?? null,
+      notes: data.notes ?? null,
+      is_primary: data.is_primary ?? false,
+      active: data.active ?? true,
+    };
+
+    if (data.id) {
+      const { data: row, error } = await supabase
+        .from("locations")
+        .update(payload)
+        .eq("id", data.id)
+        .eq("profile_id", profile.id)
+        .select()
+        .single();
+      if (error) throw error;
+      return row;
+    } else {
+      const { data: row, error } = await supabase
+        .from("locations")
+        .insert(payload)
+        .select()
+        .single();
+      if (error) throw error;
+      return row;
+    }
+  });
+
+export const deleteLocation = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { id: string }) => input)
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (!profile) throw new Error("Profile not found");
+    const { error } = await supabase
+      .from("locations")
+      .delete()
+      .eq("id", data.id)
+      .eq("profile_id", profile.id);
+    if (error) throw error;
+    return { ok: true };
+  });
+
+export const setTreatmentLocationPricing = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    (input: {
+      treatment_id: string;
+      location_id: string;
+      price_cents?: number | null;
+      duration_minutes?: number | null;
+      available?: boolean;
+    }) => input,
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+    // RLS enforces ownership
+    const { data: row, error } = await supabase
+      .from("treatment_location_pricing")
+      .upsert(
+        {
+          treatment_id: data.treatment_id,
+          location_id: data.location_id,
+          price_cents: data.price_cents ?? null,
+          duration_minutes: data.duration_minutes ?? null,
+          available: data.available ?? true,
+        },
+        { onConflict: "treatment_id,location_id" },
+      )
+      .select()
+      .single();
+    if (error) throw error;
+    return row;
+  });
