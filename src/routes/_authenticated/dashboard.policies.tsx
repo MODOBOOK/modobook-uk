@@ -154,6 +154,26 @@ function PoliciesPage() {
         </CardContent>
       </Card>
 
+      <Card>
+        <CardHeader>
+          <CardTitle>Terms & Conditions</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            Add your own terms and conditions. When required, patients must tick a box agreeing to them before they can complete a booking.
+          </p>
+          <RichTextEditor value={termsHtml} onChange={setTermsHtml} />
+          <div className="flex items-center justify-between rounded-lg border p-3">
+            <div>
+              <p className="text-sm font-medium">Require patients to agree</p>
+              <p className="text-xs text-muted-foreground">Shows a mandatory tick-box at checkout.</p>
+            </div>
+            <Switch checked={termsRequired} onCheckedChange={setTermsRequired} />
+          </div>
+        </CardContent>
+      </Card>
+
+
       <Button onClick={save} disabled={saving} size="lg">
         {saving ? "Saving…" : "Save policies"}
       </Button>
