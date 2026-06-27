@@ -42,14 +42,23 @@ export const getBookingContext = createServerFn({ method: "GET" })
       .select("*")
       .eq("profile_id", profile.id);
 
+    const { data: theme } = await sb
+      .from("clinic_theme")
+      .select("*")
+      .eq("profile_id", profile.id)
+      .maybeSingle();
+
     return {
       profileId: profile.id,
       clinicName: profile.clinic_name,
       treatment,
       locations: locations ?? [],
       rules: rules ?? [],
+      theme: theme ?? null,
+      brandColor: (profile as { brand_color?: string | null }).brand_color ?? null,
     };
   });
+
 
 export const getDayAvailability = createServerFn({ method: "GET" })
   .inputValidator((input: { profileId: string; date: string; locationId?: string | null }) => input)

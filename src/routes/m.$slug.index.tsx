@@ -283,20 +283,21 @@ function BookPage() {
                       {(profile.full_name ?? profile.clinic_name).charAt(0)}
                     </div>
                   )}
-                  <div className="mt-3 text-sm font-semibold leading-tight" style={{ color: brand }}>
-                    {profile.full_name ?? "Practitioner"}
-                  </div>
-                  <div className="text-sm font-bold uppercase leading-tight" style={{ color: brand }}>
+                  <div className="mt-3 text-base font-bold uppercase leading-tight" style={{ color: brand }}>
                     {loc.name}
                     {loc.is_primary && (
                       <Star className="ml-1 inline h-3 w-3" fill="currentColor" />
                     )}
+                  </div>
+                  <div className="mt-1 text-sm font-medium leading-tight opacity-80" style={{ color: brand }}>
+                    {profile.full_name ?? "Practitioner"}
                   </div>
                   {formatAddress(loc) && (
                     <div className="mt-1 text-xs opacity-70">
                       {formatAddress(loc)}
                     </div>
                   )}
+
                 </button>
               );
             })}

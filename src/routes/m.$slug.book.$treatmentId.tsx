@@ -53,9 +53,27 @@ function BookTreatmentPage() {
   const duration = treatment.duration ?? 30;
   const price = Number(treatment.price ?? 0);
 
+  const theme = ctx.theme;
+  const brand = theme?.primary_color || ctx.brandColor || "#1f2a44";
+  const accent = theme?.accent_color || brand;
+  const bgColor = theme?.background_color || "#ffffff";
+  const textColor = theme?.text_color || "#0f172a";
+  const headingFont = theme?.heading_font || "Inter";
+  const bodyFont = theme?.body_font || "Inter";
+  const pageStyle: React.CSSProperties = {
+    backgroundColor: bgColor,
+    color: textColor,
+    fontFamily: `${bodyFont}, system-ui, sans-serif`,
+  };
+  const headingStyle: React.CSSProperties = {
+    fontFamily: `${headingFont}, ${bodyFont}, system-ui, sans-serif`,
+    color: brand,
+  };
+
   const [locationId, setLocationId] = useState<string | null>(
     ctx.locations[0]?.id ?? null,
   );
+
   const today = new Date().toISOString().slice(0, 10);
   const [date, setDate] = useState<string>(today);
   const [month, setMonth] = useState<Date>(new Date());
@@ -201,56 +219,57 @@ function BookTreatmentPage() {
   if (confirmed) {
     const origin = typeof window !== "undefined" ? window.location.origin : "";
     return (
-      <main className="mx-auto max-w-xl px-4 py-16 text-center">
-        <CheckCircle2 className="mx-auto mb-4 h-12 w-12 text-green-600" />
-        <h1 className="text-2xl font-bold">Booking confirmed</h1>
-        <p className="mt-2 text-muted-foreground">
-          Your appointment with {ctx.clinicName} is confirmed. A confirmation
-          email has been sent to {form.email}.
-        </p>
-        {confirmed.consents.length > 0 && (
-          <div className="mt-6 rounded-lg border bg-muted/40 p-4 text-left">
-            <p className="text-sm font-semibold">Please complete your consent form(s):</p>
-            <ul className="mt-2 space-y-2 text-sm">
-              {confirmed.consents.map((c) => (
-                <li key={c.token}>
-                  <a
-                    href={`${origin}/c/${c.token}`}
-                    className="text-primary underline"
-                  >
-                    Complete consent form
-                  </a>
-                </li>
-              ))}
-            </ul>
-            <p className="mt-3 text-xs text-muted-foreground">
-              We've also emailed these links to {form.email}.
-            </p>
+      <main className="min-h-screen" style={pageStyle}>
+        <div className="mx-auto max-w-xl px-4 py-16 text-center">
+          <CheckCircle2 className="mx-auto mb-4 h-12 w-12" style={{ color: accent }} />
+          <h1 className="text-2xl font-bold" style={headingStyle}>Booking confirmed</h1>
+          <p className="mt-2 opacity-70">
+            Your appointment with {ctx.clinicName} is confirmed. A confirmation
+            email has been sent to {form.email}.
+          </p>
+          {confirmed.consents.length > 0 && (
+            <div className="mt-6 rounded-lg border bg-muted/40 p-4 text-left">
+              <p className="text-sm font-semibold">Please complete your consent form(s):</p>
+              <ul className="mt-2 space-y-2 text-sm">
+                {confirmed.consents.map((c) => (
+                  <li key={c.token}>
+                    <a href={`${origin}/c/${c.token}`} className="underline" style={{ color: brand }}>
+                      Complete consent form
+                    </a>
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-3 text-xs opacity-70">
+                We've also emailed these links to {form.email}.
+              </p>
+            </div>
+          )}
+          <div className="mt-6">
+            <Link to="/m/$slug" params={{ slug }}>
+              <Button variant="outline">Back to clinic</Button>
+            </Link>
           </div>
-        )}
-        <div className="mt-6">
-          <Link to="/m/$slug" params={{ slug }}>
-            <Button variant="outline">Back to clinic</Button>
-          </Link>
         </div>
       </main>
     );
   }
 
+
   return (
-    <main className="mx-auto max-w-3xl px-4 py-10">
+    <main className="min-h-screen" style={pageStyle}>
+      <div className="mx-auto max-w-3xl px-4 py-10">
       <div className="mb-6">
-        <Link to="/m/$slug" params={{ slug }} className="text-sm text-muted-foreground hover:underline">
+        <Link to="/m/$slug" params={{ slug }} className="text-sm opacity-70 hover:underline">
           ← Back to {ctx.clinicName}
         </Link>
       </div>
 
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle>{treatment.name}</CardTitle>
+          <CardTitle style={headingStyle}>{treatment.name}</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-wrap items-center gap-3 text-sm">
-          <span className="inline-flex items-center gap-1 text-muted-foreground">
+          <span className="inline-flex items-center gap-1 opacity-70">
             <Clock className="h-4 w-4" /> {duration} min
           </span>
           <Badge variant="secondary">£{price.toFixed(2)}</Badge>
@@ -260,28 +279,33 @@ function BookTreatmentPage() {
       {ctx.locations.length > 1 && (
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle className="text-base">Location</CardTitle>
+            <CardTitle className="text-base" style={headingStyle}>Location</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-wrap gap-2">
-            {ctx.locations.map((l: Loc) => (
-              <Button
-                key={l.id}
-                variant={locationId === l.id ? "default" : "outline"}
-                size="sm"
-                onClick={() => setLocationId(l.id)}
-              >
-                <MapPin className="mr-1 h-4 w-4" />
-                {l.name}
-              </Button>
-            ))}
+            {ctx.locations.map((l: Loc) => {
+              const selected = locationId === l.id;
+              return (
+                <Button
+                  key={l.id}
+                  variant={selected ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setLocationId(l.id)}
+                  style={selected ? { backgroundColor: brand, borderColor: brand, color: "#fff" } : { color: brand, borderColor: `${brand}55` }}
+                >
+                  <MapPin className="mr-1 h-4 w-4" />
+                  {l.name}
+                </Button>
+              );
+            })}
           </CardContent>
         </Card>
       )}
 
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle className="text-base">Pick a date & time</CardTitle>
+          <CardTitle className="text-base" style={headingStyle}>Pick a date & time</CardTitle>
         </CardHeader>
+
         <CardContent className="space-y-5">
           <div className="flex justify-center">
             <Calendar
@@ -317,16 +341,20 @@ function BookTreatmentPage() {
               </p>
             ) : (
               <div className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-5">
-                {slots.map((s) => (
-                  <Button
-                    key={s}
-                    variant={slot === s ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setSlot(s)}
-                  >
-                    {fmt(s)}
-                  </Button>
-                ))}
+                {slots.map((s) => {
+                  const selected = slot === s;
+                  return (
+                    <Button
+                      key={s}
+                      variant={selected ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setSlot(s)}
+                      style={selected ? { backgroundColor: brand, borderColor: brand, color: "#fff" } : { color: brand, borderColor: `${brand}55` }}
+                    >
+                      {fmt(s)}
+                    </Button>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -335,8 +363,9 @@ function BookTreatmentPage() {
 
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle className="text-base">Your details</CardTitle>
+          <CardTitle className="text-base" style={headingStyle}>Your details</CardTitle>
         </CardHeader>
+
         <CardContent className="grid gap-4 sm:grid-cols-2">
           <div className="sm:col-span-2">
             <Label htmlFor="name">Full name</Label>
@@ -389,9 +418,12 @@ function BookTreatmentPage() {
         size="lg"
         disabled={!slot || submitting || !form.name || !form.email || !form.phone || !form.dob}
         onClick={submit}
+        style={{ backgroundColor: brand, color: "#fff" }}
       >
         {submitting ? "Booking…" : "Confirm booking"}
       </Button>
+      </div>
     </main>
   );
 }
+
