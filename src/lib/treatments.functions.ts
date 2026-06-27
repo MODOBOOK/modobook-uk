@@ -159,8 +159,30 @@ export const getTreatmentsBySlug = createServerFn({ method: "GET" })
       .select("*")
       .eq("profile_id", profile.id)
       .eq("active", true)
+      .order("sort_order", { ascending: true })
       .order("created_at", { ascending: false });
     if (error) throw error;
     return treatments;
   });
+
+export const reorderTreatments = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { ids: string[] }) => input)
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+    const { data: profile, error } = await supabase
+      .from("profiles").select("id").eq("user_id", context.userId).single();
+    if (error) throw error;
+    await Promise.all(
+      data.ids.map((id, idx) =>
+        supabase
+          .from("treatments")
+          .update({ sort_order: idx })
+          .eq("id", id)
+          .eq("profile_id", profile.id),
+      ),
+    );
+    return { success: true };
+  });
+
 
