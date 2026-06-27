@@ -112,7 +112,7 @@ function BookPage() {
         price_mode: "fixed" | "percent"; price_value: number; notes: string | null;
         category?: string | null;
       }[];
-      addonLinks?: { treatment_id: string; addon_id: string }[];
+      addonLinks?: { treatment_id: string; addon_id: string; discount_percent: number | null; discount_amount: number | null }[];
     };
 
 
