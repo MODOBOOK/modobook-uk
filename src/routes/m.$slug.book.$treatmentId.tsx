@@ -77,9 +77,17 @@ function BookTreatmentPage() {
     ctx.locations[0]?.id ?? null,
   );
 
+  const modelSlotsAll = (ctx as { modelSlots?: Array<{ id: string; location_id: string | null; slot_date: string; start_time: string; end_time: string; price_mode: "fixed" | "percent"; price_value: number }> }).modelSlots ?? [];
+  const modelMode = modelSlotsAll.length > 0;
+  const modelSlotsForLoc = useMemo(
+    () => modelSlotsAll.filter((s) => !locationId || !s.location_id || s.location_id === locationId),
+    [modelSlotsAll, locationId],
+  );
   const today = new Date().toISOString().slice(0, 10);
-  const [date, setDate] = useState<string>(today);
-  const [month, setMonth] = useState<Date>(new Date());
+  const firstModelDate = modelSlotsForLoc[0]?.slot_date ?? today;
+  const [date, setDate] = useState<string>(modelMode ? firstModelDate : today);
+  const [month, setMonth] = useState<Date>(modelMode ? fromIsoDate(firstModelDate) : new Date());
+
   const [slot, setSlot] = useState<string | null>(null);
   const [confirmed, setConfirmed] = useState<
     { id: string; consents: { token: string; consent_template_id: string }[] } | null
@@ -148,14 +156,21 @@ function BookTreatmentPage() {
       }),
   });
 
+  const modelDates = useMemo(
+    () => new Set(modelSlotsForLoc.map((s) => s.slot_date)),
+    [modelSlotsForLoc],
+  );
+
   const isDateUnavailable = (d: Date) => {
     const iso = toIsoDate(d);
+    if (modelMode) return !modelDates.has(iso);
     const data = monthQuery.data;
     if (!data) return false;
     if (data.blockedDates.includes(iso)) return true;
     if (data.overrideDates.includes(iso)) return false;
     return !data.activeDays.includes(d.getDay());
   };
+
 
 
   const dow = useMemo(() => {
@@ -180,6 +195,11 @@ function BookTreatmentPage() {
   });
 
   const slots = useMemo(() => {
+    if (modelMode) {
+      return modelSlotsForLoc
+        .filter((s) => s.slot_date === date)
+        .map((s) => s.start_time.length === 5 ? `${s.start_time}:00` : s.start_time);
+    }
     if (!dayQuery.data || dayQuery.data.isBlocked) return [];
     const busy = dayQuery.data.busy.map((b) => ({
       start: toMinutes(b.start_time),
@@ -210,7 +230,8 @@ function BookTreatmentPage() {
       }
     }
     return Array.from(new Set(out)).sort();
-  }, [dayQuery.data, dayRules, duration, locationId]);
+  }, [dayQuery.data, dayRules, duration, locationId, modelMode, modelSlotsForLoc, date]);
+
 
 
   async function submit() {
@@ -221,6 +242,17 @@ function BookTreatmentPage() {
     setSubmitting(true);
     try {
       const endMin = toMinutes(slot) + duration;
+      let endTimeStr = fromMinutes(endMin);
+      let effectivePrice = price;
+      if (modelMode) {
+        const ms = modelSlotsForLoc.find((s) => s.slot_date === date && (s.start_time === slot || `${s.start_time}:00` === slot || s.start_time === slot.slice(0,5)));
+        if (ms) {
+          endTimeStr = ms.end_time.length === 5 ? `${ms.end_time}:00` : ms.end_time;
+          effectivePrice = ms.price_mode === "fixed"
+            ? Number(ms.price_value)
+            : Math.max(0, price * (1 - Number(ms.price_value) / 100));
+        }
+      }
       const res = await reqFn({
         data: {
           profileId: ctx.profileId,
@@ -228,7 +260,8 @@ function BookTreatmentPage() {
           locationId,
           date,
           startTime: slot,
-          endTime: fromMinutes(endMin),
+          endTime: endTimeStr,
+
           patientName: form.name,
           patientEmail: form.email,
           patientPhone: form.phone || undefined,
@@ -241,7 +274,7 @@ function BookTreatmentPage() {
             country: form.country,
           },
           notes: form.notes || undefined,
-          basePrice: price,
+          basePrice: effectivePrice,
           patientUserId: patientUserId,
 
         },
