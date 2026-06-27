@@ -619,10 +619,10 @@ function BookPage() {
                   <TabsTrigger value="treatments">Treatments</TabsTrigger>
                   <TabsTrigger value="packages" disabled={packages.length === 0}>
                     <PackageIcon className="mr-1.5 h-4 w-4" />
-                    Packages {packages.length > 0 ? `(${packages.length})` : ""}
+                    Packages
                   </TabsTrigger>
                   <TabsTrigger value="concerns" disabled={concerns.length === 0}>
-                    By concern {concerns.length > 0 ? `(${concerns.length})` : ""}
+                    By concern
                   </TabsTrigger>
                 </TabsList>
 
@@ -1144,9 +1144,6 @@ function CategoryTree({
                   {node.description && (
                     <div className="mt-0.5 text-xs font-normal opacity-80">{node.description}</div>
                   )}
-                  <div className="mt-1 text-[11px] font-normal uppercase tracking-wider opacity-70">
-                    {count} {count === 1 ? "option" : "options"}
-                  </div>
                 </div>
               </AccordionTrigger>
               <AccordionContent
