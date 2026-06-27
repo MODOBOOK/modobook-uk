@@ -77,9 +77,17 @@ function BookTreatmentPage() {
     ctx.locations[0]?.id ?? null,
   );
 
+  const modelSlotsAll = (ctx as { modelSlots?: Array<{ id: string; location_id: string | null; slot_date: string; start_time: string; end_time: string; price_mode: "fixed" | "percent"; price_value: number }> }).modelSlots ?? [];
+  const modelMode = modelSlotsAll.length > 0;
+  const modelSlotsForLoc = useMemo(
+    () => modelSlotsAll.filter((s) => !locationId || !s.location_id || s.location_id === locationId),
+    [modelSlotsAll, locationId],
+  );
   const today = new Date().toISOString().slice(0, 10);
-  const [date, setDate] = useState<string>(today);
-  const [month, setMonth] = useState<Date>(new Date());
+  const firstModelDate = modelSlotsForLoc[0]?.slot_date ?? today;
+  const [date, setDate] = useState<string>(modelMode ? firstModelDate : today);
+  const [month, setMonth] = useState<Date>(modelMode ? fromIsoDate(firstModelDate) : new Date());
+
   const [slot, setSlot] = useState<string | null>(null);
   const [confirmed, setConfirmed] = useState<
     { id: string; consents: { token: string; consent_template_id: string }[] } | null
