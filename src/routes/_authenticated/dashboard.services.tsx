@@ -298,97 +298,89 @@ function CategoryRow({
   const hasContent = node.children.length > 0 || treatsHere.length > 0;
 
   return (
-    <div className="rounded-lg border bg-card" style={{ marginLeft: depth * 12 }}>
-      <button
-        type="button"
-        onClick={() => setOpen((o) => !o)}
-        className="flex w-full items-center gap-3 px-4 py-3 text-left"
+    <div className="border-b-0">
+      <div
+        className="flex w-full items-center gap-3 px-4 py-4"
+        style={{ paddingLeft: 16 + depth * 16 }}
       >
-        <GripVertical className="h-4 w-4 shrink-0 text-muted-foreground/50" />
-        <div className="flex-1 min-w-0">
-          <p className="truncate text-sm font-semibold">
+        <button
+          type="button"
+          onClick={() => setOpen((o) => !o)}
+          className="flex flex-1 items-center gap-3 text-left"
+          aria-expanded={open}
+        >
+          <GripVertical className="h-5 w-5 shrink-0 text-[hsl(var(--accent))]" />
+          <p className="flex-1 truncate text-base font-bold text-[hsl(var(--primary))] sm:text-lg">
             {node.icon ? `${node.icon} ` : ""}
             {node.name}
           </p>
-          {(node.children.length > 0 || node.treatments.length > 0) && (
-            <p className="text-xs text-muted-foreground">
-              {node.treatments.length} service{node.treatments.length === 1 ? "" : "s"}
-              {node.children.length > 0
-                ? ` · ${node.children.length} subcategor${node.children.length === 1 ? "y" : "ies"}`
-                : ""}
-            </p>
-          )}
-        </div>
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            onEditCat(node);
-          }}
-          className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
-          aria-label="Edit category"
-        >
-          <Pencil className="h-3.5 w-3.5" />
         </button>
         <button
           type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            onDeleteCat(node);
-          }}
+          onClick={(e) => { e.stopPropagation(); onEditCat(node); }}
+          className="rounded-md p-1.5 text-[hsl(var(--accent))] hover:bg-muted"
+          aria-label="Edit category"
+        >
+          <Pencil className="h-5 w-5" />
+        </button>
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onDeleteCat(node); }}
           className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-destructive"
           aria-label="Delete category"
         >
-          <Trash2 className="h-3.5 w-3.5" />
+          <Trash2 className="h-4 w-4" />
         </button>
-        {hasContent ? (
-          open ? (
-            <ChevronDown className="h-4 w-4 text-muted-foreground" />
-          ) : (
-            <ChevronRight className="h-4 w-4 text-muted-foreground" />
-          )
-        ) : (
-          <span className="w-4" />
-        )}
-      </button>
+        <button
+          type="button"
+          onClick={() => setOpen((o) => !o)}
+          className="rounded-md p-1.5 text-[hsl(var(--primary))] hover:bg-muted"
+          aria-label={open ? "Collapse" : "Expand"}
+        >
+          {open ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
+        </button>
+      </div>
 
       {open && (
-        <div className="space-y-2 border-t bg-muted/20 p-3">
+        <div className="border-t bg-muted/10">
           {treatsHere.map((t) => (
-            <ServiceRow key={t.id} treat={t} onDelete={() => onDeleteTreat(t)} />
+            <div key={t.id} style={{ paddingLeft: 16 + (depth + 1) * 16 }} className="border-b py-2 pr-4">
+              <ServiceRow treat={t} onDelete={() => onDeleteTreat(t)} />
+            </div>
           ))}
 
-          <div className="flex flex-wrap gap-2 pt-1">
-            <Button size="sm" variant="outline" onClick={() => onAddService(node.id)}>
-              <Plus className="mr-1.5 h-3.5 w-3.5" /> Add service to this category
+          {node.children.map((child) => (
+            <CategoryRow
+              key={child.id}
+              node={child}
+              depth={depth + 1}
+              matchTreat={matchTreat}
+              onAddSub={onAddSub}
+              onEditCat={onEditCat}
+              onDeleteCat={onDeleteCat}
+              onAddService={onAddService}
+              onDeleteTreat={onDeleteTreat}
+            />
+          ))}
+
+          <div
+            className="flex flex-wrap gap-2 border-t py-2 pr-4"
+            style={{ paddingLeft: 16 + (depth + 1) * 16 }}
+          >
+            <Button size="sm" variant="outline" className="rounded-full" onClick={() => onAddService(node.id)}>
+              <Plus className="mr-1.5 h-3.5 w-3.5" /> Add service
             </Button>
-            <Button size="sm" variant="ghost" onClick={() => onAddSub(node.id)}>
+            <Button size="sm" variant="ghost" className="rounded-full" onClick={() => onAddSub(node.id)}>
               <FolderPlus className="mr-1.5 h-3.5 w-3.5" /> Add subcategory
             </Button>
           </div>
-
-          {node.children.length > 0 && (
-            <div className="space-y-2 pt-2">
-              {node.children.map((child) => (
-                <CategoryRow
-                  key={child.id}
-                  node={child}
-                  depth={depth + 1}
-                  matchTreat={matchTreat}
-                  onAddSub={onAddSub}
-                  onEditCat={onEditCat}
-                  onDeleteCat={onDeleteCat}
-                  onAddService={onAddService}
-                  onDeleteTreat={onDeleteTreat}
-                />
-              ))}
-            </div>
-          )}
+          {!hasContent && null}
         </div>
       )}
     </div>
   );
 }
+
 
 function ServiceRow({ treat, onDelete }: { treat: Treat; onDelete: () => void }) {
   return (
