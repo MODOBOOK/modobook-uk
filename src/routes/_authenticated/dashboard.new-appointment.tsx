@@ -75,10 +75,11 @@ function NewAppointmentPage() {
         const dow = new Date(date + "T00:00:00").getDay();
         const matchLoc = (rowLoc: string | null) => !locationId || !rowLoc || rowLoc === locationId;
 
-        const [{ data: rules }, { data: overrides }, { data: blocked }, { data: appts }] = await Promise.all([
+        const [{ data: rules }, { data: overrides }, { data: blocked }, { data: blockedT }, { data: appts }] = await Promise.all([
           supabase.from("availability_rules").select("start_time,end_time,slot_interval,location_id,day_of_week").eq("profile_id", profile.id).eq("day_of_week", dow),
           supabase.from("availability_overrides").select("start_time,end_time,slot_interval,location_id").eq("profile_id", profile.id).eq("date", date),
           supabase.from("blocked_dates").select("location_id").eq("profile_id", profile.id).eq("date", date),
+          supabase.from("blocked_times").select("start_time,end_time,location_id").eq("profile_id", profile.id).eq("date", date),
           supabase.from("appointments").select("start_time,end_time,location_id,status").eq("profile_id", profile.id).eq("scheduled_date", date).neq("status", "cancelled"),
         ]);
 
@@ -89,7 +90,11 @@ function NewAppointmentPage() {
           ...(rules ?? []).filter((r) => matchLoc(r.location_id)),
           ...(overrides ?? []).filter((o) => matchLoc(o.location_id)),
         ];
-        const busy = (appts ?? []).filter((a) => matchLoc(a.location_id));
+        const busy = [
+          ...(appts ?? []).filter((a) => matchLoc(a.location_id)),
+          ...(blockedT ?? []).filter((b) => matchLoc(b.location_id)).map((b) => ({ start_time: b.start_time, end_time: b.end_time, location_id: b.location_id })),
+        ];
+
 
         const toMin = (t: string) => {
           const [h, m] = t.split(":").map(Number); return h * 60 + m;
