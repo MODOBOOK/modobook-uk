@@ -21,7 +21,7 @@ export type ClinicThemeInput = {
 };
 
 async function getProfileId(
-  supabase: Awaited<ReturnType<typeof import("@/integrations/supabase/auth-middleware").requireSupabaseAuth>>["context"]["supabase"],
+  supabase: { from: (table: string) => any },
   userId: string,
 ) {
   const { data } = await supabase
