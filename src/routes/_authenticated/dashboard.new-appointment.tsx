@@ -33,6 +33,8 @@ function NewAppointmentPage() {
   const [locationId, setLocationId] = useState<string>("");
   const [date, setDate] = useState("");
   const [startTime, setStartTime] = useState("");
+  const [slots, setSlots] = useState<string[]>([]);
+  const [loadingSlots, setLoadingSlots] = useState(false);
   const [patientName, setPatientName] = useState("");
   const [patientEmail, setPatientEmail] = useState("");
   const [patientPhone, setPatientPhone] = useState("");
@@ -62,12 +64,65 @@ function NewAppointmentPage() {
   }, [profile.id]);
 
   const treatment = treatments.find((t) => t.id === treatmentId);
+  const duration = treatment?.duration ?? 30;
+
+  // Recompute available slots when date/location/treatment changes
+  useEffect(() => {
+    if (!date) { setSlots([]); return; }
+    (async () => {
+      setLoadingSlots(true);
+      try {
+        const dow = new Date(date + "T00:00:00").getDay();
+        const matchLoc = (rowLoc: string | null) => !locationId || !rowLoc || rowLoc === locationId;
+
+        const [{ data: rules }, { data: overrides }, { data: blocked }, { data: appts }] = await Promise.all([
+          supabase.from("availability_rules").select("start_time,end_time,slot_interval,location_id,day_of_week").eq("profile_id", profile.id).eq("day_of_week", dow),
+          supabase.from("availability_overrides").select("start_time,end_time,slot_interval,location_id").eq("profile_id", profile.id).eq("date", date),
+          supabase.from("blocked_dates").select("location_id").eq("profile_id", profile.id).eq("date", date),
+          supabase.from("appointments").select("start_time,end_time,location_id,status").eq("profile_id", profile.id).eq("scheduled_date", date).neq("status", "cancelled"),
+        ]);
+
+        const isBlocked = (blocked ?? []).some((b) => matchLoc(b.location_id));
+        if (isBlocked) { setSlots([]); return; }
+
+        const windows = [
+          ...(rules ?? []).filter((r) => matchLoc(r.location_id)),
+          ...(overrides ?? []).filter((o) => matchLoc(o.location_id)),
+        ];
+        const busy = (appts ?? []).filter((a) => matchLoc(a.location_id));
+
+        const toMin = (t: string) => {
+          const [h, m] = t.split(":").map(Number); return h * 60 + m;
+        };
+        const fromMin = (n: number) => `${String(Math.floor(n / 60)).padStart(2, "0")}:${String(n % 60).padStart(2, "0")}`;
+
+        const candidates = new Set<string>();
+        for (const w of windows) {
+          const interval = w.slot_interval ?? 30;
+          const s = toMin(w.start_time); const e = toMin(w.end_time);
+          for (let x = s; x + duration <= e; x += interval) candidates.add(fromMin(x));
+        }
+
+        const free = [...candidates].sort().filter((time) => {
+          const s = toMin(time); const e = s + duration;
+          return !busy.some((b) => {
+            const bs = toMin(b.start_time); const be = toMin(b.end_time);
+            return s < be && e > bs;
+          });
+        });
+        setSlots(free);
+      } finally {
+        setLoadingSlots(false);
+      }
+    })();
+  }, [date, locationId, duration, profile.id]);
 
   function computeEnd(time: string, mins: number): string {
     const [h, m] = time.split(":").map(Number);
     const total = h * 60 + m + mins;
     return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}:00`;
   }
+
 
   async function submit() {
     if (!treatment || !date || !startTime || !patientName || !patientEmail) {
