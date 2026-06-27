@@ -1,4 +1,4 @@
-import { createFileRoute, Link, Outlet, redirect } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, redirect, useRouterState } from "@tanstack/react-router";
 import { getMyProfile } from "@/lib/profiles.functions";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,6 +18,8 @@ import {
   Menu,
   CalendarPlus,
   Shield,
+  Home,
+  Star,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -27,9 +29,7 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
   ssr: false,
   beforeLoad: async () => {
     const profile = await getMyProfile();
-    if (!profile) {
-      throw redirect({ to: "/onboarding" });
-    }
+    if (!profile) throw redirect({ to: "/onboarding" });
     return { profile };
   },
   component: DashboardLayout,
@@ -49,13 +49,21 @@ const navItems = [
   { label: "New appointment", to: "/dashboard/new-appointment", icon: CalendarPlus },
   { label: "Bookings", to: "/dashboard/bookings", icon: Users },
   { label: "Patients", to: "/dashboard/patients", icon: Users },
+  { label: "Reviews", to: "/dashboard/reviews", icon: Star },
   { label: "Payments", to: "/dashboard/payments", icon: CreditCard },
+];
 
+const mobileTabs = [
+  { label: "Home", to: "/dashboard", icon: Home, exact: true },
+  { label: "Calendar", to: "/dashboard/bookings", icon: CalendarDays },
+  { label: "Patients", to: "/dashboard/patients", icon: Users },
+  { label: "Menu", to: "/dashboard/menu", icon: Menu },
 ];
 
 function DashboardLayout() {
   const { profile } = Route.useRouteContext();
   const [open, setOpen] = useState(false);
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   async function signOut() {
     await supabase.auth.signOut();
@@ -63,6 +71,7 @@ function DashboardLayout() {
 
   return (
     <div className="flex min-h-screen bg-background">
+      {/* Desktop sidebar */}
       <aside className="hidden w-64 flex-col border-r bg-muted/30 lg:flex">
         <div className="flex h-16 items-center gap-2 border-b px-6">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
@@ -70,7 +79,7 @@ function DashboardLayout() {
           </div>
           <span className="truncate text-sm font-semibold">{profile.clinic_name || "My Clinic"}</span>
         </div>
-        <nav className="flex-1 space-y-1 p-4">
+        <nav className="flex-1 space-y-1 overflow-y-auto p-4">
           {navItems.map((item) => (
             <NavLink key={item.to} to={item.to} icon={item.icon} label={item.label} />
           ))}
@@ -84,15 +93,16 @@ function DashboardLayout() {
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-16 items-center justify-between border-b px-4 lg:px-8">
-          <div className="flex items-center gap-2 lg:hidden">
+        {/* Mobile header — slim, just brand + preview */}
+        <header className="flex h-14 items-center justify-between border-b px-4 lg:hidden">
+          <div className="flex min-w-0 items-center gap-2">
             <Sheet open={open} onOpenChange={setOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon">
+                <Button variant="ghost" size="icon" className="lg:hidden">
                   <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-64 p-0">
+              <SheetContent side="left" className="w-72 p-0">
                 <div className="flex h-16 items-center gap-2 border-b px-4">
                   <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                     <Store className="h-5 w-5" />
@@ -112,20 +122,46 @@ function DashboardLayout() {
                 </div>
               </SheetContent>
             </Sheet>
-            <span className="font-semibold lg:hidden">{profile.clinic_name || "My Clinic"}</span>
+            <span className="truncate text-sm font-semibold">{profile.clinic_name || "My Clinic"}</span>
           </div>
-          <div className="ml-auto flex items-center gap-2">
-            <Button variant="outline" size="sm" asChild>
-              <a href={`/m/${profile.slug}`} target="_blank" rel="noreferrer">
-                Preview MODO Book link
-              </a>
-            </Button>
-          </div>
+          <Button variant="outline" size="sm" asChild>
+            <a href={`/m/${profile.slug}`} target="_blank" rel="noreferrer">Preview</a>
+          </Button>
         </header>
 
-        <main className="min-w-0 flex-1 overflow-x-hidden p-4 lg:p-8">
+        {/* Desktop header */}
+        <header className="hidden h-16 items-center justify-between border-b px-8 lg:flex">
+          <div />
+          <Button variant="outline" size="sm" asChild>
+            <a href={`/m/${profile.slug}`} target="_blank" rel="noreferrer">
+              Preview MODO Book link
+            </a>
+          </Button>
+        </header>
+
+        <main className="min-w-0 flex-1 overflow-x-hidden p-4 pb-24 lg:p-8 lg:pb-8">
           <Outlet />
         </main>
+
+        {/* Mobile bottom tab bar */}
+        <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t bg-background/95 backdrop-blur lg:hidden">
+          {mobileTabs.map((tab) => {
+            const active = tab.exact ? pathname === tab.to : pathname.startsWith(tab.to);
+            return (
+              <Link
+                key={tab.to}
+                to={tab.to}
+                className={cn(
+                  "flex flex-col items-center justify-center gap-1 py-2.5 text-[11px] font-medium transition",
+                  active ? "text-primary" : "text-muted-foreground",
+                )}
+              >
+                <tab.icon className={cn("h-5 w-5", active && "stroke-[2.5]")} />
+                {tab.label}
+              </Link>
+            );
+          })}
+        </nav>
       </div>
     </div>
   );
