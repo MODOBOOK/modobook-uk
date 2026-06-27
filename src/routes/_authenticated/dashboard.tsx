@@ -69,6 +69,8 @@ function DashboardLayout() {
   const { profile } = Route.useRouteContext();
   const [open, setOpen] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const themeStyle = useDashboardThemeStyle();
+
 
   async function signOut() {
     await supabase.auth.signOut();
