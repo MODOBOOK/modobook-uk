@@ -632,99 +632,133 @@ function BookPage() {
                     const slots = modelSlots
                       .filter((s) => !locationId || !s.location_id || s.location_id === locationId)
                       .filter((s) => treatById.has(s.treatment_id));
-                    if (slots.length === 0) return null;
-                    return (
-                      <div className="mb-5 rounded-2xl border-2 p-3" style={{ borderColor: `${brand}55`, backgroundColor: `${brand}08` }}>
+                    const modelPosition = profile.model_slots_position === "bottom" ? "bottom" : "top";
+
+                    const groupedSlots: { category: string; items: typeof slots }[] = (() => {
+                      if (slots.length === 0) return [];
+                      const map = new Map<string, typeof slots>();
+                      for (const s of slots) {
+                        const key = (s.category && s.category.trim()) || "General";
+                        if (!map.has(key)) map.set(key, [] as typeof slots);
+                        map.get(key)!.push(s);
+                      }
+                      return Array.from(map.entries())
+                        .sort((a, b) => a[0].localeCompare(b[0]))
+                        .map(([category, items]) => ({ category, items }));
+                    })();
+
+                    const modelBlock = slots.length === 0 ? null : (
+                      <div
+                        className={`${modelPosition === "top" ? "mb-5" : "mt-5"} rounded-2xl border-2 p-3`}
+                        style={{ borderColor: `${brand}55`, backgroundColor: `${brand}08` }}
+                      >
                         <div className="mb-2 flex items-center gap-2">
                           <Sparkles className="h-4 w-4" style={{ color: brand }} />
                           <h3 className="text-sm font-bold" style={{ color: brand }}>Model slots</h3>
                           <span className="text-xs opacity-60">Discounted dates & times</span>
                         </div>
-                        <div className="grid gap-2 sm:grid-cols-2">
-                          {slots.map((s) => {
-                            const t = treatById.get(s.treatment_id)!;
-                            const base = priceFor(t);
-                            const final = s.price_mode === "fixed" ? Number(s.price_value) : Math.max(0, base * (1 - Number(s.price_value) / 100));
-                            return (
-                              <div key={s.id} className="rounded-xl border bg-white p-3">
-                                <p className="text-sm font-semibold">{t.name}</p>
-                                <p className="text-xs text-muted-foreground">
-                                  {new Date(s.slot_date + "T00:00:00").toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" })} · {s.start_time.slice(0,5)}–{s.end_time.slice(0,5)}
-                                </p>
-                                <p className="mt-1 text-sm">
-                                  <span className="line-through text-muted-foreground">£{base.toFixed(2)}</span>{" "}
-                                  <span className="font-bold text-emerald-600">£{final.toFixed(2)}</span>
-                                </p>
-                                {s.notes && <p className="mt-1 text-xs italic text-muted-foreground">{s.notes}</p>}
-                                <a
-                                  href={`/m/${slug}/book/${t.id}?model=${s.id}`}
-                                  className="mt-2 inline-block rounded-md px-3 py-1.5 text-xs font-semibold text-white"
-                                  style={{ backgroundColor: brand }}
-                                >
-                                  Book this slot
-                                </a>
+                        <div className="space-y-3">
+                          {groupedSlots.map((g) => (
+                            <div key={g.category}>
+                              {groupedSlots.length > 1 && (
+                                <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider opacity-70">{g.category}</p>
+                              )}
+                              <div className="grid gap-2 sm:grid-cols-2">
+                                {g.items.map((s) => {
+                                  const t = treatById.get(s.treatment_id)!;
+                                  const base = priceFor(t);
+                                  const final = s.price_mode === "fixed" ? Number(s.price_value) : Math.max(0, base * (1 - Number(s.price_value) / 100));
+                                  return (
+                                    <div key={s.id} className="rounded-xl border bg-white p-3">
+                                      <p className="text-sm font-semibold">{t.name}</p>
+                                      <p className="text-xs text-muted-foreground">
+                                        {new Date(s.slot_date + "T00:00:00").toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" })} · {s.start_time.slice(0,5)}–{s.end_time.slice(0,5)}
+                                      </p>
+                                      <p className="mt-1 text-sm">
+                                        <span className="line-through text-muted-foreground">£{base.toFixed(2)}</span>{" "}
+                                        <span className="font-bold text-emerald-600">£{final.toFixed(2)}</span>
+                                      </p>
+                                      {s.notes && <p className="mt-1 text-xs italic text-muted-foreground">{s.notes}</p>}
+                                      <a
+                                        href={`/m/${slug}/book/${t.id}?model=${s.id}`}
+                                        className="mt-2 inline-block rounded-md px-3 py-1.5 text-xs font-semibold text-white"
+                                        style={{ backgroundColor: brand }}
+                                      >
+                                        Book this slot
+                                      </a>
+                                    </div>
+                                  );
+                                })}
                               </div>
-                            );
-                          })}
+                            </div>
+                          ))}
                         </div>
                       </div>
                     );
+
+                    const menuBlock = visibleTreatments.length === 0 ? (
+                      <p className="opacity-70">No treatments available here yet.</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {tree.roots.length > 0 && (
+                          <CategoryTree
+                            nodes={tree.roots}
+                            slug={slug}
+                            priceFor={priceFor}
+                            durationFor={durationFor}
+                            brand={brand}
+                            isSelected={isSelected}
+                            toggleSelect={toggleSelect}
+                            catBg={menuCatBg}
+                            catText={menuCatText}
+                            cardBg={menuCardBg}
+                            cardBorder={menuCardBorder}
+                            nameColor={menuNameColor}
+                            priceColor={menuPriceColor}
+                            size={menuSize}
+                            bold={menuTreatmentBold}
+                            categoryBold={menuCategoryBold}
+                            headingFont={headingFont}
+                          />
+                        )}
+                        {tree.uncategorised.length > 0 && (
+                          <div className="mt-4 space-y-2">
+                            {tree.roots.length > 0 && (
+                              <h3 className="text-sm font-semibold uppercase tracking-wide opacity-60">
+                                Other treatments
+                              </h3>
+                            )}
+                            {tree.uncategorised.map((t) => (
+                              <TreatmentRow
+                                key={t.id}
+                                t={t}
+                                slug={slug}
+                                price={priceFor(t)}
+                                duration={durationFor(t)}
+                                brand={brand}
+                                selected={isSelected(t.id)}
+                                onToggle={() => toggleSelect(t.id)}
+                                cardBg={menuCardBg}
+                                cardBorder={menuCardBorder}
+                                nameColor={menuNameColor}
+                                priceColor={menuPriceColor}
+                                size={menuSize}
+                                bold={menuTreatmentBold}
+                              />
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+
+                    return modelPosition === "top" ? (
+                      <>{modelBlock}{menuBlock}</>
+                    ) : (
+                      <>{menuBlock}{modelBlock}</>
+                    );
                   })()}
-                  {visibleTreatments.length === 0 ? (
-                    <p className="opacity-70">No treatments available here yet.</p>
-                  ) : (
-                    <div className="space-y-2">
-                      {tree.roots.length > 0 && (
-                        <CategoryTree
-                          nodes={tree.roots}
-                          slug={slug}
-                          priceFor={priceFor}
-                          durationFor={durationFor}
-                          brand={brand}
-                          isSelected={isSelected}
-                          toggleSelect={toggleSelect}
-                          catBg={menuCatBg}
-                          catText={menuCatText}
-                          cardBg={menuCardBg}
-                          cardBorder={menuCardBorder}
-                          nameColor={menuNameColor}
-                          priceColor={menuPriceColor}
-                          size={menuSize}
-                          bold={menuTreatmentBold}
-                          categoryBold={menuCategoryBold}
-                          headingFont={headingFont}
-                        />
-                      )}
-                      {tree.uncategorised.length > 0 && (
-                        <div className="mt-4 space-y-2">
-                          {tree.roots.length > 0 && (
-                            <h3 className="text-sm font-semibold uppercase tracking-wide opacity-60">
-                              Other treatments
-                            </h3>
-                          )}
-                          {tree.uncategorised.map((t) => (
-                            <TreatmentRow
-                              key={t.id}
-                              t={t}
-                              slug={slug}
-                              price={priceFor(t)}
-                              duration={durationFor(t)}
-                              brand={brand}
-                              selected={isSelected(t.id)}
-                              onToggle={() => toggleSelect(t.id)}
-                              cardBg={menuCardBg}
-                              cardBorder={menuCardBorder}
-                              nameColor={menuNameColor}
-                              priceColor={menuPriceColor}
-                              size={menuSize}
-                              bold={menuTreatmentBold}
-                            />
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )}
                 </TabsContent>
+
 
                 <TabsContent value="packages" className="mt-4">
                   {packages.length === 0 ? (
