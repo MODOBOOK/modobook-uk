@@ -43,7 +43,7 @@ function BookPage() {
         <p className="text-muted-foreground">No treatments available yet.</p>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
-          {treatments.map((t) => (
+          {treatments.map((t: T) => (
             <Card key={t.id}>
               <CardHeader>
                 <CardTitle className="text-base">{t.name}</CardTitle>
@@ -67,7 +67,7 @@ function BookPage() {
         <section className="mt-12">
           <h2 className="mb-4 text-xl font-semibold">Packages</h2>
           <div className="grid gap-4 sm:grid-cols-2">
-            {packages.map((p) => (
+            {packages.map((p: P) => (
               <Card key={p.id}>
                 <CardHeader>
                   <CardTitle className="text-base">{p.name}</CardTitle>
