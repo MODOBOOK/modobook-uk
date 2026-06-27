@@ -311,7 +311,7 @@ function LocationsPage() {
               <div>
                 <p className="text-sm font-medium">Active</p>
                 <p className="text-xs text-muted-foreground">
-                  Visible on your MODO page.
+                  Visible on your MODO Book page.
                 </p>
               </div>
               <Switch
