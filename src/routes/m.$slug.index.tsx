@@ -94,6 +94,7 @@ function BookPage() {
         chooser_show_consultation?: boolean | null;
         chooser_consultation_treatment_id?: string | null;
         chooser_intro_text?: string | null;
+        model_slots_position?: "top" | "bottom" | null;
       };
       treatments: Treatment[];
       packages: Package[];
@@ -109,6 +110,7 @@ function BookPage() {
         id: string; treatment_id: string; location_id: string | null;
         slot_date: string; start_time: string; end_time: string;
         price_mode: "fixed" | "percent"; price_value: number; notes: string | null;
+        category?: string | null;
       }[];
     };
 
