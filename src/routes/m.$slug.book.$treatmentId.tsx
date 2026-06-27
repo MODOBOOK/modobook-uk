@@ -178,11 +178,19 @@ function BookTreatmentPage() {
           patientName: form.name,
           patientEmail: form.email,
           patientPhone: form.phone || undefined,
+          patientDob: form.dob || null,
+          patientAddress: {
+            line1: form.addressLine1,
+            line2: form.addressLine2,
+            city: form.city,
+            postcode: form.postcode,
+            country: form.country,
+          },
           notes: form.notes || undefined,
           basePrice: price,
         },
       });
-      setConfirmed({ id: res.id });
+      setConfirmed({ id: res.id, consents: res.consents ?? [] });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Booking failed");
     } finally {
@@ -191,13 +199,35 @@ function BookTreatmentPage() {
   }
 
   if (confirmed) {
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
     return (
       <main className="mx-auto max-w-xl px-4 py-16 text-center">
         <CheckCircle2 className="mx-auto mb-4 h-12 w-12 text-green-600" />
-        <h1 className="text-2xl font-bold">Booking requested</h1>
+        <h1 className="text-2xl font-bold">Booking confirmed</h1>
         <p className="mt-2 text-muted-foreground">
-          {ctx.clinicName} will confirm your appointment by email shortly.
+          Your appointment with {ctx.clinicName} is confirmed. A confirmation
+          email has been sent to {form.email}.
         </p>
+        {confirmed.consents.length > 0 && (
+          <div className="mt-6 rounded-lg border bg-muted/40 p-4 text-left">
+            <p className="text-sm font-semibold">Please complete your consent form(s):</p>
+            <ul className="mt-2 space-y-2 text-sm">
+              {confirmed.consents.map((c) => (
+                <li key={c.token}>
+                  <a
+                    href={`${origin}/c/${c.token}`}
+                    className="text-primary underline"
+                  >
+                    Complete consent form
+                  </a>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-3 text-xs text-muted-foreground">
+              We've also emailed these links to {form.email}.
+            </p>
+          </div>
+        )}
         <div className="mt-6">
           <Link to="/m/$slug" params={{ slug }}>
             <Button variant="outline">Back to clinic</Button>
