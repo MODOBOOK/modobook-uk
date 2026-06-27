@@ -116,6 +116,9 @@ function ModelSlotsPage() {
                     · {s.start_time.slice(0, 5)}–{s.end_time.slice(0, 5)}
                     {s.location_id && lById.get(s.location_id) ? ` · ${lById.get(s.location_id)!.name}` : ""}
                   </p>
+                  {s.category && (
+                    <p className="mt-0.5 inline-block rounded-full bg-fuchsia-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-fuchsia-700">{s.category}</p>
+                  )}
                   <p className="text-xs">
                     {t && <span className="line-through text-muted-foreground">£{Number(t.price).toFixed(2)}</span>}{" "}
                     <span className="font-semibold text-emerald-600">£{finalPrice.toFixed(2)}</span>{" "}
