@@ -14,6 +14,99 @@ export type Database = {
   }
   public: {
     Tables: {
+      addon_links: {
+        Row: {
+          addon_id: string
+          category_id: string | null
+          created_at: string
+          discount_percent: number | null
+          id: string
+          treatment_id: string | null
+        }
+        Insert: {
+          addon_id: string
+          category_id?: string | null
+          created_at?: string
+          discount_percent?: number | null
+          id?: string
+          treatment_id?: string | null
+        }
+        Update: {
+          addon_id?: string
+          category_id?: string | null
+          created_at?: string
+          discount_percent?: number | null
+          id?: string
+          treatment_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "addon_links_addon_id_fkey"
+            columns: ["addon_id"]
+            isOneToOne: false
+            referencedRelation: "addons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "addon_links_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "treatment_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "addon_links_treatment_id_fkey"
+            columns: ["treatment_id"]
+            isOneToOne: false
+            referencedRelation: "treatments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      addons: {
+        Row: {
+          active: boolean
+          created_at: string
+          duration_min: number
+          id: string
+          name: string
+          price_cents: number
+          profile_id: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          duration_min?: number
+          id?: string
+          name: string
+          price_cents?: number
+          profile_id: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          duration_min?: number
+          id?: string
+          name?: string
+          price_cents?: number
+          profile_id?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "addons_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       admin_invites: {
         Row: {
           accepted_at: string | null
