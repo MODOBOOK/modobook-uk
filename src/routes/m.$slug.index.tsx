@@ -756,7 +756,33 @@ function BookPage() {
   );
 }
 
+function ChooserCard({
+  title,
+  description,
+  brand,
+  onClick,
+}: {
+  title: string;
+  description: string;
+  brand: string;
+  onClick?: () => void;
+}) {
+  const inner = (
+    <div
+      className="flex h-full flex-col rounded-2xl border bg-card p-5 text-left transition hover:shadow-lg"
+      style={{ borderColor: `${brand}33` }}
+    >
+      <div className="text-base font-bold leading-tight" style={{ color: brand }}>{title}</div>
+      <div className="mt-1 text-sm opacity-75">{description}</div>
+      <div className="mt-3 text-sm font-semibold" style={{ color: brand }}>Continue →</div>
+    </div>
+  );
+  if (onClick) return <button onClick={onClick} className="block w-full text-left">{inner}</button>;
+  return inner;
+}
+
 function ActionPlaceholder({
+
   label,
   brand,
   children,
