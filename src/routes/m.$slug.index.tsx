@@ -83,6 +83,41 @@ function BookPage() {
           </div>
         </section>
       )}
+
+      {locations && locations.length > 0 && (
+        <section className="mt-12">
+          <h2 className="mb-4 text-xl font-semibold">Locations</h2>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {locations.map((loc) => {
+              const url = mapsUrl(loc);
+              const addr = formatAddress(loc);
+              return (
+                <Card key={loc.id}>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      {loc.name}
+                      {loc.is_primary && <Star className="h-4 w-4 fill-current text-yellow-500" />}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {addr && <p className="text-sm text-muted-foreground">{addr}</p>}
+                    {loc.phone && <p className="text-sm text-muted-foreground">{loc.phone}</p>}
+                    {url && (
+                      <a href={url} target="_blank" rel="noopener noreferrer">
+                        <Button variant="outline" size="sm" className="w-full">
+                          <MapPin className="mr-2 h-4 w-4" />
+                          Open in Maps
+                          <ExternalLink className="ml-2 h-3 w-3" />
+                        </Button>
+                      </a>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </section>
+      )}
     </main>
   );
 }
