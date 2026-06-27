@@ -52,9 +52,9 @@ function BookPage() {
                 {t.description && <p className="text-sm text-muted-foreground">{t.description}</p>}
                 <div className="flex items-center justify-between text-sm">
                   <span className="inline-flex items-center gap-1 text-muted-foreground">
-                    <Clock className="h-4 w-4" />{t.duration_minutes ?? 0} min
+                    <Clock className="h-4 w-4" />{t.duration ?? 0} min
                   </span>
-                  <Badge variant="secondary">£{((t.price_pence ?? 0) / 100).toFixed(2)}</Badge>
+                  <Badge variant="secondary">£{Number(t.price ?? 0).toFixed(2)}</Badge>
                 </div>
                 <Button className="w-full" onClick={() => alert("Booking flow coming soon")}>Book</Button>
               </CardContent>
@@ -74,7 +74,7 @@ function BookPage() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground">{p.session_count} sessions</p>
-                  <p className="mt-1 font-semibold">£{((p.price_pence ?? 0) / 100).toFixed(2)}</p>
+                  <p className="mt-1 font-semibold">£{Number(p.price ?? 0).toFixed(2)}</p>
                 </CardContent>
               </Card>
             ))}

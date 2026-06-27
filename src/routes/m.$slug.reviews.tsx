@@ -105,7 +105,7 @@ function Reviews() {
         {patientReviews.length === 0 && testimonials.length === 0 && (
           <p className="text-muted-foreground">No reviews yet. Be the first!</p>
         )}
-        {patientReviews.map((r) => (
+        {patientReviews.map((r: { id: string; rating: number; title: string | null; body: string; created_at: string }) => (
           <Card key={r.id}>
             <CardContent className="space-y-2 py-4">
               <Stars value={r.rating} />
@@ -115,7 +115,7 @@ function Reviews() {
             </CardContent>
           </Card>
         ))}
-        {testimonials.map((t) => (
+        {testimonials.map((t: { id: string; rating: number | null; quote: string; author_name: string }) => (
           <Card key={t.id}>
             <CardContent className="space-y-2 py-4">
               {t.rating && <Stars value={t.rating} />}
