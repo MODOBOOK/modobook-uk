@@ -140,18 +140,22 @@ function DashboardLayout() {
         </header>
 
         {/* Desktop header */}
-        <header className="hidden h-16 items-center justify-between border-b px-8 lg:flex">
-          <div />
-          <Button variant="outline" size="sm" asChild>
+        <header className="hidden h-20 items-center justify-between border-b border-border/60 px-10 lg:flex">
+          <div>
+            <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Studio</div>
+            <div className="font-serif text-2xl leading-tight">{profile.clinic_name || "Dashboard"}</div>
+          </div>
+          <Button variant="outline" size="sm" className="rounded-full px-5" asChild>
             <a href={`/m/${profile.slug}`} target="_blank" rel="noreferrer">
-              Preview MODO Book link
+              Preview booking link
             </a>
           </Button>
         </header>
 
-        <main className="min-w-0 flex-1 overflow-x-hidden p-4 pb-24 lg:p-8 lg:pb-8">
+        <main className="min-w-0 flex-1 overflow-x-hidden p-5 pb-24 lg:p-10 lg:pb-10">
           <Outlet />
         </main>
+
 
         {/* Mobile bottom tab bar */}
         <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t bg-background/95 backdrop-blur lg:hidden">
