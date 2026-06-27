@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   Store,
   Scissors,
+  FolderTree,
   CalendarDays,
   Users,
   CreditCard,
