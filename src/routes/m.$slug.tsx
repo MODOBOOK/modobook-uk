@@ -112,12 +112,7 @@ function ModoLayout() {
           </div>
         </header>
         <Outlet />
-        <footer className="mt-16 border-t" style={{ backgroundColor: footerBg, color: footerText }}>
 
-          <div className="mx-auto max-w-5xl px-4 py-6 text-center text-xs opacity-80">
-            Powered by <span className="font-semibold tracking-wide">MODO Book</span>
-          </div>
-        </footer>
       </div>
     </div>
   );
