@@ -40,42 +40,52 @@ export const Route = createFileRoute("/_authenticated/dashboard/menu")({
 
 type Item = { label: string; description: string; to: string; icon: React.ElementType; tone: string; iconColor: string };
 
+// Luxe warm-neutral icon tones — alternating brown/beige/cream
+const T = {
+  espresso: { tone: "bg-[#3a2e26]", iconColor: "text-[#f5ede1]" },
+  mocha:    { tone: "bg-[#7a5a42]", iconColor: "text-[#f5ede1]" },
+  taupe:    { tone: "bg-[#c9b39a]", iconColor: "text-[#3a2e26]" },
+  sand:     { tone: "bg-[#e9dcc8]", iconColor: "text-[#5a4332]" },
+  cream:    { tone: "bg-[#f4ece0]", iconColor: "text-[#6b4f3a]" },
+  ivory:    { tone: "bg-[#faf6ee]", iconColor: "text-[#3a2e26]" },
+};
+
 const groups: { title: string; items: Item[] }[] = [
   {
     title: "Your business",
     items: [
-      { label: "Business & Profile", description: "Clinic info, hero image & contacts", to: "/dashboard/clinic", icon: Store, tone: "bg-rose-50", iconColor: "text-rose-500" },
-      { label: "Branding", description: "Colours, fonts, logo & favicon", to: "/dashboard/branding", icon: Palette, tone: "bg-violet-50", iconColor: "text-violet-500" },
-      { label: "Welcome & policies", description: "Intro, deposits, cancellation, T&Cs", to: "/dashboard/policies", icon: Shield, tone: "bg-emerald-50", iconColor: "text-emerald-500" },
-      { label: "Locations", description: "Manage your clinic addresses", to: "/dashboard/locations", icon: MapPin, tone: "bg-sky-50", iconColor: "text-sky-500" },
+      { label: "Business & Profile", description: "Clinic info, hero image & contacts", to: "/dashboard/clinic", icon: Store, ...T.espresso },
+      { label: "Branding", description: "Colours, fonts, logo & favicon", to: "/dashboard/branding", icon: Palette, ...T.sand },
+      { label: "Welcome & policies", description: "Intro, deposits, cancellation, T&Cs", to: "/dashboard/policies", icon: Shield, ...T.mocha },
+      { label: "Locations", description: "Manage your clinic addresses", to: "/dashboard/locations", icon: MapPin, ...T.cream },
     ],
   },
   {
     title: "Services & forms",
     items: [
-      { label: "Services", description: "Treatments, categories, pricing", to: "/dashboard/services", icon: Scissors, tone: "bg-pink-50", iconColor: "text-pink-500" },
-      { label: "Packages", description: "Bundle treatments for patients", to: "/dashboard/packages", icon: Package, tone: "bg-indigo-50", iconColor: "text-indigo-500" },
-      { label: "Discounts", description: "Menu discounts & promo codes", to: "/dashboard/discounts", icon: Percent, tone: "bg-rose-50", iconColor: "text-rose-600" },
-      { label: "Model slots", description: "Discounted dates & times", to: "/dashboard/model-slots", icon: Sparkles, tone: "bg-fuchsia-50", iconColor: "text-fuchsia-500" },
-      { label: "Medical forms", description: "Pre-treatment questionnaires", to: "/dashboard/medical-forms", icon: FileText, tone: "bg-amber-50", iconColor: "text-amber-500" },
-      { label: "Consent forms", description: "Templates sent at booking", to: "/dashboard/consent-forms", icon: FileSignature, tone: "bg-teal-50", iconColor: "text-teal-500" },
+      { label: "Services", description: "Treatments, categories, pricing", to: "/dashboard/services", icon: Scissors, ...T.taupe },
+      { label: "Packages", description: "Bundle treatments for patients", to: "/dashboard/packages", icon: Package, ...T.espresso },
+      { label: "Discounts", description: "Menu discounts & promo codes", to: "/dashboard/discounts", icon: Percent, ...T.sand },
+      { label: "Model slots", description: "Discounted dates & times", to: "/dashboard/model-slots", icon: Sparkles, ...T.mocha },
+      { label: "Medical forms", description: "Pre-treatment questionnaires", to: "/dashboard/medical-forms", icon: FileText, ...T.cream },
+      { label: "Consent forms", description: "Templates sent at booking", to: "/dashboard/consent-forms", icon: FileSignature, ...T.ivory },
     ],
   },
   {
     title: "Bookings",
     items: [
-      { label: "Booking flow", description: "Concern picker shown before treatments", to: "/dashboard/booking-flow", icon: HelpCircle, tone: "bg-cyan-50", iconColor: "text-cyan-600" },
-      { label: "Availability", description: "Opening times & ad-hoc slots", to: "/dashboard/availability", icon: CalendarDays, tone: "bg-blue-50", iconColor: "text-blue-500" },
-      { label: "New appointment", description: "Book in a patient manually", to: "/dashboard/new-appointment", icon: CalendarPlus, tone: "bg-orange-50", iconColor: "text-orange-500" },
-      { label: "Consultations", description: "MODO step-by-step records", to: "/dashboard/consultations", icon: ClipboardList, tone: "bg-fuchsia-50", iconColor: "text-fuchsia-600" },
-      { label: "Patients", description: "Client list, history & files", to: "/dashboard/patients", icon: Users, tone: "bg-lime-50", iconColor: "text-lime-600" },
-      { label: "Reviews", description: "Moderate patient reviews", to: "/dashboard/reviews", icon: Star, tone: "bg-yellow-50", iconColor: "text-yellow-600" },
+      { label: "Booking flow", description: "Concern picker shown before treatments", to: "/dashboard/booking-flow", icon: HelpCircle, ...T.taupe },
+      { label: "Availability", description: "Opening times & ad-hoc slots", to: "/dashboard/availability", icon: CalendarDays, ...T.espresso },
+      { label: "New appointment", description: "Book in a patient manually", to: "/dashboard/new-appointment", icon: CalendarPlus, ...T.sand },
+      { label: "Consultations", description: "MODO step-by-step records", to: "/dashboard/consultations", icon: ClipboardList, ...T.mocha },
+      { label: "Patients", description: "Client list, history & files", to: "/dashboard/patients", icon: Users, ...T.cream },
+      { label: "Reviews", description: "Moderate patient reviews", to: "/dashboard/reviews", icon: Star, ...T.ivory },
     ],
   },
   {
     title: "Payments",
     items: [
-      { label: "Payments & payouts", description: "Connect Stripe & manage payouts", to: "/dashboard/payments", icon: CreditCard, tone: "bg-lime-50", iconColor: "text-lime-600" },
+      { label: "Payments & payouts", description: "Connect Stripe & manage payouts", to: "/dashboard/payments", icon: CreditCard, ...T.espresso },
     ],
   },
 ];
@@ -155,7 +165,7 @@ function MenuPage() {
           <h2 className="px-2 text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">Platform</h2>
           <Link to="/admin" className="block rounded-2xl border border-muted-foreground/10 bg-card p-4 shadow-sm transition active:scale-[0.99]">
             <div className="flex items-center gap-4">
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-slate-900 text-white ring-1 ring-black/5">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#3a2e26] text-[#f5ede1] ring-1 ring-black/5">
                 <ShieldCheck className="h-6 w-6" />
               </div>
               <div className="min-w-0 flex-1">
@@ -171,7 +181,7 @@ function MenuPage() {
       <Button
         variant="outline"
         size="lg"
-        className="w-full rounded-full bg-rose-500 text-white hover:bg-rose-600 hover:text-white border-rose-500"
+        className="w-full rounded-full border-[#c9b39a] bg-[#faf6ee] text-[#3a2e26] hover:bg-[#f4ece0] hover:text-[#3a2e26]"
         onClick={() => supabase.auth.signOut()}
       >
         <LogOut className="mr-2 h-4 w-4" /> Log out
