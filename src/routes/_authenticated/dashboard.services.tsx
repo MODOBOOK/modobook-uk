@@ -236,11 +236,13 @@ function ServicesPage() {
         </Card>
       ) : (
         <div className="divide-y rounded-2xl border bg-card">
-          {roots.map((node) => (
+          {roots.map((node, idx) => (
             <CategoryRow
               key={node.id}
               node={node}
               depth={0}
+              siblings={roots}
+              index={idx}
               matchTreat={matchTreat}
               onAddSub={(parentId) => setCatDialog({ mode: "create", parentId })}
               onEditCat={(c) =>
@@ -249,8 +251,11 @@ function ServicesPage() {
               onDeleteCat={handleDeleteCat}
               onAddService={(catId) => setSvcDialog({ defaultCatId: catId })}
               onDeleteTreat={handleDeleteTreat}
+              onMoveCat={moveCat}
+              onMoveTreat={moveTreat}
             />
           ))}
+
 
           {uncategorised.filter(matchTreat).length > 0 && (
             <div className="p-4">
