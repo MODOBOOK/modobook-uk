@@ -242,6 +242,17 @@ function BookTreatmentPage() {
     setSubmitting(true);
     try {
       const endMin = toMinutes(slot) + duration;
+      let endTimeStr = fromMinutes(endMin);
+      let effectivePrice = price;
+      if (modelMode) {
+        const ms = modelSlotsForLoc.find((s) => s.slot_date === date && (s.start_time === slot || `${s.start_time}:00` === slot || s.start_time === slot.slice(0,5)));
+        if (ms) {
+          endTimeStr = ms.end_time.length === 5 ? `${ms.end_time}:00` : ms.end_time;
+          effectivePrice = ms.price_mode === "fixed"
+            ? Number(ms.price_value)
+            : Math.max(0, price * (1 - Number(ms.price_value) / 100));
+        }
+      }
       const res = await reqFn({
         data: {
           profileId: ctx.profileId,
@@ -249,7 +260,8 @@ function BookTreatmentPage() {
           locationId,
           date,
           startTime: slot,
-          endTime: fromMinutes(endMin),
+          endTime: endTimeStr,
+
           patientName: form.name,
           patientEmail: form.email,
           patientPhone: form.phone || undefined,
