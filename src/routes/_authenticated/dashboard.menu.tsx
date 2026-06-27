@@ -67,6 +67,7 @@ const groups: { title: string; items: Item[] }[] = [
     title: "Services & forms",
     items: [
       { label: "Services", description: "Treatments, categories, pricing", to: "/dashboard/services", icon: Scissors, ...T.taupe },
+      { label: "Add-ons", description: "Optional extras offered with treatments", to: "/dashboard/treatments", icon: Sparkles, ...T.ivory },
       { label: "Packages", description: "Bundle treatments for patients", to: "/dashboard/packages", icon: Package, ...T.espresso },
       { label: "Discounts", description: "Menu discounts & promo codes", to: "/dashboard/discounts", icon: Percent, ...T.sand },
       { label: "Model slots", description: "Discounted dates & times", to: "/dashboard/model-slots", icon: Sparkles, ...T.mocha },
@@ -109,7 +110,7 @@ function MenuPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-6 px-1">
       <div className="pt-2 text-center">
-        <h1 className="text-3xl font-extrabold tracking-tight">My Shop</h1>
+        <h1 className="text-3xl font-extrabold tracking-tight">My Clinic</h1>
         <p className="mt-1 text-sm text-muted-foreground">{profile.clinic_name || "Manage your clinic"}</p>
       </div>
 
