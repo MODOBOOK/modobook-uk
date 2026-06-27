@@ -793,7 +793,11 @@ function ServiceDialog({
                 price,
                 description: description.trim() || undefined,
                 category_id: categoryId === "__none__" ? null : categoryId,
+                session_count: sessionCount,
+                allow_split_payment: sessionCount > 1 ? allowSplit : false,
+                rebook_reminder_days: rebookDays.trim() ? Number(rebookDays) : null,
               });
+
               setSaving(false);
             }}
           >
