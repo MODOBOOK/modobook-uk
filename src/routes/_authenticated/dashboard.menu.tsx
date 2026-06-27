@@ -16,15 +16,19 @@ import {
   Star,
   HelpCircle,
   ChevronRight,
-
+  ShieldCheck,
   LogOut,
   ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { amIAdmin } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/_authenticated/dashboard/menu")({
   ssr: false,
+  loader: async () => {
+    try { return await amIAdmin(); } catch { return { admin: false }; }
+  },
   component: MenuPage,
 });
 
@@ -71,6 +75,7 @@ const groups: {
 
 function MenuPage() {
   const { profile } = Route.useRouteContext() as { profile: { slug: string; clinic_name?: string | null } };
+  const { admin } = Route.useLoaderData();
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -118,6 +123,24 @@ function MenuPage() {
           </div>
         </section>
       ))}
+
+      {admin && (
+        <section className="space-y-2">
+          <h2 className="px-1 text-xs font-bold uppercase tracking-wider text-muted-foreground">Platform</h2>
+          <Link to="/admin" className="block rounded-2xl border bg-card p-3 shadow-sm transition active:scale-[0.99]">
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-slate-900 text-white">
+                <ShieldCheck className="h-5 w-5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-semibold leading-tight">Platform admin</p>
+                <p className="truncate text-xs text-muted-foreground">Practitioners, admins & invites</p>
+              </div>
+              <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
+            </div>
+          </Link>
+        </section>
+      )}
 
       <Button
         variant="outline"
