@@ -49,6 +49,7 @@ export const createTreatment = createServerFn({ method: "POST" })
       deductible_against?: string[];
       deductible_window_days?: number;
       category_id?: string | null;
+      active?: boolean;
     }) => input,
   )
   .handler(async ({ data, context }) => {
@@ -76,6 +77,7 @@ export const createTreatment = createServerFn({ method: "POST" })
         deductible_against: data.deductible_against,
         deductible_window_days: data.deductible_window_days,
         category_id: data.category_id ?? null,
+        active: data.active ?? true,
       })
       .select()
       .single();

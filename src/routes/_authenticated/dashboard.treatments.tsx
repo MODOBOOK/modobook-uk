@@ -16,8 +16,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Plus, Trash2, Pencil, FileText } from "lucide-react";
+import { Plus, Trash2, Pencil, FileText, X } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard/treatments")({
   ssr: false,
@@ -47,6 +48,7 @@ type TreatmentForm = {
   price: number;
   description: string;
   category_id: string | null;
+  active: boolean;
   consent_ids: string[];
 };
 
@@ -173,7 +175,7 @@ function TreatmentsPage() {
           </DialogTrigger>
           <TreatmentDialog
             treatment={editing}
-            categoryOptions={categoryOptions}
+            categories={categories}
             consentTemplates={consentTemplates}
             onSave={handleSave}
           />
@@ -225,12 +227,12 @@ function TreatmentsPage() {
 
 function TreatmentDialog({
   treatment,
-  categoryOptions,
+  categories,
   consentTemplates,
   onSave,
 }: {
   treatment: Treatment | null;
-  categoryOptions: { id: string; label: string; depth: number }[];
+  categories: Category[];
   consentTemplates: ConsentTpl[];
   onSave: (f: TreatmentForm) => void;
 }) {
@@ -239,15 +241,35 @@ function TreatmentDialog({
   const [duration, setDuration] = useState(treatment?.duration ?? 30);
   const [price, setPrice] = useState(treatment?.price ?? 0);
   const [description, setDescription] = useState(treatment?.description ?? "");
-  const [categoryId, setCategoryId] = useState<string>(treatment?.category_id ?? "__none__");
+  const [active, setActive] = useState(treatment?.active ?? true);
   const [consentIds, setConsentIds] = useState<string[]>([]);
+
+  // Two-step category picker: parent category + optional subcategory
+  const topLevel = useMemo(() => categories.filter((c) => !c.parent_id), [categories]);
+  const childrenOf = (parentId: string | null) =>
+    parentId ? categories.filter((c) => c.parent_id === parentId) : [];
+
+  // Resolve initial category/subcategory from treatment.category_id (which may be a sub or parent)
+  const initial = useMemo(() => {
+    const id = treatment?.category_id ?? null;
+    if (!id) return { parent: null as string | null, sub: null as string | null };
+    const cat = categories.find((c) => c.id === id);
+    if (!cat) return { parent: null, sub: null };
+    if (cat.parent_id) return { parent: cat.parent_id, sub: cat.id };
+    return { parent: cat.id, sub: null };
+  }, [treatment, categories]);
+
+  const [parentId, setParentId] = useState<string | null>(initial.parent);
+  const [subId, setSubId] = useState<string | null>(initial.sub);
 
   useEffect(() => {
     setName(treatment?.name ?? "");
     setDuration(treatment?.duration ?? 30);
     setPrice(treatment?.price ?? 0);
     setDescription(treatment?.description ?? "");
-    setCategoryId(treatment?.category_id ?? "__none__");
+    setActive(treatment?.active ?? true);
+    setParentId(initial.parent);
+    setSubId(initial.sub);
     if (treatment?.id) {
       fetchConsents({ data: { treatmentId: treatment.id } })
         .then((ids) => setConsentIds(ids as string[]))
@@ -255,7 +277,7 @@ function TreatmentDialog({
     } else {
       setConsentIds([]);
     }
-  }, [treatment, fetchConsents]);
+  }, [treatment, fetchConsents, initial.parent, initial.sub]);
 
   function toggleConsent(id: string) {
     setConsentIds((prev) =>
@@ -263,32 +285,88 @@ function TreatmentDialog({
     );
   }
 
+  const subOptions = childrenOf(parentId);
+
   return (
     <DialogContent className="max-h-[90vh] overflow-y-auto">
       <DialogHeader>
         <DialogTitle>{treatment ? "Edit treatment" : "New treatment"}</DialogTitle>
       </DialogHeader>
       <div className="space-y-4">
-        <div>
-          <Label>Name</Label>
-          <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Lip filler 1ml" />
+        <div className="flex items-end justify-between gap-3">
+          <div className="flex-1">
+            <Label>Service Name</Label>
+            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. 1 Area" />
+          </div>
+          <label className="flex items-center gap-2 pb-2 text-sm">
+            <span className="text-muted-foreground">Hide</span>
+            <Switch checked={!active} onCheckedChange={(v) => setActive(!v)} />
+          </label>
         </div>
+
         <div>
-          <Label>Category</Label>
-          <Select value={categoryId} onValueChange={setCategoryId}>
-            <SelectTrigger>
-              <SelectValue placeholder="Uncategorised" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="__none__">Uncategorised</SelectItem>
-              {categoryOptions.map((c) => (
-                <SelectItem key={c.id} value={c.id}>
-                  {"\u00A0\u00A0".repeat(c.depth) + c.label.split(" › ").slice(-1)[0]}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Label>Assign to category</Label>
+          {parentId ? (
+            <div className="flex items-center justify-between rounded-md border px-3 py-2 text-sm">
+              <span>{categories.find((c) => c.id === parentId)?.name}</span>
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                onClick={() => { setParentId(null); setSubId(null); }}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          ) : (
+            <Select onValueChange={(v) => { setParentId(v); setSubId(null); }}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select a category" />
+              </SelectTrigger>
+              <SelectContent>
+                {topLevel.length === 0 ? (
+                  <div className="px-3 py-2 text-sm text-muted-foreground">
+                    No categories yet — create one in Categories.
+                  </div>
+                ) : (
+                  topLevel.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
+          )}
         </div>
+
+        {parentId && (
+          <div>
+            <Label>Assign to a sub category</Label>
+            {subId ? (
+              <div className="flex items-center justify-between rounded-md border px-3 py-2 text-sm">
+                <span>{categories.find((c) => c.id === subId)?.name}</span>
+                <Button type="button" size="icon" variant="ghost" onClick={() => setSubId(null)}>
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : subOptions.length === 0 ? (
+              <p className="text-xs text-muted-foreground">
+                No sub-categories under this category. Add one in Categories.
+              </p>
+            ) : (
+              <Select onValueChange={(v) => setSubId(v)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a sub category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {subOptions.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+        )}
+
         <div className="grid grid-cols-2 gap-3">
           <div>
             <Label>Duration (min)</Label>
@@ -344,7 +422,8 @@ function TreatmentDialog({
               duration,
               price,
               description,
-              category_id: categoryId === "__none__" ? null : categoryId,
+              category_id: subId ?? parentId,
+              active,
               consent_ids: consentIds,
             })
           }
@@ -356,4 +435,5 @@ function TreatmentDialog({
     </DialogContent>
   );
 }
+
 
