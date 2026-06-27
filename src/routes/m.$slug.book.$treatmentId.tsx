@@ -60,8 +60,21 @@ function BookTreatmentPage() {
   const [date, setDate] = useState<string>(today);
   const [month, setMonth] = useState<Date>(new Date());
   const [slot, setSlot] = useState<string | null>(null);
-  const [confirmed, setConfirmed] = useState<{ id: string } | null>(null);
-  const [form, setForm] = useState({ name: "", email: "", phone: "", notes: "" });
+  const [confirmed, setConfirmed] = useState<
+    { id: string; consents: { token: string; consent_template_id: string }[] } | null
+  >(null);
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    dob: "",
+    addressLine1: "",
+    addressLine2: "",
+    city: "",
+    postcode: "",
+    country: "",
+    notes: "",
+  });
   const [submitting, setSubmitting] = useState(false);
 
   const dayFn = useServerFn(getDayAvailability);
