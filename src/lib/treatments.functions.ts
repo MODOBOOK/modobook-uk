@@ -120,7 +120,9 @@ export const updateTreatment = createServerFn({ method: "POST" })
       session_count?: number;
       allow_split_payment?: boolean;
       rebook_reminder_days?: number | null;
+      color?: string | null;
     }) => input,
+
 
   )
   .handler(async ({ data, context }) => {
