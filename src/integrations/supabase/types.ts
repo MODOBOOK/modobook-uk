@@ -707,37 +707,49 @@ export type Database = {
         Row: {
           active: boolean | null
           created_at: string
+          description: string | null
+          duration_minutes: number | null
           expiry_days: number | null
           id: string
+          image_url: string | null
           name: string
           price: number
           profile_id: string
           session_count: number
           treatment_id: string | null
+          treatment_ids: string[]
           updated_at: string
         }
         Insert: {
           active?: boolean | null
           created_at?: string
+          description?: string | null
+          duration_minutes?: number | null
           expiry_days?: number | null
           id?: string
+          image_url?: string | null
           name: string
           price: number
           profile_id: string
           session_count: number
           treatment_id?: string | null
+          treatment_ids?: string[]
           updated_at?: string
         }
         Update: {
           active?: boolean | null
           created_at?: string
+          description?: string | null
+          duration_minutes?: number | null
           expiry_days?: number | null
           id?: string
+          image_url?: string | null
           name?: string
           price?: number
           profile_id?: string
           session_count?: number
           treatment_id?: string | null
+          treatment_ids?: string[]
           updated_at?: string
         }
         Relationships: [
