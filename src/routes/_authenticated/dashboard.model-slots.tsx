@@ -26,6 +26,7 @@ type Slot = {
   slot_date: string; start_time: string; end_time: string;
   price_mode: "fixed" | "percent"; price_value: number;
   notes: string | null; booked_appointment_id: string | null; active: boolean;
+  category: string | null;
 };
 type Treat = { id: string; name: string; price: number; duration: number };
 type Loc = { id: string; name: string };
