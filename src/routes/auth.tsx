@@ -14,8 +14,8 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
-      { title: "Sign in | Aesthetic Bookings" },
-      { name: "description", content: "Sign in to your Aesthetic Bookings account." },
+      { title: "Sign in | MODO" },
+      { name: "description", content: "Sign in to your MODO account." },
     ],
   }),
   component: AuthPage,
@@ -74,7 +74,7 @@ function AuthPage() {
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
             <Calendar className="h-6 w-6" />
           </div>
-          <span className="text-xl font-semibold tracking-tight">Aesthetic Bookings</span>
+          <span className="text-xl font-semibold tracking-tight">MODO</span>
         </div>
 
         <Tabs defaultValue="signin">

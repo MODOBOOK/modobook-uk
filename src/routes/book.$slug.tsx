@@ -59,7 +59,7 @@ function ClinicPage() {
           </div>
           <Link to="/">
             <Button variant="ghost" size="sm">
-              Powered by Aesthetic Bookings
+              Powered by MODO
             </Button>
           </Link>
         </div>
@@ -174,7 +174,7 @@ function ClinicPage() {
 
       <footer className="border-t py-6 text-center text-sm text-muted-foreground">
         <Link to="/" className="hover:underline">
-          Create your own booking page with Aesthetic Bookings
+          Create your own booking page with MODO
         </Link>
       </footer>
     </div>
