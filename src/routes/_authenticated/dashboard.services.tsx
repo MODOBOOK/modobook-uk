@@ -172,13 +172,13 @@ function ServicesPage() {
 
       <div className="grid grid-cols-2 gap-3">
         <Button
-          className="h-12 rounded-full bg-[hsl(var(--primary))] font-semibold text-primary-foreground hover:bg-[hsl(var(--primary))]/90"
+          className="h-12 rounded-full bg-black font-semibold text-white hover:bg-black/90"
           onClick={() => setCatDialog({ mode: "create", parentId: null })}
         >
           Add Category
         </Button>
         <Button
-          className="h-12 rounded-full bg-[hsl(var(--primary))] font-semibold text-primary-foreground hover:bg-[hsl(var(--primary))]/90"
+          className="h-12 rounded-full bg-black font-semibold text-white hover:bg-black/90"
           onClick={() => setSvcDialog({ defaultCatId: null })}
           disabled={picker.length === 0}
           title={picker.length === 0 ? "Create a category first" : ""}
