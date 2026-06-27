@@ -168,6 +168,8 @@ function SlotEditor({ existing, treatments, locations, onClose, onSaved }: {
   const [value, setValue] = useState<string>(existing?.price_value?.toString() ?? "");
   const [notes, setNotes] = useState(existing?.notes ?? "");
   const [active, setActive] = useState(existing?.active ?? true);
+  const [category, setCategory] = useState(existing?.category ?? "");
+
 
   const t = treatments.find((x) => x.id === treatmentId);
 
