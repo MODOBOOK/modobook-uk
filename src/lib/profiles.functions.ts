@@ -85,11 +85,15 @@ export const updateProfile = createServerFn({ method: "POST" })
       brand_color?: string;
       social_links?: Record<string, string>;
       active?: boolean;
+      welcome_intro_html?: string;
+      deposit_amount_cents?: number;
+      deposit_policy_text?: string;
+      cancellation_rules?: { hours_before: number; fee_percent: number }[];
     }) => input,
   )
   .handler(async ({ data, context }) => {
     const { supabase } = context;
-    const update: Database["public"]["Tables"]["profiles"]["Update"] = {};
+    const update: Record<string, unknown> = {};
     if (data.full_name !== undefined) update.full_name = data.full_name;
     if (data.clinic_name !== undefined) update.clinic_name = data.clinic_name;
     if (data.slug !== undefined) update.slug = data.slug.toLowerCase().replace(/[^a-z0-9-]/g, "-");
@@ -103,10 +107,14 @@ export const updateProfile = createServerFn({ method: "POST" })
     if (data.brand_color !== undefined) update.brand_color = data.brand_color;
     if (data.social_links !== undefined) update.social_links = data.social_links as Json;
     if (data.active !== undefined) update.active = data.active;
+    if (data.welcome_intro_html !== undefined) update.welcome_intro_html = data.welcome_intro_html;
+    if (data.deposit_amount_cents !== undefined) update.deposit_amount_cents = data.deposit_amount_cents;
+    if (data.deposit_policy_text !== undefined) update.deposit_policy_text = data.deposit_policy_text;
+    if (data.cancellation_rules !== undefined) update.cancellation_rules = data.cancellation_rules as Json;
 
     const { data: profile, error } = await supabase
       .from("profiles")
-      .update(update)
+      .update(update as Database["public"]["Tables"]["profiles"]["Update"])
       .eq("id", data.id)
       .select()
       .single();
