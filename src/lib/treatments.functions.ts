@@ -120,6 +120,7 @@ export const updateTreatment = createServerFn({ method: "POST" })
     if (data.is_consultation !== undefined) update.is_consultation = data.is_consultation;
     if (data.deductible_against !== undefined) update.deductible_against = data.deductible_against;
     if (data.deductible_window_days !== undefined) update.deductible_window_days = data.deductible_window_days;
+    if (data.category_id !== undefined) update.category_id = data.category_id;
 
     const { data: treatment, error } = await supabase
       .from("treatments")
