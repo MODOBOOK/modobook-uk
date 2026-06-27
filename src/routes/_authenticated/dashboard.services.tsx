@@ -111,6 +111,9 @@ function ServicesPage() {
   const removeCat = useServerFn(deleteCategory);
   const createTreat = useServerFn(createTreatment);
   const removeTreat = useServerFn(deleteTreatment);
+  const reorderCats = useServerFn(reorderCategories);
+  const reorderTreats = useServerFn(reorderTreatments);
+
 
   const cats = useQuery({ queryKey: ["my-categories"], queryFn: () => fetchCats() });
   const treats = useQuery({ queryKey: ["my-treatments"], queryFn: () => fetchTreats() });
