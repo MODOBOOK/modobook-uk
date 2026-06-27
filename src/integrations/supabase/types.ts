@@ -113,13 +113,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "appointments_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "public_profile_view"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "appointments_treatment_id_fkey"
             columns: ["treatment_id"]
             isOneToOne: false
@@ -177,13 +170,6 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "availability_rules_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "public_profile_view"
-            referencedColumns: ["id"]
-          },
         ]
       }
       blocked_dates: {
@@ -229,13 +215,6 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "blocked_dates_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "public_profile_view"
-            referencedColumns: ["id"]
-          },
         ]
       }
       clinic_gallery: {
@@ -272,13 +251,6 @@ export type Database = {
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "clinic_gallery_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "public_profile_view"
             referencedColumns: ["id"]
           },
         ]
@@ -320,13 +292,6 @@ export type Database = {
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "clinic_testimonials_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "public_profile_view"
             referencedColumns: ["id"]
           },
         ]
@@ -406,13 +371,6 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "clinic_theme_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: true
-            referencedRelation: "public_profile_view"
-            referencedColumns: ["id"]
-          },
         ]
       }
       consent_templates: {
@@ -455,13 +413,6 @@ export type Database = {
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "consent_templates_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "public_profile_view"
             referencedColumns: ["id"]
           },
         ]
@@ -526,13 +477,6 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "locations_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "public_profile_view"
-            referencedColumns: ["id"]
-          },
         ]
       }
       medical_form_templates: {
@@ -572,13 +516,6 @@ export type Database = {
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "medical_form_templates_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "public_profile_view"
             referencedColumns: ["id"]
           },
         ]
@@ -673,13 +610,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "packages_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "public_profile_view"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "packages_treatment_id_fkey"
             columns: ["treatment_id"]
             isOneToOne: false
@@ -720,13 +650,6 @@ export type Database = {
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "patient_practitioner_links_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "public_profile_view"
             referencedColumns: ["id"]
           },
         ]
@@ -788,13 +711,6 @@ export type Database = {
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "patient_reviews_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "public_profile_view"
             referencedColumns: ["id"]
           },
         ]
@@ -886,13 +802,6 @@ export type Database = {
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "payments_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "public_profile_view"
             referencedColumns: ["id"]
           },
         ]
@@ -1066,13 +975,6 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "treatment_categories_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "public_profile_view"
-            referencedColumns: ["id"]
-          },
         ]
       }
       treatment_location_pricing: {
@@ -1199,85 +1101,43 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "treatments_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "public_profile_view"
-            referencedColumns: ["id"]
-          },
         ]
       }
     }
     Views: {
-      public_profile_view: {
-        Row: {
-          about: string | null
-          active: boolean | null
-          address: Json | null
-          avatar_url: string | null
-          bio: string | null
-          brand_color: string | null
-          clinic_name: string | null
-          created_at: string | null
-          full_name: string | null
-          hero_url: string | null
-          id: string | null
-          qualifications: Json | null
-          slug: string | null
-          social_links: Json | null
-          specialties: string[] | null
-          tagline: string | null
-          timeline: Json | null
-          updated_at: string | null
-        }
-        Insert: {
-          about?: string | null
-          active?: boolean | null
-          address?: Json | null
-          avatar_url?: string | null
-          bio?: string | null
-          brand_color?: string | null
-          clinic_name?: string | null
-          created_at?: string | null
-          full_name?: string | null
-          hero_url?: string | null
-          id?: string | null
-          qualifications?: Json | null
-          slug?: string | null
-          social_links?: Json | null
-          specialties?: string[] | null
-          tagline?: string | null
-          timeline?: Json | null
-          updated_at?: string | null
-        }
-        Update: {
-          about?: string | null
-          active?: boolean | null
-          address?: Json | null
-          avatar_url?: string | null
-          bio?: string | null
-          brand_color?: string | null
-          clinic_name?: string | null
-          created_at?: string | null
-          full_name?: string | null
-          hero_url?: string | null
-          id?: string | null
-          qualifications?: Json | null
-          slug?: string | null
-          social_links?: Json | null
-          specialties?: string[] | null
-          tagline?: string | null
-          timeline?: Json | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
+      get_public_profile_by_slug: {
+        Args: { p_slug: string }
+        Returns: {
+          about: string
+          active: boolean
+          address: Json
+          avatar_url: string
+          bio: string
+          brand_color: string
+          clinic_name: string
+          created_at: string
+          full_name: string
+          hero_url: string
+          id: string
+          qualifications: Json
+          slug: string
+          social_links: Json
+          specialties: string[]
+          tagline: string
+          timeline: Json
+          updated_at: string
+        }[]
+      }
       is_active_profile_path: { Args: { path: string }; Returns: boolean }
       is_object_owner: { Args: { path: string }; Returns: boolean }
       is_profile_owner: { Args: { _profile_id: string }; Returns: boolean }
+      is_slug_available: {
+        Args: { p_exclude_id?: string; p_slug: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "practitioner" | "admin"
