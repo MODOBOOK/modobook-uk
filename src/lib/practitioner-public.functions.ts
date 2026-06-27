@@ -15,10 +15,7 @@ export const getPractitionerBio = createServerFn({ method: "GET" })
   .handler(async ({ data }) => {
     const supabase = publicClient();
     const { data: profile, error } = await supabase
-      .from("profiles")
-      .select("id, slug, full_name, clinic_name, tagline, bio, about, avatar_url, hero_url, brand_color, address, social_links, specialties, qualifications, timeline, active")
-      .eq("slug", data.slug.toLowerCase())
-      .eq("active", true)
+      .rpc("get_public_profile_by_slug", { p_slug: data.slug.toLowerCase() })
       .maybeSingle();
     if (error) throw error;
     if (!profile) throw new Error("Practitioner not found");
