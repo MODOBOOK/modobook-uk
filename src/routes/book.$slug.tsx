@@ -210,11 +210,13 @@ function TreatmentCard({
           <span className="text-xl font-bold">£{(treatment.price / 100).toFixed(2)}</span>
           <span className="text-xs text-muted-foreground">{treatment.payment_mode === "pay_in_clinic" ? "Pay in clinic" : "Book online"}</span>
         </div>
-        <Link to={`/book/${slug}/checkout?treatment=${treatment.id}`}>
-          <Button className="w-full" style={{ backgroundColor: brandColor }}>
-            Book
-          </Button>
-        </Link>
+        <Button
+          className="w-full"
+          style={{ backgroundColor: brandColor }}
+          onClick={() => window.location.href = "/"}
+        >
+          Book
+        </Button>
       </CardContent>
     </Card>
   );
