@@ -12,7 +12,9 @@ import {
   getMyTreatments,
   createTreatment,
   deleteTreatment,
+  reorderTreatments,
 } from "@/lib/treatments.functions";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
