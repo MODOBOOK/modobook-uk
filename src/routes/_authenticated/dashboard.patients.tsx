@@ -242,7 +242,7 @@ function PatientsPage() {
                 {group.map((c) => (
                   <button
                     key={c.id}
-                    onClick={() => setDrawer(c)}
+                    onClick={() => c.id.startsWith("appt:") ? setDrawer(c) : navigate({ to: "/dashboard/patients/$id", params: { id: c.id } })}
                     className="flex w-full items-center gap-3 py-3 text-left hover:bg-muted/40"
                   >
                     <div className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-full bg-primary/10 text-sm font-bold text-primary">
