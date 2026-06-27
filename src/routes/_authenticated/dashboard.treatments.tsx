@@ -141,7 +141,7 @@ function TreatmentsPage() {
 
   async function handleSave(form: TreatmentForm) {
     try {
-      const { consent_ids, addon_ids, ...rest } = form;
+      const { consent_ids, addons, ...rest } = form;
       let id: string;
       if (editing) {
         await update({ data: { id: editing.id, ...rest } });
