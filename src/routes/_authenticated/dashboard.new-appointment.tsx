@@ -346,6 +346,45 @@ function NewAppointmentPage() {
         <CardHeader><CardTitle>Patient details</CardTitle></CardHeader>
         <CardContent className="space-y-3">
           <div>
+            <Label>Existing patient</Label>
+            <div className="flex items-center gap-2">
+              <Popover open={clientPickerOpen} onOpenChange={setClientPickerOpen}>
+                <PopoverTrigger asChild>
+                  <Button type="button" variant="outline" role="combobox" className="flex-1 justify-between font-normal">
+                    {selectedClient ? selectedClient.full_name : "Search your clients…"}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                  <Command>
+                    <CommandInput placeholder="Search by name, email…" />
+                    <CommandList>
+                      <CommandEmpty>No patients found.</CommandEmpty>
+                      <CommandGroup>
+                        {clients.map((c) => (
+                          <CommandItem key={c.id} value={`${c.full_name} ${c.email ?? ""} ${c.phone ?? ""}`} onSelect={() => applyClient(c)}>
+                            <Check className={`mr-2 h-4 w-4 ${clientId === c.id ? "opacity-100" : "opacity-0"}`} />
+                            <div className="min-w-0">
+                              <div className="truncate font-medium">{c.full_name}</div>
+                              <div className="truncate text-xs text-muted-foreground">{c.email ?? c.phone ?? ""}</div>
+                            </div>
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+              {selectedClient && (
+                <Button type="button" variant="ghost" size="sm" onClick={() => applyClient(null)}>Clear</Button>
+              )}
+            </div>
+            <p className="mt-1 flex items-center gap-1 text-[11px] text-muted-foreground">
+              <UserPlus className="h-3 w-3" /> Or fill in the fields below to book a new patient.
+            </p>
+          </div>
+
+          <div>
             <Label>Full name *</Label>
             <Input value={patientName} onChange={(e) => setPatientName(e.target.value)} />
           </div>
