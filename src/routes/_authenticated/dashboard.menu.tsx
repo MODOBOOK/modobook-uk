@@ -19,6 +19,8 @@ import {
   ShieldCheck,
   LogOut,
   ExternalLink,
+  Percent,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
