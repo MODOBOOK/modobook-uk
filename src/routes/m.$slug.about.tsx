@@ -37,7 +37,7 @@ function About() {
           </div>
         )}
         <div className="flex-1 text-center sm:text-left">
-          <h1 className="text-3xl font-bold tracking-tight">{profile.full_name}</h1>
+          <h1 className="text-3xl font-bold tracking-tight" style={{ color: "var(--brand)", fontFamily: "var(--heading-font)" }}>{profile.full_name}</h1>
           {profile.tagline && <p className="mt-1 text-muted-foreground">{profile.tagline}</p>}
           {addressText && (
             <p className="mt-2 inline-flex items-center gap-1 text-sm text-muted-foreground">
