@@ -145,12 +145,12 @@ function PatientsPage() {
   }
   function openEdit(c: Client) {
     if (c.id.startsWith("appt:")) {
-      // copy into form to save as a real client
       setForm({
         full_name: c.full_name,
         email: c.email ?? "",
         phone: c.phone ?? "",
         dob: "", gender: "", address: "", group_name: "", notes: "", avatar_url: "",
+        has_allergies: false, allergies: "",
       });
       setEditing(null);
     } else {
@@ -165,6 +165,8 @@ function PatientsPage() {
         group_name: c.group_name ?? "",
         notes: c.notes ?? "",
         avatar_url: c.avatar_url ?? "",
+        has_allergies: !!c.has_allergies,
+        allergies: c.allergies ?? "",
       });
       setEditing(c);
     }
