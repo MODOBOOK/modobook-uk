@@ -17,7 +17,6 @@ import {
   Clock,
   ExternalLink,
   Star,
-  ChevronRight,
   Check,
   Package as PackageIcon,
 } from "lucide-react";
@@ -25,6 +24,8 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { mapsUrl, formatAddress } from "@/lib/maps";
 import type { Database } from "@/integrations/supabase/types";
 import { toast } from "sonner";
+import { SafeHtml } from "@/components/SafeHtml";
+import { describeCancellationRules } from "@/lib/policy";
 
 type Treatment = Database["public"]["Tables"]["treatments"]["Row"];
 type Package = Database["public"]["Tables"]["packages"]["Row"];
@@ -82,6 +83,10 @@ function BookPage() {
         brand_color: string | null;
         address: unknown;
         social_links: { instagram?: string; facebook?: string; tiktok?: string } | null;
+        welcome_intro_html?: string | null;
+        deposit_amount_cents?: number | null;
+        deposit_policy_text?: string | null;
+        cancellation_rules?: { hours_before: number; fee_percent: number }[] | null;
       };
       treatments: Treatment[];
       packages: Package[];
@@ -358,6 +363,43 @@ function BookPage() {
         </section>
       )}
 
+      {/* Welcome message */}
+      {profile.welcome_intro_html && (
+        <section className="mx-auto mt-8 max-w-3xl px-4">
+          <div
+            className="rounded-2xl border bg-card px-5 py-5 shadow-sm sm:px-7 sm:py-6"
+            style={{ borderColor: `${brand}1a` }}
+          >
+            <SafeHtml
+              html={profile.welcome_intro_html}
+              className="prose prose-sm sm:prose max-w-none [&_strong]:font-bold"
+            />
+          </div>
+        </section>
+      )}
+
+      {/* Booking & cancellation policy */}
+      {(profile.deposit_policy_text || (profile.cancellation_rules && profile.cancellation_rules.length > 0) || (profile.deposit_amount_cents ?? 0) > 0) && (
+        <section className="mx-auto mt-4 max-w-3xl px-4">
+          <details className="rounded-2xl border bg-card px-5 py-4 text-sm sm:px-7" style={{ borderColor: `${brand}1a` }}>
+            <summary className="cursor-pointer font-semibold" style={{ color: brand }}>
+              Booking & cancellation policy
+            </summary>
+            <div className="mt-3 space-y-2 opacity-90">
+              {(profile.deposit_amount_cents ?? 0) > 0 && (
+                <p>A £{((profile.deposit_amount_cents ?? 0) / 100).toFixed(2)} deposit is taken at time of booking.</p>
+              )}
+              {profile.deposit_policy_text && <p>{profile.deposit_policy_text}</p>}
+              {profile.cancellation_rules && profile.cancellation_rules.length > 0 && (
+                <ul className="ml-4 list-disc space-y-1">
+                  {describeCancellationRules(profile.cancellation_rules).map((r, i) => <li key={i}>{r}</li>)}
+                </ul>
+              )}
+            </div>
+          </details>
+        </section>
+      )}
+
       {/* Treatments + Packages */}
       {locationId ? (
         <section className="mx-auto mt-10 max-w-3xl px-4 pb-32">
@@ -372,7 +414,7 @@ function BookPage() {
 
             <TabsContent value="treatments" className="mt-4">
               <p className="mb-3 text-xs opacity-60">
-                Tap a treatment to book now, or tick multiple to book them together.
+                Tick all the treatments you'd like, then press Book Now.
               </p>
               {visibleTreatments.length === 0 ? (
                 <p className="opacity-70">No treatments available here yet.</p>
@@ -674,7 +716,6 @@ function CategoryTree({
 
 function TreatmentRow({
   t,
-  slug,
   price,
   duration,
   brand,
@@ -690,54 +731,41 @@ function TreatmentRow({
   onToggle: () => void;
 }) {
   return (
-    <div
-      className="group flex items-center gap-3 rounded-xl border bg-card p-3 transition hover:shadow-sm"
-      style={selected ? { borderColor: brand, boxShadow: `0 0 0 1px ${brand}` } : undefined}
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-pressed={selected}
+      className="group flex w-full items-center gap-3 rounded-xl border bg-card p-3 text-left transition hover:shadow-sm"
+      style={selected ? { borderColor: brand, boxShadow: `0 0 0 1.5px ${brand}` } : undefined}
     >
-      <button
-        type="button"
-        onClick={onToggle}
-        aria-label={selected ? "Remove from selection" : "Add to selection"}
-        className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded border transition"
+      <span
+        className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border transition"
         style={selected
           ? { backgroundColor: brand, borderColor: brand, color: "#fff" }
           : { borderColor: `${brand}66` }}
       >
         {selected && <Check className="h-4 w-4" />}
-      </button>
-      <Link
-        to="/m/$slug/book/$treatmentId"
-        params={{ slug, treatmentId: t.id }}
-        className="flex min-w-0 flex-1 items-center justify-between gap-3"
-      >
-        <div className="min-w-0 flex-1">
-          <div className="truncate font-semibold" style={{ color: brand }}>
-            {t.name}
-          </div>
-          {t.description && (
-            <div className="mt-0.5 line-clamp-2 text-sm text-muted-foreground">
-              {t.description}
-            </div>
-          )}
-          <div className="mt-1.5 flex items-center gap-3 text-sm text-muted-foreground">
-            <span className="inline-flex items-center gap-1">
-              <Clock className="h-3.5 w-3.5" />
-              {duration} min
-            </span>
-            <span className="font-semibold" style={{ color: brand }}>
-              {price === 0 ? "Free" : `£${price.toFixed(2)}`}
-            </span>
-          </div>
+      </span>
+      <div className="min-w-0 flex-1">
+        <div className="truncate font-semibold" style={{ color: brand }}>
+          {t.name}
         </div>
-        <div
-          className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-white transition group-hover:scale-105"
-          style={{ backgroundColor: brand }}
-          aria-label="Book now"
-        >
-          <ChevronRight className="h-5 w-5" />
+        {t.description && (
+          <div className="mt-0.5 line-clamp-2 text-sm text-muted-foreground">
+            {t.description}
+          </div>
+        )}
+        <div className="mt-1.5 flex items-center gap-3 text-sm text-muted-foreground">
+          <span className="inline-flex items-center gap-1">
+            <Clock className="h-3.5 w-3.5" />
+            {duration} min
+          </span>
+          <span className="font-semibold" style={{ color: brand }}>
+            {price === 0 ? "Free" : `£${price.toFixed(2)}`}
+          </span>
         </div>
-      </Link>
-    </div>
+      </div>
+    </button>
   );
 }
 
