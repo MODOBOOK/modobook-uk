@@ -11,6 +11,9 @@ import {
   Users,
   CreditCard,
   MapPin,
+  Palette,
+  FileText,
+  FileSignature,
   LogOut,
   Menu,
 } from "lucide-react";
