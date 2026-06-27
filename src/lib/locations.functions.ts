@@ -34,6 +34,7 @@ type LocationInput = {
   notes?: string | null;
   is_primary?: boolean;
   active?: boolean;
+  image_url?: string | null;
 };
 
 export const upsertLocation = createServerFn({ method: "POST" })
