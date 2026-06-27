@@ -8,8 +8,8 @@ export const Route = createFileRoute("/m/$slug/about")({
   loader: async ({ params }) => getPractitionerBio({ data: { slug: params.slug } }),
   head: ({ loaderData }) => ({
     meta: [
-      { title: `About ${loaderData?.profile.full_name ?? "practitioner"} · MODO` },
-      { name: "description", content: loaderData?.profile.bio?.slice(0, 160) ?? "Meet your practitioner on MODO." },
+      { title: `About ${loaderData?.profile.full_name ?? "practitioner"} · MODO Book` },
+      { name: "description", content: loaderData?.profile.bio?.slice(0, 160) ?? "Meet your practitioner on MODO Book." },
     ],
   }),
   component: About,

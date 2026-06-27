@@ -16,14 +16,14 @@ export const Route = createFileRoute("/m/$slug")({
   notFoundComponent: () => (
     <div className="flex min-h-screen flex-col items-center justify-center px-4 text-center">
       <h1 className="text-2xl font-bold">Page not found</h1>
-      <p className="mt-2 text-muted-foreground">This MODO link does not exist.</p>
+      <p className="mt-2 text-muted-foreground">This MODO Book link does not exist.</p>
       <Link to="/" className="mt-6"><Button>Go home</Button></Link>
     </div>
   ),
   head: ({ loaderData }) => ({
     meta: [
-      { title: `${loaderData?.profile.clinic_name ?? "Clinic"} · MODO` },
-      { name: "description", content: loaderData?.profile.tagline ?? "Book aesthetic treatments on MODO." },
+      { title: `${loaderData?.profile.clinic_name ?? "Clinic"} · MODO Book` },
+      { name: "description", content: loaderData?.profile.tagline ?? "Book treatments on MODO Book." },
     ],
   }),
   component: ModoLayout,
@@ -64,7 +64,7 @@ function ModoLayout() {
       <Outlet />
       <footer className="border-t mt-16">
         <div className="mx-auto max-w-5xl px-4 py-6 text-center text-xs text-muted-foreground">
-          Powered by <span className="font-semibold tracking-wide">MODO</span>
+          Powered by <span className="font-semibold tracking-wide">MODO Book</span>
         </div>
       </footer>
     </div>
