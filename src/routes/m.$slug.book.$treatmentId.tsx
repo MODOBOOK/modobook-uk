@@ -256,19 +256,20 @@ function BookTreatmentPage() {
 
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-10">
+    <main className="min-h-screen" style={pageStyle}>
+      <div className="mx-auto max-w-3xl px-4 py-10">
       <div className="mb-6">
-        <Link to="/m/$slug" params={{ slug }} className="text-sm text-muted-foreground hover:underline">
+        <Link to="/m/$slug" params={{ slug }} className="text-sm opacity-70 hover:underline">
           ← Back to {ctx.clinicName}
         </Link>
       </div>
 
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle>{treatment.name}</CardTitle>
+          <CardTitle style={headingStyle}>{treatment.name}</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-wrap items-center gap-3 text-sm">
-          <span className="inline-flex items-center gap-1 text-muted-foreground">
+          <span className="inline-flex items-center gap-1 opacity-70">
             <Clock className="h-4 w-4" /> {duration} min
           </span>
           <Badge variant="secondary">£{price.toFixed(2)}</Badge>
@@ -278,28 +279,33 @@ function BookTreatmentPage() {
       {ctx.locations.length > 1 && (
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle className="text-base">Location</CardTitle>
+            <CardTitle className="text-base" style={headingStyle}>Location</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-wrap gap-2">
-            {ctx.locations.map((l: Loc) => (
-              <Button
-                key={l.id}
-                variant={locationId === l.id ? "default" : "outline"}
-                size="sm"
-                onClick={() => setLocationId(l.id)}
-              >
-                <MapPin className="mr-1 h-4 w-4" />
-                {l.name}
-              </Button>
-            ))}
+            {ctx.locations.map((l: Loc) => {
+              const selected = locationId === l.id;
+              return (
+                <Button
+                  key={l.id}
+                  variant={selected ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setLocationId(l.id)}
+                  style={selected ? { backgroundColor: brand, borderColor: brand, color: "#fff" } : { color: brand, borderColor: `${brand}55` }}
+                >
+                  <MapPin className="mr-1 h-4 w-4" />
+                  {l.name}
+                </Button>
+              );
+            })}
           </CardContent>
         </Card>
       )}
 
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle className="text-base">Pick a date & time</CardTitle>
+          <CardTitle className="text-base" style={headingStyle}>Pick a date & time</CardTitle>
         </CardHeader>
+
         <CardContent className="space-y-5">
           <div className="flex justify-center">
             <Calendar
