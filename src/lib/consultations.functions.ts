@@ -100,7 +100,7 @@ export const updateConsultation = createServerFn({ method: "POST" })
     for (const k of allowed) if (k in data.patch) patch[k] = data.patch[k];
     const { error } = await supabase
       .from("consultations")
-      .update(patch)
+      .update(patch as any)
       .eq("id", data.id)
       .eq("profile_id", pid);
     if (error) throw error;
