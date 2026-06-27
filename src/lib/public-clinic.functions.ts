@@ -89,6 +89,15 @@ export const getPublicClinic = createServerFn({ method: "GET" })
       .eq("profile_id", profile.id)
       .eq("approved", true);
 
+    const reviewsCombined = [
+      ...(reviews ?? []),
+      ...((testimonials ?? []) as { id: string; rating: number | null }[]).map((t) => ({
+        id: t.id,
+        rating: t.rating ?? 5,
+      })),
+    ];
+
+
     const [concernAreas, concerns, concernLinks] = await Promise.all([
       supabase.from("concern_areas").select("*").eq("profile_id", profile.id).order("sort_order"),
       supabase.from("concerns").select("*").eq("profile_id", profile.id).order("sort_order"),
