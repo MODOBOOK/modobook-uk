@@ -14,7 +14,9 @@ import {
   CalendarPlus,
   ClipboardList,
   Star,
+  HelpCircle,
   ChevronRight,
+
   LogOut,
   ExternalLink,
 } from "lucide-react";
