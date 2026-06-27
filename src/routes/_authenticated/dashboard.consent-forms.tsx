@@ -88,12 +88,17 @@ function ConsentFormsPage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Consent forms</h1>
-        <p className="text-sm text-muted-foreground">
-          Ready-to-use consent templates for Botox, fillers and skin treatments. Clone any
-          template to edit the wording for your practice.
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold">Consent forms</h1>
+          <p className="text-sm text-muted-foreground">
+            Ready-to-use consent templates for Botox, fillers and skin treatments. Clone any
+            template to edit the wording, or start a blank one of your own.
+          </p>
+        </div>
+        <Button onClick={newBlank} size="sm">
+          <FileSignature className="mr-2 h-4 w-4" /> New blank consent
+        </Button>
       </div>
 
       <section className="space-y-3">
