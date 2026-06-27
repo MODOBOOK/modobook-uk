@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { RichTextEditor } from "@/components/RichTextEditor";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { Trash2, Plus } from "lucide-react";
 
@@ -34,6 +35,8 @@ function PoliciesPage() {
   const [rules, setRules] = useState<Rule[]>(
     (Array.isArray(profile.cancellation_rules) ? (profile.cancellation_rules as Rule[]) : []) ?? [],
   );
+  const [termsHtml, setTermsHtml] = useState<string>(((profile as { terms_html?: string | null }).terms_html as string | null) ?? "");
+  const [termsRequired, setTermsRequired] = useState<boolean>(Boolean((profile as { terms_required?: boolean | null }).terms_required));
   const [saving, setSaving] = useState(false);
 
   async function save() {
@@ -48,6 +51,8 @@ function PoliciesPage() {
           cancellation_rules: rules
             .filter((r) => Number.isFinite(r.hours_before) && Number.isFinite(r.fee_percent))
             .sort((a, b) => a.hours_before - b.hours_before),
+          terms_html: termsHtml,
+          terms_required: termsRequired,
         },
       });
       toast.success("Policies saved");
@@ -148,6 +153,26 @@ function PoliciesPage() {
           </Button>
         </CardContent>
       </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Terms & Conditions</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            Add your own terms and conditions. When required, patients must tick a box agreeing to them before they can complete a booking.
+          </p>
+          <RichTextEditor value={termsHtml} onChange={setTermsHtml} />
+          <div className="flex items-center justify-between rounded-lg border p-3">
+            <div>
+              <p className="text-sm font-medium">Require patients to agree</p>
+              <p className="text-xs text-muted-foreground">Shows a mandatory tick-box at checkout.</p>
+            </div>
+            <Switch checked={termsRequired} onCheckedChange={setTermsRequired} />
+          </div>
+        </CardContent>
+      </Card>
+
 
       <Button onClick={save} disabled={saving} size="lg">
         {saving ? "Saving…" : "Save policies"}

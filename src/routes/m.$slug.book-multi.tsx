@@ -128,6 +128,9 @@ function MultiBookPage() {
     notes: "",
   });
   const [submitting, setSubmitting] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const termsHtml = (ctx as { termsHtml?: string | null }).termsHtml ?? null;
+  const termsRequired = Boolean((ctx as { termsRequired?: boolean }).termsRequired);
   const [authChoice, setAuthChoice] = useState<"pending" | "guest" | "signed-in">("pending");
   const [patientUserId, setPatientUserId] = useState<string | null>(null);
   const ensure = useServerFn(ensurePatient);
@@ -215,6 +218,10 @@ function MultiBookPage() {
   async function submit() {
     if (!slot || !form.name || !form.email) {
       toast.error("Please fill name, email and pick a time slot");
+      return;
+    }
+    if (termsRequired && !agreedToTerms) {
+      toast.error("Please agree to the terms & conditions to continue");
       return;
     }
     setSubmitting(true);
@@ -478,15 +485,42 @@ function MultiBookPage() {
                 </div>
               </CardContent>
             </Card>
+            {termsHtml && termsHtml.trim() && (
+              <Card>
+                <CardHeader><CardTitle style={headingStyle}>Terms & Conditions</CardTitle></CardHeader>
+                <CardContent className="space-y-3">
+                  <div
+                    className="prose prose-sm max-w-none rounded-md border bg-muted/30 p-3 max-h-56 overflow-y-auto"
+                    dangerouslySetInnerHTML={{ __html: termsHtml }}
+                  />
+                  <label className="flex items-start gap-2 text-sm cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="mt-0.5 h-4 w-4"
+                      checked={agreedToTerms}
+                      onChange={(e) => setAgreedToTerms(e.target.checked)}
+                    />
+                    <span>
+                      I have read and agree to the Terms & Conditions
+                      {termsRequired && <span className="text-destructive"> *</span>}
+                    </span>
+                  </label>
+                </CardContent>
+              </Card>
+            )}
             <Button
               className="w-full"
               size="lg"
-              disabled={!slot || submitting || !form.name || !form.email || !form.phone || !form.dob}
+              disabled={
+                !slot || submitting || !form.name || !form.email || !form.phone || !form.dob ||
+                (termsRequired && !agreedToTerms)
+              }
               onClick={submit}
               style={{ backgroundColor: brand, color: "#fff" }}
             >
               {submitting ? "Booking…" : `Confirm ${treatments.length} bookings · £${totalPrice.toFixed(2)}`}
             </Button>
+
           </>
         )}
       </div>
