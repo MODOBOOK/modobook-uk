@@ -88,26 +88,24 @@ export const requestBooking = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const sb = publicClient();
-    const { data: inserted, error } = await sb
-      .from("appointments")
-      .insert({
-        profile_id: data.profileId,
-        treatment_id: data.treatmentId,
-        location_id: data.locationId ?? null,
-        scheduled_date: data.date,
-        start_time: data.startTime,
-        end_time: data.endTime,
-        patient_name: data.patientName,
-        patient_email: data.patientEmail,
-        patient_phone: data.patientPhone ?? null,
-        notes: data.notes ?? null,
-        status: "pending",
-        payment_status: "pending",
-        base_amount: data.basePrice,
-        total_amount: data.basePrice,
-      })
-      .select("id")
-      .single();
+    const id = crypto.randomUUID();
+    const { error } = await sb.from("appointments").insert({
+      id,
+      profile_id: data.profileId,
+      treatment_id: data.treatmentId,
+      location_id: data.locationId ?? null,
+      scheduled_date: data.date,
+      start_time: data.startTime,
+      end_time: data.endTime,
+      patient_name: data.patientName,
+      patient_email: data.patientEmail,
+      patient_phone: data.patientPhone ?? null,
+      notes: data.notes ?? null,
+      status: "pending",
+      payment_status: "pending",
+      base_amount: data.basePrice,
+      total_amount: data.basePrice,
+    });
     if (error) throw new Error(error.message);
-    return { id: inserted.id };
+    return { id };
   });
