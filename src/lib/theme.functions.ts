@@ -18,6 +18,16 @@ export type ClinicThemeInput = {
   hero_heading?: string | null;
   hero_subheading?: string | null;
   custom_css?: string | null;
+  // Booking menu styling
+  menu_card_bg?: string | null;
+  menu_card_border_color?: string | null;
+  menu_category_bg?: string | null;
+  menu_category_text?: string | null;
+  menu_treatment_name_color?: string | null;
+  menu_price_color?: string | null;
+  menu_treatment_size?: string | null;
+  menu_treatment_bold?: boolean | null;
+  menu_category_bold?: boolean | null;
 };
 
 async function getProfileId(

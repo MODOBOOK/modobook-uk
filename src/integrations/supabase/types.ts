@@ -606,6 +606,15 @@ export type Database = {
           hero_subheading: string | null
           id: string
           logo_url: string | null
+          menu_card_bg: string | null
+          menu_card_border_color: string | null
+          menu_category_bg: string | null
+          menu_category_bold: boolean | null
+          menu_category_text: string | null
+          menu_price_color: string | null
+          menu_treatment_bold: boolean | null
+          menu_treatment_name_color: string | null
+          menu_treatment_size: string | null
           primary_color: string
           profile_id: string
           text_color: string
@@ -628,6 +637,15 @@ export type Database = {
           hero_subheading?: string | null
           id?: string
           logo_url?: string | null
+          menu_card_bg?: string | null
+          menu_card_border_color?: string | null
+          menu_category_bg?: string | null
+          menu_category_bold?: boolean | null
+          menu_category_text?: string | null
+          menu_price_color?: string | null
+          menu_treatment_bold?: boolean | null
+          menu_treatment_name_color?: string | null
+          menu_treatment_size?: string | null
           primary_color?: string
           profile_id: string
           text_color?: string
@@ -650,6 +668,15 @@ export type Database = {
           hero_subheading?: string | null
           id?: string
           logo_url?: string | null
+          menu_card_bg?: string | null
+          menu_card_border_color?: string | null
+          menu_category_bg?: string | null
+          menu_category_bold?: boolean | null
+          menu_category_text?: string | null
+          menu_price_color?: string | null
+          menu_treatment_bold?: boolean | null
+          menu_treatment_name_color?: string | null
+          menu_treatment_size?: string | null
           primary_color?: string
           profile_id?: string
           text_color?: string
