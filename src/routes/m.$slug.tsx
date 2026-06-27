@@ -1,6 +1,8 @@
 import { createFileRoute, Link, Outlet, useParams } from "@tanstack/react-router";
 import { getPractitionerBio } from "@/lib/practitioner-public.functions";
 import { Button } from "@/components/ui/button";
+import { UserCircle2 } from "lucide-react";
+
 import { Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/m/$slug")({
@@ -65,38 +67,44 @@ function ModoLayout() {
         ${theme?.custom_css ?? ""}
       `}</style>
       <div className="modo-shell">
-        <header className="border-b" style={{ backgroundColor: headerBg, color: headerText }}>
-          <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-4">
-            <Link to="/m/$slug" params={{ slug }} className="flex items-center gap-3">
+        <header className="sticky top-0 z-30 border-b" style={{ backgroundColor: headerBg, color: headerText }}>
+          <div className="mx-auto grid max-w-5xl grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-3 py-2.5 sm:px-4 sm:py-4">
+            <Link to="/m/$slug" params={{ slug }} className="flex min-w-0 items-center gap-2 sm:gap-3">
               {theme?.logo_url ? (
-                <img src={theme.logo_url} alt="" className="h-10 w-auto object-contain" />
+                <img src={theme.logo_url} alt="" className="h-9 w-auto shrink-0 object-contain sm:h-10" />
               ) : profile.avatar_url ? (
-                <img src={profile.avatar_url} alt="" className="h-10 w-10 rounded-full object-cover" />
+                <img src={profile.avatar_url} alt="" className="h-9 w-9 shrink-0 rounded-full object-cover sm:h-10 sm:w-10" />
               ) : (
                 <div
-                  className="flex h-10 w-10 items-center justify-center rounded-full text-white"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white sm:h-10 sm:w-10"
                   style={{ backgroundColor: brand }}
                 >
-                  <span className="text-lg font-bold">{profile.clinic_name?.charAt(0) || "M"}</span>
+                  <span className="text-base font-bold sm:text-lg">{profile.clinic_name?.charAt(0) || "M"}</span>
                 </div>
               )}
-              <div>
-                <div className="text-sm font-semibold leading-tight">{profile.clinic_name}</div>
-                <div className="text-xs opacity-70">{profile.full_name}</div>
+              <div className="min-w-0">
+                <div className="truncate text-sm font-semibold leading-tight">{profile.clinic_name}</div>
+                {profile.full_name && (
+                  <div className="truncate text-xs opacity-70">{profile.full_name}</div>
+                )}
               </div>
             </Link>
-            <nav className="flex items-center gap-1 text-sm">
+            <nav className="flex shrink-0 items-center gap-0.5 text-sm sm:gap-1">
               <TabLink slug={slug} to="/m/$slug" label="Book" exact />
               <TabLink slug={slug} to="/m/$slug/about" label="About" />
               <TabLink slug={slug} to="/m/$slug/reviews" label="Reviews" />
-              <Link to="/m/$slug/account" params={{ slug }}>
-                <Button size="sm" variant="outline">My account</Button>
+              <Link to="/m/$slug/account" params={{ slug }} aria-label="My account">
+                <Button size="sm" variant="outline" className="ml-1 hidden sm:inline-flex">My account</Button>
+                <Button size="icon" variant="outline" className="ml-1 h-8 w-8 sm:hidden">
+                  <UserCircle2 className="h-4 w-4" />
+                </Button>
               </Link>
             </nav>
           </div>
         </header>
         <Outlet />
         <footer className="mt-16 border-t" style={{ backgroundColor: footerBg, color: footerText }}>
+
           <div className="mx-auto max-w-5xl px-4 py-6 text-center text-xs opacity-80">
             Powered by <span className="font-semibold tracking-wide">MODO Book</span>
           </div>
@@ -122,9 +130,10 @@ function TabLink({
       to={to}
       params={{ slug }}
       activeOptions={{ exact: !!exact }}
-      className="rounded-md px-3 py-1.5 opacity-70 hover:opacity-100 [&.active]:bg-black/5 [&.active]:opacity-100"
+      className="rounded-md px-2 py-1.5 text-xs opacity-70 hover:opacity-100 sm:px-3 sm:text-sm [&.active]:bg-black/5 [&.active]:opacity-100"
     >
       {label}
+
     </Link>
   );
 }
