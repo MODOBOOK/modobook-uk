@@ -1165,8 +1165,8 @@ function BookPage() {
                                   <Link
                                     to="/m/$slug/book/$treatmentId"
                                     params={{ slug, treatmentId: firstTreatmentId }}
-                                    className="rounded-full px-4 py-1.5 text-sm font-semibold text-white"
-                                    style={{ backgroundColor: brand }}
+                                    className="modo-btn px-4 py-1.5 text-sm font-semibold"
+
                                   >
                                     Book
                                   </Link>
