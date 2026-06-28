@@ -1689,12 +1689,12 @@ function TreatmentRow({
             return (
               <div className={`whitespace-nowrap ${priceSize} ${bold ? "font-bold" : "font-semibold"}`} style={{ color: priceColor }}>
                 {hasDisc && ((t as any).discount_show_was_now !== false) && (
-                  <span className="mr-1.5 text-xs font-normal text-muted-foreground line-through">£{price.toFixed(2)}</span>
+                  <span className="mr-1.5 text-sm font-normal text-muted-foreground line-through">£{price.toFixed(2)}</span>
 
                 )}
                 {discounted === 0 ? "Free" : `£${discounted.toFixed(2)}`}
                 {hasDisc && (
-                  <span className="ml-1 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700">−{pct}%</span>
+                  <span className="ml-1 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[11px] font-semibold text-emerald-700">−{pct}%</span>
                 )}
               </div>
             );
