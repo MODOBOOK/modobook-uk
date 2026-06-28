@@ -351,6 +351,13 @@ function TreatmentDialog({
     setDiscountEndsAt(treatment?.discount_ends_at ? treatment.discount_ends_at.slice(0, 16) : "");
     setDiscountShowWasNow(treatment?.discount_show_was_now ?? true);
     setDiscountLabel(treatment?.discount_label ?? "");
+    setSessionCount((treatment as { session_count?: number } | null)?.session_count ?? 1);
+    setAllowSplit((treatment as { allow_split_payment?: boolean } | null)?.allow_split_payment ?? false);
+    setRebookDays(
+      (treatment as { rebook_reminder_days?: number | null } | null)?.rebook_reminder_days != null
+        ? String((treatment as { rebook_reminder_days?: number | null }).rebook_reminder_days)
+        : "",
+    );
     if (treatment?.id) {
       fetchConsents({ data: { treatmentId: treatment.id } })
         .then((ids) => setConsentIds(ids as string[]))
