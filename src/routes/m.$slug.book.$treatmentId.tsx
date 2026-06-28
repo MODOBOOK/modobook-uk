@@ -336,6 +336,7 @@ function BookTreatmentPage() {
       setConfirmed({ id: res.id, consents: res.consents ?? [] });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Booking failed");
+      submitLockRef.current = false;
     } finally {
       setSubmitting(false);
     }
