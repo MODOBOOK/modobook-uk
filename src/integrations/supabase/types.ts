@@ -2664,6 +2664,13 @@ export type Database = {
         Args: { p_token: string }
         Returns: boolean
       }
+      create_appointment_consents: {
+        Args: { p_appointment_id: string; p_template_ids: string[] }
+        Returns: {
+          consent_template_id: string
+          token: string
+        }[]
+      }
       get_appointment_by_manage_token: {
         Args: { p_token: string }
         Returns: {
