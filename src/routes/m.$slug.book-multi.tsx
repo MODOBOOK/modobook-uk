@@ -316,6 +316,7 @@ function MultiBookPage() {
       setConfirmed(res);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Booking failed");
+      submitLockRef.current = false;
     } finally {
       setSubmitting(false);
     }
