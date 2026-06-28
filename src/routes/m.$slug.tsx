@@ -85,39 +85,55 @@ function ModoLayout() {
         ${theme?.custom_css ?? ""}
       `}</style>
       <div className="modo-shell">
-        <header className="sticky top-0 z-30 border-b" style={{ backgroundColor: headerBg, color: headerText }}>
+        <header
+          className={`${theme?.header_sticky === false ? "" : "sticky top-0"} z-30 border-b`}
+          style={{ backgroundColor: headerBg, color: headerText }}
+        >
           <div className="mx-auto grid max-w-5xl grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-3 py-2.5 sm:px-4 sm:py-4">
             <Link to="/m/$slug" params={{ slug }} className="flex min-w-0 items-center gap-2 sm:gap-3">
-              {theme?.logo_url ? (
-                <img src={theme.logo_url} alt={profile.clinic_name} className="h-10 w-auto shrink-0 object-contain sm:h-12" />
-              ) : (
-                <>
-                  {profile.avatar_url ? (
-                    <img src={profile.avatar_url} alt="" className="h-9 w-9 shrink-0 rounded-full object-cover sm:h-10 sm:w-10" />
-                  ) : (
-                    <div
-                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white sm:h-10 sm:w-10"
-                      style={{ backgroundColor: brand }}
-                    >
-                      <span className="text-base font-bold sm:text-lg">{profile.clinic_name?.charAt(0) || "M"}</span>
-                    </div>
-                  )}
-                  <div className="min-w-0">
-                    <div
-                      className="font-semibold leading-tight break-words [overflow-wrap:anywhere] line-clamp-2"
-                      style={{ fontSize: "clamp(0.75rem, 3.2vw, 0.95rem)" }}
-                    >
-                      {profile.clinic_name}
-                    </div>
-                    {profile.full_name && (
-                      <div className="truncate text-[11px] opacity-70 sm:text-xs">{profile.full_name}</div>
+              {(() => {
+                const sizeKey = theme?.header_logo_size ?? "medium";
+                const logoCls =
+                  sizeKey === "small" ? "h-8 sm:h-9" :
+                  sizeKey === "large" ? "h-14 sm:h-16" :
+                  "h-10 sm:h-12";
+                const avatarCls =
+                  sizeKey === "small" ? "h-8 w-8 sm:h-9 sm:w-9" :
+                  sizeKey === "large" ? "h-12 w-12 sm:h-14 sm:w-14" :
+                  "h-9 w-9 sm:h-10 sm:w-10";
+                return theme?.logo_url ? (
+                  <img src={theme.logo_url} alt={profile.clinic_name} className={`${logoCls} w-auto shrink-0 object-contain`} />
+                ) : (
+                  <>
+                    {profile.avatar_url ? (
+                      <img src={profile.avatar_url} alt="" className={`${avatarCls} shrink-0 rounded-full object-cover`} />
+                    ) : (
+                      <div
+                        className={`${avatarCls} flex shrink-0 items-center justify-center rounded-full text-white`}
+                        style={{ backgroundColor: brand }}
+                      >
+                        <span className="text-base font-bold sm:text-lg">{profile.clinic_name?.charAt(0) || "M"}</span>
+                      </div>
                     )}
-                  </div>
-                </>
-              )}
+                    {(theme?.header_show_name ?? true) && (
+                      <div className="min-w-0">
+                        <div
+                          className="font-semibold leading-tight break-words [overflow-wrap:anywhere] line-clamp-2"
+                          style={{ fontSize: "clamp(0.75rem, 3.2vw, 0.95rem)" }}
+                        >
+                          {profile.clinic_name}
+                        </div>
+                        {(theme?.header_show_tagline ?? true) && profile.full_name && (
+                          <div className="truncate text-[11px] opacity-70 sm:text-xs">{profile.full_name}</div>
+                        )}
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
             </Link>
             <nav className="flex shrink-0 items-center gap-0.5 text-sm sm:gap-1">
-              <TabLink slug={slug} to="/m/$slug" label="Book" exact />
+              <TabLink slug={slug} to="/m/$slug" label={theme?.header_button_label || "Book"} exact />
               <TabLink slug={slug} to="/m/$slug/about" label="About" />
               <TabLink slug={slug} to="/m/$slug/reviews" label="Reviews" />
               <Link to="/m/$slug/account" params={{ slug }} aria-label="My account">
@@ -129,6 +145,7 @@ function ModoLayout() {
             </nav>
           </div>
         </header>
+
         <Outlet />
 
       </div>

@@ -340,12 +340,25 @@ function BookPage() {
     }
   }
 
+  const btnColor = theme?.button_color || brand;
+  const btnTextColor = theme?.button_text_color || "#ffffff";
+  const btnRadius =
+    theme?.button_radius === "rounded-md" ? "0.375rem" :
+    theme?.button_radius === "rounded-xl" ? "0.75rem" :
+    theme?.button_radius === "pill" ? "9999px" : "0.75rem";
+  const btnUppercase = !!theme?.button_uppercase;
+  const density = theme?.page_density ?? "cozy";
+  const sectionGapPx = density === "compact" ? "1.25rem" : density === "spacious" ? "3rem" : "2rem";
   const pageStyle: React.CSSProperties = {
     backgroundColor: bgColor,
     color: textColor,
     fontFamily: `${bodyFont}, system-ui, sans-serif`,
     ["--brand" as string]: brand,
     ["--brand-accent" as string]: accent,
+    ["--btn-color" as string]: btnColor,
+    ["--btn-text" as string]: btnTextColor,
+    ["--btn-radius" as string]: btnRadius,
+    ["--section-gap" as string]: sectionGapPx,
   };
   const headingStyle: React.CSSProperties = {
     fontFamily: `${headingFont}, ${bodyFont}, system-ui, sans-serif`,
@@ -362,50 +375,75 @@ function BookPage() {
 
   return (
     <main className="min-h-screen pb-16" style={pageStyle}>
+      <style>{`
+        .modo-btn { background-color: var(--btn-color); color: var(--btn-text); border-radius: var(--btn-radius); ${btnUppercase ? "text-transform: uppercase; letter-spacing: 0.05em;" : ""} }
+        [data-modo-section] + [data-modo-section] { margin-top: var(--section-gap); }
+      `}</style>
+
       {/* Hero image / carousel (layout: {layoutKey}) */}
-      <div className="relative">
-        {layoutKey === "magazine" ? (
-          heroUrl ? (
-            <img src={heroUrl} alt="" className="h-32 w-full object-cover sm:h-40" />
-          ) : (
-            <div className="h-20 w-full" style={{ background: `linear-gradient(135deg, ${brand}, ${accent})` }} />
-          )
-        ) : carouselEnabled && carouselUrls.length > 0 ? (
-          <HeroCarousel urls={carouselUrls} />
-        ) : heroUrl ? (
-          <img
-            src={heroUrl}
-            alt=""
-            className={
-              layoutKey === "split"
-                ? "h-56 w-full object-cover object-top sm:h-80"
-                : "h-72 w-full object-cover object-top sm:h-[28rem]"
-            }
-          />
-        ) : (
-          <div
-            className="h-56 w-full sm:h-72"
-            style={{ background: `linear-gradient(135deg, ${brand}, ${accent})` }}
-          />
-        )}
-        {layoutKey !== "magazine" && (heroHeading || heroSubheading) && (
-          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent px-4 py-6 sm:py-10">
-            <div className="mx-auto max-w-3xl text-white">
-              {heroHeading && (
-                <h2
-                  className="text-2xl font-extrabold leading-tight sm:text-4xl"
-                  style={{ fontFamily: `${headingFont}, ${bodyFont}, system-ui, sans-serif` }}
-                >
-                  {heroHeading}
-                </h2>
-              )}
-              {heroSubheading && (
-                <p className="mt-2 max-w-2xl text-sm opacity-90 sm:text-base">{heroSubheading}</p>
-              )}
-            </div>
+      {(() => {
+        const heroHeight = theme?.hero_height ?? "medium";
+        const heroOverlayOpacity = theme?.hero_overlay_opacity ?? 0.25;
+        const heroOverlayColor = theme?.hero_overlay_color ?? "#000000";
+        const heroAlign = theme?.hero_text_alignment ?? "center";
+        const heroShowText = theme?.hero_show_text ?? true;
+        const heightCls =
+          layoutKey === "magazine" ? "h-32 sm:h-40"
+          : heroHeight === "short" ? "h-44 w-full object-cover object-top sm:h-56"
+          : heroHeight === "tall" ? "h-80 w-full object-cover object-top sm:h-[34rem]"
+          : "h-72 w-full object-cover object-top sm:h-[28rem]";
+        const splitHeight = heroHeight === "short" ? "h-44 sm:h-64" : heroHeight === "tall" ? "h-72 sm:h-96" : "h-56 sm:h-80";
+        const blankHeight = heroHeight === "short" ? "h-40 sm:h-56" : heroHeight === "tall" ? "h-72 sm:h-96" : "h-56 sm:h-72";
+        const alignCls = heroAlign === "left" ? "text-left items-start" : heroAlign === "right" ? "text-right items-end" : "text-center items-center";
+        return (
+          <div className="relative">
+            {layoutKey === "magazine" ? (
+              heroUrl ? (
+                <img src={heroUrl} alt="" className={`w-full object-cover ${heightCls}`} />
+              ) : (
+                <div className="h-20 w-full" style={{ background: `linear-gradient(135deg, ${brand}, ${accent})` }} />
+              )
+            ) : carouselEnabled && carouselUrls.length > 0 ? (
+              <HeroCarousel urls={carouselUrls} />
+            ) : heroUrl ? (
+              <img
+                src={heroUrl}
+                alt=""
+                className={layoutKey === "split" ? `${splitHeight} w-full object-cover object-top` : heightCls}
+              />
+            ) : (
+              <div
+                className={`${blankHeight} w-full`}
+                style={{ background: `linear-gradient(135deg, ${brand}, ${accent})` }}
+              />
+            )}
+            {layoutKey !== "magazine" && heroOverlayOpacity > 0 && (
+              <div
+                className="pointer-events-none absolute inset-0"
+                style={{ backgroundColor: heroOverlayColor, opacity: heroOverlayOpacity }}
+              />
+            )}
+            {layoutKey !== "magazine" && heroShowText && (heroHeading || heroSubheading) && (
+              <div className={`absolute inset-x-0 bottom-0 flex flex-col bg-gradient-to-t from-black/60 to-transparent px-4 py-6 sm:py-10 ${alignCls}`}>
+                <div className={`mx-auto w-full max-w-3xl text-white ${heroAlign === "center" ? "" : ""}`}>
+                  {heroHeading && (
+                    <h2
+                      className="text-2xl font-extrabold leading-tight sm:text-4xl"
+                      style={{ fontFamily: `${headingFont}, ${bodyFont}, system-ui, sans-serif` }}
+                    >
+                      {heroHeading}
+                    </h2>
+                  )}
+                  {heroSubheading && (
+                    <p className="mt-2 max-w-2xl text-sm opacity-90 sm:text-base">{heroSubheading}</p>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
-        )}
-      </div>
+        );
+      })()}
+
 
 
       {/* Welcome card */}
@@ -579,21 +617,34 @@ function BookPage() {
         if (igLink) items.push({ href: igLink.startsWith("http") ? igLink : `https://instagram.com/${igLink.replace("@", "")}`, label: "Instagram", sub: igLink, Icon: Instagram });
         if (fb) items.push({ href: fb.startsWith("http") ? fb : `https://facebook.com/${fb}`, label: "Facebook", sub: fb.replace(/^https?:\/\//, ""), Icon: Facebook });
         if (items.length === 0) return null;
+        const tileLayout = theme?.contact_tile_layout ?? "grid";
+        const tileIconSize = theme?.contact_tile_icon_size ?? "md";
+        const tileBg = theme?.contact_tile_bg_color ?? undefined;
+        const tileBorder = theme?.contact_tile_border_color ?? `${brand}22`;
+        const iconCls = tileIconSize === "sm" ? "h-4 w-4" : tileIconSize === "lg" ? "h-7 w-7" : "h-5 w-5";
+        const iconPadCls = tileIconSize === "sm" ? "p-2" : tileIconSize === "lg" ? "p-4" : "p-3";
+        const gridCls = tileLayout === "horizontal-list"
+          ? "flex flex-col gap-2"
+          : "grid grid-cols-2 gap-3 sm:grid-cols-4";
         return (
           <section className="mx-auto mt-8 max-w-3xl px-4">
             <h2 className="mb-4 text-xl font-bold" style={headingStyle}>Get in touch</h2>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div className={gridCls}>
               {items.map((it) => (
                 <a
                   key={it.label}
                   href={it.href}
                   target={it.href.startsWith("http") ? "_blank" : undefined}
                   rel="noreferrer"
-                  className="flex flex-col items-center gap-2 rounded-2xl border p-4 text-center transition hover:shadow-md"
-                  style={{ borderColor: `${brand}22`, color: textColor, backgroundColor: "var(--surface, transparent)" }}
+                  className={
+                    tileLayout === "horizontal-list"
+                      ? "flex flex-row items-center gap-3 rounded-2xl border p-3 transition hover:shadow-md"
+                      : "flex flex-col items-center gap-2 rounded-2xl border p-4 text-center transition hover:shadow-md"
+                  }
+                  style={{ borderColor: tileBorder, color: textColor, backgroundColor: tileBg ?? "var(--surface, transparent)" }}
                 >
-                  <span className="rounded-full p-3" style={{ backgroundColor: `${brand}14`, color: brand }}>
-                    <it.Icon className="h-5 w-5" />
+                  <span className={`rounded-full ${iconPadCls}`} style={{ backgroundColor: `${brand}14`, color: brand }}>
+                    <it.Icon className={iconCls} />
                   </span>
                   <span className="text-sm font-medium">{it.label}</span>
                   {it.sub ? <span className="text-xs opacity-70 truncate w-full">{it.sub}</span> : null}
@@ -602,6 +653,7 @@ function BookPage() {
             </div>
           </section>
         );
+
       })()}
 
 
@@ -1113,8 +1165,8 @@ function BookPage() {
                                   <Link
                                     to="/m/$slug/book/$treatmentId"
                                     params={{ slug, treatmentId: firstTreatmentId }}
-                                    className="rounded-full px-4 py-1.5 text-sm font-semibold text-white"
-                                    style={{ backgroundColor: brand }}
+                                    className="modo-btn px-4 py-1.5 text-sm font-semibold"
+
                                   >
                                     Book
                                   </Link>
