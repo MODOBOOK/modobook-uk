@@ -145,6 +145,7 @@ export const updateProfile = createServerFn({ method: "POST" })
     if (data.terms_required !== undefined) update.terms_required = data.terms_required;
     if (data.contact_sms_number !== undefined) update.contact_sms_number = data.contact_sms_number;
     if (data.contact_whatsapp_number !== undefined) update.contact_whatsapp_number = data.contact_whatsapp_number;
+    if (data.practitioner_selection_mode !== undefined) update.practitioner_selection_mode = data.practitioner_selection_mode;
 
 
 
