@@ -9,6 +9,7 @@ import {
   getMonthAvailability,
   requestMultiBooking,
 } from "@/lib/public-booking.functions";
+import { listAddonsForBooking, type PublicAddon } from "@/lib/addons.functions";
 import { ensurePatient, getMyPatient } from "@/lib/patient.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -108,8 +109,36 @@ function MultiBookPage() {
     return t.duration ?? 30;
   };
 
-  const totalDuration = treatments.reduce((s, t) => s + durationFor(t), 0);
-  const totalPrice = treatments.reduce((s, t) => s + priceFor(t), 0);
+  const totalDurationBase = treatments.reduce((s, t) => s + durationFor(t), 0);
+  const totalPriceBase = treatments.reduce((s, t) => s + priceFor(t), 0);
+
+  // Add-ons (new system) — fetched after treatment selection
+  const addonsQuery = useQuery({
+    queryKey: ["addonsForBooking", slug, ids.join(",")],
+    queryFn: () => listAddonsForBooking({ data: { slug, treatment_ids: ids } }),
+    enabled: ids.length > 0,
+  });
+  const availableAddons: PublicAddon[] = addonsQuery.data ?? [];
+  const [addonPicks, setAddonPicks] = useState<Set<string>>(new Set());
+  const toggleAddon = (id: string) =>
+    setAddonPicks((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  const addonNet = (a: PublicAddon) => {
+    const base = a.price_cents / 100;
+    const d = a.discount_percent ?? 0;
+    return base * (1 - d / 100);
+  };
+  const addonsExtraPrice = availableAddons
+    .filter((a) => addonPicks.has(a.id))
+    .reduce((s, a) => s + addonNet(a), 0);
+  const addonsExtraDuration = availableAddons
+    .filter((a) => addonPicks.has(a.id))
+    .reduce((s, a) => s + (a.duration_min || 0), 0);
+  const totalDuration = totalDurationBase + addonsExtraDuration;
+  const totalPrice = totalPriceBase + addonsExtraPrice;
 
   const today = new Date().toISOString().slice(0, 10);
   const [date, setDate] = useState<string>(today);
@@ -246,7 +275,12 @@ function MultiBookPage() {
             line1: form.addressLine1, line2: form.addressLine2,
             city: form.city, postcode: form.postcode, country: form.country,
           },
-          notes: form.notes || undefined,
+          notes: (() => {
+            const picked = availableAddons.filter((a) => addonPicks.has(a.id));
+            if (!picked.length) return form.notes || undefined;
+            const line = "Add-ons: " + picked.map((a) => `${a.name} (£${addonNet(a).toFixed(2)})`).join(", ");
+            return [form.notes, line].filter(Boolean).join("\n");
+          })(),
           patientUserId,
         },
       });
@@ -435,7 +469,60 @@ function MultiBookPage() {
                 <UserCheck className="h-4 w-4" /> Signed in — saved to your account.
               </div>
             )}
+            {availableAddons.length > 0 && (
+              <Card className="mb-6">
+                <CardHeader>
+                  <CardTitle className="text-base" style={headingStyle}>
+                    Add-ons <span className="text-xs font-normal opacity-60">(optional)</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="grid gap-2">
+                  {availableAddons.map((a) => {
+                    const checked = addonPicks.has(a.id);
+                    const base = a.price_cents / 100;
+                    const net = addonNet(a);
+                    const hasDiscount = (a.discount_percent ?? 0) > 0;
+                    return (
+                      <button
+                        key={a.id}
+                        type="button"
+                        onClick={() => toggleAddon(a.id)}
+                        className="flex items-center justify-between gap-3 rounded-md border px-3 py-2 text-left transition"
+                        style={{
+                          borderColor: checked ? brand : `${brand}33`,
+                          backgroundColor: checked ? `${brand}10` : "transparent",
+                        }}
+                      >
+                        <div className="flex items-center gap-3">
+                          <input type="checkbox" readOnly checked={checked} className="h-4 w-4" />
+                          <div>
+                            <div className="text-sm font-medium">{a.name}</div>
+                            {a.duration_min > 0 && (
+                              <div className="text-xs opacity-60">+{a.duration_min} min</div>
+                            )}
+                          </div>
+                        </div>
+                        <div className="text-right text-sm">
+                          {hasDiscount ? (
+                            <>
+                              <span className="opacity-50 line-through mr-2">£{base.toFixed(2)}</span>
+                              <span className="font-semibold" style={{ color: brand }}>£{net.toFixed(2)}</span>
+                              <div className="text-[10px] font-semibold text-emerald-600">
+                                {a.discount_percent}% off
+                              </div>
+                            </>
+                          ) : (
+                            <span className="font-semibold" style={{ color: brand }}>+£{base.toFixed(2)}</span>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </CardContent>
+              </Card>
+            )}
             <Card className="mb-6">
+
               <CardHeader>
                 <CardTitle className="text-base" style={headingStyle}>Your details</CardTitle>
               </CardHeader>
