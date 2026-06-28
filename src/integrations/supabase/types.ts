@@ -978,19 +978,38 @@ export type Database = {
           accent_color: string
           background_color: string
           body_font: string
+          button_color: string | null
+          button_radius: string
+          button_size: string
+          button_text_color: string
+          button_uppercase: boolean
+          contact_tile_bg_color: string | null
+          contact_tile_border_color: string | null
+          contact_tile_icon_size: string
+          contact_tile_layout: string
           created_at: string
           custom_css: string | null
           favicon_url: string | null
           footer_bg_color: string
           footer_text_color: string
           header_bg_color: string
+          header_button_label: string
+          header_logo_size: string
+          header_show_name: boolean
+          header_show_tagline: boolean
+          header_sticky: boolean
           header_text_color: string
           heading_font: string
           hero_carousel_enabled: boolean | null
           hero_carousel_urls: Json | null
           hero_heading: string | null
+          hero_height: string
           hero_image_url: string | null
+          hero_overlay_color: string
+          hero_overlay_opacity: number
+          hero_show_text: boolean
           hero_subheading: string | null
+          hero_text_alignment: string
           id: string
           layout_key: string | null
           logo_url: string | null
@@ -1003,9 +1022,11 @@ export type Database = {
           menu_treatment_bold: boolean | null
           menu_treatment_name_color: string | null
           menu_treatment_size: string | null
+          page_density: string
           preset_key: string | null
           primary_color: string
           profile_id: string
+          section_gap: string
           text_color: string
           updated_at: string
           welcome_card_background_type: string
@@ -1037,19 +1058,38 @@ export type Database = {
           accent_color?: string
           background_color?: string
           body_font?: string
+          button_color?: string | null
+          button_radius?: string
+          button_size?: string
+          button_text_color?: string
+          button_uppercase?: boolean
+          contact_tile_bg_color?: string | null
+          contact_tile_border_color?: string | null
+          contact_tile_icon_size?: string
+          contact_tile_layout?: string
           created_at?: string
           custom_css?: string | null
           favicon_url?: string | null
           footer_bg_color?: string
           footer_text_color?: string
           header_bg_color?: string
+          header_button_label?: string
+          header_logo_size?: string
+          header_show_name?: boolean
+          header_show_tagline?: boolean
+          header_sticky?: boolean
           header_text_color?: string
           heading_font?: string
           hero_carousel_enabled?: boolean | null
           hero_carousel_urls?: Json | null
           hero_heading?: string | null
+          hero_height?: string
           hero_image_url?: string | null
+          hero_overlay_color?: string
+          hero_overlay_opacity?: number
+          hero_show_text?: boolean
           hero_subheading?: string | null
+          hero_text_alignment?: string
           id?: string
           layout_key?: string | null
           logo_url?: string | null
@@ -1062,9 +1102,11 @@ export type Database = {
           menu_treatment_bold?: boolean | null
           menu_treatment_name_color?: string | null
           menu_treatment_size?: string | null
+          page_density?: string
           preset_key?: string | null
           primary_color?: string
           profile_id: string
+          section_gap?: string
           text_color?: string
           updated_at?: string
           welcome_card_background_type?: string
@@ -1096,19 +1138,38 @@ export type Database = {
           accent_color?: string
           background_color?: string
           body_font?: string
+          button_color?: string | null
+          button_radius?: string
+          button_size?: string
+          button_text_color?: string
+          button_uppercase?: boolean
+          contact_tile_bg_color?: string | null
+          contact_tile_border_color?: string | null
+          contact_tile_icon_size?: string
+          contact_tile_layout?: string
           created_at?: string
           custom_css?: string | null
           favicon_url?: string | null
           footer_bg_color?: string
           footer_text_color?: string
           header_bg_color?: string
+          header_button_label?: string
+          header_logo_size?: string
+          header_show_name?: boolean
+          header_show_tagline?: boolean
+          header_sticky?: boolean
           header_text_color?: string
           heading_font?: string
           hero_carousel_enabled?: boolean | null
           hero_carousel_urls?: Json | null
           hero_heading?: string | null
+          hero_height?: string
           hero_image_url?: string | null
+          hero_overlay_color?: string
+          hero_overlay_opacity?: number
+          hero_show_text?: boolean
           hero_subheading?: string | null
+          hero_text_alignment?: string
           id?: string
           layout_key?: string | null
           logo_url?: string | null
@@ -1121,9 +1182,11 @@ export type Database = {
           menu_treatment_bold?: boolean | null
           menu_treatment_name_color?: string | null
           menu_treatment_size?: string | null
+          page_density?: string
           preset_key?: string | null
           primary_color?: string
           profile_id?: string
+          section_gap?: string
           text_color?: string
           updated_at?: string
           welcome_card_background_type?: string
