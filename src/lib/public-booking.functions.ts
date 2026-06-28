@@ -345,18 +345,15 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
         .select("consent_template_id")
         .eq("treatment_id", b.treatmentId);
       if (links && links.length > 0) {
-        const rows = links.map((l) => ({
-          appointment_id: id,
-          consent_template_id: l.consent_template_id,
-          profile_id: data.profileId,
-        }));
-        const { data: inserted, error: cErr } = await sb
-          .from("appointment_consents")
-          .insert(rows)
-          .select("token, consent_template_id");
+        const templateIds = links.map((l) => l.consent_template_id);
+        const { data: inserted, error: cErr } = await sb.rpc("create_appointment_consents", {
+          p_appointment_id: id,
+          p_template_ids: templateIds,
+        });
         if (cErr) throw new Error(cErr.message);
-        consents.push(...(inserted ?? []));
+        consents.push(...((inserted ?? []) as { token: string; consent_template_id: string }[]));
       }
+
       cursor = end;
     }
     return { appointments: created, consents };
