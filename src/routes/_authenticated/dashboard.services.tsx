@@ -16,6 +16,11 @@ import {
   deleteTreatment,
   reorderTreatments,
 } from "@/lib/treatments.functions";
+import { getMyProfile, updateProfile } from "@/lib/profiles.functions";
+import { Switch } from "@/components/ui/switch";
+import { Star, X } from "lucide-react";
+
+
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -241,7 +246,10 @@ function ServicesPage() {
         </Button>
       </div>
 
+      <FavouritesCard treatments={(treats.data ?? []) as Treat[]} />
+
       {cats.isLoading || treats.isLoading ? (
+
         <p className="text-sm text-muted-foreground">Loading…</p>
       ) : roots.length === 0 && uncategorised.length === 0 ? (
         <Card>
@@ -854,5 +862,158 @@ function ServiceDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function FavouritesCard({ treatments }: { treatments: Treat[] }) {
+  const fetchProfile = useServerFn(getMyProfile);
+  const saveProfile = useServerFn(updateProfile);
+  const profile = useQuery({ queryKey: ["my-profile"], queryFn: () => fetchProfile() });
+  const [picking, setPicking] = useState(false);
+  const [pickerSearch, setPickerSearch] = useState("");
+
+  const p = profile.data as
+    | {
+        id: string;
+        clinic_name: string;
+        full_name: string | null;
+        favourite_treatment_ids?: string[] | null;
+        favourites_enabled?: boolean | null;
+        favourites_custom_title?: string | null;
+      }
+    | null
+    | undefined;
+
+  if (!p) return null;
+
+  const ids: string[] = (p.favourite_treatment_ids ?? []) as string[];
+  const enabled = p.favourites_enabled ?? true;
+  const customTitle = p.favourites_custom_title ?? "";
+  const selected = ids
+    .map((id) => treatments.find((t) => t.id === id))
+    .filter((t): t is Treat => !!t);
+  const available = treatments
+    .filter((t) => !ids.includes(t.id))
+    .filter((t) =>
+      pickerSearch.trim() === "" ? true : t.name.toLowerCase().includes(pickerSearch.toLowerCase()),
+    );
+
+  async function save(next: Partial<{ favourite_treatment_ids: string[]; favourites_enabled: boolean; favourites_custom_title: string | null }>) {
+    if (!p) return;
+    try {
+      await saveProfile({ data: { id: p.id, ...next } });
+      profile.refetch();
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  }
+
+  function move(idx: number, dir: -1 | 1) {
+    const next = [...ids];
+    const j = idx + dir;
+    if (j < 0 || j >= next.length) return;
+    [next[idx], next[j]] = [next[j], next[idx]];
+    save({ favourite_treatment_ids: next });
+  }
+
+  const defaultTitle = `${(p.full_name || p.clinic_name) ?? "Our"}'s Favourite Treatments`;
+
+  return (
+    <Card>
+      <CardContent className="space-y-4 p-5">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-start gap-3">
+            <div className="rounded-xl bg-amber-100 p-2 text-amber-600">
+              <Star className="h-5 w-5 fill-amber-500 stroke-amber-600" />
+            </div>
+            <div>
+              <h2 className="text-base font-semibold">Favourite / Most popular treatments</h2>
+              <p className="text-xs text-muted-foreground">
+                Featured on your booking page above the full menu. Shows as <em>“{customTitle.trim() || defaultTitle}”</em>.
+                If you have multiple practitioners, your clinic name is used automatically.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Label htmlFor="fav-enabled" className="text-xs">Show</Label>
+            <Switch id="fav-enabled" checked={enabled} onCheckedChange={(v) => save({ favourites_enabled: v })} />
+          </div>
+        </div>
+
+        <div className="space-y-1.5">
+          <Label className="text-xs">Custom heading (optional)</Label>
+          <Input
+            value={customTitle}
+            onChange={(e) => save({ favourites_custom_title: e.target.value })}
+            placeholder={defaultTitle}
+            className="h-10"
+          />
+        </div>
+
+        {selected.length === 0 ? (
+          <p className="rounded-lg border border-dashed bg-muted/40 p-3 text-center text-xs text-muted-foreground">
+            No favourites picked yet.
+          </p>
+        ) : (
+          <ul className="divide-y rounded-lg border">
+            {selected.map((t, idx) => (
+              <li key={t.id} className="flex items-center gap-2 p-2.5">
+                <span className="flex-1 truncate text-sm font-medium">{t.name}</span>
+                <span className="text-xs text-muted-foreground">£{Number(t.price ?? 0).toFixed(2)}</span>
+                <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => move(idx, -1)} disabled={idx === 0}>
+                  <ArrowUp className="h-4 w-4" />
+                </Button>
+                <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => move(idx, 1)} disabled={idx === selected.length - 1}>
+                  <ArrowDown className="h-4 w-4" />
+                </Button>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-8 w-8 text-destructive"
+                  onClick={() => save({ favourite_treatment_ids: ids.filter((x) => x !== t.id) })}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        <Button variant="outline" size="sm" onClick={() => setPicking((v) => !v)} disabled={treatments.length === 0}>
+          <Plus className="mr-1 h-4 w-4" /> Add treatment
+        </Button>
+
+        {picking && (
+          <div className="space-y-2 rounded-lg border bg-muted/30 p-3">
+            <Input
+              autoFocus
+              value={pickerSearch}
+              onChange={(e) => setPickerSearch(e.target.value)}
+              placeholder="Search treatments…"
+              className="h-9"
+            />
+            <div className="max-h-64 space-y-1 overflow-y-auto">
+              {available.length === 0 ? (
+                <p className="p-2 text-center text-xs text-muted-foreground">No more treatments to add.</p>
+              ) : (
+                available.map((t) => (
+                  <button
+                    key={t.id}
+                    className="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-sm hover:bg-background"
+                    onClick={() => {
+                      save({ favourite_treatment_ids: [...ids, t.id] });
+                      setPickerSearch("");
+                    }}
+                  >
+                    <span className="truncate">{t.name}</span>
+                    <span className="ml-2 text-xs text-muted-foreground">£{Number(t.price ?? 0).toFixed(2)}</span>
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }

@@ -103,7 +103,11 @@ function BookPage() {
         chooser_intro_text?: string | null;
         model_slots_position?: "top" | "bottom" | null;
         practitioner_selection_mode?: "required" | "optional" | "first_available" | null;
+        favourite_treatment_ids?: string[] | null;
+        favourites_enabled?: boolean | null;
+        favourites_custom_title?: string | null;
       };
+
       treatments: Treatment[];
       packages: Package[];
       locations: (Location & { image_url?: string | null })[];
@@ -906,7 +910,59 @@ function BookPage() {
         </section>
       )}
 
+      {/* Favourite / Most popular treatments */}
+      {(() => {
+        if (!locationId) return null;
+        if (profile.favourites_enabled === false) return null;
+        const favIds = (profile.favourite_treatment_ids ?? []) as string[];
+        if (!favIds.length) return null;
+        const favs = favIds
+          .map((id) => treatments.find((t) => t.id === id))
+          .filter((t): t is Treatment => !!t && t.active !== false);
+        if (!favs.length) return null;
+        const multiPract = practitioners.length > 1;
+        const ownerName = (multiPract ? profile.clinic_name : (profile.full_name || profile.clinic_name)) || profile.clinic_name;
+        const possessive = ownerName.endsWith("s") ? `${ownerName}'` : `${ownerName}'s`;
+        const heading = profile.favourites_custom_title?.trim() || `${possessive} Favourite Treatments`;
+        return (
+          <section className="mx-auto mt-10 max-w-5xl px-4">
+            <h2 className="mb-4 text-xl font-bold sm:text-2xl" style={headingStyle}>{heading}</h2>
+            <div className="flex gap-3 overflow-x-auto pb-3 sm:grid sm:grid-cols-2 sm:gap-4 sm:overflow-visible lg:grid-cols-3">
+              {favs.map((t) => {
+                const img = (t as Treatment & { picture_url?: string | null }).picture_url;
+                return (
+                  <Link
+                    key={t.id}
+                    to="/m/$slug/book/$treatmentId"
+                    params={{ slug, treatmentId: t.id }}
+                    className="group flex min-w-[78%] shrink-0 flex-col overflow-hidden rounded-2xl border bg-card shadow-sm transition hover:shadow-md sm:min-w-0"
+                    style={{ borderColor: `${brand}1f`, backgroundColor: menuCardBg }}
+                  >
+                    {img ? (
+                      <div className="aspect-[4/3] w-full overflow-hidden bg-muted">
+                        <img src={img} alt={t.name} className="h-full w-full object-cover transition group-hover:scale-[1.03]" loading="lazy" />
+                      </div>
+                    ) : (
+                      <div className="aspect-[4/3] w-full" style={{ background: `linear-gradient(135deg, ${brand}22, ${brand}0a)` }} />
+                    )}
+                    <div className="flex flex-1 flex-col gap-1 p-4">
+                      <div className="text-base font-semibold sm:text-lg" style={{ color: menuNameColor }}>{t.name}</div>
+                      {t.description && <div className="line-clamp-2 text-sm opacity-70">{t.description}</div>}
+                      <div className="mt-2 flex items-center justify-between text-sm">
+                        <span className="opacity-70">{durationFor(t)} min</span>
+                        <span className="font-semibold" style={{ color: menuPriceColor }}>£{priceFor(t).toFixed(2)}</span>
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </section>
+        );
+      })()}
+
       {/* Treatments + Packages */}
+
       {locationId && (!chooserOn || mode === "know" || (mode === "unsure" && pickedConcernId)) ? (
         <section className="mx-auto mt-10 max-w-3xl px-4 pb-32">
           {chooserOn && (

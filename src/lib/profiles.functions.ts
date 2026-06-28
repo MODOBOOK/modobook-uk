@@ -106,8 +106,12 @@ export const updateProfile = createServerFn({ method: "POST" })
       contact_sms_number?: string | null;
       contact_whatsapp_number?: string | null;
       practitioner_selection_mode?: "required" | "optional" | "first_available";
+      favourite_treatment_ids?: string[];
+      favourites_enabled?: boolean;
+      favourites_custom_title?: string | null;
     }) => input,
   )
+
 
   .handler(async ({ data, context }) => {
     const { supabase } = context;
@@ -146,6 +150,10 @@ export const updateProfile = createServerFn({ method: "POST" })
     if (data.contact_sms_number !== undefined) update.contact_sms_number = data.contact_sms_number;
     if (data.contact_whatsapp_number !== undefined) update.contact_whatsapp_number = data.contact_whatsapp_number;
     if (data.practitioner_selection_mode !== undefined) update.practitioner_selection_mode = data.practitioner_selection_mode;
+    if (data.favourite_treatment_ids !== undefined) update.favourite_treatment_ids = data.favourite_treatment_ids;
+    if (data.favourites_enabled !== undefined) update.favourites_enabled = data.favourites_enabled;
+    if (data.favourites_custom_title !== undefined) update.favourites_custom_title = data.favourites_custom_title;
+
 
 
 
