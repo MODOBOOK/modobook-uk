@@ -1,0 +1,1 @@
+REVOKE SELECT (phone) ON public.locations FROM anon;
