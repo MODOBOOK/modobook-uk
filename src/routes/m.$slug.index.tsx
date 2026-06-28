@@ -20,7 +20,11 @@ import {
   Check,
   Package as PackageIcon,
   Sparkles,
+  MessageCircle,
+  Facebook,
+  Phone,
 } from "lucide-react";
+
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { mapsUrl, formatAddress } from "@/lib/maps";
 import type { Database } from "@/integrations/supabase/types";
