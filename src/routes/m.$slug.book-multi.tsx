@@ -67,6 +67,7 @@ function MultiBookPage() {
   const ctx = Route.useLoaderData();
   const search = Route.useSearch();
   const ids = (search.ids ?? "").split(",").filter(Boolean);
+  const redirectPath = `/m/${slug}/book-multi?ids=${encodeURIComponent(ids.join(","))}`;
 
   // Preserve user-selected order
   const treatments = useMemo<Treatment[]>(() => {
@@ -139,6 +140,18 @@ function MultiBookPage() {
     .reduce((s, a) => s + (a.duration_min || 0), 0);
   const totalDuration = totalDurationBase + addonsExtraDuration;
   const totalPrice = totalPriceBase + addonsExtraPrice;
+  const splitEligibleTreatments = useMemo(
+    () =>
+      treatments.filter((t) => {
+        const sessions = Math.max(1, Number((t as { session_count?: number }).session_count ?? 1));
+        return Boolean((t as { allow_split_payment?: boolean }).allow_split_payment) && sessions > 1;
+      }),
+    [treatments],
+  );
+  const [paymentPlans, setPaymentPlans] = useState<Record<string, "full" | "split">>({});
+  const selectedPaymentPlan = (t: Treatment) => paymentPlans[t.id] ?? "full";
+  const setTreatmentPaymentPlan = (treatmentId: string, plan: "full" | "split") =>
+    setPaymentPlans((prev) => ({ ...prev, [treatmentId]: plan }));
 
   const today = new Date().toISOString().slice(0, 10);
   const [date, setDate] = useState<string>(today);
@@ -259,6 +272,8 @@ function MultiBookPage() {
         treatmentId: t.id,
         durationMin: durationFor(t),
         priceCents: Math.round(priceFor(t) * 100),
+        sessionCount: Math.max(1, Number((t as { session_count?: number }).session_count ?? 1)),
+        paymentPlan: selectedPaymentPlan(t),
       }));
       const res = await reqFn({
         data: {
@@ -277,9 +292,19 @@ function MultiBookPage() {
           },
           notes: (() => {
             const picked = availableAddons.filter((a) => addonPicks.has(a.id));
-            if (!picked.length) return form.notes || undefined;
-            const line = "Add-ons: " + picked.map((a) => `${a.name} (£${addonNet(a).toFixed(2)})`).join(", ");
-            return [form.notes, line].filter(Boolean).join("\n");
+            const lines = [form.notes].filter(Boolean) as string[];
+            if (picked.length) {
+              lines.push("Add-ons: " + picked.map((a) => `${a.name} (£${addonNet(a).toFixed(2)})`).join(", "));
+            }
+            for (const t of splitEligibleTreatments) {
+              const sessions = Math.max(1, Number((t as { session_count?: number }).session_count ?? 1));
+              if (selectedPaymentPlan(t) === "split") {
+                lines.push(`${t.name}: split into ${sessions} payments (£${(priceFor(t) / sessions).toFixed(2)} per session)`);
+              } else {
+                lines.push(`${t.name}: pay in full for ${sessions} sessions`);
+              }
+            }
+            return lines.length ? lines.join("\n") : undefined;
           })(),
           patientUserId,
           practitionerId: (typeof window !== "undefined" ? window.sessionStorage.getItem(`modo:practitionerId:${slug}`) : null) || null,
@@ -453,10 +478,10 @@ function MultiBookPage() {
             <CardContent className="space-y-3">
               <p className="text-sm opacity-70">Create an account or sign in to track your appointments.</p>
               <div className="grid gap-2 sm:grid-cols-3">
-                <Link to="/m/$slug/auth" params={{ slug }} search={{ redirect: typeof window !== "undefined" ? window.location.pathname + window.location.search : undefined }}>
+                <Link to="/m/$slug/auth" params={{ slug }} search={{ redirect: redirectPath }}>
                   <Button className="w-full" style={{ backgroundColor: brand, color: "#fff" }}><LogIn className="mr-2 h-4 w-4" />Sign in</Button>
                 </Link>
-                <Link to="/m/$slug/auth" params={{ slug }} search={{ tab: "signup", redirect: typeof window !== "undefined" ? window.location.pathname + window.location.search : undefined }}>
+                <Link to="/m/$slug/auth" params={{ slug }} search={{ tab: "signup", redirect: redirectPath }}>
                   <Button variant="outline" className="w-full" style={{ color: brand, borderColor: `${brand}55` }}><UserPlus className="mr-2 h-4 w-4" />Sign up</Button>
                 </Link>
                 <Button variant="ghost" className="w-full" style={{ color: brand }} onClick={() => setAuthChoice("guest")}>Continue as guest</Button>
@@ -517,6 +542,55 @@ function MultiBookPage() {
                           )}
                         </div>
                       </button>
+                    );
+                  })}
+                </CardContent>
+              </Card>
+            )}
+            {splitEligibleTreatments.length > 0 && (
+              <Card className="mb-6">
+                <CardHeader>
+                  <CardTitle className="text-base" style={headingStyle}>Payment plan</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {splitEligibleTreatments.map((t) => {
+                    const sessions = Math.max(1, Number((t as { session_count?: number }).session_count ?? 1));
+                    const plan = selectedPaymentPlan(t);
+                    const fullPrice = priceFor(t);
+                    const perSession = fullPrice / sessions;
+                    return (
+                      <div key={t.id} className="space-y-2 rounded-md border p-3" style={{ borderColor: `${brand}33` }}>
+                        <div>
+                          <div className="text-sm font-semibold" style={{ color: brand }}>{t.name}</div>
+                          <div className="text-xs opacity-70">{sessions} sessions available</div>
+                        </div>
+                        <div className="grid gap-2 sm:grid-cols-2">
+                          {(["full", "split"] as const).map((opt) => {
+                            const selected = plan === opt;
+                            return (
+                              <button
+                                key={opt}
+                                type="button"
+                                onClick={() => setTreatmentPaymentPlan(t.id, opt)}
+                                className="flex flex-col items-start gap-1 rounded-md border px-3 py-3 text-left transition"
+                                style={{
+                                  borderColor: selected ? brand : `${brand}33`,
+                                  backgroundColor: selected ? `${brand}10` : "transparent",
+                                }}
+                              >
+                                <span className="text-sm font-semibold" style={{ color: brand }}>
+                                  {opt === "full" ? "Pay in full" : `Split into ${sessions} payments`}
+                                </span>
+                                <span className="text-xs opacity-70">
+                                  {opt === "full"
+                                    ? `£${fullPrice.toFixed(2)} total`
+                                    : `£${perSession.toFixed(2)} per session · charged at each visit`}
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
                     );
                   })}
                 </CardContent>
