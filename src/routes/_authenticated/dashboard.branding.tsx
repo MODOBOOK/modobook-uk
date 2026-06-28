@@ -482,7 +482,7 @@ function BrandingPage() {
               </select>
             </div>
             <div className="space-y-1.5">
-              <Label>Position</Label>
+              <Label>Position (desktop)</Label>
               <select
                 className="w-full rounded-md border bg-transparent px-3 py-2 text-sm"
                 value={state.welcome_card_position ?? "overlap"}
