@@ -397,6 +397,45 @@ function BookPage() {
         </div>
       </section>
 
+      {/* Contact us */}
+      {(() => {
+        const sms = profile.contact_sms_number?.trim();
+        const wa = profile.contact_whatsapp_number?.trim();
+        const fb = profile.social_links?.facebook?.trim();
+        const igLink = ig?.trim();
+        const items: { href: string; label: string; sub?: string; Icon: typeof Phone }[] = [];
+        if (sms) items.push({ href: `sms:${sms}`, label: "Text us", sub: sms, Icon: Phone });
+        if (wa) items.push({ href: `https://wa.me/${wa.replace(/[^0-9]/g, "")}`, label: "WhatsApp", sub: wa, Icon: MessageCircle });
+        if (igLink) items.push({ href: igLink.startsWith("http") ? igLink : `https://instagram.com/${igLink.replace("@", "")}`, label: "Instagram", sub: igLink, Icon: Instagram });
+        if (fb) items.push({ href: fb.startsWith("http") ? fb : `https://facebook.com/${fb}`, label: "Facebook", sub: fb.replace(/^https?:\/\//, ""), Icon: Facebook });
+        if (items.length === 0) return null;
+        return (
+          <section className="mx-auto mt-8 max-w-3xl px-4">
+            <h2 className="mb-4 text-xl font-bold" style={headingStyle}>Get in touch</h2>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {items.map((it) => (
+                <a
+                  key={it.label}
+                  href={it.href}
+                  target={it.href.startsWith("http") ? "_blank" : undefined}
+                  rel="noreferrer"
+                  className="flex flex-col items-center gap-2 rounded-2xl border p-4 text-center transition hover:shadow-md"
+                  style={{ borderColor: `${brand}22`, color: textColor, backgroundColor: "var(--surface, transparent)" }}
+                >
+                  <span className="rounded-full p-3" style={{ backgroundColor: `${brand}14`, color: brand }}>
+                    <it.Icon className="h-5 w-5" />
+                  </span>
+                  <span className="text-sm font-medium">{it.label}</span>
+                  {it.sub ? <span className="text-xs opacity-70 truncate w-full">{it.sub}</span> : null}
+                </a>
+              ))}
+            </div>
+          </section>
+        );
+      })()}
+
+
+
       {/* Team Members / Locations */}
       {locations.length > 0 && (
         <section className="mx-auto mt-8 max-w-3xl px-4">
