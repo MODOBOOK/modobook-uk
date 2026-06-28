@@ -94,13 +94,13 @@ function ModoLayout() {
               {(() => {
                 const sizeKey = theme?.header_logo_size ?? "medium";
                 const logoCls =
-                  sizeKey === "small" ? "h-8 sm:h-9" :
-                  sizeKey === "large" ? "h-14 sm:h-16" :
-                  "h-10 sm:h-12";
+                  sizeKey === "small" ? "h-10 sm:h-12" :
+                  sizeKey === "large" ? "h-20 sm:h-24" :
+                  "h-14 sm:h-16";
                 const avatarCls =
-                  sizeKey === "small" ? "h-8 w-8 sm:h-9 sm:w-9" :
-                  sizeKey === "large" ? "h-12 w-12 sm:h-14 sm:w-14" :
-                  "h-9 w-9 sm:h-10 sm:w-10";
+                  sizeKey === "small" ? "h-9 w-9 sm:h-10 sm:w-10" :
+                  sizeKey === "large" ? "h-14 w-14 sm:h-16 sm:w-16" :
+                  "h-11 w-11 sm:h-12 sm:w-12";
                 return theme?.logo_url ? (
                   <img src={theme.logo_url} alt={profile.clinic_name} className={`${logoCls} w-auto shrink-0 object-contain`} />
                 ) : (
