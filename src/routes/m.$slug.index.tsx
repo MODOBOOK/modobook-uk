@@ -363,49 +363,69 @@ function BookPage() {
   return (
     <main className="min-h-screen pb-16" style={pageStyle}>
       {/* Hero image / carousel (layout: {layoutKey}) */}
-      <div className="relative">
-        {layoutKey === "magazine" ? (
-          heroUrl ? (
-            <img src={heroUrl} alt="" className="h-32 w-full object-cover sm:h-40" />
-          ) : (
-            <div className="h-20 w-full" style={{ background: `linear-gradient(135deg, ${brand}, ${accent})` }} />
-          )
-        ) : carouselEnabled && carouselUrls.length > 0 ? (
-          <HeroCarousel urls={carouselUrls} />
-        ) : heroUrl ? (
-          <img
-            src={heroUrl}
-            alt=""
-            className={
-              layoutKey === "split"
-                ? "h-56 w-full object-cover object-top sm:h-80"
-                : "h-72 w-full object-cover object-top sm:h-[28rem]"
-            }
-          />
-        ) : (
-          <div
-            className="h-56 w-full sm:h-72"
-            style={{ background: `linear-gradient(135deg, ${brand}, ${accent})` }}
-          />
-        )}
-        {layoutKey !== "magazine" && (heroHeading || heroSubheading) && (
-          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent px-4 py-6 sm:py-10">
-            <div className="mx-auto max-w-3xl text-white">
-              {heroHeading && (
-                <h2
-                  className="text-2xl font-extrabold leading-tight sm:text-4xl"
-                  style={{ fontFamily: `${headingFont}, ${bodyFont}, system-ui, sans-serif` }}
-                >
-                  {heroHeading}
-                </h2>
-              )}
-              {heroSubheading && (
-                <p className="mt-2 max-w-2xl text-sm opacity-90 sm:text-base">{heroSubheading}</p>
-              )}
-            </div>
+      {(() => {
+        const heroHeight = theme?.hero_height ?? "medium";
+        const heroOverlayOpacity = theme?.hero_overlay_opacity ?? 0.25;
+        const heroOverlayColor = theme?.hero_overlay_color ?? "#000000";
+        const heroAlign = theme?.hero_text_alignment ?? "center";
+        const heroShowText = theme?.hero_show_text ?? true;
+        const heightCls =
+          layoutKey === "magazine" ? "h-32 sm:h-40"
+          : heroHeight === "short" ? "h-44 w-full object-cover object-top sm:h-56"
+          : heroHeight === "tall" ? "h-80 w-full object-cover object-top sm:h-[34rem]"
+          : "h-72 w-full object-cover object-top sm:h-[28rem]";
+        const splitHeight = heroHeight === "short" ? "h-44 sm:h-64" : heroHeight === "tall" ? "h-72 sm:h-96" : "h-56 sm:h-80";
+        const blankHeight = heroHeight === "short" ? "h-40 sm:h-56" : heroHeight === "tall" ? "h-72 sm:h-96" : "h-56 sm:h-72";
+        const alignCls = heroAlign === "left" ? "text-left items-start" : heroAlign === "right" ? "text-right items-end" : "text-center items-center";
+        return (
+          <div className="relative">
+            {layoutKey === "magazine" ? (
+              heroUrl ? (
+                <img src={heroUrl} alt="" className={`w-full object-cover ${heightCls}`} />
+              ) : (
+                <div className="h-20 w-full" style={{ background: `linear-gradient(135deg, ${brand}, ${accent})` }} />
+              )
+            ) : carouselEnabled && carouselUrls.length > 0 ? (
+              <HeroCarousel urls={carouselUrls} />
+            ) : heroUrl ? (
+              <img
+                src={heroUrl}
+                alt=""
+                className={layoutKey === "split" ? `${splitHeight} w-full object-cover object-top` : heightCls}
+              />
+            ) : (
+              <div
+                className={`${blankHeight} w-full`}
+                style={{ background: `linear-gradient(135deg, ${brand}, ${accent})` }}
+              />
+            )}
+            {layoutKey !== "magazine" && heroOverlayOpacity > 0 && (
+              <div
+                className="pointer-events-none absolute inset-0"
+                style={{ backgroundColor: heroOverlayColor, opacity: heroOverlayOpacity }}
+              />
+            )}
+            {layoutKey !== "magazine" && heroShowText && (heroHeading || heroSubheading) && (
+              <div className={`absolute inset-x-0 bottom-0 flex flex-col bg-gradient-to-t from-black/60 to-transparent px-4 py-6 sm:py-10 ${alignCls}`}>
+                <div className={`mx-auto w-full max-w-3xl text-white ${heroAlign === "center" ? "" : ""}`}>
+                  {heroHeading && (
+                    <h2
+                      className="text-2xl font-extrabold leading-tight sm:text-4xl"
+                      style={{ fontFamily: `${headingFont}, ${bodyFont}, system-ui, sans-serif` }}
+                    >
+                      {heroHeading}
+                    </h2>
+                  )}
+                  {heroSubheading && (
+                    <p className="mt-2 max-w-2xl text-sm opacity-90 sm:text-base">{heroSubheading}</p>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
-        )}
-      </div>
+        );
+      })()}
+
 
 
       {/* Welcome card */}
