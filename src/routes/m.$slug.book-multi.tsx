@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { z } from "zod";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
@@ -170,6 +170,7 @@ function MultiBookPage() {
     notes: "",
   });
   const [submitting, setSubmitting] = useState(false);
+  const submitLockRef = useRef(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const termsHtml = (ctx as { termsHtml?: string | null }).termsHtml ?? null;
   const termsRequired = Boolean((ctx as { termsRequired?: boolean }).termsRequired);
@@ -258,6 +259,7 @@ function MultiBookPage() {
   }, [dayQuery.data, dayRules, totalDuration, locationId]);
 
   async function submit() {
+    if (submitLockRef.current) return;
     if (!slot || !form.name || !form.email) {
       toast.error("Please fill name, email and pick a time slot");
       return;
@@ -266,6 +268,7 @@ function MultiBookPage() {
       toast.error("Please agree to the terms & conditions to continue");
       return;
     }
+    submitLockRef.current = true;
     setSubmitting(true);
     try {
       const bookings = treatments.map((t) => ({
@@ -313,6 +316,7 @@ function MultiBookPage() {
       setConfirmed(res);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Booking failed");
+      submitLockRef.current = false;
     } finally {
       setSubmitting(false);
     }

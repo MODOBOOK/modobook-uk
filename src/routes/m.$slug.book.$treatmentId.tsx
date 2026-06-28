@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getBookingContext, getDayAvailability, getMonthAvailability, requestBooking } from "@/lib/public-booking.functions";
@@ -107,6 +107,7 @@ function BookTreatmentPage() {
     notes: "",
   });
   const [submitting, setSubmitting] = useState(false);
+  const submitLockRef = useRef(false);
   const sessionCount = Math.max(1, Number((treatment as { session_count?: number }).session_count ?? 1));
   const splitAllowed = Boolean((treatment as { allow_split_payment?: boolean }).allow_split_payment) && sessionCount > 1;
   const [paymentPlan, setPaymentPlan] = useState<"full" | "split">("full");
@@ -265,10 +266,12 @@ function BookTreatmentPage() {
 
 
   async function submit() {
+    if (submitLockRef.current) return;
     if (!slot || !form.name || !form.email) {
       toast.error("Please fill name, email and pick a time slot");
       return;
     }
+    submitLockRef.current = true;
     setSubmitting(true);
     try {
       const endMin = toMinutes(slot) + duration;
@@ -333,6 +336,7 @@ function BookTreatmentPage() {
       setConfirmed({ id: res.id, consents: res.consents ?? [] });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Booking failed");
+      submitLockRef.current = false;
     } finally {
       setSubmitting(false);
     }

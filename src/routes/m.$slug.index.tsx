@@ -927,19 +927,19 @@ function BookPage() {
 
             return (
               <Tabs defaultValue="treatments" className="w-full">
-                <TabsList className="grid w-full grid-cols-3" style={{ backgroundColor: `${brand}10` }}>
-                  <TabsTrigger value="treatments">Treatments</TabsTrigger>
-                  <TabsTrigger value="packages" disabled={packages.length === 0}>
+                <TabsList className="grid w-full grid-cols-3 h-auto" style={{ backgroundColor: `${brand}10` }}>
+                  <TabsTrigger value="treatments" className="text-sm sm:text-base py-2.5">Treatments</TabsTrigger>
+                  <TabsTrigger value="packages" disabled={packages.length === 0} className="text-sm sm:text-base py-2.5">
                     <PackageIcon className="mr-1.5 h-4 w-4" />
                     Packages
                   </TabsTrigger>
-                  <TabsTrigger value="concerns" disabled={concerns.length === 0}>
+                  <TabsTrigger value="concerns" disabled={concerns.length === 0} className="text-sm sm:text-base py-2.5">
                     By concern
                   </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="treatments" className="mt-4">
-                  <p className="mb-3 text-xs opacity-60">
+                  <p className="mb-3 text-sm opacity-70">
                     Tick all the treatments you'd like, then press Book Now.
                   </p>
                   {(() => {
@@ -1552,13 +1552,13 @@ function CategoryTree({
               >
                 <div className="flex-1 text-left">
                   <div
-                    className={`leading-tight ${isSub ? "text-base" : "text-lg sm:text-xl"} ${categoryBold ? "font-extrabold" : "font-medium"}`}
+                    className={`leading-tight ${isSub ? "text-lg sm:text-xl" : "text-xl sm:text-2xl"} ${categoryBold ? "font-extrabold" : "font-medium"}`}
                   >
                     {node.icon ? `${node.icon} ` : ""}
                     {node.name}
                   </div>
                   {node.description && (
-                    <div className="mt-0.5 text-xs font-normal opacity-80">{node.description}</div>
+                    <div className="mt-1 text-sm font-normal opacity-80">{node.description}</div>
                   )}
                 </div>
               </AccordionTrigger>
@@ -1642,9 +1642,9 @@ function TreatmentRow({
   const isLong = desc.length > 110;
   const shown = expanded || !isLong ? desc : desc.slice(0, 110).trimEnd() + " …";
 
-  const padding = size === "lg" ? "p-4" : size === "md" ? "p-3.5" : "p-3";
-  const nameSize = size === "lg" ? "text-base sm:text-lg" : size === "md" ? "text-[15px] sm:text-base" : "text-sm sm:text-[15px]";
-  const priceSize = size === "lg" ? "text-base" : "text-sm";
+  const padding = size === "lg" ? "p-4 sm:p-5" : size === "md" ? "p-4" : "p-3.5";
+  const nameSize = size === "lg" ? "text-lg sm:text-xl" : size === "md" ? "text-base sm:text-lg" : "text-[15px] sm:text-base";
+  const priceSize = size === "lg" ? "text-lg" : size === "md" ? "text-base" : "text-[15px]";
   const checkSize = size === "lg" ? "h-6 w-6" : "h-5 w-5";
 
   return (
@@ -1689,36 +1689,36 @@ function TreatmentRow({
             return (
               <div className={`whitespace-nowrap ${priceSize} ${bold ? "font-bold" : "font-semibold"}`} style={{ color: priceColor }}>
                 {hasDisc && ((t as any).discount_show_was_now !== false) && (
-                  <span className="mr-1.5 text-xs font-normal text-muted-foreground line-through">£{price.toFixed(2)}</span>
+                  <span className="mr-1.5 text-sm font-normal text-muted-foreground line-through">£{price.toFixed(2)}</span>
 
                 )}
                 {discounted === 0 ? "Free" : `£${discounted.toFixed(2)}`}
                 {hasDisc && (
-                  <span className="ml-1 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700">−{pct}%</span>
+                  <span className="ml-1 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[11px] font-semibold text-emerald-700">−{pct}%</span>
                 )}
               </div>
             );
           })()}
         </div>
-        <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+        <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
           <span>{duration} min</span>
           {((t as { session_count?: number }).session_count ?? 1) > 1 && (
             <span
-              className="rounded-full px-1.5 py-0.5 text-[10px] font-semibold"
+              className="rounded-full px-2 py-0.5 text-xs font-semibold"
               style={{ backgroundColor: `${brand}1a`, color: brand }}
             >
               {(t as { session_count?: number }).session_count} sessions
             </span>
           )}
           {(t as { allow_split_payment?: boolean }).allow_split_payment && (
-            <span className="rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700">
+            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">
               Split payment available
             </span>
           )}
         </div>
 
         {desc && (
-          <div className="mt-1.5 whitespace-pre-line text-xs leading-relaxed text-muted-foreground">
+          <div className="mt-2 whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
             {shown}
             {isLong && (
               <button
