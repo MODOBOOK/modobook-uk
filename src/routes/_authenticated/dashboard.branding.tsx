@@ -341,7 +341,51 @@ function BrandingPage() {
         </CardContent>
       </Card>
 
+      {/* Colour palette — six curated, harmonious sets */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Palette className="h-4 w-4" /> Colour palette
+          </CardTitle>
+          <p className="text-xs text-muted-foreground">
+            Six hand-picked palettes. One click sets every colour on your booking page so it always looks clean — no clashing or contrast issues.
+          </p>
+        </CardHeader>
+        <CardContent className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {COLOR_PALETTES.map((p) => {
+            const active = activePaletteKey === p.key;
+            return (
+              <button
+                key={p.key}
+                type="button"
+                onClick={() => applyColorPalette(p)}
+                className={`group relative overflow-hidden rounded-2xl border p-4 text-left transition hover:shadow-md ${active ? "ring-2 ring-primary" : ""}`}
+                style={{ background: p.swatches[0], color: p.swatches[3] }}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-base font-semibold">{p.name}</p>
+                    <p className="mt-0.5 text-xs opacity-80">{p.tagline}</p>
+                  </div>
+                  {active && (
+                    <span className="rounded-full bg-primary p-1 text-primary-foreground">
+                      <Check className="h-3 w-3" />
+                    </span>
+                  )}
+                </div>
+                <div className="mt-3 flex gap-1.5">
+                  {p.swatches.map((c, i) => (
+                    <span key={i} className="h-6 w-6 rounded-full border border-black/10 shadow-sm" style={{ background: c }} />
+                  ))}
+                </div>
+              </button>
+            );
+          })}
+        </CardContent>
+      </Card>
+
       {/* Booking-link layout */}
+
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Booking-link layout</CardTitle>
