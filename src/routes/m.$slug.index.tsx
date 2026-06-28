@@ -133,11 +133,14 @@ function BookPage() {
   const headingFont = theme?.heading_font || "Inter";
   const bodyFont = theme?.body_font || "Inter";
   const heroUrl = theme?.hero_image_url || profile.hero_url;
-  const carouselEnabled = !!(theme as { hero_carousel_enabled?: boolean } | null)?.hero_carousel_enabled;
+  const layoutKey = (theme?.layout_key as "classic" | "carousel" | "split" | "magazine" | null) || "classic";
   const rawCarousel = (theme as { hero_carousel_urls?: unknown } | null)?.hero_carousel_urls;
   const carouselUrls: string[] = Array.isArray(rawCarousel)
     ? (rawCarousel as unknown[]).filter((x): x is string => typeof x === "string")
     : [];
+  const carouselEnabled =
+    !!(theme as { hero_carousel_enabled?: boolean } | null)?.hero_carousel_enabled ||
+    (layoutKey === "carousel" && carouselUrls.length > 0);
   // Menu styling
   const menuCardBg = theme?.menu_card_bg || "#ffffff";
   const menuCardBorder = theme?.menu_card_border_color || `${brand}1f`;
