@@ -61,6 +61,7 @@ const groups: { title: string; items: Item[] }[] = [
       { label: "Branding", description: "Colours, fonts, logo & favicon", to: "/dashboard/branding", icon: Palette, ...T.sand },
       { label: "Welcome & policies", description: "Intro, deposits, cancellation, T&Cs", to: "/dashboard/policies", icon: Shield, ...T.mocha },
       { label: "Locations", description: "Manage your clinic addresses", to: "/dashboard/locations", icon: MapPin, ...T.cream },
+      { label: "Practitioners", description: "Team members, titles, photos & locations", to: "/dashboard/practitioners", icon: Users, ...T.taupe },
     ],
   },
   {

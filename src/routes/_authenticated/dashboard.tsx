@@ -47,6 +47,7 @@ const navItems = [
   { label: "Services", to: "/dashboard/services", icon: Scissors },
   { label: "Packages", to: "/dashboard/packages", icon: Package },
   { label: "Locations", to: "/dashboard/locations", icon: MapPin },
+  { label: "Practitioners", to: "/dashboard/practitioners", icon: Users },
   { label: "Medical forms", to: "/dashboard/medical-forms", icon: FileText },
   { label: "Consent forms", to: "/dashboard/consent-forms", icon: FileSignature },
   { label: "Availability", to: "/dashboard/availability", icon: CalendarDays },
