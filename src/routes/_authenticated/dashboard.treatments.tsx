@@ -604,6 +604,9 @@ function TreatmentDialog({
               discount_ends_at: discountEndsAt ? new Date(discountEndsAt).toISOString() : null,
               discount_show_was_now: discountShowWasNow,
               discount_label: discountLabel || null,
+              session_count: sessionCount,
+              allow_split_payment: allowSplit && sessionCount >= 2,
+              rebook_reminder_days: rebookDays === "" ? null : Number(rebookDays),
             })
           }
           disabled={!name}
