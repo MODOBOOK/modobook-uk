@@ -506,7 +506,7 @@ function BookPage() {
 
       {/* Choose Location + practitioners */}
       {locations.length > 0 && (
-        <section className="mx-auto mt-8 max-w-3xl px-4">
+        <section data-section="locations" className="mx-auto mt-8 max-w-3xl px-4">
           <h2 className="mb-4 text-xl font-bold" style={headingStyle}>
             Choose Location
           </h2>
