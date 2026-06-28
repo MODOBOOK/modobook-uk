@@ -438,58 +438,87 @@ function BookPage() {
 
 
 
-      {/* Team Members / Locations */}
+      {/* Choose Location + practitioners */}
       {locations.length > 0 && (
         <section className="mx-auto mt-8 max-w-3xl px-4">
           <h2 className="mb-4 text-xl font-bold" style={headingStyle}>
-            {locations.length > 1 ? "Team Members" : "Your practitioner"}
+            {locations.length > 1 ? "Choose Location" : (practitioners.length > 0 ? "Choose Practitioner" : "Your clinic")}
           </h2>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+          <div className={`grid gap-4 ${locations.length > 1 ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"}`}>
             {locations.map((loc) => {
               const selected = loc.id === locationId;
               const photo = loc.image_url || profile.avatar_url;
+              const locPracts = locationPractitioners
+                .filter((lp) => lp.location_id === loc.id)
+                .sort((a, b) => a.display_order - b.display_order)
+                .map((lp) => practitioners.find((p) => p.id === lp.practitioner_id))
+                .filter((p): p is NonNullable<typeof p> => !!p);
               return (
-                <button
+                <div
                   key={loc.id}
-                  onClick={() => setLocationId(loc.id)}
-                  className="group flex flex-col items-center rounded-2xl p-3 text-center transition hover:bg-black/[0.03]"
-                  style={selected ? { boxShadow: `0 0 0 2px ${brand}` } : undefined}
+                  className="rounded-2xl border p-4 transition"
+                  style={{
+                    borderColor: selected ? brand : `${brand}22`,
+                    boxShadow: selected ? `0 0 0 2px ${brand}` : undefined,
+                    backgroundColor: menuCardBg,
+                  }}
                 >
-                  {photo ? (
-                    <img
-                      src={photo}
-                      alt={loc.name}
-                      className="h-24 w-24 rounded-full object-cover sm:h-28 sm:w-28"
-                    />
-                  ) : (
-                    <div
-                      className="flex h-24 w-24 items-center justify-center rounded-full text-2xl font-bold text-white sm:h-28 sm:w-28"
-                      style={{ backgroundColor: brand }}
-                    >
-                      {(profile.full_name ?? profile.clinic_name).charAt(0)}
-                    </div>
-                  )}
-                  <div className="mt-3 text-base font-bold uppercase leading-tight" style={{ color: brand }}>
-                    {loc.name}
-                    {loc.is_primary && (
-                      <Star className="ml-1 inline h-3 w-3" fill="currentColor" />
+                  <button
+                    type="button"
+                    onClick={() => setLocationId(loc.id)}
+                    className="flex w-full items-center gap-3 text-left"
+                  >
+                    {photo ? (
+                      <img src={photo} alt={loc.name} className="h-16 w-16 rounded-full object-cover" />
+                    ) : (
+                      <div className="flex h-16 w-16 items-center justify-center rounded-full text-xl font-bold text-white" style={{ backgroundColor: brand }}>
+                        {loc.name.charAt(0)}
+                      </div>
                     )}
-                  </div>
-                  <div className="mt-1 text-sm font-medium leading-tight opacity-80" style={{ color: brand }}>
-                    {profile.full_name ?? "Practitioner"}
-                  </div>
-                  {formatAddress(loc) && (
-                    <div className="mt-1 text-xs opacity-70">
-                      {formatAddress(loc)}
+                    <div className="flex-1">
+                      <div className="text-base font-bold uppercase leading-tight" style={{ color: brand }}>
+                        {loc.name}
+                        {loc.is_primary && <Star className="ml-1 inline h-3 w-3" fill="currentColor" />}
+                      </div>
+                      {formatAddress(loc) && (
+                        <div className="mt-1 text-xs opacity-70">{formatAddress(loc)}</div>
+                      )}
+                    </div>
+                  </button>
+
+                  {locPracts.length > 0 && (
+                    <div className="mt-4 border-t pt-3" style={{ borderColor: `${brand}1a` }}>
+                      <div className="mb-2 text-xs font-semibold uppercase tracking-wide opacity-60" style={{ color: brand }}>
+                        Practitioners
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                        {locPracts.map((p) => (
+                          <div key={p.id} className="flex flex-col items-center text-center">
+                            {p.photo_url ? (
+                              <img src={p.photo_url} alt={p.name} className="h-14 w-14 rounded-full object-cover" />
+                            ) : (
+                              <div className="flex h-14 w-14 items-center justify-center rounded-full text-sm font-bold text-white" style={{ backgroundColor: brand }}>
+                                {p.name.charAt(0)}
+                              </div>
+                            )}
+                            <div className="mt-1 text-xs font-semibold leading-tight" style={{ color: brand }}>
+                              {p.name}
+                            </div>
+                            {p.professional_title && (
+                              <div className="text-[10px] leading-tight opacity-70">{p.professional_title}</div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
-
-                </button>
+                </div>
               );
             })}
           </div>
         </section>
       )}
+
 
       {/* Welcome message */}
       {profile.welcome_intro_html && (
