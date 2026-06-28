@@ -531,10 +531,10 @@ function BookPage() {
       {/* Contact us */}
       {(() => {
         if (!showContact) return null;
-        const sms = profile.contact_sms_number?.trim();
-        const wa = profile.contact_whatsapp_number?.trim();
-        const fb = profile.social_links?.facebook?.trim();
-        const igLink = ig?.trim();
+        const sms = showSms ? profile.contact_sms_number?.trim() : null;
+        const wa = showWhatsapp ? profile.contact_whatsapp_number?.trim() : null;
+        const fb = showFacebook ? profile.social_links?.facebook?.trim() : null;
+        const igLink = showInstagram ? ig?.trim() : null;
         const items: { href: string; label: string; sub?: string; Icon: typeof Phone }[] = [];
         if (sms) items.push({ href: `sms:${sms}`, label: "Text us", sub: sms, Icon: Phone });
         if (wa) items.push({ href: `https://wa.me/${wa.replace(/[^0-9]/g, "")}`, label: "WhatsApp", sub: wa, Icon: MessageCircle });
