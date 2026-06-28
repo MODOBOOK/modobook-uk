@@ -102,6 +102,7 @@ function BookPage() {
         chooser_consultation_treatment_id?: string | null;
         chooser_intro_text?: string | null;
         model_slots_position?: "top" | "bottom" | null;
+        practitioner_selection_mode?: "required" | "optional" | "first_available" | null;
       };
       treatments: Treatment[];
       packages: Package[];
@@ -153,6 +154,51 @@ function BookPage() {
   const menuCategoryBold = theme?.menu_category_bold ?? true;
 
   const [locationId, setLocationId] = useState<string | null>(null);
+  const practSelectionMode = profile.practitioner_selection_mode ?? "optional";
+  const [practitionerId, setPractitionerIdState] = useState<string | null>(null);
+  const setPractitionerId = (id: string | null) => {
+    setPractitionerIdState(id);
+    if (typeof window !== "undefined") {
+      const key = `modo:practitionerId:${slug}`;
+      if (id) window.sessionStorage.setItem(key, id);
+      else window.sessionStorage.removeItem(key);
+    }
+  };
+  // Clear practitioner when location changes
+  useEffect(() => {
+    setPractitionerId(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locationId]);
+  // Auto-pick first available when configured
+  useEffect(() => {
+    if (practSelectionMode !== "first_available" || !locationId) return;
+    const first = locationPractitioners
+      .filter((lp) => lp.location_id === locationId)
+      .sort((a, b) => a.display_order - b.display_order)
+      .map((lp) => practitioners.find((p) => p.id === lp.practitioner_id))
+      .filter((p): p is NonNullable<typeof p> => !!p)[0];
+    if (first) setPractitionerId(first.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locationId, practSelectionMode]);
+  // Block book links when practitioner required but not picked
+  useEffect(() => {
+    if (practSelectionMode !== "required") return;
+    function onClick(e: MouseEvent) {
+      if (practitionerId) return;
+      const t = e.target as HTMLElement | null;
+      const a = t?.closest?.("a") as HTMLAnchorElement | null;
+      if (!a) return;
+      const href = a.getAttribute("href") || "";
+      if (href.includes("/book/") || href.includes("/book-multi")) {
+        e.preventDefault();
+        e.stopPropagation();
+        toast.error("Please choose a practitioner first");
+        document.querySelector("[data-section='locations']")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }
+    document.addEventListener("click", onClick, true);
+    return () => document.removeEventListener("click", onClick, true);
+  }, [practSelectionMode, practitionerId]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const treatById = useMemo(() => new Map(treatments.map((t) => [t.id, t])), [treatments]);
   const addonsFor = useMemo(() => {
@@ -460,7 +506,7 @@ function BookPage() {
 
       {/* Choose Location + practitioners */}
       {locations.length > 0 && (
-        <section className="mx-auto mt-8 max-w-3xl px-4">
+        <section data-section="locations" className="mx-auto mt-8 max-w-3xl px-4">
           <h2 className="mb-4 text-xl font-bold" style={headingStyle}>
             Choose Location
           </h2>
@@ -506,36 +552,62 @@ function BookPage() {
                     </div>
                   </button>
 
-                  {selected && locPracts.length > 0 && (
+                  {selected && locPracts.length > 0 && practSelectionMode !== "first_available" && (
                     <div className="mt-3 border-t pt-3" style={{ borderColor: `${brand}1a` }}>
-                      <div className="mb-2 text-[10px] font-semibold uppercase tracking-wide opacity-55" style={{ color: brand }}>
-                        Practitioner
+                      <div className="mb-2 flex items-center justify-between">
+                        <div className="text-[10px] font-semibold uppercase tracking-wide opacity-55" style={{ color: brand }}>
+                          {practSelectionMode === "required" ? "Choose Practitioner *" : "Choose Practitioner (optional)"}
+                        </div>
+                        {practSelectionMode === "optional" && practitionerId && (
+                          <button
+                            type="button"
+                            onClick={() => setPractitionerId(null)}
+                            className="text-[10px] underline opacity-60 hover:opacity-100"
+                          >
+                            Clear
+                          </button>
+                        )}
                       </div>
                       <div className="grid gap-2">
-                        {locPracts.map((p) => (
-                          <div
-                            key={p.id}
-                            className="flex items-center gap-2 rounded-xl border px-2.5 py-2 text-left"
-                            style={{ borderColor: `${brand}22`, backgroundColor: `${brand}08` }}
-                          >
-                            {p.photo_url ? (
-                              <img src={p.photo_url} alt={p.name} className="h-8 w-8 shrink-0 rounded-full object-cover" />
-                            ) : (
-                              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white" style={{ backgroundColor: brand }}>
-                                {p.name.charAt(0)}
-                              </div>
-                            )}
-                            <div className="min-w-0">
-                              <div className="truncate text-xs font-semibold leading-tight" style={{ color: brand }}>
-                                {p.name}
-                              </div>
-                              {p.professional_title && (
-                                <div className="truncate text-[10px] leading-tight opacity-70">{p.professional_title}</div>
+                        {locPracts.map((p) => {
+                          const isPicked = practitionerId === p.id;
+                          return (
+                            <button
+                              type="button"
+                              key={p.id}
+                              onClick={() => setPractitionerId(isPicked ? null : p.id)}
+                              className="flex items-center gap-2 rounded-xl border px-2.5 py-2 text-left transition"
+                              style={{
+                                borderColor: isPicked ? brand : `${brand}22`,
+                                backgroundColor: isPicked ? `${brand}18` : `${brand}08`,
+                                boxShadow: isPicked ? `0 0 0 1px ${brand}` : undefined,
+                              }}
+                            >
+                              {p.photo_url ? (
+                                <img src={p.photo_url} alt={p.name} className="h-8 w-8 shrink-0 rounded-full object-cover" />
+                              ) : (
+                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white" style={{ backgroundColor: brand }}>
+                                  {p.name.charAt(0)}
+                                </div>
                               )}
-                            </div>
-                          </div>
-                        ))}
+                              <div className="min-w-0 flex-1">
+                                <div className="truncate text-xs font-semibold leading-tight" style={{ color: brand }}>
+                                  {p.name}
+                                </div>
+                                {p.professional_title && (
+                                  <div className="truncate text-[10px] leading-tight opacity-70">{p.professional_title}</div>
+                                )}
+                              </div>
+                              {isPicked && (
+                                <span className="text-[10px] font-semibold uppercase" style={{ color: brand }}>Selected</span>
+                              )}
+                            </button>
+                          );
+                        })}
                       </div>
+                      {practSelectionMode === "required" && !practitionerId && (
+                        <p className="mt-2 text-[11px] opacity-70">Please choose a practitioner to continue.</p>
+                      )}
                     </div>
                   )}
                 </div>

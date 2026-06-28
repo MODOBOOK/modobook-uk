@@ -314,6 +314,8 @@ function BookTreatmentPage() {
           })(),
           basePrice: effectivePrice,
           patientUserId: patientUserId,
+          practitionerId: (typeof window !== "undefined" ? window.sessionStorage.getItem(`modo:practitionerId:${slug}`) : null) || null,
+
 
         },
       });

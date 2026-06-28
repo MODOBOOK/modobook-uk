@@ -7,7 +7,7 @@ import {
   deletePractitioner,
 } from "@/lib/practitioners.functions";
 import { listMyLocations } from "@/lib/locations.functions";
-import { getMyProfile } from "@/lib/profiles.functions";
+import { getMyProfile, updateProfile } from "@/lib/profiles.functions";
 import { ImageUploader } from "@/components/ImageUploader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +24,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Pencil, Plus, Trash2, Users } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 
 type Loc = Awaited<ReturnType<typeof listMyLocations>>[number];
@@ -45,11 +46,13 @@ function PractitionersPage() {
   const fetchProfile = useServerFn(getMyProfile);
   const save = useServerFn(upsertPractitioner);
   const remove = useServerFn(deletePractitioner);
+  const saveProfile = useServerFn(updateProfile);
 
   const [practitioners, setPractitioners] = useState<Pract[]>([]);
   const [links, setLinks] = useState<{ location_id: string; practitioner_id: string }[]>([]);
   const [locations, setLocations] = useState<Loc[]>([]);
   const [profileId, setProfileId] = useState<string>("");
+  const [selectionMode, setSelectionMode] = useState<"required" | "optional" | "first_available">("optional");
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<Draft>(emptyDraft());
@@ -62,7 +65,11 @@ function PractitionersPage() {
       setPractitioners(list.practitioners);
       setLinks(list.links);
       setLocations(locs);
-      if (profile && "id" in profile) setProfileId((profile as { id: string }).id);
+      if (profile && "id" in profile) {
+        setProfileId((profile as { id: string }).id);
+        const m = (profile as { practitioner_selection_mode?: string }).practitioner_selection_mode;
+        if (m === "required" || m === "optional" || m === "first_available") setSelectionMode(m);
+      }
     } finally {
       setLoading(false);
     }
@@ -132,6 +139,39 @@ function PractitionersPage() {
         </div>
         <Button onClick={openNew}><Plus className="mr-2 h-4 w-4" /> Add practitioner</Button>
       </div>
+
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Patient selection mode</CardTitle>
+          <p className="text-xs text-muted-foreground">
+            Controls how patients choose a practitioner on your booking page once they've picked a location.
+          </p>
+        </CardHeader>
+        <CardContent>
+          <Select
+            value={selectionMode}
+            onValueChange={async (v) => {
+              const mode = v as "required" | "optional" | "first_available";
+              setSelectionMode(mode);
+              if (!profileId) return;
+              try {
+                await saveProfile({ data: { id: profileId, practitioner_selection_mode: mode } });
+                toast.success("Saved");
+              } catch (e) {
+                toast.error(e instanceof Error ? e.message : "Failed to save");
+              }
+            }}
+          >
+            <SelectTrigger className="w-full sm:w-80"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="optional">Optional — patient can pick a practitioner or skip</SelectItem>
+              <SelectItem value="required">Required — patient must pick a practitioner</SelectItem>
+              <SelectItem value="first_available">First available — auto-assign, hide picker</SelectItem>
+            </SelectContent>
+          </Select>
+        </CardContent>
+      </Card>
+
 
       {loading ? (
         <p className="text-sm text-muted-foreground">Loading…</p>
