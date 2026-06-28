@@ -105,6 +105,7 @@ export const updateProfile = createServerFn({ method: "POST" })
       terms_required?: boolean;
       contact_sms_number?: string | null;
       contact_whatsapp_number?: string | null;
+      practitioner_selection_mode?: "required" | "optional" | "first_available";
     }) => input,
   )
 
