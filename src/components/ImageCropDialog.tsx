@@ -104,8 +104,8 @@ export function ImageCropDialog({
               onCropChange={setCrop}
               onZoomChange={setZoom}
               onCropComplete={onCropComplete}
-              restrictPosition={false}
             />
+
           )}
         </div>
         <div className="space-y-3">
