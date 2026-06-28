@@ -52,6 +52,7 @@ function PractitionersPage() {
   const [links, setLinks] = useState<{ location_id: string; practitioner_id: string }[]>([]);
   const [locations, setLocations] = useState<Loc[]>([]);
   const [profileId, setProfileId] = useState<string>("");
+  const [selectionMode, setSelectionMode] = useState<"required" | "optional" | "first_available">("optional");
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<Draft>(emptyDraft());
