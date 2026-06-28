@@ -31,6 +31,20 @@ const DEFAULTS: ClinicThemeInput = {
   layout_key: "classic",
   hero_carousel_enabled: false,
   hero_carousel_urls: [],
+  welcome_card_show_logo: true,
+  welcome_card_show_name: true,
+  welcome_card_show_tagline: false,
+  welcome_card_show_rating: true,
+  welcome_card_show_actions: true,
+  welcome_card_show_contact: true,
+  welcome_card_bg_color: "#ffffff",
+  welcome_card_border_color: "#e5e7eb",
+  welcome_card_border_radius: "1rem",
+  welcome_card_border_width: "1px",
+  welcome_card_padding: "1.25rem",
+  welcome_card_shadow: "0 10px 40px rgba(15,23,42,0.08)",
+  welcome_card_opacity: 1,
+  welcome_card_blur: 0,
 };
 
 const FONTS = [
