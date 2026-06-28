@@ -60,8 +60,12 @@ const DEFAULTS: ClinicThemeInput = {
 const FONTS = [
   "Inter",
   "Plus Jakarta Sans",
+  "Syne",
+  "Bricolage Grotesque",
+  "Manrope",
   "Playfair Display",
   "Cormorant Garamond",
+  "Crimson Pro",
   "DM Serif Display",
   "Fraunces",
   "Outfit",
@@ -70,6 +74,7 @@ const FONTS = [
   "Lora",
   "Figtree",
 ];
+
 
 function ColorField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
   return (
