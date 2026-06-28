@@ -2861,6 +2861,10 @@ export type Database = {
       is_active_profile: { Args: { _profile_id: string }; Returns: boolean }
       is_active_profile_path: { Args: { path: string }; Returns: boolean }
       is_object_owner: { Args: { path: string }; Returns: boolean }
+      is_practitioner_owner: {
+        Args: { _practitioner_id: string }
+        Returns: boolean
+      }
       is_profile_owner: { Args: { _profile_id: string }; Returns: boolean }
       is_slug_available: {
         Args: { p_exclude_id?: string; p_slug: string }
