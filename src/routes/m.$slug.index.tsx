@@ -103,7 +103,11 @@ function BookPage() {
         chooser_intro_text?: string | null;
         model_slots_position?: "top" | "bottom" | null;
         practitioner_selection_mode?: "required" | "optional" | "first_available" | null;
+        favourite_treatment_ids?: string[] | null;
+        favourites_enabled?: boolean | null;
+        favourites_custom_title?: string | null;
       };
+
       treatments: Treatment[];
       packages: Package[];
       locations: (Location & { image_url?: string | null })[];
