@@ -109,8 +109,36 @@ function MultiBookPage() {
     return t.duration ?? 30;
   };
 
-  const totalDuration = treatments.reduce((s, t) => s + durationFor(t), 0);
-  const totalPrice = treatments.reduce((s, t) => s + priceFor(t), 0);
+  const totalDurationBase = treatments.reduce((s, t) => s + durationFor(t), 0);
+  const totalPriceBase = treatments.reduce((s, t) => s + priceFor(t), 0);
+
+  // Add-ons (new system) — fetched after treatment selection
+  const addonsQuery = useQuery({
+    queryKey: ["addonsForBooking", slug, ids.join(",")],
+    queryFn: () => listAddonsForBooking({ data: { slug, treatment_ids: ids } }),
+    enabled: ids.length > 0,
+  });
+  const availableAddons: PublicAddon[] = addonsQuery.data ?? [];
+  const [addonPicks, setAddonPicks] = useState<Set<string>>(new Set());
+  const toggleAddon = (id: string) =>
+    setAddonPicks((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  const addonNet = (a: PublicAddon) => {
+    const base = a.price_cents / 100;
+    const d = a.discount_percent ?? 0;
+    return base * (1 - d / 100);
+  };
+  const addonsExtraPrice = availableAddons
+    .filter((a) => addonPicks.has(a.id))
+    .reduce((s, a) => s + addonNet(a), 0);
+  const addonsExtraDuration = availableAddons
+    .filter((a) => addonPicks.has(a.id))
+    .reduce((s, a) => s + (a.duration_min || 0), 0);
+  const totalDuration = totalDurationBase + addonsExtraDuration;
+  const totalPrice = totalPriceBase + addonsExtraPrice;
 
   const today = new Date().toISOString().slice(0, 10);
   const [date, setDate] = useState<string>(today);
