@@ -469,7 +469,60 @@ function MultiBookPage() {
                 <UserCheck className="h-4 w-4" /> Signed in — saved to your account.
               </div>
             )}
+            {availableAddons.length > 0 && (
+              <Card className="mb-6">
+                <CardHeader>
+                  <CardTitle className="text-base" style={headingStyle}>
+                    Add-ons <span className="text-xs font-normal opacity-60">(optional)</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="grid gap-2">
+                  {availableAddons.map((a) => {
+                    const checked = addonPicks.has(a.id);
+                    const base = a.price_cents / 100;
+                    const net = addonNet(a);
+                    const hasDiscount = (a.discount_percent ?? 0) > 0;
+                    return (
+                      <button
+                        key={a.id}
+                        type="button"
+                        onClick={() => toggleAddon(a.id)}
+                        className="flex items-center justify-between gap-3 rounded-md border px-3 py-2 text-left transition"
+                        style={{
+                          borderColor: checked ? brand : `${brand}33`,
+                          backgroundColor: checked ? `${brand}10` : "transparent",
+                        }}
+                      >
+                        <div className="flex items-center gap-3">
+                          <input type="checkbox" readOnly checked={checked} className="h-4 w-4" />
+                          <div>
+                            <div className="text-sm font-medium">{a.name}</div>
+                            {a.duration_min > 0 && (
+                              <div className="text-xs opacity-60">+{a.duration_min} min</div>
+                            )}
+                          </div>
+                        </div>
+                        <div className="text-right text-sm">
+                          {hasDiscount ? (
+                            <>
+                              <span className="opacity-50 line-through mr-2">£{base.toFixed(2)}</span>
+                              <span className="font-semibold" style={{ color: brand }}>£{net.toFixed(2)}</span>
+                              <div className="text-[10px] font-semibold text-emerald-600">
+                                {a.discount_percent}% off
+                              </div>
+                            </>
+                          ) : (
+                            <span className="font-semibold" style={{ color: brand }}>+£{base.toFixed(2)}</span>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </CardContent>
+              </Card>
+            )}
             <Card className="mb-6">
+
               <CardHeader>
                 <CardTitle className="text-base" style={headingStyle}>Your details</CardTitle>
               </CardHeader>
