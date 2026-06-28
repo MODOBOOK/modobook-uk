@@ -266,10 +266,12 @@ function BookTreatmentPage() {
 
 
   async function submit() {
+    if (submitLockRef.current) return;
     if (!slot || !form.name || !form.email) {
       toast.error("Please fill name, email and pick a time slot");
       return;
     }
+    submitLockRef.current = true;
     setSubmitting(true);
     try {
       const endMin = toMinutes(slot) + duration;
