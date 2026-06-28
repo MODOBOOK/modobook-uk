@@ -412,37 +412,38 @@ function BookPage() {
       <section
         className={
           cardPosition === "below"
-            ? "relative z-10 mx-auto mt-6 max-w-2xl px-4"
-            : cardSize === "wide"
-              ? "relative z-10 mx-auto -mt-8 max-w-3xl px-4 sm:-mt-12"
+            ? "relative z-10 mx-auto mt-6 px-4"
+            : isWide
+              ? "relative z-10 mx-auto -mt-6 px-4 sm:max-w-2xl sm:-mt-12"
               : layoutKey === "magazine"
-                ? "relative z-10 mx-auto mt-4 max-w-2xl px-4"
+                ? "relative z-10 mx-auto mt-4 px-4"
                 : layoutKey === "split"
-                  ? "relative z-10 mx-auto -mt-8 max-w-2xl px-4 sm:-mt-12"
-                  : "relative z-10 mx-auto -mt-14 max-w-2xl px-4 sm:-mt-20"
+                  ? "relative z-10 mx-auto -mt-8 px-4 sm:-mt-12"
+                  : "relative z-10 mx-auto -mt-14 px-4 sm:-mt-20"
         }
+        style={{ maxWidth: isWide ? "none" : "42rem" }}
       >
         <div
           className={`
             border
-            ${cardSize === "compact" ? "max-w-xl" : cardSize === "wide" ? "max-w-3xl" : "max-w-2xl"}
-            ${cardSize === "compact" ? "rounded-full px-6 py-3" : ""}
+            ${isWide ? "w-full" : ""}
+            ${isCompact ? "rounded-full px-6 py-3" : ""}
           `}
           style={{
             backgroundColor: cardBgType === "solid" ? cardBg : undefined,
             backgroundImage: cardBgType === "gradient" ? `linear-gradient(135deg, ${cardGradientFrom}, ${cardGradientTo})` : undefined,
             borderColor: cardBorder,
-            borderRadius: cardSize === "compact" ? "9999px" : cardRadius,
+            borderRadius: isCompact ? "9999px" : cardRadius,
             borderWidth: cardBorderWidth,
-            padding: cardSize === "compact" ? "0.75rem 1.25rem" : cardPadding,
+            padding: isCompact ? "0.75rem 1.25rem" : cardPadding,
             boxShadow: cardShadow,
             opacity: cardOpacity,
-            backdropFilter: cardBgType === "glass" || cardBlur > 0 ? `blur(${cardBlur || 8}px)` : undefined,
-            WebkitBackdropFilter: cardBgType === "glass" || cardBlur > 0 ? `blur(${cardBlur || 8}px)` : undefined,
+            backdropFilter: cardBlur > 0 ? `blur(${cardBlur}px)` : undefined,
             margin: "0 auto",
+            maxWidth: isWide ? "none" : isCompact ? "36rem" : "42rem",
           }}
         >
-          {cardSize === "compact" ? (
+          {isCompact ? (
             <div className="flex items-center gap-3">
               {showLogo && logoUrl && (
                 <img src={logoUrl} alt={profile.clinic_name} className="h-8 w-auto object-contain" />
@@ -480,7 +481,7 @@ function BookPage() {
                   {profile.clinic_name}
                 </h1>
               )}
-              {showTagline && profile.tagline && (
+              {!isCompact && showTagline && profile.tagline && (
                 <p className="mt-1 text-sm opacity-70">{profile.tagline}</p>
               )}
 
@@ -508,7 +509,7 @@ function BookPage() {
               )}
 
               {/* Action icon row */}
-              {showActions && (
+              {!isCompact && showActions && (
                 <div className="mt-4 grid grid-cols-4 gap-2 border-t pt-3" style={{ borderColor: `${brand}22` }}>
                   {showInstagram && ig ? (
                     <ActionIcon href={ig.startsWith("http") ? ig : `https://instagram.com/${ig.replace("@", "")}`} label="Instagram" brand={brand}>
