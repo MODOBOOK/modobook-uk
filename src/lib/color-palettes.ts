@@ -196,3 +196,40 @@ export const COLOR_PALETTES: ColorPalette[] = [
     },
   },
 ];
+
+// Build a full theme palette from 4 user-chosen hex colours.
+// Slot order: [light background, soft card/border tone, primary/accent, dark text]
+export function buildCustomPalette(colors: [string, string, string, string]): Partial<ClinicThemeInput> {
+  const [bg, soft, primary, dark] = colors;
+  return {
+    background_color: bg,
+    text_color: dark,
+    primary_color: primary,
+    accent_color: soft,
+    header_bg_color: bg,
+    header_text_color: dark,
+    footer_bg_color: dark,
+    footer_text_color: bg,
+    menu_card_bg: "#ffffff",
+    menu_card_border_color: soft,
+    menu_category_bg: dark,
+    menu_category_text: bg,
+    menu_treatment_name_color: dark,
+    menu_price_color: primary,
+    button_color: dark,
+    button_text_color: bg,
+    welcome_card_bg_color: "#ffffff",
+    welcome_card_border_color: soft,
+    contact_tile_bg_color: "#ffffff",
+    contact_tile_border_color: soft,
+    hero_overlay_color: dark,
+  };
+}
+
+export const CUSTOM_PALETTE_SLOTS: Array<{ key: 0 | 1 | 2 | 3; label: string; hint: string; suggested: string }> = [
+  { key: 0, label: "Lightest — page background", hint: "Very light or off-white. This is your main page colour.", suggested: "#faf7f2" },
+  { key: 1, label: "Soft — cards & borders", hint: "A soft tint of your brand. Slightly darker than the background.", suggested: "#ece6db" },
+  { key: 2, label: "Brand — primary & accent", hint: "Your signature brand colour. Used for prices and highlights.", suggested: "#8b7355" },
+  { key: 3, label: "Darkest — text & buttons", hint: "A deep, readable colour. Used for headings, buttons and text.", suggested: "#3a3530" },
+];
+
