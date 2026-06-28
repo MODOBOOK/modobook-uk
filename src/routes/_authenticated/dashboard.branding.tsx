@@ -189,6 +189,23 @@ function BrandingPage() {
     toast.success(`${palette.name} palette applied`);
   }
 
+  const [customColors, setCustomColors] = useState<[string, string, string, string]>([
+    "#faf7f2", "#ece6db", "#8b7355", "#3a3530",
+  ]);
+  function updateCustomColor(idx: 0 | 1 | 2 | 3, hex: string) {
+    setCustomColors((c) => {
+      const next = [...c] as [string, string, string, string];
+      next[idx] = hex;
+      return next;
+    });
+  }
+  function applyCustomPalette() {
+    const valid = customColors.every((c) => /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(c));
+    if (!valid) { toast.error("Enter valid hex codes (e.g. #faf7f2)"); return; }
+    setState((s) => ({ ...s, ...buildCustomPalette(customColors) }));
+    toast.success("Custom palette applied");
+  }
+
   const activePaletteKey = COLOR_PALETTES.find(
     (p) => p.colors.background_color === state.background_color && p.colors.primary_color === state.primary_color,
   )?.key;
