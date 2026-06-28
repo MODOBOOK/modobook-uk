@@ -314,6 +314,23 @@ function SlotEditor({ existing, treatments, locations, onClose, onSaved }: {
             <div><Label>Start</Label><Input type="time" value={startT} onChange={(e) => setStartT(e.target.value)} /></div>
             <div><Label>End</Label><Input type="time" value={endT} onChange={(e) => setEndT(e.target.value)} /></div>
           </div>
+          {!isEdit && (
+            <div className="space-y-2">
+              {extraWindows.map((w, i) => (
+                <div key={i} className="grid grid-cols-[1fr_1fr_1fr_auto] gap-2 items-end">
+                  <div><Label className="text-xs">Date</Label><Input type="date" value={w.date} onChange={(e) => setExtraWindows((c) => c.map((x, ix) => ix === i ? { ...x, date: e.target.value } : x))} /></div>
+                  <div><Label className="text-xs">Start</Label><Input type="time" value={w.start} onChange={(e) => setExtraWindows((c) => c.map((x, ix) => ix === i ? { ...x, start: e.target.value } : x))} /></div>
+                  <div><Label className="text-xs">End</Label><Input type="time" value={w.end} onChange={(e) => setExtraWindows((c) => c.map((x, ix) => ix === i ? { ...x, end: e.target.value } : x))} /></div>
+                  <Button type="button" size="sm" variant="ghost" onClick={() => setExtraWindows((c) => c.filter((_, ix) => ix !== i))}><Trash2 className="h-4 w-4" /></Button>
+                </div>
+              ))}
+              <Button type="button" size="sm" variant="outline" onClick={() => setExtraWindows((c) => [...c, { date: "", start: "10:00", end: "11:00" }])}>
+                <Plus className="mr-1 h-3.5 w-3.5" />Add another date/time
+              </Button>
+              <p className="text-xs text-muted-foreground">Each window will create its own model slot for each selected treatment. Patients can book any back-to-back time within the window.</p>
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label>Price type</Label>
