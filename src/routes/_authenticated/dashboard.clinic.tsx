@@ -31,6 +31,9 @@ function ClinicPage() {
   const [instagram, setInstagram] = useState("");
   const [facebook, setFacebook] = useState("");
   const [tiktok, setTiktok] = useState("");
+  const [smsNumber, setSmsNumber] = useState("");
+  const [whatsappNumber, setWhatsappNumber] = useState("");
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
