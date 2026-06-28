@@ -230,6 +230,7 @@ export const requestBooking = createServerFn({ method: "POST" })
       notes?: string;
       basePrice: number;
       patientUserId?: string | null;
+      practitionerId?: string | null;
     }) => input,
   )
   .handler(async ({ data }) => {
@@ -240,6 +241,7 @@ export const requestBooking = createServerFn({ method: "POST" })
       profile_id: data.profileId,
       treatment_id: data.treatmentId,
       location_id: data.locationId ?? null,
+      practitioner_id: data.practitionerId ?? null,
       scheduled_date: data.date,
       start_time: data.startTime,
       end_time: data.endTime,
