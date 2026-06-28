@@ -65,7 +65,11 @@ function PractitionersPage() {
       setPractitioners(list.practitioners);
       setLinks(list.links);
       setLocations(locs);
-      if (profile && "id" in profile) setProfileId((profile as { id: string }).id);
+      if (profile && "id" in profile) {
+        setProfileId((profile as { id: string }).id);
+        const m = (profile as { practitioner_selection_mode?: string }).practitioner_selection_mode;
+        if (m === "required" || m === "optional" || m === "first_available") setSelectionMode(m);
+      }
     } finally {
       setLoading(false);
     }
