@@ -58,7 +58,34 @@ export type ClinicThemeInput = {
   welcome_card_shadow?: string | null;
   welcome_card_opacity?: number;
   welcome_card_blur?: number;
+  // Header
+  header_sticky?: boolean;
+  header_logo_size?: string;
+  header_show_name?: boolean;
+  header_show_tagline?: boolean;
+  header_button_label?: string;
+  // Hero
+  hero_height?: string;
+  hero_overlay_opacity?: number;
+  hero_overlay_color?: string;
+  hero_text_alignment?: string;
+  hero_show_text?: boolean;
+  // Buttons
+  button_color?: string | null;
+  button_text_color?: string;
+  button_radius?: string;
+  button_size?: string;
+  button_uppercase?: boolean;
+  // Density
+  page_density?: string;
+  section_gap?: string;
+  // Contact tiles
+  contact_tile_layout?: string;
+  contact_tile_icon_size?: string;
+  contact_tile_bg_color?: string | null;
+  contact_tile_border_color?: string | null;
 };
+
 
 async function getProfileId(
   supabase: { from: (table: string) => any },
