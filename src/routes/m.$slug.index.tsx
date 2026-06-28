@@ -502,7 +502,17 @@ function BookPage() {
 
       {/* Contact us */}
       {(() => {
+        if (!showContact) return null;
         const sms = profile.contact_sms_number?.trim();
+        const wa = profile.contact_whatsapp_number?.trim();
+        const fb = profile.social_links?.facebook?.trim();
+        const igLink = ig?.trim();
+        const items: { href: string; label: string; sub?: string; Icon: typeof Phone }[] = [];
+        if (sms) items.push({ href: `sms:${sms}`, label: "Text us", sub: sms, Icon: Phone });
+        if (wa) items.push({ href: `https://wa.me/${wa.replace(/[^0-9]/g, "")}`, label: "WhatsApp", sub: wa, Icon: MessageCircle });
+        if (igLink) items.push({ href: igLink.startsWith("http") ? igLink : `https://instagram.com/${igLink.replace("@", "")}`, label: "Instagram", sub: igLink, Icon: Instagram });
+        if (fb) items.push({ href: fb.startsWith("http") ? fb : `https://facebook.com/${fb}`, label: "Facebook", sub: fb.replace(/^https?:\/\/, ""), Icon: Facebook });
+        if (items.length === 0) return null;
         const wa = profile.contact_whatsapp_number?.trim();
         const fb = profile.social_links?.facebook?.trim();
         const igLink = ig?.trim();
