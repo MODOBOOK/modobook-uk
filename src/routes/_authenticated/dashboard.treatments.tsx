@@ -491,75 +491,17 @@ function TreatmentDialog({
           </p>
         </div>
 
-        {/* Add-ons */}
-        <div className="rounded-md border p-3 space-y-3">
+        {/* Add-ons moved to dedicated page */}
+        <div className="rounded-md border p-3 space-y-2 bg-muted/30">
           <div className="flex items-center gap-2">
             <PlusCircle className="h-4 w-4 text-muted-foreground" />
             <Label className="m-0">Add-ons</Label>
           </div>
-          <div>
-            <Label className="text-xs text-muted-foreground">Mode</Label>
-            <Select value={addonMode} onValueChange={(v) => setAddonMode(v as "off" | "optional")}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="off">Off — never show add-ons</SelectItem>
-                <SelectItem value="optional">Optional — customer can pick add-ons or press "No thanks"</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          {addonMode === "optional" && (
-            <div>
-              <Label className="text-xs text-muted-foreground">Pick add-on treatments</Label>
-              {addonCandidates.length === 0 ? (
-                <p className="text-xs text-muted-foreground">Create more treatments to use as add-ons.</p>
-              ) : (
-                <div className="space-y-2 max-h-72 overflow-y-auto mt-1">
-                  {addonCandidates.map((a) => {
-                    const link = addons.find((x) => x.addon_id === a.id);
-                    const checked = !!link;
-                    const pct = link?.discount_percent ?? null;
-                    const discounted = checked && pct ? a.price * (1 - pct / 100) : null;
-                    return (
-                      <div key={a.id} className="rounded-md border px-3 py-2 space-y-2">
-                        <div className="flex items-center justify-between gap-2 text-sm">
-                          <label className="flex items-center gap-2 min-w-0 cursor-pointer">
-                            <Checkbox checked={checked} onCheckedChange={() => toggleAddon(a.id)} />
-                            <span className="truncate">{a.name}</span>
-                          </label>
-                          <span className="text-xs text-muted-foreground shrink-0">£{a.price} · {a.duration}m</span>
-                        </div>
-                        {checked && (
-                          <div className="flex items-center gap-2 pl-6">
-                            <Label className="text-xs text-muted-foreground m-0">Discount %</Label>
-                            <Input
-                              type="number"
-                              min={0}
-                              max={100}
-                              value={pct ?? ""}
-                              onChange={(e) =>
-                                setAddonDiscount(a.id, e.target.value === "" ? null : Number(e.target.value))
-                              }
-                              className="h-8 w-20"
-                              placeholder="0"
-                            />
-                            {discounted !== null && (
-                              <span className="text-xs text-muted-foreground">
-                                → £{discounted.toFixed(2)}
-                              </span>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-              <p className="text-xs text-muted-foreground mt-2">
-                After selecting this treatment, customers see these add-ons with a "No thanks" button. Set a per-add-on discount to reward bundling.
-              </p>
-            </div>
-          )}
+          <p className="text-xs text-muted-foreground">
+            Add-ons are now managed in one place. Go to <span className="font-medium">Dashboard → Add-ons</span> to create add-on items and assign them to this treatment (or a whole category) with optional discounts.
+          </p>
         </div>
+
 
         <div className="rounded-md border p-3">
           <div className="flex items-center gap-2 mb-2">
