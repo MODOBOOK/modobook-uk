@@ -81,7 +81,10 @@ function ClinicPage() {
             ...(facebook ? { facebook } : {}),
             ...(tiktok ? { tiktok } : {}),
           },
+          contact_sms_number: smsNumber || null,
+          contact_whatsapp_number: whatsappNumber || null,
         },
+
       });
       toast.success("Saved");
       router.invalidate();
