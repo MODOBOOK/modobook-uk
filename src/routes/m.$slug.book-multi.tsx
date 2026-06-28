@@ -259,6 +259,7 @@ function MultiBookPage() {
   }, [dayQuery.data, dayRules, totalDuration, locationId]);
 
   async function submit() {
+    if (submitLockRef.current) return;
     if (!slot || !form.name || !form.email) {
       toast.error("Please fill name, email and pick a time slot");
       return;
@@ -267,6 +268,7 @@ function MultiBookPage() {
       toast.error("Please agree to the terms & conditions to continue");
       return;
     }
+    submitLockRef.current = true;
     setSubmitting(true);
     try {
       const bookings = treatments.map((t) => ({
