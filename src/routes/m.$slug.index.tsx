@@ -340,12 +340,25 @@ function BookPage() {
     }
   }
 
+  const btnColor = theme?.button_color || brand;
+  const btnTextColor = theme?.button_text_color || "#ffffff";
+  const btnRadius =
+    theme?.button_radius === "rounded-md" ? "0.375rem" :
+    theme?.button_radius === "rounded-xl" ? "0.75rem" :
+    theme?.button_radius === "pill" ? "9999px" : "0.75rem";
+  const btnUppercase = !!theme?.button_uppercase;
+  const density = theme?.page_density ?? "cozy";
+  const sectionGapPx = density === "compact" ? "1.25rem" : density === "spacious" ? "3rem" : "2rem";
   const pageStyle: React.CSSProperties = {
     backgroundColor: bgColor,
     color: textColor,
     fontFamily: `${bodyFont}, system-ui, sans-serif`,
     ["--brand" as string]: brand,
     ["--brand-accent" as string]: accent,
+    ["--btn-color" as string]: btnColor,
+    ["--btn-text" as string]: btnTextColor,
+    ["--btn-radius" as string]: btnRadius,
+    ["--section-gap" as string]: sectionGapPx,
   };
   const headingStyle: React.CSSProperties = {
     fontFamily: `${headingFont}, ${bodyFont}, system-ui, sans-serif`,
@@ -362,6 +375,11 @@ function BookPage() {
 
   return (
     <main className="min-h-screen pb-16" style={pageStyle}>
+      <style>{`
+        .modo-btn { background-color: var(--btn-color); color: var(--btn-text); border-radius: var(--btn-radius); ${btnUppercase ? "text-transform: uppercase; letter-spacing: 0.05em;" : ""} }
+        [data-modo-section] + [data-modo-section] { margin-top: var(--section-gap); }
+      `}</style>
+
       {/* Hero image / carousel (layout: {layoutKey}) */}
       {(() => {
         const heroHeight = theme?.hero_height ?? "medium";
