@@ -246,7 +246,10 @@ function ServicesPage() {
         </Button>
       </div>
 
+      <FavouritesCard treatments={(treats.data ?? []) as Treat[]} />
+
       {cats.isLoading || treats.isLoading ? (
+
         <p className="text-sm text-muted-foreground">Loading…</p>
       ) : roots.length === 0 && uncategorised.length === 0 ? (
         <Card>
