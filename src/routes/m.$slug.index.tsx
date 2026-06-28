@@ -1031,7 +1031,7 @@ function BookPage() {
           <section className="mx-auto mt-8 max-w-3xl px-4">
             <p className="rounded-2xl border border-dashed p-6 text-center text-sm opacity-70"
                style={{ borderColor: `${brand}33` }}>
-              Pick a team member above to see available treatments.
+              Pick a location above to see available treatments.
             </p>
           </section>
         )
