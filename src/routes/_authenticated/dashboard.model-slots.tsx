@@ -167,11 +167,13 @@ function SlotEditor({ existing, treatments, locations, onClose, onSaved }: {
   const [date, setDate] = useState(existing?.slot_date ?? "");
   const [startT, setStartT] = useState(existing?.start_time?.slice(0, 5) ?? "10:00");
   const [endT, setEndT] = useState(existing?.end_time?.slice(0, 5) ?? "11:00");
+  const [extraWindows, setExtraWindows] = useState<{ date: string; start: string; end: string }[]>([]);
   const [mode, setMode] = useState<"fixed" | "percent">(existing?.price_mode ?? "fixed");
   const [value, setValue] = useState<string>(existing?.price_value?.toString() ?? "");
   const [notes, setNotes] = useState(existing?.notes ?? "");
   const [active, setActive] = useState(existing?.active ?? true);
   const [category, setCategory] = useState(existing?.category ?? "");
+
 
   // Inline "create new treatment" state
   const [showNew, setShowNew] = useState(false);
