@@ -54,7 +54,10 @@ function ClinicPage() {
         setInstagram(links.instagram ?? "");
         setFacebook(links.facebook ?? "");
         setTiktok(links.tiktok ?? "");
+        setSmsNumber((p as { contact_sms_number?: string | null }).contact_sms_number ?? "");
+        setWhatsappNumber((p as { contact_whatsapp_number?: string | null }).contact_whatsapp_number ?? "");
       }
+
       setLoading(false);
     })();
   }, []);
