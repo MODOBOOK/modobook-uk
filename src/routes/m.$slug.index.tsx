@@ -280,15 +280,25 @@ function BookPage() {
 
   return (
     <main className="min-h-screen pb-16" style={pageStyle}>
-      {/* Hero image / carousel */}
+      {/* Hero image / carousel (layout: {layoutKey}) */}
       <div className="relative">
-        {carouselEnabled && carouselUrls.length > 0 ? (
+        {layoutKey === "magazine" ? (
+          heroUrl ? (
+            <img src={heroUrl} alt="" className="h-32 w-full object-cover sm:h-40" />
+          ) : (
+            <div className="h-20 w-full" style={{ background: `linear-gradient(135deg, ${brand}, ${accent})` }} />
+          )
+        ) : carouselEnabled && carouselUrls.length > 0 ? (
           <HeroCarousel urls={carouselUrls} />
         ) : heroUrl ? (
           <img
             src={heroUrl}
             alt=""
-            className="h-72 w-full object-cover object-top sm:h-[28rem]"
+            className={
+              layoutKey === "split"
+                ? "h-56 w-full object-cover object-top sm:h-80"
+                : "h-72 w-full object-cover object-top sm:h-[28rem]"
+            }
           />
         ) : (
           <div
@@ -296,7 +306,7 @@ function BookPage() {
             style={{ background: `linear-gradient(135deg, ${brand}, ${accent})` }}
           />
         )}
-        {(heroHeading || heroSubheading) && (
+        {layoutKey !== "magazine" && (heroHeading || heroSubheading) && (
           <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent px-4 py-6 sm:py-10">
             <div className="mx-auto max-w-3xl text-white">
               {heroHeading && (
@@ -317,7 +327,16 @@ function BookPage() {
 
 
       {/* Overlapping title card */}
-      <section className="relative z-10 mx-auto -mt-20 max-w-3xl px-4 sm:-mt-28">
+      <section
+        className={
+          layoutKey === "magazine"
+            ? "relative z-10 mx-auto mt-6 max-w-3xl px-4"
+            : layoutKey === "split"
+              ? "relative z-10 mx-auto -mt-10 max-w-3xl px-4 sm:-mt-16"
+              : "relative z-10 mx-auto -mt-20 max-w-3xl px-4 sm:-mt-28"
+        }
+      >
+
 
         <div
           className="rounded-3xl border px-5 pb-5 pt-6 shadow-2xl sm:px-8 sm:pt-8"
