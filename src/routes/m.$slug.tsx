@@ -23,10 +23,27 @@ export const Route = createFileRoute("/m/$slug")({
     </div>
   ),
   head: ({ loaderData }) => ({
-    meta: [
-      { title: `${loaderData?.profile.clinic_name ?? "Clinic"} · MODO Book` },
-      { name: "description", content: loaderData?.profile.tagline ?? "Book treatments on MODO Book." },
-    ],
+    meta: (() => {
+      const title = `${loaderData?.profile.clinic_name ?? "Clinic"} · MODO Book`;
+      const description = loaderData?.profile.tagline ?? "Book treatments on MODO Book.";
+      const image = loaderData?.theme?.hero_image_url ?? loaderData?.profile.hero_url;
+      return [
+        { title },
+        { name: "description", content: description },
+        { property: "og:title", content: title },
+        { property: "og:description", content: description },
+        { property: "og:type", content: "website" },
+        { name: "twitter:card", content: image ? "summary_large_image" : "summary" },
+        { name: "twitter:title", content: title },
+        { name: "twitter:description", content: description },
+        ...(image
+          ? [
+              { property: "og:image", content: image },
+              { name: "twitter:image", content: image },
+            ]
+          : []),
+      ];
+    })(),
     links: loaderData?.theme?.favicon_url
       ? [{ rel: "icon", href: loaderData.theme.favicon_url }]
       : undefined,
