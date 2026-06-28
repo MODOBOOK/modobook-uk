@@ -599,21 +599,34 @@ function BookPage() {
         if (igLink) items.push({ href: igLink.startsWith("http") ? igLink : `https://instagram.com/${igLink.replace("@", "")}`, label: "Instagram", sub: igLink, Icon: Instagram });
         if (fb) items.push({ href: fb.startsWith("http") ? fb : `https://facebook.com/${fb}`, label: "Facebook", sub: fb.replace(/^https?:\/\//, ""), Icon: Facebook });
         if (items.length === 0) return null;
+        const tileLayout = theme?.contact_tile_layout ?? "grid";
+        const tileIconSize = theme?.contact_tile_icon_size ?? "md";
+        const tileBg = theme?.contact_tile_bg_color ?? undefined;
+        const tileBorder = theme?.contact_tile_border_color ?? `${brand}22`;
+        const iconCls = tileIconSize === "sm" ? "h-4 w-4" : tileIconSize === "lg" ? "h-7 w-7" : "h-5 w-5";
+        const iconPadCls = tileIconSize === "sm" ? "p-2" : tileIconSize === "lg" ? "p-4" : "p-3";
+        const gridCls = tileLayout === "horizontal-list"
+          ? "flex flex-col gap-2"
+          : "grid grid-cols-2 gap-3 sm:grid-cols-4";
         return (
           <section className="mx-auto mt-8 max-w-3xl px-4">
             <h2 className="mb-4 text-xl font-bold" style={headingStyle}>Get in touch</h2>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div className={gridCls}>
               {items.map((it) => (
                 <a
                   key={it.label}
                   href={it.href}
                   target={it.href.startsWith("http") ? "_blank" : undefined}
                   rel="noreferrer"
-                  className="flex flex-col items-center gap-2 rounded-2xl border p-4 text-center transition hover:shadow-md"
-                  style={{ borderColor: `${brand}22`, color: textColor, backgroundColor: "var(--surface, transparent)" }}
+                  className={
+                    tileLayout === "horizontal-list"
+                      ? "flex flex-row items-center gap-3 rounded-2xl border p-3 transition hover:shadow-md"
+                      : "flex flex-col items-center gap-2 rounded-2xl border p-4 text-center transition hover:shadow-md"
+                  }
+                  style={{ borderColor: tileBorder, color: textColor, backgroundColor: tileBg ?? "var(--surface, transparent)" }}
                 >
-                  <span className="rounded-full p-3" style={{ backgroundColor: `${brand}14`, color: brand }}>
-                    <it.Icon className="h-5 w-5" />
+                  <span className={`rounded-full ${iconPadCls}`} style={{ backgroundColor: `${brand}14`, color: brand }}>
+                    <it.Icon className={iconCls} />
                   </span>
                   <span className="text-sm font-medium">{it.label}</span>
                   {it.sub ? <span className="text-xs opacity-70 truncate w-full">{it.sub}</span> : null}
@@ -622,6 +635,7 @@ function BookPage() {
             </div>
           </section>
         );
+
       })()}
 
 
