@@ -215,10 +215,17 @@ function BookTreatmentPage() {
 
   const slots = useMemo(() => {
     if (modelMode) {
-      return modelSlotsForLoc
-        .filter((s) => s.slot_date === date)
-        .map((s) => s.start_time.length === 5 ? `${s.start_time}:00` : s.start_time);
+      const out: string[] = [];
+      for (const s of modelSlotsForLoc.filter((s) => s.slot_date === date)) {
+        const start = toMinutes(s.start_time);
+        const end = toMinutes(s.end_time);
+        for (let t = start; t + duration <= end; t += duration) {
+          out.push(fromMinutes(t));
+        }
+      }
+      return Array.from(new Set(out)).sort();
     }
+
     if (!dayQuery.data || dayQuery.data.isBlocked) return [];
     const busy = dayQuery.data.busy.map((b) => ({
       start: toMinutes(b.start_time),
