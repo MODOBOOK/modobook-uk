@@ -271,14 +271,21 @@ function BookTreatmentPage() {
       let endTimeStr = fromMinutes(endMin);
       let effectivePrice = price;
       if (modelMode) {
-        const ms = modelSlotsForLoc.find((s) => s.slot_date === date && (s.start_time === slot || `${s.start_time}:00` === slot || s.start_time === slot.slice(0,5)));
+        const slotMin = toMinutes(slot);
+        const ms = modelSlotsForLoc.find((s) => {
+          if (s.slot_date !== date) return false;
+          const a = toMinutes(s.start_time);
+          const b = toMinutes(s.end_time);
+          return slotMin >= a && slotMin + duration <= b;
+        });
         if (ms) {
-          endTimeStr = ms.end_time.length === 5 ? `${ms.end_time}:00` : ms.end_time;
+          endTimeStr = fromMinutes(slotMin + duration);
           effectivePrice = ms.price_mode === "fixed"
             ? Number(ms.price_value)
             : Math.max(0, price * (1 - Number(ms.price_value) / 100));
         }
       }
+
       const res = await reqFn({
         data: {
           profileId: ctx.profileId,
