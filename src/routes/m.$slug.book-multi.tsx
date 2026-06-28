@@ -9,6 +9,7 @@ import {
   getMonthAvailability,
   requestMultiBooking,
 } from "@/lib/public-booking.functions";
+import { listAddonsForBooking, type PublicAddon } from "@/lib/addons.functions";
 import { ensurePatient, getMyPatient } from "@/lib/patient.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
