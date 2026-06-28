@@ -45,6 +45,7 @@ export type ClinicThemeInput = {
   welcome_card_show_instagram?: boolean;
   welcome_card_show_facebook?: boolean;
   welcome_card_size?: string;
+  welcome_card_mobile_size?: string;
   welcome_card_position?: string;
   welcome_card_background_type?: string;
   welcome_card_bg_color?: string | null;
