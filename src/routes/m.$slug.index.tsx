@@ -154,6 +154,32 @@ function BookPage() {
   const menuCategoryBold = theme?.menu_category_bold ?? true;
 
   const [locationId, setLocationId] = useState<string | null>(null);
+  const practSelectionMode = profile.practitioner_selection_mode ?? "optional";
+  const [practitionerId, setPractitionerIdState] = useState<string | null>(null);
+  const setPractitionerId = (id: string | null) => {
+    setPractitionerIdState(id);
+    if (typeof window !== "undefined") {
+      const key = `modo:practitionerId:${slug}`;
+      if (id) window.sessionStorage.setItem(key, id);
+      else window.sessionStorage.removeItem(key);
+    }
+  };
+  // Clear practitioner when location changes
+  useEffect(() => {
+    setPractitionerId(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locationId]);
+  // Auto-pick first available when configured
+  useEffect(() => {
+    if (practSelectionMode !== "first_available" || !locationId) return;
+    const first = locationPractitioners
+      .filter((lp) => lp.location_id === locationId)
+      .sort((a, b) => a.display_order - b.display_order)
+      .map((lp) => practitioners.find((p) => p.id === lp.practitioner_id))
+      .filter((p): p is NonNullable<typeof p> => !!p)[0];
+    if (first) setPractitionerId(first.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locationId, practSelectionMode]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const treatById = useMemo(() => new Map(treatments.map((t) => [t.id, t])), [treatments]);
   const addonsFor = useMemo(() => {
