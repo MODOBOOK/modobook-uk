@@ -42,6 +42,7 @@ const DEFAULTS: ClinicThemeInput = {
   welcome_card_show_instagram: true,
   welcome_card_show_facebook: true,
   welcome_card_size: "medium",
+  welcome_card_mobile_size: "medium",
   welcome_card_position: "overlap",
   welcome_card_background_type: "solid",
   welcome_card_bg_color: "#ffffff",
@@ -155,6 +156,7 @@ function BrandingPage() {
       welcome_card_show_instagram: preset.welcome_card_show_instagram,
       welcome_card_show_facebook: preset.welcome_card_show_facebook,
       welcome_card_size: preset.welcome_card_size,
+      welcome_card_mobile_size: preset.welcome_card_mobile_size,
       welcome_card_position: preset.welcome_card_position,
       welcome_card_background_type: preset.welcome_card_background_type,
       welcome_card_bg_color: preset.welcome_card_bg_color,
@@ -367,11 +369,23 @@ function BrandingPage() {
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <div className="space-y-1.5">
-              <Label>Card size</Label>
+              <Label>Desktop size</Label>
               <select
                 className="w-full rounded-md border bg-transparent px-3 py-2 text-sm"
                 value={state.welcome_card_size ?? "medium"}
                 onChange={(e) => set("welcome_card_size", e.target.value)}
+              >
+                <option value="compact">Compact pill</option>
+                <option value="medium">Medium card</option>
+                <option value="wide">Wide banner (mobile friendly)</option>
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Mobile size</Label>
+              <select
+                className="w-full rounded-md border bg-transparent px-3 py-2 text-sm"
+                value={state.welcome_card_mobile_size ?? "medium"}
+                onChange={(e) => set("welcome_card_mobile_size", e.target.value)}
               >
                 <option value="compact">Compact pill</option>
                 <option value="medium">Medium card</option>

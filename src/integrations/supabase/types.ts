@@ -1016,6 +1016,7 @@ export type Database = {
           welcome_card_border_width: string | null
           welcome_card_gradient_from: string | null
           welcome_card_gradient_to: string | null
+          welcome_card_mobile_size: string
           welcome_card_opacity: number
           welcome_card_padding: string | null
           welcome_card_position: string
@@ -1074,6 +1075,7 @@ export type Database = {
           welcome_card_border_width?: string | null
           welcome_card_gradient_from?: string | null
           welcome_card_gradient_to?: string | null
+          welcome_card_mobile_size?: string
           welcome_card_opacity?: number
           welcome_card_padding?: string | null
           welcome_card_position?: string
@@ -1132,6 +1134,7 @@ export type Database = {
           welcome_card_border_width?: string | null
           welcome_card_gradient_from?: string | null
           welcome_card_gradient_to?: string | null
+          welcome_card_mobile_size?: string
           welcome_card_opacity?: number
           welcome_card_padding?: string | null
           welcome_card_position?: string

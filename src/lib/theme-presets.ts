@@ -43,6 +43,7 @@ export type ThemePreset = {
   welcome_card_show_instagram: boolean;
   welcome_card_show_facebook: boolean;
   welcome_card_size: "compact" | "medium" | "wide";
+  welcome_card_mobile_size: "compact" | "medium" | "wide";
   welcome_card_position: "overlap" | "below";
   welcome_card_background_type: "solid" | "glass" | "gradient";
   welcome_card_bg_color: string;
@@ -94,6 +95,7 @@ export const PRESETS: Record<ThemePresetKey, ThemePreset> = {
     welcome_card_show_instagram: true,
     welcome_card_show_facebook: true,
     welcome_card_size: "medium",
+    welcome_card_mobile_size: "medium",
     welcome_card_position: "overlap",
     welcome_card_background_type: "solid",
     welcome_card_bg_color: "#faf6ee",
@@ -143,6 +145,7 @@ export const PRESETS: Record<ThemePresetKey, ThemePreset> = {
     welcome_card_show_instagram: true,
     welcome_card_show_facebook: true,
     welcome_card_size: "medium",
+    welcome_card_mobile_size: "medium",
     welcome_card_position: "overlap",
     welcome_card_background_type: "solid",
     welcome_card_bg_color: "#ffffff",
@@ -192,6 +195,7 @@ export const PRESETS: Record<ThemePresetKey, ThemePreset> = {
     welcome_card_show_instagram: true,
     welcome_card_show_facebook: true,
     welcome_card_size: "medium",
+    welcome_card_mobile_size: "medium",
     welcome_card_position: "overlap",
     welcome_card_background_type: "solid",
     welcome_card_bg_color: "#ffffff",
@@ -241,6 +245,7 @@ export const PRESETS: Record<ThemePresetKey, ThemePreset> = {
     welcome_card_show_instagram: true,
     welcome_card_show_facebook: true,
     welcome_card_size: "medium",
+    welcome_card_mobile_size: "medium",
     welcome_card_position: "overlap",
     welcome_card_background_type: "solid",
     welcome_card_bg_color: "#ffffff",
