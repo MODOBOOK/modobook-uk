@@ -1700,25 +1700,25 @@ function TreatmentRow({
             );
           })()}
         </div>
-        <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+        <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
           <span>{duration} min</span>
           {((t as { session_count?: number }).session_count ?? 1) > 1 && (
             <span
-              className="rounded-full px-1.5 py-0.5 text-[10px] font-semibold"
+              className="rounded-full px-2 py-0.5 text-xs font-semibold"
               style={{ backgroundColor: `${brand}1a`, color: brand }}
             >
               {(t as { session_count?: number }).session_count} sessions
             </span>
           )}
           {(t as { allow_split_payment?: boolean }).allow_split_payment && (
-            <span className="rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700">
+            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">
               Split payment available
             </span>
           )}
         </div>
 
         {desc && (
-          <div className="mt-1.5 whitespace-pre-line text-xs leading-relaxed text-muted-foreground">
+          <div className="mt-2 whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
             {shown}
             {isLong && (
               <button
