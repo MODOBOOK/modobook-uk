@@ -149,15 +149,18 @@ function ClinicPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Social links</CardTitle>
-          <CardDescription>Shown as icons on your booking page.</CardDescription>
+          <CardTitle>Contact & social</CardTitle>
+          <CardDescription>Patients can tap these to reach you directly from the booking page.</CardDescription>
         </CardHeader>
         <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div><Label>Text/SMS number</Label><Input value={smsNumber} onChange={(e) => setSmsNumber(e.target.value)} placeholder="+44…" /></div>
+          <div><Label>WhatsApp number</Label><Input value={whatsappNumber} onChange={(e) => setWhatsappNumber(e.target.value)} placeholder="+44…" /></div>
           <div><Label>Instagram</Label><Input value={instagram} onChange={(e) => setInstagram(e.target.value)} placeholder="@handle or full URL" /></div>
           <div><Label>Facebook</Label><Input value={facebook} onChange={(e) => setFacebook(e.target.value)} placeholder="Page URL" /></div>
           <div><Label>TikTok</Label><Input value={tiktok} onChange={(e) => setTiktok(e.target.value)} placeholder="@handle or full URL" /></div>
         </CardContent>
       </Card>
+
 
       <Button onClick={save} disabled={saving} className="w-full sm:w-auto">{saving ? "Saving…" : "Save changes"}</Button>
     </div>
