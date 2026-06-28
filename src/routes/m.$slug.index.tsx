@@ -444,32 +444,54 @@ function BookPage() {
           }}
         >
           {isCompact ? (
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-2">
               {showLogo && logoUrl && (
                 <img src={logoUrl} alt={profile.clinic_name} className="h-8 w-auto object-contain" />
               )}
               {showName && (
                 <h1 className="text-sm font-extrabold leading-tight" style={headingStyle}>{profile.clinic_name}</h1>
               )}
-              {showRating && (
-                <Link to="/m/$slug/reviews" params={{ slug }} className="ml-auto flex items-center gap-1 hover:opacity-80">
-                  {(() => {
-                    const count = reviews.length;
-                    const avg = count ? reviews.reduce((a, r) => a + r.rating, 0) / count : 0;
-                    const rounded = Math.round(avg);
-                    return (
-                      <>
-                        <div className="flex" style={{ color: accent }}>
-                          {Array.from({ length: 5 }).map((_, i) => (
-                            <Star key={i} className="h-3 w-3" fill={count === 0 || i < rounded ? "currentColor" : "none"} />
-                          ))}
-                        </div>
-                        <span className="text-xs opacity-70">{count === 0 ? "New" : `${avg.toFixed(1)}`}</span>
-                      </>
-                    );
-                  })()}
-                </Link>
-              )}
+              <div className="ml-auto flex items-center gap-2">
+                {showRating && (
+                  <Link to="/m/$slug/reviews" params={{ slug }} className="flex items-center gap-1 hover:opacity-80">
+                    {(() => {
+                      const count = reviews.length;
+                      const avg = count ? reviews.reduce((a, r) => a + r.rating, 0) / count : 0;
+                      const rounded = Math.round(avg);
+                      return (
+                        <>
+                          <div className="flex" style={{ color: accent }}>
+                            {Array.from({ length: 5 }).map((_, i) => (
+                              <Star key={i} className="h-3 w-3" fill={count === 0 || i < rounded ? "currentColor" : "none"} />
+                            ))}
+                          </div>
+                          <span className="text-xs opacity-70">{count === 0 ? "New" : `${avg.toFixed(1)}`}</span>
+                        </>
+                      );
+                    })()}
+                  </Link>
+                )}
+                {showSms && profile.contact_sms_number && (
+                  <a href={`sms:${profile.contact_sms_number}`} className="rounded-full p-1.5 hover:opacity-80" style={{ backgroundColor: `${brand}14`, color: brand }} aria-label="Text us">
+                    <Phone className="h-3.5 w-3.5" />
+                  </a>
+                )}
+                {showWhatsapp && profile.contact_whatsapp_number && (
+                  <a href={`https://wa.me/${profile.contact_whatsapp_number.replace(/[^0-9]/g, "")}`} target="_blank" rel="noreferrer" className="rounded-full p-1.5 hover:opacity-80" style={{ backgroundColor: `${brand}14`, color: brand }} aria-label="WhatsApp">
+                    <MessageCircle className="h-3.5 w-3.5" />
+                  </a>
+                )}
+                {showInstagram && ig && (
+                  <a href={ig.startsWith("http") ? ig : "https://instagram.com/" + ig.replace("@", "")} target="_blank" rel="noreferrer" className="rounded-full p-1.5 hover:opacity-80" style={{ backgroundColor: `${brand}14`, color: brand }} aria-label="Instagram">
+                    <Instagram className="h-3.5 w-3.5" />
+                  </a>
+                )}
+                {showFacebook && profile.social_links?.facebook && (
+                  <a href={profile.social_links.facebook.startsWith("http") ? profile.social_links.facebook : `https://facebook.com/${profile.social_links.facebook}`} target="_blank" rel="noreferrer" className="rounded-full p-1.5 hover:opacity-80" style={{ backgroundColor: `${brand}14`, color: brand }} aria-label="Facebook">
+                    <Facebook className="h-3.5 w-3.5" />
+                  </a>
+                )}
+              </div>
             </div>
           ) : (
             <>

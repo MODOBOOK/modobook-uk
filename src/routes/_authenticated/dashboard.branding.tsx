@@ -173,6 +173,79 @@ function BrandingPage() {
     toast.success(`${preset.name} applied — every value is still editable`);
   }
 
+  function applyWelcomeCardPreset(p: Partial<ClinicThemeInput>) {
+    setState((s) => ({ ...s, ...p }));
+    toast.success("Card style preset applied");
+  }
+
+  const WELCOME_CARD_PRESETS: { label: string; style: Partial<ClinicThemeInput> }[] = [
+    {
+      label: "Minimal pill",
+      style: {
+        welcome_card_size: "compact",
+        welcome_card_mobile_size: "compact",
+        welcome_card_background_type: "solid",
+        welcome_card_bg_color: "#ffffff",
+        welcome_card_border_color: "#e5e7eb",
+        welcome_card_border_radius: "9999px",
+        welcome_card_border_width: "1px",
+        welcome_card_padding: "0.75rem 1.25rem",
+        welcome_card_shadow: "0 4px 20px rgba(0,0,0,0.06)",
+        welcome_card_opacity: 1,
+        welcome_card_blur: 0,
+      },
+    },
+    {
+      label: "Luxe glass",
+      style: {
+        welcome_card_size: "medium",
+        welcome_card_mobile_size: "medium",
+        welcome_card_background_type: "glass",
+        welcome_card_bg_color: "rgba(255,255,255,0.72)",
+        welcome_card_border_color: "rgba(255,255,255,0.5)",
+        welcome_card_border_radius: "1.25rem",
+        welcome_card_border_width: "1px",
+        welcome_card_padding: "1.5rem",
+        welcome_card_shadow: "0 20px 60px rgba(0,0,0,0.12)",
+        welcome_card_opacity: 1,
+        welcome_card_blur: 12,
+      },
+    },
+    {
+      label: "Wide banner",
+      style: {
+        welcome_card_size: "wide",
+        welcome_card_mobile_size: "wide",
+        welcome_card_background_type: "gradient",
+        welcome_card_gradient_from: "#ffffff",
+        welcome_card_gradient_to: "#f8f8f8",
+        welcome_card_border_color: "#e5e7eb",
+        welcome_card_border_radius: "1rem",
+        welcome_card_border_width: "1px",
+        welcome_card_padding: "1rem 1.5rem",
+        welcome_card_shadow: "0 10px 40px rgba(0,0,0,0.08)",
+        welcome_card_opacity: 1,
+        welcome_card_blur: 0,
+      },
+    },
+    {
+      label: "Floating card",
+      style: {
+        welcome_card_size: "medium",
+        welcome_card_mobile_size: "medium",
+        welcome_card_background_type: "solid",
+        welcome_card_bg_color: "#ffffff",
+        welcome_card_border_color: "transparent",
+        welcome_card_border_radius: "1.5rem",
+        welcome_card_border_width: "0px",
+        welcome_card_padding: "1.75rem",
+        welcome_card_shadow: "0 24px 80px rgba(0,0,0,0.14)",
+        welcome_card_opacity: 1,
+        welcome_card_blur: 0,
+      },
+    },
+  ];
+
   async function handleSave() {
     setSaving(true);
     try {
@@ -366,6 +439,22 @@ function BrandingPage() {
               ))}
             </div>
           )}
+
+          <div className="space-y-2">
+            <Label>Quick card presets</Label>
+            <div className="flex flex-wrap gap-2">
+              {WELCOME_CARD_PRESETS.map((p) => (
+                <button
+                  key={p.label}
+                  type="button"
+                  onClick={() => applyWelcomeCardPreset(p.style)}
+                  className="rounded-full border bg-background px-3 py-1.5 text-xs font-medium transition hover:bg-accent"
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          </div>
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <div className="space-y-1.5">
