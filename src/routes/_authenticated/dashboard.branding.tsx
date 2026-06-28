@@ -31,6 +31,20 @@ const DEFAULTS: ClinicThemeInput = {
   layout_key: "classic",
   hero_carousel_enabled: false,
   hero_carousel_urls: [],
+  welcome_card_show_logo: true,
+  welcome_card_show_name: true,
+  welcome_card_show_tagline: false,
+  welcome_card_show_rating: true,
+  welcome_card_show_actions: true,
+  welcome_card_show_contact: true,
+  welcome_card_bg_color: "#ffffff",
+  welcome_card_border_color: "#e5e7eb",
+  welcome_card_border_radius: "1rem",
+  welcome_card_border_width: "1px",
+  welcome_card_padding: "1.25rem",
+  welcome_card_shadow: "0 10px 40px rgba(15,23,42,0.08)",
+  welcome_card_opacity: 1,
+  welcome_card_blur: 0,
 };
 
 const FONTS = [
@@ -121,6 +135,20 @@ function BrandingPage() {
       menu_treatment_size: preset.menu_treatment_size,
       menu_treatment_bold: preset.menu_treatment_bold,
       menu_category_bold: preset.menu_category_bold,
+      welcome_card_show_logo: preset.welcome_card_show_logo,
+      welcome_card_show_name: preset.welcome_card_show_name,
+      welcome_card_show_tagline: preset.welcome_card_show_tagline,
+      welcome_card_show_rating: preset.welcome_card_show_rating,
+      welcome_card_show_actions: preset.welcome_card_show_actions,
+      welcome_card_show_contact: preset.welcome_card_show_contact,
+      welcome_card_bg_color: preset.welcome_card_bg_color,
+      welcome_card_border_color: preset.welcome_card_border_color,
+      welcome_card_border_radius: preset.welcome_card_border_radius,
+      welcome_card_border_width: preset.welcome_card_border_width,
+      welcome_card_padding: preset.welcome_card_padding,
+      welcome_card_shadow: preset.welcome_card_shadow,
+      welcome_card_opacity: preset.welcome_card_opacity,
+      welcome_card_blur: preset.welcome_card_blur,
     }));
     toast.success(`${preset.name} applied — every value is still editable`);
   }

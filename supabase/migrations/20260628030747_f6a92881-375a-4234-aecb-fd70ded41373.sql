@@ -1,0 +1,15 @@
+ALTER TABLE public.clinic_theme
+  ADD COLUMN IF NOT EXISTS welcome_card_show_logo boolean NOT NULL DEFAULT true,
+  ADD COLUMN IF NOT EXISTS welcome_card_show_name boolean NOT NULL DEFAULT true,
+  ADD COLUMN IF NOT EXISTS welcome_card_show_tagline boolean NOT NULL DEFAULT false,
+  ADD COLUMN IF NOT EXISTS welcome_card_show_rating boolean NOT NULL DEFAULT true,
+  ADD COLUMN IF NOT EXISTS welcome_card_show_actions boolean NOT NULL DEFAULT true,
+  ADD COLUMN IF NOT EXISTS welcome_card_show_contact boolean NOT NULL DEFAULT true,
+  ADD COLUMN IF NOT EXISTS welcome_card_bg_color text,
+  ADD COLUMN IF NOT EXISTS welcome_card_border_color text,
+  ADD COLUMN IF NOT EXISTS welcome_card_border_radius text DEFAULT '1rem',
+  ADD COLUMN IF NOT EXISTS welcome_card_border_width text DEFAULT '1px',
+  ADD COLUMN IF NOT EXISTS welcome_card_padding text DEFAULT '1.5rem',
+  ADD COLUMN IF NOT EXISTS welcome_card_shadow text DEFAULT '0 10px 40px rgba(0,0,0,0.12)',
+  ADD COLUMN IF NOT EXISTS welcome_card_opacity numeric(3,2) NOT NULL DEFAULT 1.00,
+  ADD COLUMN IF NOT EXISTS welcome_card_blur integer NOT NULL DEFAULT 0;
