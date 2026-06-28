@@ -78,7 +78,7 @@ export const updateSubscriptionPlan = createServerFn({ method: "POST" })
   .inputValidator((i: { id: string; active?: boolean; description?: string | null; name?: string }) => i)
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const patch: Record<string, unknown> = {};
+    const patch: { active?: boolean; description?: string | null; name?: string } = {};
     if (data.active !== undefined) patch.active = data.active;
     if (data.description !== undefined) patch.description = data.description;
     if (data.name !== undefined) patch.name = data.name;
@@ -87,6 +87,7 @@ export const updateSubscriptionPlan = createServerFn({ method: "POST" })
       .update(patch)
       .eq("id", data.id);
     if (error) throw error;
+
     return { ok: true };
   });
 
