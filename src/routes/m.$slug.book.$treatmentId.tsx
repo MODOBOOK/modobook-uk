@@ -215,10 +215,17 @@ function BookTreatmentPage() {
 
   const slots = useMemo(() => {
     if (modelMode) {
-      return modelSlotsForLoc
-        .filter((s) => s.slot_date === date)
-        .map((s) => s.start_time.length === 5 ? `${s.start_time}:00` : s.start_time);
+      const out: string[] = [];
+      for (const s of modelSlotsForLoc.filter((s) => s.slot_date === date)) {
+        const start = toMinutes(s.start_time);
+        const end = toMinutes(s.end_time);
+        for (let t = start; t + duration <= end; t += duration) {
+          out.push(fromMinutes(t));
+        }
+      }
+      return Array.from(new Set(out)).sort();
     }
+
     if (!dayQuery.data || dayQuery.data.isBlocked) return [];
     const busy = dayQuery.data.busy.map((b) => ({
       start: toMinutes(b.start_time),
@@ -264,14 +271,21 @@ function BookTreatmentPage() {
       let endTimeStr = fromMinutes(endMin);
       let effectivePrice = price;
       if (modelMode) {
-        const ms = modelSlotsForLoc.find((s) => s.slot_date === date && (s.start_time === slot || `${s.start_time}:00` === slot || s.start_time === slot.slice(0,5)));
+        const slotMin = toMinutes(slot);
+        const ms = modelSlotsForLoc.find((s) => {
+          if (s.slot_date !== date) return false;
+          const a = toMinutes(s.start_time);
+          const b = toMinutes(s.end_time);
+          return slotMin >= a && slotMin + duration <= b;
+        });
         if (ms) {
-          endTimeStr = ms.end_time.length === 5 ? `${ms.end_time}:00` : ms.end_time;
+          endTimeStr = fromMinutes(slotMin + duration);
           effectivePrice = ms.price_mode === "fixed"
             ? Number(ms.price_value)
             : Math.max(0, price * (1 - Number(ms.price_value) / 100));
         }
       }
+
       const res = await reqFn({
         data: {
           profileId: ctx.profileId,

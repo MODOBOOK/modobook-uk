@@ -103,8 +103,11 @@ export const updateProfile = createServerFn({ method: "POST" })
       model_slots_position?: "top" | "bottom";
       terms_html?: string | null;
       terms_required?: boolean;
+      contact_sms_number?: string | null;
+      contact_whatsapp_number?: string | null;
     }) => input,
   )
+
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const update: Record<string, unknown> = {};
@@ -139,6 +142,9 @@ export const updateProfile = createServerFn({ method: "POST" })
     if (data.model_slots_position !== undefined) update.model_slots_position = data.model_slots_position;
     if (data.terms_html !== undefined) update.terms_html = data.terms_html;
     if (data.terms_required !== undefined) update.terms_required = data.terms_required;
+    if (data.contact_sms_number !== undefined) update.contact_sms_number = data.contact_sms_number;
+    if (data.contact_whatsapp_number !== undefined) update.contact_whatsapp_number = data.contact_whatsapp_number;
+
 
 
 
