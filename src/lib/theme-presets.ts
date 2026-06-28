@@ -38,7 +38,16 @@ export type ThemePreset = {
   welcome_card_show_rating: boolean;
   welcome_card_show_actions: boolean;
   welcome_card_show_contact: boolean;
+  welcome_card_show_sms: boolean;
+  welcome_card_show_whatsapp: boolean;
+  welcome_card_show_instagram: boolean;
+  welcome_card_show_facebook: boolean;
+  welcome_card_size: "compact" | "medium" | "wide";
+  welcome_card_position: "overlap" | "below";
+  welcome_card_background_type: "solid" | "glass" | "gradient";
   welcome_card_bg_color: string;
+  welcome_card_gradient_from: string;
+  welcome_card_gradient_to: string;
   welcome_card_border_color: string;
   welcome_card_border_radius: string;
   welcome_card_border_width: string;
