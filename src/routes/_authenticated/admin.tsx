@@ -1,5 +1,5 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   adminOverview,
   adminGrantByEmail,
@@ -7,12 +7,25 @@ import {
   adminDeleteInvite,
   amIAdmin,
 } from "@/lib/admin.functions";
+import {
+  listSubscriptionPlans,
+  listPractitionerSubscriptions,
+  createSubscriptionPlan,
+  updateSubscriptionPlan,
+  createSubscriptionCheckout,
+  recordManualSubscription,
+  cancelPractitionerSubscription,
+} from "@/lib/admin-subscriptions.functions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Shield, Trash2, UserPlus, ExternalLink } from "lucide-react";
+import { Shield, Trash2, UserPlus, ExternalLink, CreditCard, Plus, Link as LinkIcon } from "lucide-react";
+
 
 export const Route = createFileRoute("/_authenticated/admin")({
   ssr: false,
