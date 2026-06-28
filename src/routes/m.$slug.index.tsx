@@ -374,31 +374,32 @@ function BookPage() {
       <section
         className={
           layoutKey === "magazine"
-            ? "relative z-10 mx-auto mt-6 max-w-3xl px-4"
+            ? "relative z-10 mx-auto mt-4 max-w-2xl px-4"
             : layoutKey === "split"
-              ? "relative z-10 mx-auto -mt-10 max-w-3xl px-4 sm:-mt-16"
-              : "relative z-10 mx-auto -mt-20 max-w-3xl px-4 sm:-mt-28"
+              ? "relative z-10 mx-auto -mt-8 max-w-2xl px-4 sm:-mt-12"
+              : "relative z-10 mx-auto -mt-14 max-w-2xl px-4 sm:-mt-20"
         }
       >
 
 
         <div
-          className="rounded-3xl border px-5 pb-5 pt-6 shadow-2xl sm:px-8 sm:pt-8"
+          className="rounded-2xl border px-4 pb-4 pt-5 shadow-xl sm:px-6 sm:pt-6"
           style={{ backgroundColor: bgColor, borderColor: `${brand}1a` }}
         >
           {logoUrl && (
             <img
               src={logoUrl}
               alt={profile.clinic_name}
-              className="mb-3 h-14 w-auto object-contain sm:h-16"
+              className="mb-2 h-10 w-auto object-contain sm:h-12"
             />
           )}
           <h1
-            className="text-3xl font-extrabold leading-tight sm:text-4xl"
+            className="text-xl font-extrabold leading-tight sm:text-2xl"
             style={headingStyle}
           >
             {profile.clinic_name}
           </h1>
+
 
 
           {/* Star rating */}
