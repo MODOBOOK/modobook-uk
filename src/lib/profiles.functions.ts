@@ -142,6 +142,9 @@ export const updateProfile = createServerFn({ method: "POST" })
     if (data.model_slots_position !== undefined) update.model_slots_position = data.model_slots_position;
     if (data.terms_html !== undefined) update.terms_html = data.terms_html;
     if (data.terms_required !== undefined) update.terms_required = data.terms_required;
+    if (data.contact_sms_number !== undefined) update.contact_sms_number = data.contact_sms_number;
+    if (data.contact_whatsapp_number !== undefined) update.contact_whatsapp_number = data.contact_whatsapp_number;
+
 
 
 
