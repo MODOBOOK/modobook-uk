@@ -180,6 +180,25 @@ function BookPage() {
     if (first) setPractitionerId(first.id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [locationId, practSelectionMode]);
+  // Block book links when practitioner required but not picked
+  useEffect(() => {
+    if (practSelectionMode !== "required") return;
+    function onClick(e: MouseEvent) {
+      if (practitionerId) return;
+      const t = e.target as HTMLElement | null;
+      const a = t?.closest?.("a") as HTMLAnchorElement | null;
+      if (!a) return;
+      const href = a.getAttribute("href") || "";
+      if (href.includes("/book/") || href.includes("/book-multi")) {
+        e.preventDefault();
+        e.stopPropagation();
+        toast.error("Please choose a practitioner first");
+        document.querySelector("[data-section='locations']")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }
+    document.addEventListener("click", onClick, true);
+    return () => document.removeEventListener("click", onClick, true);
+  }, [practSelectionMode, practitionerId]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const treatById = useMemo(() => new Map(treatments.map((t) => [t.id, t])), [treatments]);
   const addonsFor = useMemo(() => {
