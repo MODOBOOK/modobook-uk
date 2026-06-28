@@ -88,6 +88,9 @@ function BookPage() {
         brand_color: string | null;
         address: unknown;
         social_links: { instagram?: string; facebook?: string; tiktok?: string } | null;
+        contact_sms_number?: string | null;
+        contact_whatsapp_number?: string | null;
+
         welcome_intro_html?: string | null;
         deposit_amount_cents?: number | null;
         deposit_policy_text?: string | null;
