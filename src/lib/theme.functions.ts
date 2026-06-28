@@ -46,8 +46,8 @@ export type ClinicThemeInput = {
   welcome_card_border_width?: string | null;
   welcome_card_padding?: string | null;
   welcome_card_shadow?: string | null;
-  welcome_card_opacity?: number | null;
-  welcome_card_blur?: number | null;
+  welcome_card_opacity?: number;
+  welcome_card_blur?: number;
 };
 
 async function getProfileId(
