@@ -266,20 +266,17 @@ export const requestBooking = createServerFn({ method: "POST" })
 
     const consents: { token: string; consent_template_id: string }[] = [];
     if (links && links.length > 0) {
-      const rows = links.map((l) => ({
-        appointment_id: id,
-        consent_template_id: l.consent_template_id,
-        profile_id: data.profileId,
-      }));
-      const { data: inserted, error: cErr } = await sb
-        .from("appointment_consents")
-        .insert(rows)
-        .select("token, consent_template_id");
+      const templateIds = links.map((l) => l.consent_template_id);
+      const { data: inserted, error: cErr } = await sb.rpc("create_appointment_consents", {
+        p_appointment_id: id,
+        p_template_ids: templateIds,
+      });
       if (cErr) throw new Error(cErr.message);
-      consents.push(...(inserted ?? []));
+      consents.push(...((inserted ?? []) as { token: string; consent_template_id: string }[]));
     }
     return { id, consents };
   });
+
 
 function addMinutesToTime(time: string, mins: number) {
   const [h, m] = time.split(":").map(Number);
