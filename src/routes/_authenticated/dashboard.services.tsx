@@ -44,10 +44,17 @@ import {
   Pencil,
   Search,
   Trash2,
-  GripVertical,
   ArrowUp,
   ArrowDown,
+  MoreVertical,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 
 import { toast } from "sonner";
 
