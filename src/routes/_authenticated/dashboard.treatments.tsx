@@ -65,6 +65,9 @@ type TreatmentForm = {
   discount_ends_at: string | null;
   discount_show_was_now: boolean;
   discount_label: string | null;
+  session_count: number;
+  allow_split_payment: boolean;
+  rebook_reminder_days: number | null;
 };
 
 type ConsentTpl = { id: string; name: string; treatment_type: string | null; is_system: boolean };
@@ -306,6 +309,17 @@ function TreatmentDialog({
     treatment?.discount_show_was_now ?? true,
   );
   const [discountLabel, setDiscountLabel] = useState<string>(treatment?.discount_label ?? "");
+  const [sessionCount, setSessionCount] = useState<number>(
+    (treatment as { session_count?: number } | null)?.session_count ?? 1,
+  );
+  const [allowSplit, setAllowSplit] = useState<boolean>(
+    (treatment as { allow_split_payment?: boolean } | null)?.allow_split_payment ?? false,
+  );
+  const [rebookDays, setRebookDays] = useState<string>(
+    (treatment as { rebook_reminder_days?: number | null } | null)?.rebook_reminder_days != null
+      ? String((treatment as { rebook_reminder_days?: number | null }).rebook_reminder_days)
+      : "",
+  );
 
   const topLevel = useMemo(() => categories.filter((c) => !c.parent_id), [categories]);
   const childrenOf = (parentId: string | null) =>
@@ -337,6 +351,13 @@ function TreatmentDialog({
     setDiscountEndsAt(treatment?.discount_ends_at ? treatment.discount_ends_at.slice(0, 16) : "");
     setDiscountShowWasNow(treatment?.discount_show_was_now ?? true);
     setDiscountLabel(treatment?.discount_label ?? "");
+    setSessionCount((treatment as { session_count?: number } | null)?.session_count ?? 1);
+    setAllowSplit((treatment as { allow_split_payment?: boolean } | null)?.allow_split_payment ?? false);
+    setRebookDays(
+      (treatment as { rebook_reminder_days?: number | null } | null)?.rebook_reminder_days != null
+        ? String((treatment as { rebook_reminder_days?: number | null }).rebook_reminder_days)
+        : "",
+    );
     if (treatment?.id) {
       fetchConsents({ data: { treatmentId: treatment.id } })
         .then((ids) => setConsentIds(ids as string[]))
@@ -445,7 +466,44 @@ function TreatmentDialog({
           <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
         </div>
 
-        {/* Discount */}
+        {/* Sessions & split payment */}
+        <div className="rounded-md border p-3 space-y-3">
+          <Label className="m-0">Sessions & payment</Label>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label className="text-xs text-muted-foreground">Number of sessions</Label>
+              <Input
+                type="number"
+                min={1}
+                value={sessionCount}
+                onChange={(e) => setSessionCount(Math.max(1, Number(e.target.value) || 1))}
+              />
+            </div>
+            <div>
+              <Label className="text-xs text-muted-foreground">Rebook reminder (days, optional)</Label>
+              <Input
+                type="number"
+                min={0}
+                placeholder="e.g. 28"
+                value={rebookDays}
+                onChange={(e) => setRebookDays(e.target.value)}
+              />
+            </div>
+          </div>
+          <label className="flex items-center gap-2 text-sm">
+            <Switch
+              checked={allowSplit}
+              onCheckedChange={setAllowSplit}
+              disabled={sessionCount < 2}
+            />
+            <span>Allow patients to split payment across each session</span>
+          </label>
+          {sessionCount < 2 && (
+            <p className="text-xs text-muted-foreground">Set 2 or more sessions to enable split payments.</p>
+          )}
+        </div>
+
+
         <div className="rounded-md border p-3 space-y-3">
           <div className="flex items-center gap-2">
             <Tag className="h-4 w-4 text-muted-foreground" />
@@ -546,6 +604,9 @@ function TreatmentDialog({
               discount_ends_at: discountEndsAt ? new Date(discountEndsAt).toISOString() : null,
               discount_show_was_now: discountShowWasNow,
               discount_label: discountLabel || null,
+              session_count: sessionCount,
+              allow_split_payment: allowSplit && sessionCount >= 2,
+              rebook_reminder_days: rebookDays === "" ? null : Number(rebookDays),
             })
           }
           disabled={!name}
