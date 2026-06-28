@@ -1552,13 +1552,13 @@ function CategoryTree({
               >
                 <div className="flex-1 text-left">
                   <div
-                    className={`leading-tight ${isSub ? "text-base" : "text-lg sm:text-xl"} ${categoryBold ? "font-extrabold" : "font-medium"}`}
+                    className={`leading-tight ${isSub ? "text-lg sm:text-xl" : "text-xl sm:text-2xl"} ${categoryBold ? "font-extrabold" : "font-medium"}`}
                   >
                     {node.icon ? `${node.icon} ` : ""}
                     {node.name}
                   </div>
                   {node.description && (
-                    <div className="mt-0.5 text-xs font-normal opacity-80">{node.description}</div>
+                    <div className="mt-1 text-sm font-normal opacity-80">{node.description}</div>
                   )}
                 </div>
               </AccordionTrigger>
