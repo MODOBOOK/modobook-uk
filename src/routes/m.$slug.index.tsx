@@ -533,36 +533,62 @@ function BookPage() {
                     </div>
                   </button>
 
-                  {selected && locPracts.length > 0 && (
+                  {selected && locPracts.length > 0 && practSelectionMode !== "first_available" && (
                     <div className="mt-3 border-t pt-3" style={{ borderColor: `${brand}1a` }}>
-                      <div className="mb-2 text-[10px] font-semibold uppercase tracking-wide opacity-55" style={{ color: brand }}>
-                        Practitioner
+                      <div className="mb-2 flex items-center justify-between">
+                        <div className="text-[10px] font-semibold uppercase tracking-wide opacity-55" style={{ color: brand }}>
+                          {practSelectionMode === "required" ? "Choose Practitioner *" : "Choose Practitioner (optional)"}
+                        </div>
+                        {practSelectionMode === "optional" && practitionerId && (
+                          <button
+                            type="button"
+                            onClick={() => setPractitionerId(null)}
+                            className="text-[10px] underline opacity-60 hover:opacity-100"
+                          >
+                            Clear
+                          </button>
+                        )}
                       </div>
                       <div className="grid gap-2">
-                        {locPracts.map((p) => (
-                          <div
-                            key={p.id}
-                            className="flex items-center gap-2 rounded-xl border px-2.5 py-2 text-left"
-                            style={{ borderColor: `${brand}22`, backgroundColor: `${brand}08` }}
-                          >
-                            {p.photo_url ? (
-                              <img src={p.photo_url} alt={p.name} className="h-8 w-8 shrink-0 rounded-full object-cover" />
-                            ) : (
-                              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white" style={{ backgroundColor: brand }}>
-                                {p.name.charAt(0)}
-                              </div>
-                            )}
-                            <div className="min-w-0">
-                              <div className="truncate text-xs font-semibold leading-tight" style={{ color: brand }}>
-                                {p.name}
-                              </div>
-                              {p.professional_title && (
-                                <div className="truncate text-[10px] leading-tight opacity-70">{p.professional_title}</div>
+                        {locPracts.map((p) => {
+                          const isPicked = practitionerId === p.id;
+                          return (
+                            <button
+                              type="button"
+                              key={p.id}
+                              onClick={() => setPractitionerId(isPicked ? null : p.id)}
+                              className="flex items-center gap-2 rounded-xl border px-2.5 py-2 text-left transition"
+                              style={{
+                                borderColor: isPicked ? brand : `${brand}22`,
+                                backgroundColor: isPicked ? `${brand}18` : `${brand}08`,
+                                boxShadow: isPicked ? `0 0 0 1px ${brand}` : undefined,
+                              }}
+                            >
+                              {p.photo_url ? (
+                                <img src={p.photo_url} alt={p.name} className="h-8 w-8 shrink-0 rounded-full object-cover" />
+                              ) : (
+                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white" style={{ backgroundColor: brand }}>
+                                  {p.name.charAt(0)}
+                                </div>
                               )}
-                            </div>
-                          </div>
-                        ))}
+                              <div className="min-w-0 flex-1">
+                                <div className="truncate text-xs font-semibold leading-tight" style={{ color: brand }}>
+                                  {p.name}
+                                </div>
+                                {p.professional_title && (
+                                  <div className="truncate text-[10px] leading-tight opacity-70">{p.professional_title}</div>
+                                )}
+                              </div>
+                              {isPicked && (
+                                <span className="text-[10px] font-semibold uppercase" style={{ color: brand }}>Selected</span>
+                              )}
+                            </button>
+                          );
+                        })}
                       </div>
+                      {practSelectionMode === "required" && !practitionerId && (
+                        <p className="mt-2 text-[11px] opacity-70">Please choose a practitioner to continue.</p>
+                      )}
                     </div>
                   )}
                 </div>
