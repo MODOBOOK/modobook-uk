@@ -152,9 +152,7 @@ function BookPage() {
   const menuTreatmentBold = theme?.menu_treatment_bold ?? true;
   const menuCategoryBold = theme?.menu_category_bold ?? true;
 
-  const [locationId, setLocationId] = useState<string | null>(
-    locations.length === 1 ? locations[0].id : null,
-  );
+  const [locationId, setLocationId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const treatById = useMemo(() => new Map(treatments.map((t) => [t.id, t])), [treatments]);
   const addonsFor = useMemo(() => {
@@ -464,7 +462,7 @@ function BookPage() {
       {locations.length > 0 && (
         <section className="mx-auto mt-8 max-w-3xl px-4">
           <h2 className="mb-4 text-xl font-bold" style={headingStyle}>
-            {locations.length > 1 ? "Choose Location" : (practitioners.length > 0 ? "Choose Practitioner" : "Your clinic")}
+            Choose Location
           </h2>
           <div className={`grid gap-4 ${locations.length > 1 ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"}`}>
             {locations.map((loc) => {
@@ -508,27 +506,33 @@ function BookPage() {
                     </div>
                   </button>
 
-                  {locPracts.length > 0 && (
-                    <div className="mt-4 border-t pt-3" style={{ borderColor: `${brand}1a` }}>
-                      <div className="mb-2 text-xs font-semibold uppercase tracking-wide opacity-60" style={{ color: brand }}>
-                        Practitioners
+                  {selected && locPracts.length > 0 && (
+                    <div className="mt-3 border-t pt-3" style={{ borderColor: `${brand}1a` }}>
+                      <div className="mb-2 text-[10px] font-semibold uppercase tracking-wide opacity-55" style={{ color: brand }}>
+                        Practitioner
                       </div>
-                      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                      <div className="grid gap-2">
                         {locPracts.map((p) => (
-                          <div key={p.id} className="flex flex-col items-center text-center">
+                          <div
+                            key={p.id}
+                            className="flex items-center gap-2 rounded-xl border px-2.5 py-2 text-left"
+                            style={{ borderColor: `${brand}22`, backgroundColor: `${brand}08` }}
+                          >
                             {p.photo_url ? (
-                              <img src={p.photo_url} alt={p.name} className="h-14 w-14 rounded-full object-cover" />
+                              <img src={p.photo_url} alt={p.name} className="h-8 w-8 shrink-0 rounded-full object-cover" />
                             ) : (
-                              <div className="flex h-14 w-14 items-center justify-center rounded-full text-sm font-bold text-white" style={{ backgroundColor: brand }}>
+                              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white" style={{ backgroundColor: brand }}>
                                 {p.name.charAt(0)}
                               </div>
                             )}
-                            <div className="mt-1 text-xs font-semibold leading-tight" style={{ color: brand }}>
-                              {p.name}
+                            <div className="min-w-0">
+                              <div className="truncate text-xs font-semibold leading-tight" style={{ color: brand }}>
+                                {p.name}
+                              </div>
+                              {p.professional_title && (
+                                <div className="truncate text-[10px] leading-tight opacity-70">{p.professional_title}</div>
+                              )}
                             </div>
-                            {p.professional_title && (
-                              <div className="text-[10px] leading-tight opacity-70">{p.professional_title}</div>
-                            )}
                           </div>
                         ))}
                       </div>
