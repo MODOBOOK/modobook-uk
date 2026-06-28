@@ -29,6 +29,7 @@ import { Route as MSlugAboutRouteImport } from './routes/m.$slug.about'
 import { Route as AuthenticatedDashboardTreatmentsRouteImport } from './routes/_authenticated/dashboard.treatments'
 import { Route as AuthenticatedDashboardServicesRouteImport } from './routes/_authenticated/dashboard.services'
 import { Route as AuthenticatedDashboardReviewsRouteImport } from './routes/_authenticated/dashboard.reviews'
+import { Route as AuthenticatedDashboardPractitionersRouteImport } from './routes/_authenticated/dashboard.practitioners'
 import { Route as AuthenticatedDashboardPoliciesRouteImport } from './routes/_authenticated/dashboard.policies'
 import { Route as AuthenticatedDashboardPaymentsRouteImport } from './routes/_authenticated/dashboard.payments'
 import { Route as AuthenticatedDashboardPatientsRouteImport } from './routes/_authenticated/dashboard.patients'
@@ -155,6 +156,12 @@ const AuthenticatedDashboardReviewsRoute =
   AuthenticatedDashboardReviewsRouteImport.update({
     id: '/reviews',
     path: '/reviews',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardPractitionersRoute =
+  AuthenticatedDashboardPractitionersRouteImport.update({
+    id: '/practitioners',
+    path: '/practitioners',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
 const AuthenticatedDashboardPoliciesRoute =
@@ -329,6 +336,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/patients': typeof AuthenticatedDashboardPatientsRouteWithChildren
   '/dashboard/payments': typeof AuthenticatedDashboardPaymentsRoute
   '/dashboard/policies': typeof AuthenticatedDashboardPoliciesRoute
+  '/dashboard/practitioners': typeof AuthenticatedDashboardPractitionersRoute
   '/dashboard/reviews': typeof AuthenticatedDashboardReviewsRoute
   '/dashboard/services': typeof AuthenticatedDashboardServicesRoute
   '/dashboard/treatments': typeof AuthenticatedDashboardTreatmentsRoute
@@ -372,6 +380,7 @@ export interface FileRoutesByTo {
   '/dashboard/patients': typeof AuthenticatedDashboardPatientsRouteWithChildren
   '/dashboard/payments': typeof AuthenticatedDashboardPaymentsRoute
   '/dashboard/policies': typeof AuthenticatedDashboardPoliciesRoute
+  '/dashboard/practitioners': typeof AuthenticatedDashboardPractitionersRoute
   '/dashboard/reviews': typeof AuthenticatedDashboardReviewsRoute
   '/dashboard/services': typeof AuthenticatedDashboardServicesRoute
   '/dashboard/treatments': typeof AuthenticatedDashboardTreatmentsRoute
@@ -419,6 +428,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/patients': typeof AuthenticatedDashboardPatientsRouteWithChildren
   '/_authenticated/dashboard/payments': typeof AuthenticatedDashboardPaymentsRoute
   '/_authenticated/dashboard/policies': typeof AuthenticatedDashboardPoliciesRoute
+  '/_authenticated/dashboard/practitioners': typeof AuthenticatedDashboardPractitionersRoute
   '/_authenticated/dashboard/reviews': typeof AuthenticatedDashboardReviewsRoute
   '/_authenticated/dashboard/services': typeof AuthenticatedDashboardServicesRoute
   '/_authenticated/dashboard/treatments': typeof AuthenticatedDashboardTreatmentsRoute
@@ -466,6 +476,7 @@ export interface FileRouteTypes {
     | '/dashboard/patients'
     | '/dashboard/payments'
     | '/dashboard/policies'
+    | '/dashboard/practitioners'
     | '/dashboard/reviews'
     | '/dashboard/services'
     | '/dashboard/treatments'
@@ -509,6 +520,7 @@ export interface FileRouteTypes {
     | '/dashboard/patients'
     | '/dashboard/payments'
     | '/dashboard/policies'
+    | '/dashboard/practitioners'
     | '/dashboard/reviews'
     | '/dashboard/services'
     | '/dashboard/treatments'
@@ -555,6 +567,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/patients'
     | '/_authenticated/dashboard/payments'
     | '/_authenticated/dashboard/policies'
+    | '/_authenticated/dashboard/practitioners'
     | '/_authenticated/dashboard/reviews'
     | '/_authenticated/dashboard/services'
     | '/_authenticated/dashboard/treatments'
@@ -722,6 +735,13 @@ declare module '@tanstack/react-router' {
       path: '/reviews'
       fullPath: '/dashboard/reviews'
       preLoaderRoute: typeof AuthenticatedDashboardReviewsRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/practitioners': {
+      id: '/_authenticated/dashboard/practitioners'
+      path: '/practitioners'
+      fullPath: '/dashboard/practitioners'
+      preLoaderRoute: typeof AuthenticatedDashboardPractitionersRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
     '/_authenticated/dashboard/policies': {
@@ -930,6 +950,7 @@ interface AuthenticatedDashboardRouteChildren {
   AuthenticatedDashboardPatientsRoute: typeof AuthenticatedDashboardPatientsRouteWithChildren
   AuthenticatedDashboardPaymentsRoute: typeof AuthenticatedDashboardPaymentsRoute
   AuthenticatedDashboardPoliciesRoute: typeof AuthenticatedDashboardPoliciesRoute
+  AuthenticatedDashboardPractitionersRoute: typeof AuthenticatedDashboardPractitionersRoute
   AuthenticatedDashboardReviewsRoute: typeof AuthenticatedDashboardReviewsRoute
   AuthenticatedDashboardServicesRoute: typeof AuthenticatedDashboardServicesRoute
   AuthenticatedDashboardTreatmentsRoute: typeof AuthenticatedDashboardTreatmentsRoute
@@ -967,6 +988,8 @@ const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
       AuthenticatedDashboardPatientsRouteWithChildren,
     AuthenticatedDashboardPaymentsRoute: AuthenticatedDashboardPaymentsRoute,
     AuthenticatedDashboardPoliciesRoute: AuthenticatedDashboardPoliciesRoute,
+    AuthenticatedDashboardPractitionersRoute:
+      AuthenticatedDashboardPractitionersRoute,
     AuthenticatedDashboardReviewsRoute: AuthenticatedDashboardReviewsRoute,
     AuthenticatedDashboardServicesRoute: AuthenticatedDashboardServicesRoute,
     AuthenticatedDashboardTreatmentsRoute:
