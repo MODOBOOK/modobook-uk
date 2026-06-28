@@ -656,9 +656,147 @@ function BrandingPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Header bar */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Header bar</CardTitle>
+          <p className="text-xs text-muted-foreground">Top navigation on every booking page.</p>
+        </CardHeader>
+        <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={state.header_sticky ?? true} onChange={(e) => set("header_sticky", e.target.checked)} />
+            Sticky header (stays on screen)
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={state.header_show_name ?? true} onChange={(e) => set("header_show_name", e.target.checked)} />
+            Show clinic name in header
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={state.header_show_tagline ?? true} onChange={(e) => set("header_show_tagline", e.target.checked)} />
+            Show practitioner name under clinic
+          </label>
+          <div className="space-y-1.5">
+            <Label>Logo size</Label>
+            <select className="h-10 w-full rounded-md border bg-background px-3 text-sm" value={state.header_logo_size ?? "medium"} onChange={(e) => set("header_logo_size", e.target.value)}>
+              <option value="small">Small</option>
+              <option value="medium">Medium</option>
+              <option value="large">Large</option>
+            </select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>"Book" tab label</Label>
+            <Input value={state.header_button_label ?? "Book"} onChange={(e) => set("header_button_label", e.target.value)} placeholder="Book" />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Hero settings */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Hero section</CardTitle>
+          <p className="text-xs text-muted-foreground">Top image on your booking page.</p>
+        </CardHeader>
+        <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="space-y-1.5">
+            <Label>Hero height</Label>
+            <select className="h-10 w-full rounded-md border bg-background px-3 text-sm" value={state.hero_height ?? "medium"} onChange={(e) => set("hero_height", e.target.value)}>
+              <option value="short">Short</option>
+              <option value="medium">Medium</option>
+              <option value="tall">Tall</option>
+            </select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Text alignment</Label>
+            <select className="h-10 w-full rounded-md border bg-background px-3 text-sm" value={state.hero_text_alignment ?? "center"} onChange={(e) => set("hero_text_alignment", e.target.value)}>
+              <option value="left">Left</option>
+              <option value="center">Centre</option>
+              <option value="right">Right</option>
+            </select>
+          </div>
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={state.hero_show_text ?? true} onChange={(e) => set("hero_show_text", e.target.checked)} />
+            Show heading & subheading over image
+          </label>
+          <ColorField label="Overlay colour" value={state.hero_overlay_color ?? "#000000"} onChange={(v) => set("hero_overlay_color", v)} />
+          <div className="space-y-1.5 sm:col-span-2">
+            <Label>Overlay darkness ({Math.round((state.hero_overlay_opacity ?? 0.25) * 100)}%)</Label>
+            <input type="range" min={0} max={0.8} step={0.05} value={state.hero_overlay_opacity ?? 0.25} onChange={(e) => set("hero_overlay_opacity", parseFloat(e.target.value))} className="w-full" />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Buttons */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Buttons</CardTitle>
+          <p className="text-xs text-muted-foreground">Style of the Book buttons across the booking page.</p>
+        </CardHeader>
+        <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <ColorField label="Button colour" value={state.button_color ?? state.primary_color ?? "#0f172a"} onChange={(v) => set("button_color", v)} />
+          <ColorField label="Button text colour" value={state.button_text_color ?? "#ffffff"} onChange={(v) => set("button_text_color", v)} />
+          <div className="space-y-1.5">
+            <Label>Corner radius</Label>
+            <select className="h-10 w-full rounded-md border bg-background px-3 text-sm" value={state.button_radius ?? "rounded-xl"} onChange={(e) => set("button_radius", e.target.value)}>
+              <option value="rounded-md">Soft</option>
+              <option value="rounded-xl">Rounded</option>
+              <option value="pill">Pill</option>
+            </select>
+          </div>
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={!!state.button_uppercase} onChange={(e) => set("button_uppercase", e.target.checked)} />
+            Uppercase button text
+          </label>
+        </CardContent>
+      </Card>
+
+      {/* Spacing & density */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Spacing & density</CardTitle>
+          <p className="text-xs text-muted-foreground">How tight or airy your booking page feels.</p>
+        </CardHeader>
+        <CardContent className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <Label>Page density</Label>
+            <select className="h-10 w-full rounded-md border bg-background px-3 text-sm" value={state.page_density ?? "cozy"} onChange={(e) => set("page_density", e.target.value)}>
+              <option value="compact">Compact</option>
+              <option value="cozy">Cozy</option>
+              <option value="spacious">Spacious</option>
+            </select>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Contact tiles */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">"Get in touch" tiles</CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="space-y-1.5">
+            <Label>Layout</Label>
+            <select className="h-10 w-full rounded-md border bg-background px-3 text-sm" value={state.contact_tile_layout ?? "grid"} onChange={(e) => set("contact_tile_layout", e.target.value)}>
+              <option value="grid">Grid</option>
+              <option value="horizontal-list">Horizontal list</option>
+            </select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Icon size</Label>
+            <select className="h-10 w-full rounded-md border bg-background px-3 text-sm" value={state.contact_tile_icon_size ?? "md"} onChange={(e) => set("contact_tile_icon_size", e.target.value)}>
+              <option value="sm">Small</option>
+              <option value="md">Medium</option>
+              <option value="lg">Large</option>
+            </select>
+          </div>
+          <ColorField label="Tile background" value={state.contact_tile_bg_color ?? "#ffffff"} onChange={(v) => set("contact_tile_bg_color", v)} />
+          <ColorField label="Tile border" value={state.contact_tile_border_color ?? "#e5e7eb"} onChange={(v) => set("contact_tile_border_color", v)} />
+        </CardContent>
+      </Card>
     </div>
   );
 }
+
 
 function LayoutThumb({ kind }: { kind: BookingLayoutKey }) {
   const base = "h-20 w-full rounded-md border bg-muted/40";
