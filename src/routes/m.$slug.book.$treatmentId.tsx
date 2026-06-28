@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getBookingContext, getDayAvailability, getMonthAvailability, requestBooking } from "@/lib/public-booking.functions";
+import { listAddonsForBooking, type PublicAddon } from "@/lib/addons.functions";
 import { ensurePatient, getMyPatient } from "@/lib/patient.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
