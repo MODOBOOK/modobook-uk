@@ -38,7 +38,16 @@ export type ThemePreset = {
   welcome_card_show_rating: boolean;
   welcome_card_show_actions: boolean;
   welcome_card_show_contact: boolean;
+  welcome_card_show_sms: boolean;
+  welcome_card_show_whatsapp: boolean;
+  welcome_card_show_instagram: boolean;
+  welcome_card_show_facebook: boolean;
+  welcome_card_size: "compact" | "medium" | "wide";
+  welcome_card_position: "overlap" | "below";
+  welcome_card_background_type: "solid" | "glass" | "gradient";
   welcome_card_bg_color: string;
+  welcome_card_gradient_from: string;
+  welcome_card_gradient_to: string;
   welcome_card_border_color: string;
   welcome_card_border_radius: string;
   welcome_card_border_width: string;
@@ -80,7 +89,16 @@ export const PRESETS: Record<ThemePresetKey, ThemePreset> = {
     welcome_card_show_rating: true,
     welcome_card_show_actions: true,
     welcome_card_show_contact: true,
+    welcome_card_show_sms: true,
+    welcome_card_show_whatsapp: true,
+    welcome_card_show_instagram: true,
+    welcome_card_show_facebook: true,
+    welcome_card_size: "medium",
+    welcome_card_position: "overlap",
+    welcome_card_background_type: "solid",
     welcome_card_bg_color: "#faf6ee",
+    welcome_card_gradient_from: "#ffffff",
+    welcome_card_gradient_to: "#f3f4f6",
     welcome_card_border_color: "#e9dcc8",
     welcome_card_border_radius: "1rem",
     welcome_card_border_width: "1px",
@@ -120,7 +138,16 @@ export const PRESETS: Record<ThemePresetKey, ThemePreset> = {
     welcome_card_show_rating: true,
     welcome_card_show_actions: true,
     welcome_card_show_contact: true,
+    welcome_card_show_sms: true,
+    welcome_card_show_whatsapp: true,
+    welcome_card_show_instagram: true,
+    welcome_card_show_facebook: true,
+    welcome_card_size: "medium",
+    welcome_card_position: "overlap",
+    welcome_card_background_type: "solid",
     welcome_card_bg_color: "#ffffff",
+    welcome_card_gradient_from: "#ffffff",
+    welcome_card_gradient_to: "#f3f4f6",
     welcome_card_border_color: "#e5e7eb",
     welcome_card_border_radius: "1rem",
     welcome_card_border_width: "1px",
@@ -160,7 +187,16 @@ export const PRESETS: Record<ThemePresetKey, ThemePreset> = {
     welcome_card_show_rating: true,
     welcome_card_show_actions: true,
     welcome_card_show_contact: true,
+    welcome_card_show_sms: true,
+    welcome_card_show_whatsapp: true,
+    welcome_card_show_instagram: true,
+    welcome_card_show_facebook: true,
+    welcome_card_size: "medium",
+    welcome_card_position: "overlap",
+    welcome_card_background_type: "solid",
     welcome_card_bg_color: "#ffffff",
+    welcome_card_gradient_from: "#ffffff",
+    welcome_card_gradient_to: "#f3f4f6",
     welcome_card_border_color: "#dde5d4",
     welcome_card_border_radius: "1.25rem",
     welcome_card_border_width: "1px",
@@ -200,7 +236,16 @@ export const PRESETS: Record<ThemePresetKey, ThemePreset> = {
     welcome_card_show_rating: true,
     welcome_card_show_actions: true,
     welcome_card_show_contact: true,
+    welcome_card_show_sms: true,
+    welcome_card_show_whatsapp: true,
+    welcome_card_show_instagram: true,
+    welcome_card_show_facebook: true,
+    welcome_card_size: "medium",
+    welcome_card_position: "overlap",
+    welcome_card_background_type: "solid",
     welcome_card_bg_color: "#ffffff",
+    welcome_card_gradient_from: "#ffffff",
+    welcome_card_gradient_to: "#f3f4f6",
     welcome_card_border_color: "#000000",
     welcome_card_border_radius: "0px",
     welcome_card_border_width: "1px",

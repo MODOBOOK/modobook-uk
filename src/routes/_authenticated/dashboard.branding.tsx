@@ -37,7 +37,16 @@ const DEFAULTS: ClinicThemeInput = {
   welcome_card_show_rating: true,
   welcome_card_show_actions: true,
   welcome_card_show_contact: true,
+  welcome_card_show_sms: true,
+  welcome_card_show_whatsapp: true,
+  welcome_card_show_instagram: true,
+  welcome_card_show_facebook: true,
+  welcome_card_size: "medium",
+  welcome_card_position: "overlap",
+  welcome_card_background_type: "solid",
   welcome_card_bg_color: "#ffffff",
+  welcome_card_gradient_from: "#ffffff",
+  welcome_card_gradient_to: "#f3f4f6",
   welcome_card_border_color: "#e5e7eb",
   welcome_card_border_radius: "1rem",
   welcome_card_border_width: "1px",
@@ -141,7 +150,16 @@ function BrandingPage() {
       welcome_card_show_rating: preset.welcome_card_show_rating,
       welcome_card_show_actions: preset.welcome_card_show_actions,
       welcome_card_show_contact: preset.welcome_card_show_contact,
+      welcome_card_show_sms: preset.welcome_card_show_sms,
+      welcome_card_show_whatsapp: preset.welcome_card_show_whatsapp,
+      welcome_card_show_instagram: preset.welcome_card_show_instagram,
+      welcome_card_show_facebook: preset.welcome_card_show_facebook,
+      welcome_card_size: preset.welcome_card_size,
+      welcome_card_position: preset.welcome_card_position,
+      welcome_card_background_type: preset.welcome_card_background_type,
       welcome_card_bg_color: preset.welcome_card_bg_color,
+      welcome_card_gradient_from: preset.welcome_card_gradient_from,
+      welcome_card_gradient_to: preset.welcome_card_gradient_to,
       welcome_card_border_color: preset.welcome_card_border_color,
       welcome_card_border_radius: preset.welcome_card_border_radius,
       welcome_card_border_width: preset.welcome_card_border_width,
@@ -327,8 +345,73 @@ function BrandingPage() {
             ))}
           </div>
 
+          {state.welcome_card_show_contact && (
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {[
+                { key: "welcome_card_show_sms", label: "Text / SMS" },
+                { key: "welcome_card_show_whatsapp", label: "WhatsApp" },
+                { key: "welcome_card_show_instagram", label: "Instagram" },
+                { key: "welcome_card_show_facebook", label: "Facebook" },
+              ].map((item) => (
+                <label key={item.key} className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={!!(state[item.key as keyof ClinicThemeInput] as boolean)}
+                    onChange={(e) => set(item.key as keyof ClinicThemeInput, e.target.checked as ClinicThemeInput[keyof ClinicThemeInput])}
+                  />
+                  {item.label}
+                </label>
+              ))}
+            </div>
+          )}
+
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="space-y-1.5">
+              <Label>Card size</Label>
+              <select
+                className="w-full rounded-md border bg-transparent px-3 py-2 text-sm"
+                value={state.welcome_card_size ?? "medium"}
+                onChange={(e) => set("welcome_card_size", e.target.value)}
+              >
+                <option value="compact">Compact pill</option>
+                <option value="medium">Medium card</option>
+                <option value="wide">Wide banner</option>
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Position</Label>
+              <select
+                className="w-full rounded-md border bg-transparent px-3 py-2 text-sm"
+                value={state.welcome_card_position ?? "overlap"}
+                onChange={(e) => set("welcome_card_position", e.target.value)}
+              >
+                <option value="overlap">Overlap hero</option>
+                <option value="below">Below hero</option>
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Background style</Label>
+              <select
+                className="w-full rounded-md border bg-transparent px-3 py-2 text-sm"
+                value={state.welcome_card_background_type ?? "solid"}
+                onChange={(e) => set("welcome_card_background_type", e.target.value)}
+              >
+                <option value="solid">Solid colour</option>
+                <option value="glass">Frosted glass</option>
+                <option value="gradient">Gradient</option>
+              </select>
+            </div>
+          </div>
+
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <ColorField label="Card background" value={state.welcome_card_bg_color ?? "#ffffff"} onChange={(v) => set("welcome_card_bg_color", v)} />
+            {(state.welcome_card_background_type === "gradient" ? (
+              <>
+                <ColorField label="Gradient from" value={state.welcome_card_gradient_from ?? "#ffffff"} onChange={(v) => set("welcome_card_gradient_from", v)} />
+                <ColorField label="Gradient to" value={state.welcome_card_gradient_to ?? "#f3f4f6"} onChange={(v) => set("welcome_card_gradient_to", v)} />
+              </>
+            ) : (
+              <ColorField label="Card background" value={state.welcome_card_bg_color ?? "#ffffff"} onChange={(v) => set("welcome_card_bg_color", v)} />
+            ))}
             <ColorField label="Border colour" value={state.welcome_card_border_color ?? "#e5e7eb"} onChange={(v) => set("welcome_card_border_color", v)} />
             <div className="space-y-1.5">
               <Label>Border radius</Label>

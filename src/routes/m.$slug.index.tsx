@@ -160,7 +160,16 @@ function BookPage() {
   const showRating = theme?.welcome_card_show_rating ?? true;
   const showActions = theme?.welcome_card_show_actions ?? true;
   const showContact = theme?.welcome_card_show_contact ?? true;
+  const showSms = theme?.welcome_card_show_sms ?? true;
+  const showWhatsapp = theme?.welcome_card_show_whatsapp ?? true;
+  const showInstagram = theme?.welcome_card_show_instagram ?? true;
+  const showFacebook = theme?.welcome_card_show_facebook ?? true;
+  const cardSize = theme?.welcome_card_size ?? "medium";
+  const cardPosition = theme?.welcome_card_position ?? "overlap";
+  const cardBgType = theme?.welcome_card_background_type ?? "solid";
   const cardBg = theme?.welcome_card_bg_color ?? bgColor;
+  const cardGradientFrom = theme?.welcome_card_gradient_from ?? "#ffffff";
+  const cardGradientTo = theme?.welcome_card_gradient_to ?? "#f3f4f6";
   const cardBorder = theme?.welcome_card_border_color ?? `${brand}1a`;
   const cardRadius = theme?.welcome_card_border_radius ?? "1rem";
   const cardBorderWidth = theme?.welcome_card_border_width ?? "1px";
@@ -386,116 +395,135 @@ function BookPage() {
       </div>
 
 
-      {/* Overlapping title card */}
+      {/* Welcome card */}
       <section
         className={
-          layoutKey === "magazine"
-            ? "relative z-10 mx-auto mt-4 max-w-2xl px-4"
-            : layoutKey === "split"
-              ? "relative z-10 mx-auto -mt-8 max-w-2xl px-4 sm:-mt-12"
-              : "relative z-10 mx-auto -mt-14 max-w-2xl px-4 sm:-mt-20"
+          cardPosition === "below"
+            ? "relative z-10 mx-auto mt-6 max-w-2xl px-4"
+            : cardSize === "wide"
+              ? "relative z-10 mx-auto -mt-8 max-w-3xl px-4 sm:-mt-12"
+              : layoutKey === "magazine"
+                ? "relative z-10 mx-auto mt-4 max-w-2xl px-4"
+                : layoutKey === "split"
+                  ? "relative z-10 mx-auto -mt-8 max-w-2xl px-4 sm:-mt-12"
+                  : "relative z-10 mx-auto -mt-14 max-w-2xl px-4 sm:-mt-20"
         }
       >
-
-
         <div
-          className="border"
+          className={`
+            border
+            ${cardSize === "compact" ? "max-w-xl" : cardSize === "wide" ? "max-w-3xl" : "max-w-2xl"}
+            ${cardSize === "compact" ? "rounded-full px-6 py-3" : ""}
+          `}
           style={{
-            backgroundColor: cardBg,
+            backgroundColor: cardBgType === "solid" ? cardBg : undefined,
+            backgroundImage: cardBgType === "gradient" ? `linear-gradient(135deg, ${cardGradientFrom}, ${cardGradientTo})` : undefined,
             borderColor: cardBorder,
-            borderRadius: cardRadius,
+            borderRadius: cardSize === "compact" ? "9999px" : cardRadius,
             borderWidth: cardBorderWidth,
-            padding: cardPadding,
+            padding: cardSize === "compact" ? "0.75rem 1.25rem" : cardPadding,
             boxShadow: cardShadow,
             opacity: cardOpacity,
-            backdropFilter: cardBlur > 0 ? `blur(${cardBlur}px)` : undefined,
-            WebkitBackdropFilter: cardBlur > 0 ? `blur(${cardBlur}px)` : undefined,
+            backdropFilter: cardBgType === "glass" || cardBlur > 0 ? `blur(${cardBlur || 8}px)` : undefined,
+            WebkitBackdropFilter: cardBgType === "glass" || cardBlur > 0 ? `blur(${cardBlur || 8}px)` : undefined,
+            margin: "0 auto",
           }}
         >
-          {showLogo && logoUrl && (
-            <img
-              src={logoUrl}
-              alt={profile.clinic_name}
-              className="mb-2 h-8 w-auto object-contain sm:h-10"
-            />
-          )}
-          {showName && (
-            <h1
-              className="text-lg font-extrabold leading-tight sm:text-xl"
-              style={headingStyle}
-            >
-              {profile.clinic_name}
-            </h1>
-          )}
-          {showTagline && profile.tagline && (
-            <p className="mt-1 text-sm opacity-70">{profile.tagline}</p>
-          )}
-
-          {/* Star rating */}
-          {showRating && (
-            <Link
-              to="/m/$slug/reviews"
-              params={{ slug }}
-              className="mt-2 flex items-center gap-2 hover:opacity-80"
-            >
-              {(() => {
-                const count = reviews.length;
-                const avg = count ? reviews.reduce((a, r) => a + r.rating, 0) / count : 0;
-                const rounded = Math.round(avg);
-                return (
-                  <>
-                    <div className="flex" style={{ color: accent }}>
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <Star
-                          key={i}
-                          className="h-3.5 w-3.5"
-                          fill={count === 0 || i < rounded ? "currentColor" : "none"}
-                        />
-                      ))}
-                    </div>
-                    <span className="text-xs opacity-70">
-                      {count === 0
-                        ? "Be the first to review"
-                        : `${avg.toFixed(1)} · ${count} review${count === 1 ? "" : "s"}`}
-                    </span>
-                  </>
-                );
-              })()}
-            </Link>
-          )}
-
-          {/* Action icon row */}
-          {showActions && (
-            <div className="mt-4 grid grid-cols-4 gap-2 border-t pt-3" style={{ borderColor: `${brand}22` }}>
-              {ig ? (
-                <ActionIcon
-                  href={ig.startsWith("http") ? ig : `https://instagram.com/${ig.replace("@", "")}`}
-                  label="Instagram"
-                  brand={brand}
-                >
-                  <Instagram className="h-5 w-5" />
-                </ActionIcon>
-              ) : (
-                <ActionPlaceholder label="Instagram" brand={brand}>
-                  <Instagram className="h-5 w-5 opacity-30" />
-                </ActionPlaceholder>
+          {cardSize === "compact" ? (
+            <div className="flex items-center gap-3">
+              {showLogo && logoUrl && (
+                <img src={logoUrl} alt={profile.clinic_name} className="h-8 w-auto object-contain" />
               )}
-              {primaryLocation && mapsUrl(primaryLocation) ? (
-                <ActionIcon href={mapsUrl(primaryLocation)!} label="Directions" brand={brand}>
-                  <MapPin className="h-5 w-5" />
-                </ActionIcon>
-              ) : (
-                <ActionPlaceholder label="Directions" brand={brand}>
-                  <MapPin className="h-5 w-5 opacity-30" />
-                </ActionPlaceholder>
+              {showName && (
+                <h1 className="text-sm font-extrabold leading-tight" style={headingStyle}>{profile.clinic_name}</h1>
               )}
-              <ActionButton onClick={handleShare} label="Share" brand={brand}>
-                <Share2 className="h-5 w-5" />
-              </ActionButton>
-              <ActionLink to="/m/$slug/about" params={{ slug }} label="About" brand={brand}>
-                <Info className="h-5 w-5" />
-              </ActionLink>
+              {showRating && (
+                <Link to="/m/$slug/reviews" params={{ slug }} className="ml-auto flex items-center gap-1 hover:opacity-80">
+                  {(() => {
+                    const count = reviews.length;
+                    const avg = count ? reviews.reduce((a, r) => a + r.rating, 0) / count : 0;
+                    const rounded = Math.round(avg);
+                    return (
+                      <>
+                        <div className="flex" style={{ color: accent }}>
+                          {Array.from({ length: 5 }).map((_, i) => (
+                            <Star key={i} className="h-3 w-3" fill={count === 0 || i < rounded ? "currentColor" : "none"} />
+                          ))}
+                        </div>
+                        <span className="text-xs opacity-70">{count === 0 ? "New" : `${avg.toFixed(1)}`}</span>
+                      </>
+                    );
+                  })()}
+                </Link>
+              )}
             </div>
+          ) : (
+            <>
+              {showLogo && logoUrl && (
+                <img src={logoUrl} alt={profile.clinic_name} className="mb-2 h-8 w-auto object-contain sm:h-10" />
+              )}
+              {showName && (
+                <h1 className="text-lg font-extrabold leading-tight sm:text-xl" style={headingStyle}>
+                  {profile.clinic_name}
+                </h1>
+              )}
+              {showTagline && profile.tagline && (
+                <p className="mt-1 text-sm opacity-70">{profile.tagline}</p>
+              )}
+
+              {/* Star rating */}
+              {showRating && (
+                <Link to="/m/$slug/reviews" params={{ slug }} className="mt-2 flex items-center gap-2 hover:opacity-80">
+                  {(() => {
+                    const count = reviews.length;
+                    const avg = count ? reviews.reduce((a, r) => a + r.rating, 0) / count : 0;
+                    const rounded = Math.round(avg);
+                    return (
+                      <>
+                        <div className="flex" style={{ color: accent }}>
+                          {Array.from({ length: 5 }).map((_, i) => (
+                            <Star key={i} className="h-3.5 w-3.5" fill={count === 0 || i < rounded ? "currentColor" : "none"} />
+                          ))}
+                        </div>
+                        <span className="text-xs opacity-70">
+                          {count === 0 ? "Be the first to review" : `${avg.toFixed(1)} · ${count} review${count === 1 ? "" : "s"}`}
+                        </span>
+                      </>
+                    );
+                  })()}
+                </Link>
+              )}
+
+              {/* Action icon row */}
+              {showActions && (
+                <div className="mt-4 grid grid-cols-4 gap-2 border-t pt-3" style={{ borderColor: `${brand}22` }}>
+                  {showInstagram && ig ? (
+                    <ActionIcon href={ig.startsWith("http") ? ig : `https://instagram.com/${ig.replace("@", "")}`} label="Instagram" brand={brand}>
+                      <Instagram className="h-5 w-5" />
+                    </ActionIcon>
+                  ) : (
+                    <ActionPlaceholder label="Instagram" brand={brand}>
+                      <Instagram className="h-5 w-5 opacity-30" />
+                    </ActionPlaceholder>
+                  )}
+                  {primaryLocation && mapsUrl(primaryLocation) ? (
+                    <ActionIcon href={mapsUrl(primaryLocation)!} label="Directions" brand={brand}>
+                      <MapPin className="h-5 w-5" />
+                    </ActionIcon>
+                  ) : (
+                    <ActionPlaceholder label="Directions" brand={brand}>
+                      <MapPin className="h-5 w-5 opacity-30" />
+                    </ActionPlaceholder>
+                  )}
+                  <ActionButton onClick={handleShare} label="Share" brand={brand}>
+                    <Share2 className="h-5 w-5" />
+                  </ActionButton>
+                  <ActionLink to="/m/$slug/about" params={{ slug }} label="About" brand={brand}>
+                    <Info className="h-5 w-5" />
+                  </ActionLink>
+                </div>
+              )}
+            </>
           )}
         </div>
       </section>
@@ -503,10 +531,10 @@ function BookPage() {
       {/* Contact us */}
       {(() => {
         if (!showContact) return null;
-        const sms = profile.contact_sms_number?.trim();
-        const wa = profile.contact_whatsapp_number?.trim();
-        const fb = profile.social_links?.facebook?.trim();
-        const igLink = ig?.trim();
+        const sms = showSms ? profile.contact_sms_number?.trim() : null;
+        const wa = showWhatsapp ? profile.contact_whatsapp_number?.trim() : null;
+        const fb = showFacebook ? profile.social_links?.facebook?.trim() : null;
+        const igLink = showInstagram ? ig?.trim() : null;
         const items: { href: string; label: string; sub?: string; Icon: typeof Phone }[] = [];
         if (sms) items.push({ href: `sms:${sms}`, label: "Text us", sub: sms, Icon: Phone });
         if (wa) items.push({ href: `https://wa.me/${wa.replace(/[^0-9]/g, "")}`, label: "WhatsApp", sub: wa, Icon: MessageCircle });
