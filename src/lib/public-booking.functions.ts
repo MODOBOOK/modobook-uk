@@ -292,7 +292,13 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
   .inputValidator(
     (input: {
       profileId: string;
-      bookings: { treatmentId: string; durationMin: number; priceCents: number }[];
+      bookings: {
+        treatmentId: string;
+        durationMin: number;
+        priceCents: number;
+        sessionCount?: number;
+        paymentPlan?: "full" | "split";
+      }[];
       locationId?: string | null;
       date: string;
       startTime: string;
@@ -320,6 +326,13 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
     for (const b of data.bookings) {
       const id = crypto.randomUUID();
       const end = addMinutesToTime(cursor, b.durationMin);
+      const sessionCount = Math.max(1, Number(b.sessionCount ?? 1));
+      const paymentNote = sessionCount > 1
+        ? b.paymentPlan === "split"
+          ? `Payment plan: Split into ${sessionCount} sessions (£${((b.priceCents / 100) / sessionCount).toFixed(2)} per session)`
+          : `Payment plan: Pay in full for ${sessionCount} sessions`
+        : null;
+      const appointmentNotes = [data.notes, paymentNote].filter(Boolean).join("\n") || null;
       const { error } = await sb.from("appointments").insert({
         id,
         profile_id: data.profileId,
@@ -335,7 +348,7 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
         patient_dob: data.patientDob ?? null,
         patient_address: data.patientAddress ?? null,
         patient_user_id: data.patientUserId ?? null,
-        notes: data.notes ?? null,
+        notes: appointmentNotes,
         status: "confirmed",
         payment_status: "pending",
         base_amount: b.priceCents / 100,
