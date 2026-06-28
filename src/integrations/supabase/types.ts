@@ -2331,6 +2331,9 @@ export type Database = {
           deposit_policy_text: string | null
           discount_stack_mode: string
           email: string | null
+          favourite_treatment_ids: string[]
+          favourites_custom_title: string | null
+          favourites_enabled: boolean
           full_name: string | null
           hero_url: string | null
           id: string
@@ -2379,6 +2382,9 @@ export type Database = {
           deposit_policy_text?: string | null
           discount_stack_mode?: string
           email?: string | null
+          favourite_treatment_ids?: string[]
+          favourites_custom_title?: string | null
+          favourites_enabled?: boolean
           full_name?: string | null
           hero_url?: string | null
           id?: string
@@ -2427,6 +2433,9 @@ export type Database = {
           deposit_policy_text?: string | null
           discount_stack_mode?: string
           email?: string | null
+          favourite_treatment_ids?: string[]
+          favourites_custom_title?: string | null
+          favourites_enabled?: boolean
           full_name?: string | null
           hero_url?: string | null
           id?: string
