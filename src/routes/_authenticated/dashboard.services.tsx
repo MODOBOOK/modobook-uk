@@ -44,10 +44,17 @@ import {
   Pencil,
   Search,
   Trash2,
-  GripVertical,
   ArrowUp,
   ArrowDown,
+  MoreVertical,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 
 import { toast } from "sonner";
 
@@ -353,78 +360,92 @@ function CategoryRow({
   onMoveCat: (siblings: Cat[], id: string, dir: -1 | 1) => void;
   onMoveTreat: (siblings: Treat[], id: string, dir: -1 | 1) => void;
 }) {
-  const [open, setOpen] = useState(depth === 0);
+  const [open, setOpen] = useState(false);
   const treatsHere = node.treatments.filter(matchTreat);
-  const hasContent = node.children.length > 0 || treatsHere.length > 0;
+  const totalCount = treatsHere.length + node.children.length;
+  const canUp = index > 0;
+  const canDown = index < siblings.length - 1;
 
   return (
-    <div className="border-b-0">
-      <div
-        className="flex w-full items-center gap-1 px-4 py-4 sm:gap-3"
-        style={{ paddingLeft: 16 + depth * 16 }}
+    <div>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="flex w-full items-center gap-2 px-3 py-3 text-left hover:bg-muted/40"
+        style={{ paddingLeft: 12 + depth * 16 }}
+        aria-expanded={open}
       >
-        <div className="flex flex-col">
-          <button
-            type="button"
-            onClick={(e) => { e.stopPropagation(); onMoveCat(siblings, node.id, -1); }}
-            disabled={index === 0}
-            className="rounded p-0.5 text-muted-foreground hover:bg-muted disabled:opacity-30"
-            aria-label="Move up"
-          >
-            <ArrowUp className="h-4 w-4" />
-          </button>
-          <button
-            type="button"
-            onClick={(e) => { e.stopPropagation(); onMoveCat(siblings, node.id, 1); }}
-            disabled={index === siblings.length - 1}
-            className="rounded p-0.5 text-muted-foreground hover:bg-muted disabled:opacity-30"
-            aria-label="Move down"
-          >
-            <ArrowDown className="h-4 w-4" />
-          </button>
-        </div>
-        <button
-          type="button"
-          onClick={() => setOpen((o) => !o)}
-          className="flex flex-1 items-center gap-3 text-left"
-          aria-expanded={open}
-        >
-          <GripVertical className="h-5 w-5 shrink-0 text-[hsl(var(--accent))]" />
-          <p className="flex-1 truncate text-base font-bold text-[hsl(var(--primary))] sm:text-lg">
-            {node.icon ? `${node.icon} ` : ""}
-            {node.name}
-          </p>
-        </button>
-        <button
-          type="button"
-          onClick={(e) => { e.stopPropagation(); onEditCat(node); }}
-          className="rounded-md p-1.5 text-[hsl(var(--accent))] hover:bg-muted"
-          aria-label="Edit category"
-        >
-          <Pencil className="h-5 w-5" />
-        </button>
-        <button
-          type="button"
-          onClick={(e) => { e.stopPropagation(); onDeleteCat(node); }}
-          className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-destructive"
-          aria-label="Delete category"
-        >
-          <Trash2 className="h-4 w-4" />
-        </button>
-        <button
-          type="button"
-          onClick={() => setOpen((o) => !o)}
-          className="rounded-md p-1.5 text-[hsl(var(--primary))] hover:bg-muted"
-          aria-label={open ? "Collapse" : "Expand"}
-        >
-          {open ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
-        </button>
-      </div>
+        {open ? (
+          <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+        ) : (
+          <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+        )}
+        <span className="flex-1 truncate text-[15px] font-semibold text-[hsl(var(--primary))]">
+          {node.icon ? `${node.icon} ` : ""}
+          {node.name}
+        </span>
+        {totalCount > 0 && (
+          <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+            {totalCount}
+          </span>
+        )}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <span
+              role="button"
+              tabIndex={0}
+              onClick={(e) => e.stopPropagation()}
+              className="ml-1 inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted"
+              aria-label="Category actions"
+            >
+              <MoreVertical className="h-4 w-4" />
+            </span>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+            <DropdownMenuItem onSelect={() => onAddService(node.id)}>
+              <Plus className="mr-2 h-4 w-4" /> Add service
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => onAddSub(node.id)}>
+              <FolderPlus className="mr-2 h-4 w-4" /> Add subcategory
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem disabled={!canUp} onSelect={() => onMoveCat(siblings, node.id, -1)}>
+              <ArrowUp className="mr-2 h-4 w-4" /> Move up
+            </DropdownMenuItem>
+            <DropdownMenuItem disabled={!canDown} onSelect={() => onMoveCat(siblings, node.id, 1)}>
+              <ArrowDown className="mr-2 h-4 w-4" /> Move down
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onSelect={() => onEditCat(node)}>
+              <Pencil className="mr-2 h-4 w-4" /> Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onSelect={() => onDeleteCat(node)}
+              className="text-destructive focus:text-destructive"
+            >
+              <Trash2 className="mr-2 h-4 w-4" /> Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </button>
 
       {open && (
-        <div className="border-t bg-muted/10">
+        <div className="border-t border-border/60 bg-muted/20">
+          {treatsHere.length === 0 && node.children.length === 0 && (
+            <p
+              className="px-3 py-3 text-xs text-muted-foreground"
+              style={{ paddingLeft: 12 + (depth + 1) * 16 }}
+            >
+              Nothing here yet.
+            </p>
+          )}
+
           {treatsHere.map((t, ti) => (
-            <div key={t.id} style={{ paddingLeft: 16 + (depth + 1) * 16 }} className="border-b py-2 pr-4">
+            <div
+              key={t.id}
+              style={{ paddingLeft: 12 + (depth + 1) * 16 }}
+              className="border-b border-border/40 pr-2"
+            >
               <ServiceRow
                 treat={t}
                 onDelete={() => onDeleteTreat(t)}
@@ -453,24 +474,21 @@ function CategoryRow({
           ))}
 
           <div
-            className="flex flex-wrap gap-2 border-t py-2 pr-4"
-            style={{ paddingLeft: 16 + (depth + 1) * 16 }}
+            className="flex flex-wrap gap-2 px-3 py-2"
+            style={{ paddingLeft: 12 + (depth + 1) * 16 }}
           >
-            <Button size="sm" variant="outline" className="rounded-full" onClick={() => onAddService(node.id)}>
-              <Plus className="mr-1.5 h-3.5 w-3.5" /> Add service
+            <Button size="sm" variant="ghost" className="h-7 rounded-full text-xs" onClick={() => onAddService(node.id)}>
+              <Plus className="mr-1 h-3 w-3" /> Service
             </Button>
-            <Button size="sm" variant="ghost" className="rounded-full" onClick={() => onAddSub(node.id)}>
-              <FolderPlus className="mr-1.5 h-3.5 w-3.5" /> Add subcategory
+            <Button size="sm" variant="ghost" className="h-7 rounded-full text-xs" onClick={() => onAddSub(node.id)}>
+              <FolderPlus className="mr-1 h-3 w-3" /> Subcategory
             </Button>
           </div>
-          {!hasContent && null}
         </div>
       )}
     </div>
   );
 }
-
-
 
 function ServiceRow({
   treat,
@@ -484,59 +502,47 @@ function ServiceRow({
   onMoveDown?: () => void;
 }) {
   return (
-    <div className="flex items-center gap-2 py-1">
-      <div className="flex flex-col">
-        <button
-          type="button"
-          onClick={onMoveUp}
-          disabled={!onMoveUp}
-          className="rounded p-0.5 text-muted-foreground hover:bg-muted disabled:opacity-30"
-          aria-label="Move service up"
-        >
-          <ArrowUp className="h-3.5 w-3.5" />
-        </button>
-        <button
-          type="button"
-          onClick={onMoveDown}
-          disabled={!onMoveDown}
-          className="rounded p-0.5 text-muted-foreground hover:bg-muted disabled:opacity-30"
-          aria-label="Move service down"
-        >
-          <ArrowDown className="h-3.5 w-3.5" />
-        </button>
-      </div>
-      <GripVertical className="h-4 w-4 shrink-0 text-[hsl(var(--accent))]/70" />
-
+    <div className="flex items-center gap-2 py-2">
       <span
-        className="h-3.5 w-3.5 shrink-0 rounded-full border"
-        style={{ backgroundColor: treat.color || "transparent" }}
+        className="h-2.5 w-2.5 shrink-0 rounded-full"
+        style={{ backgroundColor: treat.color || "hsl(var(--muted-foreground))" }}
         aria-label="Calendar colour"
       />
-
-      <div className="flex-1 min-w-0">
-        <p className="truncate text-sm font-semibold text-[hsl(var(--primary))]">{treat.name}</p>
-        <p className="text-xs text-muted-foreground">
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-medium text-[hsl(var(--primary))]">{treat.name}</p>
+        <p className="text-[11px] text-muted-foreground">
           £{treat.price} · {treat.duration} min
         </p>
       </div>
-
-      <Link
-        to="/dashboard/treatments"
-        search={{ edit: treat.id }}
-        className="rounded-md p-1.5 text-[hsl(var(--accent))] hover:bg-muted"
-        aria-label="Edit service (price, add-ons, discount, consent forms)"
-        title="Edit · add-ons · discount · consent forms"
-      >
-        <Pencil className="h-4 w-4" />
-      </Link>
-      <button
-        type="button"
-        onClick={onDelete}
-        className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-destructive"
-        aria-label="Delete service"
-      >
-        <Trash2 className="h-3.5 w-3.5" />
-      </button>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button
+            type="button"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted"
+            aria-label="Service actions"
+          >
+            <MoreVertical className="h-4 w-4" />
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem asChild>
+            <Link to="/dashboard/treatments" search={{ edit: treat.id }}>
+              <Pencil className="mr-2 h-4 w-4" /> Edit
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem disabled={!onMoveUp} onSelect={() => onMoveUp?.()}>
+            <ArrowUp className="mr-2 h-4 w-4" /> Move up
+          </DropdownMenuItem>
+          <DropdownMenuItem disabled={!onMoveDown} onSelect={() => onMoveDown?.()}>
+            <ArrowDown className="mr-2 h-4 w-4" /> Move down
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onSelect={onDelete} className="text-destructive focus:text-destructive">
+            <Trash2 className="mr-2 h-4 w-4" /> Delete
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   );
 }
