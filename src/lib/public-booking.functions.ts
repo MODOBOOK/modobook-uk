@@ -309,6 +309,7 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
       } | null;
       notes?: string;
       patientUserId?: string | null;
+      practitionerId?: string | null;
     }) => input,
   )
   .handler(async ({ data }) => {
@@ -324,6 +325,7 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
         profile_id: data.profileId,
         treatment_id: b.treatmentId,
         location_id: data.locationId ?? null,
+        practitioner_id: data.practitionerId ?? null,
         scheduled_date: data.date,
         start_time: cursor,
         end_time: end,
