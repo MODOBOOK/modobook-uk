@@ -106,6 +106,9 @@ function BookTreatmentPage() {
     notes: "",
   });
   const [submitting, setSubmitting] = useState(false);
+  const sessionCount = Math.max(1, Number((treatment as { session_count?: number }).session_count ?? 1));
+  const splitAllowed = Boolean((treatment as { allow_split_payment?: boolean }).allow_split_payment) && sessionCount > 1;
+  const [paymentPlan, setPaymentPlan] = useState<"full" | "split">("full");
 
   // Patient auth gate: 'pending' until they pick a path
   const [authChoice, setAuthChoice] = useState<"pending" | "guest" | "signed-in">("pending");
