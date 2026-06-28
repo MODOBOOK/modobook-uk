@@ -23,14 +23,24 @@ async function getCroppedBlob(imageSrc: string, area: Area, mime: string): Promi
     i.onerror = reject;
     i.src = imageSrc;
   });
+  // Clamp to image bounds so we never draw empty/transparent regions.
+  const sx = Math.max(0, Math.min(area.x, img.naturalWidth));
+  const sy = Math.max(0, Math.min(area.y, img.naturalHeight));
+  const sw = Math.max(1, Math.min(area.width, img.naturalWidth - sx));
+  const sh = Math.max(1, Math.min(area.height, img.naturalHeight - sy));
   const canvas = document.createElement("canvas");
-  canvas.width = Math.round(area.width);
-  canvas.height = Math.round(area.height);
+  canvas.width = Math.round(sw);
+  canvas.height = Math.round(sh);
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Canvas unavailable");
-  ctx.drawImage(img, area.x, area.y, area.width, area.height, 0, 0, area.width, area.height);
+  const outMime = mime === "image/jpg" ? "image/jpeg" : mime;
+  if (outMime === "image/jpeg") {
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
+  ctx.drawImage(img, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
   return new Promise((resolve, reject) =>
-    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("Crop failed"))), mime, 0.92),
+    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("Crop failed"))), outMime, 0.92),
   );
 }
 
