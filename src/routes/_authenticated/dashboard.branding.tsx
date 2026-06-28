@@ -12,6 +12,7 @@ import { ImageUploader } from "@/components/ImageUploader";
 import { toast } from "sonner";
 import { Palette, Check, X, Wand2 } from "lucide-react";
 import { PRESETS, LAYOUTS, type ThemePresetKey, type BookingLayoutKey, type ThemePreset } from "@/lib/theme-presets";
+import { COLOR_PALETTES, type ColorPalette } from "@/lib/color-palettes";
 
 export const Route = createFileRoute("/_authenticated/dashboard/branding")({
   component: BrandingPage,
