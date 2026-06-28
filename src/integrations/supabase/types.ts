@@ -292,6 +292,7 @@ export type Database = {
           patient_user_id: string | null
           payment_method: string | null
           payment_status: Database["public"]["Enums"]["payment_status"] | null
+          practitioner_id: string | null
           practitioner_notes: string | null
           profile_id: string
           scheduled_date: string
@@ -338,6 +339,7 @@ export type Database = {
           patient_user_id?: string | null
           payment_method?: string | null
           payment_status?: Database["public"]["Enums"]["payment_status"] | null
+          practitioner_id?: string | null
           practitioner_notes?: string | null
           profile_id: string
           scheduled_date: string
@@ -384,6 +386,7 @@ export type Database = {
           patient_user_id?: string | null
           payment_method?: string | null
           payment_status?: Database["public"]["Enums"]["payment_status"] | null
+          practitioner_id?: string | null
           practitioner_notes?: string | null
           profile_id?: string
           scheduled_date?: string
@@ -429,6 +432,13 @@ export type Database = {
             columns: ["package_purchase_id"]
             isOneToOne: false
             referencedRelation: "package_purchases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_practitioner_id_fkey"
+            columns: ["practitioner_id"]
+            isOneToOne: false
+            referencedRelation: "practitioners"
             referencedColumns: ["id"]
           },
           {
@@ -2191,6 +2201,7 @@ export type Database = {
           id: string
           model_slots_position: string
           phone: string | null
+          practitioner_selection_mode: string
           qualifications: Json
           role: Database["public"]["Enums"]["app_role"]
           slug: string | null
@@ -2238,6 +2249,7 @@ export type Database = {
           id?: string
           model_slots_position?: string
           phone?: string | null
+          practitioner_selection_mode?: string
           qualifications?: Json
           role?: Database["public"]["Enums"]["app_role"]
           slug?: string | null
@@ -2285,6 +2297,7 @@ export type Database = {
           id?: string
           model_slots_position?: string
           phone?: string | null
+          practitioner_selection_mode?: string
           qualifications?: Json
           role?: Database["public"]["Enums"]["app_role"]
           slug?: string | null
@@ -2839,6 +2852,7 @@ export type Database = {
           hero_url: string
           id: string
           model_slots_position: string
+          practitioner_selection_mode: string
           qualifications: Json
           slug: string
           social_links: Json
