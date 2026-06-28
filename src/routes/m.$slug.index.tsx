@@ -102,6 +102,7 @@ function BookPage() {
         chooser_consultation_treatment_id?: string | null;
         chooser_intro_text?: string | null;
         model_slots_position?: "top" | "bottom" | null;
+        practitioner_selection_mode?: "required" | "optional" | "first_available" | null;
       };
       treatments: Treatment[];
       packages: Package[];
