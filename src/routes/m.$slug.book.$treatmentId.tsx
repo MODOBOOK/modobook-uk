@@ -106,6 +106,9 @@ function BookTreatmentPage() {
     notes: "",
   });
   const [submitting, setSubmitting] = useState(false);
+  const sessionCount = Math.max(1, Number((treatment as { session_count?: number }).session_count ?? 1));
+  const splitAllowed = Boolean((treatment as { allow_split_payment?: boolean }).allow_split_payment) && sessionCount > 1;
+  const [paymentPlan, setPaymentPlan] = useState<"full" | "split">("full");
 
   // Patient auth gate: 'pending' until they pick a path
   const [authChoice, setAuthChoice] = useState<"pending" | "guest" | "signed-in">("pending");
@@ -308,9 +311,16 @@ function BookTreatmentPage() {
           },
           notes: (() => {
             const picked = availableAddons.filter((a) => addonPicks.has(a.id));
-            if (!picked.length) return form.notes || undefined;
-            const line = "Add-ons: " + picked.map((a) => `${a.name} (£${addonNet(a).toFixed(2)})`).join(", ");
-            return [form.notes, line].filter(Boolean).join("\n");
+            const lines: string[] = [];
+            if (form.notes) lines.push(form.notes);
+            if (picked.length) lines.push("Add-ons: " + picked.map((a) => `${a.name} (£${addonNet(a).toFixed(2)})`).join(", "));
+            if (splitAllowed && paymentPlan === "split") {
+              const per = (effectivePrice / sessionCount).toFixed(2);
+              lines.push(`Payment plan: Split into ${sessionCount} sessions (£${per} per session)`);
+            } else if (sessionCount > 1) {
+              lines.push(`Payment plan: Pay in full for ${sessionCount} sessions`);
+            }
+            return lines.length ? lines.join("\n") : undefined;
           })(),
           basePrice: effectivePrice,
           patientUserId: patientUserId,
@@ -570,7 +580,44 @@ function BookTreatmentPage() {
           </CardContent>
         </Card>
       )}
+      {splitAllowed && (
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="text-base" style={headingStyle}>
+              Payment plan <span className="text-xs font-normal opacity-60">({sessionCount} sessions)</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-2 sm:grid-cols-2">
+            {(["full", "split"] as const).map((opt) => {
+              const selected = paymentPlan === opt;
+              const per = (price / sessionCount).toFixed(2);
+              return (
+                <button
+                  key={opt}
+                  type="button"
+                  onClick={() => setPaymentPlan(opt)}
+                  className="flex flex-col items-start gap-1 rounded-md border px-3 py-3 text-left transition"
+                  style={{
+                    borderColor: selected ? brand : `${brand}33`,
+                    backgroundColor: selected ? `${brand}10` : "transparent",
+                  }}
+                >
+                  <div className="text-sm font-semibold" style={{ color: brand }}>
+                    {opt === "full" ? "Pay in full" : `Split into ${sessionCount} payments`}
+                  </div>
+                  <div className="text-xs opacity-70">
+                    {opt === "full"
+                      ? `£${price.toFixed(2)} total`
+                      : `£${per} per session · charged at each visit`}
+                  </div>
+                </button>
+              );
+            })}
+          </CardContent>
+        </Card>
+      )}
       <Card className="mb-6">
+
 
         <CardHeader>
           <CardTitle className="text-base" style={headingStyle}>Your details</CardTitle>
