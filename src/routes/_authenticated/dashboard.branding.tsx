@@ -440,6 +440,22 @@ function BrandingPage() {
             </div>
           )}
 
+          <div className="space-y-2">
+            <Label>Quick card presets</Label>
+            <div className="flex flex-wrap gap-2">
+              {WELCOME_CARD_PRESETS.map((p) => (
+                <button
+                  key={p.label}
+                  type="button"
+                  onClick={() => applyWelcomeCardPreset(p.style)}
+                  className="rounded-full border bg-background px-3 py-1.5 text-xs font-medium transition hover:bg-accent"
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <div className="space-y-1.5">
               <Label>Desktop size</Label>
