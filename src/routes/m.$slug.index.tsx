@@ -482,7 +482,7 @@ function BookPage() {
                   </a>
                 )}
                 {showInstagram && ig && (
-                  <a href={ig.startsWith("http") ? ig : `https://instagram.com/${ig.replace("@", "")`} target="_blank" rel="noreferrer" className="rounded-full p-1.5 hover:opacity-80" style={{ backgroundColor: `${brand}14`, color: brand }} aria-label="Instagram">
+                  <a href={ig.startsWith("http") ? ig : "https://instagram.com/" + ig.replace("@", "")} target="_blank" rel="noreferrer" className="rounded-full p-1.5 hover:opacity-80" style={{ backgroundColor: `${brand}14`, color: brand }} aria-label="Instagram">
                     <Instagram className="h-3.5 w-3.5" />
                   </a>
                 )}
