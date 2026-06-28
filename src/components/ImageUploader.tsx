@@ -16,6 +16,7 @@ export function ImageUploader({
   profileId,
   folder,
   previewClass = "mt-2 h-16 object-contain rounded",
+  cropAspect = null,
 }: {
   label: string;
   value: string | null | undefined;
@@ -23,11 +24,14 @@ export function ImageUploader({
   profileId: string;
   folder: string;
   previewClass?: string;
+  cropAspect?: number | null;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [cropOpen, setCropOpen] = useState(false);
 
-  async function handleFile(file: File) {
+  async function uploadFile(file: File) {
     if (!profileId) {
       toast.error("Profile not ready yet");
       return;
@@ -57,6 +61,23 @@ export function ImageUploader({
     }
   }
 
+  function pickFile(f: File) {
+    setPendingFile(f);
+    setCropOpen(true);
+  }
+
+  async function recropFromUrl() {
+    if (!value) return;
+    try {
+      const res = await fetch(value);
+      const blob = await res.blob();
+      const file = new File([blob], `recrop-${Date.now()}.png`, { type: blob.type || "image/png" });
+      pickFile(file);
+    } catch {
+      toast.error("Couldn't load image to crop");
+    }
+  }
+
   return (
     <div className="space-y-1.5">
       <Label>{label}</Label>
@@ -74,7 +95,7 @@ export function ImageUploader({
           className="hidden"
           onChange={(e) => {
             const f = e.target.files?.[0];
-            if (f) handleFile(f);
+            if (f) pickFile(f);
             e.target.value = "";
           }}
         />
@@ -90,18 +111,31 @@ export function ImageUploader({
             {uploading ? "Uploading…" : "Upload"}
           </Button>
           {value && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => onChange(null)}
-            >
-              <X className="h-3.5 w-3.5" />
-            </Button>
+            <>
+              <Button type="button" variant="outline" size="sm" onClick={recropFromUrl} disabled={uploading}>
+                <Crop className="mr-1.5 h-3.5 w-3.5" />Crop
+              </Button>
+              <Button type="button" variant="ghost" size="sm" onClick={() => onChange(null)}>
+                <X className="h-3.5 w-3.5" />
+              </Button>
+            </>
           )}
         </div>
       </div>
       {value && <img src={value} alt={label} className={previewClass} />}
+      <ImageCropDialog
+        open={cropOpen}
+        file={pendingFile}
+        defaultAspect={cropAspect}
+        onCancel={() => { setCropOpen(false); setPendingFile(null); }}
+        onConfirm={async (cropped) => {
+          setCropOpen(false);
+          setPendingFile(null);
+          await uploadFile(cropped);
+        }}
+      />
     </div>
+  );
+}
   );
 }
