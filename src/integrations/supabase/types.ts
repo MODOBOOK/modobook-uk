@@ -2018,6 +2018,63 @@ export type Database = {
           },
         ]
       }
+      practitioner_subscriptions: {
+        Row: {
+          cancel_at_period_end: boolean
+          created_at: string
+          current_period_end: string | null
+          id: string
+          notes: string | null
+          plan_id: string | null
+          profile_id: string
+          status: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          cancel_at_period_end?: boolean
+          created_at?: string
+          current_period_end?: string | null
+          id?: string
+          notes?: string | null
+          plan_id?: string | null
+          profile_id: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          cancel_at_period_end?: boolean
+          created_at?: string
+          current_period_end?: string | null
+          id?: string
+          notes?: string | null
+          plan_id?: string | null
+          profile_id?: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "practitioner_subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "practitioner_subscriptions_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           about: string | null
@@ -2039,6 +2096,8 @@ export type Database = {
           chooser_show_know: boolean
           chooser_show_unsure: boolean
           clinic_name: string | null
+          contact_sms_number: string | null
+          contact_whatsapp_number: string | null
           created_at: string
           deposit_amount_cents: number | null
           deposit_policy_text: string | null
@@ -2084,6 +2143,8 @@ export type Database = {
           chooser_show_know?: boolean
           chooser_show_unsure?: boolean
           clinic_name?: string | null
+          contact_sms_number?: string | null
+          contact_whatsapp_number?: string | null
           created_at?: string
           deposit_amount_cents?: number | null
           deposit_policy_text?: string | null
@@ -2129,6 +2190,8 @@ export type Database = {
           chooser_show_know?: boolean
           chooser_show_unsure?: boolean
           clinic_name?: string | null
+          contact_sms_number?: string | null
+          contact_whatsapp_number?: string | null
           created_at?: string
           deposit_amount_cents?: number | null
           deposit_policy_text?: string | null
@@ -2163,6 +2226,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      subscription_plans: {
+        Row: {
+          active: boolean
+          amount_cents: number
+          created_at: string
+          currency: string
+          description: string | null
+          id: string
+          interval: string
+          name: string
+          stripe_price_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          amount_cents: number
+          created_at?: string
+          currency?: string
+          description?: string | null
+          id?: string
+          interval?: string
+          name: string
+          stripe_price_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          amount_cents?: number
+          created_at?: string
+          currency?: string
+          description?: string | null
+          id?: string
+          interval?: string
+          name?: string
+          stripe_price_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       treatment_addons: {
         Row: {
@@ -2626,6 +2728,8 @@ export type Database = {
           brand_color: string
           cancellation_rules: Json
           clinic_name: string
+          contact_sms_number: string
+          contact_whatsapp_number: string
           created_at: string
           deposit_amount_cents: number
           deposit_policy_text: string
