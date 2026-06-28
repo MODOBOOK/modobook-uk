@@ -103,8 +103,11 @@ export const updateProfile = createServerFn({ method: "POST" })
       model_slots_position?: "top" | "bottom";
       terms_html?: string | null;
       terms_required?: boolean;
+      contact_sms_number?: string | null;
+      contact_whatsapp_number?: string | null;
     }) => input,
   )
+
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const update: Record<string, unknown> = {};
