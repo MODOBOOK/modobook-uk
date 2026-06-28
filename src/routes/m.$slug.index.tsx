@@ -926,10 +926,30 @@ function BookPage() {
         const ownerName = (multiPract ? profile.clinic_name : (profile.full_name || profile.clinic_name)) || profile.clinic_name;
         const possessive = ownerName.endsWith("s") ? `${ownerName}'` : `${ownerName}'s`;
         const heading = profile.favourites_custom_title?.trim() || `${possessive} Favourite Treatments`;
+        const scroll = (dir: number) => {
+          const el = document.getElementById("fav-carousel");
+          if (!el) return;
+          el.scrollBy({ left: dir * el.clientWidth * 0.9, behavior: "smooth" });
+        };
         return (
           <section className="mx-auto mt-10 max-w-5xl px-4">
-            <h2 className="mb-4 text-xl font-bold sm:text-2xl" style={headingStyle}>{heading}</h2>
-            <div className="flex gap-3 overflow-x-auto pb-3 sm:grid sm:grid-cols-2 sm:gap-4 sm:overflow-visible lg:grid-cols-3">
+            <div className="mb-4 flex items-end justify-between gap-3">
+              <h2 className="text-xl font-bold sm:text-2xl" style={headingStyle}>{heading}</h2>
+              {favs.length > 1 && (
+                <div className="hidden gap-2 sm:flex">
+                  <button onClick={() => scroll(-1)} aria-label="Previous" className="grid h-9 w-9 place-items-center rounded-full border bg-card transition hover:shadow" style={{ borderColor: `${brand}33` }}>
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+                  <button onClick={() => scroll(1)} aria-label="Next" className="grid h-9 w-9 place-items-center rounded-full border bg-card transition hover:shadow" style={{ borderColor: `${brand}33` }}>
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
+            </div>
+            <div
+              id="fav-carousel"
+              className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-3 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            >
               {favs.map((t) => {
                 const img = (t as Treatment & { picture_url?: string | null }).picture_url;
                 return (
@@ -937,15 +957,13 @@ function BookPage() {
                     key={t.id}
                     to="/m/$slug/book/$treatmentId"
                     params={{ slug, treatmentId: t.id }}
-                    className="group flex min-w-[78%] shrink-0 flex-col overflow-hidden rounded-2xl border bg-card shadow-sm transition hover:shadow-md sm:min-w-0"
+                    className="group flex w-[78%] shrink-0 snap-start flex-col overflow-hidden rounded-2xl border bg-card shadow-sm transition hover:shadow-md sm:w-[calc((100%-2rem)/3)]"
                     style={{ borderColor: `${brand}1f`, backgroundColor: menuCardBg }}
                   >
-                    {img ? (
+                    {img && (
                       <div className="aspect-[4/3] w-full overflow-hidden bg-muted">
                         <img src={img} alt={t.name} className="h-full w-full object-cover transition group-hover:scale-[1.03]" loading="lazy" />
                       </div>
-                    ) : (
-                      <div className="aspect-[4/3] w-full" style={{ background: `linear-gradient(135deg, ${brand}22, ${brand}0a)` }} />
                     )}
                     <div className="flex flex-1 flex-col gap-1 p-4">
                       <div className="text-base font-semibold sm:text-lg" style={{ color: menuNameColor }}>{t.name}</div>
@@ -962,6 +980,7 @@ function BookPage() {
           </section>
         );
       })()}
+
 
       {/* Treatments + Packages */}
 
