@@ -311,9 +311,16 @@ function BookTreatmentPage() {
           },
           notes: (() => {
             const picked = availableAddons.filter((a) => addonPicks.has(a.id));
-            if (!picked.length) return form.notes || undefined;
-            const line = "Add-ons: " + picked.map((a) => `${a.name} (£${addonNet(a).toFixed(2)})`).join(", ");
-            return [form.notes, line].filter(Boolean).join("\n");
+            const lines: string[] = [];
+            if (form.notes) lines.push(form.notes);
+            if (picked.length) lines.push("Add-ons: " + picked.map((a) => `${a.name} (£${addonNet(a).toFixed(2)})`).join(", "));
+            if (splitAllowed && paymentPlan === "split") {
+              const per = (effectivePrice / sessionCount).toFixed(2);
+              lines.push(`Payment plan: Split into ${sessionCount} sessions (£${per} per session)`);
+            } else if (sessionCount > 1) {
+              lines.push(`Payment plan: Pay in full for ${sessionCount} sessions`);
+            }
+            return lines.length ? lines.join("\n") : undefined;
           })(),
           basePrice: effectivePrice,
           patientUserId: patientUserId,
