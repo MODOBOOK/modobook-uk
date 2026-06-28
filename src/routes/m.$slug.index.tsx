@@ -927,19 +927,19 @@ function BookPage() {
 
             return (
               <Tabs defaultValue="treatments" className="w-full">
-                <TabsList className="grid w-full grid-cols-3" style={{ backgroundColor: `${brand}10` }}>
-                  <TabsTrigger value="treatments">Treatments</TabsTrigger>
-                  <TabsTrigger value="packages" disabled={packages.length === 0}>
+                <TabsList className="grid w-full grid-cols-3 h-auto" style={{ backgroundColor: `${brand}10` }}>
+                  <TabsTrigger value="treatments" className="text-sm sm:text-base py-2.5">Treatments</TabsTrigger>
+                  <TabsTrigger value="packages" disabled={packages.length === 0} className="text-sm sm:text-base py-2.5">
                     <PackageIcon className="mr-1.5 h-4 w-4" />
                     Packages
                   </TabsTrigger>
-                  <TabsTrigger value="concerns" disabled={concerns.length === 0}>
+                  <TabsTrigger value="concerns" disabled={concerns.length === 0} className="text-sm sm:text-base py-2.5">
                     By concern
                   </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="treatments" className="mt-4">
-                  <p className="mb-3 text-xs opacity-60">
+                  <p className="mb-3 text-sm opacity-70">
                     Tick all the treatments you'd like, then press Book Now.
                   </p>
                   {(() => {
