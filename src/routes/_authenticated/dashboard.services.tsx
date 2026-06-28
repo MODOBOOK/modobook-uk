@@ -16,6 +16,11 @@ import {
   deleteTreatment,
   reorderTreatments,
 } from "@/lib/treatments.functions";
+import { getMyProfile, updateProfile } from "@/lib/profiles.functions";
+import { Switch } from "@/components/ui/switch";
+import { Star, X } from "lucide-react";
+
+
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
