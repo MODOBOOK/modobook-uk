@@ -275,7 +275,12 @@ function MultiBookPage() {
             line1: form.addressLine1, line2: form.addressLine2,
             city: form.city, postcode: form.postcode, country: form.country,
           },
-          notes: form.notes || undefined,
+          notes: (() => {
+            const picked = availableAddons.filter((a) => addonPicks.has(a.id));
+            if (!picked.length) return form.notes || undefined;
+            const line = "Add-ons: " + picked.map((a) => `${a.name} (£${addonNet(a).toFixed(2)})`).join(", ");
+            return [form.notes, line].filter(Boolean).join("\n");
+          })(),
           patientUserId,
         },
       });
