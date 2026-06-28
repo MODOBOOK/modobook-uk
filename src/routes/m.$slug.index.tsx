@@ -160,7 +160,16 @@ function BookPage() {
   const showRating = theme?.welcome_card_show_rating ?? true;
   const showActions = theme?.welcome_card_show_actions ?? true;
   const showContact = theme?.welcome_card_show_contact ?? true;
+  const showSms = theme?.welcome_card_show_sms ?? true;
+  const showWhatsapp = theme?.welcome_card_show_whatsapp ?? true;
+  const showInstagram = theme?.welcome_card_show_instagram ?? true;
+  const showFacebook = theme?.welcome_card_show_facebook ?? true;
+  const cardSize = theme?.welcome_card_size ?? "medium";
+  const cardPosition = theme?.welcome_card_position ?? "overlap";
+  const cardBgType = theme?.welcome_card_background_type ?? "solid";
   const cardBg = theme?.welcome_card_bg_color ?? bgColor;
+  const cardGradientFrom = theme?.welcome_card_gradient_from ?? "#ffffff";
+  const cardGradientTo = theme?.welcome_card_gradient_to ?? "#f3f4f6";
   const cardBorder = theme?.welcome_card_border_color ?? `${brand}1a`;
   const cardRadius = theme?.welcome_card_border_radius ?? "1rem";
   const cardBorderWidth = theme?.welcome_card_border_width ?? "1px";
