@@ -54,6 +54,7 @@ function BookTreatmentPage() {
   const { slug } = useParams({ from: "/m/$slug/book/$treatmentId" });
   const ctx = Route.useLoaderData();
   const treatment = ctx.treatment;
+  const redirectPath = `/m/${slug}/book/${treatment.id}`;
   const duration = treatment.duration ?? 30;
   const price = Number(treatment.price ?? 0);
 
@@ -495,7 +496,7 @@ function BookTreatmentPage() {
               <Link
                 to="/m/$slug/auth"
                 params={{ slug }}
-                search={{ redirect: typeof window !== "undefined" ? window.location.pathname : undefined }}
+                search={{ redirect: redirectPath }}
               >
                 <Button className="w-full" style={{ backgroundColor: brand, color: "#fff" }}>
                   <LogIn className="mr-2 h-4 w-4" /> Sign in
@@ -504,7 +505,7 @@ function BookTreatmentPage() {
               <Link
                 to="/m/$slug/auth"
                 params={{ slug }}
-                search={{ tab: "signup", redirect: typeof window !== "undefined" ? window.location.pathname : undefined }}
+                search={{ tab: "signup", redirect: redirectPath }}
               >
                 <Button variant="outline" className="w-full" style={{ color: brand, borderColor: `${brand}55` }}>
                   <UserPlus className="mr-2 h-4 w-4" /> Sign up

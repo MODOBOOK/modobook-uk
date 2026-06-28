@@ -67,6 +67,7 @@ function MultiBookPage() {
   const ctx = Route.useLoaderData();
   const search = Route.useSearch();
   const ids = (search.ids ?? "").split(",").filter(Boolean);
+  const redirectPath = `/m/${slug}/book-multi?ids=${encodeURIComponent(ids.join(","))}`;
 
   // Preserve user-selected order
   const treatments = useMemo<Treatment[]>(() => {
@@ -477,10 +478,10 @@ function MultiBookPage() {
             <CardContent className="space-y-3">
               <p className="text-sm opacity-70">Create an account or sign in to track your appointments.</p>
               <div className="grid gap-2 sm:grid-cols-3">
-                <Link to="/m/$slug/auth" params={{ slug }} search={{ redirect: typeof window !== "undefined" ? window.location.pathname + window.location.search : undefined }}>
+                <Link to="/m/$slug/auth" params={{ slug }} search={{ redirect: redirectPath }}>
                   <Button className="w-full" style={{ backgroundColor: brand, color: "#fff" }}><LogIn className="mr-2 h-4 w-4" />Sign in</Button>
                 </Link>
-                <Link to="/m/$slug/auth" params={{ slug }} search={{ tab: "signup", redirect: typeof window !== "undefined" ? window.location.pathname + window.location.search : undefined }}>
+                <Link to="/m/$slug/auth" params={{ slug }} search={{ tab: "signup", redirect: redirectPath }}>
                   <Button variant="outline" className="w-full" style={{ color: brand, borderColor: `${brand}55` }}><UserPlus className="mr-2 h-4 w-4" />Sign up</Button>
                 </Link>
                 <Button variant="ghost" className="w-full" style={{ color: brand }} onClick={() => setAuthChoice("guest")}>Continue as guest</Button>
