@@ -34,12 +34,12 @@ export type ClinicThemeInput = {
   hero_carousel_enabled?: boolean | null;
   hero_carousel_urls?: string[] | null;
   // Welcome card show/hide and shape
-  welcome_card_show_logo?: boolean | null;
-  welcome_card_show_name?: boolean | null;
-  welcome_card_show_tagline?: boolean | null;
-  welcome_card_show_rating?: boolean | null;
-  welcome_card_show_actions?: boolean | null;
-  welcome_card_show_contact?: boolean | null;
+  welcome_card_show_logo?: boolean;
+  welcome_card_show_name?: boolean;
+  welcome_card_show_tagline?: boolean;
+  welcome_card_show_rating?: boolean;
+  welcome_card_show_actions?: boolean;
+  welcome_card_show_contact?: boolean;
   welcome_card_bg_color?: string | null;
   welcome_card_border_color?: string | null;
   welcome_card_border_radius?: string | null;
