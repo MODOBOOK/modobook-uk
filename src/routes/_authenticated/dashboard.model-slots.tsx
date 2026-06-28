@@ -222,20 +222,32 @@ function SlotEditor({ existing, treatments, locations, onClose, onSaved }: {
           notes: notes || null, active, category: category.trim() || null,
         }});
       } else {
-        for (const tid of selectedIds) {
-          await save({ data: {
-            treatment_id: tid,
-            location_id: locationId || null,
-            slot_date: date, start_time: startT, end_time: endT,
-            price_mode: mode, price_value: v,
-            notes: notes || null, active, category: category.trim() || null,
-          }});
+        const windows = [
+          { date, start: startT, end: endT },
+          ...extraWindows.filter((w) => w.date && w.start && w.end),
+        ];
+        let count = 0;
+        for (const w of windows) {
+          for (const tid of selectedIds) {
+            await save({ data: {
+              treatment_id: tid,
+              location_id: locationId || null,
+              slot_date: w.date, start_time: w.start, end_time: w.end,
+              price_mode: mode, price_value: v,
+              notes: notes || null, active, category: category.trim() || null,
+            }});
+            count++;
+          }
         }
+        toast.success(`Created ${count} model slot${count === 1 ? "" : "s"}`);
+        onSaved();
+        return;
       }
-      toast.success(isEdit ? "Saved" : `Created ${selectedIds.length} slot${selectedIds.length === 1 ? "" : "s"}`);
+      toast.success("Saved");
       onSaved();
     } catch (e) { toast.error((e as Error).message); }
   }
+
 
   const previewT = allTreatments.find((x) => x.id === selectedIds[0]);
 
