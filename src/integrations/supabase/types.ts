@@ -1008,20 +1008,29 @@ export type Database = {
           profile_id: string
           text_color: string
           updated_at: string
+          welcome_card_background_type: string
           welcome_card_bg_color: string | null
           welcome_card_blur: number
           welcome_card_border_color: string | null
           welcome_card_border_radius: string | null
           welcome_card_border_width: string | null
+          welcome_card_gradient_from: string | null
+          welcome_card_gradient_to: string | null
           welcome_card_opacity: number
           welcome_card_padding: string | null
+          welcome_card_position: string
           welcome_card_shadow: string | null
           welcome_card_show_actions: boolean
           welcome_card_show_contact: boolean
+          welcome_card_show_facebook: boolean
+          welcome_card_show_instagram: boolean
           welcome_card_show_logo: boolean
           welcome_card_show_name: boolean
           welcome_card_show_rating: boolean
+          welcome_card_show_sms: boolean
           welcome_card_show_tagline: boolean
+          welcome_card_show_whatsapp: boolean
+          welcome_card_size: string
         }
         Insert: {
           accent_color?: string
@@ -1057,20 +1066,29 @@ export type Database = {
           profile_id: string
           text_color?: string
           updated_at?: string
+          welcome_card_background_type?: string
           welcome_card_bg_color?: string | null
           welcome_card_blur?: number
           welcome_card_border_color?: string | null
           welcome_card_border_radius?: string | null
           welcome_card_border_width?: string | null
+          welcome_card_gradient_from?: string | null
+          welcome_card_gradient_to?: string | null
           welcome_card_opacity?: number
           welcome_card_padding?: string | null
+          welcome_card_position?: string
           welcome_card_shadow?: string | null
           welcome_card_show_actions?: boolean
           welcome_card_show_contact?: boolean
+          welcome_card_show_facebook?: boolean
+          welcome_card_show_instagram?: boolean
           welcome_card_show_logo?: boolean
           welcome_card_show_name?: boolean
           welcome_card_show_rating?: boolean
+          welcome_card_show_sms?: boolean
           welcome_card_show_tagline?: boolean
+          welcome_card_show_whatsapp?: boolean
+          welcome_card_size?: string
         }
         Update: {
           accent_color?: string
@@ -1106,20 +1124,29 @@ export type Database = {
           profile_id?: string
           text_color?: string
           updated_at?: string
+          welcome_card_background_type?: string
           welcome_card_bg_color?: string | null
           welcome_card_blur?: number
           welcome_card_border_color?: string | null
           welcome_card_border_radius?: string | null
           welcome_card_border_width?: string | null
+          welcome_card_gradient_from?: string | null
+          welcome_card_gradient_to?: string | null
           welcome_card_opacity?: number
           welcome_card_padding?: string | null
+          welcome_card_position?: string
           welcome_card_shadow?: string | null
           welcome_card_show_actions?: boolean
           welcome_card_show_contact?: boolean
+          welcome_card_show_facebook?: boolean
+          welcome_card_show_instagram?: boolean
           welcome_card_show_logo?: boolean
           welcome_card_show_name?: boolean
           welcome_card_show_rating?: boolean
+          welcome_card_show_sms?: boolean
           welcome_card_show_tagline?: boolean
+          welcome_card_show_whatsapp?: boolean
+          welcome_card_size?: string
         }
         Relationships: [
           {
