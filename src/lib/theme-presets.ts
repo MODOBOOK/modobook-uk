@@ -31,6 +31,21 @@ export type ThemePreset = {
   menu_treatment_bold: boolean;
   menu_category_bold: boolean;
   swatches: string[]; // for visual preview
+  // Welcome card defaults
+  welcome_card_show_logo: boolean;
+  welcome_card_show_name: boolean;
+  welcome_card_show_tagline: boolean;
+  welcome_card_show_rating: boolean;
+  welcome_card_show_actions: boolean;
+  welcome_card_show_contact: boolean;
+  welcome_card_bg_color: string;
+  welcome_card_border_color: string;
+  welcome_card_border_radius: string;
+  welcome_card_border_width: string;
+  welcome_card_padding: string;
+  welcome_card_shadow: string;
+  welcome_card_opacity: number;
+  welcome_card_blur: number;
 };
 
 export const PRESETS: Record<ThemePresetKey, ThemePreset> = {
