@@ -466,7 +466,44 @@ function TreatmentDialog({
           <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
         </div>
 
-        {/* Discount */}
+        {/* Sessions & split payment */}
+        <div className="rounded-md border p-3 space-y-3">
+          <Label className="m-0">Sessions & payment</Label>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label className="text-xs text-muted-foreground">Number of sessions</Label>
+              <Input
+                type="number"
+                min={1}
+                value={sessionCount}
+                onChange={(e) => setSessionCount(Math.max(1, Number(e.target.value) || 1))}
+              />
+            </div>
+            <div>
+              <Label className="text-xs text-muted-foreground">Rebook reminder (days, optional)</Label>
+              <Input
+                type="number"
+                min={0}
+                placeholder="e.g. 28"
+                value={rebookDays}
+                onChange={(e) => setRebookDays(e.target.value)}
+              />
+            </div>
+          </div>
+          <label className="flex items-center gap-2 text-sm">
+            <Switch
+              checked={allowSplit}
+              onCheckedChange={setAllowSplit}
+              disabled={sessionCount < 2}
+            />
+            <span>Allow patients to split payment across each session</span>
+          </label>
+          {sessionCount < 2 && (
+            <p className="text-xs text-muted-foreground">Set 2 or more sessions to enable split payments.</p>
+          )}
+        </div>
+
+
         <div className="rounded-md border p-3 space-y-3">
           <div className="flex items-center gap-2">
             <Tag className="h-4 w-4 text-muted-foreground" />
