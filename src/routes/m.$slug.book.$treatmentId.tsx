@@ -143,6 +143,24 @@ function BookTreatmentPage() {
   const monthFn = useServerFn(getMonthAvailability);
   const reqFn = useServerFn(requestBooking);
 
+  // Add-ons for this treatment
+  const addonsQuery = useQuery({
+    queryKey: ["addonsForBooking", slug, treatment.id],
+    queryFn: () => listAddonsForBooking({ data: { slug, treatment_ids: [treatment.id] } }),
+  });
+  const availableAddons: PublicAddon[] = addonsQuery.data ?? [];
+  const [addonPicks, setAddonPicks] = useState<Set<string>>(new Set());
+  const toggleAddon = (id: string) =>
+    setAddonPicks((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  const addonNet = (a: PublicAddon) =>
+    (a.price_cents / 100) * (1 - (a.discount_percent ?? 0) / 100);
+
+
+
 
   const monthQuery = useQuery({
     queryKey: ["monthAvail", ctx.profileId, month.getFullYear(), month.getMonth() + 1, locationId],
