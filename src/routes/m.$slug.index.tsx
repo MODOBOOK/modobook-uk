@@ -120,6 +120,8 @@ function BookPage() {
         category?: string | null;
       }[];
       addonLinks?: { treatment_id: string; addon_id: string; discount_percent: number | null; discount_amount: number | null }[];
+      practitioners?: { id: string; name: string; professional_title: string | null; photo_url: string | null; bio: string | null; display_order: number }[];
+      locationPractitioners?: { location_id: string; practitioner_id: string; display_order: number }[];
     };
 
 
