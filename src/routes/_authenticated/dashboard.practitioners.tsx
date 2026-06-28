@@ -46,6 +46,7 @@ function PractitionersPage() {
   const fetchProfile = useServerFn(getMyProfile);
   const save = useServerFn(upsertPractitioner);
   const remove = useServerFn(deletePractitioner);
+  const saveProfile = useServerFn(updateProfile);
 
   const [practitioners, setPractitioners] = useState<Pract[]>([]);
   const [links, setLinks] = useState<{ location_id: string; practitioner_id: string }[]>([]);
