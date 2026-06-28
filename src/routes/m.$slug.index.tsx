@@ -23,6 +23,8 @@ import {
   MessageCircle,
   Facebook,
   Phone,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
