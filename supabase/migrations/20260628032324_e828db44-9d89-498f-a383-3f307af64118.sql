@@ -1,0 +1,1 @@
+ALTER TABLE public.clinic_theme ADD COLUMN welcome_card_mobile_size TEXT NOT NULL DEFAULT 'medium';
