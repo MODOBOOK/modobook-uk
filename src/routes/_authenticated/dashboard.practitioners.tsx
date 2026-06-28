@@ -7,7 +7,7 @@ import {
   deletePractitioner,
 } from "@/lib/practitioners.functions";
 import { listMyLocations } from "@/lib/locations.functions";
-import { getMyProfile } from "@/lib/profiles.functions";
+import { getMyProfile, updateProfile } from "@/lib/profiles.functions";
 import { ImageUploader } from "@/components/ImageUploader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
