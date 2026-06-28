@@ -282,6 +282,7 @@ function MultiBookPage() {
             return [form.notes, line].filter(Boolean).join("\n");
           })(),
           patientUserId,
+          practitionerId: (typeof window !== "undefined" ? window.sessionStorage.getItem(`modo:practitionerId:${slug}`) : null) || null,
         },
       });
       setConfirmed(res);
