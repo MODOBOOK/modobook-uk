@@ -309,6 +309,17 @@ function TreatmentDialog({
     treatment?.discount_show_was_now ?? true,
   );
   const [discountLabel, setDiscountLabel] = useState<string>(treatment?.discount_label ?? "");
+  const [sessionCount, setSessionCount] = useState<number>(
+    (treatment as { session_count?: number } | null)?.session_count ?? 1,
+  );
+  const [allowSplit, setAllowSplit] = useState<boolean>(
+    (treatment as { allow_split_payment?: boolean } | null)?.allow_split_payment ?? false,
+  );
+  const [rebookDays, setRebookDays] = useState<string>(
+    (treatment as { rebook_reminder_days?: number | null } | null)?.rebook_reminder_days != null
+      ? String((treatment as { rebook_reminder_days?: number | null }).rebook_reminder_days)
+      : "",
+  );
 
   const topLevel = useMemo(() => categories.filter((c) => !c.parent_id), [categories]);
   const childrenOf = (parentId: string | null) =>
