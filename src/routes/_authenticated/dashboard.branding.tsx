@@ -300,10 +300,81 @@ function BrandingPage() {
         </CardContent>
       </Card>
 
+      {/* Welcome card */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Palette className="h-4 w-4" /> Core colors
+          <CardTitle className="text-base">Welcome card</CardTitle>
+          <p className="text-xs text-muted-foreground">Customise the floating clinic card on your booking page.</p>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {[
+              { key: "welcome_card_show_logo", label: "Show logo" },
+              { key: "welcome_card_show_name", label: "Show clinic name" },
+              { key: "welcome_card_show_tagline", label: "Show tagline" },
+              { key: "welcome_card_show_rating", label: "Show star rating" },
+              { key: "welcome_card_show_actions", label: "Show action buttons" },
+              { key: "welcome_card_show_contact", label: "Show contact chips" },
+            ].map((item) => (
+              <label key={item.key} className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={!!(state[item.key as keyof ClinicThemeInput] as boolean)}
+                  onChange={(e) => set(item.key as keyof ClinicThemeInput, e.target.checked as ClinicThemeInput[keyof ClinicThemeInput])}
+                />
+                {item.label}
+              </label>
+            ))}
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <ColorField label="Card background" value={state.welcome_card_bg_color ?? "#ffffff"} onChange={(v) => set("welcome_card_bg_color", v)} />
+            <ColorField label="Border colour" value={state.welcome_card_border_color ?? "#e5e7eb"} onChange={(v) => set("welcome_card_border_color", v)} />
+            <div className="space-y-1.5">
+              <Label>Border radius</Label>
+              <Input value={state.welcome_card_border_radius ?? "1rem"} onChange={(e) => set("welcome_card_border_radius", e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Border width</Label>
+              <Input value={state.welcome_card_border_width ?? "1px"} onChange={(e) => set("welcome_card_border_width", e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Padding</Label>
+              <Input value={state.welcome_card_padding ?? "1.25rem"} onChange={(e) => set("welcome_card_padding", e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Shadow</Label>
+              <Input value={state.welcome_card_shadow ?? "0 10px 40px rgba(0,0,0,0.08)"} onChange={(e) => set("welcome_card_shadow", e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Opacity ({Math.round((state.welcome_card_opacity ?? 1) * 100)}%)</Label>
+              <input
+                type="range"
+                min={0}
+                max={1}
+                step={0.05}
+                value={state.welcome_card_opacity ?? 1}
+                onChange={(e) => set("welcome_card_opacity", parseFloat(e.target.value))}
+                className="w-full"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Backdrop blur ({state.welcome_card_blur ?? 0}px)</Label>
+              <input
+                type="range"
+                min={0}
+                max={20}
+                step={1}
+                value={state.welcome_card_blur ?? 0}
+                onChange={(e) => set("welcome_card_blur", parseInt(e.target.value, 10))}
+                className="w-full"
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+
           </CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
