@@ -153,6 +153,22 @@ function BookPage() {
   const menuTreatmentBold = theme?.menu_treatment_bold ?? true;
   const menuCategoryBold = theme?.menu_category_bold ?? true;
 
+  // Welcome card settings
+  const showLogo = theme?.welcome_card_show_logo ?? true;
+  const showName = theme?.welcome_card_show_name ?? true;
+  const showTagline = theme?.welcome_card_show_tagline ?? false;
+  const showRating = theme?.welcome_card_show_rating ?? true;
+  const showActions = theme?.welcome_card_show_actions ?? true;
+  const showContact = theme?.welcome_card_show_contact ?? true;
+  const cardBg = theme?.welcome_card_bg_color ?? bgColor;
+  const cardBorder = theme?.welcome_card_border_color ?? `${brand}1a`;
+  const cardRadius = theme?.welcome_card_border_radius ?? "1rem";
+  const cardBorderWidth = theme?.welcome_card_border_width ?? "1px";
+  const cardPadding = theme?.welcome_card_padding ?? "1.25rem";
+  const cardShadow = theme?.welcome_card_shadow ?? "0 10px 40px rgba(0,0,0,0.08)";
+  const cardOpacity = theme?.welcome_card_opacity ?? 1;
+  const cardBlur = theme?.welcome_card_blur ?? 0;
+
   const [locationId, setLocationId] = useState<string | null>(null);
   const practSelectionMode = profile.practitioner_selection_mode ?? "optional";
   const [practitionerId, setPractitionerIdState] = useState<string | null>(null);
