@@ -12,7 +12,7 @@ import { ImageUploader } from "@/components/ImageUploader";
 import { toast } from "sonner";
 import { Palette, Check, X, Wand2 } from "lucide-react";
 import { PRESETS, LAYOUTS, type ThemePresetKey, type BookingLayoutKey, type ThemePreset } from "@/lib/theme-presets";
-import { COLOR_PALETTES, type ColorPalette } from "@/lib/color-palettes";
+import { COLOR_PALETTES, CUSTOM_PALETTE_SLOTS, buildCustomPalette, type ColorPalette } from "@/lib/color-palettes";
 
 export const Route = createFileRoute("/_authenticated/dashboard/branding")({
   component: BrandingPage,
@@ -187,6 +187,23 @@ function BrandingPage() {
   function applyColorPalette(palette: ColorPalette) {
     setState((s) => ({ ...s, ...palette.colors }));
     toast.success(`${palette.name} palette applied`);
+  }
+
+  const [customColors, setCustomColors] = useState<[string, string, string, string]>([
+    "#faf7f2", "#ece6db", "#8b7355", "#3a3530",
+  ]);
+  function updateCustomColor(idx: 0 | 1 | 2 | 3, hex: string) {
+    setCustomColors((c) => {
+      const next = [...c] as [string, string, string, string];
+      next[idx] = hex;
+      return next;
+    });
+  }
+  function applyCustomPalette() {
+    const valid = customColors.every((c) => /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(c));
+    if (!valid) { toast.error("Enter valid hex codes (e.g. #faf7f2)"); return; }
+    setState((s) => ({ ...s, ...buildCustomPalette(customColors) }));
+    toast.success("Custom palette applied");
   }
 
   const activePaletteKey = COLOR_PALETTES.find(
@@ -383,6 +400,59 @@ function BrandingPage() {
           })}
         </CardContent>
       </Card>
+
+      {/* Custom palette — build your own from 4 hex codes */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Wand2 className="h-4 w-4" /> Build your own palette
+          </CardTitle>
+          <p className="text-xs text-muted-foreground">
+            Pick 4 colours — from lightest to darkest — and we'll apply them everywhere. Paste a hex code or use the colour picker.
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-3 sm:grid-cols-2">
+            {CUSTOM_PALETTE_SLOTS.map((slot) => (
+              <div key={slot.key} className="rounded-xl border p-3">
+                <Label className="text-xs font-semibold">{slot.label}</Label>
+                <p className="mt-0.5 text-[11px] text-muted-foreground">{slot.hint}</p>
+                <div className="mt-2 flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={customColors[slot.key]}
+                    onChange={(e) => updateCustomColor(slot.key, e.target.value)}
+                    className="h-10 w-12 cursor-pointer rounded-md border bg-transparent"
+                    aria-label={`${slot.label} colour picker`}
+                  />
+                  <Input
+                    value={customColors[slot.key]}
+                    onChange={(e) => updateCustomColor(slot.key, e.target.value)}
+                    placeholder={slot.suggested}
+                    className="font-mono uppercase"
+                    maxLength={7}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="flex gap-1.5">
+              {customColors.map((c, i) => (
+                <span key={i} className="h-8 w-8 rounded-full border border-black/10 shadow-sm" style={{ background: c }} />
+              ))}
+            </div>
+            <Button type="button" onClick={applyCustomPalette} className="ml-auto">
+              Apply custom palette
+            </Button>
+          </div>
+          <p className="text-[11px] text-muted-foreground">
+            Tip: keep slot 1 very light and slot 4 very dark for the best contrast and readability.
+          </p>
+        </CardContent>
+      </Card>
+
+
 
       {/* Booking-link layout */}
 
