@@ -165,6 +165,7 @@ function BookPage() {
   const showInstagram = theme?.welcome_card_show_instagram ?? true;
   const showFacebook = theme?.welcome_card_show_facebook ?? true;
   const cardSize = theme?.welcome_card_size ?? "medium";
+  const cardMobileSize = theme?.welcome_card_mobile_size ?? "medium";
   const cardPosition = theme?.welcome_card_position ?? "overlap";
   const cardBgType = theme?.welcome_card_background_type ?? "solid";
   const cardBg = theme?.welcome_card_bg_color ?? bgColor;
@@ -177,6 +178,18 @@ function BookPage() {
   const cardShadow = theme?.welcome_card_shadow ?? "0 10px 40px rgba(0,0,0,0.08)";
   const cardOpacity = theme?.welcome_card_opacity ?? 1;
   const cardBlur = theme?.welcome_card_blur ?? 0;
+
+  // Viewport-aware size: wide banner is mobile-only; on desktop it falls back to medium
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 640);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+  const effectiveSize = isMobile ? cardMobileSize : (cardSize === "wide" ? "medium" : cardSize);
+  const isCompact = effectiveSize === "compact";
+  const isWide = effectiveSize === "wide";
 
   const [locationId, setLocationId] = useState<string | null>(null);
   const practSelectionMode = profile.practitioner_selection_mode ?? "optional";
