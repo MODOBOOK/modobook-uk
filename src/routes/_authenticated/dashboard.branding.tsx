@@ -184,6 +184,15 @@ function BrandingPage() {
     toast.success("Card style preset applied");
   }
 
+  function applyColorPalette(palette: ColorPalette) {
+    setState((s) => ({ ...s, ...palette.colors }));
+    toast.success(`${palette.name} palette applied`);
+  }
+
+  const activePaletteKey = COLOR_PALETTES.find(
+    (p) => p.colors.background_color === state.background_color && p.colors.primary_color === state.primary_color,
+  )?.key;
+
   const WELCOME_CARD_PRESETS: { label: string; style: Partial<ClinicThemeInput> }[] = [
     {
       label: "Minimal pill",
