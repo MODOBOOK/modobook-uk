@@ -880,6 +880,7 @@ function ServiceDialog({
   const [allowSplit, setAllowSplit] = useState(false);
   const [rebookDays, setRebookDays] = useState<string>("");
   const [intervalDays, setIntervalDays] = useState<string>("");
+  const [intervalUnit, setIntervalUnit] = useState<"days" | "weeks">("weeks");
   const [color, setColor] = useState<string>(PRESET_COLORS[0]);
   const [active, setActive] = useState(true);
   const [pictureUrl, setPictureUrl] = useState<string | null>(null);
