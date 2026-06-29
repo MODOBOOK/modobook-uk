@@ -162,6 +162,10 @@ export const updateTreatment = createServerFn({ method: "POST" })
     if (data.discount_ends_at !== undefined) update.discount_ends_at = data.discount_ends_at;
     if (data.discount_show_was_now !== undefined) update.discount_show_was_now = data.discount_show_was_now;
     if (data.discount_label !== undefined) update.discount_label = data.discount_label;
+    if (data.aftercare_html !== undefined) update.aftercare_html = data.aftercare_html;
+    if (data.aftercare_delay_hours !== undefined) update.aftercare_delay_hours = data.aftercare_delay_hours;
+    if (data.auto_send_medical_forms !== undefined) update.auto_send_medical_forms = data.auto_send_medical_forms;
+    if (data.auto_send_aftercare !== undefined) update.auto_send_aftercare = data.auto_send_aftercare;
 
     const { data: treatment, error } = await supabase
       .from("treatments")
