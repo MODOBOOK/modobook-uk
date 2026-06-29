@@ -853,23 +853,6 @@ function BookPage() {
                 onClick={() => setMode("unsure")}
               />
             )}
-          </div>
-          {quizOn && (
-            <div className="mt-5 flex justify-center">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setQuizOpen(true)}
-                className="gap-2"
-              >
-                <Sparkles className="h-4 w-4" />
-                Not sure? Take our treatment finder quiz
-              </Button>
-            </div>
-          )}
-          <div className="hidden">{/* legacy quiz card removed — now a popup */}</div>
-          <div className="grid gap-3 sm:grid-cols-3 mt-0">
-
             {showConsult && (
               consultTreatmentId ? (
                 <Link
@@ -893,6 +876,19 @@ function BookPage() {
               )
             )}
           </div>
+          {quizOn && (
+            <div className="mt-5 flex justify-center">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setQuizOpen(true)}
+                className="gap-2"
+              >
+                <Sparkles className="h-4 w-4" />
+                Not sure? Take our treatment finder quiz
+              </Button>
+            </div>
+          )}
         </section>
       )}
 
