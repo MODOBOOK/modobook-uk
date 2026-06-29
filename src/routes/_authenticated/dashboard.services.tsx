@@ -302,6 +302,7 @@ function ServicesPage() {
               onDeleteTreat={handleDeleteTreat}
               onMoveCat={moveCat}
               onMoveTreat={moveTreat}
+              onReorderTreatsByIds={reorderTreatsByIds}
             />
           ))}
 
