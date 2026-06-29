@@ -146,6 +146,36 @@ function AftercarePage() {
                   }
                 />
               </div>
+
+              <div className="space-y-1.5 rounded-lg border p-3">
+                <Label className="text-sm font-semibold">Auto-attach to treatments</Label>
+                <p className="text-xs text-muted-foreground">
+                  Selected treatments will automatically send this aftercare after each appointment.
+                </p>
+                {(tQ.data ?? []).length === 0 ? (
+                  <p className="text-xs text-muted-foreground">No treatments yet.</p>
+                ) : (
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {(tQ.data as { id: string; name: string }[]).map((tr) => {
+                      const checked = treatmentIds.includes(tr.id);
+                      return (
+                        <button
+                          key={tr.id}
+                          type="button"
+                          onClick={() =>
+                            setTreatmentIds((prev) =>
+                              prev.includes(tr.id) ? prev.filter((x) => x !== tr.id) : [...prev, tr.id],
+                            )
+                          }
+                          className={`rounded-full border px-2.5 py-1 text-xs transition ${checked ? "bg-foreground text-background border-foreground" : "bg-background hover:bg-muted"}`}
+                        >
+                          {tr.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             </div>
           )}
           <DialogFooter>
@@ -154,7 +184,7 @@ function AftercarePage() {
               disabled={!editing?.name.trim()}
               onClick={async () => {
                 if (!editing) return;
-                await save({
+                const saved = await save({
                   data: {
                     id: editing.id || undefined,
                     name: editing.name.trim(),
@@ -162,7 +192,12 @@ function AftercarePage() {
                     delay_hours: editing.delay_hours,
                   },
                 });
+                const tplId = (saved as any)?.id ?? editing.id;
+                if (tplId) {
+                  await setTplTreatments({ data: { template_id: tplId, treatment_ids: treatmentIds } });
+                }
                 await qc.invalidateQueries({ queryKey: ["aftercare-templates"] });
+                await qc.invalidateQueries({ queryKey: ["my-aftercare-templates"] });
                 setOpen(false);
                 toast.success("Saved");
               }}
