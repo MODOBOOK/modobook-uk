@@ -74,44 +74,99 @@ function AftercarePage() {
         </p>
       </header>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Your templates</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          {q.isLoading && <div className="text-sm text-muted-foreground">Loading…</div>}
-          {q.data && q.data.length === 0 && (
-            <div className="rounded-md border border-dashed p-6 text-center text-sm text-muted-foreground">
-              No templates yet. Click <span className="font-medium">New template</span> to create your first one.
-            </div>
-          )}
-          {(q.data as Tpl[] | undefined)?.map((t) => (
-            <div key={t.id} className="flex items-center justify-between gap-3 rounded-lg border p-3">
-              <div className="min-w-0">
-                <div className="truncate font-medium">{t.name}</div>
-                <div className="text-xs text-muted-foreground">Sends {t.delay_hours}h after appointment</div>
-              </div>
-              <div className="flex gap-1 shrink-0">
-                <Button size="sm" variant="ghost" onClick={() => openEditor(t)}>
-                  <Pencil className="h-4 w-4" />
-                </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={async () => {
-                    if (!confirm(`Delete "${t.name}"?`)) return;
-                    await remove({ data: { id: t.id } });
-                    await qc.invalidateQueries({ queryKey: ["aftercare-templates"] });
-                    toast.success("Deleted");
-                  }}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
+      {(() => {
+        const all = (q.data as Tpl[] | undefined) ?? [];
+        const mine = all.filter((t) => !t.is_system);
+        const sys = all.filter((t) => t.is_system);
+        const grouped = sys.reduce<Record<string, Tpl[]>>((acc, t) => {
+          const k = t.category || "General";
+          (acc[k] ||= []).push(t);
+          return acc;
+        }, {});
+        return (
+          <>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">My templates</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {q.isLoading && <div className="text-sm text-muted-foreground">Loading…</div>}
+                {!q.isLoading && mine.length === 0 && (
+                  <div className="rounded-md border border-dashed p-6 text-center text-sm text-muted-foreground">
+                    No personal templates yet. Use one from the library below, or click <span className="font-medium">New template</span>.
+                  </div>
+                )}
+                {mine.map((t) => (
+                  <div key={t.id} className="flex items-center justify-between gap-3 rounded-lg border p-3">
+                    <div className="min-w-0">
+                      <div className="truncate font-medium">{t.name}</div>
+                      <div className="text-xs text-muted-foreground">Sends {t.delay_hours}h after appointment</div>
+                    </div>
+                    <div className="flex gap-1 shrink-0">
+                      <Button size="sm" variant="ghost" onClick={() => openEditor(t)}>
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={async () => {
+                          if (!confirm(`Delete "${t.name}"?`)) return;
+                          await remove({ data: { id: t.id } });
+                          await qc.invalidateQueries({ queryKey: ["aftercare-templates"] });
+                          toast.success("Deleted");
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Sparkles className="h-4 w-4" /> Aftercare library
+                </CardTitle>
+                <p className="text-xs text-muted-foreground">
+                  Ready-made aftercare written by clinicians. Use as-is, or duplicate to edit your own version.
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {Object.entries(grouped).map(([cat, items]) => (
+                  <div key={cat} className="space-y-2">
+                    <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{cat}</div>
+                    {items.map((t) => (
+                      <div key={t.id} className="flex items-center justify-between gap-3 rounded-lg border p-3">
+                        <div className="min-w-0">
+                          <div className="truncate font-medium">{t.name}</div>
+                          {t.summary && <div className="truncate text-xs text-muted-foreground">{t.summary}</div>}
+                        </div>
+                        <div className="flex gap-1 shrink-0">
+                          <Button size="sm" variant="outline" onClick={() => openEditor({ ...t, id: "", name: t.name })}>
+                            Preview
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={async () => {
+                              await cloneSys({ data: { id: t.id } });
+                              await qc.invalidateQueries({ queryKey: ["aftercare-templates"] });
+                              toast.success("Added to your templates");
+                            }}
+                          >
+                            <Copy className="mr-1 h-3.5 w-3.5" /> Use
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          </>
+        );
+      })()}
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-xl">
