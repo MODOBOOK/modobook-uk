@@ -52,7 +52,24 @@ import {
   ArrowUp,
   ArrowDown,
   MoreVertical,
+  GripVertical,
 } from "lucide-react";
+import {
+  DndContext,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  closestCenter,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  useSortable,
+  arrayMove,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -209,6 +226,15 @@ function ServicesPage() {
     }
   }
 
+  async function reorderTreatsByIds(ids: string[]) {
+    try {
+      await reorderTreats({ data: { ids } });
+      treats.refetch();
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  }
+
 
   return (
     <div className="space-y-5">
@@ -276,6 +302,7 @@ function ServicesPage() {
               onDeleteTreat={handleDeleteTreat}
               onMoveCat={moveCat}
               onMoveTreat={moveTreat}
+              onReorderTreatsByIds={reorderTreatsByIds}
             />
           ))}
 
@@ -354,6 +381,7 @@ function CategoryRow({
   onDeleteTreat,
   onMoveCat,
   onMoveTreat,
+  onReorderTreatsByIds,
 }: {
   node: CatNode;
   depth: number;
@@ -367,6 +395,7 @@ function CategoryRow({
   onDeleteTreat: (t: Treat) => void;
   onMoveCat: (siblings: Cat[], id: string, dir: -1 | 1) => void;
   onMoveTreat: (siblings: Treat[], id: string, dir: -1 | 1) => void;
+  onReorderTreatsByIds: (ids: string[]) => void;
 }) {
   const [open, setOpen] = useState(false);
   const treatsHere = node.treatments.filter(matchTreat);
@@ -448,20 +477,12 @@ function CategoryRow({
             </p>
           )}
 
-          {treatsHere.map((t, ti) => (
-            <div
-              key={t.id}
-              style={{ paddingLeft: 12 + (depth + 1) * 16 }}
-              className="border-b border-border/40 pr-2"
-            >
-              <ServiceRow
-                treat={t}
-                onDelete={() => onDeleteTreat(t)}
-                onMoveUp={ti === 0 ? undefined : () => onMoveTreat(treatsHere, t.id, -1)}
-                onMoveDown={ti === treatsHere.length - 1 ? undefined : () => onMoveTreat(treatsHere, t.id, 1)}
-              />
-            </div>
-          ))}
+          <SortableTreatList
+            treats={treatsHere}
+            depth={depth}
+            onDelete={onDeleteTreat}
+            onReorder={onReorderTreatsByIds}
+          />
 
           {node.children.map((child, ci) => (
             <CategoryRow
@@ -478,6 +499,7 @@ function CategoryRow({
               onDeleteTreat={onDeleteTreat}
               onMoveCat={onMoveCat}
               onMoveTreat={onMoveTreat}
+              onReorderTreatsByIds={onReorderTreatsByIds}
             />
           ))}
 
@@ -534,7 +556,7 @@ function ServiceRow({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem asChild>
-            <Link to="/dashboard/treatments" search={{ edit: treat.id }}>
+            <Link to="/dashboard/treatments" search={{ edit: treat.id, back: "services" }}>
               <Pencil className="mr-2 h-4 w-4" /> Edit
             </Link>
           </DropdownMenuItem>
@@ -555,6 +577,81 @@ function ServiceRow({
   );
 }
 
+function SortableTreatList({
+  treats,
+  depth,
+  onDelete,
+  onReorder,
+}: {
+  treats: Treat[];
+  depth: number;
+  onDelete: (t: Treat) => void;
+  onReorder: (ids: string[]) => void;
+}) {
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 180, tolerance: 6 } }),
+  );
+  const ids = treats.map((t) => t.id);
+  function onDragEnd(e: DragEndEvent) {
+    const { active, over } = e;
+    if (!over || active.id === over.id) return;
+    const oldIdx = ids.indexOf(String(active.id));
+    const newIdx = ids.indexOf(String(over.id));
+    if (oldIdx < 0 || newIdx < 0) return;
+    const next = arrayMove(ids, oldIdx, newIdx);
+    onReorder(next);
+  }
+  return (
+    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+      <SortableContext items={ids} strategy={verticalListSortingStrategy}>
+        {treats.map((t) => (
+          <SortableServiceItem key={t.id} treat={t} depth={depth} onDelete={() => onDelete(t)} />
+        ))}
+      </SortableContext>
+    </DndContext>
+  );
+}
+
+function SortableServiceItem({
+  treat,
+  depth,
+  onDelete,
+}: {
+  treat: Treat;
+  depth: number;
+  onDelete: () => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: treat.id,
+  });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.6 : 1,
+    paddingLeft: 12 + (depth + 1) * 16,
+  } as React.CSSProperties;
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="flex items-center gap-1 border-b border-border/40 pr-2 bg-background"
+    >
+      <button
+        type="button"
+        className="inline-flex h-8 w-6 cursor-grab items-center justify-center text-muted-foreground hover:text-foreground active:cursor-grabbing touch-none"
+        aria-label="Drag to reorder"
+        {...attributes}
+        {...listeners}
+      >
+        <GripVertical className="h-4 w-4" />
+      </button>
+      <div className="flex-1">
+        <ServiceRow treat={treat} onDelete={onDelete} />
+      </div>
+    </div>
+  );
+}
 
 function CategoryDialog({
   state,

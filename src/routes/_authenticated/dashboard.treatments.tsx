@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { getMyTreatments, createTreatment, updateTreatment, deleteTreatment } from "@/lib/treatments.functions";
@@ -23,7 +23,10 @@ import { Plus, Trash2, Pencil, FileText, X, Tag, PlusCircle } from "lucide-react
 
 export const Route = createFileRoute("/_authenticated/dashboard/treatments")({
   ssr: false,
-  validateSearch: (s: Record<string, unknown>) => ({ edit: typeof s.edit === "string" ? s.edit : undefined }),
+  validateSearch: (s: Record<string, unknown>) => ({
+    edit: typeof s.edit === "string" ? s.edit : undefined,
+    back: typeof s.back === "string" ? s.back : undefined,
+  }),
   component: TreatmentsPage,
 });
 
@@ -137,6 +140,7 @@ function TreatmentsPage() {
   }, []);
 
   const search = Route.useSearch();
+  const navigate = useNavigate();
   useEffect(() => {
     if (!search.edit || items.length === 0) return;
     const t = items.find((x) => x.id === search.edit);
@@ -175,6 +179,9 @@ function TreatmentsPage() {
       setOpen(false);
       setEditing(null);
       load();
+      if (search.back === "services") {
+        navigate({ to: "/dashboard/services" });
+      }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to save");
     }
