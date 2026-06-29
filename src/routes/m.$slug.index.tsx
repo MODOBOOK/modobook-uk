@@ -1265,6 +1265,9 @@ function BookPage() {
                         };
                         const ids = pkg.treatment_ids ?? (pkg.treatment_id ? [pkg.treatment_id] : []);
                         const firstTreatmentId = ids[0];
+                        const includedTreatments = ids
+                          .map((tid) => treatments.find((t) => t.id === tid))
+                          .filter((t): t is Treatment => Boolean(t));
                         return (
                           <Card key={p.id} className="overflow-hidden rounded-2xl">
                             {pkg.image_url && (
@@ -1281,6 +1284,21 @@ function BookPage() {
                                 {p.session_count} session{p.session_count === 1 ? "" : "s"}
                                 {pkg.duration_minutes ? ` · ${pkg.duration_minutes} min each` : ""}
                               </p>
+                              {includedTreatments.length > 0 && (
+                                <div className="mt-3 rounded-lg border p-2.5" style={{ borderColor: `${brand}26`, background: `${brand}0a` }}>
+                                  <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide opacity-70">
+                                    Includes
+                                  </div>
+                                  <ul className="space-y-0.5 text-sm">
+                                    {includedTreatments.map((t) => (
+                                      <li key={t.id} className="flex items-start gap-1.5">
+                                        <span style={{ color: brand }}>•</span>
+                                        <span>{t.name}</span>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
                               <div className="mt-3 flex items-center justify-between gap-2">
                                 <p className="font-bold" style={{ color: brand }}>
                                   £{Number(p.price ?? 0).toFixed(2)}
