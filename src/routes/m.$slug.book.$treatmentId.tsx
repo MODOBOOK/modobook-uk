@@ -449,6 +449,7 @@ function BookTreatmentPage() {
               disabled={(d) => {
                 const startOfToday = new Date(new Date().setHours(0, 0, 0, 0));
                 if (d < startOfToday) return true;
+                if (bookableFrom && toIsoDate(d) < bookableFrom) return true;
                 return isDateUnavailable(d);
               }}
               weekStartsOn={1}
