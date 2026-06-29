@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { getConsultation, updateConsultation } from "@/lib/consultations.functions";
+import { listMyConsentTemplates, getConsentTemplate } from "@/lib/treatment-consents.functions";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,12 +14,13 @@ import { Separator } from "@/components/ui/separator";
 import {
   Loader2, ChevronLeft, ChevronRight, Check, Camera, X,
   HeartPulse, ListChecks, Stethoscope, ClipboardEdit, FileSignature,
-  Images, Syringe, Receipt, ArrowLeft, Plus,
+  Images, Syringe, Receipt, ArrowLeft, Plus, Search,
 } from "lucide-react";
 import { toast } from "sonner";
 import { ClientFormsList } from "@/components/patient/ClientFormsList";
 import { FaceMapAnnotator } from "@/components/consultation/FaceMapAnnotator";
 import { ProductEntryCard, type LogProduct } from "@/components/consultation/ProductEntryCard";
+import { ConsentSectionsView, type ConsentSection } from "@/components/ConsentSections";
 
 export const Route = createFileRoute("/_authenticated/dashboard/consultations/$id")({
   ssr: false,
