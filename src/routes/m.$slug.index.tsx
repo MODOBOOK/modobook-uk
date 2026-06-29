@@ -1808,11 +1808,14 @@ function TreatmentRow({
   const desc = t.description ?? "";
   const isLong = desc.length > 110;
   const shown = expanded || !isLong ? desc : desc.slice(0, 110).trimEnd() + " …";
+  const picture = (t as Treatment & { picture_url?: string | null }).picture_url || null;
+  const hasMore = isLong || !!picture;
 
   const padding = size === "lg" ? "p-4 sm:p-5" : size === "md" ? "p-4" : "p-3.5";
   const nameSize = size === "lg" ? "text-lg sm:text-xl" : size === "md" ? "text-base sm:text-lg" : "text-[15px] sm:text-base";
   const priceSize = size === "lg" ? "text-lg" : size === "md" ? "text-base" : "text-[15px]";
   const checkSize = size === "lg" ? "h-6 w-6" : "h-5 w-5";
+  const thumbSize = size === "lg" ? "h-16 w-16 sm:h-20 sm:w-20" : "h-14 w-14 sm:h-16 sm:w-16";
 
   return (
     <div
@@ -1837,7 +1840,12 @@ function TreatmentRow({
       >
         {selected && <Check className="h-3 w-3" />}
       </button>
-      <button type="button" onClick={onToggle} className="min-w-0 flex-1 text-left">
+      <button type="button" onClick={() => setExpanded((v) => !v)} className="min-w-0 flex-1 text-left">
+        {picture && (
+          <div className={`float-right ml-3 overflow-hidden rounded-lg bg-muted ${thumbSize} ${expanded ? "hidden" : ""}`}>
+            <img src={picture} alt={t.name} className="h-full w-full object-cover" loading="lazy" />
+          </div>
+        )}
         <div className="flex items-start justify-between gap-3">
           <div className={`leading-tight ${nameSize} ${bold ? "font-bold" : "font-medium"}`} style={{ color: nameColor }}>
             {t.name}
@@ -1884,25 +1892,28 @@ function TreatmentRow({
           )}
         </div>
 
+        {expanded && picture && (
+          <div className="mt-3 overflow-hidden rounded-lg bg-muted">
+            <img src={picture} alt={t.name} className="max-h-72 w-full object-cover" loading="lazy" />
+          </div>
+        )}
         {desc && (
           <div className="mt-2 whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
             {shown}
-            {isLong && (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setExpanded((v) => !v);
-                }}
-                className="ml-1 font-semibold hover:underline"
-                style={{ color: brand }}
-              >
-                {expanded ? "Show less" : "Read more"}
-              </button>
-            )}
+          </div>
+        )}
+        {hasMore && (
+          <div className="mt-1.5 text-sm font-semibold" style={{ color: brand }}>
+            {expanded ? "Show less" : picture && !isLong ? "View photo" : "Read more"}
           </div>
         )}
       </button>
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-label={selected ? "Deselect" : "Select"}
+        className="sr-only"
+      />
     </div>
   );
 }
