@@ -21,6 +21,11 @@ import {
   listMyConsentTemplates,
   setTreatmentConsents,
 } from "@/lib/treatment-consents.functions";
+import {
+  listAftercareTemplates,
+  getTreatmentAftercareIds,
+  setTreatmentAftercareIds,
+} from "@/lib/aftercare-templates.functions";
 import { getMyProfile, updateProfile } from "@/lib/profiles.functions";
 import { ImageUploader } from "@/components/ImageUploader";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -157,6 +162,7 @@ function ServicesPage() {
   const createTreat = useServerFn(createTreatment);
   const patchTreat = useServerFn(updateTreatment);
   const setConsents = useServerFn(setTreatmentConsents);
+  const setAftercareTpls = useServerFn(setTreatmentAftercareIds);
   const removeTreat = useServerFn(deleteTreatment);
   const reorderCats = useServerFn(reorderCategories);
   const reorderTreats = useServerFn(reorderTreatments);
@@ -365,7 +371,7 @@ function ServicesPage() {
         onClose={() => setSvcDialog(null)}
         onSubmit={async (values) => {
           try {
-            const { consent_ids, ...base } = values;
+            const { consent_ids, aftercare_template_ids, ...base } = values;
             const baseCreate = {
               name: base.name,
               duration: base.duration,
@@ -400,6 +406,9 @@ function ServicesPage() {
                 data: { treatmentId: created.id, consentTemplateIds: consent_ids },
               });
             }
+            await setAftercareTpls({
+              data: { treatment_id: created.id, template_ids: aftercare_template_ids ?? [] },
+            });
             toast.success("Service created");
             setSvcDialog(null);
             treats.refetch();
@@ -833,6 +842,7 @@ function ServiceDialog({
     payment_mode?: "full" | "deposit" | "pay_in_clinic";
     deposit_amount?: number;
     consent_ids?: string[];
+    aftercare_template_ids?: string[];
     auto_send_medical_forms?: boolean;
     aftercare_html?: string | null;
     aftercare_delay_hours?: number;
@@ -845,13 +855,19 @@ function ServiceDialog({
   const open = !!state;
   const fetchProfile = useServerFn(getMyProfile);
   const fetchConsents = useServerFn(listMyConsentTemplates);
+  const fetchAftercare = useServerFn(listAftercareTemplates);
   const profile = useQuery({ queryKey: ["my-profile"], queryFn: () => fetchProfile() });
   const consents = useQuery({
     queryKey: ["my-consent-templates"],
     queryFn: () => fetchConsents(),
   });
+  const aftercareTpls = useQuery({
+    queryKey: ["my-aftercare-templates"],
+    queryFn: () => fetchAftercare(),
+  });
   const profileId = (profile.data as { id?: string } | undefined)?.id ?? "";
   const consentList = (consents.data ?? []) as { id: string; name: string; is_system: boolean }[];
+  const aftercareList = (aftercareTpls.data ?? []) as { id: string; name: string; delay_hours: number }[];
 
   const [name, setName] = useState("");
   const [duration, setDuration] = useState(30);
@@ -867,6 +883,7 @@ function ServiceDialog({
   const [paymentMode, setPaymentMode] = useState<"full" | "deposit" | "pay_in_clinic">("full");
   const [depositAmount, setDepositAmount] = useState<string>("");
   const [consentIds, setConsentIds] = useState<string[]>([]);
+  const [aftercareIds, setAftercareIds] = useState<string[]>([]);
   const [autoSendForms, setAutoSendForms] = useState(true);
   const [aftercareHtml, setAftercareHtml] = useState("");
   const [aftercareDelay, setAftercareDelay] = useState(2);
@@ -892,6 +909,7 @@ function ServiceDialog({
       setPaymentMode("full");
       setDepositAmount("");
       setConsentIds([]);
+      setAftercareIds([]);
       setAutoSendForms(true);
       setAftercareHtml("");
       setAftercareDelay(2);
@@ -1115,22 +1133,62 @@ function ServiceDialog({
           </div>
 
           <div className="rounded-lg border p-3 space-y-3">
-            <Label className="m-0 text-sm font-semibold">Aftercare instructions</Label>
-            <Textarea
-              rows={4}
-              value={aftercareHtml}
-              onChange={(e) => setAftercareHtml(e.target.value)}
-              placeholder="Sent automatically to the patient after their appointment."
-            />
-            <div className="space-y-1.5 max-w-[180px]">
-              <Label className="text-xs text-muted-foreground">Send after (hours)</Label>
-              <Input
-                type="number"
-                min={0}
-                value={aftercareDelay}
-                onChange={(e) => setAftercareDelay(Math.max(0, Number(e.target.value) || 0))}
-              />
+            <div className="flex items-center justify-between gap-2">
+              <Label className="m-0 text-sm font-semibold">Aftercare</Label>
+              <Link to="/dashboard/aftercare" className="text-xs underline text-muted-foreground">
+                Manage templates
+              </Link>
             </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">Attach aftercare templates</Label>
+              {aftercareList.length === 0 ? (
+                <p className="text-xs text-muted-foreground">
+                  No templates yet. Create reusable aftercare messages on the Aftercare page.
+                </p>
+              ) : (
+                <div className="flex flex-wrap gap-1.5">
+                  {aftercareList.map((t) => {
+                    const checked = aftercareIds.includes(t.id);
+                    return (
+                      <button
+                        key={t.id}
+                        type="button"
+                        onClick={() =>
+                          setAftercareIds((prev) =>
+                            prev.includes(t.id) ? prev.filter((x) => x !== t.id) : [...prev, t.id],
+                          )
+                        }
+                        className={`rounded-full border px-2.5 py-1 text-xs transition ${checked ? "bg-foreground text-background border-foreground" : "bg-background hover:bg-muted"}`}
+                      >
+                        {t.name} · {t.delay_hours}h
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+            <details>
+              <summary className="cursor-pointer text-xs font-medium text-muted-foreground">
+                Custom one-off aftercare for this service (optional)
+              </summary>
+              <div className="mt-2 space-y-2">
+                <Textarea
+                  rows={3}
+                  value={aftercareHtml}
+                  onChange={(e) => setAftercareHtml(e.target.value)}
+                  placeholder="Overrides templates for this service only."
+                />
+                <div className="space-y-1.5 max-w-[180px]">
+                  <Label className="text-xs text-muted-foreground">Send after (hours)</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    value={aftercareDelay}
+                    onChange={(e) => setAftercareDelay(Math.max(0, Number(e.target.value) || 0))}
+                  />
+                </div>
+              </div>
+            </details>
           </div>
 
           <div className="space-y-1.5">
@@ -1173,6 +1231,7 @@ function ServiceDialog({
                 payment_mode: (profile.data as { payment_deposit_enabled?: boolean } | undefined)?.payment_deposit_enabled ? "deposit" : "full",
                 deposit_amount: depositAmount.trim() ? Number(depositAmount) : undefined,
                 consent_ids: consentIds,
+                aftercare_template_ids: aftercareIds,
                 auto_send_medical_forms: autoSendForms,
                 aftercare_html: aftercareHtml.trim() || null,
                 aftercare_delay_hours: aftercareDelay,
