@@ -604,6 +604,40 @@ function TreatmentDialog({
           <p className="text-xs text-muted-foreground mt-2">
             Patients receive a link to complete each selected form after they book.
           </p>
+          <label className="flex items-center gap-2 text-sm pt-2 border-t">
+            <Switch checked={autoSendForms} onCheckedChange={setAutoSendForms} />
+            <span>Auto-send medical forms when this treatment is booked</span>
+          </label>
+        </div>
+
+        {/* Aftercare */}
+        <div className="rounded-md border p-3 space-y-3">
+          <div className="flex items-center gap-2">
+            <FileText className="h-4 w-4 text-muted-foreground" />
+            <Label className="m-0">Aftercare instructions</Label>
+          </div>
+          <Textarea
+            rows={5}
+            value={aftercareHtml}
+            onChange={(e) => setAftercareHtml(e.target.value)}
+            placeholder="Aftercare instructions to send to the patient after their appointment. Plain text or basic HTML accepted."
+          />
+          <div className="grid grid-cols-2 gap-3 items-end">
+            <div>
+              <Label className="text-xs text-muted-foreground">Send after (hours)</Label>
+              <Input
+                type="number"
+                min={0}
+                value={aftercareDelay}
+                onChange={(e) => setAftercareDelay(Math.max(0, Number(e.target.value) || 0))}
+              />
+            </div>
+            <label className="flex items-center gap-2 text-sm pb-2">
+              <Switch checked={autoSendAftercare} onCheckedChange={setAutoSendAftercare} />
+              <span>Auto-send aftercare</span>
+            </label>
+          </div>
+          <p className="text-[11px] text-muted-foreground">Aftercare is scheduled the moment the appointment is booked and dispatched at the chosen delay after the appointment ends.</p>
         </div>
       </div>
       <DialogFooter>
@@ -627,6 +661,10 @@ function TreatmentDialog({
               session_count: sessionCount,
               allow_split_payment: allowSplit && sessionCount >= 2,
               rebook_reminder_days: rebookDays === "" ? null : Number(rebookDays),
+              aftercare_html: aftercareHtml,
+              aftercare_delay_hours: aftercareDelay,
+              auto_send_medical_forms: autoSendForms,
+              auto_send_aftercare: autoSendAftercare,
             })
           }
           disabled={!name}
