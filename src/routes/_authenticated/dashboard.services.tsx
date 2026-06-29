@@ -1045,32 +1045,22 @@ function ServiceDialog({
                 </span>
               </label>
             )}
-            <div className="grid grid-cols-2 gap-3 pt-2 border-t">
-              <div className="space-y-1.5">
-                <Label>Payment method</Label>
-                <Select value={paymentMode} onValueChange={(v) => setPaymentMode(v as typeof paymentMode)}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="full">Pay in full online</SelectItem>
-                    <SelectItem value="deposit">Deposit online, balance in clinic</SelectItem>
-                    <SelectItem value="pay_in_clinic">Pay in clinic</SelectItem>
-                  </SelectContent>
-                </Select>
+            {(profile.data as { payment_deposit_enabled?: boolean } | undefined)?.payment_deposit_enabled && (
+              <div className="pt-2 border-t space-y-1.5">
+                <Label htmlFor="s-dep">Deposit override (£) <span className="text-[11px] font-normal text-muted-foreground">— optional, leave blank to use default</span></Label>
+                <Input
+                  id="s-dep"
+                  type="number"
+                  min={0}
+                  value={depositAmount}
+                  onChange={(e) => setDepositAmount(e.target.value)}
+                  placeholder={`Default £${(((profile.data as { deposit_amount_cents?: number } | undefined)?.deposit_amount_cents ?? 0) / 100).toFixed(2)}`}
+                />
+                <p className="text-[11px] text-muted-foreground">
+                  Payment methods (full / deposit / Klarna / Clearpay / pay in clinic) are managed in <a href="/dashboard/settings" className="underline">Booking settings</a>. Klarna &amp; Clearpay always charge the full amount at booking.
+                </p>
               </div>
-              {paymentMode === "deposit" && (
-                <div className="space-y-1.5">
-                  <Label htmlFor="s-dep">Deposit amount (£)</Label>
-                  <Input
-                    id="s-dep"
-                    type="number"
-                    min={0}
-                    value={depositAmount}
-                    onChange={(e) => setDepositAmount(e.target.value)}
-                    placeholder="e.g. 25"
-                  />
-                </div>
-              )}
-            </div>
+            )}
           </div>
 
           <div className="rounded-lg border p-3 space-y-2">
