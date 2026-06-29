@@ -428,6 +428,11 @@ function MultiBookPage() {
         <Card className="mb-6">
           <CardHeader>
             <CardTitle className="text-base" style={headingStyle}>Pick a date & time</CardTitle>
+            {bookableFrom && (
+              <p className="text-xs text-muted-foreground mt-1">
+                Bookable from {fromIsoDate(bookableFrom).toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" })}
+              </p>
+            )}
           </CardHeader>
           <CardContent className="space-y-5">
             <div className="flex justify-center">
@@ -440,6 +445,7 @@ function MultiBookPage() {
                 disabled={(d) => {
                   const startOfToday = new Date(new Date().setHours(0, 0, 0, 0));
                   if (d < startOfToday) return true;
+                  if (bookableFrom && toIsoDate(d) < bookableFrom) return true;
                   return isDateUnavailable(d);
                 }}
                 weekStartsOn={1}
