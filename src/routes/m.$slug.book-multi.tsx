@@ -730,7 +730,7 @@ function MultiBookPage() {
               className="w-full"
               size="lg"
               disabled={
-                !slot || submitting || !form.name || !form.email || !form.phone || !form.dob ||
+                !slot || submitting || !form.name || !form.email || (reqPhone && !form.phone) || (reqDob && !form.dob) ||
                 (termsRequired && !agreedToTerms)
               }
               onClick={submit}
