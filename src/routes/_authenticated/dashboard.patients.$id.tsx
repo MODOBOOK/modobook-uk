@@ -27,8 +27,14 @@ import {
 import {
   ArrowLeft, Mail, Phone as PhoneIcon, MessageSquare, Edit2, Plus, Trash2, Camera,
   Upload, FileText, AlertTriangle, Download, Loader2, ClipboardList, X, Check,
+  CalendarPlus, CreditCard, FileSignature, Send,
 } from "lucide-react";
 import { toast } from "sonner";
+import { ConcernsCard } from "@/components/patient/ConcernsCard";
+import { CommsTimeline } from "@/components/patient/CommsTimeline";
+import { EmailComposerDialog } from "@/components/patient/EmailComposerDialog";
+import { logCommunication } from "@/lib/patient-hub.functions";
+
 
 export const Route = createFileRoute("/_authenticated/dashboard/patients/$id")({
   ssr: false,
