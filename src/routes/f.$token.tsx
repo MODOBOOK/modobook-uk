@@ -31,8 +31,19 @@ type FormElement = {
   text?: string;
   level?: 1 | 2 | 3;
   fieldType?: string;
+  logic?: { showIfId: string; equals: string } | null;
 };
 type FormStep = { id: string; title: string; elements: FormElement[] };
+
+function isVisible(el: FormElement, responses: Record<string, any>): boolean {
+  if (!el.logic || !el.logic.showIfId) return true;
+  const v = responses[el.logic.showIfId];
+  const target = el.logic.equals;
+  if (!target) return true;
+  if (Array.isArray(v)) return v.includes(target);
+  if (typeof v === "boolean") return (target === "Checked") === v;
+  return String(v ?? "") === target;
+}
 
 function FillFormPage() {
   const { token } = useParams({ from: "/f/$token" });
