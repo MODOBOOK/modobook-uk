@@ -33,6 +33,7 @@ import { Route as AuthenticatedDashboardReviewsRouteImport } from './routes/_aut
 import { Route as AuthenticatedDashboardPractitionersRouteImport } from './routes/_authenticated/dashboard.practitioners'
 import { Route as AuthenticatedDashboardPoliciesRouteImport } from './routes/_authenticated/dashboard.policies'
 import { Route as AuthenticatedDashboardPaymentsRouteImport } from './routes/_authenticated/dashboard.payments'
+import { Route as AuthenticatedDashboardPatientsRouteImport } from './routes/_authenticated/dashboard.patients'
 import { Route as AuthenticatedDashboardPackagesRouteImport } from './routes/_authenticated/dashboard.packages'
 import { Route as AuthenticatedDashboardNewAppointmentRouteImport } from './routes/_authenticated/dashboard.new-appointment'
 import { Route as AuthenticatedDashboardModelSlotsRouteImport } from './routes/_authenticated/dashboard.model-slots'
@@ -183,6 +184,12 @@ const AuthenticatedDashboardPaymentsRoute =
     path: '/payments',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
+const AuthenticatedDashboardPatientsRoute =
+  AuthenticatedDashboardPatientsRouteImport.update({
+    id: '/patients',
+    path: '/patients',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
 const AuthenticatedDashboardPackagesRoute =
   AuthenticatedDashboardPackagesRouteImport.update({
     id: '/packages',
@@ -281,9 +288,9 @@ const AuthenticatedDashboardAddonsRoute =
   } as any)
 const AuthenticatedDashboardPatientsIndexRoute =
   AuthenticatedDashboardPatientsIndexRouteImport.update({
-    id: '/patients/',
-    path: '/patients/',
-    getParentRoute: () => AuthenticatedDashboardRoute,
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedDashboardPatientsRoute,
   } as any)
 const AuthenticatedDashboardConsultationsIndexRoute =
   AuthenticatedDashboardConsultationsIndexRouteImport.update({
@@ -303,9 +310,9 @@ const MSlugBookTreatmentIdRoute = MSlugBookTreatmentIdRouteImport.update({
 } as any)
 const AuthenticatedDashboardPatientsIdRoute =
   AuthenticatedDashboardPatientsIdRouteImport.update({
-    id: '/patients/$id',
-    path: '/patients/$id',
-    getParentRoute: () => AuthenticatedDashboardRoute,
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => AuthenticatedDashboardPatientsRoute,
   } as any)
 const AuthenticatedDashboardConsultationsIdRoute =
   AuthenticatedDashboardConsultationsIdRouteImport.update({
@@ -340,6 +347,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/model-slots': typeof AuthenticatedDashboardModelSlotsRoute
   '/dashboard/new-appointment': typeof AuthenticatedDashboardNewAppointmentRoute
   '/dashboard/packages': typeof AuthenticatedDashboardPackagesRoute
+  '/dashboard/patients': typeof AuthenticatedDashboardPatientsRouteWithChildren
   '/dashboard/payments': typeof AuthenticatedDashboardPaymentsRoute
   '/dashboard/policies': typeof AuthenticatedDashboardPoliciesRoute
   '/dashboard/practitioners': typeof AuthenticatedDashboardPractitionersRoute
@@ -434,6 +442,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/model-slots': typeof AuthenticatedDashboardModelSlotsRoute
   '/_authenticated/dashboard/new-appointment': typeof AuthenticatedDashboardNewAppointmentRoute
   '/_authenticated/dashboard/packages': typeof AuthenticatedDashboardPackagesRoute
+  '/_authenticated/dashboard/patients': typeof AuthenticatedDashboardPatientsRouteWithChildren
   '/_authenticated/dashboard/payments': typeof AuthenticatedDashboardPaymentsRoute
   '/_authenticated/dashboard/policies': typeof AuthenticatedDashboardPoliciesRoute
   '/_authenticated/dashboard/practitioners': typeof AuthenticatedDashboardPractitionersRoute
@@ -483,6 +492,7 @@ export interface FileRouteTypes {
     | '/dashboard/model-slots'
     | '/dashboard/new-appointment'
     | '/dashboard/packages'
+    | '/dashboard/patients'
     | '/dashboard/payments'
     | '/dashboard/policies'
     | '/dashboard/practitioners'
@@ -576,6 +586,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/model-slots'
     | '/_authenticated/dashboard/new-appointment'
     | '/_authenticated/dashboard/packages'
+    | '/_authenticated/dashboard/patients'
     | '/_authenticated/dashboard/payments'
     | '/_authenticated/dashboard/policies'
     | '/_authenticated/dashboard/practitioners'
@@ -778,6 +789,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardPaymentsRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
+    '/_authenticated/dashboard/patients': {
+      id: '/_authenticated/dashboard/patients'
+      path: '/patients'
+      fullPath: '/dashboard/patients'
+      preLoaderRoute: typeof AuthenticatedDashboardPatientsRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
     '/_authenticated/dashboard/packages': {
       id: '/_authenticated/dashboard/packages'
       path: '/packages'
@@ -892,10 +910,10 @@ declare module '@tanstack/react-router' {
     }
     '/_authenticated/dashboard/patients/': {
       id: '/_authenticated/dashboard/patients/'
-      path: '/patients'
+      path: '/'
       fullPath: '/dashboard/patients/'
       preLoaderRoute: typeof AuthenticatedDashboardPatientsIndexRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
+      parentRoute: typeof AuthenticatedDashboardPatientsRoute
     }
     '/_authenticated/dashboard/consultations/': {
       id: '/_authenticated/dashboard/consultations/'
@@ -920,10 +938,10 @@ declare module '@tanstack/react-router' {
     }
     '/_authenticated/dashboard/patients/$id': {
       id: '/_authenticated/dashboard/patients/$id'
-      path: '/patients/$id'
+      path: '/$id'
       fullPath: '/dashboard/patients/$id'
       preLoaderRoute: typeof AuthenticatedDashboardPatientsIdRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
+      parentRoute: typeof AuthenticatedDashboardPatientsRoute
     }
     '/_authenticated/dashboard/consultations/$id': {
       id: '/_authenticated/dashboard/consultations/$id'
@@ -934,6 +952,24 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface AuthenticatedDashboardPatientsRouteChildren {
+  AuthenticatedDashboardPatientsIdRoute: typeof AuthenticatedDashboardPatientsIdRoute
+  AuthenticatedDashboardPatientsIndexRoute: typeof AuthenticatedDashboardPatientsIndexRoute
+}
+
+const AuthenticatedDashboardPatientsRouteChildren: AuthenticatedDashboardPatientsRouteChildren =
+  {
+    AuthenticatedDashboardPatientsIdRoute:
+      AuthenticatedDashboardPatientsIdRoute,
+    AuthenticatedDashboardPatientsIndexRoute:
+      AuthenticatedDashboardPatientsIndexRoute,
+  }
+
+const AuthenticatedDashboardPatientsRouteWithChildren =
+  AuthenticatedDashboardPatientsRoute._addFileChildren(
+    AuthenticatedDashboardPatientsRouteChildren,
+  )
 
 interface AuthenticatedDashboardRouteChildren {
   AuthenticatedDashboardAddonsRoute: typeof AuthenticatedDashboardAddonsRoute
@@ -952,6 +988,7 @@ interface AuthenticatedDashboardRouteChildren {
   AuthenticatedDashboardModelSlotsRoute: typeof AuthenticatedDashboardModelSlotsRoute
   AuthenticatedDashboardNewAppointmentRoute: typeof AuthenticatedDashboardNewAppointmentRoute
   AuthenticatedDashboardPackagesRoute: typeof AuthenticatedDashboardPackagesRoute
+  AuthenticatedDashboardPatientsRoute: typeof AuthenticatedDashboardPatientsRouteWithChildren
   AuthenticatedDashboardPaymentsRoute: typeof AuthenticatedDashboardPaymentsRoute
   AuthenticatedDashboardPoliciesRoute: typeof AuthenticatedDashboardPoliciesRoute
   AuthenticatedDashboardPractitionersRoute: typeof AuthenticatedDashboardPractitionersRoute
@@ -961,9 +998,7 @@ interface AuthenticatedDashboardRouteChildren {
   AuthenticatedDashboardTreatmentsRoute: typeof AuthenticatedDashboardTreatmentsRoute
   AuthenticatedDashboardIndexRoute: typeof AuthenticatedDashboardIndexRoute
   AuthenticatedDashboardConsultationsIdRoute: typeof AuthenticatedDashboardConsultationsIdRoute
-  AuthenticatedDashboardPatientsIdRoute: typeof AuthenticatedDashboardPatientsIdRoute
   AuthenticatedDashboardConsultationsIndexRoute: typeof AuthenticatedDashboardConsultationsIndexRoute
-  AuthenticatedDashboardPatientsIndexRoute: typeof AuthenticatedDashboardPatientsIndexRoute
 }
 
 const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
@@ -991,6 +1026,8 @@ const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
     AuthenticatedDashboardNewAppointmentRoute:
       AuthenticatedDashboardNewAppointmentRoute,
     AuthenticatedDashboardPackagesRoute: AuthenticatedDashboardPackagesRoute,
+    AuthenticatedDashboardPatientsRoute:
+      AuthenticatedDashboardPatientsRouteWithChildren,
     AuthenticatedDashboardPaymentsRoute: AuthenticatedDashboardPaymentsRoute,
     AuthenticatedDashboardPoliciesRoute: AuthenticatedDashboardPoliciesRoute,
     AuthenticatedDashboardPractitionersRoute:
@@ -1003,12 +1040,8 @@ const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
     AuthenticatedDashboardIndexRoute: AuthenticatedDashboardIndexRoute,
     AuthenticatedDashboardConsultationsIdRoute:
       AuthenticatedDashboardConsultationsIdRoute,
-    AuthenticatedDashboardPatientsIdRoute:
-      AuthenticatedDashboardPatientsIdRoute,
     AuthenticatedDashboardConsultationsIndexRoute:
       AuthenticatedDashboardConsultationsIndexRoute,
-    AuthenticatedDashboardPatientsIndexRoute:
-      AuthenticatedDashboardPatientsIndexRoute,
   }
 
 const AuthenticatedDashboardRouteWithChildren =
