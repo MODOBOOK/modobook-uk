@@ -179,6 +179,10 @@ export const getDayAvailability = createServerFn({ method: "GET" })
   .inputValidator((input: { profileId: string; date: string; locationId?: string | null }) => input)
   .handler(async ({ data }) => {
     const sb = publicClient();
+    // Use admin client to read appointments — anon has no SELECT policy on appointments,
+    // so without this booked slots would not appear as busy to public visitors.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
     const { data: blockedRows } = await sb
       .from("blocked_dates")
       .select("id,location_id")
@@ -188,7 +192,7 @@ export const getDayAvailability = createServerFn({ method: "GET" })
       (b) => !b.location_id || !data.locationId || b.location_id === data.locationId,
     );
 
-    const { data: appts } = await sb
+    const { data: appts } = await supabaseAdmin
       .from("appointments")
       .select("start_time,end_time,location_id,status")
       .eq("profile_id", data.profileId)
@@ -212,6 +216,7 @@ export const getDayAvailability = createServerFn({ method: "GET" })
 
     return { isBlocked, busy: [...(appts ?? []), ...blockedBusy], overrides: overrides ?? [] };
   });
+
 
 
 export const getMonthAvailability = createServerFn({ method: "GET" })
