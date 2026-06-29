@@ -253,6 +253,68 @@ function FormsPage() {
   );
 }
 
+/* ============= Recent submissions panel ============= */
+
+function RecentSubmissionsPanel() {
+  const fetchRecent = useServerFn(listRecentFormSubmissions);
+  const [rows, setRows] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [viewId, setViewId] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchRecent({ data: { limit: 10 } })
+      .then((r: any) => setRows(r ?? []))
+      .catch(() => setRows([]))
+      .finally(() => setLoading(false));
+  }, [fetchRecent]);
+
+  if (!loading && rows.length === 0) return null;
+
+  return (
+    <Accordion type="single" collapsible className="rounded-lg border">
+      <AccordionItem value="recent" className="border-0 px-4">
+        <AccordionTrigger className="py-3 hover:no-underline">
+          <span className="flex items-center gap-2 text-sm font-semibold">
+            Recent submissions
+            <Badge variant="secondary" className="text-[10px]">{rows.length}</Badge>
+          </span>
+        </AccordionTrigger>
+        <AccordionContent>
+          <div className="space-y-1.5 pb-3">
+            {loading ? (
+              <div className="flex justify-center py-4"><Loader2 className="h-4 w-4 animate-spin" /></div>
+            ) : rows.map((r) => {
+              const done = r.status === "submitted";
+              return (
+                <button
+                  key={r.id}
+                  onClick={() => setViewId(r.id)}
+                  className="flex w-full items-center gap-2 rounded-md border p-2.5 text-left text-sm hover:bg-muted"
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate font-medium">{r.template?.name ?? "Form"}</div>
+                    <div className="truncate text-[11px] text-muted-foreground">
+                      {(r.client?.full_name ?? r.recipient_email ?? "—")} ·{" "}
+                      {done && r.submitted_at
+                        ? `Completed ${new Date(r.submitted_at).toLocaleDateString()}`
+                        : `Sent ${new Date(r.created_at).toLocaleDateString()}`}
+                    </div>
+                  </div>
+                  <Badge variant={done ? "default" : "secondary"} className="text-[10px]">
+                    {done ? "Completed" : "Pending"}
+                  </Badge>
+                </button>
+              );
+            })}
+          </div>
+        </AccordionContent>
+      </AccordionItem>
+      <FormResponseDialog open={!!viewId} onOpenChange={(v) => !v && setViewId(null)} submissionId={viewId} />
+    </Accordion>
+  );
+}
+
+
 /* ============= Form Editor ============= */
 
 function FormEditor({ formId, onClose, cats }: { formId: string; onClose: () => void; cats: Cat[] }) {
