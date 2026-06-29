@@ -513,7 +513,7 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
         patient_address: data.patientAddress ?? null,
         patient_user_id: data.patientUserId ?? null,
         notes: appointmentNotes,
-        status: "confirmed",
+        status,
         payment_status: "pending",
         base_amount: b.priceCents / 100,
         total_amount: sessionCount > 1 && b.paymentPlan === "split"
