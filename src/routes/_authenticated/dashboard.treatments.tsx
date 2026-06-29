@@ -140,6 +140,7 @@ function TreatmentsPage() {
   }, []);
 
   const search = Route.useSearch();
+  const navigate = useNavigate();
   useEffect(() => {
     if (!search.edit || items.length === 0) return;
     const t = items.find((x) => x.id === search.edit);
