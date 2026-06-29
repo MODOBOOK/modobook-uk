@@ -13,10 +13,17 @@ import {
 import {
   getMyTreatments,
   createTreatment,
+  updateTreatment,
   deleteTreatment,
   reorderTreatments,
 } from "@/lib/treatments.functions";
+import {
+  listMyConsentTemplates,
+  setTreatmentConsents,
+} from "@/lib/treatment-consents.functions";
 import { getMyProfile, updateProfile } from "@/lib/profiles.functions";
+import { ImageUploader } from "@/components/ImageUploader";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { Star, X } from "lucide-react";
 
