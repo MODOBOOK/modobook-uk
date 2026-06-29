@@ -422,7 +422,7 @@ function MultiBookPage() {
                 <div className="font-medium" style={{ color: brand }}>{t.name}</div>
                 <div className="flex items-center gap-3 opacity-80">
                   <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{durationFor(t)} min</span>
-                  <span className="font-semibold" style={{ color: brand }}>£{priceFor(t).toFixed(2)}</span>
+                  {showPrices && <span className="font-semibold" style={{ color: brand }}>£{priceFor(t).toFixed(2)}</span>}
                 </div>
               </div>
             ))}
