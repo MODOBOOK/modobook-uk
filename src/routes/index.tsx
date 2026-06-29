@@ -186,15 +186,13 @@ function LandingPage() {
               </h2>
               <p className="mt-3 text-muted-foreground">
                 One safe, traceable place for prescribers and the practitioners they
-                support. Remote consultations, prescriptions, Rx records, batch sign-off
-                and collaborative patient notes — all linked to the booking that started
-                it.
+                support. Shared patient records and collaborative notes — all linked
+                to the booking that started it.
               </p>
             </div>
-            <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-              <HubCard icon={Pill} title="Remote prescribing" desc="Link a prescriber to a patient and treatment. Audit-trailed, signed, stored." />
+            <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               <HubCard icon={ClipboardList} title="Shared patient record" desc="Prescriber sees the medical form, consultation and photos — with consent." />
-              <HubCard icon={Microscope} title="Batch & expiry sign-off" desc="Prescribers approve the products being used, before they're used." />
+              <HubCard icon={Network} title="Connected practitioners" desc="Prescribers can support many practitioners; practitioners can refer to many prescribers." />
               <HubCard icon={HandshakeIcon} title="Collaborative care" desc="One workflow for HCPs and non-HCPs — accountable, safe, professional." />
             </div>
             <div className="mt-10 text-center">
