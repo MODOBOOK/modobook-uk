@@ -772,7 +772,7 @@ function CategoryDialog({
             />
           </div>
           <div className="space-y-1.5 rounded-lg border border-dashed border-amber-300 bg-amber-50/50 p-3">
-            <Label htmlFor="c-soon" className="text-amber-900">Coming soon date (optional)</Label>
+            <Label htmlFor="c-soon" className="text-amber-900">Book from date (optional)</Label>
             <Input
               id="c-soon"
               type="date"
@@ -780,7 +780,7 @@ function CategoryDialog({
               onChange={(e) => setComingSoon(e.target.value)}
             />
             <p className="text-[11px] text-amber-800/80">
-              Before this date the category shows a "Coming soon" badge and cannot be booked. After it passes, it becomes bookable automatically. Leave blank to disable.
+              Before this date the category shows a "Book from [date]" badge and cannot be booked. After it passes, it becomes bookable automatically. Leave blank to disable.
             </p>
           </div>
         </div>
