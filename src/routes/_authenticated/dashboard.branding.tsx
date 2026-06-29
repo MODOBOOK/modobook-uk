@@ -735,19 +735,24 @@ function BrandingPage() {
       </Card>
 
       <Card>
-        <CardHeader><CardTitle className="text-base">Logo, favicon & hero image</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle className="text-base">Logo, tab icon & banner</CardTitle>
+          <p className="text-xs text-muted-foreground">All images can be cropped and repositioned after upload. They auto-fit desktop and mobile.</p>
+        </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
           <div className="sm:col-span-2">
             <ImageUploader label="Logo" value={state.logo_url} onChange={(v) => set("logo_url", v)} profileId={profileId} folder="logo" previewClass="mt-2 h-16 object-contain rounded bg-muted/30 p-2" />
           </div>
-          <ImageUploader label="Favicon" value={state.favicon_url} onChange={(v) => set("favicon_url", v)} profileId={profileId} folder="favicon" previewClass="mt-2 h-8 w-8 object-contain rounded" />
-          <ImageUploader label="Hero image" value={state.hero_image_url} onChange={(v) => set("hero_image_url", v)} profileId={profileId} folder="hero" previewClass="mt-2 h-40 w-full rounded-md object-cover" />
+          <ImageUploader label="Tab icon (browser tab)" value={state.favicon_url} onChange={(v) => set("favicon_url", v)} profileId={profileId} folder="favicon" previewClass="mt-2 h-8 w-8 object-contain rounded" cropAspect={1} />
+          {(state.layout_key ?? "classic") === "classic" && (
+            <ImageUploader label="Banner image" value={state.hero_image_url} onChange={(v) => set("hero_image_url", v)} profileId={profileId} folder="hero" previewClass="mt-2 h-40 w-full rounded-md object-cover" cropAspect={16 / 9} />
+          )}
           <div className="space-y-1.5 sm:col-span-2">
-            <Label>Hero heading</Label>
+            <Label>Banner title</Label>
             <Input value={state.hero_heading ?? ""} onChange={(e) => set("hero_heading", e.target.value || null)} />
           </div>
           <div className="space-y-1.5 sm:col-span-2">
-            <Label>Hero subheading</Label>
+            <Label>Banner subtitle</Label>
             <Textarea rows={2} value={state.hero_subheading ?? ""} onChange={(e) => set("hero_subheading", e.target.value || null)} />
           </div>
         </CardContent>
