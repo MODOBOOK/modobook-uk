@@ -551,8 +551,9 @@ function OptionsEditor({ options, onChange }: { options: string[]; onChange: (ne
   );
 }
 
-function ElementEditor({ element, onChange, onRemove, onMove, onDuplicate }: {
+function ElementEditor({ element, siblings, onChange, onRemove, onMove, onDuplicate }: {
   element: FormElement;
+  siblings: FormElement[];
   onChange: (p: Partial<FormElement>) => void;
   onRemove: () => void;
   onMove: (d: -1 | 1) => void;
