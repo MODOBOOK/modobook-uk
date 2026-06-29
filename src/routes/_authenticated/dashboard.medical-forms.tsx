@@ -25,6 +25,7 @@ import {
 import {
   Search, Plus, Pencil, Trash2, ChevronUp, ChevronDown, Heading1, Type as TypeIcon,
   TextCursorInput, ListChecks, CheckSquare, Minus, MoveVertical, Signature, Loader2, X,
+  Copy, GripVertical, Info, Star, CircleDot, ListTodo,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -34,20 +35,26 @@ export const Route = createFileRoute("/_authenticated/dashboard/medical-forms")(
 });
 
 /* ---------- Schema types ---------- */
-type ElType = "heading" | "paragraph" | "field" | "select" | "checkbox" | "separator" | "space" | "signature";
+type ElType =
+  | "heading" | "paragraph" | "field" | "select" | "checkbox" | "separator"
+  | "space" | "signature" | "radio" | "checkbox_group" | "info" | "rating";
 type FormElement = {
   id: string;
   type: ElType;
   label?: string;
   placeholder?: string;
+  helpText?: string;
   required?: boolean;
   options?: string[];
   text?: string;
   level?: 1 | 2 | 3;
   fieldType?: "text" | "email" | "tel" | "number" | "date" | "textarea";
+  variant?: "info" | "warning" | "success";
+  max?: number;
 };
 type FormStep = { id: string; title: string; elements: FormElement[] };
 type FormSchema = { steps: FormStep[] };
+
 
 function nid() { return Math.random().toString(36).slice(2, 9); }
 
