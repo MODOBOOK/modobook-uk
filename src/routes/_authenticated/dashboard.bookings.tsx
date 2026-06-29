@@ -680,6 +680,9 @@ function CheckoutSheet({
   const updateAfter = useServerFn(updateAppointmentAftercareAndAllergy);
   const checkout = useServerFn(completeAppointmentCheckout);
   const createLink = useServerFn(createPaymentLink);
+  const getOrCreateClient = useServerFn(getOrCreateClientForAppointment);
+  const markNoShow = useServerFn(markAppointmentNoShow);
+  const blockClient = useServerFn(setClientBlocked);
 
   const [notes, setNotes] = useState(a.practitioner_notes ?? "");
   const [aftercare, setAftercare] = useState(a.aftercare_html ?? "");
@@ -690,6 +693,7 @@ function CheckoutSheet({
   const [checkoutNotes, setCheckoutNotes] = useState("");
   const [busy, setBusy] = useState(false);
   const cancelled = a.status === "cancelled";
+  const isNoShow = a.status === "no_show";
   const color = a.treatments?.color || "#3b82f6";
 
   const subtotal = Number(a.total_amount ?? 0);
