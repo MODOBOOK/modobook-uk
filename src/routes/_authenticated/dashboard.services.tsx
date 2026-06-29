@@ -1133,22 +1133,62 @@ function ServiceDialog({
           </div>
 
           <div className="rounded-lg border p-3 space-y-3">
-            <Label className="m-0 text-sm font-semibold">Aftercare instructions</Label>
-            <Textarea
-              rows={4}
-              value={aftercareHtml}
-              onChange={(e) => setAftercareHtml(e.target.value)}
-              placeholder="Sent automatically to the patient after their appointment."
-            />
-            <div className="space-y-1.5 max-w-[180px]">
-              <Label className="text-xs text-muted-foreground">Send after (hours)</Label>
-              <Input
-                type="number"
-                min={0}
-                value={aftercareDelay}
-                onChange={(e) => setAftercareDelay(Math.max(0, Number(e.target.value) || 0))}
-              />
+            <div className="flex items-center justify-between gap-2">
+              <Label className="m-0 text-sm font-semibold">Aftercare</Label>
+              <Link to="/dashboard/aftercare" className="text-xs underline text-muted-foreground">
+                Manage templates
+              </Link>
             </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">Attach aftercare templates</Label>
+              {aftercareList.length === 0 ? (
+                <p className="text-xs text-muted-foreground">
+                  No templates yet. Create reusable aftercare messages on the Aftercare page.
+                </p>
+              ) : (
+                <div className="flex flex-wrap gap-1.5">
+                  {aftercareList.map((t) => {
+                    const checked = aftercareIds.includes(t.id);
+                    return (
+                      <button
+                        key={t.id}
+                        type="button"
+                        onClick={() =>
+                          setAftercareIds((prev) =>
+                            prev.includes(t.id) ? prev.filter((x) => x !== t.id) : [...prev, t.id],
+                          )
+                        }
+                        className={`rounded-full border px-2.5 py-1 text-xs transition ${checked ? "bg-foreground text-background border-foreground" : "bg-background hover:bg-muted"}`}
+                      >
+                        {t.name} · {t.delay_hours}h
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+            <details>
+              <summary className="cursor-pointer text-xs font-medium text-muted-foreground">
+                Custom one-off aftercare for this service (optional)
+              </summary>
+              <div className="mt-2 space-y-2">
+                <Textarea
+                  rows={3}
+                  value={aftercareHtml}
+                  onChange={(e) => setAftercareHtml(e.target.value)}
+                  placeholder="Overrides templates for this service only."
+                />
+                <div className="space-y-1.5 max-w-[180px]">
+                  <Label className="text-xs text-muted-foreground">Send after (hours)</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    value={aftercareDelay}
+                    onChange={(e) => setAftercareDelay(Math.max(0, Number(e.target.value) || 0))}
+                  />
+                </div>
+              </div>
+            </details>
           </div>
 
           <div className="space-y-1.5">
