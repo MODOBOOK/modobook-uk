@@ -1170,11 +1170,8 @@ function ServiceDialog({
                 color,
                 active,
                 picture_url: pictureUrl ?? undefined,
-                payment_mode: paymentMode,
-                deposit_amount:
-                  paymentMode === "deposit" && depositAmount.trim()
-                    ? Number(depositAmount)
-                    : undefined,
+                payment_mode: (profile.data as { payment_deposit_enabled?: boolean } | undefined)?.payment_deposit_enabled ? "deposit" : "full",
+                deposit_amount: depositAmount.trim() ? Number(depositAmount) : undefined,
                 consent_ids: consentIds,
                 auto_send_medical_forms: autoSendForms,
                 aftercare_html: aftercareHtml.trim() || null,
