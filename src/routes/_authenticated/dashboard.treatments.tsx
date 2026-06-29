@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { getMyTreatments, createTreatment, updateTreatment, deleteTreatment } from "@/lib/treatments.functions";
@@ -9,6 +9,11 @@ import {
   listMyConsentTemplates,
 } from "@/lib/treatment-consents.functions";
 import { getTreatmentAddons, setTreatmentAddons, type AddonLink } from "@/lib/treatment-addons.functions";
+import {
+  listAftercareTemplates,
+  getTreatmentAftercareIds,
+  setTreatmentAftercareIds,
+} from "@/lib/aftercare-templates.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
