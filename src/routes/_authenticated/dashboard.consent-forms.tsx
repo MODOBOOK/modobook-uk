@@ -253,13 +253,21 @@ function ConsentFormsPage() {
         <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-3xl">
           <DialogHeader>
             <DialogTitle>
-              {editing?.is_system ? "Preview consent" : editing?.id ? "Edit consent template" : "New consent template"}
+              {editing?.is_system
+                ? isAdmin
+                  ? editing?.id
+                    ? "Edit system consent template"
+                    : "New system consent template"
+                  : "Preview consent"
+                : editing?.id
+                  ? "Edit consent template"
+                  : "New consent template"}
             </DialogTitle>
           </DialogHeader>
           {editing && (
             <EditorBody
               value={editing}
-              disabled={editing.is_system}
+              disabled={editing.is_system && !isAdmin}
               onChange={(v) => setEditing(v)}
             />
           )}
@@ -267,12 +275,15 @@ function ConsentFormsPage() {
             <Button variant="ghost" onClick={() => setEditing(null)}>
               Close
             </Button>
-            {editing && !editing.is_system && (
-              <Button onClick={handleSave}>Save consent form</Button>
+            {editing && (!editing.is_system || isAdmin) && (
+              <Button onClick={handleSave}>
+                {editing.is_system ? "Save system template" : "Save consent form"}
+              </Button>
             )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
     </div>
   );
 }
