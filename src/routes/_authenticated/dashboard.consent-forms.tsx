@@ -48,11 +48,14 @@ function ConsentFormsPage() {
   const clone = useServerFn(cloneConsentTemplate);
   const save = useServerFn(saveConsentTemplate);
   const remove = useServerFn(deleteConsentTemplate);
+  const checkAdmin = useServerFn(amIAdmin);
 
   const [rows, setRows] = useState<Tpl[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Tpl | null>(null);
   const [query, setQuery] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
+
 
   function newBlank() {
     setEditing({
