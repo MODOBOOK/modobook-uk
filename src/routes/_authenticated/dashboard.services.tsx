@@ -162,6 +162,7 @@ function ServicesPage() {
   const createTreat = useServerFn(createTreatment);
   const patchTreat = useServerFn(updateTreatment);
   const setConsents = useServerFn(setTreatmentConsents);
+  const setAftercareTpls = useServerFn(setTreatmentAftercareIds);
   const removeTreat = useServerFn(deleteTreatment);
   const reorderCats = useServerFn(reorderCategories);
   const reorderTreats = useServerFn(reorderTreatments);
