@@ -208,14 +208,12 @@ function LandingPage() {
         {/* FOUNDERS */}
         <section className="mx-auto max-w-7xl px-4 py-20 lg:px-8">
           <div className="grid gap-10 lg:grid-cols-2 lg:items-center">
-            <img
-              src={foundersImg}
-              alt="Two UK Nurse Prescribers, the founders of MODO Book"
-              loading="lazy"
-              width={1280}
-              height={1024}
-              className="aspect-[5/4] w-full rounded-3xl object-cover shadow-lg ring-1 ring-black/5"
-            />
+            <div className="grid aspect-[5/4] w-full grid-cols-2 grid-rows-2 gap-3 rounded-3xl bg-gradient-to-br from-primary/10 via-muted/40 to-primary/5 p-6 shadow-lg ring-1 ring-black/5 sm:gap-5 sm:p-10">
+              <IconTile icon={Stethoscope} label="Nurse Prescriber 1" />
+              <IconTile icon={Stethoscope} label="Nurse Prescriber 2" />
+              <IconTile icon={HeartHandshake} label="Built together" />
+              <IconTile icon={Sparkles} label="For everyone" />
+            </div>
             <div>
               <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
                 <HeartHandshake className="h-3.5 w-3.5" /> Built by clinicians, for clinicians
