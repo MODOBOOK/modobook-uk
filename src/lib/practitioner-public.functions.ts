@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { createClient } from "@supabase/supabase-js";
-import type { Database } from "@/integrations/supabase/types";
+import type { Database, Json } from "@/integrations/supabase/types";
 
 function publicClient() {
   return createClient<Database>(
@@ -36,7 +36,7 @@ export const getPractitionerBio = createServerFn({ method: "GET" })
     return {
       profile,
       theme: theme.data ?? null,
-      aboutPage: (aboutRpc.data as Record<string, unknown> | null) ?? {},
+      aboutPage: (aboutRpc.data as Json) ?? ({} as Json),
       locations: locations.data ?? [],
     };
   });
