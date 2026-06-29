@@ -58,6 +58,7 @@ const navItems = [
   { label: "Consultations", to: "/dashboard/consultations", icon: ClipboardList },
   { label: "Reviews", to: "/dashboard/reviews", icon: Star },
   { label: "Payments", to: "/dashboard/payments", icon: CreditCard },
+  { label: "Booking settings", to: "/dashboard/settings", icon: Settings },
 ];
 
 const mobileTabs = [
