@@ -497,6 +497,11 @@ function BookTreatmentPage() {
                 const startOfToday = new Date(new Date().setHours(0, 0, 0, 0));
                 if (d < startOfToday) return true;
                 if (bookableFrom && toIsoDate(d) < bookableFrom) return true;
+                if (maxLeadDays > 0) {
+                  const maxDate = new Date(startOfToday);
+                  maxDate.setDate(maxDate.getDate() + maxLeadDays);
+                  if (d > maxDate) return true;
+                }
                 return isDateUnavailable(d);
               }}
               weekStartsOn={1}
