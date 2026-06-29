@@ -261,7 +261,13 @@ function BookTreatmentPage() {
       const step = r.slot_interval ?? duration;
       const start = toMinutes(r.start_time);
       const end = toMinutes(r.end_time);
-      for (let t = start; t + duration <= end; t += step) {
+      // Candidate start times: regular grid plus "right after a busy block ends"
+      const candidates = new Set<number>();
+      for (let t = start; t + duration <= end; t += step) candidates.add(t);
+      for (const b of busy) {
+        if (b.end >= start && b.end + duration <= end) candidates.add(b.end);
+      }
+      for (const t of Array.from(candidates).sort((a, z) => a - z)) {
         const slotEnd = t + duration;
         const overlap = busy.some(
           (b) =>
@@ -273,6 +279,7 @@ function BookTreatmentPage() {
       }
     }
     return Array.from(new Set(out)).sort();
+
   }, [dayQuery.data, dayRules, duration, locationId, modelMode, modelSlotsForLoc, date]);
 
 
