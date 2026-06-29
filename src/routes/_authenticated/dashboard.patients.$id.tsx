@@ -86,10 +86,13 @@ function PatientProfilePage() {
       (c.email && x.patient_email?.toLowerCase() === c.email.toLowerCase()) ||
       (!c.email && x.patient_name?.toLowerCase() === c.full_name.toLowerCase())
     ));
-    if (p && typeof p === "object" && "id" in p) setProfileId((p as any).id);
+    if (p && typeof p === "object" && "id" in p) {
+      setProfileId((p as any).id);
+      setClinicName((p as any).clinic_name || (p as any).full_name || "");
+    }
     const cs: any = await listConsults({ data: { email: c.email || undefined, name: c.email ? undefined : c.full_name } });
     setConsults(cs ?? []);
-  }
+
   useEffect(() => { reload(); /* eslint-disable-next-line */ }, [id]);
 
   async function uploadAvatar(file: File) {
