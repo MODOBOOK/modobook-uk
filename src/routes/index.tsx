@@ -254,7 +254,7 @@ function LandingPage() {
               <Feature icon={Palette} title="Fully branded booking page" desc="Your colours, fonts, hero image, logo and welcome message. Looks like your brand — not ours." />
               <Feature icon={Link2} title="Your own MODO link" desc="modo.book/your-clinic. One link for Instagram, TikTok, your website and Google." />
               <Feature icon={Calendar} title="Smart live availability" desc="Weekly schedules, buffers, daily caps, lead times, model slots and ad-hoc rota changes." />
-              <Feature icon={ClipboardList} title="8-step consultation flow" desc="Medical form, concerns, assessment, plan, consent, before/after photos, batch numbers, invoice." />
+              <Feature icon={ClipboardList} title="8-step consultation flow" desc="Medical form, concerns, assessment, plan, consent, before/after photos, product log, invoice." />
               <Feature icon={FileSignature} title="Consent & medical forms" desc="Build your own or use ours. Auto-sent before treatment, auto-signed, auto-filed." />
               <Feature icon={Camera} title="Face mapping & photos" desc="Plan and record treatments with pin-drop product tags, units and before/after pictures." />
               <Feature icon={Users} title="Patient records" desc="Full history, allergies, concerns, consultations, photos, forms and comms in one profile." />
