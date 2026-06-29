@@ -44,7 +44,7 @@ export const Route = createFileRoute("/")({
       {
         property: "og:description",
         content:
-          "Booking, consultations, consent, face mapping, batch tracking, payments and a prescriber hub — in one platform built only for aesthetics.",
+          "Booking, consultations, consent, face mapping, payments and a prescriber hub — in one platform built only for aesthetics.",
       },
     ],
   }),
