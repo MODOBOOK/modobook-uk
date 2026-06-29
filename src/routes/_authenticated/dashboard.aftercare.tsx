@@ -59,10 +59,7 @@ function AftercarePage() {
           <ArrowLeft className="h-4 w-4" /> Dashboard
         </Link>
         <Button
-          onClick={() => {
-            setEditing({ id: "", name: "", body_html: "", delay_hours: 2 });
-            setOpen(true);
-          }}
+          onClick={() => openEditor({ id: "", name: "", body_html: "", delay_hours: 2 })}
         >
           <Plus className="mr-1 h-4 w-4" /> New template
         </Button>
