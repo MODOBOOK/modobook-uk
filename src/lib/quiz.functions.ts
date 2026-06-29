@@ -59,10 +59,10 @@ export const getQuizBySlug = createServerFn({ method: "GET" })
       .rpc("get_quiz_config_by_slug", { p_slug: data.slug.toLowerCase() })
       .single();
     if (cErr) throw cErr;
-    if (!cfg?.quiz_enabled) return { config: cfg, treatments: [] as Array<{ id: string; name: string; description: string | null; duration: number; price: number; picture_url: string | null; quiz_tags: Record<string, string[]> }> };
+    if (!cfg?.quiz_enabled) return { config: cfg, treatments: [] as Array<{ id: string; name: string; description: string | null; duration: number; price: number; picture_url: string | null; session_count: number | null; session_interval_days: number | null; quiz_tags: Record<string, string[]> }> };
     const { data: treatments, error: tErr } = await sb
       .from("treatments")
-      .select("id, name, description, duration, price, picture_url, quiz_tags")
+      .select("id, name, description, duration, price, picture_url, session_count, session_interval_days, quiz_tags")
       .eq("profile_id", cfg.profile_id)
       .eq("active", true);
     if (tErr) throw tErr;
