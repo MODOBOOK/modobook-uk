@@ -1886,7 +1886,7 @@ function TreatmentRow({
               {(() => {
                 const gap = (t as { session_interval_days?: number | null }).session_interval_days;
                 return gap && gap > 0
-                  ? ` · ${gap % 7 === 0 ? `${gap / 7} wk` : `${gap} days`} apart`
+                  ? ` · Every ${gap % 7 === 0 ? `${gap / 7} week${gap / 7 === 1 ? "" : "s"}` : `${gap} day${gap === 1 ? "" : "s"}`}`
                   : "";
               })()}
             </span>
