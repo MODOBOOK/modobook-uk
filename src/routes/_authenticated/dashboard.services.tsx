@@ -364,7 +364,41 @@ function ServicesPage() {
         onClose={() => setSvcDialog(null)}
         onSubmit={async (values) => {
           try {
-            await createTreat({ data: values });
+            const { consent_ids, ...base } = values;
+            const baseCreate = {
+              name: base.name,
+              duration: base.duration,
+              price: base.price,
+              description: base.description,
+              category_id: base.category_id,
+              session_count: base.session_count,
+              allow_split_payment: base.allow_split_payment,
+              rebook_reminder_days: base.rebook_reminder_days,
+              color: base.color,
+              picture_url: base.picture_url,
+              payment_mode: base.payment_mode,
+              deposit_amount: base.deposit_amount,
+              active: base.active,
+            };
+            const created = (await createTreat({ data: baseCreate })) as { id: string };
+            // patch extras not supported by createTreatment
+            await patchTreat({
+              data: {
+                id: created.id,
+                discount_percent: base.discount_percent,
+                discount_label: base.discount_label,
+                discount_show_was_now: base.discount_show_was_now,
+                aftercare_html: base.aftercare_html,
+                aftercare_delay_hours: base.aftercare_delay_hours,
+                auto_send_medical_forms: base.auto_send_medical_forms,
+                auto_send_aftercare: base.auto_send_aftercare,
+              },
+            });
+            if (consent_ids && consent_ids.length > 0) {
+              await setConsents({
+                data: { treatmentId: created.id, consentTemplateIds: consent_ids },
+              });
+            }
             toast.success("Service created");
             setSvcDialog(null);
             treats.refetch();
