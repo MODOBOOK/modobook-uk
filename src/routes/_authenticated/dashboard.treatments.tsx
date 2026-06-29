@@ -23,7 +23,10 @@ import { Plus, Trash2, Pencil, FileText, X, Tag, PlusCircle } from "lucide-react
 
 export const Route = createFileRoute("/_authenticated/dashboard/treatments")({
   ssr: false,
-  validateSearch: (s: Record<string, unknown>) => ({ edit: typeof s.edit === "string" ? s.edit : undefined }),
+  validateSearch: (s: Record<string, unknown>) => ({
+    edit: typeof s.edit === "string" ? s.edit : undefined,
+    back: typeof s.back === "string" ? s.back : undefined,
+  }),
   component: TreatmentsPage,
 });
 
