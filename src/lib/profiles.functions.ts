@@ -185,6 +185,23 @@ export const updateProfile = createServerFn({ method: "POST" })
     if (data.favourites_enabled !== undefined) update.favourites_enabled = data.favourites_enabled;
     if (data.favourites_custom_title !== undefined) update.favourites_custom_title = data.favourites_custom_title;
 
+    const passthroughKeys = [
+      "booking_min_notice_hours","booking_max_lead_days","booking_buffer_before_minutes",
+      "booking_buffer_after_minutes","booking_daily_cap","booking_smart_times_enabled",
+      "payment_pass_fees_to_customer","payment_klarna_enabled","payment_clearpay_enabled",
+      "payment_card_full_enabled","payment_deposit_enabled","require_deposit_to_confirm",
+      "allow_pay_in_clinic","show_prices_on_booking","enforce_cancellation_fee",
+      "require_account_to_book","require_phone","require_dob","require_address",
+      "require_medical_forms_before_appt","allow_patient_reschedule","allow_patient_cancel",
+      "auto_confirm_bookings","email_confirmations_enabled","sms_reminders_enabled",
+      "whatsapp_reminders_enabled","reminder_hours_before",
+    ] as const;
+    for (const k of passthroughKeys) {
+      const v = (data as Record<string, unknown>)[k];
+      if (v !== undefined) update[k] = v;
+    }
+
+
 
 
 
