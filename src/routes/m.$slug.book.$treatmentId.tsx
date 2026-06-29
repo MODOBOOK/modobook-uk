@@ -345,7 +345,7 @@ function BookTreatmentPage() {
             }
             return lines.length ? lines.join("\n") : undefined;
           })(),
-          basePrice: effectivePrice,
+          basePrice: splitAllowed && paymentPlan === "split" ? effectivePrice / sessionCount : effectivePrice,
           patientUserId: patientUserId,
           practitionerId: (typeof window !== "undefined" ? window.sessionStorage.getItem(`modo:practitionerId:${slug}`) : null) || null,
 
