@@ -908,6 +908,7 @@ function ServiceDialog({
       setAllowSplit(false);
       setRebookDays("");
       setIntervalDays("");
+      setIntervalUnit("weeks");
       setColor(PRESET_COLORS[Math.floor(Math.random() * PRESET_COLORS.length)]);
       setActive(true);
       setPictureUrl(null);
