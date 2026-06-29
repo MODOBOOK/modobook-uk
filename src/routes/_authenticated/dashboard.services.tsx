@@ -1052,6 +1052,20 @@ function ServiceDialog({
               </div>
             </div>
             {sessionCount > 1 && (
+              <div className="space-y-1.5">
+                <Label htmlFor="s-int">Days between sessions</Label>
+                <Input
+                  id="s-int"
+                  type="number"
+                  min={1}
+                  placeholder="e.g. 14"
+                  value={intervalDays}
+                  onChange={(e) => setIntervalDays(e.target.value)}
+                />
+                <p className="text-[11px] text-muted-foreground">Recommended spacing between each session (shown to patients).</p>
+              </div>
+            )}
+            {sessionCount > 1 && (
               <label className="flex items-start gap-2 text-sm">
                 <input
                   type="checkbox"
