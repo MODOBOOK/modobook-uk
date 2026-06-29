@@ -807,9 +807,31 @@ function ServiceDialog({
     allow_split_payment?: boolean;
     rebook_reminder_days?: number | null;
     color?: string | null;
+    active?: boolean;
+    picture_url?: string;
+    payment_mode?: "full" | "deposit" | "in_clinic";
+    deposit_amount?: number;
+    consent_ids?: string[];
+    auto_send_medical_forms?: boolean;
+    aftercare_html?: string | null;
+    aftercare_delay_hours?: number;
+    auto_send_aftercare?: boolean;
+    discount_percent?: number | null;
+    discount_label?: string | null;
+    discount_show_was_now?: boolean;
   }) => Promise<void>;
 }) {
   const open = !!state;
+  const fetchProfile = useServerFn(getMyProfile);
+  const fetchConsents = useServerFn(listMyConsentTemplates);
+  const profile = useQuery({ queryKey: ["my-profile"], queryFn: () => fetchProfile() });
+  const consents = useQuery({
+    queryKey: ["my-consent-templates"],
+    queryFn: () => fetchConsents(),
+  });
+  const profileId = (profile.data as { id?: string } | undefined)?.id ?? "";
+  const consentList = (consents.data ?? []) as { id: string; name: string; is_system: boolean }[];
+
   const [name, setName] = useState("");
   const [duration, setDuration] = useState(30);
   const [price, setPrice] = useState(0);
@@ -819,6 +841,18 @@ function ServiceDialog({
   const [allowSplit, setAllowSplit] = useState(false);
   const [rebookDays, setRebookDays] = useState<string>("");
   const [color, setColor] = useState<string>(PRESET_COLORS[0]);
+  const [active, setActive] = useState(true);
+  const [pictureUrl, setPictureUrl] = useState<string | null>(null);
+  const [paymentMode, setPaymentMode] = useState<"full" | "deposit" | "in_clinic">("full");
+  const [depositAmount, setDepositAmount] = useState<string>("");
+  const [consentIds, setConsentIds] = useState<string[]>([]);
+  const [autoSendForms, setAutoSendForms] = useState(true);
+  const [aftercareHtml, setAftercareHtml] = useState("");
+  const [aftercareDelay, setAftercareDelay] = useState(2);
+  const [autoSendAftercare, setAutoSendAftercare] = useState(true);
+  const [discountPercent, setDiscountPercent] = useState<string>("");
+  const [discountLabel, setDiscountLabel] = useState("");
+  const [discountShowWasNow, setDiscountShowWasNow] = useState(true);
   const [saving, setSaving] = useState(false);
 
   useMemo(() => {
@@ -832,10 +866,26 @@ function ServiceDialog({
       setAllowSplit(false);
       setRebookDays("");
       setColor(PRESET_COLORS[Math.floor(Math.random() * PRESET_COLORS.length)]);
+      setActive(true);
+      setPictureUrl(null);
+      setPaymentMode("full");
+      setDepositAmount("");
+      setConsentIds([]);
+      setAutoSendForms(true);
+      setAftercareHtml("");
+      setAftercareDelay(2);
+      setAutoSendAftercare(true);
+      setDiscountPercent("");
+      setDiscountLabel("");
+      setDiscountShowWasNow(true);
     }
   }, [open, state]);
 
-
+  function toggleConsent(id: string) {
+    setConsentIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+  }
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
@@ -844,6 +894,26 @@ function ServiceDialog({
           <DialogTitle>Add service</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
+          {/* Quick toggle rows at the top */}
+          <div className="grid grid-cols-2 gap-2 rounded-lg border bg-muted/30 p-2">
+            <label className="flex items-center justify-between gap-2 rounded-md px-2 py-1.5 text-xs">
+              <span className="font-medium">Visible to patients</span>
+              <Switch checked={active} onCheckedChange={setActive} />
+            </label>
+            <label className="flex items-center justify-between gap-2 rounded-md px-2 py-1.5 text-xs">
+              <span className="font-medium">Auto-send medical forms</span>
+              <Switch checked={autoSendForms} onCheckedChange={setAutoSendForms} />
+            </label>
+            <label className="flex items-center justify-between gap-2 rounded-md px-2 py-1.5 text-xs">
+              <span className="font-medium">Auto-send aftercare</span>
+              <Switch checked={autoSendAftercare} onCheckedChange={setAutoSendAftercare} />
+            </label>
+            <label className="flex items-center justify-between gap-2 rounded-md px-2 py-1.5 text-xs">
+              <span className="font-medium">Show was/now price</span>
+              <Switch checked={discountShowWasNow} onCheckedChange={setDiscountShowWasNow} />
+            </label>
+          </div>
+
           <div className="space-y-1.5">
             <Label htmlFor="s-name">Service name</Label>
             <Input
@@ -900,6 +970,17 @@ function ServiceDialog({
             </div>
           </div>
 
+          {profileId && (
+            <ImageUploader
+              label="Service picture (optional)"
+              value={pictureUrl}
+              onChange={setPictureUrl}
+              profileId={profileId}
+              folder="treatments"
+              previewClass="mt-2 h-24 w-full object-cover rounded-md"
+            />
+          )}
+
           <div className="rounded-lg border bg-muted/30 p-3 space-y-3">
             <div className="text-sm font-semibold">Sessions &amp; payment</div>
             <div className="grid grid-cols-2 gap-3">
@@ -943,6 +1024,102 @@ function ServiceDialog({
                 </span>
               </label>
             )}
+            <div className="grid grid-cols-2 gap-3 pt-2 border-t">
+              <div className="space-y-1.5">
+                <Label>Payment method</Label>
+                <Select value={paymentMode} onValueChange={(v) => setPaymentMode(v as typeof paymentMode)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="full">Pay in full online</SelectItem>
+                    <SelectItem value="deposit">Deposit online, balance in clinic</SelectItem>
+                    <SelectItem value="in_clinic">Pay in clinic</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {paymentMode === "deposit" && (
+                <div className="space-y-1.5">
+                  <Label htmlFor="s-dep">Deposit amount (£)</Label>
+                  <Input
+                    id="s-dep"
+                    type="number"
+                    min={0}
+                    value={depositAmount}
+                    onChange={(e) => setDepositAmount(e.target.value)}
+                    placeholder="e.g. 25"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="rounded-lg border p-3 space-y-2">
+            <Label className="m-0 text-sm font-semibold">Consent forms to send on booking</Label>
+            {consentList.length === 0 ? (
+              <p className="text-xs text-muted-foreground">
+                No consent forms yet. Add them in Dashboard → Consent forms.
+              </p>
+            ) : (
+              <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                {consentList.map((t) => (
+                  <label key={t.id} className="flex items-start gap-2 text-sm">
+                    <Checkbox
+                      checked={consentIds.includes(t.id)}
+                      onCheckedChange={() => toggleConsent(t.id)}
+                    />
+                    <span>
+                      {t.name}
+                      {t.is_system && (
+                        <span className="ml-2 text-[11px] text-muted-foreground">(template)</span>
+                      )}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="rounded-lg border p-3 space-y-3">
+            <Label className="m-0 text-sm font-semibold">Discount (optional)</Label>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">% off</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  max={100}
+                  placeholder="e.g. 15"
+                  value={discountPercent}
+                  onChange={(e) => setDiscountPercent(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">Label</Label>
+                <Input
+                  placeholder="e.g. Spring offer"
+                  value={discountLabel}
+                  onChange={(e) => setDiscountLabel(e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-lg border p-3 space-y-3">
+            <Label className="m-0 text-sm font-semibold">Aftercare instructions</Label>
+            <Textarea
+              rows={4}
+              value={aftercareHtml}
+              onChange={(e) => setAftercareHtml(e.target.value)}
+              placeholder="Sent automatically to the patient after their appointment."
+            />
+            <div className="space-y-1.5 max-w-[180px]">
+              <Label className="text-xs text-muted-foreground">Send after (hours)</Label>
+              <Input
+                type="number"
+                min={0}
+                value={aftercareDelay}
+                onChange={(e) => setAftercareDelay(Math.max(0, Number(e.target.value) || 0))}
+              />
+            </div>
           </div>
 
           <div className="space-y-1.5">
@@ -961,17 +1138,6 @@ function ServiceDialog({
             </div>
             <p className="text-[11px] text-muted-foreground">Appointments for this service appear in this colour on your calendar.</p>
           </div>
-
-
-
-          <p className="text-xs text-muted-foreground">
-            For consent forms, deposits, staff and media options, edit the service from{" "}
-            <Link to="/dashboard/treatments" className="underline">
-              advanced service settings
-            </Link>
-            .
-          </p>
-
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={onClose}>
@@ -991,9 +1157,22 @@ function ServiceDialog({
                 allow_split_payment: sessionCount > 1 ? allowSplit : false,
                 rebook_reminder_days: rebookDays.trim() ? Number(rebookDays) : null,
                 color,
-
+                active,
+                picture_url: pictureUrl ?? undefined,
+                payment_mode: paymentMode,
+                deposit_amount:
+                  paymentMode === "deposit" && depositAmount.trim()
+                    ? Number(depositAmount)
+                    : undefined,
+                consent_ids: consentIds,
+                auto_send_medical_forms: autoSendForms,
+                aftercare_html: aftercareHtml.trim() || null,
+                aftercare_delay_hours: aftercareDelay,
+                auto_send_aftercare: autoSendAftercare,
+                discount_percent: discountPercent.trim() ? Number(discountPercent) : null,
+                discount_label: discountLabel.trim() || null,
+                discount_show_was_now: discountShowWasNow,
               });
-
               setSaving(false);
             }}
           >
@@ -1004,6 +1183,7 @@ function ServiceDialog({
     </Dialog>
   );
 }
+
 
 function FavouritesCard({ treatments }: { treatments: Treat[] }) {
   const fetchProfile = useServerFn(getMyProfile);
