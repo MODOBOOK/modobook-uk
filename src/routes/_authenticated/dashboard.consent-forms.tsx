@@ -331,26 +331,28 @@ function TemplateCard({
         )}
       </CardHeader>
       <CardContent className="flex flex-wrap gap-2">
-        {editable ? (
-          <>
-            <Button size="sm" variant="outline" onClick={onEdit}>
-              <Pencil className="mr-2 h-3 w-3" /> Edit
-            </Button>
-            <Button size="sm" variant="ghost" onClick={onDelete}>
-              <Trash2 className="h-3 w-3" />
-            </Button>
-          </>
-        ) : (
-          <>
-            <Button size="sm" variant="outline" onClick={onClone}>
-              <Copy className="mr-2 h-3 w-3" /> Clone & edit
-            </Button>
-            <Button size="sm" variant="ghost" onClick={onPreview}>
-              <Eye className="mr-2 h-3 w-3" /> Preview
-            </Button>
-          </>
+        {editable && onEdit && (
+          <Button size="sm" variant="outline" onClick={onEdit}>
+            <Pencil className="mr-2 h-3 w-3" /> Edit
+          </Button>
+        )}
+        {onClone && (
+          <Button size="sm" variant="outline" onClick={onClone}>
+            <Copy className="mr-2 h-3 w-3" /> Clone
+          </Button>
+        )}
+        {onPreview && !editable && (
+          <Button size="sm" variant="ghost" onClick={onPreview}>
+            <Eye className="mr-2 h-3 w-3" /> Preview
+          </Button>
+        )}
+        {onDelete && (
+          <Button size="sm" variant="ghost" onClick={onDelete} className="ml-auto text-destructive">
+            <Trash2 className="h-3 w-3" />
+          </Button>
         )}
       </CardContent>
+
     </Card>
   );
 }
