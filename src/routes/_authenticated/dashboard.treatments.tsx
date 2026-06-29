@@ -80,6 +80,7 @@ type TreatmentForm = {
   aftercare_delay_hours: number;
   auto_send_medical_forms: boolean;
   auto_send_aftercare: boolean;
+  aftercare_template_ids: string[];
 };
 
 type ConsentTpl = { id: string; name: string; treatment_type: string | null; is_system: boolean };
