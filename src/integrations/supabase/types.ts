@@ -131,6 +131,44 @@ export type Database = {
         }
         Relationships: []
       }
+      aftercare_templates: {
+        Row: {
+          body_html: string
+          created_at: string
+          delay_hours: number
+          id: string
+          name: string
+          profile_id: string
+          updated_at: string
+        }
+        Insert: {
+          body_html?: string
+          created_at?: string
+          delay_hours?: number
+          id?: string
+          name: string
+          profile_id: string
+          updated_at?: string
+        }
+        Update: {
+          body_html?: string
+          created_at?: string
+          delay_hours?: number
+          id?: string
+          name?: string
+          profile_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aftercare_templates_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       appointment_aftercare: {
         Row: {
           appointment_id: string
@@ -2925,6 +2963,39 @@ export type Database = {
           },
           {
             foreignKeyName: "treatment_addons_treatment_id_fkey"
+            columns: ["treatment_id"]
+            isOneToOne: false
+            referencedRelation: "treatments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      treatment_aftercare_templates: {
+        Row: {
+          created_at: string
+          template_id: string
+          treatment_id: string
+        }
+        Insert: {
+          created_at?: string
+          template_id: string
+          treatment_id: string
+        }
+        Update: {
+          created_at?: string
+          template_id?: string
+          treatment_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "treatment_aftercare_templates_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "aftercare_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treatment_aftercare_templates_treatment_id_fkey"
             columns: ["treatment_id"]
             isOneToOne: false
             referencedRelation: "treatments"
