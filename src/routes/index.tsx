@@ -29,9 +29,7 @@ import {
   HandshakeIcon,
   ArrowRight,
 } from "lucide-react";
-import heroImg from "@/assets/modo-hero.jpg";
-import clinicImg from "@/assets/modo-clinic.jpg";
-import foundersImg from "@/assets/modo-founders.jpg";
+// Icon-led visuals — no AI imagery used in hero blocks for now.
 
 export const Route = createFileRoute("/")({
   head: () => ({
