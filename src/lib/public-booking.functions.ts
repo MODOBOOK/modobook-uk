@@ -363,6 +363,16 @@ export const requestBooking = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const sb = publicClient();
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: prof } = await supabaseAdmin
+      .from("profiles")
+      .select("auto_confirm_bookings,require_account_to_book")
+      .eq("id", data.profileId)
+      .maybeSingle();
+    if (prof?.require_account_to_book && !data.patientUserId) {
+      throw new Error("Please sign in to book — this clinic requires an account.");
+    }
+    const status = prof?.auto_confirm_bookings === false ? "pending" : "confirmed";
     const { data: blk } = await sb
       .from("clinic_clients")
       .select("id")
@@ -388,7 +398,7 @@ export const requestBooking = createServerFn({ method: "POST" })
       patient_address: data.patientAddress ?? null,
       patient_user_id: data.patientUserId ?? null,
       notes: data.notes ?? null,
-      status: "confirmed",
+      status,
       payment_status: "pending",
       base_amount: data.basePrice,
       total_amount: data.basePrice,
