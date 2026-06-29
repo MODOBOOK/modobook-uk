@@ -855,10 +855,15 @@ function ServiceDialog({
   const open = !!state;
   const fetchProfile = useServerFn(getMyProfile);
   const fetchConsents = useServerFn(listMyConsentTemplates);
+  const fetchAftercare = useServerFn(listAftercareTemplates);
   const profile = useQuery({ queryKey: ["my-profile"], queryFn: () => fetchProfile() });
   const consents = useQuery({
     queryKey: ["my-consent-templates"],
     queryFn: () => fetchConsents(),
+  });
+  const aftercareTpls = useQuery({
+    queryKey: ["my-aftercare-templates"],
+    queryFn: () => fetchAftercare(),
   });
   const profileId = (profile.data as { id?: string } | undefined)?.id ?? "";
   const consentList = (consents.data ?? []) as { id: string; name: string; is_system: boolean }[];
