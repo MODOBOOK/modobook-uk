@@ -11,7 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Plus, X, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
-import ImageUploader from "@/components/ImageUploader";
+import { ImageUploader } from "@/components/ImageUploader";
 
 export const Route = createFileRoute("/_authenticated/dashboard/bio")({
   component: BioEditor,
@@ -139,7 +139,7 @@ function BioEditor() {
         <ImageUploader
           bucket="practitioner-uploads"
           value={ap.hero_image_url ?? ""}
-          onChange={(url) => update("hero_image_url", url)}
+          onChange={(url: string) => update("hero_image_url", url)}
           label="Upload banner"
           cropAspect={16 / 9}
         />
@@ -155,7 +155,7 @@ function BioEditor() {
           <ImageUploader
             bucket="practitioner-uploads"
             value={avatar}
-            onChange={(url) => setAvatar(url ?? "")}
+            onChange={(url: string) => setAvatar(url ?? "")}
             label="Upload photo"
             cropAspect={1}
           />
