@@ -72,7 +72,13 @@ function SettingsPage() {
         .map((x) => Number(x.trim()))
         .filter((n) => Number.isFinite(n) && n > 0);
       await updateProfile({
-        data: { id: profile.id, ...s, reminder_hours_before: hours },
+        data: {
+          id: profile.id,
+          ...s,
+          // Deposit is always required when deposits are enabled — no separate toggle.
+          require_deposit_to_confirm: s.payment_deposit_enabled,
+          reminder_hours_before: hours,
+        },
       });
       toast.success("Settings saved");
     } catch (e) {
