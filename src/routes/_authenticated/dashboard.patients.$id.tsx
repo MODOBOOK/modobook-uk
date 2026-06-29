@@ -34,6 +34,7 @@ import { ConcernsCard } from "@/components/patient/ConcernsCard";
 import { CommsTimeline } from "@/components/patient/CommsTimeline";
 import { EmailComposerDialog } from "@/components/patient/EmailComposerDialog";
 import { SendFormDialog } from "@/components/patient/SendFormDialog";
+import { ClientFormsList } from "@/components/patient/ClientFormsList";
 import { logCommunication } from "@/lib/patient-hub.functions";
 
 
