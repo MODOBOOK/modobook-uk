@@ -83,3 +83,46 @@ export const setTreatmentAftercareIds = createServerFn({ method: "POST" })
     }
     return { ok: true };
   });
+
+export const listMyTreatmentsBasic = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const profileId = await getProfileId(context.supabase, context.userId);
+    if (!profileId) return [];
+    const { data, error } = await context.supabase
+      .from("treatments")
+      .select("id, name")
+      .eq("profile_id", profileId)
+      .order("name");
+    if (error) throw error;
+    return (data ?? []) as { id: string; name: string }[];
+  });
+
+export const getAftercareTemplateTreatmentIds = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: { template_id: string }) => i)
+  .handler(async ({ data, context }) => {
+    const { data: rows, error } = await context.supabase
+      .from("treatment_aftercare_templates")
+      .select("treatment_id")
+      .eq("template_id", data.template_id);
+    if (error) throw error;
+    return (rows ?? []).map((r: any) => r.treatment_id as string);
+  });
+
+export const setAftercareTemplateTreatmentIds = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: { template_id: string; treatment_ids: string[] }) => i)
+  .handler(async ({ data, context }) => {
+    await context.supabase
+      .from("treatment_aftercare_templates")
+      .delete()
+      .eq("template_id", data.template_id);
+    if (data.treatment_ids.length) {
+      const { error } = await context.supabase
+        .from("treatment_aftercare_templates")
+        .insert(data.treatment_ids.map((tid) => ({ treatment_id: tid, template_id: data.template_id })));
+      if (error) throw error;
+    }
+    return { ok: true };
+  });
