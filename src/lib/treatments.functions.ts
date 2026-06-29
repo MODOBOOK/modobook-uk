@@ -161,6 +161,8 @@ export const updateTreatment = createServerFn({ method: "POST" })
     if (data.session_count !== undefined) update.session_count = data.session_count;
     if (data.allow_split_payment !== undefined) update.allow_split_payment = data.allow_split_payment;
     if (data.rebook_reminder_days !== undefined) update.rebook_reminder_days = data.rebook_reminder_days;
+    if (data.session_interval_days !== undefined) update.session_interval_days = data.session_interval_days;
+
     if (data.color !== undefined) update.color = data.color;
     if (data.addon_mode !== undefined) update.addon_mode = data.addon_mode;
     if (data.discount_percent !== undefined) update.discount_percent = data.discount_percent;
