@@ -1047,6 +1047,8 @@ export type Database = {
           allergies: string | null
           archived: boolean
           avatar_url: string | null
+          block_reason: string | null
+          blocked_at: string | null
           county: string | null
           created_at: string
           dob: string | null
@@ -1061,9 +1063,11 @@ export type Database = {
           has_allergies: boolean
           how_heard: string | null
           id: string
+          is_blocked: boolean
           marketing_opt_in: boolean
           medical_form_data: Json | null
           medical_form_updated_at: string | null
+          no_show_count: number
           notes: string | null
           phone: string | null
           postcode: string | null
@@ -1078,6 +1082,8 @@ export type Database = {
           allergies?: string | null
           archived?: boolean
           avatar_url?: string | null
+          block_reason?: string | null
+          blocked_at?: string | null
           county?: string | null
           created_at?: string
           dob?: string | null
@@ -1092,9 +1098,11 @@ export type Database = {
           has_allergies?: boolean
           how_heard?: string | null
           id?: string
+          is_blocked?: boolean
           marketing_opt_in?: boolean
           medical_form_data?: Json | null
           medical_form_updated_at?: string | null
+          no_show_count?: number
           notes?: string | null
           phone?: string | null
           postcode?: string | null
@@ -1109,6 +1117,8 @@ export type Database = {
           allergies?: string | null
           archived?: boolean
           avatar_url?: string | null
+          block_reason?: string | null
+          blocked_at?: string | null
           county?: string | null
           created_at?: string
           dob?: string | null
@@ -1123,9 +1133,11 @@ export type Database = {
           has_allergies?: boolean
           how_heard?: string | null
           id?: string
+          is_blocked?: boolean
           marketing_opt_in?: boolean
           medical_form_data?: Json | null
           medical_form_updated_at?: string | null
+          no_show_count?: number
           notes?: string | null
           phone?: string | null
           postcode?: string | null
