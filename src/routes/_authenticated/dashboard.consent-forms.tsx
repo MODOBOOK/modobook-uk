@@ -137,10 +137,40 @@ function ConsentFormsPage() {
           <p className="text-sm text-muted-foreground">
             Modern, sectioned consent templates for aesthetic treatments. Clone any system template to edit, or build your own from scratch.
           </p>
+          {isAdmin && (
+            <p className="mt-1 text-xs font-medium text-primary">
+              Admin mode — you can add, edit and remove system templates for all practitioners.
+            </p>
+          )}
         </div>
-        <Button onClick={newBlank} size="sm">
-          <FileSignature className="mr-2 h-4 w-4" /> New blank consent
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button onClick={newBlank} size="sm" variant="outline">
+            <FileSignature className="mr-2 h-4 w-4" /> New blank consent
+          </Button>
+          {isAdmin && (
+            <Button
+              size="sm"
+              onClick={() =>
+                setEditing({
+                  id: undefined as any,
+                  name: "New system consent",
+                  treatment_type: "",
+                  body_markdown: "",
+                  requires_signature: true,
+                  is_system: true,
+                  sections: [
+                    { title: "About the treatment", body: "" },
+                    { title: "Risks & possible complications", bullets: [] },
+                    { title: "Aftercare", bullets: [] },
+                  ],
+                  summary: "",
+                } as Tpl)
+              }
+            >
+              <FileSignature className="mr-2 h-4 w-4" /> New system template
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="relative">
@@ -167,17 +197,30 @@ function ConsentFormsPage() {
               <TemplateCard
                 key={t.id}
                 t={t}
+                editable={isAdmin}
                 onPreview={() => setEditing(t)}
+                onEdit={isAdmin ? () => setEditing(t) : undefined}
                 onClone={async () => {
                   await clone({ data: { template_id: t.id } });
                   toast.success("Cloned to your templates");
                   refresh();
                 }}
+                onDelete={
+                  isAdmin
+                    ? async () => {
+                        if (!confirm("Remove this system consent template for all practitioners?")) return;
+                        await remove({ data: { id: t.id } });
+                        toast.success("System template removed");
+                        refresh();
+                      }
+                    : undefined
+                }
               />
             ))}
           </div>
         )}
       </section>
+
 
       <section className="space-y-3">
         <h2 className="text-sm font-semibold text-muted-foreground">
