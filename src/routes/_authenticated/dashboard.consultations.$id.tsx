@@ -282,14 +282,24 @@ function Step1({ medical, onChange, clientId, clientName, clientEmail, clientPho
         </div>
       )}
 
-      <div className="grid gap-2">
-        {MEDICAL_QUESTIONS.map((q) => (
-          <label key={q} className="flex cursor-pointer items-center gap-3 rounded-lg border bg-card p-3 active:bg-muted">
-            <Checkbox checked={!!answers[q]} onCheckedChange={(v) => toggle(q, !!v)} />
-            <span className="text-sm">{q}</span>
-          </label>
+      <div className="space-y-4">
+        {MEDICAL_SECTIONS.map((section) => (
+          <div key={section.title} className="rounded-lg border bg-card">
+            <div className="border-b px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              {section.title}
+            </div>
+            <div className="grid gap-1.5 p-2 sm:grid-cols-2">
+              {section.items.map((q: string) => (
+                <label key={q} className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-muted/50 active:bg-muted">
+                  <Checkbox checked={!!answers[q]} onCheckedChange={(v) => toggle(q, !!v)} />
+                  <span>{q}</span>
+                </label>
+              ))}
+            </div>
+          </div>
         ))}
       </div>
+
       <div className="space-y-1.5">
         <Label>Additional notes</Label>
         <Textarea rows={3} value={notes} onChange={(e) => onChange({ ...medical, notes: e.target.value })} placeholder="Allergies, medications, anything relevant…" />
