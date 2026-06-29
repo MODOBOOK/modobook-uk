@@ -1685,15 +1685,48 @@ function CategoryTree({
   headingFont: string;
 }) {
   const visible = nodes.filter(
-    (n) => n.treatments.length > 0 || n.children.some((c) => countTreatments(c) > 0),
+    (n) =>
+      (n.coming_soon_at && new Date(n.coming_soon_at) > new Date()) ||
+      n.treatments.length > 0 ||
+      n.children.some((c) => countTreatments(c) > 0),
   );
   if (visible.length === 0) return null;
 
   return (
     <div className={depth === 0 ? "space-y-4" : "space-y-3"}>
       {visible.map((node) => {
-        const count = countTreatments(node);
         const isSub = depth > 0;
+        const isComingSoon = !!node.coming_soon_at && new Date(node.coming_soon_at) > new Date();
+        const comingLabel = isComingSoon
+          ? new Date(node.coming_soon_at!).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })
+          : "";
+        if (isComingSoon) {
+          return (
+            <div
+              key={node.id}
+              className="overflow-hidden rounded-2xl border-0 shadow-sm px-5 py-4 flex items-center justify-between gap-3"
+              style={
+                isSub
+                  ? { backgroundColor: `${catBg}1a`, color: catBg }
+                  : { backgroundColor: catBg, color: catText, fontFamily: `${headingFont}, system-ui, sans-serif` }
+              }
+              aria-label={`${node.name} — coming soon`}
+            >
+              <div className="flex-1 text-left">
+                <div className={`leading-tight ${isSub ? "text-lg sm:text-xl" : "text-xl sm:text-2xl"} ${categoryBold ? "font-extrabold" : "font-medium"}`}>
+                  {node.icon ? `${node.icon} ` : ""}
+                  {node.name}
+                </div>
+                {node.description && (
+                  <div className="mt-1 text-sm font-normal opacity-80">{node.description}</div>
+                )}
+              </div>
+              <span className="shrink-0 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-amber-900 shadow-sm">
+                Coming {comingLabel}
+              </span>
+            </div>
+          );
+        }
         return (
           <Accordion key={node.id} type="single" collapsible>
             <AccordionItem value={node.id} className="overflow-hidden rounded-2xl border-0 shadow-sm">
