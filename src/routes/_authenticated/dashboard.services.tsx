@@ -381,6 +381,7 @@ function ServicesPage() {
               session_count: base.session_count,
               allow_split_payment: base.allow_split_payment,
               rebook_reminder_days: base.rebook_reminder_days,
+              session_interval_days: base.session_interval_days,
               color: base.color,
               picture_url: base.picture_url,
               payment_mode: base.payment_mode,
