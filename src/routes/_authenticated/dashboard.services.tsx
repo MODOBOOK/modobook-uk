@@ -880,6 +880,7 @@ function ServiceDialog({
   const [allowSplit, setAllowSplit] = useState(false);
   const [rebookDays, setRebookDays] = useState<string>("");
   const [intervalDays, setIntervalDays] = useState<string>("");
+  const [intervalUnit, setIntervalUnit] = useState<"days" | "weeks">("weeks");
   const [color, setColor] = useState<string>(PRESET_COLORS[0]);
   const [active, setActive] = useState(true);
   const [pictureUrl, setPictureUrl] = useState<string | null>(null);
@@ -907,6 +908,7 @@ function ServiceDialog({
       setAllowSplit(false);
       setRebookDays("");
       setIntervalDays("");
+      setIntervalUnit("weeks");
       setColor(PRESET_COLORS[Math.floor(Math.random() * PRESET_COLORS.length)]);
       setActive(true);
       setPictureUrl(null);
@@ -1053,16 +1055,35 @@ function ServiceDialog({
             </div>
             {sessionCount > 1 && (
               <div className="space-y-1.5">
-                <Label htmlFor="s-int">Days between sessions</Label>
-                <Input
-                  id="s-int"
-                  type="number"
-                  min={1}
-                  placeholder="e.g. 14"
-                  value={intervalDays}
-                  onChange={(e) => setIntervalDays(e.target.value)}
-                />
-                <p className="text-[11px] text-muted-foreground">Recommended spacing between each session (shown to patients).</p>
+                <Label htmlFor="s-int">How far apart should sessions be?</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="s-int"
+                    type="number"
+                    min={1}
+                    placeholder={intervalUnit === "weeks" ? "e.g. 2" : "e.g. 14"}
+                    value={intervalDays}
+                    onChange={(e) => setIntervalDays(e.target.value)}
+                    className="flex-1"
+                  />
+                  <div className="inline-flex rounded-md border bg-background p-0.5">
+                    <button
+                      type="button"
+                      onClick={() => setIntervalUnit("days")}
+                      className={`px-3 py-1 text-xs rounded ${intervalUnit === "days" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+                    >
+                      Days
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIntervalUnit("weeks")}
+                      className={`px-3 py-1 text-xs rounded ${intervalUnit === "weeks" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+                    >
+                      Weeks
+                    </button>
+                  </div>
+                </div>
+                <p className="text-[11px] text-muted-foreground">Recommended spacing between each session — shown to patients.</p>
               </div>
             )}
             {sessionCount > 1 && (
@@ -1243,7 +1264,7 @@ function ServiceDialog({
                 session_count: sessionCount,
                 allow_split_payment: sessionCount > 1 ? allowSplit : false,
                 rebook_reminder_days: rebookDays.trim() ? Number(rebookDays) : null,
-                session_interval_days: sessionCount > 1 && intervalDays.trim() ? Number(intervalDays) : null,
+                session_interval_days: sessionCount > 1 && intervalDays.trim() ? Number(intervalDays) * (intervalUnit === "weeks" ? 7 : 1) : null,
                 color,
                 active,
                 picture_url: pictureUrl ?? undefined,
