@@ -127,6 +127,10 @@ export const updateTreatment = createServerFn({ method: "POST" })
       discount_ends_at?: string | null;
       discount_show_was_now?: boolean;
       discount_label?: string | null;
+      aftercare_html?: string | null;
+      aftercare_delay_hours?: number;
+      auto_send_medical_forms?: boolean;
+      auto_send_aftercare?: boolean;
     }) => input,
 
 
