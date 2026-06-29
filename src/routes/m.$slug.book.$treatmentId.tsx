@@ -269,13 +269,21 @@ function BookTreatmentPage() {
       const step = r.slot_interval ?? duration;
       const start = toMinutes(r.start_time);
       const end = toMinutes(r.end_time);
-      // Candidate start times: regular grid plus "right after a busy block ends"
+      // Candidate start times
       const candidates = new Set<number>();
-      for (let t = start; t + duration <= end; t += step) candidates.add(t);
-      if (smartTimes) {
+      if (smartTimes && busy.length > 0) {
+        // Only show slots within 1 hour before/after existing bookings
+        const WINDOW = 60;
         for (const b of busy) {
-          if (b.end >= start && b.end + duration <= end) candidates.add(b.end);
+          for (let t = b.start - duration; t >= b.start - duration - WINDOW && t >= start; t -= step) {
+            if (t + duration <= end) candidates.add(t);
+          }
+          for (let t = b.end; t <= b.end + WINDOW && t + duration <= end; t += step) {
+            if (t >= start) candidates.add(t);
+          }
         }
+      } else {
+        for (let t = start; t + duration <= end; t += step) candidates.add(t);
       }
       for (const t of Array.from(candidates).sort((a, z) => a - z)) {
         const slotEnd = t + duration;
