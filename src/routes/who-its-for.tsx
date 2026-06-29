@@ -18,12 +18,12 @@ export const Route = createFileRoute("/who-its-for")({
 
 const personas = [
   {
-    icon: Syringe,
+    icon: Stethoscope,
     tag: "HCP",
-    title: "Nurse Prescribers",
+    title: "Nurses & Nurse Prescribers",
     points: [
       "Full prescribing-grade consultation flow",
-      "Batch, expiry and product traceability",
+      "Product log and treatment plans against every visit",
       "Manage non-HCPs you support in the Prescriber Hub",
       "Branded booking page on modo.book/your-clinic",
     ],
@@ -45,26 +45,37 @@ const personas = [
     title: "Pharmacist Prescribers",
     points: [
       "Run a clinic alongside dispensing",
-      "Issue prescriptions inside the Prescriber Hub",
-      "Audit-trailed sign-off on every batch",
-      "Consent-gated patient record sharing",
+      "Collaborate with practitioners in the Prescriber Hub",
+      "Shared, consent-gated patient records",
+      "Audit-trailed access on every patient file",
     ],
   },
   {
     icon: HeartHandshake,
+    tag: "HCP",
+    title: "Paramedics & Midwives",
+    points: [
+      "Aesthetics-only clinical workflow built for HCPs",
+      "Multi-location and travel days supported",
+      "Consent, medical screening and aftercare automated",
+      "Connect a prescriber via the Hub",
+    ],
+  },
+  {
+    icon: Syringe,
     tag: "Non-HCP",
-    title: "Aesthetic Therapists",
+    title: "Aesthetics Practitioners",
     points: [
       "Mandatory medical screening before every appointment",
       "Refer in your prescriber via the Hub",
+      "Photo consent, aftercare and review periods built in",
       "Look as professional as any clinic",
-      "Aftercare and review periods automated",
     ],
   },
   {
     icon: Users,
     tag: "Non-HCP",
-    title: "Skin Specialists & Beauty Pros",
+    title: "Skin Injectors & Other Injectors",
     points: [
       "Treatment menu, packages and add-ons",
       "Patient-facing concern picker and treatment finder quiz",
