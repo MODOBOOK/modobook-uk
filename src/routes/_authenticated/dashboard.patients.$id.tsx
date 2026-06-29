@@ -166,7 +166,7 @@ function PatientProfilePage() {
         <Button size="sm" variant="outline" asChild>
           <Link to="/dashboard/payments"><CreditCard className="mr-1.5 h-4 w-4" />Payment link</Link>
         </Button>
-        <Button size="sm" variant="outline" onClick={() => toast.info("Open a medical form in Medical Forms and copy the link to send")}>
+        <Button size="sm" variant="outline" onClick={() => setSendFormOpen(true)}>
           <FileText className="mr-1.5 h-4 w-4" />Send form
         </Button>
         <Button size="sm" variant="outline" onClick={async () => {
