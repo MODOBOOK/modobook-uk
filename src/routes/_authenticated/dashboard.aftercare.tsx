@@ -6,6 +6,9 @@ import {
   listAftercareTemplates,
   saveAftercareTemplate,
   deleteAftercareTemplate,
+  listMyTreatmentsBasic,
+  getAftercareTemplateTreatmentIds,
+  setAftercareTemplateTreatmentIds,
 } from "@/lib/aftercare-templates.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
