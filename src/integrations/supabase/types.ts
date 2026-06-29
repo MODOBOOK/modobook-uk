@@ -1599,6 +1599,8 @@ export type Database = {
           name: string
           profile_id: string | null
           requires_signature: boolean
+          sections: Json | null
+          summary: string | null
           treatment_type: string | null
           updated_at: string
         }
@@ -1610,6 +1612,8 @@ export type Database = {
           name: string
           profile_id?: string | null
           requires_signature?: boolean
+          sections?: Json | null
+          summary?: string | null
           treatment_type?: string | null
           updated_at?: string
         }
@@ -1621,6 +1625,8 @@ export type Database = {
           name?: string
           profile_id?: string | null
           requires_signature?: boolean
+          sections?: Json | null
+          summary?: string | null
           treatment_type?: string | null
           updated_at?: string
         }
