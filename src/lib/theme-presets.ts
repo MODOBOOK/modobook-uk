@@ -4,7 +4,7 @@
 
 export type ThemePresetKey = "luxe-editorial" | "clean-modern" | "soft-botanical" | "minimal-mono";
 
-export type BookingLayoutKey = "classic" | "carousel" | "split" | "magazine";
+export type BookingLayoutKey = "classic" | "carousel";
 
 export type ThemePreset = {
   key: ThemePresetKey;
@@ -165,7 +165,7 @@ export const PRESETS: Record<ThemePresetKey, ThemePreset> = {
     tagline: "Sage, blush & ivory — calm, spa-like.",
     heading_font: "Fraunces",
     body_font: "Outfit",
-    layout_key: "split",
+    layout_key: "classic",
     primary_color: "#4a6741",
     accent_color: "#d4a5a5",
     background_color: "#f8f4ee",
@@ -215,7 +215,7 @@ export const PRESETS: Record<ThemePresetKey, ThemePreset> = {
     tagline: "Pure black & white, Swiss grid — ultra-clean.",
     heading_font: "Inter",
     body_font: "Inter",
-    layout_key: "magazine",
+    layout_key: "classic",
     primary_color: "#000000",
     accent_color: "#000000",
     background_color: "#ffffff",
@@ -262,8 +262,6 @@ export const PRESETS: Record<ThemePresetKey, ThemePreset> = {
 };
 
 export const LAYOUTS: { key: BookingLayoutKey; name: string; description: string }[] = [
-  { key: "classic", name: "Classic Hero", description: "Big hero image with floating welcome card." },
-  { key: "carousel", name: "Image Carousel", description: "Auto-rotating gallery at the top." },
-  { key: "split", name: "Split Editorial", description: "Photo left, booking menu right on desktop." },
-  { key: "magazine", name: "Minimal Magazine", description: "Editorial wordmark with a small photo strip." },
+  { key: "classic", name: "Classic Hero", description: "One static banner image at the top, with a floating welcome card." },
+  { key: "carousel", name: "Carousel Hero", description: "Auto-rotating gallery of images at the top." },
 ];

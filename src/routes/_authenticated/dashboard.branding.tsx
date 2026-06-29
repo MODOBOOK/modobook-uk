@@ -461,14 +461,18 @@ function BrandingPage() {
           <CardTitle className="text-base">Booking-link layout</CardTitle>
           <p className="text-xs text-muted-foreground">Choose how the top of your booking page is arranged.</p>
         </CardHeader>
-        <CardContent className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <CardContent className="grid gap-3 sm:grid-cols-2">
           {LAYOUTS.map((l) => {
             const active = (state.layout_key ?? "classic") === l.key;
             return (
               <button
                 key={l.key}
                 type="button"
-                onClick={() => set("layout_key", l.key as BookingLayoutKey)}
+                onClick={() => setState((s) => ({
+                  ...s,
+                  layout_key: l.key as BookingLayoutKey,
+                  hero_carousel_enabled: l.key === "carousel",
+                }))}
                 className={`rounded-xl border p-3 text-left transition hover:shadow-md ${active ? "ring-2 ring-primary" : ""}`}
               >
                 <LayoutThumb kind={l.key} />
@@ -480,47 +484,43 @@ function BrandingPage() {
         </CardContent>
       </Card>
 
-      {/* Hero carousel */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Hero image carousel</CardTitle>
-          <p className="text-xs text-muted-foreground">When on, an auto-rotating gallery replaces the static hero image at the top of your booking page.</p>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={!!state.hero_carousel_enabled}
-              onChange={(e) => set("hero_carousel_enabled", e.target.checked)}
+      {/* Banner images — content depends on chosen layout */}
+      {(state.layout_key ?? "classic") === "carousel" ? (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Carousel banner images</CardTitle>
+            <p className="text-xs text-muted-foreground">Upload 2 or more images for the auto-rotating banner. Each one can be cropped and repositioned after upload, and resizes for desktop and mobile.</p>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {carouselUrls.length > 0 && (
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                {carouselUrls.map((u, i) => (
+                  <div key={i} className="group relative overflow-hidden rounded-md border">
+                    <img src={u} alt="" className="h-28 w-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => removeCarouselUrl(i)}
+                      className="absolute right-1 top-1 rounded-full bg-black/70 p-1 text-white opacity-0 transition group-hover:opacity-100"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <ImageUploader
+              label="Add image to carousel"
+              value={null}
+              onChange={(v) => addCarouselUrl(v)}
+              profileId={profileId}
+              folder="carousel"
+              previewClass="hidden"
+              cropAspect={16 / 9}
             />
-            Enable carousel on my booking link
-          </label>
-          {carouselUrls.length > 0 && (
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-              {carouselUrls.map((u, i) => (
-                <div key={i} className="group relative overflow-hidden rounded-md border">
-                  <img src={u} alt="" className="h-28 w-full object-cover" />
-                  <button
-                    type="button"
-                    onClick={() => removeCarouselUrl(i)}
-                    className="absolute right-1 top-1 rounded-full bg-black/70 p-1 text-white opacity-0 transition group-hover:opacity-100"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-          <ImageUploader
-            label="Add carousel image"
-            value={null}
-            onChange={(v) => addCarouselUrl(v)}
-            profileId={profileId}
-            folder="carousel"
-            previewClass="hidden"
-          />
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      ) : null}
+
 
       {/* Welcome card */}
       <Card>
@@ -735,19 +735,24 @@ function BrandingPage() {
       </Card>
 
       <Card>
-        <CardHeader><CardTitle className="text-base">Logo, favicon & hero image</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle className="text-base">Logo, tab icon & banner</CardTitle>
+          <p className="text-xs text-muted-foreground">All images can be cropped and repositioned after upload. They auto-fit desktop and mobile.</p>
+        </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
           <div className="sm:col-span-2">
             <ImageUploader label="Logo" value={state.logo_url} onChange={(v) => set("logo_url", v)} profileId={profileId} folder="logo" previewClass="mt-2 h-16 object-contain rounded bg-muted/30 p-2" />
           </div>
-          <ImageUploader label="Favicon" value={state.favicon_url} onChange={(v) => set("favicon_url", v)} profileId={profileId} folder="favicon" previewClass="mt-2 h-8 w-8 object-contain rounded" />
-          <ImageUploader label="Hero image" value={state.hero_image_url} onChange={(v) => set("hero_image_url", v)} profileId={profileId} folder="hero" previewClass="mt-2 h-40 w-full rounded-md object-cover" />
+          <ImageUploader label="Tab icon (browser tab)" value={state.favicon_url} onChange={(v) => set("favicon_url", v)} profileId={profileId} folder="favicon" previewClass="mt-2 h-8 w-8 object-contain rounded" cropAspect={1} />
+          {(state.layout_key ?? "classic") === "classic" && (
+            <ImageUploader label="Banner image" value={state.hero_image_url} onChange={(v) => set("hero_image_url", v)} profileId={profileId} folder="hero" previewClass="mt-2 h-40 w-full rounded-md object-cover" cropAspect={16 / 9} />
+          )}
           <div className="space-y-1.5 sm:col-span-2">
-            <Label>Hero heading</Label>
+            <Label>Banner title</Label>
             <Input value={state.hero_heading ?? ""} onChange={(e) => set("hero_heading", e.target.value || null)} />
           </div>
           <div className="space-y-1.5 sm:col-span-2">
-            <Label>Hero subheading</Label>
+            <Label>Banner subtitle</Label>
             <Textarea rows={2} value={state.hero_subheading ?? ""} onChange={(e) => set("hero_subheading", e.target.value || null)} />
           </div>
         </CardContent>

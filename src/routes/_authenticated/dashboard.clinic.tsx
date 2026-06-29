@@ -26,8 +26,6 @@ function ClinicPage() {
   const [about, setAbout] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
-  const [brandColor, setBrandColor] = useState("#1f2a44");
-  const [heroUrl, setHeroUrl] = useState("");
   const [instagram, setInstagram] = useState("");
   const [facebook, setFacebook] = useState("");
   const [tiktok, setTiktok] = useState("");
@@ -48,8 +46,6 @@ function ClinicPage() {
         setAbout(p.about ?? "");
         setPhone(p.phone ?? "");
         setEmail(p.email ?? "");
-        setBrandColor(p.brand_color ?? "#1f2a44");
-        setHeroUrl(p.hero_url ?? "");
         const links = (p.social_links ?? {}) as { instagram?: string; facebook?: string; tiktok?: string };
         setInstagram(links.instagram ?? "");
         setFacebook(links.facebook ?? "");
@@ -74,8 +70,6 @@ function ClinicPage() {
           about,
           phone,
           email,
-          brand_color: brandColor,
-          hero_url: heroUrl,
           social_links: {
             ...(instagram ? { instagram } : {}),
             ...(facebook ? { facebook } : {}),
@@ -119,33 +113,6 @@ function ClinicPage() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Brand & hero</CardTitle>
-          <CardDescription>Colour and hero image used on your public page.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <Label>Brand colour</Label>
-            <div className="flex items-center gap-2">
-              <input
-                type="color"
-                value={brandColor}
-                onChange={(e) => setBrandColor(e.target.value)}
-                className="h-10 w-12 cursor-pointer rounded border bg-transparent"
-              />
-              <Input value={brandColor} onChange={(e) => setBrandColor(e.target.value)} className="font-mono" />
-            </div>
-          </div>
-          <div>
-            <Label>Hero image URL</Label>
-            <Input value={heroUrl} onChange={(e) => setHeroUrl(e.target.value)} placeholder="https://…" />
-            {heroUrl && (
-              <img src={heroUrl} alt="" className="mt-2 h-32 w-full rounded-md object-cover" />
-            )}
-          </div>
-        </CardContent>
-      </Card>
 
       <Card>
         <CardHeader>
