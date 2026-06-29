@@ -249,9 +249,10 @@ function UserSupportCard() {
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<{
     authUsers: Array<{ id: string; email: string | null; created_at: string; last_sign_in_at: string | null; email_confirmed_at: string | null }>;
-    profiles: Array<{ id: string; user_id: string | null; full_name: string | null; clinic_name: string | null; slug: string | null; active: boolean }>;
+    profiles: Array<{ id: string; user_id: string | null; full_name: string | null; clinic_name: string | null; slug: string | null; active: boolean | null }>;
     clients: Array<{ id: string; profile_id: string; full_name: string | null; email: string | null; phone: string | null }>;
   } | null>(null);
+
 
   async function search() {
     if (!q.trim()) return;
