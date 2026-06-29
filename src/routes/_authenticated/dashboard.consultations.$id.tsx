@@ -38,20 +38,72 @@ const STEPS = [
   { n: 8, label: "Invoice", icon: Receipt },
 ] as const;
 
-const MEDICAL_QUESTIONS = [
-  "Pregnant or breastfeeding",
-  "Known allergies",
-  "Currently taking medication",
-  "Bleeding disorders / on blood thinners",
-  "History of cold sores",
-  "Keloid scarring",
-  "Active skin infection",
-  "Autoimmune condition",
-  "Recent botox / filler (last 4 weeks)",
-  "Heart condition",
-  "Diabetes",
-  "Cancer / chemotherapy history",
+const MEDICAL_SECTIONS: { title: string; items: string[] }[] = [
+  {
+    title: "Medical history",
+    items: [
+      "Diabetes","Autoimmune disease","Cancer (past or present)","Blood clotting disorder",
+      "Heart condition","High blood pressure","Low blood pressure","Epilepsy or seizures",
+      "Thyroid disorder","Liver disease","Kidney disease","HIV or Hepatitis",
+      "Keloid or hypertrophic scarring","Rosacea","Eczema, psoriasis or dermatitis",
+      "Cold sores (Herpes Simplex)","Any chronic medical condition",
+      "Any condition affecting healing or immune system",
+    ],
+  },
+  {
+    title: "Allergies",
+    items: [
+      "Lidocaine or local anaesthetic","Hyaluronic acid products","Poly-L-lactic acid (Sculptra)",
+      "Latex","Adhesives","Medications","Foods","Other allergies",
+    ],
+  },
+  {
+    title: "Medications",
+    items: [
+      "Prescription medications","Blood thinners","Steroids","Immunosuppressants",
+      "Acne medication (e.g. Roaccutane/Isotretinoin)","Vitamins and supplements",
+      "Weight-loss medications (e.g. GLP-1)",
+    ],
+  },
+  {
+    title: "Pregnancy",
+    items: ["Pregnant","Breastfeeding","Trying to conceive"],
+  },
+  {
+    title: "Previous aesthetic treatments",
+    items: [
+      "Anti-wrinkle injections","Dermal filler","Sculptra","Skin boosters","Polynucleotides",
+      "Fat dissolving injections","Microneedling","Chemical peels","Laser treatments",
+      "PDO threads","Facial surgery",
+    ],
+  },
+  {
+    title: "Previous complications",
+    items: [
+      "Infection","Vascular occlusion","Allergic reaction","Delayed swelling",
+      "Nodules or granulomas","Product migration","Poor healing","Excessive bruising",
+    ],
+  },
+  {
+    title: "Current health (last 2 weeks)",
+    items: [
+      "Cold sore","Illness or fever","Skin infection","Dental treatment","Vaccination",
+      "Antibiotics","Facial injury","Open wounds or acne flare-up",
+    ],
+  },
+  {
+    title: "Lifestyle",
+    items: ["Smokes or vapes","Drinks alcohol","Bruises easily"],
+  },
+  {
+    title: "Practitioner assessment",
+    items: [
+      "Suitable for treatment","Contraindications identified","Risks discussed",
+      "Treatment plan agreed","Products recommended","Aftercare discussed",
+    ],
+  },
 ];
+
 
 const CONCERN_OPTIONS = [
   "Forehead lines", "Frown lines (11s)", "Crow's feet", "Bunny lines",
