@@ -3428,6 +3428,8 @@ export type Database = {
           status: string
           template_body: string
           template_name: string
+          template_sections: Json
+          template_summary: string
           treatment_name: string
         }[]
       }
