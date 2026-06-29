@@ -286,7 +286,12 @@ function Step3({ assessment, photos, onChangeAssess, onChangePhotos }: any) {
         <Label>Clinical assessment</Label>
         <Textarea rows={5} value={assessment?.notes ?? ""} onChange={(e) => onChangeAssess({ ...assessment, notes: e.target.value })} placeholder="Skin condition, muscle tone, asymmetries…" />
       </div>
-      <FaceMap value={assessment?.face_map ?? []} onChange={(v) => onChangeAssess({ ...assessment, face_map: v })} />
+      <FaceMapAnnotator
+        title="Planning face map — tap to tag a product, or draw"
+        value={assessment?.face_map}
+        onChange={(v) => onChangeAssess({ ...assessment, face_map: v })}
+      />
+
       <PhotoGrid label="Before photos" photos={photos ?? []} onChange={onChangePhotos} />
     </div>
   );
