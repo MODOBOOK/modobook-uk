@@ -51,6 +51,8 @@ type FormElement = {
   fieldType?: "text" | "email" | "tel" | "number" | "date" | "textarea";
   variant?: "info" | "warning" | "success";
   max?: number;
+  /** Conditional visibility: only show when answer to `showIfId` equals `equals` (string match, or contained for multi-choice). */
+  logic?: { showIfId: string; equals: string } | null;
 };
 type FormStep = { id: string; title: string; elements: FormElement[] };
 type FormSchema = { steps: FormStep[] };
