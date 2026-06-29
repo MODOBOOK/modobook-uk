@@ -131,6 +131,7 @@ export type PublicBookingSettings = {
   require_dob: boolean;
   require_address: boolean;
   auto_confirm_bookings: boolean;
+  booking_smart_times_enabled: boolean;
 };
 
 function extractBookingSettings(p: Record<string, unknown>): PublicBookingSettings {
