@@ -324,6 +324,18 @@ function TreatmentDialog({
       ? String((treatment as { rebook_reminder_days?: number | null }).rebook_reminder_days)
       : "",
   );
+  const [aftercareHtml, setAftercareHtml] = useState<string>(
+    (treatment as { aftercare_html?: string | null } | null)?.aftercare_html ?? "",
+  );
+  const [aftercareDelay, setAftercareDelay] = useState<number>(
+    (treatment as { aftercare_delay_hours?: number } | null)?.aftercare_delay_hours ?? 2,
+  );
+  const [autoSendForms, setAutoSendForms] = useState<boolean>(
+    (treatment as { auto_send_medical_forms?: boolean } | null)?.auto_send_medical_forms ?? true,
+  );
+  const [autoSendAftercare, setAutoSendAftercare] = useState<boolean>(
+    (treatment as { auto_send_aftercare?: boolean } | null)?.auto_send_aftercare ?? true,
+  );
 
   const topLevel = useMemo(() => categories.filter((c) => !c.parent_id), [categories]);
   const childrenOf = (parentId: string | null) =>
