@@ -103,32 +103,32 @@ function SettingsPage() {
               label="Minimum notice (hours)"
               hint="Block bookings within this window."
               value={s.booking_min_notice_hours}
-              onChange={(v) => set("booking_min_notice_hours", v)}
+              onChange={(v) => set("booking_min_notice_hours", Number(v) || 0)}
             />
             <NumberField
               label="Max lead time (days)"
               hint="How far ahead patients can book."
               value={s.booking_max_lead_days}
-              onChange={(v) => set("booking_max_lead_days", v)}
+              onChange={(v) => set("booking_max_lead_days", Number(v) || 0)}
             />
             <NumberField
               label="Buffer before (mins)"
               hint="Padding before each appointment."
               value={s.booking_buffer_before_minutes}
-              onChange={(v) => set("booking_buffer_before_minutes", v)}
+              onChange={(v) => set("booking_buffer_before_minutes", Number(v) || 0)}
             />
             <NumberField
               label="Buffer after (mins)"
               hint="Padding after each appointment."
               value={s.booking_buffer_after_minutes}
-              onChange={(v) => set("booking_buffer_after_minutes", v)}
+              onChange={(v) => set("booking_buffer_after_minutes", Number(v) || 0)}
             />
             <NumberField
               label="Daily booking cap"
               hint="Leave empty for no cap."
               value={s.booking_daily_cap ?? ""}
               allowEmpty
-              onChange={(v) => set("booking_daily_cap", v === "" ? null : (v as number))}
+              onChange={(v) => set("booking_daily_cap", v === "" ? null : Number(v))}
             />
           </div>
           <ToggleRow
