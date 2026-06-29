@@ -33,6 +33,7 @@ import {
   listBlockedTimes,
   addBlockedTime,
   deleteBlockedTime,
+  addAvailabilityOverride,
 } from "@/lib/availability.functions";
 import {
   createPaymentLink,
@@ -541,10 +542,36 @@ function UnblockDialog({
   blocks: BlockedTime[]; onRemoved: (id: string) => void;
 }) {
   const del = useServerFn(deleteBlockedTime);
+  const addOverride = useServerFn(addAvailabilityOverride);
   const todayIso = ymd(new Date());
+
+  const [tab, setTab] = useState<"new" | "blocked">("new");
+  const [dates, setDates] = useState<string[]>([todayIso]);
+  const [start, setStart] = useState("09:00");
+  const [end, setEnd] = useState("17:00");
+  const [interval, setInterval] = useState(30);
+  const [busy, setBusy] = useState(false);
+
   const upcoming = blocks
     .filter((b) => b.date >= todayIso)
     .sort((a, b) => (a.date + a.start_time).localeCompare(b.date + b.start_time));
+
+  function addDate() { setDates((d) => [...d, todayIso]); }
+  function setDate(i: number, v: string) { setDates((d) => d.map((x, idx) => (idx === i ? v : x))); }
+  function removeDate(i: number) { setDates((d) => d.filter((_, idx) => idx !== i)); }
+
+  async function openSlots() {
+    if (!dates.length) return toast.error("Add at least one date");
+    if (!start || !end || start >= end) return toast.error("Pick a valid start/end time");
+    setBusy(true);
+    try {
+      for (const date of dates) {
+        await addOverride({ data: { date, start_time: start, end_time: end, slot_interval: interval } });
+      }
+      toast.success(`Opened ${dates.length} day${dates.length === 1 ? "" : "s"} · ${start}–${end}`);
+      onOpenChange(false);
+    } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
+  }
 
   async function remove(id: string) {
     try {
@@ -556,9 +583,65 @@ function UnblockDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-h-[85vh] overflow-y-auto">
         <DialogHeader><DialogTitle>Open up appointments</DialogTitle></DialogHeader>
-        {upcoming.length === 0 ? (
+
+        <div className="mb-3 flex rounded-full bg-muted p-1 text-sm">
+          <button type="button" onClick={() => setTab("new")} className={`flex-1 rounded-full px-3 py-1.5 ${tab === "new" ? "bg-background shadow-sm font-medium" : "text-muted-foreground"}`}>Add slots</button>
+          <button type="button" onClick={() => setTab("blocked")} className={`flex-1 rounded-full px-3 py-1.5 ${tab === "blocked" ? "bg-background shadow-sm font-medium" : "text-muted-foreground"}`}>Unblock ({upcoming.length})</button>
+        </div>
+
+        {tab === "new" ? (
+          <div className="space-y-4">
+            <p className="text-xs text-muted-foreground">Quickly open extra availability for the booking page on specific dates and times.</p>
+
+            <div className="space-y-2">
+              <Label className="text-xs uppercase tracking-wide text-muted-foreground">Dates</Label>
+              {dates.map((d, i) => (
+                <div key={i} className="flex gap-2">
+                  <Input type="date" value={d} min={todayIso} onChange={(e) => setDate(i, e.target.value)} />
+                  {dates.length > 1 && (
+                    <Button type="button" size="icon" variant="ghost" onClick={() => removeDate(i)}>
+                      <X className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              ))}
+              <Button type="button" size="sm" variant="outline" onClick={addDate} className="gap-1">
+                <Plus className="h-3.5 w-3.5" /> Add another date
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs uppercase tracking-wide text-muted-foreground">Start</Label>
+                <Input type="time" value={start} onChange={(e) => setStart(e.target.value)} />
+              </div>
+              <div>
+                <Label className="text-xs uppercase tracking-wide text-muted-foreground">End</Label>
+                <Input type="time" value={end} onChange={(e) => setEnd(e.target.value)} />
+              </div>
+            </div>
+
+            <div>
+              <Label className="text-xs uppercase tracking-wide text-muted-foreground">Slot interval (minutes)</Label>
+              <select
+                value={interval}
+                onChange={(e) => setInterval(parseInt(e.target.value, 10))}
+                className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm"
+              >
+                {[15, 20, 30, 45, 60].map((m) => <option key={m} value={m}>{m} min</option>)}
+              </select>
+            </div>
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+              <Button onClick={openSlots} disabled={busy} className="gap-1">
+                <CircleCheck className="h-4 w-4" /> {busy ? "Opening…" : "Open slots"}
+              </Button>
+            </DialogFooter>
+          </div>
+        ) : upcoming.length === 0 ? (
           <p className="py-6 text-center text-sm text-muted-foreground">No upcoming blocked times.</p>
         ) : (
           <div className="space-y-2">

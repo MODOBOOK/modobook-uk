@@ -1,9 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { SiteHeader, SiteFooter } from "./index";
+import { SiteHeader, SiteFooter, IconTile } from "./index";
 import { Syringe, Sparkles, Stethoscope, Users, MapPin, HeartHandshake, CheckCircle2 } from "lucide-react";
-import hero from "@/assets/modo-clinic.jpg";
 
 export const Route = createFileRoute("/who-its-for")({
   head: () => ({
@@ -19,12 +18,12 @@ export const Route = createFileRoute("/who-its-for")({
 
 const personas = [
   {
-    icon: Syringe,
+    icon: Stethoscope,
     tag: "HCP",
-    title: "Nurse Prescribers",
+    title: "Nurses & Nurse Prescribers",
     points: [
       "Full prescribing-grade consultation flow",
-      "Batch, expiry and product traceability",
+      "Product log and treatment plans against every visit",
       "Manage non-HCPs you support in the Prescriber Hub",
       "Branded booking page on modo.book/your-clinic",
     ],
@@ -46,26 +45,37 @@ const personas = [
     title: "Pharmacist Prescribers",
     points: [
       "Run a clinic alongside dispensing",
-      "Issue prescriptions inside the Prescriber Hub",
-      "Audit-trailed sign-off on every batch",
-      "Consent-gated patient record sharing",
+      "Collaborate with practitioners in the Prescriber Hub",
+      "Shared, consent-gated patient records",
+      "Audit-trailed access on every patient file",
     ],
   },
   {
     icon: HeartHandshake,
+    tag: "HCP",
+    title: "Paramedics & Midwives",
+    points: [
+      "Aesthetics-only clinical workflow built for HCPs",
+      "Multi-location and travel days supported",
+      "Consent, medical screening and aftercare automated",
+      "Connect a prescriber via the Hub",
+    ],
+  },
+  {
+    icon: Syringe,
     tag: "Non-HCP",
-    title: "Aesthetic Therapists",
+    title: "Aesthetics Practitioners",
     points: [
       "Mandatory medical screening before every appointment",
       "Refer in your prescriber via the Hub",
+      "Photo consent, aftercare and review periods built in",
       "Look as professional as any clinic",
-      "Aftercare and review periods automated",
     ],
   },
   {
     icon: Users,
     tag: "Non-HCP",
-    title: "Skin Specialists & Beauty Pros",
+    title: "Skin Injectors & Other Injectors",
     points: [
       "Treatment menu, packages and add-ons",
       "Patient-facing concern picker and treatment finder quiz",
@@ -106,14 +116,12 @@ function WhoPage() {
                 <Link to="/prescriber-hub"><Button size="lg" variant="outline">Prescriber Hub</Button></Link>
               </div>
             </div>
-            <img
-              src={hero}
-              alt="Practitioner using a branded MODO booking calendar"
-              loading="lazy"
-              width={1280}
-              height={1024}
-              className="aspect-[5/4] w-full rounded-3xl object-cover shadow-lg ring-1 ring-black/5"
-            />
+            <div className="grid aspect-[5/4] w-full grid-cols-2 grid-rows-2 gap-3 rounded-3xl bg-gradient-to-br from-primary/10 via-muted/40 to-primary/5 p-6 shadow-lg ring-1 ring-black/5 sm:gap-5 sm:p-10">
+              <IconTile icon={Stethoscope} label="HCPs" />
+              <IconTile icon={Syringe} label="Non-HCPs" />
+              <IconTile icon={MapPin} label="Mobile" />
+              <IconTile icon={Users} label="Clinics" />
+            </div>
           </div>
         </section>
 

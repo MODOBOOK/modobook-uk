@@ -29,9 +29,7 @@ import {
   HandshakeIcon,
   ArrowRight,
 } from "lucide-react";
-import heroImg from "@/assets/modo-hero.jpg";
-import clinicImg from "@/assets/modo-clinic.jpg";
-import foundersImg from "@/assets/modo-founders.jpg";
+// Icon-led visuals — no AI imagery used in hero blocks for now.
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -46,7 +44,7 @@ export const Route = createFileRoute("/")({
       {
         property: "og:description",
         content:
-          "Booking, consultations, consent, face mapping, batch tracking, payments and a prescriber hub — in one platform built only for aesthetics.",
+          "Booking, consultations, consent, face mapping, payments and a prescriber hub — in one platform built only for aesthetics.",
       },
     ],
   }),
@@ -91,19 +89,14 @@ function LandingPage() {
               </p>
             </div>
             <div className="relative">
-              <img
-                src={heroImg}
-                alt="A calm UK aesthetics clinic treatment room with a practitioner using a tablet"
-                width={1600}
-                height={1024}
-                className="aspect-[4/3] w-full rounded-3xl object-cover shadow-xl ring-1 ring-black/5"
-              />
-              <div className="absolute -bottom-6 -left-6 hidden w-56 rounded-2xl bg-background p-4 shadow-lg ring-1 ring-black/5 sm:block">
-                <div className="text-xs uppercase tracking-wider text-muted-foreground">This week</div>
-                <div className="mt-1 text-2xl font-semibold">42 bookings</div>
-                <div className="mt-1 text-xs text-primary">↑ 18% vs last week</div>
+              <div className="grid aspect-[4/3] w-full grid-cols-2 grid-rows-2 gap-3 rounded-3xl bg-gradient-to-br from-primary/10 via-muted/40 to-primary/5 p-6 shadow-xl ring-1 ring-black/5 sm:gap-5 sm:p-10">
+                <IconTile icon={Calendar} label="Live bookings" />
+                <IconTile icon={ClipboardList} label="Consultations" />
+                <IconTile icon={FileSignature} label="Consent" />
+                <IconTile icon={CreditCard} label="Payments" />
               </div>
             </div>
+
           </div>
         </section>
 
@@ -113,9 +106,9 @@ function LandingPage() {
             <ForCard
               icon={Syringe}
               tag="For HCPs"
-              title="Nurse Prescribers, Doctors, Dentists & Pharmacists"
+              title="Nurses, Nurse Prescribers, Doctors, Dentists, Pharmacists, Paramedics & Midwives"
               points={[
-                "Prescriber-grade consultation notes & batch tracking",
+                "Prescriber-grade consultation notes & treatment plans",
                 "Photo & social media consent split out properly",
                 "Prescriber Hub: collaborate with non-HCPs you work with",
                 "Multi-location, multi-practitioner clinics supported",
@@ -124,7 +117,7 @@ function LandingPage() {
             <ForCard
               icon={Sparkles}
               tag="For Non-HCPs"
-              title="Aesthetic Therapists, Skin Specialists & Beauty Pros"
+              title="Aesthetics Practitioners, Skin Injectors & Other Injectors"
               points={[
                 "Full medical screening & consent before every appointment",
                 "Refer in your prescriber via the Prescriber Hub",
@@ -162,7 +155,7 @@ function LandingPage() {
                   "One clinical standard for the whole industry, not two tiers.",
                   "Built-in Prescriber Hub for HCPs and non-HCPs to collaborate safely.",
                   "Granular photo, social media and marketing consent on every patient.",
-                  "Batch numbers, expiry dates and treatment plans linked to every visit.",
+                  "Treatment plans, before/after photos and notes linked to every visit.",
                   "Aftercare and review periods sent automatically, every time.",
                 ].map((line) => (
                   <li key={line} className="flex gap-2">
@@ -172,14 +165,12 @@ function LandingPage() {
                 ))}
               </ul>
             </div>
-            <img
-              src={clinicImg}
-              alt="Practitioner reviewing a branded booking calendar on a tablet"
-              loading="lazy"
-              width={1280}
-              height={1024}
-              className="aspect-[5/4] w-full rounded-3xl object-cover shadow-lg ring-1 ring-black/5"
-            />
+            <div className="grid aspect-[5/4] w-full grid-cols-2 grid-rows-2 gap-3 rounded-3xl bg-gradient-to-tr from-primary/10 via-muted/40 to-primary/5 p-6 shadow-lg ring-1 ring-black/5 sm:gap-5 sm:p-10">
+              <IconTile icon={ShieldCheck} label="One safer standard" />
+              <IconTile icon={HeartHandshake} label="HCPs + non-HCPs" />
+              <IconTile icon={ClipboardList} label="Real consultations" />
+              <IconTile icon={FileSignature} label="Granular consent" />
+            </div>
           </div>
         </section>
 
@@ -195,15 +186,13 @@ function LandingPage() {
               </h2>
               <p className="mt-3 text-muted-foreground">
                 One safe, traceable place for prescribers and the practitioners they
-                support. Remote consultations, prescriptions, Rx records, batch sign-off
-                and collaborative patient notes — all linked to the booking that started
-                it.
+                support. Shared patient records and collaborative notes — all linked
+                to the booking that started it.
               </p>
             </div>
-            <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-              <HubCard icon={Pill} title="Remote prescribing" desc="Link a prescriber to a patient and treatment. Audit-trailed, signed, stored." />
+            <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               <HubCard icon={ClipboardList} title="Shared patient record" desc="Prescriber sees the medical form, consultation and photos — with consent." />
-              <HubCard icon={Microscope} title="Batch & expiry sign-off" desc="Prescribers approve the products being used, before they're used." />
+              <HubCard icon={Network} title="Connected practitioners" desc="Prescribers can support many practitioners; practitioners can refer to many prescribers." />
               <HubCard icon={HandshakeIcon} title="Collaborative care" desc="One workflow for HCPs and non-HCPs — accountable, safe, professional." />
             </div>
             <div className="mt-10 text-center">
@@ -219,14 +208,12 @@ function LandingPage() {
         {/* FOUNDERS */}
         <section className="mx-auto max-w-7xl px-4 py-20 lg:px-8">
           <div className="grid gap-10 lg:grid-cols-2 lg:items-center">
-            <img
-              src={foundersImg}
-              alt="Two UK Nurse Prescribers, the founders of MODO Book"
-              loading="lazy"
-              width={1280}
-              height={1024}
-              className="aspect-[5/4] w-full rounded-3xl object-cover shadow-lg ring-1 ring-black/5"
-            />
+            <div className="grid aspect-[5/4] w-full grid-cols-2 grid-rows-2 gap-3 rounded-3xl bg-gradient-to-br from-primary/10 via-muted/40 to-primary/5 p-6 shadow-lg ring-1 ring-black/5 sm:gap-5 sm:p-10">
+              <IconTile icon={Stethoscope} label="Nurse Prescriber 1" />
+              <IconTile icon={Stethoscope} label="Nurse Prescriber 2" />
+              <IconTile icon={HeartHandshake} label="Built together" />
+              <IconTile icon={Sparkles} label="For everyone" />
+            </div>
             <div>
               <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
                 <HeartHandshake className="h-3.5 w-3.5" /> Built by clinicians, for clinicians
@@ -238,7 +225,7 @@ function LandingPage() {
                 Every other "booking system" in aesthetics is a hairdressing or spa app with
                 consent forms bolted on — or a medics-only portal that excludes the rest of
                 the industry. MODO Book was designed end-to-end by two practising UK Nurse
-                Prescribers who understand consultations, prescribing notes, batch numbers,
+                Prescribers who understand consultations, prescribing notes, treatment plans,
                 photo consent, model slots, top-ups, review periods and the realities of
                 running an aesthetics clinic.
               </p>
@@ -267,7 +254,7 @@ function LandingPage() {
               <Feature icon={Palette} title="Fully branded booking page" desc="Your colours, fonts, hero image, logo and welcome message. Looks like your brand — not ours." />
               <Feature icon={Link2} title="Your own MODO link" desc="modo.book/your-clinic. One link for Instagram, TikTok, your website and Google." />
               <Feature icon={Calendar} title="Smart live availability" desc="Weekly schedules, buffers, daily caps, lead times, model slots and ad-hoc rota changes." />
-              <Feature icon={ClipboardList} title="8-step consultation flow" desc="Medical form, concerns, assessment, plan, consent, before/after photos, batch numbers, invoice." />
+              <Feature icon={ClipboardList} title="8-step consultation flow" desc="Medical form, concerns, assessment, plan, consent, before/after photos, product log, invoice." />
               <Feature icon={FileSignature} title="Consent & medical forms" desc="Build your own or use ours. Auto-sent before treatment, auto-signed, auto-filed." />
               <Feature icon={Camera} title="Face mapping & photos" desc="Plan and record treatments with pin-drop product tags, units and before/after pictures." />
               <Feature icon={Users} title="Patient records" desc="Full history, allergies, concerns, consultations, photos, forms and comms in one profile." />
@@ -321,7 +308,7 @@ function LandingPage() {
                 points={[
                   "One link, one inbox, one calendar",
                   "Prescriber-grade consultation notes",
-                  "Batch & expiry tracking built in",
+                  "Photo, consent and aftercare on autopilot",
                 ]}
               />
               <WhoCard
@@ -587,5 +574,18 @@ function Badge({ icon: Icon, label }: { icon: React.ComponentType<{ className?: 
 // Re-exports used by sibling marketing pages
 export { Feature as MarketingFeature, Benefit as MarketingBenefit, WhoCard as MarketingWhoCard, HubCard as MarketingHubCard, Compare as MarketingCompare };
 
+export function IconTile({ icon: Icon, label }: { icon: React.ComponentType<{ className?: string }>; label: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center gap-2 rounded-2xl bg-background/80 p-4 text-center shadow-sm ring-1 ring-black/5 backdrop-blur sm:gap-3 sm:p-6">
+      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary sm:h-12 sm:w-12">
+        <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
+      </div>
+      <span className="text-xs font-medium sm:text-sm">{label}</span>
+    </div>
+  );
+}
+
 // silence unused warnings for icons reserved for future sections
 void GraduationCap;
+void Pill;
+void Microscope;
