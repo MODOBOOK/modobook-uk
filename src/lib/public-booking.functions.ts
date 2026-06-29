@@ -152,6 +152,12 @@ export const getMultiBookingContext = createServerFn({ method: "GET" })
       .select("*")
       .in("treatment_id", data.treatmentIds);
 
+    const bookableFrom = await computeBookableFrom(
+      sb,
+      profile.id,
+      (treatments ?? []).map((t) => (t as { category_id: string | null }).category_id),
+    );
+
     return {
       profileId: profile.id,
       clinicName: profile.clinic_name,
@@ -163,6 +169,7 @@ export const getMultiBookingContext = createServerFn({ method: "GET" })
       brandColor: (profile as { brand_color?: string | null }).brand_color ?? null,
       termsHtml: (profile as { terms_html?: string | null }).terms_html ?? null,
       termsRequired: (profile as { terms_required?: boolean | null }).terms_required ?? false,
+      bookableFrom,
     };
   });
 
