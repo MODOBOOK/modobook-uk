@@ -93,6 +93,10 @@ export const getBookingContext = createServerFn({ method: "GET" })
       .order("slot_date", { ascending: true })
       .order("start_time", { ascending: true });
 
+    const bookableFrom = await computeBookableFrom(sb, profile.id, [
+      (treatment as { category_id: string | null }).category_id,
+    ]);
+
     return {
       profileId: profile.id,
       clinicName: profile.clinic_name,
@@ -102,6 +106,7 @@ export const getBookingContext = createServerFn({ method: "GET" })
       theme: theme ?? null,
       brandColor: (profile as { brand_color?: string | null }).brand_color ?? null,
       modelSlots: modelSlots ?? [],
+      bookableFrom,
     };
   });
 
