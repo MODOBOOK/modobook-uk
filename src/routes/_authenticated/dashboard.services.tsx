@@ -836,6 +836,7 @@ function ServiceDialog({
     session_count?: number;
     allow_split_payment?: boolean;
     rebook_reminder_days?: number | null;
+    session_interval_days?: number | null;
     color?: string | null;
     active?: boolean;
     picture_url?: string;
