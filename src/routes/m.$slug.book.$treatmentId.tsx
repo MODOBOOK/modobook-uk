@@ -70,6 +70,7 @@ function BookTreatmentPage() {
   const reqAddress = settings?.require_address !== false;
   const maxLeadDays = settings?.booking_max_lead_days ?? 90;
   const minNoticeHours = settings?.booking_min_notice_hours ?? 0;
+  const smartTimes = settings?.booking_smart_times_enabled === true;
   const redirectPath = `/m/${slug}/book/${treatment.id}`;
   const duration = treatment.duration ?? 30;
   const price = Number(treatment.price ?? 0);
