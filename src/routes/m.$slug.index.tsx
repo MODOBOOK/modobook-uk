@@ -74,6 +74,22 @@ function countTreatments(n: CatNode): number {
   return n.treatments.length + n.children.reduce((s, c) => s + countTreatments(c), 0);
 }
 
+function formatSessionSpacing(days?: number | null) {
+  if (!days || days <= 0) return null;
+  if (days % 7 === 0) {
+    const weeks = days / 7;
+    return `every ${weeks} week${weeks === 1 ? "" : "s"}`;
+  }
+  return `every ${days} day${days === 1 ? "" : "s"}`;
+}
+
+function formatTreatmentSessions(t: Treatment) {
+  const sessions = (t as { session_count?: number | null }).session_count ?? 1;
+  if (sessions <= 1) return null;
+  const spacing = formatSessionSpacing((t as { session_interval_days?: number | null }).session_interval_days);
+  return `${sessions} sessions${spacing ? ` · ${spacing}` : ""}`;
+}
+
 type Theme = Database["public"]["Tables"]["clinic_theme"]["Row"];
 
 function BookPage() {
@@ -977,6 +993,7 @@ function BookPage() {
             >
               {favs.map((t) => {
                 const img = (t as Treatment & { picture_url?: string | null }).picture_url;
+                const sessions = formatTreatmentSessions(t);
                 return (
                   <Link
                     key={t.id}
@@ -992,6 +1009,11 @@ function BookPage() {
                     )}
                     <div className="flex flex-1 flex-col gap-1 p-4">
                       <div className="text-base font-semibold sm:text-lg" style={{ color: menuNameColor }}>{t.name}</div>
+                      {sessions && (
+                        <div className="text-xs font-semibold uppercase tracking-wide" style={{ color: brand }}>
+                          {sessions}
+                        </div>
+                      )}
                       {t.description && <div className="line-clamp-2 text-sm opacity-70">{t.description}</div>}
                       <div className="mt-2 flex items-center justify-between text-sm">
                         <span className="opacity-70">{durationFor(t)} min</span>
@@ -1882,13 +1904,7 @@ function TreatmentRow({
               className="rounded-full px-2 py-0.5 text-xs font-semibold"
               style={{ backgroundColor: `${brand}1a`, color: brand }}
             >
-              {(t as { session_count?: number }).session_count} sessions
-              {(() => {
-                const gap = (t as { session_interval_days?: number | null }).session_interval_days;
-                return gap && gap > 0
-                  ? ` · ${gap % 7 === 0 ? `${gap / 7} wk` : `${gap} days`} apart`
-                  : "";
-              })()}
+              {formatTreatmentSessions(t)}
             </span>
           )}
           {(t as { allow_split_payment?: boolean }).allow_split_payment && (

@@ -50,6 +50,15 @@ function fmt(t: string) {
   return `${h}:${m}`;
 }
 
+function formatSessionSpacing(days?: number | null) {
+  if (!days || days <= 0) return null;
+  if (days % 7 === 0) {
+    const weeks = days / 7;
+    return `every ${weeks} week${weeks === 1 ? "" : "s"}`;
+  }
+  return `every ${days} day${days === 1 ? "" : "s"}`;
+}
+
 const searchSchema = z.object({ ids: z.string().optional() });
 
 export const Route = createFileRoute("/m/$slug/book-multi")({
@@ -567,6 +576,7 @@ function MultiBookPage() {
                 <CardContent className="space-y-4">
                   {splitEligibleTreatments.map((t) => {
                     const sessions = Math.max(1, Number((t as { session_count?: number }).session_count ?? 1));
+                    const spacing = formatSessionSpacing((t as { session_interval_days?: number | null }).session_interval_days);
                     const plan = selectedPaymentPlan(t);
                     const fullPrice = priceFor(t);
                     const perSession = fullPrice / sessions;
@@ -574,7 +584,9 @@ function MultiBookPage() {
                       <div key={t.id} className="space-y-2 rounded-md border p-3" style={{ borderColor: `${brand}33` }}>
                         <div>
                           <div className="text-sm font-semibold" style={{ color: brand }}>{t.name}</div>
-                          <div className="text-xs opacity-70">{sessions} sessions available</div>
+                          <div className="text-xs opacity-70">
+                            {sessions} sessions available{spacing ? ` · ${spacing}` : ""}
+                          </div>
                         </div>
                         <div className="grid gap-2 sm:grid-cols-2">
                           {(["full", "split"] as const).map((opt) => {

@@ -76,6 +76,7 @@ type TreatmentForm = {
   session_count: number;
   allow_split_payment: boolean;
   rebook_reminder_days: number | null;
+  session_interval_days: number | null;
   aftercare_html: string;
   aftercare_delay_hours: number;
   auto_send_medical_forms: boolean;
@@ -347,6 +348,15 @@ function TreatmentDialog({
       ? String((treatment as { rebook_reminder_days?: number | null }).rebook_reminder_days)
       : "",
   );
+  const initialSessionIntervalDays = (treatment as { session_interval_days?: number | null } | null)?.session_interval_days ?? null;
+  const [sessionIntervalValue, setSessionIntervalValue] = useState<string>(
+    initialSessionIntervalDays != null
+      ? String(initialSessionIntervalDays % 7 === 0 ? initialSessionIntervalDays / 7 : initialSessionIntervalDays)
+      : "",
+  );
+  const [sessionIntervalUnit, setSessionIntervalUnit] = useState<"days" | "weeks">(
+    initialSessionIntervalDays != null && initialSessionIntervalDays % 7 === 0 ? "weeks" : "days",
+  );
   const [aftercareHtml, setAftercareHtml] = useState<string>(
     (treatment as { aftercare_html?: string | null } | null)?.aftercare_html ?? "",
   );
@@ -397,6 +407,9 @@ function TreatmentDialog({
         ? String((treatment as { rebook_reminder_days?: number | null }).rebook_reminder_days)
         : "",
     );
+    const interval = (treatment as { session_interval_days?: number | null } | null)?.session_interval_days ?? null;
+    setSessionIntervalValue(interval != null ? String(interval % 7 === 0 ? interval / 7 : interval) : "");
+    setSessionIntervalUnit(interval != null && interval % 7 === 0 ? "weeks" : "days");
     setAftercareHtml((treatment as { aftercare_html?: string | null } | null)?.aftercare_html ?? "");
     setAftercareDelay((treatment as { aftercare_delay_hours?: number } | null)?.aftercare_delay_hours ?? 2);
     setAutoSendForms((treatment as { auto_send_medical_forms?: boolean } | null)?.auto_send_medical_forms ?? true);
@@ -537,6 +550,42 @@ function TreatmentDialog({
               />
               <p className="mt-1 text-[11px] text-muted-foreground">Internal only — not visible to patients.</p>
             </div>
+          </div>
+          <div className={`space-y-1.5 ${sessionCount > 1 ? "" : "opacity-60"}`}>
+            <Label className="text-xs text-muted-foreground">How far apart should sessions be?</Label>
+            <div className="flex gap-2">
+              <Input
+                type="number"
+                min={1}
+                placeholder={sessionIntervalUnit === "weeks" ? "e.g. 2" : "e.g. 14"}
+                value={sessionIntervalValue}
+                onChange={(e) => setSessionIntervalValue(e.target.value)}
+                disabled={sessionCount < 2}
+              />
+              <div className="inline-flex shrink-0 rounded-md border bg-background p-0.5">
+                <button
+                  type="button"
+                  onClick={() => setSessionIntervalUnit("days")}
+                  disabled={sessionCount < 2}
+                  className={`rounded px-3 py-1 text-xs ${sessionIntervalUnit === "days" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+                >
+                  Days
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSessionIntervalUnit("weeks")}
+                  disabled={sessionCount < 2}
+                  className={`rounded px-3 py-1 text-xs ${sessionIntervalUnit === "weeks" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+                >
+                  Weeks
+                </button>
+              </div>
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              {sessionCount > 1
+                ? "This spacing is shown to patients on the booking page."
+                : "Set Number of sessions to 2+ to show spacing to patients."}
+            </p>
           </div>
           <label className="flex items-center gap-2 text-sm">
             <Switch
@@ -727,6 +776,9 @@ function TreatmentDialog({
               session_count: sessionCount,
               allow_split_payment: allowSplit && sessionCount >= 2,
               rebook_reminder_days: rebookDays === "" ? null : Number(rebookDays),
+              session_interval_days: sessionCount > 1 && sessionIntervalValue !== ""
+                ? Number(sessionIntervalValue) * (sessionIntervalUnit === "weeks" ? 7 : 1)
+                : null,
               aftercare_html: aftercareHtml,
               aftercare_delay_hours: aftercareDelay,
               auto_send_medical_forms: autoSendForms,
