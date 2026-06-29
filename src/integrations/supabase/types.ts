@@ -655,6 +655,114 @@ export type Database = {
           },
         ]
       }
+      client_communications: {
+        Row: {
+          body: string | null
+          channel: string
+          client_id: string
+          created_at: string
+          direction: string
+          id: string
+          meta: Json
+          profile_id: string
+          status: string
+          subject: string | null
+        }
+        Insert: {
+          body?: string | null
+          channel: string
+          client_id: string
+          created_at?: string
+          direction?: string
+          id?: string
+          meta?: Json
+          profile_id: string
+          status?: string
+          subject?: string | null
+        }
+        Update: {
+          body?: string | null
+          channel?: string
+          client_id?: string
+          created_at?: string
+          direction?: string
+          id?: string
+          meta?: Json
+          profile_id?: string
+          status?: string
+          subject?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_communications_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clinic_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_communications_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      client_concerns: {
+        Row: {
+          client_id: string
+          created_at: string
+          id: string
+          label: string
+          notes: string | null
+          profile_id: string
+          resolved: boolean
+          severity: string
+          source: string
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          id?: string
+          label: string
+          notes?: string | null
+          profile_id: string
+          resolved?: boolean
+          severity?: string
+          source?: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          id?: string
+          label?: string
+          notes?: string | null
+          profile_id?: string
+          resolved?: boolean
+          severity?: string
+          source?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_concerns_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clinic_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_concerns_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_files: {
         Row: {
           client_id: string
@@ -1549,6 +1657,47 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "discount_codes_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_templates: {
+        Row: {
+          body_html: string
+          created_at: string
+          id: string
+          name: string
+          profile_id: string
+          sort_order: number
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          body_html: string
+          created_at?: string
+          id?: string
+          name: string
+          profile_id: string
+          sort_order?: number
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          body_html?: string
+          created_at?: string
+          id?: string
+          name?: string
+          profile_id?: string
+          sort_order?: number
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_templates_profile_id_fkey"
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
