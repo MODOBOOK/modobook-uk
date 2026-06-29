@@ -104,6 +104,7 @@ function ConsentFormsPage() {
           requires_signature: editing.requires_signature,
           sections: editing.sections ?? null,
           summary: editing.summary ?? null,
+          is_system: isAdmin ? !!editing.is_system : false,
         },
       });
       toast.success("Saved");
@@ -113,6 +114,7 @@ function ConsentFormsPage() {
       toast.error(e instanceof Error ? e.message : "Failed");
     }
   }
+
 
   const q = query.trim().toLowerCase();
   const filter = (list: Tpl[]) =>
