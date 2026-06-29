@@ -25,6 +25,7 @@ import {
 import {
   Search, Plus, Pencil, Trash2, ChevronUp, ChevronDown, Heading1, Type as TypeIcon,
   TextCursorInput, ListChecks, CheckSquare, Minus, MoveVertical, Signature, Loader2, X,
+  Copy, GripVertical, Info, Star, CircleDot, ListTodo,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -34,20 +35,26 @@ export const Route = createFileRoute("/_authenticated/dashboard/medical-forms")(
 });
 
 /* ---------- Schema types ---------- */
-type ElType = "heading" | "paragraph" | "field" | "select" | "checkbox" | "separator" | "space" | "signature";
+type ElType =
+  | "heading" | "paragraph" | "field" | "select" | "checkbox" | "separator"
+  | "space" | "signature" | "radio" | "checkbox_group" | "info" | "rating";
 type FormElement = {
   id: string;
   type: ElType;
   label?: string;
   placeholder?: string;
+  helpText?: string;
   required?: boolean;
   options?: string[];
   text?: string;
   level?: 1 | 2 | 3;
   fieldType?: "text" | "email" | "tel" | "number" | "date" | "textarea";
+  variant?: "info" | "warning" | "success";
+  max?: number;
 };
 type FormStep = { id: string; title: string; elements: FormElement[] };
 type FormSchema = { steps: FormStep[] };
+
 
 function nid() { return Math.random().toString(36).slice(2, 9); }
 
@@ -313,10 +320,15 @@ function FormEditor({ formId, onClose, cats }: { formId: string; onClose: () => 
         case "paragraph": return { id: nid(), type, text: "Paragraph text…" };
         case "field": return { id: nid(), type, label: "Field", fieldType: "text" };
         case "select": return { id: nid(), type, label: "Select", options: ["Option 1", "Option 2"] };
+        case "radio": return { id: nid(), type, label: "Choose one", options: ["Yes", "No"] };
+        case "checkbox_group": return { id: nid(), type, label: "Select all that apply", options: ["Option 1", "Option 2"] };
         case "checkbox": return { id: nid(), type, label: "I agree" };
+        case "info": return { id: nid(), type, text: "Helpful info for the patient.", variant: "info" };
+        case "rating": return { id: nid(), type, label: "Rate", max: 5 };
         case "separator": return { id: nid(), type };
         case "space": return { id: nid(), type };
         case "signature": return { id: nid(), type, label: "Signature" };
+        default: return { id: nid(), type: "paragraph", text: "" };
       }
     })();
     setSchema((s) => ({
@@ -325,6 +337,22 @@ function FormEditor({ formId, onClose, cats }: { formId: string; onClose: () => 
     }));
     setPickerStep(null);
   }
+
+  function duplicateElement(stepId: string, elId: string) {
+    setSchema((s) => ({
+      ...s,
+      steps: s.steps.map((st) => {
+        if (st.id !== stepId) return st;
+        const i = st.elements.findIndex((e) => e.id === elId);
+        if (i < 0) return st;
+        const copy = { ...st.elements[i], id: nid() };
+        const arr = [...st.elements];
+        arr.splice(i + 1, 0, copy);
+        return { ...st, elements: arr };
+      }),
+    }));
+  }
+
   function updateElement(stepId: string, elId: string, patch: Partial<FormElement>) {
     setSchema((s) => ({
       ...s,
@@ -439,8 +467,10 @@ function FormEditor({ formId, onClose, cats }: { formId: string; onClose: () => 
                 onChange={(patch) => updateElement(step.id, el.id, patch)}
                 onRemove={() => removeElement(step.id, el.id)}
                 onMove={(d) => moveElement(step.id, el.id, d)}
+                onDuplicate={() => duplicateElement(step.id, el.id)}
               />
             ))}
+
 
             <Button variant="outline" className="w-full" onClick={() => setPickerStep(step.id)}>
               <Plus className="mr-2 h-4 w-4" />Add Item
@@ -466,20 +496,82 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   return <div className="space-y-1.5"><Label className="text-sm font-bold">{label}</Label>{children}</div>;
 }
 
-function ElementEditor({ element, onChange, onRemove, onMove }: {
+const TYPE_META: Record<ElType, { label: string; icon: any; tint: string }> = {
+  heading: { label: "Heading", icon: Heading1, tint: "bg-amber-100 text-amber-700" },
+  paragraph: { label: "Paragraph", icon: TypeIcon, tint: "bg-slate-100 text-slate-700" },
+  field: { label: "Input field", icon: TextCursorInput, tint: "bg-blue-100 text-blue-700" },
+  select: { label: "Dropdown", icon: ListChecks, tint: "bg-indigo-100 text-indigo-700" },
+  radio: { label: "Single choice", icon: CircleDot, tint: "bg-violet-100 text-violet-700" },
+  checkbox_group: { label: "Multi choice", icon: ListTodo, tint: "bg-emerald-100 text-emerald-700" },
+  checkbox: { label: "Agreement", icon: CheckSquare, tint: "bg-emerald-100 text-emerald-700" },
+  info: { label: "Info banner", icon: Info, tint: "bg-sky-100 text-sky-700" },
+  rating: { label: "Rating", icon: Star, tint: "bg-yellow-100 text-yellow-700" },
+  signature: { label: "Signature", icon: Signature, tint: "bg-rose-100 text-rose-700" },
+  separator: { label: "Divider", icon: Minus, tint: "bg-slate-100 text-slate-500" },
+  space: { label: "Spacer", icon: MoveVertical, tint: "bg-slate-100 text-slate-500" },
+};
+
+function OptionsEditor({ options, onChange }: { options: string[]; onChange: (next: string[]) => void }) {
+  const list = options ?? [];
+  function update(i: number, v: string) { onChange(list.map((o, idx) => idx === i ? v : o)); }
+  function remove(i: number) { onChange(list.filter((_, idx) => idx !== i)); }
+  function move(i: number, dir: -1 | 1) {
+    const j = i + dir;
+    if (j < 0 || j >= list.length) return;
+    const arr = [...list]; [arr[i], arr[j]] = [arr[j], arr[i]]; onChange(arr);
+  }
+  function add() { onChange([...list, `Option ${list.length + 1}`]); }
+  return (
+    <div className="space-y-1.5">
+      {list.length === 0 && (
+        <div className="rounded-md border border-dashed p-3 text-center text-xs text-muted-foreground">No options yet</div>
+      )}
+      {list.map((opt, i) => (
+        <div key={i} className="flex items-center gap-1.5 rounded-md border bg-background p-1.5">
+          <GripVertical className="h-3.5 w-3.5 text-muted-foreground" />
+          <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-muted text-[10px] font-bold text-muted-foreground">{i + 1}</span>
+          <Input
+            value={opt}
+            onChange={(e) => update(i, e.target.value)}
+            className="h-8 flex-1 border-0 bg-transparent px-1 text-sm focus-visible:ring-0"
+            placeholder={`Option ${i + 1}`}
+          />
+          <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => move(i, -1)} disabled={i === 0}><ChevronUp className="h-3 w-3" /></Button>
+          <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => move(i, 1)} disabled={i === list.length - 1}><ChevronDown className="h-3 w-3" /></Button>
+          <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => remove(i)}><X className="h-3 w-3" /></Button>
+        </div>
+      ))}
+      <Button variant="outline" size="sm" className="w-full border-dashed" onClick={add}>
+        <Plus className="mr-1.5 h-3.5 w-3.5" />Add option
+      </Button>
+    </div>
+  );
+}
+
+function ElementEditor({ element, onChange, onRemove, onMove, onDuplicate }: {
   element: FormElement;
   onChange: (p: Partial<FormElement>) => void;
   onRemove: () => void;
   onMove: (d: -1 | 1) => void;
+  onDuplicate: () => void;
 }) {
+  const meta = TYPE_META[element.type];
+  const Icon = meta.icon;
+  const hasLabel = ["field", "select", "radio", "checkbox_group", "checkbox", "signature", "rating"].includes(element.type);
+  const hasOptions = element.type === "select" || element.type === "radio" || element.type === "checkbox_group";
+  const canRequire = ["field", "select", "radio", "checkbox_group", "checkbox", "signature", "rating"].includes(element.type);
+
   return (
-    <div className="group space-y-2 rounded-md border bg-muted/20 p-3">
-      <div className="flex items-center gap-1">
-        <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{element.type}</span>
+    <div className="group space-y-2.5 rounded-lg border bg-background p-3 shadow-sm">
+      <div className="flex items-center gap-2">
+        <span className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-semibold ${meta.tint}`}>
+          <Icon className="h-3 w-3" /> {meta.label}
+        </span>
         <div className="ml-auto flex items-center gap-0.5">
-          <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => onMove(-1)}><ChevronUp className="h-3 w-3" /></Button>
-          <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => onMove(1)}><ChevronDown className="h-3 w-3" /></Button>
-          <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive" onClick={onRemove}><Trash2 className="h-3 w-3" /></Button>
+          <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => onMove(-1)} title="Move up"><ChevronUp className="h-3.5 w-3.5" /></Button>
+          <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => onMove(1)} title="Move down"><ChevronDown className="h-3.5 w-3.5" /></Button>
+          <Button size="icon" variant="ghost" className="h-7 w-7" onClick={onDuplicate} title="Duplicate"><Copy className="h-3.5 w-3.5" /></Button>
+          <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={onRemove} title="Delete"><Trash2 className="h-3.5 w-3.5" /></Button>
         </div>
       </div>
 
@@ -497,86 +589,124 @@ function ElementEditor({ element, onChange, onRemove, onMove }: {
         <Textarea rows={2} value={element.text ?? ""} onChange={(e) => onChange({ text: e.target.value })} placeholder="Paragraph text" />
       )}
 
+      {element.type === "info" && (
+        <div className="space-y-2">
+          <Textarea rows={2} value={element.text ?? ""} onChange={(e) => onChange({ text: e.target.value })} placeholder="Patient-facing message" />
+          <Select value={element.variant ?? "info"} onValueChange={(v) => onChange({ variant: v as any })}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="info">Info (blue)</SelectItem>
+              <SelectItem value="warning">Warning (amber)</SelectItem>
+              <SelectItem value="success">Success (green)</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
+      {hasLabel && (
+        <Input
+          value={element.label ?? ""}
+          onChange={(e) => onChange({ label: e.target.value })}
+          placeholder={element.type === "checkbox" ? "Checkbox label e.g. I agree…" : "Question / label"}
+        />
+      )}
+
       {element.type === "field" && (
         <div className="space-y-2">
-          <div className="grid grid-cols-[1fr_auto_auto] gap-2">
-            <Input value={element.label ?? ""} onChange={(e) => onChange({ label: e.target.value })} placeholder="Label" />
+          <div className="grid grid-cols-2 gap-2">
             <Select value={element.fieldType ?? "text"} onValueChange={(v) => onChange({ fieldType: v as any })}>
-              <SelectTrigger className="w-28"><SelectValue /></SelectTrigger>
+              <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="text">Text</SelectItem>
+                <SelectItem value="text">Short text</SelectItem>
+                <SelectItem value="textarea">Long text</SelectItem>
                 <SelectItem value="email">Email</SelectItem>
                 <SelectItem value="tel">Phone</SelectItem>
                 <SelectItem value="number">Number</SelectItem>
                 <SelectItem value="date">Date</SelectItem>
-                <SelectItem value="textarea">Long text</SelectItem>
               </SelectContent>
             </Select>
-            <label className="flex items-center gap-1 text-xs">
+            <Input value={element.placeholder ?? ""} onChange={(e) => onChange({ placeholder: e.target.value })} placeholder="Placeholder" />
+          </div>
+        </div>
+      )}
+
+      {hasOptions && (
+        <OptionsEditor options={element.options ?? []} onChange={(opts) => onChange({ options: opts })} />
+      )}
+
+      {element.type === "rating" && (
+        <div className="flex items-center gap-2">
+          <Label className="text-xs text-muted-foreground">Max stars</Label>
+          <Input
+            type="number" min={3} max={10}
+            value={element.max ?? 5}
+            onChange={(e) => onChange({ max: Math.max(3, Math.min(10, Number(e.target.value) || 5)) })}
+            className="w-20"
+          />
+        </div>
+      )}
+
+      {(canRequire || hasLabel) && element.type !== "heading" && element.type !== "paragraph" && element.type !== "info" && element.type !== "separator" && element.type !== "space" && (
+        <div className="flex flex-wrap items-center gap-3 border-t pt-2">
+          <Input
+            value={element.helpText ?? ""}
+            onChange={(e) => onChange({ helpText: e.target.value })}
+            placeholder="Help text (optional)"
+            className="h-8 flex-1 text-xs"
+          />
+          {canRequire && (
+            <label className="flex items-center gap-1.5 text-xs font-medium">
               <Checkbox checked={!!element.required} onCheckedChange={(c) => onChange({ required: !!c })} />
-              Req
+              Required
             </label>
-          </div>
-          <Input value={element.placeholder ?? ""} onChange={(e) => onChange({ placeholder: e.target.value })} placeholder="Placeholder (optional)" />
+          )}
         </div>
-      )}
-
-      {element.type === "select" && (
-        <div className="space-y-2">
-          <div className="grid grid-cols-[1fr_auto] gap-2">
-            <Input value={element.label ?? ""} onChange={(e) => onChange({ label: e.target.value })} placeholder="Label" />
-            <label className="flex items-center gap-1 text-xs">
-              <Checkbox checked={!!element.required} onCheckedChange={(c) => onChange({ required: !!c })} />Req
-            </label>
-          </div>
-          <Textarea rows={3} placeholder="Options, one per line" value={(element.options ?? []).join("\n")}
-            onChange={(e) => onChange({ options: e.target.value.split("\n").map((s) => s.trim()).filter(Boolean) })} />
-        </div>
-      )}
-
-      {element.type === "checkbox" && (
-        <Input value={element.label ?? ""} onChange={(e) => onChange({ label: e.target.value })} placeholder="Checkbox label" />
-      )}
-
-      {element.type === "signature" && (
-        <Input value={element.label ?? "Signature"} onChange={(e) => onChange({ label: e.target.value })} placeholder="Signature label" />
       )}
 
       {(element.type === "separator" || element.type === "space") && (
-        <div className="text-xs text-muted-foreground">No options.</div>
+        <div className="text-xs italic text-muted-foreground">Visual element — no settings.</div>
       )}
     </div>
   );
 }
 
 function ElementPicker({ open, onClose, onPick }: { open: boolean; onClose: () => void; onPick: (t: ElType) => void }) {
-  const items: { type: ElType; label: string; icon: any }[] = [
-    { type: "heading", label: "Heading", icon: Heading1 },
-    { type: "paragraph", label: "Paragraph", icon: TypeIcon },
-    { type: "field", label: "Field", icon: TextCursorInput },
-    { type: "select", label: "Select", icon: ListChecks },
-    { type: "checkbox", label: "Checkbox", icon: CheckSquare },
-    { type: "separator", label: "Separator", icon: Minus },
-    { type: "space", label: "Space", icon: MoveVertical },
-    { type: "signature", label: "Signature", icon: Signature },
+  const groups: { title: string; items: ElType[] }[] = [
+    { title: "Inputs", items: ["field", "select", "radio", "checkbox_group", "checkbox", "rating", "signature"] },
+    { title: "Content", items: ["heading", "paragraph", "info"] },
+    { title: "Layout", items: ["separator", "space"] },
   ];
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader><DialogTitle>Select Element</DialogTitle></DialogHeader>
-        <div className="grid grid-cols-2 gap-3">
-          {items.map(({ type, label, icon: Icon }) => (
-            <button
-              key={type}
-              onClick={() => onPick(type)}
-              className="flex flex-col items-center gap-2 rounded-xl border p-4 transition hover:bg-muted active:scale-95"
-            >
-              <Icon className="h-7 w-7 text-primary" />
-              <span className="text-sm font-bold">{label}</span>
-            </button>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader><DialogTitle>Add element</DialogTitle></DialogHeader>
+        <div className="space-y-4">
+          {groups.map((g) => (
+            <div key={g.title} className="space-y-2">
+              <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{g.title}</div>
+              <div className="grid grid-cols-3 gap-2">
+                {g.items.map((type) => {
+                  const m = TYPE_META[type];
+                  const Icon = m.icon;
+                  return (
+                    <button
+                      key={type}
+                      onClick={() => onPick(type)}
+                      className="flex flex-col items-center gap-1.5 rounded-xl border bg-background p-3 transition hover:border-primary hover:shadow-md active:scale-95"
+                    >
+                      <span className={`grid h-9 w-9 place-items-center rounded-full ${m.tint}`}>
+                        <Icon className="h-4 w-4" />
+                      </span>
+                      <span className="text-xs font-semibold">{m.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           ))}
         </div>
       </DialogContent>
     </Dialog>
   );
 }
+

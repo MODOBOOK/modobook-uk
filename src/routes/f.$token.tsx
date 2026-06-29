@@ -24,6 +24,10 @@ type FormElement = {
   placeholder?: string;
   required?: boolean;
   options?: string[];
+  helpText?: string;
+  variant?: string;
+  max?: number;
+
   text?: string;
   level?: 1 | 2 | 3;
   fieldType?: string;
@@ -144,59 +148,130 @@ function FillFormPage() {
 }
 
 function RenderElement({ el, value, onChange }: { el: FormElement; value: any; onChange: (v: any) => void }) {
+  const reqMark = el.required ? <span className="text-destructive"> *</span> : null;
+  const help = el.helpText ? <p className="text-xs text-muted-foreground">{el.helpText}</p> : null;
+
   if (el.type === "heading") {
     const T = (el.level === 1 ? "h1" : el.level === 3 ? "h3" : "h2") as any;
     const cls = el.level === 1 ? "text-2xl font-bold" : el.level === 3 ? "text-base font-bold" : "text-lg font-bold";
     return <T className={cls}>{el.text}</T>;
   }
   if (el.type === "paragraph") return <p className="text-sm text-muted-foreground">{el.text}</p>;
+  if (el.type === "info") {
+    const tones: Record<string, string> = {
+      info: "border-sky-300 bg-sky-50 text-sky-900",
+      warning: "border-amber-300 bg-amber-50 text-amber-900",
+      success: "border-emerald-300 bg-emerald-50 text-emerald-900",
+    };
+    return <div className={`rounded-md border p-3 text-sm ${tones[(el as any).variant ?? "info"]}`}>{el.text}</div>;
+  }
   if (el.type === "separator") return <hr />;
   if (el.type === "space") return <div className="h-3" />;
   if (el.type === "field") {
     const t = el.fieldType ?? "text";
     return (
       <div className="space-y-1.5">
-        <Label className="text-sm">{el.label}{el.required && <span className="text-destructive"> *</span>}</Label>
+        <Label className="text-sm">{el.label}{reqMark}</Label>
         {t === "textarea" ? (
           <Textarea rows={3} placeholder={el.placeholder} value={value ?? ""} onChange={(e) => onChange(e.target.value)} />
         ) : (
           <Input type={t} placeholder={el.placeholder} value={value ?? ""} onChange={(e) => onChange(e.target.value)} />
         )}
+        {help}
       </div>
     );
   }
   if (el.type === "select") {
     return (
       <div className="space-y-1.5">
-        <Label className="text-sm">{el.label}{el.required && <span className="text-destructive"> *</span>}</Label>
+        <Label className="text-sm">{el.label}{reqMark}</Label>
         <Select value={value ?? ""} onValueChange={onChange}>
           <SelectTrigger><SelectValue placeholder="Select…" /></SelectTrigger>
           <SelectContent>
             {(el.options ?? []).map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}
           </SelectContent>
         </Select>
+        {help}
+      </div>
+    );
+  }
+  if (el.type === "radio") {
+    return (
+      <div className="space-y-1.5">
+        <Label className="text-sm">{el.label}{reqMark}</Label>
+        <div className="space-y-1.5">
+          {(el.options ?? []).map((o) => (
+            <label key={o} className={`flex cursor-pointer items-center gap-2 rounded-md border p-2.5 text-sm ${value === o ? "border-primary bg-primary/5" : ""}`}>
+              <input type="radio" name={el.id} checked={value === o} onChange={() => onChange(o)} />
+              <span>{o}</span>
+            </label>
+          ))}
+        </div>
+        {help}
+      </div>
+    );
+  }
+  if (el.type === "checkbox_group") {
+    const arr: string[] = Array.isArray(value) ? value : [];
+    return (
+      <div className="space-y-1.5">
+        <Label className="text-sm">{el.label}{reqMark}</Label>
+        <div className="space-y-1.5">
+          {(el.options ?? []).map((o) => {
+            const checked = arr.includes(o);
+            return (
+              <label key={o} className={`flex cursor-pointer items-start gap-2 rounded-md border p-2.5 text-sm ${checked ? "border-primary bg-primary/5" : ""}`}>
+                <Checkbox className="mt-0.5" checked={checked} onCheckedChange={(c) => onChange(c ? [...arr, o] : arr.filter((x) => x !== o))} />
+                <span>{o}</span>
+              </label>
+            );
+          })}
+        </div>
+        {help}
       </div>
     );
   }
   if (el.type === "checkbox") {
     return (
-      <label className="flex items-start gap-2 text-sm">
-        <Checkbox className="mt-0.5" checked={!!value} onCheckedChange={(c) => onChange(!!c)} />
-        <span>{el.label}{el.required && <span className="text-destructive"> *</span>}</span>
-      </label>
+      <div className="space-y-1">
+        <label className="flex items-start gap-2 text-sm">
+          <Checkbox className="mt-0.5" checked={!!value} onCheckedChange={(c) => onChange(!!c)} />
+          <span>{el.label}{reqMark}</span>
+        </label>
+        {help}
+      </div>
+    );
+  }
+  if (el.type === "rating") {
+    const max = (el as any).max ?? 5;
+    const v = Number(value) || 0;
+    return (
+      <div className="space-y-1.5">
+        <Label className="text-sm">{el.label}{reqMark}</Label>
+        <div className="flex gap-1">
+          {Array.from({ length: max }).map((_, i) => (
+            <button key={i} type="button" onClick={() => onChange(i + 1)} className="text-2xl leading-none">
+              <span className={i < v ? "text-amber-500" : "text-muted-foreground/40"}>★</span>
+            </button>
+          ))}
+        </div>
+        {help}
+      </div>
     );
   }
   if (el.type === "signature") {
     return (
       <div className="space-y-1.5">
-        <Label className="text-sm">{el.label}{el.required && <span className="text-destructive"> *</span>}</Label>
+        <Label className="text-sm">{el.label}{reqMark}</Label>
         <Input placeholder="Type your full name to sign" value={value ?? ""} onChange={(e) => onChange(e.target.value)} />
         <p className="text-xs text-muted-foreground">By typing your name you confirm your electronic signature.</p>
+        {help}
       </div>
     );
   }
   return null;
 }
+
 
 function Centered({ children }: { children: React.ReactNode }) {
   return <div className="flex min-h-screen items-center justify-center px-4">{children}</div>;
