@@ -10,6 +10,39 @@ function publicClient() {
   );
 }
 
+// Walks the category chain for the given category ids and returns the latest
+// future `coming_soon_at` date (YYYY-MM-DD) found, or null if none are in the future.
+async function computeBookableFrom(
+  sb: ReturnType<typeof publicClient>,
+  profileId: string,
+  startCategoryIds: (string | null | undefined)[],
+): Promise<string | null> {
+  const seen = new Set<string>();
+  const queue = startCategoryIds.filter((id): id is string => !!id);
+  let latest: string | null = null;
+  const todayIso = new Date().toISOString().slice(0, 10);
+  while (queue.length) {
+    const batch = queue.splice(0, queue.length).filter((id) => !seen.has(id));
+    batch.forEach((id) => seen.add(id));
+    if (batch.length === 0) break;
+    const { data: cats } = await sb
+      .from("treatment_categories")
+      .select("id, parent_id, coming_soon_at")
+      .eq("profile_id", profileId)
+      .in("id", batch);
+    for (const c of cats ?? []) {
+      const csa = (c as { coming_soon_at: string | null }).coming_soon_at;
+      if (csa) {
+        const iso = csa.slice(0, 10);
+        if (iso > todayIso && (!latest || iso > latest)) latest = iso;
+      }
+      const pid = (c as { parent_id: string | null }).parent_id;
+      if (pid && !seen.has(pid)) queue.push(pid);
+    }
+  }
+  return latest;
+}
+
 export const getBookingContext = createServerFn({ method: "GET" })
   .inputValidator((input: { slug: string; treatmentId: string }) => input)
   .handler(async ({ data }) => {
