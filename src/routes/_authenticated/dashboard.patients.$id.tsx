@@ -321,6 +321,13 @@ function PatientProfilePage() {
         clinicName={clinicName}
         onSent={() => setCommsRefresh(x => x + 1)}
       />
+      <SendFormDialog
+        open={sendFormOpen}
+        onOpenChange={(v) => setSendFormOpen(v)}
+        client={client}
+        clinicName={clinicName}
+        onSent={() => setCommsRefresh(x => x + 1)}
+      />
     </div>
   );
 }
