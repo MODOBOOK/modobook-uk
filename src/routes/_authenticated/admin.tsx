@@ -236,10 +236,173 @@ function AdminPage() {
         </Card>
       )}
 
+      <UserSupportCard />
+
       <SubscriptionsSection practitioners={practitioners} />
     </div>
   );
 }
+
+function UserSupportCard() {
+  const router = useRouter();
+  const [q, setQ] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState<{
+    authUsers: Array<{ id: string; email: string | null; created_at: string; last_sign_in_at: string | null; email_confirmed_at: string | null }>;
+    profiles: Array<{ id: string; user_id: string | null; full_name: string | null; clinic_name: string | null; slug: string | null; active: boolean }>;
+    clients: Array<{ id: string; profile_id: string; full_name: string | null; email: string | null; phone: string | null }>;
+  } | null>(null);
+
+  async function search() {
+    if (!q.trim()) return;
+    setBusy(true);
+    try {
+      const r = await adminLookupByEmail({ data: { email: q.trim() } });
+      setResult(r);
+      if (!r.authUsers.length && !r.profiles.length && !r.clients.length) {
+        toast.info("No matches found");
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Lookup failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function sendReset(email: string) {
+    try {
+      const origin = typeof window !== "undefined" ? window.location.origin : "";
+      const r = await adminSendPasswordReset({ data: { email, redirectTo: `${origin}/reset-password` } });
+      if (r.actionLink) {
+        try { await navigator.clipboard.writeText(r.actionLink); toast.success("Recovery link copied to clipboard"); }
+        catch { toast.success("Recovery link generated"); }
+      } else {
+        toast.success("Password reset email sent");
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed");
+    }
+  }
+
+  async function toggleActive(profile_id: string, active: boolean) {
+    if (!confirm(active ? "Reactivate this clinic profile?" : "Deactivate this clinic profile? Their public booking link will stop working.")) return;
+    try {
+      await adminSetProfileActive({ data: { profile_id, active } });
+      toast.success("Updated");
+      await search();
+      router.invalidate();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed");
+    }
+  }
+
+  async function deleteClient(id: string, name: string) {
+    if (!confirm(`Permanently delete patient "${name}"? This cannot be undone.`)) return;
+    try {
+      await adminDeleteClient({ data: { client_id: id } });
+      toast.success("Deleted");
+      await search();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed");
+    }
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2"><Search className="h-4 w-4" /> User support — lookup by email</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <p className="text-sm text-muted-foreground">
+          Find any account or patient by email. Send a password reset link, deactivate a clinic, or remove a patient record to help fix IT issues.
+        </p>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Input
+            type="email"
+            placeholder="search by email…"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") search(); }}
+          />
+          <Button onClick={search} disabled={busy}>{busy ? "Searching…" : "Search"}</Button>
+        </div>
+
+        {result && (
+          <div className="space-y-4">
+            {result.authUsers.length > 0 && (
+              <div>
+                <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Auth accounts</div>
+                <div className="divide-y rounded-md border">
+                  {result.authUsers.map((u) => (
+                    <div key={u.id} className="flex flex-wrap items-center gap-2 p-3">
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate font-medium">{u.email}</div>
+                        <div className="text-xs text-muted-foreground">
+                          Joined {new Date(u.created_at).toLocaleDateString()}
+                          {u.last_sign_in_at ? ` · last in ${new Date(u.last_sign_in_at).toLocaleDateString()}` : " · never signed in"}
+                          {!u.email_confirmed_at && " · email unconfirmed"}
+                        </div>
+                      </div>
+                      <Button size="sm" variant="outline" onClick={() => u.email && sendReset(u.email)}>
+                        <KeyRound className="mr-1 h-3 w-3" /> Send password reset
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {result.profiles.length > 0 && (
+              <div>
+                <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Clinic profiles</div>
+                <div className="divide-y rounded-md border">
+                  {result.profiles.map((p) => (
+                    <div key={p.id} className="flex flex-wrap items-center gap-2 p-3">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="truncate font-medium">{p.clinic_name || p.full_name || "—"}</span>
+                          {!p.active && <Badge variant="secondary">Inactive</Badge>}
+                        </div>
+                        {p.slug && (
+                          <a href={`/m/${p.slug}`} target="_blank" rel="noopener" className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
+                            /m/{p.slug} <ExternalLink className="h-3 w-3" />
+                          </a>
+                        )}
+                      </div>
+                      <Button size="sm" variant="outline" onClick={() => toggleActive(p.id, !p.active)}>
+                        <Power className="mr-1 h-3 w-3" /> {p.active ? "Deactivate" : "Reactivate"}
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {result.clients.length > 0 && (
+              <div>
+                <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Patient records</div>
+                <div className="divide-y rounded-md border">
+                  {result.clients.map((c) => (
+                    <div key={c.id} className="flex flex-wrap items-center gap-2 p-3">
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate font-medium">{c.full_name || "—"}</div>
+                        <div className="truncate text-xs text-muted-foreground">{c.email}{c.phone ? ` · ${c.phone}` : ""}</div>
+                      </div>
+                      <Button size="sm" variant="ghost" onClick={() => deleteClient(c.id, c.full_name || c.email || "patient")}>
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 
 type Plan = {
   id: string; name: string; description: string | null;
