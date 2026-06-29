@@ -72,7 +72,13 @@ function SettingsPage() {
         .map((x) => Number(x.trim()))
         .filter((n) => Number.isFinite(n) && n > 0);
       await updateProfile({
-        data: { id: profile.id, ...s, reminder_hours_before: hours },
+        data: {
+          id: profile.id,
+          ...s,
+          // Deposit is always required when deposits are enabled — no separate toggle.
+          require_deposit_to_confirm: s.payment_deposit_enabled,
+          reminder_hours_before: hours,
+        },
       });
       toast.success("Settings saved");
     } catch (e) {
@@ -161,28 +167,23 @@ function SettingsPage() {
           />
           <ToggleRow
             label="Klarna"
-            hint="Pay in 3 / pay later via Klarna."
+            hint="Pay in 3 / pay later via Klarna. Patient pays the Klarna fee on top."
             checked={s.payment_klarna_enabled}
             onChange={(v) => set("payment_klarna_enabled", v)}
           />
           <ToggleRow
             label="Clearpay"
-            hint="Buy-now-pay-later via Clearpay."
+            hint="Buy-now-pay-later via Clearpay. Patient pays the Clearpay fee on top."
             checked={s.payment_clearpay_enabled}
             onChange={(v) => set("payment_clearpay_enabled", v)}
           />
           <ToggleRow
-            label="Pass processing fees to customer"
-            hint="Adds Stripe/Klarna/Clearpay fees on top of the treatment price."
+            label="Pass card processing fees to customer"
+            hint="Adds Stripe card fees on top of the treatment price."
             checked={s.payment_pass_fees_to_customer}
             onChange={(v) => set("payment_pass_fees_to_customer", v)}
           />
-          <ToggleRow
-            label="Require deposit to confirm booking"
-            hint="Bookings stay pending until deposit is paid."
-            checked={s.require_deposit_to_confirm}
-            onChange={(v) => set("require_deposit_to_confirm", v)}
-          />
+          {/* Deposit is now always required when Deposits is enabled — no toggle. */}
           <ToggleRow
             label="Allow pay in clinic"
             hint="Show 'Pay at appointment' option at checkout."
