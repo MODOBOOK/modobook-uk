@@ -156,9 +156,11 @@ function TreatmentsPage() {
     }
   }, [search.edit, items]);
 
+  const setAftercareTpls = useServerFn(setTreatmentAftercareIds);
+
   async function handleSave(form: TreatmentForm) {
     try {
-      const { consent_ids, addons, ...rest } = form;
+      const { consent_ids, addons, aftercare_template_ids, ...rest } = form;
       let id: string;
       if (editing) {
         await update({ data: { id: editing.id, ...rest } });
@@ -182,6 +184,7 @@ function TreatmentsPage() {
       }
       await setConsents({ data: { treatmentId: id, consentTemplateIds: consent_ids } });
       await setAddons({ data: { treatmentId: id, addons } });
+      await setAftercareTpls({ data: { treatment_id: id, template_ids: aftercare_template_ids } });
       setOpen(false);
       setEditing(null);
       load();
