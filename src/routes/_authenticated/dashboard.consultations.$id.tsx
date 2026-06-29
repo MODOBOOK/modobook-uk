@@ -13,7 +13,7 @@ import { Separator } from "@/components/ui/separator";
 import {
   Loader2, ChevronLeft, ChevronRight, Check, Camera, X,
   HeartPulse, ListChecks, Stethoscope, ClipboardEdit, FileSignature,
-  Images, Syringe, Receipt, ArrowLeft,
+  Images, Syringe, Receipt, ArrowLeft, Plus,
 } from "lucide-react";
 import { toast } from "sonner";
 import { ClientFormsList } from "@/components/patient/ClientFormsList";
