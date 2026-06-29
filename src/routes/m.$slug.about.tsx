@@ -116,7 +116,7 @@ function About() {
 
       {/* Intro */}
       {show("show_intro", false) && (ap.intro_heading || ap.intro_body) && (
-        <section className="mt-10 rounded-2xl border bg-muted/30 p-6">
+        <section className="mt-8 rounded-3xl border bg-gradient-to-br from-[color:var(--brand)]/10 to-transparent p-6 shadow-sm sm:p-8">
           {ap.intro_heading && (
             <h2 className="text-2xl font-semibold" style={{ color: "var(--brand)", fontFamily: "var(--heading-font)" }}>
               {ap.intro_heading}
