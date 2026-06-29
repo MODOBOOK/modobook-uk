@@ -116,14 +116,12 @@ function WhoPage() {
                 <Link to="/prescriber-hub"><Button size="lg" variant="outline">Prescriber Hub</Button></Link>
               </div>
             </div>
-            <img
-              src={hero}
-              alt="Practitioner using a branded MODO booking calendar"
-              loading="lazy"
-              width={1280}
-              height={1024}
-              className="aspect-[5/4] w-full rounded-3xl object-cover shadow-lg ring-1 ring-black/5"
-            />
+            <div className="grid aspect-[5/4] w-full grid-cols-2 grid-rows-2 gap-3 rounded-3xl bg-gradient-to-br from-primary/10 via-muted/40 to-primary/5 p-6 shadow-lg ring-1 ring-black/5 sm:gap-5 sm:p-10">
+              <IconTile icon={Stethoscope} label="HCPs" />
+              <IconTile icon={Syringe} label="Non-HCPs" />
+              <IconTile icon={MapPin} label="Mobile" />
+              <IconTile icon={Users} label="Clinics" />
+            </div>
           </div>
         </section>
 
