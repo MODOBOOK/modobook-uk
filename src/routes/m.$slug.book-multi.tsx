@@ -293,7 +293,7 @@ function MultiBookPage() {
     }
     return out2;
 
-  }, [dayQuery.data, dayRules, totalDuration, locationId, minNoticeHours, date]);
+  }, [dayQuery.data, dayRules, totalDuration, locationId, minNoticeHours, date, smartTimes]);
 
   async function submit() {
     if (submitLockRef.current) return;
