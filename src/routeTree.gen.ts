@@ -27,6 +27,7 @@ import { Route as MSlugAuthRouteImport } from './routes/m.$slug.auth'
 import { Route as MSlugAccountRouteImport } from './routes/m.$slug.account'
 import { Route as MSlugAboutRouteImport } from './routes/m.$slug.about'
 import { Route as AuthenticatedDashboardTreatmentsRouteImport } from './routes/_authenticated/dashboard.treatments'
+import { Route as AuthenticatedDashboardSettingsRouteImport } from './routes/_authenticated/dashboard.settings'
 import { Route as AuthenticatedDashboardServicesRouteImport } from './routes/_authenticated/dashboard.services'
 import { Route as AuthenticatedDashboardReviewsRouteImport } from './routes/_authenticated/dashboard.reviews'
 import { Route as AuthenticatedDashboardPractitionersRouteImport } from './routes/_authenticated/dashboard.practitioners'
@@ -144,6 +145,12 @@ const AuthenticatedDashboardTreatmentsRoute =
   AuthenticatedDashboardTreatmentsRouteImport.update({
     id: '/treatments',
     path: '/treatments',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardSettingsRoute =
+  AuthenticatedDashboardSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
 const AuthenticatedDashboardServicesRoute =
@@ -339,6 +346,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/practitioners': typeof AuthenticatedDashboardPractitionersRoute
   '/dashboard/reviews': typeof AuthenticatedDashboardReviewsRoute
   '/dashboard/services': typeof AuthenticatedDashboardServicesRoute
+  '/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
   '/dashboard/treatments': typeof AuthenticatedDashboardTreatmentsRoute
   '/m/$slug/about': typeof MSlugAboutRoute
   '/m/$slug/account': typeof MSlugAccountRoute
@@ -383,6 +391,7 @@ export interface FileRoutesByTo {
   '/dashboard/practitioners': typeof AuthenticatedDashboardPractitionersRoute
   '/dashboard/reviews': typeof AuthenticatedDashboardReviewsRoute
   '/dashboard/services': typeof AuthenticatedDashboardServicesRoute
+  '/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
   '/dashboard/treatments': typeof AuthenticatedDashboardTreatmentsRoute
   '/m/$slug/about': typeof MSlugAboutRoute
   '/m/$slug/account': typeof MSlugAccountRoute
@@ -431,6 +440,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/practitioners': typeof AuthenticatedDashboardPractitionersRoute
   '/_authenticated/dashboard/reviews': typeof AuthenticatedDashboardReviewsRoute
   '/_authenticated/dashboard/services': typeof AuthenticatedDashboardServicesRoute
+  '/_authenticated/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
   '/_authenticated/dashboard/treatments': typeof AuthenticatedDashboardTreatmentsRoute
   '/m/$slug/about': typeof MSlugAboutRoute
   '/m/$slug/account': typeof MSlugAccountRoute
@@ -479,6 +489,7 @@ export interface FileRouteTypes {
     | '/dashboard/practitioners'
     | '/dashboard/reviews'
     | '/dashboard/services'
+    | '/dashboard/settings'
     | '/dashboard/treatments'
     | '/m/$slug/about'
     | '/m/$slug/account'
@@ -523,6 +534,7 @@ export interface FileRouteTypes {
     | '/dashboard/practitioners'
     | '/dashboard/reviews'
     | '/dashboard/services'
+    | '/dashboard/settings'
     | '/dashboard/treatments'
     | '/m/$slug/about'
     | '/m/$slug/account'
@@ -570,6 +582,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/practitioners'
     | '/_authenticated/dashboard/reviews'
     | '/_authenticated/dashboard/services'
+    | '/_authenticated/dashboard/settings'
     | '/_authenticated/dashboard/treatments'
     | '/m/$slug/about'
     | '/m/$slug/account'
@@ -721,6 +734,13 @@ declare module '@tanstack/react-router' {
       path: '/treatments'
       fullPath: '/dashboard/treatments'
       preLoaderRoute: typeof AuthenticatedDashboardTreatmentsRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/settings': {
+      id: '/_authenticated/dashboard/settings'
+      path: '/settings'
+      fullPath: '/dashboard/settings'
+      preLoaderRoute: typeof AuthenticatedDashboardSettingsRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
     '/_authenticated/dashboard/services': {
@@ -953,6 +973,7 @@ interface AuthenticatedDashboardRouteChildren {
   AuthenticatedDashboardPractitionersRoute: typeof AuthenticatedDashboardPractitionersRoute
   AuthenticatedDashboardReviewsRoute: typeof AuthenticatedDashboardReviewsRoute
   AuthenticatedDashboardServicesRoute: typeof AuthenticatedDashboardServicesRoute
+  AuthenticatedDashboardSettingsRoute: typeof AuthenticatedDashboardSettingsRoute
   AuthenticatedDashboardTreatmentsRoute: typeof AuthenticatedDashboardTreatmentsRoute
   AuthenticatedDashboardIndexRoute: typeof AuthenticatedDashboardIndexRoute
   AuthenticatedDashboardConsultationsIdRoute: typeof AuthenticatedDashboardConsultationsIdRoute
@@ -992,6 +1013,7 @@ const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
       AuthenticatedDashboardPractitionersRoute,
     AuthenticatedDashboardReviewsRoute: AuthenticatedDashboardReviewsRoute,
     AuthenticatedDashboardServicesRoute: AuthenticatedDashboardServicesRoute,
+    AuthenticatedDashboardSettingsRoute: AuthenticatedDashboardSettingsRoute,
     AuthenticatedDashboardTreatmentsRoute:
       AuthenticatedDashboardTreatmentsRoute,
     AuthenticatedDashboardIndexRoute: AuthenticatedDashboardIndexRoute,

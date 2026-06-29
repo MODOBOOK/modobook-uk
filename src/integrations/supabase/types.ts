@@ -2308,8 +2308,18 @@ export type Database = {
           about: string | null
           active: boolean | null
           address: Json | null
+          allow_patient_cancel: boolean
+          allow_patient_reschedule: boolean
+          allow_pay_in_clinic: boolean
+          auto_confirm_bookings: boolean
           avatar_url: string | null
           bio: string | null
+          booking_buffer_after_minutes: number
+          booking_buffer_before_minutes: number
+          booking_daily_cap: number | null
+          booking_max_lead_days: number
+          booking_min_notice_hours: number
+          booking_smart_times_enabled: boolean
           brand_color: string | null
           cancellation_rules: Json | null
           chooser_consultation_treatment_id: string | null
@@ -2331,6 +2341,8 @@ export type Database = {
           deposit_policy_text: string | null
           discount_stack_mode: string
           email: string | null
+          email_confirmations_enabled: boolean
+          enforce_cancellation_fee: boolean
           favourite_treatment_ids: string[]
           favourites_custom_title: string | null
           favourites_enabled: boolean
@@ -2338,11 +2350,25 @@ export type Database = {
           hero_url: string | null
           id: string
           model_slots_position: string
+          payment_card_full_enabled: boolean
+          payment_clearpay_enabled: boolean
+          payment_deposit_enabled: boolean
+          payment_klarna_enabled: boolean
+          payment_pass_fees_to_customer: boolean
           phone: string | null
           practitioner_selection_mode: string
           qualifications: Json
+          reminder_hours_before: number[]
+          require_account_to_book: boolean
+          require_address: boolean
+          require_deposit_to_confirm: boolean
+          require_dob: boolean
+          require_medical_forms_before_appt: boolean
+          require_phone: boolean
           role: Database["public"]["Enums"]["app_role"]
+          show_prices_on_booking: boolean
           slug: string | null
+          sms_reminders_enabled: boolean
           social_links: Json | null
           specialties: string[]
           stripe_connect_account_id: string | null
@@ -2354,13 +2380,24 @@ export type Database = {
           updated_at: string
           user_id: string
           welcome_intro_html: string | null
+          whatsapp_reminders_enabled: boolean
         }
         Insert: {
           about?: string | null
           active?: boolean | null
           address?: Json | null
+          allow_patient_cancel?: boolean
+          allow_patient_reschedule?: boolean
+          allow_pay_in_clinic?: boolean
+          auto_confirm_bookings?: boolean
           avatar_url?: string | null
           bio?: string | null
+          booking_buffer_after_minutes?: number
+          booking_buffer_before_minutes?: number
+          booking_daily_cap?: number | null
+          booking_max_lead_days?: number
+          booking_min_notice_hours?: number
+          booking_smart_times_enabled?: boolean
           brand_color?: string | null
           cancellation_rules?: Json | null
           chooser_consultation_treatment_id?: string | null
@@ -2382,6 +2419,8 @@ export type Database = {
           deposit_policy_text?: string | null
           discount_stack_mode?: string
           email?: string | null
+          email_confirmations_enabled?: boolean
+          enforce_cancellation_fee?: boolean
           favourite_treatment_ids?: string[]
           favourites_custom_title?: string | null
           favourites_enabled?: boolean
@@ -2389,11 +2428,25 @@ export type Database = {
           hero_url?: string | null
           id?: string
           model_slots_position?: string
+          payment_card_full_enabled?: boolean
+          payment_clearpay_enabled?: boolean
+          payment_deposit_enabled?: boolean
+          payment_klarna_enabled?: boolean
+          payment_pass_fees_to_customer?: boolean
           phone?: string | null
           practitioner_selection_mode?: string
           qualifications?: Json
+          reminder_hours_before?: number[]
+          require_account_to_book?: boolean
+          require_address?: boolean
+          require_deposit_to_confirm?: boolean
+          require_dob?: boolean
+          require_medical_forms_before_appt?: boolean
+          require_phone?: boolean
           role?: Database["public"]["Enums"]["app_role"]
+          show_prices_on_booking?: boolean
           slug?: string | null
+          sms_reminders_enabled?: boolean
           social_links?: Json | null
           specialties?: string[]
           stripe_connect_account_id?: string | null
@@ -2405,13 +2458,24 @@ export type Database = {
           updated_at?: string
           user_id: string
           welcome_intro_html?: string | null
+          whatsapp_reminders_enabled?: boolean
         }
         Update: {
           about?: string | null
           active?: boolean | null
           address?: Json | null
+          allow_patient_cancel?: boolean
+          allow_patient_reschedule?: boolean
+          allow_pay_in_clinic?: boolean
+          auto_confirm_bookings?: boolean
           avatar_url?: string | null
           bio?: string | null
+          booking_buffer_after_minutes?: number
+          booking_buffer_before_minutes?: number
+          booking_daily_cap?: number | null
+          booking_max_lead_days?: number
+          booking_min_notice_hours?: number
+          booking_smart_times_enabled?: boolean
           brand_color?: string | null
           cancellation_rules?: Json | null
           chooser_consultation_treatment_id?: string | null
@@ -2433,6 +2497,8 @@ export type Database = {
           deposit_policy_text?: string | null
           discount_stack_mode?: string
           email?: string | null
+          email_confirmations_enabled?: boolean
+          enforce_cancellation_fee?: boolean
           favourite_treatment_ids?: string[]
           favourites_custom_title?: string | null
           favourites_enabled?: boolean
@@ -2440,11 +2506,25 @@ export type Database = {
           hero_url?: string | null
           id?: string
           model_slots_position?: string
+          payment_card_full_enabled?: boolean
+          payment_clearpay_enabled?: boolean
+          payment_deposit_enabled?: boolean
+          payment_klarna_enabled?: boolean
+          payment_pass_fees_to_customer?: boolean
           phone?: string | null
           practitioner_selection_mode?: string
           qualifications?: Json
+          reminder_hours_before?: number[]
+          require_account_to_book?: boolean
+          require_address?: boolean
+          require_deposit_to_confirm?: boolean
+          require_dob?: boolean
+          require_medical_forms_before_appt?: boolean
+          require_phone?: boolean
           role?: Database["public"]["Enums"]["app_role"]
+          show_prices_on_booking?: boolean
           slug?: string | null
+          sms_reminders_enabled?: boolean
           social_links?: Json | null
           specialties?: string[]
           stripe_connect_account_id?: string | null
@@ -2456,6 +2536,7 @@ export type Database = {
           updated_at?: string
           user_id?: string
           welcome_intro_html?: string | null
+          whatsapp_reminders_enabled?: boolean
         }
         Relationships: [
           {
@@ -2970,8 +3051,18 @@ export type Database = {
           about: string
           active: boolean
           address: Json
+          allow_patient_cancel: boolean
+          allow_patient_reschedule: boolean
+          allow_pay_in_clinic: boolean
+          auto_confirm_bookings: boolean
           avatar_url: string
           bio: string
+          booking_buffer_after_minutes: number
+          booking_buffer_before_minutes: number
+          booking_daily_cap: number
+          booking_max_lead_days: number
+          booking_min_notice_hours: number
+          booking_smart_times_enabled: boolean
           brand_color: string
           cancellation_rules: Json
           chooser_consultation_treatment_id: string
@@ -2992,6 +3083,8 @@ export type Database = {
           deposit_amount_cents: number
           deposit_policy_text: string
           discount_stack_mode: string
+          email_confirmations_enabled: boolean
+          enforce_cancellation_fee: boolean
           favourite_treatment_ids: string[]
           favourites_custom_title: string
           favourites_enabled: boolean
@@ -2999,9 +3092,23 @@ export type Database = {
           hero_url: string
           id: string
           model_slots_position: string
+          payment_card_full_enabled: boolean
+          payment_clearpay_enabled: boolean
+          payment_deposit_enabled: boolean
+          payment_klarna_enabled: boolean
+          payment_pass_fees_to_customer: boolean
           practitioner_selection_mode: string
           qualifications: Json
+          reminder_hours_before: number[]
+          require_account_to_book: boolean
+          require_address: boolean
+          require_deposit_to_confirm: boolean
+          require_dob: boolean
+          require_medical_forms_before_appt: boolean
+          require_phone: boolean
+          show_prices_on_booking: boolean
           slug: string
+          sms_reminders_enabled: boolean
           social_links: Json
           specialties: string[]
           tagline: string
@@ -3010,6 +3117,7 @@ export type Database = {
           timeline: Json
           updated_at: string
           welcome_intro_html: string
+          whatsapp_reminders_enabled: boolean
         }[]
       }
       has_role: {

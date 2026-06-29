@@ -109,6 +109,37 @@ export const updateProfile = createServerFn({ method: "POST" })
       favourite_treatment_ids?: string[];
       favourites_enabled?: boolean;
       favourites_custom_title?: string | null;
+      // Booking window settings
+      booking_min_notice_hours?: number;
+      booking_max_lead_days?: number;
+      booking_buffer_before_minutes?: number;
+      booking_buffer_after_minutes?: number;
+      booking_daily_cap?: number | null;
+      booking_smart_times_enabled?: boolean;
+      // Payment settings
+      payment_pass_fees_to_customer?: boolean;
+      payment_klarna_enabled?: boolean;
+      payment_clearpay_enabled?: boolean;
+      payment_card_full_enabled?: boolean;
+      payment_deposit_enabled?: boolean;
+      require_deposit_to_confirm?: boolean;
+      allow_pay_in_clinic?: boolean;
+      show_prices_on_booking?: boolean;
+      enforce_cancellation_fee?: boolean;
+      // Patient rules
+      require_account_to_book?: boolean;
+      require_phone?: boolean;
+      require_dob?: boolean;
+      require_address?: boolean;
+      require_medical_forms_before_appt?: boolean;
+      allow_patient_reschedule?: boolean;
+      allow_patient_cancel?: boolean;
+      // Confirmations & reminders
+      auto_confirm_bookings?: boolean;
+      email_confirmations_enabled?: boolean;
+      sms_reminders_enabled?: boolean;
+      whatsapp_reminders_enabled?: boolean;
+      reminder_hours_before?: number[];
     }) => input,
   )
 
@@ -153,6 +184,23 @@ export const updateProfile = createServerFn({ method: "POST" })
     if (data.favourite_treatment_ids !== undefined) update.favourite_treatment_ids = data.favourite_treatment_ids;
     if (data.favourites_enabled !== undefined) update.favourites_enabled = data.favourites_enabled;
     if (data.favourites_custom_title !== undefined) update.favourites_custom_title = data.favourites_custom_title;
+
+    const passthroughKeys = [
+      "booking_min_notice_hours","booking_max_lead_days","booking_buffer_before_minutes",
+      "booking_buffer_after_minutes","booking_daily_cap","booking_smart_times_enabled",
+      "payment_pass_fees_to_customer","payment_klarna_enabled","payment_clearpay_enabled",
+      "payment_card_full_enabled","payment_deposit_enabled","require_deposit_to_confirm",
+      "allow_pay_in_clinic","show_prices_on_booking","enforce_cancellation_fee",
+      "require_account_to_book","require_phone","require_dob","require_address",
+      "require_medical_forms_before_appt","allow_patient_reschedule","allow_patient_cancel",
+      "auto_confirm_bookings","email_confirmations_enabled","sms_reminders_enabled",
+      "whatsapp_reminders_enabled","reminder_hours_before",
+    ] as const;
+    for (const k of passthroughKeys) {
+      const v = (data as Record<string, unknown>)[k];
+      if (v !== undefined) update[k] = v;
+    }
+
 
 
 
