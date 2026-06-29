@@ -33,6 +33,7 @@ import type { Database } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 import { SafeHtml } from "@/components/SafeHtml";
 import { describeCancellationRules } from "@/lib/policy";
+import { QuizDialog } from "@/components/QuizDialog";
 
 type Treatment = Database["public"]["Tables"]["treatments"]["Row"];
 type Package = Database["public"]["Tables"]["packages"]["Row"];
@@ -283,6 +284,7 @@ function BookPage() {
   const [mode, setMode] = useState<null | "know" | "unsure">(null);
   const [pickedConcernId, setPickedConcernId] = useState<string | null>(null);
   const [quizOn, setQuizOn] = useState(false);
+  const [quizOpen, setQuizOpen] = useState(false);
   useEffect(() => {
     (async () => {
       try {
@@ -851,15 +853,6 @@ function BookPage() {
                 onClick={() => setMode("unsure")}
               />
             )}
-            {quizOn && (
-              <Link to="/m/$slug/quiz" params={{ slug }} className="block">
-                <ChooserCard
-                  title="Take our treatment finder quiz"
-                  description="Answer 8 quick questions for tailored suggestions"
-                  brand={brand}
-                />
-              </Link>
-            )}
             {showConsult && (
               consultTreatmentId ? (
                 <Link
@@ -883,6 +876,19 @@ function BookPage() {
               )
             )}
           </div>
+          {quizOn && (
+            <div className="mt-5 flex justify-center">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setQuizOpen(true)}
+                className="gap-2"
+              >
+                <Sparkles className="h-4 w-4" />
+                Not sure? Take our treatment finder quiz
+              </Button>
+            </div>
+          )}
         </section>
       )}
 
@@ -1506,6 +1512,7 @@ function BookPage() {
           </div>
         );
       })()}
+      <QuizDialog open={quizOpen} onOpenChange={setQuizOpen} slug={slug} />
     </main>
   );
 }
