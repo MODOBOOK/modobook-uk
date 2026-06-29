@@ -6,6 +6,9 @@ import {
   listAftercareTemplates,
   saveAftercareTemplate,
   deleteAftercareTemplate,
+  listMyTreatmentsBasic,
+  getAftercareTemplateTreatmentIds,
+  setAftercareTemplateTreatmentIds,
 } from "@/lib/aftercare-templates.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,10 +31,26 @@ function AftercarePage() {
   const list = useServerFn(listAftercareTemplates);
   const save = useServerFn(saveAftercareTemplate);
   const remove = useServerFn(deleteAftercareTemplate);
+  const listTreatments = useServerFn(listMyTreatmentsBasic);
+  const getTplTreatments = useServerFn(getAftercareTemplateTreatmentIds);
+  const setTplTreatments = useServerFn(setAftercareTemplateTreatmentIds);
   const qc = useQueryClient();
   const q = useQuery({ queryKey: ["aftercare-templates"], queryFn: () => list() });
+  const tQ = useQuery({ queryKey: ["my-treatments-basic"], queryFn: () => listTreatments() });
   const [editing, setEditing] = useState<Tpl | null>(null);
   const [open, setOpen] = useState(false);
+  const [treatmentIds, setTreatmentIds] = useState<string[]>([]);
+
+  const openEditor = async (tpl: Tpl) => {
+    setEditing(tpl);
+    setOpen(true);
+    if (tpl.id) {
+      const ids = await getTplTreatments({ data: { template_id: tpl.id } });
+      setTreatmentIds(ids as string[]);
+    } else {
+      setTreatmentIds([]);
+    }
+  };
 
   return (
     <div className="mx-auto max-w-3xl p-4 sm:p-6 space-y-4">
@@ -40,10 +59,7 @@ function AftercarePage() {
           <ArrowLeft className="h-4 w-4" /> Dashboard
         </Link>
         <Button
-          onClick={() => {
-            setEditing({ id: "", name: "", body_html: "", delay_hours: 2 });
-            setOpen(true);
-          }}
+          onClick={() => openEditor({ id: "", name: "", body_html: "", delay_hours: 2 })}
         >
           <Plus className="mr-1 h-4 w-4" /> New template
         </Button>
@@ -74,7 +90,7 @@ function AftercarePage() {
                 <div className="text-xs text-muted-foreground">Sends {t.delay_hours}h after appointment</div>
               </div>
               <div className="flex gap-1 shrink-0">
-                <Button size="sm" variant="ghost" onClick={() => { setEditing(t); setOpen(true); }}>
+                <Button size="sm" variant="ghost" onClick={() => openEditor(t)}>
                   <Pencil className="h-4 w-4" />
                 </Button>
                 <Button
@@ -130,6 +146,36 @@ function AftercarePage() {
                   }
                 />
               </div>
+
+              <div className="space-y-1.5 rounded-lg border p-3">
+                <Label className="text-sm font-semibold">Auto-attach to treatments</Label>
+                <p className="text-xs text-muted-foreground">
+                  Selected treatments will automatically send this aftercare after each appointment.
+                </p>
+                {(tQ.data ?? []).length === 0 ? (
+                  <p className="text-xs text-muted-foreground">No treatments yet.</p>
+                ) : (
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {(tQ.data as { id: string; name: string }[]).map((tr) => {
+                      const checked = treatmentIds.includes(tr.id);
+                      return (
+                        <button
+                          key={tr.id}
+                          type="button"
+                          onClick={() =>
+                            setTreatmentIds((prev) =>
+                              prev.includes(tr.id) ? prev.filter((x) => x !== tr.id) : [...prev, tr.id],
+                            )
+                          }
+                          className={`rounded-full border px-2.5 py-1 text-xs transition ${checked ? "bg-foreground text-background border-foreground" : "bg-background hover:bg-muted"}`}
+                        >
+                          {tr.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             </div>
           )}
           <DialogFooter>
@@ -138,7 +184,7 @@ function AftercarePage() {
               disabled={!editing?.name.trim()}
               onClick={async () => {
                 if (!editing) return;
-                await save({
+                const saved = await save({
                   data: {
                     id: editing.id || undefined,
                     name: editing.name.trim(),
@@ -146,7 +192,12 @@ function AftercarePage() {
                     delay_hours: editing.delay_hours,
                   },
                 });
+                const tplId = (saved as any)?.id ?? editing.id;
+                if (tplId) {
+                  await setTplTreatments({ data: { template_id: tplId, treatment_ids: treatmentIds } });
+                }
                 await qc.invalidateQueries({ queryKey: ["aftercare-templates"] });
+                await qc.invalidateQueries({ queryKey: ["my-aftercare-templates"] });
                 setOpen(false);
                 toast.success("Saved");
               }}
