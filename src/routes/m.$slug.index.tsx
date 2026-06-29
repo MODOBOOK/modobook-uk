@@ -1892,25 +1892,28 @@ function TreatmentRow({
           )}
         </div>
 
+        {expanded && picture && (
+          <div className="mt-3 overflow-hidden rounded-lg bg-muted">
+            <img src={picture} alt={t.name} className="max-h-72 w-full object-cover" loading="lazy" />
+          </div>
+        )}
         {desc && (
           <div className="mt-2 whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
             {shown}
-            {isLong && (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setExpanded((v) => !v);
-                }}
-                className="ml-1 font-semibold hover:underline"
-                style={{ color: brand }}
-              >
-                {expanded ? "Show less" : "Read more"}
-              </button>
-            )}
+          </div>
+        )}
+        {hasMore && (
+          <div className="mt-1.5 text-sm font-semibold" style={{ color: brand }}>
+            {expanded ? "Show less" : picture && !isLong ? "View photo" : "Read more"}
           </div>
         )}
       </button>
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-label={selected ? "Deselect" : "Select"}
+        className="sr-only"
+      />
     </div>
   );
 }
