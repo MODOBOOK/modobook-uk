@@ -1127,29 +1127,13 @@ function ServiceDialog({
 
           <div className="rounded-lg border p-3 space-y-2">
             <Label className="m-0 text-sm font-semibold">Consent forms to send on booking</Label>
-            {consentList.length === 0 ? (
-              <p className="text-xs text-muted-foreground">
-                No consent forms yet. Add them in Dashboard → Consent forms.
-              </p>
-            ) : (
-              <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-                {consentList.map((t) => (
-                  <label key={t.id} className="flex items-start gap-2 text-sm">
-                    <Checkbox
-                      checked={consentIds.includes(t.id)}
-                      onCheckedChange={() => toggleConsent(t.id)}
-                    />
-                    <span>
-                      {t.name}
-                      {t.is_system && (
-                        <span className="ml-2 text-[11px] text-muted-foreground">(template)</span>
-                      )}
-                    </span>
-                  </label>
-                ))}
-              </div>
-            )}
+            <ConsentPicker
+              all={consentList}
+              selected={consentIds}
+              onToggle={toggleConsent}
+            />
           </div>
+
 
           <div className="rounded-lg border p-3 space-y-3">
             <Label className="m-0 text-sm font-semibold">Discount (optional)</Label>
