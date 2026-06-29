@@ -663,36 +663,40 @@ function MultiBookPage() {
                   <Input id="email" type="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
                 </div>
                 <div>
-                  <Label htmlFor="phone">Phone</Label>
-                  <Input id="phone" required value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+                  <Label htmlFor="phone">Phone {!reqPhone && <span className="text-xs opacity-50">(optional)</span>}</Label>
+                  <Input id="phone" required={reqPhone} value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
                 </div>
                 <div>
-                  <Label htmlFor="dob">Date of birth</Label>
-                  <Input id="dob" type="date" required value={form.dob} onChange={(e) => setForm({ ...form, dob: e.target.value })} />
+                  <Label htmlFor="dob">Date of birth {!reqDob && <span className="text-xs opacity-50">(optional)</span>}</Label>
+                  <Input id="dob" type="date" required={reqDob} value={form.dob} onChange={(e) => setForm({ ...form, dob: e.target.value })} />
                 </div>
-                <div className="sm:col-span-2 pt-2 border-t mt-2">
-                  <Label className="text-sm font-semibold">Address</Label>
-                </div>
-                <div className="sm:col-span-2">
-                  <Label htmlFor="line1">Address line 1</Label>
-                  <Input id="line1" value={form.addressLine1} onChange={(e) => setForm({ ...form, addressLine1: e.target.value })} />
-                </div>
-                <div className="sm:col-span-2">
-                  <Label htmlFor="line2">Address line 2 (optional)</Label>
-                  <Input id="line2" value={form.addressLine2} onChange={(e) => setForm({ ...form, addressLine2: e.target.value })} />
-                </div>
-                <div>
-                  <Label htmlFor="city">City</Label>
-                  <Input id="city" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
-                </div>
-                <div>
-                  <Label htmlFor="postcode">Postcode</Label>
-                  <Input id="postcode" value={form.postcode} onChange={(e) => setForm({ ...form, postcode: e.target.value })} />
-                </div>
-                <div className="sm:col-span-2">
-                  <Label htmlFor="country">Country</Label>
-                  <Input id="country" value={form.country} onChange={(e) => setForm({ ...form, country: e.target.value })} />
-                </div>
+                {reqAddress && (
+                  <>
+                    <div className="sm:col-span-2 pt-2 border-t mt-2">
+                      <Label className="text-sm font-semibold">Address</Label>
+                    </div>
+                    <div className="sm:col-span-2">
+                      <Label htmlFor="line1">Address line 1</Label>
+                      <Input id="line1" value={form.addressLine1} onChange={(e) => setForm({ ...form, addressLine1: e.target.value })} />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <Label htmlFor="line2">Address line 2 (optional)</Label>
+                      <Input id="line2" value={form.addressLine2} onChange={(e) => setForm({ ...form, addressLine2: e.target.value })} />
+                    </div>
+                    <div>
+                      <Label htmlFor="city">City</Label>
+                      <Input id="city" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
+                    </div>
+                    <div>
+                      <Label htmlFor="postcode">Postcode</Label>
+                      <Input id="postcode" value={form.postcode} onChange={(e) => setForm({ ...form, postcode: e.target.value })} />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <Label htmlFor="country">Country</Label>
+                      <Input id="country" value={form.country} onChange={(e) => setForm({ ...form, country: e.target.value })} />
+                    </div>
+                  </>
+                )}
                 <div className="sm:col-span-2">
                   <Label htmlFor="notes">Notes (optional)</Label>
                   <Textarea id="notes" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
