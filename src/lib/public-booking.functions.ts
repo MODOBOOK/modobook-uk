@@ -218,6 +218,7 @@ export const getMultiBookingContext = createServerFn({ method: "GET" })
       termsHtml: (profile as { terms_html?: string | null }).terms_html ?? null,
       termsRequired: (profile as { terms_required?: boolean | null }).terms_required ?? false,
       bookableFrom,
+      settings: extractBookingSettings(profile as Record<string, unknown>),
     };
   });
 
