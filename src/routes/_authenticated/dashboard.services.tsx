@@ -1039,7 +1039,7 @@ function ServiceDialog({
                 <p className="text-[11px] text-muted-foreground">Shown to patients e.g. "3 sessions included".</p>
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="s-rebook">Rebook reminder (days after)</Label>
+                <Label htmlFor="s-rebook">Rebook reminder — how many days after</Label>
                 <Input
                   id="s-rebook"
                   type="number"
@@ -1048,7 +1048,7 @@ function ServiceDialog({
                   value={rebookDays}
                   onChange={(e) => setRebookDays(e.target.value)}
                 />
-                <p className="text-[11px] text-muted-foreground">Email reminder sent X days after each session.</p>
+                <p className="text-[11px] text-muted-foreground">Sent to the patient this many days after their appointment. Not shown on the booking page.</p>
               </div>
             </div>
             {sessionCount > 1 && (
