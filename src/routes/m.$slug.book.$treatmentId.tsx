@@ -437,7 +437,7 @@ function BookTreatmentPage() {
           <span className="inline-flex items-center gap-1 opacity-70">
             <Clock className="h-4 w-4" /> {duration} min
           </span>
-          <Badge variant="secondary">£{price.toFixed(2)}</Badge>
+          {showPrices && <Badge variant="secondary">£{price.toFixed(2)}</Badge>}
           {sessionCount > 1 && (
             <Badge variant="outline" className="font-semibold">
               {sessionCount} sessions{sessionSpacing ? ` · ${sessionSpacing}` : ""}
