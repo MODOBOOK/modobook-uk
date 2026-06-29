@@ -35,6 +35,7 @@ function AftercarePage() {
   const listTreatments = useServerFn(listMyTreatmentsBasic);
   const getTplTreatments = useServerFn(getAftercareTemplateTreatmentIds);
   const setTplTreatments = useServerFn(setAftercareTemplateTreatmentIds);
+  const cloneSys = useServerFn(cloneSystemAftercareTemplate);
   const qc = useQueryClient();
   const q = useQuery({ queryKey: ["aftercare-templates"], queryFn: () => list() });
   const tQ = useQuery({ queryKey: ["my-treatments-basic"], queryFn: () => listTreatments() });
