@@ -737,7 +737,7 @@ function BookTreatmentPage() {
       <Button
         className="w-full"
         size="lg"
-        disabled={!slot || submitting || !form.name || !form.email || !form.phone || !form.dob}
+        disabled={!slot || submitting || !form.name || !form.email || (reqPhone && !form.phone) || (reqDob && !form.dob)}
         onClick={submit}
         style={{ backgroundColor: brand, color: "#fff" }}
       >
