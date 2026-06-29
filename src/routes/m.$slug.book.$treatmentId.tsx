@@ -303,7 +303,7 @@ function BookTreatmentPage() {
     }
     return out2;
 
-  }, [dayQuery.data, dayRules, duration, locationId, modelMode, modelSlotsForLoc, date, minNoticeHours]);
+  }, [dayQuery.data, dayRules, duration, locationId, modelMode, modelSlotsForLoc, date, minNoticeHours, smartTimes]);
 
 
 
