@@ -320,10 +320,15 @@ function FormEditor({ formId, onClose, cats }: { formId: string; onClose: () => 
         case "paragraph": return { id: nid(), type, text: "Paragraph text…" };
         case "field": return { id: nid(), type, label: "Field", fieldType: "text" };
         case "select": return { id: nid(), type, label: "Select", options: ["Option 1", "Option 2"] };
+        case "radio": return { id: nid(), type, label: "Choose one", options: ["Yes", "No"] };
+        case "checkbox_group": return { id: nid(), type, label: "Select all that apply", options: ["Option 1", "Option 2"] };
         case "checkbox": return { id: nid(), type, label: "I agree" };
+        case "info": return { id: nid(), type, text: "Helpful info for the patient.", variant: "info" };
+        case "rating": return { id: nid(), type, label: "Rate", max: 5 };
         case "separator": return { id: nid(), type };
         case "space": return { id: nid(), type };
         case "signature": return { id: nid(), type, label: "Signature" };
+        default: return { id: nid(), type: "paragraph", text: "" };
       }
     })();
     setSchema((s) => ({
@@ -332,6 +337,22 @@ function FormEditor({ formId, onClose, cats }: { formId: string; onClose: () => 
     }));
     setPickerStep(null);
   }
+
+  function duplicateElement(stepId: string, elId: string) {
+    setSchema((s) => ({
+      ...s,
+      steps: s.steps.map((st) => {
+        if (st.id !== stepId) return st;
+        const i = st.elements.findIndex((e) => e.id === elId);
+        if (i < 0) return st;
+        const copy = { ...st.elements[i], id: nid() };
+        const arr = [...st.elements];
+        arr.splice(i + 1, 0, copy);
+        return { ...st, elements: arr };
+      }),
+    }));
+  }
+
   function updateElement(stepId: string, elId: string, patch: Partial<FormElement>) {
     setSchema((s) => ({
       ...s,
