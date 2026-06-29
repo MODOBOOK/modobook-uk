@@ -70,6 +70,7 @@ function BookTreatmentPage() {
   const reqAddress = settings?.require_address !== false;
   const maxLeadDays = settings?.booking_max_lead_days ?? 90;
   const minNoticeHours = settings?.booking_min_notice_hours ?? 0;
+  const smartTimes = settings?.booking_smart_times_enabled === true;
   const redirectPath = `/m/${slug}/book/${treatment.id}`;
   const duration = treatment.duration ?? 30;
   const price = Number(treatment.price ?? 0);
@@ -271,8 +272,10 @@ function BookTreatmentPage() {
       // Candidate start times: regular grid plus "right after a busy block ends"
       const candidates = new Set<number>();
       for (let t = start; t + duration <= end; t += step) candidates.add(t);
-      for (const b of busy) {
-        if (b.end >= start && b.end + duration <= end) candidates.add(b.end);
+      if (smartTimes) {
+        for (const b of busy) {
+          if (b.end >= start && b.end + duration <= end) candidates.add(b.end);
+        }
       }
       for (const t of Array.from(candidates).sort((a, z) => a - z)) {
         const slotEnd = t + duration;
@@ -300,7 +303,7 @@ function BookTreatmentPage() {
     }
     return out2;
 
-  }, [dayQuery.data, dayRules, duration, locationId, modelMode, modelSlotsForLoc, date, minNoticeHours]);
+  }, [dayQuery.data, dayRules, duration, locationId, modelMode, modelSlotsForLoc, date, minNoticeHours, smartTimes]);
 
 
 

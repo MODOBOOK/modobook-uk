@@ -91,6 +91,7 @@ function MultiBookPage() {
   const reqAddress = settings?.require_address !== false;
   const maxLeadDays = settings?.booking_max_lead_days ?? 90;
   const minNoticeHours = settings?.booking_min_notice_hours ?? 0;
+  const smartTimes = settings?.booking_smart_times_enabled === true;
 
 
   const theme = ctx.theme;
@@ -270,8 +271,10 @@ function MultiBookPage() {
       const end = toMinutes(r.end_time);
       const candidates = new Set<number>();
       for (let t = start; t + totalDuration <= end; t += step) candidates.add(t);
-      for (const b of busy) {
-        if (b.end >= start && b.end + totalDuration <= end) candidates.add(b.end);
+      if (smartTimes) {
+        for (const b of busy) {
+          if (b.end >= start && b.end + totalDuration <= end) candidates.add(b.end);
+        }
       }
       for (const t of Array.from(candidates).sort((a, z) => a - z)) {
         const slotEnd = t + totalDuration;
@@ -290,7 +293,7 @@ function MultiBookPage() {
     }
     return out2;
 
-  }, [dayQuery.data, dayRules, totalDuration, locationId, minNoticeHours, date]);
+  }, [dayQuery.data, dayRules, totalDuration, locationId, minNoticeHours, date, smartTimes]);
 
   async function submit() {
     if (submitLockRef.current) return;
