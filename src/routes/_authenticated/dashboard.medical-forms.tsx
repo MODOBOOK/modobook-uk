@@ -467,8 +467,10 @@ function FormEditor({ formId, onClose, cats }: { formId: string; onClose: () => 
                 onChange={(patch) => updateElement(step.id, el.id, patch)}
                 onRemove={() => removeElement(step.id, el.id)}
                 onMove={(d) => moveElement(step.id, el.id, d)}
+                onDuplicate={() => duplicateElement(step.id, el.id)}
               />
             ))}
+
 
             <Button variant="outline" className="w-full" onClick={() => setPickerStep(step.id)}>
               <Plus className="mr-2 h-4 w-4" />Add Item
