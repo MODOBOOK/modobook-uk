@@ -1433,3 +1433,94 @@ function FavouritesCard({ treatments }: { treatments: Treat[] }) {
     </Card>
   );
 }
+
+function ConsentPicker({
+  all,
+  selected,
+  onToggle,
+}: {
+  all: { id: string; name: string; is_system: boolean; treatment_type?: string | null }[];
+  selected: string[];
+  onToggle: (id: string) => void;
+}) {
+  const [q, setQ] = useState("");
+  const query = q.trim().toLowerCase();
+  const filtered = query
+    ? all.filter(
+        (t) =>
+          t.name.toLowerCase().includes(query) ||
+          (t.treatment_type ?? "").toLowerCase().includes(query),
+      )
+    : all;
+  const selectedRows = all.filter((t) => selected.includes(t.id));
+
+  if (all.length === 0) {
+    return (
+      <p className="text-xs text-muted-foreground">
+        No consent forms yet. Add them in Dashboard → Consent forms.
+      </p>
+    );
+  }
+  return (
+    <div className="space-y-2">
+      {selectedRows.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {selectedRows.map((t) => (
+            <span
+              key={t.id}
+              className="inline-flex items-center gap-1 rounded-full border bg-primary/10 px-2 py-1 text-xs text-primary"
+            >
+              {t.name}
+              <button
+                type="button"
+                onClick={() => onToggle(t.id)}
+                className="text-primary/70 hover:text-destructive"
+                aria-label="Remove"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+      <Input
+        value={q}
+        onChange={(e) => setQ(e.target.value)}
+        placeholder="Search consent forms (Botox, lip filler, Sculptra…)"
+        className="h-9 text-sm"
+      />
+      <div className="max-h-56 space-y-1 overflow-y-auto rounded-md border bg-muted/20 p-1">
+        {filtered.length === 0 ? (
+          <p className="p-2 text-center text-xs text-muted-foreground">No matches.</p>
+        ) : (
+          filtered.map((t) => {
+            const checked = selected.includes(t.id);
+            return (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => onToggle(t.id)}
+                className={`flex w-full items-start gap-2 rounded-md px-2 py-1.5 text-left text-xs transition hover:bg-background ${checked ? "bg-background ring-1 ring-primary/40" : ""}`}
+              >
+                <Checkbox checked={checked} className="mt-0.5 pointer-events-none" />
+                <span className="flex-1">
+                  <span className="block font-medium">{t.name}</span>
+                  {t.treatment_type && (
+                    <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                      {t.treatment_type}
+                    </span>
+                  )}
+                </span>
+                {t.is_system && (
+                  <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                    template
+                  </span>
+                )}
+              </button>
+            );
+          })
+        )}
+      </div>
+    </div>
+  );
+}
