@@ -84,6 +84,14 @@ function MultiBookPage() {
     return ids.map((id: string) => map.get(id)).filter(Boolean) as Treatment[];
   }, [ctx.treatments, ids]);
 
+  const settings = (ctx as { settings?: import("@/lib/public-booking.functions").PublicBookingSettings }).settings;
+  const showPrices = settings?.show_prices_on_booking !== false;
+  const reqPhone = settings?.require_phone !== false;
+  const reqDob = settings?.require_dob !== false;
+  const reqAddress = settings?.require_address !== false;
+  const maxLeadDays = settings?.booking_max_lead_days ?? 90;
+  const minNoticeHours = settings?.booking_min_notice_hours ?? 0;
+
 
   const theme = ctx.theme;
   const brand = theme?.primary_color || ctx.brandColor || "#1f2a44";
