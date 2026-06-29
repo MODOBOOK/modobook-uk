@@ -67,11 +67,16 @@ function PatientProfilePage() {
   const profileFn = useServerFn(getMyProfile);
 
   const [client, setClient] = useState<any>(null);
+  const [clinicName, setClinicName] = useState("");
   const [appts, setAppts] = useState<any[]>([]);
   const [consults, setConsults] = useState<any[]>([]);
   const [showCancelled, setShowCancelled] = useState(false);
   const [profileId, setProfileId] = useState("");
   const [editing, setEditing] = useState<null | "personal" | "emergency">(null);
+  const [emailOpen, setEmailOpen] = useState(false);
+  const [commsRefresh, setCommsRefresh] = useState(0);
+  const logComm = useServerFn(logCommunication);
+
 
   async function reload() {
     const c: any = await get({ data: { id } });
