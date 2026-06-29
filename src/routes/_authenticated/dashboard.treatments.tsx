@@ -374,6 +374,10 @@ function TreatmentDialog({
         ? String((treatment as { rebook_reminder_days?: number | null }).rebook_reminder_days)
         : "",
     );
+    setAftercareHtml((treatment as { aftercare_html?: string | null } | null)?.aftercare_html ?? "");
+    setAftercareDelay((treatment as { aftercare_delay_hours?: number } | null)?.aftercare_delay_hours ?? 2);
+    setAutoSendForms((treatment as { auto_send_medical_forms?: boolean } | null)?.auto_send_medical_forms ?? true);
+    setAutoSendAftercare((treatment as { auto_send_aftercare?: boolean } | null)?.auto_send_aftercare ?? true);
     if (treatment?.id) {
       fetchConsents({ data: { treatmentId: treatment.id } })
         .then((ids) => setConsentIds(ids as string[]))
