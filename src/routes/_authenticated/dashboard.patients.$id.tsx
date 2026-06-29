@@ -75,6 +75,7 @@ function PatientProfilePage() {
   const [profileId, setProfileId] = useState("");
   const [editing, setEditing] = useState<null | "personal" | "emergency">(null);
   const [emailOpen, setEmailOpen] = useState(false);
+  const [sendFormOpen, setSendFormOpen] = useState(false);
   const [commsRefresh, setCommsRefresh] = useState(0);
   const logComm = useServerFn(logCommunication);
 
