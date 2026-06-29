@@ -260,13 +260,19 @@ function MultiBookPage() {
       const step = r.slot_interval ?? 15;
       const start = toMinutes(r.start_time);
       const end = toMinutes(r.end_time);
-      for (let t = start; t + totalDuration <= end; t += step) {
+      const candidates = new Set<number>();
+      for (let t = start; t + totalDuration <= end; t += step) candidates.add(t);
+      for (const b of busy) {
+        if (b.end >= start && b.end + totalDuration <= end) candidates.add(b.end);
+      }
+      for (const t of Array.from(candidates).sort((a, z) => a - z)) {
         const slotEnd = t + totalDuration;
         const overlap = busy.some((b) => (!locationId || !b.locId || b.locId === locationId) && t < b.end && slotEnd > b.start);
         if (!overlap) out.push(fromMinutes(t));
       }
     }
     return Array.from(new Set(out)).sort();
+
   }, [dayQuery.data, dayRules, totalDuration, locationId]);
 
   async function submit() {
