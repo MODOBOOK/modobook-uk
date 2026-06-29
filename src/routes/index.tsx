@@ -155,7 +155,7 @@ function LandingPage() {
                   "One clinical standard for the whole industry, not two tiers.",
                   "Built-in Prescriber Hub for HCPs and non-HCPs to collaborate safely.",
                   "Granular photo, social media and marketing consent on every patient.",
-                  "Batch numbers, expiry dates and treatment plans linked to every visit.",
+                  "Treatment plans, before/after photos and notes linked to every visit.",
                   "Aftercare and review periods sent automatically, every time.",
                 ].map((line) => (
                   <li key={line} className="flex gap-2">
