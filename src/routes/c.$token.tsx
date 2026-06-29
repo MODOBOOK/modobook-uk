@@ -103,9 +103,12 @@ function ConsentPage() {
           </p>
         </CardHeader>
         <CardContent className="space-y-5">
-          <div className="prose prose-sm max-w-none whitespace-pre-wrap rounded-md border bg-muted/30 p-4 text-sm">
-            {consent.template_body}
-          </div>
+          <ConsentSectionsView
+            sections={(consent.template_sections as ConsentSection[] | null) ?? null}
+            summary={consent.template_summary as string | null | undefined}
+            fallbackBody={consent.template_body}
+          />
+
 
           {consent.requires_signature && (
             <>
