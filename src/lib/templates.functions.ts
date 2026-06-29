@@ -140,8 +140,10 @@ export const cloneConsentTemplate = createServerFn({ method: "POST" })
         treatment_type: src.treatment_type,
         body_markdown: src.body_markdown,
         requires_signature: src.requires_signature,
+        sections: (src as any).sections ?? null,
+        summary: (src as any).summary ?? null,
         is_system: false,
-      })
+      } as any)
       .select()
       .single();
     if (error) throw error;
@@ -157,6 +159,8 @@ export const saveConsentTemplate = createServerFn({ method: "POST" })
       treatment_type?: string | null;
       body_markdown: string;
       requires_signature?: boolean;
+      sections?: unknown;
+      summary?: string | null;
     }) => input,
   )
   .handler(async ({ data, context }) => {
@@ -170,7 +174,9 @@ export const saveConsentTemplate = createServerFn({ method: "POST" })
           treatment_type: data.treatment_type ?? null,
           body_markdown: data.body_markdown,
           requires_signature: data.requires_signature ?? true,
-        })
+          sections: (data.sections ?? null) as any,
+          summary: data.summary ?? null,
+        } as any)
         .eq("id", data.id)
         .eq("profile_id", profileId)
         .select()
@@ -186,8 +192,10 @@ export const saveConsentTemplate = createServerFn({ method: "POST" })
         treatment_type: data.treatment_type ?? null,
         body_markdown: data.body_markdown,
         requires_signature: data.requires_signature ?? true,
+        sections: (data.sections ?? null) as any,
+        summary: data.summary ?? null,
         is_system: false,
-      })
+      } as any)
       .select()
       .single();
     if (error) throw error;

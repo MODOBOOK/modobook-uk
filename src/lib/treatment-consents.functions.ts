@@ -64,9 +64,22 @@ export const listMyConsentTemplates = createServerFn({ method: "GET" })
     if (!profile) return [];
     const { data } = await context.supabase
       .from("consent_templates")
-      .select("id, name, treatment_type, is_system")
+      .select("id, name, treatment_type, is_system, summary, sections")
       .or(`is_system.eq.true,profile_id.eq.${profile.id}`)
       .order("is_system", { ascending: false })
       .order("name", { ascending: true });
     return data ?? [];
+  });
+
+export const getConsentTemplate = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { id: string }) => input)
+  .handler(async ({ data, context }) => {
+    const { data: row, error } = await context.supabase
+      .from("consent_templates")
+      .select("id, name, treatment_type, is_system, summary, sections, body_markdown, requires_signature")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (error) throw error;
+    return row;
   });
