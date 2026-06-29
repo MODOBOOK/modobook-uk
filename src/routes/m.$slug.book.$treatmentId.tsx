@@ -285,9 +285,22 @@ function BookTreatmentPage() {
         if (!overlap) out.push(fromMinutes(t));
       }
     }
-    return Array.from(new Set(out)).sort();
+    let out2 = Array.from(new Set(out)).sort();
+    // Apply minimum notice for today's date
+    if (minNoticeHours > 0) {
+      const todayLocalIso = (() => {
+        const n = new Date();
+        return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, "0")}-${String(n.getDate()).padStart(2, "0")}`;
+      })();
+      if (date === todayLocalIso) {
+        const now = new Date();
+        const cutoff = now.getHours() * 60 + now.getMinutes() + minNoticeHours * 60;
+        out2 = out2.filter((s) => toMinutes(s) >= cutoff);
+      }
+    }
+    return out2;
 
-  }, [dayQuery.data, dayRules, duration, locationId, modelMode, modelSlotsForLoc, date]);
+  }, [dayQuery.data, dayRules, duration, locationId, modelMode, modelSlotsForLoc, date, minNoticeHours]);
 
 
 
