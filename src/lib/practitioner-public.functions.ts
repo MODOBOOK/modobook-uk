@@ -19,12 +19,26 @@ export const getPractitionerBio = createServerFn({ method: "GET" })
       .maybeSingle();
     if (error) throw error;
     if (!profile) throw new Error("Practitioner not found");
-    const { data: theme } = await supabase
-      .from("clinic_theme")
-      .select("*")
-      .eq("profile_id", profile.id)
-      .maybeSingle();
-    return { profile, theme: theme ?? null };
+
+    const [theme, aboutRpc, locations] = await Promise.all([
+      supabase.from("clinic_theme").select("*").eq("profile_id", profile.id).maybeSingle(),
+      supabase.rpc("get_about_page_by_slug", { p_slug: data.slug.toLowerCase() }),
+      supabase
+        .from("locations")
+        .select("id, name, address_line1, address_line2, city, postcode, country, is_primary, display_order, image_url")
+        .eq("profile_id", profile.id)
+        .eq("active", true)
+        .order("is_primary", { ascending: false })
+        .order("display_order", { ascending: true })
+        .order("name", { ascending: true }),
+    ]);
+
+    return {
+      profile,
+      theme: theme.data ?? null,
+      aboutPage: (aboutRpc.data as Record<string, unknown> | null) ?? {},
+      locations: locations.data ?? [],
+    };
   });
 
 export const getPractitionerReviews = createServerFn({ method: "GET" })
