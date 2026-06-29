@@ -63,6 +63,13 @@ function BookTreatmentPage() {
   const { slug } = useParams({ from: "/m/$slug/book/$treatmentId" });
   const ctx = Route.useLoaderData();
   const treatment = ctx.treatment;
+  const settings = (ctx as { settings?: import("@/lib/public-booking.functions").PublicBookingSettings }).settings;
+  const showPrices = settings?.show_prices_on_booking !== false;
+  const reqPhone = settings?.require_phone !== false;
+  const reqDob = settings?.require_dob !== false;
+  const reqAddress = settings?.require_address !== false;
+  const maxLeadDays = settings?.booking_max_lead_days ?? 90;
+  const minNoticeHours = settings?.booking_min_notice_hours ?? 0;
   const redirectPath = `/m/${slug}/book/${treatment.id}`;
   const duration = treatment.duration ?? 30;
   const price = Number(treatment.price ?? 0);
