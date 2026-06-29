@@ -226,6 +226,15 @@ function ServicesPage() {
     }
   }
 
+  async function reorderTreatsByIds(ids: string[]) {
+    try {
+      await reorderTreats({ data: { ids } });
+      treats.refetch();
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  }
+
 
   return (
     <div className="space-y-5">
