@@ -71,6 +71,7 @@ function BioEditor() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [slug, setSlug] = useState<string>("");
+  const [profileId, setProfileId] = useState<string>("");
   const [bio, setBio] = useState("");
   const [avatar, setAvatar] = useState("");
   const [specialties, setSpecialties] = useState<string[]>([]);
@@ -84,6 +85,7 @@ function BioEditor() {
       const p = await fetchProfile();
       if (p) {
         setSlug(p.slug ?? "");
+        setProfileId(p.id ?? "");
         setBio(p.bio ?? "");
         setAvatar(p.avatar_url ?? "");
         setSpecialties(p.specialties ?? []);
@@ -137,7 +139,8 @@ function BioEditor() {
         onToggle={(v) => update("show_hero_image", v)}
       >
         <ImageUploader
-          bucket="practitioner-uploads"
+          profileId={profileId}
+          folder="about-hero"
           value={ap.hero_image_url ?? ""}
           onChange={(url: string | null) => update("hero_image_url", url ?? "")}
           label="Upload banner"
@@ -153,7 +156,8 @@ function BioEditor() {
         </CardHeader>
         <CardContent>
           <ImageUploader
-            bucket="practitioner-uploads"
+            profileId={profileId}
+            folder="avatar"
             value={avatar}
             onChange={(url: string | null) => setAvatar(url ?? "")}
             label="Upload photo"
