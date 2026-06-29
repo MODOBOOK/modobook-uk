@@ -58,6 +58,7 @@ const groups: { title: string; items: Item[] }[] = [
     title: "Your business",
     items: [
       { label: "Business & Profile", description: "Clinic info, hero image & contacts", to: "/dashboard/clinic", icon: Store, ...T.espresso },
+      { label: "About page", description: "Bio, locations, FAQs & opening hours", to: "/dashboard/bio", icon: FileText, ...T.cream },
       { label: "Branding", description: "Colours, fonts, logo & favicon", to: "/dashboard/branding", icon: Palette, ...T.sand },
       { label: "Welcome & policies", description: "Intro, deposits, cancellation, T&Cs", to: "/dashboard/policies", icon: Shield, ...T.mocha },
       { label: "Locations", description: "Manage your clinic addresses", to: "/dashboard/locations", icon: MapPin, ...T.cream },
@@ -80,6 +81,7 @@ const groups: { title: string; items: Item[] }[] = [
     title: "Bookings",
     items: [
       { label: "Booking flow", description: "Concern picker shown before treatments", to: "/dashboard/booking-flow", icon: HelpCircle, ...T.taupe },
+      { label: "Treatment finder quiz", description: "8-question quiz that recommends your treatments", to: "/dashboard/quiz", icon: Sparkles, ...T.ivory },
       { label: "Availability", description: "Opening times & ad-hoc slots", to: "/dashboard/availability", icon: CalendarDays, ...T.espresso },
       { label: "New appointment", description: "Book in a patient manually", to: "/dashboard/new-appointment", icon: CalendarPlus, ...T.sand },
       { label: "Consultations", description: "MODO step-by-step records", to: "/dashboard/consultations", icon: ClipboardList, ...T.mocha },

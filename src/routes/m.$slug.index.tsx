@@ -282,6 +282,16 @@ function BookPage() {
   const consultTreatmentId = profile.chooser_consultation_treatment_id ?? null;
   const [mode, setMode] = useState<null | "know" | "unsure">(null);
   const [pickedConcernId, setPickedConcernId] = useState<string | null>(null);
+  const [quizOn, setQuizOn] = useState(false);
+  useEffect(() => {
+    (async () => {
+      try {
+        const { supabase } = await import("@/integrations/supabase/client");
+        const { data } = await supabase.rpc("get_quiz_config_by_slug", { p_slug: slug.toLowerCase() }).single();
+        setQuizOn(!!data?.quiz_enabled);
+      } catch { /* ignore */ }
+    })();
+  }, [slug]);
 
   // Clear selection when location changes
   const setLocAndClear = (id: string | null) => {
@@ -840,6 +850,15 @@ function BookPage() {
                 brand={brand}
                 onClick={() => setMode("unsure")}
               />
+            )}
+            {quizOn && (
+              <Link to="/m/$slug/quiz" params={{ slug }} className="block">
+                <ChooserCard
+                  title="Take our treatment finder quiz"
+                  description="Answer 8 quick questions for tailored suggestions"
+                  brand={brand}
+                />
+              </Link>
             )}
             {showConsult && (
               consultTreatmentId ? (

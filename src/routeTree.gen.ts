@@ -22,6 +22,7 @@ import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/
 import { Route as MSlugIndexRouteImport } from './routes/m.$slug.index'
 import { Route as AuthenticatedDashboardIndexRouteImport } from './routes/_authenticated/dashboard.index'
 import { Route as MSlugReviewsRouteImport } from './routes/m.$slug.reviews'
+import { Route as MSlugQuizRouteImport } from './routes/m.$slug.quiz'
 import { Route as MSlugBookMultiRouteImport } from './routes/m.$slug.book-multi'
 import { Route as MSlugAuthRouteImport } from './routes/m.$slug.auth'
 import { Route as MSlugAccountRouteImport } from './routes/m.$slug.account'
@@ -30,6 +31,7 @@ import { Route as AuthenticatedDashboardTreatmentsRouteImport } from './routes/_
 import { Route as AuthenticatedDashboardSettingsRouteImport } from './routes/_authenticated/dashboard.settings'
 import { Route as AuthenticatedDashboardServicesRouteImport } from './routes/_authenticated/dashboard.services'
 import { Route as AuthenticatedDashboardReviewsRouteImport } from './routes/_authenticated/dashboard.reviews'
+import { Route as AuthenticatedDashboardQuizRouteImport } from './routes/_authenticated/dashboard.quiz'
 import { Route as AuthenticatedDashboardPractitionersRouteImport } from './routes/_authenticated/dashboard.practitioners'
 import { Route as AuthenticatedDashboardPoliciesRouteImport } from './routes/_authenticated/dashboard.policies'
 import { Route as AuthenticatedDashboardPaymentsRouteImport } from './routes/_authenticated/dashboard.payments'
@@ -122,6 +124,11 @@ const MSlugReviewsRoute = MSlugReviewsRouteImport.update({
   path: '/reviews',
   getParentRoute: () => MSlugRoute,
 } as any)
+const MSlugQuizRoute = MSlugQuizRouteImport.update({
+  id: '/quiz',
+  path: '/quiz',
+  getParentRoute: () => MSlugRoute,
+} as any)
 const MSlugBookMultiRoute = MSlugBookMultiRouteImport.update({
   id: '/book-multi',
   path: '/book-multi',
@@ -164,6 +171,12 @@ const AuthenticatedDashboardReviewsRoute =
   AuthenticatedDashboardReviewsRouteImport.update({
     id: '/reviews',
     path: '/reviews',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardQuizRoute =
+  AuthenticatedDashboardQuizRouteImport.update({
+    id: '/quiz',
+    path: '/quiz',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
 const AuthenticatedDashboardPractitionersRoute =
@@ -351,6 +364,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/payments': typeof AuthenticatedDashboardPaymentsRoute
   '/dashboard/policies': typeof AuthenticatedDashboardPoliciesRoute
   '/dashboard/practitioners': typeof AuthenticatedDashboardPractitionersRoute
+  '/dashboard/quiz': typeof AuthenticatedDashboardQuizRoute
   '/dashboard/reviews': typeof AuthenticatedDashboardReviewsRoute
   '/dashboard/services': typeof AuthenticatedDashboardServicesRoute
   '/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
@@ -359,6 +373,7 @@ export interface FileRoutesByFullPath {
   '/m/$slug/account': typeof MSlugAccountRoute
   '/m/$slug/auth': typeof MSlugAuthRoute
   '/m/$slug/book-multi': typeof MSlugBookMultiRoute
+  '/m/$slug/quiz': typeof MSlugQuizRoute
   '/m/$slug/reviews': typeof MSlugReviewsRoute
   '/dashboard/': typeof AuthenticatedDashboardIndexRoute
   '/m/$slug/': typeof MSlugIndexRoute
@@ -396,6 +411,7 @@ export interface FileRoutesByTo {
   '/dashboard/payments': typeof AuthenticatedDashboardPaymentsRoute
   '/dashboard/policies': typeof AuthenticatedDashboardPoliciesRoute
   '/dashboard/practitioners': typeof AuthenticatedDashboardPractitionersRoute
+  '/dashboard/quiz': typeof AuthenticatedDashboardQuizRoute
   '/dashboard/reviews': typeof AuthenticatedDashboardReviewsRoute
   '/dashboard/services': typeof AuthenticatedDashboardServicesRoute
   '/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
@@ -404,6 +420,7 @@ export interface FileRoutesByTo {
   '/m/$slug/account': typeof MSlugAccountRoute
   '/m/$slug/auth': typeof MSlugAuthRoute
   '/m/$slug/book-multi': typeof MSlugBookMultiRoute
+  '/m/$slug/quiz': typeof MSlugQuizRoute
   '/m/$slug/reviews': typeof MSlugReviewsRoute
   '/dashboard': typeof AuthenticatedDashboardIndexRoute
   '/m/$slug': typeof MSlugIndexRoute
@@ -446,6 +463,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/payments': typeof AuthenticatedDashboardPaymentsRoute
   '/_authenticated/dashboard/policies': typeof AuthenticatedDashboardPoliciesRoute
   '/_authenticated/dashboard/practitioners': typeof AuthenticatedDashboardPractitionersRoute
+  '/_authenticated/dashboard/quiz': typeof AuthenticatedDashboardQuizRoute
   '/_authenticated/dashboard/reviews': typeof AuthenticatedDashboardReviewsRoute
   '/_authenticated/dashboard/services': typeof AuthenticatedDashboardServicesRoute
   '/_authenticated/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
@@ -454,6 +472,7 @@ export interface FileRoutesById {
   '/m/$slug/account': typeof MSlugAccountRoute
   '/m/$slug/auth': typeof MSlugAuthRoute
   '/m/$slug/book-multi': typeof MSlugBookMultiRoute
+  '/m/$slug/quiz': typeof MSlugQuizRoute
   '/m/$slug/reviews': typeof MSlugReviewsRoute
   '/_authenticated/dashboard/': typeof AuthenticatedDashboardIndexRoute
   '/m/$slug/': typeof MSlugIndexRoute
@@ -496,6 +515,7 @@ export interface FileRouteTypes {
     | '/dashboard/payments'
     | '/dashboard/policies'
     | '/dashboard/practitioners'
+    | '/dashboard/quiz'
     | '/dashboard/reviews'
     | '/dashboard/services'
     | '/dashboard/settings'
@@ -504,6 +524,7 @@ export interface FileRouteTypes {
     | '/m/$slug/account'
     | '/m/$slug/auth'
     | '/m/$slug/book-multi'
+    | '/m/$slug/quiz'
     | '/m/$slug/reviews'
     | '/dashboard/'
     | '/m/$slug/'
@@ -541,6 +562,7 @@ export interface FileRouteTypes {
     | '/dashboard/payments'
     | '/dashboard/policies'
     | '/dashboard/practitioners'
+    | '/dashboard/quiz'
     | '/dashboard/reviews'
     | '/dashboard/services'
     | '/dashboard/settings'
@@ -549,6 +571,7 @@ export interface FileRouteTypes {
     | '/m/$slug/account'
     | '/m/$slug/auth'
     | '/m/$slug/book-multi'
+    | '/m/$slug/quiz'
     | '/m/$slug/reviews'
     | '/dashboard'
     | '/m/$slug'
@@ -590,6 +613,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/payments'
     | '/_authenticated/dashboard/policies'
     | '/_authenticated/dashboard/practitioners'
+    | '/_authenticated/dashboard/quiz'
     | '/_authenticated/dashboard/reviews'
     | '/_authenticated/dashboard/services'
     | '/_authenticated/dashboard/settings'
@@ -598,6 +622,7 @@ export interface FileRouteTypes {
     | '/m/$slug/account'
     | '/m/$slug/auth'
     | '/m/$slug/book-multi'
+    | '/m/$slug/quiz'
     | '/m/$slug/reviews'
     | '/_authenticated/dashboard/'
     | '/m/$slug/'
@@ -712,6 +737,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MSlugReviewsRouteImport
       parentRoute: typeof MSlugRoute
     }
+    '/m/$slug/quiz': {
+      id: '/m/$slug/quiz'
+      path: '/quiz'
+      fullPath: '/m/$slug/quiz'
+      preLoaderRoute: typeof MSlugQuizRouteImport
+      parentRoute: typeof MSlugRoute
+    }
     '/m/$slug/book-multi': {
       id: '/m/$slug/book-multi'
       path: '/book-multi'
@@ -766,6 +798,13 @@ declare module '@tanstack/react-router' {
       path: '/reviews'
       fullPath: '/dashboard/reviews'
       preLoaderRoute: typeof AuthenticatedDashboardReviewsRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/quiz': {
+      id: '/_authenticated/dashboard/quiz'
+      path: '/quiz'
+      fullPath: '/dashboard/quiz'
+      preLoaderRoute: typeof AuthenticatedDashboardQuizRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
     '/_authenticated/dashboard/practitioners': {
@@ -992,6 +1031,7 @@ interface AuthenticatedDashboardRouteChildren {
   AuthenticatedDashboardPaymentsRoute: typeof AuthenticatedDashboardPaymentsRoute
   AuthenticatedDashboardPoliciesRoute: typeof AuthenticatedDashboardPoliciesRoute
   AuthenticatedDashboardPractitionersRoute: typeof AuthenticatedDashboardPractitionersRoute
+  AuthenticatedDashboardQuizRoute: typeof AuthenticatedDashboardQuizRoute
   AuthenticatedDashboardReviewsRoute: typeof AuthenticatedDashboardReviewsRoute
   AuthenticatedDashboardServicesRoute: typeof AuthenticatedDashboardServicesRoute
   AuthenticatedDashboardSettingsRoute: typeof AuthenticatedDashboardSettingsRoute
@@ -1032,6 +1072,7 @@ const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
     AuthenticatedDashboardPoliciesRoute: AuthenticatedDashboardPoliciesRoute,
     AuthenticatedDashboardPractitionersRoute:
       AuthenticatedDashboardPractitionersRoute,
+    AuthenticatedDashboardQuizRoute: AuthenticatedDashboardQuizRoute,
     AuthenticatedDashboardReviewsRoute: AuthenticatedDashboardReviewsRoute,
     AuthenticatedDashboardServicesRoute: AuthenticatedDashboardServicesRoute,
     AuthenticatedDashboardSettingsRoute: AuthenticatedDashboardSettingsRoute,
@@ -1070,6 +1111,7 @@ interface MSlugRouteChildren {
   MSlugAccountRoute: typeof MSlugAccountRoute
   MSlugAuthRoute: typeof MSlugAuthRoute
   MSlugBookMultiRoute: typeof MSlugBookMultiRoute
+  MSlugQuizRoute: typeof MSlugQuizRoute
   MSlugReviewsRoute: typeof MSlugReviewsRoute
   MSlugIndexRoute: typeof MSlugIndexRoute
   MSlugBookTreatmentIdRoute: typeof MSlugBookTreatmentIdRoute
@@ -1081,6 +1123,7 @@ const MSlugRouteChildren: MSlugRouteChildren = {
   MSlugAccountRoute: MSlugAccountRoute,
   MSlugAuthRoute: MSlugAuthRoute,
   MSlugBookMultiRoute: MSlugBookMultiRoute,
+  MSlugQuizRoute: MSlugQuizRoute,
   MSlugReviewsRoute: MSlugReviewsRoute,
   MSlugIndexRoute: MSlugIndexRoute,
   MSlugBookTreatmentIdRoute: MSlugBookTreatmentIdRoute,

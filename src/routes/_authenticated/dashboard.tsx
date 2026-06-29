@@ -22,6 +22,7 @@ import {
   Star,
   ClipboardList,
   Settings,
+  HelpCircle,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -43,8 +44,10 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 const navItems = [
   { label: "Dashboard", to: "/dashboard", icon: LayoutDashboard },
   { label: "Clinic page", to: "/dashboard/clinic", icon: Store },
+  { label: "About page", to: "/dashboard/bio", icon: FileText },
   { label: "Welcome & policies", to: "/dashboard/policies", icon: Shield },
   { label: "Branding", to: "/dashboard/branding", icon: Palette },
+  { label: "Treatment finder quiz", to: "/dashboard/quiz", icon: HelpCircle },
   { label: "Services", to: "/dashboard/services", icon: Scissors },
   { label: "Packages", to: "/dashboard/packages", icon: Package },
   { label: "Locations", to: "/dashboard/locations", icon: MapPin },

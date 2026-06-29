@@ -210,7 +210,7 @@ function BookingsPage() {
                   onClick={() => { setActionsOpen(false); setShowUnblock(true); }}
                   className="w-full justify-start gap-2 rounded-full bg-emerald-300 text-emerald-950 hover:bg-emerald-400"
                 >
-                  <CircleCheck className="h-4 w-4" /> Unblock a Time
+                  <CircleCheck className="h-4 w-4" /> Open up appointments
                 </Button>
               </div>
             </>
@@ -294,7 +294,7 @@ function BookingsPage() {
                         }}
                         className="absolute left-1 right-1 z-[4] overflow-hidden rounded-md bg-slate-900 px-2 py-1 text-left text-[11px] text-white shadow-sm"
                         style={{ top, height }}
-                        title="Tap to unblock"
+                        title="Tap to open this slot"
                       >
                         <div className="truncate font-semibold flex items-center gap-1"><Ban className="h-3 w-3" /> Blocked</div>
                         <div className="truncate opacity-80">{b.start_time.slice(0,5)}–{b.end_time.slice(0,5)}{b.reason ? ` · ${b.reason}` : ""}</div>
@@ -557,7 +557,7 @@ function UnblockDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[80vh] overflow-y-auto">
-        <DialogHeader><DialogTitle>Unblock time</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>Open up appointments</DialogTitle></DialogHeader>
         {upcoming.length === 0 ? (
           <p className="py-6 text-center text-sm text-muted-foreground">No upcoming blocked times.</p>
         ) : (

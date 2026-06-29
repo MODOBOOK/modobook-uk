@@ -2602,6 +2602,9 @@ export type Database = {
           phone: string | null
           practitioner_selection_mode: string
           qualifications: Json
+          quiz_enabled: boolean
+          quiz_intro: string | null
+          quiz_outro: string | null
           reminder_hours_before: number[]
           require_account_to_book: boolean
           require_address: boolean
@@ -2681,6 +2684,9 @@ export type Database = {
           phone?: string | null
           practitioner_selection_mode?: string
           qualifications?: Json
+          quiz_enabled?: boolean
+          quiz_intro?: string | null
+          quiz_outro?: string | null
           reminder_hours_before?: number[]
           require_account_to_book?: boolean
           require_address?: boolean
@@ -2760,6 +2766,9 @@ export type Database = {
           phone?: string | null
           practitioner_selection_mode?: string
           qualifications?: Json
+          quiz_enabled?: boolean
+          quiz_intro?: string | null
+          quiz_outro?: string | null
           reminder_hours_before?: number[]
           require_account_to_book?: boolean
           require_address?: boolean
@@ -2790,6 +2799,54 @@ export type Database = {
             columns: ["chooser_consultation_treatment_id"]
             isOneToOne: false
             referencedRelation: "treatments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quiz_responses: {
+        Row: {
+          answers: Json
+          client_id: string | null
+          created_at: string
+          id: string
+          patient_email: string | null
+          patient_name: string | null
+          profile_id: string
+          recommended_treatment_ids: string[]
+        }
+        Insert: {
+          answers?: Json
+          client_id?: string | null
+          created_at?: string
+          id?: string
+          patient_email?: string | null
+          patient_name?: string | null
+          profile_id: string
+          recommended_treatment_ids?: string[]
+        }
+        Update: {
+          answers?: Json
+          client_id?: string | null
+          created_at?: string
+          id?: string
+          patient_email?: string | null
+          patient_name?: string | null
+          profile_id?: string
+          recommended_treatment_ids?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_responses_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clinic_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quiz_responses_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -3084,6 +3141,7 @@ export type Database = {
           picture_url: string | null
           price: number
           profile_id: string
+          quiz_tags: Json
           rebook_reminder_days: number | null
           session_count: number
           sort_order: number
@@ -3120,6 +3178,7 @@ export type Database = {
           picture_url?: string | null
           price: number
           profile_id: string
+          quiz_tags?: Json
           rebook_reminder_days?: number | null
           session_count?: number
           sort_order?: number
@@ -3156,6 +3215,7 @@ export type Database = {
           picture_url?: string | null
           price?: number
           profile_id?: string
+          quiz_tags?: Json
           rebook_reminder_days?: number | null
           session_count?: number
           sort_order?: number
@@ -3377,6 +3437,16 @@ export type Database = {
           updated_at: string
           welcome_intro_html: string
           whatsapp_reminders_enabled: boolean
+        }[]
+      }
+      get_quiz_config_by_slug: {
+        Args: { p_slug: string }
+        Returns: {
+          chooser_consultation_treatment_id: string
+          profile_id: string
+          quiz_enabled: boolean
+          quiz_intro: string
+          quiz_outro: string
         }[]
       }
       has_role: {
