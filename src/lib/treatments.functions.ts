@@ -91,8 +91,10 @@ export const createTreatment = createServerFn({ method: "POST" })
         session_count: data.session_count ?? 1,
         allow_split_payment: data.allow_split_payment ?? false,
         rebook_reminder_days: data.rebook_reminder_days ?? null,
+        session_interval_days: data.session_interval_days ?? null,
         color: data.color ?? null,
       } as never)
+
 
       .select()
       .single();
