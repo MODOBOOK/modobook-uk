@@ -87,8 +87,10 @@ function ConsentFormsPage() {
 
   useEffect(() => {
     refresh();
+    checkAdmin().then((r) => setIsAdmin(r.admin)).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
 
   async function handleSave() {
     if (!editing) return;
