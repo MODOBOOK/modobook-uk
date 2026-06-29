@@ -867,6 +867,7 @@ function ServiceDialog({
   });
   const profileId = (profile.data as { id?: string } | undefined)?.id ?? "";
   const consentList = (consents.data ?? []) as { id: string; name: string; is_system: boolean }[];
+  const aftercareList = (aftercareTpls.data ?? []) as { id: string; name: string; delay_hours: number }[];
 
   const [name, setName] = useState("");
   const [duration, setDuration] = useState(30);
