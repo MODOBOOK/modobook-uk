@@ -1700,33 +1700,6 @@ function CategoryTree({
         const comingLabel = isComingSoon
           ? new Date(node.coming_soon_at!).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })
           : "";
-        if (isComingSoon) {
-          return (
-            <div
-              key={node.id}
-              className="overflow-hidden rounded-2xl border-0 shadow-sm px-5 py-4 flex items-center justify-between gap-3"
-              style={
-                isSub
-                  ? { backgroundColor: `${catBg}1a`, color: catBg }
-                  : { backgroundColor: catBg, color: catText, fontFamily: `${headingFont}, system-ui, sans-serif` }
-              }
-              aria-label={`${node.name} — coming soon`}
-            >
-              <div className="flex-1 text-left">
-                <div className={`leading-tight ${isSub ? "text-lg sm:text-xl" : "text-xl sm:text-2xl"} ${categoryBold ? "font-extrabold" : "font-medium"}`}>
-                  {node.icon ? `${node.icon} ` : ""}
-                  {node.name}
-                </div>
-                {node.description && (
-                  <div className="mt-1 text-sm font-normal opacity-80">{node.description}</div>
-                )}
-              </div>
-              <span className="shrink-0 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-amber-900 shadow-sm">
-                Book from {comingLabel}
-              </span>
-            </div>
-          );
-        }
         return (
           <Accordion key={node.id} type="single" collapsible>
             <AccordionItem value={node.id} className="overflow-hidden rounded-2xl border-0 shadow-sm">
@@ -1740,10 +1713,17 @@ function CategoryTree({
               >
                 <div className="flex-1 text-left">
                   <div
-                    className={`leading-tight ${isSub ? "text-lg sm:text-xl" : "text-xl sm:text-2xl"} ${categoryBold ? "font-extrabold" : "font-medium"}`}
+                    className={`leading-tight ${isSub ? "text-lg sm:text-xl" : "text-xl sm:text-2xl"} ${categoryBold ? "font-extrabold" : "font-medium"} flex items-center gap-2 flex-wrap`}
                   >
-                    {node.icon ? `${node.icon} ` : ""}
-                    {node.name}
+                    <span>
+                      {node.icon ? `${node.icon} ` : ""}
+                      {node.name}
+                    </span>
+                    {isComingSoon && (
+                      <span className="rounded-full bg-white/90 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber-900 shadow-sm">
+                        Book from {comingLabel}
+                      </span>
+                    )}
                   </div>
                   {node.description && (
                     <div className="mt-1 text-sm font-normal opacity-80">{node.description}</div>
