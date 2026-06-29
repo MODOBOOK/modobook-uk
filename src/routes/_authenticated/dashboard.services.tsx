@@ -809,7 +809,7 @@ function ServiceDialog({
     color?: string | null;
     active?: boolean;
     picture_url?: string;
-    payment_mode?: "full" | "deposit" | "in_clinic";
+    payment_mode?: "full" | "deposit" | "pay_in_clinic";
     deposit_amount?: number;
     consent_ids?: string[];
     auto_send_medical_forms?: boolean;
@@ -843,7 +843,7 @@ function ServiceDialog({
   const [color, setColor] = useState<string>(PRESET_COLORS[0]);
   const [active, setActive] = useState(true);
   const [pictureUrl, setPictureUrl] = useState<string | null>(null);
-  const [paymentMode, setPaymentMode] = useState<"full" | "deposit" | "in_clinic">("full");
+  const [paymentMode, setPaymentMode] = useState<"full" | "deposit" | "pay_in_clinic">("full");
   const [depositAmount, setDepositAmount] = useState<string>("");
   const [consentIds, setConsentIds] = useState<string[]>([]);
   const [autoSendForms, setAutoSendForms] = useState(true);
@@ -1032,7 +1032,7 @@ function ServiceDialog({
                   <SelectContent>
                     <SelectItem value="full">Pay in full online</SelectItem>
                     <SelectItem value="deposit">Deposit online, balance in clinic</SelectItem>
-                    <SelectItem value="in_clinic">Pay in clinic</SelectItem>
+                    <SelectItem value="pay_in_clinic">Pay in clinic</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
