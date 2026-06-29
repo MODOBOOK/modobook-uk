@@ -534,7 +534,7 @@ function ServiceRow({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem asChild>
-            <Link to="/dashboard/treatments" search={{ edit: treat.id }}>
+            <Link to="/dashboard/treatments" search={{ edit: treat.id, back: "services" }}>
               <Pencil className="mr-2 h-4 w-4" /> Edit
             </Link>
           </DropdownMenuItem>
