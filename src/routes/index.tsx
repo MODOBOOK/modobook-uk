@@ -225,7 +225,7 @@ function LandingPage() {
                 Every other "booking system" in aesthetics is a hairdressing or spa app with
                 consent forms bolted on — or a medics-only portal that excludes the rest of
                 the industry. MODO Book was designed end-to-end by two practising UK Nurse
-                Prescribers who understand consultations, prescribing notes, batch numbers,
+                Prescribers who understand consultations, prescribing notes, treatment plans,
                 photo consent, model slots, top-ups, review periods and the realities of
                 running an aesthetics clinic.
               </p>
