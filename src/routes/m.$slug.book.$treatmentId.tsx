@@ -50,6 +50,15 @@ function fmt(t: string) {
   return `${h}:${m}`;
 }
 
+function formatSessionSpacing(days?: number | null) {
+  if (!days || days <= 0) return null;
+  if (days % 7 === 0) {
+    const weeks = days / 7;
+    return `every ${weeks} week${weeks === 1 ? "" : "s"}`;
+  }
+  return `every ${days} day${days === 1 ? "" : "s"}`;
+}
+
 function BookTreatmentPage() {
   const { slug } = useParams({ from: "/m/$slug/book/$treatmentId" });
   const ctx = Route.useLoaderData();
@@ -111,6 +120,7 @@ function BookTreatmentPage() {
   const [submitting, setSubmitting] = useState(false);
   const submitLockRef = useRef(false);
   const sessionCount = Math.max(1, Number((treatment as { session_count?: number }).session_count ?? 1));
+  const sessionSpacing = formatSessionSpacing((treatment as { session_interval_days?: number | null }).session_interval_days);
   const splitAllowed = Boolean((treatment as { allow_split_payment?: boolean }).allow_split_payment) && sessionCount > 1;
   const [paymentPlan, setPaymentPlan] = useState<"full" | "split">("full");
 
@@ -401,6 +411,11 @@ function BookTreatmentPage() {
             <Clock className="h-4 w-4" /> {duration} min
           </span>
           <Badge variant="secondary">£{price.toFixed(2)}</Badge>
+          {sessionCount > 1 && (
+            <Badge variant="outline" className="font-semibold">
+              {sessionCount} sessions{sessionSpacing ? ` · ${sessionSpacing}` : ""}
+            </Badge>
+          )}
         </CardContent>
       </Card>
 

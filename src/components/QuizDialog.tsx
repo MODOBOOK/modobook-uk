@@ -18,8 +18,19 @@ type Treatment = {
   duration: number;
   price: number;
   picture_url: string | null;
+  session_count?: number | null;
+  session_interval_days?: number | null;
   quiz_tags: Record<string, string[]>;
 };
+
+function formatSessionSpacing(days?: number | null) {
+  if (!days || days <= 0) return null;
+  if (days % 7 === 0) {
+    const weeks = days / 7;
+    return `every ${weeks} week${weeks === 1 ? "" : "s"}`;
+  }
+  return `every ${days} day${days === 1 ? "" : "s"}`;
+}
 
 type Config = {
   profile_id: string;
@@ -239,6 +250,12 @@ export function QuizDialog({
                         <p className="text-xs mt-1">
                           {t.duration} min · £{(t.price / 100).toFixed(2)}
                         </p>
+                        {(t.session_count ?? 1) > 1 && (
+                          <p className="mt-1 text-xs font-semibold text-muted-foreground">
+                            {t.session_count} sessions
+                            {formatSessionSpacing(t.session_interval_days) ? ` · ${formatSessionSpacing(t.session_interval_days)}` : ""}
+                          </p>
+                        )}
                       </div>
                       <Button asChild size="sm" onClick={() => onOpenChange(false)}>
                         <Link
