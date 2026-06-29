@@ -91,6 +91,7 @@ function MultiBookPage() {
   const reqAddress = settings?.require_address !== false;
   const maxLeadDays = settings?.booking_max_lead_days ?? 90;
   const minNoticeHours = settings?.booking_min_notice_hours ?? 0;
+  const smartTimes = settings?.booking_smart_times_enabled === true;
 
 
   const theme = ctx.theme;
