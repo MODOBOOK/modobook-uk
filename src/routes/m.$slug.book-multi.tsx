@@ -279,9 +279,18 @@ function MultiBookPage() {
         if (!overlap) out.push(fromMinutes(t));
       }
     }
-    return Array.from(new Set(out)).sort();
+    let out2 = Array.from(new Set(out)).sort();
+    if (minNoticeHours > 0) {
+      const n = new Date();
+      const todayLocalIso = `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, "0")}-${String(n.getDate()).padStart(2, "0")}`;
+      if (date === todayLocalIso) {
+        const cutoff = n.getHours() * 60 + n.getMinutes() + minNoticeHours * 60;
+        out2 = out2.filter((s) => toMinutes(s) >= cutoff);
+      }
+    }
+    return out2;
 
-  }, [dayQuery.data, dayRules, totalDuration, locationId]);
+  }, [dayQuery.data, dayRules, totalDuration, locationId, minNoticeHours, date]);
 
   async function submit() {
     if (submitLockRef.current) return;
