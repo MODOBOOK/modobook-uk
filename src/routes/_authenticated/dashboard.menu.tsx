@@ -93,6 +93,13 @@ const groups: { title: string; items: Item[] }[] = [
       { label: "Payments & payouts", description: "Connect Stripe & manage payouts", to: "/dashboard/payments", icon: CreditCard, ...T.espresso },
     ],
   },
+  {
+    title: "Settings",
+    items: [
+      { label: "Booking settings", description: "Notice, buffers, deposits, reminders & patient rules", to: "/dashboard/settings", icon: Shield, ...T.mocha },
+    ],
+  },
+
 ];
 
 function MenuPage() {
