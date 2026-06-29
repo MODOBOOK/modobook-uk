@@ -52,7 +52,24 @@ import {
   ArrowUp,
   ArrowDown,
   MoreVertical,
+  GripVertical,
 } from "lucide-react";
+import {
+  DndContext,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  closestCenter,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  useSortable,
+  arrayMove,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
