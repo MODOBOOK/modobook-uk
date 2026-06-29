@@ -89,19 +89,14 @@ function LandingPage() {
               </p>
             </div>
             <div className="relative">
-              <img
-                src={heroImg}
-                alt="A calm UK aesthetics clinic treatment room with a practitioner using a tablet"
-                width={1600}
-                height={1024}
-                className="aspect-[4/3] w-full rounded-3xl object-cover shadow-xl ring-1 ring-black/5"
-              />
-              <div className="absolute -bottom-6 -left-6 hidden w-56 rounded-2xl bg-background p-4 shadow-lg ring-1 ring-black/5 sm:block">
-                <div className="text-xs uppercase tracking-wider text-muted-foreground">This week</div>
-                <div className="mt-1 text-2xl font-semibold">42 bookings</div>
-                <div className="mt-1 text-xs text-primary">↑ 18% vs last week</div>
+              <div className="grid aspect-[4/3] w-full grid-cols-2 grid-rows-2 gap-3 rounded-3xl bg-gradient-to-br from-primary/10 via-muted/40 to-primary/5 p-6 shadow-xl ring-1 ring-black/5 sm:gap-5 sm:p-10">
+                <IconTile icon={Calendar} label="Live bookings" />
+                <IconTile icon={ClipboardList} label="Consultations" />
+                <IconTile icon={FileSignature} label="Consent" />
+                <IconTile icon={CreditCard} label="Payments" />
               </div>
             </div>
+
           </div>
         </section>
 
