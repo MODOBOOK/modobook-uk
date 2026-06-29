@@ -13,10 +13,12 @@ import { Separator } from "@/components/ui/separator";
 import {
   Loader2, ChevronLeft, ChevronRight, Check, Camera, X,
   HeartPulse, ListChecks, Stethoscope, ClipboardEdit, FileSignature,
-  Images, Syringe, Receipt, ArrowLeft,
+  Images, Syringe, Receipt, ArrowLeft, Plus,
 } from "lucide-react";
 import { toast } from "sonner";
 import { ClientFormsList } from "@/components/patient/ClientFormsList";
+import { FaceMapAnnotator } from "@/components/consultation/FaceMapAnnotator";
+import { ProductEntryCard, type LogProduct } from "@/components/consultation/ProductEntryCard";
 
 export const Route = createFileRoute("/_authenticated/dashboard/consultations/$id")({
   ssr: false,
@@ -284,7 +286,12 @@ function Step3({ assessment, photos, onChangeAssess, onChangePhotos }: any) {
         <Label>Clinical assessment</Label>
         <Textarea rows={5} value={assessment?.notes ?? ""} onChange={(e) => onChangeAssess({ ...assessment, notes: e.target.value })} placeholder="Skin condition, muscle tone, asymmetries…" />
       </div>
-      <FaceMap value={assessment?.face_map ?? []} onChange={(v) => onChangeAssess({ ...assessment, face_map: v })} />
+      <FaceMapAnnotator
+        title="Planning face map — tap to tag a product, or draw"
+        value={assessment?.face_map}
+        onChange={(v) => onChangeAssess({ ...assessment, face_map: v })}
+      />
+
       <PhotoGrid label="Before photos" photos={photos ?? []} onChange={onChangePhotos} />
     </div>
   );
@@ -344,35 +351,58 @@ function Step6({ photos, onChange }: any) {
 }
 
 function Step7({ log, onChange }: any) {
-  const products: any[] = log?.products ?? [];
-  const update = (i: number, patch: any) => {
-    const next = products.slice(); next[i] = { ...next[i], ...patch };
+  const products: LogProduct[] = log?.products ?? [];
+  const update = (i: number, v: LogProduct) => {
+    const next = products.slice(); next[i] = v;
     onChange({ ...log, products: next });
   };
-  const add = () => onChange({ ...log, products: [...products, { name: "", batch: "", expiry: "", dose: "", site: "" }] });
+  const add = () => onChange({ ...log, products: [...products, { quantity: "1" }] });
   const remove = (i: number) => onChange({ ...log, products: products.filter((_, j) => j !== i) });
+
+  const total = products.reduce((sum, p) => {
+    const price = Number(p.price ?? 0);
+    const qty = Number(p.quantity ?? 1);
+    return sum + (isFinite(price) ? price : 0) * (isFinite(qty) ? qty : 1);
+  }, 0);
+
   return (
     <div className="space-y-4">
-      <Header n={7} title="Treatment info" subtitle="Products, batch numbers and dosing." />
+      <Header n={7} title="Treatment performed" subtitle="Record each product used, batch numbers, and dosing." />
+
+      {products.length === 0 && (
+        <div className="rounded-lg border border-dashed bg-muted/40 p-6 text-center text-xs text-muted-foreground">
+          No treatments added yet. Tap "Add a treatment" to log products used.
+        </div>
+      )}
+
       {products.map((p, i) => (
-        <Card key={i}><CardContent className="space-y-2 p-3">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-muted-foreground">Product {i + 1}</span>
-            <Button size="icon" variant="ghost" onClick={() => remove(i)}><X className="h-4 w-4" /></Button>
-          </div>
-          <Input placeholder="Product name (e.g. Botox 100u)" value={p.name} onChange={(e) => update(i, { name: e.target.value })} />
-          <div className="grid grid-cols-2 gap-2">
-            <Input placeholder="Batch #" value={p.batch} onChange={(e) => update(i, { batch: e.target.value })} />
-            <Input placeholder="Expiry" type="date" value={p.expiry} onChange={(e) => update(i, { expiry: e.target.value })} />
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <Input placeholder="Dose / units" value={p.dose} onChange={(e) => update(i, { dose: e.target.value })} />
-            <Input placeholder="Site / area" value={p.site} onChange={(e) => update(i, { site: e.target.value })} />
-          </div>
-        </CardContent></Card>
+        <ProductEntryCard
+          key={i} index={i} value={p}
+          onChange={(v) => update(i, v)}
+          onRemove={() => remove(i)}
+        />
       ))}
-      <Button variant="outline" onClick={add} className="w-full">+ Add product</Button>
+
+      <Button variant="outline" onClick={add} className="w-full">
+        <Plus className="mr-2 h-4 w-4" />Add a treatment to this appointment
+      </Button>
+
+      {products.length > 0 && (
+        <div className="flex items-center justify-between rounded-md border bg-muted/30 px-3 py-2 text-sm">
+          <span className="text-muted-foreground">Total</span>
+          <span className="font-semibold">£{total.toFixed(2)}</span>
+        </div>
+      )}
+
       <Separator />
+
+      <FaceMapAnnotator
+        title="Treatment completed — face map"
+        color="#0d9488"
+        value={log?.face_map_after}
+        onChange={(v) => onChange({ ...log, face_map_after: v })}
+      />
+
       <div className="space-y-1.5">
         <Label>Aftercare advice given</Label>
         <Textarea rows={4} value={log?.aftercare ?? ""} onChange={(e) => onChange({ ...log, aftercare: e.target.value })} />
@@ -380,6 +410,7 @@ function Step7({ log, onChange }: any) {
     </div>
   );
 }
+
 
 function Step8({ invoice, email, onChange, onComplete, completed }: any) {
   return (
