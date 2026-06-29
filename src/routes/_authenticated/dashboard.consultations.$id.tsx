@@ -323,6 +323,9 @@ function Step4({ plan, onChange }: any) {
 
 function Step5({ consent, patientName, onChange }: any) {
   const body = consent?.body ?? defaultConsent(patientName);
+  const attachedIds: string[] = Array.isArray(consent?.attached_template_ids)
+    ? consent.attached_template_ids
+    : [];
   const photoUses: { key: string; label: string; hint: string }[] = [
     { key: "photo_file", label: "Patient file", hint: "Stored privately in clinical records." },
     { key: "photo_social", label: "Social media", hint: "May be posted on Instagram, Facebook, TikTok etc." },
@@ -333,9 +336,15 @@ function Step5({ consent, patientName, onChange }: any) {
   return (
     <div className="space-y-4">
       <Header n={5} title="Treatment consent" subtitle="Patient signs to confirm understanding." />
+
+      <ConsentTemplatesAttach
+        selectedIds={attachedIds}
+        onChange={(ids) => onChange({ ...consent, attached_template_ids: ids })}
+      />
+
       <div className="space-y-1.5">
-        <Label>Consent text</Label>
-        <Textarea rows={9} value={body} onChange={(e) => onChange({ ...consent, body: e.target.value })} />
+        <Label>Additional consent text</Label>
+        <Textarea rows={6} value={body} onChange={(e) => onChange({ ...consent, body: e.target.value })} />
       </div>
       <div className="grid gap-2">
         {["I confirm I have read and understand the above","I confirm the medical information provided is accurate","I consent to before/after photos being taken for my records"].map((l) => (
@@ -372,6 +381,133 @@ function Step5({ consent, patientName, onChange }: any) {
     </div>
   );
 }
+
+type ConsentTpl = {
+  id: string;
+  name: string;
+  treatment_type?: string | null;
+  is_system: boolean;
+  summary?: string | null;
+  sections?: ConsentSection[] | null;
+};
+
+function ConsentTemplatesAttach({
+  selectedIds,
+  onChange,
+}: {
+  selectedIds: string[];
+  onChange: (ids: string[]) => void;
+}) {
+  const fetchAll = useServerFn(listMyConsentTemplates);
+  const [all, setAll] = useState<ConsentTpl[]>([]);
+  const [q, setQ] = useState("");
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    fetchAll().then((rows) => setAll((rows ?? []) as ConsentTpl[])).catch(() => {});
+  }, [fetchAll]);
+
+  const selected = useMemo(
+    () => all.filter((t) => selectedIds.includes(t.id)),
+    [all, selectedIds],
+  );
+  const query = q.trim().toLowerCase();
+  const filtered = query
+    ? all.filter(
+        (t) =>
+          t.name.toLowerCase().includes(query) ||
+          (t.treatment_type ?? "").toLowerCase().includes(query),
+      )
+    : all;
+
+  function toggle(id: string) {
+    onChange(selectedIds.includes(id) ? selectedIds.filter((x) => x !== id) : [...selectedIds, id]);
+  }
+
+  return (
+    <div className="rounded-xl border bg-card p-3 space-y-3">
+      <div className="flex items-center justify-between">
+        <div>
+          <Label className="text-sm">Attach consent forms</Label>
+          <p className="text-xs text-muted-foreground">
+            Pull in any of your library consent forms. They render below for the patient to read and sign.
+          </p>
+        </div>
+        <Button type="button" size="sm" variant="outline" onClick={() => setOpen((v) => !v)}>
+          {open ? "Done" : "Add"}
+        </Button>
+      </div>
+
+      {selected.length > 0 && (
+        <div className="space-y-2">
+          {selected.map((t) => (
+            <div key={t.id} className="rounded-lg border bg-muted/20 p-2">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-sm font-medium">{t.name}</span>
+                <Button type="button" size="icon" variant="ghost" onClick={() => toggle(t.id)} aria-label="Remove">
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="mt-2">
+                <ConsentSectionsView
+                  sections={t.sections ?? null}
+                  summary={t.summary ?? undefined}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {open && (
+        <div className="space-y-2">
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Search consent forms…"
+              className="pl-8 h-9 text-sm"
+            />
+          </div>
+          <div className="max-h-56 space-y-1 overflow-y-auto rounded-md border bg-muted/10 p-1">
+            {filtered.length === 0 ? (
+              <p className="p-2 text-center text-xs text-muted-foreground">No matches.</p>
+            ) : (
+              filtered.map((t) => {
+                const checked = selectedIds.includes(t.id);
+                return (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => toggle(t.id)}
+                    className={`flex w-full items-start gap-2 rounded-md px-2 py-1.5 text-left text-xs transition hover:bg-background ${checked ? "bg-background ring-1 ring-primary/40" : ""}`}
+                  >
+                    <Checkbox checked={checked} className="mt-0.5 pointer-events-none" />
+                    <span className="flex-1">
+                      <span className="block font-medium">{t.name}</span>
+                      {t.treatment_type && (
+                        <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                          {t.treatment_type}
+                        </span>
+                      )}
+                    </span>
+                    {t.is_system && (
+                      <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                        template
+                      </span>
+                    )}
+                  </button>
+                );
+              })
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 
 
 function Step6({ photos, onChange }: any) {
