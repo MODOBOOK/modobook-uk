@@ -39,6 +39,11 @@ import {
   createPaymentLink,
   completeAppointmentCheckout,
 } from "@/lib/payment-links.functions";
+import {
+  getOrCreateClientForAppointment,
+  markAppointmentNoShow,
+  setClientBlocked,
+} from "@/lib/patient-actions.functions";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/dashboard/bookings")({
