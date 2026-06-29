@@ -842,6 +842,7 @@ function ServiceDialog({
     payment_mode?: "full" | "deposit" | "pay_in_clinic";
     deposit_amount?: number;
     consent_ids?: string[];
+    aftercare_template_ids?: string[];
     auto_send_medical_forms?: boolean;
     aftercare_html?: string | null;
     aftercare_delay_hours?: number;
