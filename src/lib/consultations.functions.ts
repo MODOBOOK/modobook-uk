@@ -64,7 +64,7 @@ export const getConsultation = createServerFn({ method: "GET" })
 
 export const createConsultation = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { patient_name: string; patient_email?: string; patient_phone?: string; appointment_id?: string | null }) => d)
+  .inputValidator((d: { patient_name: string; patient_email?: string; patient_phone?: string; appointment_id?: string | null; patient_id?: string | null }) => d)
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const pid = await getProfileId(supabase, userId);
@@ -77,12 +77,14 @@ export const createConsultation = createServerFn({ method: "POST" })
         patient_email: data.patient_email ?? null,
         patient_phone: data.patient_phone ?? null,
         appointment_id: data.appointment_id ?? null,
+        patient_id: data.patient_id ?? null,
       })
       .select("id")
       .single();
     if (error) throw error;
     return row;
   });
+
 
 export const updateConsultation = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
