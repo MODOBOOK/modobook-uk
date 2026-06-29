@@ -104,6 +104,7 @@ type Cat = {
   description: string | null;
   icon: string | null;
   sort_order: number;
+  coming_soon_at: string | null;
 };
 type Treat = {
   id: string;
@@ -464,6 +465,11 @@ function CategoryRow({
           {node.icon ? `${node.icon} ` : ""}
           {node.name}
         </span>
+        {node.coming_soon_at && new Date(node.coming_soon_at) > new Date() && (
+          <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-800">
+            Coming {new Date(node.coming_soon_at).toLocaleDateString(undefined, { day: "numeric", month: "short" })}
+          </span>
+        )}
         {totalCount > 0 && (
           <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
             {totalCount}
