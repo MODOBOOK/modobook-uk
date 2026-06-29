@@ -428,7 +428,7 @@ function MultiBookPage() {
             ))}
             <div className="flex items-center justify-between pt-3 text-sm font-semibold">
               <span>Total ({totalDuration} min)</span>
-              <span style={{ color: brand }}>£{totalPrice.toFixed(2)}</span>
+              {showPrices && <span style={{ color: brand }}>£{totalPrice.toFixed(2)}</span>}
             </div>
           </CardContent>
         </Card>
