@@ -4,7 +4,7 @@
 
 export type ThemePresetKey = "luxe-editorial" | "clean-modern" | "soft-botanical" | "minimal-mono";
 
-export type BookingLayoutKey = "classic" | "carousel" | "split" | "magazine";
+export type BookingLayoutKey = "classic" | "carousel";
 
 export type ThemePreset = {
   key: ThemePresetKey;
