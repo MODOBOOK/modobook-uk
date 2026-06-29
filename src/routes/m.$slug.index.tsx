@@ -1512,6 +1512,7 @@ function BookPage() {
           </div>
         );
       })()}
+      <QuizDialog open={quizOpen} onOpenChange={setQuizOpen} slug={slug} />
     </main>
   );
 }
