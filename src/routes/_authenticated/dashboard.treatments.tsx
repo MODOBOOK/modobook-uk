@@ -536,6 +536,7 @@ function TreatmentDialog({
                 onChange={(e) => setRebookDays(e.target.value)}
               />
               <p className="mt-1 text-[11px] text-muted-foreground">Internal only — not visible to patients.</p>
+            </div>
           </div>
           <label className="flex items-center gap-2 text-sm">
             <Switch
