@@ -33,6 +33,7 @@ import {
   listBlockedTimes,
   addBlockedTime,
   deleteBlockedTime,
+  addAvailabilityOverride,
 } from "@/lib/availability.functions";
 import {
   createPaymentLink,
