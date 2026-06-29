@@ -47,6 +47,7 @@ export const createCategory = createServerFn({ method: "POST" })
       description?: string;
       icon?: string;
       sort_order?: number;
+      coming_soon_at?: string | null;
     }) => input,
   )
   .handler(async ({ data, context }) => {
@@ -66,6 +67,7 @@ export const createCategory = createServerFn({ method: "POST" })
         icon: data.icon ?? null,
         sort_order: data.sort_order ?? 0,
         slug,
+        coming_soon_at: data.coming_soon_at ?? null,
       })
       .select()
       .single();
@@ -83,6 +85,7 @@ export const updateCategory = createServerFn({ method: "POST" })
       description?: string | null;
       icon?: string | null;
       sort_order?: number;
+      coming_soon_at?: string | null;
     }) => input,
   )
   .handler(async ({ data, context }) => {
@@ -93,6 +96,7 @@ export const updateCategory = createServerFn({ method: "POST" })
     if (data.description !== undefined) update.description = data.description;
     if (data.icon !== undefined) update.icon = data.icon;
     if (data.sort_order !== undefined) update.sort_order = data.sort_order;
+    if (data.coming_soon_at !== undefined) update.coming_soon_at = data.coming_soon_at;
     const { data: row, error } = await supabase
       .from("treatment_categories")
       .update(update)

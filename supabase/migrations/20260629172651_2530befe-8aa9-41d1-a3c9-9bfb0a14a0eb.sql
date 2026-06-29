@@ -1,0 +1,1 @@
+ALTER TABLE public.treatment_categories ADD COLUMN IF NOT EXISTS coming_soon_at timestamptz;

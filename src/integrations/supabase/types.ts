@@ -2934,6 +2934,7 @@ export type Database = {
       }
       treatment_categories: {
         Row: {
+          coming_soon_at: string | null
           created_at: string
           description: string | null
           icon: string | null
@@ -2946,6 +2947,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          coming_soon_at?: string | null
           created_at?: string
           description?: string | null
           icon?: string | null
@@ -2958,6 +2960,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          coming_soon_at?: string | null
           created_at?: string
           description?: string | null
           icon?: string | null

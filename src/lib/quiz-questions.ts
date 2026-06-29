@@ -64,13 +64,6 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
     multi: false,
     options: ["Under 25", "25–34", "35–44", "45–54", "55+"],
   },
-  {
-    id: "skin",
-    label: "Which best describes your skin?",
-    helper: "Pick all that apply",
-    multi: true,
-    options: ["Dry", "Oily", "Combination", "Sensitive", "Acne-prone", "Pigmentation", "Redness / rosacea"],
-  },
 ];
 
 export type QuizAnswers = Partial<Record<QuizQuestion["id"], string[]>>;
