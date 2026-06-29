@@ -1722,7 +1722,7 @@ function CategoryTree({
                 )}
               </div>
               <span className="shrink-0 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-amber-900 shadow-sm">
-                Coming {comingLabel}
+                Book from {comingLabel}
               </span>
             </div>
           );
