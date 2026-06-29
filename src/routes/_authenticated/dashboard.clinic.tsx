@@ -26,8 +26,6 @@ function ClinicPage() {
   const [about, setAbout] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
-  const [brandColor, setBrandColor] = useState("#1f2a44");
-  const [heroUrl, setHeroUrl] = useState("");
   const [instagram, setInstagram] = useState("");
   const [facebook, setFacebook] = useState("");
   const [tiktok, setTiktok] = useState("");
@@ -48,8 +46,6 @@ function ClinicPage() {
         setAbout(p.about ?? "");
         setPhone(p.phone ?? "");
         setEmail(p.email ?? "");
-        setBrandColor(p.brand_color ?? "#1f2a44");
-        setHeroUrl(p.hero_url ?? "");
         const links = (p.social_links ?? {}) as { instagram?: string; facebook?: string; tiktok?: string };
         setInstagram(links.instagram ?? "");
         setFacebook(links.facebook ?? "");
