@@ -381,6 +381,7 @@ function ServicesPage() {
               session_count: base.session_count,
               allow_split_payment: base.allow_split_payment,
               rebook_reminder_days: base.rebook_reminder_days,
+              session_interval_days: base.session_interval_days,
               color: base.color,
               picture_url: base.picture_url,
               payment_mode: base.payment_mode,
@@ -836,6 +837,7 @@ function ServiceDialog({
     session_count?: number;
     allow_split_payment?: boolean;
     rebook_reminder_days?: number | null;
+    session_interval_days?: number | null;
     color?: string | null;
     active?: boolean;
     picture_url?: string;
@@ -877,6 +879,7 @@ function ServiceDialog({
   const [sessionCount, setSessionCount] = useState(1);
   const [allowSplit, setAllowSplit] = useState(false);
   const [rebookDays, setRebookDays] = useState<string>("");
+  const [intervalDays, setIntervalDays] = useState<string>("");
   const [color, setColor] = useState<string>(PRESET_COLORS[0]);
   const [active, setActive] = useState(true);
   const [pictureUrl, setPictureUrl] = useState<string | null>(null);
@@ -903,6 +906,7 @@ function ServiceDialog({
       setSessionCount(1);
       setAllowSplit(false);
       setRebookDays("");
+      setIntervalDays("");
       setColor(PRESET_COLORS[Math.floor(Math.random() * PRESET_COLORS.length)]);
       setActive(true);
       setPictureUrl(null);
@@ -1047,6 +1051,20 @@ function ServiceDialog({
                 <p className="text-[11px] text-muted-foreground">Email reminder sent X days after each session.</p>
               </div>
             </div>
+            {sessionCount > 1 && (
+              <div className="space-y-1.5">
+                <Label htmlFor="s-int">Days between sessions</Label>
+                <Input
+                  id="s-int"
+                  type="number"
+                  min={1}
+                  placeholder="e.g. 14"
+                  value={intervalDays}
+                  onChange={(e) => setIntervalDays(e.target.value)}
+                />
+                <p className="text-[11px] text-muted-foreground">Recommended spacing between each session (shown to patients).</p>
+              </div>
+            )}
             {sessionCount > 1 && (
               <label className="flex items-start gap-2 text-sm">
                 <input
@@ -1225,6 +1243,7 @@ function ServiceDialog({
                 session_count: sessionCount,
                 allow_split_payment: sessionCount > 1 ? allowSplit : false,
                 rebook_reminder_days: rebookDays.trim() ? Number(rebookDays) : null,
+                session_interval_days: sessionCount > 1 && intervalDays.trim() ? Number(intervalDays) : null,
                 color,
                 active,
                 picture_url: pictureUrl ?? undefined,

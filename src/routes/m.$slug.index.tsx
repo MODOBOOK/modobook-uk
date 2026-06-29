@@ -1883,8 +1883,19 @@ function TreatmentRow({
               style={{ backgroundColor: `${brand}1a`, color: brand }}
             >
               {(t as { session_count?: number }).session_count} sessions
+              {(() => {
+                const gap = (t as { session_interval_days?: number | null }).session_interval_days;
+                return gap && gap > 0
+                  ? ` · ${gap % 7 === 0 ? `${gap / 7} wk` : `${gap} days`} apart`
+                  : "";
+              })()}
             </span>
           )}
+          {(t as { rebook_reminder_days?: number | null }).rebook_reminder_days ? (
+            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700">
+              Rebook reminder · {(t as { rebook_reminder_days?: number }).rebook_reminder_days}d
+            </span>
+          ) : null}
           {(t as { allow_split_payment?: boolean }).allow_split_payment && (
             <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">
               Split payment available
