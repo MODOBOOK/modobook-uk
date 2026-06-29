@@ -294,6 +294,14 @@ function PatientProfilePage() {
           <Trash2 className="mr-1.5 h-3.5 w-3.5" />Delete
         </Button>
       </div>
+        </div>
+
+        {/* Right column: activity timeline + concerns */}
+        <aside className="space-y-4">
+          <ConcernsCard clientId={id} />
+          <CommsTimeline clientId={id} refreshKey={commsRefresh} />
+        </aside>
+      </div>
 
       {editing && (
         <EditDialog
@@ -303,9 +311,18 @@ function PatientProfilePage() {
           onSaved={() => { setEditing(null); reload(); }}
         />
       )}
+
+      <EmailComposerDialog
+        open={emailOpen}
+        onClose={() => setEmailOpen(false)}
+        client={client}
+        clinicName={clinicName}
+        onSent={() => setCommsRefresh(x => x + 1)}
+      />
     </div>
   );
 }
+
 
 /* ---------- subcomponents ---------- */
 
