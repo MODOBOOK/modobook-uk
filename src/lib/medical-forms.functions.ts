@@ -229,3 +229,34 @@ export const submitFormByToken = createServerFn({ method: "POST" })
     if (error) throw error;
     return { ok: !!ok };
   });
+
+/* ---------- Standalone send-to-patient (no appointment) ---------- */
+export const sendFormToClient = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: { client_id: string; template_id: string; email?: string; phone?: string }) => i)
+  .handler(async ({ data, context }) => {
+    const { data: row, error } = await context.supabase.rpc("send_medical_form_to_client", {
+      p_client_id: data.client_id,
+      p_template_id: data.template_id,
+      p_email: data.email ?? null,
+      p_phone: data.phone ?? null,
+    });
+    if (error) throw error;
+    // row is a setof: take first
+    const r = Array.isArray(row) ? row[0] : row;
+    return { id: r.id as string, token: r.token as string };
+  });
+
+export const listFormsForClient = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: { client_id: string }) => i)
+  .handler(async ({ data, context }) => {
+    const { data: rows, error } = await context.supabase
+      .from("appointment_medical_forms")
+      .select("id, token, status, submitted_at, created_at, recipient_email, recipient_phone, template:template_id (id, name)")
+      .eq("client_id", data.client_id)
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    return rows ?? [];
+  });
+
