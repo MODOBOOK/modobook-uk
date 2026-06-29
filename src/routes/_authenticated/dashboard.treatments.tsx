@@ -637,20 +637,63 @@ function TreatmentDialog({
           </label>
         </div>
 
-        {/* Aftercare */}
+        {/* Aftercare templates (reusable) */}
         <div className="rounded-md border p-3 space-y-3">
-          <div className="flex items-center gap-2">
-            <FileText className="h-4 w-4 text-muted-foreground" />
-            <Label className="m-0">Aftercare instructions</Label>
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <FileText className="h-4 w-4 text-muted-foreground" />
+              <Label className="m-0">Aftercare templates</Label>
+            </div>
+            <Link
+              to="/dashboard/aftercare"
+              className="text-xs text-primary hover:underline"
+            >
+              Manage templates →
+            </Link>
           </div>
-          <Textarea
-            rows={5}
-            value={aftercareHtml}
-            onChange={(e) => setAftercareHtml(e.target.value)}
-            placeholder="Aftercare instructions to send to the patient after their appointment. Plain text or basic HTML accepted."
-          />
-          <div className="grid grid-cols-2 gap-3 items-end">
-            <div>
+          {aftercareTemplates.length === 0 ? (
+            <p className="text-xs text-muted-foreground">
+              No templates yet. Create one in Aftercare templates and attach it here — it will send automatically after the appointment.
+            </p>
+          ) : (
+            <div className="flex flex-wrap gap-1.5">
+              {aftercareTemplates.map((t) => {
+                const checked = aftercareTemplateIds.includes(t.id);
+                return (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() =>
+                      setAftercareTemplateIds((prev) =>
+                        prev.includes(t.id) ? prev.filter((x) => x !== t.id) : [...prev, t.id],
+                      )
+                    }
+                    className={`rounded-full border px-2.5 py-1 text-xs ${checked ? "bg-primary text-primary-foreground border-primary" : "bg-background hover:bg-muted"}`}
+                  >
+                    {t.name} <span className="opacity-70">· {t.delay_hours}h</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+          <label className="flex items-center gap-2 text-sm">
+            <Switch checked={autoSendAftercare} onCheckedChange={setAutoSendAftercare} />
+            <span>Auto-send aftercare after this treatment</span>
+          </label>
+          <p className="text-[11px] text-muted-foreground">Selected templates send automatically at each template's delay (default 2 hours after the appointment ends).</p>
+        </div>
+
+        {/* One-off override (optional) */}
+        <details className="rounded-md border p-3">
+          <summary className="cursor-pointer text-sm font-medium">Custom aftercare for this treatment (optional)</summary>
+          <div className="mt-3 space-y-3">
+            <Textarea
+              rows={5}
+              value={aftercareHtml}
+              onChange={(e) => setAftercareHtml(e.target.value)}
+              placeholder="Only fill this in if you want a one-off message for this treatment instead of (or in addition to) the templates above."
+            />
+            <div className="max-w-[200px]">
               <Label className="text-xs text-muted-foreground">Send after (hours)</Label>
               <Input
                 type="number"
@@ -659,13 +702,8 @@ function TreatmentDialog({
                 onChange={(e) => setAftercareDelay(Math.max(0, Number(e.target.value) || 0))}
               />
             </div>
-            <label className="flex items-center gap-2 text-sm pb-2">
-              <Switch checked={autoSendAftercare} onCheckedChange={setAutoSendAftercare} />
-              <span>Auto-send aftercare</span>
-            </label>
           </div>
-          <p className="text-[11px] text-muted-foreground">Aftercare is scheduled the moment the appointment is booked and dispatched at the chosen delay after the appointment ends.</p>
-        </div>
+        </details>
       </div>
       <DialogFooter>
         <Button
