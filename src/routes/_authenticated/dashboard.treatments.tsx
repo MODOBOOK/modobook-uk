@@ -306,6 +306,13 @@ function TreatmentDialog({
 }) {
   const fetchConsents = useServerFn(getTreatmentConsents);
   const fetchAddons = useServerFn(getTreatmentAddons);
+  const fetchAftercareTpls = useServerFn(listAftercareTemplates);
+  const fetchTreatmentAftercare = useServerFn(getTreatmentAftercareIds);
+  const [aftercareTemplates, setAftercareTemplates] = useState<{ id: string; name: string; delay_hours: number }[]>([]);
+  const [aftercareTemplateIds, setAftercareTemplateIds] = useState<string[]>([]);
+  useEffect(() => {
+    fetchAftercareTpls().then((r) => setAftercareTemplates(r as any)).catch(() => setAftercareTemplates([]));
+  }, [fetchAftercareTpls]);
   const [name, setName] = useState(treatment?.name ?? "");
   const [duration, setDuration] = useState(treatment?.duration ?? 30);
   const [price, setPrice] = useState(treatment?.price ?? 0);
