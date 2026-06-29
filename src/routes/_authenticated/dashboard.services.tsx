@@ -477,20 +477,12 @@ function CategoryRow({
             </p>
           )}
 
-          {treatsHere.map((t, ti) => (
-            <div
-              key={t.id}
-              style={{ paddingLeft: 12 + (depth + 1) * 16 }}
-              className="border-b border-border/40 pr-2"
-            >
-              <ServiceRow
-                treat={t}
-                onDelete={() => onDeleteTreat(t)}
-                onMoveUp={ti === 0 ? undefined : () => onMoveTreat(treatsHere, t.id, -1)}
-                onMoveDown={ti === treatsHere.length - 1 ? undefined : () => onMoveTreat(treatsHere, t.id, 1)}
-              />
-            </div>
-          ))}
+          <SortableTreatList
+            treats={treatsHere}
+            depth={depth}
+            onDelete={onDeleteTreat}
+            onReorder={onReorderTreatsByIds}
+          />
 
           {node.children.map((child, ci) => (
             <CategoryRow
@@ -507,6 +499,7 @@ function CategoryRow({
               onDeleteTreat={onDeleteTreat}
               onMoveCat={onMoveCat}
               onMoveTreat={onMoveTreat}
+              onReorderTreatsByIds={onReorderTreatsByIds}
             />
           ))}
 
