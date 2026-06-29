@@ -418,8 +418,11 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
         status: "confirmed",
         payment_status: "pending",
         base_amount: b.priceCents / 100,
-        total_amount: b.priceCents / 100,
+        total_amount: sessionCount > 1 && b.paymentPlan === "split"
+          ? (b.priceCents / 100) / sessionCount
+          : b.priceCents / 100,
       });
+
       if (error) throw new Error(error.message);
       created.push({ id, treatmentId: b.treatmentId });
 
