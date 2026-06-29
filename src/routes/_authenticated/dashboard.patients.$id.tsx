@@ -34,6 +34,7 @@ import { ConcernsCard } from "@/components/patient/ConcernsCard";
 import { CommsTimeline } from "@/components/patient/CommsTimeline";
 import { EmailComposerDialog } from "@/components/patient/EmailComposerDialog";
 import { SendFormDialog } from "@/components/patient/SendFormDialog";
+import { ClientFormsList } from "@/components/patient/ClientFormsList";
 import { logCommunication } from "@/lib/patient-hub.functions";
 
 
@@ -170,7 +171,7 @@ function PatientProfilePage() {
           <FileText className="mr-1.5 h-4 w-4" />Send form
         </Button>
         <Button size="sm" variant="outline" onClick={async () => {
-          const r: any = await createConsult({ data: { patient_name: client.full_name, patient_email: client.email || undefined, patient_phone: client.phone || undefined } });
+          const r: any = await createConsult({ data: { patient_name: client.full_name, patient_email: client.email || undefined, patient_phone: client.phone || undefined, patient_id: client.id } });
           navigate({ to: "/dashboard/consultations/$id", params: { id: r.id } });
         }}>
           <ClipboardList className="mr-1.5 h-4 w-4" />Start consultation
@@ -218,8 +219,17 @@ function PatientProfilePage() {
         <Row label="How did you hear about us?" value={client.how_heard} />
       </Section>
 
+      {/* Medical forms (sent / completed) */}
+      <Section title="Medical forms">
+        <ClientFormsList
+          client={{ id: client.id, full_name: client.full_name, email: client.email, phone: client.phone }}
+          clinicName={clinicName}
+          refreshKey={commsRefresh}
+        />
+      </Section>
+
       {client.medical_form_data && (
-        <Section title={`Medical form${client.medical_form_updated_at ? ` · updated ${new Date(client.medical_form_updated_at).toLocaleDateString()}` : ""}`}>
+        <Section title={`Latest answers${client.medical_form_updated_at ? ` · updated ${new Date(client.medical_form_updated_at).toLocaleDateString()}` : ""}`}>
           <div className="space-y-1.5">
             {Object.entries(client.medical_form_data as Record<string, unknown>).map(([k, v]) => (
               <Row key={k} label={k} value={Array.isArray(v) ? v.join(", ") : typeof v === "object" && v !== null ? JSON.stringify(v) : String(v ?? "")} />
@@ -256,7 +266,7 @@ function PatientProfilePage() {
       {/* Consultations */}
       <Section title="Consultations" actionsRight={
         <Button size="sm" variant="outline" onClick={async () => {
-          const r: any = await createConsult({ data: { patient_name: client.full_name, patient_email: client.email || undefined, patient_phone: client.phone || undefined } });
+          const r: any = await createConsult({ data: { patient_name: client.full_name, patient_email: client.email || undefined, patient_phone: client.phone || undefined, patient_id: client.id } });
           navigate({ to: "/dashboard/consultations/$id", params: { id: r.id } });
         }}><Plus className="mr-1 h-3.5 w-3.5" />New</Button>
       }>

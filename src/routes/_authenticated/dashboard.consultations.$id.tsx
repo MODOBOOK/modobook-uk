@@ -16,6 +16,7 @@ import {
   Images, Syringe, Receipt, ArrowLeft,
 } from "lucide-react";
 import { toast } from "sonner";
+import { ClientFormsList } from "@/components/patient/ClientFormsList";
 
 export const Route = createFileRoute("/_authenticated/dashboard/consultations/$id")({
   ssr: false,
@@ -163,7 +164,7 @@ export function ConsultationWizard() {
       </div>
 
       <Card><CardContent className="space-y-4 p-4 sm:p-6">
-        {step === 1 && <Step1 medical={c.medical} onChange={(v: any) => setField("medical", v)} />}
+        {step === 1 && <Step1 medical={c.medical} onChange={(v: any) => setField("medical", v)} clientId={c.patient_id} clientName={c.patient_name} clientEmail={c.patient_email} clientPhone={c.patient_phone} />}
         {step === 2 && <Step2 concerns={c.concerns} onChange={(v: any) => setField("concerns", v)} />}
         {step === 3 && <Step3 assessment={c.assessment} photos={c.before_photos} onChangeAssess={(v: any) => setField("assessment", v)} onChangePhotos={(v: any) => setField("before_photos", v)} />}
         {step === 4 && <Step4 plan={c.treatment_plan} onChange={(v: any) => setField("treatment_plan", v)} />}
@@ -197,13 +198,34 @@ export function ConsultationWizard() {
 
 /* ---------- Steps ---------- */
 
-function Step1({ medical, onChange }: { medical: any; onChange: (v: any) => void }) {
+function Step1({ medical, onChange, clientId, clientName, clientEmail, clientPhone }: {
+  medical: any;
+  onChange: (v: any) => void;
+  clientId?: string | null;
+  clientName?: string | null;
+  clientEmail?: string | null;
+  clientPhone?: string | null;
+}) {
   const answers = medical?.answers ?? {};
   const notes = medical?.notes ?? "";
   const toggle = (q: string, v: boolean) => onChange({ ...medical, answers: { ...answers, [q]: v } });
   return (
     <div className="space-y-4">
-      <Header n={1} title="Medical history" subtitle="Tick anything that applies." />
+      <Header n={1} title="Medical history" subtitle="Tick anything that applies, or send a full form for the patient to complete at home." />
+
+      {clientId ? (
+        <div className="rounded-lg border bg-muted/30 p-3">
+          <ClientFormsList
+            client={{ id: clientId, full_name: clientName ?? "", email: clientEmail ?? undefined, phone: clientPhone ?? undefined }}
+            compact
+          />
+        </div>
+      ) : (
+        <div className="rounded-md border border-dashed p-3 text-xs text-muted-foreground">
+          Link this consultation to a patient record to send medical forms automatically.
+        </div>
+      )}
+
       <div className="grid gap-2">
         {MEDICAL_QUESTIONS.map((q) => (
           <label key={q} className="flex cursor-pointer items-center gap-3 rounded-lg border bg-card p-3 active:bg-muted">
@@ -219,6 +241,7 @@ function Step1({ medical, onChange }: { medical: any; onChange: (v: any) => void
     </div>
   );
 }
+
 
 function Step2({ concerns, onChange }: { concerns: any; onChange: (v: any) => void }) {
   const selected: string[] = concerns?.selected ?? [];

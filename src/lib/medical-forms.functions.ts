@@ -253,10 +253,47 @@ export const listFormsForClient = createServerFn({ method: "GET" })
   .handler(async ({ data, context }) => {
     const { data: rows, error } = await context.supabase
       .from("appointment_medical_forms")
-      .select("id, token, status, submitted_at, created_at, recipient_email, recipient_phone, template:template_id (id, name)")
+      .select("id, token, status, submitted_at, created_at, recipient_email, recipient_phone, appointment_id, template:template_id (id, name)")
       .eq("client_id", data.client_id)
       .order("created_at", { ascending: false });
     if (error) throw error;
     return rows ?? [];
   });
+
+/* ---------- View a single submission (renders for practitioner) ---------- */
+export const getFormSubmission = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: { id: string }) => i)
+  .handler(async ({ data, context }) => {
+    const profileId = await getProfileId(context.supabase, context.userId);
+    if (!profileId) throw new Error("Profile not found");
+    const { data: row, error } = await context.supabase
+      .from("appointment_medical_forms")
+      .select("id, status, response, submitted_at, created_at, client_id, appointment_id, recipient_email, recipient_phone, token, template:template_id (id, name, schema), client:client_id (id, full_name)")
+      .eq("id", data.id)
+      .eq("profile_id", profileId)
+      .single();
+    if (error) throw error;
+    return row;
+  });
+
+/* ---------- Recent submissions across the practitioner ---------- */
+export const listRecentFormSubmissions = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: { limit?: number; status?: "sent" | "submitted" | null } = {}) => i)
+  .handler(async ({ data, context }) => {
+    const profileId = await getProfileId(context.supabase, context.userId);
+    if (!profileId) return [];
+    let q = context.supabase
+      .from("appointment_medical_forms")
+      .select("id, token, status, submitted_at, created_at, recipient_email, template:template_id (id, name), client:client_id (id, full_name)")
+      .eq("profile_id", profileId)
+      .order("created_at", { ascending: false })
+      .limit(data.limit ?? 20);
+    if (data.status) q = q.eq("status", data.status);
+    const { data: rows, error } = await q;
+    if (error) throw error;
+    return rows ?? [];
+  });
+
 
