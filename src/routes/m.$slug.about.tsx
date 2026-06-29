@@ -78,36 +78,45 @@ function About() {
   const locs = (locations as LocationRow[]) ?? [];
 
   return (
-    <main className="mx-auto max-w-4xl px-4 py-10">
+    <main className="mx-auto max-w-4xl px-4 py-10 sm:py-14">
       {/* Hero */}
       {show("show_hero_image", true) && heroImage && (
-        <div className="mb-8 overflow-hidden rounded-2xl">
-          <img src={heroImage} alt="" className="h-48 w-full object-cover sm:h-72" />
+        <div className="mb-10 overflow-hidden rounded-3xl shadow-sm ring-1 ring-black/5">
+          <img src={heroImage} alt="" className="h-56 w-full object-cover sm:h-80" />
         </div>
       )}
 
-      <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-start">
+      <header className="flex flex-col items-center gap-6 rounded-3xl border bg-card p-6 text-center shadow-sm sm:flex-row sm:items-center sm:p-8 sm:text-left">
         {profile.avatar_url ? (
-          <img src={profile.avatar_url} alt={displayName ?? ""} className="h-32 w-32 rounded-full object-cover sm:h-40 sm:w-40" />
+          <img
+            src={profile.avatar_url}
+            alt={displayName ?? ""}
+            className="h-32 w-32 shrink-0 rounded-full object-cover ring-4 ring-[color:var(--brand)]/15 sm:h-40 sm:w-40"
+          />
         ) : (
-          <div className="flex h-32 w-32 items-center justify-center rounded-full bg-muted text-4xl font-bold text-muted-foreground sm:h-40 sm:w-40">
+          <div className="flex h-32 w-32 shrink-0 items-center justify-center rounded-full bg-muted text-4xl font-bold text-muted-foreground sm:h-40 sm:w-40">
             {displayName?.charAt(0) ?? "P"}
           </div>
         )}
-        <div className="flex-1 text-center sm:text-left">
-          <h1 className="text-3xl font-bold tracking-tight" style={{ color: "var(--brand)", fontFamily: "var(--heading-font)" }}>
+        <div className="min-w-0 flex-1">
+          <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">About</p>
+          <h1
+            className="mt-1 text-3xl font-bold tracking-tight sm:text-4xl"
+            style={{ color: "var(--brand)", fontFamily: "var(--heading-font)" }}
+          >
             {displayName}
           </h1>
           {profile.full_name && profile.clinic_name && profile.full_name !== profile.clinic_name && (
             <p className="mt-1 text-base text-muted-foreground">{profile.full_name}</p>
           )}
-          {profile.tagline && <p className="mt-2 text-muted-foreground">{profile.tagline}</p>}
+          {profile.tagline && <p className="mt-3 text-muted-foreground">{profile.tagline}</p>}
         </div>
-      </div>
+      </header>
+
 
       {/* Intro */}
       {show("show_intro", false) && (ap.intro_heading || ap.intro_body) && (
-        <section className="mt-10 rounded-2xl border bg-muted/30 p-6">
+        <section className="mt-8 rounded-3xl border bg-gradient-to-br from-[color:var(--brand)]/10 to-transparent p-6 shadow-sm sm:p-8">
           {ap.intro_heading && (
             <h2 className="text-2xl font-semibold" style={{ color: "var(--brand)", fontFamily: "var(--heading-font)" }}>
               {ap.intro_heading}
@@ -271,15 +280,21 @@ function About() {
 
 function Section({ title, icon: Icon, children }: { title: string; icon?: React.ElementType; children: React.ReactNode }) {
   return (
-    <section className="mt-10">
-      <h2
-        className="mb-3 flex items-center gap-2 text-xl font-semibold"
-        style={{ color: "var(--brand)", fontFamily: "var(--heading-font)" }}
-      >
-        {Icon && <Icon className="h-5 w-5" />}
-        {title}
-      </h2>
-      {children}
+    <section className="mt-8 rounded-3xl border bg-card p-6 shadow-sm sm:p-8">
+      <div className="mb-5 flex items-center gap-3">
+        {Icon && (
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[color:var(--brand)]/10 text-[var(--brand)]">
+            <Icon className="h-4 w-4" />
+          </span>
+        )}
+        <h2
+          className="text-xl font-semibold tracking-tight sm:text-2xl"
+          style={{ color: "var(--brand)", fontFamily: "var(--heading-font)" }}
+        >
+          {title}
+        </h2>
+      </div>
+      <div className="text-[15px] leading-relaxed">{children}</div>
     </section>
   );
 }
