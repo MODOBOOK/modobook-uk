@@ -905,6 +905,7 @@ function ServiceDialog({
       setSessionCount(1);
       setAllowSplit(false);
       setRebookDays("");
+      setIntervalDays("");
       setColor(PRESET_COLORS[Math.floor(Math.random() * PRESET_COLORS.length)]);
       setActive(true);
       setPictureUrl(null);
