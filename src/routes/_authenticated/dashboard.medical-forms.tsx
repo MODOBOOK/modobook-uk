@@ -51,6 +51,8 @@ type FormElement = {
   fieldType?: "text" | "email" | "tel" | "number" | "date" | "textarea";
   variant?: "info" | "warning" | "success";
   max?: number;
+  /** Conditional visibility: only show when answer to `showIfId` equals `equals` (string match, or contained for multi-choice). */
+  logic?: { showIfId: string; equals: string } | null;
 };
 type FormStep = { id: string; title: string; elements: FormElement[] };
 type FormSchema = { steps: FormStep[] };
@@ -464,6 +466,7 @@ function FormEditor({ formId, onClose, cats }: { formId: string; onClose: () => 
               <ElementEditor
                 key={el.id}
                 element={el}
+                siblings={step.elements.filter((x) => x.id !== el.id)}
                 onChange={(patch) => updateElement(step.id, el.id, patch)}
                 onRemove={() => removeElement(step.id, el.id)}
                 onMove={(d) => moveElement(step.id, el.id, d)}
@@ -548,8 +551,9 @@ function OptionsEditor({ options, onChange }: { options: string[]; onChange: (ne
   );
 }
 
-function ElementEditor({ element, onChange, onRemove, onMove, onDuplicate }: {
+function ElementEditor({ element, siblings, onChange, onRemove, onMove, onDuplicate }: {
   element: FormElement;
+  siblings: FormElement[];
   onChange: (p: Partial<FormElement>) => void;
   onRemove: () => void;
   onMove: (d: -1 | 1) => void;
@@ -665,6 +669,57 @@ function ElementEditor({ element, onChange, onRemove, onMove, onDuplicate }: {
 
       {(element.type === "separator" || element.type === "space") && (
         <div className="text-xs italic text-muted-foreground">Visual element — no settings.</div>
+      )}
+
+      {/* Conditional logic */}
+      {element.type !== "heading" && element.type !== "separator" && element.type !== "space" && (
+        <ConditionalLogicEditor element={element} siblings={siblings} onChange={onChange} />
+      )}
+    </div>
+  );
+}
+
+function ConditionalLogicEditor({ element, siblings, onChange }: {
+  element: FormElement; siblings: FormElement[]; onChange: (p: Partial<FormElement>) => void;
+}) {
+  const candidates = siblings.filter((s) =>
+    s.type === "select" || s.type === "radio" || s.type === "checkbox_group" || s.type === "checkbox"
+  );
+  const logic = element.logic ?? null;
+  const target = candidates.find((c) => c.id === logic?.showIfId);
+  const opts = target?.type === "checkbox" ? ["Checked"] : (target?.options ?? []);
+  if (candidates.length === 0 && !logic) return null;
+  return (
+    <div className="rounded-md border border-dashed bg-muted/30 p-2 space-y-1.5">
+      <div className="flex items-center justify-between">
+        <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Conditional logic</Label>
+        {logic && (
+          <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={() => onChange({ logic: null })}>Clear</Button>
+        )}
+      </div>
+      {candidates.length === 0 ? (
+        <p className="text-[11px] text-muted-foreground">Add a dropdown, choice or agreement above this item to use logic.</p>
+      ) : (
+        <div className="grid grid-cols-2 gap-2">
+          <Select value={logic?.showIfId ?? "__none__"} onValueChange={(v) => onChange({ logic: v === "__none__" ? null : { showIfId: v, equals: "" } })}>
+            <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Show if…" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__none__">Always show</SelectItem>
+              {candidates.map((c) => (
+                <SelectItem key={c.id} value={c.id}>{c.label || "(no label)"}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {logic && (
+            <Select value={logic.equals || "__pick__"} onValueChange={(v) => onChange({ logic: { ...logic, equals: v === "__pick__" ? "" : v } })}>
+              <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="equals…" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__pick__">— choose value —</SelectItem>
+                {opts.map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          )}
+        </div>
       )}
     </div>
   );

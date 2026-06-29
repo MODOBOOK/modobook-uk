@@ -33,6 +33,7 @@ import { toast } from "sonner";
 import { ConcernsCard } from "@/components/patient/ConcernsCard";
 import { CommsTimeline } from "@/components/patient/CommsTimeline";
 import { EmailComposerDialog } from "@/components/patient/EmailComposerDialog";
+import { SendFormDialog } from "@/components/patient/SendFormDialog";
 import { logCommunication } from "@/lib/patient-hub.functions";
 
 
@@ -74,6 +75,7 @@ function PatientProfilePage() {
   const [profileId, setProfileId] = useState("");
   const [editing, setEditing] = useState<null | "personal" | "emergency">(null);
   const [emailOpen, setEmailOpen] = useState(false);
+  const [sendFormOpen, setSendFormOpen] = useState(false);
   const [commsRefresh, setCommsRefresh] = useState(0);
   const logComm = useServerFn(logCommunication);
 
@@ -164,7 +166,7 @@ function PatientProfilePage() {
         <Button size="sm" variant="outline" asChild>
           <Link to="/dashboard/payments"><CreditCard className="mr-1.5 h-4 w-4" />Payment link</Link>
         </Button>
-        <Button size="sm" variant="outline" onClick={() => toast.info("Open a medical form in Medical Forms and copy the link to send")}>
+        <Button size="sm" variant="outline" onClick={() => setSendFormOpen(true)}>
           <FileText className="mr-1.5 h-4 w-4" />Send form
         </Button>
         <Button size="sm" variant="outline" onClick={async () => {
@@ -216,7 +218,15 @@ function PatientProfilePage() {
         <Row label="How did you hear about us?" value={client.how_heard} />
       </Section>
 
-      {/* Appointments */}
+      {client.medical_form_data && (
+        <Section title={`Medical form${client.medical_form_updated_at ? ` · updated ${new Date(client.medical_form_updated_at).toLocaleDateString()}` : ""}`}>
+          <div className="space-y-1.5">
+            {Object.entries(client.medical_form_data as Record<string, unknown>).map(([k, v]) => (
+              <Row key={k} label={k} value={Array.isArray(v) ? v.join(", ") : typeof v === "object" && v !== null ? JSON.stringify(v) : String(v ?? "")} />
+            ))}
+          </div>
+        </Section>
+      )}
       <SectionDark
         title="Appointments"
         actions={
@@ -315,6 +325,13 @@ function PatientProfilePage() {
       <EmailComposerDialog
         open={emailOpen}
         onOpenChange={(v) => setEmailOpen(v)}
+        client={client}
+        clinicName={clinicName}
+        onSent={() => setCommsRefresh(x => x + 1)}
+      />
+      <SendFormDialog
+        open={sendFormOpen}
+        onOpenChange={(v) => setSendFormOpen(v)}
         client={client}
         clinicName={clinicName}
         onSent={() => setCommsRefresh(x => x + 1)}

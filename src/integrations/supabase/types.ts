@@ -131,6 +131,69 @@ export type Database = {
         }
         Relationships: []
       }
+      appointment_aftercare: {
+        Row: {
+          appointment_id: string
+          body_html: string | null
+          created_at: string
+          id: string
+          profile_id: string
+          recipient_email: string | null
+          recipient_phone: string | null
+          send_at: string
+          sent_at: string | null
+          sent_via: Json
+          status: string
+          token: string
+          updated_at: string
+        }
+        Insert: {
+          appointment_id: string
+          body_html?: string | null
+          created_at?: string
+          id?: string
+          profile_id: string
+          recipient_email?: string | null
+          recipient_phone?: string | null
+          send_at: string
+          sent_at?: string | null
+          sent_via?: Json
+          status?: string
+          token?: string
+          updated_at?: string
+        }
+        Update: {
+          appointment_id?: string
+          body_html?: string | null
+          created_at?: string
+          id?: string
+          profile_id?: string
+          recipient_email?: string | null
+          recipient_phone?: string | null
+          send_at?: string
+          sent_at?: string | null
+          sent_via?: Json
+          status?: string
+          token?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_aftercare_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointment_aftercare_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       appointment_consents: {
         Row: {
           appointment_id: string
@@ -200,33 +263,51 @@ export type Database = {
       }
       appointment_medical_forms: {
         Row: {
-          appointment_id: string
+          appointment_id: string | null
+          client_id: string | null
           created_at: string
           id: string
+          last_reminder_at: string | null
           profile_id: string
+          recipient_email: string | null
+          recipient_phone: string | null
+          reminder_count: number
           response: Json | null
+          sent_via: Json
           status: string
           submitted_at: string | null
           template_id: string
           token: string
         }
         Insert: {
-          appointment_id: string
+          appointment_id?: string | null
+          client_id?: string | null
           created_at?: string
           id?: string
+          last_reminder_at?: string | null
           profile_id: string
+          recipient_email?: string | null
+          recipient_phone?: string | null
+          reminder_count?: number
           response?: Json | null
+          sent_via?: Json
           status?: string
           submitted_at?: string | null
           template_id: string
           token?: string
         }
         Update: {
-          appointment_id?: string
+          appointment_id?: string | null
+          client_id?: string | null
           created_at?: string
           id?: string
+          last_reminder_at?: string | null
           profile_id?: string
+          recipient_email?: string | null
+          recipient_phone?: string | null
+          reminder_count?: number
           response?: Json | null
+          sent_via?: Json
           status?: string
           submitted_at?: string | null
           template_id?: string
@@ -238,6 +319,13 @@ export type Database = {
             columns: ["appointment_id"]
             isOneToOne: false
             referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointment_medical_forms_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clinic_clients"
             referencedColumns: ["id"]
           },
           {
@@ -927,6 +1015,8 @@ export type Database = {
           how_heard: string | null
           id: string
           marketing_opt_in: boolean
+          medical_form_data: Json | null
+          medical_form_updated_at: string | null
           notes: string | null
           phone: string | null
           postcode: string | null
@@ -956,6 +1046,8 @@ export type Database = {
           how_heard?: string | null
           id?: string
           marketing_opt_in?: boolean
+          medical_form_data?: Json | null
+          medical_form_updated_at?: string | null
           notes?: string | null
           phone?: string | null
           postcode?: string | null
@@ -985,6 +1077,8 @@ export type Database = {
           how_heard?: string | null
           id?: string
           marketing_opt_in?: boolean
+          medical_form_data?: Json | null
+          medical_form_updated_at?: string | null
           notes?: string | null
           phone?: string | null
           postcode?: string | null
@@ -2960,7 +3054,11 @@ export type Database = {
         Row: {
           active: boolean | null
           addon_mode: string
+          aftercare_delay_hours: number
+          aftercare_html: string | null
           allow_split_payment: boolean
+          auto_send_aftercare: boolean
+          auto_send_medical_forms: boolean
           category_id: string | null
           color: string | null
           consent_form_url: string | null
@@ -2992,7 +3090,11 @@ export type Database = {
         Insert: {
           active?: boolean | null
           addon_mode?: string
+          aftercare_delay_hours?: number
+          aftercare_html?: string | null
           allow_split_payment?: boolean
+          auto_send_aftercare?: boolean
+          auto_send_medical_forms?: boolean
           category_id?: string | null
           color?: string | null
           consent_form_url?: string | null
@@ -3024,7 +3126,11 @@ export type Database = {
         Update: {
           active?: boolean | null
           addon_mode?: string
+          aftercare_delay_hours?: number
+          aftercare_html?: string | null
           allow_split_payment?: boolean
+          auto_send_aftercare?: boolean
+          auto_send_medical_forms?: boolean
           category_id?: string | null
           color?: string | null
           consent_form_url?: string | null
@@ -3287,6 +3393,18 @@ export type Database = {
       is_slug_available: {
         Args: { p_exclude_id?: string; p_slug: string }
         Returns: boolean
+      }
+      send_medical_form_to_client: {
+        Args: {
+          p_client_id: string
+          p_email: string
+          p_phone: string
+          p_template_id: string
+        }
+        Returns: {
+          id: string
+          token: string
+        }[]
       }
       submit_consent: {
         Args: {

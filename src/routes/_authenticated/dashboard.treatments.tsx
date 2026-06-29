@@ -68,6 +68,10 @@ type TreatmentForm = {
   session_count: number;
   allow_split_payment: boolean;
   rebook_reminder_days: number | null;
+  aftercare_html: string;
+  aftercare_delay_hours: number;
+  auto_send_medical_forms: boolean;
+  auto_send_aftercare: boolean;
 };
 
 type ConsentTpl = { id: string; name: string; treatment_type: string | null; is_system: boolean };
@@ -320,6 +324,18 @@ function TreatmentDialog({
       ? String((treatment as { rebook_reminder_days?: number | null }).rebook_reminder_days)
       : "",
   );
+  const [aftercareHtml, setAftercareHtml] = useState<string>(
+    (treatment as { aftercare_html?: string | null } | null)?.aftercare_html ?? "",
+  );
+  const [aftercareDelay, setAftercareDelay] = useState<number>(
+    (treatment as { aftercare_delay_hours?: number } | null)?.aftercare_delay_hours ?? 2,
+  );
+  const [autoSendForms, setAutoSendForms] = useState<boolean>(
+    (treatment as { auto_send_medical_forms?: boolean } | null)?.auto_send_medical_forms ?? true,
+  );
+  const [autoSendAftercare, setAutoSendAftercare] = useState<boolean>(
+    (treatment as { auto_send_aftercare?: boolean } | null)?.auto_send_aftercare ?? true,
+  );
 
   const topLevel = useMemo(() => categories.filter((c) => !c.parent_id), [categories]);
   const childrenOf = (parentId: string | null) =>
@@ -358,6 +374,10 @@ function TreatmentDialog({
         ? String((treatment as { rebook_reminder_days?: number | null }).rebook_reminder_days)
         : "",
     );
+    setAftercareHtml((treatment as { aftercare_html?: string | null } | null)?.aftercare_html ?? "");
+    setAftercareDelay((treatment as { aftercare_delay_hours?: number } | null)?.aftercare_delay_hours ?? 2);
+    setAutoSendForms((treatment as { auto_send_medical_forms?: boolean } | null)?.auto_send_medical_forms ?? true);
+    setAutoSendAftercare((treatment as { auto_send_aftercare?: boolean } | null)?.auto_send_aftercare ?? true);
     if (treatment?.id) {
       fetchConsents({ data: { treatmentId: treatment.id } })
         .then((ids) => setConsentIds(ids as string[]))
@@ -584,6 +604,40 @@ function TreatmentDialog({
           <p className="text-xs text-muted-foreground mt-2">
             Patients receive a link to complete each selected form after they book.
           </p>
+          <label className="flex items-center gap-2 text-sm pt-2 border-t">
+            <Switch checked={autoSendForms} onCheckedChange={setAutoSendForms} />
+            <span>Auto-send medical forms when this treatment is booked</span>
+          </label>
+        </div>
+
+        {/* Aftercare */}
+        <div className="rounded-md border p-3 space-y-3">
+          <div className="flex items-center gap-2">
+            <FileText className="h-4 w-4 text-muted-foreground" />
+            <Label className="m-0">Aftercare instructions</Label>
+          </div>
+          <Textarea
+            rows={5}
+            value={aftercareHtml}
+            onChange={(e) => setAftercareHtml(e.target.value)}
+            placeholder="Aftercare instructions to send to the patient after their appointment. Plain text or basic HTML accepted."
+          />
+          <div className="grid grid-cols-2 gap-3 items-end">
+            <div>
+              <Label className="text-xs text-muted-foreground">Send after (hours)</Label>
+              <Input
+                type="number"
+                min={0}
+                value={aftercareDelay}
+                onChange={(e) => setAftercareDelay(Math.max(0, Number(e.target.value) || 0))}
+              />
+            </div>
+            <label className="flex items-center gap-2 text-sm pb-2">
+              <Switch checked={autoSendAftercare} onCheckedChange={setAutoSendAftercare} />
+              <span>Auto-send aftercare</span>
+            </label>
+          </div>
+          <p className="text-[11px] text-muted-foreground">Aftercare is scheduled the moment the appointment is booked and dispatched at the chosen delay after the appointment ends.</p>
         </div>
       </div>
       <DialogFooter>
@@ -607,6 +661,10 @@ function TreatmentDialog({
               session_count: sessionCount,
               allow_split_payment: allowSplit && sessionCount >= 2,
               rebook_reminder_days: rebookDays === "" ? null : Number(rebookDays),
+              aftercare_html: aftercareHtml,
+              aftercare_delay_hours: aftercareDelay,
+              auto_send_medical_forms: autoSendForms,
+              auto_send_aftercare: autoSendAftercare,
             })
           }
           disabled={!name}

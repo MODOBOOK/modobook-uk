@@ -31,8 +31,19 @@ type FormElement = {
   text?: string;
   level?: 1 | 2 | 3;
   fieldType?: string;
+  logic?: { showIfId: string; equals: string } | null;
 };
 type FormStep = { id: string; title: string; elements: FormElement[] };
+
+function isVisible(el: FormElement, responses: Record<string, any>): boolean {
+  if (!el.logic || !el.logic.showIfId) return true;
+  const v = responses[el.logic.showIfId];
+  const target = el.logic.equals;
+  if (!target) return true;
+  if (Array.isArray(v)) return v.includes(target);
+  if (typeof v === "boolean") return (target === "Checked") === v;
+  return String(v ?? "") === target;
+}
 
 function FillFormPage() {
   const { token } = useParams({ from: "/f/$token" });
@@ -86,6 +97,7 @@ function FillFormPage() {
   function validateStep() {
     for (const el of step.elements) {
       if (!el.required) continue;
+      if (!isVisible(el, responses)) continue;
       const v = responses[el.id];
       if (v == null || v === "" || (Array.isArray(v) && v.length === 0)) {
         toast.error(`Please complete: ${el.label}`);
@@ -130,7 +142,7 @@ function FillFormPage() {
 
         <Card className="space-y-4 p-5">
           <h2 className="text-lg font-bold">{step.title}</h2>
-          {step.elements.map((el) => <RenderElement key={el.id} el={el} value={responses[el.id]} onChange={(v) => setField(el.id, v)} />)}
+          {step.elements.filter((el) => isVisible(el, responses)).map((el) => <RenderElement key={el.id} el={el} value={responses[el.id]} onChange={(v) => setField(el.id, v)} />)}
         </Card>
 
         <div className="flex gap-2">
