@@ -314,7 +314,7 @@ function PatientProfilePage() {
 
       <EmailComposerDialog
         open={emailOpen}
-        onClose={() => setEmailOpen(false)}
+        onOpenChange={(v) => setEmailOpen(v)}
         client={client}
         clinicName={clinicName}
         onSent={() => setCommsRefresh(x => x + 1)}
