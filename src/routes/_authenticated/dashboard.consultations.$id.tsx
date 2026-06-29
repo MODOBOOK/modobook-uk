@@ -321,6 +321,13 @@ function Step4({ plan, onChange }: any) {
 
 function Step5({ consent, patientName, onChange }: any) {
   const body = consent?.body ?? defaultConsent(patientName);
+  const photoUses: { key: string; label: string; hint: string }[] = [
+    { key: "photo_file", label: "Patient file", hint: "Stored privately in clinical records." },
+    { key: "photo_social", label: "Social media", hint: "May be posted on Instagram, Facebook, TikTok etc." },
+    { key: "photo_marketing", label: "Marketing & website", hint: "Use on website, brochures and ads." },
+    { key: "photo_show_patients", label: "Showing other patients", hint: "May be shown in consultations as examples." },
+    { key: "photo_training", label: "Training & education", hint: "Used in courses, conferences or teaching." },
+  ];
   return (
     <div className="space-y-4">
       <Header n={5} title="Treatment consent" subtitle="Patient signs to confirm understanding." />
@@ -336,10 +343,34 @@ function Step5({ consent, patientName, onChange }: any) {
           </label>
         ))}
       </div>
+
+      {/* Photo consent — per-use opt-in */}
+      <div className="space-y-2 rounded-lg border bg-muted/30 p-3">
+        <div>
+          <Label className="text-sm">Photo & image consent</Label>
+          <p className="text-xs text-muted-foreground">Tick the uses the patient is happy with. Leave others blank.</p>
+        </div>
+        <div className="grid gap-2 sm:grid-cols-2">
+          {photoUses.map((u) => (
+            <label key={u.key} className="flex cursor-pointer items-start gap-3 rounded-lg border bg-card p-3">
+              <Checkbox
+                checked={!!consent?.[u.key]}
+                onCheckedChange={(v) => onChange({ ...consent, [u.key]: !!v })}
+              />
+              <span>
+                <span className="block text-sm font-medium">{u.label}</span>
+                <span className="block text-xs text-muted-foreground">{u.hint}</span>
+              </span>
+            </label>
+          ))}
+        </div>
+      </div>
+
       <SignaturePad value={consent?.signature ?? null} signedAt={consent?.signed_at} signerName={consent?.signer_name ?? patientName} onChange={(sig, name) => onChange({ ...consent, body, signature: sig, signed_at: sig ? new Date().toISOString() : null, signer_name: name })} />
     </div>
   );
 }
+
 
 function Step6({ photos, onChange }: any) {
   return (
