@@ -466,6 +466,7 @@ function FormEditor({ formId, onClose, cats }: { formId: string; onClose: () => 
               <ElementEditor
                 key={el.id}
                 element={el}
+                siblings={step.elements.filter((x) => x.id !== el.id)}
                 onChange={(patch) => updateElement(step.id, el.id, patch)}
                 onRemove={() => removeElement(step.id, el.id)}
                 onMove={(d) => moveElement(step.id, el.id, d)}
