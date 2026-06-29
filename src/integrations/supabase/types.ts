@@ -2549,6 +2549,7 @@ export type Database = {
       profiles: {
         Row: {
           about: string | null
+          about_page: Json
           active: boolean | null
           address: Json | null
           allow_patient_cancel: boolean
@@ -2627,6 +2628,7 @@ export type Database = {
         }
         Insert: {
           about?: string | null
+          about_page?: Json
           active?: boolean | null
           address?: Json | null
           allow_patient_cancel?: boolean
@@ -2705,6 +2707,7 @@ export type Database = {
         }
         Update: {
           about?: string | null
+          about_page?: Json
           active?: boolean | null
           address?: Json | null
           allow_patient_cancel?: boolean
@@ -3247,6 +3250,7 @@ export type Database = {
           token: string
         }[]
       }
+      get_about_page_by_slug: { Args: { p_slug: string }; Returns: Json }
       get_appointment_by_manage_token: {
         Args: { p_token: string }
         Returns: {

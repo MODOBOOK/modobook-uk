@@ -87,27 +87,30 @@ function DashboardIndex() {
     <div className="mx-auto max-w-4xl space-y-8">
       {/* Hero */}
       <Card className="overflow-hidden border-border/60 shadow-luxe">
-        <CardContent className="relative p-6 sm:p-8">
+        <CardContent className="relative p-5 sm:p-8">
           <div className="absolute inset-0 bg-gradient-to-br from-accent/15 via-background to-background" />
-          <div className="relative flex items-center gap-5">
+          <div className="relative flex items-center gap-4 sm:gap-5">
             {profile.avatar_url ? (
               <img
                 src={profile.avatar_url}
                 alt=""
-                className="h-20 w-20 shrink-0 rounded-full object-cover ring-1 ring-border sm:h-24 sm:w-24"
+                className="h-14 w-14 shrink-0 rounded-full object-cover ring-1 ring-border sm:h-20 sm:w-20"
               />
             ) : (
-              <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground ring-1 ring-border sm:h-24 sm:w-24">
-                <span className="font-serif text-3xl">{(profile.clinic_name ?? "M").charAt(0)}</span>
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground ring-1 ring-border sm:h-20 sm:w-20">
+                <span className="font-serif text-2xl sm:text-3xl">{(profile.clinic_name ?? "M").charAt(0)}</span>
               </div>
             )}
             <div className="min-w-0 flex-1">
               <p className="text-[10px] font-medium uppercase tracking-[0.25em] text-muted-foreground">{greeting()}</p>
-              <h1 className="mt-1 truncate font-serif text-3xl leading-tight sm:text-4xl">
+              <h1
+                className="mt-1 font-serif leading-tight break-words [overflow-wrap:anywhere] line-clamp-2"
+                style={{ fontSize: "clamp(1.25rem, 5.5vw, 2.25rem)" }}
+              >
                 {profile.clinic_name || profile.full_name || "Your clinic"}
               </h1>
               {profile.full_name && profile.clinic_name && (
-                <p className="mt-1 truncate text-sm italic text-muted-foreground">{profile.full_name}</p>
+                <p className="mt-1 truncate text-xs italic text-muted-foreground sm:text-sm">{profile.full_name}</p>
               )}
             </div>
           </div>

@@ -177,6 +177,7 @@ export const updatePractitionerBio = createServerFn({ method: "POST" })
       specialties?: string[];
       qualifications?: { label: string; year?: string }[];
       timeline?: { year: string; label: string }[];
+      about_page?: Record<string, unknown>;
     }) => input,
   )
   .handler(async ({ data, context }) => {
@@ -186,6 +187,7 @@ export const updatePractitionerBio = createServerFn({ method: "POST" })
     if (data.specialties !== undefined) patch.specialties = data.specialties;
     if (data.qualifications !== undefined) patch.qualifications = data.qualifications;
     if (data.timeline !== undefined) patch.timeline = data.timeline;
+    if (data.about_page !== undefined) patch.about_page = data.about_page;
 
     const { data: updated, error } = await context.supabase
       .from("profiles")
