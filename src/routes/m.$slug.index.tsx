@@ -284,6 +284,7 @@ function BookPage() {
   const [mode, setMode] = useState<null | "know" | "unsure">(null);
   const [pickedConcernId, setPickedConcernId] = useState<string | null>(null);
   const [quizOn, setQuizOn] = useState(false);
+  const [quizOpen, setQuizOpen] = useState(false);
   useEffect(() => {
     (async () => {
       try {
