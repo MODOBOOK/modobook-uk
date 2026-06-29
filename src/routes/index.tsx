@@ -308,7 +308,7 @@ function LandingPage() {
                 points={[
                   "One link, one inbox, one calendar",
                   "Prescriber-grade consultation notes",
-                  "Batch & expiry tracking built in",
+                  "Photo, consent and aftercare on autopilot",
                 ]}
               />
               <WhoCard
