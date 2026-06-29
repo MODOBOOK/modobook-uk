@@ -380,6 +380,7 @@ function CategoryRow({
   onDeleteTreat,
   onMoveCat,
   onMoveTreat,
+  onReorderTreatsByIds,
 }: {
   node: CatNode;
   depth: number;
@@ -393,6 +394,7 @@ function CategoryRow({
   onDeleteTreat: (t: Treat) => void;
   onMoveCat: (siblings: Cat[], id: string, dir: -1 | 1) => void;
   onMoveTreat: (siblings: Treat[], id: string, dir: -1 | 1) => void;
+  onReorderTreatsByIds: (ids: string[]) => void;
 }) {
   const [open, setOpen] = useState(false);
   const treatsHere = node.treatments.filter(matchTreat);
