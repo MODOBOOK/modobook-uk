@@ -97,6 +97,7 @@ function FillFormPage() {
   function validateStep() {
     for (const el of step.elements) {
       if (!el.required) continue;
+      if (!isVisible(el, responses)) continue;
       const v = responses[el.id];
       if (v == null || v === "" || (Array.isArray(v) && v.length === 0)) {
         toast.error(`Please complete: ${el.label}`);
