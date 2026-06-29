@@ -16,6 +16,7 @@ import {
   Images, Syringe, Receipt, ArrowLeft,
 } from "lucide-react";
 import { toast } from "sonner";
+import { ClientFormsList } from "@/components/patient/ClientFormsList";
 
 export const Route = createFileRoute("/_authenticated/dashboard/consultations/$id")({
   ssr: false,
