@@ -1686,7 +1686,6 @@ function CategoryTree({
 }) {
   const visible = nodes.filter(
     (n) =>
-      (n.coming_soon_at && new Date(n.coming_soon_at) > new Date()) ||
       n.treatments.length > 0 ||
       n.children.some((c) => countTreatments(c) > 0),
   );
