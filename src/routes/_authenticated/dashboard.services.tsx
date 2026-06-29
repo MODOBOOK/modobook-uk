@@ -909,6 +909,7 @@ function ServiceDialog({
       setPaymentMode("full");
       setDepositAmount("");
       setConsentIds([]);
+      setAftercareIds([]);
       setAutoSendForms(true);
       setAftercareHtml("");
       setAftercareDelay(2);
