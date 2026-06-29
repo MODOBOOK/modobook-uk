@@ -1,21 +1,19 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { SiteHeader, SiteFooter } from "./index";
+import { SiteHeader, SiteFooter, IconTile } from "./index";
 import {
-  Pill, ClipboardList, Microscope, Network, ShieldCheck, Users, FileSignature,
+  ClipboardList, Network, ShieldCheck, Users, FileSignature,
   Stethoscope, HeartHandshake, CheckCircle2, Lock,
 } from "lucide-react";
-import founders from "@/assets/modo-founders.jpg";
 
 export const Route = createFileRoute("/prescriber-hub")({
   head: () => ({
     meta: [
       { title: "Prescriber Hub | MODO Book — collaborative aesthetics care" },
-      { name: "description", content: "The MODO Prescriber Hub: a safe, traceable place for HCPs and non-HCPs to collaborate. Remote consultations, prescriptions, batch sign-off and a shared patient record." },
+      { name: "description", content: "The MODO Prescriber Hub: a safe, traceable place for HCPs and non-HCPs to collaborate around a shared patient record." },
       { property: "og:title", content: "MODO Prescriber Hub" },
       { property: "og:description", content: "One workflow for prescribers and the practitioners they support — accountable, safe, professional." },
-      { property: "og:image", content: "/__l5e/assets-v1/" },
     ],
   }),
   component: HubPage,
@@ -36,22 +34,20 @@ function HubPage() {
               <p className="mt-4 text-lg text-muted-foreground">
                 Aesthetics is collaborative — and MODO's Prescriber Hub is where that collaboration
                 lives. One safe, traceable workflow for prescribers and the practitioners they
-                support. Shared patient records, remote consultations, prescriptions and batch
-                sign-off, all linked to the booking that started it.
+                support. Shared patient records and collaborative notes, all linked to the booking
+                that started it.
               </p>
               <div className="mt-6 flex flex-wrap gap-3">
                 <Link to="/auth"><Button size="lg">Join MODO Book</Button></Link>
                 <Link to="/features"><Button size="lg" variant="outline">See all features</Button></Link>
               </div>
             </div>
-            <img
-              src={founders}
-              alt="Two Nurse Prescribers collaborating on MODO Book"
-              loading="lazy"
-              width={1280}
-              height={1024}
-              className="aspect-[5/4] w-full rounded-3xl object-cover shadow-lg ring-1 ring-black/5"
-            />
+            <div className="grid aspect-[5/4] w-full grid-cols-2 grid-rows-2 gap-3 rounded-3xl bg-background/60 p-6 shadow-lg ring-1 ring-black/5 sm:gap-5 sm:p-10">
+              <IconTile icon={Stethoscope} label="Prescribers" />
+              <IconTile icon={Users} label="Practitioners" />
+              <IconTile icon={ClipboardList} label="Shared record" />
+              <IconTile icon={HeartHandshake} label="One workflow" />
+            </div>
           </div>
         </section>
 
@@ -61,16 +57,13 @@ function HubPage() {
               Built for safer, more accountable aesthetics.
             </h2>
             <p className="mt-3 text-muted-foreground">
-              Whether you're a prescriber supporting multiple non-HCPs, or a therapist who works
+              Whether you're a prescriber supporting multiple non-HCPs, or a practitioner who works
               with one — the Hub keeps everyone on the same record.
             </p>
           </div>
           <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            <HubFeature icon={Pill} title="Remote prescribing" desc="Securely issue a prescription tied to a patient, a treatment and a date. Signed, audit-trailed and stored." />
             <HubFeature icon={ClipboardList} title="Shared patient record" desc="Prescriber sees the medical form, concerns, consultation notes and photos — with the patient's consent." />
-            <HubFeature icon={Microscope} title="Batch & expiry sign-off" desc="Prescribers approve products and batches before they're used. No more chasing screenshots over WhatsApp." />
-            <HubFeature icon={Stethoscope} title="Remote consultation log" desc="Capture the video/phone consultation, decision and rationale against the patient file." />
-            <HubFeature icon={FileSignature} title="Digital Rx record" desc="Every Rx is searchable, downloadable and CQC-friendly." />
+            <HubFeature icon={FileSignature} title="Collaborative notes" desc="Add notes, decisions and review actions against the patient file, visible to both sides." />
             <HubFeature icon={Users} title="Multi-prescriber, multi-practitioner" desc="Prescribers can support many practitioners. Practitioners can refer to many prescribers." />
           </div>
         </section>
@@ -82,8 +75,8 @@ function HubPage() {
             </div>
             <div className="mt-12 grid gap-6 md:grid-cols-3">
               <Step n={1} title="Connect" desc="Practitioner and prescriber link accounts inside MODO. Patients consent to data sharing as part of booking." />
-              <Step n={2} title="Consult" desc="Prescriber reviews the medical form, photos and consultation. Approves the plan, products and batch in the Hub." />
-              <Step n={3} title="Treat" desc="Practitioner treats with full sign-off on file. Aftercare, review and any follow-ups all flow back to both records." />
+              <Step n={2} title="Collaborate" desc="Prescriber reviews the medical form, photos and consultation notes alongside the practitioner." />
+              <Step n={3} title="Treat" desc="Aftercare, review periods and follow-ups all flow back to both records — one shared timeline." />
             </div>
           </div>
         </section>
@@ -105,7 +98,7 @@ function HubPage() {
                   {[
                     "One clinical standard across HCPs and non-HCPs.",
                     "Granular consent and traceability for every treatment.",
-                    "Removes risky WhatsApp-based prescribing workflows.",
+                    "Removes risky WhatsApp-based collaboration workflows.",
                     "Designed with input from practising prescribers.",
                   ].map((p) => (
                     <li key={p} className="flex gap-2">
@@ -130,7 +123,7 @@ function HubPage() {
                 <ul className="space-y-2 text-sm">
                   {[
                     "Consent-gated record sharing per patient.",
-                    "Audit log of every access and Rx event.",
+                    "Audit log of every access event.",
                     "Patient can withdraw consent and export their record at any time.",
                   ].map((p) => (
                     <li key={p} className="flex gap-2">
