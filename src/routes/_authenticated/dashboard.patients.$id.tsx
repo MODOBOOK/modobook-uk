@@ -33,6 +33,7 @@ import { toast } from "sonner";
 import { ConcernsCard } from "@/components/patient/ConcernsCard";
 import { CommsTimeline } from "@/components/patient/CommsTimeline";
 import { EmailComposerDialog } from "@/components/patient/EmailComposerDialog";
+import { SendFormDialog } from "@/components/patient/SendFormDialog";
 import { logCommunication } from "@/lib/patient-hub.functions";
 
 
