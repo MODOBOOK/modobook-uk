@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
+import { ConsentSectionsView, type ConsentSection } from "@/components/ConsentSections";
 
 function publicClient() {
   return createClient<Database>(
