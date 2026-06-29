@@ -238,9 +238,9 @@ export const sendFormToClient = createServerFn({ method: "POST" })
     const { data: row, error } = await context.supabase.rpc("send_medical_form_to_client", {
       p_client_id: data.client_id,
       p_template_id: data.template_id,
-      p_email: (data.email ?? "") as string,
-      p_phone: (data.phone ?? "") as string,
-    });
+      p_email: data.email ?? null,
+      p_phone: data.phone ?? null,
+    } as any);
     if (error) throw error;
     // row is a setof: take first
     const r = Array.isArray(row) ? row[0] : row;
