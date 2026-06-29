@@ -25,7 +25,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/_authenticated/dashboard/patients")({
+export const Route = createFileRoute("/_authenticated/dashboard/patients/")({
   ssr: false,
   component: PatientsPage,
 });
