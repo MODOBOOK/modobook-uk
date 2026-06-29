@@ -124,7 +124,9 @@ export const updateTreatment = createServerFn({ method: "POST" })
       session_count?: number;
       allow_split_payment?: boolean;
       rebook_reminder_days?: number | null;
+      session_interval_days?: number | null;
       color?: string | null;
+
       addon_mode?: "off" | "optional";
       discount_percent?: number | null;
       discount_starts_at?: string | null;
