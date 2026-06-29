@@ -68,6 +68,10 @@ type TreatmentForm = {
   session_count: number;
   allow_split_payment: boolean;
   rebook_reminder_days: number | null;
+  aftercare_html: string;
+  aftercare_delay_hours: number;
+  auto_send_medical_forms: boolean;
+  auto_send_aftercare: boolean;
 };
 
 type ConsentTpl = { id: string; name: string; treatment_type: string | null; is_system: boolean };
