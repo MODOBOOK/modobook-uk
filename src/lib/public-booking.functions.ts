@@ -373,6 +373,14 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const sb = publicClient();
+    const { data: blk } = await sb
+      .from("clinic_clients")
+      .select("id")
+      .eq("profile_id", data.profileId)
+      .ilike("email", data.patientEmail)
+      .eq("is_blocked", true)
+      .maybeSingle();
+    if (blk) throw new Error("Unable to book online. Please contact the clinic directly.");
     let cursor = data.startTime;
     const created: { id: string; treatmentId: string }[] = [];
     const consents: { token: string; consent_template_id: string }[] = [];
