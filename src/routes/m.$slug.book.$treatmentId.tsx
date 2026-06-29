@@ -432,6 +432,11 @@ function BookTreatmentPage() {
       <Card className="mb-6">
         <CardHeader>
           <CardTitle className="text-base" style={headingStyle}>Pick a date & time</CardTitle>
+          {bookableFrom && (
+            <p className="text-xs text-muted-foreground mt-1">
+              Bookable from {fromIsoDate(bookableFrom).toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" })}
+            </p>
+          )}
         </CardHeader>
 
         <CardContent className="space-y-5">
