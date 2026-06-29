@@ -90,7 +90,7 @@ function AftercarePage() {
                 <div className="text-xs text-muted-foreground">Sends {t.delay_hours}h after appointment</div>
               </div>
               <div className="flex gap-1 shrink-0">
-                <Button size="sm" variant="ghost" onClick={() => { setEditing(t); setOpen(true); }}>
+                <Button size="sm" variant="ghost" onClick={() => openEditor(t)}>
                   <Pencil className="h-4 w-4" />
                 </Button>
                 <Button
