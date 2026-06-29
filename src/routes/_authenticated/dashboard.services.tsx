@@ -1231,6 +1231,7 @@ function ServiceDialog({
                 payment_mode: (profile.data as { payment_deposit_enabled?: boolean } | undefined)?.payment_deposit_enabled ? "deposit" : "full",
                 deposit_amount: depositAmount.trim() ? Number(depositAmount) : undefined,
                 consent_ids: consentIds,
+                aftercare_template_ids: aftercareIds,
                 auto_send_medical_forms: autoSendForms,
                 aftercare_html: aftercareHtml.trim() || null,
                 aftercare_delay_hours: aftercareDelay,
