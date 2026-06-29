@@ -527,7 +527,7 @@ function TreatmentDialog({
               />
             </div>
             <div>
-              <Label className="text-xs text-muted-foreground">Rebook reminder (days, optional)</Label>
+              <Label className="text-xs text-muted-foreground">Rebook reminder — days after appointment</Label>
               <Input
                 type="number"
                 min={0}
@@ -535,7 +535,7 @@ function TreatmentDialog({
                 value={rebookDays}
                 onChange={(e) => setRebookDays(e.target.value)}
               />
-            </div>
+              <p className="mt-1 text-[11px] text-muted-foreground">Internal only — not visible to patients.</p>
           </div>
           <label className="flex items-center gap-2 text-sm">
             <Switch
