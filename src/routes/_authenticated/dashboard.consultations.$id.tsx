@@ -198,13 +198,34 @@ export function ConsultationWizard() {
 
 /* ---------- Steps ---------- */
 
-function Step1({ medical, onChange }: { medical: any; onChange: (v: any) => void }) {
+function Step1({ medical, onChange, clientId, clientName, clientEmail, clientPhone }: {
+  medical: any;
+  onChange: (v: any) => void;
+  clientId?: string | null;
+  clientName?: string | null;
+  clientEmail?: string | null;
+  clientPhone?: string | null;
+}) {
   const answers = medical?.answers ?? {};
   const notes = medical?.notes ?? "";
   const toggle = (q: string, v: boolean) => onChange({ ...medical, answers: { ...answers, [q]: v } });
   return (
     <div className="space-y-4">
-      <Header n={1} title="Medical history" subtitle="Tick anything that applies." />
+      <Header n={1} title="Medical history" subtitle="Tick anything that applies, or send a full form for the patient to complete at home." />
+
+      {clientId ? (
+        <div className="rounded-lg border bg-muted/30 p-3">
+          <ClientFormsList
+            client={{ id: clientId, full_name: clientName ?? "", email: clientEmail ?? undefined, phone: clientPhone ?? undefined }}
+            compact
+          />
+        </div>
+      ) : (
+        <div className="rounded-md border border-dashed p-3 text-xs text-muted-foreground">
+          Link this consultation to a patient record to send medical forms automatically.
+        </div>
+      )}
+
       <div className="grid gap-2">
         {MEDICAL_QUESTIONS.map((q) => (
           <label key={q} className="flex cursor-pointer items-center gap-3 rounded-lg border bg-card p-3 active:bg-muted">
@@ -220,6 +241,7 @@ function Step1({ medical, onChange }: { medical: any; onChange: (v: any) => void
     </div>
   );
 }
+
 
 function Step2({ concerns, onChange }: { concerns: any; onChange: (v: any) => void }) {
   const selected: string[] = concerns?.selected ?? [];
