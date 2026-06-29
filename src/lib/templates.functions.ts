@@ -140,8 +140,10 @@ export const cloneConsentTemplate = createServerFn({ method: "POST" })
         treatment_type: src.treatment_type,
         body_markdown: src.body_markdown,
         requires_signature: src.requires_signature,
+        sections: (src as any).sections ?? null,
+        summary: (src as any).summary ?? null,
         is_system: false,
-      })
+      } as any)
       .select()
       .single();
     if (error) throw error;
