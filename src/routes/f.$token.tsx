@@ -142,7 +142,7 @@ function FillFormPage() {
 
         <Card className="space-y-4 p-5">
           <h2 className="text-lg font-bold">{step.title}</h2>
-          {step.elements.map((el) => <RenderElement key={el.id} el={el} value={responses[el.id]} onChange={(v) => setField(el.id, v)} />)}
+          {step.elements.filter((el) => isVisible(el, responses)).map((el) => <RenderElement key={el.id} el={el} value={responses[el.id]} onChange={(v) => setField(el.id, v)} />)}
         </Card>
 
         <div className="flex gap-2">
