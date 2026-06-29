@@ -801,6 +801,58 @@ function CheckoutSheet({
         </div>
       )}
 
+      {/* Quick actions */}
+      <div className="grid grid-cols-3 gap-1.5">
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={busy}
+          onClick={async () => {
+            setBusy(true);
+            try {
+              const r = await getOrCreateClient({ data: { appointmentId: a.id } });
+              navigate({ to: "/dashboard/patients/$id", params: { id: r.clientId } });
+            } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
+          }}
+        >
+          Open profile
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={busy || cancelled || isNoShow}
+          onClick={async () => {
+            if (!confirm("Mark this appointment as a no-show? The client's no-show count will increase.")) return;
+            setBusy(true);
+            try {
+              const r = await markNoShow({ data: { appointmentId: a.id } });
+              onPatch({ status: "no_show" });
+              toast.success(`Marked as no-show${r.noShowCount ? ` (total: ${r.noShowCount})` : ""}`);
+            } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
+          }}
+        >
+          <AlertTriangle className="h-3.5 w-3.5 mr-1" /> No-show
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          className="text-destructive"
+          disabled={busy}
+          onClick={async () => {
+            const reason = prompt("Block this client from future online bookings.\n\nOptional reason:");
+            if (reason === null) return;
+            setBusy(true);
+            try {
+              const r = await getOrCreateClient({ data: { appointmentId: a.id } });
+              await blockClient({ data: { clientId: r.clientId, blocked: true, reason: reason || null } });
+              toast.success("Client blocked from online bookings");
+            } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
+          }}
+        >
+          <Ban className="h-3.5 w-3.5 mr-1" /> Block
+        </Button>
+      </div>
+
       {a.has_allergies && a.allergies_text && (
         <div className="rounded border border-red-500/40 bg-red-500/5 p-2 text-xs font-semibold text-red-600">
           ⚠ Allergies: {a.allergies_text}
