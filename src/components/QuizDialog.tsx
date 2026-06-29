@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { getQuizBySlug, submitQuizResponse } from "@/lib/quiz.functions";
 import { QUIZ_QUESTIONS, scoreTreatment, type QuizAnswers } from "@/lib/quiz-questions";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -116,13 +116,22 @@ export function QuizDialog({
   const canNext = q ? (answers[q.id]?.length ?? 0) > 0 : false;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4" /> Treatment finder
-          </DialogTitle>
-        </DialogHeader>
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent
+        side="right"
+        className="w-full sm:max-w-lg md:max-w-xl overflow-y-auto p-6 sm:p-8"
+      >
+        <SheetHeader className="text-left">
+          <SheetTitle className="flex items-center gap-2 text-xl">
+            <Sparkles className="h-5 w-5" /> Treatment finder
+          </SheetTitle>
+          <SheetDescription>
+            Answer a few quick questions and we'll suggest treatments that fit.
+          </SheetDescription>
+        </SheetHeader>
+        <div className="mt-4">
+
+
 
         {loading ? (
           <div className="flex items-center justify-center py-10">
@@ -315,7 +324,8 @@ export function QuizDialog({
             )}
           </div>
         )}
-      </DialogContent>
-    </Dialog>
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 }
