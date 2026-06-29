@@ -408,11 +408,15 @@ function TreatmentDialog({
       fetchAddons({ data: { treatmentId: treatment.id } })
         .then((rows) => setAddons(rows as AddonLink[]))
         .catch(() => setAddons([]));
+      fetchTreatmentAftercare({ data: { treatment_id: treatment.id } })
+        .then((ids) => setAftercareTemplateIds(ids as string[]))
+        .catch(() => setAftercareTemplateIds([]));
     } else {
       setConsentIds([]);
       setAddons([]);
+      setAftercareTemplateIds([]);
     }
-  }, [treatment, fetchConsents, fetchAddons, initial.parent, initial.sub]);
+  }, [treatment, fetchConsents, fetchAddons, fetchTreatmentAftercare, initial.parent, initial.sub]);
 
   function toggleConsent(id: string) {
     setConsentIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
