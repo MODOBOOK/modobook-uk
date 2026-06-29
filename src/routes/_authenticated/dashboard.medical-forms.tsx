@@ -177,10 +177,13 @@ function FormsPage() {
         <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search for form" className="pl-10" />
       </div>
 
+      <RecentSubmissionsPanel />
+
       <div className="grid grid-cols-2 gap-2">
         <Button variant="default" onClick={() => setNewCatOpen(true)}><Plus className="mr-2 h-4 w-4" />Add Category</Button>
         <Button variant="default" onClick={() => setNewForm(true)}><Plus className="mr-2 h-4 w-4" />Add Form</Button>
       </div>
+
 
       {loading ? (
         <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin" /></div>
