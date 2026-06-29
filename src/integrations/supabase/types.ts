@@ -3439,6 +3439,16 @@ export type Database = {
           whatsapp_reminders_enabled: boolean
         }[]
       }
+      get_quiz_config_by_slug: {
+        Args: { p_slug: string }
+        Returns: {
+          chooser_consultation_treatment_id: string
+          profile_id: string
+          quiz_enabled: boolean
+          quiz_intro: string
+          quiz_outro: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
