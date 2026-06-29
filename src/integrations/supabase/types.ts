@@ -134,29 +134,38 @@ export type Database = {
       aftercare_templates: {
         Row: {
           body_html: string
+          category: string | null
           created_at: string
           delay_hours: number
           id: string
+          is_system: boolean
           name: string
-          profile_id: string
+          profile_id: string | null
+          summary: string | null
           updated_at: string
         }
         Insert: {
           body_html?: string
+          category?: string | null
           created_at?: string
           delay_hours?: number
           id?: string
+          is_system?: boolean
           name: string
-          profile_id: string
+          profile_id?: string | null
+          summary?: string | null
           updated_at?: string
         }
         Update: {
           body_html?: string
+          category?: string | null
           created_at?: string
           delay_hours?: number
           id?: string
+          is_system?: boolean
           name?: string
-          profile_id?: string
+          profile_id?: string | null
+          summary?: string | null
           updated_at?: string
         }
         Relationships: [

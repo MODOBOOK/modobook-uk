@@ -10,14 +10,44 @@ export const listAftercareTemplates = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const profileId = await getProfileId(context.supabase, context.userId);
-    if (!profileId) return [];
     const { data, error } = await context.supabase
       .from("aftercare_templates")
       .select("*")
-      .eq("profile_id", profileId)
+      .or(`is_system.eq.true${profileId ? `,profile_id.eq.${profileId}` : ""}`)
+      .order("is_system", { ascending: false })
       .order("name");
     if (error) throw error;
     return data ?? [];
+  });
+
+export const cloneSystemAftercareTemplate = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: { id: string }) => i)
+  .handler(async ({ data, context }) => {
+    const profileId = await getProfileId(context.supabase, context.userId);
+    if (!profileId) throw new Error("Profile not found");
+    const { data: src, error: e1 } = await context.supabase
+      .from("aftercare_templates")
+      .select("name, body_html, delay_hours, category, summary")
+      .eq("id", data.id)
+      .eq("is_system", true)
+      .single();
+    if (e1) throw e1;
+    const { data: row, error } = await context.supabase
+      .from("aftercare_templates")
+      .insert({
+        profile_id: profileId,
+        is_system: false,
+        name: `${src.name} (my copy)`,
+        body_html: src.body_html,
+        delay_hours: src.delay_hours,
+        category: src.category,
+        summary: src.summary,
+      })
+      .select()
+      .single();
+    if (error) throw error;
+    return row;
   });
 
 export const saveAftercareTemplate = createServerFn({ method: "POST" })
