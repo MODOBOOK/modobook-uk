@@ -270,11 +270,18 @@ function MultiBookPage() {
       const start = toMinutes(r.start_time);
       const end = toMinutes(r.end_time);
       const candidates = new Set<number>();
-      for (let t = start; t + totalDuration <= end; t += step) candidates.add(t);
-      if (smartTimes) {
+      if (smartTimes && busy.length > 0) {
+        const WINDOW = 60;
         for (const b of busy) {
-          if (b.end >= start && b.end + totalDuration <= end) candidates.add(b.end);
+          for (let t = b.start - totalDuration; t >= b.start - totalDuration - WINDOW && t >= start; t -= step) {
+            if (t + totalDuration <= end) candidates.add(t);
+          }
+          for (let t = b.end; t <= b.end + WINDOW && t + totalDuration <= end; t += step) {
+            if (t >= start) candidates.add(t);
+          }
         }
+      } else {
+        for (let t = start; t + totalDuration <= end; t += step) candidates.add(t);
       }
       for (const t of Array.from(candidates).sort((a, z) => a - z)) {
         const slotEnd = t + totalDuration;
