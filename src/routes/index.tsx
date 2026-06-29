@@ -106,9 +106,9 @@ function LandingPage() {
             <ForCard
               icon={Syringe}
               tag="For HCPs"
-              title="Nurse Prescribers, Doctors, Dentists & Pharmacists"
+              title="Nurses, Nurse Prescribers, Doctors, Dentists, Pharmacists, Paramedics & Midwives"
               points={[
-                "Prescriber-grade consultation notes & batch tracking",
+                "Prescriber-grade consultation notes & treatment plans",
                 "Photo & social media consent split out properly",
                 "Prescriber Hub: collaborate with non-HCPs you work with",
                 "Multi-location, multi-practitioner clinics supported",
@@ -117,7 +117,7 @@ function LandingPage() {
             <ForCard
               icon={Sparkles}
               tag="For Non-HCPs"
-              title="Aesthetic Therapists, Skin Specialists & Beauty Pros"
+              title="Aesthetics Practitioners, Skin Injectors & Other Injectors"
               points={[
                 "Full medical screening & consent before every appointment",
                 "Refer in your prescriber via the Prescriber Hub",
