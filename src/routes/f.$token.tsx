@@ -24,6 +24,10 @@ type FormElement = {
   placeholder?: string;
   required?: boolean;
   options?: string[];
+  helpText?: string;
+  variant?: string;
+  max?: number;
+
   text?: string;
   level?: 1 | 2 | 3;
   fieldType?: string;
