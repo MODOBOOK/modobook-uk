@@ -164,7 +164,7 @@ export function ConsultationWizard() {
       </div>
 
       <Card><CardContent className="space-y-4 p-4 sm:p-6">
-        {step === 1 && <Step1 medical={c.medical} onChange={(v: any) => setField("medical", v)} />}
+        {step === 1 && <Step1 medical={c.medical} onChange={(v: any) => setField("medical", v)} clientId={c.patient_id} clientName={c.patient_name} clientEmail={c.patient_email} clientPhone={c.patient_phone} />}
         {step === 2 && <Step2 concerns={c.concerns} onChange={(v: any) => setField("concerns", v)} />}
         {step === 3 && <Step3 assessment={c.assessment} photos={c.before_photos} onChangeAssess={(v: any) => setField("assessment", v)} onChangePhotos={(v: any) => setField("before_photos", v)} />}
         {step === 4 && <Step4 plan={c.treatment_plan} onChange={(v: any) => setField("treatment_plan", v)} />}
