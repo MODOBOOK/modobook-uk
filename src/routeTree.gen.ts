@@ -9,6 +9,9 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WhoItsForRouteImport } from './routes/who-its-for'
+import { Route as PrescriberHubRouteImport } from './routes/prescriber-hub'
+import { Route as FeaturesRouteImport } from './routes/features'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
@@ -59,6 +62,21 @@ import { Route as MSlugBookTreatmentIdRouteImport } from './routes/m.$slug.book.
 import { Route as AuthenticatedDashboardPatientsIdRouteImport } from './routes/_authenticated/dashboard.patients.$id'
 import { Route as AuthenticatedDashboardConsultationsIdRouteImport } from './routes/_authenticated/dashboard.consultations.$id'
 
+const WhoItsForRoute = WhoItsForRouteImport.update({
+  id: '/who-its-for',
+  path: '/who-its-for',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrescriberHubRoute = PrescriberHubRouteImport.update({
+  id: '/prescriber-hub',
+  path: '/prescriber-hub',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FeaturesRoute = FeaturesRouteImport.update({
+  id: '/features',
+  path: '/features',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -337,6 +355,9 @@ const AuthenticatedDashboardConsultationsIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/features': typeof FeaturesRoute
+  '/prescriber-hub': typeof PrescriberHubRoute
+  '/who-its-for': typeof WhoItsForRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/dashboard': typeof AuthenticatedDashboardRouteWithChildren
   '/onboarding': typeof AuthenticatedOnboardingRoute
@@ -387,6 +408,9 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/features': typeof FeaturesRoute
+  '/prescriber-hub': typeof PrescriberHubRoute
+  '/who-its-for': typeof WhoItsForRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/book/$slug': typeof BookSlugRoute
@@ -436,6 +460,9 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/auth': typeof AuthRoute
+  '/features': typeof FeaturesRoute
+  '/prescriber-hub': typeof PrescriberHubRoute
+  '/who-its-for': typeof WhoItsForRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRouteWithChildren
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
@@ -488,6 +515,9 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/features'
+    | '/prescriber-hub'
+    | '/who-its-for'
     | '/admin'
     | '/dashboard'
     | '/onboarding'
@@ -538,6 +568,9 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/features'
+    | '/prescriber-hub'
+    | '/who-its-for'
     | '/admin'
     | '/onboarding'
     | '/book/$slug'
@@ -586,6 +619,9 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/features'
+    | '/prescriber-hub'
+    | '/who-its-for'
     | '/_authenticated/admin'
     | '/_authenticated/dashboard'
     | '/_authenticated/onboarding'
@@ -638,6 +674,9 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   AuthRoute: typeof AuthRoute
+  FeaturesRoute: typeof FeaturesRoute
+  PrescriberHubRoute: typeof PrescriberHubRoute
+  WhoItsForRoute: typeof WhoItsForRoute
   BookSlugRoute: typeof BookSlugRoute
   CTokenRoute: typeof CTokenRoute
   FTokenRoute: typeof FTokenRoute
@@ -646,6 +685,27 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/who-its-for': {
+      id: '/who-its-for'
+      path: '/who-its-for'
+      fullPath: '/who-its-for'
+      preLoaderRoute: typeof WhoItsForRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/prescriber-hub': {
+      id: '/prescriber-hub'
+      path: '/prescriber-hub'
+      fullPath: '/prescriber-hub'
+      preLoaderRoute: typeof PrescriberHubRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/features': {
+      id: '/features'
+      path: '/features'
+      fullPath: '/features'
+      preLoaderRoute: typeof FeaturesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -1136,6 +1196,9 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   AuthRoute: AuthRoute,
+  FeaturesRoute: FeaturesRoute,
+  PrescriberHubRoute: PrescriberHubRoute,
+  WhoItsForRoute: WhoItsForRoute,
   BookSlugRoute: BookSlugRoute,
   CTokenRoute: CTokenRoute,
   FTokenRoute: FTokenRoute,
