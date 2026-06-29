@@ -97,6 +97,8 @@ export const getBookingContext = createServerFn({ method: "GET" })
       (treatment as { category_id: string | null }).category_id,
     ]);
 
+    const settings = extractBookingSettings(profile as Record<string, unknown>);
+
     return {
       profileId: profile.id,
       clinicName: profile.clinic_name,
@@ -107,8 +109,54 @@ export const getBookingContext = createServerFn({ method: "GET" })
       brandColor: (profile as { brand_color?: string | null }).brand_color ?? null,
       modelSlots: modelSlots ?? [],
       bookableFrom,
+      settings,
     };
   });
+
+export type PublicBookingSettings = {
+  booking_min_notice_hours: number;
+  booking_max_lead_days: number;
+  booking_buffer_before_minutes: number;
+  booking_buffer_after_minutes: number;
+  booking_daily_cap: number | null;
+  payment_card_full_enabled: boolean;
+  payment_deposit_enabled: boolean;
+  payment_klarna_enabled: boolean;
+  payment_clearpay_enabled: boolean;
+  payment_pass_fees_to_customer: boolean;
+  allow_pay_in_clinic: boolean;
+  show_prices_on_booking: boolean;
+  require_account_to_book: boolean;
+  require_phone: boolean;
+  require_dob: boolean;
+  require_address: boolean;
+  auto_confirm_bookings: boolean;
+};
+
+function extractBookingSettings(p: Record<string, unknown>): PublicBookingSettings {
+  const num = (k: string, d: number) => (typeof p[k] === "number" ? (p[k] as number) : d);
+  const numN = (k: string) => (typeof p[k] === "number" ? (p[k] as number) : null);
+  const bo = (k: string, d: boolean) => (typeof p[k] === "boolean" ? (p[k] as boolean) : d);
+  return {
+    booking_min_notice_hours: num("booking_min_notice_hours", 0),
+    booking_max_lead_days: num("booking_max_lead_days", 90),
+    booking_buffer_before_minutes: num("booking_buffer_before_minutes", 0),
+    booking_buffer_after_minutes: num("booking_buffer_after_minutes", 0),
+    booking_daily_cap: numN("booking_daily_cap"),
+    payment_card_full_enabled: bo("payment_card_full_enabled", true),
+    payment_deposit_enabled: bo("payment_deposit_enabled", false),
+    payment_klarna_enabled: bo("payment_klarna_enabled", false),
+    payment_clearpay_enabled: bo("payment_clearpay_enabled", false),
+    payment_pass_fees_to_customer: bo("payment_pass_fees_to_customer", false),
+    allow_pay_in_clinic: bo("allow_pay_in_clinic", true),
+    show_prices_on_booking: bo("show_prices_on_booking", true),
+    require_account_to_book: bo("require_account_to_book", false),
+    require_phone: bo("require_phone", true),
+    require_dob: bo("require_dob", true),
+    require_address: bo("require_address", true),
+    auto_confirm_bookings: bo("auto_confirm_bookings", true),
+  };
+}
 
 
 export const getMultiBookingContext = createServerFn({ method: "GET" })
