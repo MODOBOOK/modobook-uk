@@ -161,41 +161,50 @@ export const saveConsentTemplate = createServerFn({ method: "POST" })
       requires_signature?: boolean;
       sections?: unknown;
       summary?: string | null;
+      is_system?: boolean;
     }) => input,
   )
   .handler(async ({ data, context }) => {
+    // Admin can manage system templates
+    let isAdmin = false;
+    if (data.is_system) {
+      const { data: ok } = await context.supabase.rpc("has_role", {
+        _user_id: context.userId,
+        _role: "admin",
+      });
+      isAdmin = Boolean(ok);
+      if (!isAdmin) throw new Error("Forbidden");
+    }
+
     const profileId = await getProfileId(context.supabase, context.userId);
-    if (!profileId) throw new Error("Profile not found");
+    if (!isAdmin && !profileId) throw new Error("Profile not found");
+
+    const basePayload: any = {
+      name: data.name,
+      treatment_type: data.treatment_type ?? null,
+      body_markdown: data.body_markdown,
+      requires_signature: data.requires_signature ?? true,
+      sections: (data.sections ?? null) as any,
+      summary: data.summary ?? null,
+    };
+
     if (data.id) {
-      const { data: row, error } = await context.supabase
+      const q = context.supabase
         .from("consent_templates")
-        .update({
-          name: data.name,
-          treatment_type: data.treatment_type ?? null,
-          body_markdown: data.body_markdown,
-          requires_signature: data.requires_signature ?? true,
-          sections: (data.sections ?? null) as any,
-          summary: data.summary ?? null,
-        } as any)
-        .eq("id", data.id)
-        .eq("profile_id", profileId)
+        .update(basePayload)
+        .eq("id", data.id);
+      const { data: row, error } = await (isAdmin ? q : q.eq("profile_id", profileId))
         .select()
         .single();
       if (error) throw error;
       return row;
     }
+    const insertPayload = isAdmin
+      ? { ...basePayload, profile_id: null, is_system: true }
+      : { ...basePayload, profile_id: profileId, is_system: false };
     const { data: row, error } = await context.supabase
       .from("consent_templates")
-      .insert({
-        profile_id: profileId,
-        name: data.name,
-        treatment_type: data.treatment_type ?? null,
-        body_markdown: data.body_markdown,
-        requires_signature: data.requires_signature ?? true,
-        sections: (data.sections ?? null) as any,
-        summary: data.summary ?? null,
-        is_system: false,
-      } as any)
+      .insert(insertPayload)
       .select()
       .single();
     if (error) throw error;
@@ -213,3 +222,4 @@ export const deleteConsentTemplate = createServerFn({ method: "POST" })
     if (error) throw error;
     return { ok: true };
   });
+

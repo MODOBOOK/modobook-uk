@@ -7,6 +7,8 @@ import {
   saveConsentTemplate,
   deleteConsentTemplate,
 } from "@/lib/templates.functions";
+import { amIAdmin } from "@/lib/admin.functions";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -46,11 +48,14 @@ function ConsentFormsPage() {
   const clone = useServerFn(cloneConsentTemplate);
   const save = useServerFn(saveConsentTemplate);
   const remove = useServerFn(deleteConsentTemplate);
+  const checkAdmin = useServerFn(amIAdmin);
 
   const [rows, setRows] = useState<Tpl[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Tpl | null>(null);
   const [query, setQuery] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
+
 
   function newBlank() {
     setEditing({
@@ -82,8 +87,10 @@ function ConsentFormsPage() {
 
   useEffect(() => {
     refresh();
+    checkAdmin().then((r) => setIsAdmin(r.admin)).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
 
   async function handleSave() {
     if (!editing) return;
@@ -97,6 +104,7 @@ function ConsentFormsPage() {
           requires_signature: editing.requires_signature,
           sections: editing.sections ?? null,
           summary: editing.summary ?? null,
+          is_system: isAdmin ? !!editing.is_system : false,
         },
       });
       toast.success("Saved");
@@ -106,6 +114,7 @@ function ConsentFormsPage() {
       toast.error(e instanceof Error ? e.message : "Failed");
     }
   }
+
 
   const q = query.trim().toLowerCase();
   const filter = (list: Tpl[]) =>
@@ -128,10 +137,40 @@ function ConsentFormsPage() {
           <p className="text-sm text-muted-foreground">
             Modern, sectioned consent templates for aesthetic treatments. Clone any system template to edit, or build your own from scratch.
           </p>
+          {isAdmin && (
+            <p className="mt-1 text-xs font-medium text-primary">
+              Admin mode — you can add, edit and remove system templates for all practitioners.
+            </p>
+          )}
         </div>
-        <Button onClick={newBlank} size="sm">
-          <FileSignature className="mr-2 h-4 w-4" /> New blank consent
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button onClick={newBlank} size="sm" variant="outline">
+            <FileSignature className="mr-2 h-4 w-4" /> New blank consent
+          </Button>
+          {isAdmin && (
+            <Button
+              size="sm"
+              onClick={() =>
+                setEditing({
+                  id: undefined as any,
+                  name: "New system consent",
+                  treatment_type: "",
+                  body_markdown: "",
+                  requires_signature: true,
+                  is_system: true,
+                  sections: [
+                    { title: "About the treatment", body: "" },
+                    { title: "Risks & possible complications", bullets: [] },
+                    { title: "Aftercare", bullets: [] },
+                  ],
+                  summary: "",
+                } as Tpl)
+              }
+            >
+              <FileSignature className="mr-2 h-4 w-4" /> New system template
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="relative">
@@ -158,17 +197,30 @@ function ConsentFormsPage() {
               <TemplateCard
                 key={t.id}
                 t={t}
+                editable={isAdmin}
                 onPreview={() => setEditing(t)}
+                onEdit={isAdmin ? () => setEditing(t) : undefined}
                 onClone={async () => {
                   await clone({ data: { template_id: t.id } });
                   toast.success("Cloned to your templates");
                   refresh();
                 }}
+                onDelete={
+                  isAdmin
+                    ? async () => {
+                        if (!confirm("Remove this system consent template for all practitioners?")) return;
+                        await remove({ data: { id: t.id } });
+                        toast.success("System template removed");
+                        refresh();
+                      }
+                    : undefined
+                }
               />
             ))}
           </div>
         )}
       </section>
+
 
       <section className="space-y-3">
         <h2 className="text-sm font-semibold text-muted-foreground">
@@ -201,13 +253,21 @@ function ConsentFormsPage() {
         <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-3xl">
           <DialogHeader>
             <DialogTitle>
-              {editing?.is_system ? "Preview consent" : editing?.id ? "Edit consent template" : "New consent template"}
+              {editing?.is_system
+                ? isAdmin
+                  ? editing?.id
+                    ? "Edit system consent template"
+                    : "New system consent template"
+                  : "Preview consent"
+                : editing?.id
+                  ? "Edit consent template"
+                  : "New consent template"}
             </DialogTitle>
           </DialogHeader>
           {editing && (
             <EditorBody
               value={editing}
-              disabled={editing.is_system}
+              disabled={editing.is_system && !isAdmin}
               onChange={(v) => setEditing(v)}
             />
           )}
@@ -215,12 +275,15 @@ function ConsentFormsPage() {
             <Button variant="ghost" onClick={() => setEditing(null)}>
               Close
             </Button>
-            {editing && !editing.is_system && (
-              <Button onClick={handleSave}>Save consent form</Button>
+            {editing && (!editing.is_system || isAdmin) && (
+              <Button onClick={handleSave}>
+                {editing.is_system ? "Save system template" : "Save consent form"}
+              </Button>
             )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
     </div>
   );
 }
@@ -268,26 +331,28 @@ function TemplateCard({
         )}
       </CardHeader>
       <CardContent className="flex flex-wrap gap-2">
-        {editable ? (
-          <>
-            <Button size="sm" variant="outline" onClick={onEdit}>
-              <Pencil className="mr-2 h-3 w-3" /> Edit
-            </Button>
-            <Button size="sm" variant="ghost" onClick={onDelete}>
-              <Trash2 className="h-3 w-3" />
-            </Button>
-          </>
-        ) : (
-          <>
-            <Button size="sm" variant="outline" onClick={onClone}>
-              <Copy className="mr-2 h-3 w-3" /> Clone & edit
-            </Button>
-            <Button size="sm" variant="ghost" onClick={onPreview}>
-              <Eye className="mr-2 h-3 w-3" /> Preview
-            </Button>
-          </>
+        {editable && onEdit && (
+          <Button size="sm" variant="outline" onClick={onEdit}>
+            <Pencil className="mr-2 h-3 w-3" /> Edit
+          </Button>
+        )}
+        {onClone && (
+          <Button size="sm" variant="outline" onClick={onClone}>
+            <Copy className="mr-2 h-3 w-3" /> Clone
+          </Button>
+        )}
+        {onPreview && !editable && (
+          <Button size="sm" variant="ghost" onClick={onPreview}>
+            <Eye className="mr-2 h-3 w-3" /> Preview
+          </Button>
+        )}
+        {onDelete && (
+          <Button size="sm" variant="ghost" onClick={onDelete} className="ml-auto text-destructive">
+            <Trash2 className="h-3 w-3" />
+          </Button>
         )}
       </CardContent>
+
     </Card>
   );
 }
