@@ -371,7 +371,7 @@ function ServicesPage() {
         onClose={() => setSvcDialog(null)}
         onSubmit={async (values) => {
           try {
-            const { consent_ids, ...base } = values;
+            const { consent_ids, aftercare_template_ids, ...base } = values;
             const baseCreate = {
               name: base.name,
               duration: base.duration,
@@ -406,6 +406,9 @@ function ServicesPage() {
                 data: { treatmentId: created.id, consentTemplateIds: consent_ids },
               });
             }
+            await setAftercareTpls({
+              data: { treatment_id: created.id, template_ids: aftercare_template_ids ?? [] },
+            });
             toast.success("Service created");
             setSvcDialog(null);
             treats.refetch();
