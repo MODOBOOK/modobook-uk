@@ -31,10 +31,26 @@ function AftercarePage() {
   const list = useServerFn(listAftercareTemplates);
   const save = useServerFn(saveAftercareTemplate);
   const remove = useServerFn(deleteAftercareTemplate);
+  const listTreatments = useServerFn(listMyTreatmentsBasic);
+  const getTplTreatments = useServerFn(getAftercareTemplateTreatmentIds);
+  const setTplTreatments = useServerFn(setAftercareTemplateTreatmentIds);
   const qc = useQueryClient();
   const q = useQuery({ queryKey: ["aftercare-templates"], queryFn: () => list() });
+  const tQ = useQuery({ queryKey: ["my-treatments-basic"], queryFn: () => listTreatments() });
   const [editing, setEditing] = useState<Tpl | null>(null);
   const [open, setOpen] = useState(false);
+  const [treatmentIds, setTreatmentIds] = useState<string[]>([]);
+
+  const openEditor = async (tpl: Tpl) => {
+    setEditing(tpl);
+    setOpen(true);
+    if (tpl.id) {
+      const ids = await getTplTreatments({ data: { template_id: tpl.id } });
+      setTreatmentIds(ids as string[]);
+    } else {
+      setTreatmentIds([]);
+    }
+  };
 
   return (
     <div className="mx-auto max-w-3xl p-4 sm:p-6 space-y-4">
