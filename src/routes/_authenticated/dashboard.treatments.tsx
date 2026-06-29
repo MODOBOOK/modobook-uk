@@ -730,6 +730,7 @@ function TreatmentDialog({
               aftercare_delay_hours: aftercareDelay,
               auto_send_medical_forms: autoSendForms,
               auto_send_aftercare: autoSendAftercare,
+              aftercare_template_ids: aftercareTemplateIds,
             })
           }
           disabled={!name}
