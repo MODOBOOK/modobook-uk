@@ -574,5 +574,18 @@ function Badge({ icon: Icon, label }: { icon: React.ComponentType<{ className?: 
 // Re-exports used by sibling marketing pages
 export { Feature as MarketingFeature, Benefit as MarketingBenefit, WhoCard as MarketingWhoCard, HubCard as MarketingHubCard, Compare as MarketingCompare };
 
+export function IconTile({ icon: Icon, label }: { icon: React.ComponentType<{ className?: string }>; label: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center gap-2 rounded-2xl bg-background/80 p-4 text-center shadow-sm ring-1 ring-black/5 backdrop-blur sm:gap-3 sm:p-6">
+      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary sm:h-12 sm:w-12">
+        <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
+      </div>
+      <span className="text-xs font-medium sm:text-sm">{label}</span>
+    </div>
+  );
+}
+
 // silence unused warnings for icons reserved for future sections
 void GraduationCap;
+void Pill;
+void Microscope;
