@@ -156,6 +156,7 @@ function extractBookingSettings(p: Record<string, unknown>): PublicBookingSettin
     require_dob: bo("require_dob", true),
     require_address: bo("require_address", true),
     auto_confirm_bookings: bo("auto_confirm_bookings", true),
+    booking_smart_times_enabled: bo("booking_smart_times_enabled", false),
   };
 }
 
