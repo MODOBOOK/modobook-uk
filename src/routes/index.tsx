@@ -165,14 +165,12 @@ function LandingPage() {
                 ))}
               </ul>
             </div>
-            <img
-              src={clinicImg}
-              alt="Practitioner reviewing a branded booking calendar on a tablet"
-              loading="lazy"
-              width={1280}
-              height={1024}
-              className="aspect-[5/4] w-full rounded-3xl object-cover shadow-lg ring-1 ring-black/5"
-            />
+            <div className="grid aspect-[5/4] w-full grid-cols-2 grid-rows-2 gap-3 rounded-3xl bg-gradient-to-tr from-primary/10 via-muted/40 to-primary/5 p-6 shadow-lg ring-1 ring-black/5 sm:gap-5 sm:p-10">
+              <IconTile icon={ShieldCheck} label="One safer standard" />
+              <IconTile icon={HeartHandshake} label="HCPs + non-HCPs" />
+              <IconTile icon={ClipboardList} label="Real consultations" />
+              <IconTile icon={FileSignature} label="Granular consent" />
+            </div>
           </div>
         </section>
 
