@@ -97,6 +97,8 @@ export const getBookingContext = createServerFn({ method: "GET" })
       (treatment as { category_id: string | null }).category_id,
     ]);
 
+    const settings = extractBookingSettings(profile as Record<string, unknown>);
+
     return {
       profileId: profile.id,
       clinicName: profile.clinic_name,
@@ -107,8 +109,54 @@ export const getBookingContext = createServerFn({ method: "GET" })
       brandColor: (profile as { brand_color?: string | null }).brand_color ?? null,
       modelSlots: modelSlots ?? [],
       bookableFrom,
+      settings,
     };
   });
+
+export type PublicBookingSettings = {
+  booking_min_notice_hours: number;
+  booking_max_lead_days: number;
+  booking_buffer_before_minutes: number;
+  booking_buffer_after_minutes: number;
+  booking_daily_cap: number | null;
+  payment_card_full_enabled: boolean;
+  payment_deposit_enabled: boolean;
+  payment_klarna_enabled: boolean;
+  payment_clearpay_enabled: boolean;
+  payment_pass_fees_to_customer: boolean;
+  allow_pay_in_clinic: boolean;
+  show_prices_on_booking: boolean;
+  require_account_to_book: boolean;
+  require_phone: boolean;
+  require_dob: boolean;
+  require_address: boolean;
+  auto_confirm_bookings: boolean;
+};
+
+function extractBookingSettings(p: Record<string, unknown>): PublicBookingSettings {
+  const num = (k: string, d: number) => (typeof p[k] === "number" ? (p[k] as number) : d);
+  const numN = (k: string) => (typeof p[k] === "number" ? (p[k] as number) : null);
+  const bo = (k: string, d: boolean) => (typeof p[k] === "boolean" ? (p[k] as boolean) : d);
+  return {
+    booking_min_notice_hours: num("booking_min_notice_hours", 0),
+    booking_max_lead_days: num("booking_max_lead_days", 90),
+    booking_buffer_before_minutes: num("booking_buffer_before_minutes", 0),
+    booking_buffer_after_minutes: num("booking_buffer_after_minutes", 0),
+    booking_daily_cap: numN("booking_daily_cap"),
+    payment_card_full_enabled: bo("payment_card_full_enabled", true),
+    payment_deposit_enabled: bo("payment_deposit_enabled", false),
+    payment_klarna_enabled: bo("payment_klarna_enabled", false),
+    payment_clearpay_enabled: bo("payment_clearpay_enabled", false),
+    payment_pass_fees_to_customer: bo("payment_pass_fees_to_customer", false),
+    allow_pay_in_clinic: bo("allow_pay_in_clinic", true),
+    show_prices_on_booking: bo("show_prices_on_booking", true),
+    require_account_to_book: bo("require_account_to_book", false),
+    require_phone: bo("require_phone", true),
+    require_dob: bo("require_dob", true),
+    require_address: bo("require_address", true),
+    auto_confirm_bookings: bo("auto_confirm_bookings", true),
+  };
+}
 
 
 export const getMultiBookingContext = createServerFn({ method: "GET" })
@@ -170,6 +218,7 @@ export const getMultiBookingContext = createServerFn({ method: "GET" })
       termsHtml: (profile as { terms_html?: string | null }).terms_html ?? null,
       termsRequired: (profile as { terms_required?: boolean | null }).terms_required ?? false,
       bookableFrom,
+      settings: extractBookingSettings(profile as Record<string, unknown>),
     };
   });
 
@@ -183,12 +232,22 @@ export const getDayAvailability = createServerFn({ method: "GET" })
     // so without this booked slots would not appear as busy to public visitors.
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
+    // Fetch profile settings (buffer, daily cap) via admin so RLS doesn't block us.
+    const { data: profileRow } = await supabaseAdmin
+      .from("profiles")
+      .select("booking_buffer_before_minutes,booking_buffer_after_minutes,booking_daily_cap")
+      .eq("id", data.profileId)
+      .maybeSingle();
+    const bufferBefore = Number(profileRow?.booking_buffer_before_minutes ?? 0);
+    const bufferAfter = Number(profileRow?.booking_buffer_after_minutes ?? 0);
+    const dailyCap = profileRow?.booking_daily_cap ?? null;
+
     const { data: blockedRows } = await sb
       .from("blocked_dates")
       .select("id,location_id")
       .eq("profile_id", data.profileId)
       .eq("date", data.date);
-    const isBlocked = (blockedRows ?? []).some(
+    let isBlocked = (blockedRows ?? []).some(
       (b) => !b.location_id || !data.locationId || b.location_id === data.locationId,
     );
 
@@ -198,6 +257,25 @@ export const getDayAvailability = createServerFn({ method: "GET" })
       .eq("profile_id", data.profileId)
       .eq("scheduled_date", data.date)
       .neq("status", "cancelled");
+
+    // Daily cap: if reached, block the date entirely.
+    if (dailyCap != null && (appts ?? []).length >= Number(dailyCap)) {
+      isBlocked = true;
+    }
+
+    // Apply buffer padding around each existing appointment so slots respect setup time.
+    const padTime = (t: string, delta: number) => {
+      const [h, m, s] = t.split(":").map(Number);
+      const total = Math.max(0, h * 60 + m + delta);
+      const hh = String(Math.floor(total / 60)).padStart(2, "0");
+      const mm = String(total % 60).padStart(2, "0");
+      return `${hh}:${mm}:${String(s ?? 0).padStart(2, "0")}`;
+    };
+    const paddedAppts = (appts ?? []).map((a) => ({
+      ...a,
+      start_time: bufferBefore ? padTime(a.start_time, -bufferBefore) : a.start_time,
+      end_time: bufferAfter ? padTime(a.end_time, bufferAfter) : a.end_time,
+    }));
 
     const { data: overrides } = await sb
       .from("availability_overrides")
@@ -214,7 +292,7 @@ export const getDayAvailability = createServerFn({ method: "GET" })
       .filter((b) => !b.location_id || !data.locationId || b.location_id === data.locationId)
       .map((b) => ({ start_time: b.start_time, end_time: b.end_time, location_id: b.location_id, status: "blocked" }));
 
-    return { isBlocked, busy: [...(appts ?? []), ...blockedBusy], overrides: overrides ?? [] };
+    return { isBlocked, busy: [...paddedAppts, ...blockedBusy], overrides: overrides ?? [] };
   });
 
 
@@ -285,6 +363,16 @@ export const requestBooking = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const sb = publicClient();
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: prof } = await supabaseAdmin
+      .from("profiles")
+      .select("auto_confirm_bookings,require_account_to_book")
+      .eq("id", data.profileId)
+      .maybeSingle();
+    if (prof?.require_account_to_book && !data.patientUserId) {
+      throw new Error("Please sign in to book — this clinic requires an account.");
+    }
+    const status = prof?.auto_confirm_bookings === false ? "pending" : "confirmed";
     const { data: blk } = await sb
       .from("clinic_clients")
       .select("id")
@@ -310,7 +398,7 @@ export const requestBooking = createServerFn({ method: "POST" })
       patient_address: data.patientAddress ?? null,
       patient_user_id: data.patientUserId ?? null,
       notes: data.notes ?? null,
-      status: "confirmed",
+      status,
       payment_status: "pending",
       base_amount: data.basePrice,
       total_amount: data.basePrice,
@@ -378,6 +466,16 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const sb = publicClient();
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: prof } = await supabaseAdmin
+      .from("profiles")
+      .select("auto_confirm_bookings,require_account_to_book")
+      .eq("id", data.profileId)
+      .maybeSingle();
+    if (prof?.require_account_to_book && !data.patientUserId) {
+      throw new Error("Please sign in to book — this clinic requires an account.");
+    }
+    const status = prof?.auto_confirm_bookings === false ? "pending" : "confirmed";
     const { data: blk } = await sb
       .from("clinic_clients")
       .select("id")
@@ -415,7 +513,7 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
         patient_address: data.patientAddress ?? null,
         patient_user_id: data.patientUserId ?? null,
         notes: appointmentNotes,
-        status: "confirmed",
+        status,
         payment_status: "pending",
         base_amount: b.priceCents / 100,
         total_amount: sessionCount > 1 && b.paymentPlan === "split"

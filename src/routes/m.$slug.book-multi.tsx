@@ -84,6 +84,14 @@ function MultiBookPage() {
     return ids.map((id: string) => map.get(id)).filter(Boolean) as Treatment[];
   }, [ctx.treatments, ids]);
 
+  const settings = (ctx as { settings?: import("@/lib/public-booking.functions").PublicBookingSettings }).settings;
+  const showPrices = settings?.show_prices_on_booking !== false;
+  const reqPhone = settings?.require_phone !== false;
+  const reqDob = settings?.require_dob !== false;
+  const reqAddress = settings?.require_address !== false;
+  const maxLeadDays = settings?.booking_max_lead_days ?? 90;
+  const minNoticeHours = settings?.booking_min_notice_hours ?? 0;
+
 
   const theme = ctx.theme;
   const brand = theme?.primary_color || ctx.brandColor || "#1f2a44";
@@ -271,9 +279,18 @@ function MultiBookPage() {
         if (!overlap) out.push(fromMinutes(t));
       }
     }
-    return Array.from(new Set(out)).sort();
+    let out2 = Array.from(new Set(out)).sort();
+    if (minNoticeHours > 0) {
+      const n = new Date();
+      const todayLocalIso = `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, "0")}-${String(n.getDate()).padStart(2, "0")}`;
+      if (date === todayLocalIso) {
+        const cutoff = n.getHours() * 60 + n.getMinutes() + minNoticeHours * 60;
+        out2 = out2.filter((s) => toMinutes(s) >= cutoff);
+      }
+    }
+    return out2;
 
-  }, [dayQuery.data, dayRules, totalDuration, locationId]);
+  }, [dayQuery.data, dayRules, totalDuration, locationId, minNoticeHours, date]);
 
   async function submit() {
     if (submitLockRef.current) return;
@@ -405,13 +422,13 @@ function MultiBookPage() {
                 <div className="font-medium" style={{ color: brand }}>{t.name}</div>
                 <div className="flex items-center gap-3 opacity-80">
                   <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{durationFor(t)} min</span>
-                  <span className="font-semibold" style={{ color: brand }}>£{priceFor(t).toFixed(2)}</span>
+                  {showPrices && <span className="font-semibold" style={{ color: brand }}>£{priceFor(t).toFixed(2)}</span>}
                 </div>
               </div>
             ))}
             <div className="flex items-center justify-between pt-3 text-sm font-semibold">
               <span>Total ({totalDuration} min)</span>
-              <span style={{ color: brand }}>£{totalPrice.toFixed(2)}</span>
+              {showPrices && <span style={{ color: brand }}>£{totalPrice.toFixed(2)}</span>}
             </div>
           </CardContent>
         </Card>
@@ -461,6 +478,11 @@ function MultiBookPage() {
                   const startOfToday = new Date(new Date().setHours(0, 0, 0, 0));
                   if (d < startOfToday) return true;
                   if (bookableFrom && toIsoDate(d) < bookableFrom) return true;
+                  if (maxLeadDays > 0) {
+                    const maxDate = new Date(startOfToday);
+                    maxDate.setDate(maxDate.getDate() + maxLeadDays);
+                    if (d > maxDate) return true;
+                  }
                   return isDateUnavailable(d);
                 }}
                 weekStartsOn={1}
@@ -641,36 +663,40 @@ function MultiBookPage() {
                   <Input id="email" type="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
                 </div>
                 <div>
-                  <Label htmlFor="phone">Phone</Label>
-                  <Input id="phone" required value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+                  <Label htmlFor="phone">Phone {!reqPhone && <span className="text-xs opacity-50">(optional)</span>}</Label>
+                  <Input id="phone" required={reqPhone} value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
                 </div>
                 <div>
-                  <Label htmlFor="dob">Date of birth</Label>
-                  <Input id="dob" type="date" required value={form.dob} onChange={(e) => setForm({ ...form, dob: e.target.value })} />
+                  <Label htmlFor="dob">Date of birth {!reqDob && <span className="text-xs opacity-50">(optional)</span>}</Label>
+                  <Input id="dob" type="date" required={reqDob} value={form.dob} onChange={(e) => setForm({ ...form, dob: e.target.value })} />
                 </div>
-                <div className="sm:col-span-2 pt-2 border-t mt-2">
-                  <Label className="text-sm font-semibold">Address</Label>
-                </div>
-                <div className="sm:col-span-2">
-                  <Label htmlFor="line1">Address line 1</Label>
-                  <Input id="line1" value={form.addressLine1} onChange={(e) => setForm({ ...form, addressLine1: e.target.value })} />
-                </div>
-                <div className="sm:col-span-2">
-                  <Label htmlFor="line2">Address line 2 (optional)</Label>
-                  <Input id="line2" value={form.addressLine2} onChange={(e) => setForm({ ...form, addressLine2: e.target.value })} />
-                </div>
-                <div>
-                  <Label htmlFor="city">City</Label>
-                  <Input id="city" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
-                </div>
-                <div>
-                  <Label htmlFor="postcode">Postcode</Label>
-                  <Input id="postcode" value={form.postcode} onChange={(e) => setForm({ ...form, postcode: e.target.value })} />
-                </div>
-                <div className="sm:col-span-2">
-                  <Label htmlFor="country">Country</Label>
-                  <Input id="country" value={form.country} onChange={(e) => setForm({ ...form, country: e.target.value })} />
-                </div>
+                {reqAddress && (
+                  <>
+                    <div className="sm:col-span-2 pt-2 border-t mt-2">
+                      <Label className="text-sm font-semibold">Address</Label>
+                    </div>
+                    <div className="sm:col-span-2">
+                      <Label htmlFor="line1">Address line 1</Label>
+                      <Input id="line1" value={form.addressLine1} onChange={(e) => setForm({ ...form, addressLine1: e.target.value })} />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <Label htmlFor="line2">Address line 2 (optional)</Label>
+                      <Input id="line2" value={form.addressLine2} onChange={(e) => setForm({ ...form, addressLine2: e.target.value })} />
+                    </div>
+                    <div>
+                      <Label htmlFor="city">City</Label>
+                      <Input id="city" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
+                    </div>
+                    <div>
+                      <Label htmlFor="postcode">Postcode</Label>
+                      <Input id="postcode" value={form.postcode} onChange={(e) => setForm({ ...form, postcode: e.target.value })} />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <Label htmlFor="country">Country</Label>
+                      <Input id="country" value={form.country} onChange={(e) => setForm({ ...form, country: e.target.value })} />
+                    </div>
+                  </>
+                )}
                 <div className="sm:col-span-2">
                   <Label htmlFor="notes">Notes (optional)</Label>
                   <Textarea id="notes" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
@@ -704,7 +730,7 @@ function MultiBookPage() {
               className="w-full"
               size="lg"
               disabled={
-                !slot || submitting || !form.name || !form.email || !form.phone || !form.dob ||
+                !slot || submitting || !form.name || !form.email || (reqPhone && !form.phone) || (reqDob && !form.dob) ||
                 (termsRequired && !agreedToTerms)
               }
               onClick={submit}
