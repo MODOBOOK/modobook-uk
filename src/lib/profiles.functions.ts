@@ -109,6 +109,37 @@ export const updateProfile = createServerFn({ method: "POST" })
       favourite_treatment_ids?: string[];
       favourites_enabled?: boolean;
       favourites_custom_title?: string | null;
+      // Booking window settings
+      booking_min_notice_hours?: number;
+      booking_max_lead_days?: number;
+      booking_buffer_before_minutes?: number;
+      booking_buffer_after_minutes?: number;
+      booking_daily_cap?: number | null;
+      booking_smart_times_enabled?: boolean;
+      // Payment settings
+      payment_pass_fees_to_customer?: boolean;
+      payment_klarna_enabled?: boolean;
+      payment_clearpay_enabled?: boolean;
+      payment_card_full_enabled?: boolean;
+      payment_deposit_enabled?: boolean;
+      require_deposit_to_confirm?: boolean;
+      allow_pay_in_clinic?: boolean;
+      show_prices_on_booking?: boolean;
+      enforce_cancellation_fee?: boolean;
+      // Patient rules
+      require_account_to_book?: boolean;
+      require_phone?: boolean;
+      require_dob?: boolean;
+      require_address?: boolean;
+      require_medical_forms_before_appt?: boolean;
+      allow_patient_reschedule?: boolean;
+      allow_patient_cancel?: boolean;
+      // Confirmations & reminders
+      auto_confirm_bookings?: boolean;
+      email_confirmations_enabled?: boolean;
+      sms_reminders_enabled?: boolean;
+      whatsapp_reminders_enabled?: boolean;
+      reminder_hours_before?: number[];
     }) => input,
   )
 
