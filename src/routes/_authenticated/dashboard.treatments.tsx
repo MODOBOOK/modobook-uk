@@ -178,6 +178,9 @@ function TreatmentsPage() {
       setOpen(false);
       setEditing(null);
       load();
+      if (search.back === "services") {
+        navigate({ to: "/dashboard/services" });
+      }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to save");
     }
