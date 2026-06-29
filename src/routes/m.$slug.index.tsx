@@ -1840,7 +1840,12 @@ function TreatmentRow({
       >
         {selected && <Check className="h-3 w-3" />}
       </button>
-      <button type="button" onClick={onToggle} className="min-w-0 flex-1 text-left">
+      <button type="button" onClick={() => setExpanded((v) => !v)} className="min-w-0 flex-1 text-left">
+        {picture && (
+          <div className={`float-right ml-3 overflow-hidden rounded-lg bg-muted ${thumbSize} ${expanded ? "hidden" : ""}`}>
+            <img src={picture} alt={t.name} className="h-full w-full object-cover" loading="lazy" />
+          </div>
+        )}
         <div className="flex items-start justify-between gap-3">
           <div className={`leading-tight ${nameSize} ${bold ? "font-bold" : "font-medium"}`} style={{ color: nameColor }}>
             {t.name}
