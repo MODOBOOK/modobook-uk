@@ -883,6 +883,7 @@ function ServiceDialog({
   const [paymentMode, setPaymentMode] = useState<"full" | "deposit" | "pay_in_clinic">("full");
   const [depositAmount, setDepositAmount] = useState<string>("");
   const [consentIds, setConsentIds] = useState<string[]>([]);
+  const [aftercareIds, setAftercareIds] = useState<string[]>([]);
   const [autoSendForms, setAutoSendForms] = useState(true);
   const [aftercareHtml, setAftercareHtml] = useState("");
   const [aftercareDelay, setAftercareDelay] = useState(2);
