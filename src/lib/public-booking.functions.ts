@@ -232,12 +232,22 @@ export const getDayAvailability = createServerFn({ method: "GET" })
     // so without this booked slots would not appear as busy to public visitors.
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
+    // Fetch profile settings (buffer, daily cap) via admin so RLS doesn't block us.
+    const { data: profileRow } = await supabaseAdmin
+      .from("profiles")
+      .select("booking_buffer_before_minutes,booking_buffer_after_minutes,booking_daily_cap")
+      .eq("id", data.profileId)
+      .maybeSingle();
+    const bufferBefore = Number(profileRow?.booking_buffer_before_minutes ?? 0);
+    const bufferAfter = Number(profileRow?.booking_buffer_after_minutes ?? 0);
+    const dailyCap = profileRow?.booking_daily_cap ?? null;
+
     const { data: blockedRows } = await sb
       .from("blocked_dates")
       .select("id,location_id")
       .eq("profile_id", data.profileId)
       .eq("date", data.date);
-    const isBlocked = (blockedRows ?? []).some(
+    let isBlocked = (blockedRows ?? []).some(
       (b) => !b.location_id || !data.locationId || b.location_id === data.locationId,
     );
 
@@ -247,6 +257,25 @@ export const getDayAvailability = createServerFn({ method: "GET" })
       .eq("profile_id", data.profileId)
       .eq("scheduled_date", data.date)
       .neq("status", "cancelled");
+
+    // Daily cap: if reached, block the date entirely.
+    if (dailyCap != null && (appts ?? []).length >= Number(dailyCap)) {
+      isBlocked = true;
+    }
+
+    // Apply buffer padding around each existing appointment so slots respect setup time.
+    const padTime = (t: string, delta: number) => {
+      const [h, m, s] = t.split(":").map(Number);
+      const total = Math.max(0, h * 60 + m + delta);
+      const hh = String(Math.floor(total / 60)).padStart(2, "0");
+      const mm = String(total % 60).padStart(2, "0");
+      return `${hh}:${mm}:${String(s ?? 0).padStart(2, "0")}`;
+    };
+    const paddedAppts = (appts ?? []).map((a) => ({
+      ...a,
+      start_time: bufferBefore ? padTime(a.start_time, -bufferBefore) : a.start_time,
+      end_time: bufferAfter ? padTime(a.end_time, bufferAfter) : a.end_time,
+    }));
 
     const { data: overrides } = await sb
       .from("availability_overrides")
@@ -263,7 +292,7 @@ export const getDayAvailability = createServerFn({ method: "GET" })
       .filter((b) => !b.location_id || !data.locationId || b.location_id === data.locationId)
       .map((b) => ({ start_time: b.start_time, end_time: b.end_time, location_id: b.location_id, status: "blocked" }));
 
-    return { isBlocked, busy: [...(appts ?? []), ...blockedBusy], overrides: overrides ?? [] };
+    return { isBlocked, busy: [...paddedAppts, ...blockedBusy], overrides: overrides ?? [] };
   });
 
 
