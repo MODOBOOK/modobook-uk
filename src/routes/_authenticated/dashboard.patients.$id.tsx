@@ -92,6 +92,8 @@ function PatientProfilePage() {
     }
     const cs: any = await listConsults({ data: { email: c.email || undefined, name: c.email ? undefined : c.full_name } });
     setConsults(cs ?? []);
+  }
+
 
   useEffect(() => { reload(); /* eslint-disable-next-line */ }, [id]);
 
