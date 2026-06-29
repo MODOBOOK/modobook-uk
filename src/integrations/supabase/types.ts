@@ -3218,6 +3218,7 @@ export type Database = {
           quiz_tags: Json
           rebook_reminder_days: number | null
           session_count: number
+          session_interval_days: number | null
           sort_order: number
           timing_notes: string | null
           updated_at: string
@@ -3255,6 +3256,7 @@ export type Database = {
           quiz_tags?: Json
           rebook_reminder_days?: number | null
           session_count?: number
+          session_interval_days?: number | null
           sort_order?: number
           timing_notes?: string | null
           updated_at?: string
@@ -3292,6 +3294,7 @@ export type Database = {
           quiz_tags?: Json
           rebook_reminder_days?: number | null
           session_count?: number
+          session_interval_days?: number | null
           sort_order?: number
           timing_notes?: string | null
           updated_at?: string
