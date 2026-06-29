@@ -709,12 +709,13 @@ function CategoryDialog({
 }: {
   state: { mode: "create" | "edit"; parentId: string | null; cat?: Cat } | null;
   onClose: () => void;
-  onSubmit: (v: { name: string; description?: string; icon?: string }) => Promise<void>;
+  onSubmit: (v: { name: string; description?: string; icon?: string; coming_soon_at?: string | null }) => Promise<void>;
 }) {
   const open = !!state;
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [icon, setIcon] = useState("");
+  const [comingSoon, setComingSoon] = useState("");
   const [saving, setSaving] = useState(false);
 
   useMemo(() => {
@@ -722,6 +723,7 @@ function CategoryDialog({
       setName(state?.cat?.name ?? "");
       setDescription(state?.cat?.description ?? "");
       setIcon(state?.cat?.icon ?? "");
+      setComingSoon(state?.cat?.coming_soon_at ? state.cat.coming_soon_at.slice(0, 10) : "");
     }
   }, [open, state]);
 
@@ -769,6 +771,18 @@ function CategoryDialog({
               maxLength={4}
             />
           </div>
+          <div className="space-y-1.5 rounded-lg border border-dashed border-amber-300 bg-amber-50/50 p-3">
+            <Label htmlFor="c-soon" className="text-amber-900">Coming soon date (optional)</Label>
+            <Input
+              id="c-soon"
+              type="date"
+              value={comingSoon}
+              onChange={(e) => setComingSoon(e.target.value)}
+            />
+            <p className="text-[11px] text-amber-800/80">
+              Before this date the category shows a "Coming soon" badge and cannot be booked. After it passes, it becomes bookable automatically. Leave blank to disable.
+            </p>
+          </div>
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={onClose}>
@@ -782,6 +796,7 @@ function CategoryDialog({
                 name: name.trim(),
                 description: description.trim() || undefined,
                 icon: icon.trim() || undefined,
+                coming_soon_at: comingSoon ? new Date(comingSoon + "T00:00:00").toISOString() : null,
               });
               setSaving(false);
             }}
