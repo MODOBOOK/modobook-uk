@@ -368,7 +368,7 @@ export const commitClinicImport = createServerFn({ method: "POST" })
       if (!error && row) {
         catNameToId.set(key, row.id);
         created.categories++;
-      }
+      } else noteError(`Category "${c.name}"`, error);
     }
 
     /* --- Treatments --- */
