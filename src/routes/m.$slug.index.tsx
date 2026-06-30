@@ -1887,7 +1887,7 @@ function TreatmentRow({
           </div>
         )}
         <div className="flex items-start justify-between gap-3">
-          <div className={`leading-tight ${nameSize} ${bold ? "font-bold" : "font-medium"}`} style={{ color: nameColor }}>
+          <div className={`min-w-0 flex-1 leading-tight ${nameSize} ${bold ? "font-bold" : "font-medium"}`} style={{ color: nameColor }}>
             {t.name}
           </div>
           {(() => {
