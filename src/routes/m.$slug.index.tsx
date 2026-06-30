@@ -1047,7 +1047,7 @@ function BookPage() {
                       {t.description && <div className="line-clamp-2 text-sm opacity-70">{t.description}</div>}
                       <div className="mt-2 flex items-center justify-between text-sm">
                         <span className="opacity-70">{durationFor(t)} min</span>
-                        <span className="font-semibold" style={{ color: menuPriceColor }}>£{priceFor(t).toFixed(2)}</span>
+                        <span className="font-semibold" style={{ color: menuPriceColor }}>{formatPrice(priceFor(t), (t as any).price_mode)}</span>
                       </div>
                     </div>
                   </Link>
