@@ -995,8 +995,33 @@ function BookPage() {
               })}
             </div>
           )}
+          {showConsult && (
+            <div className="mt-6 rounded-2xl border-2 border-dashed p-5 text-center" style={{ borderColor: `${brand}55` }}>
+              <p className="text-sm font-semibold" style={{ color: brand }}>Still not sure?</p>
+              <p className="mt-1 text-xs opacity-70">Book a consultation and we'll talk through all your concerns together.</p>
+              {consultTreatmentId ? (
+                <Link
+                  to="/m/$slug/book/$treatmentId"
+                  params={{ slug, treatmentId: consultTreatmentId }}
+                  className="mt-3 inline-block rounded-full px-5 py-2 text-sm font-semibold text-white transition hover:opacity-90"
+                  style={{ backgroundColor: brand }}
+                >
+                  Book a consultation
+                </Link>
+              ) : (
+                <button
+                  onClick={() => { setMode("know"); setPickedConcernId(null); }}
+                  className="mt-3 inline-block rounded-full px-5 py-2 text-sm font-semibold text-white transition hover:opacity-90"
+                  style={{ backgroundColor: brand }}
+                >
+                  Browse consultations
+                </button>
+              )}
+            </div>
+          )}
         </section>
       )}
+
 
       {/* Favourite / Most popular treatments */}
       {(() => {
