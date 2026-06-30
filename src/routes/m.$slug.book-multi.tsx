@@ -200,9 +200,11 @@ function MultiBookPage() {
     | {
         appointments: { id: string; treatmentId: string }[];
         consents: { token: string; consent_template_id: string }[];
+        medicalForms?: { token: string; appointment_id: string; template_name: string | null }[];
       }
     | null
   >(null);
+
   const [form, setForm] = useState({
     name: "", email: "", phone: "", dob: "",
     addressLine1: "", addressLine2: "", city: "", postcode: "", country: "",
