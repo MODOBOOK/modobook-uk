@@ -470,9 +470,9 @@ function FilesSection({ clientId, profileId, kind, title }: { clientId: string; 
         Add
       </Button>
     }>
-      <input ref={inputRef} type="file" accept={kind === "photo" ? "image/*" : "application/pdf"} className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) onFile(f); e.target.value = ""; }} />
+      <input ref={inputRef} type="file" accept={kind === "photo" ? "image/*" : "application/pdf,image/*"} className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) onFile(f); e.target.value = ""; }} />
       {rows.length === 0 ? (
-        <div className="py-3 text-center text-xs text-muted-foreground">No {kind === "photo" ? "photos" : "PDFs"} uploaded</div>
+        <div className="py-3 text-center text-xs text-muted-foreground">No {title.toLowerCase()} yet</div>
       ) : kind === "photo" ? (
         <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
           {rows.map(f => (
@@ -485,14 +485,18 @@ function FilesSection({ clientId, profileId, kind, title }: { clientId: string; 
           ))}
         </div>
       ) : (
-        rows.map(f => (
-          <div key={f.id} className="flex items-center justify-between border-b py-2 last:border-0">
-            <a href={f.url} target="_blank" rel="noreferrer" className="flex min-w-0 items-center gap-2 text-sm text-primary hover:underline">
-              <FileText className="h-4 w-4 shrink-0" /><span className="truncate">{f.filename || "Document"}</span>
-            </a>
-            <Button size="icon" variant="ghost" onClick={() => del({ data: { id: f.id } }).then(reload)}><X className="h-3.5 w-3.5" /></Button>
-          </div>
-        ))
+        rows.map(f => {
+          const isImg = /\.(png|jpe?g|webp|gif|heic)$/i.test(f.filename || f.url || "");
+          return (
+            <div key={f.id} className="flex items-center justify-between border-b py-2 last:border-0">
+              <a href={f.url} target="_blank" rel="noreferrer" className="flex min-w-0 items-center gap-2 text-sm text-primary hover:underline">
+                {isImg ? <img src={f.url} alt="" className="h-8 w-8 shrink-0 rounded object-cover" /> : <FileText className="h-4 w-4 shrink-0" />}
+                <span className="truncate">{f.filename || "Document"}</span>
+              </a>
+              <Button size="icon" variant="ghost" onClick={() => del({ data: { id: f.id } }).then(reload)}><X className="h-3.5 w-3.5" /></Button>
+            </div>
+          );
+        })
       )}
     </Section>
   );
