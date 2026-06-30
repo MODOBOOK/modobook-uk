@@ -40,6 +40,8 @@ function HubVisits() {
   const fetchLocations = useServerFn(listMyLocations);
   const save = useServerFn(upsertClinicVisit);
   const cancel = useServerFn(cancelClinicVisit);
+  const approve = useServerFn(approveClinicVisitRequest);
+  const decline = useServerFn(declineClinicVisitRequest);
 
   const visits = useQuery({ queryKey: ["hub-visits"], queryFn: () => fetchVisits() });
   const prescribers = useQuery({ queryKey: ["hub-prescribers"], queryFn: () => fetchPrescribers() });
