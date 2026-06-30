@@ -174,6 +174,22 @@ function DashboardLayout() {
   );
 }
 
+function BackButton() {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  if (pathname === "/dashboard" || pathname === "/dashboard/") return null;
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      className="shrink-0"
+      aria-label="Back"
+      onClick={() => window.history.back()}
+    >
+      <ChevronLeft className="h-5 w-5" />
+    </Button>
+  );
+}
+
 function NavLink({
   to,
   icon: Icon,
