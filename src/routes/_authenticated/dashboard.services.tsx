@@ -1602,3 +1602,66 @@ function ConsentPicker({
     </div>
   );
 }
+
+function AftercarePicker({
+  items,
+  selected,
+  onToggle,
+}: {
+  items: { id: string; name: string; delay_hours: number }[];
+  selected: string[];
+  onToggle: (id: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const selectedItems = items.filter((i) => selected.includes(i.id));
+  return (
+    <div className="space-y-2">
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button variant="outline" role="combobox" className="w-full justify-between font-normal">
+            <span className="text-muted-foreground">
+              {selectedItems.length === 0
+                ? "Search aftercare templates…"
+                : `${selectedItems.length} selected`}
+            </span>
+            <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+          <Command>
+            <CommandInput placeholder="Search templates…" />
+            <CommandList>
+              <CommandEmpty>No templates found.</CommandEmpty>
+              <CommandGroup>
+                {items.map((t) => {
+                  const isSel = selected.includes(t.id);
+                  return (
+                    <CommandItem key={t.id} value={t.name} onSelect={() => onToggle(t.id)}>
+                      <Check className={`mr-2 h-4 w-4 ${isSel ? "opacity-100" : "opacity-0"}`} />
+                      <span className="flex-1">{t.name}</span>
+                      <span className="text-xs text-muted-foreground">{t.delay_hours}h</span>
+                    </CommandItem>
+                  );
+                })}
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
+      {selectedItems.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {selectedItems.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => onToggle(t.id)}
+              className="rounded-full border bg-foreground text-background px-2.5 py-1 text-xs inline-flex items-center gap-1"
+            >
+              {t.name} <X className="h-3 w-3" />
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
