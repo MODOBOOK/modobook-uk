@@ -92,6 +92,7 @@ function DashboardLayout() {
   const { primary: displayName } = resolveDisplayNames(profile as { clinic_name?: string | null; full_name?: string | null; display_name_mode?: string | null });
   const [open, setOpen] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isConsultationDetail = /^\/dashboard\/consultations\/[^/]+/.test(pathname);
   const themeStyle = useDashboardThemeStyle();
   const fetchPending = useServerFn(countPendingReviews);
   const [pendingReviews, setPendingReviews] = useState(0);
