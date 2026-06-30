@@ -751,6 +751,19 @@ function MultiBookPage() {
                 </CardContent>
               </Card>
             )}
+            {showPrices && (
+              <Card className="mb-6">
+                <CardContent className="p-4">
+                  <DiscountCodeBox
+                    slug={slug}
+                    treatmentIds={treatments.map((t) => t.id)}
+                    brand={brand}
+                    value={discount}
+                    onChange={setDiscount}
+                  />
+                </CardContent>
+              </Card>
+            )}
             <Button
               className="w-full"
               size="lg"
