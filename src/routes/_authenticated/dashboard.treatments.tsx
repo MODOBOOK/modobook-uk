@@ -49,6 +49,8 @@ type Treatment = {
   discount_ends_at?: string | null;
   discount_show_was_now?: boolean | null;
   discount_label?: string | null;
+  price_mode?: "fixed" | "from" | "poa" | "free" | null;
+  badge?: "recommended" | "popular" | "new" | "bestseller" | null;
 };
 
 type Category = {
@@ -82,7 +84,10 @@ type TreatmentForm = {
   auto_send_medical_forms: boolean;
   auto_send_aftercare: boolean;
   aftercare_template_ids: string[];
+  price_mode: "fixed" | "from" | "poa" | "free";
+  badge: "recommended" | "popular" | "new" | "bestseller" | null;
 };
+
 
 type ConsentTpl = { id: string; name: string; treatment_type: string | null; is_system: boolean };
 
