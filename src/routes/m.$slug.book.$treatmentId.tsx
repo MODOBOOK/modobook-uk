@@ -345,6 +345,16 @@ function BookTreatmentPage() {
         }
       }
 
+      // Apply promo code (only if it covers this treatment)
+      let discountOff = 0;
+      if (discount && discount.applies_to_treatment_ids.includes(treatment.id)) {
+        discountOff = discount.kind === "percent"
+          ? effectivePrice * (discount.amount / 100)
+          : discount.amount;
+        discountOff = Math.min(discountOff, effectivePrice);
+        effectivePrice = Math.max(0, effectivePrice - discountOff);
+      }
+
       const res = await reqFn({
         data: {
           profileId: ctx.profileId,
@@ -370,6 +380,9 @@ function BookTreatmentPage() {
             const lines: string[] = [];
             if (form.notes) lines.push(form.notes);
             if (picked.length) lines.push("Add-ons: " + picked.map((a) => `${a.name} (£${addonNet(a).toFixed(2)})`).join(", "));
+            if (discount && discountOff > 0) {
+              lines.push(`Promo code ${discount.code} applied (-£${discountOff.toFixed(2)})`);
+            }
             if (splitAllowed && paymentPlan === "split") {
               const per = (effectivePrice / sessionCount).toFixed(2);
               lines.push(`Payment plan: Split into ${sessionCount} sessions (£${per} per session)`);
