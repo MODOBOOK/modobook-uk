@@ -518,14 +518,14 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
         patient_user_id: data.patientUserId ?? null,
         clinic_visit_id: b.clinicVisitId ?? null,
         notes: appointmentNotes,
-
         status,
         payment_status: "pending",
         base_amount: b.priceCents / 100,
         total_amount: sessionCount > 1 && b.paymentPlan === "split"
           ? (b.priceCents / 100) / sessionCount
           : b.priceCents / 100,
-      });
+      } as never);
+
 
       if (error) throw new Error(error.message);
       created.push({ id, treatmentId: b.treatmentId });
