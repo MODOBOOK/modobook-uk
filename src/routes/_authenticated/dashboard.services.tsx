@@ -675,19 +675,24 @@ function CategoryRow({
 
 function ServiceRow({
   treat,
+  picker,
   onDelete,
   onMoveUp,
   onMoveDown,
   onMoveTo,
+  onChangeCategory,
 }: {
   treat: Treat;
+  picker?: { id: string; label: string; depth: number }[];
   onDelete: () => void;
   onMoveUp?: () => void;
   onMoveDown?: () => void;
   onMoveTo?: () => void;
+  onChangeCategory?: (categoryId: string | null) => void | Promise<void>;
 }) {
+  const currentVal = treat.category_id ?? "__none__";
   return (
-    <div className="flex items-center gap-2 py-2">
+    <div className="flex flex-wrap items-center gap-2 py-2">
       <span
         className="h-2.5 w-2.5 shrink-0 rounded-full"
         style={{ backgroundColor: treat.color || "hsl(var(--muted-foreground))" }}
@@ -699,6 +704,26 @@ function ServiceRow({
           £{treat.price} · {treat.duration} min
         </p>
       </div>
+      {onChangeCategory && picker && (
+        <Select
+          value={currentVal}
+          onValueChange={(v) => onChangeCategory(v === "__none__" ? null : v)}
+        >
+          <SelectTrigger className="h-8 w-[180px] text-xs" aria-label="Move to category">
+            <SelectValue placeholder="Move to…" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="__none__">Uncategorised</SelectItem>
+            {picker.map((c) => (
+              <SelectItem key={c.id} value={c.id}>
+                {"\u00A0\u00A0".repeat(c.depth)}
+                {c.depth > 0 ? "↳ " : ""}
+                {c.label.split(" › ").slice(-1)[0]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button
@@ -740,15 +765,20 @@ function ServiceRow({
 function SortableTreatList({
   treats,
   depth,
+  picker,
   onDelete,
   onReorder,
   onMoveTo,
+  onChangeCategory,
 }: {
   treats: Treat[];
   depth: number;
+  picker: { id: string; label: string; depth: number }[];
+  currentCategoryId?: string;
   onDelete: (t: Treat) => void;
   onReorder: (ids: string[]) => void;
   onMoveTo: (t: Treat) => void;
+  onChangeCategory: (treatId: string, categoryId: string | null) => void | Promise<void>;
 }) {
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -772,14 +802,17 @@ function SortableTreatList({
             key={t.id}
             treat={t}
             depth={depth}
+            picker={picker}
             onDelete={() => onDelete(t)}
             onMoveTo={() => onMoveTo(t)}
+            onChangeCategory={(catId) => onChangeCategory(t.id, catId)}
           />
         ))}
       </SortableContext>
     </DndContext>
   );
 }
+
 
 function SortableServiceItem({
   treat,
