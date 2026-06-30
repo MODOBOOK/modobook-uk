@@ -259,6 +259,29 @@ function ServicesPage() {
     }
   }
 
+  async function moveTreatToCategory(treatId: string, categoryId: string | null) {
+    try {
+      await patchTreat({ data: { id: treatId, category_id: categoryId } });
+      toast.success("Service moved");
+      setMoveTreatState(null);
+      treats.refetch();
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  }
+
+  async function moveCatToParent(catId: string, parentId: string | null) {
+    try {
+      await updateCat({ data: { id: catId, parent_id: parentId } });
+      toast.success("Category moved");
+      setMoveCatState(null);
+      cats.refetch();
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  }
+
+
 
   return (
     <div className="space-y-5">
