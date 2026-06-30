@@ -121,6 +121,7 @@ function SettingsPage() {
           Toggle features on or off. Every option applies to your public booking link.
         </p>
       </div>
+      <SaveReminder />
 
       {/* BOOKING WINDOW */}
       <Card>
