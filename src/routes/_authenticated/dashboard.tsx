@@ -91,7 +91,9 @@ const navItems = [
   { label: "Payments", to: "/dashboard/payments", icon: CreditCard },
   { label: "Booking settings", to: "/dashboard/settings", icon: Settings },
   { label: "Prescriber Hub", to: "/hub", icon: Stethoscope },
+  { label: "Prescriber referrals", to: "/dashboard/referrals", icon: ClipboardList },
 ];
+
 
 const mobileTabs = [
   { label: "Home", to: "/dashboard", icon: Home, exact: true },
