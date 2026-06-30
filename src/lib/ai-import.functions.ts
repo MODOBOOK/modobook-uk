@@ -577,3 +577,80 @@ export const generateDescription = createServerFn({ method: "POST" })
     return { description };
   });
 
+/* --------------------------- Reset import ------------------------- */
+/* Lets a practitioner wipe everything the AI import created (or that
+   they manually added) so they can re-run the import from a fresh slate. */
+
+export const resetClinicServices = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { scope?: "treatments" | "all" }) => input ?? {})
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const scope = data.scope ?? "all";
+
+    const { data: profile, error: pErr } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("user_id", userId)
+      .single();
+    if (pErr) throw pErr;
+    const profileId = profile.id;
+
+    const removed = { treatments: 0, categories: 0, addons: 0 };
+    const skipped = { treatments: 0 };
+    const errors: string[] = [];
+
+    const { data: ts } = await supabase
+      .from("treatments")
+      .select("id")
+      .eq("profile_id", profileId);
+    const allIds = (ts ?? []).map((t: { id: string }) => t.id);
+    if (allIds.length) {
+      // Don't delete treatments that have appointments — keep history intact.
+      const { data: used } = await supabase
+        .from("appointments")
+        .select("treatment_id")
+        .in("treatment_id", allIds);
+      const usedSet = new Set((used ?? []).map((a: { treatment_id: string }) => a.treatment_id));
+      const deletable = allIds.filter((id) => !usedSet.has(id));
+      skipped.treatments = allIds.length - deletable.length;
+      if (deletable.length) {
+        const { error } = await supabase.from("treatments").delete().in("id", deletable);
+        if (error) errors.push(`Treatments: ${error.message}`);
+        else removed.treatments = deletable.length;
+      }
+    }
+
+
+    if (scope === "all") {
+      const { data: adds } = await supabase
+        .from("addons")
+        .select("id")
+        .eq("profile_id", profileId);
+      if (adds?.length) {
+        const { error } = await supabase
+          .from("addons")
+          .delete()
+          .eq("profile_id", profileId);
+        if (error) errors.push(`Add-ons: ${error.message}`);
+        else removed.addons = adds.length;
+      }
+
+      const { data: cats } = await supabase
+        .from("treatment_categories")
+        .select("id")
+        .eq("profile_id", profileId);
+      if (cats?.length) {
+        const { error } = await supabase
+          .from("treatment_categories")
+          .delete()
+          .eq("profile_id", profileId);
+        if (error) errors.push(`Categories: ${error.message}`);
+        else removed.categories = cats.length;
+      }
+    }
+
+    return { removed, skipped, errors };
+  });
+
+

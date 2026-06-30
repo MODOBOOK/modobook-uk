@@ -6,6 +6,7 @@ import {
   extractClinicData,
   commitClinicImport,
   generateDescription,
+  resetClinicServices,
   type ExtractedDraft,
   type ExtractedCategory,
   type ExtractedTreatment,
@@ -13,6 +14,7 @@ import {
   type ExtractedPackage,
   type ExtractedClinic,
 } from "@/lib/ai-import.functions";
+
 import { extractReviews, commitReviews, type ExtractedReview } from "@/lib/ai-reviews.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,7 +24,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { ArrowLeft, Sparkles, FileText, Image as ImageIcon, Globe, Table, Loader2, Wand2, CheckCircle2, Star, MessageSquareQuote } from "lucide-react";
+import { ArrowLeft, Sparkles, FileText, Image as ImageIcon, Globe, Table, Loader2, Wand2, CheckCircle2, Star, MessageSquareQuote, Trash2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard/ai-import")({
   component: AiImportPage,
@@ -254,6 +256,8 @@ function AiImportPage() {
       )}
 
       {step === "upload" && <ReviewsImportCard />}
+      {step === "upload" && <ResetImportCard />}
+
 
 
       {step === "review" && draft && (
@@ -915,3 +919,93 @@ function ReviewsImportCard() {
     </Card>
   );
 }
+
+function ResetImportCard() {
+  const reset = useServerFn(resetClinicServices);
+  const [open, setOpen] = useState(false);
+  const [scope, setScope] = useState<"treatments" | "all">("all");
+  const [busy, setBusy] = useState(false);
+
+  async function run() {
+    setBusy(true);
+    try {
+      const r = await reset({ data: { scope } });
+      const parts: string[] = [];
+      if (r.removed.treatments) parts.push(`${r.removed.treatments} treatments`);
+      if (r.removed.addons) parts.push(`${r.removed.addons} add-ons`);
+      if (r.removed.categories) parts.push(`${r.removed.categories} categories`);
+      toast.success(parts.length ? `Removed ${parts.join(", ")}` : "Nothing to remove");
+      if (r.skipped?.treatments) {
+        toast.info(`${r.skipped.treatments} treatments kept — they have existing appointments.`);
+      }
+      if (r.errors?.length) toast.error(r.errors[0]);
+      setOpen(false);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Reset failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Card className="border-destructive/30">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-lg">
+          <Trash2 className="size-5 text-destructive" /> Reset imported services
+        </CardTitle>
+        <p className="text-sm text-muted-foreground">
+          Wipe the treatments, add-ons and categories on your account so you can re-run the AI
+          import from a clean slate. Treatments that already have appointments against them are kept
+          so your history stays intact.
+        </p>
+      </CardHeader>
+      <CardContent>
+        <Button variant="destructive" onClick={() => setOpen(true)}>
+          <Trash2 className="mr-2 size-4" /> Remove imported services
+        </Button>
+      </CardContent>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Remove imported services?</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 text-sm">
+            <p className="text-muted-foreground">
+              This permanently deletes your services. You can re-import them above afterwards.
+            </p>
+            <label className="flex items-start gap-2">
+              <input
+                type="radio"
+                className="mt-1"
+                checked={scope === "all"}
+                onChange={() => setScope("all")}
+              />
+              <span>
+                <b>Everything</b> — treatments, add-ons and categories.
+              </span>
+            </label>
+            <label className="flex items-start gap-2">
+              <input
+                type="radio"
+                className="mt-1"
+                checked={scope === "treatments"}
+                onChange={() => setScope("treatments")}
+              />
+              <span>
+                <b>Treatments only</b> — keep my categories and add-ons.
+              </span>
+            </label>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setOpen(false)} disabled={busy}>Cancel</Button>
+            <Button variant="destructive" onClick={run} disabled={busy}>
+              {busy ? <><Loader2 className="mr-2 size-4 animate-spin" /> Removing…</> : "Yes, remove"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </Card>
+  );
+}
+
