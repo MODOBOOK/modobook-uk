@@ -671,14 +671,15 @@ function BookPage() {
                     <Share2 className="h-5 w-5" />
                   </ActionButton>
                   {hasCareGuides ? (
-                    <ActionButton onClick={() => setCareGuideOpen(true)} label="Care Guide" brand={brand}>
+                    <ActionButton onClick={() => setCareGuideOpen(true)} label="Pre-treatment" brand={brand}>
                       <Info className="h-5 w-5" />
                     </ActionButton>
                   ) : (
-                    <ActionPlaceholder label="Care Guide" brand={brand}>
+                    <ActionPlaceholder label="Pre-treatment" brand={brand}>
                       <Info className="h-5 w-5 opacity-30" />
                     </ActionPlaceholder>
                   )}
+
                 </div>
               )}
             </>
