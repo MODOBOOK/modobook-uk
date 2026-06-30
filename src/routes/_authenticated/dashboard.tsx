@@ -47,12 +47,19 @@ import { useServerFn } from "@tanstack/react-start";
 export const Route = createFileRoute("/_authenticated/dashboard")({
   ssr: false,
   beforeLoad: async () => {
+    const { getHubContext } = await import("@/lib/hub.functions");
+    const ctx = await getHubContext().catch(() => null);
     const profile = await getMyProfile();
+    // Pure prescriber (no clinic profile): send them to the prescriber workspace
+    if (!profile && ctx?.role === "prescriber") {
+      throw redirect({ to: "/prescriber" });
+    }
     if (!profile) throw redirect({ to: "/onboarding" });
-    return { profile };
+    return { profile, isPrescriber: ctx?.role === "prescriber" };
   },
   component: DashboardLayout,
 });
+
 
 const navItems = [
   { label: "Dashboard", to: "/dashboard", icon: LayoutDashboard },
