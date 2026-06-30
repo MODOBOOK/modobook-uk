@@ -1593,6 +1593,38 @@ function BookPage() {
         );
       })()}
 
+      {/* Pre + Post Care Guide */}
+      <Dialog open={careGuideOpen} onOpenChange={setCareGuideOpen}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl" style={{ borderColor: `${brand}33` }}>
+          <DialogHeader>
+            <DialogTitle style={{ color: brand }}>Pre + Post Care Guide</DialogTitle>
+            <DialogDescription>General before & aftercare advice from the clinic. Always follow personalised instructions sent after your appointment.</DialogDescription>
+          </DialogHeader>
+          {careGuides.length === 0 ? (
+            <p className="py-4 text-sm text-muted-foreground">No care guides have been published yet.</p>
+          ) : (
+            <Accordion type="single" collapsible className="w-full">
+              {careGuides.map((g) => (
+                <AccordionItem key={g.id} value={g.id}>
+                  <AccordionTrigger className="text-left">
+                    <span className="flex flex-col">
+                      <span className="font-semibold">{g.name}</span>
+                      {g.summary && <span className="text-xs font-normal text-muted-foreground">{g.summary}</span>}
+                    </span>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <SafeHtml
+                      html={g.body_html || ""}
+                      className="prose prose-sm max-w-none [&_p]:leading-relaxed [&_strong]:font-bold"
+                    />
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {/* Directions location picker */}
       <Dialog open={directionsOpen} onOpenChange={setDirectionsOpen}>
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-md" style={{ borderColor: `${brand}33` }}>
