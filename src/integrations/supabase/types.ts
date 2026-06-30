@@ -2731,6 +2731,72 @@ export type Database = {
           },
         ]
       }
+      prescriber_clinic_visits: {
+        Row: {
+          capacity: number
+          confirmed_by_prescriber: boolean
+          created_at: string
+          created_by: string
+          end_time: string
+          id: string
+          location_id: string | null
+          notes: string | null
+          practitioner_profile_id: string
+          prescriber_user_id: string
+          start_time: string
+          status: string
+          updated_at: string
+          visit_date: string
+        }
+        Insert: {
+          capacity?: number
+          confirmed_by_prescriber?: boolean
+          created_at?: string
+          created_by?: string
+          end_time: string
+          id?: string
+          location_id?: string | null
+          notes?: string | null
+          practitioner_profile_id: string
+          prescriber_user_id: string
+          start_time: string
+          status?: string
+          updated_at?: string
+          visit_date: string
+        }
+        Update: {
+          capacity?: number
+          confirmed_by_prescriber?: boolean
+          created_at?: string
+          created_by?: string
+          end_time?: string
+          id?: string
+          location_id?: string | null
+          notes?: string | null
+          practitioner_profile_id?: string
+          prescriber_user_id?: string
+          start_time?: string
+          status?: string
+          updated_at?: string
+          visit_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prescriber_clinic_visits_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prescriber_clinic_visits_practitioner_profile_id_fkey"
+            columns: ["practitioner_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       prescriber_profiles: {
         Row: {
           admin_note: string | null
@@ -2784,6 +2850,7 @@ export type Database = {
           accepted_at: string | null
           appointment_id: string | null
           client_id: string | null
+          clinic_visit_id: string | null
           consent_given_at: string | null
           created_at: string
           declined_at: string | null
@@ -2804,6 +2871,7 @@ export type Database = {
           accepted_at?: string | null
           appointment_id?: string | null
           client_id?: string | null
+          clinic_visit_id?: string | null
           consent_given_at?: string | null
           created_at?: string
           declined_at?: string | null
@@ -2824,6 +2892,7 @@ export type Database = {
           accepted_at?: string | null
           appointment_id?: string | null
           client_id?: string | null
+          clinic_visit_id?: string | null
           consent_given_at?: string | null
           created_at?: string
           declined_at?: string | null
@@ -2853,6 +2922,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clinic_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prescriber_referrals_clinic_visit_id_fkey"
+            columns: ["clinic_visit_id"]
+            isOneToOne: false
+            referencedRelation: "prescriber_clinic_visits"
             referencedColumns: ["id"]
           },
           {
@@ -3966,6 +4042,23 @@ export type Database = {
         Returns: boolean
       }
       link_patient_account: { Args: { p_slug: string }; Returns: string }
+      list_clinic_visits_for_slug: {
+        Args: { p_slug: string; p_treatment_ids: string[] }
+        Returns: {
+          end_time: string
+          location_id: string
+          location_name: string
+          notes: string
+          prescriber_name: string
+          prescriber_user_id: string
+          remaining_capacity: number
+          start_time: string
+          treatment_id: string
+          visit_date: string
+          visit_id: string
+        }[]
+      }
+      list_my_prescriber_visits: { Args: never; Returns: Json }
       patient_cancel_appointment: {
         Args: { p_appointment_id: string }
         Returns: Json
