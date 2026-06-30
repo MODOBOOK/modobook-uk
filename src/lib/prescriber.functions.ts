@@ -53,7 +53,7 @@ const SaveSchema = z.object({
   treatment_id: z.string().uuid(),
   requires_prescriber: z.boolean(),
   prescriber_user_id: z.string().uuid().nullable(),
-  prescriber_routing: z.enum(["same_address", "in_person_consult"]),
+  prescriber_routing: z.enum(["same_address", "clinic_visit", "in_person_consult"]),
   prescriber_note: z.string().max(2000).nullable().optional(),
 });
 export const saveTreatmentPrescriberSettings = createServerFn({ method: "POST" })
