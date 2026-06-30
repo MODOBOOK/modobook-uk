@@ -547,3 +547,79 @@ function Field({ label, value, onChange, textarea }: { label: string; value: str
     </div>
   );
 }
+
+function PackageRow({
+  pkg,
+  onToggle,
+  onRemove,
+  onChange,
+}: {
+  pkg: Draftable<ExtractedPackage>;
+  onToggle: (v: boolean) => void;
+  onRemove: () => void;
+  onChange: (patch: Partial<ExtractedPackage>) => void;
+}) {
+  const generate = useServerFn(generateDescription);
+  const [busy, setBusy] = useState(false);
+
+  async function handleGenerate() {
+    setBusy(true);
+    try {
+      const r = await generate({
+        data: {
+          kind: "package",
+          name: pkg.name || "Package",
+          treatment_names: pkg.treatment_names ?? [],
+          sessions: pkg.sessions,
+          price_gbp: pkg.price_gbp,
+        },
+      });
+      if (r.description) onChange({ description: r.description });
+      else toast.error("AI didn't return a description");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to generate");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className={`space-y-2 rounded-md border p-2 ${pkg._include ? "" : "opacity-50"}`}>
+      <div className="flex flex-wrap items-center gap-2">
+        <Checkbox checked={pkg._include} onCheckedChange={(v) => onToggle(!!v)} />
+        <Input className="md:max-w-xs" value={pkg.name} onChange={(e) => onChange({ name: e.target.value })} placeholder="Package name" />
+        <Input className="md:max-w-[110px]" type="number" step="0.01" value={pkg.price_gbp ?? ""} onChange={(e) => onChange({ price_gbp: e.target.value ? Number(e.target.value) : undefined })} placeholder="£" />
+        <Input className="md:max-w-[100px]" type="number" value={pkg.sessions ?? ""} onChange={(e) => onChange({ sessions: e.target.value ? Number(e.target.value) : undefined })} placeholder="Sessions" />
+        {pkg.treatment_names?.length ? <Badge variant="secondary">{pkg.treatment_names.length} treatments</Badge> : null}
+        <button
+          type="button"
+          onClick={onRemove}
+          className="ml-auto text-xs text-muted-foreground hover:text-destructive"
+        >
+          Remove
+        </button>
+      </div>
+      {pkg.treatment_names && pkg.treatment_names.length > 0 && (
+        <p className="pl-7 text-xs text-muted-foreground">
+          Includes: {pkg.treatment_names.join(", ")}
+        </p>
+      )}
+      <div className="space-y-1 pl-7">
+        <div className="flex items-center justify-between">
+          <Label className="text-xs text-muted-foreground">Client-facing description</Label>
+          <Button type="button" size="sm" variant="ghost" onClick={handleGenerate} disabled={busy} className="h-7 gap-1 text-xs">
+            {busy ? <Loader2 className="size-3 animate-spin" /> : <Wand2 className="size-3" />}
+            {pkg.description ? "Rewrite with AI" : "Generate with AI"}
+          </Button>
+        </div>
+        <Textarea
+          rows={2}
+          value={pkg.description ?? ""}
+          onChange={(e) => onChange({ description: e.target.value })}
+          placeholder="Shown to clients on the booking page. Leave blank or click Generate."
+        />
+      </div>
+    </div>
+  );
+}
+
