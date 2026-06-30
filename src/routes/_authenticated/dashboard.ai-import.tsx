@@ -6,6 +6,7 @@ import {
   extractClinicData,
   commitClinicImport,
   generateDescription,
+  resetClinicServices,
   type ExtractedDraft,
   type ExtractedCategory,
   type ExtractedTreatment,
@@ -13,6 +14,7 @@ import {
   type ExtractedPackage,
   type ExtractedClinic,
 } from "@/lib/ai-import.functions";
+
 import { extractReviews, commitReviews, type ExtractedReview } from "@/lib/ai-reviews.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
