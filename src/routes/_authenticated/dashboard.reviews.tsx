@@ -4,16 +4,27 @@ import {
   listMyReviews, setReviewApproval,
   listMyTestimonials, upsertTestimonial, deleteTestimonial,
 } from "@/lib/patient.functions";
+import { extractReviews, commitReviews, type ExtractedReview } from "@/lib/ai-reviews.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger,
 } from "@/components/ui/dialog";
-import { Star, Loader2, Eye, EyeOff, Plus, Pencil, Trash2 } from "lucide-react";
+import { Star, Loader2, Eye, EyeOff, Plus, Pencil, Trash2, Sparkles, Wand2 } from "lucide-react";
 import { toast } from "sonner";
+
+async function fileToDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
 
 export const Route = createFileRoute("/_authenticated/dashboard/reviews")({
   component: ReviewMod,
