@@ -260,6 +260,7 @@ function AftercarePage() {
                     name: editing.name.trim(),
                     body_html: editing.body_html,
                     delay_hours: editing.delay_hours,
+                    show_on_public: !!editing.show_on_public,
                   },
                 });
                 const tplId = (saved as any)?.id ?? editing.id;
