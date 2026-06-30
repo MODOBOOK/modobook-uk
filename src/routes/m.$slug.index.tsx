@@ -667,9 +667,15 @@ function BookPage() {
                   <ActionButton onClick={handleShare} label="Share" brand={brand}>
                     <Share2 className="h-5 w-5" />
                   </ActionButton>
-                  <ActionButton onClick={() => document.getElementById(isMobile ? "welcome-intro-mobile" : "welcome-intro")?.scrollIntoView({ behavior: "smooth", block: "start" })} label="Intro" brand={brand}>
-                    <Info className="h-5 w-5" />
-                  </ActionButton>
+                  {hasCareGuides ? (
+                    <ActionButton onClick={() => setCareGuideOpen(true)} label="Care Guide" brand={brand}>
+                      <Info className="h-5 w-5" />
+                    </ActionButton>
+                  ) : (
+                    <ActionPlaceholder label="Care Guide" brand={brand}>
+                      <Info className="h-5 w-5 opacity-30" />
+                    </ActionPlaceholder>
+                  )}
                 </div>
               )}
             </>
