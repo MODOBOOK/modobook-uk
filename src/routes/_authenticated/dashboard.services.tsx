@@ -575,6 +575,9 @@ function CategoryRow({
               <FolderPlus className="mr-2 h-4 w-4" /> Add subcategory
             </DropdownMenuItem>
             <DropdownMenuSeparator />
+            <DropdownMenuItem onSelect={() => onMoveCatTo(node)}>
+              <FolderPlus className="mr-2 h-4 w-4" /> Move to…
+            </DropdownMenuItem>
             <DropdownMenuItem disabled={!canUp} onSelect={() => onMoveCat(siblings, node.id, -1)}>
               <ArrowUp className="mr-2 h-4 w-4" /> Move up
             </DropdownMenuItem>
@@ -582,6 +585,7 @@ function CategoryRow({
               <ArrowDown className="mr-2 h-4 w-4" /> Move down
             </DropdownMenuItem>
             <DropdownMenuSeparator />
+
             <DropdownMenuItem onSelect={() => onEditCat(node)}>
               <Pencil className="mr-2 h-4 w-4" /> Edit
             </DropdownMenuItem>
