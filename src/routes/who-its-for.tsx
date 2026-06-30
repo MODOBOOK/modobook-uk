@@ -78,7 +78,7 @@ const personas = [
     title: "Skin Injectors & Other Injectors",
     points: [
       "Treatment menu, packages and add-ons",
-      "Patient-facing concern picker and treatment finder quiz",
+      "Patient-facing concern picker and treatment menu",
       "Photo consent broken down by use case",
       "Mobile-first patient flow — no app to download",
     ],
