@@ -832,7 +832,10 @@ function TreatmentDialog({
               auto_send_medical_forms: autoSendForms,
               auto_send_aftercare: autoSendAftercare,
               aftercare_template_ids: aftercareTemplateIds,
+              price_mode: priceMode,
+              badge: badge === "none" ? null : badge,
             })
+
           }
           disabled={!name}
         >
