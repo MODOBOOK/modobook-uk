@@ -1200,25 +1200,15 @@ function ServiceDialog({
                   No templates yet. Create reusable aftercare messages on the Aftercare page.
                 </p>
               ) : (
-                <div className="flex flex-wrap gap-1.5">
-                  {aftercareList.map((t) => {
-                    const checked = aftercareIds.includes(t.id);
-                    return (
-                      <button
-                        key={t.id}
-                        type="button"
-                        onClick={() =>
-                          setAftercareIds((prev) =>
-                            prev.includes(t.id) ? prev.filter((x) => x !== t.id) : [...prev, t.id],
-                          )
-                        }
-                        className={`rounded-full border px-2.5 py-1 text-xs transition ${checked ? "bg-foreground text-background border-foreground" : "bg-background hover:bg-muted"}`}
-                      >
-                        {t.name} · {t.delay_hours}h
-                      </button>
-                    );
-                  })}
-                </div>
+                <AftercarePicker
+                  items={aftercareList}
+                  selected={aftercareIds}
+                  onToggle={(id) =>
+                    setAftercareIds((prev) =>
+                      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+                    )
+                  }
+                />
               )}
             </div>
             <details>
