@@ -310,9 +310,11 @@ function PrescriptionEditor({ referralId, patient, client }: { referralId: strin
     try {
       const payload = {
         ...form,
+        referral_id: referralId,
         patient_dob: form.patient_dob || null,
         valid_until: form.valid_until || null,
       };
+
       const res = await save({ data: payload });
       setForm((f) => ({ ...f, id: res.id }));
       toast.success("Prescription saved");
