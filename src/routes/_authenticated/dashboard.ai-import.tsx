@@ -141,24 +141,55 @@ function AiImportPage() {
       {step === "upload" && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Upload your price list and let AI set you up</CardTitle>
+            <CardTitle className="text-lg">Set up your clinic in seconds</CardTitle>
             <p className="text-sm text-muted-foreground">
-              Send us a PDF, a photo, a spreadsheet or your existing clinic website — we'll
-              extract your categories, treatments, prices and add-ons for you to review.
+              Send us your existing price list — PDF, photo, spreadsheet or website — and AI will
+              pull out your <b>categories, subcategories, treatments, prices and add-ons</b>. You
+              review everything on the next screen before anything saves.
             </p>
           </CardHeader>
           <CardContent className="space-y-5">
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-              <SourceTile icon={<FileText className="size-5" />} label="PDF" active={kind === "pdf"} onClick={() => setKind("pdf")} />
-              <SourceTile icon={<ImageIcon className="size-5" />} label="Photo" active={kind === "image"} onClick={() => setKind("image")} />
-              <SourceTile icon={<Table className="size-5" />} label="Spreadsheet / CSV" active={kind === "spreadsheet"} onClick={() => setKind("spreadsheet")} />
-              <SourceTile icon={<Globe className="size-5" />} label="Website URL" active={kind === "url"} onClick={() => setKind("url")} />
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <SourceTile
+                icon={<FileText className="size-5" />}
+                label="PDF"
+                desc="A price-list PDF you already give clients"
+                active={kind === "pdf"}
+                onClick={() => setKind("pdf")}
+              />
+              <SourceTile
+                icon={<ImageIcon className="size-5" />}
+                label="Photo / screenshot"
+                desc="A picture of a printed menu or your Instagram price post"
+                active={kind === "image"}
+                onClick={() => setKind("image")}
+              />
+              <SourceTile
+                icon={<Table className="size-5" />}
+                label="Spreadsheet"
+                desc="Excel or CSV with treatment, price, duration"
+                active={kind === "spreadsheet"}
+                onClick={() => setKind("spreadsheet")}
+              />
+              <SourceTile
+                icon={<Globe className="size-5" />}
+                label="Website URL"
+                desc="Best if you link straight to your treatments / pricing page"
+                active={kind === "url"}
+                onClick={() => setKind("url")}
+              />
             </div>
 
             {kind === "url" && (
               <div className="space-y-2">
                 <Label>Website URL</Label>
                 <Input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://yourclinic.co.uk/treatments" />
+                <p className="text-xs text-muted-foreground">
+                  Tip: paste the URL of your <b>treatments or pricing page</b>, not your homepage —
+                  you'll get far fewer wrong items. If your homepage doesn't list treatments, AI
+                  will sometimes pull nothing rather than guess (that's intentional). Anything that
+                  looks wrong on the review screen can be unticked or edited before importing.
+                </p>
               </div>
             )}
 
@@ -171,6 +202,9 @@ function AiImportPage() {
                   onChange={(e) => setFile(e.target.files?.[0] ?? null)}
                 />
                 {file && <p className="text-xs text-muted-foreground">{file.name} · {(file.size / 1024).toFixed(0)} KB</p>}
+                <p className="text-xs text-muted-foreground">
+                  Clearer source = better result. Make sure prices and treatment names are readable.
+                </p>
               </div>
             )}
 
@@ -183,22 +217,23 @@ function AiImportPage() {
                 </div>
                 <div className="space-y-2">
                   <Label>Or paste content</Label>
-                  <Textarea rows={6} value={text} onChange={(e) => setText(e.target.value)} placeholder="Treatment name, price, duration…" />
+                  <Textarea rows={6} value={text} onChange={(e) => setText(e.target.value)} placeholder={"e.g.\nInjectables, Lip filler 1ml, 45, 180\nInjectables, Anti-wrinkle 1 area, 30, 120\nSkin, HydraFacial, 60, 95"} />
                 </div>
               </div>
             )}
 
-            <div className="flex justify-end">
+            <div className="flex flex-col-reverse items-stretch gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-xs text-muted-foreground">
+                Nothing is saved to your account until you press <b>Import</b> on the next screen.
+              </p>
               <Button onClick={handleExtract} disabled={busy} size="lg">
                 {busy ? <><Loader2 className="mr-2 size-4 animate-spin" /> Reading…</> : <><Wand2 className="mr-2 size-4" /> Extract with AI</>}
               </Button>
             </div>
-            <p className="text-xs text-muted-foreground">
-              Nothing is saved to your account until you press Import on the review screen.
-            </p>
           </CardContent>
         </Card>
       )}
+
 
       {step === "review" && draft && (
         <ReviewStep
