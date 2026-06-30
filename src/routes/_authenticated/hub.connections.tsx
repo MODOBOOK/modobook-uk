@@ -41,7 +41,7 @@ function Connections() {
   async function refresh() {
     const [data, ctx] = await Promise.all([list(), getCtx()]);
     setLinks(data);
-    setRole(ctx.role ?? null);
+    setRole(ctx.role === "practitioner" || ctx.role === "prescriber" ? ctx.role : null);
     setMyCode(ctx.code ?? null);
     // Prescribers must be approved before sending requests
     setCanSend(ctx.role !== "prescriber" || ctx.prescriber?.status === "approved");
