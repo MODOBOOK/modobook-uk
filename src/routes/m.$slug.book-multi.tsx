@@ -425,7 +425,10 @@ function MultiBookPage() {
         },
       });
       setConfirmed(res);
-      if (sameAddressItems.length > 0 && res.appointments?.length) {
+      if (
+        (sameAddressItems.length > 0 || clinicVisitItems.length > 0) &&
+        res.appointments?.length
+      ) {
         try {
           await createReferrals({
             data: {
@@ -438,12 +441,14 @@ function MultiBookPage() {
                 dob: form.dob || null,
               },
               clientId: null,
+              visitSelections,
             },
           });
         } catch (err) {
           console.warn("Prescriber referral creation failed", err);
         }
       }
+
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Booking failed");
       submitLockRef.current = false;
