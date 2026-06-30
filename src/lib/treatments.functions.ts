@@ -177,6 +177,9 @@ export const updateTreatment = createServerFn({ method: "POST" })
     if (data.aftercare_delay_hours !== undefined) update.aftercare_delay_hours = data.aftercare_delay_hours;
     if (data.auto_send_medical_forms !== undefined) update.auto_send_medical_forms = data.auto_send_medical_forms;
     if (data.auto_send_aftercare !== undefined) update.auto_send_aftercare = data.auto_send_aftercare;
+    if (data.price_mode !== undefined) update.price_mode = data.price_mode;
+    if (data.badge !== undefined) update.badge = data.badge;
+
 
     const { data: treatment, error } = await supabase
       .from("treatments")
