@@ -10,6 +10,7 @@ import { RichTextEditor } from "@/components/RichTextEditor";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { Trash2, Plus } from "lucide-react";
+import { SaveReminder } from "@/components/SaveReminder";
 
 export const Route = createFileRoute("/_authenticated/dashboard/policies")({
   ssr: false,
