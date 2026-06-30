@@ -163,6 +163,23 @@ function DashboardIndex() {
         </Card>
       </section>
 
+      {/* AI onboarding banner */}
+      <Link to="/dashboard/ai-import" className="block">
+        <Card className="border-primary/40 bg-gradient-to-br from-primary/10 via-background to-background transition hover:border-primary/70 hover:shadow-md">
+          <CardContent className="flex items-center gap-4 p-4 sm:p-5">
+            <div className="grid size-12 shrink-0 place-items-center rounded-full bg-primary/15 text-primary">
+              <Sparkles className="size-6" />
+            </div>
+            <div className="flex-1">
+              <p className="text-[10px] font-medium uppercase tracking-[0.25em] text-primary">New</p>
+              <h3 className="font-serif text-lg sm:text-xl">Import with AI</h3>
+              <p className="text-sm text-muted-foreground">Upload your price list (PDF, photo, CSV or website link) and we'll set up your categories, treatments, add-ons and packages in seconds.</p>
+            </div>
+            <Button size="sm" className="hidden sm:inline-flex">Start</Button>
+          </CardContent>
+        </Card>
+      </Link>
+
       {/* Quick actions */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <QuickAction to="/dashboard/new-appointment" icon={CalendarPlus} label="New booking" />

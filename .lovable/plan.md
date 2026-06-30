@@ -1,66 +1,64 @@
-## Goal
+## AI Onboarding Wizard
 
-Make customizations on the practitioner side actually flow through to the public booking page, and add the new controls you asked for. Priority is the welcome card + Get-in-touch tiles.
+A new "Import with AI" flow that lets a practitioner upload a PDF, image, spreadsheet, or paste a website URL and have Lovable AI populate their entire MODO Book — clinic info, categories, treatments, add-ons, packages, and suggested aftercare — in one go.
 
-## 1. Fix existing customizations that aren't applying
+### Where it lives
 
-Welcome card, contact chips, fonts/menu, hero/carousel all have DB fields and dashboard inputs but several show inconsistent behaviour on the public page. I will:
+- New route: `/dashboard/onboarding/ai-import` (also surfaced as a big "Import with AI" card on the dashboard home for accounts with zero services, and as a button on the Services page).
+- Three steps: **Upload → AI review → Import**.
 
-- **Welcome card**: make every dashboard control take effect on `/m/:slug` — size, mobile size, position (overlap vs below), background (solid/glass/gradient), opacity, blur, border colour/width/radius, padding, shadow. Also fix the "wide banner mobile-only" fallback so the desktop preview matches the mobile preview when both are set to wide.
-- **Contact chips**: today the SMS/WhatsApp/Instagram/Facebook toggles only show inside the compact pill. I'll also wire them into the medium card (and the Get-in-touch tile grid already uses them — confirmed).
-- **Show contact chips master toggle**: today this only hides the Get-in-touch tile section. I'll also hide chips in the welcome card when it's off.
-- **Fonts**: confirm the heading/body font from the dashboard is applied to every heading on the booking page (some sections still inherit defaults). Add `Syne` to both the loaded Google Fonts link and the FONTS picker since it's in the Warm Sand preset.
-- **Hero / carousel**: confirm the carousel toggle + uploaded URLs render the rotating gallery instead of the static hero, and that `hero_image_url` from the dashboard mirrors to the public page.
+### Step 1 — Upload
 
-## 2. New customizations
+Single screen, four input tiles:
+- **PDF price list / menu** — drag-and-drop, up to 20 MB.
+- **Photo / screenshot** — JPG/PNG of a printed menu or competitor site.
+- **Spreadsheet (CSV / Excel)** — parsed in browser to text before sending.
+- **Website URL** — scraped server-side via Firecrawl (existing connector if linked, otherwise we add it).
 
-All added as columns on `clinic_theme`, exposed in the Branding dashboard, and applied on `/m/:slug`.
+Files upload to a private `ai-imports` storage bucket scoped to the practitioner. URL inputs skip storage.
 
-### Header bar
-- `header_sticky` (default on)
-- `header_logo_size` (small / medium / large)
-- `header_show_name` toggle
-- `header_show_tagline` toggle (today shows by default)
-- `header_button_label` (rename "Book")
+### Step 2 — AI extraction (server function)
 
-### Hero
-- `hero_height` (short / medium / tall)
-- `hero_overlay_opacity` (0–80%)
-- `hero_overlay_color` (default black)
-- `hero_text_alignment` (left / center / right)
-- `hero_show_text` toggle (some practitioners want a pure image hero)
+New TanStack server function `extractClinicData` (`src/lib/ai-import.functions.ts`, behind `requireSupabaseAuth`):
 
-### Buttons (Book + contact tiles + Get-in-touch)
-- `button_color` (defaults to primary)
-- `button_text_color`
-- `button_radius` (rounded-md / rounded-xl / pill)
-- `button_size` (sm / md / lg)
-- `button_uppercase` toggle
+1. Loads the source (signed URL for PDF/image, raw text for CSV, Firecrawl markdown for URLs).
+2. Calls Lovable AI `google/gemini-3-flash-preview` with multimodal input and a tight Zod-validated `Output.object` schema:
+   - `clinic`: name, tagline, short bio, contact details if present.
+   - `categories[]`: name, optional description, parent name for subcategories.
+   - `treatments[]`: name, duration_mins, price_gbp, description, category name, suggested add-ons, suggested aftercare template name.
+   - `addons[]`: name, price, duration.
+   - `packages[]`: name, included treatment names, total price, sessions.
+3. Returns the draft as JSON — nothing is written yet.
 
-### Spacing & density
-- `page_density` (compact / cozy / spacious) — adjusts section spacing and card padding across the booking page
-- `section_gap` (sm / md / lg)
+A second lightweight call maps each treatment to the closest existing aftercare template by name similarity so the practitioner sees a suggestion rather than a blank.
 
-### Get-in-touch tiles
-- `contact_tile_layout` (grid / horizontal-list)
-- `contact_tile_icon_size` (sm / md / lg)
-- `contact_tile_bg_color`
-- `contact_tile_border_color`
+### Step 3 — Review & import
 
-## 3. Technical changes
+A single review screen with collapsible sections (Clinic, Categories, Treatments, Add-ons, Packages). For each row:
+- Checkbox to include / exclude.
+- Inline editable fields (name, price, duration, description, category dropdown, aftercare dropdown).
+- "Select all" / "Deselect all" per section.
+- Diff badges when an item with the same name already exists ("Update existing" vs "Create new").
 
-1. **Migration**: add the columns above to `clinic_theme` with sensible defaults.
-2. **`src/lib/theme.functions.ts`**: extend `ClinicThemeInput` so the new fields persist.
-3. **`src/routes/_authenticated/dashboard.branding.tsx`**: add a "Header & hero", "Buttons", "Spacing", and "Contact tiles" section with the new inputs. Keep the existing layout.
-4. **`src/routes/m.$slug.index.tsx`**: read every new field from `theme`, apply to header / hero / contact tiles / Book buttons; fix the welcome-card chip rendering and master `showContact` behaviour; add `Syne` to root fonts; wire density to the section spacing.
-5. **`src/lib/theme-presets.ts`**: include the new fields in each preset so picking a preset still produces a coherent look.
+A sticky footer shows totals ("12 treatments, 4 categories, 3 add-ons will be imported") and a single **Import** button. Import runs in a server function that:
+- Upserts clinic profile fields (only the ones the practitioner ticked).
+- Inserts categories first, then subcategories, then treatments with the correct `category_id`, then add-ons and `treatment_addons` links, then packages.
+- Links suggested aftercare via `treatment_aftercare_templates`.
+- Wraps everything in a single transaction; on failure nothing is written and the practitioner sees the row that failed.
 
-## 4. Verification
+### Safety & UX details
 
-Drive Playwright headless against `localhost:8080/m/aestheticsbynurseryan` (mobile viewport 402×717) and capture before/after screenshots after toggling each new control through the dashboard.
+- Hard server-side caps: max 80 treatments, 20 categories, 30 add-ons per import to keep the AI schema bounded.
+- All AI calls surface gateway errors clearly (rate limit, credits exhausted).
+- Imports never overwrite existing rows silently — duplicates are flagged in the review step and default to "skip".
+- Free for the practitioner; AI cost is on the platform's Lovable AI credits.
 
-## Out of scope
+### Technical notes
 
-- New backend logic for bookings
-- Per-section custom HTML
-- Customising the consultation wizard pages
+- New files: `src/routes/dashboard/onboarding/ai-import.tsx`, `src/lib/ai-import.functions.ts`, `src/components/ai-import/{UploadStep,ReviewStep,ImportSummary}.tsx`, `src/lib/ai-import/schema.ts` (Zod), storage bucket migration for `ai-imports`.
+- Reuses existing Firecrawl connector pattern if a URL is supplied; we will prompt to link it the first time.
+- No DB schema changes required beyond the storage bucket — we write into existing `treatment_categories`, `treatments`, `addons`, `treatment_addons`, `packages`, `profiles`.
+
+### Also addressed in this turn
+
+The "About" page question: the old `/about` route was intentionally folded into **Welcome & policies** on the dashboard. The heading + rich-text intro saved there renders as the Welcome card on the public booking page. If it's not showing, those two fields are still empty — filling them brings it back. No code change needed.

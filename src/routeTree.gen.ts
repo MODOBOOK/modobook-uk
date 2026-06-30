@@ -54,6 +54,7 @@ import { Route as AuthenticatedDashboardBookingsRouteImport } from './routes/_au
 import { Route as AuthenticatedDashboardBookingFlowRouteImport } from './routes/_authenticated/dashboard.booking-flow'
 import { Route as AuthenticatedDashboardBioRouteImport } from './routes/_authenticated/dashboard.bio'
 import { Route as AuthenticatedDashboardAvailabilityRouteImport } from './routes/_authenticated/dashboard.availability'
+import { Route as AuthenticatedDashboardAiImportRouteImport } from './routes/_authenticated/dashboard.ai-import'
 import { Route as AuthenticatedDashboardAftercareRouteImport } from './routes/_authenticated/dashboard.aftercare'
 import { Route as AuthenticatedDashboardAddonsRouteImport } from './routes/_authenticated/dashboard.addons'
 import { Route as AuthenticatedDashboardPatientsIndexRouteImport } from './routes/_authenticated/dashboard.patients.index'
@@ -312,6 +313,12 @@ const AuthenticatedDashboardAvailabilityRoute =
     path: '/availability',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
+const AuthenticatedDashboardAiImportRoute =
+  AuthenticatedDashboardAiImportRouteImport.update({
+    id: '/ai-import',
+    path: '/ai-import',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
 const AuthenticatedDashboardAftercareRoute =
   AuthenticatedDashboardAftercareRouteImport.update({
     id: '/aftercare',
@@ -374,6 +381,7 @@ export interface FileRoutesByFullPath {
   '/m/$slug': typeof MSlugRouteWithChildren
   '/dashboard/addons': typeof AuthenticatedDashboardAddonsRoute
   '/dashboard/aftercare': typeof AuthenticatedDashboardAftercareRoute
+  '/dashboard/ai-import': typeof AuthenticatedDashboardAiImportRoute
   '/dashboard/availability': typeof AuthenticatedDashboardAvailabilityRoute
   '/dashboard/bio': typeof AuthenticatedDashboardBioRoute
   '/dashboard/booking-flow': typeof AuthenticatedDashboardBookingFlowRoute
@@ -426,6 +434,7 @@ export interface FileRoutesByTo {
   '/f/$token': typeof FTokenRoute
   '/dashboard/addons': typeof AuthenticatedDashboardAddonsRoute
   '/dashboard/aftercare': typeof AuthenticatedDashboardAftercareRoute
+  '/dashboard/ai-import': typeof AuthenticatedDashboardAiImportRoute
   '/dashboard/availability': typeof AuthenticatedDashboardAvailabilityRoute
   '/dashboard/bio': typeof AuthenticatedDashboardBioRoute
   '/dashboard/booking-flow': typeof AuthenticatedDashboardBookingFlowRoute
@@ -481,6 +490,7 @@ export interface FileRoutesById {
   '/m/$slug': typeof MSlugRouteWithChildren
   '/_authenticated/dashboard/addons': typeof AuthenticatedDashboardAddonsRoute
   '/_authenticated/dashboard/aftercare': typeof AuthenticatedDashboardAftercareRoute
+  '/_authenticated/dashboard/ai-import': typeof AuthenticatedDashboardAiImportRoute
   '/_authenticated/dashboard/availability': typeof AuthenticatedDashboardAvailabilityRoute
   '/_authenticated/dashboard/bio': typeof AuthenticatedDashboardBioRoute
   '/_authenticated/dashboard/booking-flow': typeof AuthenticatedDashboardBookingFlowRoute
@@ -537,6 +547,7 @@ export interface FileRouteTypes {
     | '/m/$slug'
     | '/dashboard/addons'
     | '/dashboard/aftercare'
+    | '/dashboard/ai-import'
     | '/dashboard/availability'
     | '/dashboard/bio'
     | '/dashboard/booking-flow'
@@ -589,6 +600,7 @@ export interface FileRouteTypes {
     | '/f/$token'
     | '/dashboard/addons'
     | '/dashboard/aftercare'
+    | '/dashboard/ai-import'
     | '/dashboard/availability'
     | '/dashboard/bio'
     | '/dashboard/booking-flow'
@@ -643,6 +655,7 @@ export interface FileRouteTypes {
     | '/m/$slug'
     | '/_authenticated/dashboard/addons'
     | '/_authenticated/dashboard/aftercare'
+    | '/_authenticated/dashboard/ai-import'
     | '/_authenticated/dashboard/availability'
     | '/_authenticated/dashboard/bio'
     | '/_authenticated/dashboard/booking-flow'
@@ -1013,6 +1026,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardAvailabilityRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
+    '/_authenticated/dashboard/ai-import': {
+      id: '/_authenticated/dashboard/ai-import'
+      path: '/ai-import'
+      fullPath: '/dashboard/ai-import'
+      preLoaderRoute: typeof AuthenticatedDashboardAiImportRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
     '/_authenticated/dashboard/aftercare': {
       id: '/_authenticated/dashboard/aftercare'
       path: '/aftercare'
@@ -1093,6 +1113,7 @@ const AuthenticatedDashboardPatientsRouteWithChildren =
 interface AuthenticatedDashboardRouteChildren {
   AuthenticatedDashboardAddonsRoute: typeof AuthenticatedDashboardAddonsRoute
   AuthenticatedDashboardAftercareRoute: typeof AuthenticatedDashboardAftercareRoute
+  AuthenticatedDashboardAiImportRoute: typeof AuthenticatedDashboardAiImportRoute
   AuthenticatedDashboardAvailabilityRoute: typeof AuthenticatedDashboardAvailabilityRoute
   AuthenticatedDashboardBioRoute: typeof AuthenticatedDashboardBioRoute
   AuthenticatedDashboardBookingFlowRoute: typeof AuthenticatedDashboardBookingFlowRoute
@@ -1126,6 +1147,7 @@ const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
   {
     AuthenticatedDashboardAddonsRoute: AuthenticatedDashboardAddonsRoute,
     AuthenticatedDashboardAftercareRoute: AuthenticatedDashboardAftercareRoute,
+    AuthenticatedDashboardAiImportRoute: AuthenticatedDashboardAiImportRoute,
     AuthenticatedDashboardAvailabilityRoute:
       AuthenticatedDashboardAvailabilityRoute,
     AuthenticatedDashboardBioRoute: AuthenticatedDashboardBioRoute,

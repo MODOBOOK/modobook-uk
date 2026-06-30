@@ -24,6 +24,7 @@ import {
   Settings,
   HelpCircle,
   ChevronLeft,
+  Sparkles,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -47,6 +48,7 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 
 const navItems = [
   { label: "Dashboard", to: "/dashboard", icon: LayoutDashboard },
+  { label: "Import with AI", to: "/dashboard/ai-import", icon: Sparkles },
   { label: "Clinic page", to: "/dashboard/clinic", icon: Store },
   { label: "Welcome & policies", to: "/dashboard/policies", icon: Shield },
   { label: "Branding", to: "/dashboard/branding", icon: Palette },
