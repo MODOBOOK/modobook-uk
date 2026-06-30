@@ -7,9 +7,6 @@ import { resolveDisplayNames } from "@/lib/display-name";
 
 
 export const Route = createFileRoute("/m/$slug/about")({
-  beforeLoad: ({ params }) => {
-    throw redirect({ to: "/m/$slug", params: { slug: params.slug } });
-  },
   loader: async ({ params }) => getPractitionerBio({ data: { slug: params.slug } }),
   head: ({ loaderData }) => {
     const name = loaderData?.profile ? resolveDisplayNames(loaderData.profile).primary : "practitioner";
