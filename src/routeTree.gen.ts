@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WhoItsForRouteImport } from './routes/who-its-for'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PrescriberHubRouteImport } from './routes/prescriber-hub'
 import { Route as FeaturesRouteImport } from './routes/features'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -79,6 +80,11 @@ import { Route as AuthenticatedDashboardConsultationsIdRouteImport } from './rou
 const WhoItsForRoute = WhoItsForRouteImport.update({
   id: '/who-its-for',
   path: '/who-its-for',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrescriberHubRoute = PrescriberHubRouteImport.update({
@@ -452,6 +458,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/features': typeof FeaturesRoute
   '/prescriber-hub': typeof PrescriberHubRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/who-its-for': typeof WhoItsForRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/admin-prescribers': typeof AuthenticatedAdminPrescribersRoute
@@ -519,6 +526,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/features': typeof FeaturesRoute
   '/prescriber-hub': typeof PrescriberHubRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/who-its-for': typeof WhoItsForRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/admin-prescribers': typeof AuthenticatedAdminPrescribersRoute
@@ -583,6 +591,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/features': typeof FeaturesRoute
   '/prescriber-hub': typeof PrescriberHubRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/who-its-for': typeof WhoItsForRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/admin-prescribers': typeof AuthenticatedAdminPrescribersRoute
@@ -652,6 +661,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/features'
     | '/prescriber-hub'
+    | '/reset-password'
     | '/who-its-for'
     | '/admin'
     | '/admin-prescribers'
@@ -719,6 +729,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/features'
     | '/prescriber-hub'
+    | '/reset-password'
     | '/who-its-for'
     | '/admin'
     | '/admin-prescribers'
@@ -782,6 +793,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/features'
     | '/prescriber-hub'
+    | '/reset-password'
     | '/who-its-for'
     | '/_authenticated/admin'
     | '/_authenticated/admin-prescribers'
@@ -851,6 +863,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   FeaturesRoute: typeof FeaturesRoute
   PrescriberHubRoute: typeof PrescriberHubRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   WhoItsForRoute: typeof WhoItsForRoute
   BookSlugRoute: typeof BookSlugRoute
   CTokenRoute: typeof CTokenRoute
@@ -865,6 +878,13 @@ declare module '@tanstack/react-router' {
       path: '/who-its-for'
       fullPath: '/who-its-for'
       preLoaderRoute: typeof WhoItsForRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/prescriber-hub': {
@@ -1521,6 +1541,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   FeaturesRoute: FeaturesRoute,
   PrescriberHubRoute: PrescriberHubRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   WhoItsForRoute: WhoItsForRoute,
   BookSlugRoute: BookSlugRoute,
   CTokenRoute: CTokenRoute,

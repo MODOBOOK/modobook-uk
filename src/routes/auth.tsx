@@ -33,6 +33,22 @@ function AuthPage() {
   const isPrescriberFlow = as === "prescriber";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [forgotOpen, setForgotOpen] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+
+  async function handleForgot(e: React.FormEvent) {
+    e.preventDefault();
+    if (!forgotEmail) return;
+    setLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setLoading(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success("If an account exists, we've sent a reset link.");
+    setForgotOpen(false);
+  }
+
 
   async function handleGoogle() {
     setLoading(true);
