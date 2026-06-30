@@ -2671,6 +2671,9 @@ export type Database = {
           invoice_swift: string | null
           invoice_vat_number: string | null
           model_slots_position: string
+          patient_cancel_cutoff_hours: number | null
+          patient_reschedule_cutoff_hours: number | null
+          patient_reschedule_max: number | null
           payment_card_full_enabled: boolean
           payment_clearpay_enabled: boolean
           payment_deposit_enabled: boolean
@@ -2765,6 +2768,9 @@ export type Database = {
           invoice_swift?: string | null
           invoice_vat_number?: string | null
           model_slots_position?: string
+          patient_cancel_cutoff_hours?: number | null
+          patient_reschedule_cutoff_hours?: number | null
+          patient_reschedule_max?: number | null
           payment_card_full_enabled?: boolean
           payment_clearpay_enabled?: boolean
           payment_deposit_enabled?: boolean
@@ -2859,6 +2865,9 @@ export type Database = {
           invoice_swift?: string | null
           invoice_vat_number?: string | null
           model_slots_position?: string
+          patient_cancel_cutoff_hours?: number | null
+          patient_reschedule_cutoff_hours?: number | null
+          patient_reschedule_max?: number | null
           payment_card_full_enabled?: boolean
           payment_clearpay_enabled?: boolean
           payment_deposit_enabled?: boolean
