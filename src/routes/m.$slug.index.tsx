@@ -1597,7 +1597,52 @@ function BookPage() {
           </div>
         );
       })()}
-      
+
+      {/* Directions location picker */}
+      <Dialog open={directionsOpen} onOpenChange={setDirectionsOpen}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-md" style={{ borderColor: `${brand}33` }}>
+          <DialogHeader>
+            <DialogTitle style={{ color: brand }}>Choose a location</DialogTitle>
+            <DialogDescription>Select the clinic you want directions to.</DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-3 py-2">
+            {mappableLocations.map((loc) => {
+              const url = mapsUrl(loc);
+              const photo = loc.image_url || profile.avatar_url;
+              return (
+                <a
+                  key={loc.id}
+                  href={url || undefined}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setDirectionsOpen(false)}
+                  className="flex items-center gap-3 rounded-xl border p-3 transition hover:bg-muted"
+                  style={{ borderColor: `${brand}22`, backgroundColor: menuCardBg }}
+                >
+                  {photo ? (
+                    <img src={photo} alt={loc.name} className="h-12 w-12 rounded-full object-cover" />
+                  ) : (
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full text-base font-bold text-white" style={{ backgroundColor: brand }}>
+                      {loc.name.charAt(0)}
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm font-semibold" style={{ color: brand }}>
+                      {loc.name}
+                      {loc.is_primary && <Star className="ml-1 inline h-3 w-3" fill="currentColor" />}
+                    </div>
+                    {formatAddress(loc) && (
+                      <div className="mt-0.5 truncate text-xs text-muted-foreground">{formatAddress(loc)}</div>
+                    )}
+                  </div>
+                  <ExternalLink className="h-4 w-4 shrink-0 opacity-60" />
+                </a>
+              );
+            })}
+          </div>
+        </DialogContent>
+      </Dialog>
+
     </main>
   );
 }
