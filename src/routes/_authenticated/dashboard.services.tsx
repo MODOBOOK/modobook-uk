@@ -349,6 +349,7 @@ function ServicesPage() {
 
       <CategoryDialog
         state={catDialog}
+        allCategories={(cats.data ?? []) as Cat[]}
         onClose={() => setCatDialog(null)}
         onSubmit={async (values) => {
           try {
@@ -356,8 +357,9 @@ function ServicesPage() {
               await updateCat({ data: { id: catDialog.cat.id, ...values } });
               toast.success("Category updated");
             } else {
+              const { parent_id: pickedParent, ...rest } = values;
               await createCat({
-                data: { ...values, parent_id: catDialog?.parentId ?? null },
+                data: { ...rest, parent_id: pickedParent ?? catDialog?.parentId ?? null },
               });
               toast.success("Category created");
             }
@@ -368,6 +370,7 @@ function ServicesPage() {
           }
         }}
       />
+
 
       <ServiceDialog
         state={svcDialog}
