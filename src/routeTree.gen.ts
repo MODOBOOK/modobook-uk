@@ -19,6 +19,7 @@ import { Route as MSlugRouteImport } from './routes/m.$slug'
 import { Route as FTokenRouteImport } from './routes/f.$token'
 import { Route as CTokenRouteImport } from './routes/c.$token'
 import { Route as BookSlugRouteImport } from './routes/book.$slug'
+import { Route as AuthenticatedPrescriberRouteImport } from './routes/_authenticated/prescriber'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedHubRouteImport } from './routes/_authenticated/hub'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -119,6 +120,11 @@ const BookSlugRoute = BookSlugRouteImport.update({
   id: '/book/$slug',
   path: '/book/$slug',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedPrescriberRoute = AuthenticatedPrescriberRouteImport.update({
+  id: '/prescriber',
+  path: '/prescriber',
+  getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
   id: '/onboarding',
@@ -425,6 +431,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRouteWithChildren
   '/hub': typeof AuthenticatedHubRouteWithChildren
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/prescriber': typeof AuthenticatedPrescriberRoute
   '/book/$slug': typeof BookSlugRoute
   '/c/$token': typeof CTokenRoute
   '/f/$token': typeof FTokenRoute
@@ -485,6 +492,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AuthenticatedAdminRoute
   '/admin-prescribers': typeof AuthenticatedAdminPrescribersRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/prescriber': typeof AuthenticatedPrescriberRoute
   '/book/$slug': typeof BookSlugRoute
   '/c/$token': typeof CTokenRoute
   '/f/$token': typeof FTokenRoute
@@ -547,6 +555,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRouteWithChildren
   '/_authenticated/hub': typeof AuthenticatedHubRouteWithChildren
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
+  '/_authenticated/prescriber': typeof AuthenticatedPrescriberRoute
   '/book/$slug': typeof BookSlugRoute
   '/c/$token': typeof CTokenRoute
   '/f/$token': typeof FTokenRoute
@@ -611,6 +620,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/hub'
     | '/onboarding'
+    | '/prescriber'
     | '/book/$slug'
     | '/c/$token'
     | '/f/$token'
@@ -671,6 +681,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/admin-prescribers'
     | '/onboarding'
+    | '/prescriber'
     | '/book/$slug'
     | '/c/$token'
     | '/f/$token'
@@ -732,6 +743,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/hub'
     | '/_authenticated/onboarding'
+    | '/_authenticated/prescriber'
     | '/book/$slug'
     | '/c/$token'
     | '/f/$token'
@@ -868,6 +880,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/book/$slug'
       preLoaderRoute: typeof BookSlugRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/prescriber': {
+      id: '/_authenticated/prescriber'
+      path: '/prescriber'
+      fullPath: '/prescriber'
+      preLoaderRoute: typeof AuthenticatedPrescriberRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/onboarding': {
       id: '/_authenticated/onboarding'
@@ -1359,6 +1378,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRouteWithChildren
   AuthenticatedHubRoute: typeof AuthenticatedHubRouteWithChildren
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
+  AuthenticatedPrescriberRoute: typeof AuthenticatedPrescriberRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
@@ -1367,6 +1387,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRouteWithChildren,
   AuthenticatedHubRoute: AuthenticatedHubRouteWithChildren,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
+  AuthenticatedPrescriberRoute: AuthenticatedPrescriberRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
