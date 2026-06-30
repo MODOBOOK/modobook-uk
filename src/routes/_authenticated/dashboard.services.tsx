@@ -1338,6 +1338,34 @@ function ServiceDialog({
             </div>
           </div>
 
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label>Price display</Label>
+              <Select value={priceMode} onValueChange={(v) => setPriceMode(v as typeof priceMode)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="fixed">Fixed price</SelectItem>
+                  <SelectItem value="from">From £…</SelectItem>
+                  <SelectItem value="poa">POA (price on application)</SelectItem>
+                  <SelectItem value="free">Free</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Highlight badge</Label>
+              <Select value={badge} onValueChange={(v) => setBadge(v as typeof badge)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No badge</SelectItem>
+                  <SelectItem value="recommended">Recommended</SelectItem>
+                  <SelectItem value="popular">Most popular</SelectItem>
+                  <SelectItem value="new">New</SelectItem>
+                  <SelectItem value="bestseller">Bestseller</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
           {profileId && (
             <ImageUploader
               label="Service picture (optional)"
