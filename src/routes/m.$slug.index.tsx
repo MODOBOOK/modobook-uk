@@ -107,6 +107,8 @@ function BookPage() {
         id: string;
         clinic_name: string;
         full_name: string | null;
+        display_name_mode?: string | null;
+
         tagline: string | null;
         hero_url: string | null;
         avatar_url: string | null;
