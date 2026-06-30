@@ -80,24 +80,32 @@ function Connections() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <LinkIcon className="h-4 w-4 text-primary" /> Send a connection request
+            <LinkIcon className="h-4 w-4 text-primary" />
+            {role ? `Connect with a ${counterpartLabel}` : "Send a connection request"}
           </CardTitle>
-          <CardDescription>Enter the MODO code of the person you want to connect with.</CardDescription>
+          <CardDescription>
+            {role
+              ? `Enter the ${counterpartLabel}'s MODO code (starts with ${counterpartPrefix}). They can also send you a request — share your code ${myCode ? `(${formatHubCode(myCode)})` : ""} and accept it under Incoming requests.`
+              : "Enter the MODO code of the person you want to connect with."}
+            {" "}You can be linked to multiple {counterpartLabel}s.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {!canSend ? (
             <p className="text-sm text-muted-foreground">
-              You'll be able to send requests once your prescriber verification is approved.
+              You'll be able to send requests once your prescriber verification is approved. In the
+              meantime, practitioners can request you using your code
+              {myCode ? ` (${formatHubCode(myCode)})` : ""}.
             </p>
           ) : (
             <form onSubmit={onSend} className="grid gap-3 sm:grid-cols-[1fr_2fr_auto] sm:items-end">
               <div className="space-y-2">
-                <Label htmlFor="code">MODO code</Label>
+                <Label htmlFor="code">{isPrescriber ? "Practitioner" : "Prescriber"} MODO code</Label>
                 <Input
                   id="code"
                   value={code}
                   onChange={(e) => setCode(e.target.value.toUpperCase())}
-                  placeholder="PR-ABC123 or RX-ABC123"
+                  placeholder={`${counterpartPrefix}ABC123`}
                   required
                 />
               </div>
@@ -108,7 +116,11 @@ function Connections() {
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
                   rows={2}
-                  placeholder="Hi, I'd love to collaborate on prescribing for my clinic."
+                  placeholder={
+                    isPrescriber
+                      ? "Hi, happy to prescribe for your clinic."
+                      : "Hi, I'd love to collaborate on prescribing for my clinic."
+                  }
                 />
               </div>
               <Button type="submit" disabled={loading}>
@@ -119,6 +131,7 @@ function Connections() {
           )}
         </CardContent>
       </Card>
+
 
       <Section title="Incoming requests" items={incoming} empty="No incoming requests.">
         {(l) => (
