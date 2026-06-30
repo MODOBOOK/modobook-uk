@@ -964,7 +964,7 @@ function BookPage() {
       )}
 
       {/* Concerns picker (unsure path) */}
-      {locationId && chooserOn && mode === "unsure" && !pickedConcernId && (
+      {locationId && chooserOn && mode === "unsure" && !concernsConfirmed && (
         <section className="mx-auto mt-10 max-w-3xl px-4">
           <div className="mb-4 flex items-center justify-between">
             <button onClick={() => setMode(null)} className="text-sm opacity-70 hover:opacity-100">
