@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   CalendarDays,
-  CreditCard,
   ExternalLink,
   Copy,
   CalendarPlus,
