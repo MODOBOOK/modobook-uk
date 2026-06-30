@@ -184,7 +184,7 @@ async function callGateway(content: GatewayContent[]): Promise<ExtractedDraft> {
   const categories = (parsed.categories ?? []).slice(0, 25);
   const treatments = (parsed.treatments ?? []).slice(0, 100);
   const addons = (parsed.addons ?? []).slice(0, 40);
-  const packages = (parsed.packages ?? []).slice(0, 20);
+  const packages: ExtractedPackage[] = []; // AI no longer extracts packages — practitioners add them manually.
 
   // Defensive cleanup: strip "Category: Treatment" / "Category - Treatment"
   // prefixes the model sometimes leaves on the name.
