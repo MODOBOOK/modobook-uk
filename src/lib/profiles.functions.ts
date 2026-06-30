@@ -224,7 +224,9 @@ export const updateProfile = createServerFn({ method: "POST" })
       "invoice_account_number","invoice_iban","invoice_swift",
       "invoice_payment_reference","invoice_footer_notes","invoice_vat_number",
       "invoice_company_number","invoice_show_bank_details","invoice_show_logo",
+      "display_name_mode",
     ] as const;
+
     for (const k of passthroughKeys) {
       const v = (data as Record<string, unknown>)[k];
       if (v !== undefined) update[k] = v;
