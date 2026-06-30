@@ -14,6 +14,8 @@ export type PretreatmentTpl = {
   sort_order: number;
   show_on_public: boolean;
   active: boolean;
+  category: string;
+  bullets: string[];
 };
 
 export const listPretreatmentTemplates = createServerFn({ method: "GET" })
@@ -25,10 +27,15 @@ export const listPretreatmentTemplates = createServerFn({ method: "GET" })
       .from("pretreatment_templates")
       .select("*")
       .eq("profile_id", profileId)
+      .order("category")
       .order("sort_order")
       .order("created_at");
     if (error) throw error;
-    return (data ?? []) as PretreatmentTpl[];
+    return (data ?? []).map((r: any) => ({
+      ...r,
+      bullets: Array.isArray(r.bullets) ? r.bullets : [],
+      category: r.category ?? "general",
+    })) as PretreatmentTpl[];
   });
 
 export const savePretreatmentTemplate = createServerFn({ method: "POST" })
@@ -37,7 +44,9 @@ export const savePretreatmentTemplate = createServerFn({ method: "POST" })
     id?: string;
     name: string;
     summary?: string;
-    body_html: string;
+    body_html?: string;
+    bullets?: string[];
+    category?: string;
     show_on_public?: boolean;
     active?: boolean;
     sort_order?: number;
@@ -45,17 +54,20 @@ export const savePretreatmentTemplate = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const profileId = await getProfileId(context.supabase, context.userId);
     if (!profileId) throw new Error("Profile not found");
+    const payload = {
+      name: data.name,
+      summary: data.summary ?? null,
+      body_html: data.body_html ?? "",
+      bullets: data.bullets ?? [],
+      category: data.category ?? "general",
+      show_on_public: data.show_on_public ?? true,
+      active: data.active ?? true,
+      ...(data.sort_order != null ? { sort_order: data.sort_order } : {}),
+    };
     if (data.id) {
       const { data: row, error } = await context.supabase
         .from("pretreatment_templates")
-        .update({
-          name: data.name,
-          summary: data.summary ?? null,
-          body_html: data.body_html,
-          show_on_public: data.show_on_public ?? true,
-          active: data.active ?? true,
-          ...(data.sort_order != null ? { sort_order: data.sort_order } : {}),
-        })
+        .update(payload)
         .eq("id", data.id)
         .eq("profile_id", profileId)
         .select()
@@ -65,15 +77,7 @@ export const savePretreatmentTemplate = createServerFn({ method: "POST" })
     }
     const { data: row, error } = await context.supabase
       .from("pretreatment_templates")
-      .insert({
-        profile_id: profileId,
-        name: data.name,
-        summary: data.summary ?? null,
-        body_html: data.body_html,
-        show_on_public: data.show_on_public ?? true,
-        active: data.active ?? true,
-        sort_order: data.sort_order ?? 0,
-      })
+      .insert({ profile_id: profileId, sort_order: 0, ...payload })
       .select()
       .single();
     if (error) throw error;
