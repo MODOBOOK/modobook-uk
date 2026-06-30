@@ -157,6 +157,100 @@ function BookingFlowPage() {
     }
   }
 
+  // --- AI: suggest NEW concerns from treatments ---
+  type Suggestion = SuggestedConcern & { _selected: boolean; _areaChoice: string };
+  const [sugOpen, setSugOpen] = useState(false);
+  const [sugLoading, setSugLoading] = useState(false);
+  const [sugSaving, setSugSaving] = useState(false);
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+
+  async function runAiSuggestConcerns() {
+    if (treatments.length === 0) { toast.error("Add treatments first."); return; }
+    setSugLoading(true);
+    try {
+      const { concerns: out } = await suggestConcernsFromTreatments({
+        data: {
+          treatments: treatments.map((t) => ({ id: t.id, name: t.name, description: t.description })),
+          areas: areas.map((a) => ({ id: a.id, name: a.name })),
+          existingNames: concerns.map((c) => c.name),
+        },
+      });
+      if (out.length === 0) { toast.info("AI didn't find any new concerns to suggest."); return; }
+      setSuggestions(out.map((s) => ({
+        ...s,
+        _selected: true,
+        _areaChoice: s.area_id ?? (areas[0]?.id ?? "__new__"),
+      })));
+      setSugOpen(true);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "AI request failed");
+    } finally {
+      setSugLoading(false);
+    }
+  }
+
+  function updateSuggestion(idx: number, patch: Partial<Suggestion>) {
+    setSuggestions((prev) => prev.map((s, i) => (i === idx ? { ...s, ...patch } : s)));
+  }
+
+  function toggleSuggestionTreatment(idx: number, tid: string) {
+    setSuggestions((prev) => prev.map((s, i) => {
+      if (i !== idx) return s;
+      const set = new Set(s.treatment_ids);
+      if (set.has(tid)) set.delete(tid); else set.add(tid);
+      return { ...s, treatment_ids: Array.from(set) };
+    }));
+  }
+
+  async function applySuggestedConcerns() {
+    const picked = suggestions.filter((s) => s._selected && s.name.trim() && s.treatment_ids.length > 0);
+    if (picked.length === 0) { toast.error("Nothing selected to add."); return; }
+    setSugSaving(true);
+    try {
+      // Cache & resolve area names → ids, creating any new ones on the fly
+      const areaByName = new Map(areas.map((a) => [a.name.trim().toLowerCase(), a]));
+      let nextAreas = [...areas];
+      const newConcerns: Concern[] = [];
+      const newLinks: Link[] = [];
+
+      for (const s of picked) {
+        let areaId = s._areaChoice;
+        if (areaId === "__new__") {
+          const proposed = (s.area_name || "General").trim();
+          const existing = areaByName.get(proposed.toLowerCase());
+          if (existing) {
+            areaId = existing.id;
+          } else {
+            const row = await createConcernArea({ data: { name: proposed, sort_order: nextAreas.length } }) as Area;
+            nextAreas.push(row);
+            areaByName.set(proposed.toLowerCase(), row);
+            areaId = row.id;
+          }
+        }
+        const created = await createConcern({
+          data: { area_id: areaId, name: s.name.trim(), description: s.description || undefined },
+        }) as Concern;
+        newConcerns.push(created);
+        await setConcernTreatments({ data: { concern_id: created.id, treatment_ids: s.treatment_ids } });
+        for (const tid of s.treatment_ids) newLinks.push({ concern_id: created.id, treatment_id: tid });
+      }
+
+      setAreas(nextAreas);
+      setConcerns((prev) => [...prev, ...newConcerns]);
+      setLinks((prev) => [...prev, ...newLinks]);
+      toast.success(`Added ${picked.length} concern${picked.length === 1 ? "" : "s"}`);
+      setSugOpen(false);
+      setSuggestions([]);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to save");
+    } finally {
+      setSugSaving(false);
+    }
+  }
+
+
+
+
 
   function toggleId(list: string[], setList: (v: string[]) => void, id: string) {
     setList(list.includes(id) ? list.filter((x) => x !== id) : [...list, id]);
