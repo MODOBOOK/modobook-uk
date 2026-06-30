@@ -15,6 +15,7 @@ import {
   removeLink,
   getHubContext,
 } from "@/lib/hub.functions";
+import { formatHubCode } from "@/lib/hub-format";
 import { Loader2, Link as LinkIcon, X, Check } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/hub/connections")({
