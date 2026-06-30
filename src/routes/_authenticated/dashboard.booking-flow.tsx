@@ -335,13 +335,24 @@ function BookingFlowPage() {
       </Card>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Concerns &amp; matched treatments</CardTitle>
+        <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0">
+          <div>
+            <CardTitle>Concerns &amp; matched treatments</CardTitle>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Group concerns by area (e.g. Face, Body). For each concern, tick the treatments you'd suggest — or let AI draft them for you to review.
+            </p>
+          </div>
+          <Button size="sm" variant="secondary" onClick={runAiSuggest} disabled={aiLoading} className="shrink-0">
+            {aiLoading ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Sparkles className="mr-1 h-4 w-4" />}
+            Suggest with AI
+          </Button>
         </CardHeader>
         <CardContent className="space-y-4">
-          <p className="text-sm text-muted-foreground">
-            Group concerns by area (e.g. Face, Body). For each concern, tick the treatments you'd suggest.
-          </p>
+          <label className="flex items-center gap-2 text-xs text-muted-foreground">
+            <Checkbox checked={aiOnlyEmpty} onCheckedChange={(v) => setAiOnlyEmpty(!!v)} />
+            Only suggest for concerns with no treatments yet
+          </label>
+
 
           <div className="flex gap-2">
             <Input
