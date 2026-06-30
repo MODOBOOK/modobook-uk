@@ -732,18 +732,27 @@ function SortableServiceItem({
 
 function CategoryDialog({
   state,
+  allCategories,
   onClose,
   onSubmit,
 }: {
   state: { mode: "create" | "edit"; parentId: string | null; cat?: Cat } | null;
+  allCategories: Cat[];
   onClose: () => void;
-  onSubmit: (v: { name: string; description?: string; icon?: string; coming_soon_at?: string | null }) => Promise<void>;
+  onSubmit: (v: {
+    name: string;
+    description?: string;
+    icon?: string;
+    coming_soon_at?: string | null;
+    parent_id?: string | null;
+  }) => Promise<void>;
 }) {
   const open = !!state;
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [icon, setIcon] = useState("");
   const [comingSoon, setComingSoon] = useState("");
+  const [parentId, setParentId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   useMemo(() => {
@@ -752,8 +761,18 @@ function CategoryDialog({
       setDescription(state?.cat?.description ?? "");
       setIcon(state?.cat?.icon ?? "");
       setComingSoon(state?.cat?.coming_soon_at ? state.cat.coming_soon_at.slice(0, 10) : "");
+      setParentId(state?.cat ? state.cat.parent_id : state?.parentId ?? null);
     }
   }, [open, state]);
+
+  // Categories eligible as parent: top-level only, exclude self
+  const parentOptions = useMemo(
+    () =>
+      allCategories.filter(
+        (c) => !c.parent_id && (!state?.cat || c.id !== state.cat.id),
+      ),
+    [allCategories, state],
+  );
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
@@ -777,6 +796,29 @@ function CategoryDialog({
               placeholder="Start typing your category"
               maxLength={80}
             />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="c-parent">Parent category</Label>
+            <Select
+              value={parentId ?? "__none__"}
+              onValueChange={(v) => setParentId(v === "__none__" ? null : v)}
+            >
+              <SelectTrigger id="c-parent">
+                <SelectValue placeholder="Top-level category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">Top-level (no parent)</SelectItem>
+                {parentOptions.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.icon ? `${c.icon} ` : ""}
+                    {c.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-[11px] text-muted-foreground">
+              Pick a parent to make this a subcategory, or keep it top-level. You can move it to a different parent at any time.
+            </p>
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="c-desc">Description</Label>
@@ -825,6 +867,7 @@ function CategoryDialog({
                 description: description.trim() || undefined,
                 icon: icon.trim() || undefined,
                 coming_soon_at: comingSoon ? new Date(comingSoon + "T00:00:00").toISOString() : null,
+                parent_id: parentId,
               });
               setSaving(false);
             }}
@@ -836,6 +879,7 @@ function CategoryDialog({
     </Dialog>
   );
 }
+
 
 function ServiceDialog({
   state,
