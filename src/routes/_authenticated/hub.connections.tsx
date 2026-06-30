@@ -175,7 +175,7 @@ function Section({
                     {l.other_kind && <Badge variant="secondary" className="capitalize">{l.other_kind}</Badge>}
                   </div>
                   {l.other_code && (
-                    <div className="font-mono text-xs text-muted-foreground">MODO-{l.other_code}</div>
+                    <div className="font-mono text-xs text-muted-foreground">{formatHubCode(l.other_code)}</div>
                   )}
                   {l.note && <p className="mt-1 text-xs text-muted-foreground">"{l.note}"</p>}
                 </div>
