@@ -1,80 +1,48 @@
+## Goal
+Replace the "Book an in-person consultation" routing (which sent patients off to the prescriber's own booking page) with **Clinic Visit Days** — preset days when a prescriber will be present at the practitioner's clinic. Patients stay on the practitioner's booking page and pick an available visit slot; the prescriber sees a unified rota of where they'll be and who's booked.
 
-# Prescriber referral flow
+## What the user gets
 
-## 1. Database
+**Practitioner (Prescriber Hub → Connections / Prescribing):**
+- For each linked prescriber, schedule "Clinic visit days": date, start/end time, location (if multi-site), capacity, optional note.
+- Per treatment, the routing options become: *Same address* · *Clinic visit days* (replaces *In-person consult*).
+- View, edit, cancel upcoming visits; see how many patients are booked into each.
 
-New + altered schema (one migration):
+**Prescriber (Prescriber workspace → Visits):**
+- New "Clinic visits" page listing every upcoming visit across all linked practitioners — clinic name, address, date/time, list of patients booked, notes.
+- Can propose / confirm / decline visits (mirrors the practitioner's schedule).
 
-- `treatments` — add `requires_prescriber boolean default false`, `prescriber_user_id uuid` (FK auth.users, the connected prescriber for this service), `prescriber_routing text check in ('same_address','in_person_consult') default 'same_address'`, `prescriber_note text`.
-- `prescriber_referrals` (new):
-  - `practitioner_profile_id`, `prescriber_user_id`, `treatment_id`, `appointment_id` (nullable — set once patient books), `client_id` (nullable until linked)
-  - `patient_name`, `patient_email`, `patient_phone`, `patient_dob`
-  - `routing` ('same_address' | 'in_person_consult')
-  - `status` ('pending' | 'accepted' | 'declined' | 'completed')
-  - `consent_given_at`, `accepted_at`, `declined_at`, `notes`
-- Indexes on `prescriber_user_id, status` and `practitioner_profile_id`.
-- GRANTs to `authenticated` + `service_role`.
-- RLS:
-  - Practitioner can read/write referrals on their `profile_id`.
-  - Prescriber (`auth.uid() = prescriber_user_id`) can read all their referrals (minimal columns implicit — UI controls what's shown) and update status.
-  - SECURITY DEFINER fn `prescriber_get_referral_full(referral_id)` returns medical forms + consultation rows ONLY when status='accepted' AND caller is the prescriber. Used by the "full record" view.
-- Trigger: when `appointment` is inserted and `treatment.requires_prescriber`, auto-create a `prescriber_referrals` row (status='pending') and link `appointment_id`.
+**Patient (booking flow):**
+- When a treatment requires a prescriber and routing is *Clinic visit days*, the booking page shows the next available visit slots from that prescriber at this clinic and asks the patient to pick one (instead of redirecting away).
+- Consent gate still applies. Booking confirmation references the prescriber visit.
 
-## 2. Practitioner side — Services editor
+## Technical plan
 
-In `dashboard.services.*` treatment edit panel, add a "Prescriber" section:
-- Toggle: **Requires a prescriber**
-- Dropdown: **Assigned prescriber** — populated from `hub_links` where the other party is an approved prescriber.
-- Radio: **Routing**
-  - *Same address — no extra booking* (default): patient just consents; prescriber sees the referral on their dashboard before the appointment.
-  - *In-person consult at prescriber's clinic*: patient is redirected to the prescriber's `/m/{slug}` booking page after consenting, then returns.
-- Optional note shown to patient at the consent step.
+**New table** `prescriber_clinic_visits`
+- `id`, `practitioner_profile_id`, `prescriber_user_id`, `location_id` (nullable), `visit_date`, `start_time`, `end_time`, `capacity` (default 8), `notes`, `status` (`scheduled` | `cancelled`), `created_by` (`practitioner` | `prescriber`), `confirmed_by_prescriber` (bool), timestamps. GRANTs + RLS: practitioner can manage their own; linked prescriber can SELECT + UPDATE status/confirmed flag; patients get a SECURITY DEFINER RPC for public read.
 
-If `requires_prescriber=true` but no prescriber assigned → inline warning, save blocked.
+**Schema additions**
+- `prescriber_referrals.clinic_visit_id uuid null` — links a referral to the chosen visit.
+- Extend `treatments.prescriber_routing` allowed values to include `clinic_visit` (keep existing rows valid; treat legacy `in_person_consult` as `clinic_visit` in the UI).
 
-## 3. Patient side — Booking flow
+**RPCs**
+- `list_prescriber_visits_for_slug(p_slug, p_treatment_ids)` — public; returns upcoming visits + remaining capacity for the treatments' prescribers at that clinic.
+- `book_prescriber_visit(p_referral_id, p_visit_id)` — capacity check + link.
 
-In `m.$slug.index.tsx` after treatment selection, before slot/payment:
-- If any selected treatment has `requires_prescriber`, insert a **Prescriber consent step**:
-  - Card per service explaining: "This treatment requires a prescriber ({prescriber_display_name}). To proceed we need to share your details and medical info with them."
-  - Checkbox: **I consent to sharing my details and medical forms with the prescriber.** (required to continue)
-  - If routing = `in_person_consult`: button **Book consultation with prescriber** opens prescriber's booking page in a new tab; second checkbox **I've booked / completed my prescriber consultation** required.
-  - If routing = `same_address`: just consent, then continue to normal booking.
-- On final booking submit, `consent_given_at` is stamped on the auto-created referral via the appointment trigger.
+**Server functions** (`src/lib/prescriber-visits.functions.ts`)
+- `listClinicVisits` (practitioner) · `upsertClinicVisit` · `cancelClinicVisit`
+- `listMyPrescriberVisits` (prescriber view, with booked patients)
+- `listAvailableVisitsForBooking` (patient, wraps RPC)
 
-## 4. Prescriber dashboard
+**UI**
+- `src/routes/_authenticated/hub.visits.tsx` — manage visit days (shared layout; role-aware: prescriber sees rota, practitioner sees scheduler).
+- Update `hub.prescribing.tsx`: rename routing option, replace radio label.
+- Update `m.$slug.book-multi.tsx`: replace the "Book consultation with prescriber →" block with a visit picker driven by `listAvailableVisitsForBooking`; gate the Confirm button until each clinic-visit treatment has a slot selected.
+- Add a "Clinic visits" tile to both hub indexes.
 
-New route `/_authenticated/hub.referrals.tsx`:
-- Two tabs: **Pending** / **Accepted & history**.
-- Pending row (minimal tier): patient first name + initial, treatment name, referring practitioner clinic name, requested date. Buttons: **Accept case** / **Decline**.
-- On Accept → status='accepted', `accepted_at=now()`. Row expands to full record drawer:
-  - Full name, DOB, contact, address
-  - All submitted medical form responses (rendered)
-  - Any consultation notes attached to the patient
-  - Link to the appointment
-- Mark **Complete** when prescribing decision made; adds an internal note.
+**Backward compatibility**
+- Migrate any existing `prescriber_routing = 'in_person_consult'` rows to `clinic_visit`. Keep the enum/text accepting both for one release; UI shows the new label.
 
-Add link in hub sidebar + a "Pending referrals" stat to `hub.index.tsx`.
-
-## 5. Hub at the centre
-
-- `dashboard.index.tsx`: add a **Prescriber Hub** hero card at the top (above existing shortcuts) showing: MODO code, connected count, pending referrals count, CTA to open Hub. Card stays for both practitioners and prescribers.
-- Sidebar: pin "Prescriber Hub" to the top of the nav (above Calendar).
-
-## Out of scope (call out)
-
-- No payment splitting between prescriber and practitioner.
-- No automated email to prescriber on new referral yet (dashboard badge only). Email triggers can be added later.
-- "Same address" doesn't yet auto-create a calendar block for the prescriber — they see the referral, not a separate appointment.
-
-## Files touched
-
-- New migration
-- `src/lib/prescriber.functions.ts` (new)
-- `src/routes/_authenticated/hub.referrals.tsx` (new)
-- `src/routes/_authenticated/hub.index.tsx` (stat + link)
-- `src/routes/_authenticated/hub.tsx` (tab)
-- `src/routes/_authenticated/dashboard.index.tsx` (hero card)
-- Services editor component (prescriber section)
-- `src/routes/m.$slug.index.tsx` (consent step + redirect to prescriber slug)
-- Sidebar component (Hub pinned to top)
+## Out of scope
+- Reminders/notifications to prescriber about upcoming visits (existing reminder pipeline can be wired later).
+- Patient-facing rescheduling of which visit they're assigned to (practitioner can reassign).
