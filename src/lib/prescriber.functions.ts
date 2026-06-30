@@ -285,65 +285,10 @@ export const getPrescriberInfoForTreatments = createServerFn({ method: "POST" })
     }));
   });
 
-// ---- Public: create prescriber referrals after a public multi-booking succeeds ----
-export const createReferralsForBooking = createServerFn({ method: "POST" })
-  .inputValidator(
-    (i: {
-      slug: string;
-      appointments: { id: string; treatmentId: string }[];
-      patient: {
-        name: string;
-        email: string;
-        phone?: string | null;
-        dob?: string | null;
-      };
-      clientId?: string | null;
-      /** Map of treatment_id -> chosen clinic visit_id (for clinic_visit routing) */
-      visitSelections?: Record<string, string>;
-    }) => i,
-  )
-  .handler(async ({ data }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: profile } = await supabaseAdmin
-      .from("profiles")
-      .select("id")
-      .eq("slug", data.slug)
-      .maybeSingle();
-    if (!profile) return { created: 0 };
-    const treatmentIds = Array.from(new Set(data.appointments.map((a) => a.treatmentId)));
-    const { data: ts } = await supabaseAdmin
-      .from("treatments")
-      .select("id, requires_prescriber, prescriber_user_id, prescriber_routing")
-      .in("id", treatmentIds);
-    const byId = new Map((ts ?? []).map((t) => [t.id, t]));
-    const selections = data.visitSelections ?? {};
-    const rows = data.appointments
-      .map((a) => {
-        const t = byId.get(a.treatmentId);
-        if (!t || !t.requires_prescriber || !t.prescriber_user_id) return null;
-        const routing = t.prescriber_routing as string;
-        // Auto-create for same_address always; for clinic_visit only if a visit was chosen.
-        if (routing !== "same_address" && routing !== "clinic_visit") return null;
-        if (routing === "clinic_visit" && !selections[t.id]) return null;
-        return {
-          practitioner_profile_id: profile.id,
-          prescriber_user_id: t.prescriber_user_id,
-          treatment_id: t.id,
-          appointment_id: a.id,
-          client_id: data.clientId ?? null,
-          status: "pending" as const,
-          routing,
-          clinic_visit_id: routing === "clinic_visit" ? selections[t.id] : null,
-          patient_name: data.patient.name,
-          patient_email: data.patient.email,
-          patient_phone: data.patient.phone ?? null,
-          consent_given_at: new Date().toISOString(),
-        };
-      })
-      .filter((r): r is NonNullable<typeof r> => r !== null);
-    if (rows.length === 0) return { created: 0 };
-    const { error } = await supabaseAdmin.from("prescriber_referrals").insert(rows);
-    if (error) throw error;
-    return { created: rows.length };
-  });
+// Note: prescriber referrals are now auto-created by the
+// `create_referral_for_appointment` database trigger when an appointment
+// is inserted for a treatment that requires a prescriber. The trigger
+// reads `appointments.clinic_visit_id` so clinic-visit routing works
+// without an extra client call.
+
 

@@ -446,7 +446,9 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
         priceCents: number;
         sessionCount?: number;
         paymentPlan?: "full" | "split";
+        clinicVisitId?: string | null;
       }[];
+
       locationId?: string | null;
       date: string;
       startTime: string;
@@ -514,6 +516,7 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
         patient_dob: data.patientDob ?? null,
         patient_address: data.patientAddress ?? null,
         patient_user_id: data.patientUserId ?? null,
+        clinic_visit_id: b.clinicVisitId ?? null,
         notes: appointmentNotes,
         status,
         payment_status: "pending",
@@ -521,7 +524,8 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
         total_amount: sessionCount > 1 && b.paymentPlan === "split"
           ? (b.priceCents / 100) / sessionCount
           : b.priceCents / 100,
-      });
+      } as never);
+
 
       if (error) throw new Error(error.message);
       created.push({ id, treatmentId: b.treatmentId });

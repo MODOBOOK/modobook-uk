@@ -11,7 +11,7 @@ import {
 } from "@/lib/public-booking.functions";
 import { listAddonsForBooking, type PublicAddon } from "@/lib/addons.functions";
 import { ensurePatient, getMyPatient } from "@/lib/patient.functions";
-import { getPrescriberInfoForTreatments, createReferralsForBooking } from "@/lib/prescriber.functions";
+import { getPrescriberInfoForTreatments } from "@/lib/prescriber.functions";
 import { listAvailableVisitsForBooking } from "@/lib/clinic-visits.functions";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -279,7 +279,7 @@ function MultiBookPage() {
   const dayFn = useServerFn(getDayAvailability);
   const monthFn = useServerFn(getMonthAvailability);
   const reqFn = useServerFn(requestMultiBooking);
-  const createReferrals = useServerFn(createReferralsForBooking);
+  
 
   const monthQuery = useQuery({
     queryKey: ["monthAvail", ctx.profileId, month.getFullYear(), month.getMonth() + 1, locationId],
@@ -384,8 +384,10 @@ function MultiBookPage() {
           priceCents: Math.round(price * 100),
           sessionCount: Math.max(1, Number((t as { session_count?: number }).session_count ?? 1)),
           paymentPlan: selectedPaymentPlan(t),
+          clinicVisitId: visitSelections[t.id] ?? null,
         };
       });
+
       const res = await reqFn({
         data: {
           profileId: ctx.profileId,
@@ -425,29 +427,9 @@ function MultiBookPage() {
         },
       });
       setConfirmed(res);
-      if (
-        (sameAddressItems.length > 0 || clinicVisitItems.length > 0) &&
-        res.appointments?.length
-      ) {
-        try {
-          await createReferrals({
-            data: {
-              slug,
-              appointments: res.appointments,
-              patient: {
-                name: form.name,
-                email: form.email,
-                phone: form.phone || null,
-                dob: form.dob || null,
-              },
-              clientId: null,
-              visitSelections,
-            },
-          });
-        } catch (err) {
-          console.warn("Prescriber referral creation failed", err);
-        }
-      }
+      // Referrals are created automatically by the database trigger on appointment insert
+      // (using clinic_visit_id when routing is 'clinic_visit'). No separate client call.
+
 
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Booking failed");
