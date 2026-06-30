@@ -817,13 +817,17 @@ function SortableTreatList({
 function SortableServiceItem({
   treat,
   depth,
+  picker,
   onDelete,
   onMoveTo,
+  onChangeCategory,
 }: {
   treat: Treat;
   depth: number;
+  picker: { id: string; label: string; depth: number }[];
   onDelete: () => void;
   onMoveTo: () => void;
+  onChangeCategory: (categoryId: string | null) => void | Promise<void>;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: treat.id,
@@ -850,11 +854,18 @@ function SortableServiceItem({
         <GripVertical className="h-4 w-4" />
       </button>
       <div className="flex-1">
-        <ServiceRow treat={treat} onDelete={onDelete} onMoveTo={onMoveTo} />
+        <ServiceRow
+          treat={treat}
+          picker={picker}
+          onDelete={onDelete}
+          onMoveTo={onMoveTo}
+          onChangeCategory={onChangeCategory}
+        />
       </div>
     </div>
   );
 }
+
 
 function MoveTreatmentDialog({
   treat,
