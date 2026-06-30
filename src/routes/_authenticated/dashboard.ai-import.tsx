@@ -1030,7 +1030,7 @@ function FormMatcherCard() {
   const commit = useServerFn(commitFormMatches);
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [result, setResult] = useState<Awaited<ReturnType<typeof suggest>> | null>(null);
+  const [result, setResult] = useState<{ matches: Array<{ treatment_id: string; medical_form_ids: string[]; consent_ids: string[]; aftercare_ids: string[] }>; treatments: IdName[]; medicalForms: IdName[]; consents: IdName[]; aftercares: IdName[] } | null>(null);
   const [picks, setPicks] = useState<Record<string, { medical_form_ids: string[]; consent_ids: string[]; aftercare_ids: string[] }>>({});
   const [mode, setMode] = useState<"merge" | "replace">("merge");
 
