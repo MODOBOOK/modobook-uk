@@ -1038,7 +1038,7 @@ function BookPage() {
                 </Link>
               ) : (
                 <button
-                  onClick={() => { setMode("know"); setPickedConcernId(null); }}
+                  onClick={() => { setMode("know"); setPickedConcernIds([]); setConcernsConfirmed(false); }}
                   className="mt-3 inline-block rounded-full px-5 py-2 text-sm font-semibold text-white transition hover:opacity-90"
                   style={{ backgroundColor: brand }}
                 >
