@@ -407,7 +407,7 @@ function BulkMenuDiscount({ treatments, onSaved }: { treatments: Treat[]; onSave
           </div>
           <p className="mt-1 text-xs text-muted-foreground">{ids.length || "All"} selected</p>
         </div>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
           <div><Label className="text-xs">% off</Label><Input type="number" min={1} max={100} value={pct} onChange={(e) => setPct(e.target.value)} placeholder="20" /></div>
           <div><Label className="text-xs">Starts</Label><Input type="date" value={start} onChange={(e) => setStart(e.target.value)} /></div>
           <div><Label className="text-xs">Ends</Label><Input type="date" value={end} onChange={(e) => setEnd(e.target.value)} /></div>
