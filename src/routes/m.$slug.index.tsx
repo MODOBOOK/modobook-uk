@@ -34,7 +34,7 @@ import { SafeHtml } from "@/components/SafeHtml";
 import { resolveDisplayNames } from "@/lib/display-name";
 
 import { describeCancellationRules } from "@/lib/policy";
-import { QuizDialog } from "@/components/QuizDialog";
+
 
 type Treatment = Database["public"]["Tables"]["treatments"]["Row"];
 type Package = Database["public"]["Tables"]["packages"]["Row"];
@@ -320,18 +320,6 @@ function BookPage() {
   const consultTreatmentId = profile.chooser_consultation_treatment_id ?? null;
   const [mode, setMode] = useState<null | "know" | "unsure">(null);
   const [pickedConcernId, setPickedConcernId] = useState<string | null>(null);
-  const [quizOn, setQuizOn] = useState(false);
-  const [quizOpen, setQuizOpen] = useState(false);
-  useEffect(() => {
-    (async () => {
-      try {
-        const { supabase } = await import("@/integrations/supabase/client");
-        const { data } = await supabase.rpc("get_quiz_config_by_slug", { p_slug: slug.toLowerCase() }).single();
-        setQuizOn(!!data?.quiz_enabled);
-      } catch { /* ignore */ }
-    })();
-  }, [slug]);
-
   // Clear selection when location changes
   const setLocAndClear = (id: string | null) => {
     setLocationId(id);
@@ -926,19 +914,6 @@ function BookPage() {
               )
             )}
           </div>
-          {quizOn && (
-            <div className="mt-5 flex justify-center">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setQuizOpen(true)}
-                className="gap-2"
-              >
-                <Sparkles className="h-4 w-4" />
-                Not sure? Take our treatment finder quiz
-              </Button>
-            </div>
-          )}
         </section>
       )}
 
@@ -1586,7 +1561,7 @@ function BookPage() {
           </div>
         );
       })()}
-      <QuizDialog open={quizOpen} onOpenChange={setQuizOpen} slug={slug} />
+      
     </main>
   );
 }

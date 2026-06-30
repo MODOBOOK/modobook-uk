@@ -84,7 +84,6 @@ const groups: { title: string; items: Item[] }[] = [
     title: "Bookings",
     items: [
       { label: "Booking flow", description: "Concern picker shown before treatments", to: "/dashboard/booking-flow", icon: HelpCircle, ...T.taupe },
-      { label: "Treatment finder quiz", description: "8-question quiz that recommends your treatments", to: "/dashboard/quiz", icon: Sparkles, ...T.ivory },
       { label: "Availability", description: "Opening times & ad-hoc slots", to: "/dashboard/availability", icon: CalendarDays, ...T.espresso },
       { label: "New appointment", description: "Book in a patient manually", to: "/dashboard/new-appointment", icon: CalendarPlus, ...T.sand },
       { label: "Consultations", description: "MODO step-by-step records", to: "/dashboard/consultations", icon: ClipboardList, ...T.mocha },
