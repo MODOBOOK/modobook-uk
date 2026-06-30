@@ -186,6 +186,10 @@ function ServicesPage() {
     { mode: "create" | "edit"; parentId: string | null; cat?: Cat } | null
   >(null);
   const [svcDialog, setSvcDialog] = useState<{ defaultCatId: string | null } | null>(null);
+  const [moveTreatState, setMoveTreatState] = useState<Treat | null>(null);
+  const [moveCatState, setMoveCatState] = useState<Cat | null>(null);
+
+
 
 
 
@@ -255,6 +259,29 @@ function ServicesPage() {
     }
   }
 
+  async function moveTreatToCategory(treatId: string, categoryId: string | null) {
+    try {
+      await patchTreat({ data: { id: treatId, category_id: categoryId } });
+      toast.success("Service moved");
+      setMoveTreatState(null);
+      treats.refetch();
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  }
+
+  async function moveCatToParent(catId: string, parentId: string | null) {
+    try {
+      await updateCat({ data: { id: catId, parent_id: parentId } });
+      toast.success("Category moved");
+      setMoveCatState(null);
+      cats.refetch();
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  }
+
+
 
   return (
     <div className="space-y-5">
@@ -323,6 +350,8 @@ function ServicesPage() {
               onMoveCat={moveCat}
               onMoveTreat={moveTreat}
               onReorderTreatsByIds={reorderTreatsByIds}
+              onMoveTreatTo={(t) => setMoveTreatState(t)}
+              onMoveCatTo={(c) => setMoveCatState(c)}
             />
           ))}
 
@@ -338,6 +367,7 @@ function ServicesPage() {
                     key={t.id}
                     treat={t}
                     onDelete={() => handleDeleteTreat(t)}
+                    onMoveTo={() => setMoveTreatState(t)}
                   />
                 ))}
               </div>
@@ -345,6 +375,21 @@ function ServicesPage() {
           )}
         </div>
       )}
+
+      <MoveTreatmentDialog
+        treat={moveTreatState}
+        categories={picker}
+        onClose={() => setMoveTreatState(null)}
+        onConfirm={(catId) => moveTreatState && moveTreatToCategory(moveTreatState.id, catId)}
+      />
+      <MoveCategoryDialog
+        cat={moveCatState}
+        allCategories={(cats.data ?? []) as Cat[]}
+        onClose={() => setMoveCatState(null)}
+        onConfirm={(parentId) => moveCatState && moveCatToParent(moveCatState.id, parentId)}
+      />
+
+
 
 
       <CategoryDialog
@@ -456,6 +501,8 @@ function CategoryRow({
   onMoveCat,
   onMoveTreat,
   onReorderTreatsByIds,
+  onMoveTreatTo,
+  onMoveCatTo,
 }: {
   node: CatNode;
   depth: number;
@@ -470,7 +517,10 @@ function CategoryRow({
   onMoveCat: (siblings: Cat[], id: string, dir: -1 | 1) => void;
   onMoveTreat: (siblings: Treat[], id: string, dir: -1 | 1) => void;
   onReorderTreatsByIds: (ids: string[]) => void;
+  onMoveTreatTo: (t: Treat) => void;
+  onMoveCatTo: (c: Cat) => void;
 }) {
+
   const [open, setOpen] = useState(false);
   const treatsHere = node.treatments.filter(matchTreat);
   const totalCount = treatsHere.length + node.children.length;
@@ -525,6 +575,9 @@ function CategoryRow({
               <FolderPlus className="mr-2 h-4 w-4" /> Add subcategory
             </DropdownMenuItem>
             <DropdownMenuSeparator />
+            <DropdownMenuItem onSelect={() => onMoveCatTo(node)}>
+              <FolderPlus className="mr-2 h-4 w-4" /> Move to…
+            </DropdownMenuItem>
             <DropdownMenuItem disabled={!canUp} onSelect={() => onMoveCat(siblings, node.id, -1)}>
               <ArrowUp className="mr-2 h-4 w-4" /> Move up
             </DropdownMenuItem>
@@ -532,6 +585,7 @@ function CategoryRow({
               <ArrowDown className="mr-2 h-4 w-4" /> Move down
             </DropdownMenuItem>
             <DropdownMenuSeparator />
+
             <DropdownMenuItem onSelect={() => onEditCat(node)}>
               <Pencil className="mr-2 h-4 w-4" /> Edit
             </DropdownMenuItem>
@@ -561,6 +615,7 @@ function CategoryRow({
             depth={depth}
             onDelete={onDeleteTreat}
             onReorder={onReorderTreatsByIds}
+            onMoveTo={onMoveTreatTo}
           />
 
           {node.children.map((child, ci) => (
@@ -579,8 +634,11 @@ function CategoryRow({
               onMoveCat={onMoveCat}
               onMoveTreat={onMoveTreat}
               onReorderTreatsByIds={onReorderTreatsByIds}
+              onMoveTreatTo={onMoveTreatTo}
+              onMoveCatTo={onMoveCatTo}
             />
           ))}
+
 
           <div
             className="flex flex-wrap gap-2 px-3 py-2"
@@ -604,11 +662,13 @@ function ServiceRow({
   onDelete,
   onMoveUp,
   onMoveDown,
+  onMoveTo,
 }: {
   treat: Treat;
   onDelete: () => void;
   onMoveUp?: () => void;
   onMoveDown?: () => void;
+  onMoveTo?: () => void;
 }) {
   return (
     <div className="flex items-center gap-2 py-2">
@@ -639,6 +699,11 @@ function ServiceRow({
               <Pencil className="mr-2 h-4 w-4" /> Edit
             </Link>
           </DropdownMenuItem>
+          {onMoveTo && (
+            <DropdownMenuItem onSelect={() => onMoveTo()}>
+              <FolderPlus className="mr-2 h-4 w-4" /> Move to category…
+            </DropdownMenuItem>
+          )}
           <DropdownMenuSeparator />
           <DropdownMenuItem disabled={!onMoveUp} onSelect={() => onMoveUp?.()}>
             <ArrowUp className="mr-2 h-4 w-4" /> Move up
@@ -661,11 +726,13 @@ function SortableTreatList({
   depth,
   onDelete,
   onReorder,
+  onMoveTo,
 }: {
   treats: Treat[];
   depth: number;
   onDelete: (t: Treat) => void;
   onReorder: (ids: string[]) => void;
+  onMoveTo: (t: Treat) => void;
 }) {
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -685,7 +752,13 @@ function SortableTreatList({
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
       <SortableContext items={ids} strategy={verticalListSortingStrategy}>
         {treats.map((t) => (
-          <SortableServiceItem key={t.id} treat={t} depth={depth} onDelete={() => onDelete(t)} />
+          <SortableServiceItem
+            key={t.id}
+            treat={t}
+            depth={depth}
+            onDelete={() => onDelete(t)}
+            onMoveTo={() => onMoveTo(t)}
+          />
         ))}
       </SortableContext>
     </DndContext>
@@ -696,10 +769,12 @@ function SortableServiceItem({
   treat,
   depth,
   onDelete,
+  onMoveTo,
 }: {
   treat: Treat;
   depth: number;
   onDelete: () => void;
+  onMoveTo: () => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: treat.id,
@@ -726,11 +801,116 @@ function SortableServiceItem({
         <GripVertical className="h-4 w-4" />
       </button>
       <div className="flex-1">
-        <ServiceRow treat={treat} onDelete={onDelete} />
+        <ServiceRow treat={treat} onDelete={onDelete} onMoveTo={onMoveTo} />
       </div>
     </div>
   );
 }
+
+function MoveTreatmentDialog({
+  treat,
+  categories,
+  onClose,
+  onConfirm,
+}: {
+  treat: Treat | null;
+  categories: { id: string; label: string; depth: number }[];
+  onClose: () => void;
+  onConfirm: (categoryId: string | null) => void;
+}) {
+  const open = !!treat;
+  const [target, setTarget] = useState<string>("__none__");
+  useMemo(() => {
+    if (open) setTarget(treat?.category_id ?? "__none__");
+  }, [open, treat]);
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Move “{treat?.name}”</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-2">
+          <Label>Choose a category or subcategory</Label>
+          <Select value={target} onValueChange={setTarget}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__none__">Uncategorised</SelectItem>
+              {categories.map((c) => (
+                <SelectItem key={c.id} value={c.id}>
+                  {"\u00A0\u00A0".repeat(c.depth) + c.label.split(" › ").slice(-1)[0]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-[11px] text-muted-foreground">
+            Tip: subcategories appear indented. Pick any level.
+          </p>
+        </div>
+        <DialogFooter>
+          <Button variant="ghost" onClick={onClose}>Cancel</Button>
+          <Button onClick={() => onConfirm(target === "__none__" ? null : target)}>Move</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function MoveCategoryDialog({
+  cat,
+  allCategories,
+  onClose,
+  onConfirm,
+}: {
+  cat: Cat | null;
+  allCategories: Cat[];
+  onClose: () => void;
+  onConfirm: (parentId: string | null) => void;
+}) {
+  const open = !!cat;
+  const [target, setTarget] = useState<string>("__none__");
+  useMemo(() => {
+    if (open) setTarget(cat?.parent_id ?? "__none__");
+  }, [open, cat]);
+  // Eligible parents: top-level categories that are not this category itself.
+  const options = allCategories.filter(
+    (c) => !c.parent_id && (!cat || c.id !== cat.id),
+  );
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Move “{cat?.name}”</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-2">
+          <Label>Move under</Label>
+          <Select value={target} onValueChange={setTarget}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__none__">Top-level (no parent)</SelectItem>
+              {options.map((c) => (
+                <SelectItem key={c.id} value={c.id}>
+                  {c.icon ? `${c.icon} ` : ""}{c.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-[11px] text-muted-foreground">
+            Pick a parent to make this a subcategory, or keep it top-level.
+          </p>
+        </div>
+        <DialogFooter>
+          <Button variant="ghost" onClick={onClose}>Cancel</Button>
+          <Button onClick={() => onConfirm(target === "__none__" ? null : target)}>Move</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 
 function CategoryDialog({
   state,
