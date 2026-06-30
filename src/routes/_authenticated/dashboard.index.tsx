@@ -116,7 +116,7 @@ function DashboardIndex() {
               />
             ) : (
               <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground ring-1 ring-border sm:h-20 sm:w-20">
-                <span className="font-serif text-2xl sm:text-3xl">{(profile.clinic_name ?? "M").charAt(0)}</span>
+                <span className="font-serif text-2xl sm:text-3xl">{(displayPrimary ?? "M").charAt(0)}</span>
               </div>
             )}
             <div className="min-w-0 flex-1">
@@ -125,12 +125,13 @@ function DashboardIndex() {
                 className="mt-1 font-serif leading-tight break-words [overflow-wrap:anywhere] line-clamp-2"
                 style={{ fontSize: "clamp(1.25rem, 5.5vw, 2.25rem)" }}
               >
-                {profile.clinic_name || profile.full_name || "Your clinic"}
+                {displayPrimary}
               </h1>
-              {profile.full_name && profile.clinic_name && (
-                <p className="mt-1 truncate text-xs italic text-muted-foreground sm:text-sm">{profile.full_name}</p>
+              {displaySecondary && (
+                <p className="mt-1 truncate text-xs italic text-muted-foreground sm:text-sm">{displaySecondary}</p>
               )}
             </div>
+
           </div>
         </CardContent>
       </Card>
