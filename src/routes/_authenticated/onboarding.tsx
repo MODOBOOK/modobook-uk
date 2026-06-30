@@ -29,7 +29,8 @@ function OnboardingPage() {
     clinic_name: "",
     slug: "",
     tagline: "",
-    bio: "",
+    intro_heading: "",
+    intro_body: "",
     phone: "",
     address_line1: "",
     city: "",
@@ -82,7 +83,8 @@ function OnboardingPage() {
           clinic_name: form.clinic_name,
           slug: form.slug,
           tagline: form.tagline,
-          bio: form.bio,
+          welcome_intro_html: textToParagraphHtml(form.intro_body),
+          about_page: { intro_heading: form.intro_heading, show_intro: true },
           phone: form.phone,
           address: {
             line1: form.address_line1,
@@ -171,12 +173,22 @@ function OnboardingPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="bio">About you / clinic</Label>
+                <Label htmlFor="intro_heading">Welcome intro heading</Label>
+                <Input
+                  id="intro_heading"
+                  value={form.intro_heading}
+                  onChange={(e) => setForm((f) => ({ ...f, intro_heading: e.target.value }))}
+                  placeholder="e.g. Welcome to your skin and aesthetics clinic"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="intro_body">Welcome intro text</Label>
                 <Textarea
-                  id="bio"
-                  value={form.bio}
-                  onChange={(e) => setForm((f) => ({ ...f, bio: e.target.value }))}
-                  placeholder="A short bio for your clinic page."
+                  id="intro_body"
+                  value={form.intro_body}
+                  onChange={(e) => setForm((f) => ({ ...f, intro_body: e.target.value }))}
+                  placeholder="A short welcome message for patients on your booking link."
                   rows={4}
                 />
               </div>
@@ -237,4 +249,13 @@ function OnboardingPage() {
       </div>
     </div>
   );
+}
+
+function textToParagraphHtml(text: string) {
+  return text
+    .split(/\n{2,}/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean)
+    .map((paragraph) => `<p>${paragraph.replace(/\n/g, "<br />")}</p>`)
+    .join("");
 }

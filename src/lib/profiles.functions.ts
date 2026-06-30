@@ -36,6 +36,8 @@ export const createProfile = createServerFn({ method: "POST" })
       tagline?: string;
       about?: string;
       bio?: string;
+      welcome_intro_html?: string;
+      about_page?: Record<string, unknown>;
       phone?: string;
       email?: string;
       address?: Record<string, string>;
@@ -55,6 +57,8 @@ export const createProfile = createServerFn({ method: "POST" })
         tagline: data.tagline,
         about: data.about,
         bio: data.bio,
+        welcome_intro_html: data.welcome_intro_html,
+        about_page: (data.about_page ?? {}) as Json,
         phone: data.phone,
         email: data.email ?? (context.claims.email as string | undefined),
         address: data.address,

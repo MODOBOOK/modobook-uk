@@ -4,7 +4,6 @@ import { useServerFn } from "@tanstack/react-start";
 import { updateProfile, getMyProfile } from "@/lib/profiles.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { toast } from "sonner";
@@ -23,7 +22,6 @@ function ClinicPage() {
   const [slug, setSlug] = useState<string>("");
   const [clinicName, setClinicName] = useState("");
   const [tagline, setTagline] = useState("");
-  const [about, setAbout] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [instagram, setInstagram] = useState("");
@@ -43,7 +41,6 @@ function ClinicPage() {
         setSlug(p.slug ?? "");
         setClinicName(p.clinic_name ?? "");
         setTagline(p.tagline ?? "");
-        setAbout(p.about ?? "");
         setPhone(p.phone ?? "");
         setEmail(p.email ?? "");
         const links = (p.social_links ?? {}) as { instagram?: string; facebook?: string; tiktok?: string };
@@ -67,7 +64,6 @@ function ClinicPage() {
           id: profileId,
           clinic_name: clinicName,
           tagline,
-          about,
           phone,
           email,
           social_links: {
@@ -100,12 +96,11 @@ function ClinicPage() {
       <Card>
         <CardHeader>
           <CardTitle>Details</CardTitle>
-          <CardDescription>Shown on your MODO Book page.</CardDescription>
+            <CardDescription>Basic business details. Add your patient-facing intro in Welcome & policies.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div><Label>Clinic name</Label><Input value={clinicName} onChange={(e) => setClinicName(e.target.value)} /></div>
           <div><Label>Tagline</Label><Input value={tagline} onChange={(e) => setTagline(e.target.value)} /></div>
-          <div><Label>About</Label><Textarea rows={5} value={about} onChange={(e) => setAbout(e.target.value)} /></div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div><Label>Phone</Label><Input value={phone} onChange={(e) => setPhone(e.target.value)} /></div>
             <div><Label>Contact email</Label><Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} /></div>
