@@ -365,6 +365,8 @@ function ServicesPage() {
             }
             setCatDialog(null);
             cats.refetch();
+            treats.refetch();
+
           } catch (e) {
             toast.error((e as Error).message);
           }
