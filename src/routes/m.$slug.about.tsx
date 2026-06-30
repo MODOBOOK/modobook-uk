@@ -9,12 +9,16 @@ export const Route = createFileRoute("/m/$slug/about")({
     throw redirect({ to: "/m/$slug", params: { slug: params.slug } });
   },
   loader: async ({ params }) => getPractitionerBio({ data: { slug: params.slug } }),
-  head: ({ loaderData }) => ({
-    meta: [
-      { title: `About ${loaderData?.profile.clinic_name ?? loaderData?.profile.full_name ?? "practitioner"} · MODO Book` },
-      { name: "description", content: (loaderData?.profile.bio ?? "").slice(0, 160) || "Meet your practitioner on MODO Book." },
-    ],
-  }),
+  head: ({ loaderData }) => {
+    const name = loaderData?.profile ? resolveDisplayNames(loaderData.profile).primary : "practitioner";
+    return {
+      meta: [
+        { title: `About ${name} · MODO Book` },
+        { name: "description", content: (loaderData?.profile.bio ?? "").slice(0, 160) || "Meet your practitioner on MODO Book." },
+      ],
+    };
+  },
+
   component: About,
 });
 
