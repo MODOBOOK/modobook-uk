@@ -7,6 +7,8 @@ import {
   listMyClinicVisits,
   upsertClinicVisit,
   cancelClinicVisit,
+  approveClinicVisitRequest,
+  declineClinicVisitRequest,
 } from "@/lib/clinic-visits.functions";
 import { listMyConnectedPrescribers } from "@/lib/prescriber.functions";
 import { listMyLocations } from "@/lib/locations.functions";
