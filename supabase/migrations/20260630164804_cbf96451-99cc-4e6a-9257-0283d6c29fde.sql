@@ -1,0 +1,1 @@
+ALTER TABLE public.patient_reviews ALTER COLUMN approved SET DEFAULT false;
