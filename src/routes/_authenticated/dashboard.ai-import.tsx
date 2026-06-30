@@ -256,6 +256,8 @@ function AiImportPage() {
       )}
 
       {step === "upload" && <ReviewsImportCard />}
+      {step === "upload" && <ResetImportCard />}
+
 
 
       {step === "review" && draft && (
