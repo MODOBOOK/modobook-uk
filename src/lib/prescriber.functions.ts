@@ -180,7 +180,7 @@ export const getReferralFull = createServerFn({ method: "POST" })
       p_referral_id: data.id,
     });
     if (error) throw error;
-    return { full } as { full: unknown };
+    return { full: JSON.parse(JSON.stringify(full ?? null)) as Record<string, unknown> | null };
   });
 
 // ---- Practitioner: referrals I've sent (for visibility on my side) ----
