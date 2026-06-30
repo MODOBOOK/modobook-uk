@@ -1,64 +1,69 @@
-## AI Onboarding Wizard
+# Prescriber Hub
 
-A new "Import with AI" flow that lets a practitioner upload a PDF, image, spreadsheet, or paste a website URL and have Lovable AI populate their entire MODO Book — clinic info, categories, treatments, add-ons, packages, and suggested aftercare — in one go.
+A shared space where verified prescribers and practitioners find each other and link up using a short, unique code. Practitioners join freely. Prescribers must upload their registration details and photo ID — admin approves, rejects, or asks for more info before the prescriber appears in the hub.
 
-### Where it lives
+## What each role gets
 
-- New route: `/dashboard/onboarding/ai-import` (also surfaced as a big "Import with AI" card on the dashboard home for accounts with zero services, and as a button on the Services page).
-- Three steps: **Upload → AI review → Import**.
+**Practitioner** (the clinician you already have)
+- Registers as today — no extra verification.
+- Gets a unique 6-character **link code** (e.g. `MODO-4F7K`).
+- Can paste a prescriber's code to send a link-up request.
 
-### Step 1 — Upload
+**Prescriber** (new role)
+- Signs up via a "Join as prescriber" route.
+- Submits: full name, regulatory body, registration/PIN number, photo ID upload (passport or driving licence).
+- Status starts **Pending**. Sees a **read-only preview** of the hub until approved.
+- Once approved, gets their own unique link code and can request/accept links with practitioners.
 
-Single screen, four input tiles:
-- **PDF price list / menu** — drag-and-drop, up to 20 MB.
-- **Photo / screenshot** — JPG/PNG of a printed menu or competitor site.
-- **Spreadsheet (CSV / Excel)** — parsed in browser to text before sending.
-- **Website URL** — scraped server-side via Firecrawl (existing connector if linked, otherwise we add it).
+**Link-up flow** (either side can start it)
+- Enter the other party's code → request sent → recipient sees a pending request in their hub → Accept or Decline.
+- Once accepted, the pair sees each other in their "My connections" list with name, professional title and contact.
 
-Files upload to a private `ai-imports` storage bucket scoped to the practitioner. URL inputs skip storage.
+## Regulatory bodies offered
 
-### Step 2 — AI extraction (server function)
+UK: GMC, NMC, GPhC, GDC.
+Ireland: MCRN, NMBI, PSI.
+Plus a free-text **Other** option — admin verifies manually.
 
-New TanStack server function `extractClinicData` (`src/lib/ai-import.functions.ts`, behind `requireSupabaseAuth`):
+## Admin review
 
-1. Loads the source (signed URL for PDF/image, raw text for CSV, Firecrawl markdown for URLs).
-2. Calls Lovable AI `google/gemini-3-flash-preview` with multimodal input and a tight Zod-validated `Output.object` schema:
-   - `clinic`: name, tagline, short bio, contact details if present.
-   - `categories[]`: name, optional description, parent name for subcategories.
-   - `treatments[]`: name, duration_mins, price_gbp, description, category name, suggested add-ons, suggested aftercare template name.
-   - `addons[]`: name, price, duration.
-   - `packages[]`: name, included treatment names, total price, sessions.
-3. Returns the draft as JSON — nothing is written yet.
+A new **Admin → Prescriber verifications** queue. Each row shows the submitted details and the ID image. Admin picks one of three actions:
 
-A second lightweight call maps each treatment to the closest existing aftercare template by name similarity so the practitioner sees a suggestion rather than a blank.
+1. **Approve** — prescriber becomes active, gets their link code, can be linked.
+2. **Reject** — emailed with the admin's note; access stays locked.
+3. **Request more info** — emailed with the admin's note; prescriber can re-upload and resubmit, status returns to Pending.
 
-### Step 3 — Review & import
+## Pages
 
-A single review screen with collapsible sections (Clinic, Categories, Treatments, Add-ons, Packages). For each row:
-- Checkbox to include / exclude.
-- Inline editable fields (name, price, duration, description, category dropdown, aftercare dropdown).
-- "Select all" / "Deselect all" per section.
-- Diff badges when an item with the same name already exists ("Update existing" vs "Create new").
+**Public**
+- `/prescriber-hub` — keep the existing marketing page, add two clear CTAs: *Join as practitioner* and *Join as prescriber*.
+- `/prescriber-hub/join` — onboarding form for prescribers (registration details + ID upload). Practitioners are routed to the existing signup.
 
-A sticky footer shows totals ("12 treatments, 4 categories, 3 add-ons will be imported") and a single **Import** button. Import runs in a server function that:
-- Upserts clinic profile fields (only the ones the practitioner ticked).
-- Inserts categories first, then subcategories, then treatments with the correct `category_id`, then add-ons and `treatment_addons` links, then packages.
-- Links suggested aftercare via `treatment_aftercare_templates`.
-- Wraps everything in a single transaction; on failure nothing is written and the practitioner sees the row that failed.
+**Inside the dashboard**
+- `/dashboard/hub` — the hub itself:
+  - My code (copy button).
+  - "Link with someone — enter their code".
+  - Pending requests (incoming + outgoing).
+  - My connections.
+  - Read-only banner if the prescriber is still Pending or has been asked for more info.
+- `/dashboard/hub/verification` — prescriber's own verification status with a "Resubmit" form when admin requests more info.
 
-### Safety & UX details
+**Admin**
+- `/admin/prescribers` — review queue with Approve / Reject / Request more info, plus a notes field.
 
-- Hard server-side caps: max 80 treatments, 20 categories, 30 add-ons per import to keep the AI schema bounded.
-- All AI calls surface gateway errors clearly (rate limit, credits exhausted).
-- Imports never overwrite existing rows silently — duplicates are flagged in the review step and default to "skip".
-- Free for the practitioner; AI cost is on the platform's Lovable AI credits.
+## Technical notes
 
-### Technical notes
+- **DB**
+  - `prescriber_profiles` (one row per prescriber user): `user_id`, `full_name`, `regulatory_body` (enum incl. `other`), `regulatory_body_other`, `registration_number`, `id_document_path`, `status` (`pending` / `approved` / `rejected` / `more_info`), `admin_note`, `reviewed_by`, `reviewed_at`.
+  - `hub_codes`: `owner_user_id`, `owner_kind` (`practitioner` / `prescriber`), `code` (unique).
+  - `hub_links`: `requester_user_id`, `recipient_user_id`, `status` (`pending` / `accepted` / `declined`), timestamps; unique pair.
+  - `app_role` enum extended with `prescriber`.
+- **Storage**: new private bucket `prescriber-ids` with RLS so only the owning prescriber and admins can read.
+- **RLS**: prescribers see only their own verification row; admins see all via `has_role(auth.uid(),'admin')`. Hub link rows visible to either party.
+- **Server fns**: `submitPrescriberVerification`, `resubmitPrescriberVerification`, `adminListPrescriberSubmissions`, `adminDecidePrescriber` (approve/reject/more_info), `getMyHubCode`, `sendLinkRequest`, `respondToLinkRequest`, `listMyConnections`.
+- **Routing**: prescriber pages live under the existing `_authenticated` subtree; admin review under `_authenticated/admin/`.
+- **Emails**: reuse the existing transactional email path for the three admin decisions (Approved / Rejected / More info needed) and for incoming link requests.
 
-- New files: `src/routes/dashboard/onboarding/ai-import.tsx`, `src/lib/ai-import.functions.ts`, `src/components/ai-import/{UploadStep,ReviewStep,ImportSummary}.tsx`, `src/lib/ai-import/schema.ts` (Zod), storage bucket migration for `ai-imports`.
-- Reuses existing Firecrawl connector pattern if a URL is supplied; we will prompt to link it the first time.
-- No DB schema changes required beyond the storage bucket — we write into existing `treatment_categories`, `treatments`, `addons`, `treatment_addons`, `packages`, `profiles`.
+## Out of scope for this first pass
 
-### Also addressed in this turn
-
-The "About" page question: the old `/about` route was intentionally folded into **Welcome & policies** on the dashboard. The heading + rich-text intro saved there renders as the Welcome card on the public booking page. If it's not showing, those two fields are still empty — filling them brings it back. No code change needed.
+- No prescription writing, script PDFs or pharmacy integration yet — this build only delivers verification + link-up. The hub is the foundation; the script workflow can plug in once the connection model is live.
