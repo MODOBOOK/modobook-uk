@@ -804,17 +804,106 @@ function MultiBookPage() {
                 </CardContent>
               </Card>
             )}
+            {prescriberItems.length > 0 && (
+              <Card className="mb-6 border-2" style={{ borderColor: accent }}>
+                <CardContent className="space-y-4 p-4">
+                  <div>
+                    <p className="font-semibold" style={headingStyle}>
+                      Prescriber review required
+                    </p>
+                    <p className="mt-1 text-sm opacity-80">
+                      One or more of your treatments needs sign-off from a qualified prescriber
+                      before it can be performed. Please review and consent below.
+                    </p>
+                  </div>
+
+                  {sameAddressItems.length > 0 && (
+                    <div className="space-y-3">
+                      {sameAddressItems.map((p) => (
+                        <div key={p.treatment_id} className="rounded-md border bg-muted/30 p-3">
+                          <p className="text-sm font-medium">{p.treatment_name}</p>
+                          <p className="mt-0.5 text-xs opacity-75">
+                            Prescriber: <span className="font-medium">{p.prescriber_name}</span>
+                            {p.prescriber_regulatory_body ? ` · ${p.prescriber_regulatory_body}` : ""}
+                          </p>
+                          {p.note && <p className="mt-1 text-xs opacity-75">{p.note}</p>}
+                          <label className="mt-2 flex cursor-pointer items-start gap-2 text-sm">
+                            <input
+                              type="checkbox"
+                              className="mt-0.5 h-4 w-4"
+                              checked={Boolean(prescriberConsents[p.treatment_id])}
+                              onChange={(e) =>
+                                setPrescriberConsents((prev) => ({
+                                  ...prev,
+                                  [p.treatment_id]: e.target.checked,
+                                }))
+                              }
+                            />
+                            <span>
+                              I consent to {ctx.clinicName} sharing my booking details and
+                              medical forms with {p.prescriber_name} for this treatment.
+                              <span className="text-destructive"> *</span>
+                            </span>
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {inPersonItems.length > 0 && (
+                    <div className="space-y-3">
+                      {inPersonItems.map((p) => (
+                        <div
+                          key={p.treatment_id}
+                          className="rounded-md border bg-amber-50/60 p-3 text-sm"
+                        >
+                          <p className="font-medium">{p.treatment_name}</p>
+                          <p className="mt-1 text-xs">
+                            This treatment requires an in-person consultation with{" "}
+                            <span className="font-medium">{p.prescriber_name}</span> before it can
+                            be booked here.
+                          </p>
+                          {p.note && <p className="mt-1 text-xs opacity-75">{p.note}</p>}
+                          {p.prescriber_booking_slug ? (
+                            <a
+                              href={`/m/${p.prescriber_booking_slug}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="mt-2 inline-flex items-center text-sm font-semibold underline"
+                              style={{ color: accent }}
+                            >
+                              Book consultation with prescriber →
+                            </a>
+                          ) : (
+                            <p className="mt-2 text-xs opacity-75">
+                              Please contact the clinic to arrange this consultation.
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
             <Button
               className="w-full"
               size="lg"
               disabled={
                 !slot || submitting || !form.name || !form.email || (reqPhone && !form.phone) || (reqDob && !form.dob) ||
-                (termsRequired && !agreedToTerms)
+                (termsRequired && !agreedToTerms) || prescriberBlocks
               }
               onClick={submit}
               style={{ backgroundColor: brand, color: "#fff" }}
             >
-              {submitting ? "Booking…" : `Confirm ${treatments.length} bookings · £${totalAfterDiscount.toFixed(2)}`}
+              {submitting
+                ? "Booking…"
+                : inPersonItems.length > 0
+                  ? "Consultation required before booking"
+                  : !allConsented && sameAddressItems.length > 0
+                    ? "Please give prescriber consent above"
+                    : `Confirm ${treatments.length} bookings · £${totalAfterDiscount.toFixed(2)}`}
             </Button>
 
           </>
