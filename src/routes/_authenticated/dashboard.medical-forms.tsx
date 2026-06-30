@@ -696,7 +696,7 @@ function ElementEditor({ element, siblings, onChange, onRemove, onMove, onDuplic
                 <SelectItem value="date">Date</SelectItem>
               </SelectContent>
             </Select>
-            <Input value={element.placeholder ?? ""} onChange={(e) => onChange({ placeholder: e.target.value })} placeholder="Placeholder" />
+            <Input value={element.placeholder ?? ""} onChange={(e) => onChange({ placeholder: e.target.value })} placeholder="Example answer shown in the empty box (optional)" />
           </div>
         </div>
       )}
