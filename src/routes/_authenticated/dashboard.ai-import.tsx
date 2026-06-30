@@ -924,12 +924,13 @@ function ResetImportCard() {
   const reset = useServerFn(resetClinicServices);
   const [open, setOpen] = useState(false);
   const [scope, setScope] = useState<"treatments" | "all">("all");
+  const [mode, setMode] = useState<"safe" | "force">("safe");
   const [busy, setBusy] = useState(false);
 
   async function run() {
     setBusy(true);
     try {
-      const r = await reset({ data: { scope } });
+      const r = await reset({ data: { scope, force: mode === "force" } });
       const parts: string[] = [];
       if (r.removed.treatments) parts.push(`${r.removed.treatments} treatments`);
       if (r.removed.addons) parts.push(`${r.removed.addons} add-ons`);
@@ -946,6 +947,7 @@ function ResetImportCard() {
       setBusy(false);
     }
   }
+
 
   return (
     <Card className="border-destructive/30">
@@ -997,6 +999,18 @@ function ResetImportCard() {
               </span>
             </label>
           </div>
+          <div className="space-y-2 rounded-md border p-3 text-sm">
+            <p className="font-medium">When a treatment has existing bookings…</p>
+            <label className="flex items-start gap-2">
+              <input type="radio" className="mt-1" checked={mode === "safe"} onChange={() => setMode("safe")} />
+              <span><b>Keep it</b> — skip treatments that are already booked (safer).</span>
+            </label>
+            <label className="flex items-start gap-2">
+              <input type="radio" className="mt-1" checked={mode === "force"} onChange={() => setMode("force")} />
+              <span><b>Delete anyway</b> — bookings stay on the calendar with the treatment name preserved, but the service is removed from your list.</span>
+            </label>
+          </div>
+
           <DialogFooter>
             <Button variant="ghost" onClick={() => setOpen(false)} disabled={busy}>Cancel</Button>
             <Button variant="destructive" onClick={run} disabled={busy}>

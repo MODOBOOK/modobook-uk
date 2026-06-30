@@ -436,7 +436,9 @@ export type Database = {
           stripe_payment_intent_id: string | null
           surcharge_amount: number | null
           total_amount: number | null
-          treatment_id: string
+          treatment_id: string | null
+          treatment_name_snapshot: string | null
+          treatment_price_snapshot: number | null
           updated_at: string
         }
         Insert: {
@@ -483,7 +485,9 @@ export type Database = {
           stripe_payment_intent_id?: string | null
           surcharge_amount?: number | null
           total_amount?: number | null
-          treatment_id: string
+          treatment_id?: string | null
+          treatment_name_snapshot?: string | null
+          treatment_price_snapshot?: number | null
           updated_at?: string
         }
         Update: {
@@ -530,7 +534,9 @@ export type Database = {
           stripe_payment_intent_id?: string | null
           surcharge_amount?: number | null
           total_amount?: number | null
-          treatment_id?: string
+          treatment_id?: string | null
+          treatment_name_snapshot?: string | null
+          treatment_price_snapshot?: number | null
           updated_at?: string
         }
         Relationships: [
