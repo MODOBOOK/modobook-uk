@@ -1243,6 +1243,8 @@ function ServiceDialog({
       setDiscountPercent("");
       setDiscountLabel("");
       setDiscountShowWasNow(true);
+      setPriceMode("fixed");
+      setBadge("none");
       setLocOverrides({});
     }
   }, [open, state]);
