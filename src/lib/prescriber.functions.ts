@@ -223,7 +223,7 @@ export const listSentReferrals = createServerFn({ method: "GET" })
     return rows.map((r) => ({
       id: r.id,
       status: r.status as "pending" | "accepted" | "declined" | "completed",
-      routing: r.routing as "same_address" | "in_person_consult",
+      routing: r.routing as "same_address" | "clinic_visit" | "in_person_consult",
       created_at: r.created_at,
       accepted_at: r.accepted_at,
       patient_name: r.patient_name,
