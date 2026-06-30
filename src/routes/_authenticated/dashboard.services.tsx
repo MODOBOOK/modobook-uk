@@ -498,6 +498,7 @@ function CategoryRow({
   siblings,
   index,
   matchTreat,
+  picker,
   onAddSub,
   onEditCat,
   onDeleteCat,
@@ -508,12 +509,14 @@ function CategoryRow({
   onReorderTreatsByIds,
   onMoveTreatTo,
   onMoveCatTo,
+  onChangeTreatCategory,
 }: {
   node: CatNode;
   depth: number;
   siblings: CatNode[];
   index: number;
   matchTreat: (t: Treat) => boolean;
+  picker: { id: string; label: string; depth: number }[];
   onAddSub: (parentId: string) => void;
   onEditCat: (c: Cat) => void;
   onDeleteCat: (c: Cat) => void;
@@ -524,7 +527,9 @@ function CategoryRow({
   onReorderTreatsByIds: (ids: string[]) => void;
   onMoveTreatTo: (t: Treat) => void;
   onMoveCatTo: (c: Cat) => void;
+  onChangeTreatCategory: (treatId: string, categoryId: string | null) => void | Promise<void>;
 }) {
+
 
   const [open, setOpen] = useState(false);
   const treatsHere = node.treatments.filter(matchTreat);
