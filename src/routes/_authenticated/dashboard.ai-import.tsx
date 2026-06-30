@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import {
   extractClinicData,
   commitClinicImport,
+  generateDescription,
   type ExtractedDraft,
   type ExtractedCategory,
   type ExtractedTreatment,
@@ -276,6 +277,14 @@ function AiImportPage() {
               <li>{summary.packages} packages</li>
               {summary.skipped > 0 && <li className="text-muted-foreground">{summary.skipped} skipped as duplicates</li>}
             </ul>
+            {summary.errors && summary.errors.length > 0 && (
+              <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-xs">
+                <p className="mb-1 font-medium text-destructive">Some items couldn't be saved:</p>
+                <ul className="list-disc space-y-0.5 pl-4 text-destructive/90">
+                  {summary.errors.slice(0, 10).map((e, i) => <li key={i}>{e}</li>)}
+                </ul>
+              </div>
+            )}
             <div className="flex flex-wrap gap-2 pt-2">
               <Button asChild><Link to="/dashboard/services">Open Services</Link></Button>
               <Button variant="outline" asChild><Link to="/dashboard">Back to dashboard</Link></Button>
@@ -447,17 +456,18 @@ function ReviewStep({
 
       <ListCard
         title={`Packages (${includedPk}/${draft.packages.length})`}
-        helper="Bundles or course-of-X deals. You can refine which treatments are inside afterwards."
+        helper="Bundles or course-of-X deals. Add a short, client-facing description — or let AI write one based on the included treatments."
         onAll={(v) => toggleAll("packages", v)}
         onAdd={() => addRow("packages")}
         empty="No packages detected."
         rows={draft.packages.map((p, i) => (
-          <Row key={i} included={p._include} onToggle={(v) => setRow("packages", i, { _include: v })} onRemove={() => removeRow("packages", i)}>
-            <Input className="md:max-w-xs" value={p.name} onChange={(e) => setRow("packages", i, { name: e.target.value })} placeholder="Package name" />
-            <Input className="md:max-w-[110px]" type="number" step="0.01" value={p.price_gbp ?? ""} onChange={(e) => setRow("packages", i, { price_gbp: e.target.value ? Number(e.target.value) : undefined })} placeholder="£" />
-            <Input className="md:max-w-[100px]" type="number" value={p.sessions ?? ""} onChange={(e) => setRow("packages", i, { sessions: e.target.value ? Number(e.target.value) : undefined })} placeholder="Sessions" />
-            {p.treatment_names?.length ? <Badge variant="secondary">{p.treatment_names.length} treatments</Badge> : null}
-          </Row>
+          <PackageRow
+            key={i}
+            pkg={p}
+            onToggle={(v) => setRow("packages", i, { _include: v })}
+            onRemove={() => removeRow("packages", i)}
+            onChange={(patch) => setRow("packages", i, patch)}
+          />
         ))}
       />
 
@@ -537,3 +547,79 @@ function Field({ label, value, onChange, textarea }: { label: string; value: str
     </div>
   );
 }
+
+function PackageRow({
+  pkg,
+  onToggle,
+  onRemove,
+  onChange,
+}: {
+  pkg: Draftable<ExtractedPackage>;
+  onToggle: (v: boolean) => void;
+  onRemove: () => void;
+  onChange: (patch: Partial<ExtractedPackage>) => void;
+}) {
+  const generate = useServerFn(generateDescription);
+  const [busy, setBusy] = useState(false);
+
+  async function handleGenerate() {
+    setBusy(true);
+    try {
+      const r = await generate({
+        data: {
+          kind: "package",
+          name: pkg.name || "Package",
+          treatment_names: pkg.treatment_names ?? [],
+          sessions: pkg.sessions,
+          price_gbp: pkg.price_gbp,
+        },
+      });
+      if (r.description) onChange({ description: r.description });
+      else toast.error("AI didn't return a description");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to generate");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className={`space-y-2 rounded-md border p-2 ${pkg._include ? "" : "opacity-50"}`}>
+      <div className="flex flex-wrap items-center gap-2">
+        <Checkbox checked={pkg._include} onCheckedChange={(v) => onToggle(!!v)} />
+        <Input className="md:max-w-xs" value={pkg.name} onChange={(e) => onChange({ name: e.target.value })} placeholder="Package name" />
+        <Input className="md:max-w-[110px]" type="number" step="0.01" value={pkg.price_gbp ?? ""} onChange={(e) => onChange({ price_gbp: e.target.value ? Number(e.target.value) : undefined })} placeholder="£" />
+        <Input className="md:max-w-[100px]" type="number" value={pkg.sessions ?? ""} onChange={(e) => onChange({ sessions: e.target.value ? Number(e.target.value) : undefined })} placeholder="Sessions" />
+        {pkg.treatment_names?.length ? <Badge variant="secondary">{pkg.treatment_names.length} treatments</Badge> : null}
+        <button
+          type="button"
+          onClick={onRemove}
+          className="ml-auto text-xs text-muted-foreground hover:text-destructive"
+        >
+          Remove
+        </button>
+      </div>
+      {pkg.treatment_names && pkg.treatment_names.length > 0 && (
+        <p className="pl-7 text-xs text-muted-foreground">
+          Includes: {pkg.treatment_names.join(", ")}
+        </p>
+      )}
+      <div className="space-y-1 pl-7">
+        <div className="flex items-center justify-between">
+          <Label className="text-xs text-muted-foreground">Client-facing description</Label>
+          <Button type="button" size="sm" variant="ghost" onClick={handleGenerate} disabled={busy} className="h-7 gap-1 text-xs">
+            {busy ? <Loader2 className="size-3 animate-spin" /> : <Wand2 className="size-3" />}
+            {pkg.description ? "Rewrite with AI" : "Generate with AI"}
+          </Button>
+        </div>
+        <Textarea
+          rows={2}
+          value={pkg.description ?? ""}
+          onChange={(e) => onChange({ description: e.target.value })}
+          placeholder="Shown to clients on the booking page. Leave blank or click Generate."
+        />
+      </div>
+    </div>
+  );
+}
+

@@ -132,6 +132,7 @@ STRICT RULES — non-negotiable:
 - "parent" is the parent category name when something is a subcategory (e.g. "Lip filler" under parent "Injectables").
 - If a value is not visible, omit the key entirely — never write "N/A" or guess.
 - Treatment "name" must be the treatment ONLY, never "Category: Treatment", "Category - Treatment", or "Category – Treatment". Put the category part in "category" (and "parent" if it's a subcategory) and keep "name" as the clean treatment label. Example: source "Advanced Muscle Injections: Forehead — £180" -> category "Advanced Muscle Injections", name "Forehead", price 180.
+- Include "description" wherever a literal description, blurb, or "what to expect" line appears in the source for a treatment or package. Do NOT invent or paraphrase one if the source doesn't contain it — omit the field instead.
 - Hard caps: up to 25 categories, 100 treatments, 40 add-ons, 20 packages.`;
 
 
@@ -308,6 +309,10 @@ export const commitClinicImport = createServerFn({ method: "POST" })
       addons: 0,
       packages: 0,
       skipped: 0,
+      errors: [] as string[],
+    };
+    const noteError = (label: string, err: { message?: string } | null) => {
+      if (err?.message) created.errors.push(`${label}: ${err.message}`);
     };
 
     /* --- Clinic info (only fields the user kept and are non-empty) --- */
@@ -364,7 +369,7 @@ export const commitClinicImport = createServerFn({ method: "POST" })
       if (!error && row) {
         catNameToId.set(key, row.id);
         created.categories++;
-      }
+      } else noteError(`Category "${c.name}"`, error);
     }
 
     /* --- Treatments --- */
@@ -426,7 +431,7 @@ export const commitClinicImport = createServerFn({ method: "POST" })
               .insert({ treatment_id: row.id, template_id: tplId } as never);
           }
         }
-      }
+      } else noteError(`Treatment "${t.name}"`, error);
     }
 
     /* --- Add-ons --- */
@@ -451,6 +456,7 @@ export const commitClinicImport = createServerFn({ method: "POST" })
         sort_order: 0,
       } as never);
       if (!error) created.addons++;
+      else noteError(`Add-on "${a.name}"`, error);
     }
 
     /* --- Packages --- */
@@ -474,13 +480,14 @@ export const commitClinicImport = createServerFn({ method: "POST" })
         profile_id: profileId,
         name: pkg.name.trim(),
         treatment_id: primary,
-        treatment_ids: trIds.length ? trIds : null,
+        treatment_ids: trIds,
         session_count: Math.max(1, Math.round(pkg.sessions ?? trIds.length ?? 1)),
         price: Number(pkg.price_gbp ?? 0),
         active: true,
         description: pkg.description ?? null,
       } as never);
       if (!error) created.packages++;
+      else noteError(`Package "${pkg.name}"`, error);
     }
 
     return created;
@@ -509,3 +516,50 @@ function bestAftercareMatch(hint: string, map: Map<string, string>): string | nu
   }
   return null;
 }
+
+/* ----------- Generate a client-facing description on demand ----------- */
+
+export const generateDescription = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    (input: {
+      kind: "treatment" | "package";
+      name: string;
+      treatment_names?: string[];
+      sessions?: number;
+      price_gbp?: number;
+    }) => input,
+  )
+  .handler(async ({ data }): Promise<{ description: string }> => {
+    const apiKey = process.env.LOVABLE_API_KEY;
+    if (!apiKey) throw new Error("LOVABLE_API_KEY is not configured");
+
+    const ctx =
+      data.kind === "package"
+        ? `Package name: ${data.name}\nIncludes treatments: ${(data.treatment_names ?? []).join(", ") || "(unspecified)"}\nSessions: ${data.sessions ?? "?"}\nPrice (GBP): ${data.price_gbp ?? "?"}`
+        : `Treatment name: ${data.name}`;
+
+    const res = await fetch(GATEWAY_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Lovable-API-Key": apiKey },
+      body: JSON.stringify({
+        model: MODEL,
+        messages: [
+          {
+            role: "system",
+            content:
+              "You write short, warm, client-facing descriptions for a UK aesthetics clinic booking page. 2-3 sentences max, ~40 words, no emojis, no clinical jargon, no claims of medical outcomes, no pricing. Plain prose only.",
+          },
+          { role: "user", content: ctx },
+        ],
+      }),
+    });
+
+    if (res.status === 402) throw new Error("AI credits exhausted.");
+    if (res.status === 429) throw new Error("AI rate limit — try again shortly.");
+    if (!res.ok) throw new Error(`AI failed (${res.status})`);
+    const body = (await res.json()) as { choices?: Array<{ message?: { content?: string } }> };
+    const description = (body.choices?.[0]?.message?.content ?? "").trim();
+    return { description };
+  });
+
