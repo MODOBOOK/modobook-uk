@@ -974,7 +974,8 @@ function BookPage() {
               Skip · show full menu
             </button>
           </div>
-          <h2 className="mb-4 text-xl font-bold" style={headingStyle}>What's your main concern?</h2>
+          <h2 className="mb-2 text-xl font-bold" style={headingStyle}>What are your main concerns?</h2>
+          <p className="mb-4 text-sm opacity-70">Select one or more — we'll suggest treatments for all of them.</p>
           {concernAreas.length === 0 ? (
             <p className="opacity-70">No concerns set up yet.</p>
           ) : (
@@ -986,23 +987,44 @@ function BookPage() {
                   <div key={area.id}>
                     <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide opacity-60">{area.name}</h3>
                     <div className="grid gap-2 sm:grid-cols-2">
-                      {areaConcerns.map((c) => (
-                        <button
-                          key={c.id}
-                          onClick={() => setPickedConcernId(c.id)}
-                          className="rounded-xl border bg-card p-3 text-left transition hover:shadow-md"
-                          style={{ borderColor: `${brand}33` }}
-                        >
-                          <div className="font-semibold" style={{ color: brand }}>{c.name}</div>
-                          {c.description && (
-                            <div className="mt-0.5 text-xs opacity-70">{c.description}</div>
-                          )}
-                        </button>
-                      ))}
+                      {areaConcerns.map((c) => {
+                        const picked = pickedConcernIds.includes(c.id);
+                        return (
+                          <button
+                            key={c.id}
+                            onClick={() => togglePickedConcern(c.id)}
+                            aria-pressed={picked}
+                            className="rounded-xl border bg-card p-3 text-left transition hover:shadow-md"
+                            style={{
+                              borderColor: picked ? brand : `${brand}33`,
+                              borderWidth: picked ? 2 : 1,
+                              backgroundColor: picked ? `${brand}0d` : undefined,
+                            }}
+                          >
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="font-semibold" style={{ color: brand }}>{c.name}</div>
+                              {picked && <Check className="h-4 w-4 shrink-0" style={{ color: brand }} />}
+                            </div>
+                            {c.description && (
+                              <div className="mt-0.5 text-xs opacity-70">{c.description}</div>
+                            )}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 );
               })}
+              <div className="sticky bottom-3 z-10 flex justify-center pt-2">
+                <Button
+                  disabled={pickedConcernIds.length === 0}
+                  onClick={() => setConcernsConfirmed(true)}
+                  className="rounded-full px-6 py-2 text-sm font-semibold text-white shadow-lg transition hover:opacity-90 disabled:opacity-50"
+                  style={{ backgroundColor: brand }}
+                >
+                  Continue{pickedConcernIds.length > 0 ? ` · ${pickedConcernIds.length} selected` : ""}
+                </Button>
+              </div>
             </div>
           )}
           {showConsult && (
