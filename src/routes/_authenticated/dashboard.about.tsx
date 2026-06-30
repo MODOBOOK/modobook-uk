@@ -135,6 +135,8 @@ function AboutEditor() {
         )}
       </div>
 
+      <SaveReminder />
+
       {/* TAGLINE — always shown under name */}
       <Bubble icon={Tag} title="Tagline" subtitle="One line shown directly under your name at the top of the page.">
         <Input
