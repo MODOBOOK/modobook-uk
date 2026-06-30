@@ -141,6 +141,7 @@ export const getPublicClinic = createServerFn({ method: "GET" })
       practitioners: practitioners.data ?? [],
       locationPractitioners: locationPractitioners.data ?? [],
       aboutPage: (aboutRpc.data as Json) ?? ({} as Json),
+      careGuides: careGuides.data ?? [],
     };
   });
 
