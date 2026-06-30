@@ -406,6 +406,7 @@ export const commitClinicImport = createServerFn({ method: "POST" })
       const categoryId = t.category
         ? catNameToId.get(t.category.toLowerCase()) ?? null
         : null;
+      const sessions = Math.max(1, Math.round(t.session_count ?? 1));
       const { data: row, error } = await supabase
         .from("treatments")
         .insert({
@@ -417,7 +418,8 @@ export const commitClinicImport = createServerFn({ method: "POST" })
           category_id: categoryId,
           active: true,
           payment_mode: "full",
-          session_count: 1,
+          session_count: sessions,
+          allow_split_payment: sessions > 1 ? !!t.allow_split_payment : false,
         } as never)
         .select("id")
         .single();
