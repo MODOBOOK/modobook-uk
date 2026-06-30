@@ -930,6 +930,12 @@ function BrandingPage() {
           <ColorField label="Tile border" value={state.contact_tile_border_color ?? "#e5e7eb"} onChange={(v) => set("contact_tile_border_color", v)} />
         </CardContent>
       </Card>
+
+      <div className="flex justify-end pt-2">
+        <Button onClick={handleSave} disabled={saving} size="lg" className="shadow-luxe">
+          {saving ? "Saving…" : "Save changes"}
+        </Button>
+      </div>
     </div>
   );
 }
