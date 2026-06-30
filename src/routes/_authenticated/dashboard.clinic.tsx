@@ -43,7 +43,10 @@ function ClinicPage() {
         setProfileId(p.id);
         setSlug(p.slug ?? "");
         setClinicName(p.clinic_name ?? "");
+        setFullName(p.full_name ?? "");
+        setDisplayNameMode(((p as { display_name_mode?: string }).display_name_mode as "clinic" | "practitioner" | "both") ?? "both");
         setTagline(p.tagline ?? "");
+
         setPhone(p.phone ?? "");
         setEmail(p.email ?? "");
         const links = (p.social_links ?? {}) as { instagram?: string; facebook?: string; tiktok?: string };
