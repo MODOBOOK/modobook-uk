@@ -139,6 +139,10 @@ export const updateTreatment = createServerFn({ method: "POST" })
       auto_send_aftercare?: boolean;
       price_mode?: "fixed" | "from" | "poa" | "free";
       badge?: "recommended" | "popular" | "new" | "bestseller" | null;
+      requires_prescriber?: boolean;
+      prescriber_user_id?: string | null;
+      prescriber_routing?: "same_address" | "in_person_consult";
+      prescriber_note?: string | null;
     }) => input,
 
 
@@ -179,6 +183,10 @@ export const updateTreatment = createServerFn({ method: "POST" })
     if (data.auto_send_aftercare !== undefined) update.auto_send_aftercare = data.auto_send_aftercare;
     if (data.price_mode !== undefined) update.price_mode = data.price_mode;
     if (data.badge !== undefined) update.badge = data.badge;
+    if (data.requires_prescriber !== undefined) update.requires_prescriber = data.requires_prescriber;
+    if (data.prescriber_user_id !== undefined) update.prescriber_user_id = data.prescriber_user_id;
+    if (data.prescriber_routing !== undefined) update.prescriber_routing = data.prescriber_routing;
+    if (data.prescriber_note !== undefined) update.prescriber_note = data.prescriber_note;
 
 
     const { data: treatment, error } = await supabase

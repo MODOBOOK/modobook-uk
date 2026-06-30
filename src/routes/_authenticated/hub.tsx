@@ -11,6 +11,8 @@ function HubLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const tabs = [
     { to: "/hub", label: "Overview", exact: true },
+    { to: "/hub/prescribing", label: "Prescribing rules" },
+    { to: "/hub/referrals", label: "Referrals" },
     { to: "/hub/connections", label: "Connections" },
     { to: "/hub/verification", label: "Verification" },
   ];

@@ -2779,6 +2779,98 @@ export type Database = {
         }
         Relationships: []
       }
+      prescriber_referrals: {
+        Row: {
+          accepted_at: string | null
+          appointment_id: string | null
+          client_id: string | null
+          consent_given_at: string | null
+          created_at: string
+          declined_at: string | null
+          id: string
+          notes: string | null
+          patient_dob: string | null
+          patient_email: string | null
+          patient_name: string | null
+          patient_phone: string | null
+          practitioner_profile_id: string
+          prescriber_user_id: string
+          routing: string
+          status: string
+          treatment_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          appointment_id?: string | null
+          client_id?: string | null
+          consent_given_at?: string | null
+          created_at?: string
+          declined_at?: string | null
+          id?: string
+          notes?: string | null
+          patient_dob?: string | null
+          patient_email?: string | null
+          patient_name?: string | null
+          patient_phone?: string | null
+          practitioner_profile_id: string
+          prescriber_user_id: string
+          routing?: string
+          status?: string
+          treatment_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          appointment_id?: string | null
+          client_id?: string | null
+          consent_given_at?: string | null
+          created_at?: string
+          declined_at?: string | null
+          id?: string
+          notes?: string | null
+          patient_dob?: string | null
+          patient_email?: string | null
+          patient_name?: string | null
+          patient_phone?: string | null
+          practitioner_profile_id?: string
+          prescriber_user_id?: string
+          routing?: string
+          status?: string
+          treatment_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prescriber_referrals_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prescriber_referrals_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clinic_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prescriber_referrals_practitioner_profile_id_fkey"
+            columns: ["practitioner_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prescriber_referrals_treatment_id_fkey"
+            columns: ["treatment_id"]
+            isOneToOne: false
+            referencedRelation: "treatments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pretreatment_templates: {
         Row: {
           active: boolean
@@ -3510,11 +3602,15 @@ export type Database = {
           name: string
           payment_mode: Database["public"]["Enums"]["payment_mode"]
           picture_url: string | null
+          prescriber_note: string | null
+          prescriber_routing: string
+          prescriber_user_id: string | null
           price: number
           price_mode: string
           profile_id: string
           quiz_tags: Json
           rebook_reminder_days: number | null
+          requires_prescriber: boolean
           session_count: number
           session_interval_days: number | null
           sort_order: number
@@ -3550,11 +3646,15 @@ export type Database = {
           name: string
           payment_mode?: Database["public"]["Enums"]["payment_mode"]
           picture_url?: string | null
+          prescriber_note?: string | null
+          prescriber_routing?: string
+          prescriber_user_id?: string | null
           price: number
           price_mode?: string
           profile_id: string
           quiz_tags?: Json
           rebook_reminder_days?: number | null
+          requires_prescriber?: boolean
           session_count?: number
           session_interval_days?: number | null
           sort_order?: number
@@ -3590,11 +3690,15 @@ export type Database = {
           name?: string
           payment_mode?: Database["public"]["Enums"]["payment_mode"]
           picture_url?: string | null
+          prescriber_note?: string | null
+          prescriber_routing?: string
+          prescriber_user_id?: string | null
           price?: number
           price_mode?: string
           profile_id?: string
           quiz_tags?: Json
           rebook_reminder_days?: number | null
+          requires_prescriber?: boolean
           session_count?: number
           session_interval_days?: number | null
           sort_order?: number
@@ -3878,6 +3982,10 @@ export type Database = {
           p_end: string
           p_start: string
         }
+        Returns: Json
+      }
+      prescriber_get_referral_full: {
+        Args: { p_referral_id: string }
         Returns: Json
       }
       resolve_hub_code: {

@@ -32,6 +32,8 @@ import { Route as MSlugAuthRouteImport } from './routes/m.$slug.auth'
 import { Route as MSlugAccountRouteImport } from './routes/m.$slug.account'
 import { Route as MSlugAboutRouteImport } from './routes/m.$slug.about'
 import { Route as AuthenticatedHubVerificationRouteImport } from './routes/_authenticated/hub.verification'
+import { Route as AuthenticatedHubReferralsRouteImport } from './routes/_authenticated/hub.referrals'
+import { Route as AuthenticatedHubPrescribingRouteImport } from './routes/_authenticated/hub.prescribing'
 import { Route as AuthenticatedHubConnectionsRouteImport } from './routes/_authenticated/hub.connections'
 import { Route as AuthenticatedDashboardTreatmentsRouteImport } from './routes/_authenticated/dashboard.treatments'
 import { Route as AuthenticatedDashboardSettingsRouteImport } from './routes/_authenticated/dashboard.settings'
@@ -183,6 +185,18 @@ const AuthenticatedHubVerificationRoute =
   AuthenticatedHubVerificationRouteImport.update({
     id: '/verification',
     path: '/verification',
+    getParentRoute: () => AuthenticatedHubRoute,
+  } as any)
+const AuthenticatedHubReferralsRoute =
+  AuthenticatedHubReferralsRouteImport.update({
+    id: '/referrals',
+    path: '/referrals',
+    getParentRoute: () => AuthenticatedHubRoute,
+  } as any)
+const AuthenticatedHubPrescribingRoute =
+  AuthenticatedHubPrescribingRouteImport.update({
+    id: '/prescribing',
+    path: '/prescribing',
     getParentRoute: () => AuthenticatedHubRoute,
   } as any)
 const AuthenticatedHubConnectionsRoute =
@@ -444,6 +458,8 @@ export interface FileRoutesByFullPath {
   '/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
   '/dashboard/treatments': typeof AuthenticatedDashboardTreatmentsRoute
   '/hub/connections': typeof AuthenticatedHubConnectionsRoute
+  '/hub/prescribing': typeof AuthenticatedHubPrescribingRoute
+  '/hub/referrals': typeof AuthenticatedHubReferralsRoute
   '/hub/verification': typeof AuthenticatedHubVerificationRoute
   '/m/$slug/about': typeof MSlugAboutRoute
   '/m/$slug/account': typeof MSlugAccountRoute
@@ -500,6 +516,8 @@ export interface FileRoutesByTo {
   '/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
   '/dashboard/treatments': typeof AuthenticatedDashboardTreatmentsRoute
   '/hub/connections': typeof AuthenticatedHubConnectionsRoute
+  '/hub/prescribing': typeof AuthenticatedHubPrescribingRoute
+  '/hub/referrals': typeof AuthenticatedHubReferralsRoute
   '/hub/verification': typeof AuthenticatedHubVerificationRoute
   '/m/$slug/about': typeof MSlugAboutRoute
   '/m/$slug/account': typeof MSlugAccountRoute
@@ -562,6 +580,8 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
   '/_authenticated/dashboard/treatments': typeof AuthenticatedDashboardTreatmentsRoute
   '/_authenticated/hub/connections': typeof AuthenticatedHubConnectionsRoute
+  '/_authenticated/hub/prescribing': typeof AuthenticatedHubPrescribingRoute
+  '/_authenticated/hub/referrals': typeof AuthenticatedHubReferralsRoute
   '/_authenticated/hub/verification': typeof AuthenticatedHubVerificationRoute
   '/m/$slug/about': typeof MSlugAboutRoute
   '/m/$slug/account': typeof MSlugAccountRoute
@@ -624,6 +644,8 @@ export interface FileRouteTypes {
     | '/dashboard/settings'
     | '/dashboard/treatments'
     | '/hub/connections'
+    | '/hub/prescribing'
+    | '/hub/referrals'
     | '/hub/verification'
     | '/m/$slug/about'
     | '/m/$slug/account'
@@ -680,6 +702,8 @@ export interface FileRouteTypes {
     | '/dashboard/settings'
     | '/dashboard/treatments'
     | '/hub/connections'
+    | '/hub/prescribing'
+    | '/hub/referrals'
     | '/hub/verification'
     | '/m/$slug/about'
     | '/m/$slug/account'
@@ -741,6 +765,8 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/settings'
     | '/_authenticated/dashboard/treatments'
     | '/_authenticated/hub/connections'
+    | '/_authenticated/hub/prescribing'
+    | '/_authenticated/hub/referrals'
     | '/_authenticated/hub/verification'
     | '/m/$slug/about'
     | '/m/$slug/account'
@@ -932,6 +958,20 @@ declare module '@tanstack/react-router' {
       path: '/verification'
       fullPath: '/hub/verification'
       preLoaderRoute: typeof AuthenticatedHubVerificationRouteImport
+      parentRoute: typeof AuthenticatedHubRoute
+    }
+    '/_authenticated/hub/referrals': {
+      id: '/_authenticated/hub/referrals'
+      path: '/referrals'
+      fullPath: '/hub/referrals'
+      preLoaderRoute: typeof AuthenticatedHubReferralsRouteImport
+      parentRoute: typeof AuthenticatedHubRoute
+    }
+    '/_authenticated/hub/prescribing': {
+      id: '/_authenticated/hub/prescribing'
+      path: '/prescribing'
+      fullPath: '/hub/prescribing'
+      preLoaderRoute: typeof AuthenticatedHubPrescribingRouteImport
       parentRoute: typeof AuthenticatedHubRoute
     }
     '/_authenticated/hub/connections': {
@@ -1307,12 +1347,16 @@ const AuthenticatedDashboardRouteWithChildren =
 
 interface AuthenticatedHubRouteChildren {
   AuthenticatedHubConnectionsRoute: typeof AuthenticatedHubConnectionsRoute
+  AuthenticatedHubPrescribingRoute: typeof AuthenticatedHubPrescribingRoute
+  AuthenticatedHubReferralsRoute: typeof AuthenticatedHubReferralsRoute
   AuthenticatedHubVerificationRoute: typeof AuthenticatedHubVerificationRoute
   AuthenticatedHubIndexRoute: typeof AuthenticatedHubIndexRoute
 }
 
 const AuthenticatedHubRouteChildren: AuthenticatedHubRouteChildren = {
   AuthenticatedHubConnectionsRoute: AuthenticatedHubConnectionsRoute,
+  AuthenticatedHubPrescribingRoute: AuthenticatedHubPrescribingRoute,
+  AuthenticatedHubReferralsRoute: AuthenticatedHubReferralsRoute,
   AuthenticatedHubVerificationRoute: AuthenticatedHubVerificationRoute,
   AuthenticatedHubIndexRoute: AuthenticatedHubIndexRoute,
 }

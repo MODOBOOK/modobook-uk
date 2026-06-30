@@ -1,69 +1,80 @@
-# Prescriber Hub
 
-A shared space where verified prescribers and practitioners find each other and link up using a short, unique code. Practitioners join freely. Prescribers must upload their registration details and photo ID — admin approves, rejects, or asks for more info before the prescriber appears in the hub.
+# Prescriber referral flow
 
-## What each role gets
+## 1. Database
 
-**Practitioner** (the clinician you already have)
-- Registers as today — no extra verification.
-- Gets a unique 6-character **link code** (e.g. `MODO-4F7K`).
-- Can paste a prescriber's code to send a link-up request.
+New + altered schema (one migration):
 
-**Prescriber** (new role)
-- Signs up via a "Join as prescriber" route.
-- Submits: full name, regulatory body, registration/PIN number, photo ID upload (passport or driving licence).
-- Status starts **Pending**. Sees a **read-only preview** of the hub until approved.
-- Once approved, gets their own unique link code and can request/accept links with practitioners.
+- `treatments` — add `requires_prescriber boolean default false`, `prescriber_user_id uuid` (FK auth.users, the connected prescriber for this service), `prescriber_routing text check in ('same_address','in_person_consult') default 'same_address'`, `prescriber_note text`.
+- `prescriber_referrals` (new):
+  - `practitioner_profile_id`, `prescriber_user_id`, `treatment_id`, `appointment_id` (nullable — set once patient books), `client_id` (nullable until linked)
+  - `patient_name`, `patient_email`, `patient_phone`, `patient_dob`
+  - `routing` ('same_address' | 'in_person_consult')
+  - `status` ('pending' | 'accepted' | 'declined' | 'completed')
+  - `consent_given_at`, `accepted_at`, `declined_at`, `notes`
+- Indexes on `prescriber_user_id, status` and `practitioner_profile_id`.
+- GRANTs to `authenticated` + `service_role`.
+- RLS:
+  - Practitioner can read/write referrals on their `profile_id`.
+  - Prescriber (`auth.uid() = prescriber_user_id`) can read all their referrals (minimal columns implicit — UI controls what's shown) and update status.
+  - SECURITY DEFINER fn `prescriber_get_referral_full(referral_id)` returns medical forms + consultation rows ONLY when status='accepted' AND caller is the prescriber. Used by the "full record" view.
+- Trigger: when `appointment` is inserted and `treatment.requires_prescriber`, auto-create a `prescriber_referrals` row (status='pending') and link `appointment_id`.
 
-**Link-up flow** (either side can start it)
-- Enter the other party's code → request sent → recipient sees a pending request in their hub → Accept or Decline.
-- Once accepted, the pair sees each other in their "My connections" list with name, professional title and contact.
+## 2. Practitioner side — Services editor
 
-## Regulatory bodies offered
+In `dashboard.services.*` treatment edit panel, add a "Prescriber" section:
+- Toggle: **Requires a prescriber**
+- Dropdown: **Assigned prescriber** — populated from `hub_links` where the other party is an approved prescriber.
+- Radio: **Routing**
+  - *Same address — no extra booking* (default): patient just consents; prescriber sees the referral on their dashboard before the appointment.
+  - *In-person consult at prescriber's clinic*: patient is redirected to the prescriber's `/m/{slug}` booking page after consenting, then returns.
+- Optional note shown to patient at the consent step.
 
-UK: GMC, NMC, GPhC, GDC.
-Ireland: MCRN, NMBI, PSI.
-Plus a free-text **Other** option — admin verifies manually.
+If `requires_prescriber=true` but no prescriber assigned → inline warning, save blocked.
 
-## Admin review
+## 3. Patient side — Booking flow
 
-A new **Admin → Prescriber verifications** queue. Each row shows the submitted details and the ID image. Admin picks one of three actions:
+In `m.$slug.index.tsx` after treatment selection, before slot/payment:
+- If any selected treatment has `requires_prescriber`, insert a **Prescriber consent step**:
+  - Card per service explaining: "This treatment requires a prescriber ({prescriber_display_name}). To proceed we need to share your details and medical info with them."
+  - Checkbox: **I consent to sharing my details and medical forms with the prescriber.** (required to continue)
+  - If routing = `in_person_consult`: button **Book consultation with prescriber** opens prescriber's booking page in a new tab; second checkbox **I've booked / completed my prescriber consultation** required.
+  - If routing = `same_address`: just consent, then continue to normal booking.
+- On final booking submit, `consent_given_at` is stamped on the auto-created referral via the appointment trigger.
 
-1. **Approve** — prescriber becomes active, gets their link code, can be linked.
-2. **Reject** — emailed with the admin's note; access stays locked.
-3. **Request more info** — emailed with the admin's note; prescriber can re-upload and resubmit, status returns to Pending.
+## 4. Prescriber dashboard
 
-## Pages
+New route `/_authenticated/hub.referrals.tsx`:
+- Two tabs: **Pending** / **Accepted & history**.
+- Pending row (minimal tier): patient first name + initial, treatment name, referring practitioner clinic name, requested date. Buttons: **Accept case** / **Decline**.
+- On Accept → status='accepted', `accepted_at=now()`. Row expands to full record drawer:
+  - Full name, DOB, contact, address
+  - All submitted medical form responses (rendered)
+  - Any consultation notes attached to the patient
+  - Link to the appointment
+- Mark **Complete** when prescribing decision made; adds an internal note.
 
-**Public**
-- `/prescriber-hub` — keep the existing marketing page, add two clear CTAs: *Join as practitioner* and *Join as prescriber*.
-- `/prescriber-hub/join` — onboarding form for prescribers (registration details + ID upload). Practitioners are routed to the existing signup.
+Add link in hub sidebar + a "Pending referrals" stat to `hub.index.tsx`.
 
-**Inside the dashboard**
-- `/dashboard/hub` — the hub itself:
-  - My code (copy button).
-  - "Link with someone — enter their code".
-  - Pending requests (incoming + outgoing).
-  - My connections.
-  - Read-only banner if the prescriber is still Pending or has been asked for more info.
-- `/dashboard/hub/verification` — prescriber's own verification status with a "Resubmit" form when admin requests more info.
+## 5. Hub at the centre
 
-**Admin**
-- `/admin/prescribers` — review queue with Approve / Reject / Request more info, plus a notes field.
+- `dashboard.index.tsx`: add a **Prescriber Hub** hero card at the top (above existing shortcuts) showing: MODO code, connected count, pending referrals count, CTA to open Hub. Card stays for both practitioners and prescribers.
+- Sidebar: pin "Prescriber Hub" to the top of the nav (above Calendar).
 
-## Technical notes
+## Out of scope (call out)
 
-- **DB**
-  - `prescriber_profiles` (one row per prescriber user): `user_id`, `full_name`, `regulatory_body` (enum incl. `other`), `regulatory_body_other`, `registration_number`, `id_document_path`, `status` (`pending` / `approved` / `rejected` / `more_info`), `admin_note`, `reviewed_by`, `reviewed_at`.
-  - `hub_codes`: `owner_user_id`, `owner_kind` (`practitioner` / `prescriber`), `code` (unique).
-  - `hub_links`: `requester_user_id`, `recipient_user_id`, `status` (`pending` / `accepted` / `declined`), timestamps; unique pair.
-  - `app_role` enum extended with `prescriber`.
-- **Storage**: new private bucket `prescriber-ids` with RLS so only the owning prescriber and admins can read.
-- **RLS**: prescribers see only their own verification row; admins see all via `has_role(auth.uid(),'admin')`. Hub link rows visible to either party.
-- **Server fns**: `submitPrescriberVerification`, `resubmitPrescriberVerification`, `adminListPrescriberSubmissions`, `adminDecidePrescriber` (approve/reject/more_info), `getMyHubCode`, `sendLinkRequest`, `respondToLinkRequest`, `listMyConnections`.
-- **Routing**: prescriber pages live under the existing `_authenticated` subtree; admin review under `_authenticated/admin/`.
-- **Emails**: reuse the existing transactional email path for the three admin decisions (Approved / Rejected / More info needed) and for incoming link requests.
+- No payment splitting between prescriber and practitioner.
+- No automated email to prescriber on new referral yet (dashboard badge only). Email triggers can be added later.
+- "Same address" doesn't yet auto-create a calendar block for the prescriber — they see the referral, not a separate appointment.
 
-## Out of scope for this first pass
+## Files touched
 
-- No prescription writing, script PDFs or pharmacy integration yet — this build only delivers verification + link-up. The hub is the foundation; the script workflow can plug in once the connection model is live.
+- New migration
+- `src/lib/prescriber.functions.ts` (new)
+- `src/routes/_authenticated/hub.referrals.tsx` (new)
+- `src/routes/_authenticated/hub.index.tsx` (stat + link)
+- `src/routes/_authenticated/hub.tsx` (tab)
+- `src/routes/_authenticated/dashboard.index.tsx` (hero card)
+- Services editor component (prescriber section)
+- `src/routes/m.$slug.index.tsx` (consent step + redirect to prescriber slug)
+- Sidebar component (Hub pinned to top)
