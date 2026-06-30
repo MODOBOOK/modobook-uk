@@ -102,8 +102,7 @@ function AiImportPage() {
       const total =
         (result.categories?.length ?? 0) +
         (result.treatments?.length ?? 0) +
-        (result.addons?.length ?? 0) +
-        (result.packages?.length ?? 0);
+        (result.addons?.length ?? 0);
       if (!total) {
         toast.error("AI didn't find any services in that source. Try a clearer file.");
       } else {
