@@ -79,6 +79,7 @@ function PoliciesPage() {
           Shown to patients at the top of your booking link.
         </p>
       </div>
+      <SaveReminder />
 
       <Card>
         <CardHeader><CardTitle>Welcome / intro block</CardTitle></CardHeader>
