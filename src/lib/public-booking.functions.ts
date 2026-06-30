@@ -546,6 +546,27 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
 
       cursor = end;
     }
-    return { appointments: created, consents };
+
+    // The DB trigger create_appointment_medical_forms generated rows on insert;
+    // return their tokens so the confirmation page can link the patient straight
+    // into completing them.
+    const apptIds = created.map((c) => c.id);
+    const medicalForms: { token: string; appointment_id: string; template_name: string | null }[] = [];
+    if (apptIds.length > 0) {
+      const { data: forms } = await supabaseAdmin
+        .from("appointment_medical_forms")
+        .select("token, appointment_id, medical_form_templates(name)")
+        .in("appointment_id", apptIds);
+      for (const f of forms ?? []) {
+        medicalForms.push({
+          token: f.token as string,
+          appointment_id: f.appointment_id as string,
+          template_name: (f as { medical_form_templates?: { name?: string } | null }).medical_form_templates?.name ?? null,
+        });
+      }
+    }
+
+    return { appointments: created, consents, medicalForms };
   });
+
 
