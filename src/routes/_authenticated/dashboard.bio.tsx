@@ -167,7 +167,7 @@ function BioEditor() {
       </Card>
 
       <ToggleCard
-        title="Biography"
+        title="About"
         description="Your personal story — training, journey, what you're known for."
         enabled={ap.show_bio ?? true}
         onToggle={(v) => update("show_bio", v)}
