@@ -209,6 +209,21 @@ function MultiBookPage() {
   const [submitting, setSubmitting] = useState(false);
   const submitLockRef = useRef(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [prescriberConsents, setPrescriberConsents] = useState<Record<string, boolean>>({});
+
+  // Prescriber requirements for the selected treatments
+  const prescriberFn = useServerFn(getPrescriberInfoForTreatments);
+  const prescriberInfoQuery = useQuery({
+    queryKey: ["prescriberInfo", slug, ids.join(",")],
+    queryFn: () => prescriberFn({ data: { slug, treatment_ids: ids } }),
+    enabled: ids.length > 0,
+  });
+  type PrescInfo = NonNullable<typeof prescriberInfoQuery.data>[number];
+  const prescriberItems: PrescInfo[] = prescriberInfoQuery.data ?? [];
+  const sameAddressItems = prescriberItems.filter((p) => p.routing === "same_address");
+  const inPersonItems = prescriberItems.filter((p) => p.routing === "in_person_consult");
+  const allConsented = sameAddressItems.every((p) => prescriberConsents[p.treatment_id]);
+  const prescriberBlocks = !allConsented || inPersonItems.length > 0;
   
   const termsHtml = (ctx as { termsHtml?: string | null }).termsHtml ?? null;
   const termsRequired = Boolean((ctx as { termsRequired?: boolean }).termsRequired);
