@@ -599,7 +599,87 @@ function BookingFlowPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={sugOpen} onOpenChange={setSugOpen}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Review AI-suggested concerns</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Untick anything you don't want, edit the name or area, then tap <strong>Add selected</strong>. Existing concerns are skipped automatically.
+          </p>
+          <div className="mt-3 space-y-3">
+            {suggestions.length === 0 && (
+              <p className="text-sm italic text-muted-foreground">No suggestions.</p>
+            )}
+            {suggestions.map((s, idx) => (
+              <div key={idx} className={`rounded-lg border p-3 ${s._selected ? "bg-card" : "bg-muted/40 opacity-70"}`}>
+                <div className="flex items-start gap-2">
+                  <Checkbox
+                    checked={s._selected}
+                    onCheckedChange={(v) => updateSuggestion(idx, { _selected: !!v })}
+                    className="mt-1"
+                  />
+                  <div className="flex-1 space-y-2">
+                    <Input
+                      value={s.name}
+                      onChange={(e) => updateSuggestion(idx, { name: e.target.value })}
+                      className="h-9 font-medium"
+                    />
+                    {s.description && (
+                      <p className="text-xs text-muted-foreground">{s.description}</p>
+                    )}
+                    <div className="flex items-center gap-2">
+                      <Label className="text-xs">Area</Label>
+                      <Select
+                        value={s._areaChoice}
+                        onValueChange={(v) => updateSuggestion(idx, { _areaChoice: v })}
+                      >
+                        <SelectTrigger className="h-8 w-[200px]"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {areas.map((a) => (
+                            <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
+                          ))}
+                          <SelectItem value="__new__">
+                            + Create "{s.area_name || "General"}"
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <div className="mb-1 text-xs font-medium text-muted-foreground">Matched treatments</div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {treatments.map((t) => {
+                          const on = s.treatment_ids.includes(t.id);
+                          return (
+                            <button
+                              key={t.id}
+                              type="button"
+                              onClick={() => toggleSuggestionTreatment(idx, t.id)}
+                              className={`rounded-full border px-2.5 py-0.5 text-xs transition ${on ? "border-primary bg-primary text-primary-foreground" : "bg-background hover:bg-muted"}`}
+                            >
+                              {t.name}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setSugOpen(false)} disabled={sugSaving}>Cancel</Button>
+            <Button onClick={applySuggestedConcerns} disabled={sugSaving}>
+              {sugSaving ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : null}
+              Add selected
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
+
   );
 }
 
