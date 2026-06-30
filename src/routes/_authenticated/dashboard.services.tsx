@@ -1158,6 +1158,8 @@ function ServiceDialog({
     discount_percent?: number | null;
     discount_label?: string | null;
     discount_show_was_now?: boolean;
+    price_mode?: "fixed" | "from" | "poa" | "free";
+    badge?: "recommended" | "popular" | "new" | "bestseller" | null;
     location_overrides?: { location_id: string; available: boolean; price_cents: number | null; duration_minutes: number | null }[];
   }) => Promise<void>;
 }) {
