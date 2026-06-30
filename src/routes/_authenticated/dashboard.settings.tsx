@@ -48,11 +48,12 @@ function SettingsPage() {
     require_medical_forms_before_appt: !!profile.require_medical_forms_before_appt,
     allow_patient_reschedule: profile.allow_patient_reschedule !== false,
     allow_patient_cancel: profile.allow_patient_cancel !== false,
+    patient_reschedule_max: (profile.patient_reschedule_max as number | null) ?? 2,
+    patient_reschedule_cutoff_hours: (profile.patient_reschedule_cutoff_hours as number | null) ?? 24,
+    patient_cancel_cutoff_hours: (profile.patient_cancel_cutoff_hours as number | null) ?? 24,
     // confirm & reminders
     auto_confirm_bookings: profile.auto_confirm_bookings !== false,
     email_confirmations_enabled: profile.email_confirmations_enabled !== false,
-    sms_reminders_enabled: !!profile.sms_reminders_enabled,
-    whatsapp_reminders_enabled: !!profile.whatsapp_reminders_enabled,
     reminder_hours_before: (profile.reminder_hours_before as number[] | null) ?? [24, 2],
     // invoice branding
     invoice_show_logo: profile.invoice_show_logo !== false,
@@ -69,9 +70,24 @@ function SettingsPage() {
     invoice_footer_notes: (profile.invoice_footer_notes as string | null) ?? "",
   });
   const [saving, setSaving] = useState(false);
-  const [reminderInput, setReminderInput] = useState(
-    ((profile.reminder_hours_before as number[] | null) ?? [24, 2]).join(", "),
-  );
+
+  const REMINDER_PRESETS: { value: number; label: string }[] = [
+    { value: 48, label: "2 days before" },
+    { value: 24, label: "1 day before" },
+    { value: 4, label: "4 hours before" },
+    { value: 2, label: "2 hours before" },
+    { value: 1, label: "1 hour before" },
+  ];
+
+  function toggleReminder(hours: number) {
+    setS((p) => {
+      const has = p.reminder_hours_before.includes(hours);
+      const next = has
+        ? p.reminder_hours_before.filter((h) => h !== hours)
+        : [...p.reminder_hours_before, hours].sort((a, b) => b - a);
+      return { ...p, reminder_hours_before: next };
+    });
+  }
 
   function set<K extends keyof typeof s>(key: K, val: (typeof s)[K]) {
     setS((p) => ({ ...p, [key]: val }));
