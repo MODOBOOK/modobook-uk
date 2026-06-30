@@ -139,6 +139,10 @@ export const updateTreatment = createServerFn({ method: "POST" })
       auto_send_aftercare?: boolean;
       price_mode?: "fixed" | "from" | "poa" | "free";
       badge?: "recommended" | "popular" | "new" | "bestseller" | null;
+      requires_prescriber?: boolean;
+      prescriber_user_id?: string | null;
+      prescriber_routing?: "same_address" | "in_person_consult";
+      prescriber_note?: string | null;
     }) => input,
 
 
