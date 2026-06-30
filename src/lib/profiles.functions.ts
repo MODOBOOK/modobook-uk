@@ -139,6 +139,9 @@ export const updateProfile = createServerFn({ method: "POST" })
       require_medical_forms_before_appt?: boolean;
       allow_patient_reschedule?: boolean;
       allow_patient_cancel?: boolean;
+      patient_reschedule_max?: number | null;
+      patient_reschedule_cutoff_hours?: number | null;
+      patient_cancel_cutoff_hours?: number | null;
       // Confirmations & reminders
       auto_confirm_bookings?: boolean;
       email_confirmations_enabled?: boolean;
@@ -212,6 +215,7 @@ export const updateProfile = createServerFn({ method: "POST" })
       "allow_pay_in_clinic","show_prices_on_booking","enforce_cancellation_fee",
       "require_account_to_book","require_phone","require_dob","require_address",
       "require_medical_forms_before_appt","allow_patient_reschedule","allow_patient_cancel",
+      "patient_reschedule_max","patient_reschedule_cutoff_hours","patient_cancel_cutoff_hours",
       "auto_confirm_bookings","email_confirmations_enabled","sms_reminders_enabled",
       "whatsapp_reminders_enabled","reminder_hours_before",
       "invoice_bank_name","invoice_account_name","invoice_sort_code",
