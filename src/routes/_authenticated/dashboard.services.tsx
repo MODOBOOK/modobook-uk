@@ -459,6 +459,8 @@ function ServicesPage() {
                 aftercare_delay_hours: base.aftercare_delay_hours,
                 auto_send_medical_forms: base.auto_send_medical_forms,
                 auto_send_aftercare: base.auto_send_aftercare,
+                price_mode: base.price_mode,
+                badge: base.badge,
               },
             });
             if (consent_ids && consent_ids.length > 0) {
@@ -1158,6 +1160,8 @@ function ServiceDialog({
     discount_percent?: number | null;
     discount_label?: string | null;
     discount_show_was_now?: boolean;
+    price_mode?: "fixed" | "from" | "poa" | "free";
+    badge?: "recommended" | "popular" | "new" | "bestseller" | null;
     location_overrides?: { location_id: string; available: boolean; price_cents: number | null; duration_minutes: number | null }[];
   }) => Promise<void>;
 }) {
@@ -1208,6 +1212,8 @@ function ServiceDialog({
   const [discountPercent, setDiscountPercent] = useState<string>("");
   const [discountLabel, setDiscountLabel] = useState("");
   const [discountShowWasNow, setDiscountShowWasNow] = useState(true);
+  const [priceMode, setPriceMode] = useState<"fixed" | "from" | "poa" | "free">("fixed");
+  const [badge, setBadge] = useState<"none" | "recommended" | "popular" | "new" | "bestseller">("none");
   // Per-location availability + optional price/duration override (in £ and minutes — strings for empty inputs)
   type LocOverride = { available: boolean; price: string; duration: string };
   const [locOverrides, setLocOverrides] = useState<Record<string, LocOverride>>({});
@@ -1239,6 +1245,8 @@ function ServiceDialog({
       setDiscountPercent("");
       setDiscountLabel("");
       setDiscountShowWasNow(true);
+      setPriceMode("fixed");
+      setBadge("none");
       setLocOverrides({});
     }
   }, [open, state]);
@@ -1329,6 +1337,34 @@ function ServiceDialog({
                 value={price}
                 onChange={(e) => setPrice(Number(e.target.value))}
               />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label>Price display</Label>
+              <Select value={priceMode} onValueChange={(v) => setPriceMode(v as typeof priceMode)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="fixed">Fixed price</SelectItem>
+                  <SelectItem value="from">From £…</SelectItem>
+                  <SelectItem value="poa">POA (price on application)</SelectItem>
+                  <SelectItem value="free">Free</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Highlight badge</Label>
+              <Select value={badge} onValueChange={(v) => setBadge(v as typeof badge)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No badge</SelectItem>
+                  <SelectItem value="recommended">Recommended</SelectItem>
+                  <SelectItem value="popular">Most popular</SelectItem>
+                  <SelectItem value="new">New</SelectItem>
+                  <SelectItem value="bestseller">Bestseller</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
@@ -1631,6 +1667,8 @@ function ServiceDialog({
                 discount_percent: discountPercent.trim() ? Number(discountPercent) : null,
                 discount_label: discountLabel.trim() || null,
                 discount_show_was_now: discountShowWasNow,
+                price_mode: priceMode,
+                badge: badge === "none" ? null : badge,
                 location_overrides: Object.entries(locOverrides).map(([location_id, ov]) => ({
                   location_id,
                   available: ov.available,
