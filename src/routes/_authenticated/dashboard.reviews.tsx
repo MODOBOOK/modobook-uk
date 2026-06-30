@@ -72,6 +72,8 @@ function ReviewMod() {
   const fetchTestimonials = useServerFn(listMyTestimonials);
   const saveTestimonial = useServerFn(upsertTestimonial);
   const removeTestimonial = useServerFn(deleteTestimonial);
+  const extractAi = useServerFn(extractReviews);
+  const commitAi = useServerFn(commitReviews);
 
   const [reviews, setReviews] = useState<Review[]>([]);
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
