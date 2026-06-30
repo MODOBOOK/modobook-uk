@@ -459,6 +459,8 @@ function ServicesPage() {
                 aftercare_delay_hours: base.aftercare_delay_hours,
                 auto_send_medical_forms: base.auto_send_medical_forms,
                 auto_send_aftercare: base.auto_send_aftercare,
+                price_mode: base.price_mode,
+                badge: base.badge,
               },
             });
             if (consent_ids && consent_ids.length > 0) {
