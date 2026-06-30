@@ -2,6 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { getConsultation, updateConsultation } from "@/lib/consultations.functions";
+import { createPaymentLink } from "@/lib/payment-links.functions";
+import { supabase } from "@/integrations/supabase/client";
 import { listMyConsentTemplates, getConsentTemplate } from "@/lib/treatment-consents.functions";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -227,7 +229,7 @@ export function ConsultationWizard() {
         {step === 5 && <Step5 consent={c.consent} patientName={c.patient_name} onChange={(v: any) => setField("consent", v)} />}
         {step === 6 && <Step6 photos={c.after_photos} onChange={(v: any) => setField("after_photos", v)} />}
         {step === 7 && <Step7 log={c.treatment_log} onChange={(v: any) => setField("treatment_log", v)} />}
-        {step === 8 && <Step8 invoice={c.invoice} email={c.patient_email} onChange={(v: any) => setField("invoice", v)} onComplete={complete} completed={c.status === "completed"} />}
+        {step === 8 && <Step8 invoice={c.invoice} email={c.patient_email} patientName={c.patient_name} consultationId={c.id} onChange={(v: any) => setField("invoice", v)} onComplete={complete} completed={c.status === "completed"} />}
       </CardContent></Card>
 
       {/* Sticky nav */}
@@ -643,10 +645,83 @@ function Step7({ log, onChange }: any) {
 }
 
 
-function Step8({ invoice, email, onChange, onComplete, completed }: any) {
+function Step8({ invoice, email, patientName, consultationId, onChange, onComplete, completed }: any) {
+  const createLink = useServerFn(createPaymentLink);
+  const [generating, setGenerating] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const amountNum = Number(invoice?.amount ?? 0);
+  const sendEmail = (invoice?.email ?? email ?? "").trim();
+
+  async function generateStripeLink() {
+    if (!Number.isFinite(amountNum) || amountNum < 1) {
+      toast.error("Enter an amount of £1 or more");
+      return;
+    }
+    setGenerating(true);
+    try {
+      const row: any = await createLink({
+        data: {
+          amountCents: Math.round(amountNum * 100),
+          description: (invoice?.notes ?? "").trim() || `Consultation ${consultationId?.slice(0, 8) ?? ""}`,
+          kind: "checkout",
+          recipientEmail: sendEmail || null,
+          recipientName: patientName || null,
+        },
+      });
+      onChange({ ...invoice, payment_link: row.stripe_url, payment_link_id: row.id, status: "sent", sent_at: new Date().toISOString() });
+      toast.success("Stripe payment link created");
+    } catch (e: any) {
+      toast.error(e?.message ?? "Could not create payment link");
+    } finally {
+      setGenerating(false);
+    }
+  }
+
+  async function downloadPdf() {
+    if (!Number.isFinite(amountNum) || amountNum <= 0) {
+      toast.error("Enter an amount first");
+      return;
+    }
+    setDownloading(true);
+    try {
+      const { generateInvoicePdf } = await import("@/lib/invoice-pdf");
+      const { data: { user } } = await supabase.auth.getUser();
+      const { data: profile } = await supabase
+        .from("profiles").select("clinic_name, full_name").eq("user_id", user!.id).single();
+      const doc = generateInvoicePdf({
+        clinic: profile?.clinic_name || profile?.full_name || "Invoice",
+        practitioner: profile?.full_name ?? undefined,
+        patientName,
+        patientEmail: sendEmail,
+        date: new Date().toLocaleDateString("en-GB"),
+        amount: amountNum,
+        notes: invoice?.notes,
+        paymentLink: invoice?.payment_link,
+        reference: consultationId?.slice(0, 8).toUpperCase(),
+      });
+      doc.save(`invoice-${(patientName || "patient").replace(/\s+/g, "-").toLowerCase()}.pdf`);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Could not generate PDF");
+    } finally {
+      setDownloading(false);
+    }
+  }
+
+  function emailPatient() {
+    if (!sendEmail) { toast.error("Add a recipient email first"); return; }
+    const subject = encodeURIComponent("Your invoice");
+    const body = encodeURIComponent(
+      `Hi ${patientName ?? ""},\n\nPlease find your invoice for £${amountNum.toFixed(2)} below.\n` +
+      (invoice?.notes ? `\n${invoice.notes}\n` : "") +
+      (invoice?.payment_link ? `\nPay securely: ${invoice.payment_link}\n` : "") +
+      `\nThank you.`
+    );
+    window.location.href = `mailto:${sendEmail}?subject=${subject}&body=${body}`;
+  }
+
   return (
     <div className="space-y-4">
-      <Header n={8} title="Invoice & payment" subtitle="Send the patient a payment link or mark as paid." />
+      <Header n={8} title="Invoice & payment" subtitle="Generate a Stripe payment link automatically, download a PDF, or mark as paid." />
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-1.5">
           <Label>Amount (£)</Label>
@@ -661,18 +736,35 @@ function Step8({ invoice, email, onChange, onComplete, completed }: any) {
         <Label>Line items / notes</Label>
         <Textarea rows={4} value={invoice?.notes ?? ""} onChange={(e) => onChange({ ...invoice, notes: e.target.value })} placeholder="e.g. Botox 3 areas – £250" />
       </div>
-      <div className="space-y-1.5">
-        <Label>Payment link (paste from Stripe)</Label>
-        <Input type="url" placeholder="https://buy.stripe.com/…" value={invoice?.payment_link ?? ""} onChange={(e) => onChange({ ...invoice, payment_link: e.target.value })} />
-      </div>
-      <div className="flex flex-wrap items-center gap-2">
-        <Button variant="outline" onClick={() => onChange({ ...invoice, status: "sent", sent_at: new Date().toISOString() })}>
-          Mark as sent
+
+      {invoice?.payment_link ? (
+        <div className="rounded-md border bg-emerald-50 p-3 text-sm dark:bg-emerald-950/30">
+          <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-400">Stripe payment link</div>
+          <a href={invoice.payment_link} target="_blank" rel="noreferrer" className="break-all text-emerald-700 underline dark:text-emerald-300">{invoice.payment_link}</a>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <Button size="sm" variant="outline" onClick={() => { navigator.clipboard.writeText(invoice.payment_link); toast.success("Link copied"); }}>Copy link</Button>
+            <Button size="sm" variant="ghost" onClick={() => onChange({ ...invoice, payment_link: null, payment_link_id: null })}>Remove</Button>
+          </div>
+        </div>
+      ) : (
+        <div className="rounded-md border border-dashed bg-muted/30 p-3 text-xs text-muted-foreground">
+          No payment link yet. Generate one — it's created on Stripe automatically using your connected account.
+        </div>
+      )}
+
+      <div className="flex flex-wrap gap-2">
+        <Button onClick={generateStripeLink} disabled={generating}>
+          {generating ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Creating…</> : invoice?.payment_link ? "Regenerate Stripe link" : "Create Stripe payment link"}
         </Button>
-        <Button variant="outline" onClick={() => onChange({ ...invoice, status: "paid", paid_at: new Date().toISOString() })}>
+        <Button variant="outline" onClick={downloadPdf} disabled={downloading}>
+          {downloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Receipt className="mr-2 h-4 w-4" />}
+          Download PDF
+        </Button>
+        <Button variant="outline" onClick={emailPatient}>Email patient</Button>
+        <Button variant="ghost" onClick={() => onChange({ ...invoice, status: "paid", paid_at: new Date().toISOString() })}>
           Mark as paid
         </Button>
-        {invoice?.status && <Badge variant="secondary">{invoice.status}</Badge>}
+        {invoice?.status && <Badge variant="secondary" className="ml-auto">{invoice.status}</Badge>}
       </div>
       <Separator />
       <Button onClick={onComplete} disabled={completed} className="w-full">
