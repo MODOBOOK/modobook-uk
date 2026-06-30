@@ -515,3 +515,50 @@ function bestAftercareMatch(hint: string, map: Map<string, string>): string | nu
   }
   return null;
 }
+
+/* ----------- Generate a client-facing description on demand ----------- */
+
+export const generateDescription = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    (input: {
+      kind: "treatment" | "package";
+      name: string;
+      treatment_names?: string[];
+      sessions?: number;
+      price_gbp?: number;
+    }) => input,
+  )
+  .handler(async ({ data }): Promise<{ description: string }> => {
+    const apiKey = process.env.LOVABLE_API_KEY;
+    if (!apiKey) throw new Error("LOVABLE_API_KEY is not configured");
+
+    const ctx =
+      data.kind === "package"
+        ? `Package name: ${data.name}\nIncludes treatments: ${(data.treatment_names ?? []).join(", ") || "(unspecified)"}\nSessions: ${data.sessions ?? "?"}\nPrice (GBP): ${data.price_gbp ?? "?"}`
+        : `Treatment name: ${data.name}`;
+
+    const res = await fetch(GATEWAY_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Lovable-API-Key": apiKey },
+      body: JSON.stringify({
+        model: MODEL,
+        messages: [
+          {
+            role: "system",
+            content:
+              "You write short, warm, client-facing descriptions for a UK aesthetics clinic booking page. 2-3 sentences max, ~40 words, no emojis, no clinical jargon, no claims of medical outcomes, no pricing. Plain prose only.",
+          },
+          { role: "user", content: ctx },
+        ],
+      }),
+    });
+
+    if (res.status === 402) throw new Error("AI credits exhausted.");
+    if (res.status === 429) throw new Error("AI rate limit — try again shortly.");
+    if (!res.ok) throw new Error(`AI failed (${res.status})`);
+    const body = (await res.json()) as { choices?: Array<{ message?: { content?: string } }> };
+    const description = (body.choices?.[0]?.message?.content ?? "").trim();
+    return { description };
+  });
+
