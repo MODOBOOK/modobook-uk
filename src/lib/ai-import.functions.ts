@@ -583,10 +583,11 @@ export const generateDescription = createServerFn({ method: "POST" })
 
 export const resetClinicServices = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { scope?: "treatments" | "all" }) => input ?? {})
+  .inputValidator((input: { scope?: "treatments" | "all"; force?: boolean }) => input ?? {})
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const scope = data.scope ?? "all";
+    const force = data.force ?? false;
 
     const { data: profile, error: pErr } = await supabase
       .from("profiles")
@@ -606,21 +607,29 @@ export const resetClinicServices = createServerFn({ method: "POST" })
       .eq("profile_id", profileId);
     const allIds = (ts ?? []).map((t: { id: string }) => t.id);
     if (allIds.length) {
-      // Don't delete treatments that have appointments — keep history intact.
-      const { data: used } = await supabase
-        .from("appointments")
-        .select("treatment_id")
-        .in("treatment_id", allIds);
-      const usedSet = new Set((used ?? []).map((a: { treatment_id: string }) => a.treatment_id));
-      const deletable = allIds.filter((id) => !usedSet.has(id));
-      skipped.treatments = allIds.length - deletable.length;
+      let deletable: string[];
+      if (force) {
+        // Snapshot is auto-populated; FK is ON DELETE SET NULL so appointments stay.
+        deletable = allIds;
+      } else {
+        const { data: used } = await supabase
+          .from("appointments")
+          .select("treatment_id")
+          .in("treatment_id", allIds);
+        const usedSet = new Set(
+          (used ?? [])
+            .map((a: { treatment_id: string | null }) => a.treatment_id)
+            .filter((id): id is string => !!id),
+        );
+        deletable = allIds.filter((id) => !usedSet.has(id));
+        skipped.treatments = allIds.length - deletable.length;
+      }
       if (deletable.length) {
         const { error } = await supabase.from("treatments").delete().in("id", deletable);
         if (error) errors.push(`Treatments: ${error.message}`);
         else removed.treatments = deletable.length;
       }
     }
-
 
     if (scope === "all") {
       const { data: adds } = await supabase
@@ -652,5 +661,6 @@ export const resetClinicServices = createServerFn({ method: "POST" })
 
     return { removed, skipped, errors };
   });
+
 
 
