@@ -172,7 +172,7 @@ function BookPage() {
         intro_body?: string | null;
       } | null;
       careGuides?: { id: string; name: string; body_html: string; summary: string | null; category: string | null }[];
-      pretreatment?: { id: string; name: string; body_html: string; summary: string | null; sort_order: number }[];
+      pretreatment?: { id: string; name: string; body_html: string; summary: string | null; sort_order: number; category?: string | null; bullets?: string[] | null }[];
 
     };
 
@@ -251,8 +251,8 @@ function BookPage() {
   const [directionsOpen, setDirectionsOpen] = useState(false);
   const [careGuideOpen, setCareGuideOpen] = useState(false);
   const preItems = (pretreatment ?? []).length > 0
-    ? (pretreatment ?? []).map((p) => ({ id: p.id, name: p.name, body_html: p.body_html, summary: p.summary }))
-    : (careGuides ?? []).map((g) => ({ id: g.id, name: g.name, body_html: g.body_html, summary: g.summary }));
+    ? (pretreatment ?? []).map((p) => ({ id: p.id, name: p.name, body_html: p.body_html, summary: p.summary, bullets: Array.isArray(p.bullets) ? p.bullets : [] }))
+    : (careGuides ?? []).map((g) => ({ id: g.id, name: g.name, body_html: g.body_html, summary: g.summary, bullets: [] as string[] }));
   const hasCareGuides = preItems.length > 0;
 
   const practSelectionMode = profile.practitioner_selection_mode ?? "optional";
@@ -1617,10 +1617,18 @@ function BookPage() {
                     </span>
                   </AccordionTrigger>
                   <AccordionContent>
-                    <SafeHtml
-                      html={g.body_html || ""}
-                      className="prose prose-sm max-w-none [&_p]:leading-relaxed [&_strong]:font-bold"
-                    />
+                    {g.bullets && g.bullets.length > 0 ? (
+                      <ul className="list-disc pl-5 space-y-1.5 text-sm leading-relaxed">
+                        {g.bullets.map((b, i) => (
+                          <li key={i}>{b}</li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <SafeHtml
+                        html={g.body_html || ""}
+                        className="prose prose-sm max-w-none [&_p]:leading-relaxed [&_strong]:font-bold"
+                      />
+                    )}
                   </AccordionContent>
                 </AccordionItem>
               ))}
