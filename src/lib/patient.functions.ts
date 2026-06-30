@@ -156,6 +156,22 @@ export const listMyReviews = createServerFn({ method: "GET" })
     return { reviews: data ?? [] };
   });
 
+/** Count pending (unapproved) patient-submitted reviews for the signed-in practitioner. */
+export const countPendingReviews = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data: profile } = await context.supabase
+      .from("profiles").select("id").eq("user_id", context.userId).maybeSingle();
+    if (!profile) return { count: 0 };
+    const { count, error } = await context.supabase
+      .from("patient_reviews")
+      .select("id", { count: "exact", head: true })
+      .eq("profile_id", profile.id)
+      .eq("approved", false);
+    if (error) throw error;
+    return { count: count ?? 0 };
+  });
+
 export const setReviewApproval = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { reviewId: string; approved: boolean }) => input)
