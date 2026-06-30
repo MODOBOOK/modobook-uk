@@ -17,7 +17,13 @@ export const Route = createFileRoute("/_authenticated/onboarding")({
     if (profile) {
       throw redirect({ to: "/dashboard" });
     }
+    const { getHubContext } = await import("@/lib/hub.functions");
+    const ctx = await getHubContext().catch(() => null);
+    if (ctx?.role === "prescriber") {
+      throw redirect({ to: "/prescriber" });
+    }
   },
+
   component: OnboardingPage,
 });
 
