@@ -15,7 +15,9 @@ import {
   Sparkles,
 } from "lucide-react";
 import { listMyAppointments } from "@/lib/availability.functions";
+import { resolveDisplayNames } from "@/lib/display-name";
 import { toast } from "sonner";
+
 
 export const Route = createFileRoute("/_authenticated/dashboard/")({
   ssr: false,
