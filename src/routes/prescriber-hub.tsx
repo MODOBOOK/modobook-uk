@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { SiteHeader, SiteFooter, IconTile } from "./index";
+import { SiteHeader, SiteFooter } from "./index";
 import {
   ClipboardList, Network, ShieldCheck, Users, FileSignature,
   Stethoscope, HeartHandshake, CheckCircle2, Lock,
