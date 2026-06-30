@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import {
   extractClinicData,
   commitClinicImport,
+  generateDescription,
   type ExtractedDraft,
   type ExtractedCategory,
   type ExtractedTreatment,
