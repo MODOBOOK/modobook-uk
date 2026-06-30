@@ -12,7 +12,9 @@ import {
   deleteConcern,
   setConcernTreatments,
 } from "@/lib/chooser.functions";
-import { suggestConcernMatches } from "@/lib/ai-concerns.functions";
+import { suggestConcernMatches, suggestConcernsFromTreatments, type SuggestedConcern } from "@/lib/ai-concerns.functions";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -154,6 +156,100 @@ function BookingFlowPage() {
       setAiSaving(false);
     }
   }
+
+  // --- AI: suggest NEW concerns from treatments ---
+  type Suggestion = SuggestedConcern & { _selected: boolean; _areaChoice: string };
+  const [sugOpen, setSugOpen] = useState(false);
+  const [sugLoading, setSugLoading] = useState(false);
+  const [sugSaving, setSugSaving] = useState(false);
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+
+  async function runAiSuggestConcerns() {
+    if (treatments.length === 0) { toast.error("Add treatments first."); return; }
+    setSugLoading(true);
+    try {
+      const { concerns: out } = await suggestConcernsFromTreatments({
+        data: {
+          treatments: treatments.map((t) => ({ id: t.id, name: t.name, description: t.description })),
+          areas: areas.map((a) => ({ id: a.id, name: a.name })),
+          existingNames: concerns.map((c) => c.name),
+        },
+      });
+      if (out.length === 0) { toast.info("AI didn't find any new concerns to suggest."); return; }
+      setSuggestions(out.map((s) => ({
+        ...s,
+        _selected: true,
+        _areaChoice: s.area_id ?? (areas[0]?.id ?? "__new__"),
+      })));
+      setSugOpen(true);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "AI request failed");
+    } finally {
+      setSugLoading(false);
+    }
+  }
+
+  function updateSuggestion(idx: number, patch: Partial<Suggestion>) {
+    setSuggestions((prev) => prev.map((s, i) => (i === idx ? { ...s, ...patch } : s)));
+  }
+
+  function toggleSuggestionTreatment(idx: number, tid: string) {
+    setSuggestions((prev) => prev.map((s, i) => {
+      if (i !== idx) return s;
+      const set = new Set(s.treatment_ids);
+      if (set.has(tid)) set.delete(tid); else set.add(tid);
+      return { ...s, treatment_ids: Array.from(set) };
+    }));
+  }
+
+  async function applySuggestedConcerns() {
+    const picked = suggestions.filter((s) => s._selected && s.name.trim() && s.treatment_ids.length > 0);
+    if (picked.length === 0) { toast.error("Nothing selected to add."); return; }
+    setSugSaving(true);
+    try {
+      // Cache & resolve area names → ids, creating any new ones on the fly
+      const areaByName = new Map(areas.map((a) => [a.name.trim().toLowerCase(), a]));
+      let nextAreas = [...areas];
+      const newConcerns: Concern[] = [];
+      const newLinks: Link[] = [];
+
+      for (const s of picked) {
+        let areaId = s._areaChoice;
+        if (areaId === "__new__") {
+          const proposed = (s.area_name || "General").trim();
+          const existing = areaByName.get(proposed.toLowerCase());
+          if (existing) {
+            areaId = existing.id;
+          } else {
+            const row = await createConcernArea({ data: { name: proposed, sort_order: nextAreas.length } }) as Area;
+            nextAreas.push(row);
+            areaByName.set(proposed.toLowerCase(), row);
+            areaId = row.id;
+          }
+        }
+        const created = await createConcern({
+          data: { area_id: areaId, name: s.name.trim(), description: s.description || undefined },
+        }) as Concern;
+        newConcerns.push(created);
+        await setConcernTreatments({ data: { concern_id: created.id, treatment_ids: s.treatment_ids } });
+        for (const tid of s.treatment_ids) newLinks.push({ concern_id: created.id, treatment_id: tid });
+      }
+
+      setAreas(nextAreas);
+      setConcerns((prev) => [...prev, ...newConcerns]);
+      setLinks((prev) => [...prev, ...newLinks]);
+      toast.success(`Added ${picked.length} concern${picked.length === 1 ? "" : "s"}`);
+      setSugOpen(false);
+      setSuggestions([]);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to save");
+    } finally {
+      setSugSaving(false);
+    }
+  }
+
+
+
 
 
   function toggleId(list: string[], setList: (v: string[]) => void, id: string) {
@@ -342,10 +438,17 @@ function BookingFlowPage() {
               Group concerns by area (e.g. Face, Body). For each concern, tick the treatments you'd suggest — or let AI draft them for you to review.
             </p>
           </div>
-          <Button size="sm" variant="secondary" onClick={runAiSuggest} disabled={aiLoading} className="shrink-0">
-            {aiLoading ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Sparkles className="mr-1 h-4 w-4" />}
-            Suggest with AI
-          </Button>
+          <div className="flex flex-col gap-2 shrink-0 sm:flex-row">
+            <Button size="sm" variant="outline" onClick={runAiSuggestConcerns} disabled={sugLoading}>
+              {sugLoading ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Sparkles className="mr-1 h-4 w-4" />}
+              Suggest concerns with AI
+            </Button>
+            <Button size="sm" variant="secondary" onClick={runAiSuggest} disabled={aiLoading}>
+              {aiLoading ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Sparkles className="mr-1 h-4 w-4" />}
+              Match treatments with AI
+            </Button>
+          </div>
+
         </CardHeader>
         <CardContent className="space-y-4">
           <label className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -496,7 +599,87 @@ function BookingFlowPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={sugOpen} onOpenChange={setSugOpen}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Review AI-suggested concerns</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Untick anything you don't want, edit the name or area, then tap <strong>Add selected</strong>. Existing concerns are skipped automatically.
+          </p>
+          <div className="mt-3 space-y-3">
+            {suggestions.length === 0 && (
+              <p className="text-sm italic text-muted-foreground">No suggestions.</p>
+            )}
+            {suggestions.map((s, idx) => (
+              <div key={idx} className={`rounded-lg border p-3 ${s._selected ? "bg-card" : "bg-muted/40 opacity-70"}`}>
+                <div className="flex items-start gap-2">
+                  <Checkbox
+                    checked={s._selected}
+                    onCheckedChange={(v) => updateSuggestion(idx, { _selected: !!v })}
+                    className="mt-1"
+                  />
+                  <div className="flex-1 space-y-2">
+                    <Input
+                      value={s.name}
+                      onChange={(e) => updateSuggestion(idx, { name: e.target.value })}
+                      className="h-9 font-medium"
+                    />
+                    {s.description && (
+                      <p className="text-xs text-muted-foreground">{s.description}</p>
+                    )}
+                    <div className="flex items-center gap-2">
+                      <Label className="text-xs">Area</Label>
+                      <Select
+                        value={s._areaChoice}
+                        onValueChange={(v) => updateSuggestion(idx, { _areaChoice: v })}
+                      >
+                        <SelectTrigger className="h-8 w-[200px]"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {areas.map((a) => (
+                            <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
+                          ))}
+                          <SelectItem value="__new__">
+                            + Create "{s.area_name || "General"}"
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <div className="mb-1 text-xs font-medium text-muted-foreground">Matched treatments</div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {treatments.map((t) => {
+                          const on = s.treatment_ids.includes(t.id);
+                          return (
+                            <button
+                              key={t.id}
+                              type="button"
+                              onClick={() => toggleSuggestionTreatment(idx, t.id)}
+                              className={`rounded-full border px-2.5 py-0.5 text-xs transition ${on ? "border-primary bg-primary text-primary-foreground" : "bg-background hover:bg-muted"}`}
+                            >
+                              {t.name}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setSugOpen(false)} disabled={sugSaving}>Cancel</Button>
+            <Button onClick={applySuggestedConcerns} disabled={sugSaving}>
+              {sugSaving ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : null}
+              Add selected
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
+
   );
 }
 
