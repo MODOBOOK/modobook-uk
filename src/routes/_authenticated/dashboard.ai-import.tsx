@@ -924,12 +924,13 @@ function ResetImportCard() {
   const reset = useServerFn(resetClinicServices);
   const [open, setOpen] = useState(false);
   const [scope, setScope] = useState<"treatments" | "all">("all");
+  const [mode, setMode] = useState<"safe" | "force">("safe");
   const [busy, setBusy] = useState(false);
 
   async function run() {
     setBusy(true);
     try {
-      const r = await reset({ data: { scope } });
+      const r = await reset({ data: { scope, force: mode === "force" } });
       const parts: string[] = [];
       if (r.removed.treatments) parts.push(`${r.removed.treatments} treatments`);
       if (r.removed.addons) parts.push(`${r.removed.addons} add-ons`);
@@ -946,6 +947,7 @@ function ResetImportCard() {
       setBusy(false);
     }
   }
+
 
   return (
     <Card className="border-destructive/30">
