@@ -89,15 +89,19 @@ function Row({
     treatment_id: string;
     requires_prescriber: boolean;
     prescriber_user_id: string | null;
-    prescriber_routing: "same_address" | "in_person_consult";
+    prescriber_routing: "same_address" | "clinic_visit";
     prescriber_note: string | null;
   }) => Promise<void>;
 }) {
   const [req, setReq] = useState(Boolean(treatment.requires_prescriber));
   const [prescriberId, setPrescriberId] = useState<string | "">(treatment.prescriber_user_id ?? "");
-  const [routing, setRouting] = useState<"same_address" | "in_person_consult">(
-    (treatment.prescriber_routing as "same_address" | "in_person_consult") ?? "same_address",
-  );
+  const initialRouting = (() => {
+    const r = treatment.prescriber_routing as string | null;
+    if (r === "in_person_consult" || r === "clinic_visit") return "clinic_visit" as const;
+    return "same_address" as const;
+  })();
+  const [routing, setRouting] = useState<"same_address" | "clinic_visit">(initialRouting);
+
   const [note, setNote] = useState(treatment.prescriber_note ?? "");
   const [saving, setSaving] = useState(false);
 
