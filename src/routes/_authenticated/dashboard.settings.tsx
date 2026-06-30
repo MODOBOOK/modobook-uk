@@ -48,9 +48,9 @@ function SettingsPage() {
     require_medical_forms_before_appt: !!profile.require_medical_forms_before_appt,
     allow_patient_reschedule: profile.allow_patient_reschedule !== false,
     allow_patient_cancel: profile.allow_patient_cancel !== false,
-    patient_reschedule_max: (profile.patient_reschedule_max as number | null) ?? 2,
-    patient_reschedule_cutoff_hours: (profile.patient_reschedule_cutoff_hours as number | null) ?? 24,
-    patient_cancel_cutoff_hours: (profile.patient_cancel_cutoff_hours as number | null) ?? 24,
+    patient_reschedule_max: (profile.patient_reschedule_max as number | null) ?? (2 as number | null),
+    patient_reschedule_cutoff_hours: (profile.patient_reschedule_cutoff_hours as number | null) ?? (24 as number | null),
+    patient_cancel_cutoff_hours: (profile.patient_cancel_cutoff_hours as number | null) ?? (24 as number | null),
     // confirm & reminders
     auto_confirm_bookings: profile.auto_confirm_bookings !== false,
     email_confirmations_enabled: profile.email_confirmations_enabled !== false,
