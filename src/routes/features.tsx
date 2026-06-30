@@ -30,7 +30,7 @@ const groups = [
       { icon: Link2, title: "Your MODO link", desc: "Share modo.book/your-clinic on Instagram, TikTok, Google and your website." },
       { icon: Brush, title: "Hero & carousel", desc: "Classic single hero or rotating carousel. Crop on upload, mobile-friendly." },
       { icon: ImageIcon, title: "Favourite treatments", desc: "Showcase your or your clinic's most popular treatments in a horizontal carousel." },
-      { icon: FileText, title: "Editable About page", desc: "Bio, approach, why-choose-us, FAQs and a multi-location address grid — togglable sections." },
+      { icon: FileText, title: "Editable welcome intro", desc: "A clean patient-facing intro block with a heading, rich text, contact details and your clinic style." },
     ],
   },
   {

@@ -14,7 +14,6 @@ import {
   MapPin,
   Share2,
   Info,
-  
   ExternalLink,
   Star,
   Check,
@@ -90,10 +89,19 @@ function formatTreatmentSessions(t: Treatment) {
   return `${sessions} sessions${spacing ? ` · ${spacing}` : ""}`;
 }
 
+function textToParagraphHtml(text: string) {
+  return text
+    .split(/\n{2,}/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean)
+    .map((paragraph) => `<p>${paragraph.replace(/\n/g, "<br />")}</p>`)
+    .join("");
+}
+
 type Theme = Database["public"]["Tables"]["clinic_theme"]["Row"];
 
 function BookPage() {
-  const { profile, treatments, packages, locations, categories, pricing, theme, reviews, concernAreas, concerns, concernLinks, modelSlots = [], addonLinks = [], practitioners = [], locationPractitioners = [] } =
+  const { profile, treatments, packages, locations, categories, pricing, theme, reviews, concernAreas, concerns, concernLinks, modelSlots = [], addonLinks = [], practitioners = [], locationPractitioners = [], aboutPage } =
     Route.useLoaderData() as {
       profile: {
         id: string;
@@ -146,6 +154,10 @@ function BookPage() {
       addonLinks?: { treatment_id: string; addon_id: string; discount_percent: number | null; discount_amount: number | null }[];
       practitioners?: { id: string; name: string; professional_title: string | null; photo_url: string | null; bio: string | null; display_order: number }[];
       locationPractitioners?: { location_id: string; practitioner_id: string; display_order: number }[];
+      aboutPage?: {
+        intro_heading?: string | null;
+        intro_body?: string | null;
+      } | null;
     };
 
 
@@ -213,6 +225,9 @@ function BookPage() {
   const effectiveSize = isMobile ? cardMobileSize : (cardSize === "wide" ? "medium" : cardSize);
   const isCompact = effectiveSize === "compact";
   const isWide = effectiveSize === "wide";
+  const introHeading = aboutPage?.intro_heading?.trim() || "";
+  const legacyIntroBody = aboutPage?.intro_body?.trim() || "";
+  const welcomeHtml = profile.welcome_intro_html?.trim() || (legacyIntroBody ? textToParagraphHtml(legacyIntroBody) : "");
 
   const [locationId, setLocationId] = useState<string | null>(null);
   const practSelectionMode = profile.practitioner_selection_mode ?? "optional";
@@ -628,9 +643,9 @@ function BookPage() {
                   <ActionButton onClick={handleShare} label="Share" brand={brand}>
                     <Share2 className="h-5 w-5" />
                   </ActionButton>
-                  <ActionLink to="/m/$slug/about" params={{ slug }} label="About" brand={brand}>
+                  <ActionButton onClick={() => document.getElementById("welcome-intro")?.scrollIntoView({ behavior: "smooth", block: "start" })} label="Intro" brand={brand}>
                     <Info className="h-5 w-5" />
-                  </ActionLink>
+                  </ActionButton>
                 </div>
               )}
             </>
@@ -693,16 +708,23 @@ function BookPage() {
 
 
       {/* Welcome message */}
-      {profile.welcome_intro_html && (
-        <section className="mx-auto mt-8 max-w-3xl px-4">
+      {(introHeading || welcomeHtml) && (
+        <section id="welcome-intro" className="mx-auto mt-8 max-w-3xl scroll-mt-24 px-4">
           <div
             className="rounded-2xl border bg-card px-5 py-5 shadow-sm sm:px-7 sm:py-6"
             style={{ borderColor: `${brand}1a` }}
           >
-            <SafeHtml
-              html={profile.welcome_intro_html}
-              className="prose prose-sm sm:prose max-w-none [&_strong]:font-bold"
-            />
+            {introHeading && (
+              <h2 className="mb-3 text-2xl font-bold leading-tight sm:text-3xl" style={headingStyle}>
+                {introHeading}
+              </h2>
+            )}
+            {welcomeHtml && (
+              <SafeHtml
+                html={welcomeHtml}
+                className="prose prose-base sm:prose-lg max-w-none [&_h1]:text-3xl [&_h2]:text-2xl [&_h3]:text-xl [&_p]:leading-relaxed [&_strong]:font-bold"
+              />
+            )}
           </div>
         </section>
       )}
@@ -1649,32 +1671,6 @@ function ActionButton({
       {children}
       <span>{label}</span>
     </button>
-  );
-}
-
-function ActionLink({
-  to,
-  params,
-  label,
-  brand,
-  children,
-}: {
-  to: "/m/$slug/about";
-  params: { slug: string };
-  label: string;
-  brand: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <Link
-      to={to}
-      params={params}
-      className="flex flex-col items-center gap-1.5 rounded-xl p-2 text-xs font-medium transition hover:bg-muted"
-      style={{ color: brand }}
-    >
-      {children}
-      <span>{label}</span>
-    </Link>
   );
 }
 

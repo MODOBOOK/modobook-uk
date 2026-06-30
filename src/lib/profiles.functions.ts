@@ -36,6 +36,8 @@ export const createProfile = createServerFn({ method: "POST" })
       tagline?: string;
       about?: string;
       bio?: string;
+      welcome_intro_html?: string;
+      about_page?: Record<string, unknown>;
       phone?: string;
       email?: string;
       address?: Record<string, string>;
@@ -55,6 +57,8 @@ export const createProfile = createServerFn({ method: "POST" })
         tagline: data.tagline,
         about: data.about,
         bio: data.bio,
+        welcome_intro_html: data.welcome_intro_html,
+        about_page: (data.about_page ?? {}) as Json,
         phone: data.phone,
         email: data.email ?? (context.claims.email as string | undefined),
         address: data.address,
@@ -109,6 +113,7 @@ export const updateProfile = createServerFn({ method: "POST" })
       favourite_treatment_ids?: string[];
       favourites_enabled?: boolean;
       favourites_custom_title?: string | null;
+      about_page?: Record<string, unknown>;
       // Booking window settings
       booking_min_notice_hours?: number;
       booking_max_lead_days?: number;
@@ -197,6 +202,7 @@ export const updateProfile = createServerFn({ method: "POST" })
     if (data.favourite_treatment_ids !== undefined) update.favourite_treatment_ids = data.favourite_treatment_ids;
     if (data.favourites_enabled !== undefined) update.favourites_enabled = data.favourites_enabled;
     if (data.favourites_custom_title !== undefined) update.favourites_custom_title = data.favourites_custom_title;
+    if (data.about_page !== undefined) update.about_page = data.about_page as Json;
 
     const passthroughKeys = [
       "booking_min_notice_hours","booking_max_lead_days","booking_buffer_before_minutes",
