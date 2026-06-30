@@ -106,6 +106,8 @@ function QuizBuilder() {
         )}
       </div>
 
+      <SaveReminder message="Each section below has its own Save button — remember to tap it after editing settings or treatment tags." />
+
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Settings</CardTitle>
