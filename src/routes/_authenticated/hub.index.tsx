@@ -7,6 +7,7 @@ import { ShieldCheck, Copy, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { getHubContext, ensureHubCode } from "@/lib/hub.functions";
+import { formatHubCode } from "@/lib/hub-format";
 
 export const Route = createFileRoute("/_authenticated/hub/")({
   ssr: false,
