@@ -798,7 +798,7 @@ function MultiBookPage() {
               onClick={submit}
               style={{ backgroundColor: brand, color: "#fff" }}
             >
-              {submitting ? "Booking…" : `Confirm ${treatments.length} bookings · £${totalPrice.toFixed(2)}`}
+              {submitting ? "Booking…" : `Confirm ${treatments.length} bookings · £${totalAfterDiscount.toFixed(2)}`}
             </Button>
 
           </>
