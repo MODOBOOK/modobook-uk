@@ -137,7 +137,10 @@ export const updateTreatment = createServerFn({ method: "POST" })
       aftercare_delay_hours?: number;
       auto_send_medical_forms?: boolean;
       auto_send_aftercare?: boolean;
+      price_mode?: "fixed" | "from" | "poa" | "free";
+      badge?: "recommended" | "popular" | "new" | "bestseller" | null;
     }) => input,
+
 
 
   )
