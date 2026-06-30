@@ -357,12 +357,30 @@ function ReviewStep({
     setDraft({ ...draft, [key]: arr } as EditableDraft);
   }
 
-  // Names of currently-included categories — used as parent options for subcategories
-  const parentOptions = draft.categories
+  // Build a hierarchical list of included categories: top-level + their subcategories.
+  const includedCatNames = draft.categories
     .filter((c) => c._include && c.name?.trim())
-    .map((c) => c.name.trim());
+    .map((c) => ({ name: c.name.trim(), parent: c.parent?.trim() || null }));
 
-  const categoryOptions = parentOptions;
+  const parentOptions = includedCatNames
+    .filter((c) => !c.parent)
+    .map((c) => c.name);
+
+  // Each entry: { value: display name, label: "Parent › Child" or just name }
+  const categoryOptions = includedCatNames.map((c) => ({
+    value: c.name,
+    label: c.parent ? `${c.parent} › ${c.name}` : c.name,
+  }));
+
+  function addCategoryInline(name: string, parent: string | null) {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    if (draft.categories.some((c) => c.name?.toLowerCase().trim() === trimmed.toLowerCase())) return;
+    setDraft({
+      ...draft,
+      categories: [...draft.categories, { _include: true, name: trimmed, parent }],
+    });
+  }
 
   return (
     <>
@@ -428,6 +446,8 @@ function ReviewStep({
             key={i}
             treatment={t}
             categoryOptions={categoryOptions}
+            parentOptions={parentOptions}
+            onAddCategory={addCategoryInline}
             onToggle={(v) => setRow("treatments", i, { _include: v })}
             onRemove={() => removeRow("treatments", i)}
             onChange={(patch) => setRow("treatments", i, patch)}
@@ -612,18 +632,23 @@ function PackageRow({
 function TreatmentRow({
   treatment,
   categoryOptions,
+  parentOptions,
+  onAddCategory,
   onToggle,
   onRemove,
   onChange,
 }: {
   treatment: Draftable<ExtractedTreatment>;
-  categoryOptions: string[];
+  categoryOptions: Array<{ value: string; label: string }>;
+  parentOptions: string[];
+  onAddCategory: (name: string, parent: string | null) => void;
   onToggle: (v: boolean) => void;
   onRemove: () => void;
   onChange: (patch: Partial<ExtractedTreatment>) => void;
 }) {
   const generate = useServerFn(generateDescription);
   const [busy, setBusy] = useState(false);
+  const sessions = treatment.session_count ?? 1;
 
   async function handleGenerate() {
     setBusy(true);
@@ -644,6 +669,32 @@ function TreatmentRow({
     }
   }
 
+  function handleCategoryChange(v: string) {
+    if (v === "__new_top__") {
+      const name = window.prompt("New category name (e.g. Injectables)")?.trim();
+      if (!name) return;
+      onAddCategory(name, null);
+      onChange({ category: name });
+      return;
+    }
+    if (v === "__new_sub__") {
+      const parent = window.prompt(
+        `Parent category for the new subcategory. Existing parents:\n\n${parentOptions.join(", ") || "(none yet)"}`,
+      )?.trim();
+      if (!parent) return;
+      const name = window.prompt(`New subcategory name under "${parent}"`)?.trim();
+      if (!name) return;
+      // Ensure parent exists too
+      if (!parentOptions.some((p) => p.toLowerCase() === parent.toLowerCase())) {
+        onAddCategory(parent, null);
+      }
+      onAddCategory(name, parent);
+      onChange({ category: name });
+      return;
+    }
+    onChange({ category: v || null });
+  }
+
   return (
     <div className={`space-y-2 rounded-md border p-2 ${treatment._include ? "" : "opacity-50"}`}>
       <div className="flex flex-wrap items-center gap-2">
@@ -654,12 +705,14 @@ function TreatmentRow({
         <select
           className="h-9 rounded-md border bg-background px-2 text-sm md:max-w-xs"
           value={treatment.category ?? ""}
-          onChange={(e) => onChange({ category: e.target.value || null })}
+          onChange={(e) => handleCategoryChange(e.target.value)}
         >
           <option value="">— No category —</option>
           {categoryOptions.map((p) => (
-            <option key={p} value={p}>{p}</option>
+            <option key={p.value} value={p.value}>{p.label}</option>
           ))}
+          <option value="__new_top__">+ New category…</option>
+          <option value="__new_sub__">+ New subcategory…</option>
         </select>
         <button
           type="button"
@@ -669,6 +722,36 @@ function TreatmentRow({
           Remove
         </button>
       </div>
+
+      <div className="flex flex-wrap items-center gap-3 pl-7 text-xs">
+        <Label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          Sessions
+          <Input
+            type="number"
+            min={1}
+            max={20}
+            value={sessions}
+            onChange={(e) => {
+              const n = Math.max(1, Math.min(20, Number(e.target.value) || 1));
+              onChange({ session_count: n, allow_split_payment: n > 1 ? treatment.allow_split_payment : false });
+            }}
+            className="ml-1 h-8 w-16"
+          />
+        </Label>
+        {sessions > 1 && (
+          <Label className="flex items-center gap-2 text-xs text-muted-foreground">
+            <Checkbox
+              checked={!!treatment.allow_split_payment}
+              onCheckedChange={(v) => onChange({ allow_split_payment: !!v })}
+            />
+            Split payment per session (£{treatment.price_gbp ? (treatment.price_gbp / sessions).toFixed(2) : "—"} × {sessions})
+          </Label>
+        )}
+        {sessions > 1 && !treatment.allow_split_payment && (
+          <span className="text-muted-foreground">Patient pays full price upfront.</span>
+        )}
+      </div>
+
       <div className="space-y-1 pl-7">
         <div className="flex items-center justify-between">
           <Label className="text-xs text-muted-foreground">Client-facing description</Label>
