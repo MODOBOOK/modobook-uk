@@ -159,6 +159,20 @@ function MultiBookPage() {
     .reduce((s, a) => s + (a.duration_min || 0), 0);
   const totalDuration = totalDurationBase + addonsExtraDuration;
   const totalPrice = totalPriceBase + addonsExtraPrice;
+  const discountTotal = useMemo(() => {
+    if (!discount) return 0;
+    const ids = new Set(discount.applies_to_treatment_ids);
+    const eligibleSum = treatments
+      .filter((t) => ids.has(t.id))
+      .reduce((s, t) => s + priceFor(t), 0);
+    if (eligibleSum <= 0) return 0;
+    const off = discount.kind === "percent"
+      ? eligibleSum * (discount.amount / 100)
+      : discount.amount;
+    return Math.min(off, eligibleSum);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [discount, treatments]);
+  const totalAfterDiscount = Math.max(0, totalPrice - discountTotal);
   const splitEligibleTreatments = useMemo(
     () =>
       treatments.filter((t) => {
