@@ -51,6 +51,7 @@ const navItems = [
   { label: "Import with AI", to: "/dashboard/ai-import", icon: Sparkles },
   { label: "Clinic page", to: "/dashboard/clinic", icon: Store },
   { label: "Welcome & policies", to: "/dashboard/policies", icon: Shield },
+  { label: "About page", to: "/dashboard/about", icon: FileText },
   { label: "Branding", to: "/dashboard/branding", icon: Palette },
   { label: "Treatment finder quiz", to: "/dashboard/quiz", icon: HelpCircle },
   { label: "Services", to: "/dashboard/services", icon: Scissors },
