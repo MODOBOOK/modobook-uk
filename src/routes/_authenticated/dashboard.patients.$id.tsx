@@ -173,8 +173,14 @@ function PatientProfilePage() {
           <FileText className="mr-1.5 h-4 w-4" />Send form
         </Button>
         <Button size="sm" variant="outline" onClick={async () => {
-          const r: any = await createConsult({ data: { patient_name: client.full_name, patient_email: client.email || undefined, patient_phone: client.phone || undefined, patient_id: client.id } });
-          navigate({ to: "/dashboard/consultations/$id", params: { id: r.id } });
+          try {
+            const r: any = await createConsult({ data: { patient_name: client.full_name, patient_email: client.email || undefined, patient_phone: client.phone || undefined, patient_id: client.id } });
+            if (!r?.id) throw new Error("No consultation id returned");
+            window.location.href = `/dashboard/consultations/${r.id}`;
+          } catch (e: any) {
+            console.error("start consultation failed", e);
+            toast.error(e?.message || "Could not start consultation");
+          }
         }}>
           <ClipboardList className="mr-1.5 h-4 w-4" />Start consultation
         </Button>
