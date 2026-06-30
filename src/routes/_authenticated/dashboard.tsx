@@ -58,7 +58,7 @@ const navItems = [
   { label: "Welcome & policies", to: "/dashboard/policies", icon: Shield },
   { label: "About page", to: "/dashboard/about", icon: FileText },
   { label: "Branding", to: "/dashboard/branding", icon: Palette },
-  { label: "Treatment finder quiz", to: "/dashboard/quiz", icon: HelpCircle },
+  
   { label: "Services", to: "/dashboard/services", icon: Scissors },
   { label: "Add-ons", to: "/dashboard/addons", icon: Sparkles },
   { label: "Packages", to: "/dashboard/packages", icon: Package },
