@@ -131,6 +131,7 @@ STRICT RULES — non-negotiable:
 - "category" on a treatment must match a name in "categories". Create the category if missing.
 - "parent" is the parent category name when something is a subcategory (e.g. "Lip filler" under parent "Injectables").
 - If a value is not visible, omit the key entirely — never write "N/A" or guess.
+- Treatment "name" must be the treatment ONLY, never "Category: Treatment", "Category - Treatment", or "Category – Treatment". Put the category part in "category" (and "parent" if it's a subcategory) and keep "name" as the clean treatment label. Example: source "Advanced Muscle Injections: Forehead — £180" -> category "Advanced Muscle Injections", name "Forehead", price 180.
 - Hard caps: up to 25 categories, 100 treatments, 40 add-ons, 20 packages.`;
 
 
@@ -178,13 +179,35 @@ async function callGateway(content: GatewayContent[]): Promise<ExtractedDraft> {
     throw new Error("AI returned malformed output. Try a clearer source.");
   }
 
-  return {
-    clinic: parsed.clinic ?? {},
-    categories: (parsed.categories ?? []).slice(0, 25),
-    treatments: (parsed.treatments ?? []).slice(0, 100),
-    addons: (parsed.addons ?? []).slice(0, 40),
-    packages: (parsed.packages ?? []).slice(0, 20),
-  };
+  const categories = (parsed.categories ?? []).slice(0, 25);
+  const treatments = (parsed.treatments ?? []).slice(0, 100);
+  const addons = (parsed.addons ?? []).slice(0, 40);
+  const packages = (parsed.packages ?? []).slice(0, 20);
+
+  // Defensive cleanup: strip "Category: Treatment" / "Category - Treatment"
+  // prefixes the model sometimes leaves on the name.
+  const catNames = new Set(
+    categories.map((c) => (c.name ?? "").toLowerCase().trim()).filter(Boolean),
+  );
+  const SEP = /\s*[:\-–—|>/]\s+/; // colon, dash, en-dash, em-dash, pipe, >, slash
+  for (const t of treatments) {
+    if (!t?.name) continue;
+    const parts = t.name.split(SEP);
+    if (parts.length >= 2) {
+      const head = parts[0].trim();
+      const tail = parts.slice(1).join(" - ").trim();
+      const headLower = head.toLowerCase();
+      const matchesCat =
+        catNames.has(headLower) ||
+        (t.category && t.category.toLowerCase().trim() === headLower);
+      if (matchesCat && tail) {
+        t.name = tail;
+        if (!t.category) t.category = head;
+      }
+    }
+  }
+
+  return { clinic: parsed.clinic ?? {}, categories, treatments, addons, packages };
 }
 
 /* ------------------------ Server functions ------------------------ */
