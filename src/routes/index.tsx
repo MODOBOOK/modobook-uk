@@ -388,7 +388,7 @@ export function SiteHeader() {
     <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 lg:px-8">
         <Link to="/" className="flex items-center">
-          <BrandMark size="md" tagline="Book · Manage · Grow" />
+          <BrandMark size="md" />
         </Link>
         <nav className="hidden items-center gap-6 text-sm md:flex">
           <Link to="/features" className="text-muted-foreground hover:text-foreground">Features</Link>
