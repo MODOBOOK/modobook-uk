@@ -11,7 +11,7 @@ import {
 } from "@/lib/public-booking.functions";
 import { listAddonsForBooking, type PublicAddon } from "@/lib/addons.functions";
 import { ensurePatient, getMyPatient } from "@/lib/patient.functions";
-import { getPrescriberInfoForTreatments, createReferralsForBooking } from "@/lib/prescriber.functions";
+import { getPrescriberInfoForTreatments } from "@/lib/prescriber.functions";
 import { listAvailableVisitsForBooking } from "@/lib/clinic-visits.functions";
 
 import { supabase } from "@/integrations/supabase/client";
