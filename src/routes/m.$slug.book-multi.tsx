@@ -427,29 +427,9 @@ function MultiBookPage() {
         },
       });
       setConfirmed(res);
-      if (
-        (sameAddressItems.length > 0 || clinicVisitItems.length > 0) &&
-        res.appointments?.length
-      ) {
-        try {
-          await createReferrals({
-            data: {
-              slug,
-              appointments: res.appointments,
-              patient: {
-                name: form.name,
-                email: form.email,
-                phone: form.phone || null,
-                dob: form.dob || null,
-              },
-              clientId: null,
-              visitSelections,
-            },
-          });
-        } catch (err) {
-          console.warn("Prescriber referral creation failed", err);
-        }
-      }
+      // Referrals are created automatically by the database trigger on appointment insert
+      // (using clinic_visit_id when routing is 'clinic_visit'). No separate client call.
+
 
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Booking failed");
