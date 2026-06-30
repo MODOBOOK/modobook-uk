@@ -235,10 +235,27 @@ function ConsentSummary({ data }: { data: any }) {
   );
 }
 
-function PhotoCount({ data, label }: { data: any; label: string }) {
-  const n = Array.isArray(data) ? data.length : 0;
-  if (!n) return <Empty />;
-  return <p>{n} {label}{n === 1 ? "" : "s"} attached.</p>;
+function PhotoStrip({ photos, label }: { photos: any; label: string }) {
+  const urls: string[] = Array.isArray(photos)
+    ? photos
+        .map((p: any) => (typeof p === "string" ? p : p?.url || p?.publicUrl || p?.src || ""))
+        .filter(Boolean)
+    : [];
+  if (urls.length === 0) return <p className="italic text-slate-400">No {label.toLowerCase()} photos.</p>;
+  return (
+    <div className="mt-1.5 flex flex-wrap gap-1.5">
+      {urls.map((u, i) => (
+        <a key={i} href={u} target="_blank" rel="noreferrer" className="block">
+          <img
+            src={u}
+            alt={`${label} ${i + 1}`}
+            className="h-20 w-20 rounded-md border object-cover"
+            loading="lazy"
+          />
+        </a>
+      ))}
+    </div>
+  );
 }
 
 function TreatmentLogSummary({ data }: { data: any }) {
