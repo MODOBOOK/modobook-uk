@@ -317,16 +317,43 @@ function ReviewStep({
     setDraft({ ...draft, [key]: draft[key].map((r) => ({ ...r, _include: value })) });
   }
 
+  function addRow(key: "categories" | "treatments" | "addons" | "packages") {
+    const blank: Record<string, unknown> = { _include: true, name: "" };
+    setDraft({ ...draft, [key]: [...(draft[key] as Array<Record<string, unknown>>), blank] } as EditableDraft);
+  }
+
+  function removeRow(key: "categories" | "treatments" | "addons" | "packages", idx: number) {
+    const arr = [...(draft[key] as Array<Record<string, unknown>>)];
+    arr.splice(idx, 1);
+    setDraft({ ...draft, [key]: arr } as EditableDraft);
+  }
+
+  // Names of currently-included categories — used as parent options for subcategories
+  const parentOptions = draft.categories
+    .filter((c) => c._include && c.name?.trim())
+    .map((c) => c.name.trim());
+
+  const categoryOptions = parentOptions;
+
   return (
     <>
+      <Card className="border-amber-200 bg-amber-50/50 dark:bg-amber-950/10">
+        <CardContent className="py-3 text-sm text-amber-900 dark:text-amber-100">
+          <b>Quick check:</b> AI sometimes misreads source content. Untick anything you don't
+          actually offer, edit names/prices in place, or use <b>+ Add</b> to fill in items it
+          missed. Subcategories use the <b>Parent</b> dropdown.
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle>Clinic info</CardTitle>
+          <p className="text-xs text-muted-foreground">Only empty fields on your profile get filled — your existing details won't be overwritten.</p>
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="flex items-center gap-2">
             <Checkbox checked={draft.clinic._include} onCheckedChange={(v) => setDraft({ ...draft, clinic: { ...draft.clinic, _include: !!v } })} id="clinic-inc" />
-            <Label htmlFor="clinic-inc" className="text-sm text-muted-foreground">Apply (only fills empty fields on your profile)</Label>
+            <Label htmlFor="clinic-inc" className="text-sm text-muted-foreground">Apply clinic details</Label>
           </div>
           <div className="grid gap-3 md:grid-cols-2">
             <Field label="Clinic name" value={draft.clinic.clinic_name ?? ""} onChange={(v) => setDraft({ ...draft, clinic: { ...draft.clinic, clinic_name: v } })} />
@@ -338,56 +365,85 @@ function ReviewStep({
 
       <ListCard
         title={`Categories (${includedCats}/${draft.categories.length})`}
+        helper="Top-level groupings like Injectables, Skin, Body. Leave Parent blank for a top category, or pick one to make this a subcategory."
         onAll={(v) => toggleAll("categories", v)}
-        empty="No categories detected."
+        onAdd={() => addRow("categories")}
+        empty="No categories detected — use + Add category to create one."
         rows={draft.categories.map((c, i) => (
-          <Row key={i} included={c._include} onToggle={(v) => setRow("categories", i, { _include: v })}>
-            <Input className="md:max-w-xs" value={c.name} onChange={(e) => setRow("categories", i, { name: e.target.value })} placeholder="Name" />
-            <Input className="md:max-w-xs" value={c.parent ?? ""} onChange={(e) => setRow("categories", i, { parent: e.target.value || null })} placeholder="Parent (optional)" />
+          <Row key={i} included={c._include} onToggle={(v) => setRow("categories", i, { _include: v })} onRemove={() => removeRow("categories", i)}>
+            <Input className="md:max-w-xs" value={c.name} onChange={(e) => setRow("categories", i, { name: e.target.value })} placeholder="Category name" />
+            <select
+              className="h-9 rounded-md border bg-background px-2 text-sm md:max-w-xs"
+              value={c.parent ?? ""}
+              onChange={(e) => setRow("categories", i, { parent: e.target.value || null })}
+            >
+              <option value="">— Top-level category —</option>
+              {parentOptions
+                .filter((p) => p.toLowerCase() !== c.name?.toLowerCase())
+                .map((p) => (
+                  <option key={p} value={p}>Subcategory of: {p}</option>
+                ))}
+            </select>
           </Row>
         ))}
       />
 
       <ListCard
         title={`Treatments (${includedTr}/${draft.treatments.length})`}
+        helper="Each row becomes a bookable service. Pick the category it belongs to."
         onAll={(v) => toggleAll("treatments", v)}
-        empty="No treatments detected."
+        onAdd={() => addRow("treatments")}
+        empty="No treatments detected — use + Add treatment to create one."
         rows={draft.treatments.map((t, i) => (
-          <Row key={i} included={t._include} onToggle={(v) => setRow("treatments", i, { _include: v })}>
-            <Input className="md:max-w-xs" value={t.name} onChange={(e) => setRow("treatments", i, { name: e.target.value })} placeholder="Name" />
-            <Input className="md:max-w-[120px]" type="number" value={t.duration_min ?? ""} onChange={(e) => setRow("treatments", i, { duration_min: e.target.value ? Number(e.target.value) : undefined })} placeholder="Mins" />
-            <Input className="md:max-w-[120px]" type="number" step="0.01" value={t.price_gbp ?? ""} onChange={(e) => setRow("treatments", i, { price_gbp: e.target.value ? Number(e.target.value) : undefined })} placeholder="£" />
-            <Input className="md:max-w-xs" value={t.category ?? ""} onChange={(e) => setRow("treatments", i, { category: e.target.value || null })} placeholder="Category" />
+          <Row key={i} included={t._include} onToggle={(v) => setRow("treatments", i, { _include: v })} onRemove={() => removeRow("treatments", i)}>
+            <Input className="md:max-w-xs" value={t.name} onChange={(e) => setRow("treatments", i, { name: e.target.value })} placeholder="Treatment name" />
+            <Input className="md:max-w-[110px]" type="number" value={t.duration_min ?? ""} onChange={(e) => setRow("treatments", i, { duration_min: e.target.value ? Number(e.target.value) : undefined })} placeholder="Mins" />
+            <Input className="md:max-w-[110px]" type="number" step="0.01" value={t.price_gbp ?? ""} onChange={(e) => setRow("treatments", i, { price_gbp: e.target.value ? Number(e.target.value) : undefined })} placeholder="£" />
+            <select
+              className="h-9 rounded-md border bg-background px-2 text-sm md:max-w-xs"
+              value={t.category ?? ""}
+              onChange={(e) => setRow("treatments", i, { category: e.target.value || null })}
+            >
+              <option value="">— No category —</option>
+              {categoryOptions.map((p) => (
+                <option key={p} value={p}>{p}</option>
+              ))}
+            </select>
           </Row>
         ))}
       />
 
       <ListCard
         title={`Add-ons (${includedAd}/${draft.addons.length})`}
+        helper="Optional extras patients pick on top of a treatment (e.g. extra units, numbing)."
         onAll={(v) => toggleAll("addons", v)}
-        empty="No add-ons detected."
+        onAdd={() => addRow("addons")}
+        empty="No add-ons detected — use + Add add-on if you offer any."
         rows={draft.addons.map((a, i) => (
-          <Row key={i} included={a._include} onToggle={(v) => setRow("addons", i, { _include: v })}>
-            <Input className="md:max-w-xs" value={a.name} onChange={(e) => setRow("addons", i, { name: e.target.value })} placeholder="Name" />
-            <Input className="md:max-w-[120px]" type="number" step="0.01" value={a.price_gbp ?? ""} onChange={(e) => setRow("addons", i, { price_gbp: e.target.value ? Number(e.target.value) : undefined })} placeholder="£" />
-            <Input className="md:max-w-[120px]" type="number" value={a.duration_min ?? ""} onChange={(e) => setRow("addons", i, { duration_min: e.target.value ? Number(e.target.value) : undefined })} placeholder="Mins" />
+          <Row key={i} included={a._include} onToggle={(v) => setRow("addons", i, { _include: v })} onRemove={() => removeRow("addons", i)}>
+            <Input className="md:max-w-xs" value={a.name} onChange={(e) => setRow("addons", i, { name: e.target.value })} placeholder="Add-on name" />
+            <Input className="md:max-w-[110px]" type="number" step="0.01" value={a.price_gbp ?? ""} onChange={(e) => setRow("addons", i, { price_gbp: e.target.value ? Number(e.target.value) : undefined })} placeholder="£" />
+            <Input className="md:max-w-[110px]" type="number" value={a.duration_min ?? ""} onChange={(e) => setRow("addons", i, { duration_min: e.target.value ? Number(e.target.value) : undefined })} placeholder="Extra mins" />
           </Row>
         ))}
       />
 
       <ListCard
         title={`Packages (${includedPk}/${draft.packages.length})`}
+        helper="Bundles or course-of-X deals. You can refine which treatments are inside afterwards."
         onAll={(v) => toggleAll("packages", v)}
+        onAdd={() => addRow("packages")}
         empty="No packages detected."
         rows={draft.packages.map((p, i) => (
-          <Row key={i} included={p._include} onToggle={(v) => setRow("packages", i, { _include: v })}>
-            <Input className="md:max-w-xs" value={p.name} onChange={(e) => setRow("packages", i, { name: e.target.value })} placeholder="Name" />
-            <Input className="md:max-w-[120px]" type="number" step="0.01" value={p.price_gbp ?? ""} onChange={(e) => setRow("packages", i, { price_gbp: e.target.value ? Number(e.target.value) : undefined })} placeholder="£" />
+          <Row key={i} included={p._include} onToggle={(v) => setRow("packages", i, { _include: v })} onRemove={() => removeRow("packages", i)}>
+            <Input className="md:max-w-xs" value={p.name} onChange={(e) => setRow("packages", i, { name: e.target.value })} placeholder="Package name" />
+            <Input className="md:max-w-[110px]" type="number" step="0.01" value={p.price_gbp ?? ""} onChange={(e) => setRow("packages", i, { price_gbp: e.target.value ? Number(e.target.value) : undefined })} placeholder="£" />
             <Input className="md:max-w-[100px]" type="number" value={p.sessions ?? ""} onChange={(e) => setRow("packages", i, { sessions: e.target.value ? Number(e.target.value) : undefined })} placeholder="Sessions" />
             {p.treatment_names?.length ? <Badge variant="secondary">{p.treatment_names.length} treatments</Badge> : null}
           </Row>
         ))}
       />
+
 
       <div className="sticky bottom-0 -mx-4 flex flex-wrap items-center justify-between gap-3 border-t bg-background/95 px-4 py-3 backdrop-blur md:-mx-6 md:px-6">
         <div className="text-sm text-muted-foreground">
