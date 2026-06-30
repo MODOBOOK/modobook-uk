@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
-  listMyReviews, setReviewApproval,
+  listMyReviews, setReviewApproval, deletePatientReview,
   listMyTestimonials, upsertTestimonial, deleteTestimonial,
 } from "@/lib/patient.functions";
 import { extractReviews, commitReviews, type ExtractedReview } from "@/lib/ai-reviews.functions";
@@ -69,6 +69,7 @@ function Stars({ value, onChange }: { value: number; onChange?: (n: number) => v
 function ReviewMod() {
   const fetchReviews = useServerFn(listMyReviews);
   const setApproval = useServerFn(setReviewApproval);
+  const removeReview = useServerFn(deletePatientReview);
   const fetchTestimonials = useServerFn(listMyTestimonials);
   const saveTestimonial = useServerFn(upsertTestimonial);
   const removeTestimonial = useServerFn(deleteTestimonial);
@@ -216,11 +217,20 @@ function ReviewMod() {
         ) : reviews.map((r) => (
           <Card key={r.id}>
             <CardContent className="space-y-2 py-4">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-2">
                 <Stars value={r.rating} />
-                <Button size="sm" variant={r.approved ? "outline" : "default"} onClick={() => toggle(r.id, !r.approved)}>
-                  {r.approved ? <><EyeOff className="mr-1 h-4 w-4" />Hide</> : <><Eye className="mr-1 h-4 w-4" />Publish</>}
-                </Button>
+                <div className="flex gap-1">
+                  <Button size="sm" variant={r.approved ? "outline" : "default"} onClick={() => toggle(r.id, !r.approved)}>
+                    {r.approved ? <><EyeOff className="mr-1 h-4 w-4" />Hide</> : <><Eye className="mr-1 h-4 w-4" />Approve</>}
+                  </Button>
+                  <Button size="icon" variant="ghost" aria-label="Delete review" onClick={async () => {
+                    if (!confirm("Delete this patient review? This cannot be undone.")) return;
+                    try { await removeReview({ data: { reviewId: r.id } }); toast.success("Review deleted"); refresh(); }
+                    catch (e) { toast.error((e as Error).message); }
+                  }}>
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </div>
               </div>
               {r.title && <h3 className="font-semibold">{r.title}</h3>}
               <p className="text-sm">{r.body}</p>

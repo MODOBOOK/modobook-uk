@@ -168,6 +168,22 @@ export const setReviewApproval = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const deletePatientReview = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { reviewId: string }) => input)
+  .handler(async ({ data, context }) => {
+    const { data: profile } = await context.supabase
+      .from("profiles").select("id").eq("user_id", context.userId).maybeSingle();
+    if (!profile) throw new Error("Profile not found");
+    const { error } = await context.supabase
+      .from("patient_reviews")
+      .delete()
+      .eq("id", data.reviewId)
+      .eq("profile_id", profile.id);
+    if (error) throw error;
+    return { ok: true };
+  });
+
 export const updatePractitionerBio = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(
