@@ -844,42 +844,6 @@ function BookPage() {
       )}
 
 
-      {/* Welcome message */}
-      {profile.welcome_intro_html && (
-        <section className="mx-auto mt-8 max-w-3xl px-4">
-          <div
-            className="rounded-2xl border bg-card px-5 py-5 shadow-sm sm:px-7 sm:py-6"
-            style={{ borderColor: `${brand}1a` }}
-          >
-            <SafeHtml
-              html={profile.welcome_intro_html}
-              className="prose prose-sm sm:prose max-w-none [&_strong]:font-bold"
-            />
-          </div>
-        </section>
-      )}
-
-      {/* Booking & cancellation policy */}
-      {(profile.deposit_policy_text || (profile.cancellation_rules && profile.cancellation_rules.length > 0) || (profile.deposit_amount_cents ?? 0) > 0) && (
-        <section className="mx-auto mt-4 max-w-3xl px-4">
-          <details className="rounded-2xl border bg-card px-5 py-4 text-sm sm:px-7" style={{ borderColor: `${brand}1a` }}>
-            <summary className="cursor-pointer font-semibold" style={{ color: brand }}>
-              Booking & cancellation policy
-            </summary>
-            <div className="mt-3 space-y-2 opacity-90">
-              {(profile.deposit_amount_cents ?? 0) > 0 && (
-                <p>A £{((profile.deposit_amount_cents ?? 0) / 100).toFixed(2)} deposit is taken at time of booking.</p>
-              )}
-              {profile.deposit_policy_text && <p>{profile.deposit_policy_text}</p>}
-              {profile.cancellation_rules && profile.cancellation_rules.length > 0 && (
-                <ul className="ml-4 list-disc space-y-1">
-                  {describeCancellationRules(profile.cancellation_rules).map((r, i) => <li key={i}>{r}</li>)}
-                </ul>
-              )}
-            </div>
-          </details>
-        </section>
-      )}
 
       {/* Chooser gate */}
       {locationId && chooserOn && !mode && (
