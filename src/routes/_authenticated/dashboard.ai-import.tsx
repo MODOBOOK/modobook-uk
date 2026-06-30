@@ -415,26 +415,19 @@ function ReviewStep({
 
       <ListCard
         title={`Treatments (${includedTr}/${draft.treatments.length})`}
-        helper="Each row becomes a bookable service. Pick the category it belongs to."
+        helper="Each row becomes a bookable service. Add or generate a client-facing description below."
         onAll={(v) => toggleAll("treatments", v)}
         onAdd={() => addRow("treatments")}
         empty="No treatments detected — use + Add treatment to create one."
         rows={draft.treatments.map((t, i) => (
-          <Row key={i} included={t._include} onToggle={(v) => setRow("treatments", i, { _include: v })} onRemove={() => removeRow("treatments", i)}>
-            <Input className="md:max-w-xs" value={t.name} onChange={(e) => setRow("treatments", i, { name: e.target.value })} placeholder="Treatment name" />
-            <Input className="md:max-w-[110px]" type="number" value={t.duration_min ?? ""} onChange={(e) => setRow("treatments", i, { duration_min: e.target.value ? Number(e.target.value) : undefined })} placeholder="Mins" />
-            <Input className="md:max-w-[110px]" type="number" step="0.01" value={t.price_gbp ?? ""} onChange={(e) => setRow("treatments", i, { price_gbp: e.target.value ? Number(e.target.value) : undefined })} placeholder="£" />
-            <select
-              className="h-9 rounded-md border bg-background px-2 text-sm md:max-w-xs"
-              value={t.category ?? ""}
-              onChange={(e) => setRow("treatments", i, { category: e.target.value || null })}
-            >
-              <option value="">— No category —</option>
-              {categoryOptions.map((p) => (
-                <option key={p} value={p}>{p}</option>
-              ))}
-            </select>
-          </Row>
+          <TreatmentRow
+            key={i}
+            treatment={t}
+            categoryOptions={categoryOptions}
+            onToggle={(v) => setRow("treatments", i, { _include: v })}
+            onRemove={() => removeRow("treatments", i)}
+            onChange={(patch) => setRow("treatments", i, patch)}
+          />
         ))}
       />
 
@@ -611,3 +604,82 @@ function PackageRow({
   );
 }
 
+
+function TreatmentRow({
+  treatment,
+  categoryOptions,
+  onToggle,
+  onRemove,
+  onChange,
+}: {
+  treatment: Draftable<ExtractedTreatment>;
+  categoryOptions: string[];
+  onToggle: (v: boolean) => void;
+  onRemove: () => void;
+  onChange: (patch: Partial<ExtractedTreatment>) => void;
+}) {
+  const generate = useServerFn(generateDescription);
+  const [busy, setBusy] = useState(false);
+
+  async function handleGenerate() {
+    setBusy(true);
+    try {
+      const r = await generate({
+        data: {
+          kind: "treatment",
+          name: treatment.name || "Treatment",
+          price_gbp: treatment.price_gbp,
+        },
+      });
+      if (r.description) onChange({ description: r.description });
+      else toast.error("AI didn't return a description");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to generate");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className={`space-y-2 rounded-md border p-2 ${treatment._include ? "" : "opacity-50"}`}>
+      <div className="flex flex-wrap items-center gap-2">
+        <Checkbox checked={treatment._include} onCheckedChange={(v) => onToggle(!!v)} />
+        <Input className="md:max-w-xs" value={treatment.name} onChange={(e) => onChange({ name: e.target.value })} placeholder="Treatment name" />
+        <Input className="md:max-w-[110px]" type="number" value={treatment.duration_min ?? ""} onChange={(e) => onChange({ duration_min: e.target.value ? Number(e.target.value) : undefined })} placeholder="Mins" />
+        <Input className="md:max-w-[110px]" type="number" step="0.01" value={treatment.price_gbp ?? ""} onChange={(e) => onChange({ price_gbp: e.target.value ? Number(e.target.value) : undefined })} placeholder="£" />
+        <select
+          className="h-9 rounded-md border bg-background px-2 text-sm md:max-w-xs"
+          value={treatment.category ?? ""}
+          onChange={(e) => onChange({ category: e.target.value || null })}
+        >
+          <option value="">— No category —</option>
+          {categoryOptions.map((p) => (
+            <option key={p} value={p}>{p}</option>
+          ))}
+        </select>
+        <button
+          type="button"
+          onClick={onRemove}
+          className="ml-auto text-xs text-muted-foreground hover:text-destructive"
+        >
+          Remove
+        </button>
+      </div>
+      <div className="space-y-1 pl-7">
+        <div className="flex items-center justify-between">
+          <Label className="text-xs text-muted-foreground">Client-facing description</Label>
+          <Button type="button" size="sm" variant="ghost" onClick={handleGenerate} disabled={busy} className="h-7 gap-1 text-xs">
+            {busy ? <Loader2 className="size-3 animate-spin" /> : <Wand2 className="size-3" />}
+            {treatment.description ? "Rewrite with AI" : "Generate with AI"}
+          </Button>
+        </div>
+        <Textarea
+          rows={2}
+          value={treatment.description ?? ""}
+          onChange={(e) => onChange({ description: e.target.value })}
+          placeholder="Shown to clients. Uploaded text appears here automatically — edit or click Generate."
+        />
+      </div>
+    </div>
+  );
+}
