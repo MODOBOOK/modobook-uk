@@ -90,9 +90,13 @@ function AiImportPage() {
         if (!body) throw new Error("Paste some content or attach a file");
         result = await extract({ data: { text: body } });
       } else {
-        if (!file) throw new Error("Choose a file");
-        const dataUrl = await fileToDataUrl(file);
-        result = await extract({ data: { file_data_url: dataUrl, file_name: file.name } });
+        // pdf or image — supports multiple files
+        const all = files.length ? files : file ? [file] : [];
+        if (!all.length) throw new Error("Choose at least one file");
+        const payload = await Promise.all(
+          all.map(async (f) => ({ data_url: await fileToDataUrl(f), name: f.name })),
+        );
+        result = await extract({ data: { files: payload } });
       }
       const total =
         (result.categories?.length ?? 0) +
