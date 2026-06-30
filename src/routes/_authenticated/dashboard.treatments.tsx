@@ -378,8 +378,9 @@ function TreatmentDialog({
     ((treatment as { price_mode?: string } | null)?.price_mode as "fixed" | "from" | "poa" | "free") ?? "fixed",
   );
   const [badge, setBadge] = useState<"recommended" | "popular" | "new" | "bestseller" | "none">(
-    ((treatment as { badge?: string | null } | null)?.badge as "recommended" | "popular" | "new" | "bestseller" | null) ?? "none",
+    (((treatment as { badge?: string | null } | null)?.badge as "recommended" | "popular" | "new" | "bestseller" | null) ?? "none") || "none",
   );
+
 
 
   const topLevel = useMemo(() => categories.filter((c) => !c.parent_id), [categories]);
