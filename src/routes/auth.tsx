@@ -13,6 +13,9 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
+  validateSearch: (s: Record<string, unknown>) => ({
+    as: s.as === "prescriber" ? "prescriber" : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Sign in | MODO Book" },
@@ -25,6 +28,8 @@ export const Route = createFileRoute("/auth")({
 function AuthPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const { as } = Route.useSearch();
+  const isPrescriberFlow = as === "prescriber";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -40,7 +45,7 @@ function AuthPage() {
     if (result.redirected) {
       return;
     }
-    router.navigate({ to: "/dashboard" });
+    router.navigate({ to: isPrescriberFlow ? "/hub/verification" : "/dashboard" });
   }
 
   async function handleSignIn(e: React.FormEvent) {
@@ -52,7 +57,7 @@ function AuthPage() {
       toast.error(error.message);
       return;
     }
-    router.navigate({ to: "/dashboard" });
+    router.navigate({ to: isPrescriberFlow ? "/hub/verification" : "/dashboard" });
   }
 
   async function handleSignUp(e: React.FormEvent) {
@@ -64,8 +69,13 @@ function AuthPage() {
       toast.error(error.message);
       return;
     }
-    toast.success("Account created. Complete your clinic profile next.");
-    router.navigate({ to: "/onboarding" });
+    if (isPrescriberFlow) {
+      toast.success("Account created. Submit your verification next.");
+      router.navigate({ to: "/hub/verification" });
+    } else {
+      toast.success("Account created. Complete your clinic profile next.");
+      router.navigate({ to: "/onboarding" });
+    }
   }
 
   return (
@@ -78,11 +88,15 @@ function AuthPage() {
           <span className="text-xl font-semibold tracking-tight">MODO Book</span>
         </div>
 
-        <Tabs defaultValue="signin">
+        <Tabs defaultValue={isPrescriberFlow ? "signup" : "signin"}>
           <Card>
             <CardHeader className="text-center">
-              <CardTitle>Welcome</CardTitle>
-              <CardDescription>Sign in or create a new practitioner account.</CardDescription>
+              <CardTitle>{isPrescriberFlow ? "Prescriber sign up" : "Welcome"}</CardTitle>
+              <CardDescription>
+                {isPrescriberFlow
+                  ? "Create an account, then submit your verification (registration body, PIN, photo ID)."
+                  : "Sign in or create a new practitioner account."}
+              </CardDescription>
             </CardHeader>
             <TabsList className="mx-6 grid w-[calc(100%-3rem)] grid-cols-2">
               <TabsTrigger value="signin">Sign in</TabsTrigger>

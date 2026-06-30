@@ -38,9 +38,12 @@ function HubPage() {
                 that started it.
               </p>
               <div className="mt-6 flex flex-wrap gap-3">
-                <Link to="/auth"><Button size="lg">Join MODO Book</Button></Link>
-                <Link to="/features"><Button size="lg" variant="outline">See all features</Button></Link>
+                <Link to="/auth"><Button size="lg">Join as practitioner</Button></Link>
+                <Link to="/auth" search={{ as: "prescriber" }}><Button size="lg" variant="outline">Join as prescriber</Button></Link>
               </div>
+              <p className="mt-3 text-xs text-muted-foreground">
+                Prescribers complete a quick verification (registration body, PIN, photo ID) before they appear in the hub.
+              </p>
             </div>
             <div className="grid aspect-[5/4] w-full grid-cols-2 grid-rows-2 gap-3 rounded-3xl bg-background/60 p-6 shadow-lg ring-1 ring-black/5 sm:gap-5 sm:p-10">
               <IconTile icon={Stethoscope} label="Prescribers" />
@@ -140,9 +143,14 @@ function HubPage() {
         <section className="border-t">
           <div className="mx-auto max-w-3xl px-4 py-16 text-center lg:px-8">
             <HeartHandshake className="mx-auto mb-3 h-8 w-8 text-primary" />
-            <h2 className="text-2xl font-semibold sm:text-3xl">Want early access to the Prescriber Hub?</h2>
-            <p className="mt-3 text-muted-foreground">Sign up to MODO Book now — Hub access is included as it rolls out.</p>
-            <Link to="/auth"><Button size="lg" className="mt-6">Create your account</Button></Link>
+            <h2 className="text-2xl font-semibold sm:text-3xl">Ready to join?</h2>
+            <p className="mt-3 text-muted-foreground">
+              Practitioners join instantly. Prescribers submit a quick verification and we'll review it within 1–2 working days.
+            </p>
+            <div className="mt-6 flex flex-wrap justify-center gap-3">
+              <Link to="/auth"><Button size="lg">Join as practitioner</Button></Link>
+              <Link to="/auth" search={{ as: "prescriber" }}><Button size="lg" variant="outline">Join as prescriber</Button></Link>
+            </div>
           </div>
         </section>
       </main>

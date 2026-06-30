@@ -1,4 +1,4 @@
-import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
   adminOverview,
@@ -115,11 +115,18 @@ function AdminPage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-6 p-4 pb-24">
-      <div>
-        <h1 className="text-2xl font-bold">Platform admin</h1>
-        <p className="text-sm text-muted-foreground">
-          Monitor practitioners using MODO and manage admin access.
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold">Platform admin</h1>
+          <p className="text-sm text-muted-foreground">
+            Monitor practitioners using MODO and manage admin access.
+          </p>
+        </div>
+        <Link to="/admin/prescribers">
+          <Button variant="outline" size="sm">
+            <Shield className="mr-2 h-4 w-4" /> Prescriber verifications
+          </Button>
+        </Link>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3">

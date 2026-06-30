@@ -28,6 +28,7 @@ import {
   Percent,
   HeartPulse,
   Info,
+  Stethoscope,
 
 
 } from "lucide-react";
@@ -82,6 +83,7 @@ const navItems = [
   { label: "Reviews", to: "/dashboard/reviews", icon: Star },
   { label: "Payments", to: "/dashboard/payments", icon: CreditCard },
   { label: "Booking settings", to: "/dashboard/settings", icon: Settings },
+  { label: "Prescriber Hub", to: "/hub", icon: Stethoscope },
 ];
 
 const mobileTabs = [
