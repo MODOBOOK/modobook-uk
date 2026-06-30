@@ -273,7 +273,7 @@ function AiImportPage() {
               <li>{summary.categories} categories</li>
               <li>{summary.treatments} treatments</li>
               <li>{summary.addons} add-ons</li>
-              <li>{summary.packages} packages</li>
+              <li className="text-xs text-muted-foreground">Packages aren't auto-imported — add them in Services › Packages.</li>
               {summary.skipped > 0 && <li className="text-muted-foreground">{summary.skipped} skipped as duplicates</li>}
             </ul>
             {summary.errors && summary.errors.length > 0 && (
