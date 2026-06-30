@@ -54,6 +54,19 @@ function SettingsPage() {
     sms_reminders_enabled: !!profile.sms_reminders_enabled,
     whatsapp_reminders_enabled: !!profile.whatsapp_reminders_enabled,
     reminder_hours_before: (profile.reminder_hours_before as number[] | null) ?? [24, 2],
+    // invoice branding
+    invoice_show_logo: profile.invoice_show_logo !== false,
+    invoice_show_bank_details: !!profile.invoice_show_bank_details,
+    invoice_bank_name: (profile.invoice_bank_name as string | null) ?? "",
+    invoice_account_name: (profile.invoice_account_name as string | null) ?? "",
+    invoice_sort_code: (profile.invoice_sort_code as string | null) ?? "",
+    invoice_account_number: (profile.invoice_account_number as string | null) ?? "",
+    invoice_iban: (profile.invoice_iban as string | null) ?? "",
+    invoice_swift: (profile.invoice_swift as string | null) ?? "",
+    invoice_payment_reference: (profile.invoice_payment_reference as string | null) ?? "",
+    invoice_vat_number: (profile.invoice_vat_number as string | null) ?? "",
+    invoice_company_number: (profile.invoice_company_number as string | null) ?? "",
+    invoice_footer_notes: (profile.invoice_footer_notes as string | null) ?? "",
   });
   const [saving, setSaving] = useState(false);
   const [reminderInput, setReminderInput] = useState(
