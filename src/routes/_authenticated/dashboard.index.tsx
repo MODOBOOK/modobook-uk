@@ -13,6 +13,7 @@ import {
   FileText,
   ChevronRight,
   Sparkles,
+  Info,
 } from "lucide-react";
 import { listMyAppointments } from "@/lib/availability.functions";
 import { resolveDisplayNames } from "@/lib/display-name";
@@ -187,7 +188,7 @@ function DashboardIndex() {
         <QuickAction to="/dashboard/new-appointment" icon={CalendarPlus} label="New booking" />
         <QuickAction to="/dashboard/availability" icon={CalendarDays} label="Availability" />
         <QuickAction to="/dashboard/services" icon={Sparkles} label="Services" />
-        <QuickAction to="/dashboard/payments" icon={CreditCard} label={profile.stripe_connect_account_id ? "Payments" : "Connect Stripe"} />
+        <QuickAction to="/dashboard/pre-treatment" icon={Info} label="Pre-treatment" />
       </div>
 
 
