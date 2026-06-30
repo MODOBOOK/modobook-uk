@@ -13,6 +13,7 @@ import {
   Image as ImageIcon, Sparkles, HeartHandshake, ShieldCheck, MessageCircle,
   Award, Clock, MapPin, HelpCircle, Tag, GraduationCap, History, Save,
 } from "lucide-react";
+import { SaveReminder } from "@/components/SaveReminder";
 
 export const Route = createFileRoute("/_authenticated/dashboard/about")({
   ssr: false,
