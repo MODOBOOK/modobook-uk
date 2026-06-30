@@ -26,11 +26,13 @@ import {
   ChevronLeft,
   Sparkles,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useDashboardThemeStyle } from "@/hooks/use-dashboard-theme";
 import { resolveDisplayNames } from "@/lib/display-name";
+import { countPendingReviews } from "@/lib/patient.functions";
+import { useServerFn } from "@tanstack/react-start";
 
 
 
@@ -83,6 +85,15 @@ function DashboardLayout() {
   const [open, setOpen] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const themeStyle = useDashboardThemeStyle();
+  const fetchPending = useServerFn(countPendingReviews);
+  const [pendingReviews, setPendingReviews] = useState(0);
+  useEffect(() => {
+    let alive = true;
+    const load = () => fetchPending().then((r) => { if (alive) setPendingReviews(r.count); }).catch(() => {});
+    load();
+    const t = setInterval(load, 60_000);
+    return () => { alive = false; clearInterval(t); };
+  }, [fetchPending, pathname]);
 
 
 
@@ -109,7 +120,7 @@ function DashboardLayout() {
         </div>
         <nav className="flex-1 space-y-0.5 overflow-y-auto px-4 py-6">
           {navItems.map((item) => (
-            <NavLink key={item.to} to={item.to} icon={item.icon} label={item.label} />
+            <NavLink key={item.to} to={item.to} icon={item.icon} label={item.label} badge={item.to === "/dashboard/reviews" && pendingReviews > 0 ? pendingReviews : undefined} />
           ))}
         </nav>
         <div className="border-t border-border/60 p-4">
@@ -201,11 +212,13 @@ function NavLink({
   icon: Icon,
   label,
   onClick,
+  badge,
 }: {
   to: string;
   icon: React.ElementType;
   label: string;
   onClick?: () => void;
+  badge?: number;
 }) {
   return (
     <Link
@@ -219,7 +232,12 @@ function NavLink({
       onClick={onClick}
     >
       <Icon className="h-4 w-4 opacity-80" />
-      <span className="tracking-wide">{label}</span>
+      <span className="flex-1 tracking-wide">{label}</span>
+      {badge != null && badge > 0 && (
+        <span className="inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-destructive px-1.5 text-[10px] font-semibold text-destructive-foreground">
+          {badge > 99 ? "99+" : badge}
+        </span>
+      )}
     </Link>
   );
 }
