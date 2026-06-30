@@ -95,6 +95,7 @@ export function ConsultationDocCard({ id, createdAt, status, currentStep }: Prop
 
               <DocSection title="3. Assessment">
                 <AssessmentSummary data={doc.assessment} beforePhotos={doc.before_photos} />
+                <PhotoStrip photos={doc.before_photos} label="Before" />
               </DocSection>
 
               <DocSection title="4. Treatment plan">
@@ -106,7 +107,7 @@ export function ConsultationDocCard({ id, createdAt, status, currentStep }: Prop
               </DocSection>
 
               <DocSection title="6. After photos">
-                <PhotoCount data={doc.after_photos} label="after photo" />
+                <PhotoStrip photos={doc.after_photos} label="After" />
               </DocSection>
 
               <DocSection title="7. Treatment log">
