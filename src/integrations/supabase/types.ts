@@ -430,6 +430,7 @@ export type Database = {
           practitioner_id: string | null
           practitioner_notes: string | null
           profile_id: string
+          reschedule_count: number
           scheduled_date: string
           start_time: string
           status: Database["public"]["Enums"]["appointment_status"] | null
@@ -479,6 +480,7 @@ export type Database = {
           practitioner_id?: string | null
           practitioner_notes?: string | null
           profile_id: string
+          reschedule_count?: number
           scheduled_date: string
           start_time: string
           status?: Database["public"]["Enums"]["appointment_status"] | null
@@ -528,6 +530,7 @@ export type Database = {
           practitioner_id?: string | null
           practitioner_notes?: string | null
           profile_id?: string
+          reschedule_count?: number
           scheduled_date?: string
           start_time?: string
           status?: Database["public"]["Enums"]["appointment_status"] | null
@@ -956,7 +959,9 @@ export type Database = {
           created_at: string
           id: string
           profile_id: string
+          shared_at: string | null
           updated_at: string
+          visible_to_patient: boolean
         }
         Insert: {
           body: string
@@ -964,7 +969,9 @@ export type Database = {
           created_at?: string
           id?: string
           profile_id: string
+          shared_at?: string | null
           updated_at?: string
+          visible_to_patient?: boolean
         }
         Update: {
           body?: string
@@ -972,7 +979,9 @@ export type Database = {
           created_at?: string
           id?: string
           profile_id?: string
+          shared_at?: string | null
           updated_at?: string
+          visible_to_patient?: boolean
         }
         Relationships: [
           {
@@ -2253,6 +2262,51 @@ export type Database = {
           },
         ]
       }
+      patient_accounts: {
+        Row: {
+          client_id: string | null
+          created_at: string
+          email: string
+          id: string
+          profile_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          profile_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          profile_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_accounts_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clinic_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_accounts_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       patient_practitioner_links: {
         Row: {
           created_at: string
@@ -3474,6 +3528,11 @@ export type Database = {
           token: string
         }[]
       }
+      current_patient_client_id: {
+        Args: { _profile_id: string }
+        Returns: string
+      }
+      current_patient_email: { Args: { _profile_id: string }; Returns: string }
       get_about_page_by_slug: { Args: { p_slug: string }; Returns: Json }
       get_appointment_by_manage_token: {
         Args: { p_token: string }
@@ -3626,6 +3685,7 @@ export type Database = {
       is_active_profile: { Args: { _profile_id: string }; Returns: boolean }
       is_active_profile_path: { Args: { path: string }; Returns: boolean }
       is_object_owner: { Args: { path: string }; Returns: boolean }
+      is_patient_of_profile: { Args: { _profile_id: string }; Returns: boolean }
       is_practitioner_owner: {
         Args: { _practitioner_id: string }
         Returns: boolean
@@ -3634,6 +3694,20 @@ export type Database = {
       is_slug_available: {
         Args: { p_exclude_id?: string; p_slug: string }
         Returns: boolean
+      }
+      link_patient_account: { Args: { p_slug: string }; Returns: string }
+      patient_cancel_appointment: {
+        Args: { p_appointment_id: string }
+        Returns: Json
+      }
+      patient_reschedule_appointment: {
+        Args: {
+          p_appointment_id: string
+          p_date: string
+          p_end: string
+          p_start: string
+        }
+        Returns: Json
       }
       send_medical_form_to_client: {
         Args: {
