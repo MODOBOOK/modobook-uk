@@ -427,46 +427,24 @@ function NewAppointmentPage() {
         <CardHeader>
           <CardTitle>Send forms with confirmation</CardTitle>
           <p className="text-xs text-muted-foreground">
-            Forms linked to the treatment send automatically. Tick any extras to include in the patient's confirmation email.
+            Forms linked to the treatment send automatically. Search and select any extras to include in the patient's confirmation email.
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div>
-            <Label className="text-xs uppercase tracking-wide text-muted-foreground">Medical forms</Label>
-            {medicalTemplates.length === 0 ? (
-              <p className="text-xs text-muted-foreground">No medical forms yet. Create one under Forms.</p>
-            ) : (
-              <div className="mt-1 space-y-1">
-                {medicalTemplates.map((m) => (
-                  <label key={m.id} className="flex items-center gap-2 rounded-md border px-3 py-2 text-sm">
-                    <Checkbox
-                      checked={pickedMedicalIds.has(m.id)}
-                      onCheckedChange={() => toggle(setPickedMedicalIds, m.id)}
-                    />
-                    <span className="truncate">{m.name}</span>
-                  </label>
-                ))}
-              </div>
-            )}
-          </div>
-          <div>
-            <Label className="text-xs uppercase tracking-wide text-muted-foreground">Consent forms</Label>
-            {consentTemplates.length === 0 ? (
-              <p className="text-xs text-muted-foreground">No consent forms yet.</p>
-            ) : (
-              <div className="mt-1 space-y-1">
-                {consentTemplates.map((c) => (
-                  <label key={c.id} className="flex items-center gap-2 rounded-md border px-3 py-2 text-sm">
-                    <Checkbox
-                      checked={pickedConsentIds.has(c.id)}
-                      onCheckedChange={() => toggle(setPickedConsentIds, c.id)}
-                    />
-                    <span className="truncate">{c.name}</span>
-                  </label>
-                ))}
-              </div>
-            )}
-          </div>
+          <SearchableFormPicker
+            label="Medical forms"
+            emptyMessage="No medical forms yet. Create one under Forms."
+            items={medicalTemplates}
+            selected={pickedMedicalIds}
+            onToggle={(id) => toggle(setPickedMedicalIds, id)}
+          />
+          <SearchableFormPicker
+            label="Consent forms"
+            emptyMessage="No consent forms yet."
+            items={consentTemplates}
+            selected={pickedConsentIds}
+            onToggle={(id) => toggle(setPickedConsentIds, id)}
+          />
         </CardContent>
       </Card>
 
@@ -504,6 +482,88 @@ function NewAppointmentPage() {
 
         {saving ? "Creating…" : "Create appointment"}
       </Button>
+    </div>
+  );
+}
+
+function SearchableFormPicker({
+  label,
+  emptyMessage,
+  items,
+  selected,
+  onToggle,
+}: {
+  label: string;
+  emptyMessage: string;
+  items: { id: string; name: string }[];
+  selected: Set<string>;
+  onToggle: (id: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const selectedItems = items.filter((i) => selected.has(i.id));
+  return (
+    <div>
+      <Label className="text-xs uppercase tracking-wide text-muted-foreground">{label}</Label>
+      {items.length === 0 ? (
+        <p className="mt-1 text-xs text-muted-foreground">{emptyMessage}</p>
+      ) : (
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              type="button"
+              variant="outline"
+              role="combobox"
+              className="mt-1 w-full justify-between font-normal"
+            >
+              <span className="truncate text-left">
+                {selectedItems.length === 0
+                  ? `Search ${label.toLowerCase()}…`
+                  : `${selectedItems.length} selected`}
+              </span>
+              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+            <Command>
+              <CommandInput placeholder={`Search ${label.toLowerCase()}…`} />
+              <CommandList>
+                <CommandEmpty>No matches.</CommandEmpty>
+                <CommandGroup>
+                  {items.map((it) => {
+                    const isSel = selected.has(it.id);
+                    return (
+                      <CommandItem
+                        key={it.id}
+                        value={it.name}
+                        onSelect={() => onToggle(it.id)}
+                      >
+                        <Check className={`mr-2 h-4 w-4 ${isSel ? "opacity-100" : "opacity-0"}`} />
+                        <span className="truncate">{it.name}</span>
+                      </CommandItem>
+                    );
+                  })}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
+      )}
+      {selectedItems.length > 0 && (
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {selectedItems.map((it) => (
+            <button
+              key={it.id}
+              type="button"
+              onClick={() => onToggle(it.id)}
+              className="inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 py-1 text-xs hover:bg-secondary/80"
+              title="Remove"
+            >
+              {it.name}
+              <span aria-hidden>×</span>
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
