@@ -1665,6 +1665,8 @@ function ServiceDialog({
                 discount_percent: discountPercent.trim() ? Number(discountPercent) : null,
                 discount_label: discountLabel.trim() || null,
                 discount_show_was_now: discountShowWasNow,
+                price_mode: priceMode,
+                badge: badge === "none" ? null : badge,
                 location_overrides: Object.entries(locOverrides).map(([location_id, ov]) => ({
                   location_id,
                   available: ov.available,
