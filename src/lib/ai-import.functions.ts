@@ -479,13 +479,14 @@ export const commitClinicImport = createServerFn({ method: "POST" })
         profile_id: profileId,
         name: pkg.name.trim(),
         treatment_id: primary,
-        treatment_ids: trIds.length ? trIds : null,
+        treatment_ids: trIds,
         session_count: Math.max(1, Math.round(pkg.sessions ?? trIds.length ?? 1)),
         price: Number(pkg.price_gbp ?? 0),
         active: true,
         description: pkg.description ?? null,
       } as never);
       if (!error) created.packages++;
+      else noteError(`Package "${pkg.name}"`, error);
     }
 
     return created;
