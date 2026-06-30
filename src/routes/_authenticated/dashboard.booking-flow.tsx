@@ -74,6 +74,88 @@ function BookingFlowPage() {
   const [expandedArea, setExpandedArea] = useState<string | null>(null);
   const [expandedConcern, setExpandedConcern] = useState<string | null>(null);
 
+  // AI suggestion review state
+  const [aiOpen, setAiOpen] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiDraft, setAiDraft] = useState<Record<string, Set<string>>>({});
+  const [aiOnlyEmpty, setAiOnlyEmpty] = useState(true);
+  const [aiSaving, setAiSaving] = useState(false);
+
+  async function runAiSuggest() {
+    if (treatments.length === 0) { toast.error("Add treatments first."); return; }
+    const targets = aiOnlyEmpty
+      ? concerns.filter((c) => !links.some((l) => l.concern_id === c.id))
+      : concerns;
+    if (targets.length === 0) { toast.info("Nothing to match — every concern already has treatments."); return; }
+    setAiLoading(true);
+    try {
+      const areaName = (id: string) => areas.find((a) => a.id === id)?.name ?? null;
+      const { matches } = await suggestConcernMatches({
+        data: {
+          treatments: treatments.map((t) => ({ id: t.id, name: t.name, description: t.description })),
+          concerns: targets.map((c) => ({
+            id: c.id, name: c.name, description: c.description, area: areaName(c.area_id),
+          })),
+        },
+      });
+      const draft: Record<string, Set<string>> = {};
+      // Seed with existing links so user can compare/keep
+      for (const c of targets) {
+        draft[c.id] = new Set(
+          links.filter((l) => l.concern_id === c.id).map((l) => l.treatment_id),
+        );
+      }
+      for (const m of matches) {
+        const set = draft[m.concern_id] ?? new Set<string>();
+        for (const id of m.treatment_ids) set.add(id);
+        draft[m.concern_id] = set;
+      }
+      setAiDraft(draft);
+      setAiOpen(true);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "AI request failed");
+    } finally {
+      setAiLoading(false);
+    }
+  }
+
+  function toggleDraft(concernId: string, treatmentId: string) {
+    setAiDraft((prev) => {
+      const next = { ...prev };
+      const set = new Set(next[concernId] ?? []);
+      if (set.has(treatmentId)) set.delete(treatmentId); else set.add(treatmentId);
+      next[concernId] = set;
+      return next;
+    });
+  }
+
+  async function applyAiDraft() {
+    setAiSaving(true);
+    try {
+      const entries = Object.entries(aiDraft);
+      for (const [concernId, set] of entries) {
+        const ids = Array.from(set);
+        await setConcernTreatments({ data: { concern_id: concernId, treatment_ids: ids } });
+      }
+      // Rebuild local links
+      setLinks((prev) => {
+        const cleared = prev.filter((l) => !aiDraft[l.concern_id]);
+        const added: Link[] = [];
+        for (const [concernId, set] of entries) {
+          for (const tid of set) added.push({ concern_id: concernId, treatment_id: tid });
+        }
+        return [...cleared, ...added];
+      });
+      toast.success("AI matches applied");
+      setAiOpen(false);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to save");
+    } finally {
+      setAiSaving(false);
+    }
+  }
+
+
   function toggleId(list: string[], setList: (v: string[]) => void, id: string) {
     setList(list.includes(id) ? list.filter((x) => x !== id) : [...list, id]);
   }
