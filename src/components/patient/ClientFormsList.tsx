@@ -79,7 +79,7 @@ export function ClientFormsList({
                 </div>
                 {!compact && (
                   <Badge variant={done ? "default" : "secondary"} className="hidden text-[10px] sm:inline-flex">
-                    {done ? "Completed" : "Pending"}
+                    {done ? <><Lock className="mr-1 h-2.5 w-2.5" />Completed · view only</> : "Pending"}
                   </Badge>
                 )}
                 <Button size="icon" variant="ghost" className="h-7 w-7" title="View" onClick={() => setViewId(r.id)}>
