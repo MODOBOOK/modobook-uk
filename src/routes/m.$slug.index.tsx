@@ -31,6 +31,8 @@ import { mapsUrl, formatAddress } from "@/lib/maps";
 import type { Database } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 import { SafeHtml } from "@/components/SafeHtml";
+import { resolveDisplayNames } from "@/lib/display-name";
+
 import { describeCancellationRules } from "@/lib/policy";
 import { QuizDialog } from "@/components/QuizDialog";
 
