@@ -34,7 +34,7 @@ import { SafeHtml } from "@/components/SafeHtml";
 import { resolveDisplayNames } from "@/lib/display-name";
 
 import { describeCancellationRules } from "@/lib/policy";
-import { QuizDialog } from "@/components/QuizDialog";
+
 
 type Treatment = Database["public"]["Tables"]["treatments"]["Row"];
 type Package = Database["public"]["Tables"]["packages"]["Row"];
