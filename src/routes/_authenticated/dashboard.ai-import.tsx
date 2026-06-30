@@ -74,6 +74,7 @@ function AiImportPage() {
   const [url, setUrl] = useState("");
   const [text, setText] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
   const [kind, setKind] = useState<SourceKind>("pdf");
 
   async function handleExtract() {
@@ -89,9 +90,13 @@ function AiImportPage() {
         if (!body) throw new Error("Paste some content or attach a file");
         result = await extract({ data: { text: body } });
       } else {
-        if (!file) throw new Error("Choose a file");
-        const dataUrl = await fileToDataUrl(file);
-        result = await extract({ data: { file_data_url: dataUrl, file_name: file.name } });
+        // pdf or image — supports multiple files
+        const all = files.length ? files : file ? [file] : [];
+        if (!all.length) throw new Error("Choose at least one file");
+        const payload = await Promise.all(
+          all.map(async (f) => ({ data_url: await fileToDataUrl(f), name: f.name })),
+        );
+        result = await extract({ data: { files: payload } });
       }
       const total =
         (result.categories?.length ?? 0) +
@@ -195,15 +200,27 @@ function AiImportPage() {
 
             {(kind === "pdf" || kind === "image") && (
               <div className="space-y-2">
-                <Label>{kind === "pdf" ? "PDF file" : "Image / screenshot"}</Label>
+                <Label>{kind === "pdf" ? "PDF file(s)" : "Image(s) / screenshot(s)"}</Label>
                 <Input
                   type="file"
+                  multiple
                   accept={kind === "pdf" ? "application/pdf" : "image/*"}
-                  onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+                  onChange={(e) => {
+                    const list = Array.from(e.target.files ?? []);
+                    setFiles(list);
+                    setFile(list[0] ?? null);
+                  }}
                 />
-                {file && <p className="text-xs text-muted-foreground">{file.name} · {(file.size / 1024).toFixed(0)} KB</p>}
+                {files.length > 0 && (
+                  <ul className="space-y-0.5 text-xs text-muted-foreground">
+                    {files.map((f, i) => (
+                      <li key={i}>{f.name} · {(f.size / 1024).toFixed(0)} KB</li>
+                    ))}
+                  </ul>
+                )}
                 <p className="text-xs text-muted-foreground">
-                  Clearer source = better result. Make sure prices and treatment names are readable.
+                  You can select multiple {kind === "pdf" ? "PDFs" : "photos"} at once (e.g. several pages of one
+                  price list) — AI will merge them into a single set of treatments. Clearer source = better result.
                 </p>
               </div>
             )}
