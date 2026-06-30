@@ -641,7 +641,7 @@ function BookPage() {
                   <ActionButton onClick={handleShare} label="Share" brand={brand}>
                     <Share2 className="h-5 w-5" />
                   </ActionButton>
-                  <ActionButton onClick={() => document.getElementById("welcome-intro")?.scrollIntoView({ behavior: "smooth", block: "start" })} label="Intro" brand={brand}>
+                  <ActionButton onClick={() => document.getElementById(isMobile ? "welcome-intro-mobile" : "welcome-intro")?.scrollIntoView({ behavior: "smooth", block: "start" })} label="Intro" brand={brand}>
                     <Info className="h-5 w-5" />
                   </ActionButton>
                 </div>
@@ -650,6 +650,25 @@ function BookPage() {
           )}
         </div>
       </section>
+
+      {/* Mobile welcome intro at top */}
+      {isMobile && (introHeading || welcomeHtml) && (
+        <section id="welcome-intro-mobile" className="mx-auto mt-4 max-w-3xl px-4">
+          <div className="rounded-2xl border bg-card px-5 py-5 shadow-sm" style={{ borderColor: `${brand}1a` }}>
+            {introHeading && (
+              <h2 className="mb-3 text-xl font-bold leading-tight" style={headingStyle}>
+                {introHeading}
+              </h2>
+            )}
+            {welcomeHtml && (
+              <SafeHtml
+                html={welcomeHtml}
+                className="prose prose-sm max-w-none [&_h1]:text-2xl [&_h2]:text-xl [&_h3]:text-lg [&_p]:leading-relaxed [&_strong]:font-bold"
+              />
+            )}
+          </div>
+        </section>
+      )}
 
       {/* Contact us */}
       {(() => {
@@ -707,7 +726,7 @@ function BookPage() {
 
       {/* Welcome message */}
       {(introHeading || welcomeHtml) && (
-        <section id="welcome-intro" className="mx-auto mt-8 max-w-3xl scroll-mt-24 px-4">
+        <section id="welcome-intro" className="mx-auto mt-8 hidden max-w-3xl scroll-mt-24 px-4 sm:block">
           <div
             className="rounded-2xl border bg-card px-5 py-5 shadow-sm sm:px-7 sm:py-6"
             style={{ borderColor: `${brand}1a` }}
