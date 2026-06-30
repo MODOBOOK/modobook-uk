@@ -12,6 +12,7 @@ import {
   deleteConcern,
   setConcernTreatments,
 } from "@/lib/chooser.functions";
+import { suggestConcernMatches } from "@/lib/ai-concerns.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,9 +20,11 @@ import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Trash2, Plus, ChevronDown, ChevronRight } from "lucide-react";
+import { Trash2, Plus, ChevronDown, ChevronRight, Sparkles, Loader2 } from "lucide-react";
 import { SaveReminder } from "@/components/SaveReminder";
+
 
 export const Route = createFileRoute("/_authenticated/dashboard/booking-flow")({
   ssr: false,
@@ -43,7 +46,7 @@ type Link = { concern_id: string; treatment_id: string };
 
 function BookingFlowPage() {
   const loaded = Route.useLoaderData();
-  const treatments = loaded.treatments as { id: string; name: string }[];
+  const treatments = loaded.treatments as { id: string; name: string; description: string | null }[];
 
   const p = loaded.profile as Record<string, unknown>;
   const [enabled, setEnabled] = useState(Boolean(p.chooser_enabled));
@@ -70,6 +73,88 @@ function BookingFlowPage() {
   const [newAreaName, setNewAreaName] = useState("");
   const [expandedArea, setExpandedArea] = useState<string | null>(null);
   const [expandedConcern, setExpandedConcern] = useState<string | null>(null);
+
+  // AI suggestion review state
+  const [aiOpen, setAiOpen] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiDraft, setAiDraft] = useState<Record<string, Set<string>>>({});
+  const [aiOnlyEmpty, setAiOnlyEmpty] = useState(true);
+  const [aiSaving, setAiSaving] = useState(false);
+
+  async function runAiSuggest() {
+    if (treatments.length === 0) { toast.error("Add treatments first."); return; }
+    const targets = aiOnlyEmpty
+      ? concerns.filter((c) => !links.some((l) => l.concern_id === c.id))
+      : concerns;
+    if (targets.length === 0) { toast.info("Nothing to match — every concern already has treatments."); return; }
+    setAiLoading(true);
+    try {
+      const areaName = (id: string) => areas.find((a) => a.id === id)?.name ?? null;
+      const { matches } = await suggestConcernMatches({
+        data: {
+          treatments: treatments.map((t) => ({ id: t.id, name: t.name, description: t.description })),
+          concerns: targets.map((c) => ({
+            id: c.id, name: c.name, description: c.description, area: areaName(c.area_id),
+          })),
+        },
+      });
+      const draft: Record<string, Set<string>> = {};
+      // Seed with existing links so user can compare/keep
+      for (const c of targets) {
+        draft[c.id] = new Set(
+          links.filter((l) => l.concern_id === c.id).map((l) => l.treatment_id),
+        );
+      }
+      for (const m of matches) {
+        const set = draft[m.concern_id] ?? new Set<string>();
+        for (const id of m.treatment_ids) set.add(id);
+        draft[m.concern_id] = set;
+      }
+      setAiDraft(draft);
+      setAiOpen(true);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "AI request failed");
+    } finally {
+      setAiLoading(false);
+    }
+  }
+
+  function toggleDraft(concernId: string, treatmentId: string) {
+    setAiDraft((prev) => {
+      const next = { ...prev };
+      const set = new Set(next[concernId] ?? []);
+      if (set.has(treatmentId)) set.delete(treatmentId); else set.add(treatmentId);
+      next[concernId] = set;
+      return next;
+    });
+  }
+
+  async function applyAiDraft() {
+    setAiSaving(true);
+    try {
+      const entries = Object.entries(aiDraft);
+      for (const [concernId, set] of entries) {
+        const ids = Array.from(set);
+        await setConcernTreatments({ data: { concern_id: concernId, treatment_ids: ids } });
+      }
+      // Rebuild local links
+      setLinks((prev) => {
+        const cleared = prev.filter((l) => !aiDraft[l.concern_id]);
+        const added: Link[] = [];
+        for (const [concernId, set] of entries) {
+          for (const tid of set) added.push({ concern_id: concernId, treatment_id: tid });
+        }
+        return [...cleared, ...added];
+      });
+      toast.success("AI matches applied");
+      setAiOpen(false);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to save");
+    } finally {
+      setAiSaving(false);
+    }
+  }
+
 
   function toggleId(list: string[], setList: (v: string[]) => void, id: string) {
     setList(list.includes(id) ? list.filter((x) => x !== id) : [...list, id]);
@@ -250,13 +335,24 @@ function BookingFlowPage() {
       </Card>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Concerns &amp; matched treatments</CardTitle>
+        <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0">
+          <div>
+            <CardTitle>Concerns &amp; matched treatments</CardTitle>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Group concerns by area (e.g. Face, Body). For each concern, tick the treatments you'd suggest — or let AI draft them for you to review.
+            </p>
+          </div>
+          <Button size="sm" variant="secondary" onClick={runAiSuggest} disabled={aiLoading} className="shrink-0">
+            {aiLoading ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Sparkles className="mr-1 h-4 w-4" />}
+            Suggest with AI
+          </Button>
         </CardHeader>
         <CardContent className="space-y-4">
-          <p className="text-sm text-muted-foreground">
-            Group concerns by area (e.g. Face, Body). For each concern, tick the treatments you'd suggest.
-          </p>
+          <label className="flex items-center gap-2 text-xs text-muted-foreground">
+            <Checkbox checked={aiOnlyEmpty} onCheckedChange={(v) => setAiOnlyEmpty(!!v)} />
+            Only suggest for concerns with no treatments yet
+          </label>
+
 
           <div className="flex gap-2">
             <Input
@@ -353,9 +449,57 @@ function BookingFlowPage() {
           </div>
         </CardContent>
       </Card>
+
+      <Dialog open={aiOpen} onOpenChange={setAiOpen}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Review AI suggestions</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Tick or untick to adjust. Nothing is saved until you tap <strong>Apply</strong>.
+          </p>
+          <div className="space-y-3 mt-2">
+            {Object.entries(aiDraft).length === 0 && (
+              <p className="text-sm italic text-muted-foreground">No suggestions.</p>
+            )}
+            {Object.entries(aiDraft).map(([concernId, set]) => {
+              const concern = concerns.find((c) => c.id === concernId);
+              if (!concern) return null;
+              const area = areas.find((a) => a.id === concern.area_id);
+              return (
+                <div key={concernId} className="rounded-lg border bg-card p-3">
+                  <div className="mb-2 flex items-baseline justify-between gap-2">
+                    <div className="font-medium">{concern.name}</div>
+                    {area && <span className="text-xs text-muted-foreground">{area.name}</span>}
+                  </div>
+                  <div className="space-y-1">
+                    {treatments.map((t) => (
+                      <label key={t.id} className="flex items-center gap-2 rounded px-2 py-1 text-sm hover:bg-muted">
+                        <Checkbox
+                          checked={set.has(t.id)}
+                          onCheckedChange={() => toggleDraft(concernId, t.id)}
+                        />
+                        <span>{t.name}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setAiOpen(false)} disabled={aiSaving}>Cancel</Button>
+            <Button onClick={applyAiDraft} disabled={aiSaving}>
+              {aiSaving ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : null}
+              Apply
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
+
 
 function Row({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
