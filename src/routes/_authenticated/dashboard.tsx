@@ -134,7 +134,7 @@ function DashboardLayout() {
 
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Mobile header — slim, back + brand + preview */}
-        <header className="flex h-14 items-center justify-between gap-2 border-b px-3 lg:hidden">
+        <header className="flex h-14 items-center justify-between gap-2 border-b px-3 md:hidden">
           <BackButton />
           <div className="flex min-w-0 flex-1 items-center justify-center">
             <span className="truncate text-sm font-semibold">{displayName || "My Clinic"}</span>
@@ -145,13 +145,13 @@ function DashboardLayout() {
         </header>
 
 
-        {/* Desktop header */}
-        <header className="hidden h-20 items-center justify-between border-b border-border/60 px-10 lg:flex">
+        {/* Desktop / iPad header */}
+        <header className="hidden h-20 items-center justify-between border-b border-border/60 px-6 md:flex lg:px-10">
           <div className="flex items-center gap-3">
             <BackButton />
             <div>
               <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Studio</div>
-              <div className="font-serif text-2xl leading-tight">{displayName || "Dashboard"}</div>
+              <div className="font-serif text-xl leading-tight lg:text-2xl">{displayName || "Dashboard"}</div>
             </div>
           </div>
           <Button variant="outline" size="sm" className="rounded-full px-5" asChild>
@@ -162,13 +162,13 @@ function DashboardLayout() {
         </header>
 
 
-        <main className="min-w-0 flex-1 overflow-x-hidden p-5 pb-24 lg:p-10 lg:pb-10">
+        <main className="min-w-0 flex-1 overflow-x-hidden p-5 pb-24 md:p-6 md:pb-6 lg:p-10">
           <Outlet />
         </main>
 
 
         {/* Mobile bottom tab bar */}
-        <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t bg-background/95 backdrop-blur lg:hidden">
+        <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t bg-background/95 backdrop-blur md:hidden">
           {mobileTabs.map((tab) => {
             const active = tab.exact ? pathname === tab.to : pathname.startsWith(tab.to);
             return (
