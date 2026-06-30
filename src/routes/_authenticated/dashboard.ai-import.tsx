@@ -102,8 +102,7 @@ function AiImportPage() {
       const total =
         (result.categories?.length ?? 0) +
         (result.treatments?.length ?? 0) +
-        (result.addons?.length ?? 0) +
-        (result.packages?.length ?? 0);
+        (result.addons?.length ?? 0);
       if (!total) {
         toast.error("AI didn't find any services in that source. Try a clearer file.");
       } else {
@@ -274,7 +273,7 @@ function AiImportPage() {
               <li>{summary.categories} categories</li>
               <li>{summary.treatments} treatments</li>
               <li>{summary.addons} add-ons</li>
-              <li>{summary.packages} packages</li>
+              <li className="text-xs text-muted-foreground">Packages aren't auto-imported — add them in Services › Packages.</li>
               {summary.skipped > 0 && <li className="text-muted-foreground">{summary.skipped} skipped as duplicates</li>}
             </ul>
             {summary.errors && summary.errors.length > 0 && (
@@ -331,7 +330,7 @@ function ReviewStep({
   const includedCats = draft.categories.filter((c) => c._include).length;
   const includedTr = draft.treatments.filter((c) => c._include).length;
   const includedAd = draft.addons.filter((c) => c._include).length;
-  const includedPk = draft.packages.filter((c) => c._include).length;
+  
 
   function setRow(key: "categories" | "treatments" | "addons" | "packages", idx: number, patch: Record<string, unknown>) {
     const arr = [...(draft[key] as Array<Record<string, unknown>>)];
@@ -454,28 +453,17 @@ function ReviewStep({
         ))}
       />
 
-      <ListCard
-        title={`Packages (${includedPk}/${draft.packages.length})`}
-        helper="Bundles or course-of-X deals. Add a short, client-facing description — or let AI write one based on the included treatments."
-        onAll={(v) => toggleAll("packages", v)}
-        onAdd={() => addRow("packages")}
-        empty="No packages detected."
-        rows={draft.packages.map((p, i) => (
-          <PackageRow
-            key={i}
-            pkg={p}
-            onToggle={(v) => setRow("packages", i, { _include: v })}
-            onRemove={() => removeRow("packages", i)}
-            onChange={(patch) => setRow("packages", i, patch)}
-          />
-        ))}
-      />
+      <Card className="border-dashed">
+        <CardContent className="py-3 text-xs text-muted-foreground">
+          <b>Packages</b> aren't created by AI. Anything that looks like a "course of 3" or bundle stays in its category as a normal treatment — head to <span className="font-medium">Services › Packages</span> to build packages by hand once your treatments are in.
+        </CardContent>
+      </Card>
 
 
       <div className="sticky bottom-0 -mx-4 flex flex-wrap items-center justify-between gap-3 border-t bg-background/95 px-4 py-3 backdrop-blur md:-mx-6 md:px-6">
         <div className="text-sm text-muted-foreground">
           Importing <b>{includedTr}</b> treatments, <b>{includedCats}</b> categories,{" "}
-          <b>{includedAd}</b> add-ons, <b>{includedPk}</b> packages.
+          <b>{includedAd}</b> add-ons.
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={onBack} disabled={busy}>Back</Button>

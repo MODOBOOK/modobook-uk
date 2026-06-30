@@ -4,16 +4,27 @@ import {
   listMyReviews, setReviewApproval,
   listMyTestimonials, upsertTestimonial, deleteTestimonial,
 } from "@/lib/patient.functions";
+import { extractReviews, commitReviews, type ExtractedReview } from "@/lib/ai-reviews.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger,
 } from "@/components/ui/dialog";
-import { Star, Loader2, Eye, EyeOff, Plus, Pencil, Trash2 } from "lucide-react";
+import { Star, Loader2, Eye, EyeOff, Plus, Pencil, Trash2, Sparkles, Wand2 } from "lucide-react";
 import { toast } from "sonner";
+
+async function fileToDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
 
 export const Route = createFileRoute("/_authenticated/dashboard/reviews")({
   component: ReviewMod,
@@ -61,6 +72,8 @@ function ReviewMod() {
   const fetchTestimonials = useServerFn(listMyTestimonials);
   const saveTestimonial = useServerFn(upsertTestimonial);
   const removeTestimonial = useServerFn(deleteTestimonial);
+  const extractAi = useServerFn(extractReviews);
+  const commitAi = useServerFn(commitReviews);
 
   const [reviews, setReviews] = useState<Review[]>([]);
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
@@ -73,6 +86,13 @@ function ReviewMod() {
   const [quote, setQuote] = useState("");
   const [rating, setRating] = useState<number>(5);
   const [saving, setSaving] = useState(false);
+
+  // AI import state
+  const [aiOpen, setAiOpen] = useState(false);
+  const [aiFiles, setAiFiles] = useState<File[]>([]);
+  const [aiText, setAiText] = useState("");
+  const [aiBusy, setAiBusy] = useState(false);
+  const [aiDraft, setAiDraft] = useState<Array<ExtractedReview & { _include: boolean }> | null>(null);
 
   async function refresh() {
     const [r, t] = await Promise.all([fetchReviews(), fetchTestimonials()]);
@@ -140,11 +160,16 @@ function ReviewMod() {
         <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
           <div className="min-w-0">
             <h2 className="truncate text-lg font-semibold">Your added reviews</h2>
-            <p className="text-xs text-muted-foreground">Reviews from existing patients you add manually.</p>
+            <p className="text-xs text-muted-foreground">Reviews from existing patients you add manually — or import a batch with AI.</p>
           </div>
-          <Button size="sm" onClick={openNew} className="shrink-0">
-            <Plus className="mr-1.5 h-4 w-4" /> Add review
-          </Button>
+          <div className="flex shrink-0 gap-2">
+            <Button size="sm" variant="outline" onClick={() => setAiOpen(true)}>
+              <Sparkles className="mr-1.5 h-4 w-4" /> Import with AI
+            </Button>
+            <Button size="sm" onClick={openNew}>
+              <Plus className="mr-1.5 h-4 w-4" /> Add review
+            </Button>
+          </div>
         </div>
 
         {testimonials.length === 0 ? (
@@ -232,6 +257,117 @@ function ReviewMod() {
             <Button variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
             <Button onClick={save} disabled={saving}>{saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}Save</Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={aiOpen} onOpenChange={(o) => { setAiOpen(o); if (!o) { setAiDraft(null); setAiFiles([]); setAiText(""); } }}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><Sparkles className="h-4 w-4 text-primary" /> Import reviews with AI</DialogTitle>
+          </DialogHeader>
+
+          {!aiDraft ? (
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Upload screenshots of Google / Facebook / Instagram reviews, a PDF, or paste review text. AI pulls out the name, rating and quote — you tick which ones to keep before anything saves.
+              </p>
+              <div className="space-y-2">
+                <label className="text-xs font-semibold">Screenshots or PDFs</label>
+                <Input
+                  type="file"
+                  multiple
+                  accept="image/*,application/pdf"
+                  onChange={(e) => setAiFiles(Array.from(e.target.files ?? []))}
+                />
+                {aiFiles.length > 0 && (
+                  <ul className="space-y-0.5 text-xs text-muted-foreground">
+                    {aiFiles.map((f, i) => <li key={i}>{f.name} · {(f.size / 1024).toFixed(0)} KB</li>)}
+                  </ul>
+                )}
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-semibold">…or paste review text</label>
+                <Textarea
+                  rows={5}
+                  value={aiText}
+                  onChange={(e) => setAiText(e.target.value)}
+                  placeholder={"e.g.\nSarah — ★★★★★ Amazing service, felt looked after the whole time.\nJames — 5/5 Best lip filler I've had."}
+                />
+              </div>
+              <DialogFooter className="gap-2">
+                <Button variant="ghost" onClick={() => setAiOpen(false)}>Cancel</Button>
+                <Button
+                  disabled={aiBusy || (!aiFiles.length && !aiText.trim())}
+                  onClick={async () => {
+                    setAiBusy(true);
+                    try {
+                      const payload = aiFiles.length
+                        ? { files: await Promise.all(aiFiles.map(async (f) => ({ data_url: await fileToDataUrl(f), name: f.name }))) }
+                        : { text: aiText.trim() };
+                      const r = await extractAi({ data: payload });
+                      if (!r.reviews.length) { toast.error("AI couldn't find any reviews. Try a clearer screenshot."); return; }
+                      setAiDraft(r.reviews.map((rv) => ({ ...rv, _include: true })));
+                      toast.success(`Found ${r.reviews.length} review${r.reviews.length === 1 ? "" : "s"}`);
+                    } catch (e) { toast.error((e as Error).message); }
+                    finally { setAiBusy(false); }
+                  }}
+                >
+                  {aiBusy ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Reading…</> : <><Wand2 className="mr-2 h-4 w-4" /> Extract with AI</>}
+                </Button>
+              </DialogFooter>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">Untick anything you don't want to publish, or edit the wording in place.</p>
+              <div className="max-h-[55vh] space-y-2 overflow-y-auto pr-1">
+                {aiDraft.map((r, i) => (
+                  <div key={i} className={`space-y-2 rounded-md border p-3 ${r._include ? "" : "opacity-50"}`}>
+                    <div className="flex items-center gap-2">
+                      <Checkbox checked={r._include} onCheckedChange={(v) => {
+                        const next = [...aiDraft]; next[i] = { ...next[i], _include: !!v }; setAiDraft(next);
+                      }} />
+                      <Input
+                        className="max-w-[180px]"
+                        value={r.author_name}
+                        onChange={(e) => { const next = [...aiDraft]; next[i] = { ...next[i], author_name: e.target.value }; setAiDraft(next); }}
+                        placeholder="First name"
+                      />
+                      <Stars
+                        value={r.rating ?? 5}
+                        onChange={(n) => { const next = [...aiDraft]; next[i] = { ...next[i], rating: n }; setAiDraft(next); }}
+                      />
+                    </div>
+                    <Textarea
+                      rows={2}
+                      value={r.quote}
+                      onChange={(e) => { const next = [...aiDraft]; next[i] = { ...next[i], quote: e.target.value }; setAiDraft(next); }}
+                    />
+                  </div>
+                ))}
+              </div>
+              <DialogFooter className="gap-2">
+                <Button variant="ghost" onClick={() => setAiDraft(null)} disabled={aiBusy}>Back</Button>
+                <Button
+                  disabled={aiBusy}
+                  onClick={async () => {
+                    const keep = aiDraft.filter((r) => r._include && r.author_name.trim() && r.quote.trim());
+                    if (!keep.length) { toast.error("Tick at least one review to import"); return; }
+                    setAiBusy(true);
+                    try {
+                      const r = await commitAi({ data: { reviews: keep.map(({ _include: _i, ...rest }) => rest) } });
+                      toast.success(`Imported ${r.inserted} review${r.inserted === 1 ? "" : "s"}`);
+                      setAiOpen(false);
+                      setAiDraft(null); setAiFiles([]); setAiText("");
+                      refresh();
+                    } catch (e) { toast.error((e as Error).message); }
+                    finally { setAiBusy(false); }
+                  }}
+                >
+                  {aiBusy ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Importing…</> : <>Import {aiDraft.filter((r) => r._include).length} review(s)</>}
+                </Button>
+              </DialogFooter>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
