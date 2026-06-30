@@ -87,6 +87,13 @@ function ReviewMod() {
   const [rating, setRating] = useState<number>(5);
   const [saving, setSaving] = useState(false);
 
+  // AI import state
+  const [aiOpen, setAiOpen] = useState(false);
+  const [aiFiles, setAiFiles] = useState<File[]>([]);
+  const [aiText, setAiText] = useState("");
+  const [aiBusy, setAiBusy] = useState(false);
+  const [aiDraft, setAiDraft] = useState<Array<ExtractedReview & { _include: boolean }> | null>(null);
+
   async function refresh() {
     const [r, t] = await Promise.all([fetchReviews(), fetchTestimonials()]);
     setReviews(r.reviews as Review[]);
