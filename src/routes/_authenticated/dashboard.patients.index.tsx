@@ -179,6 +179,10 @@ function PatientsPage() {
       toast.error("Name is required");
       return;
     }
+    if (!form.dob || !form.dob.trim()) {
+      toast.error("Date of birth is required");
+      return;
+    }
     setSaving(true);
     try {
       await upsert({ data: { ...form, has_allergies: !!form.has_allergies, allergies: form.allergies || null } });
@@ -306,7 +310,7 @@ function PatientsPage() {
               <Field label="Phone"><Input value={form.phone ?? ""} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></Field>
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
-              <Field label="Date of birth"><Input type="date" value={form.dob ?? ""} onChange={(e) => setForm({ ...form, dob: e.target.value })} /></Field>
+              <Field label="Date of birth" required><Input type="date" required value={form.dob ?? ""} onChange={(e) => setForm({ ...form, dob: e.target.value })} /></Field>
               <Field label="Gender">
                 <Select value={form.gender ?? ""} onValueChange={(v) => setForm({ ...form, gender: v })}>
                   <SelectTrigger><SelectValue placeholder="Select…" /></SelectTrigger>
