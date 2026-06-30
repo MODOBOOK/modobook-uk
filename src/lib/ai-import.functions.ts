@@ -650,7 +650,7 @@ export const resetClinicServices = createServerFn({ method: "POST" })
       }
     }
 
-    return { removed, errors };
+    return { removed, skipped, errors };
   });
 
 
