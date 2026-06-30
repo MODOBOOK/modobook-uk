@@ -34,6 +34,8 @@ import { Route as MSlugBookMultiRouteImport } from './routes/m.$slug.book-multi'
 import { Route as MSlugAuthRouteImport } from './routes/m.$slug.auth'
 import { Route as MSlugAccountRouteImport } from './routes/m.$slug.account'
 import { Route as MSlugAboutRouteImport } from './routes/m.$slug.about'
+import { Route as AuthenticatedPrescriberVisitsRouteImport } from './routes/_authenticated/prescriber.visits'
+import { Route as AuthenticatedHubVisitsRouteImport } from './routes/_authenticated/hub.visits'
 import { Route as AuthenticatedHubVerificationRouteImport } from './routes/_authenticated/hub.verification'
 import { Route as AuthenticatedHubReferralsRouteImport } from './routes/_authenticated/hub.referrals'
 import { Route as AuthenticatedHubPrescribingRouteImport } from './routes/_authenticated/hub.prescribing'
@@ -200,6 +202,17 @@ const MSlugAboutRoute = MSlugAboutRouteImport.update({
   id: '/about',
   path: '/about',
   getParentRoute: () => MSlugRoute,
+} as any)
+const AuthenticatedPrescriberVisitsRoute =
+  AuthenticatedPrescriberVisitsRouteImport.update({
+    id: '/visits',
+    path: '/visits',
+    getParentRoute: () => AuthenticatedPrescriberRoute,
+  } as any)
+const AuthenticatedHubVisitsRoute = AuthenticatedHubVisitsRouteImport.update({
+  id: '/visits',
+  path: '/visits',
+  getParentRoute: () => AuthenticatedHubRoute,
 } as any)
 const AuthenticatedHubVerificationRoute =
   AuthenticatedHubVerificationRouteImport.update({
@@ -483,6 +496,8 @@ export interface FileRoutesByFullPath {
   '/hub/prescribing': typeof AuthenticatedHubPrescribingRoute
   '/hub/referrals': typeof AuthenticatedHubReferralsRoute
   '/hub/verification': typeof AuthenticatedHubVerificationRoute
+  '/hub/visits': typeof AuthenticatedHubVisitsRoute
+  '/prescriber/visits': typeof AuthenticatedPrescriberVisitsRoute
   '/m/$slug/about': typeof MSlugAboutRoute
   '/m/$slug/account': typeof MSlugAccountRoute
   '/m/$slug/auth': typeof MSlugAuthRoute
@@ -543,6 +558,8 @@ export interface FileRoutesByTo {
   '/hub/prescribing': typeof AuthenticatedHubPrescribingRoute
   '/hub/referrals': typeof AuthenticatedHubReferralsRoute
   '/hub/verification': typeof AuthenticatedHubVerificationRoute
+  '/hub/visits': typeof AuthenticatedHubVisitsRoute
+  '/prescriber/visits': typeof AuthenticatedPrescriberVisitsRoute
   '/m/$slug/about': typeof MSlugAboutRoute
   '/m/$slug/account': typeof MSlugAccountRoute
   '/m/$slug/auth': typeof MSlugAuthRoute
@@ -610,6 +627,8 @@ export interface FileRoutesById {
   '/_authenticated/hub/prescribing': typeof AuthenticatedHubPrescribingRoute
   '/_authenticated/hub/referrals': typeof AuthenticatedHubReferralsRoute
   '/_authenticated/hub/verification': typeof AuthenticatedHubVerificationRoute
+  '/_authenticated/hub/visits': typeof AuthenticatedHubVisitsRoute
+  '/_authenticated/prescriber/visits': typeof AuthenticatedPrescriberVisitsRoute
   '/m/$slug/about': typeof MSlugAboutRoute
   '/m/$slug/account': typeof MSlugAccountRoute
   '/m/$slug/auth': typeof MSlugAuthRoute
@@ -677,6 +696,8 @@ export interface FileRouteTypes {
     | '/hub/prescribing'
     | '/hub/referrals'
     | '/hub/verification'
+    | '/hub/visits'
+    | '/prescriber/visits'
     | '/m/$slug/about'
     | '/m/$slug/account'
     | '/m/$slug/auth'
@@ -737,6 +758,8 @@ export interface FileRouteTypes {
     | '/hub/prescribing'
     | '/hub/referrals'
     | '/hub/verification'
+    | '/hub/visits'
+    | '/prescriber/visits'
     | '/m/$slug/about'
     | '/m/$slug/account'
     | '/m/$slug/auth'
@@ -803,6 +826,8 @@ export interface FileRouteTypes {
     | '/_authenticated/hub/prescribing'
     | '/_authenticated/hub/referrals'
     | '/_authenticated/hub/verification'
+    | '/_authenticated/hub/visits'
+    | '/_authenticated/prescriber/visits'
     | '/m/$slug/about'
     | '/m/$slug/account'
     | '/m/$slug/auth'
@@ -1009,6 +1034,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/m/$slug/about'
       preLoaderRoute: typeof MSlugAboutRouteImport
       parentRoute: typeof MSlugRoute
+    }
+    '/_authenticated/prescriber/visits': {
+      id: '/_authenticated/prescriber/visits'
+      path: '/visits'
+      fullPath: '/prescriber/visits'
+      preLoaderRoute: typeof AuthenticatedPrescriberVisitsRouteImport
+      parentRoute: typeof AuthenticatedPrescriberRoute
+    }
+    '/_authenticated/hub/visits': {
+      id: '/_authenticated/hub/visits'
+      path: '/visits'
+      fullPath: '/hub/visits'
+      preLoaderRoute: typeof AuthenticatedHubVisitsRouteImport
+      parentRoute: typeof AuthenticatedHubRoute
     }
     '/_authenticated/hub/verification': {
       id: '/_authenticated/hub/verification'
@@ -1398,6 +1437,7 @@ interface AuthenticatedHubRouteChildren {
   AuthenticatedHubPrescribingRoute: typeof AuthenticatedHubPrescribingRoute
   AuthenticatedHubReferralsRoute: typeof AuthenticatedHubReferralsRoute
   AuthenticatedHubVerificationRoute: typeof AuthenticatedHubVerificationRoute
+  AuthenticatedHubVisitsRoute: typeof AuthenticatedHubVisitsRoute
   AuthenticatedHubIndexRoute: typeof AuthenticatedHubIndexRoute
 }
 
@@ -1406,6 +1446,7 @@ const AuthenticatedHubRouteChildren: AuthenticatedHubRouteChildren = {
   AuthenticatedHubPrescribingRoute: AuthenticatedHubPrescribingRoute,
   AuthenticatedHubReferralsRoute: AuthenticatedHubReferralsRoute,
   AuthenticatedHubVerificationRoute: AuthenticatedHubVerificationRoute,
+  AuthenticatedHubVisitsRoute: AuthenticatedHubVisitsRoute,
   AuthenticatedHubIndexRoute: AuthenticatedHubIndexRoute,
 }
 
@@ -1413,11 +1454,13 @@ const AuthenticatedHubRouteWithChildren =
   AuthenticatedHubRoute._addFileChildren(AuthenticatedHubRouteChildren)
 
 interface AuthenticatedPrescriberRouteChildren {
+  AuthenticatedPrescriberVisitsRoute: typeof AuthenticatedPrescriberVisitsRoute
   AuthenticatedPrescriberIndexRoute: typeof AuthenticatedPrescriberIndexRoute
 }
 
 const AuthenticatedPrescriberRouteChildren: AuthenticatedPrescriberRouteChildren =
   {
+    AuthenticatedPrescriberVisitsRoute: AuthenticatedPrescriberVisitsRoute,
     AuthenticatedPrescriberIndexRoute: AuthenticatedPrescriberIndexRoute,
   }
 

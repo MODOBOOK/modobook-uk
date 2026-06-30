@@ -15,7 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
-import { Stethoscope, ExternalLink } from "lucide-react";
+import { Stethoscope } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/hub/prescribing")({
   ssr: false,
@@ -89,22 +89,26 @@ function Row({
     treatment_id: string;
     requires_prescriber: boolean;
     prescriber_user_id: string | null;
-    prescriber_routing: "same_address" | "in_person_consult";
+    prescriber_routing: "same_address" | "clinic_visit";
     prescriber_note: string | null;
   }) => Promise<void>;
 }) {
   const [req, setReq] = useState(Boolean(treatment.requires_prescriber));
   const [prescriberId, setPrescriberId] = useState<string | "">(treatment.prescriber_user_id ?? "");
-  const [routing, setRouting] = useState<"same_address" | "in_person_consult">(
-    (treatment.prescriber_routing as "same_address" | "in_person_consult") ?? "same_address",
-  );
+  const initialRouting = (() => {
+    const r = treatment.prescriber_routing as string | null;
+    if (r === "in_person_consult" || r === "clinic_visit") return "clinic_visit" as const;
+    return "same_address" as const;
+  })();
+  const [routing, setRouting] = useState<"same_address" | "clinic_visit">(initialRouting);
+
   const [note, setNote] = useState(treatment.prescriber_note ?? "");
   const [saving, setSaving] = useState(false);
 
   const dirty =
     req !== Boolean(treatment.requires_prescriber) ||
     (prescriberId || null) !== (treatment.prescriber_user_id ?? null) ||
-    routing !== (treatment.prescriber_routing ?? "same_address") ||
+    routing !== initialRouting ||
     note !== (treatment.prescriber_note ?? "");
 
   return (
@@ -149,7 +153,7 @@ function Row({
               </Label>
               <RadioGroup
                 value={routing}
-                onValueChange={(v) => setRouting(v as "same_address" | "in_person_consult")}
+                onValueChange={(v) => setRouting(v as "same_address" | "clinic_visit")}
               >
                 <label className="flex items-start gap-2 rounded-md border p-2 text-sm">
                   <RadioGroupItem value="same_address" className="mt-0.5" />
@@ -159,14 +163,16 @@ function Row({
                   </span>
                 </label>
                 <label className="flex items-start gap-2 rounded-md border p-2 text-sm">
-                  <RadioGroupItem value="in_person_consult" className="mt-0.5" />
+                  <RadioGroupItem value="clinic_visit" className="mt-0.5" />
                   <span>
-                    <span className="font-medium">In-person consult</span> — patient is sent to the
-                    prescriber's MODO booking page before the treatment.
+                    <span className="font-medium">Clinic visit days</span> — patient picks a day the
+                    prescriber will be visiting your clinic.{" "}
+                    <Link to="/hub/visits" className="underline">Manage visit days</Link>.
                   </span>
                 </label>
               </RadioGroup>
             </div>
+
 
             <div className="sm:col-span-2">
               <Label className="mb-1.5 block text-xs uppercase tracking-wide text-muted-foreground">

@@ -12,10 +12,12 @@ function HubLayout() {
   const tabs = [
     { to: "/hub", label: "Overview", exact: true },
     { to: "/hub/prescribing", label: "Prescribing rules" },
+    { to: "/hub/visits", label: "Clinic visits" },
     { to: "/hub/referrals", label: "Referrals" },
     { to: "/hub/connections", label: "Connections" },
     { to: "/hub/verification", label: "Verification" },
   ];
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b">

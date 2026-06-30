@@ -53,7 +53,7 @@ const SaveSchema = z.object({
   treatment_id: z.string().uuid(),
   requires_prescriber: z.boolean(),
   prescriber_user_id: z.string().uuid().nullable(),
-  prescriber_routing: z.enum(["same_address", "in_person_consult"]),
+  prescriber_routing: z.enum(["same_address", "clinic_visit", "in_person_consult"]),
   prescriber_note: z.string().max(2000).nullable().optional(),
 });
 export const saveTreatmentPrescriberSettings = createServerFn({ method: "POST" })
@@ -127,7 +127,8 @@ export const listMyReferrals = createServerFn({ method: "GET" })
       return {
         id: r.id,
         status: r.status as "pending" | "accepted" | "declined" | "completed",
-        routing: r.routing as "same_address" | "in_person_consult",
+        routing: r.routing as "same_address" | "clinic_visit" | "in_person_consult",
+
         created_at: r.created_at,
         accepted_at: r.accepted_at,
         consent_given_at: r.consent_given_at,
@@ -222,7 +223,7 @@ export const listSentReferrals = createServerFn({ method: "GET" })
     return rows.map((r) => ({
       id: r.id,
       status: r.status as "pending" | "accepted" | "declined" | "completed",
-      routing: r.routing as "same_address" | "in_person_consult",
+      routing: r.routing as "same_address" | "clinic_visit" | "in_person_consult",
       created_at: r.created_at,
       accepted_at: r.accepted_at,
       patient_name: r.patient_name,
@@ -272,7 +273,7 @@ export const getPrescriberInfoForTreatments = createServerFn({ method: "POST" })
     return list.map((t) => ({
       treatment_id: t.id,
       treatment_name: t.name,
-      routing: t.prescriber_routing as "same_address" | "in_person_consult",
+      routing: t.prescriber_routing as "same_address" | "clinic_visit" | "in_person_consult",
       note: t.prescriber_note,
       prescriber_user_id: t.prescriber_user_id as string,
       prescriber_name:
@@ -297,6 +298,8 @@ export const createReferralsForBooking = createServerFn({ method: "POST" })
         dob?: string | null;
       };
       clientId?: string | null;
+      /** Map of treatment_id -> chosen clinic visit_id (for clinic_visit routing) */
+      visitSelections?: Record<string, string>;
     }) => i,
   )
   .handler(async ({ data }) => {
@@ -313,12 +316,15 @@ export const createReferralsForBooking = createServerFn({ method: "POST" })
       .select("id, requires_prescriber, prescriber_user_id, prescriber_routing")
       .in("id", treatmentIds);
     const byId = new Map((ts ?? []).map((t) => [t.id, t]));
+    const selections = data.visitSelections ?? {};
     const rows = data.appointments
       .map((a) => {
         const t = byId.get(a.treatmentId);
         if (!t || !t.requires_prescriber || !t.prescriber_user_id) return null;
-        // Only auto-create for same_address; in_person_consult means patient must book separately
-        if (t.prescriber_routing !== "same_address") return null;
+        const routing = t.prescriber_routing as string;
+        // Auto-create for same_address always; for clinic_visit only if a visit was chosen.
+        if (routing !== "same_address" && routing !== "clinic_visit") return null;
+        if (routing === "clinic_visit" && !selections[t.id]) return null;
         return {
           practitioner_profile_id: profile.id,
           prescriber_user_id: t.prescriber_user_id,
@@ -326,7 +332,8 @@ export const createReferralsForBooking = createServerFn({ method: "POST" })
           appointment_id: a.id,
           client_id: data.clientId ?? null,
           status: "pending" as const,
-          routing: t.prescriber_routing,
+          routing,
+          clinic_visit_id: routing === "clinic_visit" ? selections[t.id] : null,
           patient_name: data.patient.name,
           patient_email: data.patient.email,
           patient_phone: data.patient.phone ?? null,
@@ -339,3 +346,4 @@ export const createReferralsForBooking = createServerFn({ method: "POST" })
     if (error) throw error;
     return { created: rows.length };
   });
+

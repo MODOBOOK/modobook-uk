@@ -1,7 +1,7 @@
 import { createFileRoute, Link, Outlet, redirect, useRouterState } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { LogOut, Inbox, Network, ShieldCheck, Stethoscope, Building2 } from "lucide-react";
+import { LogOut, Inbox, Network, ShieldCheck, Stethoscope, Building2, CalendarDays } from "lucide-react";
 import { getHubContext } from "@/lib/hub.functions";
 import { getMyProfile } from "@/lib/profiles.functions";
 import { cn } from "@/lib/utils";
@@ -21,10 +21,12 @@ export const Route = createFileRoute("/_authenticated/prescriber")({
 
 const nav = [
   { to: "/prescriber", label: "Referrals", icon: Inbox, exact: true },
+  { to: "/prescriber/visits", label: "Clinic visits", icon: CalendarDays },
   { to: "/hub/connections", label: "Connections", icon: Network },
   { to: "/hub/verification", label: "Verification", icon: ShieldCheck },
   { to: "/hub", label: "Hub overview", icon: Stethoscope },
 ];
+
 
 function PrescriberLayout() {
   const { hubCtx, hasClinic } = Route.useRouteContext();
@@ -101,7 +103,7 @@ function PrescriberLayout() {
           <Outlet />
         </main>
 
-        <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t bg-background/95 backdrop-blur lg:hidden">
+        <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t bg-background/95 backdrop-blur lg:hidden">
           {nav.map((tab) => {
             const active = tab.exact ? pathname === tab.to : pathname.startsWith(tab.to);
             return (
