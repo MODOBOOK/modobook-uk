@@ -106,8 +106,25 @@ function PatientAuth() {
             <div><Label>Email</Label><Input type="email" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} required /></div>
             <div><Label>Password</Label><Input type="password" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} required /></div>
             <Button type="submit" className="w-full" disabled={loading}>{loading ? "Signing in…" : "Sign in"}</Button>
+            <button
+              type="button"
+              className="block w-full text-center text-xs text-muted-foreground underline-offset-2 hover:underline"
+              onClick={() => { setForgotOpen((v) => !v); setForgotEmail(loginEmail); }}
+            >
+              Forgot password?
+            </button>
+            {forgotOpen && (
+              <div className="rounded-md border bg-muted/40 p-3">
+                <Label className="text-xs">Send a reset link to</Label>
+                <div className="mt-1 flex gap-2">
+                  <Input type="email" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} placeholder="you@example.com" />
+                  <Button type="button" size="sm" onClick={sendReset} disabled={loading || !forgotEmail}>Send</Button>
+                </div>
+              </div>
+            )}
           </form>
         </TabsContent>
+
         <TabsContent value="signup" className="space-y-3 pt-4">
           <form onSubmit={signUp} className="space-y-3">
             <div><Label>Full name</Label><Input value={name} onChange={(e) => setName(e.target.value)} required /></div>
