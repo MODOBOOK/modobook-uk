@@ -25,6 +25,8 @@ type Rule = { hours_before: number; fee_percent: number };
 
 function PoliciesPage() {
   const { profile } = Route.useLoaderData();
+  const savedAboutPage = ((profile as { about_page?: Record<string, unknown> | null }).about_page ?? {}) as Record<string, unknown>;
+  const [introHeading, setIntroHeading] = useState<string>(typeof savedAboutPage.intro_heading === "string" ? savedAboutPage.intro_heading : "");
   const [welcome, setWelcome] = useState<string>((profile.welcome_intro_html as string | null) ?? "");
   const [depositPounds, setDepositPounds] = useState<string>(
     ((profile.deposit_amount_cents as number | null) ?? 0) > 0
@@ -46,6 +48,11 @@ function PoliciesPage() {
         data: {
           id: profile.id,
           welcome_intro_html: welcome,
+          about_page: {
+            ...savedAboutPage,
+            intro_heading: introHeading,
+            show_intro: true,
+          },
           deposit_amount_cents: depositPounds ? Math.round(Number(depositPounds) * 100) : 0,
           deposit_policy_text: depositText,
           cancellation_rules: rules
@@ -66,16 +73,27 @@ function PoliciesPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Welcome message & policies</h1>
+        <h1 className="text-2xl font-bold">Welcome / intro & policies</h1>
         <p className="text-sm text-muted-foreground">
           Shown to patients at the top of your booking link.
         </p>
       </div>
 
       <Card>
-        <CardHeader><CardTitle>Welcome message</CardTitle></CardHeader>
-        <CardContent>
+        <CardHeader><CardTitle>Welcome / intro block</CardTitle></CardHeader>
+        <CardContent className="space-y-3">
+          <div>
+            <Label>Heading</Label>
+            <Input
+              value={introHeading}
+              onChange={(e) => setIntroHeading(e.target.value)}
+              placeholder="Welcome to the clinic"
+            />
+          </div>
+          <div>
+            <Label>Intro text</Label>
           <RichTextEditor value={welcome} onChange={setWelcome} />
+          </div>
           <p className="mt-2 text-xs text-muted-foreground">Use bold, italic, headings, lists or links to introduce your clinic.</p>
         </CardContent>
       </Card>
