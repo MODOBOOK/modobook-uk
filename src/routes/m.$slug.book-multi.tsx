@@ -895,6 +895,106 @@ function MultiBookPage() {
                     </div>
                   )}
 
+                  {clinicVisitItems.length > 0 && (
+                    <div className="space-y-3">
+                      {clinicVisitItems.map((p) => {
+                        const visits = availableVisits.filter(
+                          (v) => v.treatment_id === p.treatment_id,
+                        );
+                        const selected = visitSelections[p.treatment_id];
+                        return (
+                          <div
+                            key={p.treatment_id}
+                            className="rounded-md border bg-muted/30 p-3"
+                          >
+                            <p className="text-sm font-medium">{p.treatment_name}</p>
+                            <p className="mt-0.5 text-xs opacity-75">
+                              Prescriber: <span className="font-medium">{p.prescriber_name}</span>
+                              {p.prescriber_regulatory_body
+                                ? ` · ${p.prescriber_regulatory_body}`
+                                : ""}
+                            </p>
+                            <p className="mt-1 text-xs">
+                              Pick a day {p.prescriber_name} will be visiting the clinic for your
+                              prescriber review:
+                            </p>
+                            {availableVisitsQuery.isLoading ? (
+                              <p className="mt-2 text-xs opacity-70">Loading visit days…</p>
+                            ) : visits.length === 0 ? (
+                              <p className="mt-2 text-xs text-destructive">
+                                No upcoming visit days available. Please contact the clinic.
+                              </p>
+                            ) : (
+                              <div className="mt-2 grid gap-1.5 sm:grid-cols-2">
+                                {visits.map((v) => {
+                                  const active = selected === v.visit_id;
+                                  return (
+                                    <button
+                                      key={v.visit_id}
+                                      type="button"
+                                      onClick={() =>
+                                        setVisitSelections((prev) => ({
+                                          ...prev,
+                                          [p.treatment_id]: v.visit_id,
+                                        }))
+                                      }
+                                      className={`rounded-md border px-2 py-1.5 text-left text-xs transition ${
+                                        active
+                                          ? "border-2 font-semibold"
+                                          : "hover:bg-muted"
+                                      }`}
+                                      style={
+                                        active ? { borderColor: accent, color: accent } : undefined
+                                      }
+                                    >
+                                      <div>
+                                        {new Date(
+                                          v.visit_date + "T00:00:00",
+                                        ).toLocaleDateString(undefined, {
+                                          weekday: "short",
+                                          day: "numeric",
+                                          month: "short",
+                                        })}{" "}
+                                        · {v.start_time.slice(0, 5)}–{v.end_time.slice(0, 5)}
+                                      </div>
+                                      {v.location_name && (
+                                        <div className="opacity-70">{v.location_name}</div>
+                                      )}
+                                      <div className="opacity-60">
+                                        {v.remaining_capacity} slot
+                                        {v.remaining_capacity === 1 ? "" : "s"} left
+                                      </div>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            )}
+                            {visits.length > 0 && (
+                              <label className="mt-2 flex cursor-pointer items-start gap-2 text-sm">
+                                <input
+                                  type="checkbox"
+                                  className="mt-0.5 h-4 w-4"
+                                  checked={Boolean(prescriberConsents[p.treatment_id])}
+                                  onChange={(e) =>
+                                    setPrescriberConsents((prev) => ({
+                                      ...prev,
+                                      [p.treatment_id]: e.target.checked,
+                                    }))
+                                  }
+                                />
+                                <span>
+                                  I consent to {ctx.clinicName} sharing my booking details and
+                                  medical forms with {p.prescriber_name} for this visit.
+                                  <span className="text-destructive"> *</span>
+                                </span>
+                              </label>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
                   {inPersonItems.length > 0 && (
                     <div className="space-y-3">
                       {inPersonItems.map((p) => (
@@ -909,25 +1009,14 @@ function MultiBookPage() {
                             be booked here.
                           </p>
                           {p.note && <p className="mt-1 text-xs opacity-75">{p.note}</p>}
-                          {p.prescriber_booking_slug ? (
-                            <a
-                              href={`/m/${p.prescriber_booking_slug}`}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="mt-2 inline-flex items-center text-sm font-semibold underline"
-                              style={{ color: accent }}
-                            >
-                              Book consultation with prescriber →
-                            </a>
-                          ) : (
-                            <p className="mt-2 text-xs opacity-75">
-                              Please contact the clinic to arrange this consultation.
-                            </p>
-                          )}
+                          <p className="mt-2 text-xs opacity-75">
+                            Please contact the clinic to arrange this consultation.
+                          </p>
                         </div>
                       ))}
                     </div>
                   )}
+
                 </CardContent>
               </Card>
             )}
