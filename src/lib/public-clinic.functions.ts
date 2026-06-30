@@ -120,7 +120,7 @@ export const getPublicClinic = createServerFn({ method: "GET" })
         .eq("show_on_public", true)
         .order("name"),
       supabase.from("pretreatment_templates")
-        .select("id, name, body_html, summary, sort_order")
+        .select("id, name, body_html, summary, sort_order, category, bullets")
         .eq("profile_id", profile.id)
         .eq("show_on_public", true)
         .eq("active", true)
