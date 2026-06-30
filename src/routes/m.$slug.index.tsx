@@ -247,6 +247,8 @@ function BookPage() {
 
   const [locationId, setLocationId] = useState<string | null>(null);
   const [directionsOpen, setDirectionsOpen] = useState(false);
+  const [careGuideOpen, setCareGuideOpen] = useState(false);
+  const hasCareGuides = (careGuides ?? []).length > 0;
   const practSelectionMode = profile.practitioner_selection_mode ?? "optional";
   const [practitionerId, setPractitionerIdState] = useState<string | null>(null);
   const setPractitionerId = (id: string | null) => {
