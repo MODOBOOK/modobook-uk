@@ -132,6 +132,7 @@ function BookTreatmentPage() {
   const sessionSpacing = formatSessionSpacing((treatment as { session_interval_days?: number | null }).session_interval_days);
   const splitAllowed = Boolean((treatment as { allow_split_payment?: boolean }).allow_split_payment) && sessionCount > 1;
   const [paymentPlan, setPaymentPlan] = useState<"full" | "split">("full");
+  const [discount, setDiscount] = useState<AppliedDiscount | null>(null);
 
   // Patient auth gate: 'pending' until they pick a path
   const [authChoice, setAuthChoice] = useState<"pending" | "guest" | "signed-in">("pending");
