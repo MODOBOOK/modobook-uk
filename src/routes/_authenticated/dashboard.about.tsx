@@ -76,8 +76,8 @@ function AboutEditor() {
         setAp(((p as { about_page?: AboutPage }).about_page ?? {}) as AboutPage);
         setTagline(p.tagline ?? "");
         setSpecialties(((p as { specialties?: string[] }).specialties ?? []));
-        setQuals(((p as { qualifications?: Qual[] }).qualifications ?? []));
-        setTimeline(((p as { timeline?: TimelineItem[] }).timeline ?? []));
+        setQuals(((p as unknown as { qualifications?: Qual[] }).qualifications ?? []));
+        setTimeline(((p as unknown as { timeline?: TimelineItem[] }).timeline ?? []));
       }
       setLoading(false);
     })();
