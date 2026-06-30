@@ -245,6 +245,7 @@ function BookPage() {
   const welcomeHtml = profile.welcome_intro_html?.trim() || (legacyIntroBody ? textToParagraphHtml(legacyIntroBody) : "");
 
   const [locationId, setLocationId] = useState<string | null>(null);
+  const [directionsOpen, setDirectionsOpen] = useState(false);
   const practSelectionMode = profile.practitioner_selection_mode ?? "optional";
   const [practitionerId, setPractitionerIdState] = useState<string | null>(null);
   const setPractitionerId = (id: string | null) => {
