@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { Palette, Check, X, Wand2 } from "lucide-react";
 import { PRESETS, LAYOUTS, type ThemePresetKey, type BookingLayoutKey, type ThemePreset } from "@/lib/theme-presets";
 import { COLOR_PALETTES, CUSTOM_PALETTE_SLOTS, buildCustomPalette, type ColorPalette } from "@/lib/color-palettes";
+import { SaveReminder } from "@/components/SaveReminder";
 
 export const Route = createFileRoute("/_authenticated/dashboard/branding")({
   component: BrandingPage,
@@ -314,6 +315,7 @@ function BrandingPage() {
           {saving ? "Saving…" : "Save changes"}
         </Button>
       </div>
+      <SaveReminder />
 
       {/* Style presets */}
       <Card>
@@ -928,6 +930,12 @@ function BrandingPage() {
           <ColorField label="Tile border" value={state.contact_tile_border_color ?? "#e5e7eb"} onChange={(v) => set("contact_tile_border_color", v)} />
         </CardContent>
       </Card>
+
+      <div className="flex justify-end pt-2">
+        <Button onClick={handleSave} disabled={saving} size="lg" className="shadow-luxe">
+          {saving ? "Saving…" : "Save changes"}
+        </Button>
+      </div>
     </div>
   );
 }

@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Loader2, Save, ExternalLink, Sparkles } from "lucide-react";
 import { toast } from "sonner";
+import { SaveReminder } from "@/components/SaveReminder";
 
 export const Route = createFileRoute("/_authenticated/dashboard/quiz")({
   component: QuizBuilder,
@@ -104,6 +105,8 @@ function QuizBuilder() {
           </Button>
         )}
       </div>
+
+      <SaveReminder message="Each section below has its own Save button — remember to tap it after editing settings or treatment tags." />
 
       <Card>
         <CardHeader>

@@ -21,6 +21,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { Trash2, Plus, ChevronDown, ChevronRight } from "lucide-react";
+import { SaveReminder } from "@/components/SaveReminder";
 
 export const Route = createFileRoute("/_authenticated/dashboard/booking-flow")({
   ssr: false,
@@ -157,6 +158,7 @@ function BookingFlowPage() {
           Optionally ask patients what they're looking for before showing treatments.
         </p>
       </div>
+      <SaveReminder message="Each card has its own Save button at the bottom — remember to tap it after editing." />
 
       <Card>
         <CardHeader><CardTitle>Picker settings</CardTitle></CardHeader>

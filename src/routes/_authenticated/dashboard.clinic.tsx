@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { toast } from "sonner";
+import { SaveReminder } from "@/components/SaveReminder";
 
 export const Route = createFileRoute("/_authenticated/dashboard/clinic")({
   ssr: false,
@@ -102,6 +103,7 @@ function ClinicPage() {
         <h1 className="text-2xl font-bold">Clinic page</h1>
         <p className="text-muted-foreground">Your public booking page at /m/{slug}.</p>
       </div>
+      <SaveReminder />
       <Card>
         <CardHeader>
           <CardTitle>Details</CardTitle>

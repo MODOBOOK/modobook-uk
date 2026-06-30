@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
+import { SaveReminder } from "@/components/SaveReminder";
 
 export const Route = createFileRoute("/_authenticated/dashboard/settings")({
   ssr: false,
@@ -120,6 +121,7 @@ function SettingsPage() {
           Toggle features on or off. Every option applies to your public booking link.
         </p>
       </div>
+      <SaveReminder />
 
       {/* BOOKING WINDOW */}
       <Card>
