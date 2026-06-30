@@ -176,7 +176,7 @@ function PatientProfilePage() {
           try {
             const r: any = await createConsult({ data: { patient_name: client.full_name, patient_email: client.email || undefined, patient_phone: client.phone || undefined, patient_id: client.id } });
             if (!r?.id) throw new Error("No consultation id returned");
-            await navigate({ to: "/dashboard/consultations/$id", params: { id: String(r.id) } });
+            window.location.href = `/dashboard/consultations/${r.id}`;
           } catch (e: any) {
             console.error("start consultation failed", e);
             toast.error(e?.message || "Could not start consultation");
