@@ -374,7 +374,7 @@ function ServicesPage() {
         onClose={() => setSvcDialog(null)}
         onSubmit={async (values) => {
           try {
-            const { consent_ids, aftercare_template_ids, ...base } = values;
+            const { consent_ids, aftercare_template_ids, location_overrides, ...base } = values;
             const baseCreate = {
               name: base.name,
               duration: base.duration,
@@ -413,6 +413,17 @@ function ServicesPage() {
             await setAftercareTpls({
               data: { treatment_id: created.id, template_ids: aftercare_template_ids ?? [] },
             });
+            for (const o of location_overrides ?? []) {
+              await saveLocPricing({
+                data: {
+                  treatment_id: created.id,
+                  location_id: o.location_id,
+                  available: o.available,
+                  price_cents: o.price_cents,
+                  duration_minutes: o.duration_minutes,
+                },
+              });
+            }
             toast.success("Service created");
             setSvcDialog(null);
             treats.refetch();
