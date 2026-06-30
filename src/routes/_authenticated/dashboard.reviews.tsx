@@ -210,15 +210,29 @@ function ReviewMod() {
       <section className="space-y-3">
         <div>
           <h2 className="text-lg font-semibold">Patient-submitted reviews</h2>
-          <p className="text-xs text-muted-foreground">Approve or hide reviews left by patients on your booking page.</p>
+          <p className="text-xs text-muted-foreground">New reviews are hidden until you approve them. Pending reviews appear first.</p>
         </div>
+        {(() => {
+          const pendingCount = reviews.filter((x) => !x.approved).length;
+          if (pendingCount === 0) return null;
+          return (
+            <div className="rounded-md border border-primary/40 bg-primary/5 px-3 py-2 text-sm">
+              <strong>{pendingCount}</strong> new review{pendingCount === 1 ? "" : "s"} waiting for your approval.
+            </div>
+          );
+        })()}
         {reviews.length === 0 ? (
           <p className="text-sm text-muted-foreground">No patient reviews yet.</p>
-        ) : reviews.map((r) => (
-          <Card key={r.id}>
+        ) : [...reviews].sort((a, b) => Number(a.approved) - Number(b.approved)).map((r) => (
+          <Card key={r.id} className={!r.approved ? "border-primary/40 ring-1 ring-primary/20" : undefined}>
             <CardContent className="space-y-2 py-4">
               <div className="flex items-center justify-between gap-2">
-                <Stars value={r.rating} />
+                <div className="flex items-center gap-2">
+                  <Stars value={r.rating} />
+                  {!r.approved && (
+                    <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary-foreground">New</span>
+                  )}
+                </div>
                 <div className="flex gap-1">
                   <Button size="sm" variant={r.approved ? "outline" : "default"} onClick={() => toggle(r.id, !r.approved)}>
                     {r.approved ? <><EyeOff className="mr-1 h-4 w-4" />Hide</> : <><Eye className="mr-1 h-4 w-4" />Approve</>}
@@ -234,7 +248,7 @@ function ReviewMod() {
               </div>
               {r.title && <h3 className="font-semibold">{r.title}</h3>}
               <p className="text-sm">{r.body}</p>
-              <p className="text-xs text-muted-foreground">{r.patients?.full_name ?? "Anonymous"} · {new Date(r.created_at).toLocaleDateString()}{r.approved ? "" : " · hidden"}</p>
+              <p className="text-xs text-muted-foreground">{r.patients?.full_name ?? "Anonymous"} · {new Date(r.created_at).toLocaleDateString()}{r.approved ? "" : " · hidden until approved"}</p>
             </CardContent>
           </Card>
         ))}
