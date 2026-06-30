@@ -143,7 +143,7 @@ function AiImportPage() {
           <CardHeader>
             <CardTitle className="text-lg">Set up your clinic in seconds</CardTitle>
             <p className="text-sm text-muted-foreground">
-              Send us your existing price list — PDF, photo, spreadsheet or website — and AI will
+              Send us your existing price list — PDF or photo / screenshot — and AI will
               pull out your <b>categories, subcategories, treatments, prices and add-ons</b>. You
               review everything on the next screen before anything saves.
             </p>
