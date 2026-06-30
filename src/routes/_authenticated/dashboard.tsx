@@ -116,9 +116,10 @@ function DashboardLayout() {
 
 
       <div className="flex min-w-0 flex-1 flex-col">
-        {/* Mobile header — slim, just brand + preview */}
-        <header className="flex h-14 items-center justify-between border-b px-4 lg:hidden">
-          <div className="flex min-w-0 items-center gap-2">
+        {/* Mobile header — slim, back + brand + preview */}
+        <header className="flex h-14 items-center justify-between gap-2 border-b px-3 lg:hidden">
+          <BackButton />
+          <div className="flex min-w-0 flex-1 items-center justify-center">
             <span className="truncate text-sm font-semibold">{profile.clinic_name || "My Clinic"}</span>
           </div>
           <Button variant="outline" size="sm" asChild>
@@ -129,9 +130,12 @@ function DashboardLayout() {
 
         {/* Desktop header */}
         <header className="hidden h-20 items-center justify-between border-b border-border/60 px-10 lg:flex">
-          <div>
-            <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Studio</div>
-            <div className="font-serif text-2xl leading-tight">{profile.clinic_name || "Dashboard"}</div>
+          <div className="flex items-center gap-3">
+            <BackButton />
+            <div>
+              <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Studio</div>
+              <div className="font-serif text-2xl leading-tight">{profile.clinic_name || "Dashboard"}</div>
+            </div>
           </div>
           <Button variant="outline" size="sm" className="rounded-full px-5" asChild>
             <a href={`/m/${profile.slug}`} target="_blank" rel="noreferrer">
@@ -139,6 +143,7 @@ function DashboardLayout() {
             </a>
           </Button>
         </header>
+
 
         <main className="min-w-0 flex-1 overflow-x-hidden p-5 pb-24 lg:p-10 lg:pb-10">
           <Outlet />
