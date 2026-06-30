@@ -531,9 +531,44 @@ function TreatmentDialog({
           </div>
           <div>
             <Label>Price (£)</Label>
-            <Input type="number" value={price} onChange={(e) => setPrice(Number(e.target.value))} />
+            <Input
+              type="number"
+              value={price}
+              onChange={(e) => setPrice(Number(e.target.value))}
+              disabled={priceMode === "poa" || priceMode === "free"}
+            />
           </div>
         </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <Label>Price display</Label>
+            <Select value={priceMode} onValueChange={(v) => setPriceMode(v as typeof priceMode)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="fixed">Fixed (e.g. £120)</SelectItem>
+                <SelectItem value="from">From (e.g. From £120)</SelectItem>
+                <SelectItem value="poa">POA — price on application</SelectItem>
+                <SelectItem value="free">Free</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="mt-1 text-[11px] text-muted-foreground">Controls how the price appears to patients.</p>
+          </div>
+          <div>
+            <Label>Highlight badge</Label>
+            <Select value={badge} onValueChange={(v) => setBadge(v as typeof badge)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">No badge</SelectItem>
+                <SelectItem value="recommended">⭐ Recommended</SelectItem>
+                <SelectItem value="popular">🔥 Popular</SelectItem>
+                <SelectItem value="bestseller">🏆 Bestseller</SelectItem>
+                <SelectItem value="new">✨ New</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="mt-1 text-[11px] text-muted-foreground">Shows a small label next to the service.</p>
+          </div>
+        </div>
+
         <div>
           <Label>Description</Label>
           <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
