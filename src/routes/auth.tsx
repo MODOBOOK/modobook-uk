@@ -83,7 +83,7 @@ function AuthPage() {
     <div className="flex min-h-screen items-center justify-center bg-muted/50 px-4 py-12">
       <div className="w-full max-w-md">
         <div className="mb-8 flex items-center justify-center">
-          <BrandMark size="lg" tagline="Book · Manage · Grow" />
+          <BrandMark size="lg" />
         </div>
 
         <Tabs defaultValue={isPrescriberFlow ? "signup" : "signin"}>
