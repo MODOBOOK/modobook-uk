@@ -757,6 +757,17 @@ function BookTreatmentPage() {
             <Label htmlFor="notes">Notes (optional)</Label>
             <Textarea id="notes" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
           </div>
+          {showPrices && (
+            <div className="sm:col-span-2">
+              <DiscountCodeBox
+                slug={slug}
+                treatmentIds={[treatment.id]}
+                brand={brand}
+                value={discount}
+                onChange={setDiscount}
+              />
+            </div>
+          )}
         </CardContent>
       </Card>
 
