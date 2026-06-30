@@ -141,6 +141,7 @@ export type Database = {
           is_system: boolean
           name: string
           profile_id: string | null
+          show_on_public: boolean
           summary: string | null
           updated_at: string
         }
@@ -153,6 +154,7 @@ export type Database = {
           is_system?: boolean
           name: string
           profile_id?: string | null
+          show_on_public?: boolean
           summary?: string | null
           updated_at?: string
         }
@@ -165,6 +167,7 @@ export type Database = {
           is_system?: boolean
           name?: string
           profile_id?: string | null
+          show_on_public?: boolean
           summary?: string | null
           updated_at?: string
         }
