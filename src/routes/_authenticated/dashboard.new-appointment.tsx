@@ -485,3 +485,85 @@ function NewAppointmentPage() {
     </div>
   );
 }
+
+function SearchableFormPicker({
+  label,
+  emptyMessage,
+  items,
+  selected,
+  onToggle,
+}: {
+  label: string;
+  emptyMessage: string;
+  items: { id: string; name: string }[];
+  selected: Set<string>;
+  onToggle: (id: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const selectedItems = items.filter((i) => selected.has(i.id));
+  return (
+    <div>
+      <Label className="text-xs uppercase tracking-wide text-muted-foreground">{label}</Label>
+      {items.length === 0 ? (
+        <p className="mt-1 text-xs text-muted-foreground">{emptyMessage}</p>
+      ) : (
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              type="button"
+              variant="outline"
+              role="combobox"
+              className="mt-1 w-full justify-between font-normal"
+            >
+              <span className="truncate text-left">
+                {selectedItems.length === 0
+                  ? `Search ${label.toLowerCase()}…`
+                  : `${selectedItems.length} selected`}
+              </span>
+              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+            <Command>
+              <CommandInput placeholder={`Search ${label.toLowerCase()}…`} />
+              <CommandList>
+                <CommandEmpty>No matches.</CommandEmpty>
+                <CommandGroup>
+                  {items.map((it) => {
+                    const isSel = selected.has(it.id);
+                    return (
+                      <CommandItem
+                        key={it.id}
+                        value={it.name}
+                        onSelect={() => onToggle(it.id)}
+                      >
+                        <Check className={`mr-2 h-4 w-4 ${isSel ? "opacity-100" : "opacity-0"}`} />
+                        <span className="truncate">{it.name}</span>
+                      </CommandItem>
+                    );
+                  })}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
+      )}
+      {selectedItems.length > 0 && (
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {selectedItems.map((it) => (
+            <button
+              key={it.id}
+              type="button"
+              onClick={() => onToggle(it.id)}
+              className="inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 py-1 text-xs hover:bg-secondary/80"
+              title="Remove"
+            >
+              {it.name}
+              <span aria-hidden>×</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
