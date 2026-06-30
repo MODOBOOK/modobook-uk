@@ -874,6 +874,7 @@ function ServiceDialog({
   const fetchProfile = useServerFn(getMyProfile);
   const fetchConsents = useServerFn(listMyConsentTemplates);
   const fetchAftercare = useServerFn(listAftercareTemplates);
+  const fetchLocations = useServerFn(listMyLocations);
   const profile = useQuery({ queryKey: ["my-profile"], queryFn: () => fetchProfile() });
   const consents = useQuery({
     queryKey: ["my-consent-templates"],
@@ -883,9 +884,14 @@ function ServiceDialog({
     queryKey: ["my-aftercare-templates"],
     queryFn: () => fetchAftercare(),
   });
+  const locations = useQuery({
+    queryKey: ["my-locations"],
+    queryFn: () => fetchLocations(),
+  });
   const profileId = (profile.data as { id?: string } | undefined)?.id ?? "";
   const consentList = (consents.data ?? []) as { id: string; name: string; is_system: boolean }[];
   const aftercareList = (aftercareTpls.data ?? []) as { id: string; name: string; delay_hours: number }[];
+  const locationList = (locations.data ?? []) as { id: string; name: string }[];
 
   const [name, setName] = useState("");
   const [duration, setDuration] = useState(30);
