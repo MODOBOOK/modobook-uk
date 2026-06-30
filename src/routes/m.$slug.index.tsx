@@ -914,19 +914,6 @@ function BookPage() {
               )
             )}
           </div>
-          {quizOn && (
-            <div className="mt-5 flex justify-center">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setQuizOpen(true)}
-                className="gap-2"
-              >
-                <Sparkles className="h-4 w-4" />
-                Not sure? Take our treatment finder quiz
-              </Button>
-            </div>
-          )}
         </section>
       )}
 
