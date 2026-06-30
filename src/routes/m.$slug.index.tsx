@@ -171,6 +171,7 @@ function BookPage() {
         intro_heading?: string | null;
         intro_body?: string | null;
       } | null;
+      careGuides?: { id: string; name: string; body_html: string; summary: string | null; category: string | null }[];
     };
 
 
