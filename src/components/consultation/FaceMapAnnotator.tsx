@@ -296,10 +296,10 @@ export function FaceMapAnnotator({
             const lbl = p.amount || "";
             return (
               <g key={i}>
-                <circle cx={p.x} cy={p.y} r="4.5" fill={c} stroke="#fff" strokeWidth="1.5" />
+                <circle cx={p.x} cy={p.y} r="2.5" fill={c} stroke="#fff" strokeWidth="0.8" />
                 {lbl && (
-                  <text x={p.x + 6} y={p.y + 3} fontSize="6.5" fill="#111"
-                    style={{ paintOrder: "stroke", stroke: "#fff", strokeWidth: 2 } as any}>
+                  <text x={p.x + 3.5} y={p.y + 1.8} fontSize="4.5" fill="#111"
+                    style={{ paintOrder: "stroke", stroke: "#fff", strokeWidth: 1.2 } as any}>
                     {lbl}
                   </text>
                 )}

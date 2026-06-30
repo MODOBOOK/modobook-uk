@@ -35,6 +35,7 @@ import { CommsTimeline } from "@/components/patient/CommsTimeline";
 import { EmailComposerDialog } from "@/components/patient/EmailComposerDialog";
 import { SendFormDialog } from "@/components/patient/SendFormDialog";
 import { ClientFormsList } from "@/components/patient/ClientFormsList";
+import { ConsultationDocCard } from "@/components/patient/ConsultationDocCard";
 import { logCommunication } from "@/lib/patient-hub.functions";
 
 
@@ -272,14 +273,19 @@ function PatientProfilePage() {
       }>
         {consults.length === 0 ? (
           <div className="px-1 py-2 text-xs text-muted-foreground">No consultations on file.</div>
-        ) : consults.map(c => (
-          <Link key={c.id} to="/dashboard/consultations/$id" params={{ id: c.id }} className="flex items-center justify-between rounded-md border p-2.5 text-sm hover:bg-muted">
-            <span className="flex items-center gap-2"><ClipboardList className="h-4 w-4 text-primary" />Consultation · {new Date(c.created_at).toLocaleDateString()}</span>
-            <Badge variant={c.status === "completed" ? "default" : "secondary"} className="text-[10px]">
-              {c.status === "completed" ? "Completed" : `Step ${c.current_step}/8`}
-            </Badge>
-          </Link>
-        ))}
+        ) : (
+          <div className="space-y-2">
+            {consults.map(c => (
+              <ConsultationDocCard
+                key={c.id}
+                id={c.id}
+                createdAt={c.created_at}
+                status={c.status}
+                currentStep={c.current_step}
+              />
+            ))}
+          </div>
+        )}
       </Section>
 
       {/* Notes */}
