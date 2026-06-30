@@ -468,7 +468,16 @@ function MultiBookPage() {
             ))}
             <div className="flex items-center justify-between pt-3 text-sm font-semibold">
               <span>Total ({totalDuration} min)</span>
-              {showPrices && <span style={{ color: brand }}>£{totalPrice.toFixed(2)}</span>}
+              {showPrices && (
+                discountTotal > 0 ? (
+                  <span>
+                    <span className="mr-2 text-xs font-normal opacity-50 line-through">£{totalPrice.toFixed(2)}</span>
+                    <span style={{ color: brand }}>£{totalAfterDiscount.toFixed(2)}</span>
+                  </span>
+                ) : (
+                  <span style={{ color: brand }}>£{totalPrice.toFixed(2)}</span>
+                )
+              )}
             </div>
           </CardContent>
         </Card>
