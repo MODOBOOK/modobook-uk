@@ -329,13 +329,19 @@ function BookPage() {
   const showConsult = profile.chooser_show_consultation !== false;
   const consultTreatmentId = profile.chooser_consultation_treatment_id ?? null;
   const [mode, setMode] = useState<null | "know" | "unsure">(null);
-  const [pickedConcernId, setPickedConcernId] = useState<string | null>(null);
+  const [pickedConcernIds, setPickedConcernIds] = useState<string[]>([]);
+  const [concernsConfirmed, setConcernsConfirmed] = useState(false);
+  const togglePickedConcern = (id: string) =>
+    setPickedConcernIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  void concerns; // referenced via picked ids
+
   // Clear selection when location changes
   const setLocAndClear = (id: string | null) => {
     setLocationId(id);
     setSelectedIds([]);
     setMode(null);
-    setPickedConcernId(null);
+    setPickedConcernIds([]);
+    setConcernsConfirmed(false);
   };
   void setLocAndClear;
 
@@ -954,7 +960,7 @@ function BookPage() {
       )}
 
       {/* Concerns picker (unsure path) */}
-      {locationId && chooserOn && mode === "unsure" && !pickedConcernId && (
+      {locationId && chooserOn && mode === "unsure" && !concernsConfirmed && (
         <section className="mx-auto mt-10 max-w-3xl px-4">
           <div className="mb-4 flex items-center justify-between">
             <button onClick={() => setMode(null)} className="text-sm opacity-70 hover:opacity-100">
@@ -964,7 +970,8 @@ function BookPage() {
               Skip · show full menu
             </button>
           </div>
-          <h2 className="mb-4 text-xl font-bold" style={headingStyle}>What's your main concern?</h2>
+          <h2 className="mb-2 text-xl font-bold" style={headingStyle}>What are your main concerns?</h2>
+          <p className="mb-4 text-sm opacity-70">Select one or more — we'll suggest treatments for all of them.</p>
           {concernAreas.length === 0 ? (
             <p className="opacity-70">No concerns set up yet.</p>
           ) : (
@@ -976,23 +983,44 @@ function BookPage() {
                   <div key={area.id}>
                     <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide opacity-60">{area.name}</h3>
                     <div className="grid gap-2 sm:grid-cols-2">
-                      {areaConcerns.map((c) => (
-                        <button
-                          key={c.id}
-                          onClick={() => setPickedConcernId(c.id)}
-                          className="rounded-xl border bg-card p-3 text-left transition hover:shadow-md"
-                          style={{ borderColor: `${brand}33` }}
-                        >
-                          <div className="font-semibold" style={{ color: brand }}>{c.name}</div>
-                          {c.description && (
-                            <div className="mt-0.5 text-xs opacity-70">{c.description}</div>
-                          )}
-                        </button>
-                      ))}
+                      {areaConcerns.map((c) => {
+                        const picked = pickedConcernIds.includes(c.id);
+                        return (
+                          <button
+                            key={c.id}
+                            onClick={() => togglePickedConcern(c.id)}
+                            aria-pressed={picked}
+                            className="rounded-xl border bg-card p-3 text-left transition hover:shadow-md"
+                            style={{
+                              borderColor: picked ? brand : `${brand}33`,
+                              borderWidth: picked ? 2 : 1,
+                              backgroundColor: picked ? `${brand}0d` : undefined,
+                            }}
+                          >
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="font-semibold" style={{ color: brand }}>{c.name}</div>
+                              {picked && <Check className="h-4 w-4 shrink-0" style={{ color: brand }} />}
+                            </div>
+                            {c.description && (
+                              <div className="mt-0.5 text-xs opacity-70">{c.description}</div>
+                            )}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 );
               })}
+              <div className="sticky bottom-3 z-10 flex justify-center pt-2">
+                <Button
+                  disabled={pickedConcernIds.length === 0}
+                  onClick={() => setConcernsConfirmed(true)}
+                  className="rounded-full px-6 py-2 text-sm font-semibold text-white shadow-lg transition hover:opacity-90 disabled:opacity-50"
+                  style={{ backgroundColor: brand }}
+                >
+                  Continue{pickedConcernIds.length > 0 ? ` · ${pickedConcernIds.length} selected` : ""}
+                </Button>
+              </div>
             </div>
           )}
           {showConsult && (
@@ -1010,7 +1038,7 @@ function BookPage() {
                 </Link>
               ) : (
                 <button
-                  onClick={() => { setMode("know"); setPickedConcernId(null); }}
+                  onClick={() => { setMode("know"); setPickedConcernIds([]); setConcernsConfirmed(false); }}
                   className="mt-3 inline-block rounded-full px-5 py-2 text-sm font-semibold text-white transition hover:opacity-90"
                   style={{ backgroundColor: brand }}
                 >
@@ -1101,49 +1129,55 @@ function BookPage() {
 
       {/* Treatments + Packages */}
 
-      {locationId && (!chooserOn || mode === "know" || (mode === "unsure" && pickedConcernId)) ? (
+      {locationId && (!chooserOn || mode === "know" || (mode === "unsure" && concernsConfirmed && pickedConcernIds.length > 0)) ? (
         <section className="mx-auto mt-10 max-w-3xl px-4 pb-32">
           {chooserOn && (
             <div className="mb-4 flex items-center justify-between">
               <button
                 onClick={() => {
-                  if (mode === "unsure" && pickedConcernId) setPickedConcernId(null);
+                  if (mode === "unsure" && concernsConfirmed) setConcernsConfirmed(false);
                   else setMode(null);
                 }}
                 className="text-sm opacity-70 hover:opacity-100"
               >
                 ← Back
               </button>
-              {mode === "unsure" && pickedConcernId && (
-                <button onClick={() => { setMode("know"); setPickedConcernId(null); }} className="text-sm font-semibold" style={{ color: brand }}>
+              {mode === "unsure" && concernsConfirmed && (
+                <button onClick={() => { setMode("know"); setPickedConcernIds([]); setConcernsConfirmed(false); }} className="text-sm font-semibold" style={{ color: brand }}>
                   Show full menu
                 </button>
               )}
             </div>
           )}
           {(() => {
-            // If on concern path, filter to matched treatments
-            const matchedIds =
-              mode === "unsure" && pickedConcernId
-                ? new Set(concernLinks.filter((l) => l.concern_id === pickedConcernId).map((l) => l.treatment_id))
-                : null;
+            // If on concern path, filter to matched treatments (union across all picked concerns)
+            const onConcernPath = mode === "unsure" && concernsConfirmed && pickedConcernIds.length > 0;
+            const matchedIds = onConcernPath
+              ? new Set(
+                  concernLinks
+                    .filter((l) => pickedConcernIds.includes(l.concern_id))
+                    .map((l) => l.treatment_id),
+                )
+              : null;
             const filteredTreatments = matchedIds
               ? visibleTreatments.filter((t) => matchedIds.has(t.id))
               : visibleTreatments;
             const tree = matchedIds ? buildTree(categories, filteredTreatments) : { roots, uncategorised };
 
             if (matchedIds) {
-              const concernName = concerns.find((c) => c.id === pickedConcernId)?.name;
+              const concernNames = pickedConcernIds
+                .map((id) => concerns.find((c) => c.id === id)?.name)
+                .filter((n): n is string => !!n);
               return (
                 <>
-                  {concernName && (
+                  {concernNames.length > 0 && (
                     <h2 className="mb-3 text-lg font-bold" style={headingStyle}>
-                      Suggested for: {concernName}
+                      Suggested for: {concernNames.join(", ")}
                     </h2>
                   )}
                   {filteredTreatments.length === 0 ? (
                     <p className="rounded-xl border border-dashed p-6 text-center text-sm opacity-70" style={{ borderColor: `${brand}33` }}>
-                      No treatments matched to this concern yet.
+                      No treatments matched to {concernNames.length > 1 ? "these concerns" : "this concern"} yet.
                     </p>
                   ) : (
                     <div className="space-y-2">
@@ -1173,14 +1207,11 @@ function BookPage() {
 
             return (
               <Tabs defaultValue="treatments" className="w-full">
-                <TabsList className="grid w-full grid-cols-3 h-auto" style={{ backgroundColor: `${brand}10` }}>
+                <TabsList className="grid w-full grid-cols-2 h-auto" style={{ backgroundColor: `${brand}10` }}>
                   <TabsTrigger value="treatments" className="text-sm sm:text-base py-2.5">Treatments</TabsTrigger>
                   <TabsTrigger value="packages" disabled={packages.length === 0} className="text-sm sm:text-base py-2.5">
                     <PackageIcon className="mr-1.5 h-4 w-4" />
                     Packages
-                  </TabsTrigger>
-                  <TabsTrigger value="concerns" disabled={concerns.length === 0} className="text-sm sm:text-base py-2.5">
-                    By concern
                   </TabsTrigger>
                 </TabsList>
 
@@ -1394,88 +1425,6 @@ function BookPage() {
                   )}
                 </TabsContent>
 
-                <TabsContent value="concerns" className="mt-4">
-                  <p className="mb-3 text-xs opacity-60">
-                    Not sure where to start? Pick a concern to see treatments we'd suggest.
-                  </p>
-                  {concernAreas.length === 0 ? (
-                    <p className="opacity-70">No concerns set up yet.</p>
-                  ) : (
-                    <Accordion type="multiple" className="space-y-2">
-                      {concernAreas.map((area) => {
-                        const areaConcerns = concerns.filter((c) => c.area_id === area.id);
-                        if (areaConcerns.length === 0) return null;
-                        return (
-                          <AccordionItem
-                            key={area.id}
-                            value={area.id}
-                            className="rounded-xl border px-3"
-                            style={{ borderColor: `${brand}33` }}
-                          >
-                            <AccordionTrigger className="text-sm font-semibold" style={{ color: brand }}>
-                              {area.name}
-                            </AccordionTrigger>
-                            <AccordionContent>
-                              <Accordion type="multiple" className="space-y-2">
-                                {areaConcerns.map((c) => {
-                                  const matchedIds = new Set(
-                                    concernLinks.filter((l) => l.concern_id === c.id).map((l) => l.treatment_id),
-                                  );
-                                  const matched = visibleTreatments.filter((t) => matchedIds.has(t.id));
-                                  return (
-                                    <AccordionItem
-                                      key={c.id}
-                                      value={c.id}
-                                      className="rounded-lg border bg-card px-3"
-                                      style={{ borderColor: `${brand}1f` }}
-                                    >
-                                      <AccordionTrigger className="py-2.5 text-sm font-semibold hover:no-underline" style={{ color: brand }}>
-                                        <div className="flex flex-col items-start text-left">
-                                          <span>{c.name}</span>
-                                          {c.description && (
-                                            <span className="mt-0.5 text-[11px] font-normal opacity-70">{c.description}</span>
-                                          )}
-                                        </div>
-                                      </AccordionTrigger>
-                                      <AccordionContent>
-                                        {matched.length === 0 ? (
-                                          <p className="pb-2 text-xs opacity-60">No treatments linked yet.</p>
-                                        ) : (
-                                          <div className="space-y-1.5 pb-2">
-                                            <p className="text-[11px] font-semibold uppercase tracking-wider opacity-60">Suggested treatments</p>
-                                            {matched.map((t) => (
-                                              <TreatmentRow
-                                                key={t.id}
-                                                t={t}
-                                                slug={slug}
-                                                price={priceFor(t)}
-                                                duration={durationFor(t)}
-                                                brand={brand}
-                                                selected={isSelected(t.id)}
-                                                onToggle={() => toggleSelect(t.id)}
-                                                cardBg={menuCardBg}
-                                                cardBorder={menuCardBorder}
-                                                nameColor={menuNameColor}
-                                                priceColor={menuPriceColor}
-                                                size={menuSize}
-                                                bold={menuTreatmentBold}
-                                              />
-                                            ))}
-                                          </div>
-                                        )}
-                                      </AccordionContent>
-                                    </AccordionItem>
-                                  );
-                                })}
-                              </Accordion>
-                            </AccordionContent>
-
-                          </AccordionItem>
-                        );
-                      })}
-                    </Accordion>
-                  )}
-                </TabsContent>
               </Tabs>
             );
           })()}
