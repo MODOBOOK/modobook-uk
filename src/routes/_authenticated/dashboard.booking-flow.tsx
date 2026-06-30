@@ -46,7 +46,7 @@ type Link = { concern_id: string; treatment_id: string };
 
 function BookingFlowPage() {
   const loaded = Route.useLoaderData();
-  const treatments = loaded.treatments as { id: string; name: string }[];
+  const treatments = loaded.treatments as { id: string; name: string; description: string | null }[];
 
   const p = loaded.profile as Record<string, unknown>;
   const [enabled, setEnabled] = useState(Boolean(p.chooser_enabled));
