@@ -47,12 +47,19 @@ import { useServerFn } from "@tanstack/react-start";
 export const Route = createFileRoute("/_authenticated/dashboard")({
   ssr: false,
   beforeLoad: async () => {
+    const { getHubContext } = await import("@/lib/hub.functions");
+    const ctx = await getHubContext().catch(() => null);
     const profile = await getMyProfile();
+    // Pure prescriber (no clinic profile): send them to the prescriber workspace
+    if (!profile && ctx?.role === "prescriber") {
+      throw redirect({ to: "/prescriber" });
+    }
     if (!profile) throw redirect({ to: "/onboarding" });
-    return { profile };
+    return { profile, isPrescriber: ctx?.role === "prescriber" };
   },
   component: DashboardLayout,
 });
+
 
 const navItems = [
   { label: "Dashboard", to: "/dashboard", icon: LayoutDashboard },
@@ -84,7 +91,9 @@ const navItems = [
   { label: "Payments", to: "/dashboard/payments", icon: CreditCard },
   { label: "Booking settings", to: "/dashboard/settings", icon: Settings },
   { label: "Prescriber Hub", to: "/hub", icon: Stethoscope },
+  { label: "Prescriber referrals", to: "/dashboard/referrals", icon: ClipboardList },
 ];
+
 
 const mobileTabs = [
   { label: "Home", to: "/dashboard", icon: Home, exact: true },
@@ -94,7 +103,7 @@ const mobileTabs = [
 ];
 
 function DashboardLayout() {
-  const { profile } = Route.useRouteContext();
+  const { profile, isPrescriber } = Route.useRouteContext();
   const { primary: displayName } = resolveDisplayNames(profile as { clinic_name?: string | null; full_name?: string | null; display_name_mode?: string | null });
   const [open, setOpen] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -173,11 +182,17 @@ function DashboardLayout() {
               <div className="font-serif text-xl leading-tight lg:text-2xl">{displayName || "Dashboard"}</div>
             </div>
           </div>
-          <Button variant="outline" size="sm" className="rounded-full px-5" asChild>
-            <a href={`/m/${profile.slug}`} target="_blank" rel="noreferrer">
-              Preview booking link
-            </a>
-          </Button>
+          <div className="flex items-center gap-2">
+            {isPrescriber && (
+              <Link to="/prescriber"><Button variant="ghost" size="sm" className="rounded-full">Prescriber view</Button></Link>
+            )}
+            <Button variant="outline" size="sm" className="rounded-full px-5" asChild>
+              <a href={`/m/${profile.slug}`} target="_blank" rel="noreferrer">
+                Preview booking link
+              </a>
+            </Button>
+          </div>
+
         </header>
 
 

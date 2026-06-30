@@ -19,12 +19,14 @@ import { Route as MSlugRouteImport } from './routes/m.$slug'
 import { Route as FTokenRouteImport } from './routes/f.$token'
 import { Route as CTokenRouteImport } from './routes/c.$token'
 import { Route as BookSlugRouteImport } from './routes/book.$slug'
+import { Route as AuthenticatedPrescriberRouteImport } from './routes/_authenticated/prescriber'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedHubRouteImport } from './routes/_authenticated/hub'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAdminPrescribersRouteImport } from './routes/_authenticated/admin-prescribers'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as MSlugIndexRouteImport } from './routes/m.$slug.index'
+import { Route as AuthenticatedPrescriberIndexRouteImport } from './routes/_authenticated/prescriber.index'
 import { Route as AuthenticatedHubIndexRouteImport } from './routes/_authenticated/hub.index'
 import { Route as AuthenticatedDashboardIndexRouteImport } from './routes/_authenticated/dashboard.index'
 import { Route as MSlugReviewsRouteImport } from './routes/m.$slug.reviews'
@@ -40,6 +42,7 @@ import { Route as AuthenticatedDashboardTreatmentsRouteImport } from './routes/_
 import { Route as AuthenticatedDashboardSettingsRouteImport } from './routes/_authenticated/dashboard.settings'
 import { Route as AuthenticatedDashboardServicesRouteImport } from './routes/_authenticated/dashboard.services'
 import { Route as AuthenticatedDashboardReviewsRouteImport } from './routes/_authenticated/dashboard.reviews'
+import { Route as AuthenticatedDashboardReferralsRouteImport } from './routes/_authenticated/dashboard.referrals'
 import { Route as AuthenticatedDashboardPreTreatmentRouteImport } from './routes/_authenticated/dashboard.pre-treatment'
 import { Route as AuthenticatedDashboardPractitionersRouteImport } from './routes/_authenticated/dashboard.practitioners'
 import { Route as AuthenticatedDashboardPoliciesRouteImport } from './routes/_authenticated/dashboard.policies'
@@ -120,6 +123,11 @@ const BookSlugRoute = BookSlugRouteImport.update({
   path: '/book/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedPrescriberRoute = AuthenticatedPrescriberRouteImport.update({
+  id: '/prescriber',
+  path: '/prescriber',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
@@ -151,6 +159,12 @@ const MSlugIndexRoute = MSlugIndexRouteImport.update({
   path: '/',
   getParentRoute: () => MSlugRoute,
 } as any)
+const AuthenticatedPrescriberIndexRoute =
+  AuthenticatedPrescriberIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedPrescriberRoute,
+  } as any)
 const AuthenticatedHubIndexRoute = AuthenticatedHubIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -233,6 +247,12 @@ const AuthenticatedDashboardReviewsRoute =
   AuthenticatedDashboardReviewsRouteImport.update({
     id: '/reviews',
     path: '/reviews',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardReferralsRoute =
+  AuthenticatedDashboardReferralsRouteImport.update({
+    id: '/referrals',
+    path: '/referrals',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
 const AuthenticatedDashboardPreTreatmentRoute =
@@ -425,6 +445,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRouteWithChildren
   '/hub': typeof AuthenticatedHubRouteWithChildren
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/prescriber': typeof AuthenticatedPrescriberRouteWithChildren
   '/book/$slug': typeof BookSlugRoute
   '/c/$token': typeof CTokenRoute
   '/f/$token': typeof FTokenRoute
@@ -453,6 +474,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/policies': typeof AuthenticatedDashboardPoliciesRoute
   '/dashboard/practitioners': typeof AuthenticatedDashboardPractitionersRoute
   '/dashboard/pre-treatment': typeof AuthenticatedDashboardPreTreatmentRoute
+  '/dashboard/referrals': typeof AuthenticatedDashboardReferralsRoute
   '/dashboard/reviews': typeof AuthenticatedDashboardReviewsRoute
   '/dashboard/services': typeof AuthenticatedDashboardServicesRoute
   '/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
@@ -468,6 +490,7 @@ export interface FileRoutesByFullPath {
   '/m/$slug/reviews': typeof MSlugReviewsRoute
   '/dashboard/': typeof AuthenticatedDashboardIndexRoute
   '/hub/': typeof AuthenticatedHubIndexRoute
+  '/prescriber/': typeof AuthenticatedPrescriberIndexRoute
   '/m/$slug/': typeof MSlugIndexRoute
   '/dashboard/consultations/$id': typeof AuthenticatedDashboardConsultationsIdRoute
   '/dashboard/patients/$id': typeof AuthenticatedDashboardPatientsIdRoute
@@ -511,6 +534,7 @@ export interface FileRoutesByTo {
   '/dashboard/policies': typeof AuthenticatedDashboardPoliciesRoute
   '/dashboard/practitioners': typeof AuthenticatedDashboardPractitionersRoute
   '/dashboard/pre-treatment': typeof AuthenticatedDashboardPreTreatmentRoute
+  '/dashboard/referrals': typeof AuthenticatedDashboardReferralsRoute
   '/dashboard/reviews': typeof AuthenticatedDashboardReviewsRoute
   '/dashboard/services': typeof AuthenticatedDashboardServicesRoute
   '/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
@@ -526,6 +550,7 @@ export interface FileRoutesByTo {
   '/m/$slug/reviews': typeof MSlugReviewsRoute
   '/dashboard': typeof AuthenticatedDashboardIndexRoute
   '/hub': typeof AuthenticatedHubIndexRoute
+  '/prescriber': typeof AuthenticatedPrescriberIndexRoute
   '/m/$slug': typeof MSlugIndexRoute
   '/dashboard/consultations/$id': typeof AuthenticatedDashboardConsultationsIdRoute
   '/dashboard/patients/$id': typeof AuthenticatedDashboardPatientsIdRoute
@@ -547,6 +572,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRouteWithChildren
   '/_authenticated/hub': typeof AuthenticatedHubRouteWithChildren
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
+  '/_authenticated/prescriber': typeof AuthenticatedPrescriberRouteWithChildren
   '/book/$slug': typeof BookSlugRoute
   '/c/$token': typeof CTokenRoute
   '/f/$token': typeof FTokenRoute
@@ -575,6 +601,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/policies': typeof AuthenticatedDashboardPoliciesRoute
   '/_authenticated/dashboard/practitioners': typeof AuthenticatedDashboardPractitionersRoute
   '/_authenticated/dashboard/pre-treatment': typeof AuthenticatedDashboardPreTreatmentRoute
+  '/_authenticated/dashboard/referrals': typeof AuthenticatedDashboardReferralsRoute
   '/_authenticated/dashboard/reviews': typeof AuthenticatedDashboardReviewsRoute
   '/_authenticated/dashboard/services': typeof AuthenticatedDashboardServicesRoute
   '/_authenticated/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
@@ -590,6 +617,7 @@ export interface FileRoutesById {
   '/m/$slug/reviews': typeof MSlugReviewsRoute
   '/_authenticated/dashboard/': typeof AuthenticatedDashboardIndexRoute
   '/_authenticated/hub/': typeof AuthenticatedHubIndexRoute
+  '/_authenticated/prescriber/': typeof AuthenticatedPrescriberIndexRoute
   '/m/$slug/': typeof MSlugIndexRoute
   '/_authenticated/dashboard/consultations/$id': typeof AuthenticatedDashboardConsultationsIdRoute
   '/_authenticated/dashboard/patients/$id': typeof AuthenticatedDashboardPatientsIdRoute
@@ -611,6 +639,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/hub'
     | '/onboarding'
+    | '/prescriber'
     | '/book/$slug'
     | '/c/$token'
     | '/f/$token'
@@ -639,6 +668,7 @@ export interface FileRouteTypes {
     | '/dashboard/policies'
     | '/dashboard/practitioners'
     | '/dashboard/pre-treatment'
+    | '/dashboard/referrals'
     | '/dashboard/reviews'
     | '/dashboard/services'
     | '/dashboard/settings'
@@ -654,6 +684,7 @@ export interface FileRouteTypes {
     | '/m/$slug/reviews'
     | '/dashboard/'
     | '/hub/'
+    | '/prescriber/'
     | '/m/$slug/'
     | '/dashboard/consultations/$id'
     | '/dashboard/patients/$id'
@@ -697,6 +728,7 @@ export interface FileRouteTypes {
     | '/dashboard/policies'
     | '/dashboard/practitioners'
     | '/dashboard/pre-treatment'
+    | '/dashboard/referrals'
     | '/dashboard/reviews'
     | '/dashboard/services'
     | '/dashboard/settings'
@@ -712,6 +744,7 @@ export interface FileRouteTypes {
     | '/m/$slug/reviews'
     | '/dashboard'
     | '/hub'
+    | '/prescriber'
     | '/m/$slug'
     | '/dashboard/consultations/$id'
     | '/dashboard/patients/$id'
@@ -732,6 +765,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/hub'
     | '/_authenticated/onboarding'
+    | '/_authenticated/prescriber'
     | '/book/$slug'
     | '/c/$token'
     | '/f/$token'
@@ -760,6 +794,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/policies'
     | '/_authenticated/dashboard/practitioners'
     | '/_authenticated/dashboard/pre-treatment'
+    | '/_authenticated/dashboard/referrals'
     | '/_authenticated/dashboard/reviews'
     | '/_authenticated/dashboard/services'
     | '/_authenticated/dashboard/settings'
@@ -775,6 +810,7 @@ export interface FileRouteTypes {
     | '/m/$slug/reviews'
     | '/_authenticated/dashboard/'
     | '/_authenticated/hub/'
+    | '/_authenticated/prescriber/'
     | '/m/$slug/'
     | '/_authenticated/dashboard/consultations/$id'
     | '/_authenticated/dashboard/patients/$id'
@@ -869,6 +905,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BookSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/prescriber': {
+      id: '/_authenticated/prescriber'
+      path: '/prescriber'
+      fullPath: '/prescriber'
+      preLoaderRoute: typeof AuthenticatedPrescriberRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/onboarding': {
       id: '/_authenticated/onboarding'
       path: '/onboarding'
@@ -910,6 +953,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/m/$slug/'
       preLoaderRoute: typeof MSlugIndexRouteImport
       parentRoute: typeof MSlugRoute
+    }
+    '/_authenticated/prescriber/': {
+      id: '/_authenticated/prescriber/'
+      path: '/'
+      fullPath: '/prescriber/'
+      preLoaderRoute: typeof AuthenticatedPrescriberIndexRouteImport
+      parentRoute: typeof AuthenticatedPrescriberRoute
     }
     '/_authenticated/hub/': {
       id: '/_authenticated/hub/'
@@ -1014,6 +1064,13 @@ declare module '@tanstack/react-router' {
       path: '/reviews'
       fullPath: '/dashboard/reviews'
       preLoaderRoute: typeof AuthenticatedDashboardReviewsRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/referrals': {
+      id: '/_authenticated/dashboard/referrals'
+      path: '/referrals'
+      fullPath: '/dashboard/referrals'
+      preLoaderRoute: typeof AuthenticatedDashboardReferralsRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
     '/_authenticated/dashboard/pre-treatment': {
@@ -1272,6 +1329,7 @@ interface AuthenticatedDashboardRouteChildren {
   AuthenticatedDashboardPoliciesRoute: typeof AuthenticatedDashboardPoliciesRoute
   AuthenticatedDashboardPractitionersRoute: typeof AuthenticatedDashboardPractitionersRoute
   AuthenticatedDashboardPreTreatmentRoute: typeof AuthenticatedDashboardPreTreatmentRoute
+  AuthenticatedDashboardReferralsRoute: typeof AuthenticatedDashboardReferralsRoute
   AuthenticatedDashboardReviewsRoute: typeof AuthenticatedDashboardReviewsRoute
   AuthenticatedDashboardServicesRoute: typeof AuthenticatedDashboardServicesRoute
   AuthenticatedDashboardSettingsRoute: typeof AuthenticatedDashboardSettingsRoute
@@ -1317,6 +1375,7 @@ const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
       AuthenticatedDashboardPractitionersRoute,
     AuthenticatedDashboardPreTreatmentRoute:
       AuthenticatedDashboardPreTreatmentRoute,
+    AuthenticatedDashboardReferralsRoute: AuthenticatedDashboardReferralsRoute,
     AuthenticatedDashboardReviewsRoute: AuthenticatedDashboardReviewsRoute,
     AuthenticatedDashboardServicesRoute: AuthenticatedDashboardServicesRoute,
     AuthenticatedDashboardSettingsRoute: AuthenticatedDashboardSettingsRoute,
@@ -1353,12 +1412,27 @@ const AuthenticatedHubRouteChildren: AuthenticatedHubRouteChildren = {
 const AuthenticatedHubRouteWithChildren =
   AuthenticatedHubRoute._addFileChildren(AuthenticatedHubRouteChildren)
 
+interface AuthenticatedPrescriberRouteChildren {
+  AuthenticatedPrescriberIndexRoute: typeof AuthenticatedPrescriberIndexRoute
+}
+
+const AuthenticatedPrescriberRouteChildren: AuthenticatedPrescriberRouteChildren =
+  {
+    AuthenticatedPrescriberIndexRoute: AuthenticatedPrescriberIndexRoute,
+  }
+
+const AuthenticatedPrescriberRouteWithChildren =
+  AuthenticatedPrescriberRoute._addFileChildren(
+    AuthenticatedPrescriberRouteChildren,
+  )
+
 interface AuthenticatedRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedAdminPrescribersRoute: typeof AuthenticatedAdminPrescribersRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRouteWithChildren
   AuthenticatedHubRoute: typeof AuthenticatedHubRouteWithChildren
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
+  AuthenticatedPrescriberRoute: typeof AuthenticatedPrescriberRouteWithChildren
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
@@ -1367,6 +1441,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRouteWithChildren,
   AuthenticatedHubRoute: AuthenticatedHubRouteWithChildren,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
+  AuthenticatedPrescriberRoute: AuthenticatedPrescriberRouteWithChildren,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
