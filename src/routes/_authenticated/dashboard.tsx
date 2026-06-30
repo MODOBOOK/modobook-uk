@@ -182,11 +182,17 @@ function DashboardLayout() {
               <div className="font-serif text-xl leading-tight lg:text-2xl">{displayName || "Dashboard"}</div>
             </div>
           </div>
-          <Button variant="outline" size="sm" className="rounded-full px-5" asChild>
-            <a href={`/m/${profile.slug}`} target="_blank" rel="noreferrer">
-              Preview booking link
-            </a>
-          </Button>
+          <div className="flex items-center gap-2">
+            {isPrescriber && (
+              <Link to="/prescriber"><Button variant="ghost" size="sm" className="rounded-full">Prescriber view</Button></Link>
+            )}
+            <Button variant="outline" size="sm" className="rounded-full px-5" asChild>
+              <a href={`/m/${profile.slug}`} target="_blank" rel="noreferrer">
+                Preview booking link
+              </a>
+            </Button>
+          </div>
+
         </header>
 
 
