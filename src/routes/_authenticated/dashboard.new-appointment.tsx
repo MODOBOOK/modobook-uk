@@ -427,46 +427,24 @@ function NewAppointmentPage() {
         <CardHeader>
           <CardTitle>Send forms with confirmation</CardTitle>
           <p className="text-xs text-muted-foreground">
-            Forms linked to the treatment send automatically. Tick any extras to include in the patient's confirmation email.
+            Forms linked to the treatment send automatically. Search and select any extras to include in the patient's confirmation email.
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div>
-            <Label className="text-xs uppercase tracking-wide text-muted-foreground">Medical forms</Label>
-            {medicalTemplates.length === 0 ? (
-              <p className="text-xs text-muted-foreground">No medical forms yet. Create one under Forms.</p>
-            ) : (
-              <div className="mt-1 space-y-1">
-                {medicalTemplates.map((m) => (
-                  <label key={m.id} className="flex items-center gap-2 rounded-md border px-3 py-2 text-sm">
-                    <Checkbox
-                      checked={pickedMedicalIds.has(m.id)}
-                      onCheckedChange={() => toggle(setPickedMedicalIds, m.id)}
-                    />
-                    <span className="truncate">{m.name}</span>
-                  </label>
-                ))}
-              </div>
-            )}
-          </div>
-          <div>
-            <Label className="text-xs uppercase tracking-wide text-muted-foreground">Consent forms</Label>
-            {consentTemplates.length === 0 ? (
-              <p className="text-xs text-muted-foreground">No consent forms yet.</p>
-            ) : (
-              <div className="mt-1 space-y-1">
-                {consentTemplates.map((c) => (
-                  <label key={c.id} className="flex items-center gap-2 rounded-md border px-3 py-2 text-sm">
-                    <Checkbox
-                      checked={pickedConsentIds.has(c.id)}
-                      onCheckedChange={() => toggle(setPickedConsentIds, c.id)}
-                    />
-                    <span className="truncate">{c.name}</span>
-                  </label>
-                ))}
-              </div>
-            )}
-          </div>
+          <SearchableFormPicker
+            label="Medical forms"
+            emptyMessage="No medical forms yet. Create one under Forms."
+            items={medicalTemplates}
+            selected={pickedMedicalIds}
+            onToggle={(id) => toggle(setPickedMedicalIds, id)}
+          />
+          <SearchableFormPicker
+            label="Consent forms"
+            emptyMessage="No consent forms yet."
+            items={consentTemplates}
+            selected={pickedConsentIds}
+            onToggle={(id) => toggle(setPickedConsentIds, id)}
+          />
         </CardContent>
       </Card>
 
