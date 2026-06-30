@@ -13,6 +13,9 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
+  validateSearch: (s: Record<string, unknown>) => ({
+    as: s.as === "prescriber" ? "prescriber" : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Sign in | MODO Book" },
@@ -25,6 +28,8 @@ export const Route = createFileRoute("/auth")({
 function AuthPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const { as } = Route.useSearch();
+  const isPrescriberFlow = as === "prescriber";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
