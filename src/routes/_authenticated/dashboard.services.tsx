@@ -26,11 +26,12 @@ import {
   getTreatmentAftercareIds,
   setTreatmentAftercareIds,
 } from "@/lib/aftercare-templates.functions";
+import { listMyLocations, setTreatmentLocationPricing } from "@/lib/locations.functions";
 import { getMyProfile, updateProfile } from "@/lib/profiles.functions";
 import { ImageUploader } from "@/components/ImageUploader";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
-import { Star, X } from "lucide-react";
+import { Star, X, Check, ChevronsUpDown, MapPin } from "lucide-react";
 
 
 
@@ -53,6 +54,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   ChevronDown,
   ChevronRight,
@@ -163,6 +166,7 @@ function ServicesPage() {
   const patchTreat = useServerFn(updateTreatment);
   const setConsents = useServerFn(setTreatmentConsents);
   const setAftercareTpls = useServerFn(setTreatmentAftercareIds);
+  const saveLocPricing = useServerFn(setTreatmentLocationPricing);
   const removeTreat = useServerFn(deleteTreatment);
   const reorderCats = useServerFn(reorderCategories);
   const reorderTreats = useServerFn(reorderTreatments);
@@ -371,7 +375,7 @@ function ServicesPage() {
         onClose={() => setSvcDialog(null)}
         onSubmit={async (values) => {
           try {
-            const { consent_ids, aftercare_template_ids, ...base } = values;
+            const { consent_ids, aftercare_template_ids, location_overrides, ...base } = values;
             const baseCreate = {
               name: base.name,
               duration: base.duration,
@@ -410,6 +414,17 @@ function ServicesPage() {
             await setAftercareTpls({
               data: { treatment_id: created.id, template_ids: aftercare_template_ids ?? [] },
             });
+            for (const o of location_overrides ?? []) {
+              await saveLocPricing({
+                data: {
+                  treatment_id: created.id,
+                  location_id: o.location_id,
+                  available: o.available,
+                  price_cents: o.price_cents,
+                  duration_minutes: o.duration_minutes,
+                },
+              });
+            }
             toast.success("Service created");
             setSvcDialog(null);
             treats.refetch();
@@ -852,12 +867,14 @@ function ServiceDialog({
     discount_percent?: number | null;
     discount_label?: string | null;
     discount_show_was_now?: boolean;
+    location_overrides?: { location_id: string; available: boolean; price_cents: number | null; duration_minutes: number | null }[];
   }) => Promise<void>;
 }) {
   const open = !!state;
   const fetchProfile = useServerFn(getMyProfile);
   const fetchConsents = useServerFn(listMyConsentTemplates);
   const fetchAftercare = useServerFn(listAftercareTemplates);
+  const fetchLocations = useServerFn(listMyLocations);
   const profile = useQuery({ queryKey: ["my-profile"], queryFn: () => fetchProfile() });
   const consents = useQuery({
     queryKey: ["my-consent-templates"],
@@ -867,9 +884,14 @@ function ServiceDialog({
     queryKey: ["my-aftercare-templates"],
     queryFn: () => fetchAftercare(),
   });
+  const locations = useQuery({
+    queryKey: ["my-locations"],
+    queryFn: () => fetchLocations(),
+  });
   const profileId = (profile.data as { id?: string } | undefined)?.id ?? "";
   const consentList = (consents.data ?? []) as { id: string; name: string; is_system: boolean }[];
   const aftercareList = (aftercareTpls.data ?? []) as { id: string; name: string; delay_hours: number }[];
+  const locationList = (locations.data ?? []) as { id: string; name: string }[];
 
   const [name, setName] = useState("");
   const [duration, setDuration] = useState(30);
@@ -895,6 +917,9 @@ function ServiceDialog({
   const [discountPercent, setDiscountPercent] = useState<string>("");
   const [discountLabel, setDiscountLabel] = useState("");
   const [discountShowWasNow, setDiscountShowWasNow] = useState(true);
+  // Per-location availability + optional price/duration override (in £ and minutes — strings for empty inputs)
+  type LocOverride = { available: boolean; price: string; duration: string };
+  const [locOverrides, setLocOverrides] = useState<Record<string, LocOverride>>({});
   const [saving, setSaving] = useState(false);
 
   useMemo(() => {
@@ -923,6 +948,7 @@ function ServiceDialog({
       setDiscountPercent("");
       setDiscountLabel("");
       setDiscountShowWasNow(true);
+      setLocOverrides({});
     }
   }, [open, state]);
 
@@ -1174,25 +1200,15 @@ function ServiceDialog({
                   No templates yet. Create reusable aftercare messages on the Aftercare page.
                 </p>
               ) : (
-                <div className="flex flex-wrap gap-1.5">
-                  {aftercareList.map((t) => {
-                    const checked = aftercareIds.includes(t.id);
-                    return (
-                      <button
-                        key={t.id}
-                        type="button"
-                        onClick={() =>
-                          setAftercareIds((prev) =>
-                            prev.includes(t.id) ? prev.filter((x) => x !== t.id) : [...prev, t.id],
-                          )
-                        }
-                        className={`rounded-full border px-2.5 py-1 text-xs transition ${checked ? "bg-foreground text-background border-foreground" : "bg-background hover:bg-muted"}`}
-                      >
-                        {t.name} · {t.delay_hours}h
-                      </button>
-                    );
-                  })}
-                </div>
+                <AftercarePicker
+                  items={aftercareList}
+                  selected={aftercareIds}
+                  onToggle={(id) =>
+                    setAftercareIds((prev) =>
+                      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+                    )
+                  }
+                />
               )}
             </div>
             <details>
@@ -1218,6 +1234,62 @@ function ServiceDialog({
               </div>
             </details>
           </div>
+
+          {locationList.length > 0 && (
+            <div className="rounded-lg border p-3 space-y-3">
+              <div className="flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-muted-foreground" />
+                <Label className="m-0 text-sm font-semibold">Locations & pricing</Label>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Tick locations where this service is offered. Leave price/duration blank to use the defaults above.
+              </p>
+              <div className="space-y-2">
+                {locationList.map((loc) => {
+                  const ov = locOverrides[loc.id] ?? { available: true, price: "", duration: "" };
+                  const update = (patch: Partial<LocOverride>) =>
+                    setLocOverrides((prev) => ({ ...prev, [loc.id]: { ...ov, ...patch } }));
+                  return (
+                    <div key={loc.id} className="flex flex-wrap items-center gap-2 rounded-md border p-2">
+                      <label className="flex items-center gap-2 text-sm flex-1 min-w-[140px]">
+                        <input
+                          type="checkbox"
+                          checked={ov.available}
+                          onChange={(e) => update({ available: e.target.checked })}
+                        />
+                        <span className="font-medium">{loc.name}</span>
+                      </label>
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-muted-foreground">£</span>
+                        <Input
+                          className="w-20 h-8"
+                          type="number"
+                          min={0}
+                          placeholder={String(price)}
+                          value={ov.price}
+                          disabled={!ov.available}
+                          onChange={(e) => update({ price: e.target.value })}
+                        />
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Input
+                          className="w-20 h-8"
+                          type="number"
+                          min={0}
+                          placeholder={String(duration)}
+                          value={ov.duration}
+                          disabled={!ov.available}
+                          onChange={(e) => update({ duration: e.target.value })}
+                        />
+                        <span className="text-xs text-muted-foreground">min</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
 
           <div className="space-y-1.5">
             <Label>Calendar colour</Label>
@@ -1268,6 +1340,12 @@ function ServiceDialog({
                 discount_percent: discountPercent.trim() ? Number(discountPercent) : null,
                 discount_label: discountLabel.trim() || null,
                 discount_show_was_now: discountShowWasNow,
+                location_overrides: Object.entries(locOverrides).map(([location_id, ov]) => ({
+                  location_id,
+                  available: ov.available,
+                  price_cents: ov.price.trim() ? Math.round(Number(ov.price) * 100) : null,
+                  duration_minutes: ov.duration.trim() ? Number(ov.duration) : null,
+                })),
               });
               setSaving(false);
             }}
@@ -1521,6 +1599,69 @@ function ConsentPicker({
           })
         )}
       </div>
+    </div>
+  );
+}
+
+function AftercarePicker({
+  items,
+  selected,
+  onToggle,
+}: {
+  items: { id: string; name: string; delay_hours: number }[];
+  selected: string[];
+  onToggle: (id: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const selectedItems = items.filter((i) => selected.includes(i.id));
+  return (
+    <div className="space-y-2">
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button variant="outline" role="combobox" className="w-full justify-between font-normal">
+            <span className="text-muted-foreground">
+              {selectedItems.length === 0
+                ? "Search aftercare templates…"
+                : `${selectedItems.length} selected`}
+            </span>
+            <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+          <Command>
+            <CommandInput placeholder="Search templates…" />
+            <CommandList>
+              <CommandEmpty>No templates found.</CommandEmpty>
+              <CommandGroup>
+                {items.map((t) => {
+                  const isSel = selected.includes(t.id);
+                  return (
+                    <CommandItem key={t.id} value={t.name} onSelect={() => onToggle(t.id)}>
+                      <Check className={`mr-2 h-4 w-4 ${isSel ? "opacity-100" : "opacity-0"}`} />
+                      <span className="flex-1">{t.name}</span>
+                      <span className="text-xs text-muted-foreground">{t.delay_hours}h</span>
+                    </CommandItem>
+                  );
+                })}
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
+      {selectedItems.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {selectedItems.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => onToggle(t.id)}
+              className="rounded-full border bg-foreground text-background px-2.5 py-1 text-xs inline-flex items-center gap-1"
+            >
+              {t.name} <X className="h-3 w-3" />
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
