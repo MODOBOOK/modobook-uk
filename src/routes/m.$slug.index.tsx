@@ -112,7 +112,7 @@ function textToParagraphHtml(text: string) {
 type Theme = Database["public"]["Tables"]["clinic_theme"]["Row"];
 
 function BookPage() {
-  const { profile, treatments, packages, locations, categories, pricing, theme, reviews, concernAreas, concerns, concernLinks, modelSlots = [], addonLinks = [], practitioners = [], locationPractitioners = [], aboutPage } =
+  const { profile, treatments, packages, locations, categories, pricing, theme, reviews, concernAreas, concerns, concernLinks, modelSlots = [], addonLinks = [], practitioners = [], locationPractitioners = [], aboutPage, careGuides = [] } =
     Route.useLoaderData() as {
       profile: {
         id: string;
@@ -171,6 +171,7 @@ function BookPage() {
         intro_heading?: string | null;
         intro_body?: string | null;
       } | null;
+      careGuides?: { id: string; name: string; body_html: string; summary: string | null; category: string | null }[];
     };
 
 
@@ -246,6 +247,8 @@ function BookPage() {
 
   const [locationId, setLocationId] = useState<string | null>(null);
   const [directionsOpen, setDirectionsOpen] = useState(false);
+  const [careGuideOpen, setCareGuideOpen] = useState(false);
+  const hasCareGuides = (careGuides ?? []).length > 0;
   const practSelectionMode = profile.practitioner_selection_mode ?? "optional";
   const [practitionerId, setPractitionerIdState] = useState<string | null>(null);
   const setPractitionerId = (id: string | null) => {
@@ -664,9 +667,15 @@ function BookPage() {
                   <ActionButton onClick={handleShare} label="Share" brand={brand}>
                     <Share2 className="h-5 w-5" />
                   </ActionButton>
-                  <ActionButton onClick={() => document.getElementById(isMobile ? "welcome-intro-mobile" : "welcome-intro")?.scrollIntoView({ behavior: "smooth", block: "start" })} label="Intro" brand={brand}>
-                    <Info className="h-5 w-5" />
-                  </ActionButton>
+                  {hasCareGuides ? (
+                    <ActionButton onClick={() => setCareGuideOpen(true)} label="Care Guide" brand={brand}>
+                      <Info className="h-5 w-5" />
+                    </ActionButton>
+                  ) : (
+                    <ActionPlaceholder label="Care Guide" brand={brand}>
+                      <Info className="h-5 w-5 opacity-30" />
+                    </ActionPlaceholder>
+                  )}
                 </div>
               )}
             </>
@@ -1583,6 +1592,38 @@ function BookPage() {
           </div>
         );
       })()}
+
+      {/* Pre + Post Care Guide */}
+      <Dialog open={careGuideOpen} onOpenChange={setCareGuideOpen}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl" style={{ borderColor: `${brand}33` }}>
+          <DialogHeader>
+            <DialogTitle style={{ color: brand }}>Pre + Post Care Guide</DialogTitle>
+            <DialogDescription>General before & aftercare advice from the clinic. Always follow personalised instructions sent after your appointment.</DialogDescription>
+          </DialogHeader>
+          {careGuides.length === 0 ? (
+            <p className="py-4 text-sm text-muted-foreground">No care guides have been published yet.</p>
+          ) : (
+            <Accordion type="single" collapsible className="w-full">
+              {careGuides.map((g) => (
+                <AccordionItem key={g.id} value={g.id}>
+                  <AccordionTrigger className="text-left">
+                    <span className="flex flex-col">
+                      <span className="font-semibold">{g.name}</span>
+                      {g.summary && <span className="text-xs font-normal text-muted-foreground">{g.summary}</span>}
+                    </span>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <SafeHtml
+                      html={g.body_html || ""}
+                      className="prose prose-sm max-w-none [&_p]:leading-relaxed [&_strong]:font-bold"
+                    />
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Directions location picker */}
       <Dialog open={directionsOpen} onOpenChange={setDirectionsOpen}>

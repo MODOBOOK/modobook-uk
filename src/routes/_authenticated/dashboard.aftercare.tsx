@@ -26,7 +26,7 @@ export const Route = createFileRoute("/_authenticated/dashboard/aftercare")({
   notFoundComponent: () => <div className="p-6 text-sm">Not found.</div>,
 });
 
-type Tpl = { id: string; name: string; body_html: string; delay_hours: number; is_system?: boolean; category?: string | null; summary?: string | null };
+type Tpl = { id: string; name: string; body_html: string; delay_hours: number; is_system?: boolean; category?: string | null; summary?: string | null; show_on_public?: boolean };
 
 function AftercarePage() {
   const list = useServerFn(listAftercareTemplates);
@@ -204,6 +204,19 @@ function AftercarePage() {
                 />
               </div>
 
+              <label className="flex items-start gap-3 rounded-lg border p-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="mt-1 h-4 w-4"
+                  checked={!!editing.show_on_public}
+                  onChange={(e) => setEditing({ ...editing, show_on_public: e.target.checked })}
+                />
+                <span className="text-sm">
+                  <span className="font-semibold">Show on booking page (Pre + Post Care)</span>
+                  <span className="block text-xs text-muted-foreground">Patients can read this from the “Care Guide” button on your booking page before they book.</span>
+                </span>
+              </label>
+
               <div className="space-y-1.5 rounded-lg border p-3">
                 <Label className="text-sm font-semibold">Auto-attach to treatments</Label>
                 <p className="text-xs text-muted-foreground">
@@ -247,6 +260,7 @@ function AftercarePage() {
                     name: editing.name.trim(),
                     body_html: editing.body_html,
                     delay_hours: editing.delay_hours,
+                    show_on_public: !!editing.show_on_public,
                   },
                 });
                 const tplId = (saved as any)?.id ?? editing.id;

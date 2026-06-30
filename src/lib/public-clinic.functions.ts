@@ -99,7 +99,7 @@ export const getPublicClinic = createServerFn({ method: "GET" })
     ];
 
 
-    const [concernAreas, concerns, concernLinks, modelSlots, addonLinks, practitioners, locationPractitioners, aboutRpc] = await Promise.all([
+    const [concernAreas, concerns, concernLinks, modelSlots, addonLinks, practitioners, locationPractitioners, aboutRpc, careGuides] = await Promise.all([
       supabase.from("concern_areas").select("*").eq("profile_id", profile.id).order("sort_order"),
       supabase.from("concerns").select("*").eq("profile_id", profile.id).order("sort_order"),
       supabase.from("concern_treatments").select("concern_id, treatment_id, sort_order").eq("profile_id", profile.id),
@@ -114,6 +114,11 @@ export const getPublicClinic = createServerFn({ method: "GET" })
       supabase.from("practitioners").select("id, name, professional_title, photo_url, bio, display_order").eq("profile_id", profile.id).eq("active", true).order("display_order"),
       supabase.from("location_practitioners").select("location_id, practitioner_id, display_order"),
       supabase.rpc("get_about_page_by_slug", { p_slug: data.slug.toLowerCase() }),
+      supabase.from("aftercare_templates")
+        .select("id, name, body_html, summary, category")
+        .eq("profile_id", profile.id)
+        .eq("show_on_public", true)
+        .order("name"),
     ]);
 
 
@@ -136,6 +141,7 @@ export const getPublicClinic = createServerFn({ method: "GET" })
       practitioners: practitioners.data ?? [],
       locationPractitioners: locationPractitioners.data ?? [],
       aboutPage: (aboutRpc.data as Json) ?? ({} as Json),
+      careGuides: careGuides.data ?? [],
     };
   });
 
