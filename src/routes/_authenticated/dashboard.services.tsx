@@ -1235,6 +1235,62 @@ function ServiceDialog({
             </details>
           </div>
 
+          {locationList.length > 0 && (
+            <div className="rounded-lg border p-3 space-y-3">
+              <div className="flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-muted-foreground" />
+                <Label className="m-0 text-sm font-semibold">Locations & pricing</Label>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Tick locations where this service is offered. Leave price/duration blank to use the defaults above.
+              </p>
+              <div className="space-y-2">
+                {locationList.map((loc) => {
+                  const ov = locOverrides[loc.id] ?? { available: true, price: "", duration: "" };
+                  const update = (patch: Partial<LocOverride>) =>
+                    setLocOverrides((prev) => ({ ...prev, [loc.id]: { ...ov, ...patch } }));
+                  return (
+                    <div key={loc.id} className="flex flex-wrap items-center gap-2 rounded-md border p-2">
+                      <label className="flex items-center gap-2 text-sm flex-1 min-w-[140px]">
+                        <input
+                          type="checkbox"
+                          checked={ov.available}
+                          onChange={(e) => update({ available: e.target.checked })}
+                        />
+                        <span className="font-medium">{loc.name}</span>
+                      </label>
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-muted-foreground">£</span>
+                        <Input
+                          className="w-20 h-8"
+                          type="number"
+                          min={0}
+                          placeholder={String(price)}
+                          value={ov.price}
+                          disabled={!ov.available}
+                          onChange={(e) => update({ price: e.target.value })}
+                        />
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Input
+                          className="w-20 h-8"
+                          type="number"
+                          min={0}
+                          placeholder={String(duration)}
+                          value={ov.duration}
+                          disabled={!ov.available}
+                          onChange={(e) => update({ duration: e.target.value })}
+                        />
+                        <span className="text-xs text-muted-foreground">min</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+
           <div className="space-y-1.5">
             <Label>Calendar colour</Label>
             <div className="flex flex-wrap gap-2">
