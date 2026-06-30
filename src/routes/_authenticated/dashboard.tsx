@@ -85,6 +85,15 @@ function DashboardLayout() {
   const [open, setOpen] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const themeStyle = useDashboardThemeStyle();
+  const fetchPending = useServerFn(countPendingReviews);
+  const [pendingReviews, setPendingReviews] = useState(0);
+  useEffect(() => {
+    let alive = true;
+    const load = () => fetchPending().then((r) => { if (alive) setPendingReviews(r.count); }).catch(() => {});
+    load();
+    const t = setInterval(load, 60_000);
+    return () => { alive = false; clearInterval(t); };
+  }, [fetchPending, pathname]);
 
 
 
