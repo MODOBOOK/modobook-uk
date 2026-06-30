@@ -460,36 +460,8 @@ export const commitClinicImport = createServerFn({ method: "POST" })
       else noteError(`Add-on "${a.name}"`, error);
     }
 
-    /* --- Packages --- */
-    const { data: existingPkgs } = await supabase
-      .from("packages")
-      .select("name")
-      .eq("profile_id", profileId);
-    const existingPkgNames = new Set(
-      (existingPkgs ?? []).map((p: { name: string }) => p.name.toLowerCase()),
-    );
-    for (const pkg of data.packages.filter((x) => x._include && x.name?.trim())) {
-      if (existingPkgNames.has(pkg.name.toLowerCase())) {
-        created.skipped++;
-        continue;
-      }
-      const trIds = (pkg.treatment_names ?? [])
-        .map((n) => trNameToId.get(n.toLowerCase()))
-        .filter(Boolean) as string[];
-      const primary = trIds[0] ?? null;
-      const { error } = await supabase.from("packages").insert({
-        profile_id: profileId,
-        name: pkg.name.trim(),
-        treatment_id: primary,
-        treatment_ids: trIds,
-        session_count: Math.max(1, Math.round(pkg.sessions ?? trIds.length ?? 1)),
-        price: Number(pkg.price_gbp ?? 0),
-        active: true,
-        description: pkg.description ?? null,
-      } as never);
-      if (!error) created.packages++;
-      else noteError(`Package "${pkg.name}"`, error);
-    }
+    /* --- Packages: intentionally not imported. Practitioners add them manually. --- */
+
 
     return created;
   });
