@@ -161,8 +161,10 @@ export const updateProfile = createServerFn({ method: "POST" })
       invoice_company_number?: string | null;
       invoice_show_bank_details?: boolean;
       invoice_show_logo?: boolean;
+      display_name_mode?: "clinic" | "practitioner" | "both";
     }) => input,
   )
+
 
 
   .handler(async ({ data, context }) => {
