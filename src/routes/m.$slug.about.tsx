@@ -1,4 +1,4 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { getPractitionerBio } from "@/lib/practitioner-public.functions";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -7,9 +7,6 @@ import { resolveDisplayNames } from "@/lib/display-name";
 
 
 export const Route = createFileRoute("/m/$slug/about")({
-  beforeLoad: ({ params }) => {
-    throw redirect({ to: "/m/$slug", params: { slug: params.slug } });
-  },
   loader: async ({ params }) => getPractitionerBio({ data: { slug: params.slug } }),
   head: ({ loaderData }) => {
     const name = loaderData?.profile ? resolveDisplayNames(loaderData.profile).primary : "practitioner";
@@ -124,7 +121,7 @@ function About() {
 
 
       {/* Intro */}
-      {show("show_intro", false) && (ap.intro_heading || ap.intro_body) && (
+      {show("show_intro", true) && (ap.intro_heading || ap.intro_body) && (
         <section className="mt-8 rounded-3xl border bg-gradient-to-br from-[color:var(--brand)]/10 to-transparent p-6 shadow-sm sm:p-8">
           {ap.intro_heading && (
             <h2 className="text-2xl font-semibold" style={{ color: "var(--brand)", fontFamily: "var(--heading-font)" }}>
@@ -135,12 +132,8 @@ function About() {
         </section>
       )}
 
-      {/* Bio */}
-      {show("show_bio", true) && profile.bio && (
-        <Section icon={Sparkles} title="About">
-          <p className="whitespace-pre-line leading-relaxed text-foreground/90">{profile.bio}</p>
-        </Section>
-      )}
+
+
 
       {/* Mission */}
       {show("show_mission", false) && ap.mission && (

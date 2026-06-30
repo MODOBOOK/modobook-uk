@@ -625,6 +625,10 @@ function BookPage() {
                 </Link>
               )}
 
+              <Link to="/m/$slug/about" params={{ slug }} className="mt-2 inline-block text-xs underline opacity-70 hover:opacity-100">
+                About {displayPrimary}
+              </Link>
+
               {/* Action icon row */}
               {!isCompact && showActions && (
                 <div className="mt-4 grid grid-cols-4 gap-2 border-t pt-3" style={{ borderColor: `${brand}22` }}>
