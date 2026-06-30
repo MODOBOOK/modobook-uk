@@ -85,7 +85,21 @@ const HOUR_HEIGHT = 60;
 const START_HOUR = 7;
 const END_HOUR = 23;
 const HOURS = Array.from({ length: END_HOUR - START_HOUR + 1 }, (_, i) => START_HOUR + i);
-const DAYS_VISIBLE = 3;
+
+type ViewMode = "day" | "week" | "month";
+type AvailRule = { day_of_week: number; start_time: string; end_time: string };
+
+function startOfWeek(d: Date) {
+  const c = new Date(d);
+  const day = c.getDay();
+  const diff = (day + 6) % 7; // Monday start
+  c.setDate(c.getDate() - diff);
+  c.setHours(0, 0, 0, 0);
+  return c;
+}
+function startOfMonth(d: Date) {
+  return new Date(d.getFullYear(), d.getMonth(), 1);
+}
 
 function ymd(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
