@@ -204,6 +204,7 @@ export const extractClinicData = createServerFn({ method: "POST" })
       url?: string;
       file_data_url?: string;
       file_name?: string;
+      files?: Array<{ data_url: string; name?: string }>;
     }) => input,
   )
   .handler(async ({ data }): Promise<ExtractedDraft> => {
@@ -220,24 +221,38 @@ export const extractClinicData = createServerFn({ method: "POST" })
         type: "text",
         text: `Extract from this clinic website content (source: ${data.url}):\n\n${txt}`,
       });
-    } else if (data.file_data_url) {
-      const url = data.file_data_url;
-      const mime = url.match(/^data:([^;]+);base64,/)?.[1] ?? "";
-      content.push({ type: "text", text: "Extract from this file:" });
-      if (mime.startsWith("image/")) {
-        content.push({ type: "image_url", image_url: { url } });
-      } else {
-        content.push({
-          type: "file",
-          file: { filename: data.file_name || "upload.pdf", file_data: url },
-        });
-      }
     } else {
-      throw new Error("Provide text, a URL, or a file.");
+      const files: Array<{ data_url: string; name?: string }> = [];
+      if (data.files && data.files.length) files.push(...data.files);
+      if (data.file_data_url)
+        files.push({ data_url: data.file_data_url, name: data.file_name });
+
+      if (!files.length) throw new Error("Provide text, a URL, or a file.");
+
+      content.push({
+        type: "text",
+        text:
+          files.length === 1
+            ? "Extract from this file:"
+            : `Extract from these ${files.length} files. Treat them as one combined source (e.g. multiple pages or photos of the same price list / treatment menu) and merge duplicates:`,
+      });
+
+      for (const f of files) {
+        const mime = f.data_url.match(/^data:([^;]+);base64,/)?.[1] ?? "";
+        if (mime.startsWith("image/")) {
+          content.push({ type: "image_url", image_url: { url: f.data_url } });
+        } else {
+          content.push({
+            type: "file",
+            file: { filename: f.name || "upload.pdf", file_data: f.data_url },
+          });
+        }
+      }
     }
 
     return callGateway(content);
   });
+
 
 /* --------------------------- Commit import ------------------------ */
 
