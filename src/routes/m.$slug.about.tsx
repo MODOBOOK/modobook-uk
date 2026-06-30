@@ -1,10 +1,13 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { getPractitionerBio } from "@/lib/practitioner-public.functions";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { MapPin, Award, Clock, Sparkles, MessageCircle, ShieldCheck, HeartHandshake } from "lucide-react";
 
 export const Route = createFileRoute("/m/$slug/about")({
+  beforeLoad: ({ params }) => {
+    throw redirect({ to: "/m/$slug", params: { slug: params.slug } });
+  },
   loader: async ({ params }) => getPractitionerBio({ data: { slug: params.slug } }),
   head: ({ loaderData }) => ({
     meta: [

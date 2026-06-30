@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { getMyProfile } from "@/lib/profiles.functions";
 import { updatePractitionerBio } from "@/lib/patient.functions";
@@ -14,6 +14,9 @@ import { toast } from "sonner";
 import { ImageUploader } from "@/components/ImageUploader";
 
 export const Route = createFileRoute("/_authenticated/dashboard/bio")({
+  beforeLoad: () => {
+    throw redirect({ to: "/dashboard/policies" });
+  },
   component: BioEditor,
 });
 

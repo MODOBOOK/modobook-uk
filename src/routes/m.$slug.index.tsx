@@ -89,6 +89,15 @@ function formatTreatmentSessions(t: Treatment) {
   return `${sessions} sessions${spacing ? ` · ${spacing}` : ""}`;
 }
 
+function textToParagraphHtml(text: string) {
+  return text
+    .split(/\n{2,}/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean)
+    .map((paragraph) => `<p>${paragraph.replace(/\n/g, "<br />")}</p>`)
+    .join("");
+}
+
 type Theme = Database["public"]["Tables"]["clinic_theme"]["Row"];
 
 function BookPage() {
