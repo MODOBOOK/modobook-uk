@@ -212,6 +212,7 @@ function MultiBookPage() {
   const submitLockRef = useRef(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [prescriberConsents, setPrescriberConsents] = useState<Record<string, boolean>>({});
+  const [visitSelections, setVisitSelections] = useState<Record<string, string>>({});
 
   // Prescriber requirements for the selected treatments
   const prescriberFn = useServerFn(getPrescriberInfoForTreatments);
@@ -223,9 +224,26 @@ function MultiBookPage() {
   type PrescInfo = NonNullable<typeof prescriberInfoQuery.data>[number];
   const prescriberItems: PrescInfo[] = prescriberInfoQuery.data ?? [];
   const sameAddressItems = prescriberItems.filter((p) => p.routing === "same_address");
+  const clinicVisitItems = prescriberItems.filter((p) => p.routing === "clinic_visit");
   const inPersonItems = prescriberItems.filter((p) => p.routing === "in_person_consult");
+
+  const visitsFn = useServerFn(listAvailableVisitsForBooking);
+  const clinicVisitIds = clinicVisitItems.map((p) => p.treatment_id);
+  const availableVisitsQuery = useQuery({
+    queryKey: ["clinicVisits", slug, clinicVisitIds.join(",")],
+    queryFn: () => visitsFn({ data: { slug, treatment_ids: clinicVisitIds } }),
+    enabled: clinicVisitIds.length > 0,
+  });
+  const availableVisits = availableVisitsQuery.data ?? [];
+
   const allConsented = sameAddressItems.every((p) => prescriberConsents[p.treatment_id]);
-  const prescriberBlocks = !allConsented || inPersonItems.length > 0;
+  const allVisitsPicked = clinicVisitItems.every((p) => visitSelections[p.treatment_id]);
+  const allClinicVisitsConsented = clinicVisitItems.every(
+    (p) => prescriberConsents[p.treatment_id],
+  );
+  const prescriberBlocks =
+    !allConsented || !allVisitsPicked || !allClinicVisitsConsented || inPersonItems.length > 0;
+
   
   const termsHtml = (ctx as { termsHtml?: string | null }).termsHtml ?? null;
   const termsRequired = Boolean((ctx as { termsRequired?: boolean }).termsRequired);
