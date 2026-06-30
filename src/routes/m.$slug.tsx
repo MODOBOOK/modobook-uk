@@ -141,6 +141,7 @@ function ModoLayout() {
             </Link>
             <nav className="flex shrink-0 items-center gap-0.5 text-sm sm:gap-1">
               <TabLink slug={slug} to="/m/$slug" label={theme?.header_button_label || "Book"} exact />
+              <TabLink slug={slug} to="/m/$slug/about" label="About" />
               <TabLink slug={slug} to="/m/$slug/reviews" label="Reviews" />
               <Link to="/m/$slug/account" params={{ slug }} aria-label="My account">
                 <Button size="sm" variant="outline" className="ml-1 hidden sm:inline-flex">My account</Button>
@@ -166,7 +167,7 @@ function TabLink({
   exact,
 }: {
   slug: string;
-  to: "/m/$slug" | "/m/$slug/reviews";
+  to: "/m/$slug" | "/m/$slug/reviews" | "/m/$slug/about";
   label: string;
   exact?: boolean;
 }) {
