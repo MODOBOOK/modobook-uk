@@ -270,20 +270,24 @@ function AiImportPage() {
   );
 }
 
-function SourceTile({ icon, label, active, onClick }: { icon: React.ReactNode; label: string; active: boolean; onClick: () => void }) {
+function SourceTile({ icon, label, desc, active, onClick }: { icon: React.ReactNode; label: string; desc?: string; active: boolean; onClick: () => void }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`flex flex-col items-center gap-2 rounded-lg border p-4 text-sm transition ${
+      className={`flex h-full flex-col items-start gap-2 rounded-lg border p-4 text-left text-sm transition ${
         active ? "border-primary bg-primary/5 ring-1 ring-primary" : "hover:border-primary/40"
       }`}
     >
-      {icon}
-      <span className="text-center font-medium">{label}</span>
+      <div className="flex items-center gap-2">
+        {icon}
+        <span className="font-medium">{label}</span>
+      </div>
+      {desc && <span className="text-xs leading-snug text-muted-foreground">{desc}</span>}
     </button>
   );
 }
+
 
 function ReviewStep({
   draft,
