@@ -1210,6 +1210,8 @@ function ServiceDialog({
   const [discountPercent, setDiscountPercent] = useState<string>("");
   const [discountLabel, setDiscountLabel] = useState("");
   const [discountShowWasNow, setDiscountShowWasNow] = useState(true);
+  const [priceMode, setPriceMode] = useState<"fixed" | "from" | "poa" | "free">("fixed");
+  const [badge, setBadge] = useState<"none" | "recommended" | "popular" | "new" | "bestseller">("none");
   // Per-location availability + optional price/duration override (in £ and minutes — strings for empty inputs)
   type LocOverride = { available: boolean; price: string; duration: string };
   const [locOverrides, setLocOverrides] = useState<Record<string, LocOverride>>({});
