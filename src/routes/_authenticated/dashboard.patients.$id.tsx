@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import {
   getClient, upsertClient, deleteClient,
-  listClientNotes, upsertClientNote, deleteClientNote,
+  listClientNotes, upsertClientNote, deleteClientNote, toggleClientNoteVisibility,
   listClientFiles, addClientFile, deleteClientFile,
   listClientPrescriptions, upsertClientPrescription, deleteClientPrescription,
 } from "@/lib/clients.functions";
@@ -419,33 +419,50 @@ function NotesSection({ clientId }: { clientId: string }) {
   const list = useServerFn(listClientNotes);
   const up = useServerFn(upsertClientNote);
   const del = useServerFn(deleteClientNote);
+  const toggleVis = useServerFn(toggleClientNoteVisibility);
   const [rows, setRows] = useState<any[]>([]);
-  const [adding, setAdding] = useState("");
   async function reload() { setRows((await list({ data: { client_id: clientId } })) as any[]); }
   useEffect(() => { reload(); /* eslint-disable-next-line */ }, [clientId]);
+
+  async function addNote() {
+    const body = prompt("New note");
+    if (!body?.trim()) return;
+    const share = confirm("Share this note with the patient in their portal?\n\nOK = visible to patient\nCancel = private (practitioner only)");
+    await up({ data: { client_id: clientId, body: body.trim(), visible_to_patient: share } });
+    reload();
+  }
+
   return (
     <SectionDark
       title="Notes"
-      actions={
-        <Button size="sm" variant="secondary" onClick={() => {
-          const v = prompt("New note");
-          if (v?.trim()) up({ data: { client_id: clientId, body: v.trim() } }).then(reload);
-        }}><Plus className="mr-1 h-3.5 w-3.5" />New</Button>
-      }
+      actions={<Button size="sm" variant="secondary" onClick={addNote}><Plus className="mr-1 h-3.5 w-3.5" />New</Button>}
     >
       {rows.length === 0 ? <div className="px-4 py-6 text-center text-xs text-muted-foreground">No notes yet.</div> :
         rows.map(n => (
           <div key={n.id} className="flex items-start justify-between gap-2 border-b p-3 last:border-0">
             <div className="min-w-0 flex-1">
               <div className="whitespace-pre-wrap text-sm">{n.body}</div>
-              <div className="text-[10px] text-muted-foreground">{new Date(n.created_at).toLocaleString()}</div>
+              <div className="mt-1 flex items-center gap-2">
+                <div className="text-[10px] text-muted-foreground">{new Date(n.created_at).toLocaleString()}</div>
+                {n.visible_to_patient && <Badge variant="secondary" className="h-4 px-1.5 text-[9px]">Shared with patient</Badge>}
+              </div>
             </div>
-            <Button size="icon" variant="ghost" onClick={() => del({ data: { id: n.id } }).then(reload)}><X className="h-3.5 w-3.5" /></Button>
+            <div className="flex items-center gap-1">
+              <label className="flex cursor-pointer items-center gap-1 text-[10px] text-muted-foreground">
+                <Checkbox
+                  checked={!!n.visible_to_patient}
+                  onCheckedChange={async (v) => { await toggleVis({ data: { id: n.id, visible: !!v } }); reload(); }}
+                />
+                Share
+              </label>
+              <Button size="icon" variant="ghost" onClick={() => del({ data: { id: n.id } }).then(reload)}><X className="h-3.5 w-3.5" /></Button>
+            </div>
           </div>
         ))}
     </SectionDark>
   );
 }
+
 
 function FilesSection({ clientId, profileId, kind, title }: { clientId: string; profileId: string; kind: "photo" | "pdf"; title: string }) {
   const list = useServerFn(listClientFiles);
