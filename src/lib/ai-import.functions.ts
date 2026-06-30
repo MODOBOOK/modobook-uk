@@ -455,6 +455,7 @@ export const commitClinicImport = createServerFn({ method: "POST" })
         sort_order: 0,
       } as never);
       if (!error) created.addons++;
+      else noteError(`Add-on "${a.name}"`, error);
     }
 
     /* --- Packages --- */
