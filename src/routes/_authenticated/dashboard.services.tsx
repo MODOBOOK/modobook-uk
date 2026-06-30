@@ -340,6 +340,7 @@ function ServicesPage() {
               siblings={roots}
               index={idx}
               matchTreat={matchTreat}
+              picker={picker}
               onAddSub={(parentId) => setCatDialog({ mode: "create", parentId })}
               onEditCat={(c) =>
                 setCatDialog({ mode: "edit", parentId: c.parent_id, cat: c })
@@ -352,6 +353,7 @@ function ServicesPage() {
               onReorderTreatsByIds={reorderTreatsByIds}
               onMoveTreatTo={(t) => setMoveTreatState(t)}
               onMoveCatTo={(c) => setMoveCatState(c)}
+              onChangeTreatCategory={moveTreatToCategory}
             />
           ))}
 
@@ -366,8 +368,10 @@ function ServicesPage() {
                   <ServiceRow
                     key={t.id}
                     treat={t}
+                    picker={picker}
                     onDelete={() => handleDeleteTreat(t)}
                     onMoveTo={() => setMoveTreatState(t)}
+                    onChangeCategory={(catId) => moveTreatToCategory(t.id, catId)}
                   />
                 ))}
               </div>
@@ -375,6 +379,7 @@ function ServicesPage() {
           )}
         </div>
       )}
+
 
       <MoveTreatmentDialog
         treat={moveTreatState}
