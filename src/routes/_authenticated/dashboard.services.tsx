@@ -340,6 +340,7 @@ function ServicesPage() {
               siblings={roots}
               index={idx}
               matchTreat={matchTreat}
+              picker={picker}
               onAddSub={(parentId) => setCatDialog({ mode: "create", parentId })}
               onEditCat={(c) =>
                 setCatDialog({ mode: "edit", parentId: c.parent_id, cat: c })
@@ -352,6 +353,7 @@ function ServicesPage() {
               onReorderTreatsByIds={reorderTreatsByIds}
               onMoveTreatTo={(t) => setMoveTreatState(t)}
               onMoveCatTo={(c) => setMoveCatState(c)}
+              onChangeTreatCategory={moveTreatToCategory}
             />
           ))}
 
@@ -366,8 +368,10 @@ function ServicesPage() {
                   <ServiceRow
                     key={t.id}
                     treat={t}
+                    picker={picker}
                     onDelete={() => handleDeleteTreat(t)}
                     onMoveTo={() => setMoveTreatState(t)}
+                    onChangeCategory={(catId) => moveTreatToCategory(t.id, catId)}
                   />
                 ))}
               </div>
@@ -375,6 +379,7 @@ function ServicesPage() {
           )}
         </div>
       )}
+
 
       <MoveTreatmentDialog
         treat={moveTreatState}
@@ -493,6 +498,7 @@ function CategoryRow({
   siblings,
   index,
   matchTreat,
+  picker,
   onAddSub,
   onEditCat,
   onDeleteCat,
@@ -503,12 +509,14 @@ function CategoryRow({
   onReorderTreatsByIds,
   onMoveTreatTo,
   onMoveCatTo,
+  onChangeTreatCategory,
 }: {
   node: CatNode;
   depth: number;
   siblings: CatNode[];
   index: number;
   matchTreat: (t: Treat) => boolean;
+  picker: { id: string; label: string; depth: number }[];
   onAddSub: (parentId: string) => void;
   onEditCat: (c: Cat) => void;
   onDeleteCat: (c: Cat) => void;
@@ -519,7 +527,9 @@ function CategoryRow({
   onReorderTreatsByIds: (ids: string[]) => void;
   onMoveTreatTo: (t: Treat) => void;
   onMoveCatTo: (c: Cat) => void;
+  onChangeTreatCategory: (treatId: string, categoryId: string | null) => void | Promise<void>;
 }) {
+
 
   const [open, setOpen] = useState(false);
   const treatsHere = node.treatments.filter(matchTreat);
@@ -613,9 +623,12 @@ function CategoryRow({
           <SortableTreatList
             treats={treatsHere}
             depth={depth}
+            picker={picker}
+            currentCategoryId={node.id}
             onDelete={onDeleteTreat}
             onReorder={onReorderTreatsByIds}
             onMoveTo={onMoveTreatTo}
+            onChangeCategory={onChangeTreatCategory}
           />
 
           {node.children.map((child, ci) => (
@@ -626,6 +639,7 @@ function CategoryRow({
               siblings={node.children}
               index={ci}
               matchTreat={matchTreat}
+              picker={picker}
               onAddSub={onAddSub}
               onEditCat={onEditCat}
               onDeleteCat={onDeleteCat}
@@ -636,8 +650,10 @@ function CategoryRow({
               onReorderTreatsByIds={onReorderTreatsByIds}
               onMoveTreatTo={onMoveTreatTo}
               onMoveCatTo={onMoveCatTo}
+              onChangeTreatCategory={onChangeTreatCategory}
             />
           ))}
+
 
 
           <div
@@ -659,19 +675,24 @@ function CategoryRow({
 
 function ServiceRow({
   treat,
+  picker,
   onDelete,
   onMoveUp,
   onMoveDown,
   onMoveTo,
+  onChangeCategory,
 }: {
   treat: Treat;
+  picker?: { id: string; label: string; depth: number }[];
   onDelete: () => void;
   onMoveUp?: () => void;
   onMoveDown?: () => void;
   onMoveTo?: () => void;
+  onChangeCategory?: (categoryId: string | null) => void | Promise<void>;
 }) {
+  const currentVal = treat.category_id ?? "__none__";
   return (
-    <div className="flex items-center gap-2 py-2">
+    <div className="flex flex-wrap items-center gap-2 py-2">
       <span
         className="h-2.5 w-2.5 shrink-0 rounded-full"
         style={{ backgroundColor: treat.color || "hsl(var(--muted-foreground))" }}
@@ -683,6 +704,26 @@ function ServiceRow({
           £{treat.price} · {treat.duration} min
         </p>
       </div>
+      {onChangeCategory && picker && (
+        <Select
+          value={currentVal}
+          onValueChange={(v) => onChangeCategory(v === "__none__" ? null : v)}
+        >
+          <SelectTrigger className="h-8 w-[180px] text-xs" aria-label="Move to category">
+            <SelectValue placeholder="Move to…" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="__none__">Uncategorised</SelectItem>
+            {picker.map((c) => (
+              <SelectItem key={c.id} value={c.id}>
+                {"\u00A0\u00A0".repeat(c.depth)}
+                {c.depth > 0 ? "↳ " : ""}
+                {c.label.split(" › ").slice(-1)[0]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button
@@ -724,15 +765,20 @@ function ServiceRow({
 function SortableTreatList({
   treats,
   depth,
+  picker,
   onDelete,
   onReorder,
   onMoveTo,
+  onChangeCategory,
 }: {
   treats: Treat[];
   depth: number;
+  picker: { id: string; label: string; depth: number }[];
+  currentCategoryId?: string;
   onDelete: (t: Treat) => void;
   onReorder: (ids: string[]) => void;
   onMoveTo: (t: Treat) => void;
+  onChangeCategory: (treatId: string, categoryId: string | null) => void | Promise<void>;
 }) {
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -756,8 +802,10 @@ function SortableTreatList({
             key={t.id}
             treat={t}
             depth={depth}
+            picker={picker}
             onDelete={() => onDelete(t)}
             onMoveTo={() => onMoveTo(t)}
+            onChangeCategory={(catId) => onChangeCategory(t.id, catId)}
           />
         ))}
       </SortableContext>
@@ -765,16 +813,21 @@ function SortableTreatList({
   );
 }
 
+
 function SortableServiceItem({
   treat,
   depth,
+  picker,
   onDelete,
   onMoveTo,
+  onChangeCategory,
 }: {
   treat: Treat;
   depth: number;
+  picker: { id: string; label: string; depth: number }[];
   onDelete: () => void;
   onMoveTo: () => void;
+  onChangeCategory: (categoryId: string | null) => void | Promise<void>;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: treat.id,
@@ -801,11 +854,18 @@ function SortableServiceItem({
         <GripVertical className="h-4 w-4" />
       </button>
       <div className="flex-1">
-        <ServiceRow treat={treat} onDelete={onDelete} onMoveTo={onMoveTo} />
+        <ServiceRow
+          treat={treat}
+          picker={picker}
+          onDelete={onDelete}
+          onMoveTo={onMoveTo}
+          onChangeCategory={onChangeCategory}
+        />
       </div>
     </div>
   );
 }
+
 
 function MoveTreatmentDialog({
   treat,
