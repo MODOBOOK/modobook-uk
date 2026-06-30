@@ -1,19 +1,30 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import {
   listMyReferrals,
   updateReferralStatus,
   getReferralFull,
 } from "@/lib/prescriber.functions";
+import {
+  savePrescription,
+  signPrescription,
+  listPrescriptionsForReferral,
+  saveCarePlan,
+  sendCarePlan,
+  getCarePlanForReferral,
+} from "@/lib/prescriptions.functions";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { ChevronDown, ChevronUp, CheckCircle2, XCircle, FileText, User } from "lucide-react";
+import { ChevronDown, ChevronUp, CheckCircle2, XCircle, FileText, User, Pill, ClipboardList, PenLine, Send } from "lucide-react";
+
 
 export const Route = createFileRoute("/_authenticated/prescriber/")({
   ssr: false,
