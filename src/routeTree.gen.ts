@@ -57,6 +57,7 @@ import { Route as AuthenticatedDashboardAvailabilityRouteImport } from './routes
 import { Route as AuthenticatedDashboardAiImportRouteImport } from './routes/_authenticated/dashboard.ai-import'
 import { Route as AuthenticatedDashboardAftercareRouteImport } from './routes/_authenticated/dashboard.aftercare'
 import { Route as AuthenticatedDashboardAddonsRouteImport } from './routes/_authenticated/dashboard.addons'
+import { Route as AuthenticatedDashboardAboutRouteImport } from './routes/_authenticated/dashboard.about'
 import { Route as AuthenticatedDashboardPatientsIndexRouteImport } from './routes/_authenticated/dashboard.patients.index'
 import { Route as AuthenticatedDashboardConsultationsIndexRouteImport } from './routes/_authenticated/dashboard.consultations.index'
 import { Route as MSlugManageTokenRouteImport } from './routes/m.$slug.manage.$token'
@@ -331,6 +332,12 @@ const AuthenticatedDashboardAddonsRoute =
     path: '/addons',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
+const AuthenticatedDashboardAboutRoute =
+  AuthenticatedDashboardAboutRouteImport.update({
+    id: '/about',
+    path: '/about',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
 const AuthenticatedDashboardPatientsIndexRoute =
   AuthenticatedDashboardPatientsIndexRouteImport.update({
     id: '/',
@@ -379,6 +386,7 @@ export interface FileRoutesByFullPath {
   '/c/$token': typeof CTokenRoute
   '/f/$token': typeof FTokenRoute
   '/m/$slug': typeof MSlugRouteWithChildren
+  '/dashboard/about': typeof AuthenticatedDashboardAboutRoute
   '/dashboard/addons': typeof AuthenticatedDashboardAddonsRoute
   '/dashboard/aftercare': typeof AuthenticatedDashboardAftercareRoute
   '/dashboard/ai-import': typeof AuthenticatedDashboardAiImportRoute
@@ -432,6 +440,7 @@ export interface FileRoutesByTo {
   '/book/$slug': typeof BookSlugRoute
   '/c/$token': typeof CTokenRoute
   '/f/$token': typeof FTokenRoute
+  '/dashboard/about': typeof AuthenticatedDashboardAboutRoute
   '/dashboard/addons': typeof AuthenticatedDashboardAddonsRoute
   '/dashboard/aftercare': typeof AuthenticatedDashboardAftercareRoute
   '/dashboard/ai-import': typeof AuthenticatedDashboardAiImportRoute
@@ -488,6 +497,7 @@ export interface FileRoutesById {
   '/c/$token': typeof CTokenRoute
   '/f/$token': typeof FTokenRoute
   '/m/$slug': typeof MSlugRouteWithChildren
+  '/_authenticated/dashboard/about': typeof AuthenticatedDashboardAboutRoute
   '/_authenticated/dashboard/addons': typeof AuthenticatedDashboardAddonsRoute
   '/_authenticated/dashboard/aftercare': typeof AuthenticatedDashboardAftercareRoute
   '/_authenticated/dashboard/ai-import': typeof AuthenticatedDashboardAiImportRoute
@@ -545,6 +555,7 @@ export interface FileRouteTypes {
     | '/c/$token'
     | '/f/$token'
     | '/m/$slug'
+    | '/dashboard/about'
     | '/dashboard/addons'
     | '/dashboard/aftercare'
     | '/dashboard/ai-import'
@@ -598,6 +609,7 @@ export interface FileRouteTypes {
     | '/book/$slug'
     | '/c/$token'
     | '/f/$token'
+    | '/dashboard/about'
     | '/dashboard/addons'
     | '/dashboard/aftercare'
     | '/dashboard/ai-import'
@@ -653,6 +665,7 @@ export interface FileRouteTypes {
     | '/c/$token'
     | '/f/$token'
     | '/m/$slug'
+    | '/_authenticated/dashboard/about'
     | '/_authenticated/dashboard/addons'
     | '/_authenticated/dashboard/aftercare'
     | '/_authenticated/dashboard/ai-import'
@@ -1047,6 +1060,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardAddonsRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
+    '/_authenticated/dashboard/about': {
+      id: '/_authenticated/dashboard/about'
+      path: '/about'
+      fullPath: '/dashboard/about'
+      preLoaderRoute: typeof AuthenticatedDashboardAboutRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
     '/_authenticated/dashboard/patients/': {
       id: '/_authenticated/dashboard/patients/'
       path: '/'
@@ -1111,6 +1131,7 @@ const AuthenticatedDashboardPatientsRouteWithChildren =
   )
 
 interface AuthenticatedDashboardRouteChildren {
+  AuthenticatedDashboardAboutRoute: typeof AuthenticatedDashboardAboutRoute
   AuthenticatedDashboardAddonsRoute: typeof AuthenticatedDashboardAddonsRoute
   AuthenticatedDashboardAftercareRoute: typeof AuthenticatedDashboardAftercareRoute
   AuthenticatedDashboardAiImportRoute: typeof AuthenticatedDashboardAiImportRoute
@@ -1145,6 +1166,7 @@ interface AuthenticatedDashboardRouteChildren {
 
 const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
   {
+    AuthenticatedDashboardAboutRoute: AuthenticatedDashboardAboutRoute,
     AuthenticatedDashboardAddonsRoute: AuthenticatedDashboardAddonsRoute,
     AuthenticatedDashboardAftercareRoute: AuthenticatedDashboardAftercareRoute,
     AuthenticatedDashboardAiImportRoute: AuthenticatedDashboardAiImportRoute,
