@@ -25,7 +25,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { ArrowLeft, Sparkles, FileText, Image as ImageIcon, Globe, Table, Loader2, Wand2, CheckCircle2, Star, MessageSquareQuote, Trash2 } from "lucide-react";
+import { ArrowLeft, Sparkles, FileText, Image as ImageIcon, Loader2, Wand2, CheckCircle2, Star, MessageSquareQuote, Trash2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard/ai-import")({
   component: AiImportPage,
@@ -33,7 +33,7 @@ export const Route = createFileRoute("/_authenticated/dashboard/ai-import")({
 
 type IdName = { id: string; name: string };
 
-type SourceKind = "pdf" | "image" | "spreadsheet" | "url" | "text";
+type SourceKind = "pdf" | "image";
 
 type Draftable<T> = T & { _include: boolean };
 type EditableDraft = {
@@ -63,11 +63,6 @@ async function fileToDataUrl(file: File): Promise<string> {
   });
 }
 
-async function spreadsheetToText(file: File): Promise<string> {
-  // Tiny CSV / TSV handler; for .xlsx ask user to export as CSV.
-  const text = await file.text();
-  return text.slice(0, 25000);
-}
 
 function AiImportPage() {
   const extract = useServerFn(extractClinicData);
@@ -79,8 +74,6 @@ function AiImportPage() {
   const [summary, setSummary] = useState<Awaited<ReturnType<typeof commit>> | null>(null);
 
   // upload state
-  const [url, setUrl] = useState("");
-  const [text, setText] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [files, setFiles] = useState<File[]>([]);
   const [kind, setKind] = useState<SourceKind>("pdf");
@@ -89,23 +82,13 @@ function AiImportPage() {
     setBusy(true);
     try {
       let result: ExtractedDraft;
-      if (kind === "url") {
-        if (!url.trim()) throw new Error("Paste a website URL");
-        result = await extract({ data: { url: url.trim() } });
-      } else if (kind === "text" || kind === "spreadsheet") {
-        let body = text.trim();
-        if (kind === "spreadsheet" && file) body = await spreadsheetToText(file);
-        if (!body) throw new Error("Paste some content or attach a file");
-        result = await extract({ data: { text: body } });
-      } else {
-        // pdf or image — supports multiple files
-        const all = files.length ? files : file ? [file] : [];
-        if (!all.length) throw new Error("Choose at least one file");
-        const payload = await Promise.all(
-          all.map(async (f) => ({ data_url: await fileToDataUrl(f), name: f.name })),
-        );
-        result = await extract({ data: { files: payload } });
-      }
+      // pdf or image — supports multiple files
+      const all = files.length ? files : file ? [file] : [];
+      if (!all.length) throw new Error("Choose at least one file");
+      const payload = await Promise.all(
+        all.map(async (f) => ({ data_url: await fileToDataUrl(f), name: f.name })),
+      );
+      result = await extract({ data: { files: payload } });
       const total =
         (result.categories?.length ?? 0) +
         (result.treatments?.length ?? 0) +
@@ -131,6 +114,7 @@ function AiImportPage() {
       const r = await commit({ data: draft });
       setSummary(r);
       setStep("done");
+      try { localStorage.setItem("modo:ai-import-done", "1"); } catch {}
       toast.success("Import complete");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Import failed");
@@ -155,13 +139,13 @@ function AiImportPage() {
           <CardHeader>
             <CardTitle className="text-lg">Set up your clinic in seconds</CardTitle>
             <p className="text-sm text-muted-foreground">
-              Send us your existing price list — PDF, photo, spreadsheet or website — and AI will
+              Send us your existing price list — PDF or photo / screenshot — and AI will
               pull out your <b>categories, subcategories, treatments, prices and add-ons</b>. You
               review everything on the next screen before anything saves.
             </p>
           </CardHeader>
           <CardContent className="space-y-5">
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <SourceTile
                 icon={<FileText className="size-5" />}
                 label="PDF"
@@ -176,75 +160,33 @@ function AiImportPage() {
                 active={kind === "image"}
                 onClick={() => setKind("image")}
               />
-              <SourceTile
-                icon={<Table className="size-5" />}
-                label="Spreadsheet"
-                desc="Excel or CSV with treatment, price, duration"
-                active={kind === "spreadsheet"}
-                onClick={() => setKind("spreadsheet")}
-              />
-              <SourceTile
-                icon={<Globe className="size-5" />}
-                label="Website URL"
-                desc="Best if you link straight to your treatments / pricing page"
-                active={kind === "url"}
-                onClick={() => setKind("url")}
-              />
             </div>
 
-            {kind === "url" && (
-              <div className="space-y-2">
-                <Label>Website URL</Label>
-                <Input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://yourclinic.co.uk/treatments" />
-                <p className="text-xs text-muted-foreground">
-                  Tip: paste the URL of your <b>treatments or pricing page</b>, not your homepage —
-                  you'll get far fewer wrong items. If your homepage doesn't list treatments, AI
-                  will sometimes pull nothing rather than guess (that's intentional). Anything that
-                  looks wrong on the review screen can be unticked or edited before importing.
-                </p>
-              </div>
-            )}
+            <div className="space-y-2">
+              <Label>{kind === "pdf" ? "PDF file(s)" : "Image(s) / screenshot(s)"}</Label>
+              <Input
+                type="file"
+                multiple
+                accept={kind === "pdf" ? "application/pdf" : "image/*"}
+                onChange={(e) => {
+                  const list = Array.from(e.target.files ?? []);
+                  setFiles(list);
+                  setFile(list[0] ?? null);
+                }}
+              />
+              {files.length > 0 && (
+                <ul className="space-y-0.5 text-xs text-muted-foreground">
+                  {files.map((f, i) => (
+                    <li key={i}>{f.name} · {(f.size / 1024).toFixed(0)} KB</li>
+                  ))}
+                </ul>
+              )}
+              <p className="text-xs text-muted-foreground">
+                You can select multiple {kind === "pdf" ? "PDFs" : "photos"} at once (e.g. several pages of one
+                price list) — AI will merge them into a single set of treatments. Clearer source = better result.
+              </p>
+            </div>
 
-            {(kind === "pdf" || kind === "image") && (
-              <div className="space-y-2">
-                <Label>{kind === "pdf" ? "PDF file(s)" : "Image(s) / screenshot(s)"}</Label>
-                <Input
-                  type="file"
-                  multiple
-                  accept={kind === "pdf" ? "application/pdf" : "image/*"}
-                  onChange={(e) => {
-                    const list = Array.from(e.target.files ?? []);
-                    setFiles(list);
-                    setFile(list[0] ?? null);
-                  }}
-                />
-                {files.length > 0 && (
-                  <ul className="space-y-0.5 text-xs text-muted-foreground">
-                    {files.map((f, i) => (
-                      <li key={i}>{f.name} · {(f.size / 1024).toFixed(0)} KB</li>
-                    ))}
-                  </ul>
-                )}
-                <p className="text-xs text-muted-foreground">
-                  You can select multiple {kind === "pdf" ? "PDFs" : "photos"} at once (e.g. several pages of one
-                  price list) — AI will merge them into a single set of treatments. Clearer source = better result.
-                </p>
-              </div>
-            )}
-
-            {kind === "spreadsheet" && (
-              <div className="space-y-3">
-                <div className="space-y-2">
-                  <Label>CSV file</Label>
-                  <Input type="file" accept=".csv,text/csv,text/tab-separated-values" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
-                  <p className="text-xs text-muted-foreground">Excel? Save as CSV first, or paste rows below.</p>
-                </div>
-                <div className="space-y-2">
-                  <Label>Or paste content</Label>
-                  <Textarea rows={6} value={text} onChange={(e) => setText(e.target.value)} placeholder={"e.g.\nInjectables, Lip filler 1ml, 45, 180\nInjectables, Anti-wrinkle 1 area, 30, 120\nSkin, HydraFacial, 60, 95"} />
-                </div>
-              </div>
-            )}
 
             <div className="flex flex-col-reverse items-stretch gap-2 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-xs text-muted-foreground">
