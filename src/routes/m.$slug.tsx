@@ -2,8 +2,10 @@ import { createFileRoute, Link, Outlet, useParams } from "@tanstack/react-router
 import { getPractitionerBio } from "@/lib/practitioner-public.functions";
 import { Button } from "@/components/ui/button";
 import { UserCircle2 } from "lucide-react";
+import { resolveDisplayNames } from "@/lib/display-name";
 
 import { Loader2 } from "lucide-react";
+
 
 export const Route = createFileRoute("/m/$slug")({
   loader: async ({ params }) => {
