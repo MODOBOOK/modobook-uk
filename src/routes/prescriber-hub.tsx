@@ -39,7 +39,7 @@ function HubPage() {
               </p>
               <div className="mt-6 flex flex-wrap gap-3">
                 <Link to="/auth"><Button size="lg">Join as practitioner</Button></Link>
-                <Link to="/prescriber-hub/join"><Button size="lg" variant="outline">Join as prescriber</Button></Link>
+                <Link to="/auth" search={{ as: "prescriber" }}><Button size="lg" variant="outline">Join as prescriber</Button></Link>
               </div>
               <p className="mt-3 text-xs text-muted-foreground">
                 Prescribers complete a quick verification (registration body, PIN, photo ID) before they appear in the hub.
@@ -149,7 +149,7 @@ function HubPage() {
             </p>
             <div className="mt-6 flex flex-wrap justify-center gap-3">
               <Link to="/auth"><Button size="lg">Join as practitioner</Button></Link>
-              <Link to="/prescriber-hub/join"><Button size="lg" variant="outline">Join as prescriber</Button></Link>
+              <Link to="/auth" search={{ as: "prescriber" }}><Button size="lg" variant="outline">Join as prescriber</Button></Link>
             </div>
           </div>
         </section>
