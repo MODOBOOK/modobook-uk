@@ -134,7 +134,7 @@ function DashboardLayout() {
 
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Mobile header — slim, back + brand + preview */}
-        <header className="flex h-14 items-center justify-between gap-2 border-b px-3 md:hidden">
+        <header className="flex h-14 items-center justify-between gap-2 border-b px-3 lg:hidden">
           <BackButton />
           <div className="flex min-w-0 flex-1 items-center justify-center">
             <span className="truncate text-sm font-semibold">{displayName || "My Clinic"}</span>
