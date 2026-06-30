@@ -1024,3 +1024,157 @@ function ResetImportCard() {
   );
 }
 
+function FormMatcherCard() {
+  const suggest = useServerFn(suggestFormMatches);
+  const commit = useServerFn(commitFormMatches);
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState<Awaited<ReturnType<typeof suggest>> | null>(null);
+  const [picks, setPicks] = useState<Record<string, { medical_form_ids: string[]; consent_ids: string[]; aftercare_ids: string[] }>>({});
+  const [mode, setMode] = useState<"merge" | "replace">("merge");
+
+  async function run() {
+    setBusy(true);
+    try {
+      const r = await suggest({ data: {} });
+      setResult(r);
+      const init: typeof picks = {};
+      for (const m of r.matches) {
+        init[m.treatment_id] = {
+          medical_form_ids: m.medical_form_ids,
+          consent_ids: m.consent_ids,
+          aftercare_ids: m.aftercare_ids,
+        };
+      }
+      setPicks(init);
+      setOpen(true);
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function toggle(treatmentId: string, kind: "medical_form_ids" | "consent_ids" | "aftercare_ids", id: string) {
+    setPicks((prev) => {
+      const cur = prev[treatmentId] ?? { medical_form_ids: [], consent_ids: [], aftercare_ids: [] };
+      const set = new Set(cur[kind]);
+      if (set.has(id)) set.delete(id); else set.add(id);
+      return { ...prev, [treatmentId]: { ...cur, [kind]: Array.from(set) } };
+    });
+  }
+
+  async function save() {
+    if (!result) return;
+    const matches = result.treatments.map((t) => ({
+      treatment_id: t.id,
+      medical_form_ids: picks[t.id]?.medical_form_ids ?? [],
+      consent_ids: picks[t.id]?.consent_ids ?? [],
+      aftercare_ids: picks[t.id]?.aftercare_ids ?? [],
+    }));
+    setBusy(true);
+    try {
+      const r = await commit({ data: { matches, mode } });
+      toast.success(`Linked: ${r.medical} medical, ${r.consent} consent, ${r.aftercare} aftercare`);
+      if (r.errors.length) toast.error(r.errors[0]);
+      setOpen(false);
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-lg">
+          <Sparkles className="size-5 text-primary" /> Match forms to treatments with AI
+        </CardTitle>
+        <p className="text-sm text-muted-foreground">
+          AI scans your treatments and proposes the right medical intake form, consent form and aftercare
+          for each one. Review the picks, untick anything you don't want, then save.
+        </p>
+      </CardHeader>
+      <CardContent>
+        <Button onClick={run} disabled={busy} variant="outline" size="lg">
+          {busy && !open ? <><Loader2 className="mr-2 size-4 animate-spin" /> Thinking…</> : <><Wand2 className="mr-2 size-4" /> Suggest matches</>}
+        </Button>
+      </CardContent>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>Review AI form matches</DialogTitle>
+          </DialogHeader>
+          {result && (
+            <div className="space-y-3">
+              <div className="flex items-center gap-3 text-sm">
+                <span className="text-muted-foreground">When saving:</span>
+                <label className="flex items-center gap-1">
+                  <input type="radio" checked={mode === "merge"} onChange={() => setMode("merge")} />
+                  Add to existing
+                </label>
+                <label className="flex items-center gap-1">
+                  <input type="radio" checked={mode === "replace"} onChange={() => setMode("replace")} />
+                  Replace existing
+                </label>
+              </div>
+              <div className="max-h-[60vh] space-y-3 overflow-y-auto pr-1">
+                {result.treatments.map((t) => {
+                  const p = picks[t.id] ?? { medical_form_ids: [], consent_ids: [], aftercare_ids: [] };
+                  const renderGroup = (
+                    label: string,
+                    items: IdName[],
+                    kind: "medical_form_ids" | "consent_ids" | "aftercare_ids",
+                  ) => (
+                    <div>
+                      <div className="mb-1 text-xs font-medium text-muted-foreground">{label}</div>
+                      {items.length === 0 ? (
+                        <p className="text-xs italic text-muted-foreground">None available</p>
+                      ) : (
+                        <div className="flex flex-wrap gap-1">
+                          {items.map((i) => {
+                            const on = p[kind].includes(i.id);
+                            return (
+                              <button
+                                key={i.id}
+                                type="button"
+                                onClick={() => toggle(t.id, kind, i.id)}
+                                className={`rounded-full border px-2 py-0.5 text-xs ${on ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground"}`}
+                              >
+                                {on ? "✓ " : "+ "}{i.name}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                  return (
+                    <div key={t.id} className="space-y-2 rounded-md border p-3">
+                      <div className="font-medium">{t.name}</div>
+                      {renderGroup("Medical forms", result.medicalForms, "medical_form_ids")}
+                      {renderGroup("Consent forms", result.consents, "consent_ids")}
+                      {renderGroup("Aftercare", result.aftercares, "aftercare_ids")}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setOpen(false)} disabled={busy}>Cancel</Button>
+            <Button onClick={save} disabled={busy}>
+              {busy ? <><Loader2 className="mr-2 size-4 animate-spin" /> Saving…</> : "Save links"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </Card>
+  );
+}
+
+type IdName = { id: string; name: string };
+
+
