@@ -140,6 +140,19 @@ export const updateProfile = createServerFn({ method: "POST" })
       sms_reminders_enabled?: boolean;
       whatsapp_reminders_enabled?: boolean;
       reminder_hours_before?: number[];
+      // Invoice branding
+      invoice_bank_name?: string | null;
+      invoice_account_name?: string | null;
+      invoice_sort_code?: string | null;
+      invoice_account_number?: string | null;
+      invoice_iban?: string | null;
+      invoice_swift?: string | null;
+      invoice_payment_reference?: string | null;
+      invoice_footer_notes?: string | null;
+      invoice_vat_number?: string | null;
+      invoice_company_number?: string | null;
+      invoice_show_bank_details?: boolean;
+      invoice_show_logo?: boolean;
     }) => input,
   )
 
