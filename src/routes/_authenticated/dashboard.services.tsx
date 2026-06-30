@@ -1340,6 +1340,12 @@ function ServiceDialog({
                 discount_percent: discountPercent.trim() ? Number(discountPercent) : null,
                 discount_label: discountLabel.trim() || null,
                 discount_show_was_now: discountShowWasNow,
+                location_overrides: Object.entries(locOverrides).map(([location_id, ov]) => ({
+                  location_id,
+                  available: ov.available,
+                  price_cents: ov.price.trim() ? Math.round(Number(ov.price) * 100) : null,
+                  duration_minutes: ov.duration.trim() ? Number(ov.duration) : null,
+                })),
               });
               setSaving(false);
             }}
