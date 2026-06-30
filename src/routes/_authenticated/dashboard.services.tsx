@@ -350,6 +350,8 @@ function ServicesPage() {
               onMoveCat={moveCat}
               onMoveTreat={moveTreat}
               onReorderTreatsByIds={reorderTreatsByIds}
+              onMoveTreatTo={(t) => setMoveTreatState(t)}
+              onMoveCatTo={(c) => setMoveCatState(c)}
             />
           ))}
 
@@ -365,6 +367,7 @@ function ServicesPage() {
                     key={t.id}
                     treat={t}
                     onDelete={() => handleDeleteTreat(t)}
+                    onMoveTo={() => setMoveTreatState(t)}
                   />
                 ))}
               </div>
@@ -372,6 +375,21 @@ function ServicesPage() {
           )}
         </div>
       )}
+
+      <MoveTreatmentDialog
+        treat={moveTreatState}
+        categories={picker}
+        onClose={() => setMoveTreatState(null)}
+        onConfirm={(catId) => moveTreatState && moveTreatToCategory(moveTreatState.id, catId)}
+      />
+      <MoveCategoryDialog
+        cat={moveCatState}
+        allCategories={(cats.data ?? []) as Cat[]}
+        onClose={() => setMoveCatState(null)}
+        onConfirm={(parentId) => moveCatState && moveCatToParent(moveCatState.id, parentId)}
+      />
+
+
 
 
       <CategoryDialog
