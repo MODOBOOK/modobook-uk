@@ -162,6 +162,9 @@ export const updateProfile = createServerFn({ method: "POST" })
       invoice_show_bank_details?: boolean;
       invoice_show_logo?: boolean;
       display_name_mode?: "clinic" | "practitioner" | "both";
+      specialties?: string[];
+      qualifications?: { label: string; year?: string }[];
+      timeline?: { year: string; label: string }[];
     }) => input,
   )
 
