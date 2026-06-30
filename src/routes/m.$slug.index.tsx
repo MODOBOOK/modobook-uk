@@ -1597,18 +1597,18 @@ function BookPage() {
         );
       })()}
 
-      {/* Pre + Post Care Guide */}
+      {/* Pre-treatment info */}
       <Dialog open={careGuideOpen} onOpenChange={setCareGuideOpen}>
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl" style={{ borderColor: `${brand}33` }}>
           <DialogHeader>
-            <DialogTitle style={{ color: brand }}>Pre + Post Care Guide</DialogTitle>
-            <DialogDescription>General before & aftercare advice from the clinic. Always follow personalised instructions sent after your appointment.</DialogDescription>
+            <DialogTitle style={{ color: brand }}>Pre-treatment information</DialogTitle>
+            <DialogDescription>Important things to know and prepare before your appointment.</DialogDescription>
           </DialogHeader>
-          {careGuides.length === 0 ? (
-            <p className="py-4 text-sm text-muted-foreground">No care guides have been published yet.</p>
+          {preItems.length === 0 ? (
+            <p className="py-4 text-sm text-muted-foreground">No pre-treatment notes have been published yet.</p>
           ) : (
             <Accordion type="single" collapsible className="w-full">
-              {careGuides.map((g) => (
+              {preItems.map((g) => (
                 <AccordionItem key={g.id} value={g.id}>
                   <AccordionTrigger className="text-left">
                     <span className="flex flex-col">
@@ -1628,6 +1628,7 @@ function BookPage() {
           )}
         </DialogContent>
       </Dialog>
+
 
       {/* Directions location picker */}
       <Dialog open={directionsOpen} onOpenChange={setDirectionsOpen}>
