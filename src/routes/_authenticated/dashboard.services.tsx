@@ -186,8 +186,9 @@ function ServicesPage() {
     { mode: "create" | "edit"; parentId: string | null; cat?: Cat } | null
   >(null);
   const [svcDialog, setSvcDialog] = useState<{ defaultCatId: string | null } | null>(null);
-  const [moveTreat, setMoveTreat] = useState<Treat | null>(null);
+  const [moveTreatState, setMoveTreatState] = useState<Treat | null>(null);
   const [moveCatState, setMoveCatState] = useState<Cat | null>(null);
+
 
 
 
