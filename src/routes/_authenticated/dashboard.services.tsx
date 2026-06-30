@@ -615,6 +615,7 @@ function CategoryRow({
             depth={depth}
             onDelete={onDeleteTreat}
             onReorder={onReorderTreatsByIds}
+            onMoveTo={onMoveTreatTo}
           />
 
           {node.children.map((child, ci) => (
@@ -633,8 +634,11 @@ function CategoryRow({
               onMoveCat={onMoveCat}
               onMoveTreat={onMoveTreat}
               onReorderTreatsByIds={onReorderTreatsByIds}
+              onMoveTreatTo={onMoveTreatTo}
+              onMoveCatTo={onMoveCatTo}
             />
           ))}
+
 
           <div
             className="flex flex-wrap gap-2 px-3 py-2"
