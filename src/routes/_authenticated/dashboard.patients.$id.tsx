@@ -288,8 +288,8 @@ function PatientProfilePage() {
       {/* Photos */}
       <FilesSection clientId={id} profileId={profileId} kind="photo" title="Photos" />
 
-      {/* PDFs */}
-      <FilesSection clientId={id} profileId={profileId} kind="pdf" title="PDFs" />
+      {/* Private prescription uploads (PDF or image) */}
+      <FilesSection clientId={id} profileId={profileId} kind="pdf" title="Private prescription uploads" />
 
       {/* Emergency contact */}
       <Section title="Emergency contact details" onEdit={() => setEditing("emergency")}>
@@ -299,7 +299,7 @@ function PatientProfilePage() {
         <Row label="Emergency contact phone" value={client.emergency_contact_phone} />
       </Section>
 
-      {/* Prescriptions */}
+      {/* Prescriptions (structured records) */}
       <PrescriptionsSection clientId={id} />
 
       {/* Footer actions */}
