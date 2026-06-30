@@ -83,7 +83,7 @@ function AdminPrescribers() {
         <p className="text-sm text-muted-foreground">Review identity and registration documents.</p>
       </div>
 
-      <SectionList title={`Pending (${pending.length})`} rows={pending}>
+      <SectionList title={`Pending (${pending.length})`} rows={pending} viewDoc={viewDoc}>
         {(r) => (
           <div className="space-y-3">
             <Textarea
@@ -106,7 +106,6 @@ function AdminPrescribers() {
             </div>
           </div>
         )}
-        viewDoc={viewDoc}
       </SectionList>
 
       <SectionList title={`Reviewed (${reviewed.length})`} rows={reviewed} viewDoc={viewDoc}>
