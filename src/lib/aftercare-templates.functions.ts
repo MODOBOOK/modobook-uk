@@ -52,14 +52,14 @@ export const cloneSystemAftercareTemplate = createServerFn({ method: "POST" })
 
 export const saveAftercareTemplate = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: { id?: string; name: string; body_html: string; delay_hours: number }) => i)
+  .inputValidator((i: { id?: string; name: string; body_html: string; delay_hours: number; show_on_public?: boolean }) => i)
   .handler(async ({ data, context }) => {
     const profileId = await getProfileId(context.supabase, context.userId);
     if (!profileId) throw new Error("Profile not found");
     if (data.id) {
       const { data: row, error } = await context.supabase
         .from("aftercare_templates")
-        .update({ name: data.name, body_html: data.body_html, delay_hours: data.delay_hours })
+        .update({ name: data.name, body_html: data.body_html, delay_hours: data.delay_hours, show_on_public: !!data.show_on_public })
         .eq("id", data.id)
         .eq("profile_id", profileId)
         .select()
@@ -69,7 +69,7 @@ export const saveAftercareTemplate = createServerFn({ method: "POST" })
     }
     const { data: row, error } = await context.supabase
       .from("aftercare_templates")
-      .insert({ profile_id: profileId, name: data.name, body_html: data.body_html, delay_hours: data.delay_hours })
+      .insert({ profile_id: profileId, name: data.name, body_html: data.body_html, delay_hours: data.delay_hours, show_on_public: !!data.show_on_public })
       .select()
       .single();
     if (error) throw error;
