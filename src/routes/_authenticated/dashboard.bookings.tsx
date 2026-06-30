@@ -504,6 +504,84 @@ function BookingsPage() {
   );
 }
 
+/* -------------------------------- Month view ------------------------------- */
+
+function MonthView({
+  anchor,
+  apptsByDate,
+  rulesByDow,
+  todayStr,
+  onPickDay,
+}: {
+  anchor: Date;
+  apptsByDate: Map<string, Appt[]>;
+  rulesByDow: Map<number, AvailRule[]>;
+  todayStr: string;
+  onPickDay: (d: Date) => void;
+}) {
+  const monthStart = startOfMonth(anchor);
+  const gridStart = startOfWeek(monthStart);
+  const cells = Array.from({ length: 42 }, (_, i) => addDays(gridStart, i));
+  const weekdayLabels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+  return (
+    <Card className="overflow-hidden">
+      <div className="grid grid-cols-7 border-b bg-muted/30 text-[11px] uppercase">
+        {weekdayLabels.map((w) => (
+          <div key={w} className="px-2 py-2 text-center text-muted-foreground">{w}</div>
+        ))}
+      </div>
+      <div className="grid grid-cols-7">
+        {cells.map((d) => {
+          const key = ymd(d);
+          const inMonth = d.getMonth() === monthStart.getMonth();
+          const dayAppts = apptsByDate.get(key) ?? [];
+          const hasAvail = (rulesByDow.get(d.getDay()) ?? []).length > 0;
+          const isToday = key === todayStr;
+          return (
+            <button
+              key={key}
+              onClick={() => onPickDay(d)}
+              className={`min-h-[88px] border-b border-r p-1.5 text-left transition hover:bg-accent/40 ${
+                !inMonth ? "bg-muted/20 text-muted-foreground" : ""
+              } ${!hasAvail && inMonth ? "bg-muted/40" : ""}`}
+              title={!hasAvail ? "No availability" : ""}
+            >
+              <div className="flex items-center justify-between">
+                <span className={`inline-flex h-6 w-6 items-center justify-center rounded-md text-xs font-semibold ${
+                  isToday ? "bg-primary text-primary-foreground" : ""
+                }`}>{d.getDate()}</span>
+                {dayAppts.length > 0 && (
+                  <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">
+                    {dayAppts.length}
+                  </span>
+                )}
+              </div>
+              <div className="mt-1 space-y-0.5">
+                {dayAppts.slice(0, 3).map((a) => {
+                  const color = a.treatments?.color || "#3b82f6";
+                  return (
+                    <div
+                      key={a.id}
+                      className="truncate rounded px-1 py-0.5 text-[10px]"
+                      style={{ backgroundColor: hexToRgba(color, 0.18), borderLeft: `2px solid ${color}` }}
+                    >
+                      {a.start_time.slice(0, 5)} {a.patient_name}
+                    </div>
+                  );
+                })}
+                {dayAppts.length > 3 && (
+                  <div className="text-[10px] text-muted-foreground">+{dayAppts.length - 3} more</div>
+                )}
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </Card>
+  );
+}
+
 /* ------------------------------ Sub dialogs ------------------------------ */
 
 function PaymentLinkDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
