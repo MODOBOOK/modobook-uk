@@ -108,7 +108,33 @@ function ClinicPage() {
             <CardDescription>Basic business details. Add your patient-facing intro in Welcome & policies.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div><Label>Clinic name</Label><Input value={clinicName} onChange={(e) => setClinicName(e.target.value)} /></div>
+          <div><Label>Clinic name</Label><Input value={clinicName} onChange={(e) => setClinicName(e.target.value)} placeholder="e.g. Bloom Aesthetics" /></div>
+          <div><Label>Practitioner name</Label><Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="e.g. Nurse Prescriber Ryan" /></div>
+          <div>
+            <Label>Display name on dashboard & booking page</Label>
+            <div className="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-2">
+              {([
+                { v: "clinic", label: "Clinic name only", hint: "e.g. Bloom Aesthetics" },
+                { v: "practitioner", label: "Practitioner name only", hint: "e.g. Nurse Prescriber Ryan" },
+                { v: "both", label: "Show both", hint: "Clinic name with practitioner underneath" },
+              ] as const).map((opt) => {
+                const selected = displayNameMode === opt.v;
+                return (
+                  <button
+                    key={opt.v}
+                    type="button"
+                    onClick={() => setDisplayNameMode(opt.v)}
+                    className={`rounded-md border p-3 text-left text-sm transition ${
+                      selected ? "border-primary bg-primary/5 ring-1 ring-primary" : "hover:bg-muted/50"
+                    }`}
+                  >
+                    <div className="font-medium">{opt.label}</div>
+                    <div className="mt-0.5 text-xs text-muted-foreground">{opt.hint}</div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
           <div><Label>Tagline</Label><Input value={tagline} onChange={(e) => setTagline(e.target.value)} /></div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div><Label>Phone</Label><Input value={phone} onChange={(e) => setPhone(e.target.value)} /></div>
@@ -116,6 +142,7 @@ function ClinicPage() {
           </div>
         </CardContent>
       </Card>
+
 
 
       <Card>
