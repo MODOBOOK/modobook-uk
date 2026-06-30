@@ -501,6 +501,8 @@ function CategoryRow({
   onMoveCat,
   onMoveTreat,
   onReorderTreatsByIds,
+  onMoveTreatTo,
+  onMoveCatTo,
 }: {
   node: CatNode;
   depth: number;
@@ -515,7 +517,10 @@ function CategoryRow({
   onMoveCat: (siblings: Cat[], id: string, dir: -1 | 1) => void;
   onMoveTreat: (siblings: Treat[], id: string, dir: -1 | 1) => void;
   onReorderTreatsByIds: (ids: string[]) => void;
+  onMoveTreatTo: (t: Treat) => void;
+  onMoveCatTo: (c: Cat) => void;
 }) {
+
   const [open, setOpen] = useState(false);
   const treatsHere = node.treatments.filter(matchTreat);
   const totalCount = treatsHere.length + node.children.length;
