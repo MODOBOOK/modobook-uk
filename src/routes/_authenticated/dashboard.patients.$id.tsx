@@ -288,6 +288,12 @@ function PatientProfilePage() {
         )}
       </Section>
 
+      {/* Treatment timeline */}
+      <Section title="Treatment timeline">
+        <TreatmentTimeline appointments={appts} />
+      </Section>
+
+
       {/* Notes */}
       <NotesSection clientId={id} />
 
