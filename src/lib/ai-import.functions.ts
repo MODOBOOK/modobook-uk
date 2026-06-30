@@ -31,6 +31,8 @@ export type ExtractedTreatment = {
   description?: string;
   category?: string | null;
   aftercare_hint?: string | null;
+  session_count?: number;
+  allow_split_payment?: boolean;
 };
 export type ExtractedAddon = {
   name: string;
