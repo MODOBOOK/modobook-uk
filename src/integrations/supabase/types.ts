@@ -1882,6 +1882,63 @@ export type Database = {
           },
         ]
       }
+      hub_codes: {
+        Row: {
+          code: string
+          created_at: string
+          display_name: string | null
+          owner_kind: Database["public"]["Enums"]["hub_owner_kind"]
+          user_id: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          display_name?: string | null
+          owner_kind: Database["public"]["Enums"]["hub_owner_kind"]
+          user_id: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          display_name?: string | null
+          owner_kind?: Database["public"]["Enums"]["hub_owner_kind"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      hub_links: {
+        Row: {
+          created_at: string
+          id: string
+          recipient_user_id: string
+          requester_note: string | null
+          requester_user_id: string
+          responded_at: string | null
+          status: Database["public"]["Enums"]["hub_link_status"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          recipient_user_id: string
+          requester_note?: string | null
+          requester_user_id: string
+          responded_at?: string | null
+          status?: Database["public"]["Enums"]["hub_link_status"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          recipient_user_id?: string
+          requester_note?: string | null
+          requester_user_id?: string
+          responded_at?: string | null
+          status?: Database["public"]["Enums"]["hub_link_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       location_practitioners: {
         Row: {
           created_at: string
@@ -2673,6 +2730,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      prescriber_profiles: {
+        Row: {
+          admin_note: string | null
+          created_at: string
+          full_name: string
+          id: string
+          id_document_path: string | null
+          registration_number: string
+          regulatory_body: string
+          regulatory_body_other: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: Database["public"]["Enums"]["prescriber_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_note?: string | null
+          created_at?: string
+          full_name: string
+          id?: string
+          id_document_path?: string | null
+          registration_number: string
+          regulatory_body: string
+          regulatory_body_other?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["prescriber_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_note?: string | null
+          created_at?: string
+          full_name?: string
+          id?: string
+          id_document_path?: string | null
+          registration_number?: string
+          regulatory_body?: string
+          regulatory_body_other?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["prescriber_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       pretreatment_templates: {
         Row: {
@@ -3589,6 +3694,13 @@ export type Database = {
         Returns: string
       }
       current_patient_email: { Args: { _profile_id: string }; Returns: string }
+      ensure_hub_code: {
+        Args: {
+          p_display_name: string
+          p_kind: Database["public"]["Enums"]["hub_owner_kind"]
+        }
+        Returns: string
+      }
       get_about_page_by_slug: { Args: { p_slug: string }; Returns: Json }
       get_appointment_by_manage_token: {
         Args: { p_token: string }
@@ -3746,6 +3858,7 @@ export type Database = {
         Args: { _practitioner_id: string }
         Returns: boolean
       }
+      is_prescriber_approved: { Args: { _user_id: string }; Returns: boolean }
       is_profile_owner: { Args: { _profile_id: string }; Returns: boolean }
       is_slug_available: {
         Args: { p_exclude_id?: string; p_slug: string }
@@ -3764,6 +3877,14 @@ export type Database = {
           p_start: string
         }
         Returns: Json
+      }
+      resolve_hub_code: {
+        Args: { p_code: string }
+        Returns: {
+          display_name: string
+          owner_kind: Database["public"]["Enums"]["hub_owner_kind"]
+          user_id: string
+        }[]
       }
       send_medical_form_to_client: {
         Args: {
@@ -3802,15 +3923,18 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "practitioner" | "admin"
+      app_role: "practitioner" | "admin" | "prescriber"
       appointment_status:
         | "pending"
         | "confirmed"
         | "cancelled"
         | "completed"
         | "no_show"
+      hub_link_status: "pending" | "accepted" | "declined" | "cancelled"
+      hub_owner_kind: "practitioner" | "prescriber"
       payment_mode: "full" | "deposit" | "pay_in_clinic"
       payment_status: "pending" | "paid" | "refunded" | "failed"
+      prescriber_status: "pending" | "approved" | "rejected" | "more_info"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -3938,7 +4062,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["practitioner", "admin"],
+      app_role: ["practitioner", "admin", "prescriber"],
       appointment_status: [
         "pending",
         "confirmed",
@@ -3946,8 +4070,11 @@ export const Constants = {
         "completed",
         "no_show",
       ],
+      hub_link_status: ["pending", "accepted", "declined", "cancelled"],
+      hub_owner_kind: ["practitioner", "prescriber"],
       payment_mode: ["full", "deposit", "pay_in_clinic"],
       payment_status: ["pending", "paid", "refunded", "failed"],
+      prescriber_status: ["pending", "approved", "rejected", "more_info"],
     },
   },
 } as const
