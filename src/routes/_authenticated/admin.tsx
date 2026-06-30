@@ -122,7 +122,7 @@ function AdminPage() {
             Monitor practitioners using MODO and manage admin access.
           </p>
         </div>
-        <Link to="/admin/prescribers">
+        <Link to="/admin-prescribers">
           <Button variant="outline" size="sm">
             <Shield className="mr-2 h-4 w-4" /> Prescriber verifications
           </Button>
