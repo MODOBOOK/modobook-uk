@@ -3044,6 +3044,8 @@ export type Database = {
           patient_address: string | null
           patient_dob: string | null
           patient_name: string
+          pdf_path: string | null
+          pdf_url: string | null
           practitioner_profile_id: string
           prescriber_address: string | null
           prescriber_name: string
@@ -3053,6 +3055,7 @@ export type Database = {
           quantity: string
           referral_id: string
           repeats_allowed: number
+          rx_type: string
           signature_data: string | null
           signature_name: string | null
           signed_at: string | null
@@ -3076,6 +3079,8 @@ export type Database = {
           patient_address?: string | null
           patient_dob?: string | null
           patient_name: string
+          pdf_path?: string | null
+          pdf_url?: string | null
           practitioner_profile_id: string
           prescriber_address?: string | null
           prescriber_name: string
@@ -3085,6 +3090,7 @@ export type Database = {
           quantity: string
           referral_id: string
           repeats_allowed?: number
+          rx_type?: string
           signature_data?: string | null
           signature_name?: string | null
           signed_at?: string | null
@@ -3108,6 +3114,8 @@ export type Database = {
           patient_address?: string | null
           patient_dob?: string | null
           patient_name?: string
+          pdf_path?: string | null
+          pdf_url?: string | null
           practitioner_profile_id?: string
           prescriber_address?: string | null
           prescriber_name?: string
@@ -3117,6 +3125,7 @@ export type Database = {
           quantity?: string
           referral_id?: string
           repeats_allowed?: number
+          rx_type?: string
           signature_data?: string | null
           signature_name?: string | null
           signed_at?: string | null
@@ -4059,6 +4068,10 @@ export type Database = {
         }[]
       }
       admin_revoke_admin: { Args: { _user_id: string }; Returns: boolean }
+      approve_prescriber_clinic_visit: {
+        Args: { p_id: string }
+        Returns: boolean
+      }
       cancel_appointment_by_token: {
         Args: { p_token: string }
         Returns: boolean
@@ -4075,6 +4088,10 @@ export type Database = {
         Returns: string
       }
       current_patient_email: { Args: { _profile_id: string }; Returns: string }
+      decline_prescriber_clinic_visit: {
+        Args: { p_id: string }
+        Returns: boolean
+      }
       ensure_hub_code: {
         Args: { p_display_name: string; p_kind: string }
         Returns: string

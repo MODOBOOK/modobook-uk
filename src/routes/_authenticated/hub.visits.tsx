@@ -7,6 +7,8 @@ import {
   listMyClinicVisits,
   upsertClinicVisit,
   cancelClinicVisit,
+  approveClinicVisitRequest,
+  declineClinicVisitRequest,
 } from "@/lib/clinic-visits.functions";
 import { listMyConnectedPrescribers } from "@/lib/prescriber.functions";
 import { listMyLocations } from "@/lib/locations.functions";
@@ -38,6 +40,8 @@ function HubVisits() {
   const fetchLocations = useServerFn(listMyLocations);
   const save = useServerFn(upsertClinicVisit);
   const cancel = useServerFn(cancelClinicVisit);
+  const approve = useServerFn(approveClinicVisitRequest);
+  const decline = useServerFn(declineClinicVisitRequest);
 
   const visits = useQuery({ queryKey: ["hub-visits"], queryFn: () => fetchVisits() });
   const prescribers = useQuery({ queryKey: ["hub-prescribers"], queryFn: () => fetchPrescribers() });
@@ -102,7 +106,11 @@ function HubVisits() {
                       <p className="font-semibold">
                         {formatDate(v.visit_date)} · {formatTime(v.start_time)}–{formatTime(v.end_time)}
                       </p>
-                      {v.confirmed_by_prescriber ? (
+                      {v.status === "pending_approval" ? (
+                        <Badge variant="outline" className="border-amber-400 text-amber-700">
+                          Requested by prescriber — needs your approval
+                        </Badge>
+                      ) : v.confirmed_by_prescriber ? (
                         <Badge variant="default" className="bg-emerald-600">Confirmed</Badge>
                       ) : (
                         <Badge variant="outline">Awaiting confirmation</Badge>
@@ -130,7 +138,32 @@ function HubVisits() {
                       </span>
                       <span className="text-muted-foreground">booked</span>
                     </div>
-                    {!isCancelled && (
+                    {v.status === "pending_approval" ? (
+                      <div className="flex gap-1">
+                        <Button
+                          size="sm"
+                          onClick={async () => {
+                            await approve({ data: { id: v.id } });
+                            toast.success("Visit approved — patients can now book");
+                            visits.refetch();
+                          }}
+                        >
+                          Approve
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={async () => {
+                            if (!confirm("Decline this request?")) return;
+                            await decline({ data: { id: v.id } });
+                            toast.success("Request declined");
+                            visits.refetch();
+                          }}
+                        >
+                          Decline
+                        </Button>
+                      </div>
+                    ) : !isCancelled && (
                       <div className="flex gap-1">
                         <Button size="sm" variant="ghost" onClick={() => setEditing(v)}>
                           Edit
@@ -151,6 +184,7 @@ function HubVisits() {
                     )}
                   </div>
                 </div>
+
 
                 {v.bookings.length > 0 && (
                   <div className="rounded-md bg-muted/40 p-2 text-xs">

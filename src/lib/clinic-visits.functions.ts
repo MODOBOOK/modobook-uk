@@ -208,3 +208,106 @@ export const listAvailableVisitsForBooking = createServerFn({ method: "POST" })
       notes: string | null;
     }>;
   });
+
+/* ============================================================
+   Prescriber-initiated clinic-day requests
+   ============================================================ */
+
+// ---- Prescriber: list practitioners I'm connected to (for request form) ----
+export const listMyConnectedPractitioners = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const { data: links, error } = await supabase
+      .from("hub_links")
+      .select("requester_user_id, recipient_user_id, status")
+      .or(`requester_user_id.eq.${userId},recipient_user_id.eq.${userId}`)
+      .eq("status", "accepted");
+    if (error) throw error;
+    const otherIds = (links ?? []).map((l) =>
+      l.requester_user_id === userId ? l.recipient_user_id : l.requester_user_id,
+    );
+    if (otherIds.length === 0) return [];
+    const [{ data: profiles }, { data: locs }] = await Promise.all([
+      supabase
+        .from("profiles")
+        .select("id, user_id, clinic_name, full_name")
+        .in("user_id", otherIds),
+      supabase
+        .from("locations")
+        .select("id, name, profile_id")
+        .in(
+          "profile_id",
+          (await supabase
+            .from("profiles")
+            .select("id")
+            .in("user_id", otherIds)).data?.map((p) => p.id) ?? [],
+        ),
+    ]);
+    const locsByProfile = new Map<string, { id: string; name: string }[]>();
+    for (const l of locs ?? []) {
+      const arr = locsByProfile.get(l.profile_id) ?? [];
+      arr.push({ id: l.id, name: l.name });
+      locsByProfile.set(l.profile_id, arr);
+    }
+    return (profiles ?? []).map((p) => ({
+      profile_id: p.id,
+      name: p.clinic_name ?? p.full_name ?? "Clinic",
+      locations: locsByProfile.get(p.id) ?? [],
+    }));
+  });
+
+// ---- Prescriber: request a clinic-day at a connected practitioner ----
+const RequestSchema = z.object({
+  practitioner_profile_id: z.string().uuid(),
+  location_id: z.string().uuid().nullable().optional(),
+  visit_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  start_time: z.string().regex(/^\d{2}:\d{2}(:\d{2})?$/),
+  end_time: z.string().regex(/^\d{2}:\d{2}(:\d{2})?$/),
+  capacity: z.number().int().min(1).max(200),
+  notes: z.string().max(1000).nullable().optional(),
+});
+export const requestClinicVisitAsPrescriber = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: z.infer<typeof RequestSchema>) => RequestSchema.parse(i))
+  .handler(async ({ data, context }) => {
+    const { data: row, error } = await context.supabase
+      .from("prescriber_clinic_visits")
+      .insert({
+        practitioner_profile_id: data.practitioner_profile_id,
+        prescriber_user_id: context.userId,
+        location_id: data.location_id ?? null,
+        visit_date: data.visit_date,
+        start_time: data.start_time,
+        end_time: data.end_time,
+        capacity: data.capacity,
+        notes: data.notes ?? null,
+        created_by: "prescriber",
+        status: "pending_approval",
+        confirmed_by_prescriber: true,
+      } as never)
+      .select("id")
+      .single();
+    if (error) throw error;
+    return { id: (row as { id: string }).id };
+  });
+
+// ---- Practitioner: approve / decline a prescriber-requested visit ----
+export const approveClinicVisitRequest = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: { id: string }) => i)
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase.rpc("approve_prescriber_clinic_visit", { p_id: data.id });
+    if (error) throw error;
+    return { ok: true };
+  });
+
+export const declineClinicVisitRequest = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: { id: string }) => i)
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase.rpc("decline_prescriber_clinic_visit", { p_id: data.id });
+    if (error) throw error;
+    return { ok: true };
+  });
+

@@ -366,9 +366,24 @@ function PrescriptionEditor({ referralId, patient, client }: { referralId: strin
       </div>
 
       {signed ? (
-        <div className="rounded border border-emerald-300 bg-emerald-50 p-2 text-emerald-900">
-          ✓ Signed by <strong>{latest?.signature_name}</strong> on {new Date(latest!.signed_at!).toLocaleString()}.
-          Sent to practitioner.
+        <div className="space-y-2 rounded border border-emerald-300 bg-emerald-50 p-2 text-emerald-900">
+          <p>
+            ✓ Signed by <strong>{latest?.signature_name}</strong> on{" "}
+            {new Date(latest!.signed_at!).toLocaleString()}. Sent to practitioner & filed to patient record.
+          </p>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={async () => {
+              const { downloadPrescriptionPdf } = await import("@/lib/prescription-pdf");
+              downloadPrescriptionPdf(
+                { ...form, signature_name: latest?.signature_name, signed_at: latest?.signed_at },
+                `Rx-${form.patient_name.replace(/\s+/g, "_")}.pdf`,
+              );
+            }}
+          >
+            Download PDF
+          </Button>
         </div>
       ) : (
         <div className="space-y-2">
