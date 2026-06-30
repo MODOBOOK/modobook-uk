@@ -687,3 +687,148 @@ function TreatmentRow({
     </div>
   );
 }
+
+function ReviewsImportCard() {
+  const extractAi = useServerFn(extractReviews);
+  const commitAi = useServerFn(commitReviews);
+  const [open, setOpen] = useState(false);
+  const [aiFiles, setAiFiles] = useState<File[]>([]);
+  const [aiText, setAiText] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [draft, setDraft] = useState<Array<ExtractedReview & { _include: boolean }> | null>(null);
+
+  function reset() { setDraft(null); setAiFiles([]); setAiText(""); }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-lg">
+          <MessageSquareQuote className="size-5 text-primary" /> Import patient reviews
+        </CardTitle>
+        <p className="text-sm text-muted-foreground">
+          Don't lose your Google, Facebook or Instagram reviews when you move over. Upload
+          screenshots or paste the text — AI pulls out names, ratings and quotes, you tick what to keep.
+        </p>
+      </CardHeader>
+      <CardContent>
+        <Button onClick={() => setOpen(true)} size="lg" variant="outline">
+          <Wand2 className="mr-2 size-4" /> Import reviews with AI
+        </Button>
+      </CardContent>
+
+      <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) reset(); }}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-primary" /> Import reviews with AI
+            </DialogTitle>
+          </DialogHeader>
+
+          {!draft ? (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Screenshots or PDFs</Label>
+                <Input
+                  type="file"
+                  multiple
+                  accept="image/*,application/pdf"
+                  onChange={(e) => setAiFiles(Array.from(e.target.files ?? []))}
+                />
+                {aiFiles.length > 0 && (
+                  <ul className="space-y-0.5 text-xs text-muted-foreground">
+                    {aiFiles.map((f, i) => <li key={i}>{f.name} · {(f.size / 1024).toFixed(0)} KB</li>)}
+                  </ul>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label>…or paste review text</Label>
+                <Textarea
+                  rows={5}
+                  value={aiText}
+                  onChange={(e) => setAiText(e.target.value)}
+                  placeholder={"e.g.\nSarah — ★★★★★ Amazing service, felt looked after.\nJames — 5/5 Best lip filler I've had."}
+                />
+              </div>
+              <DialogFooter className="gap-2">
+                <Button variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
+                <Button
+                  disabled={busy || (!aiFiles.length && !aiText.trim())}
+                  onClick={async () => {
+                    setBusy(true);
+                    try {
+                      const payload = aiFiles.length
+                        ? { files: await Promise.all(aiFiles.map(async (f) => ({ data_url: await fileToDataUrl(f), name: f.name }))) }
+                        : { text: aiText.trim() };
+                      const r = await extractAi({ data: payload });
+                      if (!r.reviews.length) { toast.error("AI couldn't find any reviews. Try a clearer screenshot."); return; }
+                      setDraft(r.reviews.map((rv) => ({ ...rv, _include: true })));
+                      toast.success(`Found ${r.reviews.length} review${r.reviews.length === 1 ? "" : "s"}`);
+                    } catch (e) { toast.error((e as Error).message); }
+                    finally { setBusy(false); }
+                  }}
+                >
+                  {busy ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Reading…</> : <><Wand2 className="mr-2 h-4 w-4" /> Extract with AI</>}
+                </Button>
+              </DialogFooter>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">Untick anything you don't want, or edit in place.</p>
+              <div className="max-h-[55vh] space-y-2 overflow-y-auto pr-1">
+                {draft.map((r, i) => (
+                  <div key={i} className={`space-y-2 rounded-md border p-3 ${r._include ? "" : "opacity-50"}`}>
+                    <div className="flex items-center gap-2">
+                      <Checkbox checked={r._include} onCheckedChange={(v) => {
+                        const next = [...draft]; next[i] = { ...next[i], _include: !!v }; setDraft(next);
+                      }} />
+                      <Input
+                        className="max-w-[180px]"
+                        value={r.author_name}
+                        onChange={(e) => { const next = [...draft]; next[i] = { ...next[i], author_name: e.target.value }; setDraft(next); }}
+                        placeholder="First name"
+                      />
+                      <div className="flex">
+                        {[1, 2, 3, 4, 5].map((n) => (
+                          <button key={n} type="button" className="p-0.5" onClick={() => {
+                            const next = [...draft]; next[i] = { ...next[i], rating: n }; setDraft(next);
+                          }}>
+                            <Star className={`h-4 w-4 ${n <= (r.rating ?? 5) ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground/30"}`} />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <Textarea
+                      rows={2}
+                      value={r.quote}
+                      onChange={(e) => { const next = [...draft]; next[i] = { ...next[i], quote: e.target.value }; setDraft(next); }}
+                    />
+                  </div>
+                ))}
+              </div>
+              <DialogFooter className="gap-2">
+                <Button variant="ghost" onClick={() => setDraft(null)} disabled={busy}>Back</Button>
+                <Button
+                  disabled={busy}
+                  onClick={async () => {
+                    const keep = draft.filter((r) => r._include && r.author_name.trim() && r.quote.trim());
+                    if (!keep.length) { toast.error("Tick at least one review to import"); return; }
+                    setBusy(true);
+                    try {
+                      const r = await commitAi({ data: { reviews: keep.map(({ _include: _i, ...rest }) => rest) } });
+                      toast.success(`Imported ${r.inserted} review${r.inserted === 1 ? "" : "s"}`);
+                      setOpen(false);
+                      reset();
+                    } catch (e) { toast.error((e as Error).message); }
+                    finally { setBusy(false); }
+                  }}
+                >
+                  {busy ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Importing…</> : <>Import {draft.filter((r) => r._include).length} review(s)</>}
+                </Button>
+              </DialogFooter>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </Card>
+  );
+}
