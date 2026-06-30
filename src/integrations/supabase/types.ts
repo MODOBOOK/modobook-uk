@@ -2674,6 +2674,53 @@ export type Database = {
           },
         ]
       }
+      pretreatment_templates: {
+        Row: {
+          active: boolean
+          body_html: string
+          created_at: string
+          id: string
+          name: string
+          profile_id: string
+          show_on_public: boolean
+          sort_order: number
+          summary: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          body_html?: string
+          created_at?: string
+          id?: string
+          name: string
+          profile_id: string
+          show_on_public?: boolean
+          sort_order?: number
+          summary?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          body_html?: string
+          created_at?: string
+          id?: string
+          name?: string
+          profile_id?: string
+          show_on_public?: boolean
+          sort_order?: number
+          summary?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pretreatment_templates_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           about: string | null

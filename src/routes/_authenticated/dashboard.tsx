@@ -27,6 +27,8 @@ import {
   Sparkles,
   Percent,
   HeartPulse,
+  Info,
+
 
 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -68,7 +70,9 @@ const navItems = [
   { label: "Practitioners", to: "/dashboard/practitioners", icon: Users },
   { label: "Medical forms", to: "/dashboard/medical-forms", icon: FileText },
   { label: "Consent forms", to: "/dashboard/consent-forms", icon: FileSignature },
+  { label: "Pre-treatment info", to: "/dashboard/pre-treatment", icon: Info },
   { label: "Aftercare templates", to: "/dashboard/aftercare", icon: HeartPulse },
+
   { label: "Booking flow", to: "/dashboard/booking-flow", icon: HelpCircle },
   { label: "Availability", to: "/dashboard/availability", icon: CalendarDays },
   { label: "New appointment", to: "/dashboard/new-appointment", icon: CalendarPlus },

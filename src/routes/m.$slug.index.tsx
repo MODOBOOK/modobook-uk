@@ -112,7 +112,7 @@ function textToParagraphHtml(text: string) {
 type Theme = Database["public"]["Tables"]["clinic_theme"]["Row"];
 
 function BookPage() {
-  const { profile, treatments, packages, locations, categories, pricing, theme, reviews, concernAreas, concerns, concernLinks, modelSlots = [], addonLinks = [], practitioners = [], locationPractitioners = [], aboutPage, careGuides = [] } =
+  const { profile, treatments, packages, locations, categories, pricing, theme, reviews, concernAreas, concerns, concernLinks, modelSlots = [], addonLinks = [], practitioners = [], locationPractitioners = [], aboutPage, careGuides = [], pretreatment = [] } =
     Route.useLoaderData() as {
       profile: {
         id: string;
@@ -172,6 +172,8 @@ function BookPage() {
         intro_body?: string | null;
       } | null;
       careGuides?: { id: string; name: string; body_html: string; summary: string | null; category: string | null }[];
+      pretreatment?: { id: string; name: string; body_html: string; summary: string | null; sort_order: number }[];
+
     };
 
 
@@ -248,7 +250,11 @@ function BookPage() {
   const [locationId, setLocationId] = useState<string | null>(null);
   const [directionsOpen, setDirectionsOpen] = useState(false);
   const [careGuideOpen, setCareGuideOpen] = useState(false);
-  const hasCareGuides = (careGuides ?? []).length > 0;
+  const preItems = (pretreatment ?? []).length > 0
+    ? (pretreatment ?? []).map((p) => ({ id: p.id, name: p.name, body_html: p.body_html, summary: p.summary }))
+    : (careGuides ?? []).map((g) => ({ id: g.id, name: g.name, body_html: g.body_html, summary: g.summary }));
+  const hasCareGuides = preItems.length > 0;
+
   const practSelectionMode = profile.practitioner_selection_mode ?? "optional";
   const [practitionerId, setPractitionerIdState] = useState<string | null>(null);
   const setPractitionerId = (id: string | null) => {
@@ -665,14 +671,15 @@ function BookPage() {
                     <Share2 className="h-5 w-5" />
                   </ActionButton>
                   {hasCareGuides ? (
-                    <ActionButton onClick={() => setCareGuideOpen(true)} label="Care Guide" brand={brand}>
+                    <ActionButton onClick={() => setCareGuideOpen(true)} label="Pre-treatment" brand={brand}>
                       <Info className="h-5 w-5" />
                     </ActionButton>
                   ) : (
-                    <ActionPlaceholder label="Care Guide" brand={brand}>
+                    <ActionPlaceholder label="Pre-treatment" brand={brand}>
                       <Info className="h-5 w-5 opacity-30" />
                     </ActionPlaceholder>
                   )}
+
                 </div>
               )}
             </>
@@ -1590,18 +1597,18 @@ function BookPage() {
         );
       })()}
 
-      {/* Pre + Post Care Guide */}
+      {/* Pre-treatment info */}
       <Dialog open={careGuideOpen} onOpenChange={setCareGuideOpen}>
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl" style={{ borderColor: `${brand}33` }}>
           <DialogHeader>
-            <DialogTitle style={{ color: brand }}>Pre + Post Care Guide</DialogTitle>
-            <DialogDescription>General before & aftercare advice from the clinic. Always follow personalised instructions sent after your appointment.</DialogDescription>
+            <DialogTitle style={{ color: brand }}>Pre-treatment information</DialogTitle>
+            <DialogDescription>Important things to know and prepare before your appointment.</DialogDescription>
           </DialogHeader>
-          {careGuides.length === 0 ? (
-            <p className="py-4 text-sm text-muted-foreground">No care guides have been published yet.</p>
+          {preItems.length === 0 ? (
+            <p className="py-4 text-sm text-muted-foreground">No pre-treatment notes have been published yet.</p>
           ) : (
             <Accordion type="single" collapsible className="w-full">
-              {careGuides.map((g) => (
+              {preItems.map((g) => (
                 <AccordionItem key={g.id} value={g.id}>
                   <AccordionTrigger className="text-left">
                     <span className="flex flex-col">
@@ -1621,6 +1628,7 @@ function BookPage() {
           )}
         </DialogContent>
       </Dialog>
+
 
       {/* Directions location picker */}
       <Dialog open={directionsOpen} onOpenChange={setDirectionsOpen}>
