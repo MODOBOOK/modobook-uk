@@ -89,7 +89,7 @@ function Connections() {
                   id="code"
                   value={code}
                   onChange={(e) => setCode(e.target.value.toUpperCase())}
-                  placeholder="MODO-ABC123"
+                  placeholder="PR-ABC123 or RX-ABC123"
                   required
                 />
               </div>
