@@ -57,8 +57,10 @@ export const Route = createFileRoute("/m/$slug")({
 
 function ModoLayout() {
   const { profile, theme } = Route.useLoaderData();
+  const { primary: displayPrimary, secondary: displaySecondary } = resolveDisplayNames(profile);
   const { slug } = useParams({ from: "/m/$slug" });
   const brand = theme?.primary_color || profile.brand_color || "#111827";
+
   const accent = theme?.accent_color || brand;
   const headerBg = theme?.header_bg_color || "#ffffff";
   const headerText = theme?.header_text_color || "#0f172a";
