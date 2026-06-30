@@ -151,11 +151,16 @@ function ReviewMod() {
         <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
           <div className="min-w-0">
             <h2 className="truncate text-lg font-semibold">Your added reviews</h2>
-            <p className="text-xs text-muted-foreground">Reviews from existing patients you add manually.</p>
+            <p className="text-xs text-muted-foreground">Reviews from existing patients you add manually — or import a batch with AI.</p>
           </div>
-          <Button size="sm" onClick={openNew} className="shrink-0">
-            <Plus className="mr-1.5 h-4 w-4" /> Add review
-          </Button>
+          <div className="flex shrink-0 gap-2">
+            <Button size="sm" variant="outline" onClick={() => setAiOpen(true)}>
+              <Sparkles className="mr-1.5 h-4 w-4" /> Import with AI
+            </Button>
+            <Button size="sm" onClick={openNew}>
+              <Plus className="mr-1.5 h-4 w-4" /> Add review
+            </Button>
+          </div>
         </div>
 
         {testimonials.length === 0 ? (
