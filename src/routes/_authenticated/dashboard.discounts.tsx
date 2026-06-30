@@ -155,7 +155,7 @@ function MenuDiscountRow({ treat, onSaved }: { treat: Treat; onSaved: () => void
                 <Label>% off</Label>
                 <Input type="number" min={1} max={100} value={pct} onChange={(e) => setPct(e.target.value)} placeholder="e.g. 20" />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div><Label>Starts</Label><Input type="date" value={start} onChange={(e) => setStart(e.target.value)} /></div>
                 <div><Label>Ends</Label><Input type="date" value={end} onChange={(e) => setEnd(e.target.value)} /></div>
               </div>
@@ -252,11 +252,11 @@ function CodeEditor({ treatments, onSaved, editing, onClose }: {
       <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader><DialogTitle>{editing ? "Edit code" : "New discount code"}</DialogTitle></DialogHeader>
         <div className="space-y-3">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div><Label>Code</Label><Input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="SUMMER20" /></div>
             <div><Label>Label (optional)</Label><Input value={label} onChange={(e) => setLabel(e.target.value)} placeholder="Summer offer" /></div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
               <Label>Type</Label>
               <Select value={kind} onValueChange={(v) => setKind(v as "percent" | "fixed")}>
@@ -289,7 +289,7 @@ function CodeEditor({ treatments, onSaved, editing, onClose }: {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div><Label>Starts</Label><Input type="date" value={start} onChange={(e) => setStart(e.target.value)} /></div>
             <div><Label>Ends</Label><Input type="date" value={end} onChange={(e) => setEnd(e.target.value)} /></div>
           </div>
@@ -308,7 +308,7 @@ function CodeEditor({ treatments, onSaved, editing, onClose }: {
               })}
             </div>
           </div>
-          <div className="grid grid-cols-2 items-end gap-3">
+          <div className="grid grid-cols-1 items-end gap-3 sm:grid-cols-2">
             <div><Label>Max uses (optional)</Label><Input type="number" value={maxUses} onChange={(e) => setMaxUses(e.target.value)} /></div>
             <div className="flex items-center gap-2 pb-2"><Switch checked={active} onCheckedChange={setActive} /><span className="text-sm">Active</span></div>
           </div>
@@ -407,7 +407,7 @@ function BulkMenuDiscount({ treatments, onSaved }: { treatments: Treat[]; onSave
           </div>
           <p className="mt-1 text-xs text-muted-foreground">{ids.length || "All"} selected</p>
         </div>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
           <div><Label className="text-xs">% off</Label><Input type="number" min={1} max={100} value={pct} onChange={(e) => setPct(e.target.value)} placeholder="20" /></div>
           <div><Label className="text-xs">Starts</Label><Input type="date" value={start} onChange={(e) => setStart(e.target.value)} /></div>
           <div><Label className="text-xs">Ends</Label><Input type="date" value={end} onChange={(e) => setEnd(e.target.value)} /></div>

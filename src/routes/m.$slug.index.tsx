@@ -1887,7 +1887,7 @@ function TreatmentRow({
           </div>
         )}
         <div className="flex items-start justify-between gap-3">
-          <div className={`leading-tight ${nameSize} ${bold ? "font-bold" : "font-medium"}`} style={{ color: nameColor }}>
+          <div className={`min-w-0 flex-1 leading-tight ${nameSize} ${bold ? "font-bold" : "font-medium"}`} style={{ color: nameColor }}>
             {t.name}
           </div>
           {(() => {
@@ -1902,14 +1902,13 @@ function TreatmentRow({
             const hasDisc = pct != null && pct > 0 && inWindow && price > 0;
             const discounted = hasDisc ? price * (1 - pct / 100) : price;
             return (
-              <div className={`whitespace-nowrap ${priceSize} ${bold ? "font-bold" : "font-semibold"}`} style={{ color: priceColor }}>
+              <div className={`flex flex-col items-end leading-tight ${priceSize} ${bold ? "font-bold" : "font-semibold"}`} style={{ color: priceColor }}>
                 {hasDisc && ((t as any).discount_show_was_now !== false) && (
-                  <span className="mr-1.5 text-sm font-normal text-muted-foreground line-through">£{price.toFixed(2)}</span>
-
+                  <span className="text-xs font-normal text-muted-foreground line-through">£{price.toFixed(2)}</span>
                 )}
-                {discounted === 0 ? "Free" : `£${discounted.toFixed(2)}`}
+                <span className="whitespace-nowrap">{discounted === 0 ? "Free" : `£${discounted.toFixed(2)}`}</span>
                 {hasDisc && (
-                  <span className="ml-1 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[11px] font-semibold text-emerald-700">−{pct}%</span>
+                  <span className="mt-0.5 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700">−{pct}%</span>
                 )}
               </div>
             );

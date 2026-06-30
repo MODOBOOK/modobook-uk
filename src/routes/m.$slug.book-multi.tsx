@@ -19,6 +19,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
 import { Clock, MapPin, CheckCircle2, LogIn, UserPlus, UserCheck } from "lucide-react";
+import { DiscountCodeBox, type AppliedDiscount } from "@/components/DiscountCodeBox";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 type Rule = Database["public"]["Tables"]["availability_rules"]["Row"];
@@ -158,6 +159,21 @@ function MultiBookPage() {
     .reduce((s, a) => s + (a.duration_min || 0), 0);
   const totalDuration = totalDurationBase + addonsExtraDuration;
   const totalPrice = totalPriceBase + addonsExtraPrice;
+  const [discount, setDiscount] = useState<AppliedDiscount | null>(null);
+  const discountTotal = useMemo(() => {
+    if (!discount) return 0;
+    const ids = new Set(discount.applies_to_treatment_ids);
+    const eligibleSum = treatments
+      .filter((t) => ids.has(t.id))
+      .reduce((s, t) => s + priceFor(t), 0);
+    if (eligibleSum <= 0) return 0;
+    const off = discount.kind === "percent"
+      ? eligibleSum * (discount.amount / 100)
+      : discount.amount;
+    return Math.min(off, eligibleSum);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [discount, treatments]);
+  const totalAfterDiscount = Math.max(0, totalPrice - discountTotal);
   const splitEligibleTreatments = useMemo(
     () =>
       treatments.filter((t) => {
@@ -192,6 +208,7 @@ function MultiBookPage() {
   const [submitting, setSubmitting] = useState(false);
   const submitLockRef = useRef(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  
   const termsHtml = (ctx as { termsHtml?: string | null }).termsHtml ?? null;
   const termsRequired = Boolean((ctx as { termsRequired?: boolean }).termsRequired);
   const [authChoice, setAuthChoice] = useState<"pending" | "guest" | "signed-in">("pending");
@@ -315,13 +332,23 @@ function MultiBookPage() {
     submitLockRef.current = true;
     setSubmitting(true);
     try {
-      const bookings = treatments.map((t) => ({
-        treatmentId: t.id,
-        durationMin: durationFor(t),
-        priceCents: Math.round(priceFor(t) * 100),
-        sessionCount: Math.max(1, Number((t as { session_count?: number }).session_count ?? 1)),
-        paymentPlan: selectedPaymentPlan(t),
-      }));
+      const applicableIds = new Set(discount?.applies_to_treatment_ids ?? []);
+      const bookings = treatments.map((t) => {
+        let price = priceFor(t);
+        if (discount && applicableIds.has(t.id)) {
+          const off = discount.kind === "percent"
+            ? price * (discount.amount / 100)
+            : discount.amount;
+          price = Math.max(0, price - Math.min(off, price));
+        }
+        return {
+          treatmentId: t.id,
+          durationMin: durationFor(t),
+          priceCents: Math.round(price * 100),
+          sessionCount: Math.max(1, Number((t as { session_count?: number }).session_count ?? 1)),
+          paymentPlan: selectedPaymentPlan(t),
+        };
+      });
       const res = await reqFn({
         data: {
           profileId: ctx.profileId,
@@ -342,6 +369,9 @@ function MultiBookPage() {
             const lines = [form.notes].filter(Boolean) as string[];
             if (picked.length) {
               lines.push("Add-ons: " + picked.map((a) => `${a.name} (£${addonNet(a).toFixed(2)})`).join(", "));
+            }
+            if (discount) {
+              lines.push(`Promo code ${discount.code} applied (${discount.kind === "percent" ? `${discount.amount}% off` : `£${discount.amount.toFixed(2)} off`})`);
             }
             for (const t of splitEligibleTreatments) {
               const sessions = Math.max(1, Number((t as { session_count?: number }).session_count ?? 1));
@@ -438,7 +468,16 @@ function MultiBookPage() {
             ))}
             <div className="flex items-center justify-between pt-3 text-sm font-semibold">
               <span>Total ({totalDuration} min)</span>
-              {showPrices && <span style={{ color: brand }}>£{totalPrice.toFixed(2)}</span>}
+              {showPrices && (
+                discountTotal > 0 ? (
+                  <span>
+                    <span className="mr-2 text-xs font-normal opacity-50 line-through">£{totalPrice.toFixed(2)}</span>
+                    <span style={{ color: brand }}>£{totalAfterDiscount.toFixed(2)}</span>
+                  </span>
+                ) : (
+                  <span style={{ color: brand }}>£{totalPrice.toFixed(2)}</span>
+                )
+              )}
             </div>
           </CardContent>
         </Card>
@@ -736,6 +775,19 @@ function MultiBookPage() {
                 </CardContent>
               </Card>
             )}
+            {showPrices && (
+              <Card className="mb-6">
+                <CardContent className="p-4">
+                  <DiscountCodeBox
+                    slug={slug}
+                    treatmentIds={treatments.map((t) => t.id)}
+                    brand={brand}
+                    value={discount}
+                    onChange={setDiscount}
+                  />
+                </CardContent>
+              </Card>
+            )}
             <Button
               className="w-full"
               size="lg"
@@ -746,7 +798,7 @@ function MultiBookPage() {
               onClick={submit}
               style={{ backgroundColor: brand, color: "#fff" }}
             >
-              {submitting ? "Booking…" : `Confirm ${treatments.length} bookings · £${totalPrice.toFixed(2)}`}
+              {submitting ? "Booking…" : `Confirm ${treatments.length} bookings · £${totalAfterDiscount.toFixed(2)}`}
             </Button>
 
           </>

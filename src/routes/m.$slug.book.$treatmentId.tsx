@@ -14,6 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import { Clock, MapPin, CheckCircle2, LogIn, UserPlus, UserCheck } from "lucide-react";
+import { DiscountCodeBox, type AppliedDiscount } from "@/components/DiscountCodeBox";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 type Rule = Database["public"]["Tables"]["availability_rules"]["Row"];
@@ -131,6 +132,7 @@ function BookTreatmentPage() {
   const sessionSpacing = formatSessionSpacing((treatment as { session_interval_days?: number | null }).session_interval_days);
   const splitAllowed = Boolean((treatment as { allow_split_payment?: boolean }).allow_split_payment) && sessionCount > 1;
   const [paymentPlan, setPaymentPlan] = useState<"full" | "split">("full");
+  const [discount, setDiscount] = useState<AppliedDiscount | null>(null);
 
   // Patient auth gate: 'pending' until they pick a path
   const [authChoice, setAuthChoice] = useState<"pending" | "guest" | "signed-in">("pending");
@@ -343,6 +345,16 @@ function BookTreatmentPage() {
         }
       }
 
+      // Apply promo code (only if it covers this treatment)
+      let discountOff = 0;
+      if (discount && discount.applies_to_treatment_ids.includes(treatment.id)) {
+        discountOff = discount.kind === "percent"
+          ? effectivePrice * (discount.amount / 100)
+          : discount.amount;
+        discountOff = Math.min(discountOff, effectivePrice);
+        effectivePrice = Math.max(0, effectivePrice - discountOff);
+      }
+
       const res = await reqFn({
         data: {
           profileId: ctx.profileId,
@@ -368,6 +380,9 @@ function BookTreatmentPage() {
             const lines: string[] = [];
             if (form.notes) lines.push(form.notes);
             if (picked.length) lines.push("Add-ons: " + picked.map((a) => `${a.name} (£${addonNet(a).toFixed(2)})`).join(", "));
+            if (discount && discountOff > 0) {
+              lines.push(`Promo code ${discount.code} applied (-£${discountOff.toFixed(2)})`);
+            }
             if (splitAllowed && paymentPlan === "split") {
               const per = (effectivePrice / sessionCount).toFixed(2);
               lines.push(`Payment plan: Split into ${sessionCount} sessions (£${per} per session)`);
@@ -742,6 +757,17 @@ function BookTreatmentPage() {
             <Label htmlFor="notes">Notes (optional)</Label>
             <Textarea id="notes" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
           </div>
+          {showPrices && (
+            <div className="sm:col-span-2">
+              <DiscountCodeBox
+                slug={slug}
+                treatmentIds={[treatment.id]}
+                brand={brand}
+                value={discount}
+                onChange={setDiscount}
+              />
+            </div>
+          )}
         </CardContent>
       </Card>
 
