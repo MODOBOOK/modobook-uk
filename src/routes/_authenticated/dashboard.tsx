@@ -103,7 +103,7 @@ const mobileTabs = [
 ];
 
 function DashboardLayout() {
-  const { profile } = Route.useRouteContext();
+  const { profile, isPrescriber } = Route.useRouteContext();
   const { primary: displayName } = resolveDisplayNames(profile as { clinic_name?: string | null; full_name?: string | null; display_name_mode?: string | null });
   const [open, setOpen] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
