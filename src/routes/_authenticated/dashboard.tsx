@@ -26,11 +26,13 @@ import {
   ChevronLeft,
   Sparkles,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useDashboardThemeStyle } from "@/hooks/use-dashboard-theme";
 import { resolveDisplayNames } from "@/lib/display-name";
+import { countPendingReviews } from "@/lib/patient.functions";
+import { useServerFn } from "@tanstack/react-start";
 
 
 
