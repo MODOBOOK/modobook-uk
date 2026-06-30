@@ -430,7 +430,7 @@ export const commitClinicImport = createServerFn({ method: "POST" })
               .insert({ treatment_id: row.id, template_id: tplId } as never);
           }
         }
-      }
+      } else noteError(`Treatment "${t.name}"`, error);
     }
 
     /* --- Add-ons --- */
