@@ -277,6 +277,14 @@ function AiImportPage() {
               <li>{summary.packages} packages</li>
               {summary.skipped > 0 && <li className="text-muted-foreground">{summary.skipped} skipped as duplicates</li>}
             </ul>
+            {summary.errors && summary.errors.length > 0 && (
+              <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-xs">
+                <p className="mb-1 font-medium text-destructive">Some items couldn't be saved:</p>
+                <ul className="list-disc space-y-0.5 pl-4 text-destructive/90">
+                  {summary.errors.slice(0, 10).map((e, i) => <li key={i}>{e}</li>)}
+                </ul>
+              </div>
+            )}
             <div className="flex flex-wrap gap-2 pt-2">
               <Button asChild><Link to="/dashboard/services">Open Services</Link></Button>
               <Button variant="outline" asChild><Link to="/dashboard">Back to dashboard</Link></Button>
