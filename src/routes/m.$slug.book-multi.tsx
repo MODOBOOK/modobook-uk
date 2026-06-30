@@ -384,8 +384,10 @@ function MultiBookPage() {
           priceCents: Math.round(price * 100),
           sessionCount: Math.max(1, Number((t as { session_count?: number }).session_count ?? 1)),
           paymentPlan: selectedPaymentPlan(t),
+          clinicVisitId: visitSelections[t.id] ?? null,
         };
       });
+
       const res = await reqFn({
         data: {
           profileId: ctx.profileId,
