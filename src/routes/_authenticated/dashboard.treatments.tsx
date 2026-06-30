@@ -374,6 +374,13 @@ function TreatmentDialog({
   const [autoSendAftercare, setAutoSendAftercare] = useState<boolean>(
     (treatment as { auto_send_aftercare?: boolean } | null)?.auto_send_aftercare ?? true,
   );
+  const [priceMode, setPriceMode] = useState<"fixed" | "from" | "poa" | "free">(
+    ((treatment as { price_mode?: string } | null)?.price_mode as "fixed" | "from" | "poa" | "free") ?? "fixed",
+  );
+  const [badge, setBadge] = useState<"recommended" | "popular" | "new" | "bestseller" | "none">(
+    ((treatment as { badge?: string | null } | null)?.badge as "recommended" | "popular" | "new" | "bestseller" | null) ?? "none",
+  );
+
 
   const topLevel = useMemo(() => categories.filter((c) => !c.parent_id), [categories]);
   const childrenOf = (parentId: string | null) =>
