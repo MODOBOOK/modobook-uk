@@ -108,7 +108,7 @@ function Row({
   const dirty =
     req !== Boolean(treatment.requires_prescriber) ||
     (prescriberId || null) !== (treatment.prescriber_user_id ?? null) ||
-    routing !== (treatment.prescriber_routing ?? "same_address") ||
+    routing !== initialRouting ||
     note !== (treatment.prescriber_note ?? "");
 
   return (
@@ -153,7 +153,7 @@ function Row({
               </Label>
               <RadioGroup
                 value={routing}
-                onValueChange={(v) => setRouting(v as "same_address" | "in_person_consult")}
+                onValueChange={(v) => setRouting(v as "same_address" | "clinic_visit")}
               >
                 <label className="flex items-start gap-2 rounded-md border p-2 text-sm">
                   <RadioGroupItem value="same_address" className="mt-0.5" />
@@ -163,14 +163,16 @@ function Row({
                   </span>
                 </label>
                 <label className="flex items-start gap-2 rounded-md border p-2 text-sm">
-                  <RadioGroupItem value="in_person_consult" className="mt-0.5" />
+                  <RadioGroupItem value="clinic_visit" className="mt-0.5" />
                   <span>
-                    <span className="font-medium">In-person consult</span> — patient is sent to the
-                    prescriber's MODO booking page before the treatment.
+                    <span className="font-medium">Clinic visit days</span> — patient picks a day the
+                    prescriber will be visiting your clinic.{" "}
+                    <Link to="/hub/visits" className="underline">Manage visit days</Link>.
                   </span>
                 </label>
               </RadioGroup>
             </div>
+
 
             <div className="sm:col-span-2">
               <Label className="mb-1.5 block text-xs uppercase tracking-wide text-muted-foreground">
