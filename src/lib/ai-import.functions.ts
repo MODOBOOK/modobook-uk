@@ -58,27 +58,60 @@ function stripHtml(html: string): string {
   return html
     .replace(/<script[\s\S]*?<\/script>/gi, " ")
     .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<nav[\s\S]*?<\/nav>/gi, " ")
+    .replace(/<footer[\s\S]*?<\/footer>/gi, " ")
+    .replace(/<header[\s\S]*?<\/header>/gi, " ")
     .replace(/<[^>]+>/g, " ")
     .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
     .replace(/\s+/g, " ")
     .trim()
-    .slice(0, 25000);
+    .slice(0, 40000);
 }
 
 async function fetchUrlText(url: string): Promise<string> {
-  const res = await fetch(url, {
-    headers: { "User-Agent": "Mozilla/5.0 MODO-Book Importer" },
-    redirect: "follow",
-  });
-  if (!res.ok) throw new Error(`Could not load ${url} (${res.status})`);
-  const ct = res.headers.get("content-type") || "";
-  const text = await res.text();
-  return ct.includes("html") ? stripHtml(text) : text.slice(0, 25000);
+  const collected: string[] = [];
+  const tried = new Set<string>();
+
+  async function pull(target: string) {
+    if (tried.has(target)) return;
+    tried.add(target);
+    try {
+      const res = await fetch(target, {
+        headers: { "User-Agent": "Mozilla/5.0 MODO-Book Importer" },
+        redirect: "follow",
+      });
+      if (!res.ok) return;
+      const ct = res.headers.get("content-type") || "";
+      const text = await res.text();
+      collected.push(`--- ${target} ---\n` + (ct.includes("html") ? stripHtml(text) : text.slice(0, 25000)));
+    } catch {
+      /* ignore */
+    }
+  }
+
+  await pull(url);
+
+  // Also try common price-list paths on the same origin so URL imports actually find treatments
+  try {
+    const u = new URL(url);
+    const candidates = ["/treatments", "/services", "/pricing", "/price-list", "/menu", "/book"];
+    for (const path of candidates) {
+      if (collected.join("\n").length > 50000) break;
+      await pull(`${u.origin}${path}`);
+    }
+  } catch {
+    /* ignore */
+  }
+
+  const joined = collected.join("\n\n").slice(0, 60000);
+  if (!joined.trim()) throw new Error(`Could not load ${url}`);
+  return joined;
 }
 
-const SYSTEM_PROMPT = `You are an assistant that extracts aesthetics-clinic price-list data.
+const SYSTEM_PROMPT = `You extract aesthetics-clinic price-list data from real source content.
 
-Given source content (text or a file/image), return a SINGLE JSON object with this exact shape:
+Return a SINGLE JSON object with this exact shape:
 {
   "clinic":     { "clinic_name"?, "tagline"?, "bio"?, "phone"?, "email"?, "address"? },
   "categories": [ { "name", "description"?, "parent"? } ],
@@ -87,15 +120,19 @@ Given source content (text or a file/image), return a SINGLE JSON object with th
   "packages":   [ { "name", "treatment_names"?, "price_gbp"?, "sessions"?, "description"? } ]
 }
 
-Rules:
-- Output ONLY raw JSON, no markdown fences, no commentary.
-- All prices in GBP as plain numbers (e.g. 180, not "£180").
-- duration_min is in whole minutes.
-- "category" on a treatment must match a name in "categories" (create one if missing).
-- "parent" is the parent category name when it is a subcategory.
-- If a value is not visible in the source, omit the key entirely.
-- Hard caps: up to 25 categories, 100 treatments, 40 add-ons, 20 packages. Skip anything beyond.
-- Do not invent treatments. Only include items present in the source.`;
+STRICT RULES — non-negotiable:
+- Output ONLY raw JSON. No markdown fences, no commentary.
+- NEVER invent, guess, or pad with "typical aesthetics treatments". Only include items that are literally named in the supplied source.
+- If the source has no clear price list, return empty arrays for categories/treatments/addons/packages. An empty result is correct and expected.
+- Do NOT add categories that have no treatments under them in the source.
+- Do NOT carry over examples from your training data (no Botox, lip filler, microneedling, etc. unless those exact words appear in the source).
+- All prices in GBP as plain numbers (e.g. 180, not "£180"). Omit price if not stated.
+- duration_min is whole minutes. Omit if not stated.
+- "category" on a treatment must match a name in "categories". Create the category if missing.
+- "parent" is the parent category name when something is a subcategory (e.g. "Lip filler" under parent "Injectables").
+- If a value is not visible, omit the key entirely — never write "N/A" or guess.
+- Hard caps: up to 25 categories, 100 treatments, 40 add-ons, 20 packages.`;
+
 
 type GatewayContent =
   | { type: "text"; text: string }

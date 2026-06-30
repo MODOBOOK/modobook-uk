@@ -141,24 +141,55 @@ function AiImportPage() {
       {step === "upload" && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Upload your price list and let AI set you up</CardTitle>
+            <CardTitle className="text-lg">Set up your clinic in seconds</CardTitle>
             <p className="text-sm text-muted-foreground">
-              Send us a PDF, a photo, a spreadsheet or your existing clinic website — we'll
-              extract your categories, treatments, prices and add-ons for you to review.
+              Send us your existing price list — PDF, photo, spreadsheet or website — and AI will
+              pull out your <b>categories, subcategories, treatments, prices and add-ons</b>. You
+              review everything on the next screen before anything saves.
             </p>
           </CardHeader>
           <CardContent className="space-y-5">
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-              <SourceTile icon={<FileText className="size-5" />} label="PDF" active={kind === "pdf"} onClick={() => setKind("pdf")} />
-              <SourceTile icon={<ImageIcon className="size-5" />} label="Photo" active={kind === "image"} onClick={() => setKind("image")} />
-              <SourceTile icon={<Table className="size-5" />} label="Spreadsheet / CSV" active={kind === "spreadsheet"} onClick={() => setKind("spreadsheet")} />
-              <SourceTile icon={<Globe className="size-5" />} label="Website URL" active={kind === "url"} onClick={() => setKind("url")} />
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <SourceTile
+                icon={<FileText className="size-5" />}
+                label="PDF"
+                desc="A price-list PDF you already give clients"
+                active={kind === "pdf"}
+                onClick={() => setKind("pdf")}
+              />
+              <SourceTile
+                icon={<ImageIcon className="size-5" />}
+                label="Photo / screenshot"
+                desc="A picture of a printed menu or your Instagram price post"
+                active={kind === "image"}
+                onClick={() => setKind("image")}
+              />
+              <SourceTile
+                icon={<Table className="size-5" />}
+                label="Spreadsheet"
+                desc="Excel or CSV with treatment, price, duration"
+                active={kind === "spreadsheet"}
+                onClick={() => setKind("spreadsheet")}
+              />
+              <SourceTile
+                icon={<Globe className="size-5" />}
+                label="Website URL"
+                desc="Best if you link straight to your treatments / pricing page"
+                active={kind === "url"}
+                onClick={() => setKind("url")}
+              />
             </div>
 
             {kind === "url" && (
               <div className="space-y-2">
                 <Label>Website URL</Label>
                 <Input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://yourclinic.co.uk/treatments" />
+                <p className="text-xs text-muted-foreground">
+                  Tip: paste the URL of your <b>treatments or pricing page</b>, not your homepage —
+                  you'll get far fewer wrong items. If your homepage doesn't list treatments, AI
+                  will sometimes pull nothing rather than guess (that's intentional). Anything that
+                  looks wrong on the review screen can be unticked or edited before importing.
+                </p>
               </div>
             )}
 
@@ -171,6 +202,9 @@ function AiImportPage() {
                   onChange={(e) => setFile(e.target.files?.[0] ?? null)}
                 />
                 {file && <p className="text-xs text-muted-foreground">{file.name} · {(file.size / 1024).toFixed(0)} KB</p>}
+                <p className="text-xs text-muted-foreground">
+                  Clearer source = better result. Make sure prices and treatment names are readable.
+                </p>
               </div>
             )}
 
@@ -183,22 +217,23 @@ function AiImportPage() {
                 </div>
                 <div className="space-y-2">
                   <Label>Or paste content</Label>
-                  <Textarea rows={6} value={text} onChange={(e) => setText(e.target.value)} placeholder="Treatment name, price, duration…" />
+                  <Textarea rows={6} value={text} onChange={(e) => setText(e.target.value)} placeholder={"e.g.\nInjectables, Lip filler 1ml, 45, 180\nInjectables, Anti-wrinkle 1 area, 30, 120\nSkin, HydraFacial, 60, 95"} />
                 </div>
               </div>
             )}
 
-            <div className="flex justify-end">
+            <div className="flex flex-col-reverse items-stretch gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-xs text-muted-foreground">
+                Nothing is saved to your account until you press <b>Import</b> on the next screen.
+              </p>
               <Button onClick={handleExtract} disabled={busy} size="lg">
                 {busy ? <><Loader2 className="mr-2 size-4 animate-spin" /> Reading…</> : <><Wand2 className="mr-2 size-4" /> Extract with AI</>}
               </Button>
             </div>
-            <p className="text-xs text-muted-foreground">
-              Nothing is saved to your account until you press Import on the review screen.
-            </p>
           </CardContent>
         </Card>
       )}
+
 
       {step === "review" && draft && (
         <ReviewStep
@@ -235,20 +270,24 @@ function AiImportPage() {
   );
 }
 
-function SourceTile({ icon, label, active, onClick }: { icon: React.ReactNode; label: string; active: boolean; onClick: () => void }) {
+function SourceTile({ icon, label, desc, active, onClick }: { icon: React.ReactNode; label: string; desc?: string; active: boolean; onClick: () => void }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`flex flex-col items-center gap-2 rounded-lg border p-4 text-sm transition ${
+      className={`flex h-full flex-col items-start gap-2 rounded-lg border p-4 text-left text-sm transition ${
         active ? "border-primary bg-primary/5 ring-1 ring-primary" : "hover:border-primary/40"
       }`}
     >
-      {icon}
-      <span className="text-center font-medium">{label}</span>
+      <div className="flex items-center gap-2">
+        {icon}
+        <span className="font-medium">{label}</span>
+      </div>
+      {desc && <span className="text-xs leading-snug text-muted-foreground">{desc}</span>}
     </button>
   );
 }
+
 
 function ReviewStep({
   draft,
@@ -278,16 +317,43 @@ function ReviewStep({
     setDraft({ ...draft, [key]: draft[key].map((r) => ({ ...r, _include: value })) });
   }
 
+  function addRow(key: "categories" | "treatments" | "addons" | "packages") {
+    const blank: Record<string, unknown> = { _include: true, name: "" };
+    setDraft({ ...draft, [key]: [...(draft[key] as Array<Record<string, unknown>>), blank] } as EditableDraft);
+  }
+
+  function removeRow(key: "categories" | "treatments" | "addons" | "packages", idx: number) {
+    const arr = [...(draft[key] as Array<Record<string, unknown>>)];
+    arr.splice(idx, 1);
+    setDraft({ ...draft, [key]: arr } as EditableDraft);
+  }
+
+  // Names of currently-included categories — used as parent options for subcategories
+  const parentOptions = draft.categories
+    .filter((c) => c._include && c.name?.trim())
+    .map((c) => c.name.trim());
+
+  const categoryOptions = parentOptions;
+
   return (
     <>
+      <Card className="border-amber-200 bg-amber-50/50 dark:bg-amber-950/10">
+        <CardContent className="py-3 text-sm text-amber-900 dark:text-amber-100">
+          <b>Quick check:</b> AI sometimes misreads source content. Untick anything you don't
+          actually offer, edit names/prices in place, or use <b>+ Add</b> to fill in items it
+          missed. Subcategories use the <b>Parent</b> dropdown.
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle>Clinic info</CardTitle>
+          <p className="text-xs text-muted-foreground">Only empty fields on your profile get filled — your existing details won't be overwritten.</p>
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="flex items-center gap-2">
             <Checkbox checked={draft.clinic._include} onCheckedChange={(v) => setDraft({ ...draft, clinic: { ...draft.clinic, _include: !!v } })} id="clinic-inc" />
-            <Label htmlFor="clinic-inc" className="text-sm text-muted-foreground">Apply (only fills empty fields on your profile)</Label>
+            <Label htmlFor="clinic-inc" className="text-sm text-muted-foreground">Apply clinic details</Label>
           </div>
           <div className="grid gap-3 md:grid-cols-2">
             <Field label="Clinic name" value={draft.clinic.clinic_name ?? ""} onChange={(v) => setDraft({ ...draft, clinic: { ...draft.clinic, clinic_name: v } })} />
@@ -299,56 +365,85 @@ function ReviewStep({
 
       <ListCard
         title={`Categories (${includedCats}/${draft.categories.length})`}
+        helper="Top-level groupings like Injectables, Skin, Body. Leave Parent blank for a top category, or pick one to make this a subcategory."
         onAll={(v) => toggleAll("categories", v)}
-        empty="No categories detected."
+        onAdd={() => addRow("categories")}
+        empty="No categories detected — use + Add category to create one."
         rows={draft.categories.map((c, i) => (
-          <Row key={i} included={c._include} onToggle={(v) => setRow("categories", i, { _include: v })}>
-            <Input className="md:max-w-xs" value={c.name} onChange={(e) => setRow("categories", i, { name: e.target.value })} placeholder="Name" />
-            <Input className="md:max-w-xs" value={c.parent ?? ""} onChange={(e) => setRow("categories", i, { parent: e.target.value || null })} placeholder="Parent (optional)" />
+          <Row key={i} included={c._include} onToggle={(v) => setRow("categories", i, { _include: v })} onRemove={() => removeRow("categories", i)}>
+            <Input className="md:max-w-xs" value={c.name} onChange={(e) => setRow("categories", i, { name: e.target.value })} placeholder="Category name" />
+            <select
+              className="h-9 rounded-md border bg-background px-2 text-sm md:max-w-xs"
+              value={c.parent ?? ""}
+              onChange={(e) => setRow("categories", i, { parent: e.target.value || null })}
+            >
+              <option value="">— Top-level category —</option>
+              {parentOptions
+                .filter((p) => p.toLowerCase() !== c.name?.toLowerCase())
+                .map((p) => (
+                  <option key={p} value={p}>Subcategory of: {p}</option>
+                ))}
+            </select>
           </Row>
         ))}
       />
 
       <ListCard
         title={`Treatments (${includedTr}/${draft.treatments.length})`}
+        helper="Each row becomes a bookable service. Pick the category it belongs to."
         onAll={(v) => toggleAll("treatments", v)}
-        empty="No treatments detected."
+        onAdd={() => addRow("treatments")}
+        empty="No treatments detected — use + Add treatment to create one."
         rows={draft.treatments.map((t, i) => (
-          <Row key={i} included={t._include} onToggle={(v) => setRow("treatments", i, { _include: v })}>
-            <Input className="md:max-w-xs" value={t.name} onChange={(e) => setRow("treatments", i, { name: e.target.value })} placeholder="Name" />
-            <Input className="md:max-w-[120px]" type="number" value={t.duration_min ?? ""} onChange={(e) => setRow("treatments", i, { duration_min: e.target.value ? Number(e.target.value) : undefined })} placeholder="Mins" />
-            <Input className="md:max-w-[120px]" type="number" step="0.01" value={t.price_gbp ?? ""} onChange={(e) => setRow("treatments", i, { price_gbp: e.target.value ? Number(e.target.value) : undefined })} placeholder="£" />
-            <Input className="md:max-w-xs" value={t.category ?? ""} onChange={(e) => setRow("treatments", i, { category: e.target.value || null })} placeholder="Category" />
+          <Row key={i} included={t._include} onToggle={(v) => setRow("treatments", i, { _include: v })} onRemove={() => removeRow("treatments", i)}>
+            <Input className="md:max-w-xs" value={t.name} onChange={(e) => setRow("treatments", i, { name: e.target.value })} placeholder="Treatment name" />
+            <Input className="md:max-w-[110px]" type="number" value={t.duration_min ?? ""} onChange={(e) => setRow("treatments", i, { duration_min: e.target.value ? Number(e.target.value) : undefined })} placeholder="Mins" />
+            <Input className="md:max-w-[110px]" type="number" step="0.01" value={t.price_gbp ?? ""} onChange={(e) => setRow("treatments", i, { price_gbp: e.target.value ? Number(e.target.value) : undefined })} placeholder="£" />
+            <select
+              className="h-9 rounded-md border bg-background px-2 text-sm md:max-w-xs"
+              value={t.category ?? ""}
+              onChange={(e) => setRow("treatments", i, { category: e.target.value || null })}
+            >
+              <option value="">— No category —</option>
+              {categoryOptions.map((p) => (
+                <option key={p} value={p}>{p}</option>
+              ))}
+            </select>
           </Row>
         ))}
       />
 
       <ListCard
         title={`Add-ons (${includedAd}/${draft.addons.length})`}
+        helper="Optional extras patients pick on top of a treatment (e.g. extra units, numbing)."
         onAll={(v) => toggleAll("addons", v)}
-        empty="No add-ons detected."
+        onAdd={() => addRow("addons")}
+        empty="No add-ons detected — use + Add add-on if you offer any."
         rows={draft.addons.map((a, i) => (
-          <Row key={i} included={a._include} onToggle={(v) => setRow("addons", i, { _include: v })}>
-            <Input className="md:max-w-xs" value={a.name} onChange={(e) => setRow("addons", i, { name: e.target.value })} placeholder="Name" />
-            <Input className="md:max-w-[120px]" type="number" step="0.01" value={a.price_gbp ?? ""} onChange={(e) => setRow("addons", i, { price_gbp: e.target.value ? Number(e.target.value) : undefined })} placeholder="£" />
-            <Input className="md:max-w-[120px]" type="number" value={a.duration_min ?? ""} onChange={(e) => setRow("addons", i, { duration_min: e.target.value ? Number(e.target.value) : undefined })} placeholder="Mins" />
+          <Row key={i} included={a._include} onToggle={(v) => setRow("addons", i, { _include: v })} onRemove={() => removeRow("addons", i)}>
+            <Input className="md:max-w-xs" value={a.name} onChange={(e) => setRow("addons", i, { name: e.target.value })} placeholder="Add-on name" />
+            <Input className="md:max-w-[110px]" type="number" step="0.01" value={a.price_gbp ?? ""} onChange={(e) => setRow("addons", i, { price_gbp: e.target.value ? Number(e.target.value) : undefined })} placeholder="£" />
+            <Input className="md:max-w-[110px]" type="number" value={a.duration_min ?? ""} onChange={(e) => setRow("addons", i, { duration_min: e.target.value ? Number(e.target.value) : undefined })} placeholder="Extra mins" />
           </Row>
         ))}
       />
 
       <ListCard
         title={`Packages (${includedPk}/${draft.packages.length})`}
+        helper="Bundles or course-of-X deals. You can refine which treatments are inside afterwards."
         onAll={(v) => toggleAll("packages", v)}
+        onAdd={() => addRow("packages")}
         empty="No packages detected."
         rows={draft.packages.map((p, i) => (
-          <Row key={i} included={p._include} onToggle={(v) => setRow("packages", i, { _include: v })}>
-            <Input className="md:max-w-xs" value={p.name} onChange={(e) => setRow("packages", i, { name: e.target.value })} placeholder="Name" />
-            <Input className="md:max-w-[120px]" type="number" step="0.01" value={p.price_gbp ?? ""} onChange={(e) => setRow("packages", i, { price_gbp: e.target.value ? Number(e.target.value) : undefined })} placeholder="£" />
+          <Row key={i} included={p._include} onToggle={(v) => setRow("packages", i, { _include: v })} onRemove={() => removeRow("packages", i)}>
+            <Input className="md:max-w-xs" value={p.name} onChange={(e) => setRow("packages", i, { name: e.target.value })} placeholder="Package name" />
+            <Input className="md:max-w-[110px]" type="number" step="0.01" value={p.price_gbp ?? ""} onChange={(e) => setRow("packages", i, { price_gbp: e.target.value ? Number(e.target.value) : undefined })} placeholder="£" />
             <Input className="md:max-w-[100px]" type="number" value={p.sessions ?? ""} onChange={(e) => setRow("packages", i, { sessions: e.target.value ? Number(e.target.value) : undefined })} placeholder="Sessions" />
             {p.treatment_names?.length ? <Badge variant="secondary">{p.treatment_names.length} treatments</Badge> : null}
           </Row>
         ))}
       />
+
 
       <div className="sticky bottom-0 -mx-4 flex flex-wrap items-center justify-between gap-3 border-t bg-background/95 px-4 py-3 backdrop-blur md:-mx-6 md:px-6">
         <div className="text-sm text-muted-foreground">
@@ -366,16 +461,25 @@ function ReviewStep({
   );
 }
 
-function ListCard({ title, rows, onAll, empty }: { title: string; rows: React.ReactNode[]; onAll: (v: boolean) => void; empty: string }) {
+function ListCard({ title, rows, onAll, onAdd, empty, helper }: { title: string; rows: React.ReactNode[]; onAll: (v: boolean) => void; onAdd?: () => void; empty: string; helper?: string }) {
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0">
-        <CardTitle className="text-base">{title}</CardTitle>
-        <div className="flex gap-2 text-xs">
-          <button className="text-muted-foreground hover:text-foreground" onClick={() => onAll(true)}>Select all</button>
-          <span className="text-muted-foreground">·</span>
-          <button className="text-muted-foreground hover:text-foreground" onClick={() => onAll(false)}>Deselect all</button>
+      <CardHeader className="space-y-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <CardTitle className="text-base">{title}</CardTitle>
+          <div className="flex items-center gap-3 text-xs">
+            <button className="text-muted-foreground hover:text-foreground" onClick={() => onAll(true)}>Select all</button>
+            <span className="text-muted-foreground">·</span>
+            <button className="text-muted-foreground hover:text-foreground" onClick={() => onAll(false)}>Deselect all</button>
+            {onAdd && (
+              <>
+                <span className="text-muted-foreground">·</span>
+                <button className="font-medium text-primary hover:underline" onClick={onAdd}>+ Add</button>
+              </>
+            )}
+          </div>
         </div>
+        {helper && <p className="text-xs text-muted-foreground">{helper}</p>}
       </CardHeader>
       <CardContent className="space-y-2">
         {rows.length === 0 ? <p className="text-sm text-muted-foreground">{empty}</p> : rows}
@@ -384,14 +488,25 @@ function ListCard({ title, rows, onAll, empty }: { title: string; rows: React.Re
   );
 }
 
-function Row({ included, onToggle, children }: { included: boolean; onToggle: (v: boolean) => void; children: React.ReactNode }) {
+function Row({ included, onToggle, onRemove, children }: { included: boolean; onToggle: (v: boolean) => void; onRemove?: () => void; children: React.ReactNode }) {
   return (
     <div className={`flex flex-wrap items-center gap-2 rounded-md border p-2 ${included ? "" : "opacity-50"}`}>
       <Checkbox checked={included} onCheckedChange={(v) => onToggle(!!v)} />
       {children}
+      {onRemove && (
+        <button
+          type="button"
+          onClick={onRemove}
+          className="ml-auto text-xs text-muted-foreground hover:text-destructive"
+          aria-label="Remove row"
+        >
+          Remove
+        </button>
+      )}
     </div>
   );
 }
+
 
 function Field({ label, value, onChange, textarea }: { label: string; value: string; onChange: (v: string) => void; textarea?: boolean }) {
   return (
