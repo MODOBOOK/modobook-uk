@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -81,46 +81,38 @@ export function ImageUploader({
   return (
     <div className="space-y-1.5">
       <Label>{label}</Label>
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-        <Input
-          placeholder="https://… or upload"
-          value={value ?? ""}
-          onChange={(e) => onChange(e.target.value || null)}
-          className="flex-1"
-        />
-        <input
-          ref={inputRef}
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={(e) => {
-            const f = e.target.files?.[0];
-            if (f) pickFile(f);
-            e.target.value = "";
-          }}
-        />
-        <div className="flex gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => inputRef.current?.click()}
-            disabled={uploading}
-          >
-            <Upload className="mr-1.5 h-3.5 w-3.5" />
-            {uploading ? "Uploading…" : "Upload"}
-          </Button>
-          {value && (
-            <>
-              <Button type="button" variant="outline" size="sm" onClick={recropFromUrl} disabled={uploading}>
-                <Crop className="mr-1.5 h-3.5 w-3.5" />Crop
-              </Button>
-              <Button type="button" variant="ghost" size="sm" onClick={() => onChange(null)}>
-                <X className="h-3.5 w-3.5" />
-              </Button>
-            </>
-          )}
-        </div>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) pickFile(f);
+          e.target.value = "";
+        }}
+      />
+      <div className="flex flex-wrap gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => inputRef.current?.click()}
+          disabled={uploading}
+        >
+          <Upload className="mr-1.5 h-3.5 w-3.5" />
+          {uploading ? "Uploading…" : value ? "Replace image" : "Upload image"}
+        </Button>
+        {value && (
+          <>
+            <Button type="button" variant="outline" size="sm" onClick={recropFromUrl} disabled={uploading}>
+              <Crop className="mr-1.5 h-3.5 w-3.5" />Crop
+            </Button>
+            <Button type="button" variant="ghost" size="sm" onClick={() => onChange(null)}>
+              <X className="mr-1.5 h-3.5 w-3.5" />Remove
+            </Button>
+          </>
+        )}
       </div>
       {value && <img src={value} alt={label} className={previewClass} />}
       <ImageCropDialog

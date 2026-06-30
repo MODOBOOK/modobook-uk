@@ -903,6 +903,7 @@ async function compressImage(file: File, maxDim = 1280, quality = 0.7): Promise<
 function PhotoGrid({ label, photos, onChange }: { label: string; photos: string[]; onChange: (v: string[]) => void }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
+  const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
 
   async function onFiles(files: FileList | null) {
     if (!files?.length) return;
@@ -916,6 +917,17 @@ function PhotoGrid({ label, photos, onChange }: { label: string; photos: string[
   function remove(i: number) {
     onChange(photos.filter((_, j) => j !== i));
   }
+
+  useEffect(() => {
+    if (lightboxIdx == null) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setLightboxIdx(null);
+      if (e.key === "ArrowRight") setLightboxIdx((i) => (i == null ? i : Math.min((photos.length - 1), i + 1)));
+      if (e.key === "ArrowLeft") setLightboxIdx((i) => (i == null ? i : Math.max(0, i - 1)));
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [lightboxIdx, photos.length]);
 
   return (
     <div className="space-y-2">
@@ -938,10 +950,21 @@ function PhotoGrid({ label, photos, onChange }: { label: string; photos: string[
       {photos?.length ? (
         <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
           {photos.map((src, i) => (
-            <div key={i} className="group relative aspect-square overflow-hidden rounded-lg border bg-muted">
-              <img src={src} alt="" className="h-full w-full object-cover" />
-              <button onClick={() => remove(i)} className="absolute right-1 top-1 grid h-6 w-6 place-items-center rounded-full bg-black/60 text-white opacity-0 transition group-hover:opacity-100 group-active:opacity-100">
-                <X className="h-3 w-3" />
+            <div key={i} className="relative aspect-square overflow-hidden rounded-lg border bg-muted">
+              <button
+                type="button"
+                onClick={() => setLightboxIdx(i)}
+                className="block h-full w-full"
+                aria-label="Expand photo"
+              >
+                <img src={src} alt="" className="h-full w-full object-cover transition hover:scale-[1.03]" />
+              </button>
+              <button
+                onClick={() => remove(i)}
+                aria-label="Delete photo"
+                className="absolute right-1.5 top-1.5 grid h-7 w-7 place-items-center rounded-full bg-black/75 text-white shadow-md transition hover:bg-black"
+              >
+                <X className="h-3.5 w-3.5" />
               </button>
             </div>
           ))}
@@ -949,6 +972,51 @@ function PhotoGrid({ label, photos, onChange }: { label: string; photos: string[
       ) : (
         <div className="rounded-lg border border-dashed bg-muted/40 p-6 text-center text-xs text-muted-foreground">
           No photos yet. Tap "Add photo" to take or upload.
+        </div>
+      )}
+
+      {lightboxIdx != null && photos[lightboxIdx] && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4"
+          onClick={() => setLightboxIdx(null)}
+        >
+          <button
+            type="button"
+            aria-label="Close"
+            onClick={() => setLightboxIdx(null)}
+            className="absolute right-4 top-4 grid h-10 w-10 place-items-center rounded-full bg-white/15 text-white hover:bg-white/25"
+          >
+            <X className="h-5 w-5" />
+          </button>
+          {lightboxIdx > 0 && (
+            <button
+              type="button"
+              aria-label="Previous"
+              onClick={(e) => { e.stopPropagation(); setLightboxIdx((i) => (i == null ? i : Math.max(0, i - 1))); }}
+              className="absolute left-4 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full bg-white/15 text-white hover:bg-white/25"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+          )}
+          {lightboxIdx < photos.length - 1 && (
+            <button
+              type="button"
+              aria-label="Next"
+              onClick={(e) => { e.stopPropagation(); setLightboxIdx((i) => (i == null ? i : Math.min(photos.length - 1, i + 1))); }}
+              className="absolute right-4 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full bg-white/15 text-white hover:bg-white/25"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </button>
+          )}
+          <img
+            src={photos[lightboxIdx]}
+            alt=""
+            onClick={(e) => e.stopPropagation()}
+            className="max-h-[90vh] max-w-[95vw] rounded-lg object-contain shadow-2xl"
+          />
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-white/15 px-3 py-1 text-xs text-white">
+            {lightboxIdx + 1} / {photos.length}
+          </div>
         </div>
       )}
     </div>
