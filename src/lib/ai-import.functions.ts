@@ -116,15 +116,15 @@ Return a SINGLE JSON object with this exact shape:
   "clinic":     { "clinic_name"?, "tagline"?, "bio"?, "phone"?, "email"?, "address"? },
   "categories": [ { "name", "description"?, "parent"? } ],
   "treatments": [ { "name", "duration_min"?, "price_gbp"?, "description"?, "category"?, "aftercare_hint"? } ],
-  "addons":     [ { "name", "price_gbp"?, "duration_min"? } ],
-  "packages":   [ { "name", "treatment_names"?, "price_gbp"?, "sessions"?, "description"? } ]
+  "addons":     [ { "name", "price_gbp"?, "duration_min"? } ]
 }
 
 STRICT RULES — non-negotiable:
 - Output ONLY raw JSON. No markdown fences, no commentary.
 - NEVER invent, guess, or pad with "typical aesthetics treatments". Only include items that are literally named in the supplied source.
-- If the source has no clear price list, return empty arrays for categories/treatments/addons/packages. An empty result is correct and expected.
+- If the source has no clear price list, return empty arrays for categories/treatments/addons. An empty result is correct and expected.
 - Do NOT add categories that have no treatments under them in the source.
+- DO NOT create or return packages — practitioners add packages manually. If the source lists "course of 3", "package", or "bundle" items, keep each item as a normal treatment under whatever category it sits in. Never invent a separate "Packages" category to dump them in. Only if the source itself has an explicit category literally called "Packages" / "Bundles" / "Courses" should you keep that as a category; the items inside still go into "treatments".
 - Do NOT carry over examples from your training data (no Botox, lip filler, microneedling, etc. unless those exact words appear in the source).
 - All prices in GBP as plain numbers (e.g. 180, not "£180"). Omit price if not stated.
 - duration_min is whole minutes. Omit if not stated.
@@ -132,8 +132,9 @@ STRICT RULES — non-negotiable:
 - "parent" is the parent category name when something is a subcategory (e.g. "Lip filler" under parent "Injectables").
 - If a value is not visible, omit the key entirely — never write "N/A" or guess.
 - Treatment "name" must be the treatment ONLY, never "Category: Treatment", "Category - Treatment", or "Category – Treatment". Put the category part in "category" (and "parent" if it's a subcategory) and keep "name" as the clean treatment label. Example: source "Advanced Muscle Injections: Forehead — £180" -> category "Advanced Muscle Injections", name "Forehead", price 180.
-- Include "description" wherever a literal description, blurb, or "what to expect" line appears in the source for a treatment or package. Do NOT invent or paraphrase one if the source doesn't contain it — omit the field instead.
-- Hard caps: up to 25 categories, 100 treatments, 40 add-ons, 20 packages.`;
+- Include "description" wherever a literal description, blurb, or "what to expect" line appears in the source for a treatment. Do NOT invent or paraphrase one if the source doesn't contain it — omit the field instead.
+- Hard caps: up to 25 categories, 100 treatments, 40 add-ons.`;
+
 
 
 type GatewayContent =
