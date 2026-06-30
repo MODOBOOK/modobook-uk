@@ -12,6 +12,7 @@ import {
   deleteConcern,
   setConcernTreatments,
 } from "@/lib/chooser.functions";
+import { suggestConcernMatches } from "@/lib/ai-concerns.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,9 +20,11 @@ import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Trash2, Plus, ChevronDown, ChevronRight } from "lucide-react";
+import { Trash2, Plus, ChevronDown, ChevronRight, Sparkles, Loader2 } from "lucide-react";
 import { SaveReminder } from "@/components/SaveReminder";
+
 
 export const Route = createFileRoute("/_authenticated/dashboard/booking-flow")({
   ssr: false,
