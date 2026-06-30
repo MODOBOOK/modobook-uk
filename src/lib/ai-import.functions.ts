@@ -308,6 +308,10 @@ export const commitClinicImport = createServerFn({ method: "POST" })
       addons: 0,
       packages: 0,
       skipped: 0,
+      errors: [] as string[],
+    };
+    const noteError = (label: string, err: { message?: string } | null) => {
+      if (err?.message) created.errors.push(`${label}: ${err.message}`);
     };
 
     /* --- Clinic info (only fields the user kept and are non-empty) --- */
