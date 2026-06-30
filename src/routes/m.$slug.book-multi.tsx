@@ -207,7 +207,7 @@ function MultiBookPage() {
   const [submitting, setSubmitting] = useState(false);
   const submitLockRef = useRef(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
-  const [discount, setDiscount] = useState<AppliedDiscount | null>(null);
+  
   const termsHtml = (ctx as { termsHtml?: string | null }).termsHtml ?? null;
   const termsRequired = Boolean((ctx as { termsRequired?: boolean }).termsRequired);
   const [authChoice, setAuthChoice] = useState<"pending" | "guest" | "signed-in">("pending");
