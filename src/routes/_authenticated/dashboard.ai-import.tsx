@@ -13,6 +13,7 @@ import {
   type ExtractedPackage,
   type ExtractedClinic,
 } from "@/lib/ai-import.functions";
+import { extractReviews, commitReviews, type ExtractedReview } from "@/lib/ai-reviews.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,7 +21,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Sparkles, FileText, Image as ImageIcon, Globe, Table, Loader2, Wand2, CheckCircle2 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { ArrowLeft, Sparkles, FileText, Image as ImageIcon, Globe, Table, Loader2, Wand2, CheckCircle2, Star, MessageSquareQuote } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard/ai-import")({
   component: AiImportPage,
