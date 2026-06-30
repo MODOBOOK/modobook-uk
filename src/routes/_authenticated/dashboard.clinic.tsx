@@ -69,6 +69,8 @@ function ClinicPage() {
         data: {
           id: profileId,
           clinic_name: clinicName,
+          full_name: fullName,
+          display_name_mode: displayNameMode,
           tagline,
           phone,
           email,
@@ -82,6 +84,7 @@ function ClinicPage() {
         },
 
       });
+
       toast.success("Saved");
       router.invalidate();
     } catch (e) {
