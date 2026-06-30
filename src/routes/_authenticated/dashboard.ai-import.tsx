@@ -74,6 +74,7 @@ function AiImportPage() {
   const [url, setUrl] = useState("");
   const [text, setText] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
   const [kind, setKind] = useState<SourceKind>("pdf");
 
   async function handleExtract() {
