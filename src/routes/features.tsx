@@ -40,7 +40,6 @@ const groups = [
       { icon: CalendarClock, title: "Smart availability", desc: "Weekly rules, ad-hoc rota, lead times, daily caps and per-treatment buffers." },
       { icon: Sparkles, title: "Model slots", desc: "Open up discounted windows for model patients. Optional fixed date/time." },
       { icon: MapPin, title: "Multi-location & practitioners", desc: "Patients choose location and practitioner, or let MODO auto-assign first-available." },
-      { icon: ClipboardList, title: "Treatment Finder Quiz", desc: "Optional 8-question quiz that recommends your treatments based on patient answers." },
       { icon: Star, title: "Concern picker", desc: "Patients browse by concern as well as treatment menu." },
       { icon: Layers, title: "Packages & multi-session", desc: "Bundles, courses, top-ups, add-ons and split payments — all native." },
     ],
