@@ -131,6 +131,7 @@ STRICT RULES — non-negotiable:
 - "category" on a treatment must match a name in "categories". Create the category if missing.
 - "parent" is the parent category name when something is a subcategory (e.g. "Lip filler" under parent "Injectables").
 - If a value is not visible, omit the key entirely — never write "N/A" or guess.
+- Treatment "name" must be the treatment ONLY, never "Category: Treatment", "Category - Treatment", or "Category – Treatment". Put the category part in "category" (and "parent" if it's a subcategory) and keep "name" as the clean treatment label. Example: source "Advanced Muscle Injections: Forehead — £180" -> category "Advanced Muscle Injections", name "Forehead", price 180.
 - Hard caps: up to 25 categories, 100 treatments, 40 add-ons, 20 packages.`;
 
 
