@@ -167,7 +167,7 @@ function TabLink({
   exact,
 }: {
   slug: string;
-  to: "/m/$slug" | "/m/$slug/reviews";
+  to: "/m/$slug" | "/m/$slug/reviews" | "/m/$slug/about";
   label: string;
   exact?: boolean;
 }) {
