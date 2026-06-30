@@ -623,9 +623,12 @@ function CategoryRow({
           <SortableTreatList
             treats={treatsHere}
             depth={depth}
+            picker={picker}
+            currentCategoryId={node.id}
             onDelete={onDeleteTreat}
             onReorder={onReorderTreatsByIds}
             onMoveTo={onMoveTreatTo}
+            onChangeCategory={onChangeTreatCategory}
           />
 
           {node.children.map((child, ci) => (
@@ -636,6 +639,7 @@ function CategoryRow({
               siblings={node.children}
               index={ci}
               matchTreat={matchTreat}
+              picker={picker}
               onAddSub={onAddSub}
               onEditCat={onEditCat}
               onDeleteCat={onDeleteCat}
@@ -646,8 +650,10 @@ function CategoryRow({
               onReorderTreatsByIds={onReorderTreatsByIds}
               onMoveTreatTo={onMoveTreatTo}
               onMoveCatTo={onMoveCatTo}
+              onChangeTreatCategory={onChangeTreatCategory}
             />
           ))}
+
 
 
           <div
