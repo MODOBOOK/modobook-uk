@@ -3274,6 +3274,7 @@ export type Database = {
           allow_split_payment: boolean
           auto_send_aftercare: boolean
           auto_send_medical_forms: boolean
+          badge: string | null
           category_id: string | null
           color: string | null
           consent_form_url: string | null
@@ -3295,6 +3296,7 @@ export type Database = {
           payment_mode: Database["public"]["Enums"]["payment_mode"]
           picture_url: string | null
           price: number
+          price_mode: string
           profile_id: string
           quiz_tags: Json
           rebook_reminder_days: number | null
@@ -3312,6 +3314,7 @@ export type Database = {
           allow_split_payment?: boolean
           auto_send_aftercare?: boolean
           auto_send_medical_forms?: boolean
+          badge?: string | null
           category_id?: string | null
           color?: string | null
           consent_form_url?: string | null
@@ -3333,6 +3336,7 @@ export type Database = {
           payment_mode?: Database["public"]["Enums"]["payment_mode"]
           picture_url?: string | null
           price: number
+          price_mode?: string
           profile_id: string
           quiz_tags?: Json
           rebook_reminder_days?: number | null
@@ -3350,6 +3354,7 @@ export type Database = {
           allow_split_payment?: boolean
           auto_send_aftercare?: boolean
           auto_send_medical_forms?: boolean
+          badge?: string | null
           category_id?: string | null
           color?: string | null
           consent_form_url?: string | null
@@ -3371,6 +3376,7 @@ export type Database = {
           payment_mode?: Database["public"]["Enums"]["payment_mode"]
           picture_url?: string | null
           price?: number
+          price_mode?: string
           profile_id?: string
           quiz_tags?: Json
           rebook_reminder_days?: number | null
