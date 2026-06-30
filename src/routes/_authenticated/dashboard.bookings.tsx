@@ -124,10 +124,13 @@ function hexToRgba(hex: string, a: number) {
 function BookingsPage() {
   const list = useServerFn(listMyAppointments);
   const listBlocks = useServerFn(listBlockedTimes);
+  const listRules = useServerFn(listAvailabilityRules);
   const [appts, setAppts] = useState<Appt[]>([]);
   const [blocks, setBlocks] = useState<BlockedTime[]>([]);
+  const [rules, setRules] = useState<AvailRule[]>([]);
   const [loading, setLoading] = useState(true);
   const [anchor, setAnchor] = useState(new Date());
+  const [view, setView] = useState<ViewMode>("week");
   const [actionsOpen, setActionsOpen] = useState(false);
   const [selectedAppt, setSelectedAppt] = useState<Appt | null>(null);
   const [showPayLink, setShowPayLink] = useState(false);
@@ -137,9 +140,10 @@ function BookingsPage() {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   async function refresh() {
-    const [a, b] = await Promise.all([list(), listBlocks()]);
+    const [a, b, r] = await Promise.all([list(), listBlocks(), listRules()]);
     setAppts(a as Appt[]);
     setBlocks(b as BlockedTime[]);
+    setRules((r as AvailRule[]) ?? []);
   }
 
   useEffect(() => {
@@ -155,16 +159,22 @@ function BookingsPage() {
   }, []);
 
   useEffect(() => {
-    if (!loading && scrollRef.current) {
+    if (!loading && scrollRef.current && view !== "month") {
       const targetHour = Math.max(START_HOUR, Math.min(END_HOUR, now.getHours() - 1));
       scrollRef.current.scrollTop = (targetHour - START_HOUR) * HOUR_HEIGHT;
     }
-  }, [loading]);
+  }, [loading, view]);
 
-  const days = useMemo(
-    () => Array.from({ length: DAYS_VISIBLE }, (_, i) => addDays(anchor, i)),
-    [anchor],
-  );
+  const daysVisible = view === "day" ? 1 : view === "week" ? 7 : 0;
+
+  const days = useMemo(() => {
+    if (view === "day") return [anchor];
+    if (view === "week") {
+      const start = startOfWeek(anchor);
+      return Array.from({ length: 7 }, (_, i) => addDays(start, i));
+    }
+    return [];
+  }, [anchor, view]);
 
   const apptsByDate = useMemo(() => {
     const m = new Map<string, Appt[]>();
@@ -183,59 +193,142 @@ function BookingsPage() {
     return m;
   }, [blocks]);
 
+  const rulesByDow = useMemo(() => {
+    const m = new Map<number, AvailRule[]>();
+    for (const r of rules) {
+      (m.get(r.day_of_week) ?? m.set(r.day_of_week, []).get(r.day_of_week)!).push(r);
+    }
+    return m;
+  }, [rules]);
+
+  /** Returns greyed-out segments [topPx, heightPx] for hours with no availability. */
+  function unavailableSegments(d: Date): { top: number; height: number }[] {
+    const dow = d.getDay();
+    const dayRules = rulesByDow.get(dow) ?? [];
+    if (dayRules.length === 0) {
+      return [{ top: 0, height: (END_HOUR - START_HOUR + 1) * HOUR_HEIGHT }];
+    }
+    const windows = dayRules
+      .map((r) => [parseTime(r.start_time), parseTime(r.end_time)] as [number, number])
+      .sort((a, b) => a[0] - b[0]);
+    // merge overlapping
+    const merged: [number, number][] = [];
+    for (const w of windows) {
+      const last = merged[merged.length - 1];
+      if (last && w[0] <= last[1]) last[1] = Math.max(last[1], w[1]);
+      else merged.push([w[0], w[1]]);
+    }
+    const segs: { top: number; height: number }[] = [];
+    let cursor = START_HOUR;
+    for (const [s, e] of merged) {
+      const segStart = Math.max(cursor, START_HOUR);
+      const segEnd = Math.min(s, END_HOUR + 1);
+      if (segEnd > segStart) {
+        segs.push({
+          top: (segStart - START_HOUR) * HOUR_HEIGHT,
+          height: (segEnd - segStart) * HOUR_HEIGHT,
+        });
+      }
+      cursor = Math.max(cursor, e);
+    }
+    if (cursor < END_HOUR + 1) {
+      segs.push({
+        top: (cursor - START_HOUR) * HOUR_HEIGHT,
+        height: (END_HOUR + 1 - cursor) * HOUR_HEIGHT,
+      });
+    }
+    return segs;
+  }
+
+  function navPrev() {
+    if (view === "day") setAnchor(addDays(anchor, -1));
+    else if (view === "week") setAnchor(addDays(anchor, -7));
+    else setAnchor(new Date(anchor.getFullYear(), anchor.getMonth() - 1, 1));
+  }
+  function navNext() {
+    if (view === "day") setAnchor(addDays(anchor, 1));
+    else if (view === "week") setAnchor(addDays(anchor, 7));
+    else setAnchor(new Date(anchor.getFullYear(), anchor.getMonth() + 1, 1));
+  }
+
   const todayStr = ymd(now);
   const totalHeight = (END_HOUR - START_HOUR + 1) * HOUR_HEIGHT;
+  const headerLabel =
+    view === "day"
+      ? anchor.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long", year: "numeric" })
+      : view === "week"
+      ? (() => {
+          const s = startOfWeek(anchor);
+          const e = addDays(s, 6);
+          return `${s.toLocaleDateString(undefined, { day: "numeric", month: "short" })} – ${e.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}`;
+        })()
+      : anchor.toLocaleString(undefined, { month: "long", year: "numeric" });
 
   return (
     <div className="space-y-4 max-w-6xl">
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="icon" onClick={() => setAnchor(addDays(anchor, -DAYS_VISIBLE))} aria-label="Previous">
+          <Button variant="outline" size="icon" onClick={navPrev} aria-label="Previous">
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <div className="flex items-center gap-1 font-semibold text-lg">
+          <div className="flex items-center gap-1 font-semibold text-base sm:text-lg min-w-[180px]">
             <CalendarDays className="h-4 w-4 text-muted-foreground" />
-            {anchor.toLocaleString(undefined, { month: "long", year: "numeric" })}
+            {headerLabel}
           </div>
-          <Button variant="outline" size="icon" onClick={() => setAnchor(addDays(anchor, DAYS_VISIBLE))} aria-label="Next">
+          <Button variant="outline" size="icon" onClick={navNext} aria-label="Next">
             <ChevronRight className="h-4 w-4" />
           </Button>
           <Button variant="ghost" size="sm" onClick={() => setAnchor(new Date())}>Today</Button>
         </div>
-        <div className="relative">
-          <Button size="icon" onClick={() => setActionsOpen((v) => !v)} aria-label="Calendar actions">
-            <Plus className="h-5 w-5" />
-          </Button>
-          {actionsOpen && (
-            <>
-              <button className="fixed inset-0 z-30" onClick={() => setActionsOpen(false)} aria-label="Close menu" />
-              <div className="absolute right-0 top-12 z-40 flex w-60 flex-col gap-2">
-                <Link to="/dashboard/new-appointment" onClick={() => setActionsOpen(false)}>
-                  <Button className="w-full justify-start gap-2 rounded-full bg-orange-200 text-orange-950 hover:bg-orange-300">
-                    <CalendarDays className="h-4 w-4" /> New Appointment
+        <div className="flex items-center gap-2">
+          <div className="inline-flex rounded-full bg-muted p-0.5 text-xs">
+            {(["day", "week", "month"] as ViewMode[]).map((v) => (
+              <button
+                key={v}
+                onClick={() => setView(v)}
+                className={`rounded-full px-3 py-1 capitalize transition ${
+                  view === v ? "bg-background shadow-sm font-medium" : "text-muted-foreground"
+                }`}
+              >
+                {v}
+              </button>
+            ))}
+          </div>
+          <div className="relative">
+            <Button size="icon" onClick={() => setActionsOpen((v) => !v)} aria-label="Calendar actions">
+              <Plus className="h-5 w-5" />
+            </Button>
+            {actionsOpen && (
+              <>
+                <button className="fixed inset-0 z-30" onClick={() => setActionsOpen(false)} aria-label="Close menu" />
+                <div className="absolute right-0 top-12 z-40 flex w-60 flex-col gap-2">
+                  <Link to="/dashboard/new-appointment" onClick={() => setActionsOpen(false)}>
+                    <Button className="w-full justify-start gap-2 rounded-full bg-orange-200 text-orange-950 hover:bg-orange-300">
+                      <CalendarDays className="h-4 w-4" /> New Appointment
+                    </Button>
+                  </Link>
+                  <Button
+                    onClick={() => { setActionsOpen(false); setShowPayLink(true); }}
+                    className="w-full justify-start gap-2 rounded-full bg-slate-900 text-white hover:bg-slate-800"
+                  >
+                    <Link2 className="h-4 w-4" /> Payment Link
                   </Button>
-                </Link>
-                <Button
-                  onClick={() => { setActionsOpen(false); setShowPayLink(true); }}
-                  className="w-full justify-start gap-2 rounded-full bg-slate-900 text-white hover:bg-slate-800"
-                >
-                  <Link2 className="h-4 w-4" /> Payment Link
-                </Button>
-                <Button
-                  onClick={() => { setActionsOpen(false); setShowBlock(true); }}
-                  className="w-full justify-start gap-2 rounded-full bg-rose-300 text-rose-950 hover:bg-rose-400"
-                >
-                  <Ban className="h-4 w-4" /> Block a Time
-                </Button>
-                <Button
-                  onClick={() => { setActionsOpen(false); setShowUnblock(true); }}
-                  className="w-full justify-start gap-2 rounded-full bg-emerald-300 text-emerald-950 hover:bg-emerald-400"
-                >
-                  <CircleCheck className="h-4 w-4" /> Open up appointments
-                </Button>
-              </div>
-            </>
-          )}
+                  <Button
+                    onClick={() => { setActionsOpen(false); setShowBlock(true); }}
+                    className="w-full justify-start gap-2 rounded-full bg-rose-300 text-rose-950 hover:bg-rose-400"
+                  >
+                    <Ban className="h-4 w-4" /> Block a Time
+                  </Button>
+                  <Button
+                    onClick={() => { setActionsOpen(false); setShowUnblock(true); }}
+                    className="w-full justify-start gap-2 rounded-full bg-emerald-300 text-emerald-950 hover:bg-emerald-400"
+                  >
+                    <CircleCheck className="h-4 w-4" /> Open up appointments
+                  </Button>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
@@ -243,118 +336,138 @@ function BookingsPage() {
         {loading ? "Loading…" : `${appts.length} bookings · ${blocks.length} blocked`}
       </p>
 
-      <Card className="overflow-hidden">
-        <div className="grid border-b" style={{ gridTemplateColumns: `56px repeat(${DAYS_VISIBLE}, 1fr)` }}>
-          <div />
-          {days.map((d) => {
-            const isToday = ymd(d) === todayStr;
-            return (
-              <div key={ymd(d)} className={`flex flex-col items-center py-2 ${isToday ? "text-primary" : ""}`}>
-                <span className="text-[11px] uppercase">{d.toLocaleDateString(undefined, { weekday: "short" })}</span>
-                <span className={`mt-0.5 inline-flex h-8 w-8 items-center justify-center rounded-md text-sm font-bold ${isToday ? "bg-primary text-primary-foreground" : ""}`}>
-                  {d.getDate()}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-
-        <div ref={scrollRef} className="relative max-h-[70vh] overflow-y-auto">
-          <div className="grid relative" style={{ gridTemplateColumns: `56px repeat(${DAYS_VISIBLE}, 1fr)`, height: totalHeight }}>
-            <div className="relative border-r">
-              {HOURS.map((h) => (
-                <div key={h} className="absolute left-0 right-0 pr-1 text-right text-[11px] text-muted-foreground"
-                  style={{ top: (h - START_HOUR) * HOUR_HEIGHT - 6 }}>
-                  {String(h).padStart(2, "0")}:00
-                </div>
-              ))}
-            </div>
-
+      {view === "month" ? (
+        <MonthView
+          anchor={anchor}
+          apptsByDate={apptsByDate}
+          rulesByDow={rulesByDow}
+          todayStr={todayStr}
+          onPickDay={(d) => { setAnchor(d); setView("day"); }}
+        />
+      ) : (
+        <Card className="overflow-hidden">
+          <div className="grid border-b" style={{ gridTemplateColumns: `56px repeat(${daysVisible}, 1fr)` }}>
+            <div />
             {days.map((d) => {
-              const key = ymd(d);
-              const isToday = key === todayStr;
-              const dayAppts = apptsByDate.get(key) ?? [];
-              const dayBlocks = blocksByDate.get(key) ?? [];
+              const isToday = ymd(d) === todayStr;
               return (
-                <div key={key} className="relative border-r last:border-r-0">
-                  {HOURS.map((h) => (
-                    <div key={h} className="absolute left-0 right-0 border-t border-dashed border-muted"
-                      style={{ top: (h - START_HOUR) * HOUR_HEIGHT }} />
-                  ))}
-                  {isToday && (() => {
-                    const hr = now.getHours() + now.getMinutes() / 60;
-                    if (hr < START_HOUR || hr > END_HOUR + 1) return null;
-                    const top = (hr - START_HOUR) * HOUR_HEIGHT;
-                    return (
-                      <>
-                        <div className="absolute left-0 right-0 z-10 h-px bg-red-500" style={{ top }} />
-                        <div className="absolute z-10 -translate-y-1/2 rounded-full border border-red-500 bg-background px-1 text-[10px] font-semibold text-red-500"
-                          style={{ top, left: 2 }}>
-                          {String(now.getHours()).padStart(2, "0")}:{String(now.getMinutes()).padStart(2, "0")}
-                        </div>
-                      </>
-                    );
-                  })()}
-
-                  {/* Blocked times (black) */}
-                  {dayBlocks.map((b) => {
-                    const start = parseTime(b.start_time);
-                    const end = parseTime(b.end_time);
-                    const top = (start - START_HOUR) * HOUR_HEIGHT;
-                    const height = Math.max(22, (end - start) * HOUR_HEIGHT - 2);
-                    return (
-                      <button
-                        key={b.id}
-                        onClick={async () => {
-                          if (!confirm(`Unblock ${b.start_time.slice(0,5)}–${b.end_time.slice(0,5)}?`)) return;
-                          try {
-                            await deleteBlockedTime({ data: { id: b.id } });
-                            setBlocks((p) => p.filter((x) => x.id !== b.id));
-                            toast.success("Unblocked — time now open");
-                          } catch (e) { toast.error((e as Error).message); }
-                        }}
-                        className="absolute left-1 right-1 z-[4] overflow-hidden rounded-md bg-slate-900 px-2 py-1 text-left text-[11px] text-white shadow-sm"
-                        style={{ top, height }}
-                        title="Tap to open this slot"
-                      >
-                        <div className="truncate font-semibold flex items-center gap-1"><Ban className="h-3 w-3" /> Blocked</div>
-                        <div className="truncate opacity-80">{b.start_time.slice(0,5)}–{b.end_time.slice(0,5)}{b.reason ? ` · ${b.reason}` : ""}</div>
-                      </button>
-                    );
-                  })}
-
-                  {/* Appointments */}
-                  {dayAppts.map((a) => {
-                    const start = parseTime(a.start_time);
-                    const end = parseTime(a.end_time);
-                    const top = (start - START_HOUR) * HOUR_HEIGHT;
-                    const height = Math.max(22, (end - start) * HOUR_HEIGHT - 2);
-                    const color = a.treatments?.color || "#3b82f6";
-                    return (
-                      <button
-                        key={a.id}
-                        onClick={() => setSelectedAppt(a)}
-                        className="absolute left-1 right-1 z-[5] overflow-hidden rounded-md border-l-4 px-2 py-1 text-left text-[11px] shadow-sm transition hover:shadow"
-                        style={{ top, height, borderLeftColor: color, backgroundColor: hexToRgba(color, 0.18), color: "var(--foreground)" }}
-                      >
-                        <div className="truncate font-semibold">{a.patient_name}</div>
-                        <div className="truncate opacity-80">
-                          {a.start_time.slice(0, 5)} · {a.treatments?.name ?? "Treatment"}
-                        </div>
-                        {a.has_allergies && (
-                          <div className="mt-0.5 flex items-center gap-1 text-[10px] text-red-600">
-                            <AlertTriangle className="h-2.5 w-2.5" /> Allergies
-                          </div>
-                        )}
-                      </button>
-                    );
-                  })}
+                <div key={ymd(d)} className={`flex flex-col items-center py-2 ${isToday ? "text-primary" : ""}`}>
+                  <span className="text-[11px] uppercase">{d.toLocaleDateString(undefined, { weekday: "short" })}</span>
+                  <span className={`mt-0.5 inline-flex h-8 w-8 items-center justify-center rounded-md text-sm font-bold ${isToday ? "bg-primary text-primary-foreground" : ""}`}>
+                    {d.getDate()}
+                  </span>
                 </div>
               );
             })}
           </div>
-        </div>
-      </Card>
+
+          <div ref={scrollRef} className="relative max-h-[70vh] overflow-y-auto">
+            <div className="grid relative" style={{ gridTemplateColumns: `56px repeat(${daysVisible}, 1fr)`, height: totalHeight }}>
+              <div className="relative border-r">
+                {HOURS.map((h) => (
+                  <div key={h} className="absolute left-0 right-0 pr-1 text-right text-[11px] text-muted-foreground"
+                    style={{ top: (h - START_HOUR) * HOUR_HEIGHT - 6 }}>
+                    {String(h).padStart(2, "0")}:00
+                  </div>
+                ))}
+              </div>
+
+              {days.map((d) => {
+                const key = ymd(d);
+                const isToday = key === todayStr;
+                const dayAppts = apptsByDate.get(key) ?? [];
+                const dayBlocks = blocksByDate.get(key) ?? [];
+                const unavail = unavailableSegments(d);
+                return (
+                  <div key={key} className="relative border-r last:border-r-0">
+                    {/* Grey-out: outside availability */}
+                    {unavail.map((s, i) => (
+                      <div
+                        key={`u-${i}`}
+                        className="absolute left-0 right-0 bg-muted/60 pointer-events-none"
+                        style={{ top: s.top, height: s.height, backgroundImage: "repeating-linear-gradient(135deg, transparent 0 6px, rgba(0,0,0,0.04) 6px 12px)" }}
+                        title="No availability"
+                      />
+                    ))}
+                    {HOURS.map((h) => (
+                      <div key={h} className="absolute left-0 right-0 border-t border-dashed border-muted"
+                        style={{ top: (h - START_HOUR) * HOUR_HEIGHT }} />
+                    ))}
+                    {isToday && (() => {
+                      const hr = now.getHours() + now.getMinutes() / 60;
+                      if (hr < START_HOUR || hr > END_HOUR + 1) return null;
+                      const top = (hr - START_HOUR) * HOUR_HEIGHT;
+                      return (
+                        <>
+                          <div className="absolute left-0 right-0 z-10 h-px bg-red-500" style={{ top }} />
+                          <div className="absolute z-10 -translate-y-1/2 rounded-full border border-red-500 bg-background px-1 text-[10px] font-semibold text-red-500"
+                            style={{ top, left: 2 }}>
+                            {String(now.getHours()).padStart(2, "0")}:{String(now.getMinutes()).padStart(2, "0")}
+                          </div>
+                        </>
+                      );
+                    })()}
+
+                    {/* Blocked times (black) */}
+                    {dayBlocks.map((b) => {
+                      const start = parseTime(b.start_time);
+                      const end = parseTime(b.end_time);
+                      const top = (start - START_HOUR) * HOUR_HEIGHT;
+                      const height = Math.max(22, (end - start) * HOUR_HEIGHT - 2);
+                      return (
+                        <button
+                          key={b.id}
+                          onClick={async () => {
+                            if (!confirm(`Unblock ${b.start_time.slice(0,5)}–${b.end_time.slice(0,5)}?`)) return;
+                            try {
+                              await deleteBlockedTime({ data: { id: b.id } });
+                              setBlocks((p) => p.filter((x) => x.id !== b.id));
+                              toast.success("Unblocked — time now open");
+                            } catch (e) { toast.error((e as Error).message); }
+                          }}
+                          className="absolute left-1 right-1 z-[4] overflow-hidden rounded-md bg-slate-900 px-2 py-1 text-left text-[11px] text-white shadow-sm"
+                          style={{ top, height }}
+                          title="Tap to open this slot"
+                        >
+                          <div className="truncate font-semibold flex items-center gap-1"><Ban className="h-3 w-3" /> Blocked</div>
+                          <div className="truncate opacity-80">{b.start_time.slice(0,5)}–{b.end_time.slice(0,5)}{b.reason ? ` · ${b.reason}` : ""}</div>
+                        </button>
+                      );
+                    })}
+
+                    {/* Appointments */}
+                    {dayAppts.map((a) => {
+                      const start = parseTime(a.start_time);
+                      const end = parseTime(a.end_time);
+                      const top = (start - START_HOUR) * HOUR_HEIGHT;
+                      const height = Math.max(22, (end - start) * HOUR_HEIGHT - 2);
+                      const color = a.treatments?.color || "#3b82f6";
+                      return (
+                        <button
+                          key={a.id}
+                          onClick={() => setSelectedAppt(a)}
+                          className="absolute left-1 right-1 z-[5] overflow-hidden rounded-md border-l-4 px-2 py-1 text-left text-[11px] shadow-sm transition hover:shadow"
+                          style={{ top, height, borderLeftColor: color, backgroundColor: hexToRgba(color, 0.18), color: "var(--foreground)" }}
+                        >
+                          <div className="truncate font-semibold">{a.patient_name}</div>
+                          <div className="truncate opacity-80">
+                            {a.start_time.slice(0, 5)} · {a.treatments?.name ?? "Treatment"}
+                          </div>
+                          {a.has_allergies && (
+                            <div className="mt-0.5 flex items-center gap-1 text-[10px] text-red-600">
+                              <AlertTriangle className="h-2.5 w-2.5" /> Allergies
+                            </div>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </Card>
+      )}
 
       {/* Appointment Checkout sheet */}
       <Dialog open={!!selectedAppt} onOpenChange={(o) => !o && setSelectedAppt(null)}>
