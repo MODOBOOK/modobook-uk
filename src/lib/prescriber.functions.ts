@@ -293,7 +293,7 @@ export const createReferralsForBooking = createServerFn({ method: "POST" })
           patient_name: data.patient.name,
           patient_email: data.patient.email,
           patient_phone: data.patient.phone ?? null,
-          patient_consent_at: new Date().toISOString(),
+          consent_given_at: new Date().toISOString(),
         };
       })
       .filter((r): r is NonNullable<typeof r> => r !== null);
