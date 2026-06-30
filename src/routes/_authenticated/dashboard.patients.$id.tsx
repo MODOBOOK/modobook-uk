@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import {
   getClient, upsertClient, deleteClient,
-  listClientNotes, upsertClientNote, deleteClientNote,
+  listClientNotes, upsertClientNote, deleteClientNote, toggleClientNoteVisibility,
   listClientFiles, addClientFile, deleteClientFile,
   listClientPrescriptions, upsertClientPrescription, deleteClientPrescription,
 } from "@/lib/clients.functions";
