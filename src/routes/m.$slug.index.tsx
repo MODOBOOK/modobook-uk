@@ -1133,49 +1133,55 @@ function BookPage() {
 
       {/* Treatments + Packages */}
 
-      {locationId && (!chooserOn || mode === "know" || (mode === "unsure" && pickedConcernId)) ? (
+      {locationId && (!chooserOn || mode === "know" || (mode === "unsure" && concernsConfirmed && pickedConcernIds.length > 0)) ? (
         <section className="mx-auto mt-10 max-w-3xl px-4 pb-32">
           {chooserOn && (
             <div className="mb-4 flex items-center justify-between">
               <button
                 onClick={() => {
-                  if (mode === "unsure" && pickedConcernId) setPickedConcernId(null);
+                  if (mode === "unsure" && concernsConfirmed) setConcernsConfirmed(false);
                   else setMode(null);
                 }}
                 className="text-sm opacity-70 hover:opacity-100"
               >
                 ← Back
               </button>
-              {mode === "unsure" && pickedConcernId && (
-                <button onClick={() => { setMode("know"); setPickedConcernId(null); }} className="text-sm font-semibold" style={{ color: brand }}>
+              {mode === "unsure" && concernsConfirmed && (
+                <button onClick={() => { setMode("know"); setPickedConcernIds([]); setConcernsConfirmed(false); }} className="text-sm font-semibold" style={{ color: brand }}>
                   Show full menu
                 </button>
               )}
             </div>
           )}
           {(() => {
-            // If on concern path, filter to matched treatments
-            const matchedIds =
-              mode === "unsure" && pickedConcernId
-                ? new Set(concernLinks.filter((l) => l.concern_id === pickedConcernId).map((l) => l.treatment_id))
-                : null;
+            // If on concern path, filter to matched treatments (union across all picked concerns)
+            const onConcernPath = mode === "unsure" && concernsConfirmed && pickedConcernIds.length > 0;
+            const matchedIds = onConcernPath
+              ? new Set(
+                  concernLinks
+                    .filter((l) => pickedConcernIds.includes(l.concern_id))
+                    .map((l) => l.treatment_id),
+                )
+              : null;
             const filteredTreatments = matchedIds
               ? visibleTreatments.filter((t) => matchedIds.has(t.id))
               : visibleTreatments;
             const tree = matchedIds ? buildTree(categories, filteredTreatments) : { roots, uncategorised };
 
             if (matchedIds) {
-              const concernName = concerns.find((c) => c.id === pickedConcernId)?.name;
+              const concernNames = pickedConcernIds
+                .map((id) => concerns.find((c) => c.id === id)?.name)
+                .filter((n): n is string => !!n);
               return (
                 <>
-                  {concernName && (
+                  {concernNames.length > 0 && (
                     <h2 className="mb-3 text-lg font-bold" style={headingStyle}>
-                      Suggested for: {concernName}
+                      Suggested for: {concernNames.join(", ")}
                     </h2>
                   )}
                   {filteredTreatments.length === 0 ? (
                     <p className="rounded-xl border border-dashed p-6 text-center text-sm opacity-70" style={{ borderColor: `${brand}33` }}>
-                      No treatments matched to this concern yet.
+                      No treatments matched to {concernNames.length > 1 ? "these concerns" : "this concern"} yet.
                     </p>
                   ) : (
                     <div className="space-y-2">
@@ -1205,14 +1211,11 @@ function BookPage() {
 
             return (
               <Tabs defaultValue="treatments" className="w-full">
-                <TabsList className="grid w-full grid-cols-3 h-auto" style={{ backgroundColor: `${brand}10` }}>
+                <TabsList className="grid w-full grid-cols-2 h-auto" style={{ backgroundColor: `${brand}10` }}>
                   <TabsTrigger value="treatments" className="text-sm sm:text-base py-2.5">Treatments</TabsTrigger>
                   <TabsTrigger value="packages" disabled={packages.length === 0} className="text-sm sm:text-base py-2.5">
                     <PackageIcon className="mr-1.5 h-4 w-4" />
                     Packages
-                  </TabsTrigger>
-                  <TabsTrigger value="concerns" disabled={concerns.length === 0} className="text-sm sm:text-base py-2.5">
-                    By concern
                   </TabsTrigger>
                 </TabsList>
 
