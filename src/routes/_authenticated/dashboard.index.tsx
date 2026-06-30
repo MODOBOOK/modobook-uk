@@ -37,7 +37,9 @@ function formatDay(iso: string) {
 }
 
 function DashboardIndex() {
-  const { profile } = Route.useRouteContext() as { profile: { id: string; slug: string; clinic_name?: string | null; full_name?: string | null; avatar_url?: string | null; stripe_connect_account_id?: string | null } };
+  const { profile } = Route.useRouteContext() as { profile: { id: string; slug: string; clinic_name?: string | null; full_name?: string | null; display_name_mode?: string | null; avatar_url?: string | null; stripe_connect_account_id?: string | null } };
+  const { primary: displayPrimary, secondary: displaySecondary } = resolveDisplayNames(profile);
+
   const fetchAppointments = useServerFn(listMyAppointments);
   const [appts, setAppts] = useState<Appt[]>([]);
   const [loading, setLoading] = useState(true);
