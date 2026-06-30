@@ -405,6 +405,7 @@ export type Database = {
           checkout_discount_cents: number | null
           checkout_method: string | null
           checkout_notes: string | null
+          clinic_visit_id: string | null
           consent_signed_url: string | null
           created_at: string
           created_by_practitioner: boolean | null
@@ -455,6 +456,7 @@ export type Database = {
           checkout_discount_cents?: number | null
           checkout_method?: string | null
           checkout_notes?: string | null
+          clinic_visit_id?: string | null
           consent_signed_url?: string | null
           created_at?: string
           created_by_practitioner?: boolean | null
@@ -505,6 +507,7 @@ export type Database = {
           checkout_discount_cents?: number | null
           checkout_method?: string | null
           checkout_notes?: string | null
+          clinic_visit_id?: string | null
           consent_signed_url?: string | null
           created_at?: string
           created_by_practitioner?: boolean | null
@@ -546,6 +549,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "appointments_clinic_visit_id_fkey"
+            columns: ["clinic_visit_id"]
+            isOneToOne: false
+            referencedRelation: "prescriber_clinic_visits"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "appointments_deposit_payment_link_id_fkey"
             columns: ["deposit_payment_link_id"]
@@ -798,6 +808,76 @@ export type Database = {
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      care_plans: {
+        Row: {
+          appointment_id: string | null
+          assessment: string | null
+          created_at: string
+          follow_up: string | null
+          id: string
+          notes: string | null
+          plan: string | null
+          practitioner_profile_id: string
+          prescriber_user_id: string
+          referral_id: string
+          sent_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          appointment_id?: string | null
+          assessment?: string | null
+          created_at?: string
+          follow_up?: string | null
+          id?: string
+          notes?: string | null
+          plan?: string | null
+          practitioner_profile_id: string
+          prescriber_user_id: string
+          referral_id: string
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          appointment_id?: string | null
+          assessment?: string | null
+          created_at?: string
+          follow_up?: string | null
+          id?: string
+          notes?: string | null
+          plan?: string | null
+          practitioner_profile_id?: string
+          prescriber_user_id?: string
+          referral_id?: string
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "care_plans_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "care_plans_practitioner_profile_id_fkey"
+            columns: ["practitioner_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "care_plans_referral_id_fkey"
+            columns: ["referral_id"]
+            isOneToOne: false
+            referencedRelation: "prescriber_referrals"
             referencedColumns: ["id"]
           },
         ]
@@ -2943,6 +3023,127 @@ export type Database = {
             columns: ["treatment_id"]
             isOneToOne: false
             referencedRelation: "treatments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      prescriptions: {
+        Row: {
+          appointment_id: string | null
+          clinic_address: string | null
+          clinic_logo_url: string | null
+          clinic_name: string | null
+          created_at: string
+          directions: string
+          dose: string
+          drug_form: string | null
+          drug_name: string
+          drug_strength: string | null
+          id: string
+          notes: string | null
+          patient_address: string | null
+          patient_dob: string | null
+          patient_name: string
+          practitioner_profile_id: string
+          prescriber_address: string | null
+          prescriber_name: string
+          prescriber_reg_body: string | null
+          prescriber_reg_number: string | null
+          prescriber_user_id: string
+          quantity: string
+          referral_id: string
+          repeats_allowed: number
+          signature_data: string | null
+          signature_name: string | null
+          signed_at: string | null
+          status: string
+          updated_at: string
+          valid_until: string | null
+        }
+        Insert: {
+          appointment_id?: string | null
+          clinic_address?: string | null
+          clinic_logo_url?: string | null
+          clinic_name?: string | null
+          created_at?: string
+          directions: string
+          dose: string
+          drug_form?: string | null
+          drug_name: string
+          drug_strength?: string | null
+          id?: string
+          notes?: string | null
+          patient_address?: string | null
+          patient_dob?: string | null
+          patient_name: string
+          practitioner_profile_id: string
+          prescriber_address?: string | null
+          prescriber_name: string
+          prescriber_reg_body?: string | null
+          prescriber_reg_number?: string | null
+          prescriber_user_id: string
+          quantity: string
+          referral_id: string
+          repeats_allowed?: number
+          signature_data?: string | null
+          signature_name?: string | null
+          signed_at?: string | null
+          status?: string
+          updated_at?: string
+          valid_until?: string | null
+        }
+        Update: {
+          appointment_id?: string | null
+          clinic_address?: string | null
+          clinic_logo_url?: string | null
+          clinic_name?: string | null
+          created_at?: string
+          directions?: string
+          dose?: string
+          drug_form?: string | null
+          drug_name?: string
+          drug_strength?: string | null
+          id?: string
+          notes?: string | null
+          patient_address?: string | null
+          patient_dob?: string | null
+          patient_name?: string
+          practitioner_profile_id?: string
+          prescriber_address?: string | null
+          prescriber_name?: string
+          prescriber_reg_body?: string | null
+          prescriber_reg_number?: string | null
+          prescriber_user_id?: string
+          quantity?: string
+          referral_id?: string
+          repeats_allowed?: number
+          signature_data?: string | null
+          signature_name?: string | null
+          signed_at?: string | null
+          status?: string
+          updated_at?: string
+          valid_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prescriptions_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prescriptions_practitioner_profile_id_fkey"
+            columns: ["practitioner_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prescriptions_referral_id_fkey"
+            columns: ["referral_id"]
+            isOneToOne: false
+            referencedRelation: "prescriber_referrals"
             referencedColumns: ["id"]
           },
         ]
