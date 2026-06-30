@@ -208,6 +208,10 @@ export const updateProfile = createServerFn({ method: "POST" })
       "require_medical_forms_before_appt","allow_patient_reschedule","allow_patient_cancel",
       "auto_confirm_bookings","email_confirmations_enabled","sms_reminders_enabled",
       "whatsapp_reminders_enabled","reminder_hours_before",
+      "invoice_bank_name","invoice_account_name","invoice_sort_code",
+      "invoice_account_number","invoice_iban","invoice_swift",
+      "invoice_payment_reference","invoice_footer_notes","invoice_vat_number",
+      "invoice_company_number","invoice_show_bank_details","invoice_show_logo",
     ] as const;
     for (const k of passthroughKeys) {
       const v = (data as Record<string, unknown>)[k];
