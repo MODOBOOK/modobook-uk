@@ -63,11 +63,6 @@ async function fileToDataUrl(file: File): Promise<string> {
   });
 }
 
-async function spreadsheetToText(file: File): Promise<string> {
-  // Tiny CSV / TSV handler; for .xlsx ask user to export as CSV.
-  const text = await file.text();
-  return text.slice(0, 25000);
-}
 
 function AiImportPage() {
   const extract = useServerFn(extractClinicData);
