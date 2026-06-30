@@ -32,6 +32,8 @@ import type { Database } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 import { SafeHtml } from "@/components/SafeHtml";
 import { resolveDisplayNames } from "@/lib/display-name";
+import { formatPrice, BADGE_LABEL, badgeClasses, type TreatmentBadge } from "@/lib/price-display";
+
 
 import { describeCancellationRules } from "@/lib/policy";
 
