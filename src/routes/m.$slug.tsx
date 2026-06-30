@@ -26,9 +26,11 @@ export const Route = createFileRoute("/m/$slug")({
   ),
   head: ({ loaderData }) => ({
     meta: (() => {
-      const title = `${loaderData?.profile.clinic_name ?? "Clinic"} · MODO Book`;
+      const headerName = loaderData?.profile ? resolveDisplayNames(loaderData.profile).primary : "Clinic";
+      const title = `${headerName} · MODO Book`;
       const description = loaderData?.profile.tagline ?? "Book treatments on MODO Book.";
       const image = loaderData?.theme?.hero_image_url ?? loaderData?.profile.hero_url;
+
       return [
         { title },
         { name: "description", content: description },
