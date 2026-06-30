@@ -355,6 +355,9 @@ function MultiBookPage() {
             if (picked.length) {
               lines.push("Add-ons: " + picked.map((a) => `${a.name} (£${addonNet(a).toFixed(2)})`).join(", "));
             }
+            if (discount) {
+              lines.push(`Promo code ${discount.code} applied (${discount.kind === "percent" ? `${discount.amount}% off` : `£${discount.amount.toFixed(2)} off`})`);
+            }
             for (const t of splitEligibleTreatments) {
               const sessions = Math.max(1, Number((t as { session_count?: number }).session_count ?? 1));
               if (selectedPaymentPlan(t) === "split") {
