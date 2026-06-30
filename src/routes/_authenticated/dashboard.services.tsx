@@ -26,6 +26,7 @@ import {
   getTreatmentAftercareIds,
   setTreatmentAftercareIds,
 } from "@/lib/aftercare-templates.functions";
+import { listMyLocations, setTreatmentLocationPricing } from "@/lib/locations.functions";
 import { getMyProfile, updateProfile } from "@/lib/profiles.functions";
 import { ImageUploader } from "@/components/ImageUploader";
 import { Checkbox } from "@/components/ui/checkbox";
