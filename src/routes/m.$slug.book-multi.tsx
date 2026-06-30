@@ -159,6 +159,7 @@ function MultiBookPage() {
     .reduce((s, a) => s + (a.duration_min || 0), 0);
   const totalDuration = totalDurationBase + addonsExtraDuration;
   const totalPrice = totalPriceBase + addonsExtraPrice;
+  const [discount, setDiscount] = useState<AppliedDiscount | null>(null);
   const discountTotal = useMemo(() => {
     if (!discount) return 0;
     const ids = new Set(discount.applies_to_treatment_ids);
