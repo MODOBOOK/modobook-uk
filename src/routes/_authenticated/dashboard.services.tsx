@@ -917,6 +917,9 @@ function ServiceDialog({
   const [discountPercent, setDiscountPercent] = useState<string>("");
   const [discountLabel, setDiscountLabel] = useState("");
   const [discountShowWasNow, setDiscountShowWasNow] = useState(true);
+  // Per-location availability + optional price/duration override (in £ and minutes — strings for empty inputs)
+  type LocOverride = { available: boolean; price: string; duration: string };
+  const [locOverrides, setLocOverrides] = useState<Record<string, LocOverride>>({});
   const [saving, setSaving] = useState(false);
 
   useMemo(() => {
