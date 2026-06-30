@@ -1,0 +1,1 @@
+DROP FUNCTION IF EXISTS public.ensure_hub_code(p_kind hub_owner_kind, p_display_name text);
