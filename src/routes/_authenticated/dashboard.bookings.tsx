@@ -340,6 +340,7 @@ function BookingsPage() {
         <MonthView
           anchor={anchor}
           apptsByDate={apptsByDate}
+          blocksByDate={blocksByDate}
           rulesByDow={rulesByDow}
           todayStr={todayStr}
           onPickDay={(d) => { setAnchor(d); setView("day"); }}
@@ -509,12 +510,14 @@ function BookingsPage() {
 function MonthView({
   anchor,
   apptsByDate,
+  blocksByDate,
   rulesByDow,
   todayStr,
   onPickDay,
 }: {
   anchor: Date;
   apptsByDate: Map<string, Appt[]>;
+  blocksByDate: Map<string, BlockedTime[]>;
   rulesByDow: Map<number, AvailRule[]>;
   todayStr: string;
   onPickDay: (d: Date) => void;
@@ -536,16 +539,37 @@ function MonthView({
           const key = ymd(d);
           const inMonth = d.getMonth() === monthStart.getMonth();
           const dayAppts = apptsByDate.get(key) ?? [];
+          const dayBlocks = blocksByDate.get(key) ?? [];
           const hasAvail = (rulesByDow.get(d.getDay()) ?? []).length > 0;
+          const isPast = key < todayStr;
+          const fullyBlocked = dayBlocks.some(
+            (b: any) => !b.start_time || (b.start_time <= "00:00" && b.end_time >= "23:59")
+          );
+          const unavailable = !hasAvail || fullyBlocked || isPast;
           const isToday = key === todayStr;
+          let title = "";
+          if (isPast) title = "Past date";
+          else if (fullyBlocked) title = "Blocked";
+          else if (!hasAvail) title = "No availability";
           return (
             <button
               key={key}
               onClick={() => onPickDay(d)}
-              className={`min-h-[88px] border-b border-r p-1.5 text-left transition hover:bg-accent/40 ${
+              disabled={isPast}
+              className={`relative min-h-[88px] border-b border-r p-1.5 text-left transition hover:bg-accent/40 disabled:cursor-not-allowed disabled:hover:bg-transparent ${
                 !inMonth ? "bg-muted/20 text-muted-foreground" : ""
-              } ${!hasAvail && inMonth ? "bg-muted/40" : ""}`}
-              title={!hasAvail ? "No availability" : ""}
+              } ${unavailable && inMonth ? "bg-muted/50 text-muted-foreground" : ""} ${
+                isPast ? "opacity-60" : ""
+              }`}
+              style={
+                unavailable && inMonth
+                  ? {
+                      backgroundImage:
+                        "repeating-linear-gradient(135deg, rgba(0,0,0,0.04) 0 6px, transparent 6px 12px)",
+                    }
+                  : undefined
+              }
+              title={title}
             >
               <div className="flex items-center justify-between">
                 <span className={`inline-flex h-6 w-6 items-center justify-center rounded-md text-xs font-semibold ${

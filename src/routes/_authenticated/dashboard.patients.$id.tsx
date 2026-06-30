@@ -36,6 +36,7 @@ import { EmailComposerDialog } from "@/components/patient/EmailComposerDialog";
 import { SendFormDialog } from "@/components/patient/SendFormDialog";
 import { ClientFormsList } from "@/components/patient/ClientFormsList";
 import { ConsultationDocCard } from "@/components/patient/ConsultationDocCard";
+import { TreatmentTimeline } from "@/components/patient/TreatmentTimeline";
 import { logCommunication } from "@/lib/patient-hub.functions";
 
 
@@ -287,6 +288,12 @@ function PatientProfilePage() {
           </div>
         )}
       </Section>
+
+      {/* Treatment timeline */}
+      <Section title="Treatment timeline">
+        <TreatmentTimeline appointments={appts} />
+      </Section>
+
 
       {/* Notes */}
       <NotesSection clientId={id} />

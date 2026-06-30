@@ -128,7 +128,7 @@ function About() {
 
       {/* Bio */}
       {show("show_bio", true) && profile.bio && (
-        <Section icon={Sparkles} title="Biography">
+        <Section icon={Sparkles} title="About">
           <p className="whitespace-pre-line leading-relaxed text-foreground/90">{profile.bio}</p>
         </Section>
       )}
