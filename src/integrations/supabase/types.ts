@@ -2658,6 +2658,18 @@ export type Database = {
           full_name: string | null
           hero_url: string | null
           id: string
+          invoice_account_name: string | null
+          invoice_account_number: string | null
+          invoice_bank_name: string | null
+          invoice_company_number: string | null
+          invoice_footer_notes: string | null
+          invoice_iban: string | null
+          invoice_payment_reference: string | null
+          invoice_show_bank_details: boolean
+          invoice_show_logo: boolean
+          invoice_sort_code: string | null
+          invoice_swift: string | null
+          invoice_vat_number: string | null
           model_slots_position: string
           payment_card_full_enabled: boolean
           payment_clearpay_enabled: boolean
@@ -2740,6 +2752,18 @@ export type Database = {
           full_name?: string | null
           hero_url?: string | null
           id?: string
+          invoice_account_name?: string | null
+          invoice_account_number?: string | null
+          invoice_bank_name?: string | null
+          invoice_company_number?: string | null
+          invoice_footer_notes?: string | null
+          invoice_iban?: string | null
+          invoice_payment_reference?: string | null
+          invoice_show_bank_details?: boolean
+          invoice_show_logo?: boolean
+          invoice_sort_code?: string | null
+          invoice_swift?: string | null
+          invoice_vat_number?: string | null
           model_slots_position?: string
           payment_card_full_enabled?: boolean
           payment_clearpay_enabled?: boolean
@@ -2822,6 +2846,18 @@ export type Database = {
           full_name?: string | null
           hero_url?: string | null
           id?: string
+          invoice_account_name?: string | null
+          invoice_account_number?: string | null
+          invoice_bank_name?: string | null
+          invoice_company_number?: string | null
+          invoice_footer_notes?: string | null
+          invoice_iban?: string | null
+          invoice_payment_reference?: string | null
+          invoice_show_bank_details?: boolean
+          invoice_show_logo?: boolean
+          invoice_sort_code?: string | null
+          invoice_swift?: string | null
+          invoice_vat_number?: string | null
           model_slots_position?: string
           payment_card_full_enabled?: boolean
           payment_clearpay_enabled?: boolean
