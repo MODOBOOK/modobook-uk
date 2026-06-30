@@ -26,7 +26,7 @@ export const Route = createFileRoute("/_authenticated/dashboard/aftercare")({
   notFoundComponent: () => <div className="p-6 text-sm">Not found.</div>,
 });
 
-type Tpl = { id: string; name: string; body_html: string; delay_hours: number; is_system?: boolean; category?: string | null; summary?: string | null };
+type Tpl = { id: string; name: string; body_html: string; delay_hours: number; is_system?: boolean; category?: string | null; summary?: string | null; show_on_public?: boolean };
 
 function AftercarePage() {
   const list = useServerFn(listAftercareTemplates);
