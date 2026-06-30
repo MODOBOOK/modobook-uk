@@ -96,17 +96,12 @@ function SettingsPage() {
   async function save() {
     setSaving(true);
     try {
-      const hours = reminderInput
-        .split(",")
-        .map((x) => Number(x.trim()))
-        .filter((n) => Number.isFinite(n) && n > 0);
       await updateProfile({
         data: {
           id: profile.id,
           ...s,
           // Deposit is always required when deposits are enabled — no separate toggle.
           require_deposit_to_confirm: s.payment_deposit_enabled,
-          reminder_hours_before: hours,
         },
       });
       toast.success("Settings saved");
@@ -272,11 +267,40 @@ function SettingsPage() {
             checked={s.allow_patient_reschedule}
             onChange={(v) => set("allow_patient_reschedule", v)}
           />
+          {s.allow_patient_reschedule && (
+            <div className="ml-2 grid gap-3 rounded-lg border bg-muted/30 p-3 sm:grid-cols-2">
+              <NumberField
+                label="Max reschedules per booking"
+                hint="How many times a patient can move one appointment."
+                value={s.patient_reschedule_max ?? ""}
+                allowEmpty
+                onChange={(v) => set("patient_reschedule_max", v === "" ? null : Number(v))}
+              />
+              <NumberField
+                label="Reschedule cutoff (hours before)"
+                hint="Block self-reschedule inside this window."
+                value={s.patient_reschedule_cutoff_hours ?? ""}
+                allowEmpty
+                onChange={(v) => set("patient_reschedule_cutoff_hours", v === "" ? null : Number(v))}
+              />
+            </div>
+          )}
           <ToggleRow
             label="Allow patient self-cancel"
             checked={s.allow_patient_cancel}
             onChange={(v) => set("allow_patient_cancel", v)}
           />
+          {s.allow_patient_cancel && (
+            <div className="ml-2 grid gap-3 rounded-lg border bg-muted/30 p-3 sm:grid-cols-2">
+              <NumberField
+                label="Cancel cutoff (hours before)"
+                hint="Block self-cancel inside this window."
+                value={s.patient_cancel_cutoff_hours ?? ""}
+                allowEmpty
+                onChange={(v) => set("patient_cancel_cutoff_hours", v === "" ? null : Number(v))}
+              />
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -299,26 +323,35 @@ function SettingsPage() {
             checked={s.email_confirmations_enabled}
             onChange={(v) => set("email_confirmations_enabled", v)}
           />
-          <ToggleRow
-            label="SMS reminders"
-            checked={s.sms_reminders_enabled}
-            onChange={(v) => set("sms_reminders_enabled", v)}
-          />
-          <ToggleRow
-            label="WhatsApp reminders"
-            checked={s.whatsapp_reminders_enabled}
-            onChange={(v) => set("whatsapp_reminders_enabled", v)}
-          />
           <div className="rounded-lg border p-3">
-            <Label className="text-sm font-medium">Reminder timing (hours before)</Label>
-            <p className="mb-2 text-xs text-muted-foreground">
-              Comma-separated. E.g. <code>24, 2</code> sends one a day before and one 2 hours before.
+            <Label className="text-sm font-medium">Email reminder timing</Label>
+            <p className="mb-3 text-xs text-muted-foreground">
+              Pick when patients should be emailed a reminder before their appointment.
             </p>
-            <Input
-              value={reminderInput}
-              onChange={(e) => setReminderInput(e.target.value)}
-              placeholder="24, 2"
-            />
+            <div className="grid gap-2 sm:grid-cols-2">
+              {REMINDER_PRESETS.map((opt) => {
+                const active = s.reminder_hours_before.includes(opt.value);
+                return (
+                  <label
+                    key={opt.value}
+                    className={`flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm transition ${
+                      active ? "border-primary bg-primary/5" : "hover:bg-muted/50"
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={active}
+                      onChange={() => toggleReminder(opt.value)}
+                      className="h-4 w-4"
+                    />
+                    {opt.label}
+                  </label>
+                );
+              })}
+            </div>
+            {s.reminder_hours_before.length === 0 && (
+              <p className="mt-2 text-xs text-muted-foreground italic">No reminders will be sent.</p>
+            )}
           </div>
         </CardContent>
       </Card>
