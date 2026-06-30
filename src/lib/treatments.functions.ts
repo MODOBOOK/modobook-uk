@@ -141,7 +141,7 @@ export const updateTreatment = createServerFn({ method: "POST" })
       badge?: "recommended" | "popular" | "new" | "bestseller" | null;
       requires_prescriber?: boolean;
       prescriber_user_id?: string | null;
-      prescriber_routing?: "same_address" | "in_person_consult";
+      prescriber_routing?: "same_address" | "clinic_visit" | "in_person_consult";
       prescriber_note?: string | null;
     }) => input,
 
