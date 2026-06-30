@@ -273,7 +273,7 @@ export const getPrescriberInfoForTreatments = createServerFn({ method: "POST" })
     return list.map((t) => ({
       treatment_id: t.id,
       treatment_name: t.name,
-      routing: t.prescriber_routing as "same_address" | "in_person_consult",
+      routing: t.prescriber_routing as "same_address" | "clinic_visit" | "in_person_consult",
       note: t.prescriber_note,
       prescriber_user_id: t.prescriber_user_id as string,
       prescriber_name:
