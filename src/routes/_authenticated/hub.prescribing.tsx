@@ -15,7 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
-import { Stethoscope, ExternalLink } from "lucide-react";
+import { Stethoscope } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/hub/prescribing")({
   ssr: false,
