@@ -268,10 +268,10 @@ function ReviewStep({
   const includedAd = draft.addons.filter((c) => c._include).length;
   const includedPk = draft.packages.filter((c) => c._include).length;
 
-  function setRow<K extends keyof EditableDraft>(key: K, idx: number, patch: Partial<EditableDraft[K][number]>) {
-    const next = { ...draft, [key]: [...(draft[key] as unknown as Array<Record<string, unknown>>)] };
-    (next[key] as unknown as Array<Record<string, unknown>>)[idx] = { ...(next[key] as unknown as Array<Record<string, unknown>>)[idx], ...patch };
-    setDraft(next as EditableDraft);
+  function setRow(key: "categories" | "treatments" | "addons" | "packages", idx: number, patch: Record<string, unknown>) {
+    const arr = [...(draft[key] as Array<Record<string, unknown>>)];
+    arr[idx] = { ...arr[idx], ...patch };
+    setDraft({ ...draft, [key]: arr } as EditableDraft);
   }
 
   function toggleAll<K extends "categories" | "treatments" | "addons" | "packages">(key: K, value: boolean) {
