@@ -478,6 +478,24 @@ function MultiBookPage() {
               </ul>
             </div>
           )}
+          {confirmed.medicalForms && confirmed.medicalForms.length > 0 && (
+            <div className="mt-4 rounded-lg border bg-muted/40 p-4 text-left">
+              <p className="text-sm font-semibold">Please complete your medical form(s) before your appointment:</p>
+              <ul className="mt-2 space-y-2 text-sm">
+                {confirmed.medicalForms.map((f) => (
+                  <li key={f.token}>
+                    <a href={`${origin}/f/${f.token}`} className="underline" style={{ color: brand }}>
+                      Complete {f.template_name ?? "medical form"}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-2 text-xs opacity-70">
+                A link has also been emailed to you and is available in your patient account.
+              </p>
+            </div>
+          )}
+
           <div className="mt-6">
             <Link to="/m/$slug" params={{ slug }}>
               <Button variant="outline">Back to clinic</Button>
