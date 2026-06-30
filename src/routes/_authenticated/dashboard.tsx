@@ -25,6 +25,9 @@ import {
   HelpCircle,
   ChevronLeft,
   Sparkles,
+  Percent,
+  HeartPulse,
+
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
@@ -57,11 +60,16 @@ const navItems = [
   { label: "Branding", to: "/dashboard/branding", icon: Palette },
   { label: "Treatment finder quiz", to: "/dashboard/quiz", icon: HelpCircle },
   { label: "Services", to: "/dashboard/services", icon: Scissors },
+  { label: "Add-ons", to: "/dashboard/addons", icon: Sparkles },
   { label: "Packages", to: "/dashboard/packages", icon: Package },
+  { label: "Discounts", to: "/dashboard/discounts", icon: Percent },
+  { label: "Model slots", to: "/dashboard/model-slots", icon: Sparkles },
   { label: "Locations", to: "/dashboard/locations", icon: MapPin },
   { label: "Practitioners", to: "/dashboard/practitioners", icon: Users },
   { label: "Medical forms", to: "/dashboard/medical-forms", icon: FileText },
   { label: "Consent forms", to: "/dashboard/consent-forms", icon: FileSignature },
+  { label: "Aftercare templates", to: "/dashboard/aftercare", icon: HeartPulse },
+  { label: "Booking flow", to: "/dashboard/booking-flow", icon: HelpCircle },
   { label: "Availability", to: "/dashboard/availability", icon: CalendarDays },
   { label: "New appointment", to: "/dashboard/new-appointment", icon: CalendarPlus },
   { label: "Bookings", to: "/dashboard/bookings", icon: Users },
@@ -84,6 +92,7 @@ function DashboardLayout() {
   const { primary: displayName } = resolveDisplayNames(profile as { clinic_name?: string | null; full_name?: string | null; display_name_mode?: string | null });
   const [open, setOpen] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isConsultationDetail = /^\/dashboard\/consultations\/[^/]+/.test(pathname);
   const themeStyle = useDashboardThemeStyle();
   const fetchPending = useServerFn(countPendingReviews);
   const [pendingReviews, setPendingReviews] = useState(0);
@@ -104,7 +113,10 @@ function DashboardLayout() {
   return (
     <div className="flex min-h-screen bg-background" style={themeStyle}>
       {/* Desktop / iPad sidebar */}
+      {/* Desktop / iPad sidebar — hidden on consultation detail for a focused, full-width workspace */}
+      {!isConsultationDetail && (
       <aside className="hidden w-60 shrink-0 flex-col border-r border-border/60 bg-sidebar lg:flex lg:w-72">
+
         <div className="flex h-20 items-center gap-3 border-b border-border/60 px-5 lg:px-7">
           {profile.avatar_url ? (
             <img src={profile.avatar_url} alt="" className="h-10 w-10 rounded-full object-cover ring-1 ring-border" />
@@ -130,6 +142,7 @@ function DashboardLayout() {
           </Button>
         </div>
       </aside>
+      )}
 
 
       <div className="flex min-w-0 flex-1 flex-col">
