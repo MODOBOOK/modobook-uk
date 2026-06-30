@@ -642,10 +642,14 @@ function BookPage() {
                       <Instagram className="h-5 w-5 opacity-30" />
                     </ActionPlaceholder>
                   )}
-                  {primaryLocation && mapsUrl(primaryLocation) ? (
-                    <ActionIcon href={mapsUrl(primaryLocation)!} label="Directions" brand={brand}>
+                  {mappableLocations.length === 1 && firstMapUrl ? (
+                    <ActionIcon href={firstMapUrl} label="Directions" brand={brand}>
                       <MapPin className="h-5 w-5" />
                     </ActionIcon>
+                  ) : mappableLocations.length > 1 ? (
+                    <ActionButton onClick={() => setDirectionsOpen(true)} label="Directions" brand={brand}>
+                      <MapPin className="h-5 w-5" />
+                    </ActionButton>
                   ) : (
                     <ActionPlaceholder label="Directions" brand={brand}>
                       <MapPin className="h-5 w-5 opacity-30" />
