@@ -948,6 +948,7 @@ function ServiceDialog({
       setDiscountPercent("");
       setDiscountLabel("");
       setDiscountShowWasNow(true);
+      setLocOverrides({});
     }
   }, [open, state]);
 
