@@ -645,12 +645,68 @@ function Step7({ log, onChange }: any) {
 }
 
 
+type InvLine = { description: string; qty: number; unitPrice: number };
+
 function Step8({ invoice, email, patientName, consultationId, onChange, onComplete, completed }: any) {
   const createLink = useServerFn(createPaymentLink);
   const [generating, setGenerating] = useState(false);
   const [downloading, setDownloading] = useState(false);
-  const amountNum = Number(invoice?.amount ?? 0);
+  const [emailing, setEmailing] = useState(false);
+  const items: InvLine[] = Array.isArray(invoice?.items) && invoice.items.length > 0
+    ? invoice.items
+    : [{ description: invoice?.notes ?? "", qty: 1, unitPrice: Number(invoice?.amount ?? 0) }];
+  const subtotal = items.reduce((s, it) => s + (Number(it.qty) || 0) * (Number(it.unitPrice) || 0), 0);
+  const amountNum = subtotal;
   const sendEmail = (invoice?.email ?? email ?? "").trim();
+
+  function setItems(next: InvLine[]) {
+    const total = next.reduce((s, it) => s + (Number(it.qty) || 0) * (Number(it.unitPrice) || 0), 0);
+    onChange({ ...invoice, items: next, amount: total });
+  }
+
+  async function loadProfileForPdf() {
+    const { data: { user } } = await supabase.auth.getUser();
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("clinic_name, full_name, address, email, phone, brand_color, avatar_url, hero_url, invoice_bank_name, invoice_account_name, invoice_sort_code, invoice_account_number, invoice_iban, invoice_swift, invoice_payment_reference, invoice_footer_notes, invoice_vat_number, invoice_company_number, invoice_show_bank_details, invoice_show_logo")
+      .eq("user_id", user!.id).single();
+    return profile;
+  }
+
+  function profileToInvoiceArgs(profile: any) {
+    const addr = (profile?.address ?? {}) as Record<string, string>;
+    const addrLines = [addr.line1, addr.line2, [addr.city, addr.postcode].filter(Boolean).join(" "), addr.country].filter(Boolean) as string[];
+    return {
+      clinic: profile?.clinic_name || profile?.full_name || "Invoice",
+      practitioner: profile?.full_name ?? undefined,
+      clinicAddress: addrLines,
+      clinicEmail: profile?.email ?? null,
+      clinicPhone: profile?.phone ?? null,
+      vatNumber: profile?.invoice_vat_number ?? null,
+      companyNumber: profile?.invoice_company_number ?? null,
+      logoUrl: profile?.invoice_show_logo === false ? null : (profile?.avatar_url ?? null),
+      brandColor: profile?.brand_color ?? null,
+      patientName,
+      patientEmail: sendEmail,
+      date: new Date().toLocaleDateString("en-GB"),
+      items: items.map((it) => ({ description: it.description || "Treatment", qty: Number(it.qty) || 1, unitPrice: Number(it.unitPrice) || 0 })),
+      amount: amountNum,
+      notes: invoice?.notes,
+      footerNotes: profile?.invoice_footer_notes ?? null,
+      paymentLink: invoice?.payment_link,
+      reference: consultationId?.slice(0, 8).toUpperCase(),
+      showBank: !!profile?.invoice_show_bank_details,
+      bank: {
+        bankName: profile?.invoice_bank_name,
+        accountName: profile?.invoice_account_name,
+        sortCode: profile?.invoice_sort_code,
+        accountNumber: profile?.invoice_account_number,
+        iban: profile?.invoice_iban,
+        swift: profile?.invoice_swift,
+        paymentReference: profile?.invoice_payment_reference,
+      },
+    };
+  }
 
   async function generateStripeLink() {
     if (!Number.isFinite(amountNum) || amountNum < 1) {
@@ -662,13 +718,13 @@ function Step8({ invoice, email, patientName, consultationId, onChange, onComple
       const row: any = await createLink({
         data: {
           amountCents: Math.round(amountNum * 100),
-          description: (invoice?.notes ?? "").trim() || `Consultation ${consultationId?.slice(0, 8) ?? ""}`,
+          description: items.map(i => i.description).filter(Boolean).join(", ") || `Consultation ${consultationId?.slice(0, 8) ?? ""}`,
           kind: "checkout",
           recipientEmail: sendEmail || null,
           recipientName: patientName || null,
         },
       });
-      onChange({ ...invoice, payment_link: row.stripe_url, payment_link_id: row.id, status: "sent", sent_at: new Date().toISOString() });
+      onChange({ ...invoice, items, amount: amountNum, payment_link: row.stripe_url, payment_link_id: row.id, status: "sent", sent_at: new Date().toISOString() });
       toast.success("Stripe payment link created");
     } catch (e: any) {
       toast.error(e?.message ?? "Could not create payment link");
@@ -679,26 +735,14 @@ function Step8({ invoice, email, patientName, consultationId, onChange, onComple
 
   async function downloadPdf() {
     if (!Number.isFinite(amountNum) || amountNum <= 0) {
-      toast.error("Enter an amount first");
+      toast.error("Add at least one line item");
       return;
     }
     setDownloading(true);
     try {
       const { generateInvoicePdf } = await import("@/lib/invoice-pdf");
-      const { data: { user } } = await supabase.auth.getUser();
-      const { data: profile } = await supabase
-        .from("profiles").select("clinic_name, full_name").eq("user_id", user!.id).single();
-      const doc = generateInvoicePdf({
-        clinic: profile?.clinic_name || profile?.full_name || "Invoice",
-        practitioner: profile?.full_name ?? undefined,
-        patientName,
-        patientEmail: sendEmail,
-        date: new Date().toLocaleDateString("en-GB"),
-        amount: amountNum,
-        notes: invoice?.notes,
-        paymentLink: invoice?.payment_link,
-        reference: consultationId?.slice(0, 8).toUpperCase(),
-      });
+      const profile = await loadProfileForPdf();
+      const doc = await generateInvoicePdf(profileToInvoiceArgs(profile));
       doc.save(`invoice-${(patientName || "patient").replace(/\s+/g, "-").toLowerCase()}.pdf`);
     } catch (e: any) {
       toast.error(e?.message ?? "Could not generate PDF");
@@ -707,34 +751,73 @@ function Step8({ invoice, email, patientName, consultationId, onChange, onComple
     }
   }
 
-  function emailPatient() {
+  async function emailInvoiceWithPdf() {
     if (!sendEmail) { toast.error("Add a recipient email first"); return; }
-    const subject = encodeURIComponent("Your invoice");
-    const body = encodeURIComponent(
-      `Hi ${patientName ?? ""},\n\nPlease find your invoice for £${amountNum.toFixed(2)} below.\n` +
-      (invoice?.notes ? `\n${invoice.notes}\n` : "") +
-      (invoice?.payment_link ? `\nPay securely: ${invoice.payment_link}\n` : "") +
-      `\nThank you.`
-    );
-    window.location.href = `mailto:${sendEmail}?subject=${subject}&body=${body}`;
+    if (amountNum <= 0) { toast.error("Add at least one line item"); return; }
+    setEmailing(true);
+    try {
+      const { generateInvoicePdf } = await import("@/lib/invoice-pdf");
+      const profile = await loadProfileForPdf();
+      const doc = await generateInvoicePdf(profileToInvoiceArgs(profile));
+      const blob = doc.output("blob");
+      const url = URL.createObjectURL(blob);
+      // Trigger a download of the PDF so the practitioner can attach it,
+      // then open mail client pre-populated with body + payment link.
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `invoice-${(patientName || "patient").replace(/\s+/g, "-").toLowerCase()}.pdf`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1500);
+
+      const subject = encodeURIComponent(`Your invoice from ${profile?.clinic_name || profile?.full_name || "your clinic"}`);
+      const itemsText = items.map(i => `• ${i.description} × ${i.qty} — £${(Number(i.qty) * Number(i.unitPrice)).toFixed(2)}`).join("\n");
+      const body = encodeURIComponent(
+        `Hi ${patientName ?? ""},\n\nPlease find your invoice attached.\n\n${itemsText}\n\nTotal: £${amountNum.toFixed(2)}\n` +
+        (invoice?.payment_link ? `\nPay securely: ${invoice.payment_link}\n` : "") +
+        `\nThank you,\n${profile?.full_name ?? profile?.clinic_name ?? ""}`
+      );
+      window.location.href = `mailto:${sendEmail}?subject=${subject}&body=${body}`;
+      onChange({ ...invoice, items, amount: amountNum, status: invoice?.status ?? "sent", sent_at: invoice?.sent_at ?? new Date().toISOString() });
+      toast.success("Invoice downloaded — attach it to the open email draft");
+    } catch (e: any) {
+      toast.error(e?.message ?? "Could not prepare email");
+    } finally {
+      setEmailing(false);
+    }
   }
 
   return (
     <div className="space-y-4">
-      <Header n={8} title="Invoice & payment" subtitle="Generate a Stripe payment link automatically, download a PDF, or mark as paid." />
-      <div className="grid gap-3 sm:grid-cols-2">
-        <div className="space-y-1.5">
-          <Label>Amount (£)</Label>
-          <Input type="number" inputMode="decimal" value={invoice?.amount ?? ""} onChange={(e) => onChange({ ...invoice, amount: e.target.value })} />
+      <Header n={8} title="Invoice & payment" subtitle="Add line items, generate a Stripe link, download or email the branded invoice." />
+
+      <div className="space-y-2 rounded-lg border bg-card p-3">
+        <div className="flex items-center justify-between">
+          <Label className="text-sm font-semibold">Line items</Label>
+          <Button size="sm" variant="outline" onClick={() => setItems([...items, { description: "", qty: 1, unitPrice: 0 }])}>
+            <Plus className="mr-1 h-3.5 w-3.5" />Add item
+          </Button>
         </div>
-        <div className="space-y-1.5">
-          <Label>Send to email</Label>
-          <Input type="email" value={invoice?.email ?? email ?? ""} onChange={(e) => onChange({ ...invoice, email: e.target.value })} />
+        <div className="space-y-2">
+          {items.map((it, idx) => (
+            <div key={idx} className="grid grid-cols-12 gap-2 rounded-md border bg-background p-2">
+              <Input className="col-span-6" placeholder="Description (e.g. Botox – 3 areas)" value={it.description} onChange={(e) => { const n = [...items]; n[idx] = { ...n[idx], description: e.target.value }; setItems(n); }} />
+              <Input className="col-span-2" type="number" min="0" step="1" placeholder="Qty" value={it.qty} onChange={(e) => { const n = [...items]; n[idx] = { ...n[idx], qty: Number(e.target.value) || 0 }; setItems(n); }} />
+              <Input className="col-span-3" type="number" min="0" step="0.01" placeholder="Unit £" value={it.unitPrice} onChange={(e) => { const n = [...items]; n[idx] = { ...n[idx], unitPrice: Number(e.target.value) || 0 }; setItems(n); }} />
+              <Button className="col-span-1" size="icon" variant="ghost" onClick={() => setItems(items.filter((_, i) => i !== idx))} aria-label="Remove">
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          ))}
+        </div>
+        <div className="flex items-center justify-between border-t pt-2 text-sm">
+          <span className="text-muted-foreground">Total</span>
+          <span className="font-semibold">£{amountNum.toFixed(2)}</span>
         </div>
       </div>
+
       <div className="space-y-1.5">
-        <Label>Line items / notes</Label>
-        <Textarea rows={4} value={invoice?.notes ?? ""} onChange={(e) => onChange({ ...invoice, notes: e.target.value })} placeholder="e.g. Botox 3 areas – £250" />
+        <Label>Send to email</Label>
+        <Input type="email" value={invoice?.email ?? email ?? ""} onChange={(e) => onChange({ ...invoice, email: e.target.value })} />
       </div>
 
       {invoice?.payment_link ? (
@@ -748,7 +831,7 @@ function Step8({ invoice, email, patientName, consultationId, onChange, onComple
         </div>
       ) : (
         <div className="rounded-md border border-dashed bg-muted/30 p-3 text-xs text-muted-foreground">
-          No payment link yet. Generate one — it's created on Stripe automatically using your connected account.
+          No payment link yet. Generate one — it's created on Stripe automatically.
         </div>
       )}
 
@@ -760,8 +843,11 @@ function Step8({ invoice, email, patientName, consultationId, onChange, onComple
           {downloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Receipt className="mr-2 h-4 w-4" />}
           Download PDF
         </Button>
-        <Button variant="outline" onClick={emailPatient}>Email patient</Button>
-        <Button variant="ghost" onClick={() => onChange({ ...invoice, status: "paid", paid_at: new Date().toISOString() })}>
+        <Button variant="outline" onClick={emailInvoiceWithPdf} disabled={emailing}>
+          {emailing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+          Email invoice (PDF)
+        </Button>
+        <Button variant="ghost" onClick={() => onChange({ ...invoice, items, amount: amountNum, status: "paid", paid_at: new Date().toISOString() })}>
           Mark as paid
         </Button>
         {invoice?.status && <Badge variant="secondary" className="ml-auto">{invoice.status}</Badge>}
