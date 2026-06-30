@@ -317,13 +317,23 @@ function MultiBookPage() {
     submitLockRef.current = true;
     setSubmitting(true);
     try {
-      const bookings = treatments.map((t) => ({
-        treatmentId: t.id,
-        durationMin: durationFor(t),
-        priceCents: Math.round(priceFor(t) * 100),
-        sessionCount: Math.max(1, Number((t as { session_count?: number }).session_count ?? 1)),
-        paymentPlan: selectedPaymentPlan(t),
-      }));
+      const applicableIds = new Set(discount?.applies_to_treatment_ids ?? []);
+      const bookings = treatments.map((t) => {
+        let price = priceFor(t);
+        if (discount && applicableIds.has(t.id)) {
+          const off = discount.kind === "percent"
+            ? price * (discount.amount / 100)
+            : discount.amount;
+          price = Math.max(0, price - Math.min(off, price));
+        }
+        return {
+          treatmentId: t.id,
+          durationMin: durationFor(t),
+          priceCents: Math.round(price * 100),
+          sessionCount: Math.max(1, Number((t as { session_count?: number }).session_count ?? 1)),
+          paymentPlan: selectedPaymentPlan(t),
+        };
+      });
       const res = await reqFn({
         data: {
           profileId: ctx.profileId,
