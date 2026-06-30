@@ -69,6 +69,7 @@ function Stars({ value, onChange }: { value: number; onChange?: (n: number) => v
 function ReviewMod() {
   const fetchReviews = useServerFn(listMyReviews);
   const setApproval = useServerFn(setReviewApproval);
+  const removeReview = useServerFn(deletePatientReview);
   const fetchTestimonials = useServerFn(listMyTestimonials);
   const saveTestimonial = useServerFn(upsertTestimonial);
   const removeTestimonial = useServerFn(deleteTestimonial);
