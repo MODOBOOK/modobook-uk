@@ -16,6 +16,7 @@ import {
 } from "@/lib/ai-import.functions";
 
 import { extractReviews, commitReviews, type ExtractedReview } from "@/lib/ai-reviews.functions";
+import { suggestFormMatches, commitFormMatches } from "@/lib/ai-forms.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
