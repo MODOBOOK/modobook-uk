@@ -33,7 +33,7 @@ export const Route = createFileRoute("/_authenticated/dashboard/ai-import")({
 
 type IdName = { id: string; name: string };
 
-type SourceKind = "pdf" | "image" | "spreadsheet" | "url" | "text";
+type SourceKind = "pdf" | "image";
 
 type Draftable<T> = T & { _include: boolean };
 type EditableDraft = {
