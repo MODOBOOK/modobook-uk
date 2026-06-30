@@ -995,8 +995,33 @@ function BookPage() {
               })}
             </div>
           )}
+          {showConsult && (
+            <div className="mt-6 rounded-2xl border-2 border-dashed p-5 text-center" style={{ borderColor: `${brand}55` }}>
+              <p className="text-sm font-semibold" style={{ color: brand }}>Still not sure?</p>
+              <p className="mt-1 text-xs opacity-70">Book a consultation and we'll talk through all your concerns together.</p>
+              {consultTreatmentId ? (
+                <Link
+                  to="/m/$slug/book/$treatmentId"
+                  params={{ slug, treatmentId: consultTreatmentId }}
+                  className="mt-3 inline-block rounded-full px-5 py-2 text-sm font-semibold text-white transition hover:opacity-90"
+                  style={{ backgroundColor: brand }}
+                >
+                  Book a consultation
+                </Link>
+              ) : (
+                <button
+                  onClick={() => { setMode("know"); setPickedConcernId(null); }}
+                  className="mt-3 inline-block rounded-full px-5 py-2 text-sm font-semibold text-white transition hover:opacity-90"
+                  style={{ backgroundColor: brand }}
+                >
+                  Browse consultations
+                </button>
+              )}
+            </div>
+          )}
         </section>
       )}
+
 
       {/* Favourite / Most popular treatments */}
       {(() => {
@@ -1391,48 +1416,60 @@ function BookPage() {
                               {area.name}
                             </AccordionTrigger>
                             <AccordionContent>
-                              <div className="space-y-3">
+                              <Accordion type="multiple" className="space-y-2">
                                 {areaConcerns.map((c) => {
                                   const matchedIds = new Set(
                                     concernLinks.filter((l) => l.concern_id === c.id).map((l) => l.treatment_id),
                                   );
                                   const matched = visibleTreatments.filter((t) => matchedIds.has(t.id));
                                   return (
-                                    <div key={c.id} className="rounded-lg border bg-card p-3" style={{ borderColor: `${brand}1f` }}>
-                                      <div className="font-semibold" style={{ color: brand }}>{c.name}</div>
-                                      {c.description && (
-                                        <div className="mt-0.5 text-xs opacity-70">{c.description}</div>
-                                      )}
-                                      {matched.length === 0 ? (
-                                        <p className="mt-2 text-xs opacity-60">No treatments linked yet.</p>
-                                      ) : (
-                                        <div className="mt-2 space-y-1.5">
-                                          <p className="text-[11px] font-semibold uppercase tracking-wider opacity-60">Suggested treatments</p>
-                                          {matched.map((t) => (
-                                            <TreatmentRow
-                                              key={t.id}
-                                              t={t}
-                                              slug={slug}
-                                              price={priceFor(t)}
-                                              duration={durationFor(t)}
-                                              brand={brand}
-                                              selected={isSelected(t.id)}
-                                              onToggle={() => toggleSelect(t.id)}
-                                              cardBg={menuCardBg}
-                                              cardBorder={menuCardBorder}
-                                              nameColor={menuNameColor}
-                                              priceColor={menuPriceColor}
-                                              size={menuSize}
-                                              bold={menuTreatmentBold}
-                                            />
-                                          ))}
+                                    <AccordionItem
+                                      key={c.id}
+                                      value={c.id}
+                                      className="rounded-lg border bg-card px-3"
+                                      style={{ borderColor: `${brand}1f` }}
+                                    >
+                                      <AccordionTrigger className="py-2.5 text-sm font-semibold hover:no-underline" style={{ color: brand }}>
+                                        <div className="flex flex-col items-start text-left">
+                                          <span>{c.name}</span>
+                                          {c.description && (
+                                            <span className="mt-0.5 text-[11px] font-normal opacity-70">{c.description}</span>
+                                          )}
                                         </div>
-                                      )}
-                                    </div>
+                                      </AccordionTrigger>
+                                      <AccordionContent>
+                                        {matched.length === 0 ? (
+                                          <p className="pb-2 text-xs opacity-60">No treatments linked yet.</p>
+                                        ) : (
+                                          <div className="space-y-1.5 pb-2">
+                                            <p className="text-[11px] font-semibold uppercase tracking-wider opacity-60">Suggested treatments</p>
+                                            {matched.map((t) => (
+                                              <TreatmentRow
+                                                key={t.id}
+                                                t={t}
+                                                slug={slug}
+                                                price={priceFor(t)}
+                                                duration={durationFor(t)}
+                                                brand={brand}
+                                                selected={isSelected(t.id)}
+                                                onToggle={() => toggleSelect(t.id)}
+                                                cardBg={menuCardBg}
+                                                cardBorder={menuCardBorder}
+                                                nameColor={menuNameColor}
+                                                priceColor={menuPriceColor}
+                                                size={menuSize}
+                                                bold={menuTreatmentBold}
+                                              />
+                                            ))}
+                                          </div>
+                                        )}
+                                      </AccordionContent>
+                                    </AccordionItem>
                                   );
                                 })}
-                              </div>
+                              </Accordion>
                             </AccordionContent>
+
                           </AccordionItem>
                         );
                       })}
