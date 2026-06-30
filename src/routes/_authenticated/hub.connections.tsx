@@ -15,6 +15,7 @@ import {
   removeLink,
   getHubContext,
 } from "@/lib/hub.functions";
+import { formatHubCode } from "@/lib/hub-format";
 import { Loader2, Link as LinkIcon, X, Check } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/hub/connections")({
@@ -88,7 +89,7 @@ function Connections() {
                   id="code"
                   value={code}
                   onChange={(e) => setCode(e.target.value.toUpperCase())}
-                  placeholder="MODO-ABC123"
+                  placeholder="PR-ABC123 or RX-ABC123"
                   required
                 />
               </div>
@@ -174,7 +175,7 @@ function Section({
                     {l.other_kind && <Badge variant="secondary" className="capitalize">{l.other_kind}</Badge>}
                   </div>
                   {l.other_code && (
-                    <div className="font-mono text-xs text-muted-foreground">MODO-{l.other_code}</div>
+                    <div className="font-mono text-xs text-muted-foreground">{formatHubCode(l.other_code)}</div>
                   )}
                   {l.note && <p className="mt-1 text-xs text-muted-foreground">"{l.note}"</p>}
                 </div>

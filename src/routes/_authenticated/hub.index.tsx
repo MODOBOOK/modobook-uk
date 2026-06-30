@@ -7,6 +7,7 @@ import { ShieldCheck, Copy, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { getHubContext, ensureHubCode } from "@/lib/hub.functions";
+import { formatHubCode } from "@/lib/hub-format";
 
 export const Route = createFileRoute("/_authenticated/hub/")({
   ssr: false,
@@ -91,13 +92,13 @@ function HubIndex() {
             {code ? (
               <div className="flex items-center gap-2">
                 <code className="rounded-md border bg-muted/40 px-3 py-2 font-mono text-lg tracking-widest">
-                  MODO-{code}
+                  {formatHubCode(code)}
                 </code>
                 <Button
                   size="sm"
                   variant="outline"
                   onClick={() => {
-                    navigator.clipboard.writeText(`MODO-${code}`);
+                    navigator.clipboard.writeText(formatHubCode(code));
                     toast.success("Copied");
                   }}
                 >
