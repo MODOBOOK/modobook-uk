@@ -329,13 +329,23 @@ function BookPage() {
   const showConsult = profile.chooser_show_consultation !== false;
   const consultTreatmentId = profile.chooser_consultation_treatment_id ?? null;
   const [mode, setMode] = useState<null | "know" | "unsure">(null);
-  const [pickedConcernId, setPickedConcernId] = useState<string | null>(null);
+  const [pickedConcernIds, setPickedConcernIds] = useState<string[]>([]);
+  const [concernsConfirmed, setConcernsConfirmed] = useState(false);
+  const togglePickedConcern = (id: string) =>
+    setPickedConcernIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  const pickedConcernId = concernsConfirmed && pickedConcernIds.length > 0 ? pickedConcernIds[0] : null;
+  const setPickedConcernId = (_id: string | null) => {
+    setPickedConcernIds([]);
+    setConcernsConfirmed(false);
+  };
+  void setPickedConcernId;
   // Clear selection when location changes
   const setLocAndClear = (id: string | null) => {
     setLocationId(id);
     setSelectedIds([]);
     setMode(null);
-    setPickedConcernId(null);
+    setPickedConcernIds([]);
+    setConcernsConfirmed(false);
   };
   void setLocAndClear;
 
