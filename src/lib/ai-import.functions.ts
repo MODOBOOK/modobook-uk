@@ -335,14 +335,16 @@ export const commitClinicImport = createServerFn({ method: "POST" })
 
     /* --- Categories first (parents before children) --- */
     const catNameToId = new Map<string, string>();
+    const catParentById = new Map<string, string | null>();
 
-    // Load existing for dedupe
+    // Load existing for dedupe + parent reassignment
     const { data: existingCats } = await supabase
       .from("treatment_categories")
       .select("id, name, parent_id")
       .eq("profile_id", profileId);
-    (existingCats ?? []).forEach((c: { id: string; name: string }) => {
+    (existingCats ?? []).forEach((c: { id: string; name: string; parent_id: string | null }) => {
       catNameToId.set(c.name.toLowerCase(), c.id);
+      catParentById.set(c.id, c.parent_id);
     });
 
     const selectedCats = data.categories.filter((c) => c._include && c.name?.trim());
@@ -351,11 +353,24 @@ export const commitClinicImport = createServerFn({ method: "POST" })
 
     for (const c of [...parents, ...children]) {
       const key = c.name.toLowerCase();
+      const desiredParent = c.parent ? catNameToId.get(c.parent.toLowerCase()) ?? null : null;
+
       if (catNameToId.has(key)) {
+        // Already exists — reassign parent if the user changed it in review
+        const existingId = catNameToId.get(key)!;
+        const currentParent = catParentById.get(existingId) ?? null;
+        if (desiredParent && desiredParent !== existingId && currentParent !== desiredParent) {
+          const { error } = await supabase
+            .from("treatment_categories")
+            .update({ parent_id: desiredParent } as never)
+            .eq("id", existingId);
+          if (error) noteError(`Move category "${c.name}"`, error);
+          else catParentById.set(existingId, desiredParent);
+        }
         created.skipped++;
         continue;
       }
-      const parentId = c.parent ? catNameToId.get(c.parent.toLowerCase()) ?? null : null;
+
       const slug = slugify(c.name);
       const { data: row, error } = await supabase
         .from("treatment_categories")
@@ -363,7 +378,7 @@ export const commitClinicImport = createServerFn({ method: "POST" })
           profile_id: profileId,
           name: c.name.trim(),
           slug,
-          parent_id: parentId,
+          parent_id: desiredParent,
           description: c.description ?? null,
           sort_order: 0,
         } as never)
@@ -371,6 +386,7 @@ export const commitClinicImport = createServerFn({ method: "POST" })
         .single();
       if (!error && row) {
         catNameToId.set(key, row.id);
+        catParentById.set(row.id, desiredParent);
         created.categories++;
       } else noteError(`Category "${c.name}"`, error);
     }
@@ -378,11 +394,12 @@ export const commitClinicImport = createServerFn({ method: "POST" })
     /* --- Treatments --- */
     const { data: existingTr } = await supabase
       .from("treatments")
-      .select("id, name")
+      .select("id, name, category_id")
       .eq("profile_id", profileId);
-    const existingTrNames = new Set(
-      (existingTr ?? []).map((t: { name: string }) => t.name.toLowerCase()),
-    );
+    const existingTrByName = new Map<string, { id: string; category_id: string | null }>();
+    (existingTr ?? []).forEach((t: { id: string; name: string; category_id: string | null }) => {
+      existingTrByName.set(t.name.toLowerCase(), { id: t.id, category_id: t.category_id });
+    });
     const trNameToId = new Map<string, string>();
     (existingTr ?? []).forEach((t: { id: string; name: string }) => {
       trNameToId.set(t.name.toLowerCase(), t.id);
@@ -399,14 +416,33 @@ export const commitClinicImport = createServerFn({ method: "POST" })
     );
 
     for (const t of data.treatments.filter((x) => x._include && x.name?.trim())) {
-      if (existingTrNames.has(t.name.toLowerCase())) {
-        created.skipped++;
-        continue;
-      }
-      const categoryId = t.category
+      const nameKey = t.name.toLowerCase();
+      const desiredCategoryId = t.category
         ? catNameToId.get(t.category.toLowerCase()) ?? null
         : null;
       const sessions = Math.max(1, Math.round(t.session_count ?? 1));
+
+      const existing = existingTrByName.get(nameKey);
+      if (existing) {
+        // Update category (and a few safe fields) so re-runs actually apply the user's review picks
+        const patch: Record<string, unknown> = {};
+        if (desiredCategoryId && existing.category_id !== desiredCategoryId) {
+          patch.category_id = desiredCategoryId;
+        }
+        if (t.description) patch.description = t.description;
+        if (Object.keys(patch).length) {
+          const { error } = await supabase
+            .from("treatments")
+            .update(patch as never)
+            .eq("id", existing.id);
+          if (error) noteError(`Update treatment "${t.name}"`, error);
+          else created.treatments++;
+        } else {
+          created.skipped++;
+        }
+        continue;
+      }
+
       const { data: row, error } = await supabase
         .from("treatments")
         .insert({
@@ -415,7 +451,7 @@ export const commitClinicImport = createServerFn({ method: "POST" })
           duration: Math.max(5, Math.round(t.duration_min ?? 30)),
           price: Number(t.price_gbp ?? 0),
           description: t.description ?? null,
-          category_id: categoryId,
+          category_id: desiredCategoryId,
           active: true,
           payment_mode: "full",
           session_count: sessions,
@@ -424,7 +460,7 @@ export const commitClinicImport = createServerFn({ method: "POST" })
         .select("id")
         .single();
       if (!error && row) {
-        trNameToId.set(t.name.toLowerCase(), row.id);
+        trNameToId.set(nameKey, row.id);
         created.treatments++;
 
         // Link aftercare suggestion if it matches a known template
@@ -438,6 +474,7 @@ export const commitClinicImport = createServerFn({ method: "POST" })
         }
       } else noteError(`Treatment "${t.name}"`, error);
     }
+
 
     /* --- Add-ons --- */
     const { data: existingAddons } = await supabase
