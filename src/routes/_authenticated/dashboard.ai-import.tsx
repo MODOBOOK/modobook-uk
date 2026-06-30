@@ -446,6 +446,8 @@ function ReviewStep({
             key={i}
             treatment={t}
             categoryOptions={categoryOptions}
+            parentOptions={parentOptions}
+            onAddCategory={addCategoryInline}
             onToggle={(v) => setRow("treatments", i, { _include: v })}
             onRemove={() => removeRow("treatments", i)}
             onChange={(patch) => setRow("treatments", i, patch)}
