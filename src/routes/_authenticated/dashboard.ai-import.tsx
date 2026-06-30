@@ -456,17 +456,18 @@ function ReviewStep({
 
       <ListCard
         title={`Packages (${includedPk}/${draft.packages.length})`}
-        helper="Bundles or course-of-X deals. You can refine which treatments are inside afterwards."
+        helper="Bundles or course-of-X deals. Add a short, client-facing description — or let AI write one based on the included treatments."
         onAll={(v) => toggleAll("packages", v)}
         onAdd={() => addRow("packages")}
         empty="No packages detected."
         rows={draft.packages.map((p, i) => (
-          <Row key={i} included={p._include} onToggle={(v) => setRow("packages", i, { _include: v })} onRemove={() => removeRow("packages", i)}>
-            <Input className="md:max-w-xs" value={p.name} onChange={(e) => setRow("packages", i, { name: e.target.value })} placeholder="Package name" />
-            <Input className="md:max-w-[110px]" type="number" step="0.01" value={p.price_gbp ?? ""} onChange={(e) => setRow("packages", i, { price_gbp: e.target.value ? Number(e.target.value) : undefined })} placeholder="£" />
-            <Input className="md:max-w-[100px]" type="number" value={p.sessions ?? ""} onChange={(e) => setRow("packages", i, { sessions: e.target.value ? Number(e.target.value) : undefined })} placeholder="Sessions" />
-            {p.treatment_names?.length ? <Badge variant="secondary">{p.treatment_names.length} treatments</Badge> : null}
-          </Row>
+          <PackageRow
+            key={i}
+            pkg={p}
+            onToggle={(v) => setRow("packages", i, { _include: v })}
+            onRemove={() => removeRow("packages", i)}
+            onChange={(patch) => setRow("packages", i, patch)}
+          />
         ))}
       />
 
