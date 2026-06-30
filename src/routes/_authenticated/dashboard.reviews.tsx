@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
-  listMyReviews, setReviewApproval,
+  listMyReviews, setReviewApproval, deletePatientReview,
   listMyTestimonials, upsertTestimonial, deleteTestimonial,
 } from "@/lib/patient.functions";
 import { extractReviews, commitReviews, type ExtractedReview } from "@/lib/ai-reviews.functions";
