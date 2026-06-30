@@ -461,16 +461,25 @@ function ReviewStep({
   );
 }
 
-function ListCard({ title, rows, onAll, empty }: { title: string; rows: React.ReactNode[]; onAll: (v: boolean) => void; empty: string }) {
+function ListCard({ title, rows, onAll, onAdd, empty, helper }: { title: string; rows: React.ReactNode[]; onAll: (v: boolean) => void; onAdd?: () => void; empty: string; helper?: string }) {
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0">
-        <CardTitle className="text-base">{title}</CardTitle>
-        <div className="flex gap-2 text-xs">
-          <button className="text-muted-foreground hover:text-foreground" onClick={() => onAll(true)}>Select all</button>
-          <span className="text-muted-foreground">·</span>
-          <button className="text-muted-foreground hover:text-foreground" onClick={() => onAll(false)}>Deselect all</button>
+      <CardHeader className="space-y-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <CardTitle className="text-base">{title}</CardTitle>
+          <div className="flex items-center gap-3 text-xs">
+            <button className="text-muted-foreground hover:text-foreground" onClick={() => onAll(true)}>Select all</button>
+            <span className="text-muted-foreground">·</span>
+            <button className="text-muted-foreground hover:text-foreground" onClick={() => onAll(false)}>Deselect all</button>
+            {onAdd && (
+              <>
+                <span className="text-muted-foreground">·</span>
+                <button className="font-medium text-primary hover:underline" onClick={onAdd}>+ Add</button>
+              </>
+            )}
+          </div>
         </div>
+        {helper && <p className="text-xs text-muted-foreground">{helper}</p>}
       </CardHeader>
       <CardContent className="space-y-2">
         {rows.length === 0 ? <p className="text-sm text-muted-foreground">{empty}</p> : rows}
@@ -479,14 +488,25 @@ function ListCard({ title, rows, onAll, empty }: { title: string; rows: React.Re
   );
 }
 
-function Row({ included, onToggle, children }: { included: boolean; onToggle: (v: boolean) => void; children: React.ReactNode }) {
+function Row({ included, onToggle, onRemove, children }: { included: boolean; onToggle: (v: boolean) => void; onRemove?: () => void; children: React.ReactNode }) {
   return (
     <div className={`flex flex-wrap items-center gap-2 rounded-md border p-2 ${included ? "" : "opacity-50"}`}>
       <Checkbox checked={included} onCheckedChange={(v) => onToggle(!!v)} />
       {children}
+      {onRemove && (
+        <button
+          type="button"
+          onClick={onRemove}
+          className="ml-auto text-xs text-muted-foreground hover:text-destructive"
+          aria-label="Remove row"
+        >
+          Remove
+        </button>
+      )}
     </div>
   );
 }
+
 
 function Field({ label, value, onChange, textarea }: { label: string; value: string; onChange: (v: string) => void; textarea?: boolean }) {
   return (
