@@ -192,13 +192,50 @@ export const listSentReferrals = createServerFn({ method: "GET" })
     if (!profile) return [];
     const { data, error } = await supabase
       .from("prescriber_referrals")
-      .select("id, status, routing, created_at, patient_name, treatment_id, prescriber_user_id")
+      .select("id, status, routing, created_at, accepted_at, patient_name, treatment_id, prescriber_user_id, appointment_id")
       .eq("practitioner_profile_id", profile.id)
       .order("created_at", { ascending: false })
-      .limit(50);
+      .limit(100);
     if (error) throw error;
-    return data ?? [];
+    const rows = data ?? [];
+    const treatmentIds = Array.from(new Set(rows.map((r) => r.treatment_id).filter(Boolean) as string[]));
+    const prescIds = Array.from(new Set(rows.map((r) => r.prescriber_user_id).filter(Boolean) as string[]));
+    const apptIds = Array.from(new Set(rows.map((r) => r.appointment_id).filter(Boolean) as string[]));
+    const [{ data: ts }, { data: presc }, { data: codes }, { data: appts }] = await Promise.all([
+      treatmentIds.length
+        ? supabase.from("treatments").select("id, name").in("id", treatmentIds)
+        : Promise.resolve({ data: [] as { id: string; name: string }[] }),
+      prescIds.length
+        ? supabase.from("prescriber_profiles").select("user_id, full_name, regulatory_body").in("user_id", prescIds)
+        : Promise.resolve({ data: [] as { user_id: string; full_name: string | null; regulatory_body: string | null }[] }),
+      prescIds.length
+        ? supabase.from("hub_codes").select("user_id, display_name").in("user_id", prescIds)
+        : Promise.resolve({ data: [] as { user_id: string; display_name: string | null }[] }),
+      apptIds.length
+        ? supabase.from("appointments").select("id, scheduled_date, start_time").in("id", apptIds)
+        : Promise.resolve({ data: [] as { id: string; scheduled_date: string; start_time: string }[] }),
+    ]);
+    const tmap = new Map((ts ?? []).map((t) => [t.id, t]));
+    const pmap = new Map((presc ?? []).map((p) => [p.user_id, p]));
+    const cmap = new Map((codes ?? []).map((c) => [c.user_id, c]));
+    const amap = new Map((appts ?? []).map((a) => [a.id, a]));
+    return rows.map((r) => ({
+      id: r.id,
+      status: r.status as "pending" | "accepted" | "declined" | "completed",
+      routing: r.routing as "same_address" | "in_person_consult",
+      created_at: r.created_at,
+      accepted_at: r.accepted_at,
+      patient_name: r.patient_name,
+      treatment_name: r.treatment_id ? tmap.get(r.treatment_id)?.name ?? "Treatment" : "Treatment",
+      prescriber_name:
+        (r.prescriber_user_id && (pmap.get(r.prescriber_user_id)?.full_name ?? cmap.get(r.prescriber_user_id)?.display_name)) ?? "Prescriber",
+      prescriber_regulatory_body: r.prescriber_user_id ? pmap.get(r.prescriber_user_id)?.regulatory_body ?? null : null,
+      appointment: r.appointment_id && amap.get(r.appointment_id)
+        ? { scheduled_date: amap.get(r.appointment_id)!.scheduled_date, start_time: amap.get(r.appointment_id)!.start_time }
+        : null,
+    }));
   });
+
 
 // ---- Public (for booking page): treatment prescriber metadata for a slug ----
 export const getPrescriberInfoForTreatments = createServerFn({ method: "POST" })
