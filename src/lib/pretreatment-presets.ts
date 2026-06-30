@@ -12,7 +12,7 @@ export type PretreatmentCategory =
 
 export const PRETREATMENT_CATEGORIES: { value: PretreatmentCategory; label: string; summary: string }[] = [
   { value: "general", label: "General clinic rules", summary: "Rules that apply to every appointment" },
-  { value: "injectables", label: "Injectables (Botox / Filler)", summary: "Anti-wrinkle, dermal filler, polynucleotides" },
+  { value: "injectables", label: "Injectables", summary: "Anti-wrinkle, dermal filler, polynucleotides" },
   { value: "microneedling", label: "Microneedling / Skin needling", summary: "Microneedling, RF microneedling, mesotherapy" },
   { value: "facials", label: "Facials & skin treatments", summary: "Hydrafacials, deep cleanses, LED, dermaplaning" },
   { value: "laser", label: "Laser & IPL", summary: "Hair removal, pigmentation, laser resurfacing" },
