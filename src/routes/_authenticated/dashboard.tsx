@@ -96,11 +96,11 @@ function DashboardLayout() {
             <img src={profile.avatar_url} alt="" className="h-10 w-10 rounded-full object-cover ring-1 ring-border" />
           ) : (
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground">
-              <span className="font-serif text-lg">{(profile.clinic_name ?? "M").charAt(0)}</span>
+              <span className="font-serif text-lg">{(displayName).charAt(0)}</span>
             </div>
           )}
           <div className="min-w-0">
-            <div className="truncate font-serif text-lg leading-tight">{profile.clinic_name || "My Clinic"}</div>
+            <div className="truncate font-serif text-lg leading-tight">{displayName || "My Clinic"}</div>
             <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">MODO Studio</div>
           </div>
         </div>
@@ -123,7 +123,7 @@ function DashboardLayout() {
         <header className="flex h-14 items-center justify-between gap-2 border-b px-3 lg:hidden">
           <BackButton />
           <div className="flex min-w-0 flex-1 items-center justify-center">
-            <span className="truncate text-sm font-semibold">{profile.clinic_name || "My Clinic"}</span>
+            <span className="truncate text-sm font-semibold">{displayName || "My Clinic"}</span>
           </div>
           <Button variant="outline" size="sm" asChild>
             <a href={`/m/${profile.slug}`} target="_blank" rel="noreferrer">Preview</a>
@@ -137,7 +137,7 @@ function DashboardLayout() {
             <BackButton />
             <div>
               <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Studio</div>
-              <div className="font-serif text-2xl leading-tight">{profile.clinic_name || "Dashboard"}</div>
+              <div className="font-serif text-2xl leading-tight">{displayName || "Dashboard"}</div>
             </div>
           </div>
           <Button variant="outline" size="sm" className="rounded-full px-5" asChild>
