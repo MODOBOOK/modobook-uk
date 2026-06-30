@@ -315,6 +315,7 @@ function BrandingPage() {
           {saving ? "Saving…" : "Save changes"}
         </Button>
       </div>
+      <SaveReminder />
 
       {/* Style presets */}
       <Card>
