@@ -35,10 +35,14 @@ function Connections() {
   const [note, setNote] = useState("");
   const [loading, setLoading] = useState(false);
   const [canSend, setCanSend] = useState(true);
+  const [role, setRole] = useState<"practitioner" | "prescriber" | null>(null);
+  const [myCode, setMyCode] = useState<string | null>(null);
 
   async function refresh() {
     const [data, ctx] = await Promise.all([list(), getCtx()]);
     setLinks(data);
+    setRole(ctx.role ?? null);
+    setMyCode(ctx.code ?? null);
     // Prescribers must be approved before sending requests
     setCanSend(ctx.role !== "prescriber" || ctx.prescriber?.status === "approved");
   }
@@ -46,6 +50,10 @@ function Connections() {
   useEffect(() => {
     refresh().catch((e) => toast.error(e.message));
   }, []);
+
+  const isPrescriber = role === "prescriber";
+  const counterpartLabel = isPrescriber ? "practitioner" : "prescriber";
+  const counterpartPrefix = isPrescriber ? "PR-" : "RX-";
 
   async function onSend(e: React.FormEvent) {
     e.preventDefault();
