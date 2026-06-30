@@ -3694,13 +3694,15 @@ export type Database = {
         Returns: string
       }
       current_patient_email: { Args: { _profile_id: string }; Returns: string }
-      ensure_hub_code: {
-        Args: {
-          p_display_name: string
-          p_kind: Database["public"]["Enums"]["hub_owner_kind"]
-        }
-        Returns: string
-      }
+      ensure_hub_code:
+        | {
+            Args: {
+              p_display_name: string
+              p_kind: Database["public"]["Enums"]["hub_owner_kind"]
+            }
+            Returns: string
+          }
+        | { Args: { p_display_name: string; p_kind: string }; Returns: string }
       get_about_page_by_slug: { Args: { p_slug: string }; Returns: Json }
       get_appointment_by_manage_token: {
         Args: { p_token: string }
@@ -3882,7 +3884,7 @@ export type Database = {
         Args: { p_code: string }
         Returns: {
           display_name: string
-          owner_kind: Database["public"]["Enums"]["hub_owner_kind"]
+          owner_kind: string
           user_id: string
         }[]
       }
