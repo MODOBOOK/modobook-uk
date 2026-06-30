@@ -245,7 +245,7 @@ export const commitClinicImport = createServerFn({ method: "POST" })
         if (!profile.welcome_intro_html) update.welcome_intro_html = `<p>${escapeHtml(data.clinic.bio)}</p>`;
       }
       if (Object.keys(update).length) {
-        const { error } = await supabase.from("profiles").update(update).eq("id", profileId);
+        const { error } = await supabase.from("profiles").update(update as never).eq("id", profileId);
         if (!error) created.clinic = true;
       }
     }
