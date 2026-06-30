@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
-import { MousePointer2, Pencil, Eraser, Undo2, Trash2, Upload, ImageIcon, User } from "lucide-react";
+import { MousePointer2, Pencil, Eraser, Undo2, Trash2, Upload, ImageIcon, User, Zap, X } from "lucide-react";
 import { AESTHETIC_PRODUCTS, getProductsForCategory } from "@/lib/aesthetic-products";
 import {
   Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
@@ -42,7 +42,30 @@ function normalize(value: any): FaceMapValue {
 
 type Mode = "pin" | "draw" | "erase";
 
-// SVG viewBox kept at 200x260 for backwards compatibility with existing saved pins.
+// Category → pin colour so each treatment shows distinctly without re-selecting
+const CATEGORY_COLORS: Record<string, string> = {
+  "anti-wrinkle": "#2563eb",
+  "dermal-fillers": "#db2777",
+  "bio-stimulators": "#ea580c",
+  "skin-boosters": "#0d9488",
+  "polynucleotides": "#7c3aed",
+  "fat-dissolving": "#ca8a04",
+  "chemical-peels": "#be185d",
+  "microneedling": "#4f46e5",
+  "prp-prf": "#b91c1c",
+  "threads": "#166534",
+};
+function pinColor(p: FaceMapPin, fallback: string) {
+  return (p.category && CATEGORY_COLORS[p.category]) || fallback;
+}
+
+// Quick-amount presets, grouped — includes insulin units
+const AMOUNT_GROUPS: { label: string; options: string[] }[] = [
+  { label: "Toxin units", options: ["1u", "2u", "4u", "10u", "20u"] },
+  { label: "Insulin units", options: ["5iu", "10iu", "20iu", "50iu", "100iu"] },
+  { label: "Filler / ml", options: ["0.1ml", "0.25ml", "0.5ml", "1ml", "2ml"] },
+];
+
 const VB_W = 200;
 const VB_H = 260;
 
@@ -63,6 +86,10 @@ export function FaceMapAnnotator({
   const [tempStroke, setTempStroke] = useState<FaceMapStroke | null>(null);
   const [pinDialog, setPinDialog] = useState<{ x: number; y: number } | null>(null);
 
+  // Quick-repeat preset: remembers the last tag so taps drop pins instantly
+  const [preset, setPreset] = useState<Partial<FaceMapPin> | null>(null);
+  const [quickRepeat, setQuickRepeat] = useState(true);
+
   function toLocal(e: any) {
     const svg = svgRef.current!;
     const pt = svg.createSVGPoint();
@@ -77,6 +104,10 @@ export function FaceMapAnnotator({
     e.preventDefault();
     const p = toLocal(e);
     if (mode === "pin") {
+      if (quickRepeat && preset && (preset.product || preset.amount)) {
+        onChange({ ...v, pins: [...v.pins, { ...preset, x: p.x, y: p.y } as FaceMapPin] });
+        return;
+      }
       setPinDialog({ x: p.x, y: p.y });
       return;
     }
@@ -144,6 +175,7 @@ export function FaceMapAnnotator({
   }
 
   const bgSrc = v.bg === "upload" ? v.bgUrl : v.bg === "realistic" ? realisticFace : null;
+  const presetColor = preset?.category ? CATEGORY_COLORS[preset.category] ?? color : color;
 
   return (
     <div className="space-y-2">
@@ -185,6 +217,42 @@ export function FaceMapAnnotator({
         />
       </div>
 
+      {/* Quick-repeat preset bar — tap-to-drop without re-opening the dialog */}
+      {mode === "pin" && (
+        <div className="flex flex-wrap items-center gap-2 rounded-md border bg-muted/30 px-2 py-1.5 text-xs">
+          <Zap className="h-3.5 w-3.5 text-amber-500" />
+          <span className="font-medium">Quick-tag:</span>
+          {preset && (preset.product || preset.amount) ? (
+            <>
+              <span
+                className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-white"
+                style={{ backgroundColor: presetColor }}
+              >
+                <span className="font-semibold">{preset.product ?? "Tag"}</span>
+                {preset.amount && <span className="opacity-90">· {preset.amount}</span>}
+              </span>
+              <Button size="sm" variant="ghost" className="h-6 px-2 text-[11px]" onClick={() => setPinDialog({ x: VB_W / 2, y: VB_H / 2 })}>
+                Change
+              </Button>
+              <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => setPreset(null)}>
+                <X className="h-3 w-3" />
+              </Button>
+              <label className="ml-auto flex items-center gap-1.5 text-[11px]">
+                <input type="checkbox" checked={quickRepeat} onChange={(e) => setQuickRepeat(e.target.checked)} />
+                Repeat on tap
+              </label>
+            </>
+          ) : (
+            <>
+              <span className="text-muted-foreground">none set</span>
+              <Button size="sm" variant="outline" className="ml-auto h-6 px-2 text-[11px]" onClick={() => setPinDialog({ x: VB_W / 2, y: VB_H / 2 })}>
+                Set tag
+              </Button>
+            </>
+          )}
+        </div>
+      )}
+
       <div className="overflow-hidden rounded-lg border bg-muted/30 p-2">
         <svg
           ref={svgRef}
@@ -193,7 +261,6 @@ export function FaceMapAnnotator({
           onMouseDown={onDown} onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={onUp}
           onTouchStart={onDown} onTouchMove={onMove} onTouchEnd={onUp}
         >
-          {/* Background: photo or schematic diagram */}
           {bgSrc ? (
             <image href={bgSrc} x={0} y={0} width={VB_W} height={VB_H} preserveAspectRatio="xMidYMid slice" />
           ) : (
@@ -210,7 +277,6 @@ export function FaceMapAnnotator({
             </g>
           )}
 
-          {/* Strokes */}
           {v.strokes.map((s, i) => (
             <polyline
               key={i}
@@ -225,12 +291,12 @@ export function FaceMapAnnotator({
             />
           )}
 
-          {/* Pins */}
           {v.pins.map((p, i) => {
-            const lbl = [p.product ?? p.label, p.amount].filter(Boolean).join(" · ");
+            const c = pinColor(p, color);
+            const lbl = p.amount || "";
             return (
               <g key={i}>
-                <circle cx={p.x} cy={p.y} r="4.5" fill={color} stroke="#fff" strokeWidth="1.5" />
+                <circle cx={p.x} cy={p.y} r="4.5" fill={c} stroke="#fff" strokeWidth="1.5" />
                 {lbl && (
                   <text x={p.x + 6} y={p.y + 3} fontSize="6.5" fill="#111"
                     style={{ paintOrder: "stroke", stroke: "#fff", strokeWidth: 2 } as any}>
@@ -243,25 +309,51 @@ export function FaceMapAnnotator({
         </svg>
       </div>
 
-      {v.pins.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
-          {v.pins.map((p, i) => (
-            <Badge key={i} variant="secondary" className="text-[10px]">
-              {[p.product ?? p.label, p.amount].filter(Boolean).join(" · ") || "Pin"}
-            </Badge>
-          ))}
-        </div>
-      )}
+      {/* Pin summary grouped per product — see totals at a glance */}
+      {v.pins.length > 0 && <PinSummary pins={v.pins} fallbackColor={color} />}
 
       <PinDialog
         open={!!pinDialog}
+        initial={preset ?? undefined}
         onClose={() => setPinDialog(null)}
         onSave={(pin) => {
           if (!pinDialog) return;
-          onChange({ ...v, pins: [...v.pins, { ...pin, x: pinDialog.x, y: pinDialog.y }] });
+          // Save preset for subsequent quick taps
+          setPreset({ category: pin.category, product: pin.product, amount: pin.amount, label: pin.label });
+          // Only add a pin if this was triggered by a click on the canvas, not "Set tag" button
+          const triggeredByCanvas = pinDialog.x !== VB_W / 2 || pinDialog.y !== VB_H / 2;
+          if (triggeredByCanvas) {
+            onChange({ ...v, pins: [...v.pins, { ...pin, x: pinDialog.x, y: pinDialog.y }] });
+          }
           setPinDialog(null);
         }}
       />
+    </div>
+  );
+}
+
+function PinSummary({ pins, fallbackColor }: { pins: FaceMapPin[]; fallbackColor: string }) {
+  const groups = new Map<string, { color: string; product: string; count: number; total: string }>();
+  for (const p of pins) {
+    const key = `${p.category ?? "_"}|${p.product ?? p.label ?? "Tag"}|${p.amount ?? ""}`;
+    const existing = groups.get(key);
+    if (existing) existing.count += 1;
+    else groups.set(key, {
+      color: pinColor(p, fallbackColor),
+      product: p.product ?? p.label ?? "Tag",
+      count: 1,
+      total: p.amount ?? "",
+    });
+  }
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {[...groups.values()].map((g, i) => (
+        <span key={i} className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] text-white" style={{ backgroundColor: g.color }}>
+          <span className="font-semibold">{g.product}</span>
+          {g.total && <span className="opacity-90">· {g.total}</span>}
+          <span className="rounded-full bg-white/25 px-1.5 text-[10px]">×{g.count}</span>
+        </span>
+      ))}
     </div>
   );
 }
@@ -279,22 +371,29 @@ function ToolBtn({ active, onClick, icon, children }: any) {
   );
 }
 
-function PinDialog({ open, onClose, onSave }: {
+function PinDialog({ open, initial, onClose, onSave }: {
   open: boolean;
+  initial?: Partial<FaceMapPin>;
   onClose: () => void;
   onSave: (p: Partial<FaceMapPin>) => void;
 }) {
-  const [category, setCategory] = useState<string>("anti-wrinkle");
-  const [product, setProduct] = useState<string>("");
-  const [amount, setAmount] = useState<string>("");
+  const [category, setCategory] = useState<string>(initial?.category ?? "anti-wrinkle");
+  const [product, setProduct] = useState<string>(initial?.product ?? "");
+  const [amount, setAmount] = useState<string>(initial?.amount ?? "");
   const products = getProductsForCategory(category);
 
-  useEffect(() => { if (open) { setProduct(""); setAmount(""); } }, [open]);
+  useEffect(() => {
+    if (open) {
+      setCategory(initial?.category ?? "anti-wrinkle");
+      setProduct(initial?.product ?? "");
+      setAmount(initial?.amount ?? "");
+    }
+  }, [open]); // eslint-disable-line
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="max-w-sm">
-        <DialogHeader><DialogTitle>Tag this area</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>Set quick-tag</DialogTitle></DialogHeader>
         <div className="space-y-3">
           <div className="space-y-1.5">
             <Label className="text-xs">Treatment type</Label>
@@ -316,32 +415,39 @@ function PinDialog({ open, onClose, onSave }: {
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs">Amount</Label>
-            <div className="flex flex-wrap gap-2">
-              {["0.1ml","0.25ml","0.5ml","1ml","2u","4u","10u","20u"].map((a) => (
-                <button
-                  key={a}
-                  type="button"
-                  onClick={() => setAmount(a)}
-                  className={`rounded-md border px-2 py-1 text-xs ${amount === a ? "border-primary bg-primary/10 text-primary" : "bg-card"}`}
-                >{a}</button>
-              ))}
-            </div>
+          <div className="space-y-2">
+            <Label className="text-xs">Amount per dot</Label>
+            {AMOUNT_GROUPS.map((g) => (
+              <div key={g.label} className="space-y-1">
+                <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{g.label}</div>
+                <div className="flex flex-wrap gap-1.5">
+                  {g.options.map((a) => (
+                    <button
+                      key={a}
+                      type="button"
+                      onClick={() => setAmount(a)}
+                      className={`rounded-md border px-2 py-1 text-xs ${amount === a ? "border-primary bg-primary/10 text-primary" : "bg-card"}`}
+                    >{a}</button>
+                  ))}
+                </div>
+              </div>
+            ))}
             <Input
-              placeholder="Or enter custom (e.g. 0.3ml, 6u)"
+              placeholder="Or enter custom (e.g. 0.3ml, 6u, 30iu)"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className="mt-1"
             />
           </div>
+          <p className="rounded-md bg-muted/40 p-2 text-[11px] text-muted-foreground">
+            Tip: once set, just tap the face — each tap drops a dot with this amount. Change it any time.
+          </p>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Cancel</Button>
           <Button
             onClick={() => onSave({ category, product: product || undefined, amount: amount || undefined, label: product || undefined })}
             disabled={!product && !amount}
-          >Drop pin</Button>
+          >Save tag</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
