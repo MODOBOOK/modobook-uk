@@ -1,0 +1,1 @@
+CREATE POLICY "Practitioner reads own profile reviews" ON public.patient_reviews FOR SELECT TO authenticated USING (is_profile_owner(profile_id));
