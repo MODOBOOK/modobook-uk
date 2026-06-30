@@ -597,20 +597,30 @@ export const resetClinicServices = createServerFn({ method: "POST" })
     const profileId = profile.id;
 
     const removed = { treatments: 0, categories: 0, addons: 0 };
+    const skipped = { treatments: 0 };
     const errors: string[] = [];
 
     const { data: ts } = await supabase
       .from("treatments")
       .select("id")
       .eq("profile_id", profileId);
-    if (ts?.length) {
-      const { error } = await supabase
-        .from("treatments")
-        .delete()
-        .eq("profile_id", profileId);
-      if (error) errors.push(`Treatments: ${error.message}`);
-      else removed.treatments = ts.length;
+    const allIds = (ts ?? []).map((t: { id: string }) => t.id);
+    if (allIds.length) {
+      // Don't delete treatments that have appointments — keep history intact.
+      const { data: used } = await supabase
+        .from("appointments")
+        .select("treatment_id")
+        .in("treatment_id", allIds);
+      const usedSet = new Set((used ?? []).map((a: { treatment_id: string }) => a.treatment_id));
+      const deletable = allIds.filter((id) => !usedSet.has(id));
+      skipped.treatments = allIds.length - deletable.length;
+      if (deletable.length) {
+        const { error } = await supabase.from("treatments").delete().in("id", deletable);
+        if (error) errors.push(`Treatments: ${error.message}`);
+        else removed.treatments = deletable.length;
+      }
     }
+
 
     if (scope === "all") {
       const { data: adds } = await supabase
