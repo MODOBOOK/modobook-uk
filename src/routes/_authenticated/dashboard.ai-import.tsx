@@ -357,12 +357,30 @@ function ReviewStep({
     setDraft({ ...draft, [key]: arr } as EditableDraft);
   }
 
-  // Names of currently-included categories — used as parent options for subcategories
-  const parentOptions = draft.categories
+  // Build a hierarchical list of included categories: top-level + their subcategories.
+  const includedCatNames = draft.categories
     .filter((c) => c._include && c.name?.trim())
-    .map((c) => c.name.trim());
+    .map((c) => ({ name: c.name.trim(), parent: c.parent?.trim() || null }));
 
-  const categoryOptions = parentOptions;
+  const parentOptions = includedCatNames
+    .filter((c) => !c.parent)
+    .map((c) => c.name);
+
+  // Each entry: { value: display name, label: "Parent › Child" or just name }
+  const categoryOptions = includedCatNames.map((c) => ({
+    value: c.name,
+    label: c.parent ? `${c.parent} › ${c.name}` : c.name,
+  }));
+
+  function addCategoryInline(name: string, parent: string | null) {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    if (draft.categories.some((c) => c.name?.toLowerCase().trim() === trimmed.toLowerCase())) return;
+    setDraft({
+      ...draft,
+      categories: [...draft.categories, { _include: true, name: trimmed, parent }],
+    });
+  }
 
   return (
     <>
