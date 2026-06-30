@@ -446,7 +446,9 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
         priceCents: number;
         sessionCount?: number;
         paymentPlan?: "full" | "split";
+        clinicVisitId?: string | null;
       }[];
+
       locationId?: string | null;
       date: string;
       startTime: string;
