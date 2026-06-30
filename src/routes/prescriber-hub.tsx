@@ -25,34 +25,85 @@ function HubPage() {
       <SiteHeader />
       <main>
         <section className="border-b bg-gradient-to-br from-primary/5 via-background to-primary/10">
-          <div className="mx-auto grid max-w-7xl gap-10 px-4 py-16 lg:grid-cols-2 lg:items-center lg:px-8 lg:py-24">
-            <div>
+          <div className="mx-auto max-w-5xl px-4 py-16 lg:px-8 lg:py-20">
+            <div className="mx-auto max-w-2xl text-center">
               <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-                <Network className="h-3.5 w-3.5" /> Coming soon · included on every plan
+                <Network className="h-3.5 w-3.5" /> The Prescriber Hub
               </div>
-              <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">The Prescriber Hub.</h1>
+              <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">How would you like to join?</h1>
               <p className="mt-4 text-lg text-muted-foreground">
-                Aesthetics is collaborative — and MODO's Prescriber Hub is where that collaboration
-                lives. One safe, traceable workflow for prescribers and the practitioners they
-                support. Shared patient records and collaborative notes, all linked to the booking
-                that started it.
-              </p>
-              <div className="mt-6 flex flex-wrap gap-3">
-                <Link to="/auth"><Button size="lg">Join as practitioner</Button></Link>
-                <Link to="/auth" search={{ as: "prescriber" }}><Button size="lg" variant="outline">Join as prescriber</Button></Link>
-              </div>
-              <p className="mt-3 text-xs text-muted-foreground">
-                Prescribers complete a quick verification (registration body, PIN, photo ID) before they appear in the hub.
+                Choose your role to see what you need and where to register.
               </p>
             </div>
-            <div className="grid aspect-[5/4] w-full grid-cols-2 grid-rows-2 gap-3 rounded-3xl bg-background/60 p-6 shadow-lg ring-1 ring-black/5 sm:gap-5 sm:p-10">
-              <IconTile icon={Stethoscope} label="Prescribers" />
-              <IconTile icon={Users} label="Practitioners" />
-              <IconTile icon={ClipboardList} label="Shared record" />
-              <IconTile icon={HeartHandshake} label="One workflow" />
+
+            <div className="mt-12 grid gap-6 md:grid-cols-2">
+              <Card className="flex flex-col">
+                <CardHeader>
+                  <Users className="mb-2 h-8 w-8 text-primary" />
+                  <CardTitle>I'm a Practitioner</CardTitle>
+                  <CardDescription>
+                    Aesthetic practitioners, therapists and clinic owners running treatments.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="flex flex-1 flex-col justify-between gap-6">
+                  <ul className="space-y-2 text-sm">
+                    {[
+                      "Instant registration — no verification needed.",
+                      "Connect to a prescriber using their MODO code.",
+                      "Share patient records with explicit patient consent.",
+                      "Free on every MODO Book plan.",
+                    ].map((p) => (
+                      <li key={p} className="flex gap-2">
+                        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                        <span>{p}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <Link to="/auth"><Button className="w-full" size="lg">Register as practitioner</Button></Link>
+                </CardContent>
+              </Card>
+
+              <Card className="flex flex-col border-primary/30">
+                <CardHeader>
+                  <Stethoscope className="mb-2 h-8 w-8 text-primary" />
+                  <CardTitle>I'm a Prescriber</CardTitle>
+                  <CardDescription>
+                    Doctors, dentists, nurses and pharmacist independent prescribers.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="flex flex-1 flex-col justify-between gap-6">
+                  <div className="space-y-3 text-sm">
+                    <p className="font-medium">You'll need to provide:</p>
+                    <ul className="space-y-2">
+                      {[
+                        "Full legal name.",
+                        "Professional registration number (PIN).",
+                        "Regulatory body (GMC, NMC, GPhC, GDC…).",
+                        "A photo of valid ID (passport or driving licence).",
+                      ].map((p) => (
+                        <li key={p} className="flex gap-2">
+                          <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                          <span>{p}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <p className="text-xs text-muted-foreground">
+                      Submissions are reviewed by our admin team within 1–2 working days.
+                    </p>
+                  </div>
+                  <Link to="/auth" search={{ as: "prescriber" }}>
+                    <Button className="w-full" size="lg" variant="default">Register as prescriber</Button>
+                  </Link>
+                </CardContent>
+              </Card>
             </div>
+
+            <p className="mt-8 text-center text-sm text-muted-foreground">
+              Already have an account? <Link to="/auth" className="text-primary underline">Sign in</Link>
+            </p>
           </div>
         </section>
+
 
         <section className="mx-auto max-w-7xl px-4 py-16 lg:px-8">
           <div className="mx-auto max-w-2xl text-center">
