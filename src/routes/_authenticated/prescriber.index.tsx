@@ -186,15 +186,275 @@ function FullRecord({ id, onComplete, status }: { id: string; onComplete: () => 
           </ul>
         )}
       </section>
+
       {status === "accepted" && (
-        <section className="space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Prescribing note (internal)</p>
-          <Textarea rows={2} value={note} onChange={(e) => setNote(e.target.value)} placeholder="Decision, dose, instructions…" />
-          <div className="flex justify-end">
-            <Button size="sm" onClick={onComplete}>Mark complete</Button>
-          </div>
-        </section>
+        <Tabs defaultValue="prescribe" className="pt-1">
+          <TabsList>
+            <TabsTrigger value="prescribe"><Pill className="mr-1 h-3.5 w-3.5" /> Prescription</TabsTrigger>
+            <TabsTrigger value="careplan"><ClipboardList className="mr-1 h-3.5 w-3.5" /> Care plan</TabsTrigger>
+            <TabsTrigger value="complete">Complete</TabsTrigger>
+          </TabsList>
+          <TabsContent value="prescribe" className="pt-3">
+            <PrescriptionEditor referralId={id} patient={ref} client={client} />
+          </TabsContent>
+          <TabsContent value="careplan" className="pt-3">
+            <CarePlanEditor referralId={id} />
+          </TabsContent>
+          <TabsContent value="complete" className="space-y-2 pt-3">
+            <p className="text-xs text-muted-foreground">
+              Once prescription is signed and care plan sent, mark the referral complete.
+              Both documents are returned to the practitioner automatically.
+            </p>
+            <Textarea rows={2} value={note} onChange={(e) => setNote(e.target.value)} placeholder="Optional final note for practitioner…" />
+            <div className="flex justify-end">
+              <Button size="sm" onClick={onComplete}><CheckCircle2 className="mr-1 h-4 w-4" /> Mark complete</Button>
+            </div>
+          </TabsContent>
+        </Tabs>
       )}
     </div>
   );
 }
+
+/* ---------------------- Prescription editor ---------------------- */
+type RxRow = {
+  id: string;
+  drug_name: string;
+  drug_form: string | null;
+  drug_strength: string | null;
+  dose: string;
+  quantity: string;
+  directions: string;
+  repeats_allowed: number;
+  valid_until: string | null;
+  notes: string | null;
+  status: string;
+  signed_at: string | null;
+  signature_name: string | null;
+  patient_name: string;
+  patient_dob: string | null;
+  patient_address: string | null;
+  prescriber_name: string;
+  prescriber_reg_body: string | null;
+  prescriber_reg_number: string | null;
+  clinic_name: string | null;
+  clinic_address: string | null;
+};
+
+function PrescriptionEditor({ referralId, patient, client }: { referralId: string; patient: Record<string, unknown>; client: Record<string, unknown> | null }) {
+  const list = useServerFn(listPrescriptionsForReferral);
+  const save = useServerFn(savePrescription);
+  const sign = useServerFn(signPrescription);
+  const q = useQuery({ queryKey: ["rx", referralId], queryFn: () => list({ data: { referral_id: referralId } }) });
+  const rows = (q.data ?? []) as RxRow[];
+  const latest = rows[0];
+
+  const [form, setForm] = useState({
+    id: undefined as string | undefined,
+    patient_name: "",
+    patient_dob: "",
+    patient_address: "",
+    prescriber_name: "",
+    prescriber_reg_body: "",
+    prescriber_reg_number: "",
+    clinic_name: "",
+    clinic_address: "",
+    drug_name: "",
+    drug_form: "",
+    drug_strength: "",
+    dose: "",
+    quantity: "",
+    directions: "",
+    repeats_allowed: 0,
+    valid_until: "",
+    notes: "",
+  });
+  const [sigName, setSigName] = useState("");
+
+  useEffect(() => {
+    if (latest) {
+      setForm({
+        id: latest.id,
+        patient_name: latest.patient_name,
+        patient_dob: latest.patient_dob ?? "",
+        patient_address: latest.patient_address ?? "",
+        prescriber_name: latest.prescriber_name,
+        prescriber_reg_body: latest.prescriber_reg_body ?? "",
+        prescriber_reg_number: latest.prescriber_reg_number ?? "",
+        clinic_name: latest.clinic_name ?? "",
+        clinic_address: latest.clinic_address ?? "",
+        drug_name: latest.drug_name,
+        drug_form: latest.drug_form ?? "",
+        drug_strength: latest.drug_strength ?? "",
+        dose: latest.dose,
+        quantity: latest.quantity,
+        directions: latest.directions,
+        repeats_allowed: latest.repeats_allowed,
+        valid_until: latest.valid_until ?? "",
+        notes: latest.notes ?? "",
+      });
+      setSigName(latest.signature_name ?? "");
+    } else {
+      setForm((f) => ({
+        ...f,
+        patient_name: (patient.patient_name as string) || (client?.full_name as string) || "",
+        patient_dob: (patient.patient_dob as string) || (client?.date_of_birth as string) || "",
+        patient_address: (patient.patient_address as string) || (client?.address as string) || "",
+      }));
+    }
+  }, [latest, patient, client]);
+
+  const signed = latest?.status === "signed";
+
+  async function onSave() {
+    try {
+      const payload = {
+        ...form,
+        patient_dob: form.patient_dob || null,
+        valid_until: form.valid_until || null,
+      };
+      const res = await save({ data: payload });
+      setForm((f) => ({ ...f, id: res.id }));
+      toast.success("Prescription saved");
+      q.refetch();
+    } catch (e) { toast.error((e as Error).message); }
+  }
+  async function onSign() {
+    if (!form.id) { await onSave(); }
+    const id = form.id;
+    if (!id || !sigName.trim()) { toast.error("Type your full name to sign"); return; }
+    try {
+      await sign({ data: { id, signature_name: sigName.trim(), signature_data: `${sigName.trim()} · ${new Date().toISOString()}` } });
+      toast.success("Prescription signed & sent to practitioner");
+      q.refetch();
+    } catch (e) { toast.error((e as Error).message); }
+  }
+
+  return (
+    <div className="space-y-3 text-xs">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+        <Field label="Patient name" v={form.patient_name} on={(v) => setForm({ ...form, patient_name: v })} disabled={signed} />
+        <Field label="Date of birth" type="date" v={form.patient_dob} on={(v) => setForm({ ...form, patient_dob: v })} disabled={signed} />
+        <Field label="Patient address" v={form.patient_address} on={(v) => setForm({ ...form, patient_address: v })} disabled={signed} className="sm:col-span-2" />
+        <Field label="Prescriber full name" v={form.prescriber_name} on={(v) => setForm({ ...form, prescriber_name: v })} disabled={signed} />
+        <Field label="Regulatory body (e.g. GMC, NMC, GPhC)" v={form.prescriber_reg_body} on={(v) => setForm({ ...form, prescriber_reg_body: v })} disabled={signed} />
+        <Field label="Registration number" v={form.prescriber_reg_number} on={(v) => setForm({ ...form, prescriber_reg_number: v })} disabled={signed} />
+        <Field label="Clinic / letterhead" v={form.clinic_name} on={(v) => setForm({ ...form, clinic_name: v })} disabled={signed} />
+        <Field label="Clinic address" v={form.clinic_address} on={(v) => setForm({ ...form, clinic_address: v })} disabled={signed} className="sm:col-span-2" />
+      </div>
+      <div className="rounded border bg-background p-2">
+        <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">POM — Prescription (UK guidelines)</p>
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+          <Field label="Drug name" v={form.drug_name} on={(v) => setForm({ ...form, drug_name: v })} disabled={signed} />
+          <Field label="Form (e.g. solution)" v={form.drug_form} on={(v) => setForm({ ...form, drug_form: v })} disabled={signed} />
+          <Field label="Strength" v={form.drug_strength} on={(v) => setForm({ ...form, drug_strength: v })} disabled={signed} />
+          <Field label="Dose" v={form.dose} on={(v) => setForm({ ...form, dose: v })} disabled={signed} />
+          <Field label="Quantity" v={form.quantity} on={(v) => setForm({ ...form, quantity: v })} disabled={signed} />
+          <Field label="Repeats allowed" type="number" v={String(form.repeats_allowed)} on={(v) => setForm({ ...form, repeats_allowed: Math.max(0, Number(v) || 0) })} disabled={signed} />
+          <Field label="Valid until" type="date" v={form.valid_until} on={(v) => setForm({ ...form, valid_until: v })} disabled={signed} />
+        </div>
+        <div className="mt-2">
+          <Label className="text-[11px]">Directions for use</Label>
+          <Textarea rows={2} value={form.directions} onChange={(e) => setForm({ ...form, directions: e.target.value })} disabled={signed} />
+        </div>
+        <div className="mt-2">
+          <Label className="text-[11px]">Notes</Label>
+          <Textarea rows={2} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} disabled={signed} />
+        </div>
+      </div>
+
+      {signed ? (
+        <div className="rounded border border-emerald-300 bg-emerald-50 p-2 text-emerald-900">
+          ✓ Signed by <strong>{latest?.signature_name}</strong> on {new Date(latest!.signed_at!).toLocaleString()}.
+          Sent to practitioner.
+        </div>
+      ) : (
+        <div className="space-y-2">
+          <div className="flex items-end gap-2">
+            <div className="flex-1">
+              <Label className="text-[11px]">Type your full name to sign</Label>
+              <Input value={sigName} onChange={(e) => setSigName(e.target.value)} placeholder="Dr Jane Smith" />
+            </div>
+            <Button size="sm" variant="outline" onClick={onSave}>Save draft</Button>
+            <Button size="sm" onClick={onSign}><PenLine className="mr-1 h-4 w-4" /> Sign & send</Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ---------------------- Care plan editor ---------------------- */
+function CarePlanEditor({ referralId }: { referralId: string }) {
+  const get = useServerFn(getCarePlanForReferral);
+  const save = useServerFn(saveCarePlan);
+  const send = useServerFn(sendCarePlan);
+  const q = useQuery({ queryKey: ["careplan", referralId], queryFn: () => get({ data: { referral_id: referralId } }) });
+  const row = q.data as { id: string; assessment: string | null; notes: string | null; plan: string | null; follow_up: string | null; status: string; sent_at: string | null } | null;
+  const [form, setForm] = useState({ id: undefined as string | undefined, assessment: "", notes: "", plan: "", follow_up: "" });
+  useEffect(() => {
+    if (row) setForm({ id: row.id, assessment: row.assessment ?? "", notes: row.notes ?? "", plan: row.plan ?? "", follow_up: row.follow_up ?? "" });
+  }, [row]);
+
+  async function onSave() {
+    try {
+      const res = await save({ data: { ...form, referral_id: referralId } });
+      setForm((f) => ({ ...f, id: res.id }));
+      toast.success("Care plan saved");
+      q.refetch();
+    } catch (e) { toast.error((e as Error).message); }
+  }
+  async function onSend() {
+    if (!form.id) { await onSave(); }
+    const id = form.id;
+    if (!id) return;
+    try {
+      await send({ data: { id } });
+      toast.success("Care plan sent to practitioner");
+      q.refetch();
+    } catch (e) { toast.error((e as Error).message); }
+  }
+
+  const sent = row?.status === "sent";
+
+  return (
+    <div className="space-y-2 text-xs">
+      <div>
+        <Label className="text-[11px]">Assessment</Label>
+        <Textarea rows={3} value={form.assessment} onChange={(e) => setForm({ ...form, assessment: e.target.value })} placeholder="Clinical assessment…" />
+      </div>
+      <div>
+        <Label className="text-[11px]">Plan</Label>
+        <Textarea rows={3} value={form.plan} onChange={(e) => setForm({ ...form, plan: e.target.value })} placeholder="Treatment plan, products, doses…" />
+      </div>
+      <div>
+        <Label className="text-[11px]">Notes for practitioner</Label>
+        <Textarea rows={2} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Anything the practitioner should know before treating…" />
+      </div>
+      <div>
+        <Label className="text-[11px]">Follow-up</Label>
+        <Textarea rows={2} value={form.follow_up} onChange={(e) => setForm({ ...form, follow_up: e.target.value })} placeholder="Review timing, monitoring…" />
+      </div>
+      {sent ? (
+        <div className="rounded border border-emerald-300 bg-emerald-50 p-2 text-emerald-900">
+          ✓ Sent to practitioner on {new Date(row!.sent_at!).toLocaleString()}.
+        </div>
+      ) : (
+        <div className="flex justify-end gap-2">
+          <Button size="sm" variant="outline" onClick={onSave}>Save</Button>
+          <Button size="sm" onClick={onSend}><Send className="mr-1 h-4 w-4" /> Send to practitioner</Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Field({ label, v, on, type = "text", disabled, className }: { label: string; v: string; on: (v: string) => void; type?: string; disabled?: boolean; className?: string }) {
+  return (
+    <div className={className}>
+      <Label className="text-[11px]">{label}</Label>
+      <Input type={type} value={v} onChange={(e) => on(e.target.value)} disabled={disabled} />
+    </div>
+  );
+}
+
