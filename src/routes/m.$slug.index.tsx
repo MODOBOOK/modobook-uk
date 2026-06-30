@@ -333,12 +333,8 @@ function BookPage() {
   const [concernsConfirmed, setConcernsConfirmed] = useState(false);
   const togglePickedConcern = (id: string) =>
     setPickedConcernIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
-  const pickedConcernId = concernsConfirmed && pickedConcernIds.length > 0 ? pickedConcernIds[0] : null;
-  const setPickedConcernId = (_id: string | null) => {
-    setPickedConcernIds([]);
-    setConcernsConfirmed(false);
-  };
-  void setPickedConcernId;
+  void concerns; // referenced via picked ids
+
   // Clear selection when location changes
   const setLocAndClear = (id: string | null) => {
     setLocationId(id);
