@@ -1,23 +1,19 @@
 import { createFileRoute, Link, useParams, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  getMyPatient,
-  getMyPatientLinks,
-  ensurePatient,
-  getMyAppointments,
-  submitPatientReview,
-} from "@/lib/patient.functions";
-import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
-import { Loader2, Calendar as CalendarIcon, Clock, MapPin, Star, FileText } from "lucide-react";
+import {
+  Loader2, Calendar as CalendarIcon, Clock, MapPin, FileText, StickyNote,
+  ClipboardCheck, Receipt, ShieldCheck, ExternalLink, Sparkles,
+} from "lucide-react";
 import { toast } from "sonner";
+
+export const Route = createFileRoute("/m/$slug/account")({
+  ssr: false,
+  component: Account,
+});
 
 type Appt = {
   id: string;
@@ -27,111 +23,269 @@ type Appt = {
   status: string | null;
   payment_status: string | null;
   total_amount: number | null;
-  notes: string | null;
-  practitioner_notes: string | null;
-  treatment: { name: string | null; duration: number | null } | null;
-  location: { name: string | null; address_line1: string | null; city: string | null } | null;
-  profile: { slug: string | null; clinic_name: string | null; full_name: string | null } | null;
+  treatment_id: string | null;
+  reschedule_count: number | null;
+  treatment_name_snapshot: string | null;
+  treatments: { name: string | null } | null;
+  locations: { name: string | null } | null;
 };
 
-export const Route = createFileRoute("/m/$slug/account")({
-  ssr: false,
-  component: Account,
-});
+type Profile = {
+  id: string;
+  full_name: string | null;
+  clinic_name: string | null;
+  brand_color: string | null;
+  avatar_url: string | null;
+  allow_patient_cancel: boolean | null;
+  allow_patient_reschedule: boolean | null;
+  cancellation_rules: any;
+};
 
 function Account() {
   const { slug } = useParams({ from: "/m/$slug/account" });
   const navigate = useNavigate();
-  const getPatient = useServerFn(getMyPatient);
-  const getLinks = useServerFn(getMyPatientLinks);
-  const getAppts = useServerFn(getMyAppointments);
-  const ensure = useServerFn(ensurePatient);
-  const submitReview = useServerFn(submitPatientReview);
 
   const [loading, setLoading] = useState(true);
-  const [patient, setPatient] = useState<{ full_name: string; email: string | null } | null>(null);
-  const [links, setLinks] = useState<Array<{ profiles: { slug: string; clinic_name: string | null; full_name: string | null } | null }>>([]);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [patientName, setPatientName] = useState<string>("");
   const [appts, setAppts] = useState<Appt[]>([]);
+  const [forms, setForms] = useState<any[]>([]);
+  const [consents, setConsents] = useState<any[]>([]);
+  const [notes, setNotes] = useState<any[]>([]);
+  const [aftercare, setAftercare] = useState<any[]>([]);
+  const [payments, setPayments] = useState<any[]>([]);
 
-  useEffect(() => {
-    (async () => {
-      const { data } = await supabase.auth.getSession();
-      if (!data.session) {
+  async function loadAll() {
+    setLoading(true);
+    try {
+      const { data: sess } = await supabase.auth.getSession();
+      if (!sess.session) {
         navigate({ to: "/m/$slug/auth", params: { slug }, search: { redirect: `/m/${slug}/account` } });
         return;
       }
-      const p = await getPatient();
-      if (!p.patient) {
-        await ensure({ data: { fullName: data.session.user.email?.split("@")[0] ?? "Patient", linkSlug: slug } });
+
+      // Link account to THIS practitioner (idempotent)
+      const { error: linkErr } = await supabase.rpc("link_patient_account", { p_slug: slug });
+      if (linkErr) throw linkErr;
+
+      // Public profile + rules
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("id, full_name, clinic_name, brand_color, avatar_url, allow_patient_cancel, allow_patient_reschedule, cancellation_rules")
+        .eq("slug", slug)
+        .maybeSingle();
+      if (!prof) throw new Error("Practitioner not found");
+      setProfile(prof as Profile);
+
+      // Linked clinic_client (RLS-scoped to me)
+      const { data: client } = await supabase
+        .from("clinic_clients")
+        .select("id, full_name")
+        .eq("profile_id", prof.id)
+        .maybeSingle();
+      setPatientName(client?.full_name ?? sess.session.user.email?.split("@")[0] ?? "");
+
+      // Appointments
+      const { data: apptRows } = await supabase
+        .from("appointments")
+        .select("id, scheduled_date, start_time, end_time, status, payment_status, total_amount, treatment_id, reschedule_count, treatment_name_snapshot, treatments(name), locations(name)")
+        .eq("profile_id", prof.id)
+        .order("scheduled_date", { ascending: false });
+      setAppts((apptRows ?? []) as any);
+
+      const apptIds = (apptRows ?? []).map((a) => a.id);
+
+      // Medical forms (including stand-alone ones sent via send_medical_form_to_client)
+      const { data: formRows } = await supabase
+        .from("appointment_medical_forms")
+        .select("id, token, status, submitted_at, created_at, appointment_id, medical_form_templates(name)")
+        .eq("profile_id", prof.id)
+        .order("created_at", { ascending: false });
+      setForms((formRows ?? []) as any);
+
+      // Consent forms
+      if (apptIds.length) {
+        const { data: consRows } = await supabase
+          .from("appointment_consents")
+          .select("id, token, status, signed_at, created_at, appointment_id, consent_templates(name)")
+          .in("appointment_id", apptIds)
+          .order("created_at", { ascending: false });
+        setConsents((consRows ?? []) as any);
+
+        const { data: payRows } = await supabase
+          .from("payments")
+          .select("id, amount, currency, status, created_at, appointment_id")
+          .in("appointment_id", apptIds)
+          .order("created_at", { ascending: false });
+        setPayments((payRows ?? []) as any);
+
+        const { data: acRows } = await supabase
+          .from("appointment_aftercare")
+          .select("id, send_at, sent_at, body_html, appointment_id")
+          .in("appointment_id", apptIds)
+          .order("send_at", { ascending: false });
+        setAftercare((acRows ?? []) as any);
       } else {
-        setPatient(p.patient);
+        setConsents([]); setPayments([]); setAftercare([]);
       }
-      const [l, a] = await Promise.all([getLinks(), getAppts()]);
-      setLinks(l.links as typeof links);
-      setAppts(a.appointments as Appt[]);
+
+      // Shared notes (RLS only returns visible_to_patient = true)
+      if (client?.id) {
+        const { data: noteRows } = await supabase
+          .from("client_notes")
+          .select("id, body, created_at, shared_at, visible_to_patient")
+          .eq("client_id", client.id)
+          .eq("visible_to_patient", true)
+          .order("created_at", { ascending: false });
+        setNotes((noteRows ?? []) as any);
+      }
+    } catch (e: any) {
+      toast.error(e.message ?? "Failed to load your portal");
+    } finally {
       setLoading(false);
-    })();
-  }, []);
+    }
+  }
 
-  if (loading) return <div className="flex min-h-[40vh] items-center justify-center"><Loader2 className="h-6 w-6 animate-spin" /></div>;
+  useEffect(() => { loadAll(); /* eslint-disable-next-line */ }, [slug]);
 
+  if (loading) {
+    return <div className="flex min-h-[40vh] items-center justify-center"><Loader2 className="h-6 w-6 animate-spin" /></div>;
+  }
+
+  const brand = profile?.brand_color || "#1f2937";
   const today = new Date().toISOString().slice(0, 10);
-  const upcoming = appts.filter((a) => a.scheduled_date >= today);
-  const past = appts.filter((a) => a.scheduled_date < today);
+  const upcoming = appts.filter((a) => a.scheduled_date >= today && a.status !== "cancelled");
+  const past = appts.filter((a) => a.scheduled_date < today || a.status === "cancelled" || a.status === "completed");
+
+  async function cancelAppt(id: string) {
+    if (!confirm("Cancel this appointment?")) return;
+    const { error } = await supabase.rpc("patient_cancel_appointment", { p_appointment_id: id });
+    if (error) return toast.error(error.message);
+    toast.success("Appointment cancelled");
+    loadAll();
+  }
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-10">
-      <h1 className="text-3xl font-bold tracking-tight">My MODO Book account</h1>
-      <p className="mt-1 text-muted-foreground">Welcome back{patient?.full_name ? `, ${patient.full_name}` : ""}.</p>
+    <main className="mx-auto max-w-3xl px-4 py-8" style={{ color: "#111" }}>
+      <header className="mb-8 flex items-center gap-4">
+        {profile?.avatar_url && <img src={profile.avatar_url} alt="" className="h-14 w-14 rounded-full object-cover" />}
+        <div className="min-w-0 flex-1">
+          <div className="text-xs uppercase tracking-wider text-muted-foreground">{profile?.clinic_name}</div>
+          <h1 className="truncate text-2xl font-bold tracking-tight" style={{ color: brand }}>
+            Hi{patientName ? `, ${patientName.split(" ")[0]}` : ""}
+          </h1>
+          <p className="text-xs text-muted-foreground">Your portal with {profile?.full_name ?? profile?.clinic_name}</p>
+        </div>
+        <Link to="/m/$slug" params={{ slug }}>
+          <Button size="sm" variant="outline">Back to clinic</Button>
+        </Link>
+      </header>
 
-      <section className="mt-8">
-        <h2 className="mb-3 text-lg font-semibold flex items-center gap-2"><CalendarIcon className="h-4 w-4" />Upcoming appointments</h2>
+      {/* Upcoming */}
+      <Section title="Upcoming appointments" icon={CalendarIcon} brand={brand}>
         {upcoming.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No upcoming appointments.</p>
-        ) : (
-          <div className="space-y-3">{upcoming.map((a) => <ApptCard key={a.id} a={a} />)}</div>
-        )}
-      </section>
-
-      <section className="mt-10">
-        <h2 className="mb-3 text-lg font-semibold flex items-center gap-2"><FileText className="h-4 w-4" />Past appointments &amp; notes</h2>
-        {past.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No past appointments yet.</p>
+          <Empty msg="No upcoming appointments." cta={<Link to="/m/$slug" params={{ slug }}><Button size="sm">Book a treatment</Button></Link>} />
         ) : (
           <div className="space-y-3">
-            {past.map((a) => (
-              <ApptCard key={a.id} a={a} showReview onReview={async (rating, body) => {
-                if (!a.profile?.slug) return;
-                try {
-                  await submitReview({ data: { profileSlug: a.profile.slug, rating, body } });
-                  toast.success("Review submitted — thank you!");
-                } catch (e) { toast.error((e as Error).message); }
-              }} />
+            {upcoming.map((a) => (
+              <ApptCard
+                key={a.id} a={a} brand={brand}
+                allowCancel={!!profile?.allow_patient_cancel}
+                allowReschedule={!!profile?.allow_patient_reschedule}
+                rules={profile?.cancellation_rules}
+                slug={slug}
+                onCancel={() => cancelAppt(a.id)}
+              />
             ))}
           </div>
         )}
-      </section>
+      </Section>
 
-      <section className="mt-10">
-        <h2 className="mb-3 text-lg font-semibold">Your practitioners</h2>
-        {links.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No practitioners linked yet.</p>
-        ) : (
-          <div className="grid gap-3 sm:grid-cols-2">
-            {links.map((l, i) => l.profiles && (
-              <Card key={i}>
-                <CardHeader><CardTitle className="text-base">{l.profiles.clinic_name}</CardTitle></CardHeader>
-                <CardContent className="space-y-2">
-                  <p className="text-sm text-muted-foreground">{l.profiles.full_name}</p>
-                  <Link to="/m/$slug" params={{ slug: l.profiles.slug }}>
-                    <Button size="sm" variant="outline">Visit clinic</Button>
-                  </Link>
+      {/* Medical forms */}
+      <Section title="Medical forms" icon={ClipboardCheck} brand={brand}>
+        {forms.length === 0 ? <Empty msg="No medical forms sent yet." /> : (
+          <div className="space-y-2">
+            {forms.map((f) => (
+              <RowItem
+                key={f.id}
+                title={f.medical_form_templates?.name ?? "Medical form"}
+                meta={f.status === "submitted" ? `Completed ${new Date(f.submitted_at).toLocaleDateString()}` : "Awaiting your completion"}
+                badge={f.status === "submitted" ? "Complete" : "Pending"}
+                badgeOk={f.status === "submitted"}
+                href={`/f/${f.token}`}
+              />
+            ))}
+          </div>
+        )}
+      </Section>
+
+      {/* Consent forms */}
+      <Section title="Consent forms" icon={ShieldCheck} brand={brand}>
+        {consents.length === 0 ? <Empty msg="No consent forms yet." /> : (
+          <div className="space-y-2">
+            {consents.map((c) => (
+              <RowItem
+                key={c.id}
+                title={c.consent_templates?.name ?? "Consent form"}
+                meta={c.status === "signed" ? `Signed ${new Date(c.signed_at).toLocaleDateString()}` : "Awaiting your signature"}
+                badge={c.status === "signed" ? "Signed" : "Pending"}
+                badgeOk={c.status === "signed"}
+                href={`/c/${c.token}`}
+              />
+            ))}
+          </div>
+        )}
+      </Section>
+
+      {/* Shared notes & aftercare */}
+      <Section title="Notes & aftercare from your practitioner" icon={StickyNote} brand={brand}>
+        {notes.length === 0 && aftercare.length === 0 ? <Empty msg="Your practitioner hasn't shared any notes yet." /> : (
+          <div className="space-y-3">
+            {notes.map((n) => (
+              <Card key={n.id} className="border-l-4" style={{ borderLeftColor: brand }}>
+                <CardContent className="p-3">
+                  <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                    <Sparkles className="h-3 w-3" />Shared note · {new Date(n.shared_at || n.created_at).toLocaleDateString()}
+                  </div>
+                  <div className="mt-1 whitespace-pre-wrap text-sm">{n.body}</div>
+                </CardContent>
+              </Card>
+            ))}
+            {aftercare.map((ac) => (
+              <Card key={ac.id}>
+                <CardContent className="p-3">
+                  <div className="text-[11px] text-muted-foreground">Aftercare · {new Date(ac.sent_at || ac.send_at).toLocaleDateString()}</div>
+                  <div className="prose prose-sm mt-1 max-w-none" dangerouslySetInnerHTML={{ __html: ac.body_html ?? "" }} />
                 </CardContent>
               </Card>
             ))}
           </div>
         )}
-      </section>
+      </Section>
+
+      {/* Past appointments */}
+      <Section title="Past appointments" icon={FileText} brand={brand}>
+        {past.length === 0 ? <Empty msg="No past appointments yet." /> : (
+          <div className="space-y-3">{past.map((a) => <ApptCard key={a.id} a={a} brand={brand} slug={slug} />)}</div>
+        )}
+      </Section>
+
+      {/* Invoices */}
+      <Section title="Invoices & payments" icon={Receipt} brand={brand}>
+        {payments.length === 0 ? <Empty msg="No payments on file yet." /> : (
+          <div className="space-y-2">
+            {payments.map((p) => (
+              <div key={p.id} className="flex items-center justify-between rounded-md border p-3 text-sm">
+                <div>
+                  <div className="font-medium">£{((p.amount ?? 0) / 100).toFixed(2)} {(p.currency || "GBP").toUpperCase()}</div>
+                  <div className="text-xs text-muted-foreground">{new Date(p.created_at).toLocaleString()}</div>
+                </div>
+                <Badge variant={p.status === "succeeded" ? "default" : "secondary"}>{p.status}</Badge>
+              </div>
+            ))}
+          </div>
+        )}
+      </Section>
 
       <div className="mt-10">
         <Button variant="outline" onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/m/$slug", params: { slug } }); }}>
@@ -142,53 +296,73 @@ function Account() {
   );
 }
 
-function ApptCard({ a, showReview, onReview }: { a: Appt; showReview?: boolean; onReview?: (rating: number, body: string) => Promise<void> }) {
-  const [rating, setRating] = useState(5);
-  const [body, setBody] = useState("");
-  const [open, setOpen] = useState(false);
+function Section({ title, icon: Icon, brand, children }: { title: string; icon: any; brand: string; children: React.ReactNode }) {
+  return (
+    <section className="mt-8">
+      <h2 className="mb-3 flex items-center gap-2 text-base font-semibold" style={{ color: brand }}>
+        <Icon className="h-4 w-4" />{title}
+      </h2>
+      {children}
+    </section>
+  );
+}
+
+function Empty({ msg, cta }: { msg: string; cta?: React.ReactNode }) {
+  return <div className="rounded-md border border-dashed p-4 text-center text-sm text-muted-foreground">{msg}{cta && <div className="mt-2">{cta}</div>}</div>;
+}
+
+function RowItem({ title, meta, badge, badgeOk, href }: { title: string; meta: string; badge: string; badgeOk: boolean; href: string }) {
+  return (
+    <a href={href} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between gap-3 rounded-md border p-3 text-sm hover:bg-muted/30">
+      <div className="min-w-0 flex-1">
+        <div className="truncate font-medium">{title}</div>
+        <div className="text-xs text-muted-foreground">{meta}</div>
+      </div>
+      <Badge variant={badgeOk ? "default" : "secondary"}>{badge}</Badge>
+      <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
+    </a>
+  );
+}
+
+function ApptCard({
+  a, brand, slug, allowCancel, allowReschedule, rules, onCancel,
+}: {
+  a: Appt; brand: string; slug: string;
+  allowCancel?: boolean; allowReschedule?: boolean; rules?: any;
+  onCancel?: () => void;
+}) {
+  const minH = rules?.min_notice_hours ?? 0;
+  const maxR = rules?.max_patient_reschedules ?? 999;
+  const remaining = Math.max(0, maxR - (a.reschedule_count ?? 0));
+  const treatmentName = a.treatments?.name ?? a.treatment_name_snapshot ?? "Treatment";
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-base flex items-center justify-between gap-2">
-          <span>{a.treatment?.name ?? "Treatment"}</span>
-          <Badge variant={a.status === "confirmed" ? "default" : "secondary"}>{a.status ?? "pending"}</Badge>
+        <CardTitle className="flex items-center justify-between gap-2 text-base">
+          <span style={{ color: brand }}>{treatmentName}</span>
+          <Badge variant={a.status === "confirmed" ? "default" : a.status === "cancelled" ? "destructive" : "secondary"}>{a.status ?? "pending"}</Badge>
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-2 text-sm">
+      <CardContent className="space-y-3 text-sm">
         <div className="flex flex-wrap gap-x-4 gap-y-1 text-muted-foreground">
           <span className="inline-flex items-center gap-1"><CalendarIcon className="h-3.5 w-3.5" />{a.scheduled_date}</span>
-          <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{a.start_time?.slice(0,5)}–{a.end_time?.slice(0,5)}</span>
-          {a.location?.name && <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{a.location.name}</span>}
+          <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{a.start_time?.slice(0, 5)}–{a.end_time?.slice(0, 5)}</span>
+          {a.locations?.name && <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{a.locations.name}</span>}
         </div>
-        {a.profile?.clinic_name && <div className="text-xs text-muted-foreground">{a.profile.clinic_name}</div>}
-        {a.practitioner_notes && (
-          <div className="rounded-md border bg-muted/30 p-2 text-xs">
-            <div className="font-semibold mb-1">Practitioner notes</div>
-            <div className="whitespace-pre-wrap">{a.practitioner_notes}</div>
+        {(allowCancel || allowReschedule) && a.status !== "cancelled" && a.status !== "completed" && (
+          <div className="flex flex-wrap gap-2 pt-1">
+            {allowReschedule && a.treatment_id && remaining > 0 && (
+              <Link to="/m/$slug/book/$treatmentId" params={{ slug, treatmentId: a.treatment_id }}>
+                <Button size="sm" variant="outline">Reschedule ({remaining} left)</Button>
+              </Link>
+            )}
+            {allowCancel && onCancel && (
+              <Button size="sm" variant="ghost" onClick={onCancel}>Cancel appointment</Button>
+            )}
+            {minH > 0 && (
+              <span className="self-center text-[11px] text-muted-foreground">Min {minH}h notice required</span>
+            )}
           </div>
-        )}
-        {showReview && onReview && (
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-              <Button size="sm" variant="outline" className="mt-2"><Star className="h-3.5 w-3.5 mr-1" />Leave a review</Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader><DialogTitle>Review {a.profile?.clinic_name ?? "your practitioner"}</DialogTitle></DialogHeader>
-              <div className="space-y-3">
-                <div>
-                  <Label>Rating</Label>
-                  <Input type="number" min={1} max={5} value={rating} onChange={(e) => setRating(Number(e.target.value))} />
-                </div>
-                <div>
-                  <Label>Your review</Label>
-                  <Textarea value={body} onChange={(e) => setBody(e.target.value)} rows={4} />
-                </div>
-              </div>
-              <DialogFooter>
-                <Button onClick={async () => { await onReview(rating, body); setOpen(false); setBody(""); }}>Submit</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
         )}
       </CardContent>
     </Card>
