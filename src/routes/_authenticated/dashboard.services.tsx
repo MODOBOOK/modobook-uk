@@ -31,7 +31,7 @@ import { getMyProfile, updateProfile } from "@/lib/profiles.functions";
 import { ImageUploader } from "@/components/ImageUploader";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
-import { Star, X } from "lucide-react";
+import { Star, X, Check, ChevronsUpDown, MapPin } from "lucide-react";
 
 
 
