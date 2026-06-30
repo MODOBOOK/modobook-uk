@@ -79,8 +79,6 @@ function AiImportPage() {
   const [summary, setSummary] = useState<Awaited<ReturnType<typeof commit>> | null>(null);
 
   // upload state
-  const [url, setUrl] = useState("");
-  const [text, setText] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [files, setFiles] = useState<File[]>([]);
   const [kind, setKind] = useState<SourceKind>("pdf");
@@ -89,23 +87,13 @@ function AiImportPage() {
     setBusy(true);
     try {
       let result: ExtractedDraft;
-      if (kind === "url") {
-        if (!url.trim()) throw new Error("Paste a website URL");
-        result = await extract({ data: { url: url.trim() } });
-      } else if (kind === "text" || kind === "spreadsheet") {
-        let body = text.trim();
-        if (kind === "spreadsheet" && file) body = await spreadsheetToText(file);
-        if (!body) throw new Error("Paste some content or attach a file");
-        result = await extract({ data: { text: body } });
-      } else {
-        // pdf or image — supports multiple files
-        const all = files.length ? files : file ? [file] : [];
-        if (!all.length) throw new Error("Choose at least one file");
-        const payload = await Promise.all(
-          all.map(async (f) => ({ data_url: await fileToDataUrl(f), name: f.name })),
-        );
-        result = await extract({ data: { files: payload } });
-      }
+      // pdf or image — supports multiple files
+      const all = files.length ? files : file ? [file] : [];
+      if (!all.length) throw new Error("Choose at least one file");
+      const payload = await Promise.all(
+        all.map(async (f) => ({ data_url: await fileToDataUrl(f), name: f.name })),
+      );
+      result = await extract({ data: { files: payload } });
       const total =
         (result.categories?.length ?? 0) +
         (result.treatments?.length ?? 0) +
