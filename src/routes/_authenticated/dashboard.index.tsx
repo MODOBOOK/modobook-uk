@@ -13,6 +13,7 @@ import {
   ChevronRight,
   Sparkles,
   Info,
+  Stethoscope,
 } from "lucide-react";
 import { listMyAppointments } from "@/lib/availability.functions";
 import { resolveDisplayNames } from "@/lib/display-name";
