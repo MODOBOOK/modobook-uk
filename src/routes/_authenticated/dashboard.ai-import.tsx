@@ -114,6 +114,7 @@ function AiImportPage() {
       const r = await commit({ data: draft });
       setSummary(r);
       setStep("done");
+      try { localStorage.setItem("modo:ai-import-done", "1"); } catch {}
       toast.success("Import complete");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Import failed");
