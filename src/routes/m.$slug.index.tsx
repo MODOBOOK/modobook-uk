@@ -373,6 +373,9 @@ function BookPage() {
 
   const primaryLocation =
     locations.find((l) => l.is_primary) ?? locations[0] ?? null;
+  const mappableLocations = locations.filter((l) => mapsUrl(l));
+  const firstMapUrl = mappableLocations[0] ? mapsUrl(mappableLocations[0]) : null;
+
 
   const ig = profile.social_links?.instagram;
 
