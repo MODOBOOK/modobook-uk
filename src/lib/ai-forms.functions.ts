@@ -191,42 +191,58 @@ export const commitFormMatches = createServerFn({ method: "POST" })
       }
 
       if (m.medical_form_ids.length) {
-        const rows = m.medical_form_ids.map((template_id) => ({
-          treatment_id: m.treatment_id,
-          template_id,
-        }));
-        const { error, count } = await supabase
+        const { data: existing } = await supabase
           .from("treatment_medical_forms")
-          .upsert(rows as never, { onConflict: "treatment_id,template_id", ignoreDuplicates: true, count: "exact" });
-        if (error) errors.push(`Medical link: ${error.message}`);
-        else medical += count ?? rows.length;
+          .select("template_id")
+          .eq("treatment_id", m.treatment_id);
+        const have = new Set((existing ?? []).map((r: { template_id: string }) => r.template_id));
+        const rows = m.medical_form_ids
+          .filter((id) => !have.has(id))
+          .map((template_id) => ({ treatment_id: m.treatment_id, template_id }));
+        if (rows.length) {
+          const { error } = await supabase.from("treatment_medical_forms").insert(rows as never);
+          if (error) errors.push(`Medical link: ${error.message}`);
+          else medical += rows.length;
+        }
       }
 
       if (m.consent_ids.length) {
-        const rows = m.consent_ids.map((consent_template_id) => ({
-          treatment_id: m.treatment_id,
-          consent_template_id,
-          profile_id: profileId,
-        }));
-        const { error, count } = await supabase
+        const { data: existing } = await supabase
           .from("treatment_consents")
-          .upsert(rows as never, { onConflict: "treatment_id,consent_template_id", ignoreDuplicates: true, count: "exact" });
-        if (error) errors.push(`Consent link: ${error.message}`);
-        else consent += count ?? rows.length;
+          .select("consent_template_id")
+          .eq("treatment_id", m.treatment_id);
+        const have = new Set((existing ?? []).map((r: { consent_template_id: string }) => r.consent_template_id));
+        const rows = m.consent_ids
+          .filter((id) => !have.has(id))
+          .map((consent_template_id) => ({
+            treatment_id: m.treatment_id,
+            consent_template_id,
+            profile_id: profileId,
+          }));
+        if (rows.length) {
+          const { error } = await supabase.from("treatment_consents").insert(rows as never);
+          if (error) errors.push(`Consent link: ${error.message}`);
+          else consent += rows.length;
+        }
       }
 
       if (m.aftercare_ids.length) {
-        const rows = m.aftercare_ids.map((template_id) => ({
-          treatment_id: m.treatment_id,
-          template_id,
-        }));
-        const { error, count } = await supabase
+        const { data: existing } = await supabase
           .from("treatment_aftercare_templates")
-          .upsert(rows as never, { onConflict: "treatment_id,template_id", ignoreDuplicates: true, count: "exact" });
-        if (error) errors.push(`Aftercare link: ${error.message}`);
-        else aftercare += count ?? rows.length;
+          .select("template_id")
+          .eq("treatment_id", m.treatment_id);
+        const have = new Set((existing ?? []).map((r: { template_id: string }) => r.template_id));
+        const rows = m.aftercare_ids
+          .filter((id) => !have.has(id))
+          .map((template_id) => ({ treatment_id: m.treatment_id, template_id }));
+        if (rows.length) {
+          const { error } = await supabase.from("treatment_aftercare_templates").insert(rows as never);
+          if (error) errors.push(`Aftercare link: ${error.message}`);
+          else aftercare += rows.length;
+        }
       }
     }
 
     return { medical, consent, aftercare, errors };
   });
+
