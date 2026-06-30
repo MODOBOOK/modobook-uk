@@ -120,7 +120,7 @@ function DashboardLayout() {
         </div>
         <nav className="flex-1 space-y-0.5 overflow-y-auto px-4 py-6">
           {navItems.map((item) => (
-            <NavLink key={item.to} to={item.to} icon={item.icon} label={item.label} />
+            <NavLink key={item.to} to={item.to} icon={item.icon} label={item.label} badge={item.to === "/dashboard/reviews" && pendingReviews > 0 ? pendingReviews : undefined} />
           ))}
         </nav>
         <div className="border-t border-border/60 p-4">
