@@ -25,6 +25,9 @@ import {
   HelpCircle,
   ChevronLeft,
   Sparkles,
+  Percent,
+  HeartPulse,
+
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
@@ -57,11 +60,16 @@ const navItems = [
   { label: "Branding", to: "/dashboard/branding", icon: Palette },
   { label: "Treatment finder quiz", to: "/dashboard/quiz", icon: HelpCircle },
   { label: "Services", to: "/dashboard/services", icon: Scissors },
+  { label: "Add-ons", to: "/dashboard/addons", icon: Sparkles },
   { label: "Packages", to: "/dashboard/packages", icon: Package },
+  { label: "Discounts", to: "/dashboard/discounts", icon: Percent },
+  { label: "Model slots", to: "/dashboard/model-slots", icon: Sparkles },
   { label: "Locations", to: "/dashboard/locations", icon: MapPin },
   { label: "Practitioners", to: "/dashboard/practitioners", icon: Users },
   { label: "Medical forms", to: "/dashboard/medical-forms", icon: FileText },
   { label: "Consent forms", to: "/dashboard/consent-forms", icon: FileSignature },
+  { label: "Aftercare templates", to: "/dashboard/aftercare", icon: HeartPulse },
+  { label: "Booking flow", to: "/dashboard/booking-flow", icon: HelpCircle },
   { label: "Availability", to: "/dashboard/availability", icon: CalendarDays },
   { label: "New appointment", to: "/dashboard/new-appointment", icon: CalendarPlus },
   { label: "Bookings", to: "/dashboard/bookings", icon: Users },
