@@ -103,9 +103,9 @@ function DashboardLayout() {
 
   return (
     <div className="flex min-h-screen bg-background" style={themeStyle}>
-      {/* Desktop sidebar */}
-      <aside className="hidden w-72 flex-col border-r border-border/60 bg-sidebar lg:flex">
-        <div className="flex h-20 items-center gap-3 border-b border-border/60 px-7">
+      {/* Desktop / iPad sidebar */}
+      <aside className="hidden w-60 shrink-0 flex-col border-r border-border/60 bg-sidebar md:flex lg:w-72">
+        <div className="flex h-20 items-center gap-3 border-b border-border/60 px-5 lg:px-7">
           {profile.avatar_url ? (
             <img src={profile.avatar_url} alt="" className="h-10 w-10 rounded-full object-cover ring-1 ring-border" />
           ) : (
