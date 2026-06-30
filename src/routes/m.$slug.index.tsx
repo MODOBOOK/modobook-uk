@@ -166,7 +166,9 @@ function BookPage() {
 
 
   const { slug } = useParams({ from: "/m/$slug/" });
+  const { primary: displayPrimary } = resolveDisplayNames(profile);
   const brand = theme?.primary_color || profile.brand_color || "#1f2a44";
+
   const accent = theme?.accent_color || brand;
   const bgColor = theme?.background_color || "#ffffff";
   const textColor = theme?.text_color || "#0f172a";
