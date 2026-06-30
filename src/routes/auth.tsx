@@ -143,7 +143,24 @@ function AuthPage() {
                     {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                     Sign in
                   </Button>
+                  <button
+                    type="button"
+                    className="block w-full text-center text-xs text-muted-foreground underline-offset-2 hover:underline"
+                    onClick={() => { setForgotOpen((v) => !v); setForgotEmail(email); }}
+                  >
+                    Forgot password?
+                  </button>
+                  {forgotOpen && (
+                    <div className="rounded-md border bg-muted/40 p-3">
+                      <Label htmlFor="forgot-email" className="text-xs">Send a reset link to</Label>
+                      <div className="mt-1 flex gap-2">
+                        <Input id="forgot-email" type="email" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} placeholder="you@example.com" />
+                        <Button type="button" size="sm" onClick={handleForgot} disabled={loading || !forgotEmail}>Send</Button>
+                      </div>
+                    </div>
+                  )}
                 </form>
+
               </TabsContent>
 
               <TabsContent value="signup" className="mt-0">
