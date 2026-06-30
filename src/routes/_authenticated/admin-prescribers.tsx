@@ -15,7 +15,7 @@ import {
 import { amIAdmin } from "@/lib/admin.functions";
 import { Shield, ExternalLink, Loader2 } from "lucide-react";
 
-export const Route = createFileRoute("/_authenticated/admin/prescribers")({
+export const Route = createFileRoute("/_authenticated/admin-prescribers")({
   ssr: false,
   loader: async () => {
     const me = await amIAdmin();
