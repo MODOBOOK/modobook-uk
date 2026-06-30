@@ -211,6 +211,9 @@ export const updateProfile = createServerFn({ method: "POST" })
     if (data.favourites_enabled !== undefined) update.favourites_enabled = data.favourites_enabled;
     if (data.favourites_custom_title !== undefined) update.favourites_custom_title = data.favourites_custom_title;
     if (data.about_page !== undefined) update.about_page = data.about_page as Json;
+    if (data.specialties !== undefined) update.specialties = data.specialties;
+    if (data.qualifications !== undefined) update.qualifications = data.qualifications as Json;
+    if (data.timeline !== undefined) update.timeline = data.timeline as Json;
 
     const passthroughKeys = [
       "booking_min_notice_hours","booking_max_lead_days","booking_buffer_before_minutes",
