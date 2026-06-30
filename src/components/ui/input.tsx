@@ -3,7 +3,20 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
-  ({ className, type, onFocus, ...props }, ref) => {
+  ({ className, type, onFocus, onClick, onTouchEnd, ...props }, ref) => {
+    const clearIfZero = (el: HTMLInputElement) => {
+      if (type !== "number") return;
+      const v = el.value;
+      if (v === "0" || v === "0.00" || v === "0.0" || /^0+(\.0+)?$/.test(v)) {
+        // Clear the 0 so typing replaces it on all devices (mobile/iPad/desktop).
+        // Use the native setter so React's controlled value updates correctly.
+        const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")?.set;
+        setter?.call(el, "");
+        el.dispatchEvent(new Event("input", { bubbles: true }));
+      } else {
+        try { el.select(); } catch { /* noop */ }
+      }
+    };
     return (
       <input
         type={type}
@@ -12,13 +25,9 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
           className,
         )}
         ref={ref}
-        onFocus={(e) => {
-          if (type === "number") {
-            // Select existing value so typing replaces it (fixes stuck leading 0)
-            try { e.currentTarget.select(); } catch { /* noop */ }
-          }
-          onFocus?.(e);
-        }}
+        onFocus={(e) => { clearIfZero(e.currentTarget); onFocus?.(e); }}
+        onClick={(e) => { clearIfZero(e.currentTarget); onClick?.(e); }}
+        onTouchEnd={(e) => { clearIfZero(e.currentTarget); onTouchEnd?.(e); }}
         {...props}
       />
     );
