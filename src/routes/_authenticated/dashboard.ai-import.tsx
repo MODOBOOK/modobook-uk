@@ -31,6 +31,8 @@ export const Route = createFileRoute("/_authenticated/dashboard/ai-import")({
   component: AiImportPage,
 });
 
+type IdName = { id: string; name: string };
+
 type SourceKind = "pdf" | "image" | "spreadsheet" | "url" | "text";
 
 type Draftable<T> = T & { _include: boolean };
