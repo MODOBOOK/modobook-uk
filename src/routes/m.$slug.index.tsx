@@ -250,7 +250,11 @@ function BookPage() {
   const [locationId, setLocationId] = useState<string | null>(null);
   const [directionsOpen, setDirectionsOpen] = useState(false);
   const [careGuideOpen, setCareGuideOpen] = useState(false);
-  const hasCareGuides = (careGuides ?? []).length > 0;
+  const preItems = (pretreatment ?? []).length > 0
+    ? (pretreatment ?? []).map((p) => ({ id: p.id, name: p.name, body_html: p.body_html, summary: p.summary }))
+    : (careGuides ?? []).map((g) => ({ id: g.id, name: g.name, body_html: g.body_html, summary: g.summary }));
+  const hasCareGuides = preItems.length > 0;
+
   const practSelectionMode = profile.practitioner_selection_mode ?? "optional";
   const [practitionerId, setPractitionerIdState] = useState<string | null>(null);
   const setPractitionerId = (id: string | null) => {
