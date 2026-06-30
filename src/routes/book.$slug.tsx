@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Clock, Phone, Calendar, Star, Loader2 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
+import { SafeHtml } from "@/components/SafeHtml";
 
 export const Route = createFileRoute("/book/$slug")({
   loader: async ({ params }) => {
@@ -30,16 +31,20 @@ export const Route = createFileRoute("/book/$slug")({
 });
 
 function ClinicPage() {
-  const { profile, treatments, packages, testimonials } = Route.useLoaderData() as {
+  const { profile, treatments, packages, testimonials, aboutPage } = Route.useLoaderData() as {
     profile: Database["public"]["Tables"]["profiles"]["Row"];
     treatments: Database["public"]["Tables"]["treatments"]["Row"][];
     packages: Database["public"]["Tables"]["packages"]["Row"][];
     testimonials: Database["public"]["Tables"]["clinic_testimonials"]["Row"][];
+    aboutPage?: { intro_heading?: string | null; intro_body?: string | null } | null;
   };
 
   const brandColor = profile.brand_color || "#111827";
   const address = (profile.address as { line1?: string; city?: string; postcode?: string } | null) || {};
   const addressText = [address.line1, address.city, address.postcode].filter(Boolean).join(", ");
+  const introHeading = aboutPage?.intro_heading?.trim() || "";
+  const legacyIntroBody = aboutPage?.intro_body?.trim() || "";
+  const welcomeHtml = profile.welcome_intro_html?.trim() || (legacyIntroBody ? textToParagraphHtml(legacyIntroBody) : "");
 
   return (
     <div className="min-h-screen bg-background">
@@ -76,7 +81,12 @@ function ClinicPage() {
           <div className="lg:col-span-2">
             <h2 className="text-3xl font-bold tracking-tight">{profile.clinic_name}</h2>
             <p className="mt-3 text-lg text-muted-foreground">{profile.tagline}</p>
-            <p className="mt-4 whitespace-pre-line text-foreground/90">{profile.bio || profile.about}</p>
+            {(introHeading || welcomeHtml) && (
+              <div className="mt-6 rounded-2xl border bg-card p-5 shadow-sm">
+                {introHeading && <h3 className="text-2xl font-semibold tracking-tight">{introHeading}</h3>}
+                {welcomeHtml && <SafeHtml html={welcomeHtml} className="prose prose-base mt-3 max-w-none" />}
+              </div>
+            )}
             <div className="mt-6 flex flex-wrap gap-3 text-sm text-muted-foreground">
               {addressText && (
                 <span className="flex items-center gap-1">
@@ -179,6 +189,15 @@ function ClinicPage() {
       </footer>
     </div>
   );
+}
+
+function textToParagraphHtml(text: string) {
+  return text
+    .split(/\n{2,}/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean)
+    .map((paragraph) => `<p>${paragraph.replace(/\n/g, "<br />")}</p>`)
+    .join("");
 }
 
 function TreatmentCard({

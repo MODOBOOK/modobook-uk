@@ -1674,32 +1674,6 @@ function ActionButton({
   );
 }
 
-function ActionLink({
-  to,
-  params,
-  label,
-  brand,
-  children,
-}: {
-  to: "/m/$slug/about";
-  params: { slug: string };
-  label: string;
-  brand: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <Link
-      to={to}
-      params={params}
-      className="flex flex-col items-center gap-1.5 rounded-xl p-2 text-xs font-medium transition hover:bg-muted"
-      style={{ color: brand }}
-    >
-      {children}
-      <span>{label}</span>
-    </Link>
-  );
-}
-
 type MenuStyleProps = {
   cardBg: string;
   cardBorder: string;
