@@ -25,6 +25,7 @@ import {
   Sparkles,
   Search,
   Users,
+  Info,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -77,6 +78,7 @@ const groups: { title: string; items: Item[] }[] = [
       { label: "Model slots", description: "Discounted dates & times", to: "/dashboard/model-slots", icon: Sparkles, ...T.mocha },
       { label: "Medical forms", description: "Pre-treatment questionnaires", to: "/dashboard/medical-forms", icon: FileText, ...T.cream },
       { label: "Consent forms", description: "Templates sent at booking", to: "/dashboard/consent-forms", icon: FileSignature, ...T.ivory },
+      { label: "Pre-treatment info", description: "Advice patients can read before booking", to: "/dashboard/pre-treatment", icon: Info, ...T.mocha },
       { label: "Aftercare templates", description: "Reusable post-treatment messages — auto-sent 2h after", to: "/dashboard/aftercare", icon: FileText, ...T.sand },
     ],
   },
