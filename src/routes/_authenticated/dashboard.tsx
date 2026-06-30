@@ -27,6 +27,8 @@ import {
   Sparkles,
   Percent,
   HeartPulse,
+  Info,
+
 
 } from "lucide-react";
 import { useEffect, useState } from "react";
