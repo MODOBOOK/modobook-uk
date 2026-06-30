@@ -21,10 +21,12 @@ export const Route = createFileRoute("/_authenticated/prescriber")({
 
 const nav = [
   { to: "/prescriber", label: "Referrals", icon: Inbox, exact: true },
+  { to: "/prescriber/visits", label: "Clinic visits", icon: CalendarDays },
   { to: "/hub/connections", label: "Connections", icon: Network },
   { to: "/hub/verification", label: "Verification", icon: ShieldCheck },
   { to: "/hub", label: "Hub overview", icon: Stethoscope },
 ];
+
 
 function PrescriberLayout() {
   const { hubCtx, hasClinic } = Route.useRouteContext();
