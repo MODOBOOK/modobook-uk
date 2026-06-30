@@ -212,11 +212,13 @@ function NavLink({
   icon: Icon,
   label,
   onClick,
+  badge,
 }: {
   to: string;
   icon: React.ElementType;
   label: string;
   onClick?: () => void;
+  badge?: number;
 }) {
   return (
     <Link
@@ -230,7 +232,12 @@ function NavLink({
       onClick={onClick}
     >
       <Icon className="h-4 w-4 opacity-80" />
-      <span className="tracking-wide">{label}</span>
+      <span className="flex-1 tracking-wide">{label}</span>
+      {badge != null && badge > 0 && (
+        <span className="inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-destructive px-1.5 text-[10px] font-semibold text-destructive-foreground">
+          {badge > 99 ? "99+" : badge}
+        </span>
+      )}
     </Link>
   );
 }
