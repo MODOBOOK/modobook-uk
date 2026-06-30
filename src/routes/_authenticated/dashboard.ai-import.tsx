@@ -415,26 +415,19 @@ function ReviewStep({
 
       <ListCard
         title={`Treatments (${includedTr}/${draft.treatments.length})`}
-        helper="Each row becomes a bookable service. Pick the category it belongs to."
+        helper="Each row becomes a bookable service. Add or generate a client-facing description below."
         onAll={(v) => toggleAll("treatments", v)}
         onAdd={() => addRow("treatments")}
         empty="No treatments detected — use + Add treatment to create one."
         rows={draft.treatments.map((t, i) => (
-          <Row key={i} included={t._include} onToggle={(v) => setRow("treatments", i, { _include: v })} onRemove={() => removeRow("treatments", i)}>
-            <Input className="md:max-w-xs" value={t.name} onChange={(e) => setRow("treatments", i, { name: e.target.value })} placeholder="Treatment name" />
-            <Input className="md:max-w-[110px]" type="number" value={t.duration_min ?? ""} onChange={(e) => setRow("treatments", i, { duration_min: e.target.value ? Number(e.target.value) : undefined })} placeholder="Mins" />
-            <Input className="md:max-w-[110px]" type="number" step="0.01" value={t.price_gbp ?? ""} onChange={(e) => setRow("treatments", i, { price_gbp: e.target.value ? Number(e.target.value) : undefined })} placeholder="£" />
-            <select
-              className="h-9 rounded-md border bg-background px-2 text-sm md:max-w-xs"
-              value={t.category ?? ""}
-              onChange={(e) => setRow("treatments", i, { category: e.target.value || null })}
-            >
-              <option value="">— No category —</option>
-              {categoryOptions.map((p) => (
-                <option key={p} value={p}>{p}</option>
-              ))}
-            </select>
-          </Row>
+          <TreatmentRow
+            key={i}
+            treatment={t}
+            categoryOptions={categoryOptions}
+            onToggle={(v) => setRow("treatments", i, { _include: v })}
+            onRemove={() => removeRow("treatments", i)}
+            onChange={(patch) => setRow("treatments", i, patch)}
+          />
         ))}
       />
 
