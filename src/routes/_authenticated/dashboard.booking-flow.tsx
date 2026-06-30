@@ -449,9 +449,57 @@ function BookingFlowPage() {
           </div>
         </CardContent>
       </Card>
+
+      <Dialog open={aiOpen} onOpenChange={setAiOpen}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Review AI suggestions</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Tick or untick to adjust. Nothing is saved until you tap <strong>Apply</strong>.
+          </p>
+          <div className="space-y-3 mt-2">
+            {Object.entries(aiDraft).length === 0 && (
+              <p className="text-sm italic text-muted-foreground">No suggestions.</p>
+            )}
+            {Object.entries(aiDraft).map(([concernId, set]) => {
+              const concern = concerns.find((c) => c.id === concernId);
+              if (!concern) return null;
+              const area = areas.find((a) => a.id === concern.area_id);
+              return (
+                <div key={concernId} className="rounded-lg border bg-card p-3">
+                  <div className="mb-2 flex items-baseline justify-between gap-2">
+                    <div className="font-medium">{concern.name}</div>
+                    {area && <span className="text-xs text-muted-foreground">{area.name}</span>}
+                  </div>
+                  <div className="space-y-1">
+                    {treatments.map((t) => (
+                      <label key={t.id} className="flex items-center gap-2 rounded px-2 py-1 text-sm hover:bg-muted">
+                        <Checkbox
+                          checked={set.has(t.id)}
+                          onCheckedChange={() => toggleDraft(concernId, t.id)}
+                        />
+                        <span>{t.name}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setAiOpen(false)} disabled={aiSaving}>Cancel</Button>
+            <Button onClick={applyAiDraft} disabled={aiSaving}>
+              {aiSaving ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : null}
+              Apply
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
+
 
 function Row({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
