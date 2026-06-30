@@ -2649,6 +2649,7 @@ export type Database = {
           deposit_amount_cents: number | null
           deposit_policy_text: string | null
           discount_stack_mode: string
+          display_name_mode: string
           email: string | null
           email_confirmations_enabled: boolean
           enforce_cancellation_fee: boolean
@@ -2746,6 +2747,7 @@ export type Database = {
           deposit_amount_cents?: number | null
           deposit_policy_text?: string | null
           discount_stack_mode?: string
+          display_name_mode?: string
           email?: string | null
           email_confirmations_enabled?: boolean
           enforce_cancellation_fee?: boolean
@@ -2843,6 +2845,7 @@ export type Database = {
           deposit_amount_cents?: number | null
           deposit_policy_text?: string | null
           discount_stack_mode?: string
+          display_name_mode?: string
           email?: string | null
           email_confirmations_enabled?: boolean
           enforce_cancellation_fee?: boolean
@@ -3553,6 +3556,7 @@ export type Database = {
           deposit_amount_cents: number
           deposit_policy_text: string
           discount_stack_mode: string
+          display_name_mode: string
           email_confirmations_enabled: boolean
           enforce_cancellation_fee: boolean
           favourite_treatment_ids: string[]

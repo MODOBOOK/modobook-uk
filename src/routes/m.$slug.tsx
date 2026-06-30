@@ -2,8 +2,10 @@ import { createFileRoute, Link, Outlet, useParams } from "@tanstack/react-router
 import { getPractitionerBio } from "@/lib/practitioner-public.functions";
 import { Button } from "@/components/ui/button";
 import { UserCircle2 } from "lucide-react";
+import { resolveDisplayNames } from "@/lib/display-name";
 
 import { Loader2 } from "lucide-react";
+
 
 export const Route = createFileRoute("/m/$slug")({
   loader: async ({ params }) => {
@@ -24,9 +26,11 @@ export const Route = createFileRoute("/m/$slug")({
   ),
   head: ({ loaderData }) => ({
     meta: (() => {
-      const title = `${loaderData?.profile.clinic_name ?? "Clinic"} · MODO Book`;
+      const headerName = loaderData?.profile ? resolveDisplayNames(loaderData.profile).primary : "Clinic";
+      const title = `${headerName} · MODO Book`;
       const description = loaderData?.profile.tagline ?? "Book treatments on MODO Book.";
       const image = loaderData?.theme?.hero_image_url ?? loaderData?.profile.hero_url;
+
       return [
         { title },
         { name: "description", content: description },
@@ -53,8 +57,10 @@ export const Route = createFileRoute("/m/$slug")({
 
 function ModoLayout() {
   const { profile, theme } = Route.useLoaderData();
+  const { primary: displayPrimary, secondary: displaySecondary } = resolveDisplayNames(profile);
   const { slug } = useParams({ from: "/m/$slug" });
   const brand = theme?.primary_color || profile.brand_color || "#111827";
+
   const accent = theme?.accent_color || brand;
   const headerBg = theme?.header_bg_color || "#ffffff";
   const headerText = theme?.header_text_color || "#0f172a";
@@ -102,7 +108,7 @@ function ModoLayout() {
                   sizeKey === "large" ? "h-14 w-14 sm:h-16 sm:w-16" :
                   "h-11 w-11 sm:h-12 sm:w-12";
                 return theme?.logo_url ? (
-                  <img src={theme.logo_url} alt={profile.clinic_name} className={`${logoCls} w-auto shrink-0 object-contain`} />
+                  <img src={theme.logo_url} alt={displayPrimary} className={`${logoCls} w-auto shrink-0 object-contain`} />
                 ) : (
                   <>
                     {profile.avatar_url ? (
@@ -112,7 +118,7 @@ function ModoLayout() {
                         className={`${avatarCls} flex shrink-0 items-center justify-center rounded-full text-white`}
                         style={{ backgroundColor: brand }}
                       >
-                        <span className="text-base font-bold sm:text-lg">{profile.clinic_name?.charAt(0) || "M"}</span>
+                        <span className="text-base font-bold sm:text-lg">{displayPrimary.charAt(0) || "M"}</span>
                       </div>
                     )}
                     {(theme?.header_show_name ?? true) && (
@@ -121,15 +127,16 @@ function ModoLayout() {
                           className="font-semibold leading-tight break-words [overflow-wrap:anywhere] line-clamp-2"
                           style={{ fontSize: "clamp(0.75rem, 3.2vw, 0.95rem)" }}
                         >
-                          {profile.clinic_name}
+                          {displayPrimary}
                         </div>
-                        {(theme?.header_show_tagline ?? true) && profile.full_name && (
-                          <div className="truncate text-[11px] opacity-70 sm:text-xs">{profile.full_name}</div>
+                        {(theme?.header_show_tagline ?? true) && displaySecondary && (
+                          <div className="truncate text-[11px] opacity-70 sm:text-xs">{displaySecondary}</div>
                         )}
                       </div>
                     )}
                   </>
                 );
+
               })()}
             </Link>
             <nav className="flex shrink-0 items-center gap-0.5 text-sm sm:gap-1">

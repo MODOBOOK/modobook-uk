@@ -3,18 +3,24 @@ import { getPractitionerBio } from "@/lib/practitioner-public.functions";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { MapPin, Award, Clock, Sparkles, MessageCircle, ShieldCheck, HeartHandshake } from "lucide-react";
+import { resolveDisplayNames } from "@/lib/display-name";
+
 
 export const Route = createFileRoute("/m/$slug/about")({
   beforeLoad: ({ params }) => {
     throw redirect({ to: "/m/$slug", params: { slug: params.slug } });
   },
   loader: async ({ params }) => getPractitionerBio({ data: { slug: params.slug } }),
-  head: ({ loaderData }) => ({
-    meta: [
-      { title: `About ${loaderData?.profile.clinic_name ?? loaderData?.profile.full_name ?? "practitioner"} · MODO Book` },
-      { name: "description", content: (loaderData?.profile.bio ?? "").slice(0, 160) || "Meet your practitioner on MODO Book." },
-    ],
-  }),
+  head: ({ loaderData }) => {
+    const name = loaderData?.profile ? resolveDisplayNames(loaderData.profile).primary : "practitioner";
+    return {
+      meta: [
+        { title: `About ${name} · MODO Book` },
+        { name: "description", content: (loaderData?.profile.bio ?? "").slice(0, 160) || "Meet your practitioner on MODO Book." },
+      ],
+    };
+  },
+
   component: About,
 });
 

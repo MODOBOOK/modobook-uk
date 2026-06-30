@@ -31,6 +31,8 @@ import { mapsUrl, formatAddress } from "@/lib/maps";
 import type { Database } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 import { SafeHtml } from "@/components/SafeHtml";
+import { resolveDisplayNames } from "@/lib/display-name";
+
 import { describeCancellationRules } from "@/lib/policy";
 import { QuizDialog } from "@/components/QuizDialog";
 
@@ -107,6 +109,8 @@ function BookPage() {
         id: string;
         clinic_name: string;
         full_name: string | null;
+        display_name_mode?: string | null;
+
         tagline: string | null;
         hero_url: string | null;
         avatar_url: string | null;
@@ -162,7 +166,9 @@ function BookPage() {
 
 
   const { slug } = useParams({ from: "/m/$slug/" });
+  const { primary: displayPrimary } = resolveDisplayNames(profile);
   const brand = theme?.primary_color || profile.brand_color || "#1f2a44";
+
   const accent = theme?.accent_color || brand;
   const bgColor = theme?.background_color || "#ffffff";
   const textColor = theme?.text_color || "#0f172a";
@@ -535,10 +541,10 @@ function BookPage() {
           {isCompact ? (
             <div className="flex flex-wrap items-center gap-2">
               {showLogo && logoUrl && (
-                <img src={logoUrl} alt={profile.clinic_name} className="h-8 w-auto object-contain" />
+                <img src={logoUrl} alt={displayPrimary} className="h-8 w-auto object-contain" />
               )}
               {showName && (
-                <h1 className="text-sm font-extrabold leading-tight" style={headingStyle}>{profile.clinic_name}</h1>
+                <h1 className="text-sm font-extrabold leading-tight" style={headingStyle}>{displayPrimary}</h1>
               )}
               <div className="ml-auto flex items-center gap-2">
                 {showRating && (
@@ -585,11 +591,11 @@ function BookPage() {
           ) : (
             <>
               {showLogo && logoUrl && (
-                <img src={logoUrl} alt={profile.clinic_name} className="mb-2 h-8 w-auto object-contain sm:h-10" />
+                <img src={logoUrl} alt={displayPrimary} className="mb-2 h-8 w-auto object-contain sm:h-10" />
               )}
               {showName && (
                 <h1 className="text-lg font-extrabold leading-tight sm:text-xl" style={headingStyle}>
-                  {profile.clinic_name}
+                  {displayPrimary}
                 </h1>
               )}
               {!isCompact && showTagline && profile.tagline && (
@@ -988,7 +994,7 @@ function BookPage() {
           .filter((t): t is Treatment => !!t && t.active !== false);
         if (!favs.length) return null;
         const multiPract = practitioners.length > 1;
-        const ownerName = (multiPract ? profile.clinic_name : (profile.full_name || profile.clinic_name)) || profile.clinic_name;
+        const ownerName = displayPrimary;
         const possessive = ownerName.endsWith("s") ? `${ownerName}'` : `${ownerName}'s`;
         const heading = profile.favourites_custom_title?.trim() || `${possessive} Favourite Treatments`;
         const scroll = (dir: number) => {
@@ -1471,7 +1477,7 @@ function BookPage() {
         className="mt-16 w-full px-4 py-6 text-center text-xs"
         style={{ backgroundColor: footerBg, color: footerText }}
       >
-        © {new Date().getFullYear()} {profile.clinic_name} · Powered by MODO Book
+        © {new Date().getFullYear()} {displayPrimary} · Powered by MODO Book
       </footer>
 
       {/* Add-on prompt */}
