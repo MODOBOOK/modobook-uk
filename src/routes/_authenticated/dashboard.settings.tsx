@@ -307,6 +307,47 @@ function SettingsPage() {
         </CardContent>
       </Card>
 
+      {/* INVOICE & BANK DETAILS */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Invoice & bank details</CardTitle>
+          <CardDescription>Branded on every PDF invoice you download or email.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <ToggleRow
+            label="Show clinic logo on invoice"
+            hint="Uses your profile picture / logo upload."
+            checked={s.invoice_show_logo}
+            onChange={(v) => set("invoice_show_logo", v)}
+          />
+          <ToggleRow
+            label="Show bank details on invoice"
+            hint="Adds a bank transfer panel under the totals."
+            checked={s.invoice_show_bank_details}
+            onChange={(v) => set("invoice_show_bank_details", v)}
+          />
+          <div className="grid gap-3 sm:grid-cols-2">
+            <TextField label="Bank name" value={s.invoice_bank_name} onChange={(v) => set("invoice_bank_name", v)} />
+            <TextField label="Account name" value={s.invoice_account_name} onChange={(v) => set("invoice_account_name", v)} />
+            <TextField label="Sort code" value={s.invoice_sort_code} onChange={(v) => set("invoice_sort_code", v)} placeholder="00-00-00" />
+            <TextField label="Account number" value={s.invoice_account_number} onChange={(v) => set("invoice_account_number", v)} />
+            <TextField label="IBAN" value={s.invoice_iban} onChange={(v) => set("invoice_iban", v)} />
+            <TextField label="SWIFT / BIC" value={s.invoice_swift} onChange={(v) => set("invoice_swift", v)} />
+            <TextField label="Default payment reference" value={s.invoice_payment_reference} onChange={(v) => set("invoice_payment_reference", v)} placeholder="e.g. INV-{patient}" />
+            <TextField label="VAT number" value={s.invoice_vat_number} onChange={(v) => set("invoice_vat_number", v)} />
+            <TextField label="Company number" value={s.invoice_company_number} onChange={(v) => set("invoice_company_number", v)} />
+          </div>
+          <div>
+            <Label className="text-xs">Footer notes</Label>
+            <Input
+              value={s.invoice_footer_notes}
+              onChange={(e) => set("invoice_footer_notes", e.target.value)}
+              placeholder="e.g. Payment due within 7 days. Thank you for your custom."
+            />
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="sticky bottom-20 z-10 flex justify-end lg:bottom-4">
         <Button onClick={save} disabled={saving} size="lg" className="shadow-luxe">
           {saving ? "Saving…" : "Save all settings"}
