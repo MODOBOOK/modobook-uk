@@ -340,6 +340,7 @@ function BookingsPage() {
         <MonthView
           anchor={anchor}
           apptsByDate={apptsByDate}
+          blocksByDate={blocksByDate}
           rulesByDow={rulesByDow}
           todayStr={todayStr}
           onPickDay={(d) => { setAnchor(d); setView("day"); }}
