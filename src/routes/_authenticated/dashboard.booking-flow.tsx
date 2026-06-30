@@ -438,10 +438,17 @@ function BookingFlowPage() {
               Group concerns by area (e.g. Face, Body). For each concern, tick the treatments you'd suggest — or let AI draft them for you to review.
             </p>
           </div>
-          <Button size="sm" variant="secondary" onClick={runAiSuggest} disabled={aiLoading} className="shrink-0">
-            {aiLoading ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Sparkles className="mr-1 h-4 w-4" />}
-            Suggest with AI
-          </Button>
+          <div className="flex flex-col gap-2 shrink-0 sm:flex-row">
+            <Button size="sm" variant="outline" onClick={runAiSuggestConcerns} disabled={sugLoading}>
+              {sugLoading ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Sparkles className="mr-1 h-4 w-4" />}
+              Suggest concerns with AI
+            </Button>
+            <Button size="sm" variant="secondary" onClick={runAiSuggest} disabled={aiLoading}>
+              {aiLoading ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Sparkles className="mr-1 h-4 w-4" />}
+              Match treatments with AI
+            </Button>
+          </div>
+
         </CardHeader>
         <CardContent className="space-y-4">
           <label className="flex items-center gap-2 text-xs text-muted-foreground">
