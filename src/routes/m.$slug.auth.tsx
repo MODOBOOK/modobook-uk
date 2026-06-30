@@ -32,6 +32,23 @@ function PatientAuth() {
   const [phone, setPhone] = useState("");
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
+  const [forgotOpen, setForgotOpen] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+
+  async function sendReset(e: React.FormEvent) {
+    e.preventDefault();
+    const target = forgotEmail || loginEmail;
+    if (!target) return;
+    setLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(target, {
+      redirectTo: `${window.location.origin}/reset-password?slug=${encodeURIComponent(slug)}`,
+    });
+    setLoading(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success("If an account exists, we've sent a reset link.");
+    setForgotOpen(false);
+  }
+
 
   function goAfterAuth() {
     if (search.redirect && search.redirect.startsWith("/")) {
