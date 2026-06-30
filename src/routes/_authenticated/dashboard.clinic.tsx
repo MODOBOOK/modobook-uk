@@ -21,6 +21,8 @@ function ClinicPage() {
   const [profileId, setProfileId] = useState<string>("");
   const [slug, setSlug] = useState<string>("");
   const [clinicName, setClinicName] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [displayNameMode, setDisplayNameMode] = useState<"clinic" | "practitioner" | "both">("both");
   const [tagline, setTagline] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
@@ -32,6 +34,7 @@ function ClinicPage() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+
 
   useEffect(() => {
     (async () => {
