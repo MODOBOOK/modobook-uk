@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
+import { BrandMark } from "@/components/BrandMark";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Calendar,
@@ -386,11 +387,8 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 lg:px-8">
-        <Link to="/" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <Calendar className="h-5 w-5" />
-          </div>
-          <span className="text-lg font-semibold tracking-tight">MODO Book</span>
+        <Link to="/" className="flex items-center">
+          <BrandMark size="md" tagline="Book · Manage · Grow" />
         </Link>
         <nav className="hidden items-center gap-6 text-sm md:flex">
           <Link to="/features" className="text-muted-foreground hover:text-foreground">Features</Link>
@@ -415,12 +413,8 @@ export function SiteFooter() {
     <footer className="border-t bg-muted/20">
       <div className="mx-auto grid max-w-7xl gap-8 px-4 py-12 sm:grid-cols-2 lg:grid-cols-4 lg:px-8">
         <div>
-          <div className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary text-primary-foreground">
-              <Calendar className="h-4 w-4" />
-            </div>
-            <span className="font-semibold">MODO Book</span>
-          </div>
+          <BrandMark size="sm" />
+
           <p className="mt-3 text-sm text-muted-foreground">
             The aesthetics-only booking & clinical platform. Built by two UK Nurse Prescribers.
           </p>

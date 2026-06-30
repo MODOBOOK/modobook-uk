@@ -81,11 +81,8 @@ function AuthPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted/50 px-4 py-12">
       <div className="w-full max-w-md">
-        <div className="mb-8 flex items-center justify-center gap-2">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <Calendar className="h-6 w-6" />
-          </div>
-          <span className="text-xl font-semibold tracking-tight">MODO Book</span>
+        <div className="mb-8 flex items-center justify-center">
+          <BrandMark size="lg" tagline="Book · Manage · Grow" />
         </div>
 
         <Tabs defaultValue={isPrescriberFlow ? "signup" : "signin"}>
