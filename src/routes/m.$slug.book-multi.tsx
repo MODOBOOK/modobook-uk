@@ -1035,9 +1035,12 @@ function MultiBookPage() {
                 ? "Booking…"
                 : inPersonItems.length > 0
                   ? "Consultation required before booking"
-                  : !allConsented && sameAddressItems.length > 0
-                    ? "Please give prescriber consent above"
-                    : `Confirm ${treatments.length} bookings · £${totalAfterDiscount.toFixed(2)}`}
+                  : !allVisitsPicked
+                    ? "Please pick a clinic visit day above"
+                    : !allClinicVisitsConsented || !allConsented
+                      ? "Please give prescriber consent above"
+                      : `Confirm ${treatments.length} bookings · £${totalAfterDiscount.toFixed(2)}`}
+
             </Button>
 
           </>
