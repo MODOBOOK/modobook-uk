@@ -709,21 +709,23 @@ function ServiceRow({
           value={currentVal}
           onValueChange={(v) => onChangeCategory(v === "__none__" ? null : v)}
         >
-          <SelectTrigger className="h-8 w-[180px] text-xs" aria-label="Move to category">
-            <SelectValue placeholder="Move to…" />
+          <SelectTrigger className="h-8 w-[220px] text-xs" aria-label="Move to category or subcategory">
+            <SelectValue placeholder="Move to category…" />
           </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="__none__">Uncategorised</SelectItem>
+          <SelectContent className="max-h-[320px]">
+            <SelectItem value="__none__">— Uncategorised —</SelectItem>
             {picker.map((c) => (
-              <SelectItem key={c.id} value={c.id}>
-                {"\u00A0\u00A0".repeat(c.depth)}
-                {c.depth > 0 ? "↳ " : ""}
-                {c.label.split(" › ").slice(-1)[0]}
+              <SelectItem key={c.id} value={c.id} className="text-xs">
+                <span style={{ paddingLeft: c.depth * 12 }} className="inline-block">
+                  {c.depth > 0 ? "↳ " : ""}
+                  {c.label}
+                </span>
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
       )}
+
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button
