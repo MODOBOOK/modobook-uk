@@ -180,13 +180,7 @@ export const getReferralFull = createServerFn({ method: "POST" })
       p_referral_id: data.id,
     });
     if (error) throw error;
-    return full as unknown as {
-      referral: Record<string, unknown>;
-      appointment: Record<string, unknown> | null;
-      client: Record<string, unknown> | null;
-      medical_forms: { id: string; template_name: string; response: unknown; submitted_at: string | null; status: string }[];
-      consultations: Record<string, unknown>[];
-    };
+    return { full } as { full: unknown };
   });
 
 // ---- Practitioner: referrals I've sent (for visibility on my side) ----
