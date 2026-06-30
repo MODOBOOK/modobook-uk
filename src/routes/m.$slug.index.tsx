@@ -635,9 +635,6 @@ function BookPage() {
                 </Link>
               )}
 
-              <Link to="/m/$slug/about" params={{ slug }} className="mt-2 inline-block text-xs underline opacity-70 hover:opacity-100">
-                About {displayPrimary}
-              </Link>
 
               {/* Action icon row */}
               {!isCompact && showActions && (
