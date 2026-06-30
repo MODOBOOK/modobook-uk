@@ -330,7 +330,7 @@ function ReviewStep({
   const includedCats = draft.categories.filter((c) => c._include).length;
   const includedTr = draft.treatments.filter((c) => c._include).length;
   const includedAd = draft.addons.filter((c) => c._include).length;
-  const includedPk = draft.packages.filter((c) => c._include).length;
+  
 
   function setRow(key: "categories" | "treatments" | "addons" | "packages", idx: number, patch: Record<string, unknown>) {
     const arr = [...(draft[key] as Array<Record<string, unknown>>)];
