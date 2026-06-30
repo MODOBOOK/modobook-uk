@@ -405,6 +405,25 @@ function MultiBookPage() {
         },
       });
       setConfirmed(res);
+      if (sameAddressItems.length > 0 && res.appointments?.length) {
+        try {
+          await createReferrals({
+            data: {
+              slug,
+              appointments: res.appointments,
+              patient: {
+                name: form.name,
+                email: form.email,
+                phone: form.phone || null,
+                dob: form.dob || null,
+              },
+              clientId: null,
+            },
+          });
+        } catch (err) {
+          console.warn("Prescriber referral creation failed", err);
+        }
+      }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Booking failed");
       submitLockRef.current = false;
