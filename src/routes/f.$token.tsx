@@ -1,7 +1,5 @@
 import { createFileRoute, useParams } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { useServerFn } from "@tanstack/react-start";
-import { getFormByToken, submitFormByToken, getClinicSlugForFormToken } from "@/lib/medical-forms.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -47,9 +45,6 @@ function isVisible(el: FormElement, responses: Record<string, any>): boolean {
 
 function FillFormPage() {
   const { token } = useParams({ from: "/f/$token" });
-  const fetchOne = useServerFn(getFormByToken);
-  const fetchSlug = useServerFn(getClinicSlugForFormToken);
-  const submit = useServerFn(submitFormByToken);
 
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<any>(null);
@@ -62,19 +57,17 @@ function FillFormPage() {
   useEffect(() => {
     (async () => {
       try {
-        const r: any = await fetchOne({ data: { token } });
+        const res = await fetch(`/api/public/medical-form/${encodeURIComponent(token)}`);
+        const payload = await res.json().catch(() => ({}));
+        const r = payload.form ?? null;
         setData(r);
         if (r?.status === "submitted") setDone(true);
         if (r?.response) setResponses(r.response);
-        if (!r) {
-          try { setFallbackSlug(await fetchSlug({ data: { token } }) as any); } catch { /* noop */ }
-        }
+        if (!r) setFallbackSlug(payload.fallbackSlug ?? null);
       } catch {
         setData(null);
-        try { setFallbackSlug(await fetchSlug({ data: { token } }) as any); } catch { /* noop */ }
       } finally { setLoading(false); }
     })();
-    // eslint-disable-next-line
   }, [token]);
 
   if (loading) return <Centered><Loader2 className="h-6 w-6 animate-spin" /></Centered>;
@@ -134,7 +127,12 @@ function FillFormPage() {
     if (!isLast) { setStepIdx((i) => i + 1); window.scrollTo(0, 0); return; }
     setSubmitting(true);
     try {
-      const r: any = await submit({ data: { token, response: responses } });
+      const res = await fetch(`/api/public/medical-form/${encodeURIComponent(token)}`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ response: responses }),
+      });
+      const r = await res.json().catch(() => ({ ok: false }));
       if (r.ok) setDone(true);
       else toast.error("Failed to submit");
     } catch (e) {
