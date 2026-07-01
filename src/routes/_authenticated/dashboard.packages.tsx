@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { listMyPackages, createPackage, updatePackage, deletePackage } from "@/lib/packages.functions";
 import { getMyTreatments } from "@/lib/treatments.functions";
-import { getMyCategories } from "@/lib/categories.functions";
+import { getMyPackageCategories, createPackageCategory, deletePackageCategory } from "@/lib/categories.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -62,7 +62,9 @@ function PackagesPage() {
   const update = useServerFn(updatePackage);
   const remove = useServerFn(deletePackage);
   const listTreatments = useServerFn(getMyTreatments);
-  const listCategories = useServerFn(getMyCategories);
+  const listCategories = useServerFn(getMyPackageCategories);
+  const createCat = useServerFn(createPackageCategory);
+  const deleteCat = useServerFn(deletePackageCategory);
 
   const [packages, setPackages] = useState<Pkg[]>([]);
   const [treatments, setTreatments] = useState<Treatment[]>([]);
@@ -169,6 +171,8 @@ function PackagesPage() {
           <h1 className="text-2xl font-bold">Packages</h1>
           <p className="text-sm text-muted-foreground">Bundle multiple treatments or sessions and sell them as one bookable package.</p>
         </div>
+
+
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
             <Button onClick={openCreate}><Plus className="mr-2 h-4 w-4" />New package</Button>
@@ -192,21 +196,43 @@ function PackagesPage() {
               </div>
 
               <div>
-                <Label>Category (optional)</Label>
-                <select
-                  className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                  value={form.category_id}
-                  onChange={(e) => setForm({ ...form, category_id: e.target.value })}
-                >
-                  <option value="">— No category —</option>
-                  {categories.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.parent_id ? "— " : ""}{c.name}
-                    </option>
-                  ))}
-                </select>
-                <p className="mt-1 text-xs text-muted-foreground">Group this package under one of your treatment categories on the booking page.</p>
+                <Label>Package category (optional)</Label>
+                <div className="mt-1 flex gap-2">
+                  <select
+                    className="flex h-10 flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    value={form.category_id}
+                    onChange={(e) => setForm({ ...form, category_id: e.target.value })}
+                  >
+                    <option value="">— No category —</option>
+                    {categories.map((c) => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={async () => {
+                      const name = window.prompt("New package category name");
+                      if (!name?.trim()) return;
+                      try {
+                        const row = await createCat({ data: { name: name.trim() } });
+                        setCategories((prev) => [...prev, row as Category]);
+                        setForm((f) => ({ ...f, category_id: (row as Category).id }));
+                        toast.success("Category added");
+                      } catch (e) {
+                        toast.error(e instanceof Error ? e.message : "Failed");
+                      }
+                    }}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Package categories are separate from treatment categories. Patients see packages grouped by these on the booking page.
+                </p>
               </div>
+
 
               <div>
                 <Label>Included treatments</Label>
@@ -353,6 +379,21 @@ function PackagesPage() {
         </Dialog>
       </div>
 
+      <PackageCategoriesManager
+        categories={categories}
+        onAdd={async (name) => {
+          const row = await createCat({ data: { name } });
+          setCategories((prev) => [...prev, row as Category]);
+        }}
+        onDelete={async (id) => {
+          if (!confirm("Delete this package category? Packages in it will become uncategorised.")) return;
+          await deleteCat({ data: { id } });
+          setCategories((prev) => prev.filter((c) => c.id !== id));
+        }}
+      />
+
+
+
       {packages.length === 0 ? (
         <Card><CardContent className="py-12 text-center text-sm text-muted-foreground">
           <Package className="mx-auto mb-2 h-8 w-8 opacity-50" />
@@ -450,5 +491,69 @@ function TreatmentSearchPicker({
         </Command>
       </PopoverContent>
     </Popover>
+  );
+}
+
+function PackageCategoriesManager({
+  categories,
+  onAdd,
+  onDelete,
+}: {
+  categories: Category[];
+  onAdd: (name: string) => Promise<void>;
+  onDelete: (id: string) => Promise<void>;
+}) {
+  const [name, setName] = useState("");
+  const [busy, setBusy] = useState(false);
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base">Package categories</CardTitle>
+        <p className="text-xs text-muted-foreground">
+          Group packages on the booking page. Kept separate from your treatment categories.
+        </p>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="flex flex-wrap gap-1.5">
+          {categories.length === 0 ? (
+            <p className="text-xs text-muted-foreground">No package categories yet.</p>
+          ) : (
+            categories.map((c) => (
+              <Badge key={c.id} variant="secondary" className="gap-1 pr-1">
+                <span>{c.name}</span>
+                <button
+                  type="button"
+                  aria-label={`Delete ${c.name}`}
+                  onClick={() => onDelete(c.id)}
+                  className="rounded p-0.5 hover:bg-background/60"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            ))
+          )}
+        </div>
+        <div className="flex gap-2">
+          <Input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="e.g. Skin, Anti-wrinkle, Wellness…"
+            className="h-9"
+          />
+          <Button
+            size="sm"
+            disabled={busy || !name.trim()}
+            onClick={async () => {
+              setBusy(true);
+              try { await onAdd(name.trim()); setName(""); toast.success("Added"); }
+              catch (e) { toast.error(e instanceof Error ? e.message : "Failed"); }
+              finally { setBusy(false); }
+            }}
+          >
+            <Plus className="mr-1 h-4 w-4" /> Add
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

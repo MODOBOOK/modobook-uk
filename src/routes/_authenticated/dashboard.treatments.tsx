@@ -25,6 +25,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { Plus, Trash2, Pencil, FileText, X, Tag, PlusCircle } from "lucide-react";
+import { SearchableMultiPicker } from "@/components/ui/searchable-multi-picker";
+
 
 export const Route = createFileRoute("/_authenticated/dashboard/treatments")({
   ssr: false,
@@ -717,21 +719,24 @@ function TreatmentDialog({
           {consentTemplates.length === 0 ? (
             <p className="text-xs text-muted-foreground">No consent forms yet. Add them in Dashboard → Consent forms.</p>
           ) : (
-            <div className="space-y-2 max-h-56 overflow-y-auto">
-              {consentTemplates.map((t) => (
-                <label key={t.id} className="flex items-start gap-2 text-sm">
-                  <Checkbox checked={consentIds.includes(t.id)} onCheckedChange={() => toggleConsent(t.id)} />
-                  <span>
-                    {t.name}
-                    {t.is_system && <span className="ml-2 text-xs text-muted-foreground">(template)</span>}
-                  </span>
-                </label>
-              ))}
-            </div>
+            <SearchableMultiPicker
+              hideLabel
+              label="Consent forms"
+              emptyMessage="No consent forms yet."
+              placeholder="Search consent forms…"
+              items={consentTemplates.map((t) => ({
+                id: t.id,
+                name: t.name,
+                hint: t.is_system ? "template" : undefined,
+              }))}
+              selected={consentIds}
+              onToggle={(id) => toggleConsent(id)}
+            />
           )}
           <p className="text-xs text-muted-foreground mt-2">
             Patients receive a link to complete each selected form after they book.
           </p>
+
           <label className="flex items-center gap-2 text-sm pt-2 border-t">
             <Switch checked={autoSendForms} onCheckedChange={setAutoSendForms} />
             <span>Auto-send medical forms when this treatment is booked</span>
@@ -757,26 +762,25 @@ function TreatmentDialog({
               No templates yet. Create one in Aftercare templates and attach it here — it will send automatically after the appointment.
             </p>
           ) : (
-            <div className="flex flex-wrap gap-1.5">
-              {aftercareTemplates.map((t) => {
-                const checked = aftercareTemplateIds.includes(t.id);
-                return (
-                  <button
-                    key={t.id}
-                    type="button"
-                    onClick={() =>
-                      setAftercareTemplateIds((prev) =>
-                        prev.includes(t.id) ? prev.filter((x) => x !== t.id) : [...prev, t.id],
-                      )
-                    }
-                    className={`rounded-full border px-2.5 py-1 text-xs ${checked ? "bg-primary text-primary-foreground border-primary" : "bg-background hover:bg-muted"}`}
-                  >
-                    {t.name} <span className="opacity-70">· {t.delay_hours}h</span>
-                  </button>
-                );
-              })}
-            </div>
+            <SearchableMultiPicker
+              hideLabel
+              label="Aftercare templates"
+              emptyMessage="No aftercare templates yet."
+              placeholder="Search aftercare templates…"
+              items={aftercareTemplates.map((t) => ({
+                id: t.id,
+                name: t.name,
+                hint: `${t.delay_hours}h`,
+              }))}
+              selected={aftercareTemplateIds}
+              onToggle={(id) =>
+                setAftercareTemplateIds((prev) =>
+                  prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+                )
+              }
+            />
           )}
+
           <label className="flex items-center gap-2 text-sm">
             <Switch checked={autoSendAftercare} onCheckedChange={setAutoSendAftercare} />
             <span>Auto-send aftercare after this treatment</span>

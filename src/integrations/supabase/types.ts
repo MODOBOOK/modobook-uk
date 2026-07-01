@@ -3899,6 +3899,7 @@ export type Database = {
           description: string | null
           icon: string | null
           id: string
+          kind: string
           name: string
           parent_id: string | null
           profile_id: string
@@ -3912,6 +3913,7 @@ export type Database = {
           description?: string | null
           icon?: string | null
           id?: string
+          kind?: string
           name: string
           parent_id?: string | null
           profile_id: string
@@ -3925,6 +3927,7 @@ export type Database = {
           description?: string | null
           icon?: string | null
           id?: string
+          kind?: string
           name?: string
           parent_id?: string | null
           profile_id?: string

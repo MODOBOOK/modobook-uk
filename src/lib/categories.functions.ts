@@ -32,10 +32,63 @@ export const getMyCategories = createServerFn({ method: "GET" })
       .from("treatment_categories")
       .select("*")
       .eq("profile_id", profileId)
+      .eq("kind", "treatment")
       .order("sort_order", { ascending: true })
       .order("name", { ascending: true });
     if (error) throw error;
     return data;
+  });
+
+export const getMyPackageCategories = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase } = context;
+    const profileId = await getMyProfileId(supabase as never, context.userId);
+    const { data, error } = await supabase
+      .from("treatment_categories")
+      .select("*")
+      .eq("profile_id", profileId)
+      .eq("kind", "package")
+      .order("sort_order", { ascending: true })
+      .order("name", { ascending: true });
+    if (error) throw error;
+    return data;
+  });
+
+export const createPackageCategory = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { name: string; sort_order?: number }) => input)
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+    const profileId = await getMyProfileId(supabase as never, context.userId);
+    const slug = data.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+    const { data: row, error } = await supabase
+      .from("treatment_categories")
+      .insert({
+        profile_id: profileId,
+        name: data.name,
+        slug: `pkg-${slug}`,
+        sort_order: data.sort_order ?? 0,
+        kind: "package",
+      } as never)
+      .select()
+      .single();
+    if (error) throw error;
+    return row;
+  });
+
+export const deletePackageCategory = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { id: string }) => input)
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+    const { error } = await supabase
+      .from("treatment_categories")
+      .delete()
+      .eq("id", data.id)
+      .eq("kind", "package");
+    if (error) throw error;
+    return { success: true };
   });
 
 export const createCategory = createServerFn({ method: "POST" })

@@ -447,10 +447,15 @@ function BookPage() {
     () => treatments.filter(isAvailableAtLocation),
     [treatments, locationId, pricing],
   );
-  const { roots, uncategorised } = useMemo(
-    () => buildTree(categories, visibleTreatments),
-    [categories, visibleTreatments],
+  const treatmentCategories = useMemo(
+    () => categories.filter((c) => (c as { kind?: string | null }).kind !== "package"),
+    [categories],
   );
+  const { roots, uncategorised } = useMemo(
+    () => buildTree(treatmentCategories, visibleTreatments),
+    [treatmentCategories, visibleTreatments],
+  );
+
 
   const primaryLocation =
     locations.find((l) => l.is_primary) ?? locations[0] ?? null;
@@ -1235,7 +1240,7 @@ function BookPage() {
             const filteredTreatments = matchedIds
               ? visibleTreatments.filter((t) => matchedIds.has(t.id))
               : visibleTreatments;
-            const tree = matchedIds ? buildTree(categories, filteredTreatments) : { roots, uncategorised };
+            const tree = matchedIds ? buildTree(treatmentCategories, filteredTreatments) : { roots, uncategorised };
 
             if (matchedIds) {
               const concernNames = pickedConcernIds
@@ -1426,116 +1431,152 @@ function BookPage() {
 
 
                 <TabsContent value="packages" className="mt-4">
-                  {packages.length === 0 ? (
-                    <p className="opacity-70">No packages available.</p>
-                  ) : (
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      {packages.map((p) => {
-                        const pkg = p as Package & {
-                          description?: string | null;
-                          treatment_ids?: string[] | null;
-                          duration_minutes?: number | null;
-                          image_url?: string | null;
-                          category_id?: string | null;
-                        };
-                        const ids = pkg.treatment_ids ?? (pkg.treatment_id ? [pkg.treatment_id] : []);
-                        const firstTreatmentId = ids[0];
-                        const includedTreatments = ids
-                          .map((tid) => treatments.find((t) => t.id === tid))
-                          .filter((t): t is Treatment => Boolean(t));
-                        return (
-                          <Card key={p.id} className="overflow-hidden rounded-2xl">
-                            {pkg.image_url && (
-                              <div className="aspect-[16/9] w-full overflow-hidden bg-muted">
-                                <img src={pkg.image_url} alt={p.name} className="h-full w-full object-cover" loading="lazy" />
+                  {(() => {
+                    if (packages.length === 0) {
+                      return <p className="opacity-70">No packages available.</p>;
+                    }
+                    const renderPackageCard = (p: (typeof packages)[number]) => {
+                      const pkg = p as Package & {
+                        description?: string | null;
+                        treatment_ids?: string[] | null;
+                        duration_minutes?: number | null;
+                        image_url?: string | null;
+                        category_id?: string | null;
+                      };
+                      const ids = pkg.treatment_ids ?? (pkg.treatment_id ? [pkg.treatment_id] : []);
+                      const firstTreatmentId = ids[0];
+                      const includedTreatments = ids
+                        .map((tid) => treatments.find((t) => t.id === tid))
+                        .filter((t): t is Treatment => Boolean(t));
+                      const originalTotal = includedTreatments.reduce((s, t) => s + Number(t.price ?? 0), 0) * (p.session_count || 1);
+                      const price = Number(p.price ?? 0);
+                      const saving = originalTotal > price ? originalTotal - price : 0;
+                      const savingPct = originalTotal > 0 && saving > 0 ? Math.round((saving / originalTotal) * 100) : 0;
+                      return (
+                        <Card key={p.id} className="overflow-hidden rounded-2xl">
+                          {pkg.image_url && (
+                            <div className="aspect-[16/9] w-full overflow-hidden bg-muted">
+                              <img src={pkg.image_url} alt={p.name} className="h-full w-full object-cover" loading="lazy" />
+                            </div>
+                          )}
+                          <CardContent className="p-4">
+                            <div className="font-semibold" style={{ color: brand }}>{p.name}</div>
+                            {pkg.description && (
+                              <p className="mt-1 line-clamp-3 text-sm opacity-70">{pkg.description}</p>
+                            )}
+                            <p className="mt-2 text-xs opacity-60">
+                              {p.session_count} session{p.session_count === 1 ? "" : "s"}
+                              {pkg.duration_minutes ? ` · ${pkg.duration_minutes} min each` : ""}
+                            </p>
+                            {includedTreatments.length > 0 && (
+                              <div className="mt-3 rounded-lg border p-2.5" style={{ borderColor: `${brand}26`, background: `${brand}0a` }}>
+                                <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide opacity-70">Includes</div>
+                                <ul className="space-y-0.5 text-sm">
+                                  {includedTreatments.map((t) => (
+                                    <li key={t.id} className="flex items-start gap-1.5">
+                                      <span style={{ color: brand }}>•</span>
+                                      <span>{t.name}</span>
+                                    </li>
+                                  ))}
+                                </ul>
                               </div>
                             )}
-                            <CardContent className="p-4">
-                              <div className="flex items-start justify-between gap-2">
-                                <div className="font-semibold" style={{ color: brand }}>{p.name}</div>
-                                {pkg.category_id && (() => {
-                                  const cat = categories.find((c) => c.id === pkg.category_id);
-                                  return cat ? (
-                                    <span className="rounded-full border px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide" style={{ borderColor: `${brand}44`, color: brand }}>
-                                      {cat.name}
-                                    </span>
-                                  ) : null;
-                                })()}
+                            {saving > 0 && (
+                              <div className="mt-3 flex flex-wrap items-center gap-2">
+                                <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-800">
+                                  Save £{saving.toFixed(2)} ({savingPct}%)
+                                </span>
+                                <span className="text-xs opacity-60 line-through">£{originalTotal.toFixed(2)}</span>
                               </div>
-                              {pkg.description && (
-                                <p className="mt-1 line-clamp-3 text-sm opacity-70">{pkg.description}</p>
-                              )}
-                              <p className="mt-2 text-xs opacity-60">
-                                {p.session_count} session{p.session_count === 1 ? "" : "s"}
-                                {pkg.duration_minutes ? ` · ${pkg.duration_minutes} min each` : ""}
-                              </p>
-                              {includedTreatments.length > 0 && (
-                                <div className="mt-3 rounded-lg border p-2.5" style={{ borderColor: `${brand}26`, background: `${brand}0a` }}>
-                                  <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide opacity-70">
-                                    Includes
-                                  </div>
-                                  <ul className="space-y-0.5 text-sm">
-                                    {includedTreatments.map((t) => (
-                                      <li key={t.id} className="flex items-start gap-1.5">
-                                        <span style={{ color: brand }}>•</span>
-                                        <span>{t.name}</span>
-                                      </li>
-                                    ))}
-                                  </ul>
+                            )}
+                            <div className="mt-3 flex items-center justify-between gap-2">
+                              <p className="font-bold" style={{ color: brand }}>£{price.toFixed(2)}</p>
+                              {firstTreatmentId ? (
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => togglePackageSelect(p.id)}
+                                    aria-pressed={isPackageSelected(p.id)}
+                                    className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition"
+                                    style={
+                                      isPackageSelected(p.id)
+                                        ? { backgroundColor: brand, borderColor: brand, color: "#fff" }
+                                        : { borderColor: `${brand}66`, color: brand }
+                                    }
+                                  >
+                                    {isPackageSelected(p.id) ? (<><Check className="h-3 w-3" /> Added</>) : "Add"}
+                                  </button>
+                                  <Link
+                                    to="/m/$slug/book/$treatmentId"
+                                    params={{ slug, treatmentId: firstTreatmentId }}
+                                    className="modo-btn px-4 py-1.5 text-sm font-semibold"
+                                  >
+                                    Book
+                                  </Link>
                                 </div>
+                              ) : (
+                                <span className="text-xs opacity-60">Contact to book</span>
                               )}
-                              {(() => {
-                                const originalTotal = includedTreatments.reduce((s, t) => s + Number(t.price ?? 0), 0) * (p.session_count || 1);
-                                const price = Number(p.price ?? 0);
-                                const saving = originalTotal > price ? originalTotal - price : 0;
-                                const savingPct = originalTotal > 0 && saving > 0 ? Math.round((saving / originalTotal) * 100) : 0;
-                                return saving > 0 ? (
-                                  <div className="mt-3 flex flex-wrap items-center gap-2">
-                                    <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-800">
-                                      Save £{saving.toFixed(2)} ({savingPct}%)
-                                    </span>
-                                    <span className="text-xs opacity-60 line-through">£{originalTotal.toFixed(2)}</span>
-                                  </div>
-                                ) : null;
-                              })()}
-                              <div className="mt-3 flex items-center justify-between gap-2">
-                                <p className="font-bold" style={{ color: brand }}>
-                                  £{Number(p.price ?? 0).toFixed(2)}
-                                </p>
-                                {firstTreatmentId ? (
-                                  <div className="flex items-center gap-2">
-                                    <button
-                                      type="button"
-                                      onClick={() => togglePackageSelect(p.id)}
-                                      aria-pressed={isPackageSelected(p.id)}
-                                      className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition"
-                                      style={
-                                        isPackageSelected(p.id)
-                                          ? { backgroundColor: brand, borderColor: brand, color: "#fff" }
-                                          : { borderColor: `${brand}66`, color: brand }
-                                      }
-                                    >
-                                      {isPackageSelected(p.id) ? (<><Check className="h-3 w-3" /> Added</>) : "Add"}
-                                    </button>
-                                    <Link
-                                      to="/m/$slug/book/$treatmentId"
-                                      params={{ slug, treatmentId: firstTreatmentId }}
-                                      className="modo-btn px-4 py-1.5 text-sm font-semibold"
-                                    >
-                                      Book
-                                    </Link>
-                                  </div>
-                                ) : (
-                                  <span className="text-xs opacity-60">Contact to book</span>
-                                )}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    };
+
+                    const pkgCats = (categories as { id: string; name: string; kind?: string | null }[])
+                      .filter((c) => c.kind === "package");
+                    const byCat = new Map<string | null, typeof packages>();
+                    for (const p of packages) {
+                      const key = ((p as { category_id?: string | null }).category_id ?? null);
+                      const bucket = byCat.get(key) ?? ([] as typeof packages);
+                      bucket.push(p);
+                      byCat.set(key, bucket);
+                    }
+                    const groups = pkgCats
+                      .map((c) => ({ id: c.id, name: c.name, items: byCat.get(c.id) ?? ([] as typeof packages) }))
+                      .filter((g) => g.items.length > 0);
+                    const uncategorised = byCat.get(null) ?? ([] as typeof packages);
+
+                    if (groups.length === 0) {
+                      return (
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          {packages.map((p) => renderPackageCard(p))}
+                        </div>
+                      );
+                    }
+                    return (
+                      <Accordion type="multiple" defaultValue={groups.map((g) => g.id)} className="w-full space-y-2">
+                        {groups.map((g) => (
+                          <AccordionItem key={g.id} value={g.id} className="rounded-xl border px-3" style={{ borderColor: `${brand}26` }}>
+                            <AccordionTrigger className="text-left text-base font-semibold" style={{ color: brand }}>
+                              {g.name}
+                              <span className="ml-2 rounded-full bg-muted px-2 py-0.5 text-[11px] font-normal opacity-70">{g.items.length}</span>
+                            </AccordionTrigger>
+                            <AccordionContent>
+                              <div className="grid gap-3 pt-1 sm:grid-cols-2">
+                                {g.items.map((p) => renderPackageCard(p))}
                               </div>
-                            </CardContent>
-                          </Card>
-                        );
-                      })}
-                    </div>
-                  )}
+                            </AccordionContent>
+                          </AccordionItem>
+                        ))}
+                        {uncategorised.length > 0 && (
+                          <AccordionItem value="__uncat" className="rounded-xl border px-3" style={{ borderColor: `${brand}26` }}>
+                            <AccordionTrigger className="text-left text-base font-semibold" style={{ color: brand }}>
+                              Other packages
+                              <span className="ml-2 rounded-full bg-muted px-2 py-0.5 text-[11px] font-normal opacity-70">{uncategorised.length}</span>
+                            </AccordionTrigger>
+                            <AccordionContent>
+                              <div className="grid gap-3 pt-1 sm:grid-cols-2">
+                                {uncategorised.map((p) => renderPackageCard(p))}
+                              </div>
+                            </AccordionContent>
+                          </AccordionItem>
+                        )}
+                      </Accordion>
+                    );
+                  })()}
                 </TabsContent>
+
 
               </Tabs>
             );
