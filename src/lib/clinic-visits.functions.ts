@@ -275,10 +275,13 @@ export const requestClinicVisitAsPrescriber = createServerFn({ method: "POST" })
   .inputValidator((i: z.infer<typeof RequestSchema>) => RequestSchema.parse(i))
   .handler(async ({ data, context }) => {
     // Resolve practitioner's user_id and verify an accepted hub link exists.
-    const { data: prof } = await context.supabase
+    // Use admin client because RLS on profiles blocks reading other users' rows.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: prof } = await supabaseAdmin
       .from("profiles").select("user_id").eq("id", data.practitioner_profile_id).maybeSingle();
     const practitionerUserId = (prof as { user_id: string } | null)?.user_id;
     if (!practitionerUserId) throw new Error("Practitioner not found.");
+
 
     const { data: link } = await context.supabase
       .from("hub_links")
