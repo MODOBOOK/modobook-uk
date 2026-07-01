@@ -1240,7 +1240,7 @@ function BookPage() {
             const filteredTreatments = matchedIds
               ? visibleTreatments.filter((t) => matchedIds.has(t.id))
               : visibleTreatments;
-            const tree = matchedIds ? buildTree(categories, filteredTreatments) : { roots, uncategorised };
+            const tree = matchedIds ? buildTree(treatmentCategories, filteredTreatments) : { roots, uncategorised };
 
             if (matchedIds) {
               const concernNames = pickedConcernIds
