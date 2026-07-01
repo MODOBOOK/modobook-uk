@@ -109,6 +109,65 @@ function textToParagraphHtml(text: string) {
     .join("");
 }
 
+function WelcomeIntroBlock({
+  heading,
+  html,
+  headingStyle,
+  brand,
+  expandable,
+  variant,
+}: {
+  heading: string;
+  html: string;
+  headingStyle: React.CSSProperties;
+  brand: string;
+  expandable: boolean;
+  variant: "mobile" | "desktop";
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const proseCls =
+    variant === "mobile"
+      ? "prose prose-sm max-w-none [&_h1]:text-2xl [&_h2]:text-xl [&_h3]:text-lg [&_p]:leading-relaxed [&_p]:my-3 [&_p:empty]:min-h-[1em] [&_p:empty]:block [&_br]:block [&_strong]:font-bold"
+      : "prose prose-base sm:prose-lg max-w-none [&_h1]:text-3xl [&_h2]:text-2xl [&_h3]:text-xl [&_p]:leading-relaxed [&_p]:my-3 [&_p:empty]:min-h-[1em] [&_p:empty]:block [&_br]:block [&_strong]:font-bold";
+  const collapsed = expandable && !expanded;
+  return (
+    <>
+      {heading && (
+        <h2
+          className={
+            variant === "mobile"
+              ? "mb-3 text-xl font-bold leading-tight"
+              : "mb-3 text-2xl font-bold leading-tight sm:text-3xl"
+          }
+          style={headingStyle}
+        >
+          {heading}
+        </h2>
+      )}
+      {html && (
+        <div className="relative">
+          <div
+            className={collapsed ? "max-h-40 overflow-hidden" : ""}
+            style={collapsed ? { maskImage: "linear-gradient(to bottom, black 60%, transparent)", WebkitMaskImage: "linear-gradient(to bottom, black 60%, transparent)" } : undefined}
+          >
+            <SafeHtml html={html} className={proseCls} />
+          </div>
+          {expandable && (
+            <button
+              type="button"
+              onClick={() => setExpanded((v) => !v)}
+              className="mt-3 text-sm font-semibold underline underline-offset-4"
+              style={{ color: brand }}
+            >
+              {expanded ? "Show less" : "Read more"}
+            </button>
+          )}
+        </div>
+      )}
+    </>
+  );
+}
+
 type Theme = Database["public"]["Tables"]["clinic_theme"]["Row"];
 
 function BookPage() {
@@ -246,6 +305,7 @@ function BookPage() {
   const introHeading = aboutPage?.intro_heading?.trim() || "";
   const legacyIntroBody = aboutPage?.intro_body?.trim() || "";
   const welcomeHtml = profile.welcome_intro_html?.trim() || (legacyIntroBody ? textToParagraphHtml(legacyIntroBody) : "");
+  const introExpandable = Boolean((aboutPage as { intro_expandable?: boolean } | null | undefined)?.intro_expandable);
 
   const [locationId, setLocationId] = useState<string | null>(null);
   const [directionsOpen, setDirectionsOpen] = useState(false);
@@ -691,17 +751,14 @@ function BookPage() {
       {isMobile && (introHeading || welcomeHtml) && (
         <section id="welcome-intro-mobile" className="mx-auto mt-4 max-w-3xl px-4">
           <div className="rounded-2xl border bg-card px-5 py-5 shadow-sm" style={{ borderColor: `${brand}1a` }}>
-            {introHeading && (
-              <h2 className="mb-3 text-xl font-bold leading-tight" style={headingStyle}>
-                {introHeading}
-              </h2>
-            )}
-            {welcomeHtml && (
-              <SafeHtml
-                html={welcomeHtml}
-                className="prose prose-sm max-w-none [&_h1]:text-2xl [&_h2]:text-xl [&_h3]:text-lg [&_p]:leading-relaxed [&_strong]:font-bold"
-              />
-            )}
+            <WelcomeIntroBlock
+              heading={introHeading}
+              html={welcomeHtml}
+              headingStyle={headingStyle}
+              brand={brand}
+              expandable={introExpandable}
+              variant="mobile"
+            />
           </div>
         </section>
       )}
@@ -767,17 +824,14 @@ function BookPage() {
             className="rounded-2xl border bg-card px-5 py-5 shadow-sm sm:px-7 sm:py-6"
             style={{ borderColor: `${brand}1a` }}
           >
-            {introHeading && (
-              <h2 className="mb-3 text-2xl font-bold leading-tight sm:text-3xl" style={headingStyle}>
-                {introHeading}
-              </h2>
-            )}
-            {welcomeHtml && (
-              <SafeHtml
-                html={welcomeHtml}
-                className="prose prose-base sm:prose-lg max-w-none [&_h1]:text-3xl [&_h2]:text-2xl [&_h3]:text-xl [&_p]:leading-relaxed [&_strong]:font-bold"
-              />
-            )}
+            <WelcomeIntroBlock
+              heading={introHeading}
+              html={welcomeHtml}
+              headingStyle={headingStyle}
+              brand={brand}
+              expandable={introExpandable}
+              variant="desktop"
+            />
           </div>
         </section>
       )}

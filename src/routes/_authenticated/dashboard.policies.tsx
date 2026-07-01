@@ -28,6 +28,7 @@ function PoliciesPage() {
   const { profile } = Route.useLoaderData();
   const savedAboutPage = ((profile as { about_page?: Record<string, unknown> | null }).about_page ?? {}) as Record<string, unknown>;
   const [introHeading, setIntroHeading] = useState<string>(typeof savedAboutPage.intro_heading === "string" ? savedAboutPage.intro_heading : "");
+  const [introExpandable, setIntroExpandable] = useState<boolean>(Boolean(savedAboutPage.intro_expandable));
   const [welcome, setWelcome] = useState<string>((profile.welcome_intro_html as string | null) ?? "");
   const [depositPounds, setDepositPounds] = useState<string>(
     ((profile.deposit_amount_cents as number | null) ?? 0) > 0
@@ -52,6 +53,7 @@ function PoliciesPage() {
           about_page: {
             ...savedAboutPage,
             intro_heading: introHeading,
+            intro_expandable: introExpandable,
             show_intro: true,
           },
           deposit_amount_cents: depositPounds ? Math.round(Number(depositPounds) * 100) : 0,
@@ -96,7 +98,14 @@ function PoliciesPage() {
             <Label>Intro text</Label>
           <RichTextEditor value={welcome} onChange={setWelcome} />
           </div>
-          <p className="mt-2 text-xs text-muted-foreground">Use bold, italic, headings, lists or links to introduce your clinic.</p>
+          <p className="mt-2 text-xs text-muted-foreground">Use bold, italic, headings, lists or links to introduce your clinic. Paragraph breaks and blank lines are preserved on your booking page.</p>
+          <div className="mt-3 flex items-center justify-between rounded-lg border p-3">
+            <div>
+              <p className="text-sm font-medium">Make intro expandable</p>
+              <p className="text-xs text-muted-foreground">Collapses long text with a "Read more" toggle on the booking page.</p>
+            </div>
+            <Switch checked={introExpandable} onCheckedChange={setIntroExpandable} />
+          </div>
         </CardContent>
       </Card>
 
