@@ -1,7 +1,7 @@
 import { createFileRoute, useParams } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { getFormByToken, submitFormByToken } from "@/lib/medical-forms.functions";
+import { getFormByToken, submitFormByToken, getClinicSlugForFormToken } from "@/lib/medical-forms.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -48,10 +48,12 @@ function isVisible(el: FormElement, responses: Record<string, any>): boolean {
 function FillFormPage() {
   const { token } = useParams({ from: "/f/$token" });
   const fetchOne = useServerFn(getFormByToken);
+  const fetchSlug = useServerFn(getClinicSlugForFormToken);
   const submit = useServerFn(submitFormByToken);
 
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<any>(null);
+  const [fallbackSlug, setFallbackSlug] = useState<string | null>(null);
   const [responses, setResponses] = useState<Record<string, any>>({});
   const [stepIdx, setStepIdx] = useState(0);
   const [done, setDone] = useState(false);
@@ -64,15 +66,29 @@ function FillFormPage() {
         setData(r);
         if (r?.status === "submitted") setDone(true);
         if (r?.response) setResponses(r.response);
+        if (!r) {
+          try { setFallbackSlug(await fetchSlug({ data: { token } }) as any); } catch { /* noop */ }
+        }
       } catch {
         setData(null);
+        try { setFallbackSlug(await fetchSlug({ data: { token } }) as any); } catch { /* noop */ }
       } finally { setLoading(false); }
     })();
     // eslint-disable-next-line
   }, [token]);
 
   if (loading) return <Centered><Loader2 className="h-6 w-6 animate-spin" /></Centered>;
-  if (!data) return <Centered><p className="text-sm text-muted-foreground">Form not found or expired.</p></Centered>;
+  if (!data) return (
+    <Centered>
+      <Card className="max-w-md p-8 text-center">
+        <h2 className="mb-1 text-xl font-bold">Form unavailable</h2>
+        <p className="text-sm text-muted-foreground">This form link may have expired or already been completed.</p>
+        <a href={fallbackSlug ? `/m/${fallbackSlug}` : "/"} className="mt-5 inline-block">
+          <Button>Back to clinic</Button>
+        </a>
+      </Card>
+    </Centered>
+  );
 
   const steps: FormStep[] = data.template_schema?.steps ?? [];
   const step = steps[stepIdx];
