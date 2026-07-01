@@ -192,15 +192,17 @@ export const getMultiBookingContext = createServerFn({ method: "GET" })
 
     const treatmentIds = Array.from(new Set([...(data.treatmentIds ?? []), ...pkgFirstTreatmentIds]));
 
-    const { data: treatments, error: tErr } = treatmentIds.length > 0
-      ? await sb
-          .from("treatments")
-          .select("*")
-          .in("id", treatmentIds)
-          .eq("profile_id", profile.id)
-          .eq("active", true)
-      : { data: [], error: null } as { data: unknown[]; error: null };
-    if (tErr) throw tErr;
+    let treatments: unknown[] = [];
+    if (treatmentIds.length > 0) {
+      const { data, error } = await sb
+        .from("treatments")
+        .select("*")
+        .in("id", treatmentIds)
+        .eq("profile_id", profile.id)
+        .eq("active", true);
+      if (error) throw error;
+      treatments = data ?? [];
+    }
 
     const { data: locations } = await sb
       .from("locations")
@@ -220,12 +222,14 @@ export const getMultiBookingContext = createServerFn({ method: "GET" })
       .eq("profile_id", profile.id)
       .maybeSingle();
 
-    const { data: pricing } = treatmentIds.length > 0
-      ? await sb
-          .from("treatment_location_pricing")
-          .select("*")
-          .in("treatment_id", treatmentIds)
-      : { data: [] } as { data: unknown[] };
+    let pricing: unknown[] = [];
+    if (treatmentIds.length > 0) {
+      const { data } = await sb
+        .from("treatment_location_pricing")
+        .select("*")
+        .in("treatment_id", treatmentIds);
+      pricing = data ?? [];
+    }
 
     const bookableFrom = await computeBookableFrom(
       sb,
