@@ -61,10 +61,30 @@ export function getStripeMode() {
   return process.env.STRIPE_MODE === "live" ? "live" : "sandbox";
 }
 
+function getStripeSecretKey() {
+  const mode = getStripeMode();
+  if (mode === "sandbox") {
+    return process.env.STRIPE_TEST_API_KEY || process.env.STRIPE_PLATFORM_SECRET_KEY;
+  }
+  return process.env.STRIPE_LIVE_API_KEY || process.env.STRIPE_PLATFORM_SECRET_KEY;
+}
+
 export function getStripe(): Stripe {
-  const key = process.env.STRIPE_PLATFORM_SECRET_KEY;
+  const key = getStripeSecretKey();
   if (!key) {
     throw new StripePlatformSetupError("Stripe sandbox secret key is missing.", "missing_secret");
+  }
+  if (key.startsWith("pk_")) {
+    throw new StripePlatformSetupError(
+      "Stripe needs the secret key for server payments, not the publishable key.",
+      "invalid_secret_mode",
+    );
+  }
+  if (key.startsWith("rk_")) {
+    throw new StripePlatformSetupError(
+      "Stripe Connect onboarding needs your test secret key that starts with sk_test_. A restricted key will not create practitioner Connect accounts unless it has the required Connect account permissions.",
+      "invalid_secret_mode",
+    );
   }
   if (getStripeMode() === "sandbox" && !key.startsWith("sk_test_")) {
     throw new StripePlatformSetupError(
