@@ -1,0 +1,1 @@
+DROP FUNCTION IF EXISTS public.create_walk_in_referral(uuid, text, text, text, date, text, uuid);
