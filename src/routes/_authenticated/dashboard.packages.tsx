@@ -85,6 +85,8 @@ function PackagesPage() {
       treatment_ids: p.treatment_ids ?? (p.treatment_id ? [p.treatment_id] : []),
       session_count: p.session_count,
       price: Number(p.price),
+      priceMode: "custom",
+      discountPercent: 0,
       duration_minutes: p.duration_minutes ? String(p.duration_minutes) : "",
       expiry_days: p.expiry_days ? String(p.expiry_days) : "",
       image_url: p.image_url ?? "",
@@ -92,6 +94,24 @@ function PackagesPage() {
     });
     setOpen(true);
   }
+
+  const originalTotal = useMemo(() => {
+    return form.treatment_ids.reduce((sum, id) => {
+      const t = treatments.find((x) => x.id === id);
+      return sum + Number(t?.price ?? 0);
+    }, 0) * (Number(form.session_count) || 1);
+  }, [form.treatment_ids, form.session_count, treatments]);
+
+  const effectivePrice = useMemo(() => {
+    if (form.priceMode === "percent") {
+      const pct = Math.max(0, Math.min(100, Number(form.discountPercent) || 0));
+      return Number((originalTotal * (1 - pct / 100)).toFixed(2));
+    }
+    return Number(form.price) || 0;
+  }, [form.priceMode, form.discountPercent, form.price, originalTotal]);
+
+  const savings = Math.max(0, originalTotal - effectivePrice);
+  const savingsPct = originalTotal > 0 ? Math.round((savings / originalTotal) * 100) : 0;
 
   function toggleTreatment(id: string) {
     setForm((f) => ({
