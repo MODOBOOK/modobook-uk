@@ -114,3 +114,68 @@ export const refreshStripeStatus = createServerFn({ method: "POST" })
       detailsSubmitted: account.details_submitted,
     };
   });
+
+function extractStripeConnectAccountId(value: string) {
+  const trimmed = value.trim();
+  const direct = trimmed.match(/acct_[A-Za-z0-9]+/);
+  if (direct) return direct[0];
+
+  try {
+    const url = new URL(trimmed);
+    const encodedAccount = url.pathname
+      .split("/")
+      .find((part) => part.startsWith("YWNjdF8"));
+    if (!encodedAccount) return null;
+    const decoded = atob(encodedAccount.replace(/-/g, "+").replace(/_/g, "/"));
+    return decoded.match(/^acct_[A-Za-z0-9]+$/) ? decoded : null;
+  } catch {
+    return null;
+  }
+}
+
+export const pairExistingStripeConnectLink = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { stripeConnectLink: string }) => input)
+  .handler(async ({ data, context }) => {
+    const { getAccount } = await import("./stripe.server");
+    const { supabase, userId } = context;
+    const accountId = extractStripeConnectAccountId(data.stripeConnectLink);
+
+    if (!accountId) {
+      return {
+        ok: false as const,
+        message: "Paste the full Stripe Connect setup link, or an account ID that starts with acct_.",
+      };
+    }
+
+    const { data: profile, error } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("user_id", userId)
+      .single();
+    if (error) throw error;
+
+    try {
+      const account = await getAccount(accountId);
+      const status = account.charges_enabled ? "active" : account.details_submitted ? "pending" : "incomplete";
+      await supabase
+        .from("profiles")
+        .update({
+          stripe_connect_account_id: accountId,
+          stripe_connect_onboarding_status: status,
+        })
+        .eq("id", profile.id);
+
+      return {
+        ok: true as const,
+        accountId,
+        status,
+      };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Stripe account could not be paired.";
+      return {
+        ok: false as const,
+        message,
+      };
+    }
+  });
