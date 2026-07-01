@@ -514,3 +514,79 @@ function Field({ label, v, on, type = "text", disabled, className }: { label: st
   );
 }
 
+
+type RxTemplate = Awaited<ReturnType<typeof listMyRxTemplates>>[number];
+type Snippet = Awaited<ReturnType<typeof listMySnippets>>[number];
+
+function SendWalkInButton({ id }: { id: string }) {
+  const send = useServerFn(sendWalkInToPractitioner);
+  const [busy, setBusy] = useState(false);
+  const [sent, setSent] = useState(false);
+  return (
+    <div className="flex justify-end">
+      <Button
+        size="sm"
+        variant="outline"
+        disabled={busy || sent}
+        onClick={async () => {
+          try {
+            setBusy(true);
+            await send({ data: { id } });
+            toast.success("Sent to practitioner to close");
+            setSent(true);
+          } catch (e) { toast.error((e as Error).message); }
+          finally { setBusy(false); }
+        }}
+      ><Send className="mr-1 h-4 w-4" /> {sent ? "Sent to practitioner" : "Send to practitioner to close"}</Button>
+    </div>
+  );
+}
+
+function TemplatePicker({ onPick }: { onPick: (t: RxTemplate) => void }) {
+  const fetchFn = useServerFn(listMyRxTemplates);
+  const q = useQuery({ queryKey: ["rx-templates"], queryFn: () => fetchFn() });
+  const list = (q.data ?? []) as RxTemplate[];
+  return (
+    <div className="flex items-center gap-2">
+      <Label className="text-[11px] text-muted-foreground">Load template</Label>
+      <Select onValueChange={(id) => { const t = list.find((x) => x.id === id); if (t) onPick(t); }}>
+        <SelectTrigger className="h-8 w-56 text-xs"><SelectValue placeholder={list.length ? "Choose a template…" : "No templates yet"} /></SelectTrigger>
+        <SelectContent>
+          {list.map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
+
+function SnippetPicker({ onPick }: { onPick: (text: string) => void }) {
+  const fetchFn = useServerFn(listMySnippets);
+  const q = useQuery({ queryKey: ["rx-snippets"], queryFn: () => fetchFn() });
+  const list = (q.data ?? []) as Snippet[];
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button size="sm" variant="ghost" className="h-8 text-xs"><ClipboardList className="mr-1 h-3 w-3" /> Insert direction</Button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-72 p-2">
+        {list.length === 0 ? (
+          <p className="p-2 text-xs text-muted-foreground">No snippets. Create some in Directions library.</p>
+        ) : (
+          <div className="space-y-1 max-h-64 overflow-auto">
+            {list.map((s) => (
+              <button
+                key={s.id}
+                type="button"
+                className="w-full rounded p-2 text-left text-xs hover:bg-muted"
+                onClick={() => onPick(s.body)}
+              >
+                <p className="font-medium">{s.title}</p>
+                <p className="line-clamp-2 text-muted-foreground">{s.body}</p>
+              </button>
+            ))}
+          </div>
+        )}
+      </PopoverContent>
+    </Popover>
+  );
+}
