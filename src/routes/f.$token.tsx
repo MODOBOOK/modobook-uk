@@ -1,4 +1,4 @@
-import { createFileRoute, useParams } from "@tanstack/react-router";
+import { createFileRoute, useParams, useSearch } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,11 +9,6 @@ import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CheckCircle2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-
-export const Route = createFileRoute("/f/$token")({
-  ssr: false,
-  component: FillFormPage,
-});
 
 type FormElement = {
   id: string;
@@ -32,6 +27,51 @@ type FormElement = {
   logic?: { showIfId: string; equals: string } | null;
 };
 type FormStep = { id: string; title: string; elements: FormElement[] };
+type FormSearch = { returnTo?: string };
+
+export const Route = createFileRoute("/f/$token")({
+  ssr: false,
+  validateSearch: (s: Record<string, unknown>): FormSearch => ({
+    returnTo: typeof s.returnTo === "string" && s.returnTo.startsWith("/m/") ? s.returnTo : undefined,
+  }),
+  component: FillFormPage,
+});
+
+function normalizeMedicalSchema(schema: unknown): FormStep[] {
+  if (schema && typeof schema === "object" && !Array.isArray(schema) && Array.isArray((schema as { steps?: unknown }).steps)) {
+    return ((schema as { steps: any[] }).steps ?? []).map((step, index) => ({
+      id: String(step.id ?? `step-${index}`),
+      title: String(step.title ?? `Section ${index + 1}`),
+      elements: normalizeElements(step.elements),
+    }));
+  }
+
+  if (Array.isArray(schema)) {
+    return schema.map((group: any, index) => ({
+      id: String(group.id ?? group.group ?? `group-${index}`),
+      title: String(group.title ?? group.group ?? `Section ${index + 1}`),
+      elements: normalizeElements(Array.isArray(group.elements) ? group.elements : group.questions),
+    }));
+  }
+
+  return [];
+}
+
+function normalizeElements(elements: unknown): FormElement[] {
+  if (!Array.isArray(elements)) return [];
+  return elements.map((el: any, index) => {
+    const id = String(el.id ?? `field-${index}`);
+    const base = { ...el, id, label: el.label ?? el.text ?? `Question ${index + 1}` } as FormElement;
+
+    if (el.type === "yesno") return { ...base, type: "radio", options: ["Yes", "No"] };
+    if (el.type === "checkboxes") return { ...base, type: "checkbox_group", options: Array.isArray(el.options) ? el.options : [] };
+    if (!el.type || el.type === "text" || el.type === "date" || el.type === "tel" || el.type === "email") {
+      return { ...base, type: "field", fieldType: el.fieldType ?? el.type ?? "text" };
+    }
+
+    return base;
+  });
+}
 
 function isVisible(el: FormElement, responses: Record<string, any>): boolean {
   if (!el.logic || !el.logic.showIfId) return true;
@@ -45,6 +85,7 @@ function isVisible(el: FormElement, responses: Record<string, any>): boolean {
 
 function FillFormPage() {
   const { token } = useParams({ from: "/f/$token" });
+  const search = useSearch({ from: "/f/$token" });
 
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<any>(null);
@@ -59,11 +100,11 @@ function FillFormPage() {
       try {
         const res = await fetch(`/api/public/medical-form/${encodeURIComponent(token)}`);
         const payload = await res.json().catch(() => ({}));
-        const r = payload.form ?? null;
+        const r = payload.form ? { ...payload.form, template_schema: normalizeMedicalSchema(payload.form.template_schema) } : null;
         setData(r);
         if (r?.status === "submitted") setDone(true);
         if (r?.response) setResponses(r.response);
-        if (!r) setFallbackSlug(payload.fallbackSlug ?? null);
+        if (!r || payload.fallbackSlug) setFallbackSlug(payload.fallbackSlug ?? r?.slug ?? null);
       } catch {
         setData(null);
       } finally { setLoading(false); }
@@ -71,24 +112,40 @@ function FillFormPage() {
   }, [token]);
 
   if (loading) return <Centered><Loader2 className="h-6 w-6 animate-spin" /></Centered>;
+  const backHref = search.returnTo ?? (fallbackSlug ? `/m/${fallbackSlug}` : data?.slug ? `/m/${data.slug}` : "/");
   if (!data) return (
     <Centered>
       <Card className="max-w-md p-8 text-center">
         <h2 className="mb-1 text-xl font-bold">Form unavailable</h2>
         <p className="text-sm text-muted-foreground">This form link may have expired or already been completed.</p>
-        <a href={fallbackSlug ? `/m/${fallbackSlug}` : "/"} className="mt-5 inline-block">
+        <a href={backHref} className="mt-5 inline-block">
           <Button>Back to clinic</Button>
         </a>
       </Card>
     </Centered>
   );
 
-  const steps: FormStep[] = data.template_schema?.steps ?? [];
+  const steps: FormStep[] = Array.isArray(data.template_schema) ? data.template_schema : [];
   const step = steps[stepIdx];
   const isLast = stepIdx === steps.length - 1;
 
+  if (!steps.length || !step) {
+    return (
+      <Centered>
+        <Card className="max-w-md p-8 text-center">
+          <h2 className="mb-1 text-xl font-bold">Form unavailable</h2>
+          <p className="text-sm text-muted-foreground">This medical form does not have any questions ready to complete yet.</p>
+          <a href={backHref} className="mt-5 inline-block">
+            <Button style={data.brand_color ? { backgroundColor: data.brand_color, color: "white" } : undefined}>
+              Back to {data.clinic_name || "clinic"}
+            </Button>
+          </a>
+        </Card>
+      </Centered>
+    );
+  }
+
   if (done) {
-    const backHref = data.slug ? `/m/${data.slug}` : "/";
     return (
       <Centered>
         <Card className="max-w-md p-8 text-center">
