@@ -1109,11 +1109,23 @@ export type Database = {
           created_at: string
           directions: string | null
           dose: string | null
+          form: string | null
           id: string
           notes: string | null
+          patient_address_snapshot: string | null
+          patient_dob: string | null
+          pdf_url: string | null
           prescribed_on: string | null
+          prescriber_address: string | null
+          prescriber_name: string | null
+          prescriber_reg_number: string | null
           product: string
           profile_id: string
+          quantity: string | null
+          route: string | null
+          signature_url: string | null
+          signed_at: string | null
+          strength: string | null
           updated_at: string
         }
         Insert: {
@@ -1121,11 +1133,23 @@ export type Database = {
           created_at?: string
           directions?: string | null
           dose?: string | null
+          form?: string | null
           id?: string
           notes?: string | null
+          patient_address_snapshot?: string | null
+          patient_dob?: string | null
+          pdf_url?: string | null
           prescribed_on?: string | null
+          prescriber_address?: string | null
+          prescriber_name?: string | null
+          prescriber_reg_number?: string | null
           product: string
           profile_id: string
+          quantity?: string | null
+          route?: string | null
+          signature_url?: string | null
+          signed_at?: string | null
+          strength?: string | null
           updated_at?: string
         }
         Update: {
@@ -1133,11 +1157,23 @@ export type Database = {
           created_at?: string
           directions?: string | null
           dose?: string | null
+          form?: string | null
           id?: string
           notes?: string | null
+          patient_address_snapshot?: string | null
+          patient_dob?: string | null
+          pdf_url?: string | null
           prescribed_on?: string | null
+          prescriber_address?: string | null
+          prescriber_name?: string | null
+          prescriber_reg_number?: string | null
           product?: string
           profile_id?: string
+          quantity?: string | null
+          route?: string | null
+          signature_url?: string | null
+          signed_at?: string | null
+          strength?: string | null
           updated_at?: string
         }
         Relationships: [
