@@ -1,9 +1,14 @@
 import { createFileRoute, Link, Outlet, redirect, useRouterState } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { LogOut, Inbox, Network, ShieldCheck, Stethoscope, Building2, CalendarDays } from "lucide-react";
 import { getHubContext } from "@/lib/hub.functions";
 import { getMyProfile } from "@/lib/profiles.functions";
+import { listMyReferrals } from "@/lib/prescriber.functions";
+import { listMyPrescriberVisits } from "@/lib/clinic-visits.functions";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/prescriber")({
@@ -20,11 +25,11 @@ export const Route = createFileRoute("/_authenticated/prescriber")({
 });
 
 const nav = [
-  { to: "/prescriber", label: "Referrals", icon: Inbox, exact: true },
-  { to: "/prescriber/visits", label: "Clinic visits", icon: CalendarDays },
-  { to: "/prescriber/connections", label: "Practitioners", icon: Network },
-  { to: "/hub/verification", label: "Verification", icon: ShieldCheck },
-  { to: "/hub", label: "Hub overview", icon: Stethoscope },
+  { to: "/prescriber", label: "Referrals", icon: Inbox, exact: true, key: "referrals" as const },
+  { to: "/prescriber/visits", label: "Clinic visits", icon: CalendarDays, key: "visits" as const },
+  { to: "/prescriber/connections", label: "Practitioners", icon: Network, key: "connections" as const },
+  { to: "/hub/verification", label: "Verification", icon: ShieldCheck, key: "verification" as const },
+  { to: "/hub", label: "Hub overview", icon: Stethoscope, key: "overview" as const },
 ];
 
 
@@ -32,6 +37,35 @@ function PrescriberLayout() {
   const { hubCtx, hasClinic } = Route.useRouteContext();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const name = hubCtx.prescriber?.full_name ?? hubCtx.displayName ?? "Prescriber";
+
+  const fetchRefs = useServerFn(listMyReferrals);
+  const fetchVisits = useServerFn(listMyPrescriberVisits);
+  const refsQ = useQuery({
+    queryKey: ["prescriber-nav-refs"],
+    queryFn: () => fetchRefs(),
+    refetchInterval: 60_000,
+    refetchOnWindowFocus: true,
+  });
+  const visitsQ = useQuery({
+    queryKey: ["prescriber-nav-visits"],
+    queryFn: () => fetchVisits(),
+    refetchInterval: 60_000,
+    refetchOnWindowFocus: true,
+  });
+  const pendingRefs = (refsQ.data ?? []).filter((r) => r.status === "pending").length;
+  const pendingVisits = (visitsQ.data ?? []).filter((v) => v.status === "pending_approval").length;
+  const totalPending = pendingRefs + pendingVisits;
+
+  useEffect(() => {
+    const base = "Prescriber Hub";
+    document.title = totalPending > 0 ? `(${totalPending}) ${base}` : base;
+    return () => { document.title = base; };
+  }, [totalPending]);
+
+  const badges: Record<string, number> = {
+    referrals: pendingRefs,
+    visits: pendingVisits,
+  };
 
   async function signOut() {
     await supabase.auth.signOut();
@@ -52,6 +86,7 @@ function PrescriberLayout() {
         <nav className="flex-1 space-y-0.5 overflow-y-auto px-3 py-6">
           {nav.map((item) => {
             const active = item.exact ? pathname === item.to : pathname.startsWith(item.to);
+            const count = badges[item.key] ?? 0;
             return (
               <Link
                 key={item.to}
@@ -65,6 +100,12 @@ function PrescriberLayout() {
               >
                 <item.icon className="h-4 w-4 opacity-80" />
                 <span className="flex-1 tracking-wide">{item.label}</span>
+                {count > 0 && (
+                  <span className={cn(
+                    "ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] font-semibold",
+                    active ? "bg-primary-foreground/20 text-primary-foreground" : "bg-primary text-primary-foreground",
+                  )}>{count}</span>
+                )}
               </Link>
             );
           })}
@@ -106,17 +147,23 @@ function PrescriberLayout() {
         <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t bg-background/95 backdrop-blur lg:hidden">
           {nav.map((tab) => {
             const active = tab.exact ? pathname === tab.to : pathname.startsWith(tab.to);
+            const count = badges[tab.key] ?? 0;
             return (
               <Link
                 key={tab.to}
                 to={tab.to}
                 className={cn(
-                  "flex flex-col items-center justify-center gap-1 py-2.5 text-[11px] font-medium transition",
+                  "relative flex flex-col items-center justify-center gap-1 py-2.5 text-[11px] font-medium transition",
                   active ? "text-primary" : "text-muted-foreground",
                 )}
               >
                 <tab.icon className="h-5 w-5" />
                 {tab.label}
+                {count > 0 && (
+                  <span className="absolute right-3 top-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">
+                    {count}
+                  </span>
+                )}
               </Link>
             );
           })}

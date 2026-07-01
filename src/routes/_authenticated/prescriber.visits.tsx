@@ -87,17 +87,37 @@ function PrescriberVisits() {
           <p className="text-sm text-muted-foreground">
             Upcoming days at connected clinics, plus any requests awaiting approval.
           </p>
+          {practs.length > 0 && (
+            <p className="mt-1 text-xs text-muted-foreground">
+              Linked with {practs.length} practitioner{practs.length === 1 ? "" : "s"}:{" "}
+              {practs.map((p) => p.name).join(", ")}
+            </p>
+          )}
         </div>
-        <Button onClick={() => setOpen((o) => !o)} disabled={practs.length === 0}>
+        <Button
+          onClick={() => {
+            if (practs.length === 0) {
+              toast.error("Link with a practitioner first (Practitioners tab).");
+              return;
+            }
+            if (!form.practitioner_profile_id && practs.length === 1) {
+              setForm((f) => ({ ...f, practitioner_profile_id: practs[0].profile_id }));
+            }
+            setOpen((o) => !o);
+          }}
+        >
           <Plus className="mr-2 h-4 w-4" />
           Request a clinic day
         </Button>
       </div>
 
-      {practs.length === 0 && (
+      {practs.length === 0 && !pq.isLoading && (
         <Card className="border-amber-300/60 bg-amber-50/40">
           <CardContent className="p-4 text-sm">
-            Connect with a practitioner first via the Prescriber Hub Connections page.
+            You aren't linked to any practitioners yet. Head to the{" "}
+            <span className="font-medium">Practitioners</span> tab, share your RX code with the
+            practitioner, or accept their incoming request. Once linked you can request days at
+            their clinic here.
           </CardContent>
         </Card>
       )}
