@@ -52,14 +52,6 @@ function InlineFormPanel({ submissionId }: { submissionId: string }) {
         <span>{row.client?.full_name ?? row.recipient_email ?? "—"}</span>
         <span>·</span>
         <span>{row.submitted_at ? `Submitted ${new Date(row.submitted_at).toLocaleString()}` : `Sent ${new Date(row.created_at).toLocaleString()}`}</span>
-        <div className="ml-auto flex gap-1">
-          <Button size="sm" variant="ghost" className="h-6 px-2" onClick={async () => { await navigator.clipboard.writeText(link); toast.success("Link copied"); }}>
-            <Copy className="mr-1 h-3 w-3" />Link
-          </Button>
-          <Button size="sm" variant="ghost" className="h-6 px-2" asChild>
-            <a href={link} target="_blank" rel="noreferrer"><ExternalLink className="mr-1 h-3 w-3" />Open</a>
-          </Button>
-        </div>
       </div>
 
       {row.status !== "submitted" ? (
