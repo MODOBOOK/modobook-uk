@@ -719,21 +719,24 @@ function TreatmentDialog({
           {consentTemplates.length === 0 ? (
             <p className="text-xs text-muted-foreground">No consent forms yet. Add them in Dashboard → Consent forms.</p>
           ) : (
-            <div className="space-y-2 max-h-56 overflow-y-auto">
-              {consentTemplates.map((t) => (
-                <label key={t.id} className="flex items-start gap-2 text-sm">
-                  <Checkbox checked={consentIds.includes(t.id)} onCheckedChange={() => toggleConsent(t.id)} />
-                  <span>
-                    {t.name}
-                    {t.is_system && <span className="ml-2 text-xs text-muted-foreground">(template)</span>}
-                  </span>
-                </label>
-              ))}
-            </div>
+            <SearchableMultiPicker
+              hideLabel
+              label="Consent forms"
+              emptyMessage="No consent forms yet."
+              placeholder="Search consent forms…"
+              items={consentTemplates.map((t) => ({
+                id: t.id,
+                name: t.name,
+                hint: t.is_system ? "template" : undefined,
+              }))}
+              selected={consentIds}
+              onToggle={(id) => toggleConsent(id)}
+            />
           )}
           <p className="text-xs text-muted-foreground mt-2">
             Patients receive a link to complete each selected form after they book.
           </p>
+
           <label className="flex items-center gap-2 text-sm pt-2 border-t">
             <Switch checked={autoSendForms} onCheckedChange={setAutoSendForms} />
             <span>Auto-send medical forms when this treatment is booked</span>
