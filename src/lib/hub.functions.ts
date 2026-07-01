@@ -264,6 +264,7 @@ export const listHubData = createServerFn({ method: "GET" })
       ),
     );
     let codeMap = new Map<string, { code: string; owner_kind: HubOwnerKind; display_name: string | null }>();
+    let nameFallback = new Map<string, string>();
     if (otherIds.length > 0) {
       const { data: codes } = await supabase
         .from("hub_codes")
@@ -276,12 +277,34 @@ export const listHubData = createServerFn({ method: "GET" })
           display_name: c.display_name,
         });
       }
+      // Fill in missing names via profiles / prescriber_profiles using the
+      // service role — RLS on those tables blocks cross-user reads, but the
+      // hub_link between the two users is already accepted so exposing the
+      // partner's display name is fine.
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const [{ data: profs }, { data: prescs }] = await Promise.all([
+        supabaseAdmin.from("profiles").select("user_id, clinic_name, full_name").in("user_id", otherIds),
+        supabaseAdmin.from("prescriber_profiles").select("user_id, full_name").in("user_id", otherIds),
+      ]);
+      for (const p of profs ?? []) {
+        const nm = (p.clinic_name?.trim() || p.full_name?.trim()) ?? "";
+        if (nm) nameFallback.set(p.user_id, nm);
+      }
+      for (const p of prescs ?? []) {
+        if (!nameFallback.has(p.user_id) && p.full_name?.trim()) {
+          nameFallback.set(p.user_id, p.full_name.trim());
+        }
+      }
     }
 
     const enriched = (links ?? []).map((l) => {
       const otherId = l.requester_user_id === userId ? l.recipient_user_id : l.requester_user_id;
       const direction: "outgoing" | "incoming" = l.requester_user_id === userId ? "outgoing" : "incoming";
       const other = codeMap.get(otherId) ?? null;
+      const name =
+        (other?.display_name && other.display_name.trim()) ||
+        nameFallback.get(otherId) ||
+        null;
       return {
         id: l.id,
         status: l.status as HubLinkStatus,
@@ -291,8 +314,9 @@ export const listHubData = createServerFn({ method: "GET" })
         other_user_id: otherId,
         other_code: other?.code ?? null,
         other_kind: other?.owner_kind ?? null,
-        other_name: other?.display_name ?? null,
+        other_name: name,
       };
     });
     return enriched;
   });
+
