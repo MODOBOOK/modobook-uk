@@ -1,9 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { useState } from "react";
 import { listSentReferrals } from "@/lib/prescriber.functions";
+import { listWalkInsAwaitingClose, closeWalkInAsPractitioner } from "@/lib/prescriber-directions.functions";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { toast } from "sonner";
+import { CheckCircle2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard/referrals")({
   ssr: false,
@@ -11,52 +18,121 @@ export const Route = createFileRoute("/_authenticated/dashboard/referrals")({
 });
 
 type Row = Awaited<ReturnType<typeof listSentReferrals>>[number];
+type WalkIn = Awaited<ReturnType<typeof listWalkInsAwaitingClose>>[number];
 
 function SentReferrals() {
   const fetchFn = useServerFn(listSentReferrals);
+  const fetchWalk = useServerFn(listWalkInsAwaitingClose);
   const q = useQuery({ queryKey: ["sent-referrals"], queryFn: () => fetchFn() });
+  const wq = useQuery({ queryKey: ["walk-ins"], queryFn: () => fetchWalk() });
   const rows = (q.data ?? []) as Row[];
+  const walkIns = (wq.data ?? []) as WalkIn[];
+  const awaiting = walkIns.filter((w) => w.awaiting_practitioner_close);
 
   return (
     <div className="mx-auto max-w-4xl space-y-4">
       <div>
         <h1 className="font-serif text-2xl">Prescriber referrals</h1>
         <p className="text-sm text-muted-foreground">
-          Referrals sent to prescribers for treatments that need sign-off. The prescriber sees the full record once they accept.
+          Referrals sent to prescribers, plus in-clinic walk-ins waiting for you to close.
         </p>
       </div>
 
-      {q.isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
-      {!q.isLoading && rows.length === 0 && (
-        <Card><CardContent className="py-10 text-center text-sm text-muted-foreground">No referrals yet.</CardContent></Card>
-      )}
+      <Tabs defaultValue={awaiting.length ? "walk_ins" : "sent"}>
+        <TabsList>
+          <TabsTrigger value="sent">Sent referrals</TabsTrigger>
+          <TabsTrigger value="walk_ins">
+            Walk-ins {awaiting.length > 0 && <span className="ml-1 rounded bg-primary/10 px-1.5 text-xs text-primary">{awaiting.length}</span>}
+          </TabsTrigger>
+        </TabsList>
 
-      <div className="space-y-3">
-        {rows.map((r) => (
-          <Card key={r.id}>
-            <CardContent className="flex items-start justify-between gap-3 p-4">
-              <div className="min-w-0">
-                <p className="font-semibold">
-                  {r.patient_name}
-                  <span className="ml-2 text-xs font-normal text-muted-foreground">· {r.treatment_name}</span>
-                </p>
-                <p className="mt-0.5 text-xs text-muted-foreground">
-                  Prescriber: <span className="font-medium text-foreground">{r.prescriber_name}</span>
-                  {r.prescriber_regulatory_body ? ` · ${r.prescriber_regulatory_body}` : ""}
-                  {r.appointment ? ` · ${r.appointment.scheduled_date} at ${r.appointment.start_time.slice(0,5)}` : ""}
-                  {r.routing === "in_person_consult" && <span className="ml-2">· In-person consult</span>}
-                </p>
-                <p className="mt-1 text-[11px] text-muted-foreground">
-                  Sent {new Date(r.created_at).toLocaleString()}
-                  {r.accepted_at ? ` · Accepted ${new Date(r.accepted_at).toLocaleString()}` : ""}
-                </p>
-              </div>
-              <StatusBadge status={r.status} />
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+        <TabsContent value="sent" className="space-y-3 pt-3">
+          {q.isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
+          {!q.isLoading && rows.length === 0 && (
+            <Card><CardContent className="py-10 text-center text-sm text-muted-foreground">No referrals yet.</CardContent></Card>
+          )}
+          {rows.map((r) => (
+            <Card key={r.id}>
+              <CardContent className="flex items-start justify-between gap-3 p-4">
+                <div className="min-w-0">
+                  <p className="font-semibold">
+                    {r.patient_name}
+                    <span className="ml-2 text-xs font-normal text-muted-foreground">· {r.treatment_name}</span>
+                  </p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    Prescriber: <span className="font-medium text-foreground">{r.prescriber_name}</span>
+                    {r.prescriber_regulatory_body ? ` · ${r.prescriber_regulatory_body}` : ""}
+                    {r.appointment ? ` · ${r.appointment.scheduled_date} at ${r.appointment.start_time.slice(0,5)}` : ""}
+                    {r.routing === "in_person_consult" && <span className="ml-2">· In-person consult</span>}
+                  </p>
+                  <p className="mt-1 text-[11px] text-muted-foreground">
+                    Sent {new Date(r.created_at).toLocaleString()}
+                    {r.accepted_at ? ` · Accepted ${new Date(r.accepted_at).toLocaleString()}` : ""}
+                  </p>
+                </div>
+                <StatusBadge status={r.status} />
+              </CardContent>
+            </Card>
+          ))}
+        </TabsContent>
+
+        <TabsContent value="walk_ins" className="space-y-3 pt-3">
+          {wq.isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
+          {!wq.isLoading && walkIns.length === 0 && (
+            <Card><CardContent className="py-10 text-center text-sm text-muted-foreground">No walk-in consultations.</CardContent></Card>
+          )}
+          {walkIns.map((w) => <WalkInCard key={w.id} w={w} />)}
+        </TabsContent>
+      </Tabs>
     </div>
+  );
+}
+
+function WalkInCard({ w }: { w: WalkIn }) {
+  const qc = useQueryClient();
+  const close = useServerFn(closeWalkInAsPractitioner);
+  const [note, setNote] = useState("");
+  const [busy, setBusy] = useState(false);
+  const awaiting = w.awaiting_practitioner_close;
+  return (
+    <Card className={awaiting ? "border-amber-300/60 bg-amber-50/30 dark:bg-amber-950/10" : undefined}>
+      <CardContent className="space-y-3 p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="font-semibold">{w.patient_name}</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              Walk-in with <span className="font-medium text-foreground">{w.prescriber_name}</span>
+              {" · "}{new Date(w.created_at).toLocaleString()}
+            </p>
+            {w.walk_in_note && <p className="mt-2 whitespace-pre-wrap rounded border bg-background p-2 text-sm">{w.walk_in_note}</p>}
+            {w.notes && <p className="mt-2 whitespace-pre-wrap rounded border bg-background p-2 text-sm text-muted-foreground">{w.notes}</p>}
+          </div>
+          <Badge variant={awaiting ? "secondary" : "outline"}>
+            {awaiting ? "Awaiting close" : w.status === "completed" ? "Closed" : "In progress"}
+          </Badge>
+        </div>
+        {awaiting && (
+          <div className="space-y-2">
+            <Textarea rows={2} value={note} onChange={(e) => setNote(e.target.value)} placeholder="Optional close note…" />
+            <div className="flex justify-end">
+              <Button
+                size="sm"
+                disabled={busy}
+                onClick={async () => {
+                  try {
+                    setBusy(true);
+                    await close({ data: { id: w.id, note } });
+                    toast.success("Walk-in closed");
+                    qc.invalidateQueries({ queryKey: ["walk-ins"] });
+                  } catch (e) { toast.error((e as Error).message); }
+                  finally { setBusy(false); }
+                }}
+              ><CheckCircle2 className="mr-1 h-4 w-4" />Close walk-in</Button>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 
