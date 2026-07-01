@@ -256,17 +256,35 @@ export function ConsultationWizard() {
 
 /* ---------- Steps ---------- */
 
-function Step1({ medical, onChange, clientId, clientName, clientEmail, clientPhone }: {
+function Step1({ consultationId, medical, onChange, clientId, clientName, clientEmail, clientPhone, onLinked }: {
+  consultationId: string;
   medical: any;
   onChange: (v: any) => void;
   clientId?: string | null;
   clientName?: string | null;
   clientEmail?: string | null;
   clientPhone?: string | null;
+  onLinked: (pid: string) => void;
 }) {
+  const ensure = useServerFn(ensureConsultationPatient);
+  const [linking, setLinking] = useState(false);
   const answers = medical?.answers ?? {};
   const notes = medical?.notes ?? "";
   const toggle = (q: string, v: boolean) => onChange({ ...medical, answers: { ...answers, [q]: v } });
+
+  async function linkNow() {
+    setLinking(true);
+    try {
+      const res: any = await ensure({ data: { id: consultationId } });
+      if (res?.patient_id) {
+        onLinked(res.patient_id);
+        toast.success("Patient linked — you can now add forms");
+      }
+    } catch (e: any) {
+      toast.error(e?.message ?? "Failed to link patient");
+    } finally { setLinking(false); }
+  }
+
   return (
     <div className="space-y-4">
       <Header n={1} title="Medical history" subtitle="Tick anything that applies, or send a full form for the patient to complete at home." />
@@ -279,8 +297,12 @@ function Step1({ medical, onChange, clientId, clientName, clientEmail, clientPho
           />
         </div>
       ) : (
-        <div className="rounded-md border border-dashed p-3 text-xs text-muted-foreground">
-          Link this consultation to a patient record to send medical forms automatically.
+        <div className="flex flex-col gap-2 rounded-md border border-dashed p-3 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+          <span>Link this consultation to a patient record to send additional medical forms.</span>
+          <Button size="sm" onClick={linkNow} disabled={linking}>
+            {linking ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Plus className="mr-1.5 h-3.5 w-3.5" />}
+            Link patient & enable forms
+          </Button>
         </div>
       )}
 
