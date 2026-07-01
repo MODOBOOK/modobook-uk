@@ -2365,6 +2365,7 @@ export type Database = {
       packages: {
         Row: {
           active: boolean | null
+          category_id: string | null
           created_at: string
           description: string | null
           duration_minutes: number | null
@@ -2381,6 +2382,7 @@ export type Database = {
         }
         Insert: {
           active?: boolean | null
+          category_id?: string | null
           created_at?: string
           description?: string | null
           duration_minutes?: number | null
@@ -2397,6 +2399,7 @@ export type Database = {
         }
         Update: {
           active?: boolean | null
+          category_id?: string | null
           created_at?: string
           description?: string | null
           duration_minutes?: number | null
@@ -2412,6 +2415,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "packages_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "treatment_categories"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "packages_profile_id_fkey"
             columns: ["profile_id"]

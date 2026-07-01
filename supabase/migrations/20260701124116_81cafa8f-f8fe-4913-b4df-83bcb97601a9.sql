@@ -1,0 +1,2 @@
+ALTER TABLE public.packages ADD COLUMN IF NOT EXISTS category_id UUID REFERENCES public.treatment_categories(id) ON DELETE SET NULL;
+CREATE INDEX IF NOT EXISTS idx_packages_category_id ON public.packages(category_id);
