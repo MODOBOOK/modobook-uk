@@ -176,6 +176,7 @@ function FullRecord({ id, onComplete, status }: { id: string; onComplete: () => 
   const client = parsed.client ?? null;
   const appt = parsed.appointment ?? null;
   const forms: { id: string; template_name: string; response: unknown; submitted_at: string | null; status: string }[] = parsed.medical_forms ?? [];
+  const consents: { id: string; template_name: string; status: string; signed_at: string | null; signature_name: string | null }[] = parsed.consents ?? [];
   return (
     <div className="space-y-4 rounded-md border bg-muted/30 p-3 text-sm">
       <section>
@@ -194,16 +195,36 @@ function FullRecord({ id, onComplete, status }: { id: string; onComplete: () => 
       )}
       <section>
         <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Medical forms ({forms.length})</p>
-        {forms.length === 0 ? <p className="mt-1 text-muted-foreground">None submitted yet.</p> : (
+        {forms.length === 0 ? <p className="mt-1 text-muted-foreground">None on file for this patient.</p> : (
           <ul className="mt-1 space-y-2">
             {forms.map((f) => (
               <li key={f.id} className="rounded border bg-background p-2">
                 <p className="flex items-center gap-2 font-medium">
-                  <FileText className="h-4 w-4" /> {f.template_name} <span className="text-xs text-muted-foreground">· {f.status}</span>
+                  <FileText className="h-4 w-4" /> {f.template_name}
+                  <span className="text-xs text-muted-foreground">· {f.status}{f.submitted_at ? ` · ${new Date(f.submitted_at).toLocaleDateString()}` : ""}</span>
                 </p>
                 {f.response ? (
                   <pre className="mt-1 overflow-x-auto whitespace-pre-wrap break-words text-xs text-muted-foreground">{JSON.stringify(f.response, null, 2)}</pre>
                 ) : null}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+      <section>
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Consent forms ({consents.length})</p>
+        {consents.length === 0 ? <p className="mt-1 text-muted-foreground">No consents on file for this patient.</p> : (
+          <ul className="mt-1 space-y-2">
+            {consents.map((c) => (
+              <li key={c.id} className="rounded border bg-background p-2">
+                <p className="flex items-center gap-2 font-medium">
+                  <FileText className="h-4 w-4" /> {c.template_name}
+                  <span className="text-xs text-muted-foreground">
+                    · {c.status}
+                    {c.signed_at ? ` · signed ${new Date(c.signed_at).toLocaleDateString()}` : ""}
+                    {c.signature_name ? ` by ${c.signature_name}` : ""}
+                  </span>
+                </p>
               </li>
             ))}
           </ul>
