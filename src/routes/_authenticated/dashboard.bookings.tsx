@@ -1135,25 +1135,6 @@ function CheckoutSheet({
         )}
       </div>
 
-      <div className="pt-2 border-t">
-        <div className="text-xs font-semibold mb-1">Internal notes</div>
-        <Textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} />
-        <div className="mt-2 flex justify-end">
-          <Button size="sm" variant="outline" disabled={busy} onClick={saveNotes}>
-            <Save className="h-3.5 w-3.5 mr-1" /> Save notes
-          </Button>
-        </div>
-      </div>
-
-      <div className="pt-2 border-t">
-        <div className="text-xs font-semibold mb-1">Aftercare</div>
-        <Textarea rows={3} value={aftercare} onChange={(e) => setAftercare(e.target.value)} />
-        <div className="mt-2 flex justify-end">
-          <Button size="sm" disabled={busy} onClick={saveAfter}>
-            <Save className="h-3.5 w-3.5 mr-1" /> Save aftercare
-          </Button>
-        </div>
-      </div>
 
       <DialogFooter>
         {!cancelled && (
