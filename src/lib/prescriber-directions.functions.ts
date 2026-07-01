@@ -149,9 +149,9 @@ export const deleteRxTemplate = createServerFn({ method: "POST" })
 const WalkInSchema = z.object({
   practitioner_profile_id: z.string().uuid(),
   patient_name: z.string().trim().min(1).max(200),
-  patient_email: z.string().trim().email().max(200).nullable().optional().or(z.literal("")),
-  patient_phone: z.string().trim().max(60).nullable().optional().or(z.literal("")),
-  patient_dob: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional().or(z.literal("")),
+  patient_email: z.preprocess((v) => (v === "" || v == null ? undefined : v), z.string().trim().email().max(200).optional()),
+  patient_phone: z.preprocess((v) => (v === "" || v == null ? undefined : v), z.string().trim().max(60).optional()),
+  patient_dob: z.preprocess((v) => (v === "" || v == null ? undefined : v), z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional()),
   note: z.string().trim().max(2000).nullable().optional(),
 });
 export const createWalkIn = createServerFn({ method: "POST" })
