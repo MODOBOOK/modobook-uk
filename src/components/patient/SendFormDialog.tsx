@@ -148,9 +148,9 @@ export function SendFormDialog({
               <div className="mt-1 break-all font-mono text-[11px] text-emerald-900/80">{link}</div>
             </div>
             <div className="grid grid-cols-2 gap-2">
-              <Button variant="outline" onClick={sendEmail} disabled={!email}><Mail className="mr-1.5 h-4 w-4" />Email</Button>
-              <Button variant="outline" onClick={sendSms} disabled={!phone}><MessageSquare className="mr-1.5 h-4 w-4" />SMS</Button>
-              <Button variant="outline" onClick={sendWa} disabled={!phone}><MessageSquare className="mr-1.5 h-4 w-4" />WhatsApp</Button>
+              <Button variant="outline" onClick={() => sendEmail()} disabled={!email}><Mail className="mr-1.5 h-4 w-4" />Email</Button>
+              <Button variant="outline" onClick={() => sendSms()} disabled={!phone}><MessageSquare className="mr-1.5 h-4 w-4" />SMS</Button>
+              <Button variant="outline" onClick={() => sendWa()} disabled={!phone}><MessageSquare className="mr-1.5 h-4 w-4" />WhatsApp</Button>
               <Button variant="outline" onClick={copyLink}><Copy className="mr-1.5 h-4 w-4" />Copy link</Button>
             </div>
             <Button variant="ghost" className="w-full" asChild>
