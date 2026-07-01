@@ -68,6 +68,9 @@ function Account() {
   const [notes, setNotes] = useState<any[]>([]);
   const [aftercare, setAftercare] = useState<any[]>([]);
   const [payments, setPayments] = useState<any[]>([]);
+  const [cancelTarget, setCancelTarget] = useState<Appt | null>(null);
+  const [cancelAgreed, setCancelAgreed] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
 
   async function loadAll() {
     setLoading(true);
