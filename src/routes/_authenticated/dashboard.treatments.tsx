@@ -25,6 +25,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { Plus, Trash2, Pencil, FileText, X, Tag, PlusCircle } from "lucide-react";
+import { SearchableMultiPicker } from "@/components/ui/searchable-multi-picker";
+
 
 export const Route = createFileRoute("/_authenticated/dashboard/treatments")({
   ssr: false,
