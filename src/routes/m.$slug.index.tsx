@@ -1428,9 +1428,28 @@ function BookPage() {
                 <TabsContent value="packages" className="mt-4">
                   {packages.length === 0 ? (
                     <p className="opacity-70">No packages available.</p>
-                  ) : (
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      {packages.map((p) => {
+                  ) : (() => {
+                    const pkgCats = (categories as { id: string; name: string; kind?: string | null; sort_order?: number | null }[])
+                      .filter((c) => c.kind === "package");
+                    const byCat = new Map<string | null, typeof packages>();
+                    for (const p of packages) {
+                      const key = (p as { category_id?: string | null }).category_id ?? null;
+                      const bucket = byCat.get(key) ?? [];
+                      bucket.push(p);
+                      byCat.set(key, bucket);
+                    }
+                    const groups: { id: string; name: string; items: typeof packages }[] = pkgCats
+                      .map((c) => ({ id: c.id, name: c.name, items: byCat.get(c.id) ?? [] }))
+                      .filter((g) => g.items.length > 0);
+                    const uncategorised = byCat.get(null) ?? [];
+                    const renderCards = (items: typeof packages) => (
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        {items.map((p) => renderPackageCard(p))}
+                      </div>
+                    );
+                    function renderPackageCard(p: typeof packages[number]) {
+                      return (
+
                         const pkg = p as Package & {
                           description?: string | null;
                           treatment_ids?: string[] | null;
