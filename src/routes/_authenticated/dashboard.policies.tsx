@@ -28,6 +28,7 @@ function PoliciesPage() {
   const { profile } = Route.useLoaderData();
   const savedAboutPage = ((profile as { about_page?: Record<string, unknown> | null }).about_page ?? {}) as Record<string, unknown>;
   const [introHeading, setIntroHeading] = useState<string>(typeof savedAboutPage.intro_heading === "string" ? savedAboutPage.intro_heading : "");
+  const [introExpandable, setIntroExpandable] = useState<boolean>(Boolean(savedAboutPage.intro_expandable));
   const [welcome, setWelcome] = useState<string>((profile.welcome_intro_html as string | null) ?? "");
   const [depositPounds, setDepositPounds] = useState<string>(
     ((profile.deposit_amount_cents as number | null) ?? 0) > 0
