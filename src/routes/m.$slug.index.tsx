@@ -1529,34 +1529,47 @@ function BookPage() {
 
 
       {/* Sticky multi-select bar */}
-      {locationId && selectedIds.length > 0 && (
-        <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 px-4 py-3 backdrop-blur" style={{ borderColor: `${brand}33` }}>
-          <div className="mx-auto flex max-w-3xl items-center justify-between gap-3">
-            <div className="text-sm">
-              <div className="font-semibold" style={{ color: brand }}>
-                {selectedIds.length} treatment{selectedIds.length === 1 ? "" : "s"} selected
+      {locationId && (selectedIds.length > 0 || selectedPackageIds.length > 0) && (() => {
+        const treatmentsTotal = selectedIds
+          .map((id) => priceFor(treatments.find((t) => t.id === id)!))
+          .reduce((a, b) => a + b, 0);
+        const packagesTotal = selectedPackageIds
+          .map((pid) => Number(pkgById.get(pid)?.price ?? 0))
+          .reduce((a, b) => a + b, 0);
+        const total = treatmentsTotal + packagesTotal;
+        const parts: string[] = [];
+        if (selectedIds.length) parts.push(`${selectedIds.length} treatment${selectedIds.length === 1 ? "" : "s"}`);
+        if (selectedPackageIds.length) parts.push(`${selectedPackageIds.length} package${selectedPackageIds.length === 1 ? "" : "s"}`);
+        return (
+          <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 px-4 py-3 backdrop-blur" style={{ borderColor: `${brand}33` }}>
+            <div className="mx-auto flex max-w-3xl items-center justify-between gap-3">
+              <div className="text-sm">
+                <div className="font-semibold" style={{ color: brand }}>
+                  {parts.join(" + ")} selected
+                </div>
+                <div className="text-xs opacity-70">Total £{total.toFixed(2)}</div>
               </div>
-              <div className="text-xs opacity-70">
-                Total £
-                {selectedIds
-                  .map((id) => priceFor(treatments.find((t) => t.id === id)!))
-                  .reduce((a, b) => a + b, 0)
-                  .toFixed(2)}
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <Button variant="ghost" size="sm" onClick={() => setSelectedIds([])}>
-                Clear
-              </Button>
-              <Link to="/m/$slug/book-multi" params={{ slug }} search={{ ids: selectedIds.join(",") }}>
-                <Button size="sm" style={{ backgroundColor: brand, color: "#fff" }}>
-                  Continue →
+              <div className="flex gap-2">
+                <Button variant="ghost" size="sm" onClick={() => { setSelectedIds([]); setSelectedPackageIds([]); }}>
+                  Clear
                 </Button>
-              </Link>
+                <Link
+                  to="/m/$slug/book-multi"
+                  params={{ slug }}
+                  search={{
+                    ids: selectedIds.join(","),
+                    pkgs: selectedPackageIds.join(","),
+                  }}
+                >
+                  <Button size="sm" style={{ backgroundColor: brand, color: "#fff" }}>
+                    Continue →
+                  </Button>
+                </Link>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
 
 
