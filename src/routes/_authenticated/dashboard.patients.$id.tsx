@@ -59,6 +59,18 @@ function age(dob?: string | null) {
   return Math.floor(diff / (365.25 * 24 * 3600 * 1000));
 }
 
+function formatDob(dob?: string | null) {
+  if (!dob) return "";
+  // Stored as YYYY-MM-DD → display DD/MM/YYYY
+  const m = String(dob).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (m) return `${m[3]}/${m[2]}/${m[1]}`;
+  const d = new Date(dob);
+  if (isNaN(d.getTime())) return String(dob);
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  return `${dd}/${mm}/${d.getFullYear()}`;
+}
+
 function PatientProfilePage() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
