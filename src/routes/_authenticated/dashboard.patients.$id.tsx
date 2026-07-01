@@ -239,6 +239,14 @@ function PatientProfilePage() {
         <Row label="How did you hear about us?" value={client.how_heard} />
       </Section>
 
+      {/* Emergency contact */}
+      <Section title="Emergency contact details" onEdit={() => setEditing("emergency")}>
+        <Row label="GP name" value={client.gp_name} />
+        <Row label="GP address" value={client.gp_address} />
+        <Row label="Emergency contact name" value={client.emergency_contact_name} />
+        <Row label="Emergency contact phone" value={client.emergency_contact_phone} />
+      </Section>
+
       {/* Medical forms (sent / completed) */}
       <Section title="Medical forms">
         <ClientFormsList
@@ -312,14 +320,6 @@ function PatientProfilePage() {
 
       {/* Private prescription uploads (PDF or image) */}
       <FilesSection clientId={id} profileId={profileId} kind="pdf" title="Private prescription uploads" />
-
-      {/* Emergency contact */}
-      <Section title="Emergency contact details" onEdit={() => setEditing("emergency")}>
-        <Row label="GP name" value={client.gp_name} />
-        <Row label="GP address" value={client.gp_address} />
-        <Row label="Emergency contact name" value={client.emergency_contact_name} />
-        <Row label="Emergency contact phone" value={client.emergency_contact_phone} />
-      </Section>
 
       {/* Prescriptions (structured records) */}
       <PrescriptionsSection clientId={id} />
