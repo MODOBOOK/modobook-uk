@@ -100,9 +100,14 @@ function RefCard({ r, onAct }: { r: Ref; onAct: (id: string, action: "accept" | 
               <span className="ml-2 text-xs font-normal text-muted-foreground">· {r.treatment_name}</span>
             </p>
             <p className="mt-0.5 text-xs text-muted-foreground">
-              Referred by <span className="font-medium text-foreground">{r.clinic_name}</span>
+              Referred by{" "}
+              <span className="font-medium text-foreground">
+                {r.practitioner_name ? `${r.practitioner_name} · ` : ""}{r.clinic_name}
+              </span>
+              {r.location_name ? ` · ${r.location_name}` : ""}
               {r.appointment ? ` · ${r.appointment.scheduled_date} at ${r.appointment.start_time.slice(0,5)}` : ""}
               {r.routing === "in_person_consult" && <span className="ml-2">· In-person consult</span>}
+              {r.routing === "clinic_visit" && <span className="ml-2">· Clinic visit</span>}
             </p>
           </div>
           <StatusBadge status={r.status} />
