@@ -301,4 +301,32 @@ export const getPrescriberInfoForTreatments = createServerFn({ method: "POST" })
 // reads `appointments.clinic_visit_id` so clinic-visit routing works
 // without an extra client call.
 
+// ---- Prescriber: fetch own defaults for prefilling prescription letterhead ----
+export const getMyPrescriberDefaults = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const [{ data: presc }, { data: prof }] = await Promise.all([
+      supabase
+        .from("prescriber_profiles")
+        .select("full_name, regulatory_body, regulatory_body_other, registration_number")
+        .eq("user_id", userId)
+        .maybeSingle(),
+      supabase
+        .from("profiles")
+        .select("full_name, clinic_name, address")
+        .eq("id", userId)
+        .maybeSingle(),
+    ]);
+    const regBody = presc?.regulatory_body === "other"
+      ? (presc?.regulatory_body_other ?? "")
+      : (presc?.regulatory_body ?? "");
+    return {
+      prescriber_name: presc?.full_name ?? prof?.full_name ?? "",
+      prescriber_reg_body: regBody,
+      prescriber_reg_number: presc?.registration_number ?? "",
+      clinic_name: prof?.clinic_name ?? "",
+      clinic_address: prof?.address ?? "",
+    };
+  });
 
