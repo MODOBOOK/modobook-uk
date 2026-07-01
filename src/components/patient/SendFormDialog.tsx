@@ -49,16 +49,22 @@ export function SendFormDialog({
 
   const selectedForm = useMemo(() => forms.find((f) => f.id === templateId), [forms, templateId]);
 
-  async function create() {
+  async function create(options?: { thenEmail?: boolean; thenSms?: boolean; thenWa?: boolean }) {
     if (!templateId) { toast.error("Choose a form"); return; }
     setBusy(true);
     try {
       const res: any = await send({ data: { client_id: client.id, template_id: templateId, email: email || undefined, phone: phone || undefined } });
+      if (!res?.token) throw new Error("No form token returned");
       const url = `${window.location.origin}/f/${res.token}`;
       setLink(url);
-      toast.success("Form link created");
+      toast.success("Form saved to patient's account");
+      onSent?.();
+      if (options?.thenEmail && email) setTimeout(() => sendEmailWith(url), 50);
+      else if (options?.thenSms && phone) setTimeout(() => sendSmsWith(url), 50);
+      else if (options?.thenWa && phone) setTimeout(() => sendWaWith(url), 50);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Failed to create form");
+      const msg = e instanceof Error ? e.message : typeof e === "string" ? e : (e as any)?.message ?? "Failed to create form";
+      toast.error(msg);
     } finally { setBusy(false); }
   }
 
