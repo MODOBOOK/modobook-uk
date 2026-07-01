@@ -127,7 +127,7 @@ function HubIndex() {
       desc: "Set which treatments need a prescriber and how patients are routed.",
       accent: "from-emerald-100 to-emerald-50 text-emerald-900",
     },
-  ] as const;
+  ];
 
   return (
     <div className="space-y-6">
