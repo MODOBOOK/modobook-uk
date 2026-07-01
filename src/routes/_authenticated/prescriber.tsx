@@ -38,6 +38,35 @@ function PrescriberLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const name = hubCtx.prescriber?.full_name ?? hubCtx.displayName ?? "Prescriber";
 
+  const fetchRefs = useServerFn(listMyReferrals);
+  const fetchVisits = useServerFn(listMyPrescriberVisits);
+  const refsQ = useQuery({
+    queryKey: ["prescriber-nav-refs"],
+    queryFn: () => fetchRefs(),
+    refetchInterval: 60_000,
+    refetchOnWindowFocus: true,
+  });
+  const visitsQ = useQuery({
+    queryKey: ["prescriber-nav-visits"],
+    queryFn: () => fetchVisits(),
+    refetchInterval: 60_000,
+    refetchOnWindowFocus: true,
+  });
+  const pendingRefs = (refsQ.data ?? []).filter((r) => r.status === "pending").length;
+  const pendingVisits = (visitsQ.data ?? []).filter((v) => v.status === "pending_approval").length;
+  const totalPending = pendingRefs + pendingVisits;
+
+  useEffect(() => {
+    const base = "Prescriber Hub";
+    document.title = totalPending > 0 ? `(${totalPending}) ${base}` : base;
+    return () => { document.title = base; };
+  }, [totalPending]);
+
+  const badges: Record<string, number> = {
+    referrals: pendingRefs,
+    visits: pendingVisits,
+  };
+
   async function signOut() {
     await supabase.auth.signOut();
   }
