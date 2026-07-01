@@ -98,7 +98,14 @@ function PoliciesPage() {
             <Label>Intro text</Label>
           <RichTextEditor value={welcome} onChange={setWelcome} />
           </div>
-          <p className="mt-2 text-xs text-muted-foreground">Use bold, italic, headings, lists or links to introduce your clinic.</p>
+          <p className="mt-2 text-xs text-muted-foreground">Use bold, italic, headings, lists or links to introduce your clinic. Paragraph breaks and blank lines are preserved on your booking page.</p>
+          <div className="mt-3 flex items-center justify-between rounded-lg border p-3">
+            <div>
+              <p className="text-sm font-medium">Make intro expandable</p>
+              <p className="text-xs text-muted-foreground">Collapses long text with a "Read more" toggle on the booking page.</p>
+            </div>
+            <Switch checked={introExpandable} onCheckedChange={setIntroExpandable} />
+          </div>
         </CardContent>
       </Card>
 
