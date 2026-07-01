@@ -3472,6 +3472,7 @@ export type Database = {
           invoice_sort_code: string | null
           invoice_swift: string | null
           invoice_vat_number: string | null
+          late_cancel_mode: string
           model_slots_position: string
           patient_cancel_cutoff_hours: number | null
           patient_reschedule_cutoff_hours: number | null
@@ -3570,6 +3571,7 @@ export type Database = {
           invoice_sort_code?: string | null
           invoice_swift?: string | null
           invoice_vat_number?: string | null
+          late_cancel_mode?: string
           model_slots_position?: string
           patient_cancel_cutoff_hours?: number | null
           patient_reschedule_cutoff_hours?: number | null
@@ -3668,6 +3670,7 @@ export type Database = {
           invoice_sort_code?: string | null
           invoice_swift?: string | null
           invoice_vat_number?: string | null
+          late_cancel_mode?: string
           model_slots_position?: string
           patient_cancel_cutoff_hours?: number | null
           patient_reschedule_cutoff_hours?: number | null
@@ -4553,10 +4556,12 @@ export type Database = {
         }[]
       }
       list_my_prescriber_visits: { Args: never; Returns: Json }
-      patient_cancel_appointment: {
-        Args: { p_appointment_id: string }
-        Returns: Json
-      }
+      patient_cancel_appointment:
+        | { Args: { p_appointment_id: string }; Returns: Json }
+        | {
+            Args: { p_appointment_id: string; p_confirm_late?: boolean }
+            Returns: Json
+          }
       patient_reschedule_appointment: {
         Args: {
           p_appointment_id: string
