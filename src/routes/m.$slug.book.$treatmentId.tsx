@@ -410,7 +410,7 @@ function BookTreatmentPage() {
 
         },
       });
-      setConfirmed({ id: res.id, consents: res.consents ?? [] });
+      setConfirmed({ id: res.id, consents: res.consents ?? [], medicalForms: res.medicalForms ?? [] });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Booking failed");
       submitLockRef.current = false;
@@ -430,8 +430,27 @@ function BookTreatmentPage() {
             Your appointment with {ctx.clinicName} is confirmed. A confirmation
             email has been sent to {form.email}.
           </p>
-          {confirmed.consents.length > 0 && (
+          {confirmed.medicalForms.length > 0 && (
             <div className="mt-6 rounded-lg border bg-muted/40 p-4 text-left">
+              <p className="text-sm font-semibold">Please complete your medical form(s) before your appointment:</p>
+              <ul className="mt-2 space-y-2 text-sm">
+                {confirmed.medicalForms.map((f) => (
+                  <li key={f.token}>
+                    <a href={`${origin}/mf/${f.token}`} className="underline" style={{ color: brand }}>
+                      {f.template_name ? `Complete: ${f.template_name}` : "Complete medical form"}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+              {patientUserId && (
+                <p className="mt-3 text-xs opacity-70">
+                  These are also available anytime in your <Link to="/m/$slug/account" params={{ slug }} className="underline">patient account</Link>.
+                </p>
+              )}
+            </div>
+          )}
+          {confirmed.consents.length > 0 && (
+            <div className="mt-4 rounded-lg border bg-muted/40 p-4 text-left">
               <p className="text-sm font-semibold">Please complete your consent form(s):</p>
               <ul className="mt-2 space-y-2 text-sm">
                 {confirmed.consents.map((c) => (
