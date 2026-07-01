@@ -1436,6 +1436,7 @@ function BookPage() {
                           treatment_ids?: string[] | null;
                           duration_minutes?: number | null;
                           image_url?: string | null;
+                          category_id?: string | null;
                         };
                         const ids = pkg.treatment_ids ?? (pkg.treatment_id ? [pkg.treatment_id] : []);
                         const firstTreatmentId = ids[0];
