@@ -79,6 +79,7 @@ import { Route as AuthenticatedDashboardPatientsIndexRouteImport } from './route
 import { Route as AuthenticatedDashboardConsultationsIndexRouteImport } from './routes/_authenticated/dashboard.consultations.index'
 import { Route as MSlugManageTokenRouteImport } from './routes/m.$slug.manage.$token'
 import { Route as MSlugBookTreatmentIdRouteImport } from './routes/m.$slug.book.$treatmentId'
+import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as ApiPublicMedicalFormTokenRouteImport } from './routes/api.public.medical-form.$token'
 import { Route as AuthenticatedDashboardPatientsIdRouteImport } from './routes/_authenticated/dashboard.patients.$id'
 import { Route as AuthenticatedDashboardConsultationsIdRouteImport } from './routes/_authenticated/dashboard.consultations.$id'
@@ -475,6 +476,12 @@ const MSlugBookTreatmentIdRoute = MSlugBookTreatmentIdRouteImport.update({
   path: '/book/$treatmentId',
   getParentRoute: () => MSlugRoute,
 } as any)
+const LovableEmailQueueProcessRoute =
+  LovableEmailQueueProcessRouteImport.update({
+    id: '/lovable/email/queue/process',
+    path: '/lovable/email/queue/process',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicMedicalFormTokenRoute =
   ApiPublicMedicalFormTokenRouteImport.update({
     id: '/api/public/medical-form/$token',
@@ -563,6 +570,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/consultations/$id': typeof AuthenticatedDashboardConsultationsIdRoute
   '/dashboard/patients/$id': typeof AuthenticatedDashboardPatientsIdRoute
   '/api/public/medical-form/$token': typeof ApiPublicMedicalFormTokenRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/m/$slug/book/$treatmentId': typeof MSlugBookTreatmentIdRoute
   '/m/$slug/manage/$token': typeof MSlugManageTokenRoute
   '/dashboard/consultations/': typeof AuthenticatedDashboardConsultationsIndexRoute
@@ -632,6 +640,7 @@ export interface FileRoutesByTo {
   '/dashboard/consultations/$id': typeof AuthenticatedDashboardConsultationsIdRoute
   '/dashboard/patients/$id': typeof AuthenticatedDashboardPatientsIdRoute
   '/api/public/medical-form/$token': typeof ApiPublicMedicalFormTokenRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/m/$slug/book/$treatmentId': typeof MSlugBookTreatmentIdRoute
   '/m/$slug/manage/$token': typeof MSlugManageTokenRoute
   '/dashboard/consultations': typeof AuthenticatedDashboardConsultationsIndexRoute
@@ -708,6 +717,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/consultations/$id': typeof AuthenticatedDashboardConsultationsIdRoute
   '/_authenticated/dashboard/patients/$id': typeof AuthenticatedDashboardPatientsIdRoute
   '/api/public/medical-form/$token': typeof ApiPublicMedicalFormTokenRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/m/$slug/book/$treatmentId': typeof MSlugBookTreatmentIdRoute
   '/m/$slug/manage/$token': typeof MSlugManageTokenRoute
   '/_authenticated/dashboard/consultations/': typeof AuthenticatedDashboardConsultationsIndexRoute
@@ -784,6 +794,7 @@ export interface FileRouteTypes {
     | '/dashboard/consultations/$id'
     | '/dashboard/patients/$id'
     | '/api/public/medical-form/$token'
+    | '/lovable/email/queue/process'
     | '/m/$slug/book/$treatmentId'
     | '/m/$slug/manage/$token'
     | '/dashboard/consultations/'
@@ -853,6 +864,7 @@ export interface FileRouteTypes {
     | '/dashboard/consultations/$id'
     | '/dashboard/patients/$id'
     | '/api/public/medical-form/$token'
+    | '/lovable/email/queue/process'
     | '/m/$slug/book/$treatmentId'
     | '/m/$slug/manage/$token'
     | '/dashboard/consultations'
@@ -928,6 +940,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/consultations/$id'
     | '/_authenticated/dashboard/patients/$id'
     | '/api/public/medical-form/$token'
+    | '/lovable/email/queue/process'
     | '/m/$slug/book/$treatmentId'
     | '/m/$slug/manage/$token'
     | '/_authenticated/dashboard/consultations/'
@@ -948,6 +961,7 @@ export interface RootRouteChildren {
   FTokenRoute: typeof FTokenRoute
   MSlugRoute: typeof MSlugRouteWithChildren
   ApiPublicMedicalFormTokenRoute: typeof ApiPublicMedicalFormTokenRoute
+  LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1442,6 +1456,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MSlugBookTreatmentIdRouteImport
       parentRoute: typeof MSlugRoute
     }
+    '/lovable/email/queue/process': {
+      id: '/lovable/email/queue/process'
+      path: '/lovable/email/queue/process'
+      fullPath: '/lovable/email/queue/process'
+      preLoaderRoute: typeof LovableEmailQueueProcessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/medical-form/$token': {
       id: '/api/public/medical-form/$token'
       path: '/api/public/medical-form/$token'
@@ -1681,17 +1702,8 @@ const rootRouteChildren: RootRouteChildren = {
   FTokenRoute: FTokenRoute,
   MSlugRoute: MSlugRouteWithChildren,
   ApiPublicMedicalFormTokenRoute: ApiPublicMedicalFormTokenRoute,
+  LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
