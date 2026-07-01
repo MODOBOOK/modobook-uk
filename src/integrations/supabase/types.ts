@@ -2751,6 +2751,7 @@ export type Database = {
           recipient_email: string | null
           recipient_name: string | null
           status: string
+          stripe_payment_intent_id: string | null
           stripe_payment_link_id: string | null
           stripe_url: string | null
           updated_at: string
@@ -2769,6 +2770,7 @@ export type Database = {
           recipient_email?: string | null
           recipient_name?: string | null
           status?: string
+          stripe_payment_intent_id?: string | null
           stripe_payment_link_id?: string | null
           stripe_url?: string | null
           updated_at?: string
@@ -2787,6 +2789,7 @@ export type Database = {
           recipient_email?: string | null
           recipient_name?: string | null
           status?: string
+          stripe_payment_intent_id?: string | null
           stripe_payment_link_id?: string | null
           stripe_url?: string | null
           updated_at?: string
