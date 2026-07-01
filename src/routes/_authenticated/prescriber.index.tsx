@@ -1001,8 +1001,6 @@ function TemplatePicker({ onPick }: { onPick: (t: Partial<RxTemplate>) => void }
   const fetchFn = useServerFn(listMyRxTemplates);
   const q = useQuery({ queryKey: ["rx-templates"], queryFn: () => fetchFn() });
   const mine = (q.data ?? []) as RxTemplate[];
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { AESTHETICS_MEDICATIONS } = require("@/lib/aesthetics-medications") as typeof import("@/lib/aesthetics-medications");
   const categories = Array.from(new Set(AESTHETICS_MEDICATIONS.map((m) => m.category)));
 
   function handlePick(value: string) {
