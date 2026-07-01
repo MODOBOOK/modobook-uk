@@ -75,9 +75,36 @@ function Connections() {
   const outgoing = links.filter((l) => l.direction === "outgoing" && l.status === "pending");
   const accepted = links.filter((l) => l.status === "accepted");
 
+  const hasAnyLink = accepted.length > 0 || incoming.length > 0 || outgoing.length > 0;
+  const [showSend, setShowSend] = useState(false);
+  const sendOpen = showSend || !hasAnyLink;
+
   return (
     <div className="space-y-6">
+      {hasAnyLink && (
+        <Card className="border-emerald-300/60 bg-emerald-50/40">
+          <CardContent className="p-4 text-sm">
+            {accepted.length > 0 ? (
+              <p>
+                You're linked with <strong>{accepted.length}</strong> {counterpartLabel}
+                {accepted.length === 1 ? "" : "s"} — no further request needed.{" "}
+                {isPrescriber
+                  ? "Head to Clinic visits to request days at their clinic."
+                  : "You can now book referrals through them."}
+              </p>
+            ) : (
+              <p>
+                {incoming.length > 0
+                  ? `You have ${incoming.length} incoming request${incoming.length === 1 ? "" : "s"} below — accept to connect.`
+                  : `Waiting for the ${counterpartLabel} to accept your request.`}
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      )}
+      {sendOpen ? (
       <Card>
+
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <LinkIcon className="h-4 w-4 text-primary" />
