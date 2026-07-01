@@ -186,8 +186,8 @@ export const closeWalkInAsPractitioner = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { error } = await context.supabase.rpc("close_walk_in_as_practitioner", {
       p_id: data.id,
-      p_note: data.note ?? null,
-    });
+      p_note: data.note ?? undefined,
+    } as never);
     if (error) throw error;
     return { ok: true };
   });
