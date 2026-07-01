@@ -779,6 +779,17 @@ function PrescriptionEditor({ referralId, patient, client }: { referralId: strin
   async function onSign() {
     const name = (sigName || form.prescriber_name).trim();
     if (!name) { toast.error("Type your full name to sign"); return; }
+    // A UK private Rx PDF must carry the patient's full details. Block signing
+    // if any of the legally-required identifiers are missing so the prescriber
+    // completes them here rather than a blank field ending up on the PDF.
+    const missing: string[] = [];
+    if (!form.patient_name.trim()) missing.push("full name");
+    if (!form.patient_dob) missing.push("date of birth");
+    if (!form.patient_address.trim()) missing.push("address");
+    if (missing.length) {
+      toast.error(`Patient ${missing.join(", ")} required before signing`);
+      return;
+    }
     let id = form.id;
     if (!id) {
       try {
