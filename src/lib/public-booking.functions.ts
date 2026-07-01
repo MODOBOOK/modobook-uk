@@ -424,7 +424,22 @@ export const requestBooking = createServerFn({ method: "POST" })
       if (cErr) throw new Error(cErr.message);
       consents.push(...((inserted ?? []) as { token: string; consent_template_id: string }[]));
     }
-    return { id, consents };
+    // Fetch medical forms auto-created by DB trigger
+    const medicalForms: { token: string; appointment_id: string; template_name: string | null }[] = [];
+    {
+      const { data: mfs } = await sb
+        .from("appointment_medical_forms")
+        .select("token, appointment_id, medical_form_templates(name)")
+        .eq("appointment_id", id);
+      for (const f of mfs ?? []) {
+        medicalForms.push({
+          token: (f as { token: string }).token,
+          appointment_id: (f as { appointment_id: string }).appointment_id,
+          template_name: (f as { medical_form_templates?: { name?: string } | null }).medical_form_templates?.name ?? null,
+        });
+      }
+    }
+    return { id, consents, medicalForms };
   });
 
 
