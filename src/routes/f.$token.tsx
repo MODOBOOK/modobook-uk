@@ -79,12 +79,18 @@ function FillFormPage() {
   const isLast = stepIdx === steps.length - 1;
 
   if (done) {
+    const backHref = data.slug ? `/m/${data.slug}` : "/";
     return (
       <Centered>
         <Card className="max-w-md p-8 text-center">
           <CheckCircle2 className="mx-auto mb-3 h-12 w-12 text-emerald-500" />
           <h2 className="mb-1 text-xl font-bold">All done</h2>
           <p className="text-sm text-muted-foreground">Thanks {data.patient_name}. Your form has been sent to {data.clinic_name}.</p>
+          <a href={backHref} className="mt-5 inline-block">
+            <Button style={data.brand_color ? { backgroundColor: data.brand_color, color: "white" } : undefined}>
+              Back to {data.clinic_name || "clinic"}
+            </Button>
+          </a>
         </Card>
       </Centered>
     );
