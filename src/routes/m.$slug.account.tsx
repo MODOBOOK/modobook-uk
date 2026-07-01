@@ -68,6 +68,9 @@ function Account() {
   const [notes, setNotes] = useState<any[]>([]);
   const [aftercare, setAftercare] = useState<any[]>([]);
   const [payments, setPayments] = useState<any[]>([]);
+  const [cancelTarget, setCancelTarget] = useState<Appt | null>(null);
+  const [cancelAgreed, setCancelAgreed] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
 
   async function loadAll() {
     setLoading(true);
@@ -171,9 +174,8 @@ function Account() {
   const upcoming = appts.filter((a) => a.scheduled_date >= today && a.status !== "cancelled");
   const past = appts.filter((a) => a.scheduled_date < today || a.status === "cancelled" || a.status === "completed");
 
-  const [cancelTarget, setCancelTarget] = useState<Appt | null>(null);
-  const [cancelAgreed, setCancelAgreed] = useState(false);
-  const [cancelling, setCancelling] = useState(false);
+
+
 
   function openCancel(a: Appt) {
     setCancelAgreed(false);
