@@ -764,6 +764,33 @@ function MultiBookPage() {
                     );
                   })}
                 </CardContent>
+                {splitEligibleTreatments.some((t) => selectedPaymentPlan(t) === "split") && (
+                  <div className="border-t px-6 py-4" style={{ borderColor: `${brand}22`, backgroundColor: `${brand}08` }}>
+                    <label className="flex cursor-pointer items-start gap-2 text-sm">
+                      <input
+                        type="checkbox"
+                        className="mt-0.5 h-4 w-4"
+                        style={{ accentColor: brand }}
+                        checked={splitAgreed}
+                        onChange={(e) => setSplitAgreed(e.target.checked)}
+                      />
+                      <span>
+                        I agree to pay the split-payment amount at each session
+                        {(() => {
+                          const parts = splitEligibleTreatments
+                            .filter((t) => selectedPaymentPlan(t) === "split")
+                            .map((t) => {
+                              const sessions = Math.max(1, Number((t as { session_count?: number }).session_count ?? 1));
+                              const per = priceFor(t) / sessions;
+                              return `${sessions} × £${per.toFixed(2)} for ${t.name}`;
+                            });
+                          return parts.length > 0 ? ` (${parts.join(", ")})` : "";
+                        })()}, until each treatment plan is complete.
+                        <span className="text-destructive"> *</span>
+                      </span>
+                    </label>
+                  </div>
+                )}
               </Card>
             )}
             <Card className="mb-6">
