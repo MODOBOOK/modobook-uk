@@ -49,6 +49,7 @@ export const createPackage = createServerFn({ method: "POST" })
       expiry_days: data.expiry_days,
       image_url: data.image_url,
       active: data.active,
+      category_id: data.category_id,
     });
     if (error) throw new Error(error.message);
     return { ok: true };
