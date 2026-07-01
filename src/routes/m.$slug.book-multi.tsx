@@ -1056,17 +1056,21 @@ function MultiBookPage() {
               </Card>
             )}
 
-            <Button
-              className="w-full"
-              size="lg"
-              disabled={
-                !slot || submitting || !form.name || !form.email || (reqPhone && !form.phone) || (reqDob && !form.dob) ||
-                (termsRequired && !agreedToTerms) || prescriberBlocks
-              }
-              onClick={submit}
-              style={{ backgroundColor: brand, color: "#fff" }}
-            >
-              {submitting
+            {(() => {
+              const anySplit = splitEligibleTreatments.some((t) => selectedPaymentPlan(t) === "split");
+              // Estimate "due today" – split treatments only charge first session up front
+              let dueToday = 0;
+              treatments.forEach((t) => {
+                const sessions = Math.max(1, Number((t as { session_count?: number }).session_count ?? 1));
+                const isSplit =
+                  Boolean((t as { allow_split_payment?: boolean }).allow_split_payment) &&
+                  sessions > 1 &&
+                  selectedPaymentPlan(t) === "split";
+                dueToday += isSplit ? priceFor(t) / sessions : priceFor(t);
+              });
+              // Apply proportional discount to keep the label honest
+              if (totalPrice > 0) dueToday = Math.max(0, dueToday - (dueToday / totalPrice) * discountTotal);
+              const btnLabel = submitting
                 ? "Booking…"
                 : inPersonItems.length > 0
                   ? "Consultation required before booking"
@@ -1074,9 +1078,27 @@ function MultiBookPage() {
                     ? "Please pick a clinic visit day above"
                     : !allClinicVisitsConsented || !allConsented
                       ? "Please give prescriber consent above"
-                      : `Confirm ${treatments.length} bookings · £${totalAfterDiscount.toFixed(2)}`}
-
-            </Button>
+                      : anySplit && !splitAgreed
+                        ? "Tick the split-payment agreement to continue"
+                        : anySplit
+                          ? `Book & pay £${dueToday.toFixed(2)} today (rest at each session)`
+                          : `Confirm ${treatments.length} booking${treatments.length === 1 ? "" : "s"} · £${totalAfterDiscount.toFixed(2)}`;
+              return (
+                <Button
+                  className="w-full"
+                  size="lg"
+                  disabled={
+                    !slot || submitting || !form.name || !form.email || (reqPhone && !form.phone) || (reqDob && !form.dob) ||
+                    (termsRequired && !agreedToTerms) || prescriberBlocks ||
+                    (anySplit && !splitAgreed)
+                  }
+                  onClick={submit}
+                  style={{ backgroundColor: brand, color: "#fff" }}
+                >
+                  {btnLabel}
+                </Button>
+              );
+            })()}
 
           </>
         )}
