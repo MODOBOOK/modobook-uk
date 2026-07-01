@@ -13,13 +13,12 @@ const sizes: Record<Size, { img: string; text: string; gap: string; sub: string 
 export function BrandMark({
   size = "md",
   withWordmark = true,
-  tagline: _tagline,
+  tagline,
   className,
   to,
 }: {
   size?: Size;
   withWordmark?: boolean;
-  /** Deprecated — brand no longer uses taglines. */
   tagline?: string;
   className?: string;
   to?: string;
@@ -34,13 +33,15 @@ export function BrandMark({
         draggable={false}
       />
       {withWordmark && (
-        <span
-          className={cn(
-            "font-serif font-light leading-none tracking-[0.25em] text-foreground",
-            s.text,
+        <span className="inline-flex flex-col leading-none">
+          <span className={cn("font-light tracking-[0.35em] text-foreground", s.text)}>
+            MODO
+          </span>
+          {tagline && (
+            <span className={cn("mt-1 uppercase tracking-[0.3em] text-muted-foreground", s.sub)}>
+              {tagline}
+            </span>
           )}
-        >
-          MODO
         </span>
       )}
     </span>
