@@ -131,10 +131,13 @@ export function SendFormDialog({
                 <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+44…" />
               </div>
             </div>
-            <DialogFooter>
+            <DialogFooter className="flex-col gap-2 sm:flex-row">
               <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
-              <Button onClick={create} disabled={busy || !templateId}>
-                {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}Create link
+              <Button variant="outline" onClick={() => create()} disabled={busy || !templateId}>
+                {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}Save to account
+              </Button>
+              <Button onClick={() => create({ thenEmail: true })} disabled={busy || !templateId || !email}>
+                {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Mail className="mr-2 h-4 w-4" />}Save & email
               </Button>
             </DialogFooter>
           </div>
