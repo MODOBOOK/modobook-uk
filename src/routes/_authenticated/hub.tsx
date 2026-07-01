@@ -3,8 +3,20 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import {
+  ArrowLeft,
+  LayoutDashboard,
+  CalendarDays,
+  Send,
+  Network,
+  ShieldCheck,
+  Pill,
+  Stethoscope,
+} from "lucide-react";
 import { getHubContext } from "@/lib/hub.functions";
+import { listMyClinicVisits } from "@/lib/clinic-visits.functions";
+import { listSentReferrals } from "@/lib/prescriber.functions";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/hub")({
   ssr: false,
@@ -19,74 +31,157 @@ const PRESCRIBER_REDIRECTS: Record<string, string> = {
   "/hub": "/prescriber",
 };
 
+const nav = [
+  { to: "/hub", label: "Overview", icon: LayoutDashboard, exact: true, key: "overview" as const },
+  { to: "/hub/visits", label: "Clinic days", icon: CalendarDays, key: "visits" as const },
+  { to: "/hub/referrals", label: "Referrals", icon: Send, key: "referrals" as const },
+  { to: "/hub/prescribing", label: "Rules", icon: Pill, key: "prescribing" as const },
+  { to: "/hub/connections", label: "Prescribers", icon: Network, key: "connections" as const },
+  { to: "/hub/verification", label: "Verification", icon: ShieldCheck, key: "verification" as const },
+];
+
 function HubLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
   const fetchCtx = useServerFn(getHubContext);
+  const fetchVisits = useServerFn(listMyClinicVisits);
+  const fetchRefs = useServerFn(listSentReferrals);
+
   const ctxQ = useQuery({ queryKey: ["hub-context"], queryFn: () => fetchCtx() });
   const role = ctxQ.data?.role ?? null;
   const isPrescriber = role === "prescriber";
 
-  // If a prescriber lands on a practitioner-only hub page, bounce them to
-  // their own workspace so the UI matches their role.
+  // If a prescriber lands on a practitioner-only hub page, bounce them
   useEffect(() => {
     if (!isPrescriber) return;
     const target = PRESCRIBER_REDIRECTS[pathname];
     if (target) navigate({ to: target, replace: true });
   }, [isPrescriber, pathname, navigate]);
 
-  const practitionerTabs = [
-    { to: "/hub", label: "Overview", exact: true },
-    { to: "/hub/prescribing", label: "Prescribing rules" },
-    { to: "/hub/visits", label: "Clinic visits" },
-    { to: "/hub/referrals", label: "Referrals" },
-    { to: "/hub/connections", label: "Connections" },
-    { to: "/hub/verification", label: "Verification" },
-  ];
+  const visitsQ = useQuery({
+    queryKey: ["hub-nav-visits"],
+    queryFn: () => fetchVisits(),
+    enabled: !isPrescriber,
+    refetchInterval: 60_000,
+  });
+  const refsQ = useQuery({
+    queryKey: ["hub-nav-sent-refs"],
+    queryFn: () => fetchRefs(),
+    enabled: !isPrescriber,
+    refetchInterval: 60_000,
+  });
 
-  const prescriberTabs = [
-    { to: "/prescriber", label: "Overview", exact: true },
-    { to: "/prescriber/visits", label: "Clinic visits" },
-    { to: "/prescriber/connections", label: "Practitioners" },
-    { to: "/hub/verification", label: "Verification" },
-  ];
+  const awaitingVisits = (visitsQ.data ?? []).filter(
+    (v) => v.status !== "cancelled" && !v.confirmed_by_prescriber && v.status !== "pending_approval",
+  ).length;
+  const pendingRefs = (refsQ.data ?? []).filter((r) => r.status === "pending").length;
 
-  const tabs = isPrescriber ? prescriberTabs : practitionerTabs;
+  const badges: Record<string, number> = {
+    visits: awaitingVisits,
+    referrals: pendingRefs,
+  };
+
+  const name = ctxQ.data?.displayName ?? "Prescriber Hub";
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
-          <div>
-            <h1 className="font-serif text-2xl">Prescriber Hub</h1>
-            <p className="text-xs text-muted-foreground">Connect practitioners and prescribers, share clinical context.</p>
+    <div className="flex min-h-screen bg-background">
+      <aside className="hidden w-64 shrink-0 flex-col border-r bg-sidebar lg:flex">
+        <div className="flex h-20 items-center gap-3 border-b px-5">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground">
+            <Stethoscope className="h-5 w-5" />
           </div>
-          <Link to="/dashboard">
-            <Button variant="ghost" size="sm"><ArrowLeft className="mr-2 h-4 w-4" />Dashboard</Button>
-          </Link>
+          <div className="min-w-0">
+            <div className="truncate font-serif text-lg leading-tight">{name}</div>
+            <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Prescriber Hub</div>
+          </div>
         </div>
-        <nav className="mx-auto flex max-w-5xl gap-1 px-2">
-          {tabs.map((t) => {
-            const active = t.exact ? pathname === t.to : pathname.startsWith(t.to);
+        <nav className="flex-1 space-y-0.5 overflow-y-auto px-3 py-6">
+          {nav.map((item) => {
+            const active = item.exact ? pathname === item.to : pathname.startsWith(item.to);
+            const count = badges[item.key] ?? 0;
             return (
               <Link
-                key={t.to}
-                to={t.to}
-                className={`rounded-t-md border-b-2 px-4 py-2 text-sm transition ${
+                key={item.to}
+                to={item.to}
+                className={cn(
+                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-all",
                   active
-                    ? "border-primary font-medium text-foreground"
-                    : "border-transparent text-muted-foreground hover:text-foreground"
-                }`}
+                    ? "bg-primary text-primary-foreground shadow-luxe"
+                    : "text-muted-foreground hover:bg-sidebar-accent hover:text-foreground",
+                )}
               >
-                {t.label}
+                <item.icon className="h-4 w-4 opacity-80" />
+                <span className="flex-1 tracking-wide">{item.label}</span>
+                {count > 0 && (
+                  <span
+                    className={cn(
+                      "ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] font-semibold",
+                      active
+                        ? "bg-primary-foreground/20 text-primary-foreground"
+                        : "bg-primary text-primary-foreground",
+                    )}
+                  >
+                    {count}
+                  </span>
+                )}
+              </Link>
+            );
+          })}
+          <Link
+            to="/dashboard"
+            className="mt-4 flex items-center gap-3 rounded-lg border border-dashed px-3 py-2.5 text-sm text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span>Back to dashboard</span>
+          </Link>
+        </nav>
+      </aside>
+
+      <div className="flex min-w-0 flex-1 flex-col">
+        <header className="flex h-14 items-center justify-between gap-2 border-b px-3 lg:h-20 lg:px-10">
+          <div className="min-w-0">
+            <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Prescriber Hub</div>
+            <div className="truncate font-serif text-lg lg:text-2xl">{name}</div>
+          </div>
+          <Link to="/dashboard" className="lg:hidden">
+            <Button variant="outline" size="sm">
+              <ArrowLeft className="mr-1 h-4 w-4" /> Dashboard
+            </Button>
+          </Link>
+        </header>
+
+        <main className="min-w-0 flex-1 overflow-x-hidden p-4 pb-24 sm:p-5 lg:p-10">
+          <Outlet />
+        </main>
+
+        <nav className={cn(
+          "fixed inset-x-0 bottom-0 z-30 grid border-t bg-background/95 backdrop-blur lg:hidden",
+          "grid-cols-6",
+        )}>
+          {nav.map((tab) => {
+            const active = tab.exact ? pathname === tab.to : pathname.startsWith(tab.to);
+            const count = badges[tab.key] ?? 0;
+            return (
+              <Link
+                key={tab.to}
+                to={tab.to}
+                className={cn(
+                  "relative flex flex-col items-center justify-center gap-1 py-2.5 text-[10px] font-medium transition",
+                  active ? "text-primary" : "text-muted-foreground",
+                )}
+              >
+                <tab.icon className="h-5 w-5" />
+                <span className="max-w-full truncate px-1">{tab.label}</span>
+                {count > 0 && (
+                  <span className="absolute right-2 top-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">
+                    {count}
+                  </span>
+                )}
               </Link>
             );
           })}
         </nav>
-      </header>
-      <main className="mx-auto max-w-5xl px-4 py-6">
-        <Outlet />
-      </main>
+      </div>
     </div>
   );
 }

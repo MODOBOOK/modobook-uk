@@ -55,19 +55,20 @@ function HubVisits() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h2 className="font-serif text-xl">Clinic visit days</h2>
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 sm:flex sm:flex-wrap sm:justify-between">
+        <div className="min-w-0">
+          <h2 className="font-serif text-xl">Prescriber clinic days</h2>
           <p className="text-sm text-muted-foreground">
-            Set days a prescriber will be at your clinic. Patients booking treatments that require a
-            prescriber can pick one of these slots instead of leaving your booking page.
+            Request the dates you'd like a prescriber at your clinic. They'll confirm from their end,
+            and patients booking POM treatments can then pick one of these slots.
           </p>
         </div>
         <Button
           onClick={() => setEditing("new")}
           disabled={presList.length === 0}
+          className="shrink-0"
         >
-          <Plus className="mr-2 h-4 w-4" /> Schedule a visit
+          <Plus className="mr-2 h-4 w-4" /> Request a day
         </Button>
       </div>
 
@@ -262,7 +263,7 @@ function VisitEditor({
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-0 sm:items-center sm:p-4">
       <div className="w-full max-w-lg rounded-t-2xl bg-background p-5 shadow-xl sm:rounded-2xl">
         <div className="mb-4 flex items-center justify-between">
-          <h3 className="font-serif text-lg">{visit ? "Edit visit" : "Schedule a visit"}</h3>
+          <h3 className="font-serif text-lg">{visit ? "Edit request" : "Request a prescriber day"}</h3>
           <Button variant="ghost" size="icon" onClick={onClose}>
             <X className="h-4 w-4" />
           </Button>
