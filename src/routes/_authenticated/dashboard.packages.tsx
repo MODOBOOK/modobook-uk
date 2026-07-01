@@ -192,6 +192,23 @@ function PackagesPage() {
               </div>
 
               <div>
+                <Label>Category (optional)</Label>
+                <select
+                  className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={form.category_id}
+                  onChange={(e) => setForm({ ...form, category_id: e.target.value })}
+                >
+                  <option value="">— No category —</option>
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.parent_id ? "— " : ""}{c.name}
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-1 text-xs text-muted-foreground">Group this package under one of your treatment categories on the booking page.</p>
+              </div>
+
+              <div>
                 <Label>Included treatments</Label>
                 {treatments.length === 0 ? (
                   <p className="mt-1 text-xs text-muted-foreground">You haven't added any treatments yet. The package will be sold using just the description above.</p>
