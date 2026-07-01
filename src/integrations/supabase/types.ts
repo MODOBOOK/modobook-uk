@@ -4321,6 +4321,14 @@ export type Database = {
           treatment_name: string
         }[]
       }
+      get_clinic_slug_for_consent_token: {
+        Args: { p_token: string }
+        Returns: string
+      }
+      get_clinic_slug_for_form_token: {
+        Args: { p_token: string }
+        Returns: string
+      }
       get_consent_by_token: {
         Args: { p_token: string }
         Returns: {
