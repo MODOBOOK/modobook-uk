@@ -171,6 +171,18 @@ function PackagesPage() {
           <h1 className="text-2xl font-bold">Packages</h1>
           <p className="text-sm text-muted-foreground">Bundle multiple treatments or sessions and sell them as one bookable package.</p>
         </div>
+        <PackageCategoriesManager
+          categories={categories}
+          onAdd={async (name) => {
+            const row = await createCat({ data: { name } });
+            setCategories((prev) => [...prev, row as Category]);
+          }}
+          onDelete={async (id) => {
+            await deleteCat({ data: { id } });
+            setCategories((prev) => prev.filter((c) => c.id !== id));
+          }}
+        />
+
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
             <Button onClick={openCreate}><Plus className="mr-2 h-4 w-4" />New package</Button>
