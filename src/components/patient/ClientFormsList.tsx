@@ -4,8 +4,8 @@ import { listFormsForClient, getFormSubmission } from "@/lib/medical-forms.funct
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  FileText, Send, Copy, Loader2, CheckCircle2, Clock, Lock,
-  ChevronDown, ExternalLink,
+  FileText, Send, Loader2, CheckCircle2, Clock, Lock,
+  ChevronDown,
 } from "lucide-react";
 import { toast } from "sonner";
 import { SendFormDialog } from "./SendFormDialog";
@@ -52,14 +52,6 @@ function InlineFormPanel({ submissionId }: { submissionId: string }) {
         <span>{row.client?.full_name ?? row.recipient_email ?? "—"}</span>
         <span>·</span>
         <span>{row.submitted_at ? `Submitted ${new Date(row.submitted_at).toLocaleString()}` : `Sent ${new Date(row.created_at).toLocaleString()}`}</span>
-        <div className="ml-auto flex gap-1">
-          <Button size="sm" variant="ghost" className="h-6 px-2" onClick={async () => { await navigator.clipboard.writeText(link); toast.success("Link copied"); }}>
-            <Copy className="mr-1 h-3 w-3" />Link
-          </Button>
-          <Button size="sm" variant="ghost" className="h-6 px-2" asChild>
-            <a href={link} target="_blank" rel="noreferrer"><ExternalLink className="mr-1 h-3 w-3" />Open</a>
-          </Button>
-        </div>
       </div>
 
       {row.status !== "submitted" ? (
@@ -129,10 +121,6 @@ export function ClientFormsList({
     return () => { alive = false; };
   }, [client.id, refreshKey, bump, list]);
 
-  async function copyLink(token: string) {
-    await navigator.clipboard.writeText(`${window.location.origin}/f/${token}`);
-    toast.success("Link copied");
-  }
 
   function toggle(id: string) {
     setExpanded((prev) => {
@@ -185,18 +173,6 @@ export function ClientFormsList({
                         <Badge variant={done ? "default" : "secondary"} className="hidden text-[10px] sm:inline-flex">
                           {done ? <><Lock className="mr-1 h-2.5 w-2.5" />Completed</> : "Pending"}
                         </Badge>
-                      )}
-                      {!done && (
-                        <span
-                          role="button"
-                          tabIndex={0}
-                          title="Copy link"
-                          onClick={(e) => { e.stopPropagation(); copyLink(r.token); }}
-                          onKeyDown={(e) => { if (e.key === "Enter") { e.stopPropagation(); copyLink(r.token); } }}
-                          className="inline-flex h-7 w-7 items-center justify-center rounded-md hover:bg-muted"
-                        >
-                          <Copy className="h-3.5 w-3.5" />
-                        </span>
                       )}
                       <ChevronDown className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${isOpen ? "rotate-180" : ""}`} />
                     </button>
