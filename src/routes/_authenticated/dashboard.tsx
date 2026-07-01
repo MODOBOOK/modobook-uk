@@ -38,6 +38,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useDashboardThemeStyle } from "@/hooks/use-dashboard-theme";
 import { resolveDisplayNames } from "@/lib/display-name";
 import { countPendingReviews } from "@/lib/patient.functions";
+import { getHubNotifications } from "@/lib/hub.functions";
 import { useServerFn } from "@tanstack/react-start";
 
 
@@ -110,14 +111,19 @@ function DashboardLayout() {
   const isConsultationDetail = /^\/dashboard\/consultations\/[^/]+/.test(pathname);
   const themeStyle = useDashboardThemeStyle();
   const fetchPending = useServerFn(countPendingReviews);
+  const fetchHub = useServerFn(getHubNotifications);
   const [pendingReviews, setPendingReviews] = useState(0);
+  const [hubCounts, setHubCounts] = useState<{ total: number; links: number; referrals: number; visits: number }>({ total: 0, links: 0, referrals: 0, visits: 0 });
   useEffect(() => {
     let alive = true;
-    const load = () => fetchPending().then((r) => { if (alive) setPendingReviews(r.count); }).catch(() => {});
+    const load = () => {
+      fetchPending().then((r) => { if (alive) setPendingReviews(r.count); }).catch(() => {});
+      fetchHub().then((r) => { if (alive) setHubCounts(r); }).catch(() => {});
+    };
     load();
     const t = setInterval(load, 60_000);
     return () => { alive = false; clearInterval(t); };
-  }, [fetchPending, pathname]);
+  }, [fetchPending, fetchHub, pathname]);
 
 
 
@@ -146,9 +152,15 @@ function DashboardLayout() {
           </div>
         </div>
         <nav className="flex-1 space-y-0.5 overflow-y-auto px-4 py-6">
-          {navItems.map((item) => (
-            <NavLink key={item.to} to={item.to} icon={item.icon} label={item.label} badge={item.to === "/dashboard/reviews" && pendingReviews > 0 ? pendingReviews : undefined} />
-          ))}
+          {navItems.map((item) => {
+            const badge =
+              item.to === "/dashboard/reviews" && pendingReviews > 0
+                ? pendingReviews
+                : item.to === "/hub" && hubCounts.total > 0
+                  ? hubCounts.total
+                  : undefined;
+            return <NavLink key={item.to} to={item.to} icon={item.icon} label={item.label} badge={badge} />;
+          })}
         </nav>
         <div className="border-t border-border/60 p-4">
           <Button variant="ghost" className="w-full justify-start text-muted-foreground hover:text-foreground" onClick={signOut}>
@@ -167,10 +179,19 @@ function DashboardLayout() {
           <div className="flex min-w-0 flex-1 items-center justify-center">
             <span className="truncate text-sm font-semibold">{displayName || "My Clinic"}</span>
           </div>
+          <Link to="/hub" className="relative inline-flex h-9 w-9 items-center justify-center rounded-full border border-border/70 bg-background text-foreground hover:bg-muted" aria-label="Prescriber Hub">
+            <Stethoscope className="h-4 w-4" />
+            {hubCounts.total > 0 && (
+              <span className="absolute -right-1 -top-1 inline-flex min-w-[1.1rem] items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold leading-none text-destructive-foreground">
+                {hubCounts.total > 99 ? "99+" : hubCounts.total}
+              </span>
+            )}
+          </Link>
           <Button variant="outline" size="sm" asChild>
             <a href={`/m/${profile.slug}`} target="_blank" rel="noreferrer">Preview</a>
           </Button>
         </header>
+
 
 
         {/* Desktop / iPad header */}
@@ -186,6 +207,17 @@ function DashboardLayout() {
             {isPrescriber && (
               <Link to="/prescriber"><Button variant="ghost" size="sm" className="rounded-full">Prescriber view</Button></Link>
             )}
+            <Link to="/hub">
+              <Button size="sm" className="relative rounded-full px-5">
+                <Stethoscope className="mr-2 h-4 w-4" />
+                Prescriber Hub
+                {hubCounts.total > 0 && (
+                  <span className="ml-2 inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-destructive px-1.5 text-[10px] font-semibold text-destructive-foreground">
+                    {hubCounts.total > 99 ? "99+" : hubCounts.total}
+                  </span>
+                )}
+              </Button>
+            </Link>
             <Button variant="outline" size="sm" className="rounded-full px-5" asChild>
               <a href={`/m/${profile.slug}`} target="_blank" rel="noreferrer">
                 Preview booking link
