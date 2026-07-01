@@ -63,14 +63,15 @@ function formatSessionSpacing(days?: number | null) {
   return `every ${days} day${days === 1 ? "" : "s"}`;
 }
 
-const searchSchema = z.object({ ids: z.string().optional() });
+const searchSchema = z.object({ ids: z.string().optional(), pkgs: z.string().optional() });
 
 export const Route = createFileRoute("/m/$slug/book-multi")({
   validateSearch: searchSchema,
-  loaderDeps: ({ search }) => ({ ids: search.ids ?? "" }),
+  loaderDeps: ({ search }) => ({ ids: search.ids ?? "", pkgs: search.pkgs ?? "" }),
   loader: ({ params, deps }) => {
     const ids = deps.ids.split(",").filter(Boolean);
-    return getMultiBookingContext({ data: { slug: params.slug, treatmentIds: ids } });
+    const packageIds = deps.pkgs.split(",").filter(Boolean);
+    return getMultiBookingContext({ data: { slug: params.slug, treatmentIds: ids, packageIds } });
   },
   component: MultiBookPage,
 });
@@ -80,13 +81,25 @@ function MultiBookPage() {
   const ctx = Route.useLoaderData();
   const search = Route.useSearch();
   const ids = (search.ids ?? "").split(",").filter(Boolean);
-  const redirectPath = `/m/${slug}/book-multi?ids=${encodeURIComponent(ids.join(","))}`;
+  const packageIds = (search.pkgs ?? "").split(",").filter(Boolean);
+  const selectedPackages = ((ctx as { selectedPackages?: Array<{ id: string; name: string; price: number; session_count: number; firstTreatmentId: string | null }> }).selectedPackages ?? [])
+    .filter((p) => packageIds.includes(p.id));
+  const redirectPath = `/m/${slug}/book-multi?ids=${encodeURIComponent(ids.join(","))}${packageIds.length ? `&pkgs=${encodeURIComponent(packageIds.join(","))}` : ""}`;
+
+  // Combine explicit treatment ids with each package's first treatment (auto-included, deduped)
+  const combinedIds = useMemo(() => {
+    const out: string[] = [...ids];
+    for (const p of selectedPackages) {
+      if (p.firstTreatmentId && !out.includes(p.firstTreatmentId)) out.push(p.firstTreatmentId);
+    }
+    return out;
+  }, [ids, selectedPackages]);
 
   // Preserve user-selected order
   const treatments = useMemo<Treatment[]>(() => {
     const map = new Map<string, Treatment>(ctx.treatments.map((t: Treatment) => [t.id, t]));
-    return ids.map((id: string) => map.get(id)).filter(Boolean) as Treatment[];
-  }, [ctx.treatments, ids]);
+    return combinedIds.map((id: string) => map.get(id)).filter(Boolean) as Treatment[];
+  }, [ctx.treatments, combinedIds]);
 
   const settings = (ctx as { settings?: import("@/lib/public-booking.functions").PublicBookingSettings }).settings;
   const showPrices = settings?.show_prices_on_booking !== false;
