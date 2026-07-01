@@ -110,7 +110,7 @@ export function FormResponseDialog({
                       .map((el) => (
                         <div key={el.id} className="grid grid-cols-[160px_1fr] gap-3 border-b py-1.5 last:border-0">
                           <div className="text-xs text-muted-foreground">{el.label ?? el.text ?? el.id}</div>
-                          <div className="text-sm">{renderValue(response[el.id])}</div>
+                          <div className="text-sm">{renderValue(response[el.id], el.type)}</div>
                         </div>
                       ))}
                   </div>
