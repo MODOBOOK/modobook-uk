@@ -87,6 +87,12 @@ function BookTreatmentPage() {
     backgroundColor: bgColor,
     color: textColor,
     fontFamily: `${bodyFont}, system-ui, sans-serif`,
+    // Theme shadcn tokens with the practitioner's brand so calendar, buttons, rings etc. all match
+    ["--primary" as string]: brand,
+    ["--primary-foreground" as string]: "#ffffff",
+    ["--accent" as string]: `${brand}1a`,
+    ["--accent-foreground" as string]: brand,
+    ["--ring" as string]: brand,
   };
   const headingStyle: React.CSSProperties = {
     fontFamily: `${headingFont}, ${bodyFont}, system-ui, sans-serif`,
@@ -132,7 +138,9 @@ function BookTreatmentPage() {
   const sessionSpacing = formatSessionSpacing((treatment as { session_interval_days?: number | null }).session_interval_days);
   const splitAllowed = Boolean((treatment as { allow_split_payment?: boolean }).allow_split_payment) && sessionCount > 1;
   const [paymentPlan, setPaymentPlan] = useState<"full" | "split">("full");
+  const [splitAgreed, setSplitAgreed] = useState(false);
   const [discount, setDiscount] = useState<AppliedDiscount | null>(null);
+
 
   // Patient auth gate: 'pending' until they pick a path
   const [authChoice, setAuthChoice] = useState<"pending" | "guest" | "signed-in">("pending");
@@ -700,6 +708,24 @@ function BookTreatmentPage() {
               );
             })}
           </CardContent>
+          {paymentPlan === "split" && (
+            <div className="border-t px-6 py-4" style={{ borderColor: `${brand}22`, backgroundColor: `${brand}08` }}>
+              <label className="flex cursor-pointer items-start gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  className="mt-0.5 h-4 w-4 accent-current"
+                  style={{ accentColor: brand }}
+                  checked={splitAgreed}
+                  onChange={(e) => setSplitAgreed(e.target.checked)}
+                />
+                <span>
+                  I agree to pay <strong>£{(price / sessionCount).toFixed(2)}</strong> per session,
+                  across <strong>{sessionCount} payments</strong> (total £{price.toFixed(2)}), charged at each visit to complete this treatment plan.
+                  <span className="text-destructive"> *</span>
+                </span>
+              </label>
+            </div>
+          )}
         </Card>
       )}
       <Card className="mb-6">
@@ -774,11 +800,23 @@ function BookTreatmentPage() {
       <Button
         className="w-full"
         size="lg"
-        disabled={!slot || submitting || !form.name || !form.email || (reqPhone && !form.phone) || (reqDob && !form.dob)}
+        disabled={
+          !slot || submitting || !form.name || !form.email ||
+          (reqPhone && !form.phone) || (reqDob && !form.dob) ||
+          (splitAllowed && paymentPlan === "split" && !splitAgreed)
+        }
         onClick={submit}
         style={{ backgroundColor: brand, color: "#fff" }}
       >
-        {submitting ? "Booking…" : "Confirm booking"}
+        {submitting
+          ? "Booking…"
+          : splitAllowed && paymentPlan === "split"
+            ? !splitAgreed
+              ? "Tick the split-payment agreement to continue"
+              : `Book & pay £${(price / sessionCount).toFixed(2)} today (${sessionCount} × £${(price / sessionCount).toFixed(2)})`
+            : showPrices && price > 0
+              ? `Book & pay £${price.toFixed(2)}`
+              : "Confirm booking"}
       </Button>
       </>
       )}

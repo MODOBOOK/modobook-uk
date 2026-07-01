@@ -109,6 +109,11 @@ function MultiBookPage() {
     backgroundColor: bgColor,
     color: textColor,
     fontFamily: `${bodyFont}, system-ui, sans-serif`,
+    ["--primary" as string]: brand,
+    ["--primary-foreground" as string]: "#ffffff",
+    ["--accent" as string]: `${brand}1a`,
+    ["--accent-foreground" as string]: brand,
+    ["--ring" as string]: brand,
   };
   const headingStyle: React.CSSProperties = {
     fontFamily: `${headingFont}, ${bodyFont}, system-ui, sans-serif`,
@@ -213,6 +218,7 @@ function MultiBookPage() {
   const [submitting, setSubmitting] = useState(false);
   const submitLockRef = useRef(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [splitAgreed, setSplitAgreed] = useState(false);
   const [prescriberConsents, setPrescriberConsents] = useState<Record<string, boolean>>({});
   const [visitSelections, setVisitSelections] = useState<Record<string, string>>({});
 
@@ -758,6 +764,33 @@ function MultiBookPage() {
                     );
                   })}
                 </CardContent>
+                {splitEligibleTreatments.some((t) => selectedPaymentPlan(t) === "split") && (
+                  <div className="border-t px-6 py-4" style={{ borderColor: `${brand}22`, backgroundColor: `${brand}08` }}>
+                    <label className="flex cursor-pointer items-start gap-2 text-sm">
+                      <input
+                        type="checkbox"
+                        className="mt-0.5 h-4 w-4"
+                        style={{ accentColor: brand }}
+                        checked={splitAgreed}
+                        onChange={(e) => setSplitAgreed(e.target.checked)}
+                      />
+                      <span>
+                        I agree to pay the split-payment amount at each session
+                        {(() => {
+                          const parts = splitEligibleTreatments
+                            .filter((t) => selectedPaymentPlan(t) === "split")
+                            .map((t) => {
+                              const sessions = Math.max(1, Number((t as { session_count?: number }).session_count ?? 1));
+                              const per = priceFor(t) / sessions;
+                              return `${sessions} × £${per.toFixed(2)} for ${t.name}`;
+                            });
+                          return parts.length > 0 ? ` (${parts.join(", ")})` : "";
+                        })()}, until each treatment plan is complete.
+                        <span className="text-destructive"> *</span>
+                      </span>
+                    </label>
+                  </div>
+                )}
               </Card>
             )}
             <Card className="mb-6">
@@ -1023,17 +1056,21 @@ function MultiBookPage() {
               </Card>
             )}
 
-            <Button
-              className="w-full"
-              size="lg"
-              disabled={
-                !slot || submitting || !form.name || !form.email || (reqPhone && !form.phone) || (reqDob && !form.dob) ||
-                (termsRequired && !agreedToTerms) || prescriberBlocks
-              }
-              onClick={submit}
-              style={{ backgroundColor: brand, color: "#fff" }}
-            >
-              {submitting
+            {(() => {
+              const anySplit = splitEligibleTreatments.some((t) => selectedPaymentPlan(t) === "split");
+              // Estimate "due today" – split treatments only charge first session up front
+              let dueToday = 0;
+              treatments.forEach((t) => {
+                const sessions = Math.max(1, Number((t as { session_count?: number }).session_count ?? 1));
+                const isSplit =
+                  Boolean((t as { allow_split_payment?: boolean }).allow_split_payment) &&
+                  sessions > 1 &&
+                  selectedPaymentPlan(t) === "split";
+                dueToday += isSplit ? priceFor(t) / sessions : priceFor(t);
+              });
+              // Apply proportional discount to keep the label honest
+              if (totalPrice > 0) dueToday = Math.max(0, dueToday - (dueToday / totalPrice) * discountTotal);
+              const btnLabel = submitting
                 ? "Booking…"
                 : inPersonItems.length > 0
                   ? "Consultation required before booking"
@@ -1041,9 +1078,27 @@ function MultiBookPage() {
                     ? "Please pick a clinic visit day above"
                     : !allClinicVisitsConsented || !allConsented
                       ? "Please give prescriber consent above"
-                      : `Confirm ${treatments.length} bookings · £${totalAfterDiscount.toFixed(2)}`}
-
-            </Button>
+                      : anySplit && !splitAgreed
+                        ? "Tick the split-payment agreement to continue"
+                        : anySplit
+                          ? `Book & pay £${dueToday.toFixed(2)} today (rest at each session)`
+                          : `Confirm ${treatments.length} booking${treatments.length === 1 ? "" : "s"} · £${totalAfterDiscount.toFixed(2)}`;
+              return (
+                <Button
+                  className="w-full"
+                  size="lg"
+                  disabled={
+                    !slot || submitting || !form.name || !form.email || (reqPhone && !form.phone) || (reqDob && !form.dob) ||
+                    (termsRequired && !agreedToTerms) || prescriberBlocks ||
+                    (anySplit && !splitAgreed)
+                  }
+                  onClick={submit}
+                  style={{ backgroundColor: brand, color: "#fff" }}
+                >
+                  {btnLabel}
+                </Button>
+              );
+            })()}
 
           </>
         )}
