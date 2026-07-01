@@ -65,7 +65,7 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
                   const patch: Record<string, unknown> = {};
                   if (kind === "deposit") {
                     patch.deposit_paid_at = new Date().toISOString();
-                    patch.payment_status = "deposit_paid";
+                    patch.payment_status = "paid";
                   } else {
                     patch.payment_status = "paid";
                     patch.payment_method = "stripe_link";
