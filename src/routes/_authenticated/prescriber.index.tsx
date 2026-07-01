@@ -733,7 +733,7 @@ function PrescriptionEditor({ referralId, patient, client }: { referralId: strin
         valid_until: latest.valid_until ?? "",
         notes: latest.notes ?? "",
       });
-      setSigName(latest.signature_name ?? "");
+      setSigName((s) => s || latest.signature_name || latest.prescriber_name || "");
     } else {
       const d = (defaults.data ?? {}) as {
         prescriber_name?: string;
@@ -742,17 +742,20 @@ function PrescriptionEditor({ referralId, patient, client }: { referralId: strin
         clinic_name?: string;
         clinic_address?: string;
       };
+      const prescriberName = d.prescriber_name || "";
       setForm((f) => ({
         ...f,
         patient_name: (patient.patient_name as string) || (client?.full_name as string) || "",
         patient_dob: (patient.patient_dob as string) || (client?.date_of_birth as string) || "",
         patient_address: (patient.patient_address as string) || (client?.address as string) || "",
-        prescriber_name: f.prescriber_name || d.prescriber_name || "",
+        prescriber_name: f.prescriber_name || prescriberName,
         prescriber_reg_body: f.prescriber_reg_body || d.prescriber_reg_body || "",
         prescriber_reg_number: f.prescriber_reg_number || d.prescriber_reg_number || "",
         clinic_name: f.clinic_name || d.clinic_name || "",
         clinic_address: f.clinic_address || d.clinic_address || "",
       }));
+      setSigName((s) => s || prescriberName);
+
     }
   }, [latest, patient, client, defaults.data]);
 
