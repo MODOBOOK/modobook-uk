@@ -65,7 +65,7 @@ function PrescriberHome() {
             Patients booked by connected practitioners appear here for your sign-off.
           </p>
         </div>
-        <WalkInDialog onCreated={() => q.refetch()} />
+        <WalkInDialog trigger={<Button size="sm" variant="outline">+ New walk-in</Button>} onCreated={() => refs.refetch()} />
       </div>
 
       <Tabs defaultValue="pending">
