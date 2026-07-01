@@ -337,6 +337,10 @@ function PackagesPage() {
           {packages.map((p) => {
             const ids = p.treatment_ids ?? (p.treatment_id ? [p.treatment_id] : []);
             const names = ids.map((id) => treatments.find((tt) => tt.id === id)?.name).filter(Boolean) as string[];
+            const original = ids.reduce((sum, id) => sum + Number(treatments.find((tt) => tt.id === id)?.price ?? 0), 0) * (p.session_count || 1);
+            const price = Number(p.price);
+            const saving = original > price ? original - price : 0;
+            const savingPct = original > 0 && saving > 0 ? Math.round((saving / original) * 100) : 0;
             return (
               <Card key={p.id}>
                 <CardHeader className="flex flex-row items-start justify-between gap-2 pb-2">
@@ -353,10 +357,20 @@ function PackagesPage() {
                 </CardHeader>
                 <CardContent className="text-sm">
                   {p.description && <p className="mb-2 line-clamp-2 text-xs text-muted-foreground">{p.description}</p>}
-                  <div className="flex justify-between">
+                  <div className="flex items-baseline justify-between gap-2">
                     <span>{p.session_count} session{p.session_count === 1 ? "" : "s"}</span>
-                    <span className="font-semibold">£{Number(p.price).toFixed(2)}</span>
+                    <div className="text-right">
+                      {saving > 0 && (
+                        <div className="text-xs text-muted-foreground line-through">£{original.toFixed(2)}</div>
+                      )}
+                      <div className="font-semibold">£{price.toFixed(2)}</div>
+                    </div>
                   </div>
+                  {saving > 0 && (
+                    <p className="mt-1 text-right text-xs font-medium text-emerald-600">
+                      Save £{saving.toFixed(2)} ({savingPct}%)
+                    </p>
+                  )}
                   {p.expiry_days && <p className="mt-1 text-xs text-muted-foreground">Expires after {p.expiry_days} days</p>}
                   {!p.active && <p className="mt-1 text-xs text-amber-600">Hidden from patients</p>}
                 </CardContent>
@@ -366,5 +380,49 @@ function PackagesPage() {
         </div>
       )}
     </div>
+  );
+}
+
+function TreatmentSearchPicker({
+  treatments,
+  selectedIds,
+  onToggle,
+}: {
+  treatments: Treatment[];
+  selectedIds: string[];
+  onToggle: (id: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="outline" role="combobox" className="mt-2 w-full justify-start font-normal text-muted-foreground">
+          <Search className="mr-2 h-4 w-4" />
+          Search treatments to add…
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+        <Command>
+          <CommandInput placeholder="Type to search…" />
+          <CommandList>
+            <CommandEmpty>No treatments found.</CommandEmpty>
+            <CommandGroup>
+              {treatments.map((t) => {
+                const checked = selectedIds.includes(t.id);
+                return (
+                  <CommandItem key={t.id} value={t.name} onSelect={() => onToggle(t.id)}>
+                    <Check className={`mr-2 h-4 w-4 ${checked ? "opacity-100" : "opacity-0"}`} />
+                    <span className="flex-1">{t.name}</span>
+                    {t.price != null && (
+                      <span className="ml-2 text-xs text-muted-foreground">£{Number(t.price).toFixed(2)}</span>
+                    )}
+                  </CommandItem>
+                );
+              })}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
   );
 }
