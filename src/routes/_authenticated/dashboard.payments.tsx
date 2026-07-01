@@ -147,38 +147,29 @@ function PaymentsPage() {
             <li>• Refunds and disputes handled in your own Stripe dashboard.</li>
           </ul>
           <div className="flex flex-wrap gap-2">
-            <Button onClick={connect} disabled={loading}>
-              <ExternalLink className="mr-2 h-4 w-4" />
-              {connected ? "Continue Stripe onboarding" : "Connect Stripe"}
-            </Button>
+            {connected ? (
+              <Button asChild>
+                <a
+                  href="https://connect.stripe.com/d/setup/s/_Uo7mgbGo33rJz5I0836UBjgs9C/YWNjdF8xVG9WV0w4aFYxMnpCc2ZI/6840fd659306f32b8"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <ExternalLink className="mr-2 h-4 w-4" />
+                  Continue Stripe onboarding
+                </a>
+              </Button>
+            ) : (
+              <Button onClick={connect} disabled={loading}>
+                <ExternalLink className="mr-2 h-4 w-4" />
+                Connect Stripe
+              </Button>
+            )}
             {connected && (
               <Button variant="outline" onClick={checkStatus} disabled={loading}>
                 <RefreshCw className="mr-2 h-4 w-4" />
                 Refresh status
               </Button>
             )}
-          </div>
-
-          <div className="space-y-3 rounded-lg border border-border/70 bg-muted/25 p-4">
-            <div className="space-y-1">
-              <Label htmlFor="stripe-existing-link">Pair an existing Stripe setup link</Label>
-              <p className="text-sm text-muted-foreground">
-                Paste the Connect setup link Stripe gave you so MODO can attach it to this practitioner profile.
-              </p>
-            </div>
-            <div className="flex flex-col gap-2 sm:flex-row">
-              <Input
-                id="stripe-existing-link"
-                value={stripeConnectLink}
-                onChange={(event) => setStripeConnectLink(event.target.value)}
-                placeholder="https://connect.stripe.com/d/setup/..."
-                className="min-w-0 flex-1"
-              />
-              <Button type="button" variant="outline" onClick={pairLink} disabled={pairing || !stripeConnectLink.trim()}>
-                <Link2 className="mr-2 h-4 w-4" />
-                Pair link
-              </Button>
-            </div>
           </div>
         </CardContent>
       </Card>
