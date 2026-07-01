@@ -44,7 +44,18 @@ function PaymentsPage() {
       if ("recovered" in res && res.recovered) {
         toast.success("Fresh sandbox Stripe connection created");
       }
-      window.location.href = res.url;
+      // Open in a new top-level tab. Stripe blocks being loaded in iframes
+      // (X-Frame-Options), so navigating the current window fails inside the
+      // Lovable preview. Fall back to top-window navigation if the popup is blocked.
+      const win = window.open(res.url, "_blank", "noopener,noreferrer");
+      if (!win) {
+        try {
+          (window.top ?? window).location.href = res.url;
+        } catch {
+          window.location.href = res.url;
+        }
+        toast.info("Popup blocked — opening Stripe in this tab instead.");
+      }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to start Stripe onboarding");
     } finally {
