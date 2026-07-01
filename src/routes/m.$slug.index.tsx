@@ -1450,7 +1450,17 @@ function BookPage() {
                               </div>
                             )}
                             <CardContent className="p-4">
-                              <div className="font-semibold" style={{ color: brand }}>{p.name}</div>
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="font-semibold" style={{ color: brand }}>{p.name}</div>
+                                {pkg.category_id && (() => {
+                                  const cat = categories.find((c) => c.id === pkg.category_id);
+                                  return cat ? (
+                                    <span className="rounded-full border px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide" style={{ borderColor: `${brand}44`, color: brand }}>
+                                      {cat.name}
+                                    </span>
+                                  ) : null;
+                                })()}
+                              </div>
                               {pkg.description && (
                                 <p className="mt-1 line-clamp-3 text-sm opacity-70">{pkg.description}</p>
                               )}
