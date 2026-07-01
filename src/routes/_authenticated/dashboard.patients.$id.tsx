@@ -714,9 +714,22 @@ function PrescriptionsSection({ clientId, client, profileId }: { clientId: strin
           </div>
           <div className="flex items-center gap-1">
             {r.pdf_url && (
-              <Button size="icon" variant="ghost" asChild title="Download PDF">
-                <a href={r.pdf_url} target="_blank" rel="noreferrer"><Download className="h-3.5 w-3.5" /></a>
-              </Button>
+              <Button size="icon" variant="ghost" title="Download PDF" onClick={async () => {
+                const url = r.pdf_url as string;
+                const filename = `prescription-${r.id}.pdf`;
+                try {
+                  const res = await fetch(url);
+                  if (!res.ok) throw new Error("fetch failed");
+                  const blob = await res.blob();
+                  const blobUrl = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = blobUrl; a.download = filename;
+                  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+                  setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+                } catch {
+                  window.open(url, "_blank");
+                }
+              }}><Download className="h-3.5 w-3.5" /></Button>
             )}
             <Button size="icon" variant="ghost" onClick={() => del({ data: { id: r.id } }).then(reload)}><X className="h-3.5 w-3.5" /></Button>
           </div>
