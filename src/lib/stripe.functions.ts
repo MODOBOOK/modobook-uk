@@ -56,7 +56,7 @@ export const startStripeOnboarding = createServerFn({ method: "POST" })
         return {
           ok: false as const,
           code,
-          message: "Stripe Connect is not enabled on this sandbox platform account yet.",
+          message,
           actionUrl: "https://dashboard.stripe.com/test/connect/overview",
         };
       }
