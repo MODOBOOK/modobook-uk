@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WhoItsForRouteImport } from './routes/who-its-for'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PrescriberHubRouteImport } from './routes/prescriber-hub'
 import { Route as FeaturesRouteImport } from './routes/features'
@@ -84,6 +85,11 @@ import { Route as AuthenticatedDashboardConsultationsIdRouteImport } from './rou
 const WhoItsForRoute = WhoItsForRouteImport.update({
   id: '/who-its-for',
   path: '/who-its-for',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -487,6 +493,7 @@ export interface FileRoutesByFullPath {
   '/features': typeof FeaturesRoute
   '/prescriber-hub': typeof PrescriberHubRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/terms': typeof TermsRoute
   '/who-its-for': typeof WhoItsForRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/admin-prescribers': typeof AuthenticatedAdminPrescribersRoute
@@ -559,6 +566,7 @@ export interface FileRoutesByTo {
   '/features': typeof FeaturesRoute
   '/prescriber-hub': typeof PrescriberHubRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/terms': typeof TermsRoute
   '/who-its-for': typeof WhoItsForRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/admin-prescribers': typeof AuthenticatedAdminPrescribersRoute
@@ -628,6 +636,7 @@ export interface FileRoutesById {
   '/features': typeof FeaturesRoute
   '/prescriber-hub': typeof PrescriberHubRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/terms': typeof TermsRoute
   '/who-its-for': typeof WhoItsForRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/admin-prescribers': typeof AuthenticatedAdminPrescribersRoute
@@ -702,6 +711,7 @@ export interface FileRouteTypes {
     | '/features'
     | '/prescriber-hub'
     | '/reset-password'
+    | '/terms'
     | '/who-its-for'
     | '/admin'
     | '/admin-prescribers'
@@ -774,6 +784,7 @@ export interface FileRouteTypes {
     | '/features'
     | '/prescriber-hub'
     | '/reset-password'
+    | '/terms'
     | '/who-its-for'
     | '/admin'
     | '/admin-prescribers'
@@ -842,6 +853,7 @@ export interface FileRouteTypes {
     | '/features'
     | '/prescriber-hub'
     | '/reset-password'
+    | '/terms'
     | '/who-its-for'
     | '/_authenticated/admin'
     | '/_authenticated/admin-prescribers'
@@ -916,6 +928,7 @@ export interface RootRouteChildren {
   FeaturesRoute: typeof FeaturesRoute
   PrescriberHubRoute: typeof PrescriberHubRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  TermsRoute: typeof TermsRoute
   WhoItsForRoute: typeof WhoItsForRoute
   BookSlugRoute: typeof BookSlugRoute
   CTokenRoute: typeof CTokenRoute
@@ -930,6 +943,13 @@ declare module '@tanstack/react-router' {
       path: '/who-its-for'
       fullPath: '/who-its-for'
       preLoaderRoute: typeof WhoItsForRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reset-password': {
@@ -1633,6 +1653,7 @@ const rootRouteChildren: RootRouteChildren = {
   FeaturesRoute: FeaturesRoute,
   PrescriberHubRoute: PrescriberHubRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  TermsRoute: TermsRoute,
   WhoItsForRoute: WhoItsForRoute,
   BookSlugRoute: BookSlugRoute,
   CTokenRoute: CTokenRoute,
@@ -1642,13 +1663,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

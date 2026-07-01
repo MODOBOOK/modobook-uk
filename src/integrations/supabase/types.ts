@@ -2707,6 +2707,83 @@ export type Database = {
           },
         ]
       }
+      platform_terms: {
+        Row: {
+          body_markdown: string
+          created_at: string
+          effective_at: string
+          id: string
+          is_active: boolean
+          title: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          body_markdown: string
+          created_at?: string
+          effective_at?: string
+          id?: string
+          is_active?: boolean
+          title: string
+          updated_at?: string
+          version: number
+        }
+        Update: {
+          body_markdown?: string
+          created_at?: string
+          effective_at?: string
+          id?: string
+          is_active?: boolean
+          title?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: []
+      }
+      platform_terms_acceptances: {
+        Row: {
+          accepted_at: string
+          context: string | null
+          created_at: string
+          id: string
+          ip_hash: string | null
+          terms_id: string
+          terms_version: number
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          accepted_at?: string
+          context?: string | null
+          created_at?: string
+          id?: string
+          ip_hash?: string | null
+          terms_id: string
+          terms_version: number
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          accepted_at?: string
+          context?: string | null
+          created_at?: string
+          id?: string
+          ip_hash?: string | null
+          terms_id?: string
+          terms_version?: number
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "platform_terms_acceptances_terms_id_fkey"
+            columns: ["terms_id"]
+            isOneToOne: false
+            referencedRelation: "platform_terms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       practitioner_subscriptions: {
         Row: {
           cancel_at_period_end: boolean
@@ -4358,6 +4435,7 @@ export type Database = {
           quiz_outro: string
         }[]
       }
+      has_accepted_current_terms: { Args: never; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -4426,6 +4504,15 @@ export type Database = {
       prescriber_get_referral_full: {
         Args: { p_referral_id: string }
         Returns: Json
+      }
+      record_platform_terms_acceptance: {
+        Args: {
+          p_context?: string
+          p_ip_hash?: string
+          p_terms_id: string
+          p_user_agent?: string
+        }
+        Returns: string
       }
       resolve_hub_code: {
         Args: { p_code: string }

@@ -3,6 +3,7 @@ import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -11,6 +12,7 @@ import { BrandMark } from "@/components/BrandMark";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { toast } from "sonner";
+import { fetchActiveTerms, recordTermsAcceptance } from "@/lib/platform-terms";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
@@ -35,6 +37,8 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [forgotOpen, setForgotOpen] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
+  const [acceptTerms, setAcceptTerms] = useState(false);
+
 
   async function handleForgot(e: React.FormEvent) {
     e.preventDefault();
@@ -79,13 +83,34 @@ function AuthPage() {
 
   async function handleSignUp(e: React.FormEvent) {
     e.preventDefault();
+    if (!acceptTerms) {
+      toast.error("Please accept the Terms & Conditions to create your account.");
+      return;
+    }
     setLoading(true);
-    const { error } = await supabase.auth.signUp({ email, password });
-    setLoading(false);
+    // Snapshot active terms *before* signup so we know which version to record.
+    let activeTermsId: string | null = null;
+    try {
+      const active = await fetchActiveTerms();
+      activeTermsId = active?.id ?? null;
+    } catch {
+      /* non-fatal — gate will re-prompt on first dashboard entry */
+    }
+    const { data, error } = await supabase.auth.signUp({ email, password });
     if (error) {
+      setLoading(false);
       toast.error(error.message);
       return;
     }
+    // If session was created immediately (email confirmations off), record acceptance now.
+    if (data.session && activeTermsId) {
+      try {
+        await recordTermsAcceptance(activeTermsId, "signup");
+      } catch {
+        /* gate will re-prompt if this failed */
+      }
+    }
+    setLoading(false);
     if (isPrescriberFlow) {
       toast.success("Account created. Submit your verification next.");
       router.navigate({ to: "/hub/verification" });
@@ -186,7 +211,22 @@ function AuthPage() {
                       minLength={6}
                     />
                   </div>
-                  <Button type="submit" className="w-full" disabled={loading}>
+                  <label className="flex items-start gap-2 rounded-md border bg-muted/30 p-3 text-xs text-muted-foreground">
+                    <Checkbox
+                      checked={acceptTerms}
+                      onCheckedChange={(v) => setAcceptTerms(Boolean(v))}
+                      className="mt-0.5"
+                    />
+                    <span>
+                      I agree to the MODO BOOK{" "}
+                      <Link to="/terms" target="_blank" className="underline text-foreground">
+                        Terms &amp; Conditions
+                      </Link>
+                      . I confirm I am the account holder and, where I process patient
+                      data, I am the Data Controller and MODO acts as my Data Processor.
+                    </span>
+                  </label>
+                  <Button type="submit" className="w-full" disabled={loading || !acceptTerms}>
                     {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                     Create account
                   </Button>
@@ -199,10 +239,10 @@ function AuthPage() {
                 Continue with Google
               </Button>
 
-              <p className="text-center text-sm text-muted-foreground">
-                By signing in, you agree to our{" "}
-                <Link to="/" className="underline">
-                  terms
+              <p className="text-center text-xs text-muted-foreground">
+                By signing in you agree to our{" "}
+                <Link to="/terms" className="underline">
+                  Terms &amp; Conditions
                 </Link>
                 .
               </p>

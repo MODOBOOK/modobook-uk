@@ -1,5 +1,6 @@
-import { createFileRoute, Link, Outlet, redirect } from "@tanstack/react-router";
+import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
+import { TermsAcceptanceGate } from "@/components/TermsAcceptanceGate";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -14,5 +15,10 @@ export const Route = createFileRoute("/_authenticated")({
 });
 
 function AuthenticatedLayout() {
-  return <Outlet />;
+  return (
+    <>
+      <TermsAcceptanceGate />
+      <Outlet />
+    </>
+  );
 }
