@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { listMyPackages, createPackage, updatePackage, deletePackage } from "@/lib/packages.functions";
 import { getMyTreatments } from "@/lib/treatments.functions";
+import { getMyCategories } from "@/lib/categories.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
