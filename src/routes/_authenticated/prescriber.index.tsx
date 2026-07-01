@@ -277,9 +277,6 @@ function RecordsSection({
     </div>
   );
 }
-    </div>
-  );
-}
 
 /* ---------------------- Prescription editor ---------------------- */
 type RxRow = {
