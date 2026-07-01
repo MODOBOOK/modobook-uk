@@ -263,7 +263,7 @@ function VisitEditor({
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-0 sm:items-center sm:p-4">
       <div className="w-full max-w-lg rounded-t-2xl bg-background p-5 shadow-xl sm:rounded-2xl">
         <div className="mb-4 flex items-center justify-between">
-          <h3 className="font-serif text-lg">{visit ? "Edit visit" : "Schedule a visit"}</h3>
+          <h3 className="font-serif text-lg">{visit ? "Edit request" : "Request a prescriber day"}</h3>
           <Button variant="ghost" size="icon" onClick={onClose}>
             <X className="h-4 w-4" />
           </Button>
