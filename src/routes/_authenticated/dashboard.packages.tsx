@@ -52,6 +52,7 @@ const blankForm = {
   expiry_days: "" as string,
   image_url: "",
   active: true,
+  category_id: "" as string,
 };
 
 function PackagesPage() {
