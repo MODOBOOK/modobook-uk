@@ -106,15 +106,20 @@ export const listMyReferrals = createServerFn({ method: "GET" })
       apptIds.length
         ? supabase
             .from("appointments")
-            .select("id, scheduled_date, start_time, status")
+            .select("id, scheduled_date, start_time, status, location_id")
             .in("id", apptIds)
         : Promise.resolve({
-            data: [] as { id: string; scheduled_date: string; start_time: string; status: string }[],
+            data: [] as { id: string; scheduled_date: string; start_time: string; status: string; location_id: string | null }[],
           }),
     ]);
+    const locIds = Array.from(new Set((appts ?? []).map((a) => a.location_id).filter(Boolean) as string[]));
+    const { data: locs } = locIds.length
+      ? await supabase.from("locations").select("id, name, city").in("id", locIds)
+      : { data: [] as { id: string; name: string; city: string | null }[] };
     const pmap = new Map((profiles ?? []).map((p) => [p.id, p]));
     const tmap = new Map((treatments ?? []).map((t) => [t.id, t]));
     const amap = new Map((appts ?? []).map((a) => [a.id, a]));
+    const lmap = new Map((locs ?? []).map((l) => [l.id, l]));
     return (data ?? []).map((r) => {
       const minimal = r.status === "pending" || r.status === "declined";
       const fullName = r.patient_name ?? "";
@@ -124,17 +129,19 @@ export const listMyReferrals = createServerFn({ method: "GET" })
       const t = r.treatment_id ? tmap.get(r.treatment_id) : null;
       const p = pmap.get(r.practitioner_profile_id);
       const a = r.appointment_id ? amap.get(r.appointment_id) : null;
+      const loc = a?.location_id ? lmap.get(a.location_id) : null;
       return {
         id: r.id,
         status: r.status as "pending" | "accepted" | "declined" | "completed",
         routing: r.routing as "same_address" | "clinic_visit" | "in_person_consult",
-
         created_at: r.created_at,
         accepted_at: r.accepted_at,
         consent_given_at: r.consent_given_at,
         patient_display: masked,
         treatment_name: t?.name ?? "Treatment",
-        clinic_name: p?.clinic_name ?? p?.full_name ?? "Clinic",
+        clinic_name: p?.clinic_name ?? "Clinic",
+        practitioner_name: p?.full_name ?? null,
+        location_name: loc ? [loc.name, loc.city].filter(Boolean).join(" · ") : null,
         appointment: a
           ? { id: a.id, scheduled_date: a.scheduled_date, start_time: a.start_time, status: a.status }
           : null,
