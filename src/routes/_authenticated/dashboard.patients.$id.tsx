@@ -248,15 +248,6 @@ function PatientProfilePage() {
         />
       </Section>
 
-      {client.medical_form_data && (
-        <Section title={`Latest answers${client.medical_form_updated_at ? ` · updated ${new Date(client.medical_form_updated_at).toLocaleDateString()}` : ""}`}>
-          <div className="space-y-1.5">
-            {Object.entries(client.medical_form_data as Record<string, unknown>).map(([k, v]) => (
-              <Row key={k} label={k} value={Array.isArray(v) ? v.join(", ") : typeof v === "object" && v !== null ? JSON.stringify(v) : String(v ?? "")} />
-            ))}
-          </div>
-        </Section>
-      )}
       <SectionDark
         title="Appointments"
         actions={
