@@ -1,20 +1,62 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { listFormsForClient, getFormSubmission } from "@/lib/medical-forms.functions";
+import { listFormsForClient, getFormSubmission, updateFormSubmission } from "@/lib/medical-forms.functions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   FileText, Send, Loader2, CheckCircle2, Clock, Lock,
-  ChevronDown,
+  ChevronDown, Pencil, Eye, EyeOff, X, Save,
 } from "lucide-react";
 import { toast } from "sonner";
 import { SendFormDialog } from "./SendFormDialog";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
-type El = { id: string; type: string; label?: string; text?: string };
+type El = {
+  id: string;
+  type: string;
+  label?: string;
+  text?: string;
+  placeholder?: string;
+  options?: string[];
+  fieldType?: string;
+  max?: number;
+};
 
-function renderValue(v: any) {
-  if (v === undefined || v === null || v === "") return <span className="text-muted-foreground">—</span>;
+const NONE_LABEL = "None of the above";
+const STRUCTURAL = ["heading", "paragraph", "separator", "space", "info"];
+
+function isEmpty(v: any) {
+  if (v === undefined || v === null || v === "") return true;
+  if (Array.isArray(v) && v.length === 0) return true;
+  return false;
+}
+
+function formatValue(v: any): string {
+  if (isEmpty(v)) return NONE_LABEL;
+  if (Array.isArray(v)) return v.join(", ");
+  if (typeof v === "boolean") return v ? "Yes" : "No";
+  if (typeof v === "object") {
+    if ("dataUrl" in v) return "Signature captured";
+    return JSON.stringify(v);
+  }
+  return String(v);
+}
+
+function renderValue(v: any, elType?: string) {
+  const empty = isEmpty(v);
+  const isCheckboxGroup = elType === "checkbox_group" || elType === "checkboxes";
+  if (empty) {
+    return (
+      <span className={isCheckboxGroup ? "italic text-muted-foreground" : "text-muted-foreground"}>
+        {isCheckboxGroup ? NONE_LABEL : "—"}
+      </span>
+    );
+  }
   if (Array.isArray(v)) return <span>{v.join(", ")}</span>;
   if (typeof v === "object") {
     if ("dataUrl" in v) return <img src={v.dataUrl} alt="signature" className="max-h-24 rounded border bg-white" />;
@@ -25,26 +67,146 @@ function renderValue(v: any) {
   return <span className="whitespace-pre-wrap">{String(v)}</span>;
 }
 
-function InlineFormPanel({ submissionId }: { submissionId: string }) {
+function EditField({ el, value, onChange }: { el: El; value: any; onChange: (v: any) => void }) {
+  const t = el.type;
+  if (t === "field" || t === "text" || t === "date" || t === "email" || t === "tel") {
+    const type = el.fieldType ?? (t === "field" ? "text" : t);
+    if (type === "textarea") {
+      return <Textarea rows={3} value={value ?? ""} onChange={(e) => onChange(e.target.value)} placeholder={el.placeholder} />;
+    }
+    return <Input type={type} value={value ?? ""} onChange={(e) => onChange(e.target.value)} placeholder={el.placeholder} />;
+  }
+  if (t === "textarea") return <Textarea rows={3} value={value ?? ""} onChange={(e) => onChange(e.target.value)} />;
+  if (t === "select") {
+    return (
+      <Select value={value ?? ""} onValueChange={onChange}>
+        <SelectTrigger className="h-9"><SelectValue placeholder="Select…" /></SelectTrigger>
+        <SelectContent>
+          {(el.options ?? []).map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+        </SelectContent>
+      </Select>
+    );
+  }
+  if (t === "radio" || t === "yesno") {
+    const opts = t === "yesno" ? ["Yes", "No"] : el.options ?? [];
+    return (
+      <div className="flex flex-wrap gap-1.5">
+        {opts.map((o) => (
+          <button
+            type="button"
+            key={o}
+            onClick={() => onChange(o)}
+            className={`rounded-md border px-2.5 py-1 text-xs ${value === o ? "border-primary bg-primary/10" : "hover:bg-muted"}`}
+          >{o}</button>
+        ))}
+      </div>
+    );
+  }
+  if (t === "checkbox_group" || t === "checkboxes") {
+    const arr: string[] = Array.isArray(value) ? value : [];
+    return (
+      <div className="grid grid-cols-1 gap-1 sm:grid-cols-2">
+        {(el.options ?? []).map((o) => {
+          const checked = arr.includes(o);
+          return (
+            <label key={o} className="flex items-start gap-1.5 text-xs">
+              <Checkbox className="mt-0.5" checked={checked} onCheckedChange={(c) => onChange(c ? [...arr, o] : arr.filter((x) => x !== o))} />
+              <span>{o}</span>
+            </label>
+          );
+        })}
+      </div>
+    );
+  }
+  if (t === "checkbox") {
+    return (
+      <label className="flex items-center gap-2 text-xs">
+        <Checkbox checked={!!value} onCheckedChange={(c) => onChange(!!c)} />
+        <span>{el.label}</span>
+      </label>
+    );
+  }
+  if (t === "rating") {
+    const max = el.max ?? 5;
+    const v = Number(value) || 0;
+    return (
+      <div className="flex gap-1">
+        {Array.from({ length: max }).map((_, i) => (
+          <button type="button" key={i} onClick={() => onChange(i + 1)} className="text-xl leading-none">
+            <span className={i < v ? "text-amber-500" : "text-muted-foreground/40"}>★</span>
+          </button>
+        ))}
+      </div>
+    );
+  }
+  if (t === "signature") {
+    return <Input value={value ?? ""} onChange={(e) => onChange(e.target.value)} placeholder="Type full name to sign" />;
+  }
+  // fallback
+  return <Input value={value ?? ""} onChange={(e) => onChange(e.target.value)} />;
+}
+
+function InlineFormPanel({ submissionId, onSaved }: { submissionId: string; onSaved?: () => void }) {
   const fetchOne = useServerFn(getFormSubmission);
+  const updateOne = useServerFn(updateFormSubmission);
   const [row, setRow] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [expanded, setExpanded] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState<Record<string, any>>({});
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     let alive = true;
     setLoading(true);
     fetchOne({ data: { id: submissionId } })
-      .then((r: any) => { if (alive) setRow(r); })
+      .then((r: any) => { if (alive) { setRow(r); setDraft(r?.response ?? {}); } })
       .catch((e) => toast.error(e instanceof Error ? e.message : "Failed to load"))
       .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
   }, [submissionId, fetchOne]);
 
-  if (loading || !row) return <div className="flex justify-center py-4"><Loader2 className="h-4 w-4 animate-spin" /></div>;
-
   const steps = (row?.template?.schema?.steps ?? []) as { id: string; title: string; elements: El[] }[];
   const response: Record<string, any> = row?.response ?? {};
+
+  const summaryItems = useMemo(() => {
+    const items: { id: string; label: string; value: any; type: string }[] = [];
+    for (const s of steps) {
+      for (const el of s.elements) {
+        if (STRUCTURAL.includes(el.type)) continue;
+        items.push({
+          id: el.id,
+          label: el.label ?? el.text ?? el.id,
+          value: response[el.id],
+          type: el.type,
+        });
+      }
+    }
+    return items;
+  }, [steps, response]);
+
+  if (loading || !row) return <div className="flex justify-center py-4"><Loader2 className="h-4 w-4 animate-spin" /></div>;
+
   const link = `${typeof window !== "undefined" ? window.location.origin : ""}/f/${row.token}`;
+  const submitted = row.status === "submitted";
+
+  async function save() {
+    setSaving(true);
+    try {
+      await updateOne({ data: { id: submissionId, response: draft } });
+      toast.success("Answers updated");
+      // reload
+      const r: any = await fetchOne({ data: { id: submissionId } });
+      setRow(r);
+      setDraft(r?.response ?? {});
+      setEditing(false);
+      onSaved?.();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to save");
+    } finally {
+      setSaving(false);
+    }
+  }
 
   return (
     <div className="space-y-3 border-t bg-muted/20 p-3 text-sm">
@@ -54,40 +216,106 @@ function InlineFormPanel({ submissionId }: { submissionId: string }) {
         <span>{row.submitted_at ? `Submitted ${new Date(row.submitted_at).toLocaleString()}` : `Sent ${new Date(row.created_at).toLocaleString()}`}</span>
       </div>
 
-      {row.status !== "submitted" ? (
+      {!submitted ? (
         <div className="space-y-2">
-          <div className="flex items-center justify-between rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] text-amber-900">
-            <span>Awaiting patient response — you can complete this form here on their behalf.</span>
+          <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] text-amber-900">
+            Awaiting patient response — you can complete this form here on their behalf.
           </div>
           <div className="overflow-hidden rounded-md border bg-background">
-            <iframe
-              src={`${link}?embed=1`}
-              title="Fill form"
-              className="h-[70vh] w-full"
-              onLoad={() => {
-                // refresh parent list when submitted (child posts message)
-              }}
-            />
+            <iframe src={`${link}?embed=1`} title="Fill form" className="h-[70vh] w-full" />
           </div>
         </div>
-      ) : steps.length === 0 ? (
-        <pre className="overflow-auto rounded-md bg-background p-2 text-xs">{JSON.stringify(response, null, 2)}</pre>
       ) : (
-        steps.map((s) => (
-          <div key={s.id} className="space-y-1.5">
-            <div className="text-[11px] font-semibold uppercase tracking-wider text-primary">{s.title}</div>
-            <div className="space-y-1 rounded-md border bg-background p-2.5">
-              {s.elements
-                .filter((el) => !["heading", "paragraph", "separator", "space", "info"].includes(el.type))
-                .map((el) => (
-                  <div key={el.id} className="grid grid-cols-[130px_1fr] gap-2 border-b py-1 last:border-0">
-                    <div className="text-[11px] text-muted-foreground">{el.label ?? el.text ?? el.id}</div>
-                    <div className="text-xs">{renderValue(response[el.id])}</div>
-                  </div>
-                ))}
+        <>
+          {/* Summary */}
+          {!editing && (
+            <div className="space-y-2 rounded-md border bg-background p-3">
+              <div className="flex items-center justify-between gap-2">
+                <div className="text-[11px] font-semibold uppercase tracking-wider text-primary">Summary</div>
+                <div className="flex gap-1">
+                  <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => setExpanded((x) => !x)}>
+                    {expanded ? <><EyeOff className="mr-1 h-3 w-3" />Hide full form</> : <><Eye className="mr-1 h-3 w-3" />View full form</>}
+                  </Button>
+                  <Button size="sm" variant="outline" className="h-7 px-2 text-xs" onClick={() => { setEditing(true); setExpanded(true); }}>
+                    <Pencil className="mr-1 h-3 w-3" />Edit answers
+                  </Button>
+                </div>
+              </div>
+              {summaryItems.length === 0 ? (
+                <div className="text-[11px] text-muted-foreground">No questions in this form.</div>
+              ) : (
+                <div className="grid grid-cols-1 gap-y-1 text-xs sm:grid-cols-[minmax(0,180px)_1fr] sm:gap-x-3">
+                  {summaryItems.map((it) => (
+                    <div key={it.id} className="contents">
+                      <div className="truncate text-[11px] text-muted-foreground">{it.label}</div>
+                      <div className="border-b pb-1 sm:border-0 sm:pb-0">{renderValue(it.value, it.type)}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-          </div>
-        ))
+          )}
+
+          {/* Full / Edit view */}
+          {(expanded || editing) && (
+            <div className="space-y-3">
+              {editing && (
+                <div className="flex items-center justify-between rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-[11px]">
+                  <span className="font-medium text-primary">Editing answers</span>
+                  <div className="flex gap-1">
+                    <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => { setEditing(false); setDraft(response); }} disabled={saving}>
+                      <X className="mr-1 h-3 w-3" />Cancel
+                    </Button>
+                    <Button size="sm" className="h-7 px-2 text-xs" onClick={save} disabled={saving}>
+                      {saving ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Save className="mr-1 h-3 w-3" />}
+                      Save
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {steps.length === 0 ? (
+                <pre className="overflow-auto rounded-md bg-background p-2 text-xs">{JSON.stringify(response, null, 2)}</pre>
+              ) : (
+                steps.map((s) => (
+                  <div key={s.id} className="space-y-1.5">
+                    <div className="text-[11px] font-semibold uppercase tracking-wider text-primary">{s.title}</div>
+                    <div className="space-y-2 rounded-md border bg-background p-2.5">
+                      {s.elements
+                        .filter((el) => !STRUCTURAL.includes(el.type))
+                        .map((el) => (
+                          <div key={el.id} className="grid grid-cols-1 gap-1 border-b py-1.5 last:border-0 sm:grid-cols-[140px_1fr] sm:gap-2">
+                            <div className="text-[11px] text-muted-foreground">
+                              <Label className="text-[11px] font-normal text-muted-foreground">{el.label ?? el.text ?? el.id}</Label>
+                            </div>
+                            <div className="text-xs">
+                              {editing ? (
+                                <EditField el={el} value={draft[el.id]} onChange={(v) => setDraft((d) => ({ ...d, [el.id]: v }))} />
+                              ) : (
+                                renderValue(response[el.id], el.type)
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                ))
+              )}
+
+              {editing && (
+                <div className="flex justify-end gap-2">
+                  <Button size="sm" variant="outline" onClick={() => { setEditing(false); setDraft(response); }} disabled={saving}>
+                    Cancel
+                  </Button>
+                  <Button size="sm" onClick={save} disabled={saving}>
+                    {saving ? <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" /> : <Save className="mr-2 h-3.5 w-3.5" />}
+                    Save answers
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+        </>
       )}
     </div>
   );
@@ -146,7 +374,7 @@ export function ClientFormsList({
         <div className="flex justify-center py-4"><Loader2 className="h-4 w-4 animate-spin" /></div>
       ) : rows.length === 0 ? (
         <div className="rounded-md border border-dashed p-3 text-xs text-muted-foreground">
-          No forms yet. Click <span className="font-medium">Add form</span> to attach another medical form — they'll appear here and can be expanded to view.
+          No forms yet. Click <span className="font-medium">Add form</span> to attach a medical form.
         </div>
       ) : (
         <div className="space-y-1.5">
@@ -178,7 +406,7 @@ export function ClientFormsList({
                     </button>
                   </CollapsibleTrigger>
                   <CollapsibleContent>
-                    {isOpen && <InlineFormPanel submissionId={r.id} />}
+                    {isOpen && <InlineFormPanel submissionId={r.id} onSaved={() => setBump((x) => x + 1)} />}
                   </CollapsibleContent>
                 </div>
               </Collapsible>

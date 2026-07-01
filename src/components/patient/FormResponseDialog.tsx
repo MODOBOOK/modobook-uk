@@ -17,8 +17,16 @@ type El = {
   level?: number;
 };
 
-function renderValue(v: any) {
-  if (v === undefined || v === null || v === "") return <span className="text-muted-foreground">—</span>;
+function renderValue(v: any, elType?: string) {
+  const empty = v === undefined || v === null || v === "" || (Array.isArray(v) && v.length === 0);
+  const isCheckboxGroup = elType === "checkbox_group" || elType === "checkboxes";
+  if (empty) {
+    return (
+      <span className={isCheckboxGroup ? "italic text-muted-foreground" : "text-muted-foreground"}>
+        {isCheckboxGroup ? "None of the above" : "—"}
+      </span>
+    );
+  }
   if (Array.isArray(v)) return <span>{v.join(", ")}</span>;
   if (typeof v === "object") {
     if ("dataUrl" in v) return <img src={v.dataUrl} alt="signature" className="max-h-24 rounded border bg-white" />;
@@ -28,6 +36,7 @@ function renderValue(v: any) {
   if (typeof v === "string" && v.startsWith("data:image")) return <img src={v} alt="" className="max-h-24 rounded border bg-white" />;
   return <span className="whitespace-pre-wrap">{String(v)}</span>;
 }
+
 
 export function FormResponseDialog({
   open, onOpenChange, submissionId,
@@ -101,7 +110,7 @@ export function FormResponseDialog({
                       .map((el) => (
                         <div key={el.id} className="grid grid-cols-[160px_1fr] gap-3 border-b py-1.5 last:border-0">
                           <div className="text-xs text-muted-foreground">{el.label ?? el.text ?? el.id}</div>
-                          <div className="text-sm">{renderValue(response[el.id])}</div>
+                          <div className="text-sm">{renderValue(response[el.id], el.type)}</div>
                         </div>
                       ))}
                   </div>
