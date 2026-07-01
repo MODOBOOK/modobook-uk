@@ -34,7 +34,9 @@ type Pkg = {
   image_url: string | null;
   active: boolean;
 };
-type Treatment = { id: string; name: string };
+type Treatment = { id: string; name: string; price: number | null };
+
+type PriceMode = "custom" | "percent";
 
 const blankForm = {
   name: "",
@@ -42,6 +44,8 @@ const blankForm = {
   treatment_ids: [] as string[],
   session_count: 1,
   price: 0,
+  priceMode: "custom" as PriceMode,
+  discountPercent: 0,
   duration_minutes: "" as string,
   expiry_days: "" as string,
   image_url: "",
