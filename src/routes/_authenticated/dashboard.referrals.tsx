@@ -4,13 +4,14 @@ import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { listSentReferrals } from "@/lib/prescriber.functions";
 import { listWalkInsAwaitingClose, closeWalkInAsPractitioner } from "@/lib/prescriber-directions.functions";
+import { getReferralAttachments } from "@/lib/prescriptions.functions";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, FileText } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard/referrals")({
   ssr: false,
