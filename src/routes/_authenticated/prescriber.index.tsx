@@ -17,6 +17,7 @@ import {
   getCarePlanForReferral,
 } from "@/lib/prescriptions.functions";
 import { addWalkInMedicalForms, listLinkedPractitionerMedicalForms, listMySnippets, listMyRxTemplates, saveWalkInMedicalFormResponse, sendWalkInToPractitioner } from "@/lib/prescriber-directions.functions";
+import { AESTHETICS_MEDICATIONS } from "@/lib/aesthetics-medications";
 import { WalkInDialog } from "@/components/prescriber/WalkInDialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
