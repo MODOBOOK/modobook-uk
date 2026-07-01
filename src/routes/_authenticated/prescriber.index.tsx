@@ -115,10 +115,20 @@ function RefCard({ r, onAct }: { r: Ref; onAct: (id: string, action: "accept" | 
               {r.appointment ? ` · ${r.appointment.scheduled_date} at ${r.appointment.start_time.slice(0,5)}` : ""}
               {r.routing === "in_person_consult" && <span className="ml-2">· In-person consult</span>}
               {r.routing === "clinic_visit" && <span className="ml-2">· Clinic visit</span>}
+              {r.is_walk_in && <span className="ml-2">· Walk-in</span>}
             </p>
+            {r.is_walk_in && r.walk_in_note && (
+              <p className="mt-2 rounded border bg-muted/40 p-2 text-xs whitespace-pre-wrap">{r.walk_in_note}</p>
+            )}
           </div>
-          <StatusBadge status={r.status} />
+          <div className="flex flex-col items-end gap-1">
+            <StatusBadge status={r.status} />
+            {r.is_walk_in && r.awaiting_practitioner_close && <Badge variant="outline" className="text-[10px]">With practitioner</Badge>}
+          </div>
         </div>
+        {r.status === "accepted" && r.is_walk_in && !r.awaiting_practitioner_close && (
+          <SendWalkInButton id={r.id} />
+        )}
         {r.status === "pending" && (
           <div className="flex justify-end gap-2">
             <Button variant="outline" size="sm" onClick={() => onAct(r.id, "decline")}>
