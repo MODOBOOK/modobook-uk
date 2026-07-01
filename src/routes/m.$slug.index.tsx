@@ -305,6 +305,7 @@ function BookPage() {
   const introHeading = aboutPage?.intro_heading?.trim() || "";
   const legacyIntroBody = aboutPage?.intro_body?.trim() || "";
   const welcomeHtml = profile.welcome_intro_html?.trim() || (legacyIntroBody ? textToParagraphHtml(legacyIntroBody) : "");
+  const introExpandable = Boolean((aboutPage as { intro_expandable?: boolean } | null | undefined)?.intro_expandable);
 
   const [locationId, setLocationId] = useState<string | null>(null);
   const [directionsOpen, setDirectionsOpen] = useState(false);
