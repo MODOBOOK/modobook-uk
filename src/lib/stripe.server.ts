@@ -29,6 +29,12 @@ function normaliseStripeError(error: unknown): never {
       "connect_not_enabled",
     );
   }
+  if (message.includes("responsibilities of managing losses") || message.includes("platform-profile")) {
+    throw new StripePlatformSetupError(
+      "Your Stripe sandbox platform profile needs the connected-account loss responsibility step completed before Connect accounts can be created.",
+      "connect_not_enabled",
+    );
+  }
   if (
     code === "account_invalid" ||
     code === "resource_missing" ||
@@ -75,11 +81,18 @@ export async function createConnectAccount(email: string) {
   const stripe = getStripe();
   try {
     return await stripe.accounts.create({
-      type: "express",
       email,
+      controller: {
+        fees: { payer: "account" },
+        losses: { payments: "stripe" },
+        requirement_collection: "stripe",
+        stripe_dashboard: { type: "express" },
+      },
       capabilities: {
         card_payments: { requested: true },
         transfers: { requested: true },
+        klarna_payments: { requested: true },
+        afterpay_clearpay_payments: { requested: true },
       },
       settings: {
         payouts: { schedule: { interval: "manual" } },
