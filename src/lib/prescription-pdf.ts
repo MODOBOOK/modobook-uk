@@ -20,6 +20,7 @@ export type RxPdfInput = {
   valid_until?: string | null;
   notes?: string | null;
   signature_name?: string | null;
+  signature_data_url?: string | null;
   signed_at?: string | null;
 };
 
