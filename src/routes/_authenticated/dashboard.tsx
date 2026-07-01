@@ -111,14 +111,19 @@ function DashboardLayout() {
   const isConsultationDetail = /^\/dashboard\/consultations\/[^/]+/.test(pathname);
   const themeStyle = useDashboardThemeStyle();
   const fetchPending = useServerFn(countPendingReviews);
+  const fetchHub = useServerFn(getHubNotifications);
   const [pendingReviews, setPendingReviews] = useState(0);
+  const [hubCounts, setHubCounts] = useState<{ total: number; links: number; referrals: number; visits: number }>({ total: 0, links: 0, referrals: 0, visits: 0 });
   useEffect(() => {
     let alive = true;
-    const load = () => fetchPending().then((r) => { if (alive) setPendingReviews(r.count); }).catch(() => {});
+    const load = () => {
+      fetchPending().then((r) => { if (alive) setPendingReviews(r.count); }).catch(() => {});
+      fetchHub().then((r) => { if (alive) setHubCounts(r); }).catch(() => {});
+    };
     load();
     const t = setInterval(load, 60_000);
     return () => { alive = false; clearInterval(t); };
-  }, [fetchPending, pathname]);
+  }, [fetchPending, fetchHub, pathname]);
 
 
 
