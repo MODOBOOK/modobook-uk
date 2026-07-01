@@ -246,11 +246,13 @@ export type Database = {
       }
       appointment_consents: {
         Row: {
-          appointment_id: string
+          appointment_id: string | null
+          client_id: string | null
           consent_template_id: string
           created_at: string
           id: string
           profile_id: string
+          referral_id: string | null
           signature_data: string | null
           signature_name: string | null
           signed_at: string | null
@@ -260,11 +262,13 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          appointment_id: string
+          appointment_id?: string | null
+          client_id?: string | null
           consent_template_id: string
           created_at?: string
           id?: string
           profile_id: string
+          referral_id?: string | null
           signature_data?: string | null
           signature_name?: string | null
           signed_at?: string | null
@@ -274,11 +278,13 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          appointment_id?: string
+          appointment_id?: string | null
+          client_id?: string | null
           consent_template_id?: string
           created_at?: string
           id?: string
           profile_id?: string
+          referral_id?: string | null
           signature_data?: string | null
           signature_name?: string | null
           signed_at?: string | null
@@ -296,6 +302,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "appointment_consents_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clinic_clients"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "appointment_consents_consent_template_id_fkey"
             columns: ["consent_template_id"]
             isOneToOne: false
@@ -307,6 +320,13 @@ export type Database = {
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointment_consents_referral_id_fkey"
+            columns: ["referral_id"]
+            isOneToOne: false
+            referencedRelation: "prescriber_referrals"
             referencedColumns: ["id"]
           },
         ]
@@ -4216,6 +4236,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_walk_in_consent_forms: {
+        Args: { p_referral_id: string; p_template_ids: string[] }
+        Returns: number
+      }
       add_walk_in_medical_forms: {
         Args: { p_referral_id: string; p_template_ids: string[] }
         Returns: number
@@ -4273,19 +4297,34 @@ export type Database = {
           token: string
         }[]
       }
-      create_walk_in_referral: {
-        Args: {
-          p_client_id?: string
-          p_medical_form_template_ids?: string[]
-          p_note?: string
-          p_patient_dob?: string
-          p_patient_email?: string
-          p_patient_name: string
-          p_patient_phone?: string
-          p_practitioner_profile_id: string
-        }
-        Returns: string
-      }
+      create_walk_in_referral:
+        | {
+            Args: {
+              p_client_id?: string
+              p_medical_form_template_ids?: string[]
+              p_note?: string
+              p_patient_dob?: string
+              p_patient_email?: string
+              p_patient_name: string
+              p_patient_phone?: string
+              p_practitioner_profile_id: string
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              p_client_id?: string
+              p_consent_template_ids?: string[]
+              p_medical_form_template_ids?: string[]
+              p_note?: string
+              p_patient_dob?: string
+              p_patient_email?: string
+              p_patient_name: string
+              p_patient_phone?: string
+              p_practitioner_profile_id: string
+            }
+            Returns: string
+          }
       current_patient_client_id: {
         Args: { _profile_id: string }
         Returns: string
@@ -4492,6 +4531,16 @@ export type Database = {
           treatment_id: string
           visit_date: string
           visit_id: string
+        }[]
+      }
+      list_linked_practitioner_consent_forms: {
+        Args: { p_practitioner_profile_id: string }
+        Returns: {
+          id: string
+          is_system: boolean
+          name: string
+          summary: string
+          treatment_type: string
         }[]
       }
       list_linked_practitioner_medical_forms: {
