@@ -161,12 +161,12 @@ export const createWalkIn = createServerFn({ method: "POST" })
     const { data: id, error } = await context.supabase.rpc("create_walk_in_referral", {
       p_practitioner_profile_id: data.practitioner_profile_id,
       p_patient_name: data.patient_name,
-      p_patient_email: data.patient_email || null,
-      p_patient_phone: data.patient_phone || null,
-      p_patient_dob: data.patient_dob || null,
-      p_note: data.note ?? null,
-      p_client_id: null,
-    });
+      p_patient_email: data.patient_email || undefined,
+      p_patient_phone: data.patient_phone || undefined,
+      p_patient_dob: data.patient_dob || undefined,
+      p_note: data.note ?? undefined,
+      p_client_id: undefined,
+    } as never);
     if (error) throw error;
     return { id: id as unknown as string };
   });
