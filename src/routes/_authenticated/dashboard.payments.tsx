@@ -3,10 +3,11 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useServerFn } from "@tanstack/react-start";
 import { startStripeOnboarding, refreshStripeStatus } from "@/lib/stripe.functions";
 import { toast } from "sonner";
-import { CreditCard, ExternalLink, RefreshCw } from "lucide-react";
+import { AlertCircle, CreditCard, ExternalLink, RefreshCw } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard/payments")({
   ssr: false,
@@ -19,6 +20,10 @@ function PaymentsPage() {
   const onboard = useServerFn(startStripeOnboarding);
   const refresh = useServerFn(refreshStripeStatus);
   const [loading, setLoading] = useState(false);
+  const [setupIssue, setSetupIssue] = useState<{
+    message: string;
+    actionUrl?: string;
+  } | null>(null);
 
   async function connect() {
     setLoading(true);
@@ -30,7 +35,13 @@ function PaymentsPage() {
           refreshUrl: `${origin}/dashboard/payments?retry=1`,
         },
       });
-      if (res.url) window.location.href = res.url;
+      if (!res.ok) {
+        setSetupIssue({ message: res.message, actionUrl: "actionUrl" in res ? res.actionUrl : undefined });
+        toast.error(res.message);
+        return;
+      }
+      setSetupIssue(null);
+      window.location.href = res.url;
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to start Stripe onboarding");
     } finally {
@@ -77,6 +88,23 @@ function PaymentsPage() {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
+          {setupIssue && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Stripe Connect setup needed</AlertTitle>
+              <AlertDescription className="space-y-3">
+                <p>{setupIssue.message}</p>
+                {setupIssue.actionUrl && (
+                  <Button asChild variant="outline" size="sm">
+                    <a href={setupIssue.actionUrl} target="_blank" rel="noreferrer">
+                      Open Stripe Connect setup
+                      <ExternalLink className="ml-2 h-4 w-4" />
+                    </a>
+                  </Button>
+                )}
+              </AlertDescription>
+            </Alert>
+          )}
           <ul className="space-y-1 text-sm text-muted-foreground">
             <li>• 0% platform fee — you keep 100% (minus Stripe processing fees).</li>
             <li>• Klarna & Clearpay supported with a 5% surcharge passed to the patient.</li>
