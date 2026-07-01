@@ -207,6 +207,17 @@ function DashboardLayout() {
             {isPrescriber && (
               <Link to="/prescriber"><Button variant="ghost" size="sm" className="rounded-full">Prescriber view</Button></Link>
             )}
+            <Link to="/hub">
+              <Button size="sm" className="relative rounded-full px-5">
+                <Stethoscope className="mr-2 h-4 w-4" />
+                Prescriber Hub
+                {hubCounts.total > 0 && (
+                  <span className="ml-2 inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-destructive px-1.5 text-[10px] font-semibold text-destructive-foreground">
+                    {hubCounts.total > 99 ? "99+" : hubCounts.total}
+                  </span>
+                )}
+              </Button>
+            </Link>
             <Button variant="outline" size="sm" className="rounded-full px-5" asChild>
               <a href={`/m/${profile.slug}`} target="_blank" rel="noreferrer">
                 Preview booking link
