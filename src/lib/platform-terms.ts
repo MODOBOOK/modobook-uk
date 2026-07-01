@@ -30,8 +30,9 @@ async function hashIp(): Promise<string | null> {
 }
 
 export async function recordTermsAcceptance(termsId: string, context: string): Promise<void> {
-  const userAgent = typeof navigator !== "undefined" ? navigator.userAgent.slice(0, 500) : null;
-  const ipHash = await hashIp();
+  const userAgent =
+    typeof navigator !== "undefined" ? navigator.userAgent.slice(0, 500) : undefined;
+  const ipHash = (await hashIp()) ?? undefined;
   const { error } = await supabase.rpc("record_platform_terms_acceptance", {
     p_terms_id: termsId,
     p_user_agent: userAgent,
