@@ -118,7 +118,11 @@ function BookTreatmentPage() {
 
   const [slot, setSlot] = useState<string | null>(null);
   const [confirmed, setConfirmed] = useState<
-    { id: string; consents: { token: string; consent_template_id: string }[] } | null
+    {
+      id: string;
+      consents: { token: string; consent_template_id: string }[];
+      medicalForms: { token: string; appointment_id: string; template_name: string | null }[];
+    } | null
   >(null);
   const [form, setForm] = useState({
     name: "",
