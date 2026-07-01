@@ -287,6 +287,36 @@ export const getFormSubmission = createServerFn({ method: "GET" })
     return row;
   });
 
+/* ---------- Practitioner edits a submitted form ---------- */
+export const updateFormSubmission = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: { id: string; response: Record<string, unknown> }) => i)
+  .handler(async ({ data, context }) => {
+    const profileId = await getProfileId(context.supabase, context.userId);
+    if (!profileId) throw new Error("Profile not found");
+    const { data: row, error } = await context.supabase
+      .from("appointment_medical_forms")
+      .update({
+        response: data.response as any,
+        status: "submitted",
+        submitted_at: new Date().toISOString(),
+      })
+      .eq("id", data.id)
+      .eq("profile_id", profileId)
+      .select("id, client_id")
+      .single();
+    if (error) throw error;
+    if (row?.client_id) {
+      await (context.supabase.rpc as any)("sync_medical_form_to_client", {
+        p_client_id: row.client_id,
+        p_response: data.response,
+      }).then(() => null, () => null);
+    }
+    return { ok: true };
+  });
+
+
+
 /* ---------- Recent submissions across the practitioner ---------- */
 export const listRecentFormSubmissions = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
