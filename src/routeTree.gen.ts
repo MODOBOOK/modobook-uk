@@ -36,6 +36,7 @@ import { Route as MSlugAuthRouteImport } from './routes/m.$slug.auth'
 import { Route as MSlugAccountRouteImport } from './routes/m.$slug.account'
 import { Route as MSlugAboutRouteImport } from './routes/m.$slug.about'
 import { Route as AuthenticatedPrescriberVisitsRouteImport } from './routes/_authenticated/prescriber.visits'
+import { Route as AuthenticatedPrescriberLibraryRouteImport } from './routes/_authenticated/prescriber.library'
 import { Route as AuthenticatedPrescriberConnectionsRouteImport } from './routes/_authenticated/prescriber.connections'
 import { Route as AuthenticatedHubVisitsRouteImport } from './routes/_authenticated/hub.visits'
 import { Route as AuthenticatedHubVerificationRouteImport } from './routes/_authenticated/hub.verification'
@@ -214,6 +215,12 @@ const AuthenticatedPrescriberVisitsRoute =
   AuthenticatedPrescriberVisitsRouteImport.update({
     id: '/visits',
     path: '/visits',
+    getParentRoute: () => AuthenticatedPrescriberRoute,
+  } as any)
+const AuthenticatedPrescriberLibraryRoute =
+  AuthenticatedPrescriberLibraryRouteImport.update({
+    id: '/library',
+    path: '/library',
     getParentRoute: () => AuthenticatedPrescriberRoute,
   } as any)
 const AuthenticatedPrescriberConnectionsRoute =
@@ -512,6 +519,7 @@ export interface FileRoutesByFullPath {
   '/hub/verification': typeof AuthenticatedHubVerificationRoute
   '/hub/visits': typeof AuthenticatedHubVisitsRoute
   '/prescriber/connections': typeof AuthenticatedPrescriberConnectionsRoute
+  '/prescriber/library': typeof AuthenticatedPrescriberLibraryRoute
   '/prescriber/visits': typeof AuthenticatedPrescriberVisitsRoute
   '/m/$slug/about': typeof MSlugAboutRoute
   '/m/$slug/account': typeof MSlugAccountRoute
@@ -576,6 +584,7 @@ export interface FileRoutesByTo {
   '/hub/verification': typeof AuthenticatedHubVerificationRoute
   '/hub/visits': typeof AuthenticatedHubVisitsRoute
   '/prescriber/connections': typeof AuthenticatedPrescriberConnectionsRoute
+  '/prescriber/library': typeof AuthenticatedPrescriberLibraryRoute
   '/prescriber/visits': typeof AuthenticatedPrescriberVisitsRoute
   '/m/$slug/about': typeof MSlugAboutRoute
   '/m/$slug/account': typeof MSlugAccountRoute
@@ -647,6 +656,7 @@ export interface FileRoutesById {
   '/_authenticated/hub/verification': typeof AuthenticatedHubVerificationRoute
   '/_authenticated/hub/visits': typeof AuthenticatedHubVisitsRoute
   '/_authenticated/prescriber/connections': typeof AuthenticatedPrescriberConnectionsRoute
+  '/_authenticated/prescriber/library': typeof AuthenticatedPrescriberLibraryRoute
   '/_authenticated/prescriber/visits': typeof AuthenticatedPrescriberVisitsRoute
   '/m/$slug/about': typeof MSlugAboutRoute
   '/m/$slug/account': typeof MSlugAccountRoute
@@ -718,6 +728,7 @@ export interface FileRouteTypes {
     | '/hub/verification'
     | '/hub/visits'
     | '/prescriber/connections'
+    | '/prescriber/library'
     | '/prescriber/visits'
     | '/m/$slug/about'
     | '/m/$slug/account'
@@ -782,6 +793,7 @@ export interface FileRouteTypes {
     | '/hub/verification'
     | '/hub/visits'
     | '/prescriber/connections'
+    | '/prescriber/library'
     | '/prescriber/visits'
     | '/m/$slug/about'
     | '/m/$slug/account'
@@ -852,6 +864,7 @@ export interface FileRouteTypes {
     | '/_authenticated/hub/verification'
     | '/_authenticated/hub/visits'
     | '/_authenticated/prescriber/connections'
+    | '/_authenticated/prescriber/library'
     | '/_authenticated/prescriber/visits'
     | '/m/$slug/about'
     | '/m/$slug/account'
@@ -1073,6 +1086,13 @@ declare module '@tanstack/react-router' {
       path: '/visits'
       fullPath: '/prescriber/visits'
       preLoaderRoute: typeof AuthenticatedPrescriberVisitsRouteImport
+      parentRoute: typeof AuthenticatedPrescriberRoute
+    }
+    '/_authenticated/prescriber/library': {
+      id: '/_authenticated/prescriber/library'
+      path: '/library'
+      fullPath: '/prescriber/library'
+      preLoaderRoute: typeof AuthenticatedPrescriberLibraryRouteImport
       parentRoute: typeof AuthenticatedPrescriberRoute
     }
     '/_authenticated/prescriber/connections': {
@@ -1495,6 +1515,7 @@ const AuthenticatedHubRouteWithChildren =
 
 interface AuthenticatedPrescriberRouteChildren {
   AuthenticatedPrescriberConnectionsRoute: typeof AuthenticatedPrescriberConnectionsRoute
+  AuthenticatedPrescriberLibraryRoute: typeof AuthenticatedPrescriberLibraryRoute
   AuthenticatedPrescriberVisitsRoute: typeof AuthenticatedPrescriberVisitsRoute
   AuthenticatedPrescriberIndexRoute: typeof AuthenticatedPrescriberIndexRoute
 }
@@ -1503,6 +1524,7 @@ const AuthenticatedPrescriberRouteChildren: AuthenticatedPrescriberRouteChildren
   {
     AuthenticatedPrescriberConnectionsRoute:
       AuthenticatedPrescriberConnectionsRoute,
+    AuthenticatedPrescriberLibraryRoute: AuthenticatedPrescriberLibraryRoute,
     AuthenticatedPrescriberVisitsRoute: AuthenticatedPrescriberVisitsRoute,
     AuthenticatedPrescriberIndexRoute: AuthenticatedPrescriberIndexRoute,
   }
