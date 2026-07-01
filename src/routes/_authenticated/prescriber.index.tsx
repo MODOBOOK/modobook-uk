@@ -777,15 +777,25 @@ function PrescriptionEditor({ referralId, patient, client }: { referralId: strin
     } catch (e) { toast.error((e as Error).message); }
   }
   async function onSign() {
-    if (!form.id) { await onSave(); }
-    const id = form.id;
-    if (!id || !sigName.trim()) { toast.error("Type your full name to sign"); return; }
+    const name = (sigName || form.prescriber_name).trim();
+    if (!name) { toast.error("Type your full name to sign"); return; }
+    let id = form.id;
+    if (!id) {
+      try {
+        const payload = { ...form, referral_id: referralId, patient_dob: form.patient_dob || null, valid_until: form.valid_until || null };
+        const res = await save({ data: payload });
+        id = res.id;
+        setForm((f) => ({ ...f, id: res.id }));
+      } catch (e) { toast.error((e as Error).message); return; }
+    }
+    if (!id) { toast.error("Save the prescription first"); return; }
     try {
-      await sign({ data: { id, signature_name: sigName.trim(), signature_data: `${sigName.trim()} · ${new Date().toISOString()}` } });
+      await sign({ data: { id, signature_name: name, signature_data: `${name} · ${new Date().toISOString()}` } });
       toast.success("Prescription signed & sent to practitioner");
       q.refetch();
     } catch (e) { toast.error((e as Error).message); }
   }
+
 
   return (
     <div className="space-y-3 text-xs">
