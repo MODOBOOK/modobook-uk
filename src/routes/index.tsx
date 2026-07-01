@@ -210,10 +210,10 @@ function LandingPage() {
         <section className="mx-auto max-w-7xl px-4 py-20 lg:px-8">
           <div className="grid gap-10 lg:grid-cols-2 lg:items-center">
             <div className="grid aspect-[5/4] w-full grid-cols-2 grid-rows-2 gap-3 rounded-3xl bg-gradient-to-br from-primary/10 via-muted/40 to-primary/5 p-6 shadow-lg ring-1 ring-black/5 sm:gap-5 sm:p-10">
-              <IconTile icon={Stethoscope} label="Nurse Prescriber 1" />
-              <IconTile icon={Stethoscope} label="Nurse Prescriber 2" />
+              <IconTile icon={Stethoscope} label="Clinician-led" />
               <IconTile icon={HeartHandshake} label="Built together" />
               <IconTile icon={Sparkles} label="For everyone" />
+              <IconTile icon={Sparkles} label="Aesthetics-only" />
             </div>
             <div>
               <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
