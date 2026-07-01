@@ -3,7 +3,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 /* ============================================================
    AI-assisted onboarding: extract clinic data from PDFs/images/
-   spreadsheets/URLs and import into MODO Book.
+   spreadsheets/URLs and import into MODO.
    ============================================================ */
 
 const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";

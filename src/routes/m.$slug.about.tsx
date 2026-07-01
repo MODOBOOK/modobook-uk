@@ -12,8 +12,8 @@ export const Route = createFileRoute("/m/$slug/about")({
     const name = loaderData?.profile ? resolveDisplayNames(loaderData.profile).primary : "practitioner";
     return {
       meta: [
-        { title: `About ${name} · MODO Book` },
-        { name: "description", content: (loaderData?.profile.bio ?? "").slice(0, 160) || "Meet your practitioner on MODO Book." },
+        { title: `About ${name} · MODO` },
+        { name: "description", content: (loaderData?.profile.bio ?? "").slice(0, 160) || "Meet your practitioner on MODO." },
       ],
     };
   },

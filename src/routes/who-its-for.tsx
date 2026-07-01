@@ -7,9 +7,9 @@ import { Syringe, Sparkles, Stethoscope, Users, MapPin, HeartHandshake, CheckCir
 export const Route = createFileRoute("/who-its-for")({
   head: () => ({
     meta: [
-      { title: "Who MODO Book is for | Aesthetics-only booking for HCPs & non-HCPs" },
-      { name: "description", content: "MODO Book is built for every aesthetics practitioner — Nurse Prescribers, doctors, dentists, pharmacists, therapists and skin specialists — under one safe clinical standard." },
-      { property: "og:title", content: "Who MODO Book is for" },
+      { title: "Who MODO is for | Aesthetics-only booking for HCPs & non-HCPs" },
+      { name: "description", content: "MODO is built for every aesthetics practitioner — Nurse Prescribers, doctors, dentists, pharmacists, therapists and skin specialists — under one safe clinical standard." },
+      { property: "og:title", content: "Who MODO is for" },
       { property: "og:description", content: "Aesthetics-only software for HCPs and non-HCPs, supporting safer collaborative care." },
     ],
   }),
@@ -108,7 +108,7 @@ function WhoPage() {
                 One platform for every aesthetics practitioner.
               </h1>
               <p className="mt-4 text-lg text-muted-foreground">
-                MODO Book isn't medics-only. It isn't a salon app. It's built for the whole
+                MODO isn't medics-only. It isn't a salon app. It's built for the whole
                 aesthetics industry — HCPs and non-HCPs — under one safer clinical standard.
               </p>
               <div className="mt-6 flex flex-wrap gap-3">

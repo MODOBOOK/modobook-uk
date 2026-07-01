@@ -12,10 +12,10 @@ import {
 export const Route = createFileRoute("/features")({
   head: () => ({
     meta: [
-      { title: "Features | MODO Book — the aesthetics-only booking & clinical platform" },
-      { name: "description", content: "Every feature inside MODO Book — booking, branding, consultations, consent, face mapping, photos, payments, Klarna, Clearpay, marketing, multi-practitioner clinics and more." },
-      { property: "og:title", content: "MODO Book — Features" },
-      { property: "og:description", content: "The full feature list of MODO Book, the aesthetics-only booking and clinical platform built by UK Nurse Prescribers." },
+      { title: "Features | MODO — the aesthetics-only booking & clinical platform" },
+      { name: "description", content: "Every feature inside MODO — booking, branding, consultations, consent, face mapping, photos, payments, Klarna, Clearpay, marketing, multi-practitioner clinics and more." },
+      { property: "og:title", content: "MODO — Features" },
+      { property: "og:description", content: "The full feature list of MODO, the aesthetics-only booking and clinical platform built by UK Nurse Prescribers." },
     ],
   }),
   component: FeaturesPage,
@@ -84,7 +84,7 @@ function FeaturesPage() {
       <SiteHeader />
       <main>
         <section className="mx-auto max-w-5xl px-4 pt-16 pb-10 text-center lg:px-8">
-          <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">Every feature in MODO Book.</h1>
+          <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">Every feature in MODO.</h1>
           <p className="mx-auto mt-4 max-w-2xl text-lg text-muted-foreground">
             The booking, consultation, clinical and marketing stack — built only for aesthetics, for HCPs and non-HCPs alike.
           </p>
