@@ -16,7 +16,7 @@ import {
   sendCarePlan,
   getCarePlanForReferral,
 } from "@/lib/prescriptions.functions";
-import { addWalkInMedicalForms, listLinkedPractitionerMedicalForms, listMySnippets, listMyRxTemplates, saveWalkInMedicalFormResponse, sendWalkInToPractitioner } from "@/lib/prescriber-directions.functions";
+import { addWalkInConsentForms, addWalkInMedicalForms, listLinkedPractitionerConsentForms, listLinkedPractitionerMedicalForms, listMySnippets, listMyRxTemplates, saveWalkInMedicalFormResponse, sendWalkInToPractitioner } from "@/lib/prescriber-directions.functions";
 import { AESTHETICS_MEDICATIONS } from "@/lib/aesthetics-medications";
 import { WalkInDialog } from "@/components/prescriber/WalkInDialog";
 import { Card, CardContent } from "@/components/ui/card";
@@ -253,6 +253,7 @@ function RecordsSection({
   forms: MedicalFormRecord[];
   consents: {
     id: string;
+    template_id?: string | null;
     template_name: string;
     status: string;
     signed_at: string | null;
@@ -262,6 +263,7 @@ function RecordsSection({
     body_markdown?: string | null;
     summary?: string | null;
     treatment_type?: string | null;
+    token?: string | null;
   }[];
   referralId: string;
   practitionerProfileId: string | null;
@@ -308,11 +310,21 @@ function RecordsSection({
         )}
       </section>
       <section>
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          Consent forms ({consents.length})
-        </p>
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Consent forms ({consents.length})
+          </p>
+          {practitionerProfileId ? (
+            <AttachConsentFormsButton
+              referralId={referralId}
+              practitionerProfileId={practitionerProfileId}
+              attachedIds={consents.map((c) => c.template_id).filter(Boolean) as string[]}
+              onChanged={onChanged}
+            />
+          ) : null}
+        </div>
         {consents.length === 0 ? (
-          <p className="text-muted-foreground">No consents on file for this patient.</p>
+          <p className="rounded-md border border-dashed bg-background p-3 text-muted-foreground">Use Select consents to choose consent forms for this walk-in. They will load here once selected.</p>
         ) : (
           <Accordion type="multiple" className="rounded border bg-background">
             {consents.map((c) => (
@@ -359,6 +371,16 @@ function RecordsSection({
                         Download PDF
                       </a>
                     ) : null}
+                    {c.token ? (
+                      <a
+                        href={`/c/${c.token}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="ml-auto text-primary underline"
+                      >
+                        Open signing link
+                      </a>
+                    ) : null}
                   </div>
                   {c.signature_data ? (
                     <div>
@@ -377,6 +399,83 @@ function RecordsSection({
         )}
       </section>
     </div>
+  );
+}
+
+function AttachConsentFormsButton({
+  referralId,
+  practitionerProfileId,
+  attachedIds,
+  onChanged,
+}: {
+  referralId: string;
+  practitionerProfileId: string;
+  attachedIds: string[];
+  onChanged: () => void;
+}) {
+  const fetchConsents = useServerFn(listLinkedPractitionerConsentForms);
+  const attachConsents = useServerFn(addWalkInConsentForms);
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const consentsQ = useQuery({
+    queryKey: ["linked-practitioner-consent-forms", practitionerProfileId],
+    queryFn: () => fetchConsents({ data: { practitioner_profile_id: practitionerProfileId } }),
+    enabled: open,
+  });
+  const attached = new Set(attachedIds);
+  const consents = ((consentsQ.data ?? []) as { id: string; name: string; summary?: string | null; treatment_type?: string | null }[]).filter((f) => !attached.has(f.id));
+  const filtered = consents.filter((f) => `${f.name} ${f.summary ?? ""} ${f.treatment_type ?? ""}`.toLowerCase().includes(query.trim().toLowerCase()));
+
+  function toggle(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+
+  async function save() {
+    if (selected.size === 0) return toast.error("Select at least one consent form");
+    try {
+      const res = await attachConsents({ data: { referral_id: referralId, template_ids: Array.from(selected) } });
+      toast.success(res.added > 0 ? "Consent forms loaded" : "Those consents were already loaded");
+      setOpen(false);
+      setSelected(new Set());
+      setQuery("");
+      onChanged();
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  }
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button type="button" size="sm" variant="outline" className="h-7 px-2 text-[11px]">
+          <Plus className="h-3.5 w-3.5" /> Select consents
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-80 space-y-2 p-3">
+        <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search consent forms…" />
+        <div className="max-h-56 space-y-1 overflow-y-auto pr-1">
+          {consentsQ.isLoading ? (
+            <p className="py-3 text-xs text-muted-foreground">Loading consents…</p>
+          ) : filtered.length === 0 ? (
+            <p className="py-3 text-xs text-muted-foreground">No more consent forms available.</p>
+          ) : filtered.map((f) => (
+            <label key={f.id} className="flex cursor-pointer items-start gap-2 rounded-md border p-2 text-sm hover:bg-accent/40">
+              <Checkbox checked={selected.has(f.id)} onCheckedChange={() => toggle(f.id)} className="mt-0.5" />
+              <span className="min-w-0 flex-1">
+                <span className="block truncate font-medium">{f.name}</span>
+                {f.summary || f.treatment_type ? <span className="block truncate text-xs text-muted-foreground">{f.summary ?? f.treatment_type}</span> : null}
+              </span>
+            </label>
+          ))}
+        </div>
+        <Button type="button" size="sm" className="w-full" onClick={save} disabled={selected.size === 0}>Load selected consents</Button>
+      </PopoverContent>
+    </Popover>
   );
 }
 
