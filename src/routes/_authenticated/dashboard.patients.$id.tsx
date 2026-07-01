@@ -228,7 +228,7 @@ function PatientProfilePage() {
 
       {/* Personal details */}
       <Section title="Personal details" onEdit={() => setEditing("personal")}>
-        <Row label="DOB (Age)" value={client.dob ? `${client.dob}${age(client.dob) != null ? ` (${age(client.dob)})` : ""}` : ""} />
+        <Row label="DOB (Age)" value={client.dob ? `${formatDob(client.dob)}${age(client.dob) != null ? ` (${age(client.dob)})` : ""}` : ""} />
         <Row label="Gender" value={client.gender} />
         <Row label="County" value={client.county} />
         <Row label="Address line 1" value={client.address_line1 || client.address} />
