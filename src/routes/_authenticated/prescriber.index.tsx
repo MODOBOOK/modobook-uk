@@ -356,6 +356,23 @@ function PrescriptionEditor({ referralId, patient, client }: { referralId: strin
 
   return (
     <div className="space-y-3 text-xs">
+      {!signed && (
+        <div className="flex flex-wrap items-center gap-2 rounded border bg-muted/40 p-2">
+          <TemplatePicker onPick={(t) => setForm((f) => ({
+            ...f,
+            drug_name: t.drug_name ?? f.drug_name,
+            drug_form: t.drug_form ?? f.drug_form,
+            drug_strength: t.drug_strength ?? f.drug_strength,
+            dose: t.dose ?? f.dose,
+            quantity: t.quantity ?? f.quantity,
+            directions: t.directions ?? f.directions,
+            repeats_allowed: t.repeats_allowed ?? f.repeats_allowed,
+            valid_until: t.validity_days ? new Date(Date.now() + t.validity_days * 86400000).toISOString().slice(0, 10) : f.valid_until,
+            notes: t.notes ?? f.notes,
+          }))} />
+          <SnippetPicker onPick={(text) => setForm((f) => ({ ...f, directions: f.directions ? `${f.directions}\n${text}` : text }))} />
+        </div>
+      )}
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <Field label="Patient name" v={form.patient_name} on={(v) => setForm({ ...form, patient_name: v })} disabled={signed} />
         <Field label="Date of birth" type="date" v={form.patient_dob} on={(v) => setForm({ ...form, patient_dob: v })} disabled={signed} />
