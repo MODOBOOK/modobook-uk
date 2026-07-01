@@ -64,9 +64,17 @@ export function getStripeMode() {
 function getStripeSecretKey() {
   const mode = getStripeMode();
   if (mode === "sandbox") {
-    return process.env.STRIPE_TEST_API_KEY || process.env.STRIPE_PLATFORM_SECRET_KEY;
+    return (
+      process.env.STRIPE_TEST_API_KEY ||
+      process.env.STRIPE_SECRET_KEY ||
+      process.env.STRIPE_PLATFORM_SECRET_KEY
+    );
   }
-  return process.env.STRIPE_LIVE_API_KEY || process.env.STRIPE_PLATFORM_SECRET_KEY;
+  return (
+    process.env.STRIPE_LIVE_API_KEY ||
+    process.env.STRIPE_SECRET_KEY ||
+    process.env.STRIPE_PLATFORM_SECRET_KEY
+  );
 }
 
 export function getStripe(): Stripe {
