@@ -62,7 +62,9 @@ function PackagesPage() {
   const update = useServerFn(updatePackage);
   const remove = useServerFn(deletePackage);
   const listTreatments = useServerFn(getMyTreatments);
-  const listCategories = useServerFn(getMyCategories);
+  const listCategories = useServerFn(getMyPackageCategories);
+  const createCat = useServerFn(createPackageCategory);
+  const deleteCat = useServerFn(deletePackageCategory);
 
   const [packages, setPackages] = useState<Pkg[]>([]);
   const [treatments, setTreatments] = useState<Treatment[]>([]);
