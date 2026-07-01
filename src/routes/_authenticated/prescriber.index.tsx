@@ -16,13 +16,14 @@ import {
   sendCarePlan,
   getCarePlanForReferral,
 } from "@/lib/prescriptions.functions";
-import { addWalkInMedicalForms, listLinkedPractitionerMedicalForms, listMySnippets, listMyRxTemplates, sendWalkInToPractitioner } from "@/lib/prescriber-directions.functions";
+import { addWalkInMedicalForms, listLinkedPractitionerMedicalForms, listMySnippets, listMyRxTemplates, saveWalkInMedicalFormResponse, sendWalkInToPractitioner } from "@/lib/prescriber-directions.functions";
 import { WalkInDialog } from "@/components/prescriber/WalkInDialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -30,7 +31,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { ChevronDown, ChevronUp, CheckCircle2, XCircle, FileText, User, Pill, ClipboardList, PenLine, Send, Plus } from "lucide-react";
+import { ChevronDown, ChevronUp, CheckCircle2, XCircle, FileText, User, Pill, ClipboardList, PenLine, Send, Plus, Loader2 } from "lucide-react";
 
 
 export const Route = createFileRoute("/_authenticated/prescriber/")({
