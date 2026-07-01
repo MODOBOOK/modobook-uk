@@ -200,28 +200,46 @@ export const listClientPrescriptions = createServerFn({ method: "GET" })
 export const upsertClientPrescription = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: {
-    id?: string; client_id: string; product: string; dose?: string; directions?: string; prescribed_on?: string; notes?: string;
+    id?: string; client_id: string; product: string;
+    strength?: string; form?: string; quantity?: string; route?: string;
+    dose?: string; directions?: string; prescribed_on?: string; notes?: string;
+    prescriber_name?: string; prescriber_reg_number?: string; prescriber_address?: string;
+    patient_address_snapshot?: string; patient_dob?: string;
+    signature_url?: string; pdf_url?: string; signed_at?: string;
   }) => d)
   .handler(async ({ data, context }) => {
     const pid = await getProfileId(context.supabase, context.userId);
     if (!pid) throw new Error("No profile");
     const payload: any = {
       product: data.product,
+      strength: data.strength || null,
+      form: data.form || null,
+      quantity: data.quantity || null,
+      route: data.route || null,
       dose: data.dose || null,
       directions: data.directions || null,
       prescribed_on: data.prescribed_on || null,
       notes: data.notes || null,
+      prescriber_name: data.prescriber_name || null,
+      prescriber_reg_number: data.prescriber_reg_number || null,
+      prescriber_address: data.prescriber_address || null,
+      patient_address_snapshot: data.patient_address_snapshot || null,
+      patient_dob: data.patient_dob || null,
+      signature_url: data.signature_url || null,
+      pdf_url: data.pdf_url || null,
+      signed_at: data.signed_at || null,
     };
     if (data.id) {
       const { error } = await context.supabase.from("client_prescriptions").update(payload).eq("id", data.id);
       if (error) throw error;
       return { ok: true };
     }
-    const { error } = await context.supabase.from("client_prescriptions")
-      .insert({ profile_id: pid, client_id: data.client_id, ...payload });
+    const { data: row, error } = await context.supabase.from("client_prescriptions")
+      .insert({ profile_id: pid, client_id: data.client_id, ...payload }).select("id").single();
     if (error) throw error;
-    return { ok: true };
+    return { ok: true, id: row?.id };
   });
+
 
 export const deleteClientPrescription = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

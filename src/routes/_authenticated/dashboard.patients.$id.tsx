@@ -315,7 +315,7 @@ function PatientProfilePage() {
       <FilesSection clientId={id} profileId={profileId} kind="pdf" title="Private prescription uploads" />
 
       {/* Prescriptions (structured records) */}
-      <PrescriptionsSection clientId={id} />
+      <PrescriptionsSection clientId={id} client={client} profileId={profileId} />
 
       {/* Footer actions */}
       <div className="flex flex-wrap gap-2 pt-4">
@@ -534,59 +534,272 @@ function FilesSection({ clientId, profileId, kind, title }: { clientId: string; 
   );
 }
 
-function PrescriptionsSection({ clientId }: { clientId: string }) {
+function PrescriptionsSection({ clientId, client, profileId }: { clientId: string; client: any; profileId: string }) {
   const list = useServerFn(listClientPrescriptions);
   const up = useServerFn(upsertClientPrescription);
   const del = useServerFn(deleteClientPrescription);
+  const profileFn = useServerFn(getMyProfile);
   const [rows, setRows] = useState<any[]>([]);
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState<any>({ product: "", dose: "", directions: "", prescribed_on: "", notes: "" });
+  const [saving, setSaving] = useState(false);
+  const [prescriber, setPrescriber] = useState<any>(null);
+  const emptyForm = {
+    product: "", strength: "", form: "", quantity: "", route: "PO", dose: "",
+    directions: "", prescribed_on: new Date().toISOString().slice(0, 10), notes: "",
+    prescriber_name: "", prescriber_reg_number: "", prescriber_address: "",
+    agree: false, signature_name: "",
+  };
+  const [form, setForm] = useState<any>(emptyForm);
+  const sigRef = useRef<HTMLCanvasElement>(null);
+  const drawingRef = useRef(false);
+  const hasSigRef = useRef(false);
+
   async function reload() { setRows((await list({ data: { client_id: clientId } })) as any[]); }
   useEffect(() => { reload(); /* eslint-disable-next-line */ }, [clientId]);
+
+  async function openNew() {
+    let p = prescriber;
+    if (!p) {
+      p = await profileFn();
+      setPrescriber(p);
+    }
+    const clinicAddress = [p?.clinic_address_line1, p?.clinic_address_line2, p?.clinic_city, p?.clinic_postcode].filter(Boolean).join(", ")
+      || p?.clinic_address || "";
+    setForm({
+      ...emptyForm,
+      prescriber_name: p?.full_name || "",
+      prescriber_reg_number: p?.prescriber_reg_number || p?.gphc_number || p?.gmc_number || p?.nmc_number || "",
+      prescriber_address: clinicAddress,
+      signature_name: p?.full_name || "",
+    });
+    setTimeout(() => clearSignature(), 50);
+    setOpen(true);
+  }
+
+  function getCanvasPoint(e: React.PointerEvent<HTMLCanvasElement>) {
+    const c = sigRef.current!;
+    const rect = c.getBoundingClientRect();
+    return { x: (e.clientX - rect.left) * (c.width / rect.width), y: (e.clientY - rect.top) * (c.height / rect.height) };
+  }
+  function onSigDown(e: React.PointerEvent<HTMLCanvasElement>) {
+    const c = sigRef.current!; const ctx = c.getContext("2d")!;
+    (e.target as Element).setPointerCapture(e.pointerId);
+    const p = getCanvasPoint(e);
+    ctx.beginPath(); ctx.moveTo(p.x, p.y);
+    drawingRef.current = true; hasSigRef.current = true;
+  }
+  function onSigMove(e: React.PointerEvent<HTMLCanvasElement>) {
+    if (!drawingRef.current) return;
+    const ctx = sigRef.current!.getContext("2d")!;
+    ctx.lineWidth = 2; ctx.lineCap = "round"; ctx.strokeStyle = "#111";
+    const p = getCanvasPoint(e);
+    ctx.lineTo(p.x, p.y); ctx.stroke();
+  }
+  function onSigUp() { drawingRef.current = false; }
+  function clearSignature() {
+    const c = sigRef.current; if (!c) return;
+    const ctx = c.getContext("2d")!;
+    ctx.clearRect(0, 0, c.width, c.height);
+    ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, c.width, c.height);
+    hasSigRef.current = false;
+  }
+
+  async function save() {
+    if (!form.product.trim()) return toast.error("Drug name required");
+    if (!form.dose.trim()) return toast.error("Dose required");
+    if (!form.quantity.trim()) return toast.error("Quantity required");
+    if (!form.directions.trim()) return toast.error("Directions required");
+    if (!form.prescriber_name.trim()) return toast.error("Prescriber name required");
+    if (!form.prescriber_reg_number.trim()) return toast.error("Prescriber registration number required (GMC/GPhC/NMC)");
+    if (!form.prescriber_address.trim()) return toast.error("Prescriber address required");
+    if (!hasSigRef.current) return toast.error("Signature required");
+    if (!form.agree) return toast.error("Please confirm the prescriber declaration");
+    setSaving(true);
+    try {
+      const signatureDataUrl = sigRef.current!.toDataURL("image/png");
+      const patientAddress = [client?.address_line1, client?.address_line2, client?.county, client?.postcode].filter(Boolean).join(", ");
+      const signedAt = new Date().toISOString();
+
+      // Build PDF
+      const { buildPrescriptionPdf } = await import("@/lib/prescription-pdf");
+      const pdf = buildPrescriptionPdf({
+        clinic_name: prescriber?.clinic_name,
+        clinic_address: prescriber?.clinic_address,
+        prescriber_name: form.prescriber_name,
+        prescriber_reg_number: form.prescriber_reg_number,
+        prescriber_address: form.prescriber_address,
+        patient_name: client?.full_name || "",
+        patient_dob: client?.dob || null,
+        patient_address: patientAddress,
+        drug_name: form.product,
+        drug_form: form.form,
+        drug_strength: form.strength,
+        dose: `${form.dose}${form.route ? ` (${form.route})` : ""}`,
+        quantity: form.quantity,
+        directions: form.directions,
+        notes: form.notes,
+        signature_name: form.signature_name || form.prescriber_name,
+        signature_data_url: signatureDataUrl,
+        signed_at: signedAt,
+      });
+      const pdfBlob = pdf.output("blob");
+      const stamp = Date.now();
+      const pdfPath = `${profileId}/clients/${clientId}/rx/${stamp}.pdf`;
+      const sigPath = `${profileId}/clients/${clientId}/rx/${stamp}-sig.png`;
+
+      const [pdfUp, sigUp] = await Promise.all([
+        supabase.storage.from("clinic-assets").upload(pdfPath, pdfBlob, { upsert: false, contentType: "application/pdf" }),
+        supabase.storage.from("clinic-assets").upload(sigPath, await (await fetch(signatureDataUrl)).blob(), { upsert: false, contentType: "image/png" }),
+      ]);
+      if (pdfUp.error) throw pdfUp.error;
+      if (sigUp.error) throw sigUp.error;
+      const [{ data: pdfSigned }, { data: sigSigned }] = await Promise.all([
+        supabase.storage.from("clinic-assets").createSignedUrl(pdfPath, TEN_YEARS),
+        supabase.storage.from("clinic-assets").createSignedUrl(sigPath, TEN_YEARS),
+      ]);
+
+      await up({ data: {
+        client_id: clientId,
+        product: form.product,
+        strength: form.strength,
+        form: form.form,
+        quantity: form.quantity,
+        route: form.route,
+        dose: form.dose,
+        directions: form.directions,
+        prescribed_on: form.prescribed_on,
+        notes: form.notes,
+        prescriber_name: form.prescriber_name,
+        prescriber_reg_number: form.prescriber_reg_number,
+        prescriber_address: form.prescriber_address,
+        patient_address_snapshot: patientAddress,
+        patient_dob: client?.dob || undefined,
+        signature_url: sigSigned?.signedUrl,
+        pdf_url: pdfSigned?.signedUrl,
+        signed_at: signedAt,
+      }});
+      toast.success("Prescription signed and saved");
+      setOpen(false);
+      reload();
+    } catch (e: any) {
+      toast.error(e.message ?? "Failed to save prescription");
+    } finally { setSaving(false); }
+  }
+
   return (
-    <Section title="Prescriptions" actionsRight={<Button size="sm" variant="outline" onClick={() => { setForm({ product: "", dose: "", directions: "", prescribed_on: "", notes: "" }); setOpen(true); }}><Plus className="mr-1 h-3.5 w-3.5" />Add</Button>}>
+    <Section title="Prescriptions" actionsRight={<Button size="sm" variant="outline" onClick={openNew}><Plus className="mr-1 h-3.5 w-3.5" />Add</Button>}>
       {rows.length === 0 ? (
         <div className="py-3 text-center text-xs text-muted-foreground">No prescriptions yet.</div>
       ) : rows.map(r => {
         const isHubRx = typeof r.notes === "string" && r.notes.startsWith("Prescriber:");
+        const label = [r.product, r.strength, r.form].filter(Boolean).join(" · ");
         return (
         <div key={r.id} className="flex items-start justify-between gap-2 border-b py-2 last:border-0">
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <div className="font-medium">{r.product}{r.dose ? ` — ${r.dose}` : ""}</div>
+              <div className="font-medium">{label || r.product}</div>
               {isHubRx && <Badge variant="secondary" className="text-[10px]">Rx from Prescriber Hub</Badge>}
+              {r.signed_at && <Badge variant="secondary" className="text-[10px]"><FileSignature className="mr-1 h-3 w-3" />Signed</Badge>}
             </div>
+            {(r.dose || r.quantity || r.route) && (
+              <div className="text-xs">
+                {r.dose && <>Dose: {r.dose}{r.route ? ` (${r.route})` : ""}. </>}
+                {r.quantity && <>Qty: {r.quantity}.</>}
+              </div>
+            )}
             {r.directions && <div className="text-xs">{r.directions}</div>}
-            {r.prescribed_on && <div className="text-[10px] text-muted-foreground">{r.prescribed_on}</div>}
+            {r.prescribed_on && <div className="text-[10px] text-muted-foreground">Prescribed {formatDob(r.prescribed_on)}</div>}
+            {r.prescriber_name && <div className="text-[10px] text-muted-foreground">Prescriber: {r.prescriber_name}{r.prescriber_reg_number ? ` — ${r.prescriber_reg_number}` : ""}</div>}
             {r.notes && <div className="text-xs text-muted-foreground whitespace-pre-line">{r.notes}</div>}
           </div>
-          <Button size="icon" variant="ghost" onClick={() => del({ data: { id: r.id } }).then(reload)}><X className="h-3.5 w-3.5" /></Button>
+          <div className="flex items-center gap-1">
+            {r.pdf_url && (
+              <Button size="icon" variant="ghost" asChild title="Download PDF">
+                <a href={r.pdf_url} target="_blank" rel="noreferrer"><Download className="h-3.5 w-3.5" /></a>
+              </Button>
+            )}
+            <Button size="icon" variant="ghost" onClick={() => del({ data: { id: r.id } }).then(reload)}><X className="h-3.5 w-3.5" /></Button>
+          </div>
         </div>
         );
       })}
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>New prescription</DialogTitle></DialogHeader>
-          <div className="grid gap-2">
-            <Input placeholder="Product *" value={form.product} onChange={e => setForm({ ...form, product: e.target.value })} />
-            <Input placeholder="Dose" value={form.dose} onChange={e => setForm({ ...form, dose: e.target.value })} />
-            <Input placeholder="Directions" value={form.directions} onChange={e => setForm({ ...form, directions: e.target.value })} />
-            <Input type="date" value={form.prescribed_on} onChange={e => setForm({ ...form, prescribed_on: e.target.value })} />
-            <Textarea rows={2} placeholder="Notes" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} />
+        <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
+          <DialogHeader><DialogTitle>New UK private prescription</DialogTitle></DialogHeader>
+
+          <div className="rounded-md border bg-muted/40 p-3 text-xs space-y-1">
+            <div className="font-semibold">Patient</div>
+            <div>{client?.full_name}{client?.dob ? ` — DOB ${formatDob(client.dob)}` : ""}</div>
+            <div className="text-muted-foreground">
+              {[client?.address_line1, client?.address_line2, client?.county, client?.postcode].filter(Boolean).join(", ") || <span className="italic">No address on file — add one to the patient before prescribing.</span>}
+            </div>
           </div>
+
+          <div className="mt-3 space-y-3">
+            <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Medication</div>
+            <div className="grid grid-cols-2 gap-2">
+              <F label="Drug (approved name) *"><Input value={form.product} onChange={e => setForm({ ...form, product: e.target.value })} /></F>
+              <F label="Strength"><Input placeholder="e.g. 50 units, 20 mg/ml" value={form.strength} onChange={e => setForm({ ...form, strength: e.target.value })} /></F>
+              <F label="Form"><Input placeholder="e.g. injection, cream" value={form.form} onChange={e => setForm({ ...form, form: e.target.value })} /></F>
+              <F label="Route"><Input placeholder="e.g. IM, SC, PO, topical" value={form.route} onChange={e => setForm({ ...form, route: e.target.value })} /></F>
+              <F label="Dose *"><Input placeholder="e.g. up to 50 units" value={form.dose} onChange={e => setForm({ ...form, dose: e.target.value })} /></F>
+              <F label="Quantity to supply *"><Input placeholder="e.g. 1 vial" value={form.quantity} onChange={e => setForm({ ...form, quantity: e.target.value })} /></F>
+            </div>
+            <F label="Directions for use *"><Textarea rows={2} value={form.directions} onChange={e => setForm({ ...form, directions: e.target.value })} /></F>
+            <div className="grid grid-cols-2 gap-2">
+              <F label="Prescribed on"><Input type="date" value={form.prescribed_on} onChange={e => setForm({ ...form, prescribed_on: e.target.value })} /></F>
+            </div>
+            <F label="Clinical notes"><Textarea rows={2} value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} /></F>
+
+            <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground pt-2">Prescriber</div>
+            <div className="grid grid-cols-2 gap-2">
+              <F label="Full name *"><Input value={form.prescriber_name} onChange={e => setForm({ ...form, prescriber_name: e.target.value })} /></F>
+              <F label="Registration no. * (GMC/GPhC/NMC)"><Input value={form.prescriber_reg_number} onChange={e => setForm({ ...form, prescriber_reg_number: e.target.value })} /></F>
+            </div>
+            <F label="Prescriber address *"><Textarea rows={2} value={form.prescriber_address} onChange={e => setForm({ ...form, prescriber_address: e.target.value })} /></F>
+
+            <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground pt-2">Signature</div>
+            <div className="rounded-md border bg-white">
+              <canvas
+                ref={sigRef}
+                width={600}
+                height={160}
+                className="block w-full touch-none rounded-md"
+                style={{ height: 160 }}
+                onPointerDown={onSigDown}
+                onPointerMove={onSigMove}
+                onPointerUp={onSigUp}
+                onPointerLeave={onSigUp}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="text-[10px] text-muted-foreground">Draw your signature in the box above.</div>
+              <Button type="button" variant="ghost" size="sm" onClick={clearSignature}>Clear</Button>
+            </div>
+            <F label="Signatory name (typed)"><Input value={form.signature_name} onChange={e => setForm({ ...form, signature_name: e.target.value })} /></F>
+
+            <label className="mt-2 flex items-start gap-2 rounded-md border bg-muted/40 p-3 text-xs">
+              <Checkbox checked={!!form.agree} onCheckedChange={(v) => setForm({ ...form, agree: !!v })} />
+              <span>
+                I confirm I am an appropriately qualified UK prescriber, this prescription complies with the Human Medicines Regulations 2012,
+                and I have carried out an appropriate consultation with the patient before prescribing.
+              </span>
+            </label>
+          </div>
+
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-            <Button onClick={async () => {
-              if (!form.product.trim()) { toast.error("Product required"); return; }
-              await up({ data: { client_id: clientId, ...form } });
-              setOpen(false); reload();
-            }}>Save</Button>
+            <Button variant="outline" onClick={() => setOpen(false)} disabled={saving}>Cancel</Button>
+            <Button onClick={save} disabled={saving}>
+              {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Sign & save
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </Section>
   );
 }
+
 
 function EditDialog({ client, which, onClose, onSaved }: { client: any; which: "personal" | "emergency"; onClose: () => void; onSaved: () => void }) {
   const up = useServerFn(upsertClient);
