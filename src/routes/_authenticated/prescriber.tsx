@@ -86,6 +86,7 @@ function PrescriberLayout() {
         <nav className="flex-1 space-y-0.5 overflow-y-auto px-3 py-6">
           {nav.map((item) => {
             const active = item.exact ? pathname === item.to : pathname.startsWith(item.to);
+            const count = badges[item.key] ?? 0;
             return (
               <Link
                 key={item.to}
@@ -99,6 +100,12 @@ function PrescriberLayout() {
               >
                 <item.icon className="h-4 w-4 opacity-80" />
                 <span className="flex-1 tracking-wide">{item.label}</span>
+                {count > 0 && (
+                  <span className={cn(
+                    "ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] font-semibold",
+                    active ? "bg-primary-foreground/20 text-primary-foreground" : "bg-primary text-primary-foreground",
+                  )}>{count}</span>
+                )}
               </Link>
             );
           })}
