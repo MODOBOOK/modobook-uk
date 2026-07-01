@@ -554,17 +554,23 @@ function PrescriptionsSection({ clientId }: { clientId: string }) {
     <Section title="Prescriptions" actionsRight={<Button size="sm" variant="outline" onClick={() => { setForm({ product: "", dose: "", directions: "", prescribed_on: "", notes: "" }); setOpen(true); }}><Plus className="mr-1 h-3.5 w-3.5" />Add</Button>}>
       {rows.length === 0 ? (
         <div className="py-3 text-center text-xs text-muted-foreground">No prescriptions yet.</div>
-      ) : rows.map(r => (
+      ) : rows.map(r => {
+        const isHubRx = typeof r.notes === "string" && r.notes.startsWith("Prescriber:");
+        return (
         <div key={r.id} className="flex items-start justify-between gap-2 border-b py-2 last:border-0">
           <div className="min-w-0 flex-1">
-            <div className="font-medium">{r.product}{r.dose ? ` — ${r.dose}` : ""}</div>
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="font-medium">{r.product}{r.dose ? ` — ${r.dose}` : ""}</div>
+              {isHubRx && <Badge variant="secondary" className="text-[10px]">Rx from Prescriber Hub</Badge>}
+            </div>
             {r.directions && <div className="text-xs">{r.directions}</div>}
             {r.prescribed_on && <div className="text-[10px] text-muted-foreground">{r.prescribed_on}</div>}
-            {r.notes && <div className="text-xs text-muted-foreground">{r.notes}</div>}
+            {r.notes && <div className="text-xs text-muted-foreground whitespace-pre-line">{r.notes}</div>}
           </div>
           <Button size="icon" variant="ghost" onClick={() => del({ data: { id: r.id } }).then(reload)}><X className="h-3.5 w-3.5" /></Button>
         </div>
-      ))}
+        );
+      })}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader><DialogTitle>New prescription</DialogTitle></DialogHeader>
