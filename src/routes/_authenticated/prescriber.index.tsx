@@ -268,7 +268,9 @@ function PrescriptionEditor({ referralId, patient, client }: { referralId: strin
   const list = useServerFn(listPrescriptionsForReferral);
   const save = useServerFn(savePrescription);
   const sign = useServerFn(signPrescription);
+  const fetchDefaults = useServerFn(getMyPrescriberDefaults);
   const q = useQuery({ queryKey: ["rx", referralId], queryFn: () => list({ data: { referral_id: referralId } }) });
+  const defaults = useQuery({ queryKey: ["my-prescriber-defaults"], queryFn: () => fetchDefaults(), staleTime: 5 * 60 * 1000 });
   const rows = (q.data ?? []) as RxRow[];
   const latest = rows[0];
 
