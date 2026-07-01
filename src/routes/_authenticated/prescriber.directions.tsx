@@ -175,7 +175,7 @@ function TemplateDialog({ template, trigger, onSaved }: { template?: RxTpl; trig
     quantity: template?.quantity ?? "",
     directions: template?.directions ?? "",
     repeats_allowed: template?.repeats_allowed ?? 0,
-    validity_days: template?.validity_days ?? 28,
+    validity_days: (template?.validity_days ?? 28) as number | null,
     notes: template?.notes ?? "",
     sort_order: template?.sort_order ?? 0,
   });
