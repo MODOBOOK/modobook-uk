@@ -379,6 +379,21 @@ function PackagesPage() {
         </Dialog>
       </div>
 
+      <PackageCategoriesManager
+        categories={categories}
+        onAdd={async (name) => {
+          const row = await createCat({ data: { name } });
+          setCategories((prev) => [...prev, row as Category]);
+        }}
+        onDelete={async (id) => {
+          if (!confirm("Delete this package category? Packages in it will become uncategorised.")) return;
+          await deleteCat({ data: { id } });
+          setCategories((prev) => prev.filter((c) => c.id !== id));
+        }}
+      />
+
+
+
       {packages.length === 0 ? (
         <Card><CardContent className="py-12 text-center text-sm text-muted-foreground">
           <Package className="mx-auto mb-2 h-8 w-8 opacity-50" />
