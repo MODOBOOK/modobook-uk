@@ -92,9 +92,21 @@ function SentReferrals() {
 function WalkInCard({ w }: { w: WalkIn }) {
   const qc = useQueryClient();
   const close = useServerFn(closeWalkInAsPractitioner);
+  const fetchAttachments = useServerFn(getReferralAttachments);
+  const attachQ = useQuery({
+    queryKey: ["referral-attachments", w.id],
+    queryFn: () => fetchAttachments({ data: { referral_id: w.id } }),
+  });
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const awaiting = w.awaiting_practitioner_close;
+  const prescriptions = (attachQ.data?.prescriptions ?? []) as Array<{
+    id: string; drug_name: string; drug_strength?: string | null; dose: string;
+    directions: string; quantity: string; status: string; signed_at?: string | null;
+    prescriber_name?: string | null; pdf_url?: string | null;
+  }>;
+  const carePlan = attachQ.data?.care_plan as { assessment?: string | null; plan?: string | null; notes?: string | null; follow_up?: string | null } | null | undefined;
+
   return (
     <Card className={awaiting ? "border-amber-300/60 bg-amber-50/30 dark:bg-amber-950/10" : undefined}>
       <CardContent className="space-y-3 p-4">
@@ -112,6 +124,50 @@ function WalkInCard({ w }: { w: WalkIn }) {
             {awaiting ? "Awaiting close" : w.status === "completed" ? "Closed" : "In progress"}
           </Badge>
         </div>
+
+        {prescriptions.length > 0 && (
+          <div className="space-y-2 rounded border bg-background p-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Prescriptions from prescriber ({prescriptions.length})
+            </p>
+            {prescriptions.map((p) => (
+              <div key={p.id} className="rounded border p-2 text-sm">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="font-medium">
+                    {p.drug_name}{p.drug_strength ? ` ${p.drug_strength}` : ""}
+                    <span className="ml-2 text-xs font-normal text-muted-foreground">Qty {p.quantity}</span>
+                  </p>
+                  <Badge variant={p.status === "signed" ? "default" : "outline"} className="text-[10px]">
+                    {p.status === "signed" ? "Signed" : p.status}
+                  </Badge>
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">Dose: {p.dose}</p>
+                <p className="text-xs text-muted-foreground">Directions: {p.directions}</p>
+                {p.signed_at && (
+                  <p className="mt-1 text-[11px] text-muted-foreground">
+                    Signed by {p.prescriber_name} · {new Date(p.signed_at).toLocaleString()}
+                  </p>
+                )}
+                {p.pdf_url && (
+                  <a href={p.pdf_url} target="_blank" rel="noreferrer" className="mt-1 inline-flex items-center gap-1 text-xs text-primary hover:underline">
+                    <FileText className="h-3 w-3" /> View PDF
+                  </a>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {carePlan && (carePlan.assessment || carePlan.plan || carePlan.notes || carePlan.follow_up) && (
+          <div className="space-y-1 rounded border bg-background p-3 text-sm">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Care plan</p>
+            {carePlan.assessment && <p><span className="text-xs text-muted-foreground">Assessment: </span>{carePlan.assessment}</p>}
+            {carePlan.plan && <p><span className="text-xs text-muted-foreground">Plan: </span>{carePlan.plan}</p>}
+            {carePlan.notes && <p className="whitespace-pre-wrap"><span className="text-xs text-muted-foreground">Notes: </span>{carePlan.notes}</p>}
+            {carePlan.follow_up && <p><span className="text-xs text-muted-foreground">Follow-up: </span>{carePlan.follow_up}</p>}
+          </div>
+        )}
+
         {awaiting && (
           <div className="space-y-2">
             <Textarea rows={2} value={note} onChange={(e) => setNote(e.target.value)} placeholder="Optional close note…" />
