@@ -4330,6 +4330,7 @@ export type Database = {
           patient_name: string
           requires_signature: boolean
           scheduled_date: string
+          slug: string
           start_time: string
           status: string
           template_body: string
@@ -4348,6 +4349,7 @@ export type Database = {
           patient_name: string
           response: Json
           scheduled_date: string
+          slug: string
           start_time: string
           status: string
           template_name: string
