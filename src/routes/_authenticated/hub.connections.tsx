@@ -158,6 +158,15 @@ function Connections() {
           )}
         </CardContent>
       </Card>
+      ) : (
+        <div>
+          <Button variant="outline" size="sm" onClick={() => setShowSend(true)}>
+            <LinkIcon className="mr-2 h-3 w-3" /> Connect with another {counterpartLabel}
+          </Button>
+        </div>
+      )}
+
+
 
 
       <Section title="Incoming requests" items={incoming} empty="No incoming requests.">
