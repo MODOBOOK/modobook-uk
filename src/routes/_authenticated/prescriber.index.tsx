@@ -193,6 +193,50 @@ function FullRecord({ id, onComplete, status }: { id: string; onComplete: () => 
           <p className="mt-1">{appt.scheduled_date} at {String(appt.start_time).slice(0, 5)} · {appt.status}</p>
         </section>
       )}
+      {status === "accepted" ? (
+        <Tabs defaultValue="records" className="pt-1">
+          <TabsList>
+            <TabsTrigger value="records"><FileText className="mr-1 h-3.5 w-3.5" /> Medical &amp; consent</TabsTrigger>
+            <TabsTrigger value="prescribe"><Pill className="mr-1 h-3.5 w-3.5" /> Prescription</TabsTrigger>
+            <TabsTrigger value="careplan"><ClipboardList className="mr-1 h-3.5 w-3.5" /> Care plan</TabsTrigger>
+            <TabsTrigger value="complete">Complete</TabsTrigger>
+          </TabsList>
+          <TabsContent value="records" className="space-y-4 pt-3">
+            <RecordsSection forms={forms} consents={consents} />
+          </TabsContent>
+          <TabsContent value="prescribe" className="pt-3">
+            <PrescriptionEditor referralId={id} patient={ref} client={client} />
+          </TabsContent>
+          <TabsContent value="careplan" className="pt-3">
+            <CarePlanEditor referralId={id} />
+          </TabsContent>
+          <TabsContent value="complete" className="space-y-2 pt-3">
+            <p className="text-xs text-muted-foreground">
+              Once prescription is signed and care plan sent, mark the referral complete.
+              Both documents are returned to the practitioner automatically.
+            </p>
+            <Textarea rows={2} value={note} onChange={(e) => setNote(e.target.value)} placeholder="Optional final note for practitioner…" />
+            <div className="flex justify-end">
+              <Button size="sm" onClick={onComplete}><CheckCircle2 className="mr-1 h-4 w-4" /> Mark complete</Button>
+            </div>
+          </TabsContent>
+        </Tabs>
+      ) : (
+        <RecordsSection forms={forms} consents={consents} />
+      )}
+    </div>
+  );
+}
+
+function RecordsSection({
+  forms,
+  consents,
+}: {
+  forms: { id: string; template_name: string; response: unknown; submitted_at: string | null; status: string }[];
+  consents: { id: string; template_name: string; status: string; signed_at: string | null; signature_name: string | null }[];
+}) {
+  return (
+    <div className="space-y-4">
       <section>
         <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Medical forms ({forms.length})</p>
         {forms.length === 0 ? <p className="mt-1 text-muted-foreground">None on file for this patient.</p> : (
@@ -230,32 +274,6 @@ function FullRecord({ id, onComplete, status }: { id: string; onComplete: () => 
           </ul>
         )}
       </section>
-
-      {status === "accepted" && (
-        <Tabs defaultValue="prescribe" className="pt-1">
-          <TabsList>
-            <TabsTrigger value="prescribe"><Pill className="mr-1 h-3.5 w-3.5" /> Prescription</TabsTrigger>
-            <TabsTrigger value="careplan"><ClipboardList className="mr-1 h-3.5 w-3.5" /> Care plan</TabsTrigger>
-            <TabsTrigger value="complete">Complete</TabsTrigger>
-          </TabsList>
-          <TabsContent value="prescribe" className="pt-3">
-            <PrescriptionEditor referralId={id} patient={ref} client={client} />
-          </TabsContent>
-          <TabsContent value="careplan" className="pt-3">
-            <CarePlanEditor referralId={id} />
-          </TabsContent>
-          <TabsContent value="complete" className="space-y-2 pt-3">
-            <p className="text-xs text-muted-foreground">
-              Once prescription is signed and care plan sent, mark the referral complete.
-              Both documents are returned to the practitioner automatically.
-            </p>
-            <Textarea rows={2} value={note} onChange={(e) => setNote(e.target.value)} placeholder="Optional final note for practitioner…" />
-            <div className="flex justify-end">
-              <Button size="sm" onClick={onComplete}><CheckCircle2 className="mr-1 h-4 w-4" /> Mark complete</Button>
-            </div>
-          </TabsContent>
-        </Tabs>
-      )}
     </div>
   );
 }
