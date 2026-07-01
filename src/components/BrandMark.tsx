@@ -5,9 +5,9 @@ import { cn } from "@/lib/utils";
 type Size = "sm" | "md" | "lg";
 
 const sizes: Record<Size, { img: string; text: string; gap: string; sub: string }> = {
-  sm: { img: "h-7 w-7",   text: "text-base",  gap: "gap-2",   sub: "text-[8px]"  },
-  md: { img: "h-9 w-9",   text: "text-xl",    gap: "gap-2.5", sub: "text-[9px]"  },
-  lg: { img: "h-14 w-14", text: "text-3xl",   gap: "gap-3",   sub: "text-[10px]" },
+  sm: { img: "h-7 w-7",   text: "text-lg",    gap: "gap-2",   sub: "text-[8px]"  },
+  md: { img: "h-10 w-10", text: "text-2xl",   gap: "gap-2.5", sub: "text-[9px]"  },
+  lg: { img: "h-16 w-16", text: "text-4xl",   gap: "gap-3",   sub: "text-[10px]" },
 };
 
 export function BrandMark({
