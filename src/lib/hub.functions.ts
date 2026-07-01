@@ -320,3 +320,64 @@ export const listHubData = createServerFn({ method: "GET" })
     return enriched;
   });
 
+// ---- Hub notification counts for the signed-in user (practitioner or prescriber) ----
+export const getHubNotifications = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+
+    // Pending incoming link requests (someone asked to connect with me)
+    const linksP = supabase
+      .from("hub_links")
+      .select("id", { count: "exact", head: true })
+      .eq("recipient_user_id", userId)
+      .eq("status", "pending");
+
+    // My profile id (used for practitioner-side referrals + visit requests)
+    const profileP = supabase
+      .from("profiles")
+      .select("id")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    const [{ count: links }, { data: profile }] = await Promise.all([linksP, profileP]);
+
+    // Referrals awaiting action:
+    //  - As prescriber: referrals routed to me that are still pending
+    //  - As prescriber: walk-ins awaiting practitioner close still show for the practitioner
+    //  - As practitioner: walk-ins awaiting my close
+    const prescRefP = supabase
+      .from("prescriber_referrals")
+      .select("id", { count: "exact", head: true })
+      .eq("prescriber_user_id", userId)
+      .eq("status", "pending");
+
+    const practRefP = profile
+      ? supabase
+          .from("prescriber_referrals")
+          .select("id", { count: "exact", head: true })
+          .eq("practitioner_profile_id", profile.id)
+          .eq("awaiting_practitioner_close", true)
+      : Promise.resolve({ count: 0 } as { count: number | null });
+
+    // Clinic visit requests awaiting my response (prescriber side: status='requested')
+    const visitReqP = supabase
+      .from("prescriber_clinic_visits")
+      .select("id", { count: "exact", head: true })
+      .eq("prescriber_user_id", userId)
+      .eq("status", "requested");
+
+    const [{ count: prescRefs }, practRefRes, { count: visitReqs }] = await Promise.all([
+      prescRefP,
+      practRefP,
+      visitReqP,
+    ]);
+    const practRefs = (practRefRes as { count: number | null }).count ?? 0;
+
+    const l = links ?? 0;
+    const r = (prescRefs ?? 0) + practRefs;
+    const v = visitReqs ?? 0;
+    return { links: l, referrals: r, visits: v, total: l + r + v };
+  });
+
+
