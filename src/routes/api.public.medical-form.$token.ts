@@ -11,7 +11,10 @@ export const Route = createFileRoute("/api/public/medical-form/$token")({
 
         const sb = publicClient();
         const { data: rows, error } = await sb.rpc("get_medical_form_by_token", { p_token: token });
-        if (error) return json({ error: "Form could not be loaded" }, 500);
+        if (error) {
+          const { data: fallbackSlug } = await sb.rpc("get_clinic_slug_for_form_token", { p_token: token });
+          return json({ form: null, fallbackSlug: fallbackSlug ?? null, error: "Form could not be loaded" }, 200);
+        }
 
         const form = Array.isArray(rows) ? rows[0] : rows;
         if (form) return json({ form });
