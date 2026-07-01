@@ -87,6 +87,12 @@ function BookTreatmentPage() {
     backgroundColor: bgColor,
     color: textColor,
     fontFamily: `${bodyFont}, system-ui, sans-serif`,
+    // Theme shadcn tokens with the practitioner's brand so calendar, buttons, rings etc. all match
+    ["--primary" as string]: brand,
+    ["--primary-foreground" as string]: "#ffffff",
+    ["--accent" as string]: `${brand}1a`,
+    ["--accent-foreground" as string]: brand,
+    ["--ring" as string]: brand,
   };
   const headingStyle: React.CSSProperties = {
     fontFamily: `${headingFont}, ${bodyFont}, system-ui, sans-serif`,
