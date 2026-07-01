@@ -12,6 +12,7 @@ type PackageInput = {
   expiry_days: number | null;
   image_url: string | null;
   active: boolean;
+  category_id: string | null;
 };
 
 export const listMyPackages = createServerFn({ method: "GET" })
@@ -48,6 +49,7 @@ export const createPackage = createServerFn({ method: "POST" })
       expiry_days: data.expiry_days,
       image_url: data.image_url,
       active: data.active,
+      category_id: data.category_id,
     });
     if (error) throw new Error(error.message);
     return { ok: true };
@@ -69,6 +71,7 @@ export const updatePackage = createServerFn({ method: "POST" })
       expiry_days: data.expiry_days,
       image_url: data.image_url,
       active: data.active,
+      category_id: data.category_id,
     }).eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };

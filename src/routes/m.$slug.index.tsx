@@ -1436,6 +1436,7 @@ function BookPage() {
                           treatment_ids?: string[] | null;
                           duration_minutes?: number | null;
                           image_url?: string | null;
+                          category_id?: string | null;
                         };
                         const ids = pkg.treatment_ids ?? (pkg.treatment_id ? [pkg.treatment_id] : []);
                         const firstTreatmentId = ids[0];
@@ -1450,7 +1451,17 @@ function BookPage() {
                               </div>
                             )}
                             <CardContent className="p-4">
-                              <div className="font-semibold" style={{ color: brand }}>{p.name}</div>
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="font-semibold" style={{ color: brand }}>{p.name}</div>
+                                {pkg.category_id && (() => {
+                                  const cat = categories.find((c) => c.id === pkg.category_id);
+                                  return cat ? (
+                                    <span className="rounded-full border px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide" style={{ borderColor: `${brand}44`, color: brand }}>
+                                      {cat.name}
+                                    </span>
+                                  ) : null;
+                                })()}
+                              </div>
                               {pkg.description && (
                                 <p className="mt-1 line-clamp-3 text-sm opacity-70">{pkg.description}</p>
                               )}
@@ -1473,6 +1484,20 @@ function BookPage() {
                                   </ul>
                                 </div>
                               )}
+                              {(() => {
+                                const originalTotal = includedTreatments.reduce((s, t) => s + Number(t.price ?? 0), 0) * (p.session_count || 1);
+                                const price = Number(p.price ?? 0);
+                                const saving = originalTotal > price ? originalTotal - price : 0;
+                                const savingPct = originalTotal > 0 && saving > 0 ? Math.round((saving / originalTotal) * 100) : 0;
+                                return saving > 0 ? (
+                                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                                    <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-800">
+                                      Save £{saving.toFixed(2)} ({savingPct}%)
+                                    </span>
+                                    <span className="text-xs opacity-60 line-through">£{originalTotal.toFixed(2)}</span>
+                                  </div>
+                                ) : null;
+                              })()}
                               <div className="mt-3 flex items-center justify-between gap-2">
                                 <p className="font-bold" style={{ color: brand }}>
                                   £{Number(p.price ?? 0).toFixed(2)}

@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { listMyPackages, createPackage, updatePackage, deletePackage } from "@/lib/packages.functions";
 import { getMyTreatments } from "@/lib/treatments.functions";
+import { getMyCategories } from "@/lib/categories.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -33,8 +34,10 @@ type Pkg = {
   expiry_days: number | null;
   image_url: string | null;
   active: boolean;
+  category_id: string | null;
 };
 type Treatment = { id: string; name: string; price: number | null };
+type Category = { id: string; name: string; parent_id: string | null };
 
 type PriceMode = "custom" | "percent";
 
@@ -50,6 +53,7 @@ const blankForm = {
   expiry_days: "" as string,
   image_url: "",
   active: true,
+  category_id: "" as string,
 };
 
 function PackagesPage() {
@@ -58,17 +62,20 @@ function PackagesPage() {
   const update = useServerFn(updatePackage);
   const remove = useServerFn(deletePackage);
   const listTreatments = useServerFn(getMyTreatments);
+  const listCategories = useServerFn(getMyCategories);
 
   const [packages, setPackages] = useState<Pkg[]>([]);
   const [treatments, setTreatments] = useState<Treatment[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Pkg | null>(null);
   const [form, setForm] = useState(blankForm);
 
   async function refresh() {
-    const [p, t] = await Promise.all([list(), listTreatments()]);
+    const [p, t, c] = await Promise.all([list(), listTreatments(), listCategories()]);
     setPackages(p as Pkg[]);
     setTreatments((t as Treatment[]) ?? []);
+    setCategories((c as Category[]) ?? []);
   }
   useEffect(() => { refresh(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
 
@@ -91,6 +98,7 @@ function PackagesPage() {
       expiry_days: p.expiry_days ? String(p.expiry_days) : "",
       image_url: p.image_url ?? "",
       active: p.active,
+      category_id: p.category_id ?? "",
     });
     setOpen(true);
   }
@@ -135,6 +143,7 @@ function PackagesPage() {
       expiry_days: form.expiry_days ? Number(form.expiry_days) : null,
       image_url: form.image_url.trim() || null,
       active: form.active,
+      category_id: form.category_id || null,
     };
     try {
       if (editing) await update({ data: { id: editing.id, ...payload } });
@@ -180,6 +189,23 @@ function PackagesPage() {
                   rows={3}
                 />
                 <p className="mt-1 text-xs text-muted-foreground">Use this if your package doesn't map to an existing treatment.</p>
+              </div>
+
+              <div>
+                <Label>Category (optional)</Label>
+                <select
+                  className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={form.category_id}
+                  onChange={(e) => setForm({ ...form, category_id: e.target.value })}
+                >
+                  <option value="">— No category —</option>
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.parent_id ? "— " : ""}{c.name}
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-1 text-xs text-muted-foreground">Group this package under one of your treatment categories on the booking page.</p>
               </div>
 
               <div>
