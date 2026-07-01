@@ -197,6 +197,19 @@ export const addWalkInMedicalForms = createServerFn({ method: "POST" })
     return { added: Number(count ?? 0) };
   });
 
+export const saveWalkInMedicalFormResponse = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: { referral_id: string; form_id: string; response: unknown }) => i)
+  .handler(async ({ data, context }) => {
+    const { data: ok, error } = await (context.supabase as any).rpc("save_walk_in_medical_form_response", {
+      p_referral_id: data.referral_id,
+      p_form_id: data.form_id,
+      p_response: data.response,
+    });
+    if (error) throw error;
+    return { ok: !!ok };
+  });
+
 export const sendWalkInToPractitioner = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i: { id: string }) => i)
