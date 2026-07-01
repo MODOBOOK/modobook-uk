@@ -88,7 +88,7 @@ export const listMyReferrals = createServerFn({ method: "GET" })
     const { data, error } = await supabase
       .from("prescriber_referrals")
       .select(
-        "id, status, routing, created_at, accepted_at, consent_given_at, patient_name, patient_email, practitioner_profile_id, treatment_id, appointment_id",
+        "id, status, routing, created_at, accepted_at, consent_given_at, patient_name, patient_email, practitioner_profile_id, treatment_id, appointment_id, is_walk_in, awaiting_practitioner_close, walk_in_note",
       )
       .eq("prescriber_user_id", userId)
       .order("created_at", { ascending: false });
@@ -133,18 +133,21 @@ export const listMyReferrals = createServerFn({ method: "GET" })
       return {
         id: r.id,
         status: r.status as "pending" | "accepted" | "declined" | "completed",
-        routing: r.routing as "same_address" | "clinic_visit" | "in_person_consult",
+        routing: r.routing as "same_address" | "clinic_visit" | "in_person_consult" | "walk_in",
         created_at: r.created_at,
         accepted_at: r.accepted_at,
         consent_given_at: r.consent_given_at,
         patient_display: masked,
-        treatment_name: t?.name ?? "Treatment",
+        treatment_name: t?.name ?? (r.is_walk_in ? "Walk-in consult" : "Treatment"),
         clinic_name: p?.clinic_name ?? "Clinic",
         practitioner_name: p?.full_name ?? null,
         location_name: loc ? [loc.name, loc.city].filter(Boolean).join(" · ") : null,
         appointment: a
           ? { id: a.id, scheduled_date: a.scheduled_date, start_time: a.start_time, status: a.status }
           : null,
+        is_walk_in: (r as { is_walk_in?: boolean }).is_walk_in ?? false,
+        awaiting_practitioner_close: (r as { awaiting_practitioner_close?: boolean }).awaiting_practitioner_close ?? false,
+        walk_in_note: (r as { walk_in_note?: string | null }).walk_in_note ?? null,
       };
     });
   });
