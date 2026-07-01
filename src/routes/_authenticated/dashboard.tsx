@@ -179,10 +179,19 @@ function DashboardLayout() {
           <div className="flex min-w-0 flex-1 items-center justify-center">
             <span className="truncate text-sm font-semibold">{displayName || "My Clinic"}</span>
           </div>
+          <Link to="/hub" className="relative inline-flex h-9 w-9 items-center justify-center rounded-full border border-border/70 bg-background text-foreground hover:bg-muted" aria-label="Prescriber Hub">
+            <Stethoscope className="h-4 w-4" />
+            {hubCounts.total > 0 && (
+              <span className="absolute -right-1 -top-1 inline-flex min-w-[1.1rem] items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold leading-none text-destructive-foreground">
+                {hubCounts.total > 99 ? "99+" : hubCounts.total}
+              </span>
+            )}
+          </Link>
           <Button variant="outline" size="sm" asChild>
             <a href={`/m/${profile.slug}`} target="_blank" rel="noreferrer">Preview</a>
           </Button>
         </header>
+
 
 
         {/* Desktop / iPad header */}
