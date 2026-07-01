@@ -552,7 +552,7 @@ function TemplatePicker({ onPick }: { onPick: (t: RxTemplate) => void }) {
       <Select onValueChange={(id) => { const t = list.find((x) => x.id === id); if (t) onPick(t); }}>
         <SelectTrigger className="h-8 w-56 text-xs"><SelectValue placeholder={list.length ? "Choose a template…" : "No templates yet"} /></SelectTrigger>
         <SelectContent>
-          {list.map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
+          {list.map((t) => <SelectItem key={t.id} value={t.id}>{t.label}</SelectItem>)}
         </SelectContent>
       </Select>
     </div>
@@ -580,7 +580,7 @@ function SnippetPicker({ onPick }: { onPick: (text: string) => void }) {
                 className="w-full rounded p-2 text-left text-xs hover:bg-muted"
                 onClick={() => onPick(s.body)}
               >
-                <p className="font-medium">{s.title}</p>
+                <p className="font-medium">{s.label}</p>
                 <p className="line-clamp-2 text-muted-foreground">{s.body}</p>
               </button>
             ))}
