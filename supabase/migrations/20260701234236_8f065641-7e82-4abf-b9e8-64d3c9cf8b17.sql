@@ -1,0 +1,1 @@
+ALTER TABLE public.payment_links ADD COLUMN IF NOT EXISTS stripe_payment_intent_id TEXT; CREATE INDEX IF NOT EXISTS payment_links_pi_idx ON public.payment_links(stripe_payment_intent_id);
