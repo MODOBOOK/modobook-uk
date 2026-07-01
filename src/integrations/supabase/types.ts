@@ -4186,18 +4186,32 @@ export type Database = {
           token: string
         }[]
       }
-      create_walk_in_referral: {
-        Args: {
-          p_client_id?: string
-          p_note?: string
-          p_patient_dob?: string
-          p_patient_email?: string
-          p_patient_name: string
-          p_patient_phone?: string
-          p_practitioner_profile_id: string
-        }
-        Returns: string
-      }
+      create_walk_in_referral:
+        | {
+            Args: {
+              p_client_id?: string
+              p_note?: string
+              p_patient_dob?: string
+              p_patient_email?: string
+              p_patient_name: string
+              p_patient_phone?: string
+              p_practitioner_profile_id: string
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              p_client_id?: string
+              p_medical_form_template_ids?: string[]
+              p_note?: string
+              p_patient_dob?: string
+              p_patient_email?: string
+              p_patient_name: string
+              p_patient_phone?: string
+              p_practitioner_profile_id: string
+            }
+            Returns: string
+          }
       current_patient_client_id: {
         Args: { _profile_id: string }
         Returns: string
@@ -4389,6 +4403,15 @@ export type Database = {
           treatment_id: string
           visit_date: string
           visit_id: string
+        }[]
+      }
+      list_linked_practitioner_medical_forms: {
+        Args: { p_practitioner_profile_id: string }
+        Returns: {
+          description: string
+          id: string
+          is_system: boolean
+          name: string
         }[]
       }
       list_my_prescriber_visits: { Args: never; Returns: Json }
