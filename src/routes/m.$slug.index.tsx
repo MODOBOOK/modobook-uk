@@ -413,6 +413,7 @@ function BookPage() {
   const setLocAndClear = (id: string | null) => {
     setLocationId(id);
     setSelectedIds([]);
+    setSelectedPackageIds([]);
     setMode(null);
     setPickedConcernIds([]);
     setConcernsConfirmed(false);
