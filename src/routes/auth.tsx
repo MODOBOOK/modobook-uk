@@ -37,6 +37,8 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [forgotOpen, setForgotOpen] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
+  const [acceptTerms, setAcceptTerms] = useState(false);
+
 
   async function handleForgot(e: React.FormEvent) {
     e.preventDefault();
