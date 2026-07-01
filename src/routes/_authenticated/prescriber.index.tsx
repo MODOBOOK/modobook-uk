@@ -284,7 +284,7 @@ function RecordsSection({
           ) : null}
         </div>
         {forms.length === 0 ? (
-          <p className="rounded-md border border-dashed bg-background p-3 text-muted-foreground">Select medical forms to load them for this walk-in patient.</p>
+          <p className="rounded-md border border-dashed bg-background p-3 text-muted-foreground">Use Select forms to choose the medical forms for this walk-in. They will load here in full once selected.</p>
         ) : (
           <Accordion type="multiple" className="rounded border bg-background">
             {forms.map((f) => (
@@ -300,7 +300,7 @@ function RecordsSection({
                   </span>
                 </AccordionTrigger>
                 <AccordionContent className="px-3 pb-3">
-                  <MedicalFormFullView form={f} />
+                  <MedicalFormFullView form={f} referralId={referralId} onChanged={onChanged} />
                 </AccordionContent>
               </AccordionItem>
             ))}
