@@ -2929,12 +2929,15 @@ export type Database = {
         Row: {
           accepted_at: string | null
           appointment_id: string | null
+          awaiting_practitioner_close: boolean
           client_id: string | null
           clinic_visit_id: string | null
+          closed_by_practitioner_at: string | null
           consent_given_at: string | null
           created_at: string
           declined_at: string | null
           id: string
+          is_walk_in: boolean
           notes: string | null
           patient_dob: string | null
           patient_email: string | null
@@ -2946,16 +2949,20 @@ export type Database = {
           status: string
           treatment_id: string | null
           updated_at: string
+          walk_in_note: string | null
         }
         Insert: {
           accepted_at?: string | null
           appointment_id?: string | null
+          awaiting_practitioner_close?: boolean
           client_id?: string | null
           clinic_visit_id?: string | null
+          closed_by_practitioner_at?: string | null
           consent_given_at?: string | null
           created_at?: string
           declined_at?: string | null
           id?: string
+          is_walk_in?: boolean
           notes?: string | null
           patient_dob?: string | null
           patient_email?: string | null
@@ -2967,16 +2974,20 @@ export type Database = {
           status?: string
           treatment_id?: string | null
           updated_at?: string
+          walk_in_note?: string | null
         }
         Update: {
           accepted_at?: string | null
           appointment_id?: string | null
+          awaiting_practitioner_close?: boolean
           client_id?: string | null
           clinic_visit_id?: string | null
+          closed_by_practitioner_at?: string | null
           consent_given_at?: string | null
           created_at?: string
           declined_at?: string | null
           id?: string
+          is_walk_in?: boolean
           notes?: string | null
           patient_dob?: string | null
           patient_email?: string | null
@@ -2988,6 +2999,7 @@ export type Database = {
           status?: string
           treatment_id?: string | null
           updated_at?: string
+          walk_in_note?: string | null
         }
         Relationships: [
           {
@@ -3026,6 +3038,93 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      prescribing_rx_templates: {
+        Row: {
+          created_at: string
+          directions: string | null
+          dose: string | null
+          drug_form: string | null
+          drug_name: string
+          drug_strength: string | null
+          id: string
+          label: string
+          notes: string | null
+          prescriber_user_id: string
+          quantity: string | null
+          repeats_allowed: number
+          sort_order: number
+          updated_at: string
+          validity_days: number | null
+        }
+        Insert: {
+          created_at?: string
+          directions?: string | null
+          dose?: string | null
+          drug_form?: string | null
+          drug_name: string
+          drug_strength?: string | null
+          id?: string
+          label: string
+          notes?: string | null
+          prescriber_user_id: string
+          quantity?: string | null
+          repeats_allowed?: number
+          sort_order?: number
+          updated_at?: string
+          validity_days?: number | null
+        }
+        Update: {
+          created_at?: string
+          directions?: string | null
+          dose?: string | null
+          drug_form?: string | null
+          drug_name?: string
+          drug_strength?: string | null
+          id?: string
+          label?: string
+          notes?: string | null
+          prescriber_user_id?: string
+          quantity?: string | null
+          repeats_allowed?: number
+          sort_order?: number
+          updated_at?: string
+          validity_days?: number | null
+        }
+        Relationships: []
+      }
+      prescribing_snippets: {
+        Row: {
+          body: string
+          category: string | null
+          created_at: string
+          id: string
+          label: string
+          prescriber_user_id: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          body: string
+          category?: string | null
+          created_at?: string
+          id?: string
+          label: string
+          prescriber_user_id: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          category?: string | null
+          created_at?: string
+          id?: string
+          label?: string
+          prescriber_user_id?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
       }
       prescriptions: {
         Row: {
@@ -4076,12 +4175,28 @@ export type Database = {
         Args: { p_token: string }
         Returns: boolean
       }
+      close_walk_in_as_practitioner: {
+        Args: { p_id: string; p_note?: string }
+        Returns: boolean
+      }
       create_appointment_consents: {
         Args: { p_appointment_id: string; p_template_ids: string[] }
         Returns: {
           consent_template_id: string
           token: string
         }[]
+      }
+      create_walk_in_referral: {
+        Args: {
+          p_client_id?: string
+          p_note?: string
+          p_patient_dob?: string
+          p_patient_email?: string
+          p_patient_name: string
+          p_patient_phone?: string
+          p_practitioner_profile_id: string
+        }
+        Returns: string
       }
       current_patient_client_id: {
         Args: { _profile_id: string }
@@ -4314,6 +4429,7 @@ export type Database = {
           token: string
         }[]
       }
+      send_walk_in_to_practitioner: { Args: { p_id: string }; Returns: boolean }
       submit_consent: {
         Args: {
           p_signature_data: string
