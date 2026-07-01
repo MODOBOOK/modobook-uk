@@ -274,6 +274,25 @@ export const requestClinicVisitAsPrescriber = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i: z.infer<typeof RequestSchema>) => RequestSchema.parse(i))
   .handler(async ({ data, context }) => {
+    // Resolve practitioner's user_id and verify an accepted hub link exists.
+    const { data: prof } = await context.supabase
+      .from("profiles").select("user_id").eq("id", data.practitioner_profile_id).maybeSingle();
+    const practitionerUserId = (prof as { user_id: string } | null)?.user_id;
+    if (!practitionerUserId) throw new Error("Practitioner not found.");
+
+    const { data: link } = await context.supabase
+      .from("hub_links")
+      .select("id")
+      .eq("status", "accepted")
+      .or(
+        `and(requester_user_id.eq.${context.userId},recipient_user_id.eq.${practitionerUserId}),` +
+        `and(recipient_user_id.eq.${context.userId},requester_user_id.eq.${practitionerUserId})`
+      )
+      .maybeSingle();
+    if (!link) {
+      throw new Error("You aren't linked to this practitioner yet. Ask them to accept your hub link first.");
+    }
+
     const { data: row, error } = await context.supabase
       .from("prescriber_clinic_visits")
       .insert({
