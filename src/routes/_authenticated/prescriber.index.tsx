@@ -457,51 +457,174 @@ function AttachMedicalFormsButton({
   );
 }
 
-function MedicalFormFullView({ form }: { form: MedicalFormRecord }) {
-  const schema = form.schema as { steps?: Array<{ id?: string; title?: string; elements?: Array<Record<string, unknown>> }> } | null | undefined;
+type PrescriberFormElement = {
+  id?: string;
+  type?: string;
+  label?: string;
+  text?: string;
+  required?: boolean;
+  options?: string[];
+  helpText?: string;
+  placeholder?: string;
+  fieldType?: string;
+  level?: 1 | 2 | 3;
+  max?: number;
+};
+type PrescriberFormStep = { id?: string; title?: string; elements?: PrescriberFormElement[] };
+
+function normalizeMedicalSchema(schema: unknown): PrescriberFormStep[] {
+  if (schema && typeof schema === "object" && !Array.isArray(schema) && Array.isArray((schema as { steps?: unknown }).steps)) {
+    return ((schema as { steps: PrescriberFormStep[] }).steps ?? []).map((s, i) => ({ ...s, id: s.id ?? `step-${i}` }));
+  }
+  if (Array.isArray(schema)) {
+    return schema.map((group: any, i) => ({
+      id: String(group.id ?? group.group ?? `group-${i}`),
+      title: String(group.title ?? group.group ?? `Section ${i + 1}`),
+      elements: Array.isArray(group.elements)
+        ? group.elements
+        : (Array.isArray(group.questions) ? group.questions.map((q: any) => ({ ...q, type: q.type ?? "field" })) : []),
+    }));
+  }
+  return [];
+}
+
+function MedicalFormFullView({ form, referralId, onChanged }: { form: MedicalFormRecord; referralId: string; onChanged: () => void }) {
+  const saveResponse = useServerFn(saveWalkInMedicalFormResponse);
+  const steps = normalizeMedicalSchema(form.schema);
   const response = form.response && typeof form.response === "object" && !Array.isArray(form.response)
     ? (form.response as Record<string, unknown>)
     : null;
+  const [answers, setAnswers] = useState<Record<string, unknown>>(response ?? {});
+  const [saving, setSaving] = useState(false);
 
-  if (!schema?.steps?.length) {
+  useEffect(() => { setAnswers(response ?? {}); }, [form.id, form.response]);
+
+  if (!steps.length) {
     return form.response ? <FormResponseView response={form.response} /> : <p className="text-xs text-muted-foreground">No response recorded.</p>;
+  }
+
+  async function save() {
+    try {
+      setSaving(true);
+      await saveResponse({ data: { referral_id: referralId, form_id: form.id, response: answers } });
+      toast.success("Medical form saved to the patient record");
+      onChanged();
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
     <div className="space-y-3 text-xs">
       {form.description ? <p className="text-muted-foreground">{form.description}</p> : null}
-      {schema.steps.map((step, stepIndex) => (
+      {steps.map((step, stepIndex) => (
         <div key={step.id ?? stepIndex} className="space-y-2 rounded-md border bg-muted/20 p-3">
           {step.title ? <p className="font-semibold text-foreground">{step.title}</p> : null}
-          {(step.elements ?? []).map((el, i) => <FormSchemaElement key={String(el.id ?? i)} element={el} response={response} />)}
+          {(step.elements ?? []).map((el, i) => (
+            <FormSchemaElement
+              key={String(el.id ?? i)}
+              element={el}
+              answers={answers}
+              onChange={(id, value) => setAnswers((prev) => ({ ...prev, [id]: value }))}
+            />
+          ))}
         </div>
       ))}
+      <div className="flex justify-end">
+        <Button type="button" size="sm" onClick={save} disabled={saving}>
+          {saving ? <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> : null}
+          Save medical form
+        </Button>
+      </div>
     </div>
   );
 }
 
-function FormSchemaElement({ element, response }: { element: Record<string, unknown>; response: Record<string, unknown> | null }) {
+function FormSchemaElement({ element, answers, onChange }: { element: PrescriberFormElement; answers: Record<string, unknown>; onChange: (id: string, value: unknown) => void }) {
   const type = String(element.type ?? "field");
-  const id = typeof element.id === "string" ? element.id : "";
+  const id = typeof element.id === "string" ? element.id : String(element.label ?? element.text ?? "").toLowerCase().replace(/\W+/g, "_");
   const label = String(element.label ?? element.text ?? "");
-  const value = id && response ? response[id] ?? response[label] : undefined;
+  const value = answers[id] ?? answers[label];
+  const reqMark = element.required ? <span className="text-destructive"> *</span> : null;
   if (type === "heading") return <p className="text-sm font-semibold text-foreground">{String(element.text ?? label)}</p>;
   if (type === "paragraph" || type === "info") return <p className="whitespace-pre-wrap text-muted-foreground">{String(element.text ?? label)}</p>;
   if (type === "separator") return <div className="my-2 border-t" />;
   if (type === "space") return <div className="h-2" />;
+  if (type === "yesno" || type === "radio") {
+    const options = type === "yesno" ? ["Yes", "No"] : (element.options ?? []);
+    return (
+      <div className="rounded bg-background p-2">
+        <Label className="text-xs font-medium">{label || "Question"}{reqMark}</Label>
+        <div className="mt-2 flex flex-wrap gap-2">
+          {options.map((o) => (
+            <button key={o} type="button" onClick={() => onChange(id, o)} className={`rounded-md border px-3 py-1.5 text-xs ${value === o ? "border-primary bg-primary/10 text-primary" : "bg-muted/20"}`}>{o}</button>
+          ))}
+        </div>
+        {element.helpText ? <p className="mt-1 text-muted-foreground">{element.helpText}</p> : null}
+      </div>
+    );
+  }
+  if (type === "select") {
+    return (
+      <div className="rounded bg-background p-2">
+        <Label className="text-xs font-medium">{label || "Question"}{reqMark}</Label>
+        <Select value={String(value ?? "")} onValueChange={(v) => onChange(id, v)}>
+          <SelectTrigger className="mt-1 h-8 text-xs"><SelectValue placeholder="Select…" /></SelectTrigger>
+          <SelectContent>{(element.options ?? []).map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
+        </Select>
+      </div>
+    );
+  }
+  if (type === "checkbox" || type === "checkbox_group") {
+    const options = element.options ?? [];
+    if (options.length) {
+      const arr = Array.isArray(value) ? value as string[] : [];
+      return (
+        <div className="rounded bg-background p-2">
+          <Label className="text-xs font-medium">{label || "Question"}{reqMark}</Label>
+          <div className="mt-2 space-y-1">
+            {options.map((o) => (
+              <label key={o} className="flex cursor-pointer items-center gap-2 rounded border p-2">
+                <Checkbox checked={arr.includes(o)} onCheckedChange={(c) => onChange(id, c ? [...arr, o] : arr.filter((x) => x !== o))} />
+                <span>{o}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+      );
+    }
+    return (
+      <label className="flex cursor-pointer items-start gap-2 rounded bg-background p-2">
+        <Checkbox checked={!!value} onCheckedChange={(c) => onChange(id, !!c)} className="mt-0.5" />
+        <span>{label || "Question"}{reqMark}</span>
+      </label>
+    );
+  }
+  if (type === "rating") {
+    const max = Number(element.max ?? 5);
+    const n = Number(value) || 0;
+    return (
+      <div className="rounded bg-background p-2">
+        <Label className="text-xs font-medium">{label || "Question"}{reqMark}</Label>
+        <div className="mt-1 flex gap-1">{Array.from({ length: max }).map((_, i) => <button key={i} type="button" onClick={() => onChange(id, i + 1)} className={i < n ? "text-amber-500" : "text-muted-foreground/40"}>★</button>)}</div>
+      </div>
+    );
+  }
+  const fieldType = element.fieldType === "textarea" || type === "textarea" ? "textarea" : (element.fieldType ?? (type === "date" ? "date" : "text"));
   return (
     <div className="rounded bg-background p-2">
       <div className="flex items-start justify-between gap-3">
-        <p className="font-medium text-foreground">{label || "Question"}</p>
+        <Label className="font-medium text-foreground">{label || "Question"}{reqMark}</Label>
         {element.required ? <Badge variant="outline" className="shrink-0 text-[10px]">Required</Badge> : null}
       </div>
-      {Array.isArray(element.options) && element.options.length > 0 ? (
-        <p className="mt-1 text-muted-foreground">Options: {(element.options as string[]).join(", ")}</p>
-      ) : null}
       {element.helpText ? <p className="mt-1 text-muted-foreground">{String(element.helpText)}</p> : null}
-      <p className="mt-2 rounded border bg-muted/30 px-2 py-1 text-muted-foreground">
-        {value == null || value === "" ? "No answer yet" : typeof value === "object" ? JSON.stringify(value) : String(value)}
-      </p>
+      {fieldType === "textarea" ? (
+        <Textarea rows={2} className="mt-2 text-xs" value={String(value ?? "")} placeholder={element.placeholder} onChange={(e) => onChange(id, e.target.value)} />
+      ) : (
+        <Input type={fieldType} className="mt-2 h-8 text-xs" value={String(value ?? "")} placeholder={element.placeholder} onChange={(e) => onChange(id, e.target.value)} />
+      )}
     </div>
   );
 }
