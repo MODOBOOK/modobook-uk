@@ -436,7 +436,7 @@ function BookTreatmentPage() {
               <ul className="mt-2 space-y-2 text-sm">
                 {confirmed.medicalForms.map((f) => (
                   <li key={f.token}>
-                    <a href={`${origin}/mf/${f.token}`} className="underline" style={{ color: brand }}>
+                    <a href={`${origin}/f/${f.token}`} className="underline" style={{ color: brand }}>
                       {f.template_name ? `Complete: ${f.template_name}` : "Complete medical form"}
                     </a>
                   </li>
