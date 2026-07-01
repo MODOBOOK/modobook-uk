@@ -152,9 +152,15 @@ function DashboardLayout() {
           </div>
         </div>
         <nav className="flex-1 space-y-0.5 overflow-y-auto px-4 py-6">
-          {navItems.map((item) => (
-            <NavLink key={item.to} to={item.to} icon={item.icon} label={item.label} badge={item.to === "/dashboard/reviews" && pendingReviews > 0 ? pendingReviews : undefined} />
-          ))}
+          {navItems.map((item) => {
+            const badge =
+              item.to === "/dashboard/reviews" && pendingReviews > 0
+                ? pendingReviews
+                : item.to === "/hub" && hubCounts.total > 0
+                  ? hubCounts.total
+                  : undefined;
+            return <NavLink key={item.to} to={item.to} icon={item.icon} label={item.label} badge={badge} />;
+          })}
         </nav>
         <div className="border-t border-border/60 p-4">
           <Button variant="ghost" className="w-full justify-start text-muted-foreground hover:text-foreground" onClick={signOut}>
