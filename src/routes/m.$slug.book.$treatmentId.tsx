@@ -800,11 +800,23 @@ function BookTreatmentPage() {
       <Button
         className="w-full"
         size="lg"
-        disabled={!slot || submitting || !form.name || !form.email || (reqPhone && !form.phone) || (reqDob && !form.dob)}
+        disabled={
+          !slot || submitting || !form.name || !form.email ||
+          (reqPhone && !form.phone) || (reqDob && !form.dob) ||
+          (splitAllowed && paymentPlan === "split" && !splitAgreed)
+        }
         onClick={submit}
         style={{ backgroundColor: brand, color: "#fff" }}
       >
-        {submitting ? "Booking…" : "Confirm booking"}
+        {submitting
+          ? "Booking…"
+          : splitAllowed && paymentPlan === "split"
+            ? !splitAgreed
+              ? "Tick the split-payment agreement to continue"
+              : `Book & pay £${(price / sessionCount).toFixed(2)} today (${sessionCount} × £${(price / sessionCount).toFixed(2)})`
+            : showPrices && price > 0
+              ? `Book & pay £${price.toFixed(2)}`
+              : "Confirm booking"}
       </Button>
       </>
       )}
