@@ -19,6 +19,7 @@ export class StripePlatformSetupError extends Error {
 
 function normaliseStripeError(error: unknown): never {
   const message = error instanceof Error ? error.message : "Stripe could not start onboarding.";
+  const lowerMessage = message.toLowerCase();
   const stripeError = error as { code?: string; param?: string; raw?: { code?: string; param?: string } };
   const code = stripeError.code || stripeError.raw?.code;
   const param = stripeError.param || stripeError.raw?.param;
@@ -29,7 +30,7 @@ function normaliseStripeError(error: unknown): never {
       "connect_not_enabled",
     );
   }
-  if (message.includes("responsibilities of managing losses") || message.includes("platform-profile")) {
+  if (lowerMessage.includes("managing losses") || lowerMessage.includes("platform-profile")) {
     throw new StripePlatformSetupError(
       "Your Stripe sandbox platform profile needs the connected-account loss responsibility step completed before Connect accounts can be created.",
       "connect_not_enabled",
