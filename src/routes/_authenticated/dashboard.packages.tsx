@@ -194,21 +194,43 @@ function PackagesPage() {
               </div>
 
               <div>
-                <Label>Category (optional)</Label>
-                <select
-                  className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                  value={form.category_id}
-                  onChange={(e) => setForm({ ...form, category_id: e.target.value })}
-                >
-                  <option value="">— No category —</option>
-                  {categories.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.parent_id ? "— " : ""}{c.name}
-                    </option>
-                  ))}
-                </select>
-                <p className="mt-1 text-xs text-muted-foreground">Group this package under one of your treatment categories on the booking page.</p>
+                <Label>Package category (optional)</Label>
+                <div className="mt-1 flex gap-2">
+                  <select
+                    className="flex h-10 flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    value={form.category_id}
+                    onChange={(e) => setForm({ ...form, category_id: e.target.value })}
+                  >
+                    <option value="">— No category —</option>
+                    {categories.map((c) => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={async () => {
+                      const name = window.prompt("New package category name");
+                      if (!name?.trim()) return;
+                      try {
+                        const row = await createCat({ data: { name: name.trim() } });
+                        setCategories((prev) => [...prev, row as Category]);
+                        setForm((f) => ({ ...f, category_id: (row as Category).id }));
+                        toast.success("Category added");
+                      } catch (e) {
+                        toast.error(e instanceof Error ? e.message : "Failed");
+                      }
+                    }}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Package categories are separate from treatment categories. Patients see packages grouped by these on the booking page.
+                </p>
               </div>
+
 
               <div>
                 <Label>Included treatments</Label>
