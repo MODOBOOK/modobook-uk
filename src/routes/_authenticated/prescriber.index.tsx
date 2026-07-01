@@ -27,6 +27,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 import { toast } from "sonner";
 import { ChevronDown, ChevronUp, CheckCircle2, XCircle, FileText, User, Pill, ClipboardList, PenLine, Send } from "lucide-react";
 
@@ -233,48 +234,149 @@ function RecordsSection({
   consents,
 }: {
   forms: { id: string; template_name: string; response: unknown; submitted_at: string | null; status: string }[];
-  consents: { id: string; template_name: string; status: string; signed_at: string | null; signature_name: string | null }[];
+  consents: {
+    id: string;
+    template_name: string;
+    status: string;
+    signed_at: string | null;
+    signature_name: string | null;
+    signature_data?: string | null;
+    signed_url?: string | null;
+    body_markdown?: string | null;
+    summary?: string | null;
+    treatment_type?: string | null;
+  }[];
 }) {
   return (
     <div className="space-y-4">
       <section>
-        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Medical forms ({forms.length})</p>
-        {forms.length === 0 ? <p className="mt-1 text-muted-foreground">None on file for this patient.</p> : (
-          <ul className="mt-1 space-y-2">
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          Medical forms ({forms.length})
+        </p>
+        {forms.length === 0 ? (
+          <p className="text-muted-foreground">None on file for this patient.</p>
+        ) : (
+          <Accordion type="multiple" className="rounded border bg-background">
             {forms.map((f) => (
-              <li key={f.id} className="rounded border bg-background p-2">
-                <p className="flex items-center gap-2 font-medium">
-                  <FileText className="h-4 w-4" /> {f.template_name}
-                  <span className="text-xs text-muted-foreground">· {f.status}{f.submitted_at ? ` · ${new Date(f.submitted_at).toLocaleDateString()}` : ""}</span>
-                </p>
-                {f.response ? (
-                  <pre className="mt-1 overflow-x-auto whitespace-pre-wrap break-words text-xs text-muted-foreground">{JSON.stringify(f.response, null, 2)}</pre>
-                ) : null}
-              </li>
+              <AccordionItem key={f.id} value={f.id} className="border-b last:border-b-0">
+                <AccordionTrigger className="px-3 py-2 text-left hover:no-underline">
+                  <span className="flex flex-1 items-center gap-2 pr-2 text-sm font-medium">
+                    <FileText className="h-4 w-4 shrink-0" />
+                    <span className="truncate">{f.template_name}</span>
+                    <span className="ml-auto text-xs font-normal text-muted-foreground">
+                      {f.status}
+                      {f.submitted_at ? ` · ${new Date(f.submitted_at).toLocaleDateString()}` : ""}
+                    </span>
+                  </span>
+                </AccordionTrigger>
+                <AccordionContent className="px-3 pb-3">
+                  {f.response ? (
+                    <FormResponseView response={f.response} />
+                  ) : (
+                    <p className="text-xs text-muted-foreground">No response recorded.</p>
+                  )}
+                </AccordionContent>
+              </AccordionItem>
             ))}
-          </ul>
+          </Accordion>
         )}
       </section>
       <section>
-        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Consent forms ({consents.length})</p>
-        {consents.length === 0 ? <p className="mt-1 text-muted-foreground">No consents on file for this patient.</p> : (
-          <ul className="mt-1 space-y-2">
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          Consent forms ({consents.length})
+        </p>
+        {consents.length === 0 ? (
+          <p className="text-muted-foreground">No consents on file for this patient.</p>
+        ) : (
+          <Accordion type="multiple" className="rounded border bg-background">
             {consents.map((c) => (
-              <li key={c.id} className="rounded border bg-background p-2">
-                <p className="flex items-center gap-2 font-medium">
-                  <FileText className="h-4 w-4" /> {c.template_name}
-                  <span className="text-xs text-muted-foreground">
-                    · {c.status}
-                    {c.signed_at ? ` · signed ${new Date(c.signed_at).toLocaleDateString()}` : ""}
-                    {c.signature_name ? ` by ${c.signature_name}` : ""}
+              <AccordionItem key={c.id} value={c.id} className="border-b last:border-b-0">
+                <AccordionTrigger className="px-3 py-2 text-left hover:no-underline">
+                  <span className="flex flex-1 items-center gap-2 pr-2 text-sm font-medium">
+                    <FileText className="h-4 w-4 shrink-0" />
+                    <span className="truncate">{c.template_name}</span>
+                    <span className="ml-auto text-xs font-normal text-muted-foreground">
+                      {c.status}
+                      {c.signed_at ? ` · ${new Date(c.signed_at).toLocaleDateString()}` : ""}
+                    </span>
                   </span>
-                </p>
-              </li>
+                </AccordionTrigger>
+                <AccordionContent className="space-y-3 px-3 pb-3">
+                  {c.summary ? (
+                    <p className="text-xs italic text-muted-foreground">{c.summary}</p>
+                  ) : null}
+                  {c.body_markdown ? (
+                    <div className="whitespace-pre-wrap rounded bg-muted/40 p-3 text-xs leading-relaxed">
+                      {c.body_markdown}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">No consent body on file.</p>
+                  )}
+                  <div className="flex flex-wrap items-center gap-3 border-t pt-2 text-xs">
+                    <div>
+                      <span className="text-muted-foreground">Signed by: </span>
+                      <span className="font-medium">{c.signature_name || "—"}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Date: </span>
+                      <span className="font-medium">
+                        {c.signed_at ? new Date(c.signed_at).toLocaleString() : "—"}
+                      </span>
+                    </div>
+                    {c.signed_url ? (
+                      <a
+                        href={c.signed_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="ml-auto text-primary underline"
+                      >
+                        Download PDF
+                      </a>
+                    ) : null}
+                  </div>
+                  {c.signature_data ? (
+                    <div>
+                      <p className="mb-1 text-xs text-muted-foreground">Signature</p>
+                      <img
+                        src={c.signature_data}
+                        alt="Signature"
+                        className="max-h-20 rounded border bg-white p-1"
+                      />
+                    </div>
+                  ) : null}
+                </AccordionContent>
+              </AccordionItem>
             ))}
-          </ul>
+          </Accordion>
         )}
       </section>
     </div>
+  );
+}
+
+function FormResponseView({ response }: { response: unknown }) {
+  if (response && typeof response === "object" && !Array.isArray(response)) {
+    const entries = Object.entries(response as Record<string, unknown>);
+    if (entries.length === 0) {
+      return <p className="text-xs text-muted-foreground">Empty response.</p>;
+    }
+    return (
+      <dl className="grid grid-cols-1 gap-2 text-xs sm:grid-cols-2">
+        {entries.map(([k, v]) => (
+          <div key={k} className="rounded bg-muted/40 p-2">
+            <dt className="font-medium capitalize text-foreground">{k.replace(/_/g, " ")}</dt>
+            <dd className="mt-0.5 whitespace-pre-wrap break-words text-muted-foreground">
+              {v == null || v === "" ? "—" : typeof v === "object" ? JSON.stringify(v) : String(v)}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    );
+  }
+  return (
+    <pre className="overflow-x-auto whitespace-pre-wrap break-words rounded bg-muted/40 p-2 text-xs text-muted-foreground">
+      {JSON.stringify(response, null, 2)}
+    </pre>
   );
 }
 
