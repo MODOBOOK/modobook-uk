@@ -233,6 +233,39 @@ function Account() {
         </Link>
       </header>
 
+      {/* Missing bookings claim */}
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-md border border-dashed bg-muted/30 px-3 py-2 text-xs">
+        <span className="text-muted-foreground">Missing a booking? It may have been made with a different email.</span>
+        <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setClaimOpen(true)}>
+          Claim a booking
+        </Button>
+      </div>
+
+      <Dialog open={claimOpen} onOpenChange={setClaimOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Claim a booking</DialogTitle>
+            <DialogDescription>
+              Enter the email address you used when you booked. We'll link those bookings to your account.
+            </DialogDescription>
+          </DialogHeader>
+          <input
+            type="email"
+            autoFocus
+            placeholder="you@example.com"
+            className="w-full rounded-md border px-3 py-2 text-sm"
+            value={claimEmail}
+            onChange={(e) => setClaimEmail(e.target.value)}
+          />
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setClaimOpen(false)} disabled={claiming}>Cancel</Button>
+            <Button onClick={claimBookings} disabled={claiming || !claimEmail.trim()}>
+              {claiming && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Link bookings
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Upcoming */}
       <Section title="Upcoming appointments" icon={CalendarIcon} brand={brand}>
         {upcoming.length === 0 ? (
