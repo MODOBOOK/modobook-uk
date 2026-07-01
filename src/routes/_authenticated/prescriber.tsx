@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { LogOut, Inbox, Network, ShieldCheck, Stethoscope, Building2, CalendarDays, Pill } from "lucide-react";
+import { LogOut, Inbox, Network, ShieldCheck, Stethoscope, Building2, CalendarDays, Pill, LayoutDashboard, ClipboardList } from "lucide-react";
 import { getHubContext } from "@/lib/hub.functions";
 import { getMyProfile } from "@/lib/profiles.functions";
 import { listMyReferrals } from "@/lib/prescriber.functions";
@@ -25,12 +25,13 @@ export const Route = createFileRoute("/_authenticated/prescriber")({
 });
 
 const nav = [
+  { to: "/prescriber/dashboard", label: "Dashboard", icon: LayoutDashboard, key: "dashboard" as const },
   { to: "/prescriber", label: "Referrals", icon: Inbox, exact: true, key: "referrals" as const },
   { to: "/prescriber/visits", label: "Clinic visits", icon: CalendarDays, key: "visits" as const },
   { to: "/prescriber/library", label: "Prescriptions", icon: Pill, key: "library" as const },
+  { to: "/prescriber/directions", label: "Directions", icon: ClipboardList, key: "directions" as const },
   { to: "/prescriber/connections", label: "Practitioners", icon: Network, key: "connections" as const },
   { to: "/hub/verification", label: "Verification", icon: ShieldCheck, key: "verification" as const },
-  { to: "/hub", label: "Hub overview", icon: Stethoscope, key: "overview" as const },
 ];
 
 
