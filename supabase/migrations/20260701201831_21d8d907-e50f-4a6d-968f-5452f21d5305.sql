@@ -1,0 +1,1 @@
+UPDATE public.profiles SET stripe_connect_account_id = NULL, stripe_connect_onboarding_status = 'not_started' WHERE stripe_connect_account_id IS NOT NULL;
