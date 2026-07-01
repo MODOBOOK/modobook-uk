@@ -86,7 +86,15 @@ function HubIndex() {
     navigate({ to: "/hub/verification" });
   };
 
-  const actions = [
+  const actions: Array<{
+    to: string;
+    icon: typeof CalendarDays;
+    title: string;
+    desc: string;
+    accent: string;
+    disabled?: boolean;
+    disabledHint?: string;
+  }> = [
     {
       to: "/hub/visits",
       icon: CalendarDays,
