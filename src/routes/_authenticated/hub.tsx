@@ -1,15 +1,41 @@
-import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useRouterState, useNavigate } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
+import { getHubContext } from "@/lib/hub.functions";
 
 export const Route = createFileRoute("/_authenticated/hub")({
   ssr: false,
   component: HubLayout,
 });
 
+// Prescriber-only routes get sent to their dedicated workspace
+const PRESCRIBER_REDIRECTS: Record<string, string> = {
+  "/hub/visits": "/prescriber/visits",
+  "/hub/prescribing": "/prescriber",
+  "/hub/referrals": "/prescriber",
+  "/hub": "/prescriber",
+};
+
 function HubLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const tabs = [
+  const navigate = useNavigate();
+  const fetchCtx = useServerFn(getHubContext);
+  const ctxQ = useQuery({ queryKey: ["hub-context"], queryFn: () => fetchCtx() });
+  const role = ctxQ.data?.role ?? null;
+  const isPrescriber = role === "prescriber";
+
+  // If a prescriber lands on a practitioner-only hub page, bounce them to
+  // their own workspace so the UI matches their role.
+  useEffect(() => {
+    if (!isPrescriber) return;
+    const target = PRESCRIBER_REDIRECTS[pathname];
+    if (target) navigate({ to: target, replace: true });
+  }, [isPrescriber, pathname, navigate]);
+
+  const practitionerTabs = [
     { to: "/hub", label: "Overview", exact: true },
     { to: "/hub/prescribing", label: "Prescribing rules" },
     { to: "/hub/visits", label: "Clinic visits" },
@@ -17,6 +43,15 @@ function HubLayout() {
     { to: "/hub/connections", label: "Connections" },
     { to: "/hub/verification", label: "Verification" },
   ];
+
+  const prescriberTabs = [
+    { to: "/prescriber", label: "Overview", exact: true },
+    { to: "/prescriber/visits", label: "Clinic visits" },
+    { to: "/prescriber/connections", label: "Practitioners" },
+    { to: "/hub/verification", label: "Verification" },
+  ];
+
+  const tabs = isPrescriber ? prescriberTabs : practitionerTabs;
 
   return (
     <div className="min-h-screen bg-background">
