@@ -162,7 +162,7 @@ function extractBookingSettings(p: Record<string, unknown>): PublicBookingSettin
 
 
 export const getMultiBookingContext = createServerFn({ method: "GET" })
-  .inputValidator((input: { slug: string; treatmentIds: string[] }) => input)
+  .inputValidator((input: { slug: string; treatmentIds: string[]; packageIds?: string[] }) => input)
   .handler(async ({ data }) => {
     const sb = publicClient();
     const { data: profile, error: pErr } = await sb
@@ -171,13 +171,35 @@ export const getMultiBookingContext = createServerFn({ method: "GET" })
     if (pErr) throw pErr;
     if (!profile) throw new Error("Clinic not found");
 
-    const { data: treatments, error: tErr } = await sb
+    // Load selected packages first so we can auto-include their first treatment
+    const packageIds = (data.packageIds ?? []).filter(Boolean);
+    let packagesRows: Array<Record<string, unknown>> = [];
+    if (packageIds.length > 0) {
+      const { data: pkgs } = await sb
+        .from("packages")
+        .select("*")
+        .in("id", packageIds)
+        .eq("profile_id", profile.id);
+      packagesRows = (pkgs ?? []) as Array<Record<string, unknown>>;
+    }
+    const pkgFirstTreatmentIds = packagesRows
+      .map((p) => {
+        const ids = (p.treatment_ids as string[] | null) ?? [];
+        const single = p.treatment_id as string | null;
+        return ids[0] ?? single ?? null;
+      })
+      .filter((v): v is string => Boolean(v));
+
+    const treatmentIds = Array.from(new Set([...(data.treatmentIds ?? []), ...pkgFirstTreatmentIds]));
+
+    const treatmentsRes = await sb
       .from("treatments")
       .select("*")
-      .in("id", data.treatmentIds)
+      .in("id", treatmentIds.length > 0 ? treatmentIds : ["00000000-0000-0000-0000-000000000000"])
       .eq("profile_id", profile.id)
       .eq("active", true);
-    if (tErr) throw tErr;
+    if (treatmentsRes.error) throw treatmentsRes.error;
+    const treatments = treatmentsRes.data ?? [];
 
     const { data: locations } = await sb
       .from("locations")
@@ -197,16 +219,32 @@ export const getMultiBookingContext = createServerFn({ method: "GET" })
       .eq("profile_id", profile.id)
       .maybeSingle();
 
-    const { data: pricing } = await sb
+    const pricingRes = await sb
       .from("treatment_location_pricing")
       .select("*")
-      .in("treatment_id", data.treatmentIds);
+      .in("treatment_id", treatmentIds.length > 0 ? treatmentIds : ["00000000-0000-0000-0000-000000000000"]);
+    const pricing = pricingRes.data ?? [];
 
     const bookableFrom = await computeBookableFrom(
       sb,
       profile.id,
       (treatments ?? []).map((t) => (t as { category_id: string | null }).category_id),
     );
+
+    // Build lightweight package summaries with resolved first treatment id + expiry
+    const selectedPackages = packagesRows.map((p) => {
+      const ids = (p.treatment_ids as string[] | null) ?? [];
+      const single = p.treatment_id as string | null;
+      const firstTreatmentId = ids[0] ?? single ?? null;
+      return {
+        id: p.id as string,
+        name: p.name as string,
+        price: Number(p.price ?? 0),
+        session_count: Number(p.session_count ?? 1),
+        expiry_days: (p.expiry_days as number | null) ?? null,
+        firstTreatmentId,
+      };
+    });
 
     return {
       profileId: profile.id,
@@ -221,6 +259,7 @@ export const getMultiBookingContext = createServerFn({ method: "GET" })
       termsRequired: (profile as { terms_required?: boolean | null }).terms_required ?? false,
       bookableFrom,
       settings: extractBookingSettings(profile as Record<string, unknown>),
+      selectedPackages,
     };
   });
 
@@ -481,6 +520,7 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
       notes?: string;
       patientUserId?: string | null;
       practitionerId?: string | null;
+      packagePurchases?: { packageId: string }[];
     }) => input,
   )
   .handler(async ({ data }) => {
@@ -581,7 +621,37 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
       }
     }
 
-    return { appointments: created, consents, medicalForms };
+    // Persist package purchases (session 1 = the appointment we just booked; remaining sessions tracked here)
+    const packagePurchases: { id: string; packageId: string; sessionsRemaining: number }[] = [];
+    if (data.packagePurchases && data.packagePurchases.length > 0) {
+      const pkgIds = data.packagePurchases.map((p) => p.packageId);
+      const { data: pkgs } = await supabaseAdmin
+        .from("packages")
+        .select("id, session_count, expiry_days")
+        .in("id", pkgIds);
+      for (const p of data.packagePurchases) {
+        const meta = (pkgs ?? []).find((x) => x.id === p.packageId);
+        const sessions = Math.max(1, Number(meta?.session_count ?? 1));
+        const remaining = Math.max(0, sessions - 1);
+        const expDays = (meta?.expiry_days as number | null) ?? null;
+        const expiresAt = expDays
+          ? new Date(Date.now() + expDays * 24 * 60 * 60 * 1000).toISOString()
+          : null;
+        const purchaseId = crypto.randomUUID();
+        const { error: purchErr } = await supabaseAdmin.from("package_purchases").insert({
+          id: purchaseId,
+          package_id: p.packageId,
+          patient_email: data.patientEmail,
+          sessions_remaining: remaining,
+          expires_at: expiresAt,
+          status: "active",
+        } as never);
+        if (purchErr) throw new Error(purchErr.message);
+        packagePurchases.push({ id: purchaseId, packageId: p.packageId, sessionsRemaining: remaining });
+      }
+    }
+
+    return { appointments: created, consents, medicalForms, packagePurchases };
   });
 
 

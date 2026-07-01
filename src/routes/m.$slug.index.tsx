@@ -361,6 +361,11 @@ function BookPage() {
     return () => document.removeEventListener("click", onClick, true);
   }, [practSelectionMode, practitionerId]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [selectedPackageIds, setSelectedPackageIds] = useState<string[]>([]);
+  const pkgById = useMemo(() => new Map(packages.map((p) => [p.id, p])), [packages]);
+  const togglePackageSelect = (id: string) =>
+    setSelectedPackageIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  const isPackageSelected = (id: string) => selectedPackageIds.includes(id);
   const treatById = useMemo(() => new Map(treatments.map((t) => [t.id, t])), [treatments]);
   const addonsFor = useMemo(() => {
     const m = new Map<string, string[]>();
@@ -408,6 +413,7 @@ function BookPage() {
   const setLocAndClear = (id: string | null) => {
     setLocationId(id);
     setSelectedIds([]);
+    setSelectedPackageIds([]);
     setMode(null);
     setPickedConcernIds([]);
     setConcernsConfirmed(false);
@@ -1472,14 +1478,28 @@ function BookPage() {
                                   £{Number(p.price ?? 0).toFixed(2)}
                                 </p>
                                 {firstTreatmentId ? (
-                                  <Link
-                                    to="/m/$slug/book/$treatmentId"
-                                    params={{ slug, treatmentId: firstTreatmentId }}
-                                    className="modo-btn px-4 py-1.5 text-sm font-semibold"
-
-                                  >
-                                    Book
-                                  </Link>
+                                  <div className="flex items-center gap-2">
+                                    <button
+                                      type="button"
+                                      onClick={() => togglePackageSelect(p.id)}
+                                      aria-pressed={isPackageSelected(p.id)}
+                                      className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition"
+                                      style={
+                                        isPackageSelected(p.id)
+                                          ? { backgroundColor: brand, borderColor: brand, color: "#fff" }
+                                          : { borderColor: `${brand}66`, color: brand }
+                                      }
+                                    >
+                                      {isPackageSelected(p.id) ? (<><Check className="h-3 w-3" /> Added</>) : "Add"}
+                                    </button>
+                                    <Link
+                                      to="/m/$slug/book/$treatmentId"
+                                      params={{ slug, treatmentId: firstTreatmentId }}
+                                      className="modo-btn px-4 py-1.5 text-sm font-semibold"
+                                    >
+                                      Book
+                                    </Link>
+                                  </div>
                                 ) : (
                                   <span className="text-xs opacity-60">Contact to book</span>
                                 )}
@@ -1509,34 +1529,47 @@ function BookPage() {
 
 
       {/* Sticky multi-select bar */}
-      {locationId && selectedIds.length > 0 && (
-        <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 px-4 py-3 backdrop-blur" style={{ borderColor: `${brand}33` }}>
-          <div className="mx-auto flex max-w-3xl items-center justify-between gap-3">
-            <div className="text-sm">
-              <div className="font-semibold" style={{ color: brand }}>
-                {selectedIds.length} treatment{selectedIds.length === 1 ? "" : "s"} selected
+      {locationId && (selectedIds.length > 0 || selectedPackageIds.length > 0) && (() => {
+        const treatmentsTotal = selectedIds
+          .map((id) => priceFor(treatments.find((t) => t.id === id)!))
+          .reduce((a, b) => a + b, 0);
+        const packagesTotal = selectedPackageIds
+          .map((pid) => Number(pkgById.get(pid)?.price ?? 0))
+          .reduce((a, b) => a + b, 0);
+        const total = treatmentsTotal + packagesTotal;
+        const parts: string[] = [];
+        if (selectedIds.length) parts.push(`${selectedIds.length} treatment${selectedIds.length === 1 ? "" : "s"}`);
+        if (selectedPackageIds.length) parts.push(`${selectedPackageIds.length} package${selectedPackageIds.length === 1 ? "" : "s"}`);
+        return (
+          <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 px-4 py-3 backdrop-blur" style={{ borderColor: `${brand}33` }}>
+            <div className="mx-auto flex max-w-3xl items-center justify-between gap-3">
+              <div className="text-sm">
+                <div className="font-semibold" style={{ color: brand }}>
+                  {parts.join(" + ")} selected
+                </div>
+                <div className="text-xs opacity-70">Total £{total.toFixed(2)}</div>
               </div>
-              <div className="text-xs opacity-70">
-                Total £
-                {selectedIds
-                  .map((id) => priceFor(treatments.find((t) => t.id === id)!))
-                  .reduce((a, b) => a + b, 0)
-                  .toFixed(2)}
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <Button variant="ghost" size="sm" onClick={() => setSelectedIds([])}>
-                Clear
-              </Button>
-              <Link to="/m/$slug/book-multi" params={{ slug }} search={{ ids: selectedIds.join(",") }}>
-                <Button size="sm" style={{ backgroundColor: brand, color: "#fff" }}>
-                  Continue →
+              <div className="flex gap-2">
+                <Button variant="ghost" size="sm" onClick={() => { setSelectedIds([]); setSelectedPackageIds([]); }}>
+                  Clear
                 </Button>
-              </Link>
+                <Link
+                  to="/m/$slug/book-multi"
+                  params={{ slug }}
+                  search={{
+                    ids: selectedIds.join(","),
+                    pkgs: selectedPackageIds.join(","),
+                  }}
+                >
+                  <Button size="sm" style={{ backgroundColor: brand, color: "#fff" }}>
+                    Continue →
+                  </Button>
+                </Link>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
 
 

@@ -63,14 +63,15 @@ function formatSessionSpacing(days?: number | null) {
   return `every ${days} day${days === 1 ? "" : "s"}`;
 }
 
-const searchSchema = z.object({ ids: z.string().optional() });
+const searchSchema = z.object({ ids: z.string().optional(), pkgs: z.string().optional() });
 
 export const Route = createFileRoute("/m/$slug/book-multi")({
   validateSearch: searchSchema,
-  loaderDeps: ({ search }) => ({ ids: search.ids ?? "" }),
+  loaderDeps: ({ search }) => ({ ids: search.ids ?? "", pkgs: search.pkgs ?? "" }),
   loader: ({ params, deps }) => {
     const ids = deps.ids.split(",").filter(Boolean);
-    return getMultiBookingContext({ data: { slug: params.slug, treatmentIds: ids } });
+    const packageIds = deps.pkgs.split(",").filter(Boolean);
+    return getMultiBookingContext({ data: { slug: params.slug, treatmentIds: ids, packageIds } });
   },
   component: MultiBookPage,
 });
@@ -80,13 +81,25 @@ function MultiBookPage() {
   const ctx = Route.useLoaderData();
   const search = Route.useSearch();
   const ids = (search.ids ?? "").split(",").filter(Boolean);
-  const redirectPath = `/m/${slug}/book-multi?ids=${encodeURIComponent(ids.join(","))}`;
+  const packageIds = (search.pkgs ?? "").split(",").filter(Boolean);
+  const selectedPackages = ((ctx as { selectedPackages?: Array<{ id: string; name: string; price: number; session_count: number; firstTreatmentId: string | null }> }).selectedPackages ?? [])
+    .filter((p) => packageIds.includes(p.id));
+  const redirectPath = `/m/${slug}/book-multi?ids=${encodeURIComponent(ids.join(","))}${packageIds.length ? `&pkgs=${encodeURIComponent(packageIds.join(","))}` : ""}`;
+
+  // Combine explicit treatment ids with each package's first treatment (auto-included, deduped)
+  const combinedIds = useMemo(() => {
+    const out: string[] = [...ids];
+    for (const p of selectedPackages) {
+      if (p.firstTreatmentId && !out.includes(p.firstTreatmentId)) out.push(p.firstTreatmentId);
+    }
+    return out;
+  }, [ids, selectedPackages]);
 
   // Preserve user-selected order
   const treatments = useMemo<Treatment[]>(() => {
     const map = new Map<string, Treatment>(ctx.treatments.map((t: Treatment) => [t.id, t]));
-    return ids.map((id: string) => map.get(id)).filter(Boolean) as Treatment[];
-  }, [ctx.treatments, ids]);
+    return combinedIds.map((id: string) => map.get(id)).filter(Boolean) as Treatment[];
+  }, [ctx.treatments, combinedIds]);
 
   const settings = (ctx as { settings?: import("@/lib/public-booking.functions").PublicBookingSettings }).settings;
   const showPrices = settings?.show_prices_on_booking !== false;
@@ -432,6 +445,7 @@ function MultiBookPage() {
           })(),
           patientUserId,
           practitionerId: (typeof window !== "undefined" ? window.sessionStorage.getItem(`modo:practitionerId:${slug}`) : null) || null,
+          packagePurchases: selectedPackages.map((p) => ({ packageId: p.id })),
         },
       });
       setConfirmed(res);
@@ -520,6 +534,27 @@ function MultiBookPage() {
             ← Back to {ctx.clinicName}
           </Link>
         </div>
+
+        {selectedPackages.length > 0 && (
+          <Card className="mb-4">
+            <CardHeader>
+              <CardTitle style={headingStyle}>Package{selectedPackages.length === 1 ? "" : "s"} in this booking ({selectedPackages.length})</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {selectedPackages.map((p) => (
+                <div key={p.id} className="flex items-center justify-between text-sm border-b last:border-b-0 py-2">
+                  <div>
+                    <div className="font-medium" style={{ color: brand }}>{p.name}</div>
+                    <div className="text-xs opacity-70">{p.session_count} session{p.session_count === 1 ? "" : "s"} · first session booked below, remaining tracked in your account</div>
+                  </div>
+                  {showPrices && (
+                    <div className="font-semibold whitespace-nowrap" style={{ color: brand }}>£{p.price.toFixed(2)}</div>
+                  )}
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
 
         <Card className="mb-6">
           <CardHeader>
