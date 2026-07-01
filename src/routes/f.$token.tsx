@@ -1,7 +1,7 @@
 import { createFileRoute, useParams } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { getFormByToken, submitFormByToken } from "@/lib/medical-forms.functions";
+import { getFormByToken, submitFormByToken, getClinicSlugForFormToken } from "@/lib/medical-forms.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
