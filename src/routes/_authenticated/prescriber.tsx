@@ -147,17 +147,23 @@ function PrescriberLayout() {
         <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t bg-background/95 backdrop-blur lg:hidden">
           {nav.map((tab) => {
             const active = tab.exact ? pathname === tab.to : pathname.startsWith(tab.to);
+            const count = badges[tab.key] ?? 0;
             return (
               <Link
                 key={tab.to}
                 to={tab.to}
                 className={cn(
-                  "flex flex-col items-center justify-center gap-1 py-2.5 text-[11px] font-medium transition",
+                  "relative flex flex-col items-center justify-center gap-1 py-2.5 text-[11px] font-medium transition",
                   active ? "text-primary" : "text-muted-foreground",
                 )}
               >
                 <tab.icon className="h-5 w-5" />
                 {tab.label}
+                {count > 0 && (
+                  <span className="absolute right-3 top-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">
+                    {count}
+                  </span>
+                )}
               </Link>
             );
           })}
