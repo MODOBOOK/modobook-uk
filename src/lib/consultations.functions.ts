@@ -120,3 +120,68 @@ export const deleteConsultation = createServerFn({ method: "POST" })
     if (error) throw error;
     return { ok: true };
   });
+
+// Ensures the consultation is linked to a clinic_client so features that
+// require a patient record (e.g. sending additional medical forms) work.
+// Reuses an existing client (matched by email, then name) or creates a new one.
+export const ensureConsultationPatient = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string }) => d)
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const pid = await getProfileId(supabase, userId);
+    if (!pid) throw new Error("No profile");
+
+    const { data: cons, error: cErr } = await supabase
+      .from("consultations")
+      .select("id, patient_id, patient_name, patient_email, patient_phone")
+      .eq("id", data.id)
+      .eq("profile_id", pid)
+      .maybeSingle();
+    if (cErr) throw cErr;
+    if (!cons) throw new Error("Consultation not found");
+    if (cons.patient_id) return { patient_id: cons.patient_id as string };
+
+    let clientId: string | null = null;
+    if (cons.patient_email) {
+      const { data: existing } = await supabase
+        .from("clinic_clients")
+        .select("id")
+        .eq("profile_id", pid)
+        .ilike("email", cons.patient_email)
+        .maybeSingle();
+      if (existing?.id) clientId = existing.id as string;
+    }
+    if (!clientId && cons.patient_name) {
+      const { data: existing } = await supabase
+        .from("clinic_clients")
+        .select("id")
+        .eq("profile_id", pid)
+        .ilike("full_name", cons.patient_name)
+        .maybeSingle();
+      if (existing?.id) clientId = existing.id as string;
+    }
+    if (!clientId) {
+      const { data: created, error: iErr } = await supabase
+        .from("clinic_clients")
+        .insert({
+          profile_id: pid,
+          full_name: cons.patient_name || "Unnamed patient",
+          email: cons.patient_email ?? null,
+          phone: cons.patient_phone ?? null,
+        })
+        .select("id")
+        .single();
+      if (iErr) throw iErr;
+      clientId = created.id as string;
+    }
+
+    const { error: uErr } = await supabase
+      .from("consultations")
+      .update({ patient_id: clientId })
+      .eq("id", data.id)
+      .eq("profile_id", pid);
+    if (uErr) throw uErr;
+
+    return { patient_id: clientId };
+  });
