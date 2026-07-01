@@ -447,10 +447,15 @@ function BookPage() {
     () => treatments.filter(isAvailableAtLocation),
     [treatments, locationId, pricing],
   );
-  const { roots, uncategorised } = useMemo(
-    () => buildTree(categories, visibleTreatments),
-    [categories, visibleTreatments],
+  const treatmentCategories = useMemo(
+    () => categories.filter((c) => (c as { kind?: string | null }).kind !== "package"),
+    [categories],
   );
+  const { roots, uncategorised } = useMemo(
+    () => buildTree(treatmentCategories, visibleTreatments),
+    [treatmentCategories, visibleTreatments],
+  );
+
 
   const primaryLocation =
     locations.find((l) => l.is_primary) ?? locations[0] ?? null;
