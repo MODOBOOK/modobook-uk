@@ -25,7 +25,7 @@ const personas = [
       "Full prescribing-grade consultation flow",
       "Product log and treatment plans against every visit",
       "Manage non-HCPs you support in the Prescriber Hub",
-      "Branded booking page on modo.book/your-clinic",
+      "Branded booking page on modo.app/your-clinic",
     ],
   },
   {

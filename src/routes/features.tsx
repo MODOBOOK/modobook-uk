@@ -27,7 +27,7 @@ const groups = [
     icon: Palette,
     items: [
       { icon: Palette, title: "Custom branding", desc: "Six curated palettes, build-your-own colour scheme, fonts, logo, tab icon and welcome card." },
-      { icon: Link2, title: "Your MODO link", desc: "Share modo.book/your-clinic on Instagram, TikTok, Google and your website." },
+      { icon: Link2, title: "Your MODO link", desc: "Share modo.app/your-clinic on Instagram, TikTok, Google and your website." },
       { icon: Brush, title: "Hero & carousel", desc: "Classic single hero or rotating carousel. Crop on upload, mobile-friendly." },
       { icon: ImageIcon, title: "Favourite treatments", desc: "Showcase your or your clinic's most popular treatments in a horizontal carousel." },
       { icon: FileText, title: "Editable welcome intro", desc: "A clean patient-facing intro block with a heading, rich text, contact details and your clinic style." },
