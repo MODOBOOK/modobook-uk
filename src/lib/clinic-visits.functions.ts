@@ -214,6 +214,10 @@ export const listAvailableVisitsForBooking = createServerFn({ method: "POST" })
    ============================================================ */
 
 // ---- Prescriber: list practitioners I'm connected to (for request form) ----
+// NOTE: reads practitioner profile + locations via the service role because
+// standard RLS on `profiles` / `locations` does not let a prescriber read a
+// linked practitioner's row. Safe: we only expose partners of an already
+// ACCEPTED hub_link, and only minimal fields.
 export const listMyConnectedPractitioners = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
@@ -228,22 +232,20 @@ export const listMyConnectedPractitioners = createServerFn({ method: "GET" })
       l.requester_user_id === userId ? l.recipient_user_id : l.requester_user_id,
     );
     if (otherIds.length === 0) return [];
-    const [{ data: profiles }, { data: locs }] = await Promise.all([
-      supabase
-        .from("profiles")
-        .select("id, user_id, clinic_name, full_name")
-        .in("user_id", otherIds),
-      supabase
-        .from("locations")
-        .select("id, name, profile_id")
-        .in(
-          "profile_id",
-          (await supabase
-            .from("profiles")
-            .select("id")
-            .in("user_id", otherIds)).data?.map((p) => p.id) ?? [],
-        ),
-    ]);
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: profiles } = await supabaseAdmin
+      .from("profiles")
+      .select("id, user_id, clinic_name, full_name")
+      .in("user_id", otherIds);
+    const profileIds = (profiles ?? []).map((p) => p.id);
+    const { data: locs } = profileIds.length
+      ? await supabaseAdmin
+          .from("locations")
+          .select("id, name, profile_id")
+          .in("profile_id", profileIds)
+      : { data: [] as { id: string; name: string; profile_id: string }[] };
+
     const locsByProfile = new Map<string, { id: string; name: string }[]>();
     for (const l of locs ?? []) {
       const arr = locsByProfile.get(l.profile_id) ?? [];
@@ -256,6 +258,7 @@ export const listMyConnectedPractitioners = createServerFn({ method: "GET" })
       locations: locsByProfile.get(p.id) ?? [],
     }));
   });
+
 
 // ---- Prescriber: request a clinic-day at a connected practitioner ----
 const RequestSchema = z.object({
