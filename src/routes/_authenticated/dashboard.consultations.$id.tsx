@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { getConsultation, updateConsultation } from "@/lib/consultations.functions";
+import { getConsultation, updateConsultation, ensureConsultationPatient } from "@/lib/consultations.functions";
 import { createPaymentLink } from "@/lib/payment-links.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { listMyConsentTemplates, getConsentTemplate } from "@/lib/treatment-consents.functions";
