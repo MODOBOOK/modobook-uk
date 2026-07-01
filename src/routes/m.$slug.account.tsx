@@ -71,6 +71,27 @@ function Account() {
   const [cancelTarget, setCancelTarget] = useState<Appt | null>(null);
   const [cancelAgreed, setCancelAgreed] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [claimOpen, setClaimOpen] = useState(false);
+  const [claimEmail, setClaimEmail] = useState("");
+  const [claiming, setClaiming] = useState(false);
+
+  async function claimBookings() {
+    if (!claimEmail.trim()) return;
+    setClaiming(true);
+    const { data, error } = await supabase.rpc("claim_appointments_by_email", {
+      p_slug: slug, p_email: claimEmail.trim(),
+    } as any);
+    setClaiming(false);
+    if (error) return toast.error(error.message);
+    const n = Number(data ?? 0);
+    if (n === 0) {
+      toast.info("No bookings found for that email at this clinic.");
+    } else {
+      toast.success(`Linked ${n} booking${n === 1 ? "" : "s"} to your account.`);
+      setClaimOpen(false); setClaimEmail("");
+      loadAll();
+    }
+  }
 
   async function loadAll() {
     setLoading(true);
