@@ -1,9 +1,10 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ShieldCheck, Copy, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { ShieldCheck, Copy, AlertTriangle, CheckCircle2, Stethoscope, ClipboardCheck } from "lucide-react";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { getHubContext, ensureHubCode } from "@/lib/hub.functions";
@@ -14,12 +15,16 @@ export const Route = createFileRoute("/_authenticated/hub/")({
   component: HubIndex,
 });
 
+const CHOICE_KEY = "hub-role-choice-v1";
+
 function HubIndex() {
+  const navigate = useNavigate();
   const getCtx = useServerFn(getHubContext);
   const ensure = useServerFn(ensureHubCode);
   const [ctx, setCtx] = useState<Awaited<ReturnType<typeof getHubContext>> | null>(null);
   const [code, setCode] = useState<string | null>(null);
   const [blocked, setBlocked] = useState<string | null>(null);
+  const [showChooser, setShowChooser] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -28,6 +33,8 @@ function HubIndex() {
       const r = await ensure();
       setCode(r.code);
       setBlocked(r.blockedReason);
+      const chosen = typeof window !== "undefined" ? window.localStorage.getItem(CHOICE_KEY) : "1";
+      if (!chosen && !c.prescriber) setShowChooser(true);
     })().catch((e) => toast.error(e.message));
   }, [getCtx, ensure]);
 
@@ -35,17 +42,63 @@ function HubIndex() {
 
   const status = ctx.prescriber?.status;
 
+  const choosePractitioner = () => {
+    window.localStorage.setItem(CHOICE_KEY, "practitioner");
+    setShowChooser(false);
+    toast.success("You're set up as a practitioner");
+  };
+  const choosePrescriber = () => {
+    window.localStorage.setItem(CHOICE_KEY, "prescriber");
+    setShowChooser(false);
+    navigate({ to: "/hub/verification" });
+  };
+
   return (
     <div className="space-y-6">
-      {ctx.role === "none" && (
+      <Dialog open={showChooser} onOpenChange={(open) => { if (open) setShowChooser(true); }}>
+        <DialogContent className="sm:max-w-lg" onInteractOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
+          <DialogHeader>
+            <DialogTitle>Are you a practitioner or a prescriber?</DialogTitle>
+            <DialogDescription>
+              Choose how you'll use the Prescriber Hub. Practitioners get instant access; prescribers are verified first.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <button
+              type="button"
+              onClick={choosePractitioner}
+              className="rounded-lg border p-4 text-left transition hover:border-primary hover:bg-primary/5"
+            >
+              <Stethoscope className="mb-2 h-5 w-5 text-primary" />
+              <div className="font-medium">I'm a practitioner</div>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Instant access. Connect with prescribers and send referrals.
+              </p>
+            </button>
+            <button
+              type="button"
+              onClick={choosePrescriber}
+              className="rounded-lg border p-4 text-left transition hover:border-primary hover:bg-primary/5"
+            >
+              <ClipboardCheck className="mb-2 h-5 w-5 text-primary" />
+              <div className="font-medium">I'm a prescriber</div>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Verification required — upload your registration and ID.
+              </p>
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {ctx.role === "none" && !showChooser && (
         <Card>
           <CardHeader>
             <CardTitle>Choose your account type</CardTitle>
             <CardDescription>Pick how you want to use the Prescriber Hub.</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-wrap gap-3">
-            <Link to="/onboarding"><Button>I'm a practitioner</Button></Link>
-            <Link to="/hub/verification"><Button variant="outline">I'm a prescriber</Button></Link>
+            <Button onClick={choosePractitioner}>I'm a practitioner</Button>
+            <Button variant="outline" onClick={choosePrescriber}>I'm a prescriber</Button>
           </CardContent>
         </Card>
       )}
