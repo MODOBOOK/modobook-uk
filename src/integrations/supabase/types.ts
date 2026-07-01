@@ -4133,6 +4133,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_walk_in_medical_forms: {
+        Args: { p_referral_id: string; p_template_ids: string[] }
+        Returns: number
+      }
       admin_grant_admin_by_email: { Args: { _email: string }; Returns: string }
       admin_list_admins: {
         Args: never
@@ -4189,6 +4193,7 @@ export type Database = {
       create_walk_in_referral: {
         Args: {
           p_client_id?: string
+          p_medical_form_template_ids?: string[]
           p_note?: string
           p_patient_dob?: string
           p_patient_email?: string
@@ -4391,6 +4396,15 @@ export type Database = {
           visit_id: string
         }[]
       }
+      list_linked_practitioner_medical_forms: {
+        Args: { p_practitioner_profile_id: string }
+        Returns: {
+          description: string
+          id: string
+          is_system: boolean
+          name: string
+        }[]
+      }
       list_my_prescriber_visits: { Args: never; Returns: Json }
       patient_cancel_appointment: {
         Args: { p_appointment_id: string }
@@ -4416,6 +4430,10 @@ export type Database = {
           owner_kind: string
           user_id: string
         }[]
+      }
+      save_walk_in_medical_form_response: {
+        Args: { p_form_id: string; p_referral_id: string; p_response: Json }
+        Returns: boolean
       }
       send_medical_form_to_client: {
         Args: {

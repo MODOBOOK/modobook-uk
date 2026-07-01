@@ -16,7 +16,7 @@ import {
   sendCarePlan,
   getCarePlanForReferral,
 } from "@/lib/prescriptions.functions";
-import { listMySnippets, listMyRxTemplates, sendWalkInToPractitioner } from "@/lib/prescriber-directions.functions";
+import { addWalkInMedicalForms, listLinkedPractitionerMedicalForms, listMySnippets, listMyRxTemplates, saveWalkInMedicalFormResponse, sendWalkInToPractitioner } from "@/lib/prescriber-directions.functions";
 import { WalkInDialog } from "@/components/prescriber/WalkInDialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,8 +28,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { ChevronDown, ChevronUp, CheckCircle2, XCircle, FileText, User, Pill, ClipboardList, PenLine, Send } from "lucide-react";
+import { ChevronDown, ChevronUp, CheckCircle2, XCircle, FileText, User, Pill, ClipboardList, PenLine, Send, Plus, Loader2 } from "lucide-react";
 
 
 export const Route = createFileRoute("/_authenticated/prescriber/")({
@@ -176,7 +177,7 @@ function FullRecord({ id, onComplete, status }: { id: string; onComplete: () => 
   const ref = parsed.referral ?? {};
   const client = parsed.client ?? null;
   const appt = parsed.appointment ?? null;
-  const forms: { id: string; template_name: string; response: unknown; submitted_at: string | null; status: string }[] = parsed.medical_forms ?? [];
+  const forms: MedicalFormRecord[] = parsed.medical_forms ?? [];
   const consents: { id: string; template_name: string; status: string; signed_at: string | null; signature_name: string | null }[] = parsed.consents ?? [];
   return (
     <div className="space-y-4 rounded-md border bg-muted/30 p-3 text-sm">
@@ -203,7 +204,7 @@ function FullRecord({ id, onComplete, status }: { id: string; onComplete: () => 
             <TabsTrigger value="complete">Complete</TabsTrigger>
           </TabsList>
           <TabsContent value="records" className="space-y-4 pt-3">
-            <RecordsSection forms={forms} consents={consents} />
+            <RecordsSection forms={forms} consents={consents} referralId={id} practitionerProfileId={ref.practitioner_profile_id ?? null} onChanged={() => q.refetch()} />
           </TabsContent>
           <TabsContent value="prescribe" className="pt-3">
             <PrescriptionEditor referralId={id} patient={ref} client={client} />
@@ -223,17 +224,32 @@ function FullRecord({ id, onComplete, status }: { id: string; onComplete: () => 
           </TabsContent>
         </Tabs>
       ) : (
-        <RecordsSection forms={forms} consents={consents} />
+        <RecordsSection forms={forms} consents={consents} referralId={id} practitionerProfileId={ref.practitioner_profile_id ?? null} onChanged={() => q.refetch()} />
       )}
     </div>
   );
 }
 
+type MedicalFormRecord = {
+  id: string;
+  template_id?: string | null;
+  template_name: string;
+  description?: string | null;
+  response: unknown;
+  submitted_at: string | null;
+  status: string;
+  schema?: unknown;
+  token?: string | null;
+};
+
 function RecordsSection({
   forms,
   consents,
+  referralId,
+  practitionerProfileId,
+  onChanged,
 }: {
-  forms: { id: string; template_name: string; response: unknown; submitted_at: string | null; status: string }[];
+  forms: MedicalFormRecord[];
   consents: {
     id: string;
     template_name: string;
@@ -246,15 +262,28 @@ function RecordsSection({
     summary?: string | null;
     treatment_type?: string | null;
   }[];
+  referralId: string;
+  practitionerProfileId: string | null;
+  onChanged: () => void;
 }) {
   return (
     <div className="space-y-4">
       <section>
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          Medical forms ({forms.length})
-        </p>
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Medical forms ({forms.length})
+          </p>
+          {practitionerProfileId ? (
+            <AttachMedicalFormsButton
+              referralId={referralId}
+              practitionerProfileId={practitionerProfileId}
+              attachedIds={forms.map((f) => f.template_id).filter(Boolean) as string[]}
+              onChanged={onChanged}
+            />
+          ) : null}
+        </div>
         {forms.length === 0 ? (
-          <p className="text-muted-foreground">None on file for this patient.</p>
+          <p className="rounded-md border border-dashed bg-background p-3 text-muted-foreground">Use Select forms to choose the medical forms for this walk-in. They will load here in full once selected.</p>
         ) : (
           <Accordion type="multiple" className="rounded border bg-background">
             {forms.map((f) => (
@@ -270,11 +299,7 @@ function RecordsSection({
                   </span>
                 </AccordionTrigger>
                 <AccordionContent className="px-3 pb-3">
-                  {f.response ? (
-                    <FormResponseView response={f.response} />
-                  ) : (
-                    <p className="text-xs text-muted-foreground">No response recorded.</p>
-                  )}
+                  <MedicalFormFullView form={f} referralId={referralId} onChanged={onChanged} />
                 </AccordionContent>
               </AccordionItem>
             ))}
@@ -350,6 +375,255 @@ function RecordsSection({
           </Accordion>
         )}
       </section>
+    </div>
+  );
+}
+
+function AttachMedicalFormsButton({
+  referralId,
+  practitionerProfileId,
+  attachedIds,
+  onChanged,
+}: {
+  referralId: string;
+  practitionerProfileId: string;
+  attachedIds: string[];
+  onChanged: () => void;
+}) {
+  const fetchForms = useServerFn(listLinkedPractitionerMedicalForms);
+  const attachForms = useServerFn(addWalkInMedicalForms);
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const formsQ = useQuery({
+    queryKey: ["linked-practitioner-medical-forms", practitionerProfileId],
+    queryFn: () => fetchForms({ data: { practitioner_profile_id: practitionerProfileId } }),
+    enabled: open,
+  });
+  const attached = new Set(attachedIds);
+  const forms = ((formsQ.data ?? []) as { id: string; name: string; description?: string | null }[]).filter((f) => !attached.has(f.id));
+  const filtered = forms.filter((f) => `${f.name} ${f.description ?? ""}`.toLowerCase().includes(query.trim().toLowerCase()));
+
+  function toggle(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+
+  async function save() {
+    if (selected.size === 0) return toast.error("Select at least one medical form");
+    try {
+      const res = await attachForms({ data: { referral_id: referralId, template_ids: Array.from(selected) } });
+      toast.success(res.added > 0 ? "Medical forms loaded" : "Those forms were already loaded");
+      setOpen(false);
+      setSelected(new Set());
+      setQuery("");
+      onChanged();
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  }
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button type="button" size="sm" variant="outline" className="h-7 px-2 text-[11px]">
+          <Plus className="h-3.5 w-3.5" /> Select forms
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-80 space-y-2 p-3">
+        <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search medical forms…" />
+        <div className="max-h-56 space-y-1 overflow-y-auto pr-1">
+          {formsQ.isLoading ? (
+            <p className="py-3 text-xs text-muted-foreground">Loading forms…</p>
+          ) : filtered.length === 0 ? (
+            <p className="py-3 text-xs text-muted-foreground">No more forms available.</p>
+          ) : filtered.map((f) => (
+            <label key={f.id} className="flex cursor-pointer items-start gap-2 rounded-md border p-2 text-sm hover:bg-accent/40">
+              <Checkbox checked={selected.has(f.id)} onCheckedChange={() => toggle(f.id)} className="mt-0.5" />
+              <span className="min-w-0 flex-1">
+                <span className="block truncate font-medium">{f.name}</span>
+                {f.description ? <span className="block truncate text-xs text-muted-foreground">{f.description}</span> : null}
+              </span>
+            </label>
+          ))}
+        </div>
+        <Button type="button" size="sm" className="w-full" onClick={save} disabled={selected.size === 0}>Load selected forms</Button>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+type PrescriberFormElement = {
+  id?: string;
+  type?: string;
+  label?: string;
+  text?: string;
+  required?: boolean;
+  options?: string[];
+  helpText?: string;
+  placeholder?: string;
+  fieldType?: string;
+  level?: 1 | 2 | 3;
+  max?: number;
+};
+type PrescriberFormStep = { id?: string; title?: string; elements?: PrescriberFormElement[] };
+
+function normalizeMedicalSchema(schema: unknown): PrescriberFormStep[] {
+  if (schema && typeof schema === "object" && !Array.isArray(schema) && Array.isArray((schema as { steps?: unknown }).steps)) {
+    return ((schema as { steps: PrescriberFormStep[] }).steps ?? []).map((s, i) => ({ ...s, id: s.id ?? `step-${i}` }));
+  }
+  if (Array.isArray(schema)) {
+    return schema.map((group: any, i) => ({
+      id: String(group.id ?? group.group ?? `group-${i}`),
+      title: String(group.title ?? group.group ?? `Section ${i + 1}`),
+      elements: Array.isArray(group.elements)
+        ? group.elements
+        : (Array.isArray(group.questions) ? group.questions.map((q: any) => ({ ...q, type: q.type ?? "field" })) : []),
+    }));
+  }
+  return [];
+}
+
+function MedicalFormFullView({ form, referralId, onChanged }: { form: MedicalFormRecord; referralId: string; onChanged: () => void }) {
+  const saveResponse = useServerFn(saveWalkInMedicalFormResponse);
+  const steps = normalizeMedicalSchema(form.schema);
+  const response = form.response && typeof form.response === "object" && !Array.isArray(form.response)
+    ? (form.response as Record<string, unknown>)
+    : null;
+  const [answers, setAnswers] = useState<Record<string, unknown>>(response ?? {});
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => { setAnswers(response ?? {}); }, [form.id, form.response]);
+
+  if (!steps.length) {
+    return form.response ? <FormResponseView response={form.response} /> : <p className="text-xs text-muted-foreground">No response recorded.</p>;
+  }
+
+  async function save() {
+    try {
+      setSaving(true);
+      await saveResponse({ data: { referral_id: referralId, form_id: form.id, response: answers } });
+      toast.success("Medical form saved to the patient record");
+      onChanged();
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="space-y-3 text-xs">
+      {form.description ? <p className="text-muted-foreground">{form.description}</p> : null}
+      {steps.map((step, stepIndex) => (
+        <div key={step.id ?? stepIndex} className="space-y-2 rounded-md border bg-muted/20 p-3">
+          {step.title ? <p className="font-semibold text-foreground">{step.title}</p> : null}
+          {(step.elements ?? []).map((el, i) => (
+            <FormSchemaElement
+              key={String(el.id ?? i)}
+              element={el}
+              answers={answers}
+              onChange={(id, value) => setAnswers((prev) => ({ ...prev, [id]: value }))}
+            />
+          ))}
+        </div>
+      ))}
+      <div className="flex justify-end">
+        <Button type="button" size="sm" onClick={save} disabled={saving}>
+          {saving ? <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> : null}
+          Save medical form
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function FormSchemaElement({ element, answers, onChange }: { element: PrescriberFormElement; answers: Record<string, unknown>; onChange: (id: string, value: unknown) => void }) {
+  const type = String(element.type ?? "field");
+  const id = typeof element.id === "string" ? element.id : String(element.label ?? element.text ?? "").toLowerCase().replace(/\W+/g, "_");
+  const label = String(element.label ?? element.text ?? "");
+  const value = answers[id] ?? answers[label];
+  const reqMark = element.required ? <span className="text-destructive"> *</span> : null;
+  if (type === "heading") return <p className="text-sm font-semibold text-foreground">{String(element.text ?? label)}</p>;
+  if (type === "paragraph" || type === "info") return <p className="whitespace-pre-wrap text-muted-foreground">{String(element.text ?? label)}</p>;
+  if (type === "separator") return <div className="my-2 border-t" />;
+  if (type === "space") return <div className="h-2" />;
+  if (type === "yesno" || type === "radio") {
+    const options = type === "yesno" ? ["Yes", "No"] : (element.options ?? []);
+    return (
+      <div className="rounded bg-background p-2">
+        <Label className="text-xs font-medium">{label || "Question"}{reqMark}</Label>
+        <div className="mt-2 flex flex-wrap gap-2">
+          {options.map((o) => (
+            <button key={o} type="button" onClick={() => onChange(id, o)} className={`rounded-md border px-3 py-1.5 text-xs ${value === o ? "border-primary bg-primary/10 text-primary" : "bg-muted/20"}`}>{o}</button>
+          ))}
+        </div>
+        {element.helpText ? <p className="mt-1 text-muted-foreground">{element.helpText}</p> : null}
+      </div>
+    );
+  }
+  if (type === "select") {
+    return (
+      <div className="rounded bg-background p-2">
+        <Label className="text-xs font-medium">{label || "Question"}{reqMark}</Label>
+        <Select value={String(value ?? "")} onValueChange={(v) => onChange(id, v)}>
+          <SelectTrigger className="mt-1 h-8 text-xs"><SelectValue placeholder="Select…" /></SelectTrigger>
+          <SelectContent>{(element.options ?? []).map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
+        </Select>
+      </div>
+    );
+  }
+  if (type === "checkbox" || type === "checkbox_group") {
+    const options = element.options ?? [];
+    if (options.length) {
+      const arr = Array.isArray(value) ? value as string[] : [];
+      return (
+        <div className="rounded bg-background p-2">
+          <Label className="text-xs font-medium">{label || "Question"}{reqMark}</Label>
+          <div className="mt-2 space-y-1">
+            {options.map((o) => (
+              <label key={o} className="flex cursor-pointer items-center gap-2 rounded border p-2">
+                <Checkbox checked={arr.includes(o)} onCheckedChange={(c) => onChange(id, c ? [...arr, o] : arr.filter((x) => x !== o))} />
+                <span>{o}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+      );
+    }
+    return (
+      <label className="flex cursor-pointer items-start gap-2 rounded bg-background p-2">
+        <Checkbox checked={!!value} onCheckedChange={(c) => onChange(id, !!c)} className="mt-0.5" />
+        <span>{label || "Question"}{reqMark}</span>
+      </label>
+    );
+  }
+  if (type === "rating") {
+    const max = Number(element.max ?? 5);
+    const n = Number(value) || 0;
+    return (
+      <div className="rounded bg-background p-2">
+        <Label className="text-xs font-medium">{label || "Question"}{reqMark}</Label>
+        <div className="mt-1 flex gap-1">{Array.from({ length: max }).map((_, i) => <button key={i} type="button" onClick={() => onChange(id, i + 1)} className={i < n ? "text-amber-500" : "text-muted-foreground/40"}>★</button>)}</div>
+      </div>
+    );
+  }
+  const fieldType = element.fieldType === "textarea" || type === "textarea" ? "textarea" : (element.fieldType ?? (type === "date" ? "date" : "text"));
+  return (
+    <div className="rounded bg-background p-2">
+      <div className="flex items-start justify-between gap-3">
+        <Label className="font-medium text-foreground">{label || "Question"}{reqMark}</Label>
+        {element.required ? <Badge variant="outline" className="shrink-0 text-[10px]">Required</Badge> : null}
+      </div>
+      {element.helpText ? <p className="mt-1 text-muted-foreground">{String(element.helpText)}</p> : null}
+      {fieldType === "textarea" ? (
+        <Textarea rows={2} className="mt-2 text-xs" value={String(value ?? "")} placeholder={element.placeholder} onChange={(e) => onChange(id, e.target.value)} />
+      ) : (
+        <Input type={fieldType} className="mt-2 h-8 text-xs" value={String(value ?? "")} placeholder={element.placeholder} onChange={(e) => onChange(id, e.target.value)} />
+      )}
     </div>
   );
 }
