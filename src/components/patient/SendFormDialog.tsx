@@ -59,9 +59,9 @@ export function SendFormDialog({
       setLink(url);
       toast.success("Form saved to patient's account");
       onSent?.();
-      if (options?.thenEmail && email) setTimeout(() => sendEmailWith(url), 50);
-      else if (options?.thenSms && phone) setTimeout(() => sendSmsWith(url), 50);
-      else if (options?.thenWa && phone) setTimeout(() => sendWaWith(url), 50);
+      if (options?.thenEmail && email) await sendEmail(url);
+      else if (options?.thenSms && phone) await sendSms(url);
+      else if (options?.thenWa && phone) await sendWa(url);
     } catch (e) {
       const msg = e instanceof Error ? e.message : typeof e === "string" ? e : (e as any)?.message ?? "Failed to create form";
       toast.error(msg);
@@ -73,25 +73,28 @@ export function SendFormDialog({
     return `Hi ${client.full_name.split(" ")[0] || ""}, please complete this form from ${who}: ${url}`;
   }
 
-  async function sendEmail() {
-    if (!link || !email) return;
+  async function sendEmail(urlOverride?: string) {
+    const url = urlOverride || link;
+    if (!url || !email) return;
     const subject = encodeURIComponent(`${selectedForm?.name ?? "Form"} from ${clinicName || "your clinic"}`);
-    const body = encodeURIComponent(`Hi ${client.full_name},\n\nPlease complete the following form before your appointment:\n\n${link}\n\nThank you,\n${clinicName ?? ""}`);
+    const body = encodeURIComponent(`Hi ${client.full_name},\n\nPlease complete the following form before your appointment:\n\n${url}\n\nThank you,\n${clinicName ?? ""}`);
     window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
-    await logComm({ data: { clientId: client.id, channel: "email", subject: decodeURIComponent(subject), body: link } });
+    await logComm({ data: { clientId: client.id, channel: "email", subject: decodeURIComponent(subject), body: url } });
     onSent?.();
   }
-  async function sendSms() {
-    if (!link || !phone) return;
-    window.location.href = `sms:${phone}?&body=${encodeURIComponent(makeMessage(link))}`;
-    await logComm({ data: { clientId: client.id, channel: "sms", body: makeMessage(link) } });
+  async function sendSms(urlOverride?: string) {
+    const url = urlOverride || link;
+    if (!url || !phone) return;
+    window.location.href = `sms:${phone}?&body=${encodeURIComponent(makeMessage(url))}`;
+    await logComm({ data: { clientId: client.id, channel: "sms", body: makeMessage(url) } });
     onSent?.();
   }
-  async function sendWa() {
-    if (!link || !phone) return;
-    const wa = `https://wa.me/${phone.replace(/\D/g, "")}?text=${encodeURIComponent(makeMessage(link))}`;
+  async function sendWa(urlOverride?: string) {
+    const url = urlOverride || link;
+    if (!url || !phone) return;
+    const wa = `https://wa.me/${phone.replace(/\D/g, "")}?text=${encodeURIComponent(makeMessage(url))}`;
     window.open(wa, "_blank");
-    await logComm({ data: { clientId: client.id, channel: "whatsapp", body: makeMessage(link) } });
+    await logComm({ data: { clientId: client.id, channel: "whatsapp", body: makeMessage(url) } });
     onSent?.();
   }
   async function copyLink() {
