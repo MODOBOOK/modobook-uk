@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { listMyPackages, createPackage, updatePackage, deletePackage } from "@/lib/packages.functions";
 import { getMyTreatments } from "@/lib/treatments.functions";
@@ -10,9 +10,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Package } from "lucide-react";
+import { Plus, Pencil, Trash2, Package, X, Search, Check } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard/packages")({
   ssr: false,
@@ -32,7 +34,9 @@ type Pkg = {
   image_url: string | null;
   active: boolean;
 };
-type Treatment = { id: string; name: string };
+type Treatment = { id: string; name: string; price: number | null };
+
+type PriceMode = "custom" | "percent";
 
 const blankForm = {
   name: "",
@@ -40,6 +44,8 @@ const blankForm = {
   treatment_ids: [] as string[],
   session_count: 1,
   price: 0,
+  priceMode: "custom" as PriceMode,
+  discountPercent: 0,
   duration_minutes: "" as string,
   expiry_days: "" as string,
   image_url: "",
@@ -79,6 +85,8 @@ function PackagesPage() {
       treatment_ids: p.treatment_ids ?? (p.treatment_id ? [p.treatment_id] : []),
       session_count: p.session_count,
       price: Number(p.price),
+      priceMode: "custom",
+      discountPercent: 0,
       duration_minutes: p.duration_minutes ? String(p.duration_minutes) : "",
       expiry_days: p.expiry_days ? String(p.expiry_days) : "",
       image_url: p.image_url ?? "",
@@ -86,6 +94,24 @@ function PackagesPage() {
     });
     setOpen(true);
   }
+
+  const originalTotal = useMemo(() => {
+    return form.treatment_ids.reduce((sum, id) => {
+      const t = treatments.find((x) => x.id === id);
+      return sum + Number(t?.price ?? 0);
+    }, 0) * (Number(form.session_count) || 1);
+  }, [form.treatment_ids, form.session_count, treatments]);
+
+  const effectivePrice = useMemo(() => {
+    if (form.priceMode === "percent") {
+      const pct = Math.max(0, Math.min(100, Number(form.discountPercent) || 0));
+      return Number((originalTotal * (1 - pct / 100)).toFixed(2));
+    }
+    return Number(form.price) || 0;
+  }, [form.priceMode, form.discountPercent, form.price, originalTotal]);
+
+  const savings = Math.max(0, originalTotal - effectivePrice);
+  const savingsPct = originalTotal > 0 ? Math.round((savings / originalTotal) * 100) : 0;
 
   function toggleTreatment(id: string) {
     setForm((f) => ({
@@ -104,7 +130,7 @@ function PackagesPage() {
       treatment_id: form.treatment_ids[0] ?? null,
       treatment_ids: form.treatment_ids,
       session_count: Number(form.session_count) || 1,
-      price: Number(form.price) || 0,
+      price: effectivePrice,
       duration_minutes: form.duration_minutes ? Number(form.duration_minutes) : null,
       expiry_days: form.expiry_days ? Number(form.expiry_days) : null,
       image_url: form.image_url.trim() || null,
@@ -157,38 +183,122 @@ function PackagesPage() {
               </div>
 
               <div>
-                <Label>Included treatments (optional)</Label>
+                <Label>Included treatments</Label>
                 {treatments.length === 0 ? (
                   <p className="mt-1 text-xs text-muted-foreground">You haven't added any treatments yet. The package will be sold using just the description above.</p>
                 ) : (
-                  <div className="mt-2 max-h-48 overflow-y-auto rounded-md border p-2">
-                    {treatments.map((t) => (
-                      <label key={t.id} className="flex cursor-pointer items-center gap-2 rounded px-2 py-1 hover:bg-muted">
-                        <Checkbox
-                          checked={form.treatment_ids.includes(t.id)}
-                          onCheckedChange={() => toggleTreatment(t.id)}
-                        />
-                        <span className="text-sm">{t.name}</span>
-                      </label>
-                    ))}
-                  </div>
-                )}
-                {form.treatment_ids.length > 0 && (
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {form.treatment_ids.length} treatment{form.treatment_ids.length === 1 ? "" : "s"} selected
-                  </p>
+                  <>
+                    <TreatmentSearchPicker
+                      treatments={treatments}
+                      selectedIds={form.treatment_ids}
+                      onToggle={toggleTreatment}
+                    />
+                    {form.treatment_ids.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {form.treatment_ids.map((id) => {
+                          const t = treatments.find((x) => x.id === id);
+                          if (!t) return null;
+                          return (
+                            <Badge key={id} variant="secondary" className="gap-1 pr-1">
+                              <span>{t.name}</span>
+                              {t.price != null && <span className="text-muted-foreground">· £{Number(t.price).toFixed(2)}</span>}
+                              <button
+                                type="button"
+                                onClick={() => toggleTreatment(id)}
+                                className="ml-0.5 rounded p-0.5 hover:bg-background/60"
+                                aria-label={`Remove ${t.name}`}
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            </Badge>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label>Total sessions</Label>
-                  <Input type="number" min={1} value={form.session_count} onChange={(e) => setForm({ ...form, session_count: Number(e.target.value) })} />
+              <div>
+                <Label>Total sessions</Label>
+                <Input
+                  type="number"
+                  min={1}
+                  value={form.session_count}
+                  onFocus={(e) => e.target.select()}
+                  onChange={(e) => setForm({ ...form, session_count: Number(e.target.value) })}
+                />
+              </div>
+
+              <div className="rounded-lg border bg-muted/30 p-3">
+                <div className="mb-2 flex items-center justify-between">
+                  <Label className="text-sm font-semibold">Package pricing</Label>
+                  {originalTotal > 0 && (
+                    <span className="text-xs text-muted-foreground">
+                      Sessions × treatments = <span className="font-medium">£{originalTotal.toFixed(2)}</span>
+                    </span>
+                  )}
                 </div>
-                <div>
-                  <Label>Price (£)</Label>
-                  <Input type="number" min={0} step="0.01" value={form.price} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} />
+                <div className="mb-3 inline-flex rounded-md border bg-background p-0.5 text-xs">
+                  <button
+                    type="button"
+                    onClick={() => setForm({ ...form, priceMode: "percent" })}
+                    className={`rounded px-3 py-1.5 transition ${form.priceMode === "percent" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                  >
+                    Apply % discount
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setForm({ ...form, priceMode: "custom" })}
+                    className={`rounded px-3 py-1.5 transition ${form.priceMode === "custom" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                  >
+                    Set custom price
+                  </button>
                 </div>
+                {form.priceMode === "percent" ? (
+                  <div>
+                    <Label>Discount (%)</Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      max={100}
+                      step="1"
+                      value={form.discountPercent}
+                      onFocus={(e) => e.target.select()}
+                      onChange={(e) => setForm({ ...form, discountPercent: Number(e.target.value) })}
+                      placeholder="e.g. 15"
+                    />
+                  </div>
+                ) : (
+                  <div>
+                    <Label>Package price (£)</Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      step="0.01"
+                      value={form.price}
+                      onFocus={(e) => e.target.select()}
+                      onChange={(e) => setForm({ ...form, price: Number(e.target.value) })}
+                    />
+                  </div>
+                )}
+                {originalTotal > 0 && (
+                  <div className="mt-3 flex items-baseline justify-between rounded-md bg-background p-2.5">
+                    <div className="text-xs text-muted-foreground">
+                      {savings > 0 ? (
+                        <>
+                          Was <span className="line-through">£{originalTotal.toFixed(2)}</span> — save{" "}
+                          <span className="font-medium text-emerald-600">£{savings.toFixed(2)} ({savingsPct}%)</span>
+                        </>
+                      ) : effectivePrice > originalTotal ? (
+                        <span className="text-amber-600">Priced above sum of treatments</span>
+                      ) : (
+                        "No discount applied"
+                      )}
+                    </div>
+                    <div className="text-lg font-semibold">£{effectivePrice.toFixed(2)}</div>
+                  </div>
+                )}
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -227,6 +337,10 @@ function PackagesPage() {
           {packages.map((p) => {
             const ids = p.treatment_ids ?? (p.treatment_id ? [p.treatment_id] : []);
             const names = ids.map((id) => treatments.find((tt) => tt.id === id)?.name).filter(Boolean) as string[];
+            const original = ids.reduce((sum, id) => sum + Number(treatments.find((tt) => tt.id === id)?.price ?? 0), 0) * (p.session_count || 1);
+            const price = Number(p.price);
+            const saving = original > price ? original - price : 0;
+            const savingPct = original > 0 && saving > 0 ? Math.round((saving / original) * 100) : 0;
             return (
               <Card key={p.id}>
                 <CardHeader className="flex flex-row items-start justify-between gap-2 pb-2">
@@ -243,10 +357,20 @@ function PackagesPage() {
                 </CardHeader>
                 <CardContent className="text-sm">
                   {p.description && <p className="mb-2 line-clamp-2 text-xs text-muted-foreground">{p.description}</p>}
-                  <div className="flex justify-between">
+                  <div className="flex items-baseline justify-between gap-2">
                     <span>{p.session_count} session{p.session_count === 1 ? "" : "s"}</span>
-                    <span className="font-semibold">£{Number(p.price).toFixed(2)}</span>
+                    <div className="text-right">
+                      {saving > 0 && (
+                        <div className="text-xs text-muted-foreground line-through">£{original.toFixed(2)}</div>
+                      )}
+                      <div className="font-semibold">£{price.toFixed(2)}</div>
+                    </div>
                   </div>
+                  {saving > 0 && (
+                    <p className="mt-1 text-right text-xs font-medium text-emerald-600">
+                      Save £{saving.toFixed(2)} ({savingPct}%)
+                    </p>
+                  )}
                   {p.expiry_days && <p className="mt-1 text-xs text-muted-foreground">Expires after {p.expiry_days} days</p>}
                   {!p.active && <p className="mt-1 text-xs text-amber-600">Hidden from patients</p>}
                 </CardContent>
@@ -256,5 +380,49 @@ function PackagesPage() {
         </div>
       )}
     </div>
+  );
+}
+
+function TreatmentSearchPicker({
+  treatments,
+  selectedIds,
+  onToggle,
+}: {
+  treatments: Treatment[];
+  selectedIds: string[];
+  onToggle: (id: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="outline" role="combobox" className="mt-2 w-full justify-start font-normal text-muted-foreground">
+          <Search className="mr-2 h-4 w-4" />
+          Search treatments to add…
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+        <Command>
+          <CommandInput placeholder="Type to search…" />
+          <CommandList>
+            <CommandEmpty>No treatments found.</CommandEmpty>
+            <CommandGroup>
+              {treatments.map((t) => {
+                const checked = selectedIds.includes(t.id);
+                return (
+                  <CommandItem key={t.id} value={t.name} onSelect={() => onToggle(t.id)}>
+                    <Check className={`mr-2 h-4 w-4 ${checked ? "opacity-100" : "opacity-0"}`} />
+                    <span className="flex-1">{t.name}</span>
+                    {t.price != null && (
+                      <span className="ml-2 text-xs text-muted-foreground">£{Number(t.price).toFixed(2)}</span>
+                    )}
+                  </CommandItem>
+                );
+              })}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
   );
 }
