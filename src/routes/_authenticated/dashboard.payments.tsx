@@ -41,6 +41,9 @@ function PaymentsPage() {
         return;
       }
       setSetupIssue(null);
+      if ("recovered" in res && res.recovered) {
+        toast.success("Fresh sandbox Stripe connection created");
+      }
       window.location.href = res.url;
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to start Stripe onboarding");
@@ -52,8 +55,12 @@ function PaymentsPage() {
   async function checkStatus() {
     setLoading(true);
     try {
-      await refresh({});
-      toast.success("Status refreshed");
+      const res = await refresh({});
+      if ("reset" in res && res.reset) {
+        toast.info("Old Stripe connection cleared. Please connect again in sandbox mode.");
+      } else {
+        toast.success("Status refreshed");
+      }
       router.invalidate();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to refresh status");
@@ -106,6 +113,7 @@ function PaymentsPage() {
             </Alert>
           )}
           <ul className="space-y-1 text-sm text-muted-foreground">
+            <li>• Sandbox/test mode is active — use Stripe keys that start with sk_test_.</li>
             <li>• 0% platform fee — you keep 100% (minus Stripe processing fees).</li>
             <li>• Klarna & Clearpay supported with a 5% surcharge passed to the patient.</li>
             <li>• Refunds and disputes handled in your own Stripe dashboard.</li>
