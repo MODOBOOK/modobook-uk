@@ -52,6 +52,7 @@ function SettingsPage() {
     patient_reschedule_max: (profile.patient_reschedule_max as number | null) ?? (2 as number | null),
     patient_reschedule_cutoff_hours: (profile.patient_reschedule_cutoff_hours as number | null) ?? (24 as number | null),
     patient_cancel_cutoff_hours: (profile.patient_cancel_cutoff_hours as number | null) ?? (24 as number | null),
+    late_cancel_mode: ((profile as { late_cancel_mode?: string }).late_cancel_mode as "block" | "warn_agree" | undefined) ?? "block",
     // confirm & reminders
     auto_confirm_bookings: profile.auto_confirm_bookings !== false,
     email_confirmations_enabled: profile.email_confirmations_enabled !== false,
@@ -293,14 +294,28 @@ function SettingsPage() {
             onChange={(v) => set("allow_patient_cancel", v)}
           />
           {s.allow_patient_cancel && (
-            <div className="ml-2 grid gap-3 rounded-lg border bg-muted/30 p-3 sm:grid-cols-2">
+            <div className="ml-2 space-y-3 rounded-lg border bg-muted/30 p-3">
               <NumberField
                 label="Cancel cutoff (hours before)"
-                hint="Block self-cancel inside this window."
+                hint="Inside this window, self-cancel is restricted."
                 value={s.patient_cancel_cutoff_hours ?? ""}
                 allowEmpty
                 onChange={(v) => set("patient_cancel_cutoff_hours", v === "" ? null : Number(v))}
               />
+              <div>
+                <Label className="text-sm font-medium">When cancelling inside the cutoff</Label>
+                <p className="mb-2 text-xs text-muted-foreground">
+                  Choose how the patient portal handles late cancellations.
+                </p>
+                <select
+                  className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+                  value={s.late_cancel_mode}
+                  onChange={(e) => set("late_cancel_mode", e.target.value as "block" | "warn_agree")}
+                >
+                  <option value="block">Block — ask patient to contact the clinic</option>
+                  <option value="warn_agree">Warn & require agreement (they accept any charges per your policy)</option>
+                </select>
+              </div>
             </div>
           )}
         </CardContent>

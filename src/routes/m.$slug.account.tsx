@@ -4,11 +4,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
+} from "@/components/ui/dialog";
 import {
   Loader2, Calendar as CalendarIcon, Clock, MapPin, FileText, StickyNote,
-  ClipboardCheck, Receipt, ShieldCheck, ExternalLink, Sparkles,
+  ClipboardCheck, Receipt, ShieldCheck, ExternalLink, Sparkles, HeartPulse,
+  Mail, Phone, AlertTriangle, ChevronDown,
 } from "lucide-react";
 import { toast } from "sonner";
+import { describeCancellationRules, type CancellationRule } from "@/lib/policy";
 
 export const Route = createFileRoute("/m/$slug/account")({
   ssr: false,
@@ -39,6 +45,14 @@ type Profile = {
   allow_patient_cancel: boolean | null;
   allow_patient_reschedule: boolean | null;
   cancellation_rules: any;
+  patient_cancel_cutoff_hours: number | null;
+  patient_reschedule_cutoff_hours: number | null;
+  patient_reschedule_max: number | null;
+  late_cancel_mode: "block" | "warn_agree" | null;
+  email: string | null;
+  phone: string | null;
+  contact_sms_number: string | null;
+  contact_whatsapp_number: string | null;
 };
 
 function Account() {
@@ -71,7 +85,7 @@ function Account() {
       // Public profile + rules
       const { data: prof } = await supabase
         .from("profiles")
-        .select("id, full_name, clinic_name, brand_color, avatar_url, allow_patient_cancel, allow_patient_reschedule, cancellation_rules")
+        .select("id, full_name, clinic_name, brand_color, avatar_url, allow_patient_cancel, allow_patient_reschedule, cancellation_rules, patient_cancel_cutoff_hours, patient_reschedule_cutoff_hours, patient_reschedule_max, late_cancel_mode, email, phone, contact_sms_number, contact_whatsapp_number")
         .eq("slug", slug)
         .maybeSingle();
       if (!prof) throw new Error("Practitioner not found");
@@ -157,11 +171,26 @@ function Account() {
   const upcoming = appts.filter((a) => a.scheduled_date >= today && a.status !== "cancelled");
   const past = appts.filter((a) => a.scheduled_date < today || a.status === "cancelled" || a.status === "completed");
 
-  async function cancelAppt(id: string) {
-    if (!confirm("Cancel this appointment?")) return;
-    const { error } = await supabase.rpc("patient_cancel_appointment", { p_appointment_id: id });
+  const [cancelTarget, setCancelTarget] = useState<Appt | null>(null);
+  const [cancelAgreed, setCancelAgreed] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+
+  function openCancel(a: Appt) {
+    setCancelAgreed(false);
+    setCancelTarget(a);
+  }
+
+  async function performCancel(confirmLate: boolean) {
+    if (!cancelTarget) return;
+    setCancelling(true);
+    const { error } = await supabase.rpc("patient_cancel_appointment", {
+      p_appointment_id: cancelTarget.id,
+      p_confirm_late: confirmLate,
+    } as any);
+    setCancelling(false);
     if (error) return toast.error(error.message);
     toast.success("Appointment cancelled");
+    setCancelTarget(null);
     loadAll();
   }
 
@@ -192,14 +221,28 @@ function Account() {
                 key={a.id} a={a} brand={brand}
                 allowCancel={!!profile?.allow_patient_cancel}
                 allowReschedule={!!profile?.allow_patient_reschedule}
-                rules={profile?.cancellation_rules}
+                cancelCutoffHours={profile?.patient_cancel_cutoff_hours ?? 0}
+                rescheduleCutoffHours={profile?.patient_reschedule_cutoff_hours ?? 0}
+                maxReschedules={profile?.patient_reschedule_max ?? 999}
                 slug={slug}
-                onCancel={() => cancelAppt(a.id)}
+                onCancel={() => openCancel(a)}
               />
             ))}
           </div>
         )}
       </Section>
+
+      <CancelDialog
+        open={!!cancelTarget}
+        onOpenChange={(v) => { if (!v) setCancelTarget(null); }}
+        appt={cancelTarget}
+        profile={profile}
+        agreed={cancelAgreed}
+        setAgreed={setCancelAgreed}
+        loading={cancelling}
+        onConfirm={performCancel}
+      />
+
 
       {/* Medical forms */}
       <Section title="Medical forms" icon={ClipboardCheck} brand={brand}>
@@ -237,25 +280,28 @@ function Account() {
         )}
       </Section>
 
-      {/* Shared notes & aftercare */}
-      <Section title="Notes & aftercare from your practitioner" icon={StickyNote} brand={brand}>
-        {notes.length === 0 && aftercare.length === 0 ? <Empty msg="Your practitioner hasn't shared any notes yet." /> : (
+      {/* Aftercare */}
+      <Section title="Aftercare guidance" icon={HeartPulse} brand={brand}>
+        {aftercare.length === 0 ? (
+          <Empty msg="Your practitioner will share aftercare here after your appointment." />
+        ) : (
+          <div className="space-y-3">
+            {aftercare.map((ac) => <AftercareCard key={ac.id} ac={ac} brand={brand} appts={appts} />)}
+          </div>
+        )}
+      </Section>
+
+      {/* Shared notes */}
+      <Section title="Notes from your practitioner" icon={StickyNote} brand={brand}>
+        {notes.length === 0 ? <Empty msg="No shared notes yet." /> : (
           <div className="space-y-3">
             {notes.map((n) => (
               <Card key={n.id} className="border-l-4" style={{ borderLeftColor: brand }}>
-                <CardContent className="p-3">
+                <CardContent className="p-4">
                   <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
                     <Sparkles className="h-3 w-3" />Shared note · {new Date(n.shared_at || n.created_at).toLocaleDateString()}
                   </div>
-                  <div className="mt-1 whitespace-pre-wrap text-sm">{n.body}</div>
-                </CardContent>
-              </Card>
-            ))}
-            {aftercare.map((ac) => (
-              <Card key={ac.id}>
-                <CardContent className="p-3">
-                  <div className="text-[11px] text-muted-foreground">Aftercare · {new Date(ac.sent_at || ac.send_at).toLocaleDateString()}</div>
-                  <div className="prose prose-sm mt-1 max-w-none" dangerouslySetInnerHTML={{ __html: ac.body_html ?? "" }} />
+                  <div className="mt-1 whitespace-pre-wrap text-sm leading-relaxed">{n.body}</div>
                 </CardContent>
               </Card>
             ))}
@@ -269,6 +315,7 @@ function Account() {
           <div className="space-y-3">{past.map((a) => <ApptCard key={a.id} a={a} brand={brand} slug={slug} />)}</div>
         )}
       </Section>
+
 
       {/* Invoices */}
       <Section title="Invoices & payments" icon={Receipt} brand={brand}>
@@ -325,16 +372,19 @@ function RowItem({ title, meta, badge, badgeOk, href }: { title: string; meta: s
 }
 
 function ApptCard({
-  a, brand, slug, allowCancel, allowReschedule, rules, onCancel,
+  a, brand, slug, allowCancel, allowReschedule,
+  cancelCutoffHours = 0, rescheduleCutoffHours = 0, maxReschedules = 999,
+  onCancel,
 }: {
   a: Appt; brand: string; slug: string;
-  allowCancel?: boolean; allowReschedule?: boolean; rules?: any;
+  allowCancel?: boolean; allowReschedule?: boolean;
+  cancelCutoffHours?: number; rescheduleCutoffHours?: number; maxReschedules?: number;
   onCancel?: () => void;
 }) {
-  const minH = rules?.min_notice_hours ?? 0;
-  const maxR = rules?.max_patient_reschedules ?? 999;
-  const remaining = Math.max(0, maxR - (a.reschedule_count ?? 0));
+  const remaining = Math.max(0, maxReschedules - (a.reschedule_count ?? 0));
   const treatmentName = a.treatments?.name ?? a.treatment_name_snapshot ?? "Treatment";
+  const hoursUntil = hoursBetweenNowAnd(a.scheduled_date, a.start_time);
+  const rescheduleTooLate = allowReschedule && hoursUntil < rescheduleCutoffHours;
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -350,17 +400,23 @@ function ApptCard({
           {a.locations?.name && <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{a.locations.name}</span>}
         </div>
         {(allowCancel || allowReschedule) && a.status !== "cancelled" && a.status !== "completed" && (
-          <div className="flex flex-wrap gap-2 pt-1">
-            {allowReschedule && a.treatment_id && remaining > 0 && (
+          <div className="flex flex-wrap items-center gap-2 pt-1">
+            {allowReschedule && a.treatment_id && remaining > 0 && !rescheduleTooLate && (
               <Link to="/m/$slug/book/$treatmentId" params={{ slug, treatmentId: a.treatment_id }}>
                 <Button size="sm" variant="outline">Reschedule ({remaining} left)</Button>
               </Link>
             )}
+            {allowReschedule && rescheduleTooLate && (
+              <span className="text-[11px] text-muted-foreground">Reschedule needs {rescheduleCutoffHours}h notice — please contact the clinic.</span>
+            )}
+            {allowReschedule && !rescheduleTooLate && remaining === 0 && (
+              <span className="text-[11px] text-muted-foreground">Reschedule limit reached — please contact the clinic.</span>
+            )}
             {allowCancel && onCancel && (
               <Button size="sm" variant="ghost" onClick={onCancel}>Cancel appointment</Button>
             )}
-            {minH > 0 && (
-              <span className="self-center text-[11px] text-muted-foreground">Min {minH}h notice required</span>
+            {allowCancel && cancelCutoffHours > 0 && (
+              <span className="text-[11px] text-muted-foreground">Free cancel up to {cancelCutoffHours}h before</span>
             )}
           </div>
         )}
@@ -368,3 +424,158 @@ function ApptCard({
     </Card>
   );
 }
+
+function hoursBetweenNowAnd(date?: string, time?: string): number {
+  if (!date || !time) return Infinity;
+  const dt = new Date(`${date}T${time}`);
+  return (dt.getTime() - Date.now()) / 3_600_000;
+}
+
+function AftercareCard({ ac, brand, appts }: { ac: any; brand: string; appts: Appt[] }) {
+  const [open, setOpen] = useState(false);
+  const appt = appts.find((a) => a.id === ac.appointment_id);
+  const title = appt ? (appt.treatments?.name ?? appt.treatment_name_snapshot ?? "Treatment") : "Aftercare";
+  const when = ac.sent_at || ac.send_at;
+  return (
+    <Card className="border-l-4 overflow-hidden" style={{ borderLeftColor: brand }}>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="flex w-full items-center gap-3 p-4 text-left hover:bg-muted/30"
+      >
+        <div className="grid h-9 w-9 flex-none place-items-center rounded-full" style={{ background: `${brand}18`, color: brand }}>
+          <HeartPulse className="h-4 w-4" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-sm font-medium">{title} · Aftercare</div>
+          <div className="text-[11px] text-muted-foreground">
+            {when ? new Date(when).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" }) : ""}
+            {appt?.scheduled_date && ` · for appt ${appt.scheduled_date}`}
+          </div>
+        </div>
+        <Badge variant={ac.sent_at ? "default" : "secondary"} className="hidden sm:inline-flex">
+          {ac.sent_at ? "Delivered" : "Scheduled"}
+        </Badge>
+        <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+      {open && (
+        <div className="border-t bg-muted/20 px-4 py-3">
+          <div
+            className="prose prose-sm max-w-none prose-headings:mt-3 prose-headings:mb-1 prose-p:my-1.5 prose-ul:my-1.5 prose-li:my-0.5"
+            dangerouslySetInnerHTML={{ __html: ac.body_html ?? "<em>No content</em>" }}
+          />
+        </div>
+      )}
+    </Card>
+  );
+}
+
+function CancelDialog({
+  open, onOpenChange, appt, profile, agreed, setAgreed, loading, onConfirm,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  appt: Appt | null;
+  profile: Profile | null;
+  agreed: boolean;
+  setAgreed: (v: boolean) => void;
+  loading: boolean;
+  onConfirm: (confirmLate: boolean) => void;
+}) {
+  if (!appt || !profile) return null;
+  const cutoff = profile.patient_cancel_cutoff_hours ?? 0;
+  const mode = profile.late_cancel_mode ?? "block";
+  const hoursUntil = hoursBetweenNowAnd(appt.scheduled_date, appt.start_time);
+  const isLate = hoursUntil < cutoff;
+  const rules: CancellationRule[] = Array.isArray(profile.cancellation_rules) ? profile.cancellation_rules : [];
+  const applicable = rules
+    .slice()
+    .sort((a, b) => a.hours_before - b.hours_before)
+    .find((r) => hoursUntil < r.hours_before);
+  const ruleLines = describeCancellationRules(rules);
+  const contactEmail = profile.email;
+  const contactPhone = profile.phone || profile.contact_sms_number || profile.contact_whatsapp_number;
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            {isLate ? <AlertTriangle className="h-4 w-4 text-amber-600" /> : null}
+            Cancel appointment
+          </DialogTitle>
+          <DialogDescription>
+            {appt.treatments?.name ?? appt.treatment_name_snapshot ?? "Treatment"} · {appt.scheduled_date} at {appt.start_time?.slice(0, 5)}
+          </DialogDescription>
+        </DialogHeader>
+
+        {!isLate && (
+          <p className="text-sm text-muted-foreground">
+            You're outside the {cutoff}h cancellation window. This won't incur any charge.
+          </p>
+        )}
+
+        {isLate && mode === "block" && (
+          <div className="space-y-3">
+            <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+              Cancellations inside {cutoff}h of your appointment must be arranged directly with the clinic. Please get in touch below.
+            </div>
+            <div className="space-y-1 text-sm">
+              {contactEmail && (
+                <a href={`mailto:${contactEmail}?subject=${encodeURIComponent("Cancel appointment on " + appt.scheduled_date)}`} className="inline-flex items-center gap-2 underline">
+                  <Mail className="h-4 w-4" /> {contactEmail}
+                </a>
+              )}
+              {contactPhone && (
+                <div className="flex items-center gap-2"><Phone className="h-4 w-4" /> <a href={`tel:${contactPhone}`} className="underline">{contactPhone}</a></div>
+              )}
+              {!contactEmail && !contactPhone && (
+                <div className="text-muted-foreground">Please contact your practitioner directly.</div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {isLate && mode === "warn_agree" && (
+          <div className="space-y-3">
+            <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+              <div className="font-medium">Late cancellation ({cutoff}h notice)</div>
+              {applicable ? (
+                <div className="mt-1">A <strong>{applicable.fee_percent}%</strong> cancellation fee applies to this booking.</div>
+              ) : (
+                <div className="mt-1">A cancellation fee may apply as per the clinic's policy.</div>
+              )}
+            </div>
+            {ruleLines.length > 0 && (
+              <div className="rounded-md border p-3 text-xs text-muted-foreground">
+                <div className="mb-1 font-medium text-foreground">Clinic policy</div>
+                <ul className="list-disc space-y-0.5 pl-4">
+                  {ruleLines.map((l, i) => <li key={i}>{l}</li>)}
+                </ul>
+              </div>
+            )}
+            <label className="flex items-start gap-2 text-sm">
+              <Checkbox checked={agreed} onCheckedChange={(v) => setAgreed(v === true)} className="mt-0.5" />
+              <span>I understand and agree to be charged as per the clinic's cancellation policy.</span>
+            </label>
+          </div>
+        )}
+
+        <DialogFooter className="gap-2">
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>Keep appointment</Button>
+          {!isLate && (
+            <Button variant="destructive" onClick={() => onConfirm(false)} disabled={loading}>
+              {loading ? "Cancelling…" : "Cancel appointment"}
+            </Button>
+          )}
+          {isLate && mode === "warn_agree" && (
+            <Button variant="destructive" disabled={!agreed || loading} onClick={() => onConfirm(true)}>
+              {loading ? "Cancelling…" : "Confirm cancellation"}
+            </Button>
+          )}
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
