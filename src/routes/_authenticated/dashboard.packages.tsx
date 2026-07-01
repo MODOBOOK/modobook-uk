@@ -139,6 +139,7 @@ function PackagesPage() {
       expiry_days: form.expiry_days ? Number(form.expiry_days) : null,
       image_url: form.image_url.trim() || null,
       active: form.active,
+      category_id: form.category_id || null,
     };
     try {
       if (editing) await update({ data: { id: editing.id, ...payload } });
