@@ -33,8 +33,10 @@ type Pkg = {
   expiry_days: number | null;
   image_url: string | null;
   active: boolean;
+  category_id: string | null;
 };
 type Treatment = { id: string; name: string; price: number | null };
+type Category = { id: string; name: string; parent_id: string | null };
 
 type PriceMode = "custom" | "percent";
 
