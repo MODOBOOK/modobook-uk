@@ -996,17 +996,47 @@ function SendWalkInButton({ id }: { id: string }) {
   );
 }
 
-function TemplatePicker({ onPick }: { onPick: (t: RxTemplate) => void }) {
+function TemplatePicker({ onPick }: { onPick: (t: Partial<RxTemplate>) => void }) {
   const fetchFn = useServerFn(listMyRxTemplates);
   const q = useQuery({ queryKey: ["rx-templates"], queryFn: () => fetchFn() });
-  const list = (q.data ?? []) as RxTemplate[];
+  const mine = (q.data ?? []) as RxTemplate[];
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { AESTHETICS_MEDICATIONS } = require("@/lib/aesthetics-medications") as typeof import("@/lib/aesthetics-medications");
+  const categories = Array.from(new Set(AESTHETICS_MEDICATIONS.map((m) => m.category)));
+
+  function handlePick(value: string) {
+    if (value.startsWith("mine:")) {
+      const t = mine.find((x) => x.id === value.slice(5));
+      if (t) onPick(t);
+      return;
+    }
+    if (value.startsWith("preset:")) {
+      const p = AESTHETICS_MEDICATIONS.find((x) => x.id === value.slice(7));
+      if (p) onPick(p);
+    }
+  }
+
   return (
     <div className="flex items-center gap-2">
-      <Label className="text-[11px] text-muted-foreground">Load template</Label>
-      <Select onValueChange={(id) => { const t = list.find((x) => x.id === id); if (t) onPick(t); }}>
-        <SelectTrigger className="h-8 w-56 text-xs"><SelectValue placeholder={list.length ? "Choose a template…" : "No templates yet"} /></SelectTrigger>
-        <SelectContent>
-          {list.map((t) => <SelectItem key={t.id} value={t.id}>{t.label}</SelectItem>)}
+      <Label className="text-[11px] text-muted-foreground">Load medication</Label>
+      <Select onValueChange={handlePick}>
+        <SelectTrigger className="h-8 w-64 text-xs"><SelectValue placeholder="Choose a preset or template…" /></SelectTrigger>
+        <SelectContent className="max-h-80">
+          {mine.length > 0 && (
+            <>
+              <div className="px-2 pt-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">My templates</div>
+              {mine.map((t) => <SelectItem key={t.id} value={`mine:${t.id}`}>{t.label}</SelectItem>)}
+              <div className="my-1 border-t" />
+            </>
+          )}
+          {categories.map((cat) => (
+            <div key={cat}>
+              <div className="px-2 pt-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{cat}</div>
+              {AESTHETICS_MEDICATIONS.filter((m) => m.category === cat).map((m) => (
+                <SelectItem key={m.id} value={`preset:${m.id}`}>{m.label}</SelectItem>
+              ))}
+            </div>
+          ))}
         </SelectContent>
       </Select>
     </div>
