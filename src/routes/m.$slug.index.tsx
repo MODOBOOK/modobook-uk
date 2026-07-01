@@ -1473,6 +1473,20 @@ function BookPage() {
                                   </ul>
                                 </div>
                               )}
+                              {(() => {
+                                const originalTotal = includedTreatments.reduce((s, t) => s + Number(t.price ?? 0), 0) * (p.session_count || 1);
+                                const price = Number(p.price ?? 0);
+                                const saving = originalTotal > price ? originalTotal - price : 0;
+                                const savingPct = originalTotal > 0 && saving > 0 ? Math.round((saving / originalTotal) * 100) : 0;
+                                return saving > 0 ? (
+                                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                                    <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-800">
+                                      Save £{saving.toFixed(2)} ({savingPct}%)
+                                    </span>
+                                    <span className="text-xs opacity-60 line-through">£{originalTotal.toFixed(2)}</span>
+                                  </div>
+                                ) : null;
+                              })()}
                               <div className="mt-3 flex items-center justify-between gap-2">
                                 <p className="font-bold" style={{ color: brand }}>
                                   £{Number(p.price ?? 0).toFixed(2)}
