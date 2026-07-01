@@ -109,6 +109,65 @@ function textToParagraphHtml(text: string) {
     .join("");
 }
 
+function WelcomeIntroBlock({
+  heading,
+  html,
+  headingStyle,
+  brand,
+  expandable,
+  variant,
+}: {
+  heading: string;
+  html: string;
+  headingStyle: React.CSSProperties;
+  brand: string;
+  expandable: boolean;
+  variant: "mobile" | "desktop";
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const proseCls =
+    variant === "mobile"
+      ? "prose prose-sm max-w-none [&_h1]:text-2xl [&_h2]:text-xl [&_h3]:text-lg [&_p]:leading-relaxed [&_p]:my-3 [&_p:empty]:min-h-[1em] [&_p:empty]:block [&_br]:block [&_strong]:font-bold"
+      : "prose prose-base sm:prose-lg max-w-none [&_h1]:text-3xl [&_h2]:text-2xl [&_h3]:text-xl [&_p]:leading-relaxed [&_p]:my-3 [&_p:empty]:min-h-[1em] [&_p:empty]:block [&_br]:block [&_strong]:font-bold";
+  const collapsed = expandable && !expanded;
+  return (
+    <>
+      {heading && (
+        <h2
+          className={
+            variant === "mobile"
+              ? "mb-3 text-xl font-bold leading-tight"
+              : "mb-3 text-2xl font-bold leading-tight sm:text-3xl"
+          }
+          style={headingStyle}
+        >
+          {heading}
+        </h2>
+      )}
+      {html && (
+        <div className="relative">
+          <div
+            className={collapsed ? "max-h-40 overflow-hidden" : ""}
+            style={collapsed ? { maskImage: "linear-gradient(to bottom, black 60%, transparent)", WebkitMaskImage: "linear-gradient(to bottom, black 60%, transparent)" } : undefined}
+          >
+            <SafeHtml html={html} className={proseCls} />
+          </div>
+          {expandable && (
+            <button
+              type="button"
+              onClick={() => setExpanded((v) => !v)}
+              className="mt-3 text-sm font-semibold underline underline-offset-4"
+              style={{ color: brand }}
+            >
+              {expanded ? "Show less" : "Read more"}
+            </button>
+          )}
+        </div>
+      )}
+    </>
+  );
+}
+
 type Theme = Database["public"]["Tables"]["clinic_theme"]["Row"];
 
 function BookPage() {
