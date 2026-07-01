@@ -1478,14 +1478,28 @@ function BookPage() {
                                   £{Number(p.price ?? 0).toFixed(2)}
                                 </p>
                                 {firstTreatmentId ? (
-                                  <Link
-                                    to="/m/$slug/book/$treatmentId"
-                                    params={{ slug, treatmentId: firstTreatmentId }}
-                                    className="modo-btn px-4 py-1.5 text-sm font-semibold"
-
-                                  >
-                                    Book
-                                  </Link>
+                                  <div className="flex items-center gap-2">
+                                    <button
+                                      type="button"
+                                      onClick={() => togglePackageSelect(p.id)}
+                                      aria-pressed={isPackageSelected(p.id)}
+                                      className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition"
+                                      style={
+                                        isPackageSelected(p.id)
+                                          ? { backgroundColor: brand, borderColor: brand, color: "#fff" }
+                                          : { borderColor: `${brand}66`, color: brand }
+                                      }
+                                    >
+                                      {isPackageSelected(p.id) ? (<><Check className="h-3 w-3" /> Added</>) : "Add"}
+                                    </button>
+                                    <Link
+                                      to="/m/$slug/book/$treatmentId"
+                                      params={{ slug, treatmentId: firstTreatmentId }}
+                                      className="modo-btn px-4 py-1.5 text-sm font-semibold"
+                                    >
+                                      Book
+                                    </Link>
+                                  </div>
                                 ) : (
                                   <span className="text-xs opacity-60">Contact to book</span>
                                 )}
