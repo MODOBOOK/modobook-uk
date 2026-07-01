@@ -218,6 +218,7 @@ function MultiBookPage() {
   const [submitting, setSubmitting] = useState(false);
   const submitLockRef = useRef(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [splitAgreed, setSplitAgreed] = useState(false);
   const [prescriberConsents, setPrescriberConsents] = useState<Record<string, boolean>>({});
   const [visitSelections, setVisitSelections] = useState<Record<string, string>>({});
 
