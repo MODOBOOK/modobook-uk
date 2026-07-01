@@ -1,48 +1,40 @@
 ## Goal
-Replace the "Book an in-person consultation" routing (which sent patients off to the prescriber's own booking page) with **Clinic Visit Days** — preset days when a prescriber will be present at the practitioner's clinic. Patients stay on the practitioner's booking page and pick an available visit slot; the prescriber sees a unified rota of where they'll be and who's booked.
 
-## What the user gets
+Let patients tick multiple packages the same way they already tick multiple treatments on `/m/{slug}`, mix packages and treatments in a single selection, and take them all through checkout together.
 
-**Practitioner (Prescriber Hub → Connections / Prescribing):**
-- For each linked prescriber, schedule "Clinic visit days": date, start/end time, location (if multi-site), capacity, optional note.
-- Per treatment, the routing options become: *Same address* · *Clinic visit days* (replaces *In-person consult*).
-- View, edit, cancel upcoming visits; see how many patients are booked into each.
+## Customer menu (`m.$slug.index.tsx`)
 
-**Prescriber (Prescriber workspace → Visits):**
-- New "Clinic visits" page listing every upcoming visit across all linked practitioners — clinic name, address, date/time, list of patients booked, notes.
-- Can propose / confirm / decline visits (mirrors the practitioner's schedule).
+- Add a `selectedPackageIds` state next to the existing `selectedIds` and a "Select" toggle in the top-right of every package card (same visual style as the treatment card's check button).
+- Clear both arrays when the location changes.
+- Sticky bottom bar (currently "N treatments selected"):
+  - Show combined count, e.g. `2 treatments · 1 package`.
+  - Total = sum of treatment prices + sum of package prices (first-session for packages counts once).
+  - "Continue" links to `/m/$slug/book-multi` with a new search shape: `?ids=<treatmentIds>&pkgs=<packageIds>`.
 
-**Patient (booking flow):**
-- When a treatment requires a prescriber and routing is *Clinic visit days*, the booking page shows the next available visit slots from that prescriber at this clinic and asks the patient to pick one (instead of redirecting away).
-- Consent gate still applies. Booking confirmation references the prescriber visit.
+## Booking flow (`m.$slug.book-multi.tsx`)
 
-## Technical plan
+- Extend `searchSchema` with `pkgs: z.string().optional()`; forward `packageIds` into the loader.
+- Update `getMultiBookingContext` (server fn) to accept `packageIds` and return the selected package rows joined with their included treatments so the page can render them alongside treatments.
+- Render a "Packages" block above the treatments list on the review step, each with sessions/price/included-treatments summary.
+- Duration/timeslot logic: only the first session of each package is booked in this appointment (existing single-package behaviour); subsequent sessions remain to be scheduled after purchase — surface a small note under the package block.
+- Totals, deposit, and Stripe line items include package prices; add-ons continue to attach to treatments only.
+- `redirectPath` (auth bounce) preserves both `ids` and `pkgs` params.
 
-**New table** `prescriber_clinic_visits`
-- `id`, `practitioner_profile_id`, `prescriber_user_id`, `location_id` (nullable), `visit_date`, `start_time`, `end_time`, `capacity` (default 8), `notes`, `status` (`scheduled` | `cancelled`), `created_by` (`practitioner` | `prescriber`), `confirmed_by_prescriber` (bool), timestamps. GRANTs + RLS: practitioner can manage their own; linked prescriber can SELECT + UPDATE status/confirmed flag; patients get a SECURITY DEFINER RPC for public read.
+## Checkout persistence
 
-**Schema additions**
-- `prescriber_referrals.clinic_visit_id uuid null` — links a referral to the chosen visit.
-- Extend `treatments.prescriber_routing` allowed values to include `clinic_visit` (keep existing rows valid; treat legacy `in_person_consult` as `clinic_visit` in the UI).
+- When creating the appointment(s), keep the current treatment appointments as-is and additionally insert one `package_purchases` row per selected package (owner = patient, package_id, sessions_remaining = session_count − 1, expires_at from `expiry_days`).
+- If the package has a `treatment_ids[0]`, create the first-session appointment against that treatment and mark it as the first redeemed session; otherwise create a placeholder appointment with `notes = "Package: <name> — session 1 of N"`.
+- Confirmation email lists purchased packages plus booked treatments.
 
-**RPCs**
-- `list_prescriber_visits_for_slug(p_slug, p_treatment_ids)` — public; returns upcoming visits + remaining capacity for the treatments' prescribers at that clinic.
-- `book_prescriber_visit(p_referral_id, p_visit_id)` — capacity check + link.
+## Technical notes
 
-**Server functions** (`src/lib/prescriber-visits.functions.ts`)
-- `listClinicVisits` (practitioner) · `upsertClinicVisit` · `cancelClinicVisit`
-- `listMyPrescriberVisits` (prescriber view, with booked patients)
-- `listAvailableVisitsForBooking` (patient, wraps RPC)
-
-**UI**
-- `src/routes/_authenticated/hub.visits.tsx` — manage visit days (shared layout; role-aware: prescriber sees rota, practitioner sees scheduler).
-- Update `hub.prescribing.tsx`: rename routing option, replace radio label.
-- Update `m.$slug.book-multi.tsx`: replace the "Book consultation with prescriber →" block with a visit picker driven by `listAvailableVisitsForBooking`; gate the Confirm button until each clinic-visit treatment has a slot selected.
-- Add a "Clinic visits" tile to both hub indexes.
-
-**Backward compatibility**
-- Migrate any existing `prescriber_routing = 'in_person_consult'` rows to `clinic_visit`. Keep the enum/text accepting both for one release; UI shows the new label.
+- Files touched: `src/routes/m.$slug.index.tsx`, `src/routes/m.$slug.book-multi.tsx`, `src/lib/booking.functions.ts` (multi-context loader + create-appointment path), `src/lib/packages.functions.ts` (only if we add a helper for expanding packages).
+- No schema changes required — `package_purchases` and existing appointment columns are sufficient.
+- Type-safe search params: use `zodValidator(fallback(...))` per project convention.
+- The existing "Book" button on each package card stays for users who want a single package flow; the new checkbox is purely additive.
 
 ## Out of scope
-- Reminders/notifications to prescriber about upcoming visits (existing reminder pipeline can be wired later).
-- Patient-facing rescheduling of which visit they're assigned to (practitioner can reassign).
+
+- Scheduling all package sessions at checkout (still a follow-up flow).
+- Applying discount codes to packages.
+- Add-ons on packages.
