@@ -520,6 +520,7 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
       notes?: string;
       patientUserId?: string | null;
       practitionerId?: string | null;
+      packagePurchases?: { packageId: string }[];
     }) => input,
   )
   .handler(async ({ data }) => {
