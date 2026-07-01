@@ -1,0 +1,3 @@
+ALTER TABLE public.clinic_clients
+  ADD COLUMN IF NOT EXISTS city TEXT,
+  ADD COLUMN IF NOT EXISTS country TEXT;

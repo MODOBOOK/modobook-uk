@@ -1147,6 +1147,8 @@ export type Database = {
           avatar_url: string | null
           block_reason: string | null
           blocked_at: string | null
+          city: string | null
+          country: string | null
           county: string | null
           created_at: string
           dob: string | null
@@ -1182,6 +1184,8 @@ export type Database = {
           avatar_url?: string | null
           block_reason?: string | null
           blocked_at?: string | null
+          city?: string | null
+          country?: string | null
           county?: string | null
           created_at?: string
           dob?: string | null
@@ -1217,6 +1221,8 @@ export type Database = {
           avatar_url?: string | null
           block_reason?: string | null
           blocked_at?: string | null
+          city?: string | null
+          country?: string | null
           county?: string | null
           created_at?: string
           dob?: string | null
