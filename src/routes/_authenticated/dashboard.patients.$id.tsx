@@ -315,7 +315,7 @@ function PatientProfilePage() {
       <FilesSection clientId={id} profileId={profileId} kind="pdf" title="Private prescription uploads" />
 
       {/* Prescriptions (structured records) */}
-      <PrescriptionsSection clientId={id} />
+      <PrescriptionsSection clientId={id} client={client} profileId={profileId} />
 
       {/* Footer actions */}
       <div className="flex flex-wrap gap-2 pt-4">
