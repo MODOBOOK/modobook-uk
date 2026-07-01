@@ -121,10 +121,6 @@ export function ClientFormsList({
     return () => { alive = false; };
   }, [client.id, refreshKey, bump, list]);
 
-  async function copyLink(token: string) {
-    await navigator.clipboard.writeText(`${window.location.origin}/f/${token}`);
-    toast.success("Link copied");
-  }
 
   function toggle(id: string) {
     setExpanded((prev) => {
