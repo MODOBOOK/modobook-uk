@@ -6,7 +6,6 @@
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 import { loadEnv } from "vite";
-import path from "node:path";
 
 // Load all env vars (no prefix) into process.env for server-side routes
 // (e.g. auth email webhook needs SUPABASE_SERVICE_ROLE_KEY). Client-side
@@ -18,20 +17,4 @@ export default defineConfig({
   tanstackStart: {
     server: { entry: "server" },
   },
-  vite: {
-    resolve: {
-      alias: {
-        "entities/lib/decode.js": path.resolve(
-          process.cwd(),
-          "node_modules/entities/dist/decode.js",
-        ),
-        "entities/lib/encode.js": path.resolve(
-          process.cwd(),
-          "node_modules/entities/dist/encode.js",
-        ),
-        entities: path.resolve(process.cwd(), "node_modules/entities"),
-      },
-    },
-  },
-
 });
