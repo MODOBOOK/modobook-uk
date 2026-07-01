@@ -213,9 +213,19 @@ export const getFormByToken = createServerFn({ method: "GET" })
   .inputValidator((i: { token: string }) => i)
   .handler(async ({ data }) => {
     const sb = publicClient();
-    const { data: row, error } = await sb.rpc("get_medical_form_by_token", { p_token: data.token }).single();
+    const { data: rows, error } = await sb.rpc("get_medical_form_by_token", { p_token: data.token });
     if (error) throw error;
-    return row;
+    const row = Array.isArray(rows) ? rows[0] : rows;
+    return row ?? null;
+  });
+
+export const getClinicSlugForFormToken = createServerFn({ method: "GET" })
+  .inputValidator((i: { token: string }) => i)
+  .handler(async ({ data }) => {
+    const sb = publicClient();
+    const { data: slug, error } = await sb.rpc("get_clinic_slug_for_form_token", { p_token: data.token });
+    if (error) return null;
+    return (slug as string | null) ?? null;
   });
 
 export const submitFormByToken = createServerFn({ method: "POST" })
