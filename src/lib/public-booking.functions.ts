@@ -621,7 +621,37 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
       }
     }
 
-    return { appointments: created, consents, medicalForms };
+    // Persist package purchases (session 1 = the appointment we just booked; remaining sessions tracked here)
+    const packagePurchases: { id: string; packageId: string; sessionsRemaining: number }[] = [];
+    if (data.packagePurchases && data.packagePurchases.length > 0) {
+      const pkgIds = data.packagePurchases.map((p) => p.packageId);
+      const { data: pkgs } = await supabaseAdmin
+        .from("packages")
+        .select("id, session_count, expiry_days")
+        .in("id", pkgIds);
+      for (const p of data.packagePurchases) {
+        const meta = (pkgs ?? []).find((x) => x.id === p.packageId);
+        const sessions = Math.max(1, Number(meta?.session_count ?? 1));
+        const remaining = Math.max(0, sessions - 1);
+        const expDays = (meta?.expiry_days as number | null) ?? null;
+        const expiresAt = expDays
+          ? new Date(Date.now() + expDays * 24 * 60 * 60 * 1000).toISOString()
+          : null;
+        const purchaseId = crypto.randomUUID();
+        const { error: purchErr } = await supabaseAdmin.from("package_purchases").insert({
+          id: purchaseId,
+          package_id: p.packageId,
+          patient_email: data.patientEmail,
+          sessions_remaining: remaining,
+          expires_at: expiresAt,
+          status: "active",
+        } as never);
+        if (purchErr) throw new Error(purchErr.message);
+        packagePurchases.push({ id: purchaseId, packageId: p.packageId, sessionsRemaining: remaining });
+      }
+    }
+
+    return { appointments: created, consents, medicalForms, packagePurchases };
   });
 
 
