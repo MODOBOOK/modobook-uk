@@ -4,10 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useServerFn } from "@tanstack/react-start";
-import { startStripeOnboarding, refreshStripeStatus } from "@/lib/stripe.functions";
+import { startStripeOnboarding, refreshStripeStatus, pairExistingStripeConnectLink } from "@/lib/stripe.functions";
 import { toast } from "sonner";
-import { AlertCircle, CreditCard, ExternalLink, RefreshCw } from "lucide-react";
+import { AlertCircle, CreditCard, ExternalLink, Link2, RefreshCw } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard/payments")({
   ssr: false,
@@ -19,7 +21,10 @@ function PaymentsPage() {
   const router = useRouter();
   const onboard = useServerFn(startStripeOnboarding);
   const refresh = useServerFn(refreshStripeStatus);
+  const pairExisting = useServerFn(pairExistingStripeConnectLink);
   const [loading, setLoading] = useState(false);
+  const [pairing, setPairing] = useState(false);
+  const [stripeConnectLink, setStripeConnectLink] = useState("");
   const [setupIssue, setSetupIssue] = useState<{
     message: string;
     actionUrl?: string;
@@ -66,6 +71,29 @@ function PaymentsPage() {
       toast.error(e instanceof Error ? e.message : "Failed to refresh status");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function pairLink() {
+    if (!stripeConnectLink.trim()) {
+      toast.error("Paste the Stripe Connect setup link first");
+      return;
+    }
+    setPairing(true);
+    try {
+      const res = await pairExisting({ data: { stripeConnectLink } });
+      if (!res.ok) {
+        toast.error(res.message);
+        return;
+      }
+      setStripeConnectLink("");
+      setSetupIssue(null);
+      toast.success("Stripe account paired to this practitioner");
+      router.invalidate();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to pair Stripe account");
+    } finally {
+      setPairing(false);
     }
   }
 
@@ -129,6 +157,28 @@ function PaymentsPage() {
                 Refresh status
               </Button>
             )}
+          </div>
+
+          <div className="space-y-3 rounded-lg border border-border/70 bg-muted/25 p-4">
+            <div className="space-y-1">
+              <Label htmlFor="stripe-existing-link">Pair an existing Stripe setup link</Label>
+              <p className="text-sm text-muted-foreground">
+                Paste the Connect setup link Stripe gave you so MODO can attach it to this practitioner profile.
+              </p>
+            </div>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Input
+                id="stripe-existing-link"
+                value={stripeConnectLink}
+                onChange={(event) => setStripeConnectLink(event.target.value)}
+                placeholder="https://connect.stripe.com/d/setup/..."
+                className="min-w-0 flex-1"
+              />
+              <Button type="button" variant="outline" onClick={pairLink} disabled={pairing || !stripeConnectLink.trim()}>
+                <Link2 className="mr-2 h-4 w-4" />
+                Pair link
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
