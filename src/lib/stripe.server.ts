@@ -1,6 +1,11 @@
 import Stripe from "stripe";
 
-export type StripePlatformSetupErrorCode = "connect_not_enabled" | "missing_secret" | "stripe_error";
+export type StripePlatformSetupErrorCode =
+  | "connect_not_enabled"
+  | "invalid_secret_mode"
+  | "missing_secret"
+  | "stale_connect_account"
+  | "stripe_error";
 
 export class StripePlatformSetupError extends Error {
   code: StripePlatformSetupErrorCode;
@@ -14,19 +19,64 @@ export class StripePlatformSetupError extends Error {
 
 function normaliseStripeError(error: unknown): never {
   const message = error instanceof Error ? error.message : "Stripe could not start onboarding.";
+  const lowerMessage = message.toLowerCase();
+  const stripeError = error as { code?: string; param?: string; raw?: { code?: string; param?: string } };
+  const code = stripeError.code || stripeError.raw?.code;
+  const param = stripeError.param || stripeError.raw?.param;
+
   if (message.includes("signed up for Connect") || message.includes("dashboard.stripe.com/connect")) {
     throw new StripePlatformSetupError(
       "Stripe Connect is not enabled on this sandbox platform account yet.",
       "connect_not_enabled",
     );
   }
+  if (lowerMessage.includes("managing losses") || lowerMessage.includes("platform-profile")) {
+    throw new StripePlatformSetupError(
+      "Your Stripe sandbox platform profile needs the connected-account loss responsibility step completed before Connect accounts can be created.",
+      "connect_not_enabled",
+    );
+  }
+  if (lowerMessage.includes("stripe_dashboard[type]=express") || lowerMessage.includes("negative balances")) {
+    throw new StripePlatformSetupError(
+      "Stripe Express onboarding needs platform responsibility enabled in your Stripe sandbox Connect settings.",
+      "connect_not_enabled",
+    );
+  }
+  if (
+    code === "account_invalid" ||
+    code === "resource_missing" ||
+    param === "account" ||
+    message.includes("No such account") ||
+    message.includes("does not have access to account")
+  ) {
+    throw new StripePlatformSetupError(
+      "This Stripe account was created under a different platform key. We will create a fresh sandbox connection.",
+      "stale_connect_account",
+    );
+  }
   throw new StripePlatformSetupError(message, "stripe_error");
+}
+
+export function getStripeMode() {
+  return process.env.STRIPE_MODE === "live" ? "live" : "sandbox";
 }
 
 export function getStripe(): Stripe {
   const key = process.env.STRIPE_PLATFORM_SECRET_KEY;
   if (!key) {
     throw new StripePlatformSetupError("Stripe sandbox secret key is missing.", "missing_secret");
+  }
+  if (getStripeMode() === "sandbox" && !key.startsWith("sk_test_")) {
+    throw new StripePlatformSetupError(
+      "Sandbox mode needs your Stripe test secret key, which starts with sk_test_.",
+      "invalid_secret_mode",
+    );
+  }
+  if (getStripeMode() === "live" && !key.startsWith("sk_live_")) {
+    throw new StripePlatformSetupError(
+      "Live mode needs your Stripe live secret key, which starts with sk_live_.",
+      "invalid_secret_mode",
+    );
   }
   return new Stripe(key, {
     apiVersion: "2026-06-24.dahlia",
@@ -38,11 +88,18 @@ export async function createConnectAccount(email: string) {
   const stripe = getStripe();
   try {
     return await stripe.accounts.create({
-      type: "express",
       email,
+      controller: {
+        fees: { payer: "application" },
+        losses: { payments: "application" },
+        requirement_collection: "stripe",
+        stripe_dashboard: { type: "express" },
+      },
       capabilities: {
         card_payments: { requested: true },
         transfers: { requested: true },
+        klarna_payments: { requested: true },
+        afterpay_clearpay_payments: { requested: true },
       },
       settings: {
         payouts: { schedule: { interval: "manual" } },
@@ -69,7 +126,11 @@ export async function createConnectOnboardingLink(accountId: string, refreshUrl:
 
 export async function getAccount(accountId: string) {
   const stripe = getStripe();
-  return stripe.accounts.retrieve(accountId);
+  try {
+    return await stripe.accounts.retrieve(accountId);
+  } catch (error) {
+    normaliseStripeError(error);
+  }
 }
 
 export async function createCheckoutSession(params: {

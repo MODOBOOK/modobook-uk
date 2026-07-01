@@ -5,7 +5,7 @@ export const startStripeOnboarding = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { returnUrl: string; refreshUrl: string }) => input)
   .handler(async ({ data, context }) => {
-    const { createConnectAccount, createConnectOnboardingLink } = await import("./stripe.server");
+    const { createConnectAccount, createConnectOnboardingLink, getStripeMode } = await import("./stripe.server");
     const { supabase, userId, claims } = context;
     const { data: profile, error } = await supabase
       .from("profiles")
@@ -29,8 +29,26 @@ export const startStripeOnboarding = createServerFn({ method: "POST" })
           .eq("id", profile.id);
       }
 
-      const link = await createConnectOnboardingLink(accountId, data.refreshUrl, data.returnUrl);
-      return { ok: true as const, url: link.url };
+      try {
+        const link = await createConnectOnboardingLink(accountId, data.refreshUrl, data.returnUrl);
+        return { ok: true as const, url: link.url, mode: getStripeMode() };
+      } catch (error) {
+        const code = typeof error === "object" && error && "code" in error ? String(error.code) : "stripe_error";
+        if (code !== "stale_connect_account") throw error;
+
+        const email = profile.email || (claims as { email?: string })?.email || "";
+        const account = await createConnectAccount(email);
+        accountId = account.id;
+        await supabase
+          .from("profiles")
+          .update({
+            stripe_connect_account_id: accountId,
+            stripe_connect_onboarding_status: "pending",
+          })
+          .eq("id", profile.id);
+        const link = await createConnectOnboardingLink(accountId, data.refreshUrl, data.returnUrl);
+        return { ok: true as const, url: link.url, mode: getStripeMode(), recovered: true as const };
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : "Stripe onboarding could not be started.";
       const code = typeof error === "object" && error && "code" in error ? String(error.code) : "stripe_error";
@@ -40,6 +58,13 @@ export const startStripeOnboarding = createServerFn({ method: "POST" })
           code,
           message: "Stripe Connect is not enabled on this sandbox platform account yet.",
           actionUrl: "https://dashboard.stripe.com/test/connect/overview",
+        };
+      }
+      if (code === "invalid_secret_mode") {
+        return {
+          ok: false as const,
+          code,
+          message,
         };
       }
       if (code === "missing_secret") {
@@ -65,7 +90,18 @@ export const refreshStripeStatus = createServerFn({ method: "POST" })
       .single();
     if (error) throw error;
     if (!profile.stripe_connect_account_id) return { status: "not_started" as const };
-    const account = await getAccount(profile.stripe_connect_account_id);
+    let account;
+    try {
+      account = await getAccount(profile.stripe_connect_account_id);
+    } catch (error) {
+      const code = typeof error === "object" && error && "code" in error ? String(error.code) : "stripe_error";
+      if (code !== "stale_connect_account") throw error;
+      await supabase
+        .from("profiles")
+        .update({ stripe_connect_account_id: null, stripe_connect_onboarding_status: "not_started" })
+        .eq("id", profile.id);
+      return { status: "not_started" as const, reset: true as const };
+    }
     const status = account.charges_enabled ? "active" : account.details_submitted ? "pending" : "incomplete";
     await supabase
       .from("profiles")
