@@ -708,6 +708,24 @@ function BookTreatmentPage() {
               );
             })}
           </CardContent>
+          {paymentPlan === "split" && (
+            <div className="border-t px-6 py-4" style={{ borderColor: `${brand}22`, backgroundColor: `${brand}08` }}>
+              <label className="flex cursor-pointer items-start gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  className="mt-0.5 h-4 w-4 accent-current"
+                  style={{ accentColor: brand }}
+                  checked={splitAgreed}
+                  onChange={(e) => setSplitAgreed(e.target.checked)}
+                />
+                <span>
+                  I agree to pay <strong>£{(price / sessionCount).toFixed(2)}</strong> per session,
+                  across <strong>{sessionCount} payments</strong> (total £{price.toFixed(2)}), charged at each visit to complete this treatment plan.
+                  <span className="text-destructive"> *</span>
+                </span>
+              </label>
+            </div>
+          )}
         </Card>
       )}
       <Card className="mb-6">
