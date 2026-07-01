@@ -36,6 +36,12 @@ function normaliseStripeError(error: unknown): never {
       "connect_not_enabled",
     );
   }
+  if (lowerMessage.includes("stripe_dashboard[type]=express") || lowerMessage.includes("negative balances")) {
+    throw new StripePlatformSetupError(
+      "Stripe Express onboarding needs platform responsibility enabled in your Stripe sandbox Connect settings.",
+      "connect_not_enabled",
+    );
+  }
   if (
     code === "account_invalid" ||
     code === "resource_missing" ||
@@ -84,8 +90,8 @@ export async function createConnectAccount(email: string) {
     return await stripe.accounts.create({
       email,
       controller: {
-        fees: { payer: "account" },
-        losses: { payments: "stripe" },
+        fees: { payer: "application" },
+        losses: { payments: "application" },
         requirement_collection: "stripe",
         stripe_dashboard: { type: "express" },
       },
