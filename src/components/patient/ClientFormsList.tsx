@@ -4,8 +4,8 @@ import { listFormsForClient, getFormSubmission } from "@/lib/medical-forms.funct
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  FileText, Send, Copy, Loader2, CheckCircle2, Clock, Lock,
-  ChevronDown, ExternalLink,
+  FileText, Send, Loader2, CheckCircle2, Clock, Lock,
+  ChevronDown,
 } from "lucide-react";
 import { toast } from "sonner";
 import { SendFormDialog } from "./SendFormDialog";
