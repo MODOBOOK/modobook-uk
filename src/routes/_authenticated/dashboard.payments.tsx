@@ -69,28 +69,6 @@ function PaymentsPage() {
     }
   }
 
-  async function pairLink() {
-    if (!stripeConnectLink.trim()) {
-      toast.error("Paste the Stripe Connect setup link first");
-      return;
-    }
-    setPairing(true);
-    try {
-      const res = await pairExisting({ data: { stripeConnectLink } });
-      if (!res.ok) {
-        toast.error(res.message);
-        return;
-      }
-      setStripeConnectLink("");
-      setSetupIssue(null);
-      toast.success("Stripe account paired to this practitioner");
-      router.invalidate();
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Failed to pair Stripe account");
-    } finally {
-      setPairing(false);
-    }
-  }
 
   const connected = !!profile.stripe_connect_account_id;
   const status = profile.stripe_connect_onboarding_status ?? "not_started";
