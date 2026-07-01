@@ -212,7 +212,7 @@ function Account() {
                 meta={f.status === "submitted" ? `Completed ${new Date(f.submitted_at).toLocaleDateString()}` : "Awaiting your completion"}
                 badge={f.status === "submitted" ? "Complete" : "Pending"}
                 badgeOk={f.status === "submitted"}
-                href={`/f/${f.token}`}
+                href={`/f/${f.token}?returnTo=${encodeURIComponent(`/m/${slug}/account`)}`}
               />
             ))}
           </div>
