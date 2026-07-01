@@ -12,6 +12,7 @@ type PackageInput = {
   expiry_days: number | null;
   image_url: string | null;
   active: boolean;
+  category_id: string | null;
 };
 
 export const listMyPackages = createServerFn({ method: "GET" })
