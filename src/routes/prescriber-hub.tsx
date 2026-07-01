@@ -10,7 +10,7 @@ import {
 export const Route = createFileRoute("/prescriber-hub")({
   head: () => ({
     meta: [
-      { title: "Prescriber Hub | MODO Book — collaborative aesthetics care" },
+      { title: "Prescriber Hub | MODO — collaborative aesthetics care" },
       { name: "description", content: "The MODO Prescriber Hub: a safe, traceable place for HCPs and non-HCPs to collaborate around a shared patient record." },
       { property: "og:title", content: "MODO Prescriber Hub" },
       { property: "og:description", content: "One workflow for prescribers and the practitioners they support — accountable, safe, professional." },
@@ -51,7 +51,7 @@ function HubPage() {
                       "Instant registration — no verification needed.",
                       "Connect to a prescriber using their MODO code.",
                       "Share patient records with explicit patient consent.",
-                      "Free on every MODO Book plan.",
+                      "Free on every MODO plan.",
                     ].map((p) => (
                       <li key={p} className="flex gap-2">
                         <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />

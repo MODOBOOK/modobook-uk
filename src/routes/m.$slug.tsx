@@ -20,15 +20,15 @@ export const Route = createFileRoute("/m/$slug")({
   notFoundComponent: () => (
     <div className="flex min-h-screen flex-col items-center justify-center px-4 text-center">
       <h1 className="text-2xl font-bold">Page not found</h1>
-      <p className="mt-2 text-muted-foreground">This MODO Book link does not exist.</p>
+      <p className="mt-2 text-muted-foreground">This MODO link does not exist.</p>
       <Link to="/" className="mt-6"><Button>Go home</Button></Link>
     </div>
   ),
   head: ({ loaderData }) => ({
     meta: (() => {
       const headerName = loaderData?.profile ? resolveDisplayNames(loaderData.profile).primary : "Clinic";
-      const title = `${headerName} · MODO Book`;
-      const description = loaderData?.profile.tagline ?? "Book treatments on MODO Book.";
+      const title = `${headerName} · MODO`;
+      const description = loaderData?.profile.tagline ?? "Book treatments on MODO.";
       const image = loaderData?.theme?.hero_image_url ?? loaderData?.profile.hero_url;
 
       return [

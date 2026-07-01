@@ -18,8 +18,8 @@ export const Route = createFileRoute("/reset-password")({
   }),
   head: () => ({
     meta: [
-      { title: "Reset password | MODO Book" },
-      { name: "description", content: "Set a new password for your MODO Book account." },
+      { title: "Reset password | MODO" },
+      { name: "description", content: "Set a new password for your MODO account." },
     ],
   }),
   component: ResetPasswordPage,

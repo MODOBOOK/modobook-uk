@@ -435,7 +435,7 @@ function ReviewStep({
         <div className="flex gap-2">
           <Button variant="outline" onClick={onBack} disabled={busy}>Back</Button>
           <Button onClick={onImport} disabled={busy}>
-            {busy ? <><Loader2 className="mr-2 size-4 animate-spin" /> Importing…</> : "Import to MODO Book"}
+            {busy ? <><Loader2 className="mr-2 size-4 animate-spin" /> Importing…</> : "Import to MODO"}
           </Button>
         </div>
       </div>

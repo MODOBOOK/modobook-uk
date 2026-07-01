@@ -35,13 +35,13 @@ import {
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "MODO Book | The aesthetics-only booking & clinical platform — built by Nurse Prescribers" },
+      { title: "MODO | The aesthetics-only booking & clinical platform — built by Nurse Prescribers" },
       {
         name: "description",
         content:
-          "MODO Book is the UK booking, consultation and clinical platform built only for aesthetics — for HCPs and non-HCPs alike. Designed by two practising Nurse Prescribers for patient safety and collaborative working.",
+          "MODO is the UK booking, consultation and clinical platform built only for aesthetics — for HCPs and non-HCPs alike. Designed by two practising Nurse Prescribers for patient safety and collaborative working.",
       },
-      { property: "og:title", content: "MODO Book — The aesthetics-only platform, built by Nurse Prescribers" },
+      { property: "og:title", content: "MODO — The aesthetics-only platform, built by Nurse Prescribers" },
       {
         property: "og:description",
         content:
@@ -146,7 +146,7 @@ function LandingPage() {
                 patient safety falls down.
               </p>
               <p className="mt-3 text-muted-foreground">
-                MODO Book is for every aesthetics practitioner — HCPs and non-HCPs — under
+                MODO is for every aesthetics practitioner — HCPs and non-HCPs — under
                 one standard. Real consultations. Real medical screening. Real consent.
                 Real collaborative working between injectors, therapists and their
                 prescribers.
@@ -225,7 +225,7 @@ function LandingPage() {
               <p className="mt-4 text-muted-foreground">
                 Every other "booking system" in aesthetics is a hairdressing or spa app with
                 consent forms bolted on — or a medics-only portal that excludes the rest of
-                the industry. MODO Book was designed end-to-end by two practising UK Nurse
+                the industry. MODO was designed end-to-end by two practising UK Nurse
                 Prescribers who understand consultations, prescribing notes, treatment plans,
                 photo consent, model slots, top-ups, review periods and the realities of
                 running an aesthetics clinic.
@@ -283,7 +283,7 @@ function LandingPage() {
         <section className="mx-auto max-w-7xl px-4 py-20 lg:px-8">
           <div className="mx-auto max-w-2xl text-center">
             <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-              Why practitioners are switching to MODO Book
+              Why practitioners are switching to MODO
             </h2>
             <p className="mt-3 text-muted-foreground">
               Save hours every week, look more professional and protect yourself clinically — all from one login.
@@ -436,7 +436,7 @@ export function SiteFooter() {
         </div>
       </div>
       <div className="border-t py-6 text-center text-sm text-muted-foreground">
-        © {new Date().getFullYear()} MODO Book. Designed by Nurse Prescribers, for aesthetics clinics.
+        © {new Date().getFullYear()} MODO. Designed by Nurse Prescribers, for aesthetics clinics.
       </div>
     </footer>
   );
