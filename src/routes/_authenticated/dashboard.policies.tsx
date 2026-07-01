@@ -53,6 +53,7 @@ function PoliciesPage() {
           about_page: {
             ...savedAboutPage,
             intro_heading: introHeading,
+            intro_expandable: introExpandable,
             show_intro: true,
           },
           deposit_amount_cents: depositPounds ? Math.round(Number(depositPounds) * 100) : 0,
