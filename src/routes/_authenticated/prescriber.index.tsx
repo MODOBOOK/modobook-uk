@@ -17,6 +17,7 @@ import {
   getCarePlanForReferral,
 } from "@/lib/prescriptions.functions";
 import { addWalkInMedicalForms, listLinkedPractitionerMedicalForms, listMySnippets, listMyRxTemplates, saveWalkInMedicalFormResponse, sendWalkInToPractitioner } from "@/lib/prescriber-directions.functions";
+import { AESTHETICS_MEDICATIONS } from "@/lib/aesthetics-medications";
 import { WalkInDialog } from "@/components/prescriber/WalkInDialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -779,6 +780,17 @@ function PrescriptionEditor({ referralId, patient, client }: { referralId: strin
   async function onSign() {
     const name = (sigName || form.prescriber_name).trim();
     if (!name) { toast.error("Type your full name to sign"); return; }
+    // A UK private Rx PDF must carry the patient's full details. Block signing
+    // if any of the legally-required identifiers are missing so the prescriber
+    // completes them here rather than a blank field ending up on the PDF.
+    const missing: string[] = [];
+    if (!form.patient_name.trim()) missing.push("full name");
+    if (!form.patient_dob) missing.push("date of birth");
+    if (!form.patient_address.trim()) missing.push("address");
+    if (missing.length) {
+      toast.error(`Patient ${missing.join(", ")} required before signing`);
+      return;
+    }
     let id = form.id;
     if (!id) {
       try {
@@ -985,17 +997,45 @@ function SendWalkInButton({ id }: { id: string }) {
   );
 }
 
-function TemplatePicker({ onPick }: { onPick: (t: RxTemplate) => void }) {
+function TemplatePicker({ onPick }: { onPick: (t: Partial<RxTemplate>) => void }) {
   const fetchFn = useServerFn(listMyRxTemplates);
   const q = useQuery({ queryKey: ["rx-templates"], queryFn: () => fetchFn() });
-  const list = (q.data ?? []) as RxTemplate[];
+  const mine = (q.data ?? []) as RxTemplate[];
+  const categories = Array.from(new Set(AESTHETICS_MEDICATIONS.map((m) => m.category)));
+
+  function handlePick(value: string) {
+    if (value.startsWith("mine:")) {
+      const t = mine.find((x) => x.id === value.slice(5));
+      if (t) onPick(t);
+      return;
+    }
+    if (value.startsWith("preset:")) {
+      const p = AESTHETICS_MEDICATIONS.find((x) => x.id === value.slice(7));
+      if (p) onPick(p);
+    }
+  }
+
   return (
     <div className="flex items-center gap-2">
-      <Label className="text-[11px] text-muted-foreground">Load template</Label>
-      <Select onValueChange={(id) => { const t = list.find((x) => x.id === id); if (t) onPick(t); }}>
-        <SelectTrigger className="h-8 w-56 text-xs"><SelectValue placeholder={list.length ? "Choose a template…" : "No templates yet"} /></SelectTrigger>
-        <SelectContent>
-          {list.map((t) => <SelectItem key={t.id} value={t.id}>{t.label}</SelectItem>)}
+      <Label className="text-[11px] text-muted-foreground">Load medication</Label>
+      <Select onValueChange={handlePick}>
+        <SelectTrigger className="h-8 w-64 text-xs"><SelectValue placeholder="Choose a preset or template…" /></SelectTrigger>
+        <SelectContent className="max-h-80">
+          {mine.length > 0 && (
+            <>
+              <div className="px-2 pt-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">My templates</div>
+              {mine.map((t) => <SelectItem key={t.id} value={`mine:${t.id}`}>{t.label}</SelectItem>)}
+              <div className="my-1 border-t" />
+            </>
+          )}
+          {categories.map((cat) => (
+            <div key={cat}>
+              <div className="px-2 pt-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{cat}</div>
+              {AESTHETICS_MEDICATIONS.filter((m) => m.category === cat).map((m) => (
+                <SelectItem key={m.id} value={`preset:${m.id}`}>{m.label}</SelectItem>
+              ))}
+            </div>
+          ))}
         </SelectContent>
       </Select>
     </div>
