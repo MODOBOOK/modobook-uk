@@ -361,6 +361,11 @@ function BookPage() {
     return () => document.removeEventListener("click", onClick, true);
   }, [practSelectionMode, practitionerId]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [selectedPackageIds, setSelectedPackageIds] = useState<string[]>([]);
+  const pkgById = useMemo(() => new Map(packages.map((p) => [p.id, p])), [packages]);
+  const togglePackageSelect = (id: string) =>
+    setSelectedPackageIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  const isPackageSelected = (id: string) => selectedPackageIds.includes(id);
   const treatById = useMemo(() => new Map(treatments.map((t) => [t.id, t])), [treatments]);
   const addonsFor = useMemo(() => {
     const m = new Map<string, string[]>();
