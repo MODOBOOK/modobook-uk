@@ -4133,6 +4133,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_walk_in_medical_forms: {
+        Args: { p_referral_id: string; p_template_ids: string[] }
+        Returns: number
+      }
       admin_grant_admin_by_email: { Args: { _email: string }; Returns: string }
       admin_list_admins: {
         Args: never
