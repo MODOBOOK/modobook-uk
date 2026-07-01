@@ -4,12 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useServerFn } from "@tanstack/react-start";
-import { startStripeOnboarding, refreshStripeStatus, pairExistingStripeConnectLink } from "@/lib/stripe.functions";
+import { startStripeOnboarding, refreshStripeStatus } from "@/lib/stripe.functions";
 import { toast } from "sonner";
-import { AlertCircle, CreditCard, ExternalLink, Link2, RefreshCw } from "lucide-react";
+import { AlertCircle, CreditCard, ExternalLink, RefreshCw } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard/payments")({
   ssr: false,
@@ -21,10 +19,7 @@ function PaymentsPage() {
   const router = useRouter();
   const onboard = useServerFn(startStripeOnboarding);
   const refresh = useServerFn(refreshStripeStatus);
-  const pairExisting = useServerFn(pairExistingStripeConnectLink);
   const [loading, setLoading] = useState(false);
-  const [pairing, setPairing] = useState(false);
-  const [stripeConnectLink, setStripeConnectLink] = useState("");
   const [setupIssue, setSetupIssue] = useState<{
     message: string;
     actionUrl?: string;
