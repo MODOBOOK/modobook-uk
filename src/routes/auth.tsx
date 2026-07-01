@@ -83,13 +83,34 @@ function AuthPage() {
 
   async function handleSignUp(e: React.FormEvent) {
     e.preventDefault();
+    if (!acceptTerms) {
+      toast.error("Please accept the Terms & Conditions to create your account.");
+      return;
+    }
     setLoading(true);
-    const { error } = await supabase.auth.signUp({ email, password });
-    setLoading(false);
+    // Snapshot active terms *before* signup so we know which version to record.
+    let activeTermsId: string | null = null;
+    try {
+      const active = await fetchActiveTerms();
+      activeTermsId = active?.id ?? null;
+    } catch {
+      /* non-fatal — gate will re-prompt on first dashboard entry */
+    }
+    const { data, error } = await supabase.auth.signUp({ email, password });
     if (error) {
+      setLoading(false);
       toast.error(error.message);
       return;
     }
+    // If session was created immediately (email confirmations off), record acceptance now.
+    if (data.session && activeTermsId) {
+      try {
+        await recordTermsAcceptance(activeTermsId, "signup");
+      } catch {
+        /* gate will re-prompt if this failed */
+      }
+    }
+    setLoading(false);
     if (isPrescriberFlow) {
       toast.success("Account created. Submit your verification next.");
       router.navigate({ to: "/hub/verification" });
