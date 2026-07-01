@@ -178,18 +178,6 @@ export function ClientFormsList({
                           {done ? <><Lock className="mr-1 h-2.5 w-2.5" />Completed</> : "Pending"}
                         </Badge>
                       )}
-                      {!done && (
-                        <span
-                          role="button"
-                          tabIndex={0}
-                          title="Copy link"
-                          onClick={(e) => { e.stopPropagation(); copyLink(r.token); }}
-                          onKeyDown={(e) => { if (e.key === "Enter") { e.stopPropagation(); copyLink(r.token); } }}
-                          className="inline-flex h-7 w-7 items-center justify-center rounded-md hover:bg-muted"
-                        >
-                          <Copy className="h-3.5 w-3.5" />
-                        </span>
-                      )}
                       <ChevronDown className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${isOpen ? "rotate-180" : ""}`} />
                     </button>
                   </CollapsibleTrigger>
