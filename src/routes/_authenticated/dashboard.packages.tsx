@@ -130,7 +130,7 @@ function PackagesPage() {
       treatment_id: form.treatment_ids[0] ?? null,
       treatment_ids: form.treatment_ids,
       session_count: Number(form.session_count) || 1,
-      price: Number(form.price) || 0,
+      price: effectivePrice,
       duration_minutes: form.duration_minutes ? Number(form.duration_minutes) : null,
       expiry_days: form.expiry_days ? Number(form.expiry_days) : null,
       image_url: form.image_url.trim() || null,
