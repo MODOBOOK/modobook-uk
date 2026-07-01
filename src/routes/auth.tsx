@@ -211,7 +211,22 @@ function AuthPage() {
                       minLength={6}
                     />
                   </div>
-                  <Button type="submit" className="w-full" disabled={loading}>
+                  <label className="flex items-start gap-2 rounded-md border bg-muted/30 p-3 text-xs text-muted-foreground">
+                    <Checkbox
+                      checked={acceptTerms}
+                      onCheckedChange={(v) => setAcceptTerms(Boolean(v))}
+                      className="mt-0.5"
+                    />
+                    <span>
+                      I agree to the MODO BOOK{" "}
+                      <Link to="/terms" target="_blank" className="underline text-foreground">
+                        Terms &amp; Conditions
+                      </Link>
+                      . I confirm I am the account holder and, where I process patient
+                      data, I am the Data Controller and MODO acts as my Data Processor.
+                    </span>
+                  </label>
+                  <Button type="submit" className="w-full" disabled={loading || !acceptTerms}>
                     {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                     Create account
                   </Button>
@@ -224,10 +239,10 @@ function AuthPage() {
                 Continue with Google
               </Button>
 
-              <p className="text-center text-sm text-muted-foreground">
-                By signing in, you agree to our{" "}
-                <Link to="/" className="underline">
-                  terms
+              <p className="text-center text-xs text-muted-foreground">
+                By signing in you agree to our{" "}
+                <Link to="/terms" className="underline">
+                  Terms &amp; Conditions
                 </Link>
                 .
               </p>
