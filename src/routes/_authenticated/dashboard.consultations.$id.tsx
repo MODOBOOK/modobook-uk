@@ -20,7 +20,6 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { ClientFormsList } from "@/components/patient/ClientFormsList";
-import { FaceMapAnnotator } from "@/components/consultation/FaceMapAnnotator";
 import { ProductEntryCard, type LogProduct } from "@/components/consultation/ProductEntryCard";
 import { ConsentSectionsView, type ConsentSection } from "@/components/ConsentSections";
 
