@@ -762,26 +762,25 @@ function TreatmentDialog({
               No templates yet. Create one in Aftercare templates and attach it here — it will send automatically after the appointment.
             </p>
           ) : (
-            <div className="flex flex-wrap gap-1.5">
-              {aftercareTemplates.map((t) => {
-                const checked = aftercareTemplateIds.includes(t.id);
-                return (
-                  <button
-                    key={t.id}
-                    type="button"
-                    onClick={() =>
-                      setAftercareTemplateIds((prev) =>
-                        prev.includes(t.id) ? prev.filter((x) => x !== t.id) : [...prev, t.id],
-                      )
-                    }
-                    className={`rounded-full border px-2.5 py-1 text-xs ${checked ? "bg-primary text-primary-foreground border-primary" : "bg-background hover:bg-muted"}`}
-                  >
-                    {t.name} <span className="opacity-70">· {t.delay_hours}h</span>
-                  </button>
-                );
-              })}
-            </div>
+            <SearchableMultiPicker
+              hideLabel
+              label="Aftercare templates"
+              emptyMessage="No aftercare templates yet."
+              placeholder="Search aftercare templates…"
+              items={aftercareTemplates.map((t) => ({
+                id: t.id,
+                name: t.name,
+                hint: `${t.delay_hours}h`,
+              }))}
+              selected={aftercareTemplateIds}
+              onToggle={(id) =>
+                setAftercareTemplateIds((prev) =>
+                  prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+                )
+              }
+            />
           )}
+
           <label className="flex items-center gap-2 text-sm">
             <Switch checked={autoSendAftercare} onCheckedChange={setAutoSendAftercare} />
             <span>Auto-send aftercare after this treatment</span>
