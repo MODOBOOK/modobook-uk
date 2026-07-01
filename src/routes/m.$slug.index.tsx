@@ -751,17 +751,14 @@ function BookPage() {
       {isMobile && (introHeading || welcomeHtml) && (
         <section id="welcome-intro-mobile" className="mx-auto mt-4 max-w-3xl px-4">
           <div className="rounded-2xl border bg-card px-5 py-5 shadow-sm" style={{ borderColor: `${brand}1a` }}>
-            {introHeading && (
-              <h2 className="mb-3 text-xl font-bold leading-tight" style={headingStyle}>
-                {introHeading}
-              </h2>
-            )}
-            {welcomeHtml && (
-              <SafeHtml
-                html={welcomeHtml}
-                className="prose prose-sm max-w-none [&_h1]:text-2xl [&_h2]:text-xl [&_h3]:text-lg [&_p]:leading-relaxed [&_strong]:font-bold"
-              />
-            )}
+            <WelcomeIntroBlock
+              heading={introHeading}
+              html={welcomeHtml}
+              headingStyle={headingStyle}
+              brand={brand}
+              expandable={introExpandable}
+              variant="mobile"
+            />
           </div>
         </section>
       )}
