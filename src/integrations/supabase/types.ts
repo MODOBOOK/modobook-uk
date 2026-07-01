@@ -4367,6 +4367,10 @@ export type Database = {
       }
       is_active_profile: { Args: { _profile_id: string }; Returns: boolean }
       is_active_profile_path: { Args: { path: string }; Returns: boolean }
+      is_linked_to_practitioner_profile: {
+        Args: { _profile_id: string }
+        Returns: boolean
+      }
       is_object_owner: { Args: { path: string }; Returns: boolean }
       is_patient_of_profile: { Args: { _profile_id: string }; Returns: boolean }
       is_practitioner_owner: {
