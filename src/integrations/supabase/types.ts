@@ -4431,6 +4431,10 @@ export type Database = {
           user_id: string
         }[]
       }
+      save_walk_in_medical_form_response: {
+        Args: { p_form_id: string; p_referral_id: string; p_response: Json }
+        Returns: boolean
+      }
       send_medical_form_to_client: {
         Args: {
           p_client_id: string
