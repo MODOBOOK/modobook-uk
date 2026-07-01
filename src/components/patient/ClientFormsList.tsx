@@ -63,7 +63,21 @@ function InlineFormPanel({ submissionId }: { submissionId: string }) {
       </div>
 
       {row.status !== "submitted" ? (
-        <div className="rounded-md border border-dashed p-3 text-center text-xs text-muted-foreground">Awaiting patient response.</div>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] text-amber-900">
+            <span>Awaiting patient response — you can complete this form here on their behalf.</span>
+          </div>
+          <div className="overflow-hidden rounded-md border bg-background">
+            <iframe
+              src={`${link}?embed=1`}
+              title="Fill form"
+              className="h-[70vh] w-full"
+              onLoad={() => {
+                // refresh parent list when submitted (child posts message)
+              }}
+            />
+          </div>
+        </div>
       ) : steps.length === 0 ? (
         <pre className="overflow-auto rounded-md bg-background p-2 text-xs">{JSON.stringify(response, null, 2)}</pre>
       ) : (
