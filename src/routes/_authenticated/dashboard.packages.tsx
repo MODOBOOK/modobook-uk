@@ -183,38 +183,122 @@ function PackagesPage() {
               </div>
 
               <div>
-                <Label>Included treatments (optional)</Label>
+                <Label>Included treatments</Label>
                 {treatments.length === 0 ? (
                   <p className="mt-1 text-xs text-muted-foreground">You haven't added any treatments yet. The package will be sold using just the description above.</p>
                 ) : (
-                  <div className="mt-2 max-h-48 overflow-y-auto rounded-md border p-2">
-                    {treatments.map((t) => (
-                      <label key={t.id} className="flex cursor-pointer items-center gap-2 rounded px-2 py-1 hover:bg-muted">
-                        <Checkbox
-                          checked={form.treatment_ids.includes(t.id)}
-                          onCheckedChange={() => toggleTreatment(t.id)}
-                        />
-                        <span className="text-sm">{t.name}</span>
-                      </label>
-                    ))}
-                  </div>
-                )}
-                {form.treatment_ids.length > 0 && (
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {form.treatment_ids.length} treatment{form.treatment_ids.length === 1 ? "" : "s"} selected
-                  </p>
+                  <>
+                    <TreatmentSearchPicker
+                      treatments={treatments}
+                      selectedIds={form.treatment_ids}
+                      onToggle={toggleTreatment}
+                    />
+                    {form.treatment_ids.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {form.treatment_ids.map((id) => {
+                          const t = treatments.find((x) => x.id === id);
+                          if (!t) return null;
+                          return (
+                            <Badge key={id} variant="secondary" className="gap-1 pr-1">
+                              <span>{t.name}</span>
+                              {t.price != null && <span className="text-muted-foreground">· £{Number(t.price).toFixed(2)}</span>}
+                              <button
+                                type="button"
+                                onClick={() => toggleTreatment(id)}
+                                className="ml-0.5 rounded p-0.5 hover:bg-background/60"
+                                aria-label={`Remove ${t.name}`}
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            </Badge>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label>Total sessions</Label>
-                  <Input type="number" min={1} value={form.session_count} onChange={(e) => setForm({ ...form, session_count: Number(e.target.value) })} />
+              <div>
+                <Label>Total sessions</Label>
+                <Input
+                  type="number"
+                  min={1}
+                  value={form.session_count}
+                  onFocus={(e) => e.target.select()}
+                  onChange={(e) => setForm({ ...form, session_count: Number(e.target.value) })}
+                />
+              </div>
+
+              <div className="rounded-lg border bg-muted/30 p-3">
+                <div className="mb-2 flex items-center justify-between">
+                  <Label className="text-sm font-semibold">Package pricing</Label>
+                  {originalTotal > 0 && (
+                    <span className="text-xs text-muted-foreground">
+                      Sessions × treatments = <span className="font-medium">£{originalTotal.toFixed(2)}</span>
+                    </span>
+                  )}
                 </div>
-                <div>
-                  <Label>Price (£)</Label>
-                  <Input type="number" min={0} step="0.01" value={form.price} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} />
+                <div className="mb-3 inline-flex rounded-md border bg-background p-0.5 text-xs">
+                  <button
+                    type="button"
+                    onClick={() => setForm({ ...form, priceMode: "percent" })}
+                    className={`rounded px-3 py-1.5 transition ${form.priceMode === "percent" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                  >
+                    Apply % discount
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setForm({ ...form, priceMode: "custom" })}
+                    className={`rounded px-3 py-1.5 transition ${form.priceMode === "custom" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                  >
+                    Set custom price
+                  </button>
                 </div>
+                {form.priceMode === "percent" ? (
+                  <div>
+                    <Label>Discount (%)</Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      max={100}
+                      step="1"
+                      value={form.discountPercent}
+                      onFocus={(e) => e.target.select()}
+                      onChange={(e) => setForm({ ...form, discountPercent: Number(e.target.value) })}
+                      placeholder="e.g. 15"
+                    />
+                  </div>
+                ) : (
+                  <div>
+                    <Label>Package price (£)</Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      step="0.01"
+                      value={form.price}
+                      onFocus={(e) => e.target.select()}
+                      onChange={(e) => setForm({ ...form, price: Number(e.target.value) })}
+                    />
+                  </div>
+                )}
+                {originalTotal > 0 && (
+                  <div className="mt-3 flex items-baseline justify-between rounded-md bg-background p-2.5">
+                    <div className="text-xs text-muted-foreground">
+                      {savings > 0 ? (
+                        <>
+                          Was <span className="line-through">£{originalTotal.toFixed(2)}</span> — save{" "}
+                          <span className="font-medium text-emerald-600">£{savings.toFixed(2)} ({savingsPct}%)</span>
+                        </>
+                      ) : effectivePrice > originalTotal ? (
+                        <span className="text-amber-600">Priced above sum of treatments</span>
+                      ) : (
+                        "No discount applied"
+                      )}
+                    </div>
+                    <div className="text-lg font-semibold">£{effectivePrice.toFixed(2)}</div>
+                  </div>
+                )}
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
