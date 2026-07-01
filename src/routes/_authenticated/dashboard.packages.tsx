@@ -94,6 +94,7 @@ function PackagesPage() {
       expiry_days: p.expiry_days ? String(p.expiry_days) : "",
       image_url: p.image_url ?? "",
       active: p.active,
+      category_id: p.category_id ?? "",
     });
     setOpen(true);
   }
