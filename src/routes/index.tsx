@@ -253,7 +253,7 @@ function LandingPage() {
             </div>
             <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               <Feature icon={Palette} title="Fully branded booking page" desc="Your colours, fonts, hero image, logo and welcome message. Looks like your brand — not ours." />
-              <Feature icon={Link2} title="Your own MODO link" desc="modo.book/your-clinic. One link for Instagram, TikTok, your website and Google." />
+              <Feature icon={Link2} title="Your own MODO link" desc="modo.app/your-clinic. One link for Instagram, TikTok, your website and Google." />
               <Feature icon={Calendar} title="Smart live availability" desc="Weekly schedules, buffers, daily caps, lead times, model slots and ad-hoc rota changes." />
               <Feature icon={ClipboardList} title="8-step consultation flow" desc="Medical form, concerns, assessment, plan, consent, before/after photos, product log, invoice." />
               <Feature icon={FileSignature} title="Consent & medical forms" desc="Build your own or use ours. Auto-sent before treatment, auto-signed, auto-filed." />

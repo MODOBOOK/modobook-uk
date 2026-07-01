@@ -80,7 +80,7 @@ async function fetchUrlText(url: string): Promise<string> {
     tried.add(target);
     try {
       const res = await fetch(target, {
-        headers: { "User-Agent": "Mozilla/5.0 MODO-Book Importer" },
+        headers: { "User-Agent": "Mozilla/5.0 MODO Importer" },
         redirect: "follow",
       });
       if (!res.ok) return;
