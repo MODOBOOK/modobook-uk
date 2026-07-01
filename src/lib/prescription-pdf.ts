@@ -138,13 +138,26 @@ export function buildPrescriptionPdf(rx: RxPdfInput): jsPDF {
   y += 8;
   doc.setFont("helvetica", "bold");
   doc.text("Signature:", M, y);
-  doc.setFont("helvetica", "italic");
-  doc.setFontSize(14);
-  doc.text(rx.signature_name || "________________________", M + 70, y);
+  if (rx.signature_data_url) {
+    try {
+      doc.addImage(rx.signature_data_url, "PNG", M + 70, y - 22, 160, 40);
+    } catch {
+      doc.setFont("helvetica", "italic");
+      doc.setFontSize(14);
+      doc.text(rx.signature_name || "________________________", M + 70, y);
+    }
+  } else {
+    doc.setFont("helvetica", "italic");
+    doc.setFontSize(14);
+    doc.text(rx.signature_name || "________________________", M + 70, y);
+  }
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
   if (rx.signed_at) {
-    doc.text(`Signed: ${new Date(rx.signed_at).toLocaleString("en-GB")}`, M, y + 16);
+    doc.text(`Signed: ${new Date(rx.signed_at).toLocaleString("en-GB")}`, M, y + 26);
+  }
+  if (rx.signature_name) {
+    doc.text(`Name: ${rx.signature_name}`, M + 240, y + 26);
   }
 
   return doc;
