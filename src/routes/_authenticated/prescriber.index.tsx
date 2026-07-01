@@ -58,11 +58,14 @@ function PrescriberHome() {
 
   return (
     <div className="space-y-4">
-      <div>
-        <h2 className="font-serif text-2xl">Referrals</h2>
-        <p className="text-sm text-muted-foreground">
-          Patients booked by connected practitioners appear here for your sign-off.
-        </p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2 className="font-serif text-2xl">Referrals</h2>
+          <p className="text-sm text-muted-foreground">
+            Patients booked by connected practitioners appear here for your sign-off.
+          </p>
+        </div>
+        <WalkInDialog onCreated={() => q.refetch()} />
       </div>
 
       <Tabs defaultValue="pending">
