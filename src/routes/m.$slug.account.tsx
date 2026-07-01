@@ -71,6 +71,27 @@ function Account() {
   const [cancelTarget, setCancelTarget] = useState<Appt | null>(null);
   const [cancelAgreed, setCancelAgreed] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [claimOpen, setClaimOpen] = useState(false);
+  const [claimEmail, setClaimEmail] = useState("");
+  const [claiming, setClaiming] = useState(false);
+
+  async function claimBookings() {
+    if (!claimEmail.trim()) return;
+    setClaiming(true);
+    const { data, error } = await supabase.rpc("claim_appointments_by_email", {
+      p_slug: slug, p_email: claimEmail.trim(),
+    } as any);
+    setClaiming(false);
+    if (error) return toast.error(error.message);
+    const n = Number(data ?? 0);
+    if (n === 0) {
+      toast.info("No bookings found for that email at this clinic.");
+    } else {
+      toast.success(`Linked ${n} booking${n === 1 ? "" : "s"} to your account.`);
+      setClaimOpen(false); setClaimEmail("");
+      loadAll();
+    }
+  }
 
   async function loadAll() {
     setLoading(true);
@@ -211,6 +232,39 @@ function Account() {
           <Button size="sm" variant="outline">Back to clinic</Button>
         </Link>
       </header>
+
+      {/* Missing bookings claim */}
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-md border border-dashed bg-muted/30 px-3 py-2 text-xs">
+        <span className="text-muted-foreground">Missing a booking? It may have been made with a different email.</span>
+        <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setClaimOpen(true)}>
+          Claim a booking
+        </Button>
+      </div>
+
+      <Dialog open={claimOpen} onOpenChange={setClaimOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Claim a booking</DialogTitle>
+            <DialogDescription>
+              Enter the email address you used when you booked. We'll link those bookings to your account.
+            </DialogDescription>
+          </DialogHeader>
+          <input
+            type="email"
+            autoFocus
+            placeholder="you@example.com"
+            className="w-full rounded-md border px-3 py-2 text-sm"
+            value={claimEmail}
+            onChange={(e) => setClaimEmail(e.target.value)}
+          />
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setClaimOpen(false)} disabled={claiming}>Cancel</Button>
+            <Button onClick={claimBookings} disabled={claiming || !claimEmail.trim()}>
+              {claiming && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Link bookings
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Upcoming */}
       <Section title="Upcoming appointments" icon={CalendarIcon} brand={brand}>

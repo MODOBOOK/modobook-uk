@@ -4449,6 +4449,10 @@ export type Database = {
         Args: { p_token: string }
         Returns: boolean
       }
+      claim_appointments_by_email: {
+        Args: { p_email: string; p_slug: string }
+        Returns: number
+      }
       close_walk_in_as_practitioner: {
         Args: { p_id: string; p_note?: string }
         Returns: boolean
