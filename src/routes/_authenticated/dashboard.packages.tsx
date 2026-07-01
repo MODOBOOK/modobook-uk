@@ -493,3 +493,67 @@ function TreatmentSearchPicker({
     </Popover>
   );
 }
+
+function PackageCategoriesManager({
+  categories,
+  onAdd,
+  onDelete,
+}: {
+  categories: Category[];
+  onAdd: (name: string) => Promise<void>;
+  onDelete: (id: string) => Promise<void>;
+}) {
+  const [name, setName] = useState("");
+  const [busy, setBusy] = useState(false);
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base">Package categories</CardTitle>
+        <p className="text-xs text-muted-foreground">
+          Group packages on the booking page. Kept separate from your treatment categories.
+        </p>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="flex flex-wrap gap-1.5">
+          {categories.length === 0 ? (
+            <p className="text-xs text-muted-foreground">No package categories yet.</p>
+          ) : (
+            categories.map((c) => (
+              <Badge key={c.id} variant="secondary" className="gap-1 pr-1">
+                <span>{c.name}</span>
+                <button
+                  type="button"
+                  aria-label={`Delete ${c.name}`}
+                  onClick={() => onDelete(c.id)}
+                  className="rounded p-0.5 hover:bg-background/60"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            ))
+          )}
+        </div>
+        <div className="flex gap-2">
+          <Input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="e.g. Skin, Anti-wrinkle, Wellness…"
+            className="h-9"
+          />
+          <Button
+            size="sm"
+            disabled={busy || !name.trim()}
+            onClick={async () => {
+              setBusy(true);
+              try { await onAdd(name.trim()); setName(""); toast.success("Added"); }
+              catch (e) { toast.error(e instanceof Error ? e.message : "Failed"); }
+              finally { setBusy(false); }
+            }}
+          >
+            <Plus className="mr-1 h-4 w-4" /> Add
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
