@@ -1,8 +1,33 @@
 import Stripe from "stripe";
 
+export type StripePlatformSetupErrorCode = "connect_not_enabled" | "missing_secret" | "stripe_error";
+
+export class StripePlatformSetupError extends Error {
+  code: StripePlatformSetupErrorCode;
+
+  constructor(message: string, code: StripePlatformSetupErrorCode = "stripe_error") {
+    super(message);
+    this.name = "StripePlatformSetupError";
+    this.code = code;
+  }
+}
+
+function normaliseStripeError(error: unknown): never {
+  const message = error instanceof Error ? error.message : "Stripe could not start onboarding.";
+  if (message.includes("signed up for Connect") || message.includes("dashboard.stripe.com/connect")) {
+    throw new StripePlatformSetupError(
+      "Stripe Connect is not enabled on this sandbox platform account yet.",
+      "connect_not_enabled",
+    );
+  }
+  throw new StripePlatformSetupError(message, "stripe_error");
+}
+
 export function getStripe(): Stripe {
   const key = process.env.STRIPE_PLATFORM_SECRET_KEY;
-  if (!key) throw new Error("Missing STRIPE_PLATFORM_SECRET_KEY");
+  if (!key) {
+    throw new StripePlatformSetupError("Stripe sandbox secret key is missing.", "missing_secret");
+  }
   return new Stripe(key, {
     apiVersion: "2026-06-24.dahlia",
     typescript: true,
@@ -11,27 +36,35 @@ export function getStripe(): Stripe {
 
 export async function createConnectAccount(email: string) {
   const stripe = getStripe();
-  return stripe.accounts.create({
-    type: "express",
-    email,
-    capabilities: {
-      card_payments: { requested: true },
-      transfers: { requested: true },
-    },
-    settings: {
-      payouts: { schedule: { interval: "manual" } },
-    },
-  });
+  try {
+    return await stripe.accounts.create({
+      type: "express",
+      email,
+      capabilities: {
+        card_payments: { requested: true },
+        transfers: { requested: true },
+      },
+      settings: {
+        payouts: { schedule: { interval: "manual" } },
+      },
+    });
+  } catch (error) {
+    normaliseStripeError(error);
+  }
 }
 
 export async function createConnectOnboardingLink(accountId: string, refreshUrl: string, returnUrl: string) {
   const stripe = getStripe();
-  return stripe.accountLinks.create({
-    account: accountId,
-    refresh_url: refreshUrl,
-    return_url: returnUrl,
-    type: "account_onboarding",
-  });
+  try {
+    return await stripe.accountLinks.create({
+      account: accountId,
+      refresh_url: refreshUrl,
+      return_url: returnUrl,
+      type: "account_onboarding",
+    });
+  } catch (error) {
+    normaliseStripeError(error);
+  }
 }
 
 export async function getAccount(accountId: string) {
