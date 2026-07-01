@@ -98,9 +98,9 @@ function ConsentPage() {
         <CardHeader>
           <CardTitle>{consent.template_name}</CardTitle>
           <p className="text-sm text-muted-foreground">
-            {consent.clinic_name} · {consent.treatment_name} ·{" "}
-            {new Date(consent.scheduled_date).toLocaleDateString()} at{" "}
-            {String(consent.start_time).slice(0, 5)}
+            {[consent.clinic_name, consent.treatment_name, formatConsentDateTime(consent.scheduled_date, consent.start_time)]
+              .filter(Boolean)
+              .join(" · ")}
           </p>
         </CardHeader>
         <CardContent className="space-y-5">
@@ -139,4 +139,9 @@ function ConsentPage() {
       </Card>
     </main>
   );
+}
+
+function formatConsentDateTime(date?: string | null, time?: string | null) {
+  if (!date) return null;
+  return `${new Date(date).toLocaleDateString()}${time ? ` at ${String(time).slice(0, 5)}` : ""}`;
 }

@@ -154,6 +154,7 @@ const WalkInSchema = z.object({
   patient_dob: z.preprocess((v) => (v === "" || v == null ? undefined : v), z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional()),
   note: z.string().trim().max(2000).nullable().optional(),
   medical_form_template_ids: z.array(z.string().uuid()).default([]),
+  consent_template_ids: z.array(z.string().uuid()).default([]),
 });
 
 export const listLinkedPractitionerMedicalForms = createServerFn({ method: "POST" })
@@ -161,6 +162,17 @@ export const listLinkedPractitionerMedicalForms = createServerFn({ method: "POST
   .inputValidator((i: { practitioner_profile_id: string }) => i)
   .handler(async ({ data, context }) => {
     const { data: rows, error } = await (context.supabase as any).rpc("list_linked_practitioner_medical_forms", {
+      p_practitioner_profile_id: data.practitioner_profile_id,
+    });
+    if (error) throw error;
+    return rows ?? [];
+  });
+
+export const listLinkedPractitionerConsentForms = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: { practitioner_profile_id: string }) => i)
+  .handler(async ({ data, context }) => {
+    const { data: rows, error } = await (context.supabase as any).rpc("list_linked_practitioner_consent_forms", {
       p_practitioner_profile_id: data.practitioner_profile_id,
     });
     if (error) throw error;
@@ -180,6 +192,7 @@ export const createWalkIn = createServerFn({ method: "POST" })
       p_note: data.note ?? undefined,
       p_client_id: undefined,
       p_medical_form_template_ids: data.medical_form_template_ids,
+      p_consent_template_ids: data.consent_template_ids,
     } as never);
     if (error) throw error;
     return { id: id as unknown as string };
@@ -190,6 +203,18 @@ export const addWalkInMedicalForms = createServerFn({ method: "POST" })
   .inputValidator((i: { referral_id: string; template_ids: string[] }) => i)
   .handler(async ({ data, context }) => {
     const { data: count, error } = await (context.supabase as any).rpc("add_walk_in_medical_forms", {
+      p_referral_id: data.referral_id,
+      p_template_ids: data.template_ids,
+    });
+    if (error) throw error;
+    return { added: Number(count ?? 0) };
+  });
+
+export const addWalkInConsentForms = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: { referral_id: string; template_ids: string[] }) => i)
+  .handler(async ({ data, context }) => {
+    const { data: count, error } = await (context.supabase as any).rpc("add_walk_in_consent_forms", {
       p_referral_id: data.referral_id,
       p_template_ids: data.template_ids,
     });
