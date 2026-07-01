@@ -733,7 +733,7 @@ function PrescriptionEditor({ referralId, patient, client }: { referralId: strin
         valid_until: latest.valid_until ?? "",
         notes: latest.notes ?? "",
       });
-      setSigName(latest.signature_name ?? "");
+      setSigName((s) => s || latest.signature_name || latest.prescriber_name || "");
     } else {
       const d = (defaults.data ?? {}) as {
         prescriber_name?: string;
@@ -742,17 +742,20 @@ function PrescriptionEditor({ referralId, patient, client }: { referralId: strin
         clinic_name?: string;
         clinic_address?: string;
       };
+      const prescriberName = d.prescriber_name || "";
       setForm((f) => ({
         ...f,
         patient_name: (patient.patient_name as string) || (client?.full_name as string) || "",
         patient_dob: (patient.patient_dob as string) || (client?.date_of_birth as string) || "",
         patient_address: (patient.patient_address as string) || (client?.address as string) || "",
-        prescriber_name: f.prescriber_name || d.prescriber_name || "",
+        prescriber_name: f.prescriber_name || prescriberName,
         prescriber_reg_body: f.prescriber_reg_body || d.prescriber_reg_body || "",
         prescriber_reg_number: f.prescriber_reg_number || d.prescriber_reg_number || "",
         clinic_name: f.clinic_name || d.clinic_name || "",
         clinic_address: f.clinic_address || d.clinic_address || "",
       }));
+      setSigName((s) => s || prescriberName);
+
     }
   }, [latest, patient, client, defaults.data]);
 
@@ -774,15 +777,25 @@ function PrescriptionEditor({ referralId, patient, client }: { referralId: strin
     } catch (e) { toast.error((e as Error).message); }
   }
   async function onSign() {
-    if (!form.id) { await onSave(); }
-    const id = form.id;
-    if (!id || !sigName.trim()) { toast.error("Type your full name to sign"); return; }
+    const name = (sigName || form.prescriber_name).trim();
+    if (!name) { toast.error("Type your full name to sign"); return; }
+    let id = form.id;
+    if (!id) {
+      try {
+        const payload = { ...form, referral_id: referralId, patient_dob: form.patient_dob || null, valid_until: form.valid_until || null };
+        const res = await save({ data: payload });
+        id = res.id;
+        setForm((f) => ({ ...f, id: res.id }));
+      } catch (e) { toast.error((e as Error).message); return; }
+    }
+    if (!id) { toast.error("Save the prescription first"); return; }
     try {
-      await sign({ data: { id, signature_name: sigName.trim(), signature_data: `${sigName.trim()} · ${new Date().toISOString()}` } });
+      await sign({ data: { id, signature_name: name, signature_data: `${name} · ${new Date().toISOString()}` } });
       toast.success("Prescription signed & sent to practitioner");
       q.refetch();
     } catch (e) { toast.error((e as Error).message); }
   }
+
 
   return (
     <div className="space-y-3 text-xs">
