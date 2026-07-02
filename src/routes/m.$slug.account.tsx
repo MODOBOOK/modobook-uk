@@ -312,27 +312,52 @@ function Account() {
         </DialogContent>
       </Dialog>
 
-      {/* Upcoming */}
-      <Section title="Upcoming appointments" icon={CalendarIcon} brand={brand}>
-        {upcoming.length === 0 ? (
-          <Empty msg="No upcoming appointments." cta={<Link to="/m/$slug" params={{ slug }}><Button size="sm">Book a treatment</Button></Link>} />
-        ) : (
-          <div className="space-y-3">
-            {upcoming.map((a) => (
-              <ApptCard
-                key={a.id} a={a} brand={brand}
-                allowCancel={!!profile?.allow_patient_cancel}
-                allowReschedule={!!profile?.allow_patient_reschedule}
-                cancelCutoffHours={profile?.patient_cancel_cutoff_hours ?? 0}
-                rescheduleCutoffHours={profile?.patient_reschedule_cutoff_hours ?? 0}
-                maxReschedules={profile?.patient_reschedule_max ?? 999}
-                slug={slug}
-                onCancel={() => openCancel(a)}
-              />
-            ))}
-          </div>
-        )}
-      </Section>
+      {/* Appointments (tabs) */}
+      <section className="mt-8">
+        <h2 className="mb-3 flex items-center gap-2 text-base font-semibold" style={{ color: brand }}>
+          <CalendarIcon className="h-4 w-4" />Appointments
+        </h2>
+        <Tabs defaultValue="upcoming">
+          <TabsList className="mb-3">
+            <TabsTrigger value="upcoming">Upcoming {upcoming.length > 0 && `(${upcoming.length})`}</TabsTrigger>
+            <TabsTrigger value="previous">Previous {past.length > 0 && `(${past.length})`}</TabsTrigger>
+          </TabsList>
+          <TabsContent value="upcoming">
+            {upcoming.length === 0 ? (
+              <Empty msg="No upcoming appointments." cta={<Link to="/m/$slug" params={{ slug }}><Button size="sm">Book a treatment</Button></Link>} />
+            ) : (
+              <div className="space-y-3">
+                {upcoming.map((a) => (
+                  <ApptCard
+                    key={a.id} a={a} brand={brand}
+                    allowCancel={!!profile?.allow_patient_cancel}
+                    allowReschedule={!!profile?.allow_patient_reschedule}
+                    cancelCutoffHours={profile?.patient_cancel_cutoff_hours ?? 0}
+                    rescheduleCutoffHours={profile?.patient_reschedule_cutoff_hours ?? 0}
+                    maxReschedules={profile?.patient_reschedule_max ?? 999}
+                    slug={slug}
+                    onCancel={() => openCancel(a)}
+                  />
+                ))}
+              </div>
+            )}
+          </TabsContent>
+          <TabsContent value="previous">
+            {past.length === 0 ? (
+              <Empty msg="No previous appointments yet." />
+            ) : (
+              <div className="space-y-3">
+                {past.map((a) => (
+                  <ApptCard
+                    key={a.id} a={a} brand={brand} slug={slug}
+                    aftercare={aftercareByAppt.get(a.id) ?? []}
+                  />
+                ))}
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
+      </section>
 
       <CancelDialog
         open={!!cancelTarget}
