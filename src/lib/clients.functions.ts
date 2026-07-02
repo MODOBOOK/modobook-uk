@@ -387,28 +387,30 @@ export const mergeClients = createServerFn({ method: "POST" })
     if (!ids.length) return { ok: true, merged: 0 };
 
     // Repoint child records to the kept client
-    const tables = ["client_notes", "client_files", "client_prescriptions", "appointment_medical_forms", "appointment_consents"];
+    const tables = ["client_notes", "client_files", "client_prescriptions", "appointment_medical_forms", "appointment_consents"] as const;
+    const sb: any = context.supabase;
     for (const t of tables) {
       try {
-        await context.supabase.from(t).update({ client_id: data.keep_id }).in("client_id", ids);
+        await sb.from(t).update({ client_id: data.keep_id }).in("client_id", ids);
       } catch { /* table may not have client_id — ignore */ }
     }
 
     // Backfill kept client from best available field data
-    const { data: kept } = await context.supabase.from("clinic_clients").select("*").eq("id", data.keep_id).maybeSingle();
-    const { data: others } = await context.supabase.from("clinic_clients").select("*").in("id", ids);
+    const { data: kept } = await sb.from("clinic_clients").select("*").eq("id", data.keep_id).maybeSingle();
+    const { data: others } = await sb.from("clinic_clients").select("*").in("id", ids);
     if (kept && others?.length) {
       const merged: any = {};
+      const keptAny: any = kept;
       const fields = ["email","phone","dob","gender","address","address_line1","address_line2","postcode","city","country","county","gp_name","gp_address","emergency_contact_name","emergency_contact_phone","notes","group_name","avatar_url","allergies"];
       for (const f of fields) {
-        if (!kept[f]) {
+        if (!keptAny[f]) {
           const found = others.find((o: any) => o[f]);
           if (found) merged[f] = found[f];
         }
       }
       if (others.some((o: any) => o.has_allergies)) merged.has_allergies = true;
       if (Object.keys(merged).length) {
-        await context.supabase.from("clinic_clients").update(merged).eq("id", data.keep_id);
+        await sb.from("clinic_clients").update(merged).eq("id", data.keep_id);
       }
     }
 
