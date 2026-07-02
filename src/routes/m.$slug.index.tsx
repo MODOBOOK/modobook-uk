@@ -313,6 +313,8 @@ function BookPage() {
   const [locationId, setLocationId] = useState<string | null>(null);
   const [directionsOpen, setDirectionsOpen] = useState(false);
   const [careGuideOpen, setCareGuideOpen] = useState(false);
+  const [expandedFavId, setExpandedFavId] = useState<string | null>(null);
+
   const preItems = (pretreatment ?? []).length > 0
     ? (pretreatment ?? []).map((p) => ({ id: p.id, name: p.name, body_html: p.body_html, summary: p.summary, bullets: Array.isArray(p.bullets) ? p.bullets : [] }))
     : (careGuides ?? []).map((g) => ({ id: g.id, name: g.name, body_html: g.body_html, summary: g.summary, bullets: [] as string[] }));
