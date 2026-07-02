@@ -1267,14 +1267,18 @@ function BookPage() {
                 .filter((n): n is string => !!n);
               return (
                 <>
-                  {concernNames.length > 0 && (
+                  {onConsultPath ? (
+                    <h2 className="mb-3 text-lg font-bold" style={headingStyle}>
+                      Choose a consultation
+                    </h2>
+                  ) : concernNames.length > 0 && (
                     <h2 className="mb-3 text-lg font-bold" style={headingStyle}>
                       Suggested for: {concernNames.join(", ")}
                     </h2>
                   )}
                   {filteredTreatments.length === 0 ? (
                     <p className="rounded-xl border border-dashed p-6 text-center text-sm opacity-70" style={{ borderColor: `${brand}33` }}>
-                      No treatments matched to {concernNames.length > 1 ? "these concerns" : "this concern"} yet.
+                      {onConsultPath ? "No consultations available yet." : `No treatments matched to ${concernNames.length > 1 ? "these concerns" : "this concern"} yet.`}
                     </p>
                   ) : (
                     <div className="space-y-2">
