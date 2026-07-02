@@ -166,6 +166,32 @@ export async function exchangeStripeOAuthCode(code: string) {
   }
 }
 
+export function getStripeSetupSummary() {
+  const mode = getStripeMode();
+  const key = getStripeSecretKey()?.trim();
+  const clientId = process.env.STRIPE_CONNECT_CLIENT_ID?.trim();
+  const redirectUri = "https://modo-book.lovable.app/api/public/stripe/oauth-callback";
+
+  return {
+    mode,
+    hasSecretKey: !!key,
+    secretKeyType: key?.startsWith("sk_test_")
+      ? "test"
+      : key?.startsWith("sk_live_")
+        ? "live"
+        : key?.startsWith("pk_")
+          ? "publishable"
+          : key?.startsWith("rk_")
+            ? "restricted"
+            : key
+              ? "unknown"
+              : "missing",
+    hasConnectClientId: !!clientId,
+    connectClientIdType: clientId?.startsWith("ca_") ? "connect" : clientId ? "invalid" : "missing",
+    redirectUri,
+  } as const;
+}
+
 export async function deauthorizeStripeAccount(accountId: string) {
   const stripe = getStripe();
   const clientId = getStripeConnectClientId();
