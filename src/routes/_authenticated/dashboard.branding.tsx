@@ -518,7 +518,6 @@ function BrandingPage() {
               profileId={profileId}
               folder="carousel"
               previewClass="hidden"
-              cropAspect={16 / 9}
             />
           </CardContent>
         </Card>
@@ -740,7 +739,7 @@ function BrandingPage() {
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Logo, tab icon & banner</CardTitle>
-          <p className="text-xs text-muted-foreground">All images can be cropped and repositioned after upload. They auto-fit desktop and mobile.</p>
+          <p className="text-xs text-muted-foreground">Banner images now keep the full upload visible on mobile. Crop is optional if you want to trim the image.</p>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
           <div className="sm:col-span-2">
@@ -748,7 +747,7 @@ function BrandingPage() {
           </div>
           <ImageUploader label="Tab icon (browser tab)" value={state.favicon_url} onChange={(v) => set("favicon_url", v)} profileId={profileId} folder="favicon" previewClass="mt-2 h-8 w-8 object-contain rounded" cropAspect={1} />
           {(state.layout_key ?? "classic") === "classic" && (
-            <ImageUploader label="Banner image" value={state.hero_image_url} onChange={(v) => set("hero_image_url", v)} profileId={profileId} folder="hero" previewClass="mt-2 h-40 w-full rounded-md object-cover" cropAspect={16 / 9} />
+            <ImageUploader label="Banner image" value={state.hero_image_url} onChange={(v) => set("hero_image_url", v)} profileId={profileId} folder="hero" previewClass="mt-2 h-40 w-full rounded-md bg-muted/30 object-contain" />
           )}
           <div className="space-y-1.5 sm:col-span-2">
             <Label>Banner title</Label>

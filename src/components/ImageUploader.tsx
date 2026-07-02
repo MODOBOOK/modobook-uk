@@ -8,6 +8,38 @@ import { Crop, Upload, X } from "lucide-react";
 import { ImageCropDialog } from "@/components/ImageCropDialog";
 
 const TEN_YEARS = 60 * 60 * 24 * 365 * 10;
+const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
+
+async function compressImageIfNeeded(file: File): Promise<File> {
+  if (!file.type.startsWith("image/") || file.type === "image/svg+xml" || file.type === "image/gif") return file;
+  if (file.size <= MAX_UPLOAD_BYTES) return file;
+
+  const objectUrl = URL.createObjectURL(file);
+  try {
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const el = new Image();
+      el.onload = () => resolve(el);
+      el.onerror = reject;
+      el.src = objectUrl;
+    });
+    const maxSide = 2400;
+    const scale = Math.min(1, maxSide / Math.max(img.naturalWidth, img.naturalHeight));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(img.naturalWidth * scale));
+    canvas.height = Math.max(1, Math.round(img.naturalHeight * scale));
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return file;
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+    const outputType = file.type === "image/png" ? "image/png" : "image/jpeg";
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, outputType, 0.86));
+    if (!blob || blob.size >= file.size) return file;
+    const ext = outputType === "image/png" ? "png" : "jpg";
+    return new File([blob], `${file.name.replace(/\.[^.]+$/, "")}.${ext}`, { type: outputType });
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
+}
 
 export function ImageUploader({
   label,
@@ -36,17 +68,18 @@ export function ImageUploader({
       toast.error("Profile not ready yet");
       return;
     }
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Image must be under 5MB");
-      return;
-    }
     setUploading(true);
     try {
-      const ext = file.name.split(".").pop()?.toLowerCase() || "png";
+      const prepared = await compressImageIfNeeded(file);
+      if (prepared.size > MAX_UPLOAD_BYTES) {
+        toast.error("Image is too large. Please choose a smaller image or crop it first.");
+        return;
+      }
+      const ext = prepared.name.split(".").pop()?.toLowerCase() || "png";
       const path = `${profileId}/${folder}/${Date.now()}.${ext}`;
       const { error: upErr } = await supabase.storage
         .from("clinic-assets")
-        .upload(path, file, { upsert: true, contentType: file.type });
+        .upload(path, prepared, { upsert: true, contentType: prepared.type });
       if (upErr) throw upErr;
       const { data, error: sErr } = await supabase.storage
         .from("clinic-assets")

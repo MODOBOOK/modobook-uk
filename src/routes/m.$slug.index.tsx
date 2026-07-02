@@ -563,10 +563,10 @@ function BookPage() {
         const heroShowText = theme?.hero_show_text ?? true;
         const heightCls =
           layoutKey === "magazine" ? "h-28 sm:h-36"
-          : heroHeight === "short" ? "h-36 w-full object-cover object-top sm:h-44"
-          : heroHeight === "tall" ? "h-64 w-full object-cover object-top sm:h-[26rem]"
-          : heroHeight === "extra_tall" ? "h-[26rem] w-full object-cover object-top sm:h-[36rem]"
-          : "h-56 w-full object-cover object-top sm:h-[22rem]";
+          : heroHeight === "short" ? "h-36 sm:h-44"
+          : heroHeight === "tall" ? "h-64 sm:h-[26rem]"
+          : heroHeight === "extra_tall" ? "h-[26rem] sm:h-[36rem]"
+          : "h-56 sm:h-[22rem]";
         const splitHeight = heroHeight === "short" ? "h-36 sm:h-52" : heroHeight === "tall" ? "h-56 sm:h-80" : heroHeight === "extra_tall" ? "h-[26rem] sm:h-[40rem]" : "h-44 sm:h-64";
         const blankHeight = heroHeight === "short" ? "h-32 sm:h-44" : heroHeight === "tall" ? "h-56 sm:h-72" : heroHeight === "extra_tall" ? "h-[26rem] sm:h-[36rem]" : "h-44 sm:h-56";
         const alignCls = heroAlign === "left" ? "text-left items-start" : heroAlign === "right" ? "text-right items-end" : "text-center items-center";
@@ -574,18 +574,14 @@ function BookPage() {
           <div className="relative">
             {layoutKey === "magazine" ? (
               heroUrl ? (
-                <img src={heroUrl} alt="" className={`w-full object-cover ${heightCls}`} />
+                <HeroImage src={heroUrl} heightClass={heightCls} />
               ) : (
                 <div className="h-20 w-full" style={{ background: `linear-gradient(135deg, ${brand}, ${accent})` }} />
               )
             ) : carouselEnabled && carouselUrls.length > 0 ? (
               <HeroCarousel urls={carouselUrls} heightClass={heightCls} />
             ) : heroUrl ? (
-              <img
-                src={heroUrl}
-                alt=""
-                className={layoutKey === "split" ? `${splitHeight} w-full object-cover object-top` : heightCls}
-              />
+              <HeroImage src={heroUrl} heightClass={layoutKey === "split" ? splitHeight : heightCls} />
             ) : (
               <div
                 className={`${blankHeight} w-full`}
@@ -2310,6 +2306,20 @@ function TreatmentRow({
 
 
 
+function HeroImage({ src, heightClass }: { src: string; heightClass: string }) {
+  return (
+    <div className={`relative w-full overflow-hidden bg-muted/40 ${heightClass}`}>
+      <img
+        src={src}
+        alt=""
+        aria-hidden="true"
+        className="absolute inset-0 h-full w-full scale-110 object-cover opacity-30 blur-2xl"
+      />
+      <img src={src} alt="" className="relative z-10 h-full w-full object-contain" />
+    </div>
+  );
+}
+
 function HeroCarousel({ urls, heightClass }: { urls: string[]; heightClass?: string }) {
   const [i, setI] = useState(0);
   useEffect(() => {
@@ -2320,12 +2330,13 @@ function HeroCarousel({ urls, heightClass }: { urls: string[]; heightClass?: str
   return (
     <div className={`relative w-full overflow-hidden ${heightClass || "h-56 sm:h-[22rem]"}`}>
       {urls.map((u, idx) => (
-        <img
+        <div
           key={u + idx}
-          src={u}
-          alt=""
-          className={`absolute inset-0 h-full w-full object-cover object-top transition-opacity duration-700 ${idx === i ? "opacity-100" : "opacity-0"}`}
-        />
+          className={`absolute inset-0 transition-opacity duration-700 ${idx === i ? "opacity-100" : "opacity-0"}`}
+        >
+          <img src={u} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full scale-110 object-cover opacity-30 blur-2xl" />
+          <img src={u} alt="" className="relative z-10 h-full w-full object-contain" />
+        </div>
       ))}
       {urls.length > 1 && (
         <div className="absolute bottom-3 left-1/2 z-10 flex -translate-x-1/2 gap-1.5">
