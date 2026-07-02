@@ -310,17 +310,18 @@ export const importClientsCsv = createServerFn({ method: "POST" })
 
       if (existingId) {
         const { error } = await context.supabase.from("clinic_clients").update(payload).eq("id", existingId);
-        if (error) { skipped.push(full_name); continue; }
+        if (error) { skipped.push(`${full_name}: ${error.message}`); continue; }
         updated.push(existingId);
       } else {
         const { data: row2, error } = await context.supabase
           .from("clinic_clients").insert({ profile_id: pid, ...payload }).select("id").single();
-        if (error) { skipped.push(full_name); continue; }
+        if (error) { skipped.push(`${full_name}: ${error.message}`); continue; }
         inserted.push(row2.id);
       }
     }
-    return { inserted: inserted.length, updated: updated.length, skipped: skipped.length };
+    return { inserted: inserted.length, updated: updated.length, skipped: skipped.length, skippedDetails: skipped.slice(0, 5) };
   });
+
 
 /* ---------- Groups ---------- */
 export const listClientGroups = createServerFn({ method: "GET" })
