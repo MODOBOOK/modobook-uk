@@ -134,9 +134,12 @@ function BookingsPage() {
   const list = useServerFn(listMyAppointments);
   const listBlocks = useServerFn(listBlockedTimes);
   const listRules = useServerFn(listAvailabilityRules);
+  const listLocations = useServerFn(listMyLocations);
   const [appts, setAppts] = useState<Appt[]>([]);
   const [blocks, setBlocks] = useState<BlockedTime[]>([]);
   const [rules, setRules] = useState<AvailRule[]>([]);
+  const [locations, setLocations] = useState<{ id: string; name: string }[]>([]);
+  const [locationFilter, setLocationFilter] = useState<string>("all");
   const [loading, setLoading] = useState(true);
   const [anchor, setAnchor] = useState(new Date());
   const [view, setView] = useState<ViewMode>(() =>
@@ -151,10 +154,11 @@ function BookingsPage() {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   async function refresh() {
-    const [a, b, r] = await Promise.all([list(), listBlocks(), listRules()]);
+    const [a, b, r, l] = await Promise.all([list(), listBlocks(), listRules(), listLocations()]);
     setAppts(a as Appt[]);
     setBlocks(b as BlockedTime[]);
     setRules((r as AvailRule[]) ?? []);
+    setLocations(((l as any[]) ?? []).map((x) => ({ id: x.id, name: x.name })));
   }
 
   useEffect(() => {
@@ -188,22 +192,31 @@ function BookingsPage() {
     return [];
   }, [anchor, view]);
 
+  const filteredAppts = useMemo(
+    () => (locationFilter === "all" ? appts : appts.filter((a) => (a.location_id ?? null) === locationFilter)),
+    [appts, locationFilter]
+  );
+  const filteredBlocks = useMemo(
+    () => (locationFilter === "all" ? blocks : blocks.filter((b) => (b.location_id ?? null) === locationFilter || b.location_id == null)),
+    [blocks, locationFilter]
+  );
+
   const apptsByDate = useMemo(() => {
     const m = new Map<string, Appt[]>();
-    for (const a of appts) {
+    for (const a of filteredAppts) {
       if (a.status === "cancelled") continue;
       (m.get(a.scheduled_date) ?? m.set(a.scheduled_date, []).get(a.scheduled_date)!).push(a);
     }
     return m;
-  }, [appts]);
+  }, [filteredAppts]);
 
   const blocksByDate = useMemo(() => {
     const m = new Map<string, BlockedTime[]>();
-    for (const b of blocks) {
+    for (const b of filteredBlocks) {
       (m.get(b.date) ?? m.set(b.date, []).get(b.date)!).push(b);
     }
     return m;
-  }, [blocks]);
+  }, [filteredBlocks]);
 
   const rulesByDow = useMemo(() => {
     const m = new Map<number, AvailRule[]>();
