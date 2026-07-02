@@ -29,8 +29,9 @@ export const startStripeStandardConnect = createServerFn({ method: "POST" })
         .eq("id", profile.id);
 
       const email = profile.email || (claims as { email?: string })?.email || undefined;
-      const redirectOrigin = "https://modo-book.lovable.app";
+      const redirectOrigin = "https://modobook.uk";
       const redirectUri = `${redirectOrigin}/api/public/stripe/oauth-callback`;
+
       const url = buildStripeOAuthAuthorizeUrl({ state, redirectUri, email });
 
       return { ok: true as const, url, mode: getStripeMode() };
