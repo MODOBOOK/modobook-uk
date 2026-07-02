@@ -64,12 +64,35 @@ function PrivacyPage() {
 
           <h2>4. Where your data is stored</h2>
           <p>
-            MODO uses Lovable Cloud (Supabase infrastructure) hosted in the European
-            Union (AWS eu-west-3, Paris). Payments are handled by Stripe (UK &amp;
-            Ireland). Email is delivered via our notify.modobook.co.uk domain.
-            Transfers outside the UK/EEA rely on the UK International Data Transfer
-            Addendum and Standard Contractual Clauses where applicable.
+            <strong>All clinical data — including medical history forms,
+            consultation notes, consent forms, prescriptions and any
+            before/after or treatment photos — is stored at rest inside the
+            European Economic Area</strong>, on Lovable Cloud (Supabase / AWS
+            <em> eu-west-3, Paris, France</em>). Databases and file storage
+            (patient photos, consent PDFs, uploaded documents) never leave that
+            EEA region under normal operation.
           </p>
+          <p>
+            <strong>Transactional and authentication emails</strong> — booking
+            confirmations, reminders, medical-form and consent links,
+            prescription receipts, one-time passcodes and password resets — are
+            sent from <code>notify.modobook.co.uk</code> through Lovable's
+            managed EU email relay. To protect health data in transit and at
+            the provider, our emails contain only appointment metadata (date,
+            time, treatment name, clinic) and secure one-time links back into
+            MODO; <strong>we do not embed medical history answers, consultation
+            notes, diagnoses, prescription contents or clinical photos in the
+            body of an email</strong>.
+          </p>
+          <p>
+            <strong>Payments</strong> are processed by Stripe (UK &amp;
+            Ireland). Stripe receives only the information required to take a
+            payment (name, email, amount, appointment reference) — never your
+            clinical record. Any onward international transfer by a
+            sub-processor relies on the UK International Data Transfer
+            Addendum and EU Standard Contractual Clauses.
+          </p>
+
 
           <h2>5. How long we keep data</h2>
           <ul>
