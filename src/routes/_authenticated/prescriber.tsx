@@ -1,10 +1,11 @@
 import { createFileRoute, Link, Outlet, redirect, useRouterState } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
-import { LogOut, Inbox, Network, ShieldCheck, Stethoscope, Building2, CalendarDays, Pill, LayoutDashboard, ClipboardList } from "lucide-react";
+import { LogOut, Inbox, Network, ShieldCheck, Stethoscope, Building2, CalendarDays, Pill, LayoutDashboard, ClipboardList, MoreHorizontal } from "lucide-react";
 import { getHubContext } from "@/lib/hub.functions";
 import { getMyProfile } from "@/lib/profiles.functions";
 import { listMyReferrals } from "@/lib/prescriber.functions";
@@ -25,14 +26,17 @@ export const Route = createFileRoute("/_authenticated/prescriber")({
 });
 
 const nav = [
-  { to: "/prescriber/dashboard", label: "Dashboard", icon: LayoutDashboard, key: "dashboard" as const },
-  { to: "/prescriber", label: "Referrals", icon: Inbox, exact: true, key: "referrals" as const },
-  { to: "/prescriber/visits", label: "Clinic visits", icon: CalendarDays, key: "visits" as const },
-  { to: "/prescriber/library", label: "Prescriptions", icon: Pill, key: "library" as const },
-  { to: "/prescriber/directions", label: "Directions", icon: ClipboardList, key: "directions" as const },
-  { to: "/prescriber/connections", label: "Practitioners", icon: Network, key: "connections" as const },
-  { to: "/hub/verification", label: "Verification", icon: ShieldCheck, key: "verification" as const },
+  { to: "/prescriber/dashboard", label: "Dashboard", shortLabel: "Home", icon: LayoutDashboard, key: "dashboard" as const },
+  { to: "/prescriber", label: "Referrals", shortLabel: "Referrals", icon: Inbox, exact: true, key: "referrals" as const },
+  { to: "/prescriber/visits", label: "Clinic visits", shortLabel: "Visits", icon: CalendarDays, key: "visits" as const },
+  { to: "/prescriber/library", label: "Prescriptions", shortLabel: "Rx", icon: Pill, key: "library" as const },
+  { to: "/prescriber/directions", label: "Directions", shortLabel: "Directions", icon: ClipboardList, key: "directions" as const },
+  { to: "/prescriber/connections", label: "Practitioners", shortLabel: "Team", icon: Network, key: "connections" as const },
+  { to: "/hub/verification", label: "Verification", shortLabel: "Verify", icon: ShieldCheck, key: "verification" as const },
 ];
+
+// Mobile: primary 4 tabs + More sheet for the rest
+const mobilePrimaryKeys = ["referrals", "visits", "library", "connections"] as const;
 
 
 
@@ -40,6 +44,7 @@ function PrescriberLayout() {
   const { hubCtx, hasClinic } = Route.useRouteContext();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const name = hubCtx.prescriber?.full_name ?? hubCtx.displayName ?? "Prescriber";
+  const [moreOpen, setMoreOpen] = useState(false);
 
   const fetchRefs = useServerFn(listMyReferrals);
   const fetchVisits = useServerFn(listMyPrescriberVisits);
@@ -147,29 +152,85 @@ function PrescriberLayout() {
           <Outlet />
         </main>
 
-        <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-7 border-t bg-background/95 backdrop-blur lg:hidden">
-          {nav.map((tab) => {
-            const active = tab.exact ? pathname === tab.to : pathname.startsWith(tab.to);
-            const count = badges[tab.key] ?? 0;
-            return (
-              <Link
-                key={tab.to}
-                to={tab.to}
-                className={cn(
-                  "relative flex flex-col items-center justify-center gap-1 py-2.5 text-[11px] font-medium transition",
-                  active ? "text-primary" : "text-muted-foreground",
-                )}
+        <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden">
+          {nav
+            .filter((t) => (mobilePrimaryKeys as readonly string[]).includes(t.key))
+            .map((tab) => {
+              const active = tab.exact ? pathname === tab.to : pathname.startsWith(tab.to);
+              const count = badges[tab.key] ?? 0;
+              return (
+                <Link
+                  key={tab.to}
+                  to={tab.to}
+                  className={cn(
+                    "relative flex flex-col items-center justify-center gap-1 py-2.5 text-[10px] font-medium transition",
+                    active ? "text-primary" : "text-muted-foreground",
+                  )}
+                >
+                  <tab.icon className="h-5 w-5" />
+                  <span className="truncate">{tab.shortLabel}</span>
+                  {count > 0 && (
+                    <span className="absolute right-4 top-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">
+                      {count}
+                    </span>
+                  )}
+                </Link>
+              );
+            })}
+          <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
+            <SheetTrigger asChild>
+              <button
+                type="button"
+                className="relative flex flex-col items-center justify-center gap-1 py-2.5 text-[10px] font-medium text-muted-foreground transition"
               >
-                <tab.icon className="h-5 w-5" />
-                {tab.label}
-                {count > 0 && (
-                  <span className="absolute right-3 top-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">
-                    {count}
-                  </span>
+                <MoreHorizontal className="h-5 w-5" />
+                <span>More</span>
+              </button>
+            </SheetTrigger>
+            <SheetContent side="bottom" className="rounded-t-2xl pb-[env(safe-area-inset-bottom)]">
+              <SheetHeader>
+                <SheetTitle className="font-serif text-lg">More</SheetTitle>
+              </SheetHeader>
+              <div className="mt-4 grid grid-cols-3 gap-2">
+                {nav
+                  .filter((t) => !(mobilePrimaryKeys as readonly string[]).includes(t.key))
+                  .map((tab) => {
+                    const active = tab.exact ? pathname === tab.to : pathname.startsWith(tab.to);
+                    return (
+                      <Link
+                        key={tab.to}
+                        to={tab.to}
+                        onClick={() => setMoreOpen(false)}
+                        className={cn(
+                          "flex flex-col items-center justify-center gap-2 rounded-xl border p-4 text-xs font-medium transition",
+                          active ? "border-primary bg-primary/5 text-primary" : "text-muted-foreground hover:bg-muted",
+                        )}
+                      >
+                        <tab.icon className="h-5 w-5" />
+                        <span className="text-center">{tab.label}</span>
+                      </Link>
+                    );
+                  })}
+                {hasClinic && (
+                  <Link
+                    to="/dashboard"
+                    onClick={() => setMoreOpen(false)}
+                    className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed p-4 text-xs font-medium text-muted-foreground hover:bg-muted"
+                  >
+                    <Building2 className="h-5 w-5" />
+                    <span className="text-center">Clinic dashboard</span>
+                  </Link>
                 )}
-              </Link>
-            );
-          })}
+              </div>
+              <Button
+                variant="ghost"
+                className="mt-4 w-full justify-center text-muted-foreground"
+                onClick={() => { setMoreOpen(false); void signOut(); }}
+              >
+                <LogOut className="mr-2 h-4 w-4" /> Sign out
+              </Button>
+            </SheetContent>
+          </Sheet>
         </nav>
       </div>
     </div>
