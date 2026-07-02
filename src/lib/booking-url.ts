@@ -19,15 +19,11 @@ function currentZone(): string | null {
 }
 
 export function buildBookingUrl(slug: string, path = ""): string {
-  const zone = currentZone();
+  const zone = currentZone() ?? PRIMARY_ZONE;
   const suffix = path && !path.startsWith("/") ? `/${path}` : path;
-  if (zone) {
-    return `https://${slug}.${zone}${suffix}`;
-  }
-  // Local/preview fallback — keep the /m/ path so links still work.
-  const origin = typeof window !== "undefined" ? window.location.origin : "";
-  return `${origin}/m/${slug}${suffix}`;
+  return `https://${slug}.${zone}${suffix}`;
 }
+
 
 /** Short label without the protocol, for display in the UI. */
 export function bookingUrlLabel(slug: string): string {
