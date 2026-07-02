@@ -129,6 +129,11 @@ export function ImageCropDialog({
         </div>
         <DialogFooter>
           <Button type="button" variant="ghost" onClick={onCancel}>Cancel</Button>
+          {file && (
+            <Button type="button" variant="outline" onClick={() => onConfirm(file)} disabled={busy}>
+              Use full image
+            </Button>
+          )}
           <Button type="button" onClick={confirm} disabled={busy || !area}>
             {busy ? "Cropping…" : "Apply crop"}
           </Button>
