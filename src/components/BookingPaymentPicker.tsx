@@ -42,7 +42,7 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
   const availableModes = useMemo(() => {
     if (!configured) return [] as Array<"deposit" | "full">;
     const arr: Array<"deposit" | "full"> = [];
-    const o = opts as Extract<Options, { configured: true }>;
+    const o = opts as ConfiguredOptions;
     if (o.depositEnabled && o.depositCents >= 100) arr.push("deposit");
     if (o.cardEnabled || o.klarnaEnabled || o.clearpayEnabled) arr.push("full");
     return arr;
@@ -50,7 +50,7 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
 
   const availableMethods = useMemo(() => {
     if (!configured) return [] as Array<"card" | "klarna" | "clearpay">;
-    const o = opts as Extract<Options, { configured: true }>;
+    const o = opts as ConfiguredOptions;
     const arr: Array<"card" | "klarna" | "clearpay"> = [];
     if (o.cardEnabled) arr.push("card");
     if (o.klarnaEnabled) arr.push("klarna");
@@ -71,7 +71,7 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
 
   if (!configured || availableModes.length === 0 || availableMethods.length === 0) return null;
 
-  const o = opts as Extract<Options, { configured: true }>;
+  const o = opts as ConfiguredOptions;
   const chosen = value ?? {
     mode: availableModes[0],
     method: availableMethods[0],
