@@ -294,13 +294,25 @@ export const getDayAvailability = createServerFn({ method: "GET" })
 
     const { data: appts } = await supabaseAdmin
       .from("appointments")
-      .select("start_time,end_time,location_id,status")
+      .select("start_time,end_time,location_id,status,payment_status,payment_hold_expires_at")
       .eq("profile_id", data.profileId)
       .eq("scheduled_date", data.date)
       .neq("status", "cancelled");
 
+    // Release slots that were held for a Stripe checkout that the patient
+    // abandoned: an unpaid pending appointment whose hold timestamp has passed
+    // no longer blocks availability.
+    const nowMs = Date.now();
+    const activeAppts = (appts ?? []).filter((a) => {
+      const held = (a as { payment_hold_expires_at?: string | null }).payment_hold_expires_at;
+      const paid = (a as { payment_status?: string }).payment_status === "paid";
+      const pending = a.status === "pending";
+      if (!held || paid || !pending) return true;
+      return new Date(held).getTime() > nowMs;
+    });
+
     // Daily cap: if reached, block the date entirely.
-    if (dailyCap != null && (appts ?? []).length >= Number(dailyCap)) {
+    if (dailyCap != null && activeAppts.length >= Number(dailyCap)) {
       isBlocked = true;
     }
 
@@ -312,11 +324,12 @@ export const getDayAvailability = createServerFn({ method: "GET" })
       const mm = String(total % 60).padStart(2, "0");
       return `${hh}:${mm}:${String(s ?? 0).padStart(2, "0")}`;
     };
-    const paddedAppts = (appts ?? []).map((a) => ({
+    const paddedAppts = activeAppts.map((a) => ({
       ...a,
       start_time: bufferBefore ? padTime(a.start_time, -bufferBefore) : a.start_time,
       end_time: bufferAfter ? padTime(a.end_time, bufferAfter) : a.end_time,
     }));
+
 
     const { data: overrides } = await sb
       .from("availability_overrides")
