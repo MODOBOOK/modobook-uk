@@ -220,7 +220,7 @@ function MultiBookPage() {
     setPaymentPlans((prev) => ({ ...prev, [treatmentId]: plan }));
 
   const bookableFrom = (ctx as { bookableFrom?: string | null }).bookableFrom ?? null;
-  const todayIso = new Date().toISOString().slice(0, 10);
+  const todayIso = (() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`; })();
   const today = bookableFrom && bookableFrom > todayIso ? bookableFrom : todayIso;
   const [date, setDate] = useState<string>(today);
   const [month, setMonth] = useState<Date>(fromIsoDate(today));
