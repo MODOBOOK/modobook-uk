@@ -560,7 +560,21 @@ function PatientDetail({ client, appts, onEdit }: { client: Client; appts: Appt[
 }
 
 /* ---------- CSV Import ---------- */
+function detectDelimiter(sample: string): string {
+  const counts: Record<string, number> = { ",": 0, ";": 0, "\t": 0, "|": 0 };
+  let inQ = false;
+  for (const ch of sample) {
+    if (ch === '"') inQ = !inQ;
+    else if (!inQ && ch in counts) counts[ch]++;
+    if (ch === "\n") break;
+  }
+  return Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0] || ",";
+}
+
 function parseCsv(text: string): Record<string, string>[] {
+  // Strip UTF-8 BOM (Excel adds this on "Save as CSV")
+  if (text.charCodeAt(0) === 0xfeff) text = text.slice(1);
+  const delim = detectDelimiter(text.slice(0, 4096));
   const lines: string[][] = [];
   let cur: string[] = [];
   let field = "";
@@ -573,7 +587,7 @@ function parseCsv(text: string): Record<string, string>[] {
       } else field += ch;
     } else {
       if (ch === '"') inQuotes = true;
-      else if (ch === ",") { cur.push(field); field = ""; }
+      else if (ch === delim) { cur.push(field); field = ""; }
       else if (ch === "\r") { /* skip */ }
       else if (ch === "\n") { cur.push(field); lines.push(cur); cur = []; field = ""; }
       else field += ch;
@@ -582,13 +596,23 @@ function parseCsv(text: string): Record<string, string>[] {
   if (field.length || cur.length) { cur.push(field); lines.push(cur); }
   const rows = lines.filter((r) => r.some((c) => c.trim() !== ""));
   if (!rows.length) return [];
-  const header = rows[0].map((h) => h.trim());
+  const header = rows[0].map((h) => h.replace(/^\uFEFF/, "").trim());
   return rows.slice(1).map((r) => {
     const obj: Record<string, string> = {};
     header.forEach((h, i) => { obj[h] = (r[i] ?? "").trim(); });
     return obj;
   });
 }
+
+const SAMPLE_CSV = "Full Name,Email,Phone,DOB,Address,Postcode,City,Gender,Notes,Group\nJane Doe,jane@example.com,07700 900123,15/04/1988,10 High Street,SW1A 1AA,London,female,Sample patient,VIP\n";
+function downloadSampleCsv() {
+  const blob = new Blob([SAMPLE_CSV], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = "modo-patients-template.csv"; a.click();
+  URL.revokeObjectURL(url);
+}
+
 
 function ImportCsvDialog({ open, onOpenChange, onImport }: {
   open: boolean; onOpenChange: (v: boolean) => void; onImport: (rows: Record<string, string>[]) => Promise<void>;
