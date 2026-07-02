@@ -1330,7 +1330,7 @@ function MultiBookPage() {
           )}
 
           {step !== "details" && (
-            <div className="mt-6 flex items-center justify-between gap-3">
+            <div className="mt-6 hidden items-center justify-between gap-3 lg:flex">
               <Button
                 variant="outline"
                 onClick={goBack}
