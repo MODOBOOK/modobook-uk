@@ -848,7 +848,16 @@ function BookTreatmentPage() {
         </CardContent>
       </Card>
 
+      <BookingPaymentPicker
+        slug={slug}
+        totalAmount={splitAllowed && paymentPlan === "split" ? effectivePrice / sessionCount : effectivePrice}
+        value={paymentChoice}
+        onChange={setPaymentChoice}
+        accent={brand}
+      />
+
       <Button
+
         className="w-full"
         size="lg"
         disabled={
