@@ -104,10 +104,14 @@ export const refreshStripeStatus = createServerFn({ method: "POST" })
       return { status: "not_started" as const, reset: true as const };
     }
     const status = account.charges_enabled ? "active" : account.details_submitted ? "pending" : "incomplete";
+    if (account.payouts_enabled) {
+      await ensureDailyPayoutSchedule(profile.stripe_connect_account_id);
+    }
     await supabase
       .from("profiles")
       .update({ stripe_connect_onboarding_status: status })
       .eq("id", profile.id);
+
     return {
       status,
       chargesEnabled: account.charges_enabled,
