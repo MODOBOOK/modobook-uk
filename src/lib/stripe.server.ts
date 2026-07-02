@@ -26,19 +26,19 @@ function normaliseStripeError(error: unknown): never {
 
   if (message.includes("signed up for Connect") || message.includes("dashboard.stripe.com/connect")) {
     throw new StripePlatformSetupError(
-      "Stripe Connect is not enabled on this sandbox platform account yet.",
+      "Stripe Connect is not enabled on your platform account yet. Activate Connect in your Stripe dashboard.",
       "connect_not_enabled",
     );
   }
-  if (lowerMessage.includes("managing losses") || lowerMessage.includes("platform-profile")) {
+  if (lowerMessage.includes("managing losses") || lowerMessage.includes("platform-profile") || lowerMessage.includes("loss liability") || lowerMessage.includes("liability")) {
     throw new StripePlatformSetupError(
-      "Your Stripe sandbox platform profile needs the connected-account loss responsibility step completed before Connect accounts can be created.",
+      "Your Stripe platform profile needs the 'loss liability' step completed. In Stripe: Connect → Settings → Platform profile → choose who is responsible for negative balances on connected accounts.",
       "connect_not_enabled",
     );
   }
   if (lowerMessage.includes("stripe_dashboard[type]=express") || lowerMessage.includes("negative balances")) {
     throw new StripePlatformSetupError(
-      "Stripe Express onboarding needs platform responsibility enabled in your Stripe sandbox Connect settings.",
+      "Stripe Express onboarding needs platform responsibility enabled in your Stripe Connect settings.",
       "connect_not_enabled",
     );
   }
