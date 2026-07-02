@@ -115,7 +115,8 @@ export const updateTreatment = createServerFn({ method: "POST" })
       consent_form_url?: string;
       picture_url?: string;
       payment_mode?: Database["public"]["Enums"]["payment_mode"];
-      deposit_amount?: number;
+      deposit_amount?: number | null;
+
       active?: boolean;
       is_consultation?: boolean;
       deductible_against?: string[];
