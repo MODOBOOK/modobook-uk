@@ -30,6 +30,8 @@ import {
   Copy, GripVertical, Info, Star, CircleDot, ListTodo,
 } from "lucide-react";
 import { toast } from "sonner";
+import { AiGenerateFormDialog } from "@/components/medical-forms/AiGenerateFormDialog";
+import { Sparkles } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard/medical-forms")({
   ssr: false,
@@ -107,6 +109,7 @@ function FormsPage() {
   const [newCatOpen, setNewCatOpen] = useState(false);
   const [newForm, setNewForm] = useState(false);
   const [catName, setCatName] = useState("");
+  const [aiOpen, setAiOpen] = useState(false);
 
   async function refresh() {
     const [f, c] = await Promise.all([fetchForms(), fetchCats()]);
@@ -183,6 +186,10 @@ function FormsPage() {
         <Button variant="default" onClick={() => setNewCatOpen(true)}><Plus className="mr-2 h-4 w-4" />Add Category</Button>
         <Button variant="default" onClick={() => setNewForm(true)}><Plus className="mr-2 h-4 w-4" />Add Form</Button>
       </div>
+      <Button variant="outline" className="w-full" onClick={() => setAiOpen(true)}>
+        <Sparkles className="mr-2 h-4 w-4" />Generate form with AI
+      </Button>
+      <AiGenerateFormDialog open={aiOpen} onOpenChange={setAiOpen} onCreated={refresh} />
 
 
       {loading ? (
