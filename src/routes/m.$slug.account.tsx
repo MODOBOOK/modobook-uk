@@ -133,7 +133,7 @@ function Account() {
         .from("appointments")
         .select("id, scheduled_date, start_time, end_time, status, payment_status, amount_paid_cents, payment_hold_expires_at, total_amount, treatment_id, reschedule_count, treatment_name_snapshot, patient_user_id, patient_email, treatments(name), locations(name)")
         .eq("profile_id", prof.id)
-        .or(`patient_user_id.eq.${sess.session.user.id}${myEmail ? `,patient_email.eq.${myEmail}` : ""}`)
+        .or(`patient_user_id.eq.${sess.session.user.id}${myEmail ? `,patient_email.ilike.${myEmail}` : ""}`)
         .order("scheduled_date", { ascending: false });
       const visibleAppts = (apptRows ?? []).filter((a: any) => {
         // Always show confirmed/completed/cancelled — those have real state.
