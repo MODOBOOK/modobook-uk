@@ -127,7 +127,7 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
   const surchargeCents = clinicFeeCents + stripeFeeCents;
   const totalCents = chosen ? baseCents + surchargeCents : 0;
 
-  const accentColor = accent || "currentColor";
+  
   const cardStyle: React.CSSProperties = accent
     ? {
         borderColor: `color-mix(in oklab, ${accent} 40%, transparent)`,
