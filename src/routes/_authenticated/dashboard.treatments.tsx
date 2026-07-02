@@ -872,6 +872,8 @@ function TreatmentDialog({
               aftercare_template_ids: aftercareTemplateIds,
               price_mode: priceMode,
               badge: badge === "none" ? null : badge,
+              deposit_amount: depositOverride.trim() === "" ? null : Math.max(0, Number(depositOverride)),
+
             })
 
           }
