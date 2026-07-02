@@ -2450,6 +2450,59 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          body: string | null
+          cleared_at: string | null
+          created_at: string
+          emoji: string | null
+          entity_id: string | null
+          entity_type: string | null
+          id: string
+          link: string | null
+          profile_id: string
+          read_at: string | null
+          title: string
+          type: string
+        }
+        Insert: {
+          body?: string | null
+          cleared_at?: string | null
+          created_at?: string
+          emoji?: string | null
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          link?: string | null
+          profile_id: string
+          read_at?: string | null
+          title: string
+          type: string
+        }
+        Update: {
+          body?: string | null
+          cleared_at?: string | null
+          created_at?: string
+          emoji?: string | null
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          link?: string | null
+          profile_id?: string
+          read_at?: string | null
+          title?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       package_purchases: {
         Row: {
           created_at: string
@@ -4532,6 +4585,19 @@ export type Database = {
           consent_template_id: string
           token: string
         }[]
+      }
+      create_notification: {
+        Args: {
+          p_body: string
+          p_emoji: string
+          p_entity_id: string
+          p_entity_type: string
+          p_link: string
+          p_profile_id: string
+          p_title: string
+          p_type: string
+        }
+        Returns: undefined
       }
       create_walk_in_referral:
         | {
