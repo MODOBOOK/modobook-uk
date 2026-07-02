@@ -16,6 +16,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { describeCancellationRules, type CancellationRule } from "@/lib/policy";
+import { SafeHtml } from "@/components/SafeHtml";
+
 
 export const Route = createFileRoute("/m/$slug/account")({
   ssr: false,
