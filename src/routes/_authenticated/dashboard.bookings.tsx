@@ -24,6 +24,7 @@ import {
   Trash2,
   Mail,
   Percent,
+  Undo2,
 } from "lucide-react";
 import {
   listMyAppointments,
