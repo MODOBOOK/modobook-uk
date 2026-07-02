@@ -93,7 +93,7 @@ const START_HOUR = 7;
 const END_HOUR = 23;
 const HOURS = Array.from({ length: END_HOUR - START_HOUR + 1 }, (_, i) => START_HOUR + i);
 
-type ViewMode = "day" | "week" | "month";
+type ViewMode = "day" | "3day" | "week" | "month";
 type AvailRule = { day_of_week: number; start_time: string; end_time: string };
 
 function startOfWeek(d: Date) {
@@ -137,7 +137,9 @@ function BookingsPage() {
   const [rules, setRules] = useState<AvailRule[]>([]);
   const [loading, setLoading] = useState(true);
   const [anchor, setAnchor] = useState(new Date());
-  const [view, setView] = useState<ViewMode>("week");
+  const [view, setView] = useState<ViewMode>(() =>
+    typeof window !== "undefined" && window.innerWidth < 768 ? "3day" : "week"
+  );
   const [actionsOpen, setActionsOpen] = useState(false);
   const [selectedAppt, setSelectedAppt] = useState<Appt | null>(null);
   const [showPayLink, setShowPayLink] = useState(false);
@@ -172,10 +174,11 @@ function BookingsPage() {
     }
   }, [loading, view]);
 
-  const daysVisible = view === "day" ? 1 : view === "week" ? 7 : 0;
+  const daysVisible = view === "day" ? 1 : view === "3day" ? 3 : view === "week" ? 7 : 0;
 
   const days = useMemo(() => {
     if (view === "day") return [anchor];
+    if (view === "3day") return Array.from({ length: 3 }, (_, i) => addDays(anchor, i));
     if (view === "week") {
       const start = startOfWeek(anchor);
       return Array.from({ length: 7 }, (_, i) => addDays(start, i));
@@ -249,11 +252,13 @@ function BookingsPage() {
 
   function navPrev() {
     if (view === "day") setAnchor(addDays(anchor, -1));
+    else if (view === "3day") setAnchor(addDays(anchor, -3));
     else if (view === "week") setAnchor(addDays(anchor, -7));
     else setAnchor(new Date(anchor.getFullYear(), anchor.getMonth() - 1, 1));
   }
   function navNext() {
     if (view === "day") setAnchor(addDays(anchor, 1));
+    else if (view === "3day") setAnchor(addDays(anchor, 3));
     else if (view === "week") setAnchor(addDays(anchor, 7));
     else setAnchor(new Date(anchor.getFullYear(), anchor.getMonth() + 1, 1));
   }
@@ -263,6 +268,14 @@ function BookingsPage() {
   const headerLabel =
     view === "day"
       ? anchor.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long", year: "numeric" })
+      : view === "3day"
+      ? (() => {
+          const e = addDays(anchor, 2);
+          const sameMonth = anchor.getMonth() === e.getMonth();
+          return sameMonth
+            ? `${anchor.getDate()}–${e.getDate()} ${e.toLocaleDateString(undefined, { month: "short", year: "numeric" })}`
+            : `${anchor.toLocaleDateString(undefined, { day: "numeric", month: "short" })} – ${e.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}`;
+        })()
       : view === "week"
       ? (() => {
           const s = startOfWeek(anchor);
