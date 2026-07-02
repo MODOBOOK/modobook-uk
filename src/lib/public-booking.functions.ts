@@ -562,6 +562,7 @@ async function maybeCreateBookingCheckout(args: {
   totalAmount: number;
   patientEmail: string;
   description: string;
+  choice?: PaymentChoice | null;
 }): Promise<string | null> {
   const p = args.profile;
   if (!p) return null;
@@ -570,38 +571,66 @@ async function maybeCreateBookingCheckout(args: {
 
   const depositEnabled = !!p.payment_deposit_enabled;
   const depositPer = Math.max(0, Number(p.deposit_amount_cents ?? 0));
-  let amountCents: number;
+  const fullEnabled = p.payment_card_full_enabled !== false
+    || !!p.payment_klarna_enabled
+    || !!p.payment_clearpay_enabled;
+
+  // Decide deposit vs full based on the patient's explicit choice when given,
+  // otherwise fall back to legacy behaviour (deposit if configured).
   let kind: "deposit" | "checkout";
-  if (depositEnabled && depositPer >= 100) {
+  let amountCents: number;
+  const wantsDeposit = args.choice
+    ? args.choice.mode === "deposit"
+    : depositEnabled && depositPer >= 100;
+  if (wantsDeposit && depositEnabled && depositPer >= 100) {
     amountCents = depositPer * args.appointmentIds.length;
     kind = "deposit";
-  } else {
+  } else if (fullEnabled) {
     amountCents = Math.round(args.totalAmount * 100);
     kind = "checkout";
+  } else {
+    return null;
   }
   if (amountCents < 100) return null;
 
-  const methodTypes: string[] = [];
-  if (p.payment_card_full_enabled !== false) methodTypes.push("card");
-  if (p.payment_klarna_enabled) methodTypes.push("klarna");
-  if (p.payment_clearpay_enabled) methodTypes.push("afterpay_clearpay");
-  if (methodTypes.length === 0) methodTypes.push("card");
+  // Build allowed methods. When the patient picked one, restrict Stripe to
+  // just that method so the fee we add matches the chosen rail exactly.
+  const enabled = {
+    card: p.payment_card_full_enabled !== false,
+    klarna: !!p.payment_klarna_enabled,
+    clearpay: !!p.payment_clearpay_enabled,
+  };
+  let methodTypes: string[] = [];
+  if (args.choice) {
+    const m = args.choice.method;
+    if (m === "card" && enabled.card) methodTypes = ["card"];
+    else if (m === "klarna" && enabled.klarna) methodTypes = ["klarna"];
+    else if (m === "clearpay" && enabled.clearpay) methodTypes = ["afterpay_clearpay"];
+  }
+  if (methodTypes.length === 0) {
+    if (enabled.card) methodTypes.push("card");
+    if (enabled.klarna) methodTypes.push("klarna");
+    if (enabled.clearpay) methodTypes.push("afterpay_clearpay");
+    if (methodTypes.length === 0) methodTypes.push("card");
+  }
 
-  // Practitioner-set platform fee, applied per payment mode/method.
-  // At Stripe Checkout the patient chooses the method, so when both card and
-  // BNPL are enabled we apply the higher of the two enabled percentages so the
-  // practitioner nets the intended amount regardless of the method chosen.
+  // Practitioner-set platform fee. When the patient picked a method we apply
+  // the exact percentage for that rail; otherwise apply the worst-case among
+  // the enabled methods so the practitioner nets the intended amount.
   const cardPct = p.payment_surcharge_card_enabled ? Number(p.payment_surcharge_card_percent ?? 0) : 0;
   const bnplPct = p.payment_surcharge_bnpl_enabled ? Number(p.payment_surcharge_bnpl_percent ?? 0) : 0;
   const depPct = p.payment_surcharge_deposit_enabled ? Number(p.payment_surcharge_deposit_percent ?? 0) : 0;
   let pct = 0;
   if (kind === "deposit") {
     pct = depPct;
+  } else if (args.choice) {
+    pct = args.choice.method === "card" ? cardPct : bnplPct;
   } else {
     const bnplOn = methodTypes.includes("klarna") || methodTypes.includes("afterpay_clearpay");
     pct = Math.max(cardPct, bnplOn ? bnplPct : 0);
   }
   const surchargeCents = pct > 0 ? Math.ceil((amountCents * pct) / 100) : 0;
+
 
   const origin = process.env.PUBLIC_APP_URL || process.env.APP_URL || "https://modo-book.lovable.app";
   const successUrl = `${origin}/m/${p.slug ?? ""}/account?paid=1`;
