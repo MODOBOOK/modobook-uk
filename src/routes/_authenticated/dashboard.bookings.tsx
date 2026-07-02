@@ -372,8 +372,40 @@ function BookingsPage() {
         </div>
       </div>
 
+      {locations.length > 1 && (
+        <div className="flex flex-wrap items-center gap-1.5">
+          <button
+            onClick={() => setLocationFilter("all")}
+            className={`rounded-full border px-3 py-1 text-xs transition ${
+              locationFilter === "all"
+                ? "bg-foreground text-background border-foreground"
+                : "bg-background text-muted-foreground hover:bg-muted"
+            }`}
+          >
+            All locations
+          </button>
+          {locations.map((l) => (
+            <button
+              key={l.id}
+              onClick={() => setLocationFilter(l.id)}
+              className={`rounded-full border px-3 py-1 text-xs transition ${
+                locationFilter === l.id
+                  ? "bg-foreground text-background border-foreground"
+                  : "bg-background text-muted-foreground hover:bg-muted"
+              }`}
+            >
+              {l.name}
+            </button>
+          ))}
+        </div>
+      )}
+
       <p className="text-xs text-muted-foreground">
-        {loading ? "Loading…" : `${appts.length} bookings · ${blocks.length} blocked`}
+        {loading
+          ? "Loading…"
+          : `${filteredAppts.length} bookings · ${filteredBlocks.length} blocked${
+              locationFilter !== "all" ? ` · ${locations.find((l) => l.id === locationFilter)?.name ?? ""}` : ""
+            }`}
       </p>
 
       {view === "month" ? (
