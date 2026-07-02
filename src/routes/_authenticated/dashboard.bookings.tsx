@@ -41,6 +41,7 @@ import {
   createPaymentLink,
   completeAppointmentCheckout,
 } from "@/lib/payment-links.functions";
+import { refundAppointment } from "@/lib/stripe.functions";
 import {
   getOrCreateClientForAppointment,
   markAppointmentNoShow,
