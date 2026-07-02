@@ -213,7 +213,7 @@ function PatientsPage() {
     <div className="mx-auto max-w-3xl space-y-4 pb-12">
       <header className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
         <div className="min-w-0">
-          <h1 className="truncate text-2xl font-bold">Client List</h1>
+          <h1 className="truncate text-2xl font-bold">Patient List</h1>
           <p className="text-xs text-muted-foreground">Manage your patient contacts</p>
         </div>
         <div className="shrink-0 text-xs text-muted-foreground">
@@ -222,10 +222,10 @@ function PatientsPage() {
       </header>
 
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-        <ActionPill icon={Upload} label="Import Clients" onClick={() => toast.info("CSV import coming soon")} />
-        <ActionPill icon={Plus} label="Add Client" onClick={openAdd} primary />
-        <ActionPill icon={Users} label="Create Group" onClick={() => toast.info("Groups coming soon")} />
-        <ActionPill icon={Combine} label="Merge Duplicates" onClick={() => toast.info("Merge tool coming soon")} />
+        <ActionPill icon={Upload} label="Import Patients" onClick={() => setImportOpen(true)} />
+        <ActionPill icon={Plus} label="Add Patient" onClick={openAdd} primary />
+        <ActionPill icon={Users} label="Create Group" onClick={() => setGroupOpen(true)} />
+        <ActionPill icon={Combine} label="Merge Duplicates" onClick={() => setMergeOpen(true)} />
       </div>
 
       <div className="relative">
