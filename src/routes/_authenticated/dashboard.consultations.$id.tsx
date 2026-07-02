@@ -365,7 +365,7 @@ function Step2({ concerns, onChange }: { concerns: any; onChange: (v: any) => vo
   );
 }
 
-function Step3({ assessment, photos, onChangeAssess, onChangePhotos }: any) {
+function Step3({ profileId, consultationId, assessment, photos, onChangeAssess, onChangePhotos }: any) {
   return (
     <div className="space-y-4">
       <Header n={3} title="Assessment" subtitle="Clinical notes and before photos." />
@@ -374,7 +374,7 @@ function Step3({ assessment, photos, onChangeAssess, onChangePhotos }: any) {
         <Textarea rows={5} value={assessment?.notes ?? ""} onChange={(e) => onChangeAssess({ ...assessment, notes: e.target.value })} placeholder="Skin condition, muscle tone, asymmetries…" />
       </div>
 
-      <PhotoGrid label="Before photos" photos={photos ?? []} onChange={onChangePhotos} />
+      <PhotoGrid label="Before photos" photos={photos ?? []} onChange={onChangePhotos} profileId={profileId} consultationId={consultationId} />
     </div>
   );
 }
