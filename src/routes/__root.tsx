@@ -149,8 +149,8 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
   // Wildcard subdomain routing:
-  //   {slug}.modobook.co.uk → /m/{slug}
-  //   {slug}.modobook.app   → /m/{slug}
+  //   {slug}.modobook.co.uk → /{slug}
+  //   {slug}.modobook.app   → /{slug}
   // Attach the apex + wildcard for each zone in Project Settings → Domains.
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -165,12 +165,13 @@ function RootComponent() {
     const RESERVED = new Set(["www", "app", "api", "notify", "mail", "admin", "dashboard"]);
     if (!sub || sub.includes(".") || RESERVED.has(sub)) return;
 
-    if (path.startsWith("/m/") || path.startsWith("/auth")) return;
+    const APP_PATHS = ["/auth", "/api/", "/dashboard", "/prescriber-hub"];
+    if (APP_PATHS.some((p) => path.startsWith(p))) return;
 
     const suffix = path === "/" ? "" : path;
     const search = window.location.search;
     const hash = window.location.hash;
-    window.location.replace(`/m/${sub}${suffix}${search}${hash}`);
+    window.location.replace(`/${sub}${suffix}${search}${hash}`);
   }, []);
 
   useEffect(() => {
