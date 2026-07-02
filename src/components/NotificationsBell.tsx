@@ -52,8 +52,9 @@ export function NotificationsBell({ className }: { className?: string }) {
 
   useEffect(() => {
     if (!profileId) return;
-    const channel = supabase
-      .channel(`notifications-${profileId}`)
+    const channelName = `notifications-${profileId}-${Math.random().toString(36).slice(2)}`;
+    const channel = supabase.channel(channelName);
+    channel
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "notifications", filter: `profile_id=eq.${profileId}` },
@@ -64,6 +65,7 @@ export function NotificationsBell({ className }: { className?: string }) {
       supabase.removeChannel(channel);
     };
   }, [profileId, refresh]);
+
 
   const unread = items.filter((n) => !n.read_at).length;
 
