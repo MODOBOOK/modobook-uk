@@ -92,14 +92,32 @@ export const listMyAppointments = createServerFn({ method: "GET" })
     const { supabase, userId } = context;
     const profileId = await getProfileId(supabase, userId);
     if (!profileId) return [];
+    // Sweep abandoned Stripe checkouts: any pending, unpaid appointment whose
+    // payment hold has passed is cancelled so it no longer blocks the slot.
+    // Real bookings only exist after Stripe payment succeeds.
+    await supabase
+      .from("appointments")
+      .update({ status: "cancelled" })
+      .eq("profile_id", profileId)
+      .eq("status", "pending")
+      .neq("payment_status", "paid")
+      .not("payment_hold_expires_at", "is", null)
+      .lt("payment_hold_expires_at", new Date().toISOString());
     const { data, error } = await supabase
       .from("appointments")
-      .select("id, patient_name, patient_email, patient_phone, scheduled_date, start_time, end_time, status, payment_status, total_amount, amount_paid_cents, notes, practitioner_notes, aftercare_html, has_allergies, allergies_text, treatment_id, location_id, treatments(name, color), locations(name)")
+      .select("id, patient_name, patient_email, patient_phone, scheduled_date, start_time, end_time, status, payment_status, total_amount, amount_paid_cents, notes, practitioner_notes, aftercare_html, has_allergies, allergies_text, treatment_id, location_id, payment_hold_expires_at, treatments(name, color), locations(name)")
       .eq("profile_id", profileId)
+      .neq("status", "cancelled")
       .order("scheduled_date", { ascending: true })
       .order("start_time", { ascending: true });
     if (error) throw error;
-    return data ?? [];
+    // Hide appointments still awaiting Stripe payment — the booking is only
+    // real after checkout.session.completed fires and payment_status is paid.
+    return (data ?? []).filter((a) => {
+      const held = (a as { payment_hold_expires_at?: string | null }).payment_hold_expires_at;
+      const paid = (a as { payment_status?: string }).payment_status === "paid";
+      return !held || paid;
+    });
   });
 
 export const updateAppointmentNotes = createServerFn({ method: "POST" })
