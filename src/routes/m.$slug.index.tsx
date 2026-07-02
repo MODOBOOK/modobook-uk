@@ -199,6 +199,7 @@ function BookPage() {
         chooser_show_unsure?: boolean | null;
         chooser_show_consultation?: boolean | null;
         chooser_consultation_treatment_id?: string | null;
+        chooser_consultation_treatment_ids?: string[] | null;
         chooser_intro_text?: string | null;
         model_slots_position?: "top" | "bottom" | null;
         practitioner_selection_mode?: "required" | "optional" | "first_available" | null;
