@@ -53,7 +53,9 @@ type Treatment = {
   discount_label?: string | null;
   price_mode?: "fixed" | "from" | "poa" | "free" | null;
   badge?: "recommended" | "popular" | "new" | "bestseller" | null;
+  deposit_amount?: number | null;
 };
+
 
 type Category = {
   id: string;
