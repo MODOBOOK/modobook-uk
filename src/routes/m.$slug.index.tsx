@@ -558,12 +558,12 @@ function BookPage() {
         const heroAlign = theme?.hero_text_alignment ?? "center";
         const heroShowText = theme?.hero_show_text ?? true;
         const heightCls =
-          layoutKey === "magazine" ? "h-32 sm:h-40"
-          : heroHeight === "short" ? "h-44 w-full object-cover object-top sm:h-56"
-          : heroHeight === "tall" ? "h-80 w-full object-cover object-top sm:h-[34rem]"
-          : "h-72 w-full object-cover object-top sm:h-[28rem]";
-        const splitHeight = heroHeight === "short" ? "h-44 sm:h-64" : heroHeight === "tall" ? "h-72 sm:h-96" : "h-56 sm:h-80";
-        const blankHeight = heroHeight === "short" ? "h-40 sm:h-56" : heroHeight === "tall" ? "h-72 sm:h-96" : "h-56 sm:h-72";
+          layoutKey === "magazine" ? "h-28 sm:h-36"
+          : heroHeight === "short" ? "h-36 w-full object-cover object-top sm:h-44"
+          : heroHeight === "tall" ? "h-64 w-full object-cover object-top sm:h-[26rem]"
+          : "h-56 w-full object-cover object-top sm:h-[22rem]";
+        const splitHeight = heroHeight === "short" ? "h-36 sm:h-52" : heroHeight === "tall" ? "h-56 sm:h-80" : "h-44 sm:h-64";
+        const blankHeight = heroHeight === "short" ? "h-32 sm:h-44" : heroHeight === "tall" ? "h-56 sm:h-72" : "h-44 sm:h-56";
         const alignCls = heroAlign === "left" ? "text-left items-start" : heroAlign === "right" ? "text-right items-end" : "text-center items-center";
         return (
           <div className="relative">
