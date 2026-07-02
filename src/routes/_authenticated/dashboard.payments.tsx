@@ -24,8 +24,10 @@ function PaymentsPage() {
     message: string;
     actionUrl?: string;
   } | null>(null);
+  const [stripeLink, setStripeLink] = useState<string | null>(null);
 
   async function connect() {
+    const pendingWindow = window.open("about:blank", "_blank");
     setLoading(true);
     try {
       const origin = window.location.origin;
@@ -36,27 +38,24 @@ function PaymentsPage() {
         },
       });
       if (!res.ok) {
+        pendingWindow?.close();
         setSetupIssue({ message: res.message, actionUrl: "actionUrl" in res ? res.actionUrl : undefined });
         toast.error(res.message);
         return;
       }
       setSetupIssue(null);
       if ("recovered" in res && res.recovered) {
-        toast.success("Fresh sandbox Stripe connection created");
+        toast.success("Fresh Stripe connection created");
       }
-      // Open in a new top-level tab. Stripe blocks being loaded in iframes
-      // (X-Frame-Options), so navigating the current window fails inside the
-      // Lovable preview. Fall back to top-window navigation if the popup is blocked.
-      const win = window.open(res.url, "_blank", "noopener,noreferrer");
-      if (!win) {
-        try {
-          (window.top ?? window).location.href = res.url;
-        } catch {
-          window.location.href = res.url;
-        }
-        toast.info("Popup blocked — opening Stripe in this tab instead.");
+      setStripeLink(res.url);
+      if (pendingWindow) {
+        pendingWindow.opener = null;
+        pendingWindow.location.href = res.url;
+      } else {
+        toast.info("Your browser blocked the new tab. Use the Stripe button shown below.");
       }
     } catch (e) {
+      pendingWindow?.close();
       toast.error(e instanceof Error ? e.message : "Failed to start Stripe onboarding");
     } finally {
       setLoading(false);
@@ -68,7 +67,7 @@ function PaymentsPage() {
     try {
       const res = await refresh({});
       if ("reset" in res && res.reset) {
-        toast.info("Old Stripe connection cleared. Please connect again in sandbox mode.");
+        toast.info("Old Stripe connection cleared. Please connect again.");
       } else {
         toast.success("Status refreshed");
       }
@@ -126,26 +125,24 @@ function PaymentsPage() {
           )}
           <ul className="space-y-1 text-sm text-muted-foreground">
             <li>• 0% platform fee — you keep 100% (minus Stripe processing fees).</li>
-            <li>• 0% platform fee — you keep 100% (minus Stripe processing fees).</li>
             <li>• Klarna & Clearpay supported with a 5% surcharge passed to the patient.</li>
             <li>• Refunds and disputes handled in your own Stripe dashboard.</li>
           </ul>
           <div className="flex flex-wrap gap-2">
-            {connected ? (
+            <Button onClick={connect} disabled={loading}>
+              <ExternalLink className="mr-2 h-4 w-4" />
+              {connected ? "Continue Stripe onboarding" : "Connect Stripe"}
+            </Button>
+            {stripeLink && (
               <Button asChild>
                 <a
-                  href="https://connect.stripe.com/d/setup/s/_Uo7mgbGo33rJz5I0836UBjgs9C/YWNjdF8xVG9WV0w4aFYxMnpCc2ZI/6840fd659306f32b8"
+                  href={stripeLink}
                   target="_blank"
                   rel="noreferrer"
                 >
                   <ExternalLink className="mr-2 h-4 w-4" />
-                  Continue Stripe onboarding
+                  Open Stripe manually
                 </a>
-              </Button>
-            ) : (
-              <Button onClick={connect} disabled={loading}>
-                <ExternalLink className="mr-2 h-4 w-4" />
-                Connect Stripe
               </Button>
             )}
             {connected && (
