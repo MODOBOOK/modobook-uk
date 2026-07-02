@@ -128,10 +128,12 @@ function Account() {
       // These are Stripe checkout holds; until Stripe confirms payment the
       // appointment shouldn't appear on the patient's account.
       
+      const myEmail = (sess.session.user.email ?? "").toLowerCase();
       const { data: apptRows } = await supabase
         .from("appointments")
-        .select("id, scheduled_date, start_time, end_time, status, payment_status, amount_paid_cents, payment_hold_expires_at, total_amount, treatment_id, reschedule_count, treatment_name_snapshot, treatments(name), locations(name)")
+        .select("id, scheduled_date, start_time, end_time, status, payment_status, amount_paid_cents, payment_hold_expires_at, total_amount, treatment_id, reschedule_count, treatment_name_snapshot, patient_user_id, patient_email, treatments(name), locations(name)")
         .eq("profile_id", prof.id)
+        .or(`patient_user_id.eq.${sess.session.user.id}${myEmail ? `,patient_email.ilike.${myEmail}` : ""}`)
         .order("scheduled_date", { ascending: false });
       const visibleAppts = (apptRows ?? []).filter((a: any) => {
         // Always show confirmed/completed/cancelled — those have real state.
