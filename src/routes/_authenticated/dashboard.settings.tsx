@@ -243,6 +243,58 @@ function SettingsPage() {
               onPercent={(v) => set("payment_surcharge_deposit_percent", v)}
             />
           </div>
+          <div className="rounded-md border p-3 space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <div className="text-sm font-medium">Stripe processing fee</div>
+                <p className="text-xs text-muted-foreground">
+                  Stripe's own rate per transaction. Toggle on to add it to the "Platform fee" so the patient covers it. Defaults are UK domestic — edit to match your Stripe pricing.
+                </p>
+              </div>
+              <Switch
+                checked={s.stripe_fee_pass_to_patient}
+                onCheckedChange={(v) => set("stripe_fee_pass_to_patient", v)}
+              />
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1">
+                <Label className="text-xs">Card — %</Label>
+                <Input
+                  type="number" step="0.01" inputMode="decimal"
+                  value={s.stripe_fee_card_percent}
+                  onFocus={(e) => e.target.select()}
+                  onChange={(e) => set("stripe_fee_card_percent", Number(e.target.value) || 0)}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Card — fixed (pence)</Label>
+                <Input
+                  type="number" step="1" inputMode="numeric"
+                  value={s.stripe_fee_card_fixed_cents}
+                  onFocus={(e) => e.target.select()}
+                  onChange={(e) => set("stripe_fee_card_fixed_cents", Math.max(0, Math.round(Number(e.target.value) || 0)))}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Klarna / Clearpay — %</Label>
+                <Input
+                  type="number" step="0.01" inputMode="decimal"
+                  value={s.stripe_fee_bnpl_percent}
+                  onFocus={(e) => e.target.select()}
+                  onChange={(e) => set("stripe_fee_bnpl_percent", Number(e.target.value) || 0)}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Klarna / Clearpay — fixed (pence)</Label>
+                <Input
+                  type="number" step="1" inputMode="numeric"
+                  value={s.stripe_fee_bnpl_fixed_cents}
+                  onFocus={(e) => e.target.select()}
+                  onChange={(e) => set("stripe_fee_bnpl_fixed_cents", Math.max(0, Math.round(Number(e.target.value) || 0)))}
+                />
+              </div>
+            </div>
+          </div>
           {/* Deposit is now always required when Deposits is enabled — no toggle. */}
           <ToggleRow
             label="Allow pay in clinic"
