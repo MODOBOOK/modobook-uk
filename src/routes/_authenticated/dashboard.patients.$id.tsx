@@ -963,3 +963,135 @@ function EditDialog({ client, which, onClose, onSaved }: { client: any; which: "
 function F({ label, children }: { label: string; children: React.ReactNode }) {
   return <div className="space-y-1.5"><Label className="text-xs">{label}</Label>{children}</div>;
 }
+
+/* ---------- Payment link dialog ---------- */
+
+function PaymentLinkDialog({
+  open, onOpenChange, client, clinicName, onSent,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  client: any;
+  clinicName: string;
+  onSent: () => void;
+}) {
+  const create = useServerFn(createPaymentLink);
+  const logComm = useServerFn(logCommunication);
+  const [amount, setAmount] = useState("");
+  const [description, setDescription] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [url, setUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (open) {
+      setAmount("");
+      setDescription(clinicName ? `Payment for ${clinicName}` : "Payment");
+      setUrl(null);
+    }
+  }, [open, clinicName]);
+
+  if (!client) return null;
+
+  async function generate() {
+    const cents = Math.round(Number(amount) * 100);
+    if (!Number.isFinite(cents) || cents < 100) {
+      toast.error("Enter an amount of £1.00 or more");
+      return;
+    }
+    if (!description.trim()) {
+      toast.error("Add a short description");
+      return;
+    }
+    setBusy(true);
+    try {
+      const r: any = await create({
+        data: {
+          amountCents: cents,
+          description: description.trim(),
+          kind: "adhoc",
+          recipientEmail: client.email || undefined,
+          recipientName: client.full_name || undefined,
+          recipientPhone: client.phone || undefined,
+        },
+      });
+      setUrl(r?.stripe_url ?? null);
+      if (r?.stripe_url) {
+        try { await navigator.clipboard.writeText(r.stripe_url); } catch { /* ignore */ }
+        toast.success("Payment link created and copied");
+      }
+    } catch (e: any) {
+      toast.error(e?.message || "Could not create payment link");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const emailHref = client.email && url
+    ? `mailto:${client.email}?subject=${encodeURIComponent(`Payment link${clinicName ? ` — ${clinicName}` : ""}`)}&body=${encodeURIComponent(
+        `Hi ${client.full_name?.split(" ")[0] || ""},\n\nHere is your payment link:\n${url}\n\nThank you,\n${clinicName || ""}`,
+      )}`
+    : null;
+  const smsHref = client.phone && url ? `sms:${client.phone}?&body=${encodeURIComponent(`Payment link: ${url}`)}` : null;
+  const waHref = client.phone && url ? `https://wa.me/${client.phone.replace(/\D/g, "")}?text=${encodeURIComponent(`Payment link: ${url}`)}` : null;
+
+  async function markLogged(channel: "email" | "sms" | "whatsapp") {
+    try {
+      await logComm({ data: { clientId: client.id, channel: channel === "whatsapp" ? "sms" : channel, body: `Payment link sent: ${url}` } });
+      onSent();
+    } catch { /* ignore */ }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Send a payment link</DialogTitle>
+        </DialogHeader>
+        {!url ? (
+          <div className="space-y-3">
+            <div>
+              <Label htmlFor="pl-amount">Amount (£)</Label>
+              <Input id="pl-amount" type="number" inputMode="decimal" min="1" step="0.01" placeholder="e.g. 50.00" value={amount} onChange={e => setAmount(e.target.value)} />
+            </div>
+            <div>
+              <Label htmlFor="pl-desc">Description</Label>
+              <Input id="pl-desc" value={description} onChange={e => setDescription(e.target.value)} />
+            </div>
+            <p className="text-xs text-muted-foreground">Creates a Stripe payment link on your connected account. Any card surcharges you've configured will be added automatically.</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <div className="rounded-md border bg-muted/50 p-2 text-xs break-all">{url}</div>
+            <div className="flex flex-wrap gap-2">
+              <Button size="sm" variant="outline" onClick={async () => { try { await navigator.clipboard.writeText(url); toast.success("Copied"); } catch { /* */ } }}>Copy link</Button>
+              {emailHref && (
+                <Button size="sm" variant="outline" asChild onClick={() => markLogged("email")}>
+                  <a href={emailHref}><Mail className="mr-1.5 h-4 w-4" />Email</a>
+                </Button>
+              )}
+              {smsHref && (
+                <Button size="sm" variant="outline" asChild onClick={() => markLogged("sms")}>
+                  <a href={smsHref}><MessageSquare className="mr-1.5 h-4 w-4" />SMS</a>
+                </Button>
+              )}
+              {waHref && (
+                <Button size="sm" variant="outline" asChild onClick={() => markLogged("whatsapp")}>
+                  <a href={waHref} target="_blank" rel="noreferrer"><MessageSquare className="mr-1.5 h-4 w-4" />WhatsApp</a>
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
+        <DialogFooter>
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>Close</Button>
+          {!url && (
+            <Button onClick={generate} disabled={busy}>
+              {busy ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Send className="mr-1.5 h-4 w-4" />}
+              Create link
+            </Button>
+          )}
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
