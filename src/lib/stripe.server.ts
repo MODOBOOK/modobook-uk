@@ -132,8 +132,9 @@ export async function createConnectAccount(email: string) {
         afterpay_clearpay_payments: { requested: true },
       },
       settings: {
-        payouts: { schedule: { interval: "manual" } },
+        payouts: { schedule: { interval: "daily" } },
       },
+
     });
   } catch (error) {
     normaliseStripeError(error);
@@ -162,6 +163,23 @@ export async function getAccount(accountId: string) {
     normaliseStripeError(error);
   }
 }
+
+export async function ensureDailyPayoutSchedule(accountId: string) {
+  const stripe = getStripe();
+  try {
+    const account = await stripe.accounts.retrieve(accountId);
+    const interval = account.settings?.payouts?.schedule?.interval;
+    if (interval === "daily") return { changed: false as const };
+    await stripe.accounts.update(accountId, {
+      settings: { payouts: { schedule: { interval: "daily" } } },
+    });
+    return { changed: true as const };
+  } catch {
+    // Non-fatal — payout schedule sync is best-effort.
+    return { changed: false as const };
+  }
+}
+
 
 export async function createCheckoutSession(params: {
   accountId: string;
