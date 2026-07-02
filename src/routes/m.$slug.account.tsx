@@ -208,7 +208,38 @@ function Account() {
   const brand = profile?.brand_color || "#1f2937";
   const today = new Date().toISOString().slice(0, 10);
   const upcoming = appts.filter((a) => a.scheduled_date >= today && a.status !== "cancelled");
-  const past = appts.filter((a) => a.scheduled_date < today || a.status === "cancelled" || a.status === "completed");
+  const past = appts
+    .filter((a) => a.scheduled_date < today || a.status === "cancelled" || a.status === "completed")
+    .sort((a, b) => (b.scheduled_date + b.start_time).localeCompare(a.scheduled_date + a.start_time));
+
+  // Aftercare pruning: hide from top-level once (a) associated appointment is >7 days old,
+  // or (b) a newer confirmed/completed appointment has taken place. These are shown inside the
+  // relevant past appointment card instead.
+  const now = Date.now();
+  const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+  const activeAftercare: any[] = [];
+  const aftercareByAppt = new Map<string, any[]>();
+  for (const ac of aftercare) {
+    const appt = appts.find((a) => a.id === ac.appointment_id);
+    const apptDate = appt?.scheduled_date ? new Date(`${appt.scheduled_date}T${appt.start_time || "00:00"}`).getTime() : null;
+    const olderThanWeek = apptDate != null && (now - apptDate) > WEEK_MS;
+    const hasNewerAppt = appt
+      ? appts.some((b) =>
+          b.id !== appt.id &&
+          b.status !== "cancelled" &&
+          (b.scheduled_date + (b.start_time || "")) > (appt.scheduled_date + (appt.start_time || ""))
+        )
+      : false;
+    if (olderThanWeek || hasNewerAppt) {
+      if (ac.appointment_id) {
+        const list = aftercareByAppt.get(ac.appointment_id) ?? [];
+        list.push(ac);
+        aftercareByAppt.set(ac.appointment_id, list);
+      }
+    } else {
+      activeAftercare.push(ac);
+    }
+  }
 
 
 
