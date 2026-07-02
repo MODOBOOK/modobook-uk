@@ -115,7 +115,7 @@ function BookTreatmentPage() {
     [modelSlotsAll, locationId],
   );
   const bookableFrom = (ctx as { bookableFrom?: string | null }).bookableFrom ?? null;
-  const todayIso = new Date().toISOString().slice(0, 10);
+  const todayIso = (() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`; })();
   const today = bookableFrom && bookableFrom > todayIso ? bookableFrom : todayIso;
   const firstModelDate = modelSlotsForLoc[0]?.slot_date ?? today;
   const [date, setDate] = useState<string>(modelMode ? firstModelDate : today);

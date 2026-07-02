@@ -1707,8 +1707,8 @@ function BookPage() {
                     pkgs: selectedPackageIds.join(","),
                   }}
                 >
-                  <Button size="sm" style={{ backgroundColor: brand, color: "#fff" }}>
-                    Continue →
+                  <Button size="lg" className="h-12 px-6 text-base font-semibold shadow-md" style={{ backgroundColor: brand, color: "#fff" }}>
+                    Book →
                   </Button>
                 </Link>
               </div>

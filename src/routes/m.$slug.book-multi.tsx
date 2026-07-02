@@ -220,7 +220,7 @@ function MultiBookPage() {
     setPaymentPlans((prev) => ({ ...prev, [treatmentId]: plan }));
 
   const bookableFrom = (ctx as { bookableFrom?: string | null }).bookableFrom ?? null;
-  const todayIso = new Date().toISOString().slice(0, 10);
+  const todayIso = (() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`; })();
   const today = bookableFrom && bookableFrom > todayIso ? bookableFrom : todayIso;
   const [date, setDate] = useState<string>(today);
   const [month, setMonth] = useState<Date>(fromIsoDate(today));
@@ -1330,7 +1330,7 @@ function MultiBookPage() {
           )}
 
           {step !== "details" && (
-            <div className="mt-6 flex items-center justify-between gap-3">
+            <div className="mt-6 hidden items-center justify-between gap-3 lg:flex">
               <Button
                 variant="outline"
                 onClick={goBack}
@@ -1357,6 +1357,30 @@ function MultiBookPage() {
         </aside>
       </div>
 
+
+      {step !== "details" && (
+        <div
+          className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 px-4 py-3 backdrop-blur lg:hidden"
+          style={{ borderColor: `${brand}33` }}
+        >
+          <div className="mx-auto flex max-w-3xl items-center gap-3">
+            {step !== "selection" && (
+              <Button variant="outline" size="lg" onClick={goBack} className="h-12 px-4" style={{ color: brand, borderColor: `${brand}55` }}>
+                <ChevronLeft className="h-5 w-5" />
+              </Button>
+            )}
+            <Button
+              size="lg"
+              onClick={goNext}
+              disabled={step === "selection" ? !selectionValid : !datetimeValid}
+              className="h-12 flex-1 text-base font-semibold shadow-md"
+              style={{ backgroundColor: brand, color: "#fff" }}
+            >
+              Book <ChevronRight className="ml-1 h-5 w-5" />
+            </Button>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
