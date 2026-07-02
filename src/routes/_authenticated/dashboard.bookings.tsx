@@ -302,15 +302,20 @@ function BookingsPage() {
         </div>
         <div className="flex items-center gap-2">
           <div className="inline-flex rounded-full bg-muted p-0.5 text-xs">
-            {(["day", "week", "month"] as ViewMode[]).map((v) => (
+            {([
+              { v: "day" as ViewMode, label: "1" },
+              { v: "3day" as ViewMode, label: "3" },
+              { v: "week" as ViewMode, label: "Week" },
+              { v: "month" as ViewMode, label: "Month" },
+            ]).map(({ v, label }) => (
               <button
                 key={v}
                 onClick={() => setView(v)}
-                className={`rounded-full px-3 py-1 capitalize transition ${
+                className={`rounded-full px-3 py-1 transition ${
                   view === v ? "bg-background shadow-sm font-medium" : "text-muted-foreground"
                 }`}
               >
-                {v}
+                {label}
               </button>
             ))}
           </div>
