@@ -63,6 +63,8 @@ type Appt = {
   status: string;
   payment_status: string;
   total_amount: number | null;
+  amount_paid_cents: number | null;
+
   notes: string | null;
   practitioner_notes: string | null;
   aftercare_html: string | null;
