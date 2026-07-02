@@ -210,12 +210,34 @@ function SettingsPage() {
             checked={s.payment_clearpay_enabled}
             onChange={(v) => set("payment_clearpay_enabled", v)}
           />
-          <ToggleRow
-            label="Pass card processing fees to customer"
-            hint="Adds Stripe card fees on top of the treatment price."
-            checked={s.payment_pass_fees_to_customer}
-            onChange={(v) => set("payment_pass_fees_to_customer", v)}
-          />
+          <div className="rounded-md border p-3 space-y-3">
+            <div className="text-sm font-medium">Platform fees passed to patient</div>
+            <p className="text-xs text-muted-foreground">
+              Adds a "Platform fee" line on Stripe checkout so the patient covers the cost. Shown as a
+              platform fee — not a separate charge.
+            </p>
+            <SurchargeRow
+              label="Full card payment"
+              enabled={s.payment_surcharge_card_enabled}
+              percent={s.payment_surcharge_card_percent}
+              onToggle={(v) => set("payment_surcharge_card_enabled", v)}
+              onPercent={(v) => set("payment_surcharge_card_percent", v)}
+            />
+            <SurchargeRow
+              label="Klarna & Clearpay"
+              enabled={s.payment_surcharge_bnpl_enabled}
+              percent={s.payment_surcharge_bnpl_percent}
+              onToggle={(v) => set("payment_surcharge_bnpl_enabled", v)}
+              onPercent={(v) => set("payment_surcharge_bnpl_percent", v)}
+            />
+            <SurchargeRow
+              label="Deposits"
+              enabled={s.payment_surcharge_deposit_enabled}
+              percent={s.payment_surcharge_deposit_percent}
+              onToggle={(v) => set("payment_surcharge_deposit_enabled", v)}
+              onPercent={(v) => set("payment_surcharge_deposit_percent", v)}
+            />
+          </div>
           {/* Deposit is now always required when Deposits is enabled — no toggle. */}
           <ToggleRow
             label="Allow pay in clinic"
