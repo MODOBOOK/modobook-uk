@@ -1,0 +1,145 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { BrandMark } from "@/components/BrandMark";
+
+export const Route = createFileRoute("/privacy")({
+  ssr: false,
+  head: () => ({
+    meta: [
+      { title: "Privacy Policy | MODO" },
+      {
+        name: "description",
+        content:
+          "How MODO collects, uses and protects personal and health data under UK GDPR and the Data Protection Act 2018.",
+      },
+    ],
+  }),
+  component: PrivacyPage,
+});
+
+function PrivacyPage() {
+  return (
+    <div className="min-h-screen bg-background">
+      <header className="border-b bg-white/70 backdrop-blur">
+        <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-4">
+          <Link to="/"><BrandMark size="sm" /></Link>
+          <Link to="/" className="text-sm text-muted-foreground hover:text-foreground">← Home</Link>
+        </div>
+      </header>
+
+      <main className="mx-auto max-w-3xl px-4 py-10">
+        <h1 className="font-serif text-4xl tracking-tight">Privacy Policy</h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Effective 2 July 2026 · Governed by the laws of Scotland (UK GDPR & Data Protection Act 2018)
+        </p>
+
+        <div className="prose prose-neutral mt-8 max-w-none prose-h2:font-serif prose-h2:tracking-tight prose-a:text-primary">
+          <h2>1. Who we are</h2>
+          <p>
+            MODO ("we", "us", "the platform") is an aesthetics booking and clinical records
+            platform operated by MODO Ltd (Scotland). This notice explains how we process
+            personal data for two groups of people:
+          </p>
+          <ul>
+            <li><strong>Practitioners</strong> — clinicians and clinic staff who use MODO as a Data Controller for their patients.</li>
+            <li><strong>Patients</strong> — individuals who book appointments through a practitioner's MODO booking page. For patient clinical data, the practitioner is the Data Controller and MODO acts as their Data Processor.</li>
+          </ul>
+
+          <h2>2. Data we collect</h2>
+          <ul>
+            <li><strong>Account & identity:</strong> name, email, phone, role, clinic address.</li>
+            <li><strong>Booking data:</strong> appointment dates, treatments, packages, payments (via Stripe).</li>
+            <li><strong>Special-category health data:</strong> medical history, allergies, pregnancy status, medications, consultation notes, consent signatures, prescriptions, aftercare responses, before/after photos where uploaded.</li>
+            <li><strong>Communications:</strong> SMS/email confirmations, reminders, aftercare messages, review requests.</li>
+            <li><strong>Technical:</strong> device, browser, IP, session cookies required to keep you signed in.</li>
+          </ul>
+
+          <h2>3. Lawful bases (UK GDPR Article 6 &amp; 9)</h2>
+          <ul>
+            <li><strong>Contract</strong> (Art. 6(1)(b)) — to deliver bookings, payments and clinical records you request.</li>
+            <li><strong>Legal obligation</strong> (Art. 6(1)(c)) — to keep clinical, prescribing and financial records as required by UK law and professional regulators (NMC, GMC, GPhC, HMRC).</li>
+            <li><strong>Explicit consent</strong> (Art. 9(2)(a)) — for processing health data, sending marketing, and storing before/after photos.</li>
+            <li><strong>Vital interests</strong> (Art. 9(2)(c)) — to flag allergies and safety alerts during treatment.</li>
+            <li><strong>Legitimate interests</strong> (Art. 6(1)(f)) — platform security, fraud prevention, service improvement (balanced against your rights).</li>
+          </ul>
+
+          <h2>4. Where your data is stored</h2>
+          <p>
+            MODO uses Lovable Cloud (Supabase infrastructure) hosted in the European
+            Union (AWS eu-west-3, Paris). Payments are handled by Stripe (UK &amp;
+            Ireland). Email is delivered via our notify.modobook.co.uk domain.
+            Transfers outside the UK/EEA rely on the UK International Data Transfer
+            Addendum and Standard Contractual Clauses where applicable.
+          </p>
+
+          <h2>5. How long we keep data</h2>
+          <ul>
+            <li><strong>Clinical records</strong> (medical forms, consents, consultation notes, prescriptions, aftercare) — retained for a minimum of <strong>8 years after last treatment</strong>, or until a child patient reaches age 25, in line with NHS &amp; NMC guidance.</li>
+            <li><strong>Prescription audit trail</strong> — 10 years.</li>
+            <li><strong>Financial records</strong> (invoices, Stripe references) — 7 years (HMRC).</li>
+            <li><strong>Marketing preferences &amp; suppression list</strong> — held indefinitely to honour opt-outs.</li>
+            <li><strong>Account &amp; login logs</strong> — up to 24 months after account closure.</li>
+          </ul>
+
+          <h2>6. Your rights</h2>
+          <p>Under UK GDPR you have the right to:</p>
+          <ul>
+            <li>Access a copy of your data (Subject Access Request).</li>
+            <li>Have inaccurate data <strong>rectified</strong> — patients can edit name, contact and address details directly in their account.</li>
+            <li>Request <strong>erasure</strong> where legally permitted (clinical records may be retained for the periods above).</li>
+            <li>Request <strong>portability</strong> of data you provided in a machine-readable format.</li>
+            <li>Object to or restrict processing, including marketing.</li>
+            <li>Withdraw consent at any time (this does not affect processing already carried out).</li>
+            <li>Complain to the Information Commissioner's Office (<a href="https://ico.org.uk" target="_blank" rel="noreferrer">ico.org.uk</a>, 0303 123 1113).</li>
+          </ul>
+          <p>
+            To exercise any of these rights, email <a href="mailto:privacy@modobook.co.uk">privacy@modobook.co.uk</a>.
+            We respond within one calendar month.
+          </p>
+
+          <h2>7. Cookies</h2>
+          <p>
+            We use only <strong>strictly necessary</strong> cookies to keep you signed in and remember
+            layout preferences. We do not use advertising or cross-site tracking cookies.
+            Optional analytics (if ever enabled) will be gated by the on-screen consent banner.
+          </p>
+
+          <h2>8. Security</h2>
+          <ul>
+            <li>Encryption in transit (TLS 1.2+) and at rest (AES-256).</li>
+            <li>Row-Level Security so practitioners can only see their own patients.</li>
+            <li>Role-based access control; passwords hashed via Supabase Auth (bcrypt).</li>
+            <li>Automatic daily backups.</li>
+            <li>Signed URLs and short-lived tokens for consent, medical-form and cancellation links.</li>
+          </ul>
+
+          <h2>9. Sharing your data</h2>
+          <p>
+            We share data only with sub-processors necessary to run the service:
+            Lovable Cloud / Supabase (hosting &amp; database), Stripe (payments), and the
+            SMS/email providers used by your practitioner. We never sell personal data.
+          </p>
+
+          <h2>10. Data Protection Officer &amp; Controller contact</h2>
+          <p>
+            <strong>Controller:</strong> MODO Ltd, Scotland, United Kingdom.<br />
+            <strong>Data Protection contact:</strong> <a href="mailto:privacy@modobook.co.uk">privacy@modobook.co.uk</a>
+            <br />
+            For clinical data held about you as a patient, the practitioner who
+            treated you is the Data Controller — contact them directly, or email us
+            and we will route your request.
+          </p>
+
+          <h2>11. Changes to this notice</h2>
+          <p>
+            We update this notice when the platform or the law changes. The current
+            version is always available at <Link to="/privacy">/privacy</Link>.
+          </p>
+        </div>
+
+        <div className="mt-10 border-t pt-6 text-sm text-muted-foreground">
+          See also our <Link to="/terms" className="underline">Terms &amp; Conditions</Link>.
+        </div>
+      </main>
+    </div>
+  );
+}
