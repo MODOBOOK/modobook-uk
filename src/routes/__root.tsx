@@ -148,6 +148,17 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
+  // Backwards compatibility: redirect legacy /m/{slug} paths to /{slug}.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const path = window.location.pathname;
+    if (path.startsWith("/m/")) {
+      const search = window.location.search;
+      const hash = window.location.hash;
+      window.location.replace(path.replace(/^\/m\//, "/") + search + hash);
+    }
+  }, []);
+
   // Wildcard subdomain routing:
   //   {slug}.modobook.co.uk → /{slug}
   //   {slug}.modobook.app   → /{slug}
