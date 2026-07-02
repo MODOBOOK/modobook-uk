@@ -149,71 +149,73 @@ function PatientProfilePage() {
   const visibleAppts = showCancelled ? appts : appts.filter(a => a.status !== "cancelled");
 
   return (
-    <div className="mx-auto max-w-7xl space-y-4 pb-20">
+    <div className="mx-auto w-full max-w-7xl space-y-4 pb-20">
       <div className="flex items-center justify-between">
         <Link to="/dashboard/patients" className="inline-flex items-center text-xs text-muted-foreground hover:text-foreground">
           <ArrowLeft className="mr-1 h-3.5 w-3.5" />All patients
         </Link>
       </div>
 
-      {/* Quick actions bar */}
-      <div className="sticky top-0 z-10 -mx-2 flex flex-wrap items-center gap-2 rounded-xl border bg-card/95 px-3 py-2 shadow-sm backdrop-blur">
-        <Button size="sm" variant="default" asChild>
-          <Link to="/dashboard/new-appointment"><CalendarPlus className="mr-1.5 h-4 w-4" />Book</Link>
-        </Button>
-        <Button size="sm" variant="outline" onClick={() => setEmailOpen(true)} disabled={!client.email}>
-          <Mail className="mr-1.5 h-4 w-4" />Email
-        </Button>
-        {client.phone && (
-          <Button size="sm" variant="outline" asChild onClick={async () => {
-            await logComm({ data: { clientId: id, channel: "sms", body: "(opened SMS app)" } }); setCommsRefresh(x => x + 1);
+      {/* Quick actions bar — horizontally scrollable on mobile */}
+      <div className="sticky top-0 z-10 rounded-xl border bg-card/95 shadow-sm backdrop-blur">
+        <div className="flex items-center gap-2 overflow-x-auto px-3 py-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <Button size="sm" variant="default" className="shrink-0" asChild>
+            <Link to="/dashboard/new-appointment"><CalendarPlus className="mr-1.5 h-4 w-4" />Book</Link>
+          </Button>
+          <Button size="sm" variant="outline" className="shrink-0" onClick={() => setEmailOpen(true)} disabled={!client.email}>
+            <Mail className="mr-1.5 h-4 w-4" />Email
+          </Button>
+          {client.phone && (
+            <Button size="sm" variant="outline" className="shrink-0" asChild onClick={async () => {
+              await logComm({ data: { clientId: id, channel: "sms", body: "(opened SMS app)" } }); setCommsRefresh(x => x + 1);
+            }}>
+              <a href={`sms:${client.phone}`}><MessageSquare className="mr-1.5 h-4 w-4" />SMS</a>
+            </Button>
+          )}
+          {client.phone && (
+            <Button size="sm" variant="outline" className="shrink-0" asChild>
+              <a href={`https://wa.me/${client.phone.replace(/\D/g,"")}`} target="_blank" rel="noreferrer">
+                <MessageSquare className="mr-1.5 h-4 w-4" />WhatsApp
+              </a>
+            </Button>
+          )}
+          <Button size="sm" variant="outline" className="shrink-0" asChild>
+            <Link to="/dashboard/payments"><CreditCard className="mr-1.5 h-4 w-4" />Payment link</Link>
+          </Button>
+          <Button size="sm" variant="outline" className="shrink-0" onClick={() => setSendFormOpen(true)}>
+            <FileText className="mr-1.5 h-4 w-4" />Send form
+          </Button>
+          <Button size="sm" variant="outline" className="shrink-0" onClick={async () => {
+            try {
+              const r: any = await createConsult({ data: { patient_name: client.full_name, patient_email: client.email || undefined, patient_phone: client.phone || undefined, patient_id: client.id } });
+              if (!r?.id) throw new Error("No consultation id returned");
+              window.location.href = `/dashboard/consultations/${r.id}`;
+            } catch (e: any) {
+              console.error("start consultation failed", e);
+              toast.error(e?.message || "Could not start consultation");
+            }
           }}>
-            <a href={`sms:${client.phone}`}><MessageSquare className="mr-1.5 h-4 w-4" />SMS</a>
+            <ClipboardList className="mr-1.5 h-4 w-4" />Start consultation
           </Button>
-        )}
-        {client.phone && (
-          <Button size="sm" variant="outline" asChild>
-            <a href={`https://wa.me/${client.phone.replace(/\D/g,"")}`} target="_blank" rel="noreferrer">
-              <MessageSquare className="mr-1.5 h-4 w-4" />WhatsApp
-            </a>
-          </Button>
-        )}
-        <Button size="sm" variant="outline" asChild>
-          <Link to="/dashboard/payments"><CreditCard className="mr-1.5 h-4 w-4" />Payment link</Link>
-        </Button>
-        <Button size="sm" variant="outline" onClick={() => setSendFormOpen(true)}>
-          <FileText className="mr-1.5 h-4 w-4" />Send form
-        </Button>
-        <Button size="sm" variant="outline" onClick={async () => {
-          try {
-            const r: any = await createConsult({ data: { patient_name: client.full_name, patient_email: client.email || undefined, patient_phone: client.phone || undefined, patient_id: client.id } });
-            if (!r?.id) throw new Error("No consultation id returned");
-            window.location.href = `/dashboard/consultations/${r.id}`;
-          } catch (e: any) {
-            console.error("start consultation failed", e);
-            toast.error(e?.message || "Could not start consultation");
-          }
-        }}>
-          <ClipboardList className="mr-1.5 h-4 w-4" />Start consultation
-        </Button>
+        </div>
       </div>
 
       {/* Header */}
       <Card>
-        <CardContent className="flex flex-col items-center gap-3 p-6 text-center sm:flex-row sm:items-center sm:text-left">
-          <AvatarUpload client={client} onUpload={uploadAvatar} />
-          <div className="flex-1 space-y-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-2xl font-bold">{client.full_name}</h1>
+        <CardContent className="flex flex-col items-center gap-3 p-4 text-center sm:flex-row sm:items-center sm:p-6 sm:text-left">
+          <div className="shrink-0"><AvatarUpload client={client} onUpload={uploadAvatar} /></div>
+          <div className="min-w-0 flex-1 space-y-1">
+            <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
+              <h1 className="break-words text-xl font-bold sm:text-2xl">{client.full_name}</h1>
               {client.has_allergies && (
                 <Badge variant="destructive" className="gap-1"><AlertTriangle className="h-3 w-3" />Allergy</Badge>
               )}
               {client.archived && <Badge variant="secondary">Inactive</Badge>}
             </div>
-            {client.phone && <div className="text-sm font-semibold">{client.phone}</div>}
-            {client.email && <div className="text-sm text-muted-foreground">{client.email}</div>}
+            {client.phone && <div className="break-all text-sm font-semibold">{client.phone}</div>}
+            {client.email && <div className="break-all text-sm text-muted-foreground">{client.email}</div>}
             {client.has_allergies && client.allergies && (
-              <div className="mt-2 rounded-md border border-red-200 bg-red-50 p-2 text-xs text-red-700">
+              <div className="mt-2 rounded-md border border-red-200 bg-red-50 p-2 text-left text-xs text-red-700">
                 <strong>Allergies:</strong> {client.allergies}
               </div>
             )}
@@ -222,8 +224,8 @@ function PatientProfilePage() {
       </Card>
 
       {/* Two-column layout */}
-      <div className="grid gap-4 lg:grid-cols-[1fr_360px]">
-        <div className="space-y-4 min-w-0">
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="min-w-0 space-y-4">
 
 
       {/* Personal details */}
@@ -332,7 +334,7 @@ function PatientProfilePage() {
         </div>
 
         {/* Right column: activity timeline + concerns */}
-        <aside className="space-y-4">
+        <aside className="min-w-0 space-y-4">
           <ConcernsCard clientId={id} />
           <CommsTimeline clientId={id} refreshKey={commsRefresh} />
         </aside>
@@ -397,7 +399,7 @@ function Row({ label, value }: { label: string; value?: string | null }) {
   return (
     <div className="border-b py-2 last:border-0">
       <div className="text-xs text-muted-foreground">{label}</div>
-      <div className="font-medium">{value || <span className="text-muted-foreground">—</span>}</div>
+      <div className="break-words font-medium">{value || <span className="text-muted-foreground">—</span>}</div>
     </div>
   );
 }
