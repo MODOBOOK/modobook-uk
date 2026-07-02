@@ -126,7 +126,7 @@ function Account() {
       // Appointments — exclude "pending" placeholders that haven't been paid yet.
       // These are Stripe checkout holds; until Stripe confirms payment the
       // appointment shouldn't appear on the patient's account.
-      const nowIso = new Date().toISOString();
+      
       const { data: apptRows } = await supabase
         .from("appointments")
         .select("id, scheduled_date, start_time, end_time, status, payment_status, amount_paid_cents, payment_hold_expires_at, total_amount, treatment_id, reschedule_count, treatment_name_snapshot, treatments(name), locations(name)")
