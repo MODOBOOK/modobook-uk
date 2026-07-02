@@ -2310,7 +2310,7 @@ function TreatmentRow({
 
 
 
-function HeroCarousel({ urls }: { urls: string[] }) {
+function HeroCarousel({ urls, heightClass }: { urls: string[]; heightClass?: string }) {
   const [i, setI] = useState(0);
   useEffect(() => {
     if (urls.length < 2) return;
@@ -2318,7 +2318,7 @@ function HeroCarousel({ urls }: { urls: string[] }) {
     return () => clearInterval(t);
   }, [urls.length]);
   return (
-    <div className="relative h-56 w-full overflow-hidden sm:h-[22rem]">
+    <div className={`relative w-full overflow-hidden ${heightClass || "h-56 sm:h-[22rem]"}`}>
       {urls.map((u, idx) => (
         <img
           key={u + idx}
