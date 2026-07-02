@@ -1167,6 +1167,11 @@ function BookPage() {
       {/* Favourite / Most popular treatments */}
       {(() => {
         if (!locationId) return null;
+        // When the booking chooser is active, favourites must not appear above
+        // the consultation/concern results because they make it look like the
+        // patient is being shown the full menu. Only show favourites on the
+        // normal "I know what I want"/full-menu path.
+        if (chooserOn && mode !== "know") return null;
         if (profile.favourites_enabled === false) return null;
         const favIds = (profile.favourite_treatment_ids ?? []) as string[];
         if (!favIds.length) return null;
