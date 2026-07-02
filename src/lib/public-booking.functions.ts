@@ -557,6 +557,11 @@ async function maybeCreateBookingCheckout(args: {
     payment_surcharge_bnpl_percent?: number | string | null;
     payment_surcharge_deposit_enabled?: boolean | null;
     payment_surcharge_deposit_percent?: number | string | null;
+    stripe_fee_pass_to_patient?: boolean | null;
+    stripe_fee_card_percent?: number | string | null;
+    stripe_fee_card_fixed_cents?: number | string | null;
+    stripe_fee_bnpl_percent?: number | string | null;
+    stripe_fee_bnpl_fixed_cents?: number | string | null;
   } | null;
   appointmentIds: string[];
   totalAmount: number;
