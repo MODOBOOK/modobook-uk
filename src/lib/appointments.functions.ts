@@ -96,14 +96,6 @@ export const createAppointmentForPatient = createServerFn({ method: "POST" })
       .eq("id", id)
       .single();
 
-    // Fire branded email notifications (non-blocking best-effort).
-    try {
-      const { sendBookingNotifications } = await import("@/lib/email/send-branded.server");
-      await sendBookingNotifications(id);
-    } catch (e) {
-      console.error("[createAppointmentForPatient] email notify failed", e);
-    }
-
     return { id, manageToken: created?.manage_token ?? null };
   });
 

@@ -71,7 +71,7 @@ function ResetPasswordPage() {
 
   function onContinue() {
     if (slug) {
-      navigate({ to: "/$slug/account", params: { slug } });
+      navigate({ to: "/m/$slug/account", params: { slug } });
     } else {
       navigate({ to: "/dashboard" });
     }

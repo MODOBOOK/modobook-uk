@@ -17,7 +17,7 @@ import {
 import { toast } from "sonner";
 import { describeCancellationRules, type CancellationRule } from "@/lib/policy";
 
-export const Route = createFileRoute("/$slug/account")({
+export const Route = createFileRoute("/m/$slug/account")({
   ssr: false,
   component: Account,
 });
@@ -57,7 +57,7 @@ type Profile = {
 };
 
 function Account() {
-  const { slug } = useParams({ from: "/$slug/account" });
+  const { slug } = useParams({ from: "/m/$slug/account" });
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(true);
@@ -101,7 +101,7 @@ function Account() {
     try {
       const { data: sess } = await supabase.auth.getSession();
       if (!sess.session) {
-        navigate({ to: "/$slug/auth", params: { slug }, search: { redirect: `/${slug}/account` } });
+        navigate({ to: "/m/$slug/auth", params: { slug }, search: { redirect: `/m/${slug}/account` } });
         return;
       }
 
@@ -340,7 +340,7 @@ function Account() {
         </div>
         <div className="flex flex-col gap-2 sm:flex-row">
           <Button size="sm" variant="outline" onClick={() => setEditOpen(true)}>Edit my details</Button>
-          <Link to="/$slug" params={{ slug }}>
+          <Link to="/m/$slug" params={{ slug }}>
             <Button size="sm" variant="outline">Back to clinic</Button>
           </Link>
         </div>
@@ -399,7 +399,7 @@ function Account() {
           </TabsList>
           <TabsContent value="upcoming">
             {upcoming.length === 0 ? (
-              <Empty msg="No upcoming appointments." cta={<Link to="/$slug" params={{ slug }}><Button size="sm">Book a treatment</Button></Link>} />
+              <Empty msg="No upcoming appointments." cta={<Link to="/m/$slug" params={{ slug }}><Button size="sm">Book a treatment</Button></Link>} />
             ) : (
               <div className="space-y-3">
                 {upcoming.map((a) => (
@@ -457,7 +457,7 @@ function Account() {
                 meta={f.status === "submitted" ? `Completed ${new Date(f.submitted_at).toLocaleDateString()}` : "Awaiting your completion"}
                 badge={f.status === "submitted" ? "Complete" : "Pending"}
                 badgeOk={f.status === "submitted"}
-                href={`/f/${f.token}?returnTo=${encodeURIComponent(`/${slug}/account`)}`}
+                href={`/f/${f.token}?returnTo=${encodeURIComponent(`/m/${slug}/account`)}`}
               />
             ))}
           </div>
@@ -531,7 +531,7 @@ function Account() {
       </Section>
 
       <div className="mt-10">
-        <Button variant="outline" onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/$slug", params: { slug } }); }}>
+        <Button variant="outline" onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/m/$slug", params: { slug } }); }}>
           Sign out
         </Button>
       </div>
@@ -615,7 +615,7 @@ function ApptCard({
           {(allowCancel || allowReschedule) && a.status !== "cancelled" && a.status !== "completed" && (
             <div className="flex flex-wrap items-center gap-2 pt-1">
               {allowReschedule && a.treatment_id && remaining > 0 && !rescheduleTooLate && (
-                <Link to="/$slug/book/$treatmentId" params={{ slug, treatmentId: a.treatment_id }}>
+                <Link to="/m/$slug/book/$treatmentId" params={{ slug, treatmentId: a.treatment_id }}>
                   <Button size="sm" variant="outline">Reschedule ({remaining} left)</Button>
                 </Link>
               )}

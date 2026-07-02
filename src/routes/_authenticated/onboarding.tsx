@@ -151,7 +151,7 @@ function OnboardingPage() {
               <div className="space-y-2">
                 <Label htmlFor="slug">Booking link</Label>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground whitespace-nowrap">/</span>
+                  <span className="text-sm text-muted-foreground whitespace-nowrap">/m/</span>
                   <Input
                     id="slug"
                     value={form.slug}

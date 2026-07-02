@@ -119,13 +119,13 @@ function AboutEditor() {
         <div className="min-w-0">
           <h1 className="text-2xl font-bold tracking-tight">About page</h1>
           <p className="text-sm text-muted-foreground">
-            Each block below is a section on your public page at <span className="font-mono text-xs">/{slug || "your-slug"}/about</span>.
+            Each block below is a section on your public page at <span className="font-mono text-xs">/m/{slug || "your-slug"}/about</span>.
             Toggle off to hide. Names come from <Link to="/dashboard/clinic" className="underline">Clinic page</Link>.
           </p>
         </div>
         {slug && (
           <a
-            href={`/${slug}/about`}
+            href={`/m/${slug}/about`}
             target="_blank"
             rel="noreferrer"
             className="inline-flex items-center gap-1.5 rounded-full border bg-card px-3 py-1.5 text-xs font-medium hover:bg-accent"

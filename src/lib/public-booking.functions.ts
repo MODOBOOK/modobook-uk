@@ -717,8 +717,8 @@ async function maybeCreateBookingCheckout(args: {
 
 
   const origin = process.env.PUBLIC_APP_URL || process.env.APP_URL || "https://modo-book.lovable.app";
-  const successUrl = `${origin}/${p.slug ?? ""}/account?paid=1&session_id={CHECKOUT_SESSION_ID}`;
-  const cancelUrl = `${origin}/${p.slug ?? ""}`;
+  const successUrl = `${origin}/m/${p.slug ?? ""}/account?paid=1&session_id={CHECKOUT_SESSION_ID}`;
+  const cancelUrl = `${origin}/m/${p.slug ?? ""}`;
 
   try {
     const { createCheckoutSession } = await import("./stripe.server");

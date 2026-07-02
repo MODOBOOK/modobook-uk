@@ -101,7 +101,7 @@ function ClinicPage() {
     <div className="space-y-6 max-w-3xl">
       <div>
         <h1 className="text-2xl font-bold">Clinic page</h1>
-        <p className="text-muted-foreground">Your public booking page at /{slug}.</p>
+        <p className="text-muted-foreground">Your public booking page at /m/{slug}.</p>
       </div>
       <SaveReminder />
       <Card>

@@ -163,12 +163,12 @@ function AdminPage() {
                   </div>
                   {p.slug && (
                     <a
-                      href={`/${p.slug}`}
+                      href={`/m/${p.slug}`}
                       target="_blank"
                       rel="noopener"
                       className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
                     >
-                      /{p.slug} <ExternalLink className="h-3 w-3" />
+                      /m/{p.slug} <ExternalLink className="h-3 w-3" />
                     </a>
                   )}
                 </div>
@@ -372,8 +372,8 @@ function UserSupportCard() {
                           {!p.active && <Badge variant="secondary">Inactive</Badge>}
                         </div>
                         {p.slug && (
-                          <a href={`/${p.slug}`} target="_blank" rel="noopener" className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
-                            /{p.slug} <ExternalLink className="h-3 w-3" />
+                          <a href={`/m/${p.slug}`} target="_blank" rel="noopener" className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
+                            /m/{p.slug} <ExternalLink className="h-3 w-3" />
                           </a>
                         )}
                       </div>

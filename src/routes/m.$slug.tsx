@@ -7,7 +7,7 @@ import { resolveDisplayNames } from "@/lib/display-name";
 import { Loader2 } from "lucide-react";
 
 
-export const Route = createFileRoute("/$slug")({
+export const Route = createFileRoute("/m/$slug")({
   loader: async ({ params }) => {
     const { profile, theme } = await getPractitionerBio({ data: { slug: params.slug } });
     return { profile, theme };
@@ -58,7 +58,7 @@ export const Route = createFileRoute("/$slug")({
 function ModoLayout() {
   const { profile, theme } = Route.useLoaderData();
   const { primary: displayPrimary, secondary: displaySecondary } = resolveDisplayNames(profile);
-  const { slug } = useParams({ from: "/$slug" });
+  const { slug } = useParams({ from: "/m/$slug" });
   const brand = theme?.primary_color || profile.brand_color || "#111827";
 
   const accent = theme?.accent_color || brand;
@@ -96,7 +96,7 @@ function ModoLayout() {
           style={{ backgroundColor: headerBg, color: headerText }}
         >
           <div className="mx-auto grid max-w-5xl grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-3 py-2.5 sm:px-4 sm:py-4">
-            <Link to="/$slug" params={{ slug }} className="flex min-w-0 items-center gap-2 sm:gap-3">
+            <Link to="/m/$slug" params={{ slug }} className="flex min-w-0 items-center gap-2 sm:gap-3">
               {(() => {
                 const sizeKey = theme?.header_logo_size ?? "medium";
                 const logoCls =
@@ -140,10 +140,10 @@ function ModoLayout() {
               })()}
             </Link>
             <nav className="flex shrink-0 items-center gap-0.5 text-sm sm:gap-1">
-              <TabLink slug={slug} to="/$slug" label={theme?.header_button_label || "Book"} exact />
-              <TabLink slug={slug} to="/$slug/about" label="About" />
-              <TabLink slug={slug} to="/$slug/reviews" label="Reviews" />
-              <Link to="/$slug/account" params={{ slug }} aria-label="My account">
+              <TabLink slug={slug} to="/m/$slug" label={theme?.header_button_label || "Book"} exact />
+              <TabLink slug={slug} to="/m/$slug/about" label="About" />
+              <TabLink slug={slug} to="/m/$slug/reviews" label="Reviews" />
+              <Link to="/m/$slug/account" params={{ slug }} aria-label="My account">
                 <Button size="sm" variant="outline" className="ml-1 hidden sm:inline-flex">My account</Button>
                 <Button size="icon" variant="outline" className="ml-1 h-8 w-8 sm:hidden">
                   <UserCircle2 className="h-4 w-4" />
@@ -167,7 +167,7 @@ function TabLink({
   exact,
 }: {
   slug: string;
-  to: "/$slug" | "/$slug/reviews" | "/$slug/about";
+  to: "/m/$slug" | "/m/$slug/reviews" | "/m/$slug/about";
   label: string;
   exact?: boolean;
 }) {

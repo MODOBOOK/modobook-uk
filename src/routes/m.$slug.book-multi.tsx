@@ -71,7 +71,7 @@ function formatSessionSpacing(days?: number | null) {
 
 const searchSchema = z.object({ ids: z.string().optional(), pkgs: z.string().optional() });
 
-export const Route = createFileRoute("/$slug/book-multi")({
+export const Route = createFileRoute("/m/$slug/book-multi")({
   validateSearch: searchSchema,
   loaderDeps: ({ search }) => ({ ids: search.ids ?? "", pkgs: search.pkgs ?? "" }),
   loader: ({ params, deps }) => {
@@ -83,14 +83,14 @@ export const Route = createFileRoute("/$slug/book-multi")({
 });
 
 function MultiBookPage() {
-  const { slug } = useParams({ from: "/$slug/book-multi" });
+  const { slug } = useParams({ from: "/m/$slug/book-multi" });
   const ctx = Route.useLoaderData();
   const search = Route.useSearch();
   const ids = (search.ids ?? "").split(",").filter(Boolean);
   const packageIds = (search.pkgs ?? "").split(",").filter(Boolean);
   const selectedPackages = ((ctx as { selectedPackages?: Array<{ id: string; name: string; price: number; session_count: number; firstTreatmentId: string | null }> }).selectedPackages ?? [])
     .filter((p) => packageIds.includes(p.id));
-  const redirectPath = `/${slug}/book-multi?ids=${encodeURIComponent(ids.join(","))}${packageIds.length ? `&pkgs=${encodeURIComponent(packageIds.join(","))}` : ""}`;
+  const redirectPath = `/m/${slug}/book-multi?ids=${encodeURIComponent(ids.join(","))}${packageIds.length ? `&pkgs=${encodeURIComponent(packageIds.join(","))}` : ""}`;
 
   // Combine explicit treatment ids with each package's first treatment (auto-included, deduped)
   const combinedIds = useMemo(() => {
@@ -503,7 +503,7 @@ function MultiBookPage() {
       <main className="min-h-screen" style={pageStyle}>
         <div className="mx-auto max-w-xl px-4 py-16 text-center">
           <p className="opacity-70">No treatments selected.</p>
-          <Link to="/$slug" params={{ slug }} className="mt-4 inline-block">
+          <Link to="/m/$slug" params={{ slug }} className="mt-4 inline-block">
             <Button variant="outline">Back to clinic</Button>
           </Link>
         </div>
@@ -554,7 +554,7 @@ function MultiBookPage() {
           )}
 
           <div className="mt-6">
-            <Link to="/$slug" params={{ slug }}>
+            <Link to="/m/$slug" params={{ slug }}>
               <Button variant="outline">Back to clinic</Button>
             </Link>
           </div>
@@ -567,7 +567,7 @@ function MultiBookPage() {
     <main className="min-h-screen" style={pageStyle}>
       <div className="mx-auto max-w-3xl px-4 py-10">
         <div className="mb-6">
-          <Link to="/$slug" params={{ slug }} className="text-sm opacity-70 hover:underline">
+          <Link to="/m/$slug" params={{ slug }} className="text-sm opacity-70 hover:underline">
             ← Back to {ctx.clinicName}
           </Link>
         </div>
@@ -735,10 +735,10 @@ function MultiBookPage() {
             <CardContent className="space-y-3">
               <p className="text-sm opacity-70">Create an account or sign in to track your appointments.</p>
               <div className="grid gap-2 sm:grid-cols-3">
-                <Link to="/$slug/auth" params={{ slug }} search={{ redirect: redirectPath }}>
+                <Link to="/m/$slug/auth" params={{ slug }} search={{ redirect: redirectPath }}>
                   <Button className="w-full" style={{ backgroundColor: brand, color: "#fff" }}><LogIn className="mr-2 h-4 w-4" />Sign in</Button>
                 </Link>
-                <Link to="/$slug/auth" params={{ slug }} search={{ tab: "signup", redirect: redirectPath }}>
+                <Link to="/m/$slug/auth" params={{ slug }} search={{ tab: "signup", redirect: redirectPath }}>
                   <Button variant="outline" className="w-full" style={{ color: brand, borderColor: `${brand}55` }}><UserPlus className="mr-2 h-4 w-4" />Sign up</Button>
                 </Link>
                 <Button variant="ghost" className="w-full" style={{ color: brand }} onClick={() => setAuthChoice("guest")}>Continue as guest</Button>

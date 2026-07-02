@@ -51,7 +51,7 @@ type Location = Database["public"]["Tables"]["locations"]["Row"];
 type Category = Database["public"]["Tables"]["treatment_categories"]["Row"];
 type Pricing = Database["public"]["Tables"]["treatment_location_pricing"]["Row"];
 
-export const Route = createFileRoute("/$slug/")({
+export const Route = createFileRoute("/m/$slug/")({
   loader: async ({ params }) => getPublicClinic({ data: { slug: params.slug } }),
   component: BookPage,
 });
@@ -236,7 +236,7 @@ function BookPage() {
     };
 
 
-  const { slug } = useParams({ from: "/$slug/" });
+  const { slug } = useParams({ from: "/m/$slug/" });
   const { primary: displayPrimary } = resolveDisplayNames(profile);
   const brand = theme?.primary_color || profile.brand_color || "#1f2a44";
 
@@ -635,7 +635,7 @@ function BookPage() {
               )}
               <div className="ml-auto flex items-center gap-2">
                 {showRating && (
-                  <Link to="/$slug/reviews" params={{ slug }} className="flex items-center gap-1 hover:opacity-80">
+                  <Link to="/m/$slug/reviews" params={{ slug }} className="flex items-center gap-1 hover:opacity-80">
                     {(() => {
                       const count = reviews.length;
                       const avg = count ? reviews.reduce((a, r) => a + r.rating, 0) / count : 0;
@@ -691,7 +691,7 @@ function BookPage() {
 
               {/* Star rating */}
               {showRating && (
-                <Link to="/$slug/reviews" params={{ slug }} className="mt-2 flex items-center gap-2 hover:opacity-80">
+                <Link to="/m/$slug/reviews" params={{ slug }} className="mt-2 flex items-center gap-2 hover:opacity-80">
                   {(() => {
                     const count = reviews.length;
                     const avg = count ? reviews.reduce((a, r) => a + r.rating, 0) / count : 0;
@@ -1014,7 +1014,7 @@ function BookPage() {
             {showConsult && (
               consultTreatmentId ? (
                 <Link
-                  to="/$slug/book/$treatmentId"
+                  to="/m/$slug/book/$treatmentId"
                   params={{ slug, treatmentId: consultTreatmentId }}
                   className="block"
                 >
@@ -1107,7 +1107,7 @@ function BookPage() {
               <p className="mt-1 text-xs opacity-70">Book a consultation and we'll talk through all your concerns together.</p>
               {consultTreatmentId ? (
                 <Link
-                  to="/$slug/book/$treatmentId"
+                  to="/m/$slug/book/$treatmentId"
                   params={{ slug, treatmentId: consultTreatmentId }}
                   className="mt-3 inline-block rounded-full px-5 py-2 text-sm font-semibold text-white transition hover:opacity-90"
                   style={{ backgroundColor: brand }}
@@ -1173,7 +1173,7 @@ function BookPage() {
                 return (
                   <Link
                     key={t.id}
-                    to="/$slug/book/$treatmentId"
+                    to="/m/$slug/book/$treatmentId"
                     params={{ slug, treatmentId: t.id }}
                     className="group flex w-[78%] shrink-0 snap-start flex-col overflow-hidden rounded-2xl border bg-card shadow-sm transition hover:shadow-md sm:w-[calc((100%-2rem)/3)]"
                     style={{ borderColor: `${brand}1f`, backgroundColor: menuCardBg }}
@@ -1350,7 +1350,7 @@ function BookPage() {
                                       </p>
                                       {s.notes && <p className="mt-1 text-xs italic text-muted-foreground">{s.notes}</p>}
                                       <a
-                                        href={`/${slug}/book/${t.id}?model=${s.id}`}
+                                        href={`/m/${slug}/book/${t.id}?model=${s.id}`}
                                         className="mt-2 inline-block rounded-md px-3 py-1.5 text-xs font-semibold text-white"
                                         style={{ backgroundColor: brand }}
                                       >
@@ -1507,7 +1507,7 @@ function BookPage() {
                                     {isPackageSelected(p.id) ? (<><Check className="h-3 w-3" /> Added</>) : "Add"}
                                   </button>
                                   <Link
-                                    to="/$slug/book/$treatmentId"
+                                    to="/m/$slug/book/$treatmentId"
                                     params={{ slug, treatmentId: firstTreatmentId }}
                                     className="modo-btn px-4 py-1.5 text-sm font-semibold"
                                   >
@@ -1620,7 +1620,7 @@ function BookPage() {
                   Clear
                 </Button>
                 <Link
-                  to="/$slug/book-multi"
+                  to="/m/$slug/book-multi"
                   params={{ slug }}
                   search={{
                     ids: selectedIds.join(","),

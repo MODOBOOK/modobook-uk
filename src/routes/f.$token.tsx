@@ -32,7 +32,7 @@ type FormSearch = { returnTo?: string };
 export const Route = createFileRoute("/f/$token")({
   ssr: false,
   validateSearch: (s: Record<string, unknown>): FormSearch => ({
-    returnTo: typeof s.returnTo === "string" && /^\/[^/]/.test(s.returnTo) ? s.returnTo : undefined,
+    returnTo: typeof s.returnTo === "string" && s.returnTo.startsWith("/m/") ? s.returnTo : undefined,
   }),
   component: FillFormPage,
 });
@@ -112,7 +112,7 @@ function FillFormPage() {
   }, [token]);
 
   if (loading) return <Centered><Loader2 className="h-6 w-6 animate-spin" /></Centered>;
-  const backHref = search.returnTo ?? (fallbackSlug ? `/${fallbackSlug}` : data?.slug ? `/${data.slug}` : "/");
+  const backHref = search.returnTo ?? (fallbackSlug ? `/m/${fallbackSlug}` : data?.slug ? `/m/${data.slug}` : "/");
   if (!data) return (
     <Centered>
       <Card className="max-w-md p-8 text-center">

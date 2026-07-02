@@ -51,7 +51,7 @@ export function EmailComposerDialog({
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
   const [selectedTpl, setSelectedTpl] = useState<string>("");
-  
+  const [bccSelf, setBccSelf] = useState(true);
 
   useEffect(() => {
     if (!open) return;
@@ -96,64 +96,21 @@ export function EmailComposerDialog({
   async function send() {
     if (!client.email) { toast.error("Patient has no email address"); return; }
     if (!subject.trim() || !body.trim()) { toast.error("Subject and message required"); return; }
-    try {
-      const { supabase } = await import("@/integrations/supabase/client");
-      const { data: sessionRes } = await supabase.auth.getSession();
-      const token = sessionRes.session?.access_token;
-      if (!token) { toast.error("You need to be signed in"); return; }
-      const { data: prof } = await supabase
-        .from("profiles")
-        .select("id, email, slug, clinic_name, full_name, brand_color")
-        .eq("user_id", sessionRes.session!.user.id)
-        .maybeSingle();
-      const { data: theme } = prof
-        ? await supabase
-            .from("clinic_theme")
-            .select("logo_url, accent_color, primary_color, button_color, button_text_color, text_color")
-            .eq("profile_id", prof.id)
-            .maybeSingle()
-        : { data: null as any };
-      const brand = {
-        clinicName: (prof as any)?.clinic_name || (prof as any)?.full_name || clinicName || "Your practitioner",
-        logoUrl: (theme as any)?.logo_url ?? null,
-        accentColor: (theme as any)?.accent_color || (theme as any)?.primary_color || (prof as any)?.brand_color || null,
-        buttonColor: (theme as any)?.button_color ?? null,
-        buttonTextColor: (theme as any)?.button_text_color ?? null,
-        textColor: (theme as any)?.text_color ?? null,
-        practitionerEmail: (prof as any)?.email ?? null,
-      };
-      const replyTo = (prof as any)?.email || undefined;
-      const fromName = `${brand.clinicName} via MODO`;
-      const res = await fetch("/lovable/email/transactional/send", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({
-          templateName: "practitioner-message",
-          recipientEmail: client.email,
-          replyTo,
-          fromName,
-          templateData: {
-            brand,
-            subject: renderedSubject,
-            bodyText: renderedBody,
-          },
-        }),
-      });
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok || json.success === false) {
-        toast.error(json.error || json.reason || "Failed to send");
-        return;
-      }
-      await log({ data: {
-        clientId: client.id, channel: "email",
-        subject: renderedSubject, body: renderedBody,
-      } });
-      toast.success("Email sent from MODO — replies go to your inbox");
-      onOpenChange(false);
-      onSent?.();
-    } catch (e: any) {
-      toast.error(e?.message || "Failed to send");
+    // Open mail client + log to comms
+    const params = new URLSearchParams({ subject: renderedSubject, body: renderedBody });
+    if (bccSelf) {
+      // mailto allows bcc via param
+      params.set("bcc", "");
     }
+    const href = `mailto:${encodeURIComponent(client.email)}?${params.toString()}`;
+    window.location.href = href;
+    await log({ data: {
+      clientId: client.id, channel: "email",
+      subject: renderedSubject, body: renderedBody,
+    } });
+    toast.success("Email opened in your mail app & logged");
+    onOpenChange(false);
+    onSent?.();
   }
 
   return (
@@ -221,9 +178,10 @@ export function EmailComposerDialog({
             </details>
           )}
 
-          <p className="text-[11px] text-muted-foreground">
-            Sent from MODO on your behalf with your clinic branding. Replies come back to your inbox.
-          </p>
+          <label className="flex items-center gap-2 text-xs text-muted-foreground">
+            <input type="checkbox" checked={bccSelf} onChange={e => setBccSelf(e.target.checked)} />
+            BCC myself
+          </label>
         </div>
 
         <DialogFooter>

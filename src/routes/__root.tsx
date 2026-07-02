@@ -75,30 +75,12 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   );
 }
 
-const STATIC_TOP_LEVEL = new Set([
-  "auth",
-  "dashboard",
-  "prescriber-hub",
-  "features",
-  "who-its-for",
-  "terms",
-  "reset-password",
-  "c",
-  "f",
-  "book",
-  "api",
-  "",
-]);
-
 function getClinicFallbackHref() {
   if (typeof window === "undefined") return "/";
   const returnTo = new URLSearchParams(window.location.search).get("returnTo");
-  const returnToSegment = returnTo?.split("/")[1] ?? "";
-  if (returnTo && !STATIC_TOP_LEVEL.has(returnToSegment)) return returnTo;
-
-  const first = window.location.pathname.match(/^\/([^/?#]+)/)?.[1] ?? "";
-  if (!first || STATIC_TOP_LEVEL.has(first)) return "/";
-  return `/${first}`;
+  if (returnTo?.startsWith("/m/")) return returnTo;
+  const slug = window.location.pathname.match(/^\/m\/([^/?#]+)/)?.[1];
+  return slug ? `/m/${slug}` : "/";
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
@@ -148,27 +130,16 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
-  // Backwards compatibility: redirect legacy /m/{slug} paths to /{slug}.
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const path = window.location.pathname;
-    if (path.startsWith("/m/")) {
-      const search = window.location.search;
-      const hash = window.location.hash;
-      window.location.replace(path.replace(/^\/m\//, "/") + search + hash);
-    }
-  }, []);
-
   // Wildcard subdomain routing:
-  //   {slug}.modobook.uk → /{slug}
+  //   {slug}.modobook.co.uk → /m/{slug}
+  //   {slug}.modobook.app   → /m/{slug}
   // Attach the apex + wildcard for each zone in Project Settings → Domains.
   useEffect(() => {
     if (typeof window === "undefined") return;
     const host = window.location.hostname.toLowerCase();
     const path = window.location.pathname;
 
-    const ZONES = [".modobook.uk", ".modobook.app", ".modobook.co.uk"];
-
+    const ZONES = [".modobook.co.uk", ".modobook.uk", ".modobook.app"];
     const zone = ZONES.find((z) => host.endsWith(z));
     if (!zone) return;
     const sub = host.slice(0, -zone.length);
@@ -176,13 +147,12 @@ function RootComponent() {
     const RESERVED = new Set(["www", "app", "api", "notify", "mail", "admin", "dashboard"]);
     if (!sub || sub.includes(".") || RESERVED.has(sub)) return;
 
-    const APP_PATHS = ["/auth", "/api/", "/dashboard", "/prescriber-hub"];
-    if (APP_PATHS.some((p) => path.startsWith(p))) return;
+    if (path.startsWith("/m/") || path.startsWith("/auth")) return;
 
     const suffix = path === "/" ? "" : path;
     const search = window.location.search;
     const hash = window.location.hash;
-    window.location.replace(`/${sub}${suffix}${search}${hash}`);
+    window.location.replace(`/m/${sub}${suffix}${search}${hash}`);
   }, []);
 
   useEffect(() => {

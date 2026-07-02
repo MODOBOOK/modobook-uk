@@ -127,7 +127,7 @@ function BioEditor() {
         </div>
         {slug && (
           <Button size="sm" variant="outline" asChild>
-            <Link to="/$slug/about" params={{ slug }} target="_blank">
+            <Link to="/m/$slug/about" params={{ slug }} target="_blank">
               <ExternalLink className="mr-1 h-4 w-4" /> Preview live page
             </Link>
           </Button>
