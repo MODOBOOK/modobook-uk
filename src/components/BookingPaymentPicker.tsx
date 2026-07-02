@@ -30,13 +30,16 @@ type Props = {
   value: PaymentChoice | null;
   onChange: (choice: PaymentChoice | null) => void;
   accent?: string;
+  /** Optional per-treatment deposit total in pence, overrides clinic default. */
+  depositOverrideCents?: number | null;
 };
+
 
 function formatGBP(pence: number) {
   return `£${(pence / 100).toFixed(2)}`;
 }
 
-export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accent }: Props) {
+export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accent, depositOverrideCents }: Props) {
   const fn = useServerFn(getPublicPaymentOptions);
   const q = useQuery({
     queryKey: ["publicPaymentOptions", slug],
@@ -46,14 +49,21 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
   const opts = q.data as ConfiguredOptions | { configured: false } | undefined;
   const configured = opts && "configured" in opts && opts.configured;
 
+  const effectiveDepositCents = useMemo(() => {
+    if (!configured) return 0;
+    const o = opts as ConfiguredOptions;
+    return depositOverrideCents != null && depositOverrideCents > 0 ? depositOverrideCents : o.depositCents;
+  }, [configured, opts, depositOverrideCents]);
+
   const availableModes = useMemo(() => {
     if (!configured) return [] as Array<"deposit" | "full">;
     const arr: Array<"deposit" | "full"> = [];
     const o = opts as ConfiguredOptions;
-    if (o.depositEnabled && o.depositCents >= 100) arr.push("deposit");
+    if (o.depositEnabled && effectiveDepositCents >= 100) arr.push("deposit");
     if (o.cardEnabled || o.klarnaEnabled || o.clearpayEnabled) arr.push("full");
     return arr;
-  }, [configured, opts]);
+  }, [configured, opts, effectiveDepositCents]);
+
 
   const availableMethods = useMemo(() => {
     if (!configured) return [] as Array<"card" | "klarna" | "clearpay">;
@@ -84,7 +94,7 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
     method: availableMethods[0],
   };
 
-  const baseCents = chosen.mode === "deposit" ? o.depositCents : Math.round(totalAmount * 100);
+  const baseCents = chosen.mode === "deposit" ? effectiveDepositCents : Math.round(totalAmount * 100);
   const pct = chosen.mode === "deposit"
     ? o.surcharges.depositPercent
     : chosen.method === "card"
@@ -147,7 +157,7 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
                 style={optionStyle(chosen.mode === "deposit")}
               >
                 <div className="text-sm font-semibold">Pay deposit</div>
-                <div className="text-xs opacity-75">{formatGBP(o.depositCents)} now — balance at your appointment</div>
+                <div className="text-xs opacity-75">{formatGBP(effectiveDepositCents)} now — balance at your appointment</div>
               </button>
             )}
             {availableModes.includes("full") && (

@@ -53,7 +53,9 @@ type Treatment = {
   discount_label?: string | null;
   price_mode?: "fixed" | "from" | "poa" | "free" | null;
   badge?: "recommended" | "popular" | "new" | "bestseller" | null;
+  deposit_amount?: number | null;
 };
+
 
 type Category = {
   id: string;
@@ -88,7 +90,9 @@ type TreatmentForm = {
   aftercare_template_ids: string[];
   price_mode: "fixed" | "from" | "poa" | "free";
   badge: "recommended" | "popular" | "new" | "bestseller" | null;
+  deposit_amount: number | null;
 };
+
 
 
 type ConsentTpl = { id: string; name: string; treatment_type: string | null; is_system: boolean };
@@ -382,6 +386,12 @@ function TreatmentDialog({
   const [badge, setBadge] = useState<"recommended" | "popular" | "new" | "bestseller" | "none">(
     (((treatment as { badge?: string | null } | null)?.badge as "recommended" | "popular" | "new" | "bestseller" | null) ?? "none") || "none",
   );
+  const [depositOverride, setDepositOverride] = useState<string>(
+    (treatment as { deposit_amount?: number | null } | null)?.deposit_amount != null
+      ? String((treatment as { deposit_amount?: number | null }).deposit_amount)
+      : "",
+  );
+
 
 
 
@@ -431,6 +441,12 @@ function TreatmentDialog({
     setAutoSendAftercare((treatment as { auto_send_aftercare?: boolean } | null)?.auto_send_aftercare ?? true);
     setPriceMode((((treatment as { price_mode?: string } | null)?.price_mode as "fixed" | "from" | "poa" | "free") ?? "fixed") || "fixed");
     setBadge((((treatment as { badge?: string | null } | null)?.badge as "recommended" | "popular" | "new" | "bestseller" | null) ?? "none") || "none");
+    setDepositOverride(
+      (treatment as { deposit_amount?: number | null } | null)?.deposit_amount != null
+        ? String((treatment as { deposit_amount?: number | null }).deposit_amount)
+        : "",
+    );
+
 
     if (treatment?.id) {
       fetchConsents({ data: { treatmentId: treatment.id } })
@@ -651,7 +667,22 @@ function TreatmentDialog({
           {sessionCount < 2 && (
             <p className="text-xs text-muted-foreground">Set 2 or more sessions to enable split payments.</p>
           )}
+          <div className="pt-2 border-t">
+            <Label className="text-xs text-muted-foreground">Deposit for this treatment (£)</Label>
+            <Input
+              type="number"
+              min={0}
+              step="0.01"
+              placeholder="Leave blank to use your default deposit"
+              value={depositOverride}
+              onChange={(e) => setDepositOverride(e.target.value)}
+            />
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              Overrides the default deposit set in Settings → Payments for this treatment only. Requires deposit payments to be enabled.
+            </p>
+          </div>
         </div>
+
 
 
         <div className="rounded-md border p-3 space-y-3">
@@ -841,6 +872,8 @@ function TreatmentDialog({
               aftercare_template_ids: aftercareTemplateIds,
               price_mode: priceMode,
               badge: badge === "none" ? null : badge,
+              deposit_amount: depositOverride.trim() === "" ? null : Math.max(0, Number(depositOverride)),
+
             })
 
           }

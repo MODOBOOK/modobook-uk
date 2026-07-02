@@ -1162,7 +1162,17 @@ function MultiBookPage() {
               value={paymentChoice}
               onChange={setPaymentChoice}
               accent={brand}
+              depositOverrideCents={(() => {
+                const overrides = treatments
+                  .map((t) => (t as { deposit_amount?: number | null }).deposit_amount)
+                  .filter((v): v is number => v != null && v > 0);
+                if (overrides.length === 0) return null;
+                // Sum only overrides — the picker still adds the clinic default for
+                // treatments without an override on the server when checkout runs.
+                return Math.round(overrides.reduce((a, b) => a + b, 0) * 100);
+              })()}
             />
+
 
             {(() => {
 
