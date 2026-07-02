@@ -8,9 +8,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
-} from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Loader2, Calendar as CalendarIcon, Clock, MapPin, FileText, StickyNote,
