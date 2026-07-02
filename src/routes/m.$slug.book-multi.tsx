@@ -279,6 +279,8 @@ function MultiBookPage() {
   const [patientUserId, setPatientUserId] = useState<string | null>(null);
   const ensure = useServerFn(ensurePatient);
   const fetchPatient = useServerFn(getMyPatient);
+  const saveMyPatient = useServerFn(updateMyPatient);
+  const [rememberMe, setRememberMe] = useState(true);
 
   useEffect(() => {
     (async () => {
@@ -289,13 +291,19 @@ function MultiBookPage() {
         try {
           await ensure({ data: { fullName: data.session.user.email?.split("@")[0] ?? "Patient", linkSlug: slug } });
           const p = await fetchPatient();
-          const pp = p.patient;
+          const pp = p.patient as Record<string, string | null> | null;
           if (pp) {
             setForm((f) => ({
               ...f,
               name: f.name || pp.full_name || "",
               email: f.email || pp.email || data.session.user.email || "",
               phone: f.phone || pp.phone || "",
+              dob: f.dob || pp.date_of_birth || "",
+              addressLine1: f.addressLine1 || pp.address_line1 || "",
+              addressLine2: f.addressLine2 || pp.address_line2 || "",
+              city: f.city || pp.city || "",
+              postcode: f.postcode || pp.postcode || "",
+              country: f.country || pp.country || "",
             }));
           }
         } catch {/* non-fatal */}
