@@ -62,6 +62,9 @@ function DashboardIndex() {
         setLoading(false);
       }
     })();
+    if (profile.stripe_connect_account_id) {
+      fetchPayouts().then(setPayouts).catch(() => {});
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
