@@ -9,9 +9,9 @@ const SITE_NAME = "modobook-uk"
 // SENDER_DOMAIN is the verified sender subdomain FQDN (e.g., "notify.example.com").
 // It MUST match the subdomain delegated to Lovable's nameservers. NEVER use the root domain.
 const SENDER_DOMAIN = "notify.modobook.co.uk"
-// FROM_DOMAIN is the domain shown in the From: header (e.g., "example.com").
-// Can be the root domain when display_from_root is enabled — this is cosmetic only.
-const FROM_DOMAIN = "notify.modobook.co.uk"
+// FROM_DOMAIN is the domain shown in the From: header (e.g., "info@example.com").
+// It is the root domain so emails appear to come from the clinic's main address.
+const FROM_DOMAIN = "modobook.co.uk"
 
 function redactEmail(email: string | null | undefined): string {
   if (!email) return '***'
@@ -287,7 +287,7 @@ export const Route = createFileRoute("/lovable/email/transactional/send")({
           payload: {
             message_id: messageId,
             to: effectiveRecipient,
-            from: `${fromDisplayName} <noreply@${FROM_DOMAIN}>`,
+            from: `${fromDisplayName} <info@${FROM_DOMAIN}>`,
             reply_to: replyTo || undefined,
             sender_domain: SENDER_DOMAIN,
             subject: resolvedSubject,

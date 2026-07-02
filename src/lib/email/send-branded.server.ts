@@ -15,7 +15,7 @@ import type { BrandContext } from "@/lib/email-templates/_branded-shell";
 
 const SITE_NAME = "modobook-uk";
 const SENDER_DOMAIN = "notify.modobook.co.uk";
-const FROM_DOMAIN = "notify.modobook.co.uk";
+const FROM_DOMAIN = "modobook.co.uk";
 
 function generateToken(): string {
   const bytes = new Uint8Array(32);
@@ -101,7 +101,7 @@ export async function sendBrandedEmail(opts: SendBrandedOptions): Promise<{ ok: 
     payload: {
       message_id: messageId,
       to: recipient,
-      from: `${fromDisplayName} <noreply@${FROM_DOMAIN}>`,
+      from: `${fromDisplayName} <info@${FROM_DOMAIN}>`,
       reply_to: opts.replyTo || undefined,
       sender_domain: SENDER_DOMAIN,
       subject,
