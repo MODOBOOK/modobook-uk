@@ -30,7 +30,10 @@ type Props = {
   value: PaymentChoice | null;
   onChange: (choice: PaymentChoice | null) => void;
   accent?: string;
+  /** Optional per-treatment deposit total in pence, overrides clinic default. */
+  depositOverrideCents?: number | null;
 };
+
 
 function formatGBP(pence: number) {
   return `£${(pence / 100).toFixed(2)}`;
