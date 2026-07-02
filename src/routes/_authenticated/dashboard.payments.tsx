@@ -1,18 +1,58 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useServerFn } from "@tanstack/react-start";
-import { startStripeOnboarding, refreshStripeStatus } from "@/lib/stripe.functions";
+import { startStripeOnboarding, refreshStripeStatus, getStripePayouts } from "@/lib/stripe.functions";
 import { toast } from "sonner";
-import { AlertCircle, CreditCard, ExternalLink, RefreshCw } from "lucide-react";
+import { AlertCircle, CreditCard, ExternalLink, RefreshCw, Wallet, Clock } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard/payments")({
   ssr: false,
   component: PaymentsPage,
 });
+
+type PayoutRow = {
+  id: string;
+  amount: number;
+  currency: string;
+  status: string;
+  arrivalDate: number;
+  created: number;
+  method: string | null;
+  description: string | null;
+};
+
+type PayoutsData = {
+  available: Record<string, number>;
+  pending: Record<string, number>;
+  instantAvailable: Record<string, number>;
+  payouts: PayoutRow[];
+};
+
+function formatMoney(cents: number, currency: string) {
+  try {
+    return new Intl.NumberFormat("en-GB", { style: "currency", currency: currency.toUpperCase() }).format(cents / 100);
+  } catch {
+    return `${(cents / 100).toFixed(2)} ${currency.toUpperCase()}`;
+  }
+}
+
+function sumRow(map: Record<string, number>) {
+  const entries = Object.entries(map);
+  if (entries.length === 0) return "£0.00";
+  return entries.map(([c, v]) => formatMoney(v, c)).join(" · ");
+}
+
+function statusBadgeVariant(status: string): "default" | "secondary" | "destructive" | "outline" {
+  if (status === "paid") return "default";
+  if (status === "failed" || status === "canceled") return "destructive";
+  if (status === "in_transit" || status === "pending") return "secondary";
+  return "outline";
+}
+
 
 function PaymentsPage() {
   const { profile } = Route.useRouteContext() as { profile: { stripe_connect_account_id: string | null; stripe_connect_onboarding_status: string | null } };
