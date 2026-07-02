@@ -32,7 +32,7 @@ type FormSearch = { returnTo?: string };
 export const Route = createFileRoute("/f/$token")({
   ssr: false,
   validateSearch: (s: Record<string, unknown>): FormSearch => ({
-    returnTo: typeof s.returnTo === "string" && s.returnTo.startsWith("/") ? s.returnTo : undefined,
+    returnTo: typeof s.returnTo === "string" && /^\/[^/]/.test(s.returnTo) ? s.returnTo : undefined,
   }),
   component: FillFormPage,
 });
