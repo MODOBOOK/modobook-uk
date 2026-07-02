@@ -11,6 +11,7 @@ import {
   type PaymentChoice,
 } from "@/lib/public-booking.functions";
 import { BookingPaymentPicker } from "@/components/BookingPaymentPicker";
+import { BookingProgress, type BookingStep } from "@/components/BookingProgress";
 
 import { listAddonsForBooking, type PublicAddon } from "@/lib/addons.functions";
 import { ensurePatient, getMyPatient, updateMyPatient } from "@/lib/patient.functions";
@@ -570,6 +571,24 @@ function MultiBookPage() {
             ← Back to {ctx.clinicName}
           </Link>
         </div>
+
+        {(() => {
+          const detailsDone = Boolean(
+            form.name && form.email &&
+            (!reqPhone || form.phone) &&
+            (!reqDob || form.dob) &&
+            (!reqAddress || form.addressLine1),
+          );
+          const steps: BookingStep[] = [
+            { key: "treatment", label: "Treatment", done: treatments.length > 0 || selectedPackages.length > 0 },
+            { key: "location", label: "Location", done: ctx.locations.length <= 1 ? true : !!locationId },
+            { key: "datetime", label: "Date & Time", done: !!slot },
+            { key: "details", label: "Your Details", done: detailsDone },
+            { key: "payment", label: "Payment", done: !!paymentChoice },
+          ];
+          return <BookingProgress steps={steps} accent={brand} />;
+        })()}
+
 
         {selectedPackages.length > 0 && (
           <Card className="mb-4">
