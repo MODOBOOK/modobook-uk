@@ -85,7 +85,14 @@ function PatientsPage() {
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [drawer, setDrawer] = useState<Client | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
+  const [groupOpen, setGroupOpen] = useState(false);
+  const [mergeOpen, setMergeOpen] = useState(false);
   const navigate = useNavigate();
+  const importCsv = useServerFn(importClientsCsv);
+  const assignGroup = useServerFn(assignClientsToGroup);
+  const findDupes = useServerFn(findDuplicateClients);
+  const doMerge = useServerFn(mergeClients);
 
   async function refresh() {
     const [c, a] = await Promise.all([list(), listAppt()]);
