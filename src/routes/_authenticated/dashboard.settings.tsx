@@ -514,3 +514,39 @@ function TextField({
     </div>
   );
 }
+
+function SurchargeRow({
+  label, enabled, percent, onToggle, onPercent,
+}: {
+  label: string;
+  enabled: boolean;
+  percent: number;
+  onToggle: (v: boolean) => void;
+  onPercent: (v: number) => void;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-md border p-2">
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-medium">{label}</p>
+      </div>
+      <div className="flex items-center gap-2">
+        {enabled && (
+          <div className="flex items-center gap-1">
+            <Input
+              type="number"
+              min="0"
+              max="100"
+              step="0.1"
+              value={percent}
+              onFocus={(e) => { if (Number(e.target.value) === 0) e.target.select(); }}
+              onChange={(e) => onPercent(Number(e.target.value) || 0)}
+              className="w-20 h-8"
+            />
+            <span className="text-xs text-muted-foreground">%</span>
+          </div>
+        )}
+        <Switch checked={enabled} onCheckedChange={onToggle} />
+      </div>
+    </div>
+  );
+}
