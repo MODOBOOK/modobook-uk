@@ -1438,6 +1438,7 @@ export type Database = {
           heading_font: string
           hero_carousel_enabled: boolean | null
           hero_carousel_urls: Json | null
+          hero_fit: string
           hero_heading: string | null
           hero_height: string
           hero_image_url: string | null
@@ -1518,6 +1519,7 @@ export type Database = {
           heading_font?: string
           hero_carousel_enabled?: boolean | null
           hero_carousel_urls?: Json | null
+          hero_fit?: string
           hero_heading?: string | null
           hero_height?: string
           hero_image_url?: string | null
@@ -1598,6 +1600,7 @@ export type Database = {
           heading_font?: string
           hero_carousel_enabled?: boolean | null
           hero_carousel_urls?: Json | null
+          hero_fit?: string
           hero_heading?: string | null
           hero_height?: string
           hero_image_url?: string | null
