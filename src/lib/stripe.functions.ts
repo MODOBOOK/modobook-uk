@@ -81,7 +81,8 @@ export const startStripeOnboarding = createServerFn({ method: "POST" })
 export const refreshStripeStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { getAccount } = await import("./stripe.server");
+    const { getAccount, ensureDailyPayoutSchedule } = await import("./stripe.server");
+
     const { supabase, userId } = context;
     const { data: profile, error } = await supabase
       .from("profiles")
