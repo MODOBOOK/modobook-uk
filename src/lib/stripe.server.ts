@@ -47,10 +47,12 @@ function normaliseStripeError(error: unknown): never {
     code === "resource_missing" ||
     param === "account" ||
     message.includes("No such account") ||
-    message.includes("does not have access to account")
+    message.includes("does not have access to account") ||
+    lowerMessage.includes("live mode") && lowerMessage.includes("test mode") ||
+    lowerMessage.includes("test mode") && lowerMessage.includes("live mode")
   ) {
     throw new StripePlatformSetupError(
-      "This Stripe account was created under a different platform key. We will create a fresh sandbox connection.",
+      "This Stripe account was created under a different mode. We will create a fresh live connection.",
       "stale_connect_account",
     );
   }
