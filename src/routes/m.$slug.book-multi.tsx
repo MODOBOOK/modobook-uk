@@ -1357,39 +1357,6 @@ function MultiBookPage() {
         </aside>
       </div>
 
-      {step !== "details" && (
-        <div
-          className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 px-4 py-3 backdrop-blur lg:hidden"
-          style={{ borderColor: `${brand}33` }}
-        >
-          <div className="mx-auto flex max-w-3xl items-center justify-between gap-3">
-            <div className="min-w-0">
-              <div className="truncate text-[11px] uppercase tracking-wide opacity-60">
-                {step === "selection" ? "Step 1 of 3 · Select" : "Step 2 of 3 · Date & Time"}
-              </div>
-              {showPrices && (
-                <div className="text-base font-bold" style={{ color: brand }}>£{totalAfterDiscount.toFixed(2)}</div>
-              )}
-            </div>
-            <div className="flex items-center gap-2">
-              {step !== "selection" && (
-                <Button variant="outline" size="sm" onClick={goBack} style={{ color: brand, borderColor: `${brand}55` }}>
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-              )}
-              <Button
-                size="lg"
-                onClick={goNext}
-                disabled={step === "selection" ? !selectionValid : !datetimeValid}
-                className="h-12 px-6 text-base font-semibold shadow-md"
-                style={{ backgroundColor: brand, color: "#fff" }}
-              >
-                Book <ChevronRight className="ml-1 h-5 w-5" />
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
     </main>
   );
 }
