@@ -249,3 +249,170 @@ export const deleteClientPrescription = createServerFn({ method: "POST" })
     if (error) throw error;
     return { ok: true };
   });
+
+/* ---------- CSV Import ---------- */
+type CsvRow = Record<string, string>;
+export const importClientsCsv = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { rows: CsvRow[] }) => d)
+  .handler(async ({ data, context }) => {
+    const pid = await getProfileId(context.supabase, context.userId);
+    if (!pid) throw new Error("No profile");
+    const norm = (s: string) => s.trim().toLowerCase().replace(/[\s_-]+/g, "");
+    const pick = (row: CsvRow, keys: string[]) => {
+      const map: Record<string, string> = {};
+      for (const k of Object.keys(row)) map[norm(k)] = row[k];
+      for (const k of keys) {
+        const v = map[norm(k)];
+        if (v != null && String(v).trim() !== "") return String(v).trim();
+      }
+      return "";
+    };
+    const parseDob = (raw: string): string | null => {
+      if (!raw) return null;
+      const s = raw.trim();
+      const iso = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(s);
+      if (iso) return `${iso[1]}-${iso[2].padStart(2,"0")}-${iso[3].padStart(2,"0")}`;
+      const dmy = /^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})$/.exec(s);
+      if (dmy) {
+        let [_, d, m, y] = dmy;
+        if (y.length === 2) y = (Number(y) > 30 ? "19" : "20") + y;
+        return `${y}-${m.padStart(2,"0")}-${d.padStart(2,"0")}`;
+      }
+      return null;
+    };
+
+    const inserted: string[] = [];
+    const updated: string[] = [];
+    const skipped: string[] = [];
+
+    for (const row of data.rows) {
+      const full_name = pick(row, ["full_name", "name", "patient", "patient name", "client name"]);
+      if (!full_name) { skipped.push("(missing name)"); continue; }
+      const email = pick(row, ["email", "email address"]).toLowerCase() || null;
+      const phone = pick(row, ["phone", "mobile", "telephone", "contact number"]) || null;
+      const dob = parseDob(pick(row, ["dob", "date of birth", "birthday", "birth date"]));
+      const address = pick(row, ["address", "home address", "street address"]) || null;
+      const postcode = pick(row, ["postcode", "postal code", "zip", "zip code"]) || null;
+      const city = pick(row, ["city", "town"]) || null;
+      const gender = pick(row, ["gender", "sex"]).toLowerCase() || null;
+      const notes = pick(row, ["notes", "note", "comments"]) || null;
+      const group_name = pick(row, ["group", "group name", "tag"]) || null;
+
+      let existingId: string | null = null;
+      if (email) {
+        const { data: exist } = await context.supabase
+          .from("clinic_clients").select("id").eq("profile_id", pid).ilike("email", email).maybeSingle();
+        if (exist?.id) existingId = exist.id;
+      }
+      const payload: any = { full_name, email, phone, dob, address, postcode, city, gender, notes, group_name };
+      Object.keys(payload).forEach((k) => payload[k] == null && delete payload[k]);
+
+      if (existingId) {
+        const { error } = await context.supabase.from("clinic_clients").update(payload).eq("id", existingId);
+        if (error) { skipped.push(full_name); continue; }
+        updated.push(existingId);
+      } else {
+        const { data: row2, error } = await context.supabase
+          .from("clinic_clients").insert({ profile_id: pid, ...payload }).select("id").single();
+        if (error) { skipped.push(full_name); continue; }
+        inserted.push(row2.id);
+      }
+    }
+    return { inserted: inserted.length, updated: updated.length, skipped: skipped.length };
+  });
+
+/* ---------- Groups ---------- */
+export const listClientGroups = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const pid = await getProfileId(context.supabase, context.userId);
+    if (!pid) return [];
+    const { data } = await context.supabase
+      .from("clinic_clients").select("group_name").eq("profile_id", pid).not("group_name", "is", null);
+    const counts = new Map<string, number>();
+    for (const r of (data ?? []) as { group_name: string | null }[]) {
+      const g = (r.group_name ?? "").trim();
+      if (!g) continue;
+      counts.set(g, (counts.get(g) ?? 0) + 1);
+    }
+    return Array.from(counts.entries()).map(([name, count]) => ({ name, count })).sort((a,b) => a.name.localeCompare(b.name));
+  });
+
+export const assignClientsToGroup = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { client_ids: string[]; group_name: string }) => d)
+  .handler(async ({ data, context }) => {
+    const pid = await getProfileId(context.supabase, context.userId);
+    if (!pid) throw new Error("No profile");
+    if (!data.client_ids.length) return { ok: true, count: 0 };
+    const { error } = await context.supabase
+      .from("clinic_clients").update({ group_name: data.group_name.trim() || null })
+      .eq("profile_id", pid).in("id", data.client_ids);
+    if (error) throw error;
+    return { ok: true, count: data.client_ids.length };
+  });
+
+/* ---------- Merge duplicates ---------- */
+export const findDuplicateClients = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const pid = await getProfileId(context.supabase, context.userId);
+    if (!pid) return [];
+    const { data } = await context.supabase
+      .from("clinic_clients").select("id, full_name, email, phone, created_at").eq("profile_id", pid);
+    const rows = (data ?? []) as any[];
+    const groups = new Map<string, any[]>();
+    for (const r of rows) {
+      const keyEmail = r.email ? `e:${String(r.email).toLowerCase().trim()}` : null;
+      const keyPhone = r.phone ? `p:${String(r.phone).replace(/\D/g,"")}` : null;
+      const keyName = `n:${String(r.full_name || "").toLowerCase().trim()}`;
+      const key = keyEmail || keyPhone || keyName;
+      if (!key) continue;
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key)!.push(r);
+    }
+    return Array.from(groups.entries())
+      .filter(([, list]) => list.length > 1)
+      .map(([key, list]) => ({ key, clients: list.sort((a,b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()) }));
+  });
+
+export const mergeClients = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { keep_id: string; merge_ids: string[] }) => d)
+  .handler(async ({ data, context }) => {
+    const pid = await getProfileId(context.supabase, context.userId);
+    if (!pid) throw new Error("No profile");
+    const ids = data.merge_ids.filter((x) => x && x !== data.keep_id);
+    if (!ids.length) return { ok: true, merged: 0 };
+
+    // Repoint child records to the kept client
+    const tables = ["client_notes", "client_files", "client_prescriptions", "appointment_medical_forms", "appointment_consents"];
+    for (const t of tables) {
+      try {
+        await context.supabase.from(t).update({ client_id: data.keep_id }).in("client_id", ids);
+      } catch { /* table may not have client_id — ignore */ }
+    }
+
+    // Backfill kept client from best available field data
+    const { data: kept } = await context.supabase.from("clinic_clients").select("*").eq("id", data.keep_id).maybeSingle();
+    const { data: others } = await context.supabase.from("clinic_clients").select("*").in("id", ids);
+    if (kept && others?.length) {
+      const merged: any = {};
+      const fields = ["email","phone","dob","gender","address","address_line1","address_line2","postcode","city","country","county","gp_name","gp_address","emergency_contact_name","emergency_contact_phone","notes","group_name","avatar_url","allergies"];
+      for (const f of fields) {
+        if (!kept[f]) {
+          const found = others.find((o: any) => o[f]);
+          if (found) merged[f] = found[f];
+        }
+      }
+      if (others.some((o: any) => o.has_allergies)) merged.has_allergies = true;
+      if (Object.keys(merged).length) {
+        await context.supabase.from("clinic_clients").update(merged).eq("id", data.keep_id);
+      }
+    }
+
+    const { error } = await context.supabase.from("clinic_clients").delete().eq("profile_id", pid).in("id", ids);
+    if (error) throw error;
+    return { ok: true, merged: ids.length };
+  });
