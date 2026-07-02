@@ -2952,6 +2952,42 @@ export type Database = {
           },
         ]
       }
+      phi_access_log: {
+        Row: {
+          action: string
+          actor_role: string | null
+          actor_user_id: string | null
+          client_id: string | null
+          created_at: string
+          id: string
+          profile_id: string
+          row_id: string | null
+          table_name: string
+        }
+        Insert: {
+          action: string
+          actor_role?: string | null
+          actor_user_id?: string | null
+          client_id?: string | null
+          created_at?: string
+          id?: string
+          profile_id: string
+          row_id?: string | null
+          table_name: string
+        }
+        Update: {
+          action?: string
+          actor_role?: string | null
+          actor_user_id?: string | null
+          client_id?: string | null
+          created_at?: string
+          id?: string
+          profile_id?: string
+          row_id?: string | null
+          table_name?: string
+        }
+        Relationships: []
+      }
       platform_terms: {
         Row: {
           body_markdown: string

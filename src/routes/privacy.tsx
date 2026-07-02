@@ -160,8 +160,14 @@ function PrivacyPage() {
         </div>
 
         <div className="mt-10 border-t pt-6 text-sm text-muted-foreground">
-          See also our <Link to="/terms" className="underline">Terms &amp; Conditions</Link>.
+          See also:{" "}
+          <Link to="/privacy/dpia" className="underline">Data Protection Impact Assessment</Link>
+          {" · "}
+          <Link to="/privacy/breach-response" className="underline">Breach Response Procedure</Link>
+          {" · "}
+          <Link to="/terms" className="underline">Terms &amp; Conditions</Link>.
         </div>
+
       </main>
     </div>
   );
