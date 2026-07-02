@@ -209,6 +209,8 @@ function MultiBookPage() {
     [treatments],
   );
   const [paymentPlans, setPaymentPlans] = useState<Record<string, "full" | "split">>({});
+  const [paymentChoice, setPaymentChoice] = useState<PaymentChoice | null>(null);
+
   const selectedPaymentPlan = (t: Treatment) => paymentPlans[t.id] ?? "full";
   const setTreatmentPaymentPlan = (treatmentId: string, plan: "full" | "split") =>
     setPaymentPlans((prev) => ({ ...prev, [treatmentId]: plan }));
