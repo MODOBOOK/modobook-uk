@@ -399,6 +399,68 @@ function Row({ label, value }: { label: string; value?: string | null }) {
   );
 }
 
+function AppointmentRow({ appt }: { appt: any }) {
+  const [open, setOpen] = useState(false);
+  const dt = new Date(appt.scheduled_date + "T" + appt.start_time);
+  const dateLabel = dt.toLocaleString([], { day: "2-digit", month: "short", year: "numeric", hour: "numeric", minute: "2-digit" });
+  const treatment = appt.treatments?.name ?? "Treatment";
+  const priceCents = appt.total_amount_cents ?? appt.price_cents ?? appt.treatments?.price_cents;
+  const price = typeof priceCents === "number" ? `£${(priceCents / 100).toFixed(2)}` : null;
+  const paid = appt.payment_status === "paid" || appt.status === "paid";
+  const location = appt.locations?.name || appt.location_name;
+  const practitioner = appt.practitioners?.full_name || appt.practitioner_name;
+  return (
+    <div className="border-b last:border-0">
+      <button
+        type="button"
+        onClick={() => setOpen(s => !s)}
+        className="flex w-full items-center gap-2 px-4 py-3 text-left transition hover:bg-muted/40"
+      >
+        {open ? <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />}
+        <div className="min-w-0 flex-1">
+          <div className="truncate font-medium">{dateLabel}</div>
+          <div className="truncate text-xs uppercase tracking-wider text-primary">{treatment}</div>
+        </div>
+        <Badge variant={appt.status === "cancelled" ? "destructive" : "outline"} className="shrink-0">{appt.status}</Badge>
+      </button>
+      {open && (
+        <div className="space-y-1.5 border-t bg-muted/30 px-4 py-3 text-xs">
+          {price && (
+            <div className="flex justify-between gap-2">
+              <span className="text-muted-foreground">Price</span>
+              <span className="font-medium">{price} {paid ? <Badge variant="secondary" className="ml-1 h-4 px-1.5 text-[9px]">Paid</Badge> : null}</span>
+            </div>
+          )}
+          {location && (
+            <div className="flex justify-between gap-2">
+              <span className="text-muted-foreground">Location</span>
+              <span className="break-words text-right font-medium">{location}</span>
+            </div>
+          )}
+          {practitioner && (
+            <div className="flex justify-between gap-2">
+              <span className="text-muted-foreground">Practitioner</span>
+              <span className="break-words text-right font-medium">{practitioner}</span>
+            </div>
+          )}
+          {appt.duration_minutes && (
+            <div className="flex justify-between gap-2">
+              <span className="text-muted-foreground">Duration</span>
+              <span className="font-medium">{appt.duration_minutes} min</span>
+            </div>
+          )}
+          {appt.notes && (
+            <div>
+              <div className="text-muted-foreground">Notes</div>
+              <div className="whitespace-pre-wrap break-words">{appt.notes}</div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function AvatarUpload({ client, onUpload }: { client: any; onUpload: (f: File) => void }) {
   const ref = useRef<HTMLInputElement>(null);
   return (
