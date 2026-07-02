@@ -59,12 +59,47 @@ function PaymentsPage() {
   const router = useRouter();
   const onboard = useServerFn(startStripeOnboarding);
   const refresh = useServerFn(refreshStripeStatus);
+  const loadPayouts = useServerFn(getStripePayouts);
   const [loading, setLoading] = useState(false);
   const [setupIssue, setSetupIssue] = useState<{
     message: string;
     actionUrl?: string;
   } | null>(null);
   const [stripeLink, setStripeLink] = useState<string | null>(null);
+  const [payouts, setPayouts] = useState<PayoutsData | null>(null);
+  const [payoutsLoading, setPayoutsLoading] = useState(false);
+  const [payoutsError, setPayoutsError] = useState<string | null>(null);
+
+  const connected = !!profile.stripe_connect_account_id;
+
+  async function fetchPayouts() {
+    setPayoutsLoading(true);
+    setPayoutsError(null);
+    try {
+      const res = await loadPayouts({});
+      if (!res.ok) {
+        setPayoutsError(res.message);
+        setPayouts(null);
+        return;
+      }
+      setPayouts({
+        available: res.available,
+        pending: res.pending,
+        instantAvailable: res.instantAvailable,
+        payouts: res.payouts,
+      });
+    } catch (e) {
+      setPayoutsError(e instanceof Error ? e.message : "Could not load payouts.");
+    } finally {
+      setPayoutsLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    if (connected) void fetchPayouts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [connected]);
+
 
   async function connect() {
     const pendingWindow = window.open("about:blank", "_blank");
