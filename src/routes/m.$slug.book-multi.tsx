@@ -25,7 +25,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
-import { Clock, MapPin, CheckCircle2, LogIn, UserPlus, UserCheck } from "lucide-react";
+import { Clock, MapPin, CheckCircle2, LogIn, UserPlus, UserCheck, ChevronLeft, ChevronRight, CalendarDays } from "lucide-react";
 import { DiscountCodeBox, type AppliedDiscount } from "@/components/DiscountCodeBox";
 import { AddressAutocomplete } from "@/components/AddressAutocomplete";
 
