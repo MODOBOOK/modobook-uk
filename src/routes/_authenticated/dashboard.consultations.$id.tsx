@@ -590,11 +590,11 @@ function ConsentTemplatesAttach({
 
 
 
-function Step6({ photos, onChange }: any) {
+function Step6({ profileId, consultationId, photos, onChange }: any) {
   return (
     <div className="space-y-4">
       <Header n={6} title="After photos" subtitle="Capture results right after treatment." />
-      <PhotoGrid label="After photos" photos={photos ?? []} onChange={onChange} />
+      <PhotoGrid label="After photos" photos={photos ?? []} onChange={onChange} profileId={profileId} consultationId={consultationId} />
     </div>
   );
 }
