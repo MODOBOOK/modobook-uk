@@ -123,6 +123,12 @@ export const updateProfile = createServerFn({ method: "POST" })
       booking_smart_times_enabled?: boolean;
       // Payment settings
       payment_pass_fees_to_customer?: boolean;
+      payment_surcharge_card_enabled?: boolean;
+      payment_surcharge_card_percent?: number;
+      payment_surcharge_bnpl_enabled?: boolean;
+      payment_surcharge_bnpl_percent?: number;
+      payment_surcharge_deposit_enabled?: boolean;
+      payment_surcharge_deposit_percent?: number;
       payment_klarna_enabled?: boolean;
       payment_clearpay_enabled?: boolean;
       payment_card_full_enabled?: boolean;
