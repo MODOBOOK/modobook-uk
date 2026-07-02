@@ -551,6 +551,16 @@ function Account() {
         )}
       </Section>
 
+      <DataPrivacySection
+        slug={slug}
+        profileId={profile.id}
+        brand={brand}
+        onErased={async () => {
+          await supabase.auth.signOut();
+          navigate({ to: "/m/$slug", params: { slug } });
+        }}
+      />
+
       <div className="mt-10">
         <Button variant="outline" onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/m/$slug", params: { slug } }); }}>
           Sign out
@@ -559,6 +569,7 @@ function Account() {
     </main>
   );
 }
+
 
 function Section({ title, icon: Icon, brand, children }: { title: string; icon: any; brand: string; children: React.ReactNode }) {
   return (
