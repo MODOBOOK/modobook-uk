@@ -412,6 +412,8 @@ function BookTreatmentPage() {
           basePrice: splitAllowed && paymentPlan === "split" ? effectivePrice / sessionCount : effectivePrice,
           patientUserId: patientUserId,
           practitionerId: (typeof window !== "undefined" ? window.sessionStorage.getItem(`modo:practitionerId:${slug}`) : null) || null,
+          paymentChoice,
+
 
 
         },
