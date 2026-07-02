@@ -130,20 +130,19 @@ function PaymentsPage() {
   async function connect() {
     setLoading(true);
     setErrorMsg(null);
+    const stripeTab = window.open("about:blank", "_blank");
     try {
       const res = await startConnect({ data: { origin: window.location.origin } });
       if (!res.ok) {
+        stripeTab?.close();
         setErrorMsg(res.message);
         toast.error(res.message);
         return;
       }
-      // Break out of any iframe (e.g. Lovable preview) — Stripe's OAuth
-      // page sets X-Frame-Options: DENY and will otherwise appear to hang.
-      const target = window.top ?? window;
-      try {
-        target.location.href = res.url;
-      } catch {
-        window.open(res.url, "_blank", "noopener,noreferrer");
+      if (stripeTab && !stripeTab.closed) {
+        stripeTab.location.href = res.url;
+      } else {
+        window.location.href = res.url;
       }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to start Stripe connection.");
