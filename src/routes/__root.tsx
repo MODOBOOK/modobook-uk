@@ -175,6 +175,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <Outlet />
       <Toaster />
+      <CookieConsent />
     </QueryClientProvider>
   );
 }
