@@ -402,8 +402,15 @@ function BookPage() {
   const showKnow = profile.chooser_show_know !== false;
   const showUnsure = profile.chooser_show_unsure !== false;
   const showConsult = profile.chooser_show_consultation !== false;
-  const consultTreatmentId = profile.chooser_consultation_treatment_id ?? null;
-  const [mode, setMode] = useState<null | "know" | "unsure">(null);
+  const consultTreatmentIds = (() => {
+    const arr = Array.isArray(profile.chooser_consultation_treatment_ids) ? profile.chooser_consultation_treatment_ids : [];
+    const single = profile.chooser_consultation_treatment_id;
+    const set = new Set<string>(arr.filter(Boolean));
+    if (single) set.add(single);
+    return Array.from(set);
+  })();
+  const consultTreatmentId = consultTreatmentIds[0] ?? null;
+  const [mode, setMode] = useState<null | "know" | "unsure" | "consult">(null);
   const [pickedConcernIds, setPickedConcernIds] = useState<string[]>([]);
   const [concernsConfirmed, setConcernsConfirmed] = useState(false);
   const togglePickedConcern = (id: string) =>
