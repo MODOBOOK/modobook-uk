@@ -229,6 +229,100 @@ function PaymentsPage() {
           </div>
         </CardContent>
       </Card>
+
+      {connected && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="rounded-lg bg-primary/10 p-2 text-primary">
+                  <Wallet className="h-5 w-5" />
+                </div>
+                <div>
+                  <CardTitle>Payouts</CardTitle>
+                  <CardDescription>Money on its way from Stripe to your bank account.</CardDescription>
+                </div>
+              </div>
+              <Button variant="outline" size="sm" onClick={fetchPayouts} disabled={payoutsLoading}>
+                <RefreshCw className={`mr-2 h-4 w-4 ${payoutsLoading ? "animate-spin" : ""}`} />
+                Refresh
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Alert>
+              <Clock className="h-4 w-4" />
+              <AlertTitle>Payments may take 3–5 working days to clear</AlertTitle>
+              <AlertDescription>
+                Funds from card, Klarna and Clearpay payments are held by Stripe before being paid out to your bank.
+                The pending balance below shows amounts Stripe is still processing.
+              </AlertDescription>
+            </Alert>
+
+            {payoutsError && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{payoutsError}</AlertDescription>
+              </Alert>
+            )}
+
+            {payouts && (
+              <>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <div className="rounded-lg border p-3">
+                    <div className="text-xs uppercase tracking-wide text-muted-foreground">Pending</div>
+                    <div className="mt-1 text-lg font-semibold">{sumRow(payouts.pending)}</div>
+                    <div className="mt-1 text-xs text-muted-foreground">Clearing with Stripe</div>
+                  </div>
+                  <div className="rounded-lg border p-3">
+                    <div className="text-xs uppercase tracking-wide text-muted-foreground">Available</div>
+                    <div className="mt-1 text-lg font-semibold">{sumRow(payouts.available)}</div>
+                    <div className="mt-1 text-xs text-muted-foreground">Ready for payout</div>
+                  </div>
+                  <div className="rounded-lg border p-3">
+                    <div className="text-xs uppercase tracking-wide text-muted-foreground">Instant available</div>
+                    <div className="mt-1 text-lg font-semibold">{sumRow(payouts.instantAvailable)}</div>
+                    <div className="mt-1 text-xs text-muted-foreground">Eligible for instant payout</div>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="mb-2 text-sm font-medium">Recent payouts</div>
+                  {payouts.payouts.length === 0 ? (
+                    <div className="rounded-md border border-dashed p-4 text-sm text-muted-foreground">
+                      No payouts yet. Once Stripe releases your first funds they will appear here.
+                    </div>
+                  ) : (
+                    <div className="divide-y rounded-md border">
+                      {payouts.payouts.map((p) => (
+                        <div key={p.id} className="flex items-center justify-between gap-3 p-3 text-sm">
+                          <div className="min-w-0">
+                            <div className="font-medium">{formatMoney(p.amount, p.currency)}</div>
+                            <div className="text-xs text-muted-foreground">
+                              {p.status === "paid" ? "Arrived" : "Expected"} {new Date(p.arrivalDate * 1000).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
+                              {p.method ? ` · ${p.method}` : ""}
+                            </div>
+                          </div>
+                          <Badge variant={statusBadgeVariant(p.status)}>{p.status.replace("_", " ")}</Badge>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="text-xs text-muted-foreground">
+                  Manage bank details and payout schedule in your Stripe Express dashboard.
+                </div>
+              </>
+            )}
+
+            {!payouts && !payoutsError && payoutsLoading && (
+              <div className="text-sm text-muted-foreground">Loading payouts…</div>
+            )}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
+
 }
