@@ -579,7 +579,7 @@ function BookPage() {
                 <div className="h-20 w-full" style={{ background: `linear-gradient(135deg, ${brand}, ${accent})` }} />
               )
             ) : carouselEnabled && carouselUrls.length > 0 ? (
-              <HeroCarousel urls={carouselUrls} />
+              <HeroCarousel urls={carouselUrls} heightClass={heightCls} />
             ) : heroUrl ? (
               <img
                 src={heroUrl}
