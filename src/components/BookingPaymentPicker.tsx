@@ -99,16 +99,17 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
     }
   }, [value, configured, availableModes, availableMethods, effectiveDepositCents, treatmentTotalCents, onChange]);
 
-  if (!configured || availableModes.length === 0 || availableMethods.length === 0) return null;
-
-  const o = opts as ConfiguredOptions;
   const chosen = useMemo(() => {
-    const mode = value && availableModes.includes(value.mode) ? value.mode : availableModes[0];
-    const method = value && availableMethods.includes(value.method) ? value.method : availableMethods[0];
+    const mode = value && availableModes.includes(value.mode) ? value.mode : (availableModes[0] ?? "full");
+    const method = value && availableMethods.includes(value.method) ? value.method : (availableMethods[0] ?? "card");
     // When deposit equals the full price, treat it as a full payment.
     const normalizedMode = mode === "deposit" && effectiveDepositCents === treatmentTotalCents ? "full" : mode;
     return { mode: normalizedMode, method };
   }, [value, availableModes, availableMethods, effectiveDepositCents, treatmentTotalCents]);
+
+  if (!configured || availableModes.length === 0 || availableMethods.length === 0) return null;
+
+  const o = opts as ConfiguredOptions;
 
   const baseCents = chosen.mode === "deposit" ? effectiveDepositCents : treatmentTotalCents;
   const pct = chosen.mode === "deposit"
