@@ -522,7 +522,24 @@ function BookTreatmentPage() {
         </Link>
       </div>
 
-      <Card className="mb-6">
+      {(() => {
+        const detailsDone = Boolean(
+          form.name && form.email &&
+          (!reqPhone || form.phone) &&
+          (!reqDob || form.dob) &&
+          (!reqAddress || form.addressLine1),
+        );
+        const steps: BookingStep[] = [
+          { key: "treatment", label: "Treatment", done: true },
+          { key: "location", label: "Location", done: ctx.locations.length <= 1 ? true : !!locationId },
+          { key: "datetime", label: "Date & Time", done: !!slot },
+          { key: "details", label: "Your Details", done: detailsDone },
+          { key: "payment", label: "Payment", done: !!paymentChoice },
+        ];
+        return <BookingProgress steps={steps} accent={brand} />;
+      })()}
+
+      <Card className="mb-6 animate-fade-in transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md">
         <CardHeader>
           <CardTitle style={headingStyle}>{treatment.name}</CardTitle>
         </CardHeader>
@@ -530,7 +547,16 @@ function BookTreatmentPage() {
           <span className="inline-flex items-center gap-1 opacity-70">
             <Clock className="h-4 w-4" /> {duration} min
           </span>
-          {showPrices && <Badge variant="secondary">£{price.toFixed(2)}</Badge>}
+          {showPrices && (
+            sessionCount > 1 ? (
+              <span className="text-sm">
+                <span className="font-semibold" style={{ color: brand }}>From £{(price / sessionCount).toFixed(2)} per session</span>
+                <span className="opacity-60"> or £{price.toFixed(2)} paid upfront</span>
+              </span>
+            ) : (
+              <span className="text-sm font-semibold" style={{ color: brand }}>£{price.toFixed(2)}</span>
+            )
+          )}
           {sessionCount > 1 && (
             <Badge variant="outline" className="font-semibold">
               {sessionCount} sessions{sessionSpacing ? ` · ${sessionSpacing}` : ""}
@@ -538,6 +564,7 @@ function BookTreatmentPage() {
           )}
         </CardContent>
       </Card>
+
 
       {ctx.locations.length > 1 && (
         <Card className="mb-6">
