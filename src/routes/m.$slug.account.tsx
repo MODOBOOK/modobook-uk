@@ -8,6 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Loader2, Calendar as CalendarIcon, Clock, MapPin, FileText, StickyNote,
   ClipboardCheck, Receipt, ShieldCheck, ExternalLink, Sparkles, HeartPulse,
@@ -207,7 +208,38 @@ function Account() {
   const brand = profile?.brand_color || "#1f2937";
   const today = new Date().toISOString().slice(0, 10);
   const upcoming = appts.filter((a) => a.scheduled_date >= today && a.status !== "cancelled");
-  const past = appts.filter((a) => a.scheduled_date < today || a.status === "cancelled" || a.status === "completed");
+  const past = appts
+    .filter((a) => a.scheduled_date < today || a.status === "cancelled" || a.status === "completed")
+    .sort((a, b) => (b.scheduled_date + b.start_time).localeCompare(a.scheduled_date + a.start_time));
+
+  // Aftercare pruning: hide from top-level once (a) associated appointment is >7 days old,
+  // or (b) a newer confirmed/completed appointment has taken place. These are shown inside the
+  // relevant past appointment card instead.
+  const now = Date.now();
+  const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+  const activeAftercare: any[] = [];
+  const aftercareByAppt = new Map<string, any[]>();
+  for (const ac of aftercare) {
+    const appt = appts.find((a) => a.id === ac.appointment_id);
+    const apptDate = appt?.scheduled_date ? new Date(`${appt.scheduled_date}T${appt.start_time || "00:00"}`).getTime() : null;
+    const olderThanWeek = apptDate != null && (now - apptDate) > WEEK_MS;
+    const hasNewerAppt = appt
+      ? appts.some((b) =>
+          b.id !== appt.id &&
+          b.status !== "cancelled" &&
+          (b.scheduled_date + (b.start_time || "")) > (appt.scheduled_date + (appt.start_time || ""))
+        )
+      : false;
+    if (olderThanWeek || hasNewerAppt) {
+      if (ac.appointment_id) {
+        const list = aftercareByAppt.get(ac.appointment_id) ?? [];
+        list.push(ac);
+        aftercareByAppt.set(ac.appointment_id, list);
+      }
+    } else {
+      activeAftercare.push(ac);
+    }
+  }
 
 
 
@@ -280,27 +312,52 @@ function Account() {
         </DialogContent>
       </Dialog>
 
-      {/* Upcoming */}
-      <Section title="Upcoming appointments" icon={CalendarIcon} brand={brand}>
-        {upcoming.length === 0 ? (
-          <Empty msg="No upcoming appointments." cta={<Link to="/m/$slug" params={{ slug }}><Button size="sm">Book a treatment</Button></Link>} />
-        ) : (
-          <div className="space-y-3">
-            {upcoming.map((a) => (
-              <ApptCard
-                key={a.id} a={a} brand={brand}
-                allowCancel={!!profile?.allow_patient_cancel}
-                allowReschedule={!!profile?.allow_patient_reschedule}
-                cancelCutoffHours={profile?.patient_cancel_cutoff_hours ?? 0}
-                rescheduleCutoffHours={profile?.patient_reschedule_cutoff_hours ?? 0}
-                maxReschedules={profile?.patient_reschedule_max ?? 999}
-                slug={slug}
-                onCancel={() => openCancel(a)}
-              />
-            ))}
-          </div>
-        )}
-      </Section>
+      {/* Appointments (tabs) */}
+      <section className="mt-8">
+        <h2 className="mb-3 flex items-center gap-2 text-base font-semibold" style={{ color: brand }}>
+          <CalendarIcon className="h-4 w-4" />Appointments
+        </h2>
+        <Tabs defaultValue="upcoming">
+          <TabsList className="mb-3">
+            <TabsTrigger value="upcoming">Upcoming {upcoming.length > 0 && `(${upcoming.length})`}</TabsTrigger>
+            <TabsTrigger value="previous">Previous {past.length > 0 && `(${past.length})`}</TabsTrigger>
+          </TabsList>
+          <TabsContent value="upcoming">
+            {upcoming.length === 0 ? (
+              <Empty msg="No upcoming appointments." cta={<Link to="/m/$slug" params={{ slug }}><Button size="sm">Book a treatment</Button></Link>} />
+            ) : (
+              <div className="space-y-3">
+                {upcoming.map((a) => (
+                  <ApptCard
+                    key={a.id} a={a} brand={brand}
+                    allowCancel={!!profile?.allow_patient_cancel}
+                    allowReschedule={!!profile?.allow_patient_reschedule}
+                    cancelCutoffHours={profile?.patient_cancel_cutoff_hours ?? 0}
+                    rescheduleCutoffHours={profile?.patient_reschedule_cutoff_hours ?? 0}
+                    maxReschedules={profile?.patient_reschedule_max ?? 999}
+                    slug={slug}
+                    onCancel={() => openCancel(a)}
+                  />
+                ))}
+              </div>
+            )}
+          </TabsContent>
+          <TabsContent value="previous">
+            {past.length === 0 ? (
+              <Empty msg="No previous appointments yet." />
+            ) : (
+              <div className="space-y-3">
+                {past.map((a) => (
+                  <ApptCard
+                    key={a.id} a={a} brand={brand} slug={slug}
+                    aftercare={aftercareByAppt.get(a.id) ?? []}
+                  />
+                ))}
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
+      </section>
 
       <CancelDialog
         open={!!cancelTarget}
@@ -350,13 +407,13 @@ function Account() {
         )}
       </Section>
 
-      {/* Aftercare */}
+      {/* Aftercare (active only — older or superseded aftercare is tucked into Previous appointments) */}
       <Section title="Aftercare guidance" icon={HeartPulse} brand={brand}>
-        {aftercare.length === 0 ? (
-          <Empty msg="Your practitioner will share aftercare here after your appointment." />
+        {activeAftercare.length === 0 ? (
+          <Empty msg="Your practitioner will share aftercare here after your appointment. Older aftercare is filed under Previous appointments." />
         ) : (
           <div className="space-y-3">
-            {aftercare.map((ac) => <AftercareCard key={ac.id} ac={ac} brand={brand} appts={appts} />)}
+            {activeAftercare.map((ac) => <AftercareCard key={ac.id} ac={ac} brand={brand} appts={appts} />)}
           </div>
         )}
       </Section>
@@ -379,12 +436,6 @@ function Account() {
         )}
       </Section>
 
-      {/* Past appointments */}
-      <Section title="Past appointments" icon={FileText} brand={brand}>
-        {past.length === 0 ? <Empty msg="No past appointments yet." /> : (
-          <div className="space-y-3">{past.map((a) => <ApptCard key={a.id} a={a} brand={brand} slug={slug} />)}</div>
-        )}
-      </Section>
 
 
       {/* Invoices */}
@@ -444,12 +495,13 @@ function RowItem({ title, meta, badge, badgeOk, href }: { title: string; meta: s
 function ApptCard({
   a, brand, slug, allowCancel, allowReschedule,
   cancelCutoffHours = 0, rescheduleCutoffHours = 0, maxReschedules = 999,
-  onCancel,
+  onCancel, aftercare = [],
 }: {
   a: Appt; brand: string; slug: string;
   allowCancel?: boolean; allowReschedule?: boolean;
   cancelCutoffHours?: number; rescheduleCutoffHours?: number; maxReschedules?: number;
   onCancel?: () => void;
+  aftercare?: any[];
 }) {
   const remaining = Math.max(0, maxReschedules - (a.reschedule_count ?? 0));
   const treatmentName = a.treatments?.name ?? a.treatment_name_snapshot ?? "Treatment";
@@ -490,8 +542,40 @@ function ApptCard({
             )}
           </div>
         )}
+        {aftercare.length > 0 && (
+          <div className="space-y-2 pt-2">
+            <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Aftercare</div>
+            {aftercare.map((ac) => <InlineAftercare key={ac.id} ac={ac} brand={brand} />)}
+          </div>
+        )}
       </CardContent>
     </Card>
+  );
+}
+
+function InlineAftercare({ ac, brand }: { ac: any; brand: string }) {
+  const [open, setOpen] = useState(false);
+  const when = ac.sent_at || ac.send_at;
+  return (
+    <div className="rounded-md border">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs hover:bg-muted/30"
+      >
+        <HeartPulse className="h-3.5 w-3.5" style={{ color: brand }} />
+        <span className="flex-1 truncate">Aftercare · {when ? new Date(when).toLocaleDateString() : ""}</span>
+        <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+      {open && (
+        <div className="border-t bg-muted/20 px-3 py-2">
+          <div
+            className="prose prose-sm max-w-none prose-headings:mt-2 prose-headings:mb-1 prose-p:my-1 prose-ul:my-1 prose-li:my-0.5"
+            dangerouslySetInnerHTML={{ __html: ac.body_html ?? "<em>No content</em>" }}
+          />
+        </div>
+      )}
+    </div>
   );
 }
 
