@@ -407,13 +407,14 @@ export const requestBooking = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: prof } = await supabaseAdmin
       .from("profiles")
-      .select("auto_confirm_bookings,require_account_to_book")
+      .select("auto_confirm_bookings,require_account_to_book,slug,clinic_name,stripe_connect_account_id,stripe_connect_onboarding_status,payment_deposit_enabled,require_deposit_to_confirm,deposit_amount_cents,payment_card_full_enabled,payment_klarna_enabled,payment_clearpay_enabled")
       .eq("id", data.profileId)
       .maybeSingle();
     if (prof?.require_account_to_book && !data.patientUserId) {
       throw new Error("Please sign in to book — this clinic requires an account.");
     }
     const status = prof?.auto_confirm_bookings === false ? "pending" : "confirmed";
+
     const { data: blk } = await sb
       .from("clinic_clients")
       .select("id")
@@ -478,8 +479,102 @@ export const requestBooking = createServerFn({ method: "POST" })
         });
       }
     }
-    return { id, consents, medicalForms };
+    // Optional Stripe Checkout for deposit / full payment
+    let checkoutUrl: string | null = null;
+    try {
+      checkoutUrl = await maybeCreateBookingCheckout({
+        profile: prof,
+        appointmentIds: [id],
+        totalAmount: data.basePrice,
+        patientEmail: data.patientEmail,
+        description: `Booking with ${prof?.clinic_name ?? "clinic"}`,
+      });
+    } catch (e) {
+      console.error("[requestBooking] checkout failed", e);
+    }
+    return { id, consents, medicalForms, checkoutUrl };
   });
+
+// Build a Checkout Session on the practitioner's Connect account for a deposit
+// (or full amount) when the clinic has payments configured. Returns the hosted URL
+// or null if payments aren't set up / not required.
+async function maybeCreateBookingCheckout(args: {
+  profile: {
+    slug?: string | null;
+    stripe_connect_account_id?: string | null;
+    stripe_connect_onboarding_status?: string | null;
+    payment_deposit_enabled?: boolean | null;
+    require_deposit_to_confirm?: boolean | null;
+    deposit_amount_cents?: number | null;
+    payment_card_full_enabled?: boolean | null;
+    payment_klarna_enabled?: boolean | null;
+    payment_clearpay_enabled?: boolean | null;
+  } | null;
+  appointmentIds: string[];
+  totalAmount: number;
+  patientEmail: string;
+  description: string;
+}): Promise<string | null> {
+  const p = args.profile;
+  if (!p) return null;
+  if (!p.stripe_connect_account_id) return null;
+  if (p.stripe_connect_onboarding_status && p.stripe_connect_onboarding_status !== "active") return null;
+
+  const depositEnabled = !!p.payment_deposit_enabled;
+  const depositPer = Math.max(0, Number(p.deposit_amount_cents ?? 0));
+  let amountCents: number;
+  let kind: "deposit" | "checkout";
+  if (depositEnabled && depositPer >= 100) {
+    amountCents = depositPer * args.appointmentIds.length;
+    kind = "deposit";
+  } else {
+    amountCents = Math.round(args.totalAmount * 100);
+    kind = "checkout";
+  }
+  if (amountCents < 100) return null;
+
+  const methodTypes: string[] = [];
+  if (p.payment_card_full_enabled !== false) methodTypes.push("card");
+  if (p.payment_klarna_enabled) methodTypes.push("klarna");
+  if (p.payment_clearpay_enabled) methodTypes.push("afterpay_clearpay");
+  if (methodTypes.length === 0) methodTypes.push("card");
+
+  const origin = process.env.PUBLIC_APP_URL || process.env.APP_URL || "https://modo-book.lovable.app";
+  const successUrl = `${origin}/m/${p.slug ?? ""}/account?paid=1`;
+  const cancelUrl = `${origin}/m/${p.slug ?? ""}`;
+
+  try {
+    const { createCheckoutSession } = await import("./stripe.server");
+    const session = await createCheckoutSession({
+      accountId: p.stripe_connect_account_id,
+      lineItems: [
+        {
+          quantity: 1,
+          price_data: {
+            currency: "gbp",
+            unit_amount: amountCents,
+            product_data: {
+              name: kind === "deposit" ? `Deposit — ${args.description}` : args.description,
+            },
+          },
+        },
+      ],
+      successUrl,
+      cancelUrl,
+      customerEmail: args.patientEmail,
+      paymentMethodTypes: methodTypes as never,
+      metadata: {
+        appointment_ids: args.appointmentIds.join(","),
+        kind,
+      },
+    });
+    return session.url ?? null;
+  } catch (e) {
+    console.error("[maybeCreateBookingCheckout] stripe error", e);
+    return null;
+  }
+}
+
 
 
 function addMinutesToTime(time: string, mins: number) {
@@ -528,7 +623,7 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: prof } = await supabaseAdmin
       .from("profiles")
-      .select("auto_confirm_bookings,require_account_to_book")
+      .select("auto_confirm_bookings,require_account_to_book,slug,clinic_name,stripe_connect_account_id,stripe_connect_onboarding_status,payment_deposit_enabled,require_deposit_to_confirm,deposit_amount_cents,payment_card_full_enabled,payment_klarna_enabled,payment_clearpay_enabled")
       .eq("id", data.profileId)
       .maybeSingle();
     if (prof?.require_account_to_book && !data.patientUserId) {
@@ -651,7 +746,21 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
       }
     }
 
-    return { appointments: created, consents, medicalForms, packagePurchases };
+    let checkoutUrl: string | null = null;
+    try {
+      const totalAmount = data.bookings.reduce((sum, b) => sum + b.priceCents / 100, 0);
+      checkoutUrl = await maybeCreateBookingCheckout({
+        profile: prof,
+        appointmentIds: created.map((c) => c.id),
+        totalAmount,
+        patientEmail: data.patientEmail,
+        description: `Booking with ${prof?.clinic_name ?? "clinic"}`,
+      });
+    } catch (e) {
+      console.error("[requestMultiBooking] checkout failed", e);
+    }
+    return { appointments: created, consents, medicalForms, packagePurchases, checkoutUrl };
+
   });
 
 

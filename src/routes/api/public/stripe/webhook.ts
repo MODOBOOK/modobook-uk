@@ -76,8 +76,28 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
                     .update(patch as never)
                     .eq("id", apptId);
                 }
+              } else if (metadata.appointment_ids) {
+                // Checkout Session created directly for a booking (deposit / full)
+                const ids = String(metadata.appointment_ids).split(",").map((s) => s.trim()).filter(Boolean);
+                if (ids.length > 0) {
+                  const kind = metadata.kind || "deposit";
+                  const patch: Record<string, unknown> = {};
+                  if (kind === "deposit") {
+                    patch.deposit_paid_at = new Date().toISOString();
+                    patch.payment_status = "paid";
+                  } else {
+                    patch.payment_status = "paid";
+                    patch.payment_method = "stripe_link";
+                    patch.checkout_completed_at = new Date().toISOString();
+                  }
+                  await supabaseAdmin
+                    .from("appointments")
+                    .update(patch as never)
+                    .in("id", ids);
+                }
               }
               break;
+
             }
 
             case "checkout.session.async_payment_failed": {

@@ -448,7 +448,12 @@ function MultiBookPage() {
           packagePurchases: selectedPackages.map((p) => ({ packageId: p.id })),
         },
       });
+      if ((res as { checkoutUrl?: string | null }).checkoutUrl) {
+        window.location.href = (res as { checkoutUrl: string }).checkoutUrl;
+        return;
+      }
       setConfirmed(res);
+
       // Referrals are created automatically by the database trigger on appointment insert
       // (using clinic_visit_id when routing is 'clinic_visit'). No separate client call.
 

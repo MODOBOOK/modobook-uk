@@ -410,7 +410,12 @@ function BookTreatmentPage() {
 
         },
       });
+      if ((res as { checkoutUrl?: string | null }).checkoutUrl) {
+        window.location.href = (res as { checkoutUrl: string }).checkoutUrl;
+        return;
+      }
       setConfirmed({ id: res.id, consents: res.consents ?? [], medicalForms: res.medicalForms ?? [] });
+
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Booking failed");
       submitLockRef.current = false;
