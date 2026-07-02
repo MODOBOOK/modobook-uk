@@ -46,8 +46,10 @@ function DashboardIndex() {
   const { primary: displayPrimary, secondary: displaySecondary } = resolveDisplayNames(profile);
 
   const fetchAppointments = useServerFn(listMyAppointments);
+  const fetchPayouts = useServerFn(getStripePayouts);
   const [appts, setAppts] = useState<Appt[]>([]);
   const [loading, setLoading] = useState(true);
+  const [payouts, setPayouts] = useState<Awaited<ReturnType<typeof getStripePayouts>> | null>(null);
 
   const bookingUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/m/${profile.slug}`;
 
