@@ -1020,10 +1020,10 @@ function BookPage() {
               />
             )}
             {showConsult && (
-              consultTreatmentId ? (
+              consultTreatmentIds.length === 1 ? (
                 <Link
                   to="/m/$slug/book/$treatmentId"
-                  params={{ slug, treatmentId: consultTreatmentId }}
+                  params={{ slug, treatmentId: consultTreatmentIds[0] }}
                   className="block"
                 >
                   <ChooserCard
@@ -1032,6 +1032,13 @@ function BookPage() {
                     brand={brand}
                   />
                 </Link>
+              ) : consultTreatmentIds.length > 1 ? (
+                <ChooserCard
+                  title="Book a consultation now"
+                  description="Choose from our consultations"
+                  brand={brand}
+                  onClick={() => setMode("consult")}
+                />
               ) : (
                 <ChooserCard
                   title="Book a consultation now"
