@@ -841,6 +841,7 @@ function BrandingPage() {
               <option value="short">Short</option>
               <option value="medium">Medium</option>
               <option value="tall">Tall</option>
+              <option value="extra_tall">Extra tall</option>
             </select>
           </div>
           <div className="space-y-1.5">
