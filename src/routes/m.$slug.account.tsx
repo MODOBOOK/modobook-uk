@@ -436,12 +436,6 @@ function Account() {
         )}
       </Section>
 
-      {/* Past appointments */}
-      <Section title="Past appointments" icon={FileText} brand={brand}>
-        {past.length === 0 ? <Empty msg="No past appointments yet." /> : (
-          <div className="space-y-3">{past.map((a) => <ApptCard key={a.id} a={a} brand={brand} slug={slug} />)}</div>
-        )}
-      </Section>
 
 
       {/* Invoices */}
