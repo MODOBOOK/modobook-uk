@@ -13,7 +13,7 @@ import {
 import { BookingPaymentPicker } from "@/components/BookingPaymentPicker";
 
 import { listAddonsForBooking, type PublicAddon } from "@/lib/addons.functions";
-import { ensurePatient, getMyPatient } from "@/lib/patient.functions";
+import { ensurePatient, getMyPatient, updateMyPatient } from "@/lib/patient.functions";
 import { getPrescriberInfoForTreatments } from "@/lib/prescriber.functions";
 import { listAvailableVisitsForBooking } from "@/lib/clinic-visits.functions";
 
