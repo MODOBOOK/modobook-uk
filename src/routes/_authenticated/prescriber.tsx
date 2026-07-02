@@ -26,14 +26,17 @@ export const Route = createFileRoute("/_authenticated/prescriber")({
 });
 
 const nav = [
-  { to: "/prescriber/dashboard", label: "Dashboard", icon: LayoutDashboard, key: "dashboard" as const },
-  { to: "/prescriber", label: "Referrals", icon: Inbox, exact: true, key: "referrals" as const },
-  { to: "/prescriber/visits", label: "Clinic visits", icon: CalendarDays, key: "visits" as const },
-  { to: "/prescriber/library", label: "Prescriptions", icon: Pill, key: "library" as const },
-  { to: "/prescriber/directions", label: "Directions", icon: ClipboardList, key: "directions" as const },
-  { to: "/prescriber/connections", label: "Practitioners", icon: Network, key: "connections" as const },
-  { to: "/hub/verification", label: "Verification", icon: ShieldCheck, key: "verification" as const },
+  { to: "/prescriber/dashboard", label: "Dashboard", shortLabel: "Home", icon: LayoutDashboard, key: "dashboard" as const },
+  { to: "/prescriber", label: "Referrals", shortLabel: "Referrals", icon: Inbox, exact: true, key: "referrals" as const },
+  { to: "/prescriber/visits", label: "Clinic visits", shortLabel: "Visits", icon: CalendarDays, key: "visits" as const },
+  { to: "/prescriber/library", label: "Prescriptions", shortLabel: "Rx", icon: Pill, key: "library" as const },
+  { to: "/prescriber/directions", label: "Directions", shortLabel: "Directions", icon: ClipboardList, key: "directions" as const },
+  { to: "/prescriber/connections", label: "Practitioners", shortLabel: "Team", icon: Network, key: "connections" as const },
+  { to: "/hub/verification", label: "Verification", shortLabel: "Verify", icon: ShieldCheck, key: "verification" as const },
 ];
+
+// Mobile: primary 4 tabs + More sheet for the rest
+const mobilePrimaryKeys = ["referrals", "visits", "library", "connections"] as const;
 
 
 
