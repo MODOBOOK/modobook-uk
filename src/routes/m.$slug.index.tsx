@@ -1214,18 +1214,22 @@ function BookPage() {
               {favs.map((t) => {
                 const img = (t as Treatment & { picture_url?: string | null }).picture_url;
                 const sessions = formatTreatmentSessions(t);
+                const isExpanded = expandedFavId === t.id;
+                const hasLongDesc = (t.description?.length || 0) > 100;
                 return (
-                  <Link
+                  <div
                     key={t.id}
-                    to="/m/$slug/book/$treatmentId"
-                    params={{ slug, treatmentId: t.id }}
                     className="group flex w-[78%] shrink-0 snap-start flex-col overflow-hidden rounded-2xl border bg-card shadow-sm transition hover:shadow-md sm:w-[calc((100%-1.5rem)/3)]"
                     style={{ borderColor: `${brand}1f`, backgroundColor: menuCardBg }}
                   >
                     {img && (
-                      <div className="aspect-[16/10] w-full overflow-hidden bg-muted">
+                      <Link
+                        to="/m/$slug/book/$treatmentId"
+                        params={{ slug, treatmentId: t.id }}
+                        className="block aspect-[16/10] w-full overflow-hidden bg-muted"
+                      >
                         <img src={img} alt={t.name} className="h-full w-full object-cover transition group-hover:scale-[1.03]" loading="lazy" />
-                      </div>
+                      </Link>
                     )}
                     <div className="flex flex-1 flex-col gap-0.5 p-3">
                       <div className="text-sm font-semibold sm:text-base" style={{ color: menuNameColor }}>{t.name}</div>
@@ -1234,13 +1238,36 @@ function BookPage() {
                           {sessions}
                         </div>
                       )}
-                      {t.description && <div className="line-clamp-1 text-xs opacity-70">{t.description}</div>}
-                      <div className="mt-1.5 flex items-center justify-between text-xs">
+                      {t.description && (
+                        <div className={`text-xs leading-relaxed opacity-70 ${isExpanded ? "" : "line-clamp-1"}`}>
+                          {t.description}
+                        </div>
+                      )}
+                      {hasLongDesc && (
+                        <button
+                          type="button"
+                          onClick={() => setExpandedFavId(isExpanded ? null : t.id)}
+                          className="mt-1 flex items-center gap-1 text-xs font-semibold"
+                          style={{ color: brand }}
+                          aria-label={isExpanded ? "Show less" : "Read more"}
+                        >
+                          {isExpanded ? "Show less" : "Read more"}
+                          {isExpanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                        </button>
+                      )}
+                      <div className="mt-auto flex items-center justify-between border-t pt-2 text-xs" style={{ borderColor: `${brand}1f` }}>
                         <span className="opacity-70">{durationFor(t)} min</span>
-                        <span className="font-semibold" style={{ color: menuPriceColor }}>{formatPrice(priceFor(t), (t as any).price_mode)}</span>
+                        <Link
+                          to="/m/$slug/book/$treatmentId"
+                          params={{ slug, treatmentId: t.id }}
+                          className="rounded-full px-4 py-2 text-xs font-semibold text-white shadow-sm"
+                          style={{ backgroundColor: brand }}
+                        >
+                          Book
+                        </Link>
                       </div>
                     </div>
-                  </Link>
+                  </div>
                 );
               })}
             </div>
