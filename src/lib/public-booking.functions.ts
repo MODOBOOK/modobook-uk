@@ -510,6 +510,12 @@ async function maybeCreateBookingCheckout(args: {
     payment_klarna_enabled?: boolean | null;
     payment_clearpay_enabled?: boolean | null;
     payment_pass_fees_to_customer?: boolean | null;
+    payment_surcharge_card_enabled?: boolean | null;
+    payment_surcharge_card_percent?: number | string | null;
+    payment_surcharge_bnpl_enabled?: boolean | null;
+    payment_surcharge_bnpl_percent?: number | string | null;
+    payment_surcharge_deposit_enabled?: boolean | null;
+    payment_surcharge_deposit_percent?: number | string | null;
   } | null;
   appointmentIds: string[];
   totalAmount: number;
