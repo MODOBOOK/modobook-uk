@@ -15,9 +15,30 @@ async function parseStripeWebhook(params: {
   signature: string;
   secrets: string[];
 }) {
+  // Peek at the payload to decide which parser Stripe expects. v2 core events
+  // (Workbench "Event destinations") include `"type":"v2.core..."` and MUST be
+  // parsed with parseEventNotificationAsync; classic events use constructEventAsync.
+  let isV2 = false;
+  try {
+    const preview = JSON.parse(params.rawBody) as { type?: string };
+    isV2 = typeof preview.type === "string" && preview.type.startsWith("v2.");
+  } catch {
+    // fall through — treat as classic
+  }
+
   let lastError: unknown;
   for (const secret of params.secrets) {
     try {
+      if (isV2) {
+        return {
+          kind: "notification" as const,
+          event: await params.stripe.parseEventNotificationAsync(
+            params.rawBody,
+            params.signature,
+            secret,
+          ),
+        };
+      }
       return {
         kind: "classic" as const,
         event: await params.stripe.webhooks.constructEventAsync(
@@ -27,21 +48,7 @@ async function parseStripeWebhook(params: {
         ),
       };
     } catch (err) {
-      const message = err instanceof Error ? err.message : "";
       lastError = err;
-      if (!message.includes("event notification")) continue;
-      try {
-        return {
-          kind: "notification" as const,
-          event: await params.stripe.parseEventNotificationAsync(
-            params.rawBody,
-            params.signature,
-            secret,
-          ),
-        };
-      } catch (notificationErr) {
-        lastError = notificationErr;
-      }
     }
   }
   throw lastError instanceof Error ? lastError : new Error("invalid signature");
