@@ -7,7 +7,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Calendar, Clock, MapPin } from "lucide-react";
 
-export const Route = createFileRoute("/m/$slug/manage/$token")({
+export const Route = createFileRoute("/$slug/manage/$token")({
   loader: async ({ params }) => getAppointmentByToken({ data: { token: params.token } }),
   component: ManagePage,
   errorComponent: () => (
@@ -36,7 +36,7 @@ function ManagePage() {
     cancellation_rules: CancellationRule[] | null;
     deposit_policy_text: string | null;
   };
-  const { token, slug } = useParams({ from: "/m/$slug/manage/$token" });
+  const { token, slug } = useParams({ from: "/$slug/manage/$token" });
   const [status, setStatus] = useState(appt.status);
   const [cancelling, setCancelling] = useState(false);
 
@@ -109,7 +109,7 @@ function ManagePage() {
       {status !== "cancelled" && (
         <div className="flex flex-col gap-2">
           <Button asChild variant="outline">
-            <Link to="/m/$slug" params={{ slug }}>Book a different time</Link>
+            <Link to="/$slug" params={{ slug }}>Book a different time</Link>
           </Button>
           <Button variant="destructive" onClick={cancel} disabled={cancelling}>
             {cancelling ? "Cancelling…" : "Cancel appointment"}

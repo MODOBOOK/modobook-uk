@@ -11,7 +11,7 @@ import { toast } from "sonner";
 
 type Search = { tab?: "signup" | "signin"; redirect?: string };
 
-export const Route = createFileRoute("/m/$slug/auth")({
+export const Route = createFileRoute("/$slug/auth")({
   validateSearch: (s: Record<string, unknown>): Search => ({
     tab: s.tab === "signup" || s.tab === "signin" ? s.tab : undefined,
     redirect: typeof s.redirect === "string" ? s.redirect : undefined,
@@ -20,8 +20,8 @@ export const Route = createFileRoute("/m/$slug/auth")({
 });
 
 function PatientAuth() {
-  const { slug } = useParams({ from: "/m/$slug/auth" });
-  const search = useSearch({ from: "/m/$slug/auth" });
+  const { slug } = useParams({ from: "/$slug/auth" });
+  const search = useSearch({ from: "/$slug/auth" });
   const navigate = useNavigate();
   const ensure = useServerFn(ensurePatient);
   const [loading, setLoading] = useState(false);
@@ -54,7 +54,7 @@ function PatientAuth() {
     if (search.redirect && search.redirect.startsWith("/")) {
       window.location.assign(search.redirect);
     } else {
-      navigate({ to: "/m/$slug/account", params: { slug } });
+      navigate({ to: "/$slug/account", params: { slug } });
     }
   }
 
@@ -65,7 +65,7 @@ function PatientAuth() {
       const { error } = await supabase.auth.signUp({
         email,
         password,
-        options: { emailRedirectTo: `${window.location.origin}${search.redirect ?? `/m/${slug}/account`}` },
+        options: { emailRedirectTo: `${window.location.origin}${search.redirect ?? `/${slug}/account`}` },
       });
       if (error) throw error;
       await ensure({ data: { fullName: name, phone, linkSlug: slug } });
