@@ -6,7 +6,7 @@ import { getBookingContext, getDayAvailability, getMonthAvailability, requestBoo
 import { BookingPaymentPicker } from "@/components/BookingPaymentPicker";
 
 import { listAddonsForBooking, type PublicAddon } from "@/lib/addons.functions";
-import { ensurePatient, getMyPatient } from "@/lib/patient.functions";
+import { ensurePatient, getMyPatient, updateMyPatient } from "@/lib/patient.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
