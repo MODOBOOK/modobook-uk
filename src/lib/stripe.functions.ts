@@ -179,3 +179,51 @@ export const pairExistingStripeConnectLink = createServerFn({ method: "POST" })
       };
     }
   });
+
+export const getStripePayouts = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { getConnectBalance, listConnectPayouts } = await import("./stripe.server");
+    const { supabase, userId } = context;
+    const { data: profile, error } = await supabase
+      .from("profiles")
+      .select("stripe_connect_account_id")
+      .eq("user_id", userId)
+      .single();
+    if (error) throw error;
+    if (!profile.stripe_connect_account_id) {
+      return { ok: false as const, code: "not_connected", message: "Connect Stripe to view payouts." };
+    }
+    try {
+      const [balance, payouts] = await Promise.all([
+        getConnectBalance(profile.stripe_connect_account_id),
+        listConnectPayouts(profile.stripe_connect_account_id, 20),
+      ]);
+      const sum = (arr: Array<{ amount: number; currency: string }> | undefined) =>
+        (arr ?? []).reduce<Record<string, number>>((acc, b) => {
+          acc[b.currency] = (acc[b.currency] ?? 0) + b.amount;
+          return acc;
+        }, {});
+      return {
+        ok: true as const,
+        available: sum(balance?.available),
+        pending: sum(balance?.pending),
+        instantAvailable: sum(balance?.instant_available ?? []),
+        payouts: (payouts?.data ?? []).map((p) => ({
+          id: p.id,
+          amount: p.amount,
+          currency: p.currency,
+          status: p.status,
+          arrivalDate: p.arrival_date,
+          created: p.created,
+          method: p.method,
+          description: p.description,
+        })),
+      };
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Could not load payouts.";
+      const code = typeof e === "object" && e && "code" in e ? String((e as { code?: string }).code) : "stripe_error";
+      return { ok: false as const, code, message };
+    }
+  });
+

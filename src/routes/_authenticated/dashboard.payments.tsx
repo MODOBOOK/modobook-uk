@@ -1,30 +1,105 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useServerFn } from "@tanstack/react-start";
-import { startStripeOnboarding, refreshStripeStatus } from "@/lib/stripe.functions";
+import { startStripeOnboarding, refreshStripeStatus, getStripePayouts } from "@/lib/stripe.functions";
 import { toast } from "sonner";
-import { AlertCircle, CreditCard, ExternalLink, RefreshCw } from "lucide-react";
+import { AlertCircle, CreditCard, ExternalLink, RefreshCw, Wallet, Clock } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard/payments")({
   ssr: false,
   component: PaymentsPage,
 });
 
+type PayoutRow = {
+  id: string;
+  amount: number;
+  currency: string;
+  status: string;
+  arrivalDate: number;
+  created: number;
+  method: string | null;
+  description: string | null;
+};
+
+type PayoutsData = {
+  available: Record<string, number>;
+  pending: Record<string, number>;
+  instantAvailable: Record<string, number>;
+  payouts: PayoutRow[];
+};
+
+function formatMoney(cents: number, currency: string) {
+  try {
+    return new Intl.NumberFormat("en-GB", { style: "currency", currency: currency.toUpperCase() }).format(cents / 100);
+  } catch {
+    return `${(cents / 100).toFixed(2)} ${currency.toUpperCase()}`;
+  }
+}
+
+function sumRow(map: Record<string, number>) {
+  const entries = Object.entries(map);
+  if (entries.length === 0) return "£0.00";
+  return entries.map(([c, v]) => formatMoney(v, c)).join(" · ");
+}
+
+function statusBadgeVariant(status: string): "default" | "secondary" | "destructive" | "outline" {
+  if (status === "paid") return "default";
+  if (status === "failed" || status === "canceled") return "destructive";
+  if (status === "in_transit" || status === "pending") return "secondary";
+  return "outline";
+}
+
+
 function PaymentsPage() {
   const { profile } = Route.useRouteContext() as { profile: { stripe_connect_account_id: string | null; stripe_connect_onboarding_status: string | null } };
   const router = useRouter();
   const onboard = useServerFn(startStripeOnboarding);
   const refresh = useServerFn(refreshStripeStatus);
+  const loadPayouts = useServerFn(getStripePayouts);
   const [loading, setLoading] = useState(false);
   const [setupIssue, setSetupIssue] = useState<{
     message: string;
     actionUrl?: string;
   } | null>(null);
   const [stripeLink, setStripeLink] = useState<string | null>(null);
+  const [payouts, setPayouts] = useState<PayoutsData | null>(null);
+  const [payoutsLoading, setPayoutsLoading] = useState(false);
+  const [payoutsError, setPayoutsError] = useState<string | null>(null);
+
+  const connected = !!profile.stripe_connect_account_id;
+
+  async function fetchPayouts() {
+    setPayoutsLoading(true);
+    setPayoutsError(null);
+    try {
+      const res = await loadPayouts({});
+      if (!res.ok) {
+        setPayoutsError(res.message);
+        setPayouts(null);
+        return;
+      }
+      setPayouts({
+        available: res.available,
+        pending: res.pending,
+        instantAvailable: res.instantAvailable,
+        payouts: res.payouts,
+      });
+    } catch (e) {
+      setPayoutsError(e instanceof Error ? e.message : "Could not load payouts.");
+    } finally {
+      setPayoutsLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    if (connected) void fetchPayouts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [connected]);
+
 
   async function connect() {
     const pendingWindow = window.open("about:blank", "_blank");
@@ -80,8 +155,8 @@ function PaymentsPage() {
   }
 
 
-  const connected = !!profile.stripe_connect_account_id;
   const status = profile.stripe_connect_onboarding_status ?? "not_started";
+
 
   return (
     <div className="space-y-6 max-w-3xl">
@@ -154,6 +229,100 @@ function PaymentsPage() {
           </div>
         </CardContent>
       </Card>
+
+      {connected && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="rounded-lg bg-primary/10 p-2 text-primary">
+                  <Wallet className="h-5 w-5" />
+                </div>
+                <div>
+                  <CardTitle>Payouts</CardTitle>
+                  <CardDescription>Money on its way from Stripe to your bank account.</CardDescription>
+                </div>
+              </div>
+              <Button variant="outline" size="sm" onClick={fetchPayouts} disabled={payoutsLoading}>
+                <RefreshCw className={`mr-2 h-4 w-4 ${payoutsLoading ? "animate-spin" : ""}`} />
+                Refresh
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Alert>
+              <Clock className="h-4 w-4" />
+              <AlertTitle>Payments may take 3–5 working days to clear</AlertTitle>
+              <AlertDescription>
+                Funds from card, Klarna and Clearpay payments are held by Stripe before being paid out to your bank.
+                The pending balance below shows amounts Stripe is still processing.
+              </AlertDescription>
+            </Alert>
+
+            {payoutsError && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{payoutsError}</AlertDescription>
+              </Alert>
+            )}
+
+            {payouts && (
+              <>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <div className="rounded-lg border p-3">
+                    <div className="text-xs uppercase tracking-wide text-muted-foreground">Pending</div>
+                    <div className="mt-1 text-lg font-semibold">{sumRow(payouts.pending)}</div>
+                    <div className="mt-1 text-xs text-muted-foreground">Clearing with Stripe</div>
+                  </div>
+                  <div className="rounded-lg border p-3">
+                    <div className="text-xs uppercase tracking-wide text-muted-foreground">Available</div>
+                    <div className="mt-1 text-lg font-semibold">{sumRow(payouts.available)}</div>
+                    <div className="mt-1 text-xs text-muted-foreground">Ready for payout</div>
+                  </div>
+                  <div className="rounded-lg border p-3">
+                    <div className="text-xs uppercase tracking-wide text-muted-foreground">Instant available</div>
+                    <div className="mt-1 text-lg font-semibold">{sumRow(payouts.instantAvailable)}</div>
+                    <div className="mt-1 text-xs text-muted-foreground">Eligible for instant payout</div>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="mb-2 text-sm font-medium">Recent payouts</div>
+                  {payouts.payouts.length === 0 ? (
+                    <div className="rounded-md border border-dashed p-4 text-sm text-muted-foreground">
+                      No payouts yet. Once Stripe releases your first funds they will appear here.
+                    </div>
+                  ) : (
+                    <div className="divide-y rounded-md border">
+                      {payouts.payouts.map((p) => (
+                        <div key={p.id} className="flex items-center justify-between gap-3 p-3 text-sm">
+                          <div className="min-w-0">
+                            <div className="font-medium">{formatMoney(p.amount, p.currency)}</div>
+                            <div className="text-xs text-muted-foreground">
+                              {p.status === "paid" ? "Arrived" : "Expected"} {new Date(p.arrivalDate * 1000).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
+                              {p.method ? ` · ${p.method}` : ""}
+                            </div>
+                          </div>
+                          <Badge variant={statusBadgeVariant(p.status)}>{p.status.replace("_", " ")}</Badge>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="text-xs text-muted-foreground">
+                  Manage bank details and payout schedule in your Stripe Express dashboard.
+                </div>
+              </>
+            )}
+
+            {!payouts && !payoutsError && payoutsLoading && (
+              <div className="text-sm text-muted-foreground">Loading payouts…</div>
+            )}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
+
 }

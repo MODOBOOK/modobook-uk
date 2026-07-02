@@ -258,4 +258,23 @@ export async function deactivatePaymentLink(accountId: string, id: string) {
   return stripe.paymentLinks.update(id, { active: false }, { stripeAccount: accountId });
 }
 
+export async function getConnectBalance(accountId: string) {
+  const stripe = getStripe();
+  try {
+    return await stripe.balance.retrieve({}, { stripeAccount: accountId });
+  } catch (error) {
+    normaliseStripeError(error);
+  }
+}
+
+export async function listConnectPayouts(accountId: string, limit = 10) {
+  const stripe = getStripe();
+  try {
+    return await stripe.payouts.list({ limit }, { stripeAccount: accountId });
+  } catch (error) {
+    normaliseStripeError(error);
+  }
+}
+
+
 
