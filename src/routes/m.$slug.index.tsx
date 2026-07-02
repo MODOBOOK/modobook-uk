@@ -565,9 +565,10 @@ function BookPage() {
           layoutKey === "magazine" ? "h-28 sm:h-36"
           : heroHeight === "short" ? "h-36 w-full object-cover object-top sm:h-44"
           : heroHeight === "tall" ? "h-64 w-full object-cover object-top sm:h-[26rem]"
+          : heroHeight === "extra_tall" ? "h-[26rem] w-full object-cover object-top sm:h-[36rem]"
           : "h-56 w-full object-cover object-top sm:h-[22rem]";
-        const splitHeight = heroHeight === "short" ? "h-36 sm:h-52" : heroHeight === "tall" ? "h-56 sm:h-80" : "h-44 sm:h-64";
-        const blankHeight = heroHeight === "short" ? "h-32 sm:h-44" : heroHeight === "tall" ? "h-56 sm:h-72" : "h-44 sm:h-56";
+        const splitHeight = heroHeight === "short" ? "h-36 sm:h-52" : heroHeight === "tall" ? "h-56 sm:h-80" : heroHeight === "extra_tall" ? "h-[26rem] sm:h-[40rem]" : "h-44 sm:h-64";
+        const blankHeight = heroHeight === "short" ? "h-32 sm:h-44" : heroHeight === "tall" ? "h-56 sm:h-72" : heroHeight === "extra_tall" ? "h-[26rem] sm:h-[36rem]" : "h-44 sm:h-56";
         const alignCls = heroAlign === "left" ? "text-left items-start" : heroAlign === "right" ? "text-right items-end" : "text-center items-center";
         return (
           <div className="relative">
@@ -578,7 +579,7 @@ function BookPage() {
                 <div className="h-20 w-full" style={{ background: `linear-gradient(135deg, ${brand}, ${accent})` }} />
               )
             ) : carouselEnabled && carouselUrls.length > 0 ? (
-              <HeroCarousel urls={carouselUrls} />
+              <HeroCarousel urls={carouselUrls} heightClass={heightCls} />
             ) : heroUrl ? (
               <img
                 src={heroUrl}
@@ -2309,7 +2310,7 @@ function TreatmentRow({
 
 
 
-function HeroCarousel({ urls }: { urls: string[] }) {
+function HeroCarousel({ urls, heightClass }: { urls: string[]; heightClass?: string }) {
   const [i, setI] = useState(0);
   useEffect(() => {
     if (urls.length < 2) return;
@@ -2317,7 +2318,7 @@ function HeroCarousel({ urls }: { urls: string[] }) {
     return () => clearInterval(t);
   }, [urls.length]);
   return (
-    <div className="relative h-56 w-full overflow-hidden sm:h-[22rem]">
+    <div className={`relative w-full overflow-hidden ${heightClass || "h-56 sm:h-[22rem]"}`}>
       {urls.map((u, idx) => (
         <img
           key={u + idx}
