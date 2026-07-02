@@ -841,7 +841,17 @@ function BrandingPage() {
               <option value="medium">Medium</option>
               <option value="tall">Tall</option>
               <option value="extra_tall">Extra tall</option>
+              <option value="huge">Huge</option>
+              <option value="natural">Fit to image (auto height)</option>
             </select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Image fit</Label>
+            <select className="h-10 w-full rounded-md border bg-background px-3 text-sm" value={state.hero_fit ?? "contain"} onChange={(e) => set("hero_fit", e.target.value)}>
+              <option value="contain">Fit whole image (letterbox)</option>
+              <option value="cover">Fill & crop</option>
+            </select>
+            <p className="text-[11px] text-muted-foreground">"Fit to image" ignores this and shows the picture at its natural size.</p>
           </div>
           <div className="space-y-1.5">
             <Label>Text alignment</Label>
