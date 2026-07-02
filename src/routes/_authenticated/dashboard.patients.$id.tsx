@@ -399,7 +399,7 @@ function Row({ label, value }: { label: string; value?: string | null }) {
   return (
     <div className="border-b py-2 last:border-0">
       <div className="text-xs text-muted-foreground">{label}</div>
-      <div className="font-medium">{value || <span className="text-muted-foreground">—</span>}</div>
+      <div className="break-words font-medium">{value || <span className="text-muted-foreground">—</span>}</div>
     </div>
   );
 }
