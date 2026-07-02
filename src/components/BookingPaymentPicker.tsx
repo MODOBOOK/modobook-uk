@@ -13,6 +13,13 @@ type ConfiguredOptions = {
   depositCents: number;
   passFees: boolean;
   surcharges: { cardPercent: number; bnplPercent: number; depositPercent: number };
+  stripeFee: {
+    passToPatient: boolean;
+    cardPercent: number;
+    cardFixedCents: number;
+    bnplPercent: number;
+    bnplFixedCents: number;
+  };
 };
 
 
