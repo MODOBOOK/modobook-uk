@@ -114,46 +114,71 @@ export function getStripe(): Stripe {
   });
 }
 
-export async function createConnectAccount(email: string) {
+export function getStripeConnectClientId() {
+  const id = process.env.STRIPE_CONNECT_CLIENT_ID;
+  if (!id) {
+    throw new StripePlatformSetupError(
+      "Stripe Connect client ID is not configured. Add STRIPE_CONNECT_CLIENT_ID (starts with ca_...).",
+      "missing_secret",
+    );
+  }
+  if (!id.startsWith("ca_")) {
+    throw new StripePlatformSetupError(
+      "STRIPE_CONNECT_CLIENT_ID must be the Connect client ID from Stripe (starts with ca_).",
+      "invalid_secret_mode",
+    );
+  }
+  return id;
+}
+
+export function buildStripeOAuthAuthorizeUrl(params: {
+  state: string;
+  redirectUri: string;
+  email?: string;
+}) {
+  const clientId = getStripeConnectClientId();
+  const url = new URL("https://connect.stripe.com/oauth/authorize");
+  url.searchParams.set("response_type", "code");
+  url.searchParams.set("client_id", clientId);
+  url.searchParams.set("scope", "read_write");
+  url.searchParams.set("state", params.state);
+  url.searchParams.set("redirect_uri", params.redirectUri);
+  url.searchParams.set("stripe_user[country]", "GB");
+  if (params.email) url.searchParams.set("stripe_user[email]", params.email);
+  return url.toString();
+}
+
+export async function exchangeStripeOAuthCode(code: string) {
   const stripe = getStripe();
   try {
-    return await stripe.accounts.create({
-      email,
-      controller: {
-        fees: { payer: "application" },
-        losses: { payments: "application" },
-        requirement_collection: "stripe",
-        stripe_dashboard: { type: "express" },
-      },
-      capabilities: {
-        card_payments: { requested: true },
-        transfers: { requested: true },
-        klarna_payments: { requested: true },
-        afterpay_clearpay_payments: { requested: true },
-      },
-      settings: {
-        payouts: { schedule: { interval: "daily" } },
-      },
-
+    const response = await stripe.oauth.token({
+      grant_type: "authorization_code",
+      code,
     });
+    return response;
   } catch (error) {
     normaliseStripeError(error);
   }
 }
 
-export async function createConnectOnboardingLink(accountId: string, refreshUrl: string, returnUrl: string) {
+export async function deauthorizeStripeAccount(accountId: string) {
   const stripe = getStripe();
+  const clientId = getStripeConnectClientId();
   try {
-    return await stripe.accountLinks.create({
-      account: accountId,
-      refresh_url: refreshUrl,
-      return_url: returnUrl,
-      type: "account_onboarding",
+    return await stripe.oauth.deauthorize({
+      client_id: clientId,
+      stripe_user_id: accountId,
     });
   } catch (error) {
+    // If the practitioner already revoked from Stripe's side, treat as success.
+    const message = error instanceof Error ? error.message : "";
+    if (message.toLowerCase().includes("not connected") || message.includes("does not have access")) {
+      return { stripe_user_id: accountId };
+    }
     normaliseStripeError(error);
   }
 }
+
 
 export async function getAccount(accountId: string) {
   const stripe = getStripe();

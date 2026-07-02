@@ -5,9 +5,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useServerFn } from "@tanstack/react-start";
-import { startStripeOnboarding, refreshStripeStatus, getStripePayouts } from "@/lib/stripe.functions";
+import {
+  startStripeStandardConnect,
+  disconnectStripe,
+  refreshStripeStatus,
+  getStripePayouts,
+} from "@/lib/stripe.functions";
 import { toast } from "sonner";
-import { AlertCircle, CreditCard, ExternalLink, RefreshCw, Wallet, Clock } from "lucide-react";
+import { AlertCircle, CreditCard, ExternalLink, RefreshCw, Wallet, Clock, Unlink } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard/payments")({
   ssr: false,
@@ -53,24 +58,46 @@ function statusBadgeVariant(status: string): "default" | "secondary" | "destruct
   return "outline";
 }
 
-
 function PaymentsPage() {
-  const { profile } = Route.useRouteContext() as { profile: { stripe_connect_account_id: string | null; stripe_connect_onboarding_status: string | null } };
+  const { profile } = Route.useRouteContext() as {
+    profile: {
+      stripe_connect_account_id: string | null;
+      stripe_connect_onboarding_status: string | null;
+      stripe_connect_type?: string | null;
+    };
+  };
   const router = useRouter();
-  const onboard = useServerFn(startStripeOnboarding);
+  const startConnect = useServerFn(startStripeStandardConnect);
+  const disconnect = useServerFn(disconnectStripe);
   const refresh = useServerFn(refreshStripeStatus);
   const loadPayouts = useServerFn(getStripePayouts);
   const [loading, setLoading] = useState(false);
-  const [setupIssue, setSetupIssue] = useState<{
-    message: string;
-    actionUrl?: string;
-  } | null>(null);
-  const [stripeLink, setStripeLink] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [payouts, setPayouts] = useState<PayoutsData | null>(null);
   const [payoutsLoading, setPayoutsLoading] = useState(false);
   const [payoutsError, setPayoutsError] = useState<string | null>(null);
 
   const connected = !!profile.stripe_connect_account_id;
+  const isLegacyExpress = connected && profile.stripe_connect_type !== "standard";
+  const status = profile.stripe_connect_onboarding_status ?? "not_started";
+
+  // Surface any error/success message coming back from the OAuth callback.
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    const err = url.searchParams.get("stripe_error");
+    const ok = url.searchParams.get("connected");
+    if (err) {
+      setErrorMsg(err);
+      toast.error(err);
+      url.searchParams.delete("stripe_error");
+      window.history.replaceState({}, "", url.toString());
+    } else if (ok) {
+      toast.success("Stripe account connected");
+      url.searchParams.delete("connected");
+      window.history.replaceState({}, "", url.toString());
+      router.invalidate();
+    }
+  }, [router]);
 
   async function fetchPayouts() {
     setPayoutsLoading(true);
@@ -96,42 +123,38 @@ function PaymentsPage() {
   }
 
   useEffect(() => {
-    if (connected) void fetchPayouts();
+    if (connected && !isLegacyExpress) void fetchPayouts();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [connected]);
-
+  }, [connected, isLegacyExpress]);
 
   async function connect() {
-    const pendingWindow = window.open("about:blank", "_blank");
     setLoading(true);
+    setErrorMsg(null);
     try {
-      const origin = window.location.origin;
-      const res = await onboard({
-        data: {
-          returnUrl: `${origin}/dashboard/payments?refresh=1`,
-          refreshUrl: `${origin}/dashboard/payments?retry=1`,
-        },
-      });
+      const res = await startConnect({ data: { origin: window.location.origin } });
       if (!res.ok) {
-        pendingWindow?.close();
-        setSetupIssue({ message: res.message, actionUrl: "actionUrl" in res ? res.actionUrl : undefined });
+        setErrorMsg(res.message);
         toast.error(res.message);
         return;
       }
-      setSetupIssue(null);
-      if ("recovered" in res && res.recovered) {
-        toast.success("Fresh Stripe connection created");
-      }
-      setStripeLink(res.url);
-      if (pendingWindow) {
-        pendingWindow.opener = null;
-        pendingWindow.location.href = res.url;
-      } else {
-        toast.info("Your browser blocked the new tab. Use the Stripe button shown below.");
-      }
+      // Same-tab redirect to Stripe's authorize page.
+      window.location.href = res.url;
     } catch (e) {
-      pendingWindow?.close();
-      toast.error(e instanceof Error ? e.message : "Failed to start Stripe onboarding");
+      toast.error(e instanceof Error ? e.message : "Failed to start Stripe connection.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleDisconnect() {
+    if (!confirm("Disconnect your Stripe account? You can reconnect anytime.")) return;
+    setLoading(true);
+    try {
+      await disconnect({});
+      toast.success("Stripe disconnected");
+      router.invalidate();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to disconnect.");
     } finally {
       setLoading(false);
     }
@@ -154,16 +177,29 @@ function PaymentsPage() {
     }
   }
 
-
-  const status = profile.stripe_connect_onboarding_status ?? "not_started";
-
-
   return (
     <div className="space-y-6 max-w-3xl">
       <div>
         <h1 className="text-2xl font-bold">Payments</h1>
-        <p className="text-muted-foreground">Connect your Stripe account to receive payments from patients.</p>
+        <p className="text-muted-foreground">
+          Connect your own Stripe account. Payments go directly to you — refunds, payouts and disputes are managed inside your Stripe dashboard and mobile app.
+        </p>
       </div>
+
+      {isLegacyExpress && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Old Stripe Express connection detected</AlertTitle>
+          <AlertDescription className="space-y-3">
+            <p>
+              MODO has moved to full Stripe accounts so you get access via the Stripe website and mobile app. Please reconnect using your own Stripe account.
+            </p>
+            <Button size="sm" variant="secondary" onClick={handleDisconnect} disabled={loading}>
+              Remove old connection
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
 
       <Card>
         <CardHeader>
@@ -173,64 +209,78 @@ function PaymentsPage() {
                 <CreditCard className="h-5 w-5" />
               </div>
               <div>
-                <CardTitle>Stripe Connect</CardTitle>
-                <CardDescription>Payments go directly to your Stripe account.</CardDescription>
+                <CardTitle>Stripe account</CardTitle>
+                <CardDescription>
+                  {connected && !isLegacyExpress
+                    ? "Your Stripe account is linked to MODO."
+                    : "Connect your Stripe account to start taking payments."}
+                </CardDescription>
               </div>
             </div>
-            <Badge variant={status === "active" ? "default" : "secondary"}>{status}</Badge>
+            {connected && !isLegacyExpress && (
+              <Badge variant={status === "active" ? "default" : "secondary"}>{status}</Badge>
+            )}
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          {setupIssue && (
+          {errorMsg && (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Stripe Connect setup needed</AlertTitle>
-              <AlertDescription className="space-y-3">
-                <p>{setupIssue.message}</p>
-                {setupIssue.actionUrl && (
-                  <Button asChild variant="outline" size="sm">
-                    <a href={setupIssue.actionUrl} target="_blank" rel="noreferrer">
-                      Open Stripe Connect setup
-                      <ExternalLink className="ml-2 h-4 w-4" />
-                    </a>
-                  </Button>
-                )}
-              </AlertDescription>
+              <AlertTitle>Stripe connection issue</AlertTitle>
+              <AlertDescription>{errorMsg}</AlertDescription>
             </Alert>
           )}
-          <ul className="space-y-1 text-sm text-muted-foreground">
-            <li>• 0% platform fee — you keep 100% (minus Stripe processing fees).</li>
-            <li>• Klarna & Clearpay supported with a 5% surcharge passed to the patient.</li>
-            <li>• Refunds and disputes handled in your own Stripe dashboard.</li>
-          </ul>
-          <div className="flex flex-wrap gap-2">
-            <Button onClick={connect} disabled={loading}>
-              <ExternalLink className="mr-2 h-4 w-4" />
-              {connected ? "Continue Stripe onboarding" : "Connect Stripe"}
-            </Button>
-            {stripeLink && (
-              <Button asChild>
-                <a
-                  href={stripeLink}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  <ExternalLink className="mr-2 h-4 w-4" />
-                  Open Stripe manually
-                </a>
+
+          {!connected || isLegacyExpress ? (
+            <>
+              <ul className="space-y-1 text-sm text-muted-foreground">
+                <li>• Payments land directly in your Stripe account.</li>
+                <li>• Full Stripe Dashboard access + mobile app.</li>
+                <li>• You own refunds, payouts, disputes and bank details.</li>
+                <li>• Klarna &amp; Clearpay supported (enable in your own Stripe settings).</li>
+              </ul>
+              <div className="rounded-md border bg-muted/40 p-3 text-sm text-muted-foreground">
+                Don't have a Stripe account yet?{" "}
+                <a href="https://dashboard.stripe.com/register" target="_blank" rel="noreferrer" className="underline">
+                  Create one at stripe.com
+                </a>{" "}
+                first (takes about 5 minutes), then come back and click Connect.
+              </div>
+              <Button onClick={connect} disabled={loading}>
+                <ExternalLink className="mr-2 h-4 w-4" />
+                Connect with Stripe
               </Button>
-            )}
-            {connected && (
-              <Button variant="outline" onClick={checkStatus} disabled={loading}>
-                <RefreshCw className="mr-2 h-4 w-4" />
-                Refresh status
-              </Button>
-            )}
-          </div>
+            </>
+          ) : (
+            <>
+              <div className="rounded-md border bg-muted/40 p-3 text-sm">
+                <div className="font-mono text-xs text-muted-foreground break-all">
+                  {profile.stripe_connect_account_id}
+                </div>
+                <div className="mt-1 text-xs text-muted-foreground">
+                  Manage this account at{" "}
+                  <a href="https://dashboard.stripe.com" target="_blank" rel="noreferrer" className="underline">
+                    dashboard.stripe.com
+                  </a>{" "}
+                  or in the Stripe mobile app.
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button variant="outline" onClick={checkStatus} disabled={loading}>
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  Refresh status
+                </Button>
+                <Button variant="ghost" onClick={handleDisconnect} disabled={loading}>
+                  <Unlink className="mr-2 h-4 w-4" />
+                  Disconnect
+                </Button>
+              </div>
+            </>
+          )}
         </CardContent>
       </Card>
 
-      {connected && (
+      {connected && !isLegacyExpress && (
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between gap-4">
@@ -311,7 +361,7 @@ function PaymentsPage() {
                 </div>
 
                 <div className="text-xs text-muted-foreground">
-                  Manage bank details and payout schedule in your Stripe Express dashboard.
+                  Manage bank details and payout schedule in your Stripe dashboard.
                 </div>
               </>
             )}
@@ -324,5 +374,4 @@ function PaymentsPage() {
       )}
     </div>
   );
-
 }

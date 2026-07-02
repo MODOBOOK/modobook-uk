@@ -185,6 +185,23 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
               }
               break;
             }
+
+            case "account.application.deauthorized": {
+              // Practitioner revoked MODO's access from inside their own Stripe dashboard.
+              const accountId = connectedAccountId;
+              if (accountId) {
+                await supabaseAdmin
+                  .from("profiles")
+                  .update({
+                    stripe_connect_account_id: null,
+                    stripe_connect_onboarding_status: "not_started",
+                    stripe_connect_type: null,
+                  } as never)
+                  .eq("stripe_connect_account_id", accountId);
+              }
+              break;
+            }
+
           }
         } catch (err) {
           console.error("[stripe-webhook] handler error", event.type, err);
