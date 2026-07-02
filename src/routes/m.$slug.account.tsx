@@ -407,13 +407,13 @@ function Account() {
         )}
       </Section>
 
-      {/* Aftercare */}
+      {/* Aftercare (active only — older or superseded aftercare is tucked into Previous appointments) */}
       <Section title="Aftercare guidance" icon={HeartPulse} brand={brand}>
-        {aftercare.length === 0 ? (
-          <Empty msg="Your practitioner will share aftercare here after your appointment." />
+        {activeAftercare.length === 0 ? (
+          <Empty msg="Your practitioner will share aftercare here after your appointment. Older aftercare is filed under Previous appointments." />
         ) : (
           <div className="space-y-3">
-            {aftercare.map((ac) => <AftercareCard key={ac.id} ac={ac} brand={brand} appts={appts} />)}
+            {activeAftercare.map((ac) => <AftercareCard key={ac.id} ac={ac} brand={brand} appts={appts} />)}
           </div>
         )}
       </Section>
