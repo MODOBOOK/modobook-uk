@@ -1054,10 +1054,11 @@ function MultiBookPage() {
                   <Card className="mb-6">
                     <CardHeader><CardTitle style={headingStyle}>Terms & Conditions</CardTitle></CardHeader>
                     <CardContent className="space-y-3">
-                      <div
+                      <SafeHtml
+                        html={termsHtml}
                         className="prose prose-sm max-w-none rounded-md border bg-muted/30 p-3 max-h-56 overflow-y-auto"
-                        dangerouslySetInnerHTML={{ __html: termsHtml }}
                       />
+
                       <label className="flex items-start gap-2 text-sm cursor-pointer">
                         <input
                           type="checkbox"

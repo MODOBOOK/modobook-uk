@@ -51,12 +51,21 @@ function PatientAuth() {
 
 
   function goAfterAuth() {
-    if (search.redirect && search.redirect.startsWith("/")) {
-      window.location.assign(search.redirect);
+    const target = search.redirect;
+    // Only allow same-origin absolute paths. Reject protocol-relative (//foo)
+    // and URLs with a scheme (https:/, javascript:, etc.) to prevent open-redirect.
+    if (
+      typeof target === "string" &&
+      target.startsWith("/") &&
+      !target.startsWith("//") &&
+      !target.startsWith("/\\")
+    ) {
+      window.location.assign(target);
     } else {
       navigate({ to: "/m/$slug/account", params: { slug } });
     }
   }
+
 
   async function signUp(e: React.FormEvent) {
     e.preventDefault();
