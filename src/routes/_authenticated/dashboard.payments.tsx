@@ -137,8 +137,14 @@ function PaymentsPage() {
         toast.error(res.message);
         return;
       }
-      // Same-tab redirect to Stripe's authorize page.
-      window.location.href = res.url;
+      // Break out of any iframe (e.g. Lovable preview) — Stripe's OAuth
+      // page sets X-Frame-Options: DENY and will otherwise appear to hang.
+      const target = window.top ?? window;
+      try {
+        target.location.href = res.url;
+      } catch {
+        window.open(res.url, "_blank", "noopener,noreferrer");
+      }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to start Stripe connection.");
     } finally {
