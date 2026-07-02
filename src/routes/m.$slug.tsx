@@ -86,10 +86,24 @@ function ModoLayout() {
         } as React.CSSProperties
       }
     >
-      <style>{`
-        .modo-shell h1, .modo-shell h2, .modo-shell h3 { font-family: ${headingFont}; }
-        ${theme?.custom_css ?? ""}
-      `}</style>
+      <style>{(() => {
+        // Defence in depth: strip any attempt to break out of the <style> element
+        // and clamp font names to a safe character set.
+        const safeFont = String(headingFont ?? "")
+          .replace(/[^a-zA-Z0-9\s\-_,'"]/g, "")
+          .slice(0, 80) || "inherit";
+        const rawCss = String(theme?.custom_css ?? "");
+        const safeCss = rawCss
+          .replace(/<\/?\s*style\b[^>]*>/gi, "")
+          .replace(/<\/?\s*script\b[^>]*>/gi, "")
+          .replace(/<!--[\s\S]*?-->/g, "")
+          .slice(0, 20000);
+        return `
+          .modo-shell h1, .modo-shell h2, .modo-shell h3 { font-family: ${safeFont}; }
+          ${safeCss}
+        `;
+      })()}</style>
+
       <div className="modo-shell">
         <header
           className={`${theme?.header_sticky === false ? "" : "sticky top-0"} z-30 border-b`}

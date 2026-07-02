@@ -118,12 +118,30 @@ export const upsertMyTheme = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const profileId = await getProfileId(context.supabase, context.userId);
     if (!profileId) throw new Error("Profile not found");
+
+    // Sanitize practitioner-controlled fields that end up rendered inside a
+    // <style> element on the public /m/:slug page.
+    const sanitized: ClinicThemeInput = { ...data };
+    if (typeof sanitized.heading_font === "string") {
+      sanitized.heading_font = sanitized.heading_font
+        .replace(/[^a-zA-Z0-9\s\-_,'"]/g, "")
+        .slice(0, 80);
+    }
+    if (typeof sanitized.custom_css === "string") {
+      sanitized.custom_css = sanitized.custom_css
+        .replace(/<\/?\s*style\b[^>]*>/gi, "")
+        .replace(/<\/?\s*script\b[^>]*>/gi, "")
+        .replace(/<!--[\s\S]*?-->/g, "")
+        .slice(0, 20000);
+    }
+
     const { data: row, error } = await context.supabase
       .from("clinic_theme")
-      .upsert({ profile_id: profileId, ...data }, { onConflict: "profile_id" })
+      .upsert({ profile_id: profileId, ...sanitized }, { onConflict: "profile_id" })
       .select()
       .single();
     if (error) throw error;
+
 
     // Mirror visible bits onto the public profile so the /m/:slug page reflects them.
     const profileUpdate: { brand_color?: string | null; hero_url?: string | null } = {};

@@ -16,6 +16,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { describeCancellationRules, type CancellationRule } from "@/lib/policy";
+import { SafeHtml } from "@/components/SafeHtml";
+
 
 export const Route = createFileRoute("/m/$slug/account")({
   ssr: false,
@@ -693,11 +695,12 @@ function InlineAftercare({ ac, brand }: { ac: any; brand: string }) {
       </button>
       {open && (
         <div className="border-t bg-muted/20 px-3 py-2">
-          <div
+          <SafeHtml
+            html={ac.body_html ?? "<em>No content</em>"}
             className="prose prose-sm max-w-none prose-headings:mt-2 prose-headings:mb-1 prose-p:my-1 prose-ul:my-1 prose-li:my-0.5"
-            dangerouslySetInnerHTML={{ __html: ac.body_html ?? "<em>No content</em>" }}
           />
         </div>
+
       )}
     </div>
   );
@@ -738,11 +741,12 @@ function AftercareCard({ ac, brand, appts }: { ac: any; brand: string; appts: Ap
       </button>
       {open && (
         <div className="border-t bg-muted/20 px-4 py-3">
-          <div
+          <SafeHtml
+            html={ac.body_html ?? "<em>No content</em>"}
             className="prose prose-sm max-w-none prose-headings:mt-3 prose-headings:mb-1 prose-p:my-1.5 prose-ul:my-1.5 prose-li:my-0.5"
-            dangerouslySetInnerHTML={{ __html: ac.body_html ?? "<em>No content</em>" }}
           />
         </div>
+
       )}
     </Card>
   );

@@ -71,6 +71,40 @@ function stripHtml(html: string): string {
     .slice(0, 40000);
 }
 
+function isBlockedHost(hostname: string): boolean {
+  const h = hostname.toLowerCase();
+  if (!h) return true;
+  if (h === "localhost" || h.endsWith(".localhost") || h.endsWith(".internal") || h.endsWith(".local")) return true;
+  // IPv6 loopback / link-local / unique-local
+  if (h === "::1" || h.startsWith("[::1") || h.startsWith("[fc") || h.startsWith("[fd") || h.startsWith("[fe80")) return true;
+  // IPv4 literal – block loopback / private / link-local / CGNAT / metadata
+  const m = h.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+  if (m) {
+    const [a, b] = [parseInt(m[1], 10), parseInt(m[2], 10)];
+    if (a === 10) return true;
+    if (a === 127) return true;
+    if (a === 0) return true;
+    if (a === 169 && b === 254) return true; // link-local incl. AWS/GCP metadata 169.254.169.254
+    if (a === 172 && b >= 16 && b <= 31) return true;
+    if (a === 192 && b === 168) return true;
+    if (a === 100 && b >= 64 && b <= 127) return true; // CGNAT
+    if (a >= 224) return true; // multicast / reserved
+  }
+  return false;
+}
+
+function assertSafeUrl(target: string): URL {
+  let u: URL;
+  try { u = new URL(target); } catch { throw new Error("Invalid URL"); }
+  if (u.protocol !== "http:" && u.protocol !== "https:") {
+    throw new Error("Only http and https URLs are allowed");
+  }
+  if (isBlockedHost(u.hostname)) {
+    throw new Error("URL points to a private or reserved address");
+  }
+  return u;
+}
+
 async function fetchUrlText(url: string): Promise<string> {
   const collected: string[] = [];
   const tried = new Set<string>();
@@ -79,11 +113,15 @@ async function fetchUrlText(url: string): Promise<string> {
     if (tried.has(target)) return;
     tried.add(target);
     try {
+      // Re-validate on every hop; refuse to follow redirects into private space.
+      assertSafeUrl(target);
       const res = await fetch(target, {
         headers: { "User-Agent": "Mozilla/5.0 MODO Importer" },
         redirect: "follow",
       });
       if (!res.ok) return;
+      // If the final URL after redirects is now private, discard the response.
+      try { assertSafeUrl(res.url); } catch { return; }
       const ct = res.headers.get("content-type") || "";
       const text = await res.text();
       collected.push(`--- ${target} ---\n` + (ct.includes("html") ? stripHtml(text) : text.slice(0, 25000)));
@@ -92,7 +130,9 @@ async function fetchUrlText(url: string): Promise<string> {
     }
   }
 
-  await pull(url);
+  const initial = assertSafeUrl(url);
+  await pull(initial.toString());
+
 
   // Also try common price-list paths on the same origin so URL imports actually find treatments
   try {
