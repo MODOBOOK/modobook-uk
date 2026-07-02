@@ -746,7 +746,21 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
       }
     }
 
-    return { appointments: created, consents, medicalForms, packagePurchases };
+    let checkoutUrl: string | null = null;
+    try {
+      const totalAmount = data.bookings.reduce((sum, b) => sum + b.priceCents / 100, 0);
+      checkoutUrl = await maybeCreateBookingCheckout({
+        profile: prof,
+        appointmentIds: created.map((c) => c.id),
+        totalAmount,
+        patientEmail: data.patientEmail,
+        description: `Booking with ${prof?.clinic_name ?? "clinic"}`,
+      });
+    } catch (e) {
+      console.error("[requestMultiBooking] checkout failed", e);
+    }
+    return { appointments: created, consents, medicalForms, packagePurchases, checkoutUrl };
+
   });
 
 
