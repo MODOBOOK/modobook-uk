@@ -4,10 +4,41 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 async function getProfile(supabase: any, userId: string) {
   const { data } = await supabase
     .from("profiles")
-    .select("id, stripe_connect_account_id, slug, clinic_name, full_name")
+    .select(
+      "id, stripe_connect_account_id, slug, clinic_name, full_name, payment_pass_fees_to_customer, payment_surcharge_card_enabled, payment_surcharge_card_percent, stripe_fee_pass_to_patient, stripe_fee_card_percent, stripe_fee_card_fixed_cents",
+    )
     .eq("user_id", userId)
     .single();
   return data;
+}
+
+// Compute the platform/processing surcharge (in pence) for a card payment
+// link, mirroring the same rules used in the public checkout flow so a link
+// sent from the app charges the patient exactly what the practitioner has
+// configured.
+function computeCardSurchargeCents(
+  subtotalCents: number,
+  p: {
+    payment_pass_fees_to_customer?: boolean | null;
+    payment_surcharge_card_enabled?: boolean | null;
+    payment_surcharge_card_percent?: number | null;
+    stripe_fee_pass_to_patient?: boolean | null;
+    stripe_fee_card_percent?: number | null;
+    stripe_fee_card_fixed_cents?: number | null;
+  },
+) {
+  let surcharge = 0;
+  if (p.payment_pass_fees_to_customer && p.payment_surcharge_card_enabled) {
+    const pct = Number(p.payment_surcharge_card_percent ?? 0);
+    if (pct > 0) surcharge += (subtotalCents * pct) / 100;
+  }
+  if (p.stripe_fee_pass_to_patient) {
+    const pct = Number(p.stripe_fee_card_percent ?? 0);
+    const fixed = Number(p.stripe_fee_card_fixed_cents ?? 0);
+    if (pct > 0) surcharge += (subtotalCents * pct) / 100;
+    if (fixed > 0) surcharge += fixed;
+  }
+  return Math.round(surcharge);
 }
 
 export const createPaymentLink = createServerFn({ method: "POST" })
@@ -20,6 +51,7 @@ export const createPaymentLink = createServerFn({ method: "POST" })
       appointmentId?: string | null;
       recipientEmail?: string | null;
       recipientName?: string | null;
+      recipientPhone?: string | null;
       expiresAt?: string | null;
       currency?: string;
     }) => input,
@@ -33,16 +65,22 @@ export const createPaymentLink = createServerFn({ method: "POST" })
     if (!Number.isFinite(data.amountCents) || data.amountCents < 100) {
       throw new Error("Minimum amount is £1.00");
     }
+    const subtotalCents = Math.round(data.amountCents);
+    const surchargeCents = computeCardSurchargeCents(subtotalCents, profile);
+    const totalCents = subtotalCents + surchargeCents;
+
     const { createConnectedPaymentLink } = await import("./stripe.server");
     const link = await createConnectedPaymentLink({
       accountId: profile.stripe_connect_account_id,
-      amountCents: Math.round(data.amountCents),
+      amountCents: subtotalCents,
       currency: data.currency ?? "gbp",
       description: data.description,
+      surchargeCents,
       metadata: {
         profile_id: profile.id,
         appointment_id: data.appointmentId ?? "",
         kind: data.kind ?? "adhoc",
+        surcharge_cents: String(surchargeCents),
       },
     });
 
@@ -52,7 +90,7 @@ export const createPaymentLink = createServerFn({ method: "POST" })
         profile_id: profile.id,
         appointment_id: data.appointmentId ?? null,
         kind: data.kind ?? "adhoc",
-        amount_cents: Math.round(data.amountCents),
+        amount_cents: totalCents,
         currency: (data.currency ?? "gbp").toLowerCase(),
         description: data.description,
         stripe_payment_link_id: link.id,
@@ -71,14 +109,21 @@ export const createPaymentLink = createServerFn({ method: "POST" })
         .from("appointments")
         .update({
           deposit_payment_link_id: row.id,
-          deposit_required_cents: Math.round(data.amountCents),
+          deposit_required_cents: subtotalCents,
           deposit_due_at: data.expiresAt ?? null,
         })
         .eq("id", data.appointmentId)
         .eq("profile_id", profile.id);
     }
-    return row;
+    return {
+      ...row,
+      subtotal_cents: subtotalCents,
+      surcharge_cents: surchargeCents,
+      total_cents: totalCents,
+      recipient_phone: data.recipientPhone ?? null,
+    };
   });
+
 
 export const listPaymentLinks = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
