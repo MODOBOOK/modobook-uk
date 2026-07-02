@@ -1304,7 +1304,8 @@ function MultiBookPage() {
                       disabled={
                         !slot || submitting || !form.name || !form.email || (reqPhone && !form.phone) || (reqDob && !form.dob) ||
                         (termsRequired && !agreedToTerms) || prescriberBlocks ||
-                        (anySplit && !splitAgreed)
+                        (anySplit && !splitAgreed) ||
+                        (totalAfterDiscount > 0 && !paymentChoice)
                       }
                       onClick={submit}
                       style={{ backgroundColor: brand, color: "#fff" }}
