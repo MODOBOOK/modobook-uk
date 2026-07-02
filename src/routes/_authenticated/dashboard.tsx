@@ -40,6 +40,7 @@ import { resolveDisplayNames } from "@/lib/display-name";
 import { countPendingReviews } from "@/lib/patient.functions";
 import { getHubNotifications } from "@/lib/hub.functions";
 import { useServerFn } from "@tanstack/react-start";
+import { NotificationsBell } from "@/components/NotificationsBell";
 
 
 
@@ -179,6 +180,7 @@ function DashboardLayout() {
           <div className="flex min-w-0 flex-1 items-center justify-center">
             <span className="truncate text-sm font-semibold">{displayName || "My Clinic"}</span>
           </div>
+          <NotificationsBell />
           <Link to="/hub" className="relative inline-flex h-9 w-9 items-center justify-center rounded-full border border-border/70 bg-background text-foreground hover:bg-muted" aria-label="Prescriber Hub">
             <Stethoscope className="h-4 w-4" />
             {hubCounts.total > 0 && (
@@ -204,6 +206,7 @@ function DashboardLayout() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <NotificationsBell />
             {isPrescriber && (
               <Link to="/prescriber"><Button variant="ghost" size="sm" className="rounded-full">Prescriber view</Button></Link>
             )}
