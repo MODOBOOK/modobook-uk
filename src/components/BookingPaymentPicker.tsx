@@ -49,14 +49,21 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
   const opts = q.data as ConfiguredOptions | { configured: false } | undefined;
   const configured = opts && "configured" in opts && opts.configured;
 
+  const effectiveDepositCents = useMemo(() => {
+    if (!configured) return 0;
+    const o = opts as ConfiguredOptions;
+    return depositOverrideCents != null && depositOverrideCents > 0 ? depositOverrideCents : o.depositCents;
+  }, [configured, opts, depositOverrideCents]);
+
   const availableModes = useMemo(() => {
     if (!configured) return [] as Array<"deposit" | "full">;
     const arr: Array<"deposit" | "full"> = [];
     const o = opts as ConfiguredOptions;
-    if (o.depositEnabled && o.depositCents >= 100) arr.push("deposit");
+    if (o.depositEnabled && effectiveDepositCents >= 100) arr.push("deposit");
     if (o.cardEnabled || o.klarnaEnabled || o.clearpayEnabled) arr.push("full");
     return arr;
-  }, [configured, opts]);
+  }, [configured, opts, effectiveDepositCents]);
+
 
   const availableMethods = useMemo(() => {
     if (!configured) return [] as Array<"card" | "klarna" | "clearpay">;
