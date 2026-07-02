@@ -277,7 +277,9 @@ function BookingFlowPage() {
           chooser_show_unsure: showUnsure,
           chooser_show_consultation: showConsult,
           chooser_consultation_treatment_ids: consultIds,
-          chooser_consultation_treatment_id: consultIds[0] ?? null,
+          // Keep the legacy single-ID field only for a genuinely single
+          // consultation setup. Multiple consultations are driven by the array.
+          chooser_consultation_treatment_id: consultIds.length === 1 ? consultIds[0] : null,
           chooser_intro_text: intro || null,
           chooser_extra_enabled: extraOn,
           chooser_extra_title: extraTitle || null,
