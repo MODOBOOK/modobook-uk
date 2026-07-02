@@ -980,4 +980,128 @@ function EditMyDetailsDialog({
   );
 }
 
+function DataPrivacySection({
+  slug, profileId, brand, onErased,
+}: { slug: string; profileId: string; brand: string; onErased: () => void | Promise<void> }) {
+  const [exporting, setExporting] = useState(false);
+  const [erasing, setErasing] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
+
+  async function exportData() {
+    setExporting(true);
+    try {
+      const [
+        { data: { user } },
+        clientRes, apptsRes, formsRes, consentsRes, notesRes,
+        aftercareRes, paymentsRes, prescriptionsRes,
+      ] = await Promise.all([
+        supabase.auth.getUser(),
+        supabase.from("clinic_clients").select("*").eq("profile_id", profileId),
+        supabase.from("appointments").select("*").eq("profile_id", profileId),
+        supabase.from("appointment_medical_forms").select("*").eq("profile_id", profileId),
+        supabase.from("appointment_consents").select("*").eq("profile_id", profileId),
+        supabase.from("client_notes").select("*").eq("profile_id", profileId).eq("visible_to_patient", true),
+        supabase.from("appointment_aftercare").select("*").eq("profile_id", profileId),
+        supabase.from("payments").select("*").eq("profile_id", profileId),
+        supabase.from("client_prescriptions").select("*").eq("profile_id", profileId),
+      ]);
+      const bundle = {
+        exported_at: new Date().toISOString(),
+        clinic_slug: slug,
+        user: { id: user?.id, email: user?.email },
+        client_record: clientRes.data ?? [],
+        appointments: apptsRes.data ?? [],
+        medical_forms: formsRes.data ?? [],
+        consents: consentsRes.data ?? [],
+        notes_shared_with_you: notesRes.data ?? [],
+        aftercare: aftercareRes.data ?? [],
+        payments: paymentsRes.data ?? [],
+        prescriptions: prescriptionsRes.data ?? [],
+      };
+      const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `modo-${slug}-my-data-${new Date().toISOString().slice(0,10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success("Your data has been downloaded.");
+    } catch (e: any) {
+      toast.error(e?.message || "Export failed");
+    } finally {
+      setExporting(false);
+    }
+  }
+
+  async function requestErasure() {
+    setErasing(true);
+    const { error } = await supabase.rpc("patient_request_erasure", { p_slug: slug } as any);
+    setErasing(false);
+    if (error) return toast.error(error.message);
+    toast.success("Your personal details have been erased.");
+    setConfirmOpen(false);
+    await onErased();
+  }
+
+  return (
+    <section className="mt-8">
+      <h2 className="mb-3 flex items-center gap-2 text-base font-semibold" style={{ color: brand }}>
+        <ShieldCheck className="h-4 w-4" />Data & privacy
+      </h2>
+      <Card>
+        <CardContent className="grid gap-4 p-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <div className="text-sm font-medium">Download my data</div>
+            <p className="text-xs text-muted-foreground">
+              Get a copy of everything this clinic holds about you — profile, bookings, forms, consents, prescriptions and payments — as a JSON file.
+            </p>
+            <Button variant="outline" size="sm" onClick={exportData} disabled={exporting}>
+              {exporting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Download JSON
+            </Button>
+          </div>
+          <div className="space-y-2">
+            <div className="text-sm font-medium">Erase my personal details</div>
+            <p className="text-xs text-muted-foreground">
+              Removes your name, contact, address, GP and emergency-contact details from this clinic.
+              Clinical records (medical forms, consents, prescriptions and bookings) are anonymised and
+              retained for UK statutory periods (8 years clinical, 10 years prescriptions, 7 years financial).
+              Your patient login for this clinic will be removed.
+            </p>
+            <Button variant="destructive" size="sm" onClick={() => setConfirmOpen(true)}>
+              Request erasure
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Dialog open={confirmOpen} onOpenChange={(o) => { setConfirmOpen(o); if (!o) setConfirmText(""); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm erasure</DialogTitle>
+            <DialogDescription>
+              This cannot be undone. Your personal details will be erased at this clinic immediately and you will be signed out.
+              Clinical records are retained (anonymised) to meet UK regulatory retention rules.
+              Type <strong>ERASE</strong> to confirm.
+            </DialogDescription>
+          </DialogHeader>
+          <input
+            className="w-full rounded-md border px-3 py-2 text-sm"
+            value={confirmText}
+            onChange={(e) => setConfirmText(e.target.value)}
+            placeholder="ERASE"
+          />
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setConfirmOpen(false)} disabled={erasing}>Cancel</Button>
+            <Button variant="destructive" onClick={requestErasure} disabled={erasing || confirmText !== "ERASE"}>
+              {erasing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Erase my details
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </section>
+  );
+}
+
+
 
