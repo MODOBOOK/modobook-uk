@@ -294,7 +294,7 @@ export const getDayAvailability = createServerFn({ method: "GET" })
 
     const { data: appts } = await supabaseAdmin
       .from("appointments")
-      .select("start_time,end_time,location_id,status,payment_status,payment_hold_expires_at")
+      .select("id,start_time,end_time,location_id,status,payment_status,payment_hold_expires_at")
       .eq("profile_id", data.profileId)
       .eq("scheduled_date", data.date)
       .neq("status", "cancelled");
