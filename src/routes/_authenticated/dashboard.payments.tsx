@@ -125,7 +125,7 @@ function PaymentsPage() {
             </Alert>
           )}
           <ul className="space-y-1 text-sm text-muted-foreground">
-            <li>• Sandbox/test mode is active — use Stripe keys that start with sk_test_.</li>
+            <li>• 0% platform fee — you keep 100% (minus Stripe processing fees).</li>
             <li>• 0% platform fee — you keep 100% (minus Stripe processing fees).</li>
             <li>• Klarna & Clearpay supported with a 5% surcharge passed to the patient.</li>
             <li>• Refunds and disputes handled in your own Stripe dashboard.</li>
