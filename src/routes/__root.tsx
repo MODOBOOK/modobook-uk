@@ -75,12 +75,30 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   );
 }
 
+const STATIC_TOP_LEVEL = new Set([
+  "auth",
+  "dashboard",
+  "prescriber-hub",
+  "features",
+  "who-its-for",
+  "terms",
+  "reset-password",
+  "c",
+  "f",
+  "book",
+  "api",
+  "",
+]);
+
 function getClinicFallbackHref() {
   if (typeof window === "undefined") return "/";
   const returnTo = new URLSearchParams(window.location.search).get("returnTo");
-  if (returnTo?.startsWith("/m/")) return returnTo;
-  const slug = window.location.pathname.match(/^\/m\/([^/?#]+)/)?.[1];
-  return slug ? `/m/${slug}` : "/";
+  const returnToSegment = returnTo?.split("/")[1] ?? "";
+  if (returnTo && !STATIC_TOP_LEVEL.has(returnToSegment)) return returnTo;
+
+  const first = window.location.pathname.match(/^\/([^/?#]+)/)?.[1] ?? "";
+  if (!first || STATIC_TOP_LEVEL.has(first)) return "/";
+  return `/${first}`;
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
