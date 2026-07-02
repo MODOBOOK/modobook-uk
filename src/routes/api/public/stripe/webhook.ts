@@ -1,12 +1,58 @@
 import { createFileRoute } from "@tanstack/react-router";
 import Stripe from "stripe";
 
+function getWebhookSecrets() {
+  return [
+    process.env.STRIPE_WEBHOOK_SECRET,
+    process.env.STRIPE_CONNECTED_WEBHOOK_SECRET,
+    process.env.STRIPE_CONNECT_WEBHOOK_SECRET,
+  ].filter((secret): secret is string => Boolean(secret));
+}
+
+async function parseStripeWebhook(params: {
+  stripe: Stripe;
+  rawBody: string;
+  signature: string;
+  secrets: string[];
+}) {
+  let lastError: unknown;
+  for (const secret of params.secrets) {
+    try {
+      return {
+        kind: "classic" as const,
+        event: await params.stripe.webhooks.constructEventAsync(
+          params.rawBody,
+          params.signature,
+          secret,
+        ),
+      };
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "";
+      lastError = err;
+      if (!message.includes("event notification")) continue;
+      try {
+        return {
+          kind: "notification" as const,
+          event: await params.stripe.parseEventNotificationAsync(
+            params.rawBody,
+            params.signature,
+            secret,
+          ),
+        };
+      } catch (notificationErr) {
+        lastError = notificationErr;
+      }
+    }
+  }
+  throw lastError instanceof Error ? lastError : new Error("invalid signature");
+}
+
 export const Route = createFileRoute("/api/public/stripe/webhook")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const secret = process.env.STRIPE_WEBHOOK_SECRET;
-        if (!secret) return new Response("Webhook secret not configured", { status: 500 });
+        const secrets = getWebhookSecrets();
+        if (secrets.length === 0) return new Response("Webhook secret not configured", { status: 500 });
 
         const key =
           process.env.STRIPE_TEST_API_KEY ||
@@ -20,13 +66,23 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
         const rawBody = await request.text();
         const stripe = new Stripe(key, { apiVersion: "2026-06-24.dahlia", typescript: true });
 
-        let event: Stripe.Event;
+        let parsed: Awaited<ReturnType<typeof parseStripeWebhook>>;
         try {
-          event = await stripe.webhooks.constructEventAsync(rawBody, signature, secret);
+          parsed = await parseStripeWebhook({ stripe, rawBody, signature, secrets });
         } catch (err) {
           const msg = err instanceof Error ? err.message : "invalid signature";
           return new Response(`Webhook signature verification failed: ${msg}`, { status: 400 });
         }
+
+        if (parsed.kind === "notification") {
+          // Stripe Workbench's new Event Destinations send v2.core.event notifications.
+          // They are account/status updates, not Checkout payment confirmations, so
+          // acknowledge them to stop retries while classic checkout webhooks below
+          // continue to update appointments after payment.
+          return new Response("ok", { status: 200 });
+        }
+
+        const event = parsed.event;
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const connectedAccountId = (event as unknown as { account?: string }).account ?? null;
