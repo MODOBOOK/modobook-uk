@@ -77,6 +77,17 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
     return arr;
   }, [configured, opts]);
 
+  // Initialise defaults once options load
+  useEffect(() => {
+    if (!configured || value) return;
+    if (availableModes.length === 0 || availableMethods.length === 0) return;
+    onChange({
+      mode: availableModes.includes("deposit") ? "deposit" : "full",
+      method: availableMethods[0],
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [configured, availableModes.join(","), availableMethods.join(",")]);
+
   // If the externally controlled value is no longer valid (e.g. deposit now equals full price), coerce it.
   useEffect(() => {
     if (!value || !configured) return;
