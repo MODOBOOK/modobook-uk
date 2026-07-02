@@ -55,14 +55,16 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
     return depositOverrideCents != null && depositOverrideCents > 0 ? depositOverrideCents : o.depositCents;
   }, [configured, opts, depositOverrideCents]);
 
+  const treatmentTotalCents = Math.round(totalAmount * 100);
+
   const availableModes = useMemo(() => {
     if (!configured) return [] as Array<"deposit" | "full">;
     const arr: Array<"deposit" | "full"> = [];
     const o = opts as ConfiguredOptions;
-    if (o.depositEnabled && effectiveDepositCents >= 100) arr.push("deposit");
+    if (o.depositEnabled && effectiveDepositCents >= 100 && effectiveDepositCents < treatmentTotalCents) arr.push("deposit");
     if (o.cardEnabled || o.klarnaEnabled || o.clearpayEnabled) arr.push("full");
     return arr;
-  }, [configured, opts, effectiveDepositCents]);
+  }, [configured, opts, effectiveDepositCents, treatmentTotalCents]);
 
 
   const availableMethods = useMemo(() => {
@@ -86,15 +88,29 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [configured, availableModes.join(","), availableMethods.join(",")]);
 
+  // If the externally controlled value is no longer valid (e.g. deposit now equals full price), coerce it.
+  useEffect(() => {
+    if (!value || !configured) return;
+    const chosenMode = availableModes.includes(value.mode) ? value.mode : availableModes[0];
+    const chosenMethod = availableMethods.includes(value.method) ? value.method : availableMethods[0];
+    const normalizedMode = chosenMode === "deposit" && effectiveDepositCents === treatmentTotalCents ? "full" : chosenMode;
+    if (normalizedMode !== value.mode || chosenMethod !== value.method) {
+      onChange({ mode: normalizedMode, method: chosenMethod });
+    }
+  }, [value, configured, availableModes, availableMethods, effectiveDepositCents, treatmentTotalCents, onChange]);
+
   if (!configured || availableModes.length === 0 || availableMethods.length === 0) return null;
 
   const o = opts as ConfiguredOptions;
-  const chosen = value ?? {
-    mode: availableModes[0],
-    method: availableMethods[0],
-  };
+  const chosen = useMemo(() => {
+    const mode = value && availableModes.includes(value.mode) ? value.mode : availableModes[0];
+    const method = value && availableMethods.includes(value.method) ? value.method : availableMethods[0];
+    // When deposit equals the full price, treat it as a full payment.
+    const normalizedMode = mode === "deposit" && effectiveDepositCents === treatmentTotalCents ? "full" : mode;
+    return { mode: normalizedMode, method };
+  }, [value, availableModes, availableMethods, effectiveDepositCents, treatmentTotalCents]);
 
-  const baseCents = chosen.mode === "deposit" ? effectiveDepositCents : Math.round(totalAmount * 100);
+  const baseCents = chosen.mode === "deposit" ? effectiveDepositCents : treatmentTotalCents;
   const pct = chosen.mode === "deposit"
     ? o.surcharges.depositPercent
     : chosen.method === "card"
