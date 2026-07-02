@@ -2,7 +2,9 @@ import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { getBookingContext, getDayAvailability, getMonthAvailability, requestBooking } from "@/lib/public-booking.functions";
+import { getBookingContext, getDayAvailability, getMonthAvailability, requestBooking, type PaymentChoice } from "@/lib/public-booking.functions";
+import { BookingPaymentPicker } from "@/components/BookingPaymentPicker";
+
 import { listAddonsForBooking, type PublicAddon } from "@/lib/addons.functions";
 import { ensurePatient, getMyPatient } from "@/lib/patient.functions";
 import { supabase } from "@/integrations/supabase/client";
@@ -146,6 +148,8 @@ function BookTreatmentPage() {
   const [paymentPlan, setPaymentPlan] = useState<"full" | "split">("full");
   const [splitAgreed, setSplitAgreed] = useState(false);
   const [discount, setDiscount] = useState<AppliedDiscount | null>(null);
+  const [paymentChoice, setPaymentChoice] = useState<PaymentChoice | null>(null);
+
 
 
   // Patient auth gate: 'pending' until they pick a path
@@ -408,6 +412,8 @@ function BookTreatmentPage() {
           basePrice: splitAllowed && paymentPlan === "split" ? effectivePrice / sessionCount : effectivePrice,
           patientUserId: patientUserId,
           practitionerId: (typeof window !== "undefined" ? window.sessionStorage.getItem(`modo:practitionerId:${slug}`) : null) || null,
+          paymentChoice,
+
 
 
         },
@@ -842,7 +848,16 @@ function BookTreatmentPage() {
         </CardContent>
       </Card>
 
+      <BookingPaymentPicker
+        slug={slug}
+        totalAmount={splitAllowed && paymentPlan === "split" ? price / sessionCount : price}
+        value={paymentChoice}
+        onChange={setPaymentChoice}
+        accent={brand}
+      />
+
       <Button
+
         className="w-full"
         size="lg"
         disabled={

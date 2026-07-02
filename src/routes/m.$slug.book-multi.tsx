@@ -8,7 +8,10 @@ import {
   getDayAvailability,
   getMonthAvailability,
   requestMultiBooking,
+  type PaymentChoice,
 } from "@/lib/public-booking.functions";
+import { BookingPaymentPicker } from "@/components/BookingPaymentPicker";
+
 import { listAddonsForBooking, type PublicAddon } from "@/lib/addons.functions";
 import { ensurePatient, getMyPatient } from "@/lib/patient.functions";
 import { getPrescriberInfoForTreatments } from "@/lib/prescriber.functions";
@@ -206,6 +209,8 @@ function MultiBookPage() {
     [treatments],
   );
   const [paymentPlans, setPaymentPlans] = useState<Record<string, "full" | "split">>({});
+  const [paymentChoice, setPaymentChoice] = useState<PaymentChoice | null>(null);
+
   const selectedPaymentPlan = (t: Treatment) => paymentPlans[t.id] ?? "full";
   const setTreatmentPaymentPlan = (treatmentId: string, plan: "full" | "split") =>
     setPaymentPlans((prev) => ({ ...prev, [treatmentId]: plan }));
@@ -448,6 +453,8 @@ function MultiBookPage() {
           patientUserId,
           practitionerId: (typeof window !== "undefined" ? window.sessionStorage.getItem(`modo:practitionerId:${slug}`) : null) || null,
           packagePurchases: selectedPackages.map((p) => ({ packageId: p.id })),
+          paymentChoice,
+
         },
       });
       if ((res as { checkoutUrl?: string | null }).checkoutUrl) {
@@ -1113,7 +1120,16 @@ function MultiBookPage() {
               </Card>
             )}
 
+            <BookingPaymentPicker
+              slug={slug}
+              totalAmount={totalAfterDiscount}
+              value={paymentChoice}
+              onChange={setPaymentChoice}
+              accent={brand}
+            />
+
             {(() => {
+
               const anySplit = splitEligibleTreatments.some((t) => selectedPaymentPlan(t) === "split");
               // Estimate "due today" – split treatments only charge first session up front
               let dueToday = 0;
