@@ -123,6 +123,12 @@ export const updateProfile = createServerFn({ method: "POST" })
       booking_smart_times_enabled?: boolean;
       // Payment settings
       payment_pass_fees_to_customer?: boolean;
+      payment_surcharge_card_enabled?: boolean;
+      payment_surcharge_card_percent?: number;
+      payment_surcharge_bnpl_enabled?: boolean;
+      payment_surcharge_bnpl_percent?: number;
+      payment_surcharge_deposit_enabled?: boolean;
+      payment_surcharge_deposit_percent?: number;
       payment_klarna_enabled?: boolean;
       payment_clearpay_enabled?: boolean;
       payment_card_full_enabled?: boolean;
@@ -220,6 +226,9 @@ export const updateProfile = createServerFn({ method: "POST" })
       "booking_min_notice_hours","booking_max_lead_days","booking_buffer_before_minutes",
       "booking_buffer_after_minutes","booking_daily_cap","booking_smart_times_enabled",
       "payment_pass_fees_to_customer","payment_klarna_enabled","payment_clearpay_enabled",
+      "payment_surcharge_card_enabled","payment_surcharge_card_percent",
+      "payment_surcharge_bnpl_enabled","payment_surcharge_bnpl_percent",
+      "payment_surcharge_deposit_enabled","payment_surcharge_deposit_percent",
       "payment_card_full_enabled","payment_deposit_enabled","require_deposit_to_confirm",
       "allow_pay_in_clinic","show_prices_on_booking","enforce_cancellation_fee",
       "require_account_to_book","require_phone","require_dob","require_address",

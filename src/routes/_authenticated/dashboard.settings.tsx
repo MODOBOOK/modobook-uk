@@ -37,6 +37,12 @@ function SettingsPage() {
     payment_klarna_enabled: !!profile.payment_klarna_enabled,
     payment_clearpay_enabled: !!profile.payment_clearpay_enabled,
     payment_pass_fees_to_customer: !!profile.payment_pass_fees_to_customer,
+    payment_surcharge_card_enabled: !!profile.payment_surcharge_card_enabled,
+    payment_surcharge_card_percent: Number(profile.payment_surcharge_card_percent ?? 0),
+    payment_surcharge_bnpl_enabled: !!profile.payment_surcharge_bnpl_enabled,
+    payment_surcharge_bnpl_percent: Number(profile.payment_surcharge_bnpl_percent ?? 0),
+    payment_surcharge_deposit_enabled: !!profile.payment_surcharge_deposit_enabled,
+    payment_surcharge_deposit_percent: Number(profile.payment_surcharge_deposit_percent ?? 0),
     require_deposit_to_confirm: !!profile.require_deposit_to_confirm,
     allow_pay_in_clinic: profile.allow_pay_in_clinic !== false,
     show_prices_on_booking: profile.show_prices_on_booking !== false,
@@ -204,12 +210,34 @@ function SettingsPage() {
             checked={s.payment_clearpay_enabled}
             onChange={(v) => set("payment_clearpay_enabled", v)}
           />
-          <ToggleRow
-            label="Pass card processing fees to customer"
-            hint="Adds Stripe card fees on top of the treatment price."
-            checked={s.payment_pass_fees_to_customer}
-            onChange={(v) => set("payment_pass_fees_to_customer", v)}
-          />
+          <div className="rounded-md border p-3 space-y-3">
+            <div className="text-sm font-medium">Platform fees passed to patient</div>
+            <p className="text-xs text-muted-foreground">
+              Adds a "Platform fee" line on Stripe checkout so the patient covers the cost. Shown as a
+              platform fee — not a separate charge.
+            </p>
+            <SurchargeRow
+              label="Full card payment"
+              enabled={s.payment_surcharge_card_enabled}
+              percent={s.payment_surcharge_card_percent}
+              onToggle={(v) => set("payment_surcharge_card_enabled", v)}
+              onPercent={(v) => set("payment_surcharge_card_percent", v)}
+            />
+            <SurchargeRow
+              label="Klarna & Clearpay"
+              enabled={s.payment_surcharge_bnpl_enabled}
+              percent={s.payment_surcharge_bnpl_percent}
+              onToggle={(v) => set("payment_surcharge_bnpl_enabled", v)}
+              onPercent={(v) => set("payment_surcharge_bnpl_percent", v)}
+            />
+            <SurchargeRow
+              label="Deposits"
+              enabled={s.payment_surcharge_deposit_enabled}
+              percent={s.payment_surcharge_deposit_percent}
+              onToggle={(v) => set("payment_surcharge_deposit_enabled", v)}
+              onPercent={(v) => set("payment_surcharge_deposit_percent", v)}
+            />
+          </div>
           {/* Deposit is now always required when Deposits is enabled — no toggle. */}
           <ToggleRow
             label="Allow pay in clinic"
@@ -483,6 +511,42 @@ function TextField({
     <div>
       <Label className="text-xs">{label}</Label>
       <Input value={value ?? ""} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} />
+    </div>
+  );
+}
+
+function SurchargeRow({
+  label, enabled, percent, onToggle, onPercent,
+}: {
+  label: string;
+  enabled: boolean;
+  percent: number;
+  onToggle: (v: boolean) => void;
+  onPercent: (v: number) => void;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-md border p-2">
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-medium">{label}</p>
+      </div>
+      <div className="flex items-center gap-2">
+        {enabled && (
+          <div className="flex items-center gap-1">
+            <Input
+              type="number"
+              min="0"
+              max="100"
+              step="0.1"
+              value={percent}
+              onFocus={(e) => { if (Number(e.target.value) === 0) e.target.select(); }}
+              onChange={(e) => onPercent(Number(e.target.value) || 0)}
+              className="w-20 h-8"
+            />
+            <span className="text-xs text-muted-foreground">%</span>
+          </div>
+        )}
+        <Switch checked={enabled} onCheckedChange={onToggle} />
+      </div>
     </div>
   );
 }
