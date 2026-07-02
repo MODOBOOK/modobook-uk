@@ -39,7 +39,7 @@ function formatGBP(pence: number) {
   return `£${(pence / 100).toFixed(2)}`;
 }
 
-export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accent }: Props) {
+export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accent, depositOverrideCents }: Props) {
   const fn = useServerFn(getPublicPaymentOptions);
   const q = useQuery({
     queryKey: ["publicPaymentOptions", slug],
