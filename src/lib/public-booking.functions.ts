@@ -300,16 +300,28 @@ export const getDayAvailability = createServerFn({ method: "GET" })
       .neq("status", "cancelled");
 
     // Release slots that were held for a Stripe checkout that the patient
-    // abandoned: an unpaid pending appointment whose hold timestamp has passed
-    // no longer blocks availability.
+    // abandoned: an unpaid pending appointment whose hold timestamp has
+    // passed no longer blocks availability. We also actively cancel those
+    // rows so they stop appearing on patient profiles and dashboards.
     const nowMs = Date.now();
+    const expiredIds: string[] = [];
     const activeAppts = (appts ?? []).filter((a) => {
-      const held = (a as { payment_hold_expires_at?: string | null }).payment_hold_expires_at;
+      const held = (a as { payment_hold_expires_at?: string | null; id?: string }).payment_hold_expires_at;
       const paid = (a as { payment_status?: string }).payment_status === "paid";
       const pending = a.status === "pending";
       if (!held || paid || !pending) return true;
-      return new Date(held).getTime() > nowMs;
+      if (new Date(held).getTime() > nowMs) return true;
+      const id = (a as { id?: string }).id;
+      if (id) expiredIds.push(id);
+      return false;
     });
+    if (expiredIds.length > 0) {
+      await supabaseAdmin
+        .from("appointments")
+        .update({ status: "cancelled" } as never)
+        .in("id", expiredIds);
+    }
+
 
     // Daily cap: if reached, block the date entirely.
     if (dailyCap != null && activeAppts.length >= Number(dailyCap)) {
