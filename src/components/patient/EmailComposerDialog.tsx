@@ -221,10 +221,9 @@ export function EmailComposerDialog({
             </details>
           )}
 
-          <label className="flex items-center gap-2 text-xs text-muted-foreground">
-            <input type="checkbox" checked={bccSelf} onChange={e => setBccSelf(e.target.checked)} />
-            BCC myself
-          </label>
+          <p className="text-[11px] text-muted-foreground">
+            Sent from MODO on your behalf with your clinic branding. Replies come back to your inbox.
+          </p>
         </div>
 
         <DialogFooter>
