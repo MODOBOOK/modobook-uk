@@ -933,7 +933,8 @@ function BookTreatmentPage() {
         disabled={
           !slot || submitting || !form.name || !form.email ||
           (reqPhone && !form.phone) || (reqDob && !form.dob) ||
-          (splitAllowed && paymentPlan === "split" && !splitAgreed)
+          (splitAllowed && paymentPlan === "split" && !splitAgreed) ||
+          (price > 0 && !paymentChoice)
         }
         onClick={submit}
         style={{ backgroundColor: brand, color: "#fff" }}

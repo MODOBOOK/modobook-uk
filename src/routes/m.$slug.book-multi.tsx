@@ -574,11 +574,11 @@ function MultiBookPage() {
   const datetimeValid = !!slot;
 
   const stepsMeta: BookingStep[] = [
-    { key: "treatment", label: "Treatment", done: treatments.length > 0 || selectedPackages.length > 0 },
-    { key: "location", label: "Location", done: ctx.locations.length <= 1 ? true : !!locationId },
-    { key: "datetime", label: "Date & Time", done: !!slot },
-    { key: "details", label: "Your Details", done: detailsDone },
-    { key: "payment", label: "Payment", done: !!paymentChoice || totalAfterDiscount <= 0 },
+    { key: "treatment", label: "Treatment", done: treatments.length > 0 || selectedPackages.length > 0, active: step === "selection" && !(treatments.length > 0 || selectedPackages.length > 0) },
+    { key: "location", label: "Location", done: ctx.locations.length <= 1 ? true : !!locationId, active: step === "selection" && !(ctx.locations.length <= 1 ? true : !!locationId) },
+    { key: "datetime", label: "Date & Time", done: !!slot, active: step === "datetime" && !slot },
+    { key: "details", label: "Your Details", done: detailsDone, active: step === "details" && !detailsDone },
+    { key: "payment", label: "Payment", done: !!paymentChoice || totalAfterDiscount <= 0, active: step === "details" && !paymentChoice && totalAfterDiscount > 0 },
   ];
 
   const goNext = () => {
@@ -1304,7 +1304,8 @@ function MultiBookPage() {
                       disabled={
                         !slot || submitting || !form.name || !form.email || (reqPhone && !form.phone) || (reqDob && !form.dob) ||
                         (termsRequired && !agreedToTerms) || prescriberBlocks ||
-                        (anySplit && !splitAgreed)
+                        (anySplit && !splitAgreed) ||
+                        (totalAfterDiscount > 0 && !paymentChoice)
                       }
                       onClick={submit}
                       style={{ backgroundColor: brand, color: "#fff" }}
