@@ -36,6 +36,7 @@ import { EmailComposerDialog } from "@/components/patient/EmailComposerDialog";
 import { SendFormDialog } from "@/components/patient/SendFormDialog";
 import { ClientFormsList } from "@/components/patient/ClientFormsList";
 import { ConsultationDocCard } from "@/components/patient/ConsultationDocCard";
+import { AdhocPaymentLinkDialog } from "@/components/patient/AdhocPaymentLinkDialog";
 
 import { logCommunication } from "@/lib/patient-hub.functions";
 
@@ -91,6 +92,7 @@ function PatientProfilePage() {
   const [editing, setEditing] = useState<null | "personal" | "emergency">(null);
   const [emailOpen, setEmailOpen] = useState(false);
   const [sendFormOpen, setSendFormOpen] = useState(false);
+  const [payLinkOpen, setPayLinkOpen] = useState(false);
   const [commsRefresh, setCommsRefresh] = useState(0);
   const logComm = useServerFn(logCommunication);
 
@@ -179,8 +181,8 @@ function PatientProfilePage() {
               </a>
             </Button>
           )}
-          <Button size="sm" variant="outline" className="shrink-0" asChild>
-            <Link to="/dashboard/payments"><CreditCard className="mr-1.5 h-4 w-4" />Payment link</Link>
+          <Button size="sm" variant="outline" className="shrink-0" onClick={() => setPayLinkOpen(true)}>
+            <CreditCard className="mr-1.5 h-4 w-4" />Payment link
           </Button>
           <Button size="sm" variant="outline" className="shrink-0" onClick={() => setSendFormOpen(true)}>
             <FileText className="mr-1.5 h-4 w-4" />Send form
@@ -357,6 +359,13 @@ function PatientProfilePage() {
         client={client}
         clinicName={clinicName}
         onSent={() => setCommsRefresh(x => x + 1)}
+      />
+      <AdhocPaymentLinkDialog
+        open={payLinkOpen}
+        onOpenChange={setPayLinkOpen}
+        patientName={client.full_name}
+        patientEmail={client.email}
+        patientPhone={client.phone}
       />
     </div>
   );
