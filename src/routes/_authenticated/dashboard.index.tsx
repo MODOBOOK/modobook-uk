@@ -14,8 +14,10 @@ import {
   Sparkles,
   Info,
   Stethoscope,
+  Wallet,
 } from "lucide-react";
 import { listMyAppointments } from "@/lib/availability.functions";
+import { getStripePayouts } from "@/lib/stripe.functions";
 import { resolveDisplayNames } from "@/lib/display-name";
 import { toast } from "sonner";
 
