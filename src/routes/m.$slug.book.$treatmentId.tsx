@@ -6,7 +6,7 @@ import { getBookingContext, getDayAvailability, getMonthAvailability, requestBoo
 import { BookingPaymentPicker } from "@/components/BookingPaymentPicker";
 
 import { listAddonsForBooking, type PublicAddon } from "@/lib/addons.functions";
-import { ensurePatient, getMyPatient } from "@/lib/patient.functions";
+import { ensurePatient, getMyPatient, updateMyPatient } from "@/lib/patient.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -157,6 +157,8 @@ function BookTreatmentPage() {
   const [patientUserId, setPatientUserId] = useState<string | null>(null);
   const ensure = useServerFn(ensurePatient);
   const fetchPatient = useServerFn(getMyPatient);
+  const saveMyPatient = useServerFn(updateMyPatient);
+  const [rememberMe, setRememberMe] = useState(true);
 
   // If the user is already signed in when arriving here, auto-skip the gate.
   useEffect(() => {
@@ -168,13 +170,19 @@ function BookTreatmentPage() {
         try {
           await ensure({ data: { fullName: data.session.user.email?.split("@")[0] ?? "Patient", linkSlug: slug } });
           const p = await fetchPatient();
-          const pp = p.patient;
+          const pp = p.patient as Record<string, string | null> | null;
           if (pp) {
             setForm((f) => ({
               ...f,
               name: f.name || pp.full_name || "",
               email: f.email || pp.email || data.session.user.email || "",
               phone: f.phone || pp.phone || "",
+              dob: f.dob || pp.date_of_birth || "",
+              addressLine1: f.addressLine1 || pp.address_line1 || "",
+              addressLine2: f.addressLine2 || pp.address_line2 || "",
+              city: f.city || pp.city || "",
+              postcode: f.postcode || pp.postcode || "",
+              country: f.country || pp.country || "",
             }));
           }
 
@@ -418,6 +426,20 @@ function BookTreatmentPage() {
 
         },
       });
+      if (patientUserId && rememberMe) {
+        try {
+          await saveMyPatient({ data: {
+            full_name: form.name,
+            phone: form.phone,
+            date_of_birth: form.dob || null,
+            address_line1: form.addressLine1,
+            address_line2: form.addressLine2,
+            city: form.city,
+            postcode: form.postcode,
+            country: form.country,
+          }});
+        } catch { /* non-fatal */ }
+      }
       if ((res as { checkoutUrl?: string | null }).checkoutUrl) {
         window.location.href = (res as { checkoutUrl: string }).checkoutUrl;
         return;
@@ -834,6 +856,20 @@ function BookTreatmentPage() {
             <Label htmlFor="notes">Notes (optional)</Label>
             <Textarea id="notes" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
           </div>
+          {authChoice === "signed-in" && (
+            <div className="sm:col-span-2 flex items-center gap-2 rounded-md border bg-muted/40 p-3 text-sm">
+              <input
+                id="remember-me"
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className="h-4 w-4"
+              />
+              <Label htmlFor="remember-me" className="cursor-pointer font-normal">
+                Save these details to my account for faster booking next time
+              </Label>
+            </div>
+          )}
           {showPrices && (
             <div className="sm:col-span-2">
               <DiscountCodeBox
