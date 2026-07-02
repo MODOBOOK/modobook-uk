@@ -1120,7 +1120,16 @@ function MultiBookPage() {
               </Card>
             )}
 
+            <BookingPaymentPicker
+              slug={slug}
+              totalAmount={totalAfterDiscount}
+              value={paymentChoice}
+              onChange={setPaymentChoice}
+              accent={brand}
+            />
+
             {(() => {
+
               const anySplit = splitEligibleTreatments.some((t) => selectedPaymentPlan(t) === "split");
               // Estimate "due today" – split treatments only charge first session up front
               let dueToday = 0;
