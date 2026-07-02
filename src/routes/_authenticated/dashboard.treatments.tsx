@@ -90,7 +90,9 @@ type TreatmentForm = {
   aftercare_template_ids: string[];
   price_mode: "fixed" | "from" | "poa" | "free";
   badge: "recommended" | "popular" | "new" | "bestseller" | null;
+  deposit_amount: number | null;
 };
+
 
 
 type ConsentTpl = { id: string; name: string; treatment_type: string | null; is_system: boolean };
