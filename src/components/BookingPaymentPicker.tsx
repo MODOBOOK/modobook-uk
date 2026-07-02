@@ -96,7 +96,7 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
     method: availableMethods[0],
   };
 
-  const baseCents = chosen.mode === "deposit" ? effectiveDepositCents : Math.round(totalAmount * 100);
+  const baseCents = chosen.mode === "deposit" ? effectiveDepositCents : treatmentTotalCents;
   const pct = chosen.mode === "deposit"
     ? o.surcharges.depositPercent
     : chosen.method === "card"
