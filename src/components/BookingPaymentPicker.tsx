@@ -173,9 +173,7 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
         )}
         {stripeFeeCents > 0 && (
           <div className="flex items-baseline justify-between">
-            <span className="opacity-70">
-              Card processing ({stripePct}%{stripeFixed > 0 ? ` + ${formatGBP(stripeFixed)}` : ""})
-            </span>
+            <span className="opacity-70">Platform fee</span>
             <span>{formatGBP(stripeFeeCents)}</span>
           </div>
         )}
