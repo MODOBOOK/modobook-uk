@@ -578,7 +578,7 @@ function MultiBookPage() {
     { key: "location", label: "Location", done: ctx.locations.length <= 1 ? true : !!locationId },
     { key: "datetime", label: "Date & Time", done: !!slot },
     { key: "details", label: "Your Details", done: detailsDone },
-    { key: "payment", label: "Payment", done: !!paymentChoice },
+    { key: "payment", label: "Payment", done: !!paymentChoice || totalAfterDiscount <= 0 },
   ];
 
   const goNext = () => {
