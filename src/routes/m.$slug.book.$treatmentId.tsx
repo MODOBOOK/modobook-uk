@@ -850,7 +850,7 @@ function BookTreatmentPage() {
 
       <BookingPaymentPicker
         slug={slug}
-        totalAmount={splitAllowed && paymentPlan === "split" ? effectivePrice / sessionCount : effectivePrice}
+        totalAmount={splitAllowed && paymentPlan === "split" ? price / sessionCount : price}
         value={paymentChoice}
         onChange={setPaymentChoice}
         accent={brand}
