@@ -64,6 +64,9 @@ type Appt = {
   payment_status: string;
   total_amount: number | null;
   amount_paid_cents: number | null;
+  amount_refunded_cents: number | null;
+  stripe_payment_intent_id: string | null;
+
 
   notes: string | null;
   practitioner_notes: string | null;
