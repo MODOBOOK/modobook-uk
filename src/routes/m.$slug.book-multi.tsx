@@ -11,6 +11,7 @@ import {
   type PaymentChoice,
 } from "@/lib/public-booking.functions";
 import { BookingPaymentPicker } from "@/components/BookingPaymentPicker";
+import { BookingProgress, type BookingStep } from "@/components/BookingProgress";
 
 import { listAddonsForBooking, type PublicAddon } from "@/lib/addons.functions";
 import { ensurePatient, getMyPatient, updateMyPatient } from "@/lib/patient.functions";
