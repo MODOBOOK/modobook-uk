@@ -4573,6 +4573,7 @@ export type Database = {
         Args: { p_id: string }
         Returns: boolean
       }
+      can_patient_view_photo: { Args: { path: string }; Returns: boolean }
       cancel_appointment_by_token: {
         Args: { p_token: string }
         Returns: boolean
