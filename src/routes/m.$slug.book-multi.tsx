@@ -384,11 +384,11 @@ function MultiBookPage() {
       }
     }
     let out2 = Array.from(new Set(out)).sort();
-    if (minNoticeHours > 0) {
+    {
       const n = new Date();
       const todayLocalIso = `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, "0")}-${String(n.getDate()).padStart(2, "0")}`;
       if (date === todayLocalIso) {
-        const cutoff = n.getHours() * 60 + n.getMinutes() + minNoticeHours * 60;
+        const cutoff = n.getHours() * 60 + n.getMinutes() + Math.max(0, minNoticeHours) * 60;
         out2 = out2.filter((s) => toMinutes(s) >= cutoff);
       }
     }
