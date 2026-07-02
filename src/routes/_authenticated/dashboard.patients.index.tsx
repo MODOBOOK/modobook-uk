@@ -558,3 +558,219 @@ function PatientDetail({ client, appts, onEdit }: { client: Client; appts: Appt[
     </div>
   );
 }
+
+/* ---------- CSV Import ---------- */
+function parseCsv(text: string): Record<string, string>[] {
+  const lines: string[][] = [];
+  let cur: string[] = [];
+  let field = "";
+  let inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (inQuotes) {
+      if (ch === '"') {
+        if (text[i + 1] === '"') { field += '"'; i++; } else { inQuotes = false; }
+      } else field += ch;
+    } else {
+      if (ch === '"') inQuotes = true;
+      else if (ch === ",") { cur.push(field); field = ""; }
+      else if (ch === "\r") { /* skip */ }
+      else if (ch === "\n") { cur.push(field); lines.push(cur); cur = []; field = ""; }
+      else field += ch;
+    }
+  }
+  if (field.length || cur.length) { cur.push(field); lines.push(cur); }
+  const rows = lines.filter((r) => r.some((c) => c.trim() !== ""));
+  if (!rows.length) return [];
+  const header = rows[0].map((h) => h.trim());
+  return rows.slice(1).map((r) => {
+    const obj: Record<string, string> = {};
+    header.forEach((h, i) => { obj[h] = (r[i] ?? "").trim(); });
+    return obj;
+  });
+}
+
+function ImportCsvDialog({ open, onOpenChange, onImport }: {
+  open: boolean; onOpenChange: (v: boolean) => void; onImport: (rows: Record<string, string>[]) => Promise<void>;
+}) {
+  const [rows, setRows] = useState<Record<string, string>[]>([]);
+  const [busy, setBusy] = useState(false);
+  const [filename, setFilename] = useState("");
+
+  function handleFile(f: File | null) {
+    if (!f) return;
+    setFilename(f.name);
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const parsed = parseCsv(String(reader.result || ""));
+        setRows(parsed);
+        if (!parsed.length) toast.error("No rows found in CSV");
+      } catch {
+        toast.error("Could not parse CSV");
+      }
+    };
+    reader.readAsText(f);
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => { if (!v) { setRows([]); setFilename(""); } onOpenChange(v); }}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader><DialogTitle>Import patients from CSV</DialogTitle></DialogHeader>
+        <div className="space-y-3 text-sm">
+          <p className="text-xs text-muted-foreground">
+            Include a header row. Recognised columns: <strong>Full Name, Email, Phone, DOB, Address, Postcode, City, Gender, Notes, Group</strong>.
+            Existing patients with the same email will be updated.
+          </p>
+          <Input type="file" accept=".csv,text/csv" onChange={(e) => handleFile(e.target.files?.[0] ?? null)} />
+          {filename && <div className="text-xs text-muted-foreground">{filename} — {rows.length} row(s) detected</div>}
+          {rows.length > 0 && (
+            <div className="max-h-40 overflow-auto rounded border text-xs">
+              <table className="w-full">
+                <thead className="bg-muted/50"><tr>{Object.keys(rows[0]).slice(0, 5).map((h) => <th key={h} className="px-2 py-1 text-left">{h}</th>)}</tr></thead>
+                <tbody>
+                  {rows.slice(0, 5).map((r, i) => (
+                    <tr key={i} className="border-t">{Object.keys(rows[0]).slice(0, 5).map((h) => <td key={h} className="px-2 py-1">{r[h]}</td>)}</tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button disabled={!rows.length || busy} onClick={async () => {
+            setBusy(true);
+            try { await onImport(rows); setRows([]); setFilename(""); }
+            catch (e) { toast.error(e instanceof Error ? e.message : "Import failed"); }
+            finally { setBusy(false); }
+          }}>{busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}Import {rows.length || ""}</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/* ---------- Create Group ---------- */
+function CreateGroupDialog({ open, onOpenChange, clients, onSave }: {
+  open: boolean; onOpenChange: (v: boolean) => void; clients: Client[];
+  onSave: (name: string, ids: string[]) => Promise<void>;
+}) {
+  const [name, setName] = useState("");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [q, setQ] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const filtered = useMemo(() => {
+    const s = q.trim().toLowerCase();
+    return s ? clients.filter((c) => c.full_name.toLowerCase().includes(s) || (c.email ?? "").toLowerCase().includes(s)) : clients;
+  }, [clients, q]);
+
+  function toggle(id: string) {
+    setSelected((prev) => { const n = new Set(prev); if (n.has(id)) n.delete(id); else n.add(id); return n; });
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => { if (!v) { setName(""); setSelected(new Set()); setQ(""); } onOpenChange(v); }}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader><DialogTitle>Create group</DialogTitle></DialogHeader>
+        <div className="space-y-3">
+          <Field label="Group name" required>
+            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. VIP, Botox regulars" />
+          </Field>
+          <Input placeholder="Search patients…" value={q} onChange={(e) => setQ(e.target.value)} />
+          <div className="max-h-64 overflow-auto rounded border divide-y">
+            {filtered.map((c) => (
+              <label key={c.id} className="flex cursor-pointer items-center gap-2 px-3 py-2 text-sm hover:bg-muted/40">
+                <input type="checkbox" checked={selected.has(c.id)} onChange={() => toggle(c.id)} />
+                <span className="flex-1 truncate">{c.full_name}</span>
+                <span className="truncate text-xs text-muted-foreground">{c.email}</span>
+              </label>
+            ))}
+            {!filtered.length && <div className="p-4 text-center text-xs text-muted-foreground">No patients match</div>}
+          </div>
+          <div className="text-xs text-muted-foreground">{selected.size} selected</div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button disabled={!name.trim() || !selected.size || busy} onClick={async () => {
+            setBusy(true);
+            try { await onSave(name.trim(), Array.from(selected)); setName(""); setSelected(new Set()); }
+            catch (e) { toast.error(e instanceof Error ? e.message : "Failed"); }
+            finally { setBusy(false); }
+          }}>{busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}Save group</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/* ---------- Merge Duplicates ---------- */
+type DupeGroup = { key: string; clients: { id: string; full_name: string; email: string | null; phone: string | null; created_at: string }[] };
+function MergeDuplicatesDialog({ open, onOpenChange, loadGroups, onMerge }: {
+  open: boolean; onOpenChange: (v: boolean) => void;
+  loadGroups: () => Promise<DupeGroup[]>;
+  onMerge: (keep_id: string, merge_ids: string[]) => Promise<void>;
+}) {
+  const [groups, setGroups] = useState<DupeGroup[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [keepMap, setKeepMap] = useState<Record<string, string>>({});
+  const [busy, setBusy] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    setLoading(true);
+    loadGroups().then((g) => {
+      setGroups(g);
+      const km: Record<string, string> = {};
+      g.forEach((grp) => { km[grp.key] = grp.clients[0].id; });
+      setKeepMap(km);
+    }).finally(() => setLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
+        <DialogHeader><DialogTitle>Merge duplicate patients</DialogTitle></DialogHeader>
+        {loading ? (
+          <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin" /></div>
+        ) : groups.length === 0 ? (
+          <div className="py-8 text-center text-sm text-muted-foreground">No duplicates found.</div>
+        ) : (
+          <div className="space-y-4">
+            <p className="text-xs text-muted-foreground">Patients matched by shared email, phone, or name. Choose which record to keep — the others merge into it.</p>
+            {groups.map((g) => {
+              const keepId = keepMap[g.key];
+              return (
+                <div key={g.key} className="rounded-lg border p-3 space-y-2">
+                  {g.clients.map((c) => (
+                    <label key={c.id} className="flex cursor-pointer items-start gap-2 rounded p-2 hover:bg-muted/40">
+                      <input type="radio" name={`keep-${g.key}`} checked={keepId === c.id}
+                             onChange={() => setKeepMap({ ...keepMap, [g.key]: c.id })} className="mt-1" />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-semibold truncate">{c.full_name} {keepId === c.id && <Badge variant="outline" className="ml-1 text-[10px]">Keep</Badge>}</div>
+                        <div className="text-xs text-muted-foreground truncate">{c.email || "—"} · {c.phone || "—"}</div>
+                      </div>
+                    </label>
+                  ))}
+                  <Button size="sm" className="w-full" disabled={busy === g.key} onClick={async () => {
+                    setBusy(g.key);
+                    try {
+                      await onMerge(keepId, g.clients.map((c) => c.id).filter((id) => id !== keepId));
+                      setGroups((prev) => prev.filter((x) => x.key !== g.key));
+                    } catch (e) { toast.error(e instanceof Error ? e.message : "Merge failed"); }
+                    finally { setBusy(null); }
+                  }}>{busy === g.key ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Combine className="mr-2 h-4 w-4" />}Merge {g.clients.length} records</Button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Close</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
