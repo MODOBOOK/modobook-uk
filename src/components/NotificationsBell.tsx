@@ -6,7 +6,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { useServerFn } from "@tanstack/react-start";
-import { Link } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import {
   listNotifications,
   markAllNotificationsRead,
@@ -34,6 +34,7 @@ export function NotificationsBell({ className }: { className?: string }) {
   const [items, setItems] = useState<NotificationRow[]>([]);
   const [profileId, setProfileId] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
 
   const refresh = useCallback(async () => {
     try {
@@ -166,14 +167,13 @@ export function NotificationsBell({ className }: { className?: string }) {
                   </div>
                 );
                 return (
-                  <li key={n.id} className={cn(!n.read_at && "bg-primary/[0.03]")}>
-                    {n.link ? (
-                      <Link to={n.link} onClick={() => onOpenItem(n)} className="block">
-                        {content}
-                      </Link>
-                    ) : (
-                      <div onClick={() => onOpenItem(n)}>{content}</div>
-                    )}
+                  <li key={n.id} className={cn("cursor-pointer", !n.read_at && "bg-primary/[0.03]")}
+                    onClick={() => {
+                      onOpenItem(n);
+                      if (n.link) navigate({ to: n.link as string });
+                    }}
+                  >
+                    {content}
                   </li>
                 );
               })}
