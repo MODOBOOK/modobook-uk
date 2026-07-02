@@ -18,6 +18,8 @@ import { Route as FeaturesRouteImport } from './routes/features'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PrivacyDpiaRouteImport } from './routes/privacy.dpia'
+import { Route as PrivacyBreachResponseRouteImport } from './routes/privacy.breach-response'
 import { Route as MSlugRouteImport } from './routes/m.$slug'
 import { Route as FTokenRouteImport } from './routes/f.$token'
 import { Route as CTokenRouteImport } from './routes/c.$token'
@@ -132,6 +134,16 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyDpiaRoute = PrivacyDpiaRouteImport.update({
+  id: '/dpia',
+  path: '/dpia',
+  getParentRoute: () => PrivacyRoute,
+} as any)
+const PrivacyBreachResponseRoute = PrivacyBreachResponseRouteImport.update({
+  id: '/breach-response',
+  path: '/breach-response',
+  getParentRoute: () => PrivacyRoute,
 } as any)
 const MSlugRoute = MSlugRouteImport.update({
   id: '/m/$slug',
@@ -537,7 +549,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/features': typeof FeaturesRoute
   '/prescriber-hub': typeof PrescriberHubRoute
-  '/privacy': typeof PrivacyRoute
+  '/privacy': typeof PrivacyRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/terms': typeof TermsRoute
   '/who-its-for': typeof WhoItsForRoute
@@ -551,6 +563,8 @@ export interface FileRoutesByFullPath {
   '/c/$token': typeof CTokenRoute
   '/f/$token': typeof FTokenRoute
   '/m/$slug': typeof MSlugRouteWithChildren
+  '/privacy/breach-response': typeof PrivacyBreachResponseRoute
+  '/privacy/dpia': typeof PrivacyDpiaRoute
   '/dashboard/about': typeof AuthenticatedDashboardAboutRoute
   '/dashboard/addons': typeof AuthenticatedDashboardAddonsRoute
   '/dashboard/aftercare': typeof AuthenticatedDashboardAftercareRoute
@@ -617,7 +631,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/features': typeof FeaturesRoute
   '/prescriber-hub': typeof PrescriberHubRoute
-  '/privacy': typeof PrivacyRoute
+  '/privacy': typeof PrivacyRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/terms': typeof TermsRoute
   '/who-its-for': typeof WhoItsForRoute
@@ -627,6 +641,8 @@ export interface FileRoutesByTo {
   '/book/$slug': typeof BookSlugRoute
   '/c/$token': typeof CTokenRoute
   '/f/$token': typeof FTokenRoute
+  '/privacy/breach-response': typeof PrivacyBreachResponseRoute
+  '/privacy/dpia': typeof PrivacyDpiaRoute
   '/dashboard/about': typeof AuthenticatedDashboardAboutRoute
   '/dashboard/addons': typeof AuthenticatedDashboardAddonsRoute
   '/dashboard/aftercare': typeof AuthenticatedDashboardAftercareRoute
@@ -694,7 +710,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/features': typeof FeaturesRoute
   '/prescriber-hub': typeof PrescriberHubRoute
-  '/privacy': typeof PrivacyRoute
+  '/privacy': typeof PrivacyRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/terms': typeof TermsRoute
   '/who-its-for': typeof WhoItsForRoute
@@ -708,6 +724,8 @@ export interface FileRoutesById {
   '/c/$token': typeof CTokenRoute
   '/f/$token': typeof FTokenRoute
   '/m/$slug': typeof MSlugRouteWithChildren
+  '/privacy/breach-response': typeof PrivacyBreachResponseRoute
+  '/privacy/dpia': typeof PrivacyDpiaRoute
   '/_authenticated/dashboard/about': typeof AuthenticatedDashboardAboutRoute
   '/_authenticated/dashboard/addons': typeof AuthenticatedDashboardAddonsRoute
   '/_authenticated/dashboard/aftercare': typeof AuthenticatedDashboardAftercareRoute
@@ -790,6 +808,8 @@ export interface FileRouteTypes {
     | '/c/$token'
     | '/f/$token'
     | '/m/$slug'
+    | '/privacy/breach-response'
+    | '/privacy/dpia'
     | '/dashboard/about'
     | '/dashboard/addons'
     | '/dashboard/aftercare'
@@ -866,6 +886,8 @@ export interface FileRouteTypes {
     | '/book/$slug'
     | '/c/$token'
     | '/f/$token'
+    | '/privacy/breach-response'
+    | '/privacy/dpia'
     | '/dashboard/about'
     | '/dashboard/addons'
     | '/dashboard/aftercare'
@@ -946,6 +968,8 @@ export interface FileRouteTypes {
     | '/c/$token'
     | '/f/$token'
     | '/m/$slug'
+    | '/privacy/breach-response'
+    | '/privacy/dpia'
     | '/_authenticated/dashboard/about'
     | '/_authenticated/dashboard/addons'
     | '/_authenticated/dashboard/aftercare'
@@ -1014,7 +1038,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   FeaturesRoute: typeof FeaturesRoute
   PrescriberHubRoute: typeof PrescriberHubRoute
-  PrivacyRoute: typeof PrivacyRoute
+  PrivacyRoute: typeof PrivacyRouteWithChildren
   ResetPasswordRoute: typeof ResetPasswordRoute
   TermsRoute: typeof TermsRoute
   WhoItsForRoute: typeof WhoItsForRoute
@@ -1094,6 +1118,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/privacy/dpia': {
+      id: '/privacy/dpia'
+      path: '/dpia'
+      fullPath: '/privacy/dpia'
+      preLoaderRoute: typeof PrivacyDpiaRouteImport
+      parentRoute: typeof PrivacyRoute
+    }
+    '/privacy/breach-response': {
+      id: '/privacy/breach-response'
+      path: '/breach-response'
+      fullPath: '/privacy/breach-response'
+      preLoaderRoute: typeof PrivacyBreachResponseRouteImport
+      parentRoute: typeof PrivacyRoute
     }
     '/m/$slug': {
       id: '/m/$slug'
@@ -1765,6 +1803,19 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
   AuthenticatedRouteChildren,
 )
 
+interface PrivacyRouteChildren {
+  PrivacyBreachResponseRoute: typeof PrivacyBreachResponseRoute
+  PrivacyDpiaRoute: typeof PrivacyDpiaRoute
+}
+
+const PrivacyRouteChildren: PrivacyRouteChildren = {
+  PrivacyBreachResponseRoute: PrivacyBreachResponseRoute,
+  PrivacyDpiaRoute: PrivacyDpiaRoute,
+}
+
+const PrivacyRouteWithChildren =
+  PrivacyRoute._addFileChildren(PrivacyRouteChildren)
+
 interface MSlugRouteChildren {
   MSlugAboutRoute: typeof MSlugAboutRoute
   MSlugAccountRoute: typeof MSlugAccountRoute
@@ -1795,7 +1846,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   FeaturesRoute: FeaturesRoute,
   PrescriberHubRoute: PrescriberHubRoute,
-  PrivacyRoute: PrivacyRoute,
+  PrivacyRoute: PrivacyRouteWithChildren,
   ResetPasswordRoute: ResetPasswordRoute,
   TermsRoute: TermsRoute,
   WhoItsForRoute: WhoItsForRoute,
