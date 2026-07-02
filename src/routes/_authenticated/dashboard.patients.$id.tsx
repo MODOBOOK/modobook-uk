@@ -360,6 +360,13 @@ function PatientProfilePage() {
         clinicName={clinicName}
         onSent={() => setCommsRefresh(x => x + 1)}
       />
+      <AdhocPaymentLinkDialog
+        open={payLinkOpen}
+        onOpenChange={setPayLinkOpen}
+        patientName={client.full_name}
+        patientEmail={client.email}
+        patientPhone={client.phone}
+      />
     </div>
   );
 }
