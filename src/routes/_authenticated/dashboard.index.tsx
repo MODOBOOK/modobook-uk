@@ -153,6 +153,35 @@ function DashboardIndex() {
         </CardContent>
       </Card>
 
+      {/* Payments (compact) */}
+      <Link to="/dashboard/payments" className="block">
+        <Card className="border-border/60 transition hover:border-accent hover:shadow-luxe">
+          <CardContent className="flex items-center gap-4 p-5">
+            <div className="grid size-11 shrink-0 place-items-center rounded-full bg-primary/15 text-primary">
+              <Wallet className="size-5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] font-medium uppercase tracking-[0.25em] text-muted-foreground">Payments</p>
+              {payouts?.ok ? (
+                <p className="mt-1 font-serif text-lg">
+                  £{((payouts.pending?.gbp ?? 0) / 100).toFixed(2)} pending
+                  <span className="ml-2 text-sm text-muted-foreground">
+                    · £{((payouts.available?.gbp ?? 0) / 100).toFixed(2)} available
+                  </span>
+                </p>
+              ) : (
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {profile.stripe_connect_account_id ? "View balance and payouts" : "Connect Stripe to accept payments"}
+                </p>
+              )}
+            </div>
+            <ChevronRight className="size-5 text-muted-foreground" />
+          </CardContent>
+        </Card>
+      </Link>
+
+
+
       {/* Analytics */}
       <section className="space-y-3">
         <div className="flex items-end justify-between px-1">
