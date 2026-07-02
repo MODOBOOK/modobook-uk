@@ -1022,11 +1022,23 @@ function CheckoutSheet({
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        <Badge variant={cancelled ? "destructive" : "outline"}>{a.status}</Badge>
-        <Badge variant={a.payment_status === "paid" ? "default" : "secondary"}>{a.payment_status}</Badge>
-        {a.total_amount != null && <Badge variant="outline">£{Number(a.total_amount).toFixed(2)}</Badge>}
-      </div>
+      {(() => {
+        const totalDue = Number(a.total_amount ?? 0);
+        const paid = Number(a.amount_paid_cents ?? 0) / 100;
+        const outstanding = Math.max(0, totalDue - paid);
+        return (
+          <div className="flex flex-wrap gap-2">
+            <Badge variant={cancelled ? "destructive" : "outline"}>{a.status}</Badge>
+            <Badge variant={a.payment_status === "paid" ? "default" : "secondary"}>{a.payment_status}</Badge>
+            {a.total_amount != null && <Badge variant="outline">Total £{totalDue.toFixed(2)}</Badge>}
+            {paid > 0 && <Badge className="bg-emerald-600 text-white hover:bg-emerald-600">Paid £{paid.toFixed(2)}</Badge>}
+            {outstanding > 0 && a.total_amount != null && (
+              <Badge className="bg-amber-500 text-white hover:bg-amber-500">Outstanding £{outstanding.toFixed(2)}</Badge>
+            )}
+          </div>
+        );
+      })()}
+
 
       {(a.patient_email || a.patient_phone) && (
         <div className="text-xs text-muted-foreground">
