@@ -48,18 +48,28 @@ type Link = { concern_id: string; treatment_id: string };
 
 function BookingFlowPage() {
   const loaded = Route.useLoaderData();
-  const treatments = loaded.treatments as { id: string; name: string; description: string | null }[];
+  const treatments = loaded.treatments as { id: string; name: string; description: string | null; is_consultation?: boolean | null }[];
 
   const p = loaded.profile as Record<string, unknown>;
   const [enabled, setEnabled] = useState(Boolean(p.chooser_enabled));
   const [showKnow, setShowKnow] = useState(p.chooser_show_know !== false);
   const [showUnsure, setShowUnsure] = useState(p.chooser_show_unsure !== false);
   const [showConsult, setShowConsult] = useState(p.chooser_show_consultation !== false);
-  const [consultIds, setConsultIds] = useState<string[]>(
-    Array.isArray(p.chooser_consultation_treatment_ids)
-      ? (p.chooser_consultation_treatment_ids as string[])
-      : (p.chooser_consultation_treatment_id ? [p.chooser_consultation_treatment_id as string] : []),
-  );
+  const [consultIds, setConsultIds] = useState<string[]>(() => {
+    const saved = Array.isArray(p.chooser_consultation_treatment_ids)
+      ? (p.chooser_consultation_treatment_ids as string[]).filter(Boolean)
+      : [];
+    if (p.chooser_consultation_treatment_id) saved.unshift(p.chooser_consultation_treatment_id as string);
+    const uniqueSaved = Array.from(new Set(saved));
+    if (uniqueSaved.length > 0) return uniqueSaved;
+
+    // Backfill older/live accounts where the public preview was finding
+    // consultations by treatment flag/name, but the chooser array had never
+    // been saved. This makes the dashboard and customer page use the same list.
+    return treatments
+      .filter((t) => t.is_consultation === true || /consult/i.test(t.name ?? ""))
+      .map((t) => t.id);
+  });
   const [intro, setIntro] = useState<string>((p.chooser_intro_text as string | null) ?? "");
   const [extraOn, setExtraOn] = useState(Boolean(p.chooser_extra_enabled));
   const [extraTitle, setExtraTitle] = useState<string>((p.chooser_extra_title as string | null) ?? "");
@@ -267,7 +277,9 @@ function BookingFlowPage() {
           chooser_show_unsure: showUnsure,
           chooser_show_consultation: showConsult,
           chooser_consultation_treatment_ids: consultIds,
-          chooser_consultation_treatment_id: consultIds[0] ?? null,
+          // Keep the legacy single-ID field only for a genuinely single
+          // consultation setup. Multiple consultations are driven by the array.
+          chooser_consultation_treatment_id: consultIds.length === 1 ? consultIds[0] : null,
           chooser_intro_text: intro || null,
           chooser_extra_enabled: extraOn,
           chooser_extra_title: extraTitle || null,
