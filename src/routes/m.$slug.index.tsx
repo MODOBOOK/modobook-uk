@@ -565,9 +565,10 @@ function BookPage() {
           layoutKey === "magazine" ? "h-28 sm:h-36"
           : heroHeight === "short" ? "h-36 w-full object-cover object-top sm:h-44"
           : heroHeight === "tall" ? "h-64 w-full object-cover object-top sm:h-[26rem]"
+          : heroHeight === "extra_tall" ? "h-[26rem] w-full object-cover object-top sm:h-[36rem]"
           : "h-56 w-full object-cover object-top sm:h-[22rem]";
-        const splitHeight = heroHeight === "short" ? "h-36 sm:h-52" : heroHeight === "tall" ? "h-56 sm:h-80" : "h-44 sm:h-64";
-        const blankHeight = heroHeight === "short" ? "h-32 sm:h-44" : heroHeight === "tall" ? "h-56 sm:h-72" : "h-44 sm:h-56";
+        const splitHeight = heroHeight === "short" ? "h-36 sm:h-52" : heroHeight === "tall" ? "h-56 sm:h-80" : heroHeight === "extra_tall" ? "h-[26rem] sm:h-[40rem]" : "h-44 sm:h-64";
+        const blankHeight = heroHeight === "short" ? "h-32 sm:h-44" : heroHeight === "tall" ? "h-56 sm:h-72" : heroHeight === "extra_tall" ? "h-[26rem] sm:h-[36rem]" : "h-44 sm:h-56";
         const alignCls = heroAlign === "left" ? "text-left items-start" : heroAlign === "right" ? "text-right items-end" : "text-center items-center";
         return (
           <div className="relative">
