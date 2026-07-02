@@ -51,7 +51,7 @@ export function EmailComposerDialog({
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
   const [selectedTpl, setSelectedTpl] = useState<string>("");
-  const [bccSelf, setBccSelf] = useState(true);
+  
 
   useEffect(() => {
     if (!open) return;
