@@ -546,16 +546,21 @@ async function maybeCreateBookingCheckout(args: {
   if (p.payment_clearpay_enabled) methodTypes.push("afterpay_clearpay");
   if (methodTypes.length === 0) methodTypes.push("card");
 
-  // Practitioner-set surcharge passed to the customer.
-  // Worst-case across enabled methods so the practitioner nets the full amount
-  // regardless of which method the patient selects at Stripe checkout.
-  let surchargeCents = 0;
-  if (p.payment_pass_fees_to_customer) {
-    const bnplOn = !!(p.payment_klarna_enabled || p.payment_clearpay_enabled);
-    const feePercent = bnplOn ? 5.9 : 2.9; // Klarna/Clearpay ~5%+ vs card ~2.9%
-    const fixed = 30; // 30p per transaction
-    surchargeCents = Math.ceil((amountCents * feePercent) / 100 + fixed);
+  // Practitioner-set platform fee, applied per payment mode/method.
+  // At Stripe Checkout the patient chooses the method, so when both card and
+  // BNPL are enabled we apply the higher of the two enabled percentages so the
+  // practitioner nets the intended amount regardless of the method chosen.
+  const cardPct = p.payment_surcharge_card_enabled ? Number(p.payment_surcharge_card_percent ?? 0) : 0;
+  const bnplPct = p.payment_surcharge_bnpl_enabled ? Number(p.payment_surcharge_bnpl_percent ?? 0) : 0;
+  const depPct = p.payment_surcharge_deposit_enabled ? Number(p.payment_surcharge_deposit_percent ?? 0) : 0;
+  let pct = 0;
+  if (kind === "deposit") {
+    pct = depPct;
+  } else {
+    const bnplOn = methodTypes.includes("klarna") || methodTypes.includes("afterpay_clearpay");
+    pct = Math.max(cardPct, bnplOn ? bnplPct : 0);
   }
+  const surchargeCents = pct > 0 ? Math.ceil((amountCents * pct) / 100) : 0;
 
   const origin = process.env.PUBLIC_APP_URL || process.env.APP_URL || "https://modo-book.lovable.app";
   const successUrl = `${origin}/m/${p.slug ?? ""}/account?paid=1`;
