@@ -90,7 +90,16 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
     : chosen.method === "card"
       ? o.surcharges.cardPercent
       : o.surcharges.bnplPercent;
-  const surchargeCents = pct > 0 ? Math.ceil((baseCents * pct) / 100) : 0;
+  const clinicFeeCents = pct > 0 ? Math.ceil((baseCents * pct) / 100) : 0;
+
+  const isBnpl = chosen.method === "klarna" || chosen.method === "clearpay";
+  const stripePct = o.stripeFee.passToPatient ? (isBnpl ? o.stripeFee.bnplPercent : o.stripeFee.cardPercent) : 0;
+  const stripeFixed = o.stripeFee.passToPatient ? (isBnpl ? o.stripeFee.bnplFixedCents : o.stripeFee.cardFixedCents) : 0;
+  const stripeFeeCents = o.stripeFee.passToPatient
+    ? Math.ceil((baseCents * stripePct) / 100) + Math.max(0, stripeFixed)
+    : 0;
+
+  const surchargeCents = clinicFeeCents + stripeFeeCents;
   const totalCents = baseCents + surchargeCents;
 
   const styleAccent = accent ? { borderColor: accent, color: accent } : undefined;
