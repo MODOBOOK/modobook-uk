@@ -495,12 +495,13 @@ function RowItem({ title, meta, badge, badgeOk, href }: { title: string; meta: s
 function ApptCard({
   a, brand, slug, allowCancel, allowReschedule,
   cancelCutoffHours = 0, rescheduleCutoffHours = 0, maxReschedules = 999,
-  onCancel,
+  onCancel, aftercare = [],
 }: {
   a: Appt; brand: string; slug: string;
   allowCancel?: boolean; allowReschedule?: boolean;
   cancelCutoffHours?: number; rescheduleCutoffHours?: number; maxReschedules?: number;
   onCancel?: () => void;
+  aftercare?: any[];
 }) {
   const remaining = Math.max(0, maxReschedules - (a.reschedule_count ?? 0));
   const treatmentName = a.treatments?.name ?? a.treatment_name_snapshot ?? "Treatment";
@@ -541,8 +542,40 @@ function ApptCard({
             )}
           </div>
         )}
+        {aftercare.length > 0 && (
+          <div className="space-y-2 pt-2">
+            <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Aftercare</div>
+            {aftercare.map((ac) => <InlineAftercare key={ac.id} ac={ac} brand={brand} />)}
+          </div>
+        )}
       </CardContent>
     </Card>
+  );
+}
+
+function InlineAftercare({ ac, brand }: { ac: any; brand: string }) {
+  const [open, setOpen] = useState(false);
+  const when = ac.sent_at || ac.send_at;
+  return (
+    <div className="rounded-md border">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs hover:bg-muted/30"
+      >
+        <HeartPulse className="h-3.5 w-3.5" style={{ color: brand }} />
+        <span className="flex-1 truncate">Aftercare · {when ? new Date(when).toLocaleDateString() : ""}</span>
+        <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+      {open && (
+        <div className="border-t bg-muted/20 px-3 py-2">
+          <div
+            className="prose prose-sm max-w-none prose-headings:mt-2 prose-headings:mb-1 prose-p:my-1 prose-ul:my-1 prose-li:my-0.5"
+            dangerouslySetInnerHTML={{ __html: ac.body_html ?? "<em>No content</em>" }}
+          />
+        </div>
+      )}
+    </div>
   );
 }
 
