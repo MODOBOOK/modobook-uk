@@ -870,7 +870,9 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
         totalAmount,
         patientEmail: data.patientEmail,
         description: `Booking with ${prof?.clinic_name ?? "clinic"}`,
+        choice: data.paymentChoice ?? null,
       });
+
     } catch (e) {
       console.error("[requestMultiBooking] checkout failed", e);
     }
