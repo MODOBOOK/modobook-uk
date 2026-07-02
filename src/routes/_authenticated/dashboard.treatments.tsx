@@ -386,6 +386,12 @@ function TreatmentDialog({
   const [badge, setBadge] = useState<"recommended" | "popular" | "new" | "bestseller" | "none">(
     (((treatment as { badge?: string | null } | null)?.badge as "recommended" | "popular" | "new" | "bestseller" | null) ?? "none") || "none",
   );
+  const [depositOverride, setDepositOverride] = useState<string>(
+    (treatment as { deposit_amount?: number | null } | null)?.deposit_amount != null
+      ? String((treatment as { deposit_amount?: number | null }).deposit_amount)
+      : "",
+  );
+
 
 
 
