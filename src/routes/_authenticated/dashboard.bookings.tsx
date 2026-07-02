@@ -93,7 +93,7 @@ const START_HOUR = 7;
 const END_HOUR = 23;
 const HOURS = Array.from({ length: END_HOUR - START_HOUR + 1 }, (_, i) => START_HOUR + i);
 
-type ViewMode = "day" | "week" | "month";
+type ViewMode = "day" | "3day" | "week" | "month";
 type AvailRule = { day_of_week: number; start_time: string; end_time: string };
 
 function startOfWeek(d: Date) {
@@ -137,7 +137,9 @@ function BookingsPage() {
   const [rules, setRules] = useState<AvailRule[]>([]);
   const [loading, setLoading] = useState(true);
   const [anchor, setAnchor] = useState(new Date());
-  const [view, setView] = useState<ViewMode>("week");
+  const [view, setView] = useState<ViewMode>(() =>
+    typeof window !== "undefined" && window.innerWidth < 768 ? "3day" : "week"
+  );
   const [actionsOpen, setActionsOpen] = useState(false);
   const [selectedAppt, setSelectedAppt] = useState<Appt | null>(null);
   const [showPayLink, setShowPayLink] = useState(false);
@@ -172,10 +174,11 @@ function BookingsPage() {
     }
   }, [loading, view]);
 
-  const daysVisible = view === "day" ? 1 : view === "week" ? 7 : 0;
+  const daysVisible = view === "day" ? 1 : view === "3day" ? 3 : view === "week" ? 7 : 0;
 
   const days = useMemo(() => {
     if (view === "day") return [anchor];
+    if (view === "3day") return Array.from({ length: 3 }, (_, i) => addDays(anchor, i));
     if (view === "week") {
       const start = startOfWeek(anchor);
       return Array.from({ length: 7 }, (_, i) => addDays(start, i));
@@ -249,11 +252,13 @@ function BookingsPage() {
 
   function navPrev() {
     if (view === "day") setAnchor(addDays(anchor, -1));
+    else if (view === "3day") setAnchor(addDays(anchor, -3));
     else if (view === "week") setAnchor(addDays(anchor, -7));
     else setAnchor(new Date(anchor.getFullYear(), anchor.getMonth() - 1, 1));
   }
   function navNext() {
     if (view === "day") setAnchor(addDays(anchor, 1));
+    else if (view === "3day") setAnchor(addDays(anchor, 3));
     else if (view === "week") setAnchor(addDays(anchor, 7));
     else setAnchor(new Date(anchor.getFullYear(), anchor.getMonth() + 1, 1));
   }
@@ -263,6 +268,14 @@ function BookingsPage() {
   const headerLabel =
     view === "day"
       ? anchor.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long", year: "numeric" })
+      : view === "3day"
+      ? (() => {
+          const e = addDays(anchor, 2);
+          const sameMonth = anchor.getMonth() === e.getMonth();
+          return sameMonth
+            ? `${anchor.getDate()}–${e.getDate()} ${e.toLocaleDateString(undefined, { month: "short", year: "numeric" })}`
+            : `${anchor.toLocaleDateString(undefined, { day: "numeric", month: "short" })} – ${e.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}`;
+        })()
       : view === "week"
       ? (() => {
           const s = startOfWeek(anchor);
@@ -289,15 +302,20 @@ function BookingsPage() {
         </div>
         <div className="flex items-center gap-2">
           <div className="inline-flex rounded-full bg-muted p-0.5 text-xs">
-            {(["day", "week", "month"] as ViewMode[]).map((v) => (
+            {([
+              { v: "day" as ViewMode, label: "1" },
+              { v: "3day" as ViewMode, label: "3" },
+              { v: "week" as ViewMode, label: "Week" },
+              { v: "month" as ViewMode, label: "Month" },
+            ]).map(({ v, label }) => (
               <button
                 key={v}
                 onClick={() => setView(v)}
-                className={`rounded-full px-3 py-1 capitalize transition ${
+                className={`rounded-full px-3 py-1 transition ${
                   view === v ? "bg-background shadow-sm font-medium" : "text-muted-foreground"
                 }`}
               >
-                {v}
+                {label}
               </button>
             ))}
           </div>
@@ -353,15 +371,18 @@ function BookingsPage() {
           onPickDay={(d) => { setAnchor(d); setView("day"); }}
         />
       ) : (
-        <Card className="overflow-hidden">
-          <div className="grid border-b" style={{ gridTemplateColumns: `56px repeat(${daysVisible}, 1fr)` }}>
+        <Card className="overflow-hidden" style={{ ["--gutter" as any]: "44px" }}>
+          <div
+            className="sticky top-0 z-20 grid border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80"
+            style={{ gridTemplateColumns: `var(--gutter) repeat(${daysVisible}, 1fr)` }}
+          >
             <div />
             {days.map((d) => {
               const isToday = ymd(d) === todayStr;
               return (
                 <div key={ymd(d)} className={`flex flex-col items-center py-2 ${isToday ? "text-primary" : ""}`}>
-                  <span className="text-[11px] uppercase">{d.toLocaleDateString(undefined, { weekday: "short" })}</span>
-                  <span className={`mt-0.5 inline-flex h-8 w-8 items-center justify-center rounded-md text-sm font-bold ${isToday ? "bg-primary text-primary-foreground" : ""}`}>
+                  <span className="text-[10px] uppercase tracking-wide">{d.toLocaleDateString(undefined, { weekday: "short" })}</span>
+                  <span className={`mt-0.5 inline-flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold ${isToday ? "bg-primary text-primary-foreground" : ""}`}>
                     {d.getDate()}
                   </span>
                 </div>
@@ -369,11 +390,11 @@ function BookingsPage() {
             })}
           </div>
 
-          <div ref={scrollRef} className="relative max-h-[70vh] overflow-y-auto">
-            <div className="grid relative" style={{ gridTemplateColumns: `56px repeat(${daysVisible}, 1fr)`, height: totalHeight }}>
+          <div ref={scrollRef} className="relative max-h-[75vh] overflow-y-auto">
+            <div className="grid relative" style={{ gridTemplateColumns: `var(--gutter) repeat(${daysVisible}, 1fr)`, height: totalHeight }}>
               <div className="relative border-r">
                 {HOURS.map((h) => (
-                  <div key={h} className="absolute left-0 right-0 pr-1 text-right text-[11px] text-muted-foreground"
+                  <div key={h} className="absolute left-0 right-0 pr-1 text-right text-[10px] text-muted-foreground"
                     style={{ top: (h - START_HOUR) * HOUR_HEIGHT - 6 }}>
                     {String(h).padStart(2, "0")}:00
                   </div>
