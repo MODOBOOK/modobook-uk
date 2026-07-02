@@ -71,7 +71,7 @@ export const startStripeOnboarding = createServerFn({ method: "POST" })
         return {
           ok: false as const,
           code,
-          message: "Stripe sandbox keys are not available to the server yet.",
+          message: "Stripe keys are not available to the server yet.",
         };
       }
       return { ok: false as const, code, message };
