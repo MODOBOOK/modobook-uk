@@ -407,13 +407,14 @@ export const requestBooking = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: prof } = await supabaseAdmin
       .from("profiles")
-      .select("auto_confirm_bookings,require_account_to_book")
+      .select("auto_confirm_bookings,require_account_to_book,slug,clinic_name,stripe_connect_account_id,stripe_connect_onboarding_status,payment_deposit_enabled,require_deposit_to_confirm,deposit_amount_cents,payment_card_full_enabled,payment_klarna_enabled,payment_clearpay_enabled")
       .eq("id", data.profileId)
       .maybeSingle();
     if (prof?.require_account_to_book && !data.patientUserId) {
       throw new Error("Please sign in to book — this clinic requires an account.");
     }
     const status = prof?.auto_confirm_bookings === false ? "pending" : "confirmed";
+
     const { data: blk } = await sb
       .from("clinic_clients")
       .select("id")
