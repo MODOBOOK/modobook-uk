@@ -990,9 +990,16 @@ function CheckoutSheet({
           appointmentId: a.id,
           recipientEmail: a.patient_email,
           recipientName: a.patient_name,
+          recipientPhone: a.patient_phone,
         },
       });
       const url = (row as { stripe_url: string | null }).stripe_url;
+      const subtotalCents = Number((row as { subtotal_cents?: number }).subtotal_cents ?? Math.round(total * 100));
+      const surchargeCents = Number((row as { surcharge_cents?: number }).surcharge_cents ?? 0);
+      const totalCents = Number((row as { total_cents?: number }).total_cents ?? subtotalCents + surchargeCents);
+      const feeLine = surchargeCents > 0
+        ? `\nSubtotal: £${(subtotalCents / 100).toFixed(2)}\nPlatform fee: £${(surchargeCents / 100).toFixed(2)}\nTotal: £${(totalCents / 100).toFixed(2)}`
+        : `\nAmount: £${(totalCents / 100).toFixed(2)}`;
       await checkout({
         data: {
           appointmentId: a.id,
@@ -1003,14 +1010,31 @@ function CheckoutSheet({
         },
       });
       if (url && navigator.clipboard) await navigator.clipboard.writeText(url);
-      toast.success("Payment link copied — paste into email/SMS");
-      if (url && a.patient_email) {
+
+      // Prefer SMS when we have a phone number — open the device's native
+      // SMS composer prefilled with the link and price breakdown. Fall back
+      // to email if there's no phone. Clipboard is set either way.
+      if (url && a.patient_phone) {
+        const body = encodeURIComponent(
+          `Hi ${a.patient_name}, here's your secure payment link:${feeLine}\n\n${url}`,
+        );
+        const phone = a.patient_phone.replace(/\s+/g, "");
+        // iOS uses `&` after the number; Android accepts `?`. `?body=` works on both modern platforms.
+        window.location.href = `sms:${phone}?body=${body}`;
+        toast.success("Opening SMS with payment link");
+      } else if (url && a.patient_email) {
         const subject = encodeURIComponent("Your payment link");
-        const body = encodeURIComponent(`Hi ${a.patient_name},\n\nHere's your secure payment link: ${url}\n\nThanks!`);
+        const body = encodeURIComponent(
+          `Hi ${a.patient_name},\n\nHere's your secure payment link:${feeLine}\n\n${url}\n\nThanks!`,
+        );
         window.open(`mailto:${a.patient_email}?subject=${subject}&body=${body}`);
+        toast.success("Payment link copied — email opened");
+      } else {
+        toast.success("Payment link copied to clipboard");
       }
     } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
   }
+
 
   return (
     <div className="space-y-3 text-sm">
