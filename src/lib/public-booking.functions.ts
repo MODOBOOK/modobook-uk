@@ -923,8 +923,18 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
     } catch (e) {
       console.error("[requestMultiBooking] checkout failed", e);
     }
+    // Slot hold while patient completes Stripe checkout; abandoned bookings
+    // auto-release when the hold expires (see getDayAvailability filter).
+    if (checkoutUrl && created.length > 0) {
+      const holdUntil = new Date(Date.now() + 30 * 60 * 1000).toISOString();
+      await supabaseAdmin
+        .from("appointments")
+        .update({ status: "pending", payment_hold_expires_at: holdUntil } as never)
+        .in("id", created.map((c) => c.id));
+    }
     return { appointments: created, consents, medicalForms, packagePurchases, checkoutUrl };
 
   });
+
 
 
