@@ -402,13 +402,33 @@ function BookPage() {
   const showKnow = profile.chooser_show_know !== false;
   const showUnsure = profile.chooser_show_unsure !== false;
   const showConsult = profile.chooser_show_consultation !== false;
-  const consultTreatmentIds = (() => {
+  const consultTreatmentIds = useMemo(() => {
     const arr = Array.isArray(profile.chooser_consultation_treatment_ids) ? profile.chooser_consultation_treatment_ids : [];
     const single = profile.chooser_consultation_treatment_id;
-    const set = new Set<string>(arr.filter(Boolean));
-    if (single) set.add(single);
-    return Array.from(set);
-  })();
+    const configured = new Set<string>(arr.filter(Boolean));
+    if (single) configured.add(single);
+    if (configured.size > 0) return Array.from(configured);
+
+    const catsById = new Map(categories.map((c) => [c.id, c]));
+    const categoryLooksLikeConsultation = (categoryId?: string | null) => {
+      let current = categoryId ? catsById.get(categoryId) : null;
+      const seen = new Set<string>();
+      while (current && !seen.has(current.id)) {
+        seen.add(current.id);
+        if (/consult/i.test(current.name ?? "")) return true;
+        current = current.parent_id ? catsById.get(current.parent_id) ?? null : null;
+      }
+      return false;
+    };
+
+    return treatments
+      .filter((t) => {
+        const flagged = Boolean((t as Treatment & { is_consultation?: boolean | null }).is_consultation);
+        const named = /consult/i.test(t.name ?? "");
+        return flagged || named || categoryLooksLikeConsultation(t.category_id);
+      })
+      .map((t) => t.id);
+  }, [profile.chooser_consultation_treatment_ids, profile.chooser_consultation_treatment_id, categories, treatments]);
   const consultTreatmentId = consultTreatmentIds[0] ?? null;
   const [mode, setMode] = useState<null | "know" | "unsure" | "consult">(null);
   const [pickedConcernIds, setPickedConcernIds] = useState<string[]>([]);
