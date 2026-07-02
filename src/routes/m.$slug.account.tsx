@@ -203,6 +203,36 @@ function Account() {
 
   useEffect(() => { loadAll(); /* eslint-disable-next-line */ }, [slug]);
 
+  // If we've just returned from Stripe Checkout, reconcile the session so the
+  // appointment flips to "paid" even when the connected-account webhook isn't
+  // wired. This is idempotent — the webhook still runs the same update.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const url = new URL(window.location.href);
+    const sessionId = url.searchParams.get("session_id");
+    const paid = url.searchParams.get("paid");
+    if (!sessionId || paid !== "1") return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const mod = await import("@/lib/stripe-confirm.functions");
+        const res = await mod.confirmCheckoutSession({ data: { sessionId, slug } });
+        if (cancelled) return;
+        if ((res as { ok?: boolean }).ok) {
+          toast.success("Payment confirmed");
+          loadAll();
+        }
+      } catch (e) {
+        console.error("[confirmCheckoutSession] failed", e);
+      } finally {
+        url.searchParams.delete("session_id");
+        url.searchParams.delete("paid");
+        window.history.replaceState({}, "", url.pathname + (url.search ? url.search : ""));
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [slug]);
+
   if (loading) {
     return <div className="flex min-h-[40vh] items-center justify-center"><Loader2 className="h-6 w-6 animate-spin" /></div>;
   }
