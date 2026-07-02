@@ -92,6 +92,7 @@ function PatientProfilePage() {
   const [editing, setEditing] = useState<null | "personal" | "emergency">(null);
   const [emailOpen, setEmailOpen] = useState(false);
   const [sendFormOpen, setSendFormOpen] = useState(false);
+  const [payLinkOpen, setPayLinkOpen] = useState(false);
   const [commsRefresh, setCommsRefresh] = useState(0);
   const logComm = useServerFn(logCommunication);
 
