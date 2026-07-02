@@ -410,6 +410,13 @@ export const getPublicPaymentOptions = createServerFn({ method: "GET" })
         bnplPercent: prof.payment_surcharge_bnpl_enabled ? Number(prof.payment_surcharge_bnpl_percent ?? 0) : 0,
         depositPercent: prof.payment_surcharge_deposit_enabled ? Number(prof.payment_surcharge_deposit_percent ?? 0) : 0,
       },
+      stripeFee: {
+        passToPatient: !!prof.stripe_fee_pass_to_patient,
+        cardPercent: Number(prof.stripe_fee_card_percent ?? 0),
+        cardFixedCents: Math.round(Number(prof.stripe_fee_card_fixed_cents ?? 0)),
+        bnplPercent: Number(prof.stripe_fee_bnpl_percent ?? 0),
+        bnplFixedCents: Math.round(Number(prof.stripe_fee_bnpl_fixed_cents ?? 0)),
+      },
     } as const;
   });
 
