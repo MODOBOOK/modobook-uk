@@ -24,6 +24,7 @@ import {
   Trash2,
   Mail,
   Percent,
+  Undo2,
 } from "lucide-react";
 import {
   listMyAppointments,
@@ -40,6 +41,7 @@ import {
   createPaymentLink,
   completeAppointmentCheckout,
 } from "@/lib/payment-links.functions";
+import { refundAppointment } from "@/lib/stripe.functions";
 import {
   getOrCreateClientForAppointment,
   markAppointmentNoShow,
@@ -64,6 +66,9 @@ type Appt = {
   payment_status: string;
   total_amount: number | null;
   amount_paid_cents: number | null;
+  amount_refunded_cents: number | null;
+  stripe_payment_intent_id: string | null;
+
 
   notes: string | null;
   practitioner_notes: string | null;
@@ -915,6 +920,7 @@ function CheckoutSheet({
   const getOrCreateClient = useServerFn(getOrCreateClientForAppointment);
   const markNoShow = useServerFn(markAppointmentNoShow);
   const blockClient = useServerFn(setClientBlocked);
+  const refund = useServerFn(refundAppointment);
   const navigate = useNavigate();
 
   const [notes, setNotes] = useState(a.practitioner_notes ?? "");
@@ -1168,7 +1174,51 @@ function CheckoutSheet({
           <Button disabled={busy} variant="outline" onClick={() => markPaidWith("cash")}>Cash</Button>
           <Button disabled={busy} variant="outline" onClick={() => markPaidWith("bank_transfer")}>Bank transfer</Button>
         </div>
+
+        {a.stripe_payment_intent_id && Number(a.amount_paid_cents ?? 0) > Number(a.amount_refunded_cents ?? 0) && (
+          <div className="border-t pt-2 space-y-1.5">
+            {Number(a.amount_refunded_cents ?? 0) > 0 && (
+              <div className="text-xs text-muted-foreground">
+                Already refunded: £{(Number(a.amount_refunded_cents ?? 0) / 100).toFixed(2)}
+              </div>
+            )}
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={busy}
+              className="w-full text-destructive"
+              onClick={async () => {
+                const maxRefund = (Number(a.amount_paid_cents ?? 0) - Number(a.amount_refunded_cents ?? 0)) / 100;
+                const input = prompt(
+                  `Refund via Stripe.\n\nMax refundable: £${maxRefund.toFixed(2)}\n\nLeave blank to refund the full amount, or enter a smaller amount (£):`,
+                  "",
+                );
+                if (input === null) return;
+                const amt = input.trim() === "" ? undefined : Number(input);
+                if (amt !== undefined && (!isFinite(amt) || amt <= 0)) {
+                  toast.error("Enter a valid amount");
+                  return;
+                }
+                setBusy(true);
+                try {
+                  const r = await refund({ data: { appointmentId: a.id, amount: amt } });
+                  if (!r.ok) { toast.error(r.message); return; }
+                  const newRefunded = Number(a.amount_refunded_cents ?? 0) + r.refundedCents;
+                  onPatch({
+                    amount_refunded_cents: newRefunded,
+                    payment_status: r.fullyRefunded ? "refunded" : a.payment_status,
+                  });
+                  toast.success(`Refunded £${(r.refundedCents / 100).toFixed(2)}`);
+                } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
+              }}
+            >
+              <Undo2 className="h-3.5 w-3.5 mr-1" /> Refund via Stripe
+            </Button>
+          </div>
+        )}
       </div>
+
+
 
       <div className="pt-2 border-t space-y-2">
         <label className="flex items-center gap-2 text-xs">

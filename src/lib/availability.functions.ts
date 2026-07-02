@@ -100,7 +100,7 @@ export const listMyAppointments = createServerFn({ method: "GET" })
     // hold window; the appointment row itself remains for the practitioner.
     const { data, error } = await supabase
       .from("appointments")
-      .select("id, patient_name, patient_email, patient_phone, scheduled_date, start_time, end_time, status, payment_status, total_amount, amount_paid_cents, notes, practitioner_notes, aftercare_html, has_allergies, allergies_text, treatment_id, location_id, payment_hold_expires_at, treatments(name, color), locations(name)")
+      .select("id, patient_name, patient_email, patient_phone, scheduled_date, start_time, end_time, status, payment_status, total_amount, amount_paid_cents, amount_refunded_cents, stripe_payment_intent_id, notes, practitioner_notes, aftercare_html, has_allergies, allergies_text, treatment_id, location_id, payment_hold_expires_at, treatments(name, color), locations(name)")
       .eq("profile_id", profileId)
       .neq("status", "cancelled")
       .order("scheduled_date", { ascending: true })

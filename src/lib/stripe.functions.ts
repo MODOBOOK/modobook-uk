@@ -232,3 +232,62 @@ export const getStripePayouts = createServerFn({ method: "POST" })
     }
   });
 
+export const refundAppointment = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { appointmentId: string; amount?: number }) => input)
+  .handler(async ({ data, context }) => {
+    const { createRefund } = await import("./stripe.server");
+    const { supabase, userId } = context;
+
+    const { data: profile, error: pErr } = await supabase
+      .from("profiles")
+      .select("id, stripe_connect_account_id")
+      .eq("user_id", userId)
+      .single();
+    if (pErr) throw pErr;
+    if (!profile.stripe_connect_account_id) {
+      return { ok: false as const, message: "Connect Stripe to process refunds." };
+    }
+
+    const { data: appt, error: aErr } = await supabase
+      .from("appointments")
+      .select("id, profile_id, stripe_payment_intent_id, amount_paid_cents, amount_refunded_cents")
+      .eq("id", data.appointmentId)
+      .eq("profile_id", profile.id)
+      .single();
+    if (aErr) throw aErr;
+    if (!appt.stripe_payment_intent_id) {
+      return { ok: false as const, message: "No Stripe payment on this booking to refund." };
+    }
+
+    const paid = Number(appt.amount_paid_cents ?? 0);
+    const alreadyRefunded = Number(appt.amount_refunded_cents ?? 0);
+    const maxRefundable = Math.max(0, paid - alreadyRefunded);
+    if (maxRefundable <= 0) {
+      return { ok: false as const, message: "This booking has already been fully refunded." };
+    }
+    const refundAmount = data.amount != null ? Math.min(data.amount, maxRefundable / 100) : undefined;
+
+    try {
+      const refund = await createRefund(
+        appt.stripe_payment_intent_id,
+        profile.stripe_connect_account_id,
+        refundAmount,
+      );
+      const refundedCents = Number(refund.amount ?? (refundAmount ? Math.round(refundAmount * 100) : maxRefundable));
+      const newRefunded = alreadyRefunded + refundedCents;
+      const fullyRefunded = newRefunded >= paid;
+      await supabase
+        .from("appointments")
+        .update({
+          amount_refunded_cents: newRefunded,
+          payment_status: fullyRefunded ? "refunded" : "paid",
+        })
+        .eq("id", appt.id);
+      return { ok: true as const, refundedCents, fullyRefunded };
+    } catch (e) {
+      return { ok: false as const, message: e instanceof Error ? e.message : "Refund failed." };
+    }
+  });
+
+
