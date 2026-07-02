@@ -334,7 +334,7 @@ function PatientProfilePage() {
         </div>
 
         {/* Right column: activity timeline + concerns */}
-        <aside className="space-y-4">
+        <aside className="min-w-0 space-y-4">
           <ConcernsCard clientId={id} />
           <CommsTimeline clientId={id} refreshKey={commsRefresh} />
         </aside>
