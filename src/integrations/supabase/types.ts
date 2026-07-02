@@ -4822,6 +4822,26 @@ export type Database = {
         }
         Returns: Json
       }
+      patient_update_own_client: {
+        Args: {
+          p_address_line1?: string
+          p_address_line2?: string
+          p_county?: string
+          p_dob?: string
+          p_email?: string
+          p_emergency_contact_name?: string
+          p_emergency_contact_phone?: string
+          p_full_name?: string
+          p_gender?: string
+          p_gp_address?: string
+          p_gp_name?: string
+          p_phone?: string
+          p_postcode?: string
+          p_preferred_contact?: string
+          p_slug: string
+        }
+        Returns: string
+      }
       prescriber_get_referral_full: {
         Args: { p_referral_id: string }
         Returns: Json

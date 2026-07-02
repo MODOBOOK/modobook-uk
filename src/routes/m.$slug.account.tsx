@@ -75,6 +75,8 @@ function Account() {
   const [claimOpen, setClaimOpen] = useState(false);
   const [claimEmail, setClaimEmail] = useState("");
   const [claiming, setClaiming] = useState(false);
+  const [myClient, setMyClient] = useState<any>(null);
+  const [editOpen, setEditOpen] = useState(false);
 
   async function claimBookings() {
     if (!claimEmail.trim()) return;
@@ -119,10 +121,11 @@ function Account() {
       // Linked clinic_client (RLS-scoped to me)
       const { data: client } = await supabase
         .from("clinic_clients")
-        .select("id, full_name")
+        .select("id, full_name, email, phone, dob, gender, address_line1, address_line2, county, postcode, preferred_contact, emergency_contact_name, emergency_contact_phone, gp_name, gp_address")
         .eq("profile_id", prof.id)
         .maybeSingle();
       setPatientName(client?.full_name ?? sess.session.user.email?.split("@")[0] ?? "");
+      setMyClient(client ?? null);
 
       // Appointments — exclude "pending" placeholders that haven't been paid yet.
       // These are Stripe checkout holds; until Stripe confirms payment the
@@ -306,9 +309,12 @@ function Account() {
           </h1>
           <p className="text-xs text-muted-foreground">Your portal with {profile?.full_name ?? profile?.clinic_name}</p>
         </div>
-        <Link to="/m/$slug" params={{ slug }}>
-          <Button size="sm" variant="outline">Back to clinic</Button>
-        </Link>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Button size="sm" variant="outline" onClick={() => setEditOpen(true)}>Edit my details</Button>
+          <Link to="/m/$slug" params={{ slug }}>
+            <Button size="sm" variant="outline">Back to clinic</Button>
+          </Link>
+        </div>
       </header>
 
       {/* Missing bookings claim */}
@@ -343,6 +349,14 @@ function Account() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <EditMyDetailsDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        slug={slug}
+        initial={myClient}
+        onSaved={() => { setEditOpen(false); loadAll(); }}
+      />
 
       {/* Appointments (tabs) */}
       <section className="mt-8">
@@ -781,4 +795,128 @@ function CancelDialog({
     </Dialog>
   );
 }
+
+function EditMyDetailsDialog({
+  open, onOpenChange, slug, initial, onSaved,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  slug: string;
+  initial: any;
+  onSaved: () => void;
+}) {
+  const [f, setF] = useState<any>(initial ?? {});
+  const [saving, setSaving] = useState(false);
+  useEffect(() => { setF(initial ?? {}); }, [initial, open]);
+
+  async function save() {
+    setSaving(true);
+    const { error } = await supabase.rpc("patient_update_own_client", {
+      p_slug: slug,
+      p_full_name: f.full_name ?? null,
+      p_email: f.email ?? null,
+      p_phone: f.phone ?? null,
+      p_dob: f.dob || null,
+      p_gender: f.gender ?? null,
+      p_address_line1: f.address_line1 ?? null,
+      p_address_line2: f.address_line2 ?? null,
+      p_county: f.county ?? null,
+      p_postcode: f.postcode ?? null,
+      p_preferred_contact: f.preferred_contact ?? null,
+      p_emergency_contact_name: f.emergency_contact_name ?? null,
+      p_emergency_contact_phone: f.emergency_contact_phone ?? null,
+      p_gp_name: f.gp_name ?? null,
+      p_gp_address: f.gp_address ?? null,
+    } as any);
+    setSaving(false);
+    if (error) return toast.error(error.message);
+    toast.success("Details updated");
+    onSaved();
+  }
+
+  const field = (label: string, key: string, type: string = "text") => (
+    <div className="space-y-1">
+      <label className="text-xs font-medium text-muted-foreground">{label}</label>
+      <input
+        type={type}
+        className="w-full rounded-md border px-3 py-2 text-sm"
+        value={f?.[key] ?? ""}
+        onChange={(e) => setF({ ...f, [key]: e.target.value })}
+      />
+    </div>
+  );
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Edit my details</DialogTitle>
+          <DialogDescription>Update your personal, contact, and emergency information.</DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-3">
+          {field("Full name", "full_name")}
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {field("Email", "email", "email")}
+            {field("Phone", "phone", "tel")}
+          </div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {field("Date of birth", "dob", "date")}
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-muted-foreground">Gender</label>
+              <select
+                className="w-full rounded-md border px-3 py-2 text-sm"
+                value={f?.gender ?? ""}
+                onChange={(e) => setF({ ...f, gender: e.target.value })}
+              >
+                <option value="">Select…</option>
+                {["Female","Male","Non-binary","Other","Prefer not to say"].map(g => <option key={g} value={g}>{g}</option>)}
+              </select>
+            </div>
+          </div>
+          <div className="pt-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Address</div>
+          {field("Address line 1", "address_line1")}
+          {field("Address line 2", "address_line2")}
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {field("County", "county")}
+            {field("Postcode", "postcode")}
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-muted-foreground">Preferred contact</label>
+            <select
+              className="w-full rounded-md border px-3 py-2 text-sm"
+              value={f?.preferred_contact ?? ""}
+              onChange={(e) => setF({ ...f, preferred_contact: e.target.value })}
+            >
+              <option value="">Any</option>
+              {["Email","Phone","SMS"].map(g => <option key={g} value={g}>{g}</option>)}
+            </select>
+          </div>
+          <div className="pt-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Emergency contact</div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {field("Contact name", "emergency_contact_name")}
+            {field("Contact phone", "emergency_contact_phone", "tel")}
+          </div>
+          <div className="pt-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">GP</div>
+          {field("GP name", "gp_name")}
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-muted-foreground">GP address</label>
+            <textarea
+              rows={2}
+              className="w-full rounded-md border px-3 py-2 text-sm"
+              value={f?.gp_address ?? ""}
+              onChange={(e) => setF({ ...f, gp_address: e.target.value })}
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={saving}>Cancel</Button>
+          <Button onClick={save} disabled={saving}>
+            {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Save
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 
