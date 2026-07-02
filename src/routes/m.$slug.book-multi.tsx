@@ -564,567 +564,551 @@ function MultiBookPage() {
     );
   }
 
-  return (
-    <main className="min-h-screen" style={pageStyle}>
-      <div className="mx-auto max-w-3xl px-4 py-10">
-        <div className="mb-6">
-          <Link to="/m/$slug" params={{ slug }} className="text-sm opacity-70 hover:underline">
-            ← Back to {ctx.clinicName}
-          </Link>
-        </div>
+  const detailsDone = Boolean(
+    form.name && form.email &&
+    (!reqPhone || form.phone) &&
+    (!reqDob || form.dob) &&
+    (!reqAddress || form.addressLine1),
+  );
+  const selectionValid = (treatments.length > 0 || selectedPackages.length > 0) && (ctx.locations.length <= 1 || !!locationId);
+  const datetimeValid = !!slot;
 
-        {(() => {
-          const detailsDone = Boolean(
-            form.name && form.email &&
-            (!reqPhone || form.phone) &&
-            (!reqDob || form.dob) &&
-            (!reqAddress || form.addressLine1),
-          );
-          const steps: BookingStep[] = [
-            { key: "treatment", label: "Treatment", done: treatments.length > 0 || selectedPackages.length > 0 },
-            { key: "location", label: "Location", done: ctx.locations.length <= 1 ? true : !!locationId },
-            { key: "datetime", label: "Date & Time", done: !!slot },
-            { key: "details", label: "Your Details", done: detailsDone },
-            { key: "payment", label: "Payment", done: !!paymentChoice },
-          ];
-          return <BookingProgress steps={steps} accent={brand} />;
-        })()}
+  const stepsMeta: BookingStep[] = [
+    { key: "treatment", label: "Treatment", done: treatments.length > 0 || selectedPackages.length > 0 },
+    { key: "location", label: "Location", done: ctx.locations.length <= 1 ? true : !!locationId },
+    { key: "datetime", label: "Date & Time", done: !!slot },
+    { key: "details", label: "Your Details", done: detailsDone },
+    { key: "payment", label: "Payment", done: !!paymentChoice },
+  ];
 
+  const goNext = () => {
+    if (step === "selection") setStep("datetime");
+    else if (step === "datetime") setStep("details");
+  };
+  const goBack = () => {
+    if (step === "details") setStep("datetime");
+    else if (step === "datetime") setStep("selection");
+  };
 
-        {selectedPackages.length > 0 && (
-          <Card className="mb-4">
-            <CardHeader>
-              <CardTitle style={headingStyle}>Package{selectedPackages.length === 1 ? "" : "s"} in this booking ({selectedPackages.length})</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {selectedPackages.map((p) => (
-                <div key={p.id} className="flex items-center justify-between text-sm border-b last:border-b-0 py-2">
-                  <div>
-                    <div className="font-medium" style={{ color: brand }}>{p.name}</div>
-                    <div className="text-xs opacity-70">{p.session_count} session{p.session_count === 1 ? "" : "s"} · first session booked below, remaining tracked in your account</div>
-                  </div>
-                  {showPrices && (
-                    <div className="font-semibold whitespace-nowrap" style={{ color: brand }}>£{p.price.toFixed(2)}</div>
-                  )}
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        )}
+  const dateLabel = date ? fromIsoDate(date).toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" }) : null;
+  const chosenLoc = ctx.locations.find((l: Loc) => l.id === locationId);
 
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle style={headingStyle}>Your selection ({treatments.length})</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {treatments.map((t) => (
-              <div key={t.id} className="flex items-center justify-between text-sm border-b last:border-b-0 py-2">
-                <div className="font-medium" style={{ color: brand }}>{t.name}</div>
-                <div className="flex items-center gap-3 opacity-80">
-                  <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{durationFor(t)} min</span>
-                  {showPrices && <span className="font-semibold" style={{ color: brand }}>£{priceFor(t).toFixed(2)}</span>}
-                </div>
-              </div>
-            ))}
-            <div className="flex items-center justify-between pt-3 text-sm font-semibold">
-              <span>Total ({totalDuration} min)</span>
-              {showPrices && (
-                discountTotal > 0 ? (
-                  <span>
-                    <span className="mr-2 text-xs font-normal opacity-50 line-through">£{totalPrice.toFixed(2)}</span>
-                    <span style={{ color: brand }}>£{totalAfterDiscount.toFixed(2)}</span>
-                  </span>
-                ) : (
-                  <span style={{ color: brand }}>£{totalPrice.toFixed(2)}</span>
-                )
-              )}
-            </div>
-          </CardContent>
-        </Card>
+  const summaryChip = (
+    <div
+      className="mb-6 flex flex-wrap items-center gap-x-4 gap-y-1 rounded-xl border px-4 py-3 text-xs sm:text-sm"
+      style={{ borderColor: `${brand}33`, backgroundColor: `${brand}08`, color: brand }}
+    >
+      <span className="font-semibold">
+        {treatments.length + selectedPackages.length} item{treatments.length + selectedPackages.length === 1 ? "" : "s"}
+      </span>
+      <span className="opacity-70">·</span>
+      <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{totalDuration} min</span>
+      {chosenLoc && (<><span className="opacity-70">·</span><span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{chosenLoc.name}</span></>)}
+      {dateLabel && slot && (<><span className="opacity-70">·</span><span className="inline-flex items-center gap-1"><CalendarDays className="h-3.5 w-3.5" />{dateLabel} · {fmt(slot)}</span></>)}
+      {showPrices && (
+        <span className="ml-auto font-semibold">
+          {discountTotal > 0 && <span className="mr-2 text-[11px] font-normal opacity-50 line-through">£{totalPrice.toFixed(2)}</span>}
+          £{totalAfterDiscount.toFixed(2)}
+        </span>
+      )}
+    </div>
+  );
 
-        {ctx.locations.length > 1 && (
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="text-base" style={headingStyle}>Location</CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-wrap gap-2">
-              {ctx.locations.map((l: Loc) => {
-                const selected = locationId === l.id;
-                return (
-                  <Button
-                    key={l.id}
-                    variant={selected ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setLocationId(l.id)}
-                    style={selected ? { backgroundColor: brand, borderColor: brand, color: "#fff" } : { color: brand, borderColor: `${brand}55` }}
-                  >
-                    <MapPin className="mr-1 h-4 w-4" />{l.name}
-                  </Button>
-                );
-              })}
-            </CardContent>
-          </Card>
-        )}
-
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="text-base" style={headingStyle}>Pick a date & time</CardTitle>
-            {bookableFrom && (
-              <p className="text-xs text-muted-foreground mt-1">
-                Bookable from {fromIsoDate(bookableFrom).toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" })}
-              </p>
-            )}
-          </CardHeader>
-          <CardContent className="space-y-5">
-            <div className="flex justify-center">
-              <Calendar
-                mode="single"
-                selected={fromIsoDate(date)}
-                month={month}
-                onMonthChange={setMonth}
-                onSelect={(d) => { if (!d) return; setDate(toIsoDate(d)); setSlot(null); }}
-                disabled={(d) => {
-                  const startOfToday = new Date(new Date().setHours(0, 0, 0, 0));
-                  if (d < startOfToday) return true;
-                  if (bookableFrom && toIsoDate(d) < bookableFrom) return true;
-                  if (maxLeadDays > 0) {
-                    const maxDate = new Date(startOfToday);
-                    maxDate.setDate(maxDate.getDate() + maxLeadDays);
-                    if (d > maxDate) return true;
-                  }
-                  return isDateUnavailable(d);
-                }}
-                weekStartsOn={1}
-                className="pointer-events-auto rounded-md border p-3"
-              />
-            </div>
+  const SummarySidebar = (
+    <div className="rounded-2xl border p-4 text-sm" style={{ borderColor: `${brand}33`, backgroundColor: `${brand}06` }}>
+      <div className="mb-3 text-xs font-semibold uppercase tracking-wide" style={{ color: brand }}>Order summary</div>
+      <div className="space-y-2">
+        {selectedPackages.map((p) => (
+          <div key={p.id} className="flex justify-between gap-3 border-b pb-2 last:border-b-0">
             <div>
-              <Label className="mb-2 block text-sm font-semibold">Available start times (needs {totalDuration} min)</Label>
-              {dayQuery.isLoading ? (
-                <p className="mt-2 text-sm text-muted-foreground">Loading…</p>
-              ) : dayQuery.data?.isBlocked ? (
-                <p className="mt-2 text-sm text-muted-foreground">This date is unavailable.</p>
-              ) : slots.length === 0 ? (
-                <p className="mt-2 text-sm text-muted-foreground">No slots available. Try another date.</p>
-              ) : (
-                <div className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-5">
-                  {slots.map((s) => {
-                    const selected = slot === s;
-                    return (
-                      <Button
-                        key={s}
-                        variant={selected ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => setSlot(s)}
-                        style={selected ? { backgroundColor: brand, borderColor: brand, color: "#fff" } : { color: brand, borderColor: `${brand}55` }}
-                      >
-                        {fmt(s)}
-                      </Button>
-                    );
-                  })}
-                </div>
-              )}
+              <div className="font-medium" style={{ color: brand }}>{p.name}</div>
+              <div className="text-[11px] opacity-70">{p.session_count} session{p.session_count === 1 ? "" : "s"}</div>
             </div>
-          </CardContent>
-        </Card>
+            {showPrices && <div className="whitespace-nowrap font-semibold" style={{ color: brand }}>£{p.price.toFixed(2)}</div>}
+          </div>
+        ))}
+        {treatments.map((t) => (
+          <div key={t.id} className="flex justify-between gap-3 border-b pb-2 last:border-b-0">
+            <div>
+              <div className="font-medium">{t.name}</div>
+              <div className="text-[11px] opacity-70">{durationFor(t)} min</div>
+            </div>
+            {showPrices && <div className="whitespace-nowrap font-semibold" style={{ color: brand }}>£{priceFor(t).toFixed(2)}</div>}
+          </div>
+        ))}
+      </div>
+      <div className="mt-3 space-y-1 border-t pt-3 text-xs">
+        {chosenLoc && <div className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5 opacity-60" />{chosenLoc.name}</div>}
+        <div className="flex items-center gap-1.5"><Clock className="h-3.5 w-3.5 opacity-60" />{totalDuration} min total</div>
+        {dateLabel && slot && <div className="flex items-center gap-1.5"><CalendarDays className="h-3.5 w-3.5 opacity-60" />{dateLabel} at {fmt(slot)}</div>}
+      </div>
+      {showPrices && (
+        <div className="mt-3 flex items-baseline justify-between border-t pt-3">
+          <span className="text-xs opacity-70">Total</span>
+          <span className="text-lg font-bold" style={{ color: brand }}>
+            {discountTotal > 0 && <span className="mr-2 text-xs font-normal opacity-50 line-through">£{totalPrice.toFixed(2)}</span>}
+            £{totalAfterDiscount.toFixed(2)}
+          </span>
+        </div>
+      )}
+    </div>
+  );
 
-        {authChoice === "pending" ? (
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="text-base" style={headingStyle}>Sign in to continue</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <p className="text-sm opacity-70">Create an account or sign in to track your appointments.</p>
-              <div className="grid gap-2 sm:grid-cols-3">
-                <Link to="/m/$slug/auth" params={{ slug }} search={{ redirect: redirectPath }}>
-                  <Button className="w-full" style={{ backgroundColor: brand, color: "#fff" }}><LogIn className="mr-2 h-4 w-4" />Sign in</Button>
-                </Link>
-                <Link to="/m/$slug/auth" params={{ slug }} search={{ tab: "signup", redirect: redirectPath }}>
-                  <Button variant="outline" className="w-full" style={{ color: brand, borderColor: `${brand}55` }}><UserPlus className="mr-2 h-4 w-4" />Sign up</Button>
-                </Link>
-                <Button variant="ghost" className="w-full" style={{ color: brand }} onClick={() => setAuthChoice("guest")}>Continue as guest</Button>
-              </div>
-            </CardContent>
-          </Card>
-        ) : (
-          <>
-            {authChoice === "signed-in" && (
-              <div className="mb-3 flex items-center gap-2 rounded-md border px-3 py-2 text-sm" style={{ borderColor: `${brand}33`, color: brand }}>
-                <UserCheck className="h-4 w-4" /> Signed in — saved to your account.
-              </div>
-            )}
-            {availableAddons.length > 0 && (
+  return (
+    <main className="min-h-screen pb-28 lg:pb-10" style={pageStyle}>
+      <div className="mx-auto grid max-w-6xl gap-8 px-4 py-8 lg:grid-cols-[minmax(0,1fr)_320px] lg:py-10">
+        <div>
+          <div className="mb-4">
+            <Link to="/m/$slug" params={{ slug }} className="text-sm opacity-70 hover:underline">
+              ← Back to {ctx.clinicName}
+            </Link>
+          </div>
+
+          <BookingProgress steps={stepsMeta} accent={brand} />
+          {summaryChip}
+
+          {step === "selection" && (
+            <>
+              {selectedPackages.length > 0 && (
+                <Card className="mb-4">
+                  <CardHeader>
+                    <CardTitle style={headingStyle}>Package{selectedPackages.length === 1 ? "" : "s"} in this booking ({selectedPackages.length})</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    {selectedPackages.map((p) => (
+                      <div key={p.id} className="flex items-center justify-between text-sm border-b last:border-b-0 py-2">
+                        <div>
+                          <div className="font-medium" style={{ color: brand }}>{p.name}</div>
+                          <div className="text-xs opacity-70">{p.session_count} session{p.session_count === 1 ? "" : "s"} · first session booked below, remaining tracked in your account</div>
+                        </div>
+                        {showPrices && (
+                          <div className="font-semibold whitespace-nowrap" style={{ color: brand }}>£{p.price.toFixed(2)}</div>
+                        )}
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              )}
+
               <Card className="mb-6">
                 <CardHeader>
-                  <CardTitle className="text-base" style={headingStyle}>
-                    Add-ons <span className="text-xs font-normal opacity-60">(optional)</span>
-                  </CardTitle>
+                  <CardTitle style={headingStyle}>Your selection ({treatments.length})</CardTitle>
                 </CardHeader>
-                <CardContent className="grid gap-2">
-                  {availableAddons.map((a) => {
-                    const checked = addonPicks.has(a.id);
-                    const base = a.price_cents / 100;
-                    const net = addonNet(a);
-                    const hasDiscount = (a.discount_percent ?? 0) > 0;
-                    return (
-                      <button
-                        key={a.id}
-                        type="button"
-                        onClick={() => toggleAddon(a.id)}
-                        className="flex items-center justify-between gap-3 rounded-md border px-3 py-2 text-left transition"
-                        style={{
-                          borderColor: checked ? brand : `${brand}33`,
-                          backgroundColor: checked ? `${brand}10` : "transparent",
-                        }}
-                      >
-                        <div className="flex items-center gap-3">
-                          <input type="checkbox" readOnly checked={checked} className="h-4 w-4" />
-                          <div>
-                            <div className="text-sm font-medium">{a.name}</div>
-                            {a.duration_min > 0 && (
-                              <div className="text-xs opacity-60">+{a.duration_min} min</div>
+                <CardContent className="space-y-2">
+                  {treatments.map((t) => (
+                    <div key={t.id} className="flex items-center justify-between text-sm border-b last:border-b-0 py-2">
+                      <div className="font-medium" style={{ color: brand }}>{t.name}</div>
+                      <div className="flex items-center gap-3 opacity-80">
+                        <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{durationFor(t)} min</span>
+                        {showPrices && <span className="font-semibold" style={{ color: brand }}>£{priceFor(t).toFixed(2)}</span>}
+                      </div>
+                    </div>
+                  ))}
+                  <div className="flex items-center justify-between pt-3 text-sm font-semibold">
+                    <span>Total ({totalDuration} min)</span>
+                    {showPrices && (
+                      discountTotal > 0 ? (
+                        <span>
+                          <span className="mr-2 text-xs font-normal opacity-50 line-through">£{totalPrice.toFixed(2)}</span>
+                          <span style={{ color: brand }}>£{totalAfterDiscount.toFixed(2)}</span>
+                        </span>
+                      ) : (
+                        <span style={{ color: brand }}>£{totalPrice.toFixed(2)}</span>
+                      )
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {ctx.locations.length > 1 && (
+                <Card className="mb-6">
+                  <CardHeader>
+                    <CardTitle className="text-base" style={headingStyle}>Location</CardTitle>
+                  </CardHeader>
+                  <CardContent className="flex flex-wrap gap-2">
+                    {ctx.locations.map((l: Loc) => {
+                      const selected = locationId === l.id;
+                      return (
+                        <Button
+                          key={l.id}
+                          variant={selected ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => setLocationId(l.id)}
+                          style={selected ? { backgroundColor: brand, borderColor: brand, color: "#fff" } : { color: brand, borderColor: `${brand}55` }}
+                        >
+                          <MapPin className="mr-1 h-4 w-4" />{l.name}
+                        </Button>
+                      );
+                    })}
+                  </CardContent>
+                </Card>
+              )}
+
+              {availableAddons.length > 0 && (
+                <Card className="mb-6">
+                  <CardHeader>
+                    <CardTitle className="text-base" style={headingStyle}>
+                      Add-ons <span className="text-xs font-normal opacity-60">(optional)</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="grid gap-2">
+                    {availableAddons.map((a) => {
+                      const checked = addonPicks.has(a.id);
+                      const base = a.price_cents / 100;
+                      const net = addonNet(a);
+                      const hasDiscount = (a.discount_percent ?? 0) > 0;
+                      return (
+                        <button
+                          key={a.id}
+                          type="button"
+                          onClick={() => toggleAddon(a.id)}
+                          className="flex items-center justify-between gap-3 rounded-md border px-3 py-2 text-left transition"
+                          style={{
+                            borderColor: checked ? brand : `${brand}33`,
+                            backgroundColor: checked ? `${brand}10` : "transparent",
+                          }}
+                        >
+                          <div className="flex items-center gap-3">
+                            <input type="checkbox" readOnly checked={checked} className="h-4 w-4" />
+                            <div>
+                              <div className="text-sm font-medium">{a.name}</div>
+                              {a.duration_min > 0 && (
+                                <div className="text-xs opacity-60">+{a.duration_min} min</div>
+                              )}
+                            </div>
+                          </div>
+                          <div className="text-right text-sm">
+                            {hasDiscount ? (
+                              <>
+                                <span className="opacity-50 line-through mr-2">£{base.toFixed(2)}</span>
+                                <span className="font-semibold" style={{ color: brand }}>£{net.toFixed(2)}</span>
+                                <div className="text-[10px] font-semibold text-emerald-600">
+                                  {a.discount_percent}% off
+                                </div>
+                              </>
+                            ) : (
+                              <span className="font-semibold" style={{ color: brand }}>+£{base.toFixed(2)}</span>
                             )}
                           </div>
-                        </div>
-                        <div className="text-right text-sm">
-                          {hasDiscount ? (
-                            <>
-                              <span className="opacity-50 line-through mr-2">£{base.toFixed(2)}</span>
-                              <span className="font-semibold" style={{ color: brand }}>£{net.toFixed(2)}</span>
-                              <div className="text-[10px] font-semibold text-emerald-600">
-                                {a.discount_percent}% off
-                              </div>
-                            </>
-                          ) : (
-                            <span className="font-semibold" style={{ color: brand }}>+£{base.toFixed(2)}</span>
-                          )}
-                        </div>
-                      </button>
-                    );
-                  })}
-                </CardContent>
-              </Card>
-            )}
-            {splitEligibleTreatments.length > 0 && (
-              <Card className="mb-6">
-                <CardHeader>
-                  <CardTitle className="text-base" style={headingStyle}>Payment plan</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {splitEligibleTreatments.map((t) => {
-                    const sessions = Math.max(1, Number((t as { session_count?: number }).session_count ?? 1));
-                    const spacing = formatSessionSpacing((t as { session_interval_days?: number | null }).session_interval_days);
-                    const plan = selectedPaymentPlan(t);
-                    const fullPrice = priceFor(t);
-                    const perSession = fullPrice / sessions;
-                    return (
-                      <div key={t.id} className="space-y-2 rounded-md border p-3" style={{ borderColor: `${brand}33` }}>
-                        <div>
-                          <div className="text-sm font-semibold" style={{ color: brand }}>{t.name}</div>
-                          <div className="text-xs opacity-70">
-                            {sessions} sessions available{spacing ? ` · ${spacing}` : ""}
-                          </div>
-                        </div>
-                        <div className="grid gap-2 sm:grid-cols-2">
-                          {(["full", "split"] as const).map((opt) => {
-                            const selected = plan === opt;
-                            return (
-                              <button
-                                key={opt}
-                                type="button"
-                                onClick={() => setTreatmentPaymentPlan(t.id, opt)}
-                                className="flex flex-col items-start gap-1 rounded-md border px-3 py-3 text-left transition"
-                                style={{
-                                  borderColor: selected ? brand : `${brand}33`,
-                                  backgroundColor: selected ? `${brand}10` : "transparent",
-                                }}
-                              >
-                                <span className="text-sm font-semibold" style={{ color: brand }}>
-                                  {opt === "full" ? "Pay in full" : `Split into ${sessions} payments`}
-                                </span>
-                                <span className="text-xs opacity-70">
-                                  {opt === "full"
-                                    ? `£${fullPrice.toFixed(2)} total`
-                                    : `£${perSession.toFixed(2)} per session · charged at each visit`}
-                                </span>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </CardContent>
-                {splitEligibleTreatments.some((t) => selectedPaymentPlan(t) === "split") && (
-                  <div className="border-t px-6 py-4" style={{ borderColor: `${brand}22`, backgroundColor: `${brand}08` }}>
-                    <label className="flex cursor-pointer items-start gap-2 text-sm">
-                      <input
-                        type="checkbox"
-                        className="mt-0.5 h-4 w-4"
-                        style={{ accentColor: brand }}
-                        checked={splitAgreed}
-                        onChange={(e) => setSplitAgreed(e.target.checked)}
-                      />
-                      <span>
-                        I agree to pay the split-payment amount at each session
-                        {(() => {
-                          const parts = splitEligibleTreatments
-                            .filter((t) => selectedPaymentPlan(t) === "split")
-                            .map((t) => {
-                              const sessions = Math.max(1, Number((t as { session_count?: number }).session_count ?? 1));
-                              const per = priceFor(t) / sessions;
-                              return `${sessions} × £${per.toFixed(2)} for ${t.name}`;
-                            });
-                          return parts.length > 0 ? ` (${parts.join(", ")})` : "";
-                        })()}, until each treatment plan is complete.
-                        <span className="text-destructive"> *</span>
-                      </span>
-                    </label>
-                  </div>
-                )}
-              </Card>
-            )}
+                        </button>
+                      );
+                    })}
+                  </CardContent>
+                </Card>
+              )}
+            </>
+          )}
+
+          {step === "datetime" && (
             <Card className="mb-6">
-
               <CardHeader>
-                <CardTitle className="text-base" style={headingStyle}>Your details</CardTitle>
+                <CardTitle className="text-base" style={headingStyle}>Pick a date & time</CardTitle>
+                {bookableFrom && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Bookable from {fromIsoDate(bookableFrom).toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" })}
+                  </p>
+                )}
               </CardHeader>
-              <CardContent className="grid gap-4 sm:grid-cols-2">
-                <div className="sm:col-span-2">
-                  <Label htmlFor="name">Full name</Label>
-                  <Input id="name" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+              <CardContent className="space-y-5">
+                <div className="flex justify-center">
+                  <Calendar
+                    mode="single"
+                    selected={fromIsoDate(date)}
+                    month={month}
+                    onMonthChange={setMonth}
+                    onSelect={(d) => { if (!d) return; setDate(toIsoDate(d)); setSlot(null); }}
+                    disabled={(d) => {
+                      const startOfToday = new Date(new Date().setHours(0, 0, 0, 0));
+                      if (d < startOfToday) return true;
+                      if (bookableFrom && toIsoDate(d) < bookableFrom) return true;
+                      if (maxLeadDays > 0) {
+                        const maxDate = new Date(startOfToday);
+                        maxDate.setDate(maxDate.getDate() + maxLeadDays);
+                        if (d > maxDate) return true;
+                      }
+                      return isDateUnavailable(d);
+                    }}
+                    weekStartsOn={1}
+                    className="pointer-events-auto rounded-md border p-3"
+                  />
                 </div>
                 <div>
-                  <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+                  <Label className="mb-2 block text-sm font-semibold">Available start times (needs {totalDuration} min)</Label>
+                  {dayQuery.isLoading ? (
+                    <p className="mt-2 text-sm text-muted-foreground">Loading…</p>
+                  ) : dayQuery.data?.isBlocked ? (
+                    <p className="mt-2 text-sm text-muted-foreground">This date is unavailable.</p>
+                  ) : slots.length === 0 ? (
+                    <p className="mt-2 text-sm text-muted-foreground">No slots available. Try another date.</p>
+                  ) : (
+                    <div className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-5">
+                      {slots.map((s) => {
+                        const selected = slot === s;
+                        return (
+                          <Button
+                            key={s}
+                            variant={selected ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setSlot(s)}
+                            style={selected ? { backgroundColor: brand, borderColor: brand, color: "#fff" } : { color: brand, borderColor: `${brand}55` }}
+                          >
+                            {fmt(s)}
+                          </Button>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
-                <div>
-                  <Label htmlFor="phone">Phone {!reqPhone && <span className="text-xs opacity-50">(optional)</span>}</Label>
-                  <Input id="phone" required={reqPhone} value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
-                </div>
-                <div>
-                  <Label htmlFor="dob">Date of birth {!reqDob && <span className="text-xs opacity-50">(optional)</span>}</Label>
-                  <Input id="dob" type="date" required={reqDob} value={form.dob} onChange={(e) => setForm({ ...form, dob: e.target.value })} />
-                </div>
-                {reqAddress && (
-                  <>
-                    <div className="sm:col-span-2 pt-2 border-t mt-2">
-                      <Label className="text-sm font-semibold">Address</Label>
-                    </div>
-                    <div className="sm:col-span-2">
-                      <Label htmlFor="line1">Address line 1</Label>
-                      <AddressAutocomplete
-                        id="line1"
-                        value={form.addressLine1}
-                        country="gb"
-                        onChange={(v) => setForm({ ...form, addressLine1: v })}
-                        onSelect={(a) =>
-                          setForm({
-                            ...form,
-                            addressLine1: a.line1,
-                            city: a.city || form.city,
-                            postcode: a.postcode || form.postcode,
-                            country: a.country || form.country,
-                          })
-                        }
-                      />
-                    </div>
-
-                    <div className="sm:col-span-2">
-                      <Label htmlFor="line2">Address line 2 (optional)</Label>
-                      <Input id="line2" value={form.addressLine2} onChange={(e) => setForm({ ...form, addressLine2: e.target.value })} />
-                    </div>
-                    <div>
-                      <Label htmlFor="city">City</Label>
-                      <Input id="city" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
-                    </div>
-                    <div>
-                      <Label htmlFor="postcode">Postcode</Label>
-                      <Input id="postcode" value={form.postcode} onChange={(e) => setForm({ ...form, postcode: e.target.value })} />
-                    </div>
-                    <div className="sm:col-span-2">
-                      <Label htmlFor="country">Country</Label>
-                      <Input id="country" value={form.country} onChange={(e) => setForm({ ...form, country: e.target.value })} />
-                    </div>
-                  </>
-                )}
-                <div className="sm:col-span-2">
-                  <Label htmlFor="notes">Notes (optional)</Label>
-                  <Textarea id="notes" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
-                </div>
-                {authChoice === "signed-in" && (
-                  <div className="sm:col-span-2 flex items-center gap-2 rounded-md border bg-muted/40 p-3 text-sm">
-                    <input
-                      id="remember-me-multi"
-                      type="checkbox"
-                      checked={rememberMe}
-                      onChange={(e) => setRememberMe(e.target.checked)}
-                      className="h-4 w-4"
-                    />
-                    <Label htmlFor="remember-me-multi" className="cursor-pointer font-normal">
-                      Save these details to my account for faster booking next time
-                    </Label>
-                  </div>
-                )}
               </CardContent>
             </Card>
-            {termsHtml && termsHtml.trim() && (
-              <Card>
-                <CardHeader><CardTitle style={headingStyle}>Terms & Conditions</CardTitle></CardHeader>
-                <CardContent className="space-y-3">
-                  <div
-                    className="prose prose-sm max-w-none rounded-md border bg-muted/30 p-3 max-h-56 overflow-y-auto"
-                    dangerouslySetInnerHTML={{ __html: termsHtml }}
-                  />
-                  <label className="flex items-start gap-2 text-sm cursor-pointer">
-                    <input
-                      type="checkbox"
-                      className="mt-0.5 h-4 w-4"
-                      checked={agreedToTerms}
-                      onChange={(e) => setAgreedToTerms(e.target.checked)}
-                    />
-                    <span>
-                      I have read and agree to the Terms & Conditions
-                      {termsRequired && <span className="text-destructive"> *</span>}
-                    </span>
-                  </label>
-                </CardContent>
-              </Card>
-            )}
-            {showPrices && (
+          )}
+
+          {step === "details" && (
+            authChoice === "pending" ? (
               <Card className="mb-6">
-                <CardContent className="p-4">
-                  <DiscountCodeBox
-                    slug={slug}
-                    treatmentIds={treatments.map((t) => t.id)}
-                    brand={brand}
-                    value={discount}
-                    onChange={setDiscount}
-                  />
+                <CardHeader>
+                  <CardTitle className="text-base" style={headingStyle}>Sign in to continue</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <p className="text-sm opacity-70">Create an account or sign in to track your appointments.</p>
+                  <div className="grid gap-2 sm:grid-cols-3">
+                    <Link to="/m/$slug/auth" params={{ slug }} search={{ redirect: redirectPath }}>
+                      <Button className="w-full" style={{ backgroundColor: brand, color: "#fff" }}><LogIn className="mr-2 h-4 w-4" />Sign in</Button>
+                    </Link>
+                    <Link to="/m/$slug/auth" params={{ slug }} search={{ tab: "signup", redirect: redirectPath }}>
+                      <Button variant="outline" className="w-full" style={{ color: brand, borderColor: `${brand}55` }}><UserPlus className="mr-2 h-4 w-4" />Sign up</Button>
+                    </Link>
+                    <Button variant="ghost" className="w-full" style={{ color: brand }} onClick={() => setAuthChoice("guest")}>Continue as guest</Button>
+                  </div>
                 </CardContent>
               </Card>
-            )}
-            {prescriberItems.length > 0 && (
-              <Card className="mb-6 border-2" style={{ borderColor: accent }}>
-                <CardContent className="space-y-4 p-4">
-                  <div>
-                    <p className="font-semibold" style={headingStyle}>
-                      Prescriber review required
-                    </p>
-                    <p className="mt-1 text-sm opacity-80">
-                      One or more of your treatments needs sign-off from a qualified prescriber
-                      before it can be performed. Please review and consent below.
-                    </p>
+            ) : (
+              <>
+                {authChoice === "signed-in" && (
+                  <div className="mb-3 flex items-center gap-2 rounded-md border px-3 py-2 text-sm" style={{ borderColor: `${brand}33`, color: brand }}>
+                    <UserCheck className="h-4 w-4" /> Signed in — saved to your account.
                   </div>
-
-                  {sameAddressItems.length > 0 && (
-                    <div className="space-y-3">
-                      {sameAddressItems.map((p) => (
-                        <div key={p.treatment_id} className="rounded-md border bg-muted/30 p-3">
-                          <p className="text-sm font-medium">{p.treatment_name}</p>
-                          <p className="mt-0.5 text-xs opacity-75">
-                            Prescriber: <span className="font-medium">{p.prescriber_name}</span>
-                            {p.prescriber_regulatory_body ? ` · ${p.prescriber_regulatory_body}` : ""}
-                          </p>
-                          {p.note && <p className="mt-1 text-xs opacity-75">{p.note}</p>}
-                          <label className="mt-2 flex cursor-pointer items-start gap-2 text-sm">
-                            <input
-                              type="checkbox"
-                              className="mt-0.5 h-4 w-4"
-                              checked={Boolean(prescriberConsents[p.treatment_id])}
-                              onChange={(e) =>
-                                setPrescriberConsents((prev) => ({
-                                  ...prev,
-                                  [p.treatment_id]: e.target.checked,
-                                }))
-                              }
-                            />
-                            <span>
-                              I consent to {ctx.clinicName} sharing my booking details and
-                              medical forms with {p.prescriber_name} for this treatment.
-                              <span className="text-destructive"> *</span>
-                            </span>
-                          </label>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {clinicVisitItems.length > 0 && (
-                    <div className="space-y-3">
-                      {clinicVisitItems.map((p) => {
-                        const visits = availableVisits.filter(
-                          (v) => v.treatment_id === p.treatment_id,
-                        );
-                        const selected = visitSelections[p.treatment_id];
+                )}
+                {splitEligibleTreatments.length > 0 && (
+                  <Card className="mb-6">
+                    <CardHeader>
+                      <CardTitle className="text-base" style={headingStyle}>Payment plan</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {splitEligibleTreatments.map((t) => {
+                        const sessions = Math.max(1, Number((t as { session_count?: number }).session_count ?? 1));
+                        const spacing = formatSessionSpacing((t as { session_interval_days?: number | null }).session_interval_days);
+                        const plan = selectedPaymentPlan(t);
+                        const fullPrice = priceFor(t);
+                        const perSession = fullPrice / sessions;
                         return (
-                          <div
-                            key={p.treatment_id}
-                            className="rounded-md border bg-muted/30 p-3"
-                          >
-                            <p className="text-sm font-medium">{p.treatment_name}</p>
-                            <p className="mt-0.5 text-xs opacity-75">
-                              Prescriber: <span className="font-medium">{p.prescriber_name}</span>
-                              {p.prescriber_regulatory_body
-                                ? ` · ${p.prescriber_regulatory_body}`
-                                : ""}
-                            </p>
-                            <p className="mt-1 text-xs">
-                              Pick a day {p.prescriber_name} will be visiting the clinic for your
-                              prescriber review:
-                            </p>
-                            {availableVisitsQuery.isLoading ? (
-                              <p className="mt-2 text-xs opacity-70">Loading visit days…</p>
-                            ) : visits.length === 0 ? (
-                              <p className="mt-2 text-xs text-destructive">
-                                No upcoming visit days available. Please contact the clinic.
-                              </p>
-                            ) : (
-                              <div className="mt-2 grid gap-1.5 sm:grid-cols-2">
-                                {visits.map((v) => {
-                                  const active = selected === v.visit_id;
-                                  return (
-                                    <button
-                                      key={v.visit_id}
-                                      type="button"
-                                      onClick={() =>
-                                        setVisitSelections((prev) => ({
-                                          ...prev,
-                                          [p.treatment_id]: v.visit_id,
-                                        }))
-                                      }
-                                      className={`rounded-md border px-2 py-1.5 text-left text-xs transition ${
-                                        active
-                                          ? "border-2 font-semibold"
-                                          : "hover:bg-muted"
-                                      }`}
-                                      style={
-                                        active ? { borderColor: accent, color: accent } : undefined
-                                      }
-                                    >
-                                      <div>
-                                        {new Date(
-                                          v.visit_date + "T00:00:00",
-                                        ).toLocaleDateString(undefined, {
-                                          weekday: "short",
-                                          day: "numeric",
-                                          month: "short",
-                                        })}{" "}
-                                        · {v.start_time.slice(0, 5)}–{v.end_time.slice(0, 5)}
-                                      </div>
-                                      {v.location_name && (
-                                        <div className="opacity-70">{v.location_name}</div>
-                                      )}
-                                      <div className="opacity-60">
-                                        {v.remaining_capacity} slot
-                                        {v.remaining_capacity === 1 ? "" : "s"} left
-                                      </div>
-                                    </button>
-                                  );
-                                })}
+                          <div key={t.id} className="space-y-2 rounded-md border p-3" style={{ borderColor: `${brand}33` }}>
+                            <div>
+                              <div className="text-sm font-semibold" style={{ color: brand }}>{t.name}</div>
+                              <div className="text-xs opacity-70">
+                                {sessions} sessions available{spacing ? ` · ${spacing}` : ""}
                               </div>
-                            )}
-                            {visits.length > 0 && (
+                            </div>
+                            <div className="grid gap-2 sm:grid-cols-2">
+                              {(["full", "split"] as const).map((opt) => {
+                                const selected = plan === opt;
+                                return (
+                                  <button
+                                    key={opt}
+                                    type="button"
+                                    onClick={() => setTreatmentPaymentPlan(t.id, opt)}
+                                    className="flex flex-col items-start gap-1 rounded-md border px-3 py-3 text-left transition"
+                                    style={{
+                                      borderColor: selected ? brand : `${brand}33`,
+                                      backgroundColor: selected ? `${brand}10` : "transparent",
+                                    }}
+                                  >
+                                    <span className="text-sm font-semibold" style={{ color: brand }}>
+                                      {opt === "full" ? "Pay in full" : `Split into ${sessions} payments`}
+                                    </span>
+                                    <span className="text-xs opacity-70">
+                                      {opt === "full"
+                                        ? `£${fullPrice.toFixed(2)} total`
+                                        : `£${perSession.toFixed(2)} per session · charged at each visit`}
+                                    </span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </CardContent>
+                    {splitEligibleTreatments.some((t) => selectedPaymentPlan(t) === "split") && (
+                      <div className="border-t px-6 py-4" style={{ borderColor: `${brand}22`, backgroundColor: `${brand}08` }}>
+                        <label className="flex cursor-pointer items-start gap-2 text-sm">
+                          <input
+                            type="checkbox"
+                            className="mt-0.5 h-4 w-4"
+                            style={{ accentColor: brand }}
+                            checked={splitAgreed}
+                            onChange={(e) => setSplitAgreed(e.target.checked)}
+                          />
+                          <span>
+                            I agree to pay the split-payment amount at each session
+                            {(() => {
+                              const parts = splitEligibleTreatments
+                                .filter((t) => selectedPaymentPlan(t) === "split")
+                                .map((t) => {
+                                  const sessions = Math.max(1, Number((t as { session_count?: number }).session_count ?? 1));
+                                  const per = priceFor(t) / sessions;
+                                  return `${sessions} × £${per.toFixed(2)} for ${t.name}`;
+                                });
+                              return parts.length > 0 ? ` (${parts.join(", ")})` : "";
+                            })()}, until each treatment plan is complete.
+                            <span className="text-destructive"> *</span>
+                          </span>
+                        </label>
+                      </div>
+                    )}
+                  </Card>
+                )}
+                <Card className="mb-6">
+                  <CardHeader>
+                    <CardTitle className="text-base" style={headingStyle}>Your details</CardTitle>
+                  </CardHeader>
+                  <CardContent className="grid gap-4 sm:grid-cols-2">
+                    <div className="sm:col-span-2">
+                      <Label htmlFor="name">Full name</Label>
+                      <Input id="name" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+                    </div>
+                    <div>
+                      <Label htmlFor="email">Email</Label>
+                      <Input id="email" type="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+                    </div>
+                    <div>
+                      <Label htmlFor="phone">Phone {!reqPhone && <span className="text-xs opacity-50">(optional)</span>}</Label>
+                      <Input id="phone" required={reqPhone} value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+                    </div>
+                    <div>
+                      <Label htmlFor="dob">Date of birth {!reqDob && <span className="text-xs opacity-50">(optional)</span>}</Label>
+                      <Input id="dob" type="date" required={reqDob} value={form.dob} onChange={(e) => setForm({ ...form, dob: e.target.value })} />
+                    </div>
+                    {reqAddress && (
+                      <>
+                        <div className="sm:col-span-2 pt-2 border-t mt-2">
+                          <Label className="text-sm font-semibold">Address</Label>
+                        </div>
+                        <div className="sm:col-span-2">
+                          <Label htmlFor="line1">Address line 1</Label>
+                          <AddressAutocomplete
+                            id="line1"
+                            value={form.addressLine1}
+                            country="gb"
+                            onChange={(v) => setForm({ ...form, addressLine1: v })}
+                            onSelect={(a) =>
+                              setForm({
+                                ...form,
+                                addressLine1: a.line1,
+                                city: a.city || form.city,
+                                postcode: a.postcode || form.postcode,
+                                country: a.country || form.country,
+                              })
+                            }
+                          />
+                        </div>
+                        <div className="sm:col-span-2">
+                          <Label htmlFor="line2">Address line 2 (optional)</Label>
+                          <Input id="line2" value={form.addressLine2} onChange={(e) => setForm({ ...form, addressLine2: e.target.value })} />
+                        </div>
+                        <div>
+                          <Label htmlFor="city">City</Label>
+                          <Input id="city" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
+                        </div>
+                        <div>
+                          <Label htmlFor="postcode">Postcode</Label>
+                          <Input id="postcode" value={form.postcode} onChange={(e) => setForm({ ...form, postcode: e.target.value })} />
+                        </div>
+                        <div className="sm:col-span-2">
+                          <Label htmlFor="country">Country</Label>
+                          <Input id="country" value={form.country} onChange={(e) => setForm({ ...form, country: e.target.value })} />
+                        </div>
+                      </>
+                    )}
+                    <div className="sm:col-span-2">
+                      <Label htmlFor="notes">Notes (optional)</Label>
+                      <Textarea id="notes" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
+                    </div>
+                    {authChoice === "signed-in" && (
+                      <div className="sm:col-span-2 flex items-center gap-2 rounded-md border bg-muted/40 p-3 text-sm">
+                        <input
+                          id="remember-me-multi"
+                          type="checkbox"
+                          checked={rememberMe}
+                          onChange={(e) => setRememberMe(e.target.checked)}
+                          className="h-4 w-4"
+                        />
+                        <Label htmlFor="remember-me-multi" className="cursor-pointer font-normal">
+                          Save these details to my account for faster booking next time
+                        </Label>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+                {termsHtml && termsHtml.trim() && (
+                  <Card className="mb-6">
+                    <CardHeader><CardTitle style={headingStyle}>Terms & Conditions</CardTitle></CardHeader>
+                    <CardContent className="space-y-3">
+                      <div
+                        className="prose prose-sm max-w-none rounded-md border bg-muted/30 p-3 max-h-56 overflow-y-auto"
+                        dangerouslySetInnerHTML={{ __html: termsHtml }}
+                      />
+                      <label className="flex items-start gap-2 text-sm cursor-pointer">
+                        <input
+                          type="checkbox"
+                          className="mt-0.5 h-4 w-4"
+                          checked={agreedToTerms}
+                          onChange={(e) => setAgreedToTerms(e.target.checked)}
+                        />
+                        <span>
+                          I have read and agree to the Terms & Conditions
+                          {termsRequired && <span className="text-destructive"> *</span>}
+                        </span>
+                      </label>
+                    </CardContent>
+                  </Card>
+                )}
+                {showPrices && (
+                  <Card className="mb-6">
+                    <CardContent className="p-4">
+                      <DiscountCodeBox
+                        slug={slug}
+                        treatmentIds={treatments.map((t) => t.id)}
+                        brand={brand}
+                        value={discount}
+                        onChange={setDiscount}
+                      />
+                    </CardContent>
+                  </Card>
+                )}
+                {prescriberItems.length > 0 && (
+                  <Card className="mb-6 border-2" style={{ borderColor: accent }}>
+                    <CardContent className="space-y-4 p-4">
+                      <div>
+                        <p className="font-semibold" style={headingStyle}>
+                          Prescriber review required
+                        </p>
+                        <p className="mt-1 text-sm opacity-80">
+                          One or more of your treatments needs sign-off from a qualified prescriber
+                          before it can be performed. Please review and consent below.
+                        </p>
+                      </div>
+
+                      {sameAddressItems.length > 0 && (
+                        <div className="space-y-3">
+                          {sameAddressItems.map((p) => (
+                            <div key={p.treatment_id} className="rounded-md border bg-muted/30 p-3">
+                              <p className="text-sm font-medium">{p.treatment_name}</p>
+                              <p className="mt-0.5 text-xs opacity-75">
+                                Prescriber: <span className="font-medium">{p.prescriber_name}</span>
+                                {p.prescriber_regulatory_body ? ` · ${p.prescriber_regulatory_body}` : ""}
+                              </p>
+                              {p.note && <p className="mt-1 text-xs opacity-75">{p.note}</p>}
                               <label className="mt-2 flex cursor-pointer items-start gap-2 text-sm">
                                 <input
                                   type="checkbox"
@@ -1139,109 +1123,259 @@ function MultiBookPage() {
                                 />
                                 <span>
                                   I consent to {ctx.clinicName} sharing my booking details and
-                                  medical forms with {p.prescriber_name} for this visit.
+                                  medical forms with {p.prescriber_name} for this treatment.
                                   <span className="text-destructive"> *</span>
                                 </span>
                               </label>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-
-                  {inPersonItems.length > 0 && (
-                    <div className="space-y-3">
-                      {inPersonItems.map((p) => (
-                        <div
-                          key={p.treatment_id}
-                          className="rounded-md border bg-amber-50/60 p-3 text-sm"
-                        >
-                          <p className="font-medium">{p.treatment_name}</p>
-                          <p className="mt-1 text-xs">
-                            This treatment requires an in-person consultation with{" "}
-                            <span className="font-medium">{p.prescriber_name}</span> before it can
-                            be booked here.
-                          </p>
-                          {p.note && <p className="mt-1 text-xs opacity-75">{p.note}</p>}
-                          <p className="mt-2 text-xs opacity-75">
-                            Please contact the clinic to arrange this consultation.
-                          </p>
+                            </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
-                  )}
+                      )}
 
-                </CardContent>
-              </Card>
-            )}
+                      {clinicVisitItems.length > 0 && (
+                        <div className="space-y-3">
+                          {clinicVisitItems.map((p) => {
+                            const visits = availableVisits.filter(
+                              (v) => v.treatment_id === p.treatment_id,
+                            );
+                            const selected = visitSelections[p.treatment_id];
+                            return (
+                              <div
+                                key={p.treatment_id}
+                                className="rounded-md border bg-muted/30 p-3"
+                              >
+                                <p className="text-sm font-medium">{p.treatment_name}</p>
+                                <p className="mt-0.5 text-xs opacity-75">
+                                  Prescriber: <span className="font-medium">{p.prescriber_name}</span>
+                                  {p.prescriber_regulatory_body
+                                    ? ` · ${p.prescriber_regulatory_body}`
+                                    : ""}
+                                </p>
+                                <p className="mt-1 text-xs">
+                                  Pick a day {p.prescriber_name} will be visiting the clinic for your
+                                  prescriber review:
+                                </p>
+                                {availableVisitsQuery.isLoading ? (
+                                  <p className="mt-2 text-xs opacity-70">Loading visit days…</p>
+                                ) : visits.length === 0 ? (
+                                  <p className="mt-2 text-xs text-destructive">
+                                    No upcoming visit days available. Please contact the clinic.
+                                  </p>
+                                ) : (
+                                  <div className="mt-2 grid gap-1.5 sm:grid-cols-2">
+                                    {visits.map((v) => {
+                                      const active = selected === v.visit_id;
+                                      return (
+                                        <button
+                                          key={v.visit_id}
+                                          type="button"
+                                          onClick={() =>
+                                            setVisitSelections((prev) => ({
+                                              ...prev,
+                                              [p.treatment_id]: v.visit_id,
+                                            }))
+                                          }
+                                          className={`rounded-md border px-2 py-1.5 text-left text-xs transition ${
+                                            active
+                                              ? "border-2 font-semibold"
+                                              : "hover:bg-muted"
+                                          }`}
+                                          style={
+                                            active ? { borderColor: accent, color: accent } : undefined
+                                          }
+                                        >
+                                          <div>
+                                            {new Date(
+                                              v.visit_date + "T00:00:00",
+                                            ).toLocaleDateString(undefined, {
+                                              weekday: "short",
+                                              day: "numeric",
+                                              month: "short",
+                                            })}{" "}
+                                            · {v.start_time.slice(0, 5)}–{v.end_time.slice(0, 5)}
+                                          </div>
+                                          {v.location_name && (
+                                            <div className="opacity-70">{v.location_name}</div>
+                                          )}
+                                          <div className="opacity-60">
+                                            {v.remaining_capacity} slot
+                                            {v.remaining_capacity === 1 ? "" : "s"} left
+                                          </div>
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                )}
+                                {visits.length > 0 && (
+                                  <label className="mt-2 flex cursor-pointer items-start gap-2 text-sm">
+                                    <input
+                                      type="checkbox"
+                                      className="mt-0.5 h-4 w-4"
+                                      checked={Boolean(prescriberConsents[p.treatment_id])}
+                                      onChange={(e) =>
+                                        setPrescriberConsents((prev) => ({
+                                          ...prev,
+                                          [p.treatment_id]: e.target.checked,
+                                        }))
+                                      }
+                                    />
+                                    <span>
+                                      I consent to {ctx.clinicName} sharing my booking details and
+                                      medical forms with {p.prescriber_name} for this visit.
+                                      <span className="text-destructive"> *</span>
+                                    </span>
+                                  </label>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
 
-            <BookingPaymentPicker
-              slug={slug}
-              totalAmount={totalAfterDiscount}
-              value={paymentChoice}
-              onChange={setPaymentChoice}
-              accent={brand}
-              depositOverrideCents={(() => {
-                const overrides = treatments
-                  .map((t) => (t as { deposit_amount?: number | null }).deposit_amount)
-                  .filter((v): v is number => v != null && v > 0);
-                if (overrides.length === 0) return null;
-                // Sum only overrides — the picker still adds the clinic default for
-                // treatments without an override on the server when checkout runs.
-                return Math.round(overrides.reduce((a, b) => a + b, 0) * 100);
-              })()}
-            />
+                      {inPersonItems.length > 0 && (
+                        <div className="space-y-3">
+                          {inPersonItems.map((p) => (
+                            <div
+                              key={p.treatment_id}
+                              className="rounded-md border bg-amber-50/60 p-3 text-sm"
+                            >
+                              <p className="font-medium">{p.treatment_name}</p>
+                              <p className="mt-1 text-xs">
+                                This treatment requires an in-person consultation with{" "}
+                                <span className="font-medium">{p.prescriber_name}</span> before it can
+                                be booked here.
+                              </p>
+                              {p.note && <p className="mt-1 text-xs opacity-75">{p.note}</p>}
+                              <p className="mt-2 text-xs opacity-75">
+                                Please contact the clinic to arrange this consultation.
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
 
+                <BookingPaymentPicker
+                  slug={slug}
+                  totalAmount={totalAfterDiscount}
+                  value={paymentChoice}
+                  onChange={setPaymentChoice}
+                  accent={brand}
+                  depositOverrideCents={(() => {
+                    const overrides = treatments
+                      .map((t) => (t as { deposit_amount?: number | null }).deposit_amount)
+                      .filter((v): v is number => v != null && v > 0);
+                    if (overrides.length === 0) return null;
+                    return Math.round(overrides.reduce((a, b) => a + b, 0) * 100);
+                  })()}
+                />
 
-            {(() => {
+                {(() => {
+                  const anySplit = splitEligibleTreatments.some((t) => selectedPaymentPlan(t) === "split");
+                  let dueToday = 0;
+                  treatments.forEach((t) => {
+                    const sessions = Math.max(1, Number((t as { session_count?: number }).session_count ?? 1));
+                    const isSplit =
+                      Boolean((t as { allow_split_payment?: boolean }).allow_split_payment) &&
+                      sessions > 1 &&
+                      selectedPaymentPlan(t) === "split";
+                    dueToday += isSplit ? priceFor(t) / sessions : priceFor(t);
+                  });
+                  if (totalPrice > 0) dueToday = Math.max(0, dueToday - (dueToday / totalPrice) * discountTotal);
+                  const btnLabel = submitting
+                    ? "Booking…"
+                    : inPersonItems.length > 0
+                      ? "Consultation required before booking"
+                      : !allVisitsPicked
+                        ? "Please pick a clinic visit day above"
+                        : !allClinicVisitsConsented || !allConsented
+                          ? "Please give prescriber consent above"
+                          : anySplit && !splitAgreed
+                            ? "Tick the split-payment agreement to continue"
+                            : anySplit
+                              ? `Book & pay £${dueToday.toFixed(2)} today (rest at each session)`
+                              : `Confirm ${treatments.length} booking${treatments.length === 1 ? "" : "s"} · £${totalAfterDiscount.toFixed(2)}`;
+                  return (
+                    <Button
+                      className="mt-4 w-full"
+                      size="lg"
+                      disabled={
+                        !slot || submitting || !form.name || !form.email || (reqPhone && !form.phone) || (reqDob && !form.dob) ||
+                        (termsRequired && !agreedToTerms) || prescriberBlocks ||
+                        (anySplit && !splitAgreed)
+                      }
+                      onClick={submit}
+                      style={{ backgroundColor: brand, color: "#fff" }}
+                    >
+                      {btnLabel}
+                    </Button>
+                  );
+                })()}
+              </>
+            )
+          )}
 
-              const anySplit = splitEligibleTreatments.some((t) => selectedPaymentPlan(t) === "split");
-              // Estimate "due today" – split treatments only charge first session up front
-              let dueToday = 0;
-              treatments.forEach((t) => {
-                const sessions = Math.max(1, Number((t as { session_count?: number }).session_count ?? 1));
-                const isSplit =
-                  Boolean((t as { allow_split_payment?: boolean }).allow_split_payment) &&
-                  sessions > 1 &&
-                  selectedPaymentPlan(t) === "split";
-                dueToday += isSplit ? priceFor(t) / sessions : priceFor(t);
-              });
-              // Apply proportional discount to keep the label honest
-              if (totalPrice > 0) dueToday = Math.max(0, dueToday - (dueToday / totalPrice) * discountTotal);
-              const btnLabel = submitting
-                ? "Booking…"
-                : inPersonItems.length > 0
-                  ? "Consultation required before booking"
-                  : !allVisitsPicked
-                    ? "Please pick a clinic visit day above"
-                    : !allClinicVisitsConsented || !allConsented
-                      ? "Please give prescriber consent above"
-                      : anySplit && !splitAgreed
-                        ? "Tick the split-payment agreement to continue"
-                        : anySplit
-                          ? `Book & pay £${dueToday.toFixed(2)} today (rest at each session)`
-                          : `Confirm ${treatments.length} booking${treatments.length === 1 ? "" : "s"} · £${totalAfterDiscount.toFixed(2)}`;
-              return (
-                <Button
-                  className="w-full"
-                  size="lg"
-                  disabled={
-                    !slot || submitting || !form.name || !form.email || (reqPhone && !form.phone) || (reqDob && !form.dob) ||
-                    (termsRequired && !agreedToTerms) || prescriberBlocks ||
-                    (anySplit && !splitAgreed)
-                  }
-                  onClick={submit}
-                  style={{ backgroundColor: brand, color: "#fff" }}
-                >
-                  {btnLabel}
-                </Button>
-              );
-            })()}
+          {step !== "details" && (
+            <div className="mt-6 flex items-center justify-between gap-3">
+              <Button
+                variant="outline"
+                onClick={goBack}
+                disabled={step === "selection"}
+                style={{ color: brand, borderColor: `${brand}55` }}
+              >
+                <ChevronLeft className="mr-1 h-4 w-4" /> Back
+              </Button>
+              <Button
+                onClick={goNext}
+                disabled={step === "selection" ? !selectionValid : !datetimeValid}
+                style={{ backgroundColor: brand, color: "#fff" }}
+              >
+                Continue <ChevronRight className="ml-1 h-4 w-4" />
+              </Button>
+            </div>
+          )}
+        </div>
 
-          </>
-        )}
+        <aside className="hidden lg:block">
+          <div className="sticky top-6">{SummarySidebar}</div>
+        </aside>
       </div>
+
+      {step !== "details" && (
+        <div
+          className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 px-4 py-3 backdrop-blur lg:hidden"
+          style={{ borderColor: `${brand}33` }}
+        >
+          <div className="mx-auto flex max-w-3xl items-center justify-between gap-3">
+            <div className="min-w-0">
+              <div className="truncate text-[11px] uppercase tracking-wide opacity-60">
+                {step === "selection" ? "Step 1 of 3 · Select" : "Step 2 of 3 · Date & Time"}
+              </div>
+              {showPrices && (
+                <div className="text-base font-bold" style={{ color: brand }}>£{totalAfterDiscount.toFixed(2)}</div>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              {step !== "selection" && (
+                <Button variant="outline" size="sm" onClick={goBack} style={{ color: brand, borderColor: `${brand}55` }}>
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+              )}
+              <Button
+                size="sm"
+                onClick={goNext}
+                disabled={step === "selection" ? !selectionValid : !datetimeValid}
+                style={{ backgroundColor: brand, color: "#fff" }}
+              >
+                Continue <ChevronRight className="ml-1 h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
+
