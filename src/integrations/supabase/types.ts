@@ -421,6 +421,7 @@ export type Database = {
           aftercare_sent_at: string | null
           allergies_text: string | null
           amount_paid_cents: number
+          amount_refunded_cents: number
           base_amount: number | null
           checkout_completed_at: string | null
           checkout_discount_cents: number | null
@@ -474,6 +475,7 @@ export type Database = {
           aftercare_sent_at?: string | null
           allergies_text?: string | null
           amount_paid_cents?: number
+          amount_refunded_cents?: number
           base_amount?: number | null
           checkout_completed_at?: string | null
           checkout_discount_cents?: number | null
@@ -527,6 +529,7 @@ export type Database = {
           aftercare_sent_at?: string | null
           allergies_text?: string | null
           amount_paid_cents?: number
+          amount_refunded_cents?: number
           base_amount?: number | null
           checkout_completed_at?: string | null
           checkout_discount_cents?: number | null
