@@ -393,8 +393,10 @@ function PatientsPage() {
         onOpenChange={setImportOpen}
         onImport={async (rows) => {
           const res: any = await importCsv({ data: { rows } });
-          toast.success(`Imported ${res.inserted}, updated ${res.updated}${res.skipped ? `, skipped ${res.skipped}` : ""}`);
+          const detail = res.skippedDetails?.length ? ` — first issue: ${res.skippedDetails[0]}` : "";
+          toast.success(`Imported ${res.inserted}, updated ${res.updated}${res.skipped ? `, skipped ${res.skipped}${detail}` : ""}`);
           setImportOpen(false);
+
           refresh();
         }}
       />
