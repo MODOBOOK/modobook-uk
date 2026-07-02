@@ -213,6 +213,30 @@ export const updateProfile = createServerFn({ method: "POST" })
     if (data.chooser_extra_title !== undefined) update.chooser_extra_title = data.chooser_extra_title;
     if (data.chooser_extra_body !== undefined) update.chooser_extra_body = data.chooser_extra_body;
     if (data.chooser_extra_treatment_ids !== undefined) update.chooser_extra_treatment_ids = data.chooser_extra_treatment_ids;
+
+    // Filter out stale/deleted treatment ids to avoid FK constraint errors
+    const candidateIds = new Set<string>();
+    for (const id of (data.chooser_consultation_treatment_ids ?? [])) if (id) candidateIds.add(id);
+    if (data.chooser_consultation_treatment_id) candidateIds.add(data.chooser_consultation_treatment_id);
+    for (const id of (data.chooser_extra_treatment_ids ?? [])) if (id) candidateIds.add(id);
+    if (candidateIds.size > 0) {
+      const { data: existing } = await supabase
+        .from("treatments")
+        .select("id")
+        .in("id", Array.from(candidateIds));
+      const valid = new Set((existing ?? []).map((t) => t.id as string));
+      if (data.chooser_consultation_treatment_ids !== undefined) {
+        update.chooser_consultation_treatment_ids = (data.chooser_consultation_treatment_ids ?? []).filter((id) => valid.has(id));
+      }
+      if (data.chooser_consultation_treatment_id !== undefined) {
+        update.chooser_consultation_treatment_id = data.chooser_consultation_treatment_id && valid.has(data.chooser_consultation_treatment_id)
+          ? data.chooser_consultation_treatment_id
+          : null;
+      }
+      if (data.chooser_extra_treatment_ids !== undefined) {
+        update.chooser_extra_treatment_ids = (data.chooser_extra_treatment_ids ?? []).filter((id) => valid.has(id));
+      }
+    }
     if (data.model_slots_position !== undefined) update.model_slots_position = data.model_slots_position;
     if (data.terms_html !== undefined) update.terms_html = data.terms_html;
     if (data.terms_required !== undefined) update.terms_required = data.terms_required;
