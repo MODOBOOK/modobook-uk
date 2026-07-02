@@ -223,10 +223,10 @@ export function ConsultationWizard() {
       <Card><CardContent className="space-y-4 p-4 sm:p-6">
         {step === 1 && <Step1 consultationId={c.id} medical={c.medical} onChange={(v: any) => setField("medical", v)} clientId={c.patient_id} clientName={c.patient_name} clientEmail={c.patient_email} clientPhone={c.patient_phone} onLinked={(pid) => setC((prev: any) => ({ ...prev, patient_id: pid }))} />}
         {step === 2 && <Step2 concerns={c.concerns} onChange={(v: any) => setField("concerns", v)} />}
-        {step === 3 && <Step3 assessment={c.assessment} photos={c.before_photos} onChangeAssess={(v: any) => setField("assessment", v)} onChangePhotos={(v: any) => setField("before_photos", v)} />}
+        {step === 3 && <Step3 profileId={c.profile_id} consultationId={c.id} assessment={c.assessment} photos={c.before_photos} onChangeAssess={(v: any) => setField("assessment", v)} onChangePhotos={(v: any) => setField("before_photos", v)} />}
         {step === 4 && <Step4 plan={c.treatment_plan} onChange={(v: any) => setField("treatment_plan", v)} />}
         {step === 5 && <Step5 consent={c.consent} patientName={c.patient_name} onChange={(v: any) => setField("consent", v)} />}
-        {step === 6 && <Step6 photos={c.after_photos} onChange={(v: any) => setField("after_photos", v)} />}
+        {step === 6 && <Step6 profileId={c.profile_id} consultationId={c.id} photos={c.after_photos} onChange={(v: any) => setField("after_photos", v)} />}
         {step === 7 && <Step7 log={c.treatment_log} onChange={(v: any) => setField("treatment_log", v)} />}
         {step === 8 && <Step8 invoice={c.invoice} email={c.patient_email} patientName={c.patient_name} consultationId={c.id} onChange={(v: any) => setField("invoice", v)} onComplete={complete} completed={c.status === "completed"} />}
       </CardContent></Card>
@@ -365,7 +365,7 @@ function Step2({ concerns, onChange }: { concerns: any; onChange: (v: any) => vo
   );
 }
 
-function Step3({ assessment, photos, onChangeAssess, onChangePhotos }: any) {
+function Step3({ profileId, consultationId, assessment, photos, onChangeAssess, onChangePhotos }: any) {
   return (
     <div className="space-y-4">
       <Header n={3} title="Assessment" subtitle="Clinical notes and before photos." />
@@ -374,7 +374,7 @@ function Step3({ assessment, photos, onChangeAssess, onChangePhotos }: any) {
         <Textarea rows={5} value={assessment?.notes ?? ""} onChange={(e) => onChangeAssess({ ...assessment, notes: e.target.value })} placeholder="Skin condition, muscle tone, asymmetries…" />
       </div>
 
-      <PhotoGrid label="Before photos" photos={photos ?? []} onChange={onChangePhotos} />
+      <PhotoGrid label="Before photos" photos={photos ?? []} onChange={onChangePhotos} profileId={profileId} consultationId={consultationId} />
     </div>
   );
 }
@@ -590,11 +590,11 @@ function ConsentTemplatesAttach({
 
 
 
-function Step6({ photos, onChange }: any) {
+function Step6({ profileId, consultationId, photos, onChange }: any) {
   return (
     <div className="space-y-4">
       <Header n={6} title="After photos" subtitle="Capture results right after treatment." />
-      <PhotoGrid label="After photos" photos={photos ?? []} onChange={onChange} />
+      <PhotoGrid label="After photos" photos={photos ?? []} onChange={onChange} profileId={profileId} consultationId={consultationId} />
     </div>
   );
 }
@@ -885,46 +885,115 @@ function defaultConsent(name: string) {
   return `I, ${name}, confirm that the treatment has been fully explained to me, including the risks, benefits and alternatives. I have had the opportunity to ask questions and I consent to proceed.`;
 }
 
-async function compressImage(file: File, maxDim = 1280, quality = 0.7): Promise<string> {
-  return new Promise((resolve, reject) => {
+const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const SIGNED_URL_TTL_SECONDS = 600; // 10 minutes
+const SIGNED_URL_REFRESH_MS = 8 * 60 * 1000; // refresh ~2 min before expiry
+
+async function compressImageToBlob(file: File, maxDim = 1600, quality = 0.82): Promise<Blob> {
+  const bitmap = await createImageBitmap(file).catch(() => null);
+  const img: HTMLImageElement | ImageBitmap = bitmap ?? await new Promise<HTMLImageElement>((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => {
-      const img = new Image();
-      img.onload = () => {
-        const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
-        const w = Math.round(img.width * scale);
-        const h = Math.round(img.height * scale);
-        const canvas = document.createElement("canvas");
-        canvas.width = w; canvas.height = h;
-        const ctx = canvas.getContext("2d");
-        if (!ctx) return reject("no ctx");
-        ctx.drawImage(img, 0, 0, w, h);
-        resolve(canvas.toDataURL("image/jpeg", quality));
-      };
-      img.onerror = reject;
-      img.src = reader.result as string;
+      const image = new Image();
+      image.onload = () => resolve(image);
+      image.onerror = reject;
+      image.src = reader.result as string;
     };
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
+  const w0 = (img as any).width; const h0 = (img as any).height;
+  const scale = Math.min(1, maxDim / Math.max(w0, h0));
+  const w = Math.round(w0 * scale); const h = Math.round(h0 * scale);
+  const canvas = document.createElement("canvas");
+  canvas.width = w; canvas.height = h;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("no ctx");
+  ctx.drawImage(img as any, 0, 0, w, h);
+  return await new Promise<Blob>((resolve, reject) =>
+    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("encode failed"))), "image/jpeg", quality)
+  );
 }
 
-function PhotoGrid({ label, photos, onChange }: { label: string; photos: string[]; onChange: (v: string[]) => void }) {
+// A stored photo is either a legacy inline data URL or a bucket path
+// like `{profile_id}/consultations/{consultation_id}/{uuid}.jpg`.
+function isInlinePhoto(v: string) {
+  return typeof v === "string" && (v.startsWith("data:") || v.startsWith("http://") || v.startsWith("https://") || v.startsWith("blob:"));
+}
+
+function PhotoGrid({ label, photos, onChange, profileId, consultationId }: {
+  label: string;
+  photos: string[];
+  onChange: (v: string[]) => void;
+  profileId?: string;
+  consultationId?: string;
+}) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
+  const [urlMap, setUrlMap] = useState<Record<string, string>>({});
+
+  // Sign private bucket paths and refresh before expiry
+  useEffect(() => {
+    let cancelled = false;
+    const paths = (photos ?? []).filter((p) => p && !isInlinePhoto(p));
+    if (!paths.length) { setUrlMap({}); return; }
+
+    async function sign() {
+      const { data, error } = await supabase.storage
+        .from("patient-photos")
+        .createSignedUrls(paths, SIGNED_URL_TTL_SECONDS);
+      if (cancelled) return;
+      if (error) { toast.error("Couldn't load photos"); return; }
+      const next: Record<string, string> = {};
+      for (const row of data ?? []) {
+        if (row.path && row.signedUrl) next[row.path] = row.signedUrl;
+      }
+      setUrlMap(next);
+    }
+    sign();
+    const timer = window.setInterval(sign, SIGNED_URL_REFRESH_MS);
+    return () => { cancelled = true; window.clearInterval(timer); };
+  }, [photos]);
+
+  const displaySrc = useCallback((p: string) => (isInlinePhoto(p) ? p : (urlMap[p] ?? "")), [urlMap]);
 
   async function onFiles(files: FileList | null) {
     if (!files?.length) return;
+    if (!profileId || !consultationId) { toast.error("Consultation not ready"); return; }
+    const arr = Array.from(files);
+    const invalid = arr.find((f) => !ALLOWED_IMAGE_TYPES.includes(f.type));
+    if (invalid) { toast.error("Only JPEG, PNG or WebP images are allowed"); return; }
+
     setBusy(true);
     try {
-      const compressed = await Promise.all(Array.from(files).map((f) => compressImage(f)));
-      onChange([...(photos ?? []), ...compressed]);
-    } catch { toast.error("Couldn't process image"); }
-    finally { setBusy(false); if (inputRef.current) inputRef.current.value = ""; }
+      const uploaded: string[] = [];
+      for (const f of arr) {
+        const blob = await compressImageToBlob(f);
+        const path = `${profileId}/consultations/${consultationId}/${crypto.randomUUID()}.jpg`;
+        const { error } = await supabase.storage
+          .from("patient-photos")
+          .upload(path, blob, { upsert: false, contentType: "image/jpeg", cacheControl: "0" });
+        if (error) throw error;
+        uploaded.push(path);
+      }
+      onChange([...(photos ?? []), ...uploaded]);
+    } catch (e: any) {
+      toast.error(e?.message || "Couldn't upload image");
+    } finally {
+      setBusy(false);
+      if (inputRef.current) inputRef.current.value = "";
+    }
   }
-  function remove(i: number) {
-    onChange(photos.filter((_, j) => j !== i));
+
+  async function remove(i: number) {
+    const target = photos[i];
+    const next = photos.filter((_, j) => j !== i);
+    onChange(next);
+    if (target && !isInlinePhoto(target)) {
+      // Best-effort delete; RLS enforces ownership.
+      supabase.storage.from("patient-photos").remove([target]).catch(() => {});
+    }
   }
 
   useEffect(() => {
@@ -950,7 +1019,7 @@ function PhotoGrid({ label, photos, onChange }: { label: string; photos: string[
       <input
         ref={inputRef}
         type="file"
-        accept="image/*"
+        accept="image/jpeg,image/png,image/webp"
         capture="environment"
         multiple
         className="hidden"
@@ -958,25 +1027,32 @@ function PhotoGrid({ label, photos, onChange }: { label: string; photos: string[
       />
       {photos?.length ? (
         <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-          {photos.map((src, i) => (
-            <div key={i} className="relative aspect-square overflow-hidden rounded-lg border bg-muted">
-              <button
-                type="button"
-                onClick={() => setLightboxIdx(i)}
-                className="block h-full w-full"
-                aria-label="Expand photo"
-              >
-                <img src={src} alt="" className="h-full w-full object-cover transition hover:scale-[1.03]" />
-              </button>
-              <button
-                onClick={() => remove(i)}
-                aria-label="Delete photo"
-                className="absolute right-1.5 top-1.5 grid h-7 w-7 place-items-center rounded-full bg-black/75 text-white shadow-md transition hover:bg-black"
-              >
-                <X className="h-3.5 w-3.5" />
-              </button>
-            </div>
-          ))}
+          {photos.map((src, i) => {
+            const url = displaySrc(src);
+            return (
+              <div key={src + i} className="relative aspect-square overflow-hidden rounded-lg border bg-muted">
+                <button
+                  type="button"
+                  onClick={() => setLightboxIdx(i)}
+                  className="block h-full w-full"
+                  aria-label="Expand photo"
+                >
+                  {url ? (
+                    <img src={url} alt="" className="h-full w-full object-cover transition hover:scale-[1.03]" />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center"><Loader2 className="h-4 w-4 animate-spin text-muted-foreground" /></div>
+                  )}
+                </button>
+                <button
+                  onClick={() => remove(i)}
+                  aria-label="Delete photo"
+                  className="absolute right-1.5 top-1.5 grid h-7 w-7 place-items-center rounded-full bg-black/75 text-white shadow-md transition hover:bg-black"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            );
+          })}
         </div>
       ) : (
         <div className="rounded-lg border border-dashed bg-muted/40 p-6 text-center text-xs text-muted-foreground">
@@ -1018,7 +1094,7 @@ function PhotoGrid({ label, photos, onChange }: { label: string; photos: string[
             </button>
           )}
           <img
-            src={photos[lightboxIdx]}
+            src={displaySrc(photos[lightboxIdx])}
             alt=""
             onClick={(e) => e.stopPropagation()}
             className="max-h-[90vh] max-w-[95vw] rounded-lg object-contain shadow-2xl"
