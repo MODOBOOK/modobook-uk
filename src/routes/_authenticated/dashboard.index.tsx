@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { listMyAppointments } from "@/lib/availability.functions";
 import { getStripePayouts } from "@/lib/stripe.functions";
+import { buildBookingUrl } from "@/lib/booking-url";
 import { resolveDisplayNames } from "@/lib/display-name";
 import { toast } from "sonner";
 
@@ -51,7 +52,7 @@ function DashboardIndex() {
   const [loading, setLoading] = useState(true);
   const [payouts, setPayouts] = useState<Awaited<ReturnType<typeof getStripePayouts>> | null>(null);
 
-  const bookingUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/m/${profile.slug}`;
+  const bookingUrl = buildBookingUrl(profile.slug);
 
   useEffect(() => {
     (async () => {
