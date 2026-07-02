@@ -309,9 +309,12 @@ function Account() {
           </h1>
           <p className="text-xs text-muted-foreground">Your portal with {profile?.full_name ?? profile?.clinic_name}</p>
         </div>
-        <Link to="/m/$slug" params={{ slug }}>
-          <Button size="sm" variant="outline">Back to clinic</Button>
-        </Link>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Button size="sm" variant="outline" onClick={() => setEditOpen(true)}>Edit my details</Button>
+          <Link to="/m/$slug" params={{ slug }}>
+            <Button size="sm" variant="outline">Back to clinic</Button>
+          </Link>
+        </div>
       </header>
 
       {/* Missing bookings claim */}
