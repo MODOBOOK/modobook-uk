@@ -160,12 +160,29 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
         </div>
       )}
 
-      <div className="mt-4 flex items-baseline justify-between border-t pt-3">
-        <div className="text-xs opacity-70">
-          {chosen.mode === "deposit" ? "Deposit today" : "Total today"}
-          {surchargeCents > 0 && o.passFees ? ` (incl. ${formatGBP(surchargeCents)} platform fee)` : null}
+      <div className="mt-4 border-t pt-3 space-y-1.5 text-sm">
+        <div className="flex items-baseline justify-between">
+          <span className="opacity-70">{chosen.mode === "deposit" ? "Deposit" : "Subtotal"}</span>
+          <span>{formatGBP(baseCents)}</span>
         </div>
-        <div className="text-lg font-semibold">{formatGBP(totalCents)}</div>
+        {clinicFeeCents > 0 && (
+          <div className="flex items-baseline justify-between">
+            <span className="opacity-70">Platform fee ({pct}%)</span>
+            <span>{formatGBP(clinicFeeCents)}</span>
+          </div>
+        )}
+        {stripeFeeCents > 0 && (
+          <div className="flex items-baseline justify-between">
+            <span className="opacity-70">
+              Card processing ({stripePct}%{stripeFixed > 0 ? ` + ${formatGBP(stripeFixed)}` : ""})
+            </span>
+            <span>{formatGBP(stripeFeeCents)}</span>
+          </div>
+        )}
+        <div className="flex items-baseline justify-between border-t pt-2 mt-1">
+          <span className="font-medium">{chosen.mode === "deposit" ? "Deposit today" : "Total today"}</span>
+          <span className="text-lg font-semibold">{formatGBP(totalCents)}</span>
+        </div>
       </div>
     </div>
   );
