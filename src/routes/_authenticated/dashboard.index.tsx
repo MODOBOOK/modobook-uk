@@ -51,7 +51,7 @@ function DashboardIndex() {
   const [loading, setLoading] = useState(true);
   const [payouts, setPayouts] = useState<Awaited<ReturnType<typeof getStripePayouts>> | null>(null);
 
-  const bookingUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/m/${profile.slug}`;
+  const bookingUrl = buildBookingUrl(profile.slug);
 
   useEffect(() => {
     (async () => {
