@@ -65,6 +65,8 @@ export const Route = createFileRoute("/lovable/email/transactional/send")({
         let idempotencyKey: string
         let messageId: string
         let templateData: Record<string, any> = {}
+        let replyTo: string | undefined
+        let fromName: string | undefined
         try {
           const body = await request.json()
           templateName = body.templateName || body.template_name
@@ -73,6 +75,12 @@ export const Route = createFileRoute("/lovable/email/transactional/send")({
           idempotencyKey = body.idempotencyKey || body.idempotency_key || messageId
           if (body.templateData && typeof body.templateData === 'object') {
             templateData = body.templateData
+          }
+          if (typeof body.replyTo === 'string' && body.replyTo.includes('@')) {
+            replyTo = body.replyTo.trim()
+          }
+          if (typeof body.fromName === 'string' && body.fromName.trim()) {
+            fromName = body.fromName.trim().replace(/[<>"\r\n]/g, '').slice(0, 80)
           }
         } catch {
           return Response.json(
