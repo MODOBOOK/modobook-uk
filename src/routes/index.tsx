@@ -428,12 +428,10 @@ export function SiteFooter() {
           { label: "Create your clinic page", to: "/auth" },
           { label: "Sign in", to: "/auth" },
         ]} />
-        <div className="text-sm text-muted-foreground">
-          <div className="font-medium text-foreground">Trust & safety</div>
-          <p className="mt-3">
-            UK/EU data residency · Encrypted at rest · GDPR-ready · Granular photo & marketing consent.
-          </p>
-        </div>
+        <FooterCol title="Legal" links={[
+          { label: "Privacy Policy", to: "/privacy" },
+          { label: "Terms & Conditions", to: "/terms" },
+        ]} />
       </div>
       <div className="border-t py-6 text-center text-sm text-muted-foreground">
         © {new Date().getFullYear()} MODO. Designed by Nurse Prescribers, for aesthetics clinics.
