@@ -65,6 +65,53 @@ export const getMyPatient = createServerFn({ method: "GET" })
     return { patient: data };
   });
 
+/** Save patient's own contact/address details so future bookings can prefill. */
+export const updateMyPatient = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    (input: {
+      full_name?: string;
+      email?: string;
+      phone?: string;
+      date_of_birth?: string | null;
+      address_line1?: string;
+      address_line2?: string;
+      city?: string;
+      postcode?: string;
+      country?: string;
+    }) => input,
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId, claims } = context;
+    const email = (claims as { email?: string } | null)?.email ?? null;
+    const patch: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(data)) {
+      if (v !== undefined && v !== "") patch[k] = v;
+    }
+    const { data: existing } = await supabase
+      .from("patients").select("id").eq("user_id", userId).maybeSingle();
+    if (!existing) {
+      const { data: created, error } = await supabase
+        .from("patients")
+        .insert({
+          user_id: userId,
+          full_name: (patch.full_name as string) || email?.split("@")[0] || "Patient",
+          email: (patch.email as string) || email,
+          ...patch,
+        })
+        .select("*").single();
+      if (error) throw error;
+      return { patient: created };
+    }
+    const { data: updated, error } = await supabase
+      .from("patients")
+      .update(patch as never)
+      .eq("user_id", userId)
+      .select("*").single();
+    if (error) throw error;
+    return { patient: updated };
+  });
+
 export const getMyPatientLinks = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
