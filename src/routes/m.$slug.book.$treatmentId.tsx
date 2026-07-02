@@ -856,6 +856,20 @@ function BookTreatmentPage() {
             <Label htmlFor="notes">Notes (optional)</Label>
             <Textarea id="notes" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
           </div>
+          {authChoice === "signed-in" && (
+            <div className="sm:col-span-2 flex items-center gap-2 rounded-md border bg-muted/40 p-3 text-sm">
+              <input
+                id="remember-me"
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className="h-4 w-4"
+              />
+              <Label htmlFor="remember-me" className="cursor-pointer font-normal">
+                Save these details to my account for faster booking next time
+              </Label>
+            </div>
+          )}
           {showPrices && (
             <div className="sm:col-span-2">
               <DiscountCodeBox
