@@ -644,10 +644,14 @@ function ImportCsvDialog({ open, onOpenChange, onImport }: {
         <div className="space-y-3 text-sm">
           <p className="text-xs text-muted-foreground">
             Include a header row. Recognised columns: <strong>Full Name, Email, Phone, DOB, Address, Postcode, City, Gender, Notes, Group</strong>.
-            Existing patients with the same email will be updated.
+            Existing patients with the same email will be updated. Commas, semicolons and tabs are all supported as separators.
           </p>
-          <Input type="file" accept=".csv,text/csv" onChange={(e) => handleFile(e.target.files?.[0] ?? null)} />
+          <button type="button" onClick={downloadSampleCsv} className="text-xs underline text-primary">
+            Download a sample template
+          </button>
+          <Input type="file" accept=".csv,text/csv,text/plain" onChange={(e) => handleFile(e.target.files?.[0] ?? null)} />
           {filename && <div className="text-xs text-muted-foreground">{filename} — {rows.length} row(s) detected</div>}
+
           {rows.length > 0 && (
             <div className="max-h-40 overflow-auto rounded border text-xs">
               <table className="w-full">
