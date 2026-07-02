@@ -1127,8 +1127,15 @@ function CheckoutSheet({
         <div className="border-t pt-2 text-sm">
           <div className="flex justify-between text-muted-foreground"><span>Subtotal</span><span>£{subtotal.toFixed(2)}</span></div>
           {discountValue > 0 && <div className="flex justify-between text-emerald-600"><span>Discount</span><span>-£{discountValue.toFixed(2)}</span></div>}
-          <div className="flex justify-between font-bold"><span>Total</span><span>£{total.toFixed(2)}</span></div>
+          {Number(a.amount_paid_cents ?? 0) > 0 && (
+            <div className="flex justify-between text-emerald-700"><span>Already paid</span><span>-£{(Number(a.amount_paid_cents ?? 0) / 100).toFixed(2)}</span></div>
+          )}
+          <div className="flex justify-between font-bold">
+            <span>Outstanding</span>
+            <span>£{Math.max(0, total - Number(a.amount_paid_cents ?? 0) / 100).toFixed(2)}</span>
+          </div>
         </div>
+
         <div className="grid grid-cols-2 gap-2">
           <Button disabled={busy} className="bg-slate-900 text-white hover:bg-slate-800" onClick={sendStripeLink}>
             <Link2 className="h-4 w-4 mr-1" /> Stripe link
