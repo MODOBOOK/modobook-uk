@@ -219,7 +219,7 @@ function NewAppointmentPage() {
         },
       });
       const manageUrl = result.manageToken
-        ? `${window.location.origin}/m/${profile.slug}/manage/${result.manageToken}`
+        ? `${window.location.origin}/${profile.slug}/manage/${result.manageToken}`
         : null;
 
       let depositUrl: string | null = null;

@@ -125,7 +125,7 @@ export const upsertMyTheme = createServerFn({ method: "POST" })
       .single();
     if (error) throw error;
 
-    // Mirror visible bits onto the public profile so the /m/:slug page reflects them.
+    // Mirror visible bits onto the public profile so the /:slug page reflects them.
     const profileUpdate: { brand_color?: string | null; hero_url?: string | null } = {};
     if (data.primary_color !== undefined) profileUpdate.brand_color = data.primary_color;
     if (data.hero_image_url !== undefined) profileUpdate.hero_url = data.hero_image_url;
