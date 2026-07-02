@@ -160,15 +160,15 @@ function RootComponent() {
   }, []);
 
   // Wildcard subdomain routing:
-  //   {slug}.modobook.co.uk → /{slug}
-  //   {slug}.modobook.app   → /{slug}
+  //   {slug}.modobook.uk → /{slug}
   // Attach the apex + wildcard for each zone in Project Settings → Domains.
   useEffect(() => {
     if (typeof window === "undefined") return;
     const host = window.location.hostname.toLowerCase();
     const path = window.location.pathname;
 
-    const ZONES = [".modobook.co.uk", ".modobook.uk", ".modobook.app"];
+    const ZONES = [".modobook.uk", ".modobook.app", ".modobook.co.uk"];
+
     const zone = ZONES.find((z) => host.endsWith(z));
     if (!zone) return;
     const sub = host.slice(0, -zone.length);

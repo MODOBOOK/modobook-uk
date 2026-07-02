@@ -14,8 +14,9 @@ import { TEMPLATES } from "@/lib/email-templates/registry";
 import type { BrandContext } from "@/lib/email-templates/_branded-shell";
 
 const SITE_NAME = "modobook-uk";
-const SENDER_DOMAIN = "notify.modobook.co.uk";
-const FROM_DOMAIN = "modobook.co.uk";
+const SENDER_DOMAIN = "notify.modobook.uk";
+const FROM_DOMAIN = "modobook.uk";
+
 
 function generateToken(): string {
   const bytes = new Uint8Array(32);

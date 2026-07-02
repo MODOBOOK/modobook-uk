@@ -8,10 +8,11 @@ import { TEMPLATES } from '@/lib/email-templates/registry'
 const SITE_NAME = "modobook-uk"
 // SENDER_DOMAIN is the verified sender subdomain FQDN (e.g., "notify.example.com").
 // It MUST match the subdomain delegated to Lovable's nameservers. NEVER use the root domain.
-const SENDER_DOMAIN = "notify.modobook.co.uk"
+const SENDER_DOMAIN = "notify.modobook.uk"
 // FROM_DOMAIN is the domain shown in the From: header (e.g., "info@example.com").
 // It is the root domain so emails appear to come from the clinic's main address.
-const FROM_DOMAIN = "modobook.co.uk"
+const FROM_DOMAIN = "modobook.uk"
+
 
 function redactEmail(email: string | null | undefined): string {
   if (!email) return '***'
