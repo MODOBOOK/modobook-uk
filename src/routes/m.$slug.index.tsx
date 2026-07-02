@@ -2286,7 +2286,7 @@ function HeroCarousel({ urls }: { urls: string[] }) {
     return () => clearInterval(t);
   }, [urls.length]);
   return (
-    <div className="relative h-72 w-full overflow-hidden sm:h-[28rem]">
+    <div className="relative h-56 w-full overflow-hidden sm:h-[22rem]">
       {urls.map((u, idx) => (
         <img
           key={u + idx}
