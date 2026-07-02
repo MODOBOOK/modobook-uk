@@ -207,30 +207,45 @@ export async function createConnectedPaymentLink(params: {
   currency: string;
   description: string;
   metadata?: Record<string, string>;
+  surchargeCents?: number;
 }) {
   const stripe = getStripe();
   const opts = { stripeAccount: params.accountId } as const;
+  const currency = params.currency.toLowerCase();
+
   const product = await stripe.products.create(
     { name: params.description.slice(0, 250) || "Payment" },
     opts,
   );
   const price = await stripe.prices.create(
-    {
-      product: product.id,
-      currency: params.currency.toLowerCase(),
-      unit_amount: params.amountCents,
-    },
+    { product: product.id, currency, unit_amount: params.amountCents },
     opts,
   );
+  const lineItems: Stripe.PaymentLinkCreateParams.LineItem[] = [
+    { price: price.id, quantity: 1 },
+  ];
+
+  // Add the practitioner's platform / processing fee as a visible second
+  // line item so the patient sees the breakdown and pays the combined total.
+  if (params.surchargeCents && params.surchargeCents > 0) {
+    const feeProduct = await stripe.products.create(
+      { name: "Platform fee" },
+      opts,
+    );
+    const feePrice = await stripe.prices.create(
+      { product: feeProduct.id, currency, unit_amount: Math.round(params.surchargeCents) },
+      opts,
+    );
+    lineItems.push({ price: feePrice.id, quantity: 1 });
+  }
+
   const link = await stripe.paymentLinks.create(
-    {
-      line_items: [{ price: price.id, quantity: 1 }],
-      metadata: params.metadata,
-    },
+    { line_items: lineItems, metadata: params.metadata },
     opts,
   );
   return { id: link.id, url: link.url };
 }
+
 
 export async function retrievePaymentLink(accountId: string, id: string) {
   const stripe = getStripe();
