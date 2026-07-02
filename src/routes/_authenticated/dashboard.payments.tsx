@@ -155,8 +155,8 @@ function PaymentsPage() {
   }
 
 
-  const connected = !!profile.stripe_connect_account_id;
   const status = profile.stripe_connect_onboarding_status ?? "not_started";
+
 
   return (
     <div className="space-y-6 max-w-3xl">
