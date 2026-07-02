@@ -36,7 +36,7 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
     queryFn: () => fn({ data: { slug } }),
   });
 
-  const opts = q.data as Options | undefined;
+  const opts = q.data as ConfiguredOptions | { configured: false } | undefined;
   const configured = opts && "configured" in opts && opts.configured;
 
   const availableModes = useMemo(() => {
