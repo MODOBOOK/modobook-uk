@@ -426,6 +426,20 @@ function BookTreatmentPage() {
 
         },
       });
+      if (patientUserId && rememberMe) {
+        try {
+          await saveMyPatient({ data: {
+            full_name: form.name,
+            phone: form.phone,
+            date_of_birth: form.dob || null,
+            address_line1: form.addressLine1,
+            address_line2: form.addressLine2,
+            city: form.city,
+            postcode: form.postcode,
+            country: form.country,
+          }});
+        } catch { /* non-fatal */ }
+      }
       if ((res as { checkoutUrl?: string | null }).checkoutUrl) {
         window.location.href = (res as { checkoutUrl: string }).checkoutUrl;
         return;
