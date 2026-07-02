@@ -8,7 +8,10 @@ import {
   getDayAvailability,
   getMonthAvailability,
   requestMultiBooking,
+  type PaymentChoice,
 } from "@/lib/public-booking.functions";
+import { BookingPaymentPicker } from "@/components/BookingPaymentPicker";
+
 import { listAddonsForBooking, type PublicAddon } from "@/lib/addons.functions";
 import { ensurePatient, getMyPatient } from "@/lib/patient.functions";
 import { getPrescriberInfoForTreatments } from "@/lib/prescriber.functions";
