@@ -132,8 +132,9 @@ export async function createConnectAccount(email: string) {
         afterpay_clearpay_payments: { requested: true },
       },
       settings: {
-        payouts: { schedule: { interval: "manual" } },
+        payouts: { schedule: { interval: "daily" } },
       },
+
     });
   } catch (error) {
     normaliseStripeError(error);
