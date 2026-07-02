@@ -1222,7 +1222,7 @@ function BookPage() {
 
       {/* Treatments + Packages */}
 
-      {locationId && (!chooserOn || mode === "know" || (mode === "unsure" && concernsConfirmed && pickedConcernIds.length > 0)) ? (
+      {locationId && (!chooserOn || mode === "know" || mode === "consult" || (mode === "unsure" && concernsConfirmed && pickedConcernIds.length > 0)) ? (
         <section className="mx-auto mt-10 max-w-3xl px-4 pb-32">
           {chooserOn && (
             <div className="mb-4 flex items-center justify-between">
@@ -1245,7 +1245,10 @@ function BookPage() {
           {(() => {
             // If on concern path, filter to matched treatments (union across all picked concerns)
             const onConcernPath = mode === "unsure" && concernsConfirmed && pickedConcernIds.length > 0;
-            const matchedIds = onConcernPath
+            const onConsultPath = mode === "consult" && consultTreatmentIds.length > 0;
+            const matchedIds = onConsultPath
+              ? new Set(consultTreatmentIds)
+              : onConcernPath
               ? new Set(
                   concernLinks
                     .filter((l) => pickedConcernIds.includes(l.concern_id))
@@ -1256,6 +1259,7 @@ function BookPage() {
               ? visibleTreatments.filter((t) => matchedIds.has(t.id))
               : visibleTreatments;
             const tree = matchedIds ? buildTree(treatmentCategories, filteredTreatments) : { roots, uncategorised };
+
 
             if (matchedIds) {
               const concernNames = pickedConcernIds
