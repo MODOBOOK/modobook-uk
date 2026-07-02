@@ -199,6 +199,7 @@ function BookPage() {
         chooser_show_unsure?: boolean | null;
         chooser_show_consultation?: boolean | null;
         chooser_consultation_treatment_id?: string | null;
+        chooser_consultation_treatment_ids?: string[] | null;
         chooser_intro_text?: string | null;
         model_slots_position?: "top" | "bottom" | null;
         practitioner_selection_mode?: "required" | "optional" | "first_available" | null;
@@ -401,8 +402,15 @@ function BookPage() {
   const showKnow = profile.chooser_show_know !== false;
   const showUnsure = profile.chooser_show_unsure !== false;
   const showConsult = profile.chooser_show_consultation !== false;
-  const consultTreatmentId = profile.chooser_consultation_treatment_id ?? null;
-  const [mode, setMode] = useState<null | "know" | "unsure">(null);
+  const consultTreatmentIds = (() => {
+    const arr = Array.isArray(profile.chooser_consultation_treatment_ids) ? profile.chooser_consultation_treatment_ids : [];
+    const single = profile.chooser_consultation_treatment_id;
+    const set = new Set<string>(arr.filter(Boolean));
+    if (single) set.add(single);
+    return Array.from(set);
+  })();
+  const consultTreatmentId = consultTreatmentIds[0] ?? null;
+  const [mode, setMode] = useState<null | "know" | "unsure" | "consult">(null);
   const [pickedConcernIds, setPickedConcernIds] = useState<string[]>([]);
   const [concernsConfirmed, setConcernsConfirmed] = useState(false);
   const togglePickedConcern = (id: string) =>
@@ -1012,10 +1020,10 @@ function BookPage() {
               />
             )}
             {showConsult && (
-              consultTreatmentId ? (
+              consultTreatmentIds.length === 1 ? (
                 <Link
                   to="/m/$slug/book/$treatmentId"
-                  params={{ slug, treatmentId: consultTreatmentId }}
+                  params={{ slug, treatmentId: consultTreatmentIds[0] }}
                   className="block"
                 >
                   <ChooserCard
@@ -1024,6 +1032,13 @@ function BookPage() {
                     brand={brand}
                   />
                 </Link>
+              ) : consultTreatmentIds.length > 1 ? (
+                <ChooserCard
+                  title="Book a consultation now"
+                  description="Choose from our consultations"
+                  brand={brand}
+                  onClick={() => setMode("consult")}
+                />
               ) : (
                 <ChooserCard
                   title="Book a consultation now"
@@ -1207,7 +1222,7 @@ function BookPage() {
 
       {/* Treatments + Packages */}
 
-      {locationId && (!chooserOn || mode === "know" || (mode === "unsure" && concernsConfirmed && pickedConcernIds.length > 0)) ? (
+      {locationId && (!chooserOn || mode === "know" || mode === "consult" || (mode === "unsure" && concernsConfirmed && pickedConcernIds.length > 0)) ? (
         <section className="mx-auto mt-10 max-w-3xl px-4 pb-32">
           {chooserOn && (
             <div className="mb-4 flex items-center justify-between">
@@ -1230,7 +1245,10 @@ function BookPage() {
           {(() => {
             // If on concern path, filter to matched treatments (union across all picked concerns)
             const onConcernPath = mode === "unsure" && concernsConfirmed && pickedConcernIds.length > 0;
-            const matchedIds = onConcernPath
+            const onConsultPath = mode === "consult" && consultTreatmentIds.length > 0;
+            const matchedIds = onConsultPath
+              ? new Set(consultTreatmentIds)
+              : onConcernPath
               ? new Set(
                   concernLinks
                     .filter((l) => pickedConcernIds.includes(l.concern_id))
@@ -1242,20 +1260,25 @@ function BookPage() {
               : visibleTreatments;
             const tree = matchedIds ? buildTree(treatmentCategories, filteredTreatments) : { roots, uncategorised };
 
+
             if (matchedIds) {
               const concernNames = pickedConcernIds
                 .map((id) => concerns.find((c) => c.id === id)?.name)
                 .filter((n): n is string => !!n);
               return (
                 <>
-                  {concernNames.length > 0 && (
+                  {onConsultPath ? (
+                    <h2 className="mb-3 text-lg font-bold" style={headingStyle}>
+                      Choose a consultation
+                    </h2>
+                  ) : concernNames.length > 0 && (
                     <h2 className="mb-3 text-lg font-bold" style={headingStyle}>
                       Suggested for: {concernNames.join(", ")}
                     </h2>
                   )}
                   {filteredTreatments.length === 0 ? (
                     <p className="rounded-xl border border-dashed p-6 text-center text-sm opacity-70" style={{ borderColor: `${brand}33` }}>
-                      No treatments matched to {concernNames.length > 1 ? "these concerns" : "this concern"} yet.
+                      {onConsultPath ? "No consultations available yet." : `No treatments matched to ${concernNames.length > 1 ? "these concerns" : "this concern"} yet.`}
                     </p>
                   ) : (
                     <div className="space-y-2">
