@@ -57,7 +57,7 @@ export const startStripeOnboarding = createServerFn({ method: "POST" })
           ok: false as const,
           code,
           message,
-          actionUrl: "https://dashboard.stripe.com/test/connect/overview",
+          actionUrl: "https://dashboard.stripe.com/connect/overview",
         };
       }
       if (code === "invalid_secret_mode") {
