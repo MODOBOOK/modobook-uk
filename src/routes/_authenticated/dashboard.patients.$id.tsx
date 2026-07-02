@@ -181,8 +181,8 @@ function PatientProfilePage() {
               </a>
             </Button>
           )}
-          <Button size="sm" variant="outline" className="shrink-0" asChild>
-            <Link to="/dashboard/payments"><CreditCard className="mr-1.5 h-4 w-4" />Payment link</Link>
+          <Button size="sm" variant="outline" className="shrink-0" onClick={() => setPayLinkOpen(true)}>
+            <CreditCard className="mr-1.5 h-4 w-4" />Payment link
           </Button>
           <Button size="sm" variant="outline" className="shrink-0" onClick={() => setSendFormOpen(true)}>
             <FileText className="mr-1.5 h-4 w-4" />Send form
