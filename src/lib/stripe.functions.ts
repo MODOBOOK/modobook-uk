@@ -41,6 +41,37 @@ export const startStripeStandardConnect = createServerFn({ method: "POST" })
     }
   });
 
+export const checkStripeConnectSetup = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async () => {
+    const { getStripeSetupSummary, getStripe } = await import("./stripe.server");
+    const setup = getStripeSetupSummary();
+
+    try {
+      const stripe = getStripe();
+      await stripe.balance.retrieve();
+      const modeMatchesKey =
+        (setup.mode === "live" && setup.secretKeyType === "live") ||
+        (setup.mode === "sandbox" && setup.secretKeyType === "test");
+
+      return {
+        ok: modeMatchesKey && setup.connectClientIdType === "connect",
+        ...setup,
+        stripeReachable: true,
+        message: modeMatchesKey && setup.connectClientIdType === "connect"
+          ? "MODO can reach Stripe and the key mode looks correct. If Stripe still spins, the selected Stripe account is likely blocked, restricted, or already connected to another platform."
+          : "Stripe is reachable, but the saved Stripe mode, key, or Connect client ID does not match.",
+      };
+    } catch (e) {
+      return {
+        ok: false as const,
+        ...setup,
+        stripeReachable: false,
+        message: e instanceof Error ? e.message : "MODO could not reach Stripe with the saved key.",
+      };
+    }
+  });
+
 export const disconnectStripe = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
