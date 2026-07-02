@@ -123,13 +123,27 @@ function Account() {
         .maybeSingle();
       setPatientName(client?.full_name ?? sess.session.user.email?.split("@")[0] ?? "");
 
-      // Appointments
+      // Appointments — exclude "pending" placeholders that haven't been paid yet.
+      // These are Stripe checkout holds; until Stripe confirms payment the
+      // appointment shouldn't appear on the patient's account.
+      const nowIso = new Date().toISOString();
       const { data: apptRows } = await supabase
         .from("appointments")
-        .select("id, scheduled_date, start_time, end_time, status, payment_status, total_amount, treatment_id, reschedule_count, treatment_name_snapshot, treatments(name), locations(name)")
+        .select("id, scheduled_date, start_time, end_time, status, payment_status, amount_paid_cents, payment_hold_expires_at, total_amount, treatment_id, reschedule_count, treatment_name_snapshot, treatments(name), locations(name)")
         .eq("profile_id", prof.id)
         .order("scheduled_date", { ascending: false });
-      setAppts((apptRows ?? []) as any);
+      const visibleAppts = (apptRows ?? []).filter((a: any) => {
+        // Always show confirmed/completed/cancelled — those have real state.
+        if (a.status !== "pending") return true;
+        // Pending + paid (or partial deposit) is a real booking.
+        if (a.payment_status === "paid" || (a.amount_paid_cents ?? 0) > 0) return true;
+        // Pending + unpaid inside the hold window: not confirmed yet, hide.
+        // Pending + unpaid past the hold window: abandoned, hide.
+        if (!a.payment_hold_expires_at) return true; // legacy row with no hold — leave visible
+        return false;
+      });
+      setAppts(visibleAppts as any);
+
 
       const apptIds = (apptRows ?? []).map((a) => a.id);
 
