@@ -1189,8 +1189,8 @@ function BookPage() {
           el.scrollBy({ left: dir * el.clientWidth * 0.9, behavior: "smooth" });
         };
         return (
-          <section className="mx-auto mt-10 max-w-5xl px-4">
-            <div className="mb-4 flex items-end justify-between gap-3">
+          <section className="mx-auto mt-6 max-w-5xl px-4">
+            <div className="mb-3 flex items-end justify-between gap-3">
               <h2 className="text-xl font-bold sm:text-2xl" style={headingStyle}>{heading}</h2>
               {favs.length > 1 && (
                 <div className="hidden gap-2 sm:flex">
