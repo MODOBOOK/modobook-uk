@@ -102,39 +102,63 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
   const surchargeCents = clinicFeeCents + stripeFeeCents;
   const totalCents = baseCents + surchargeCents;
 
-  const styleAccent = accent ? { borderColor: accent, color: accent } : undefined;
+  const accentColor = accent || "currentColor";
+  const cardStyle: React.CSSProperties = accent
+    ? {
+        borderColor: `color-mix(in oklab, ${accent} 40%, transparent)`,
+        background: `color-mix(in oklab, ${accent} 6%, hsl(var(--background)))`,
+        boxShadow: `0 1px 0 color-mix(in oklab, ${accent} 12%, transparent), 0 10px 30px -18px color-mix(in oklab, ${accent} 45%, transparent)`,
+      }
+    : {};
+  const headingStyle: React.CSSProperties = accent ? { color: accent } : {};
+
+  const optionStyle = (selected: boolean): React.CSSProperties => {
+    if (!accent) return {};
+    if (selected) {
+      return {
+        borderColor: accent,
+        background: `color-mix(in oklab, ${accent} 14%, transparent)`,
+        color: accent,
+        boxShadow: `inset 0 0 0 1px ${accent}`,
+      };
+    }
+    return {
+      borderColor: `color-mix(in oklab, ${accent} 22%, transparent)`,
+      background: `color-mix(in oklab, ${accent} 3%, transparent)`,
+    };
+  };
 
   return (
-    <div className="rounded-2xl border bg-background/60 p-4 sm:p-5">
+    <div className="rounded-2xl border-2 p-4 sm:p-5" style={cardStyle}>
       <div className="flex items-center gap-2 mb-3">
-        <CreditCard className="h-4 w-4 opacity-70" />
-        <h3 className="text-sm font-semibold">How would you like to pay?</h3>
+        <CreditCard className="h-4 w-4" style={headingStyle} />
+        <h3 className="text-sm font-semibold tracking-wide uppercase" style={headingStyle}>How would you like to pay?</h3>
       </div>
 
       {availableModes.length > 1 && (
         <div className="mb-4">
-          <div className="text-xs uppercase tracking-wide opacity-60 mb-2">Amount</div>
+          <div className="text-[11px] uppercase tracking-[0.14em] opacity-60 mb-2">Amount</div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {availableModes.includes("deposit") && (
               <button
                 type="button"
                 onClick={() => onChange({ ...chosen, mode: "deposit" })}
-                className={`text-left rounded-lg border px-3 py-2 transition ${chosen.mode === "deposit" ? "ring-2" : "opacity-80 hover:opacity-100"}`}
-                style={chosen.mode === "deposit" ? styleAccent : undefined}
+                className="text-left rounded-xl border-2 px-3 py-2.5 transition"
+                style={optionStyle(chosen.mode === "deposit")}
               >
-                <div className="text-sm font-medium">Pay deposit</div>
-                <div className="text-xs opacity-70">{formatGBP(o.depositCents)} now — balance at your appointment</div>
+                <div className="text-sm font-semibold">Pay deposit</div>
+                <div className="text-xs opacity-75">{formatGBP(o.depositCents)} now — balance at your appointment</div>
               </button>
             )}
             {availableModes.includes("full") && (
               <button
                 type="button"
                 onClick={() => onChange({ ...chosen, mode: "full" })}
-                className={`text-left rounded-lg border px-3 py-2 transition ${chosen.mode === "full" ? "ring-2" : "opacity-80 hover:opacity-100"}`}
-                style={chosen.mode === "full" ? styleAccent : undefined}
+                className="text-left rounded-xl border-2 px-3 py-2.5 transition"
+                style={optionStyle(chosen.mode === "full")}
               >
-                <div className="text-sm font-medium">Pay in full</div>
-                <div className="text-xs opacity-70">£{totalAmount.toFixed(2)} now</div>
+                <div className="text-sm font-semibold">Pay in full</div>
+                <div className="text-xs opacity-75">£{totalAmount.toFixed(2)} now</div>
               </button>
             )}
           </div>
@@ -143,15 +167,15 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
 
       {availableMethods.length > 1 && (
         <div>
-          <div className="text-xs uppercase tracking-wide opacity-60 mb-2">Method</div>
+          <div className="text-[11px] uppercase tracking-[0.14em] opacity-60 mb-2">Method</div>
           <div className="grid grid-cols-3 gap-2">
             {availableMethods.map((m) => (
               <button
                 key={m}
                 type="button"
                 onClick={() => onChange({ ...chosen, method: m })}
-                className={`rounded-lg border px-3 py-2 text-sm transition ${chosen.method === m ? "ring-2" : "opacity-80 hover:opacity-100"}`}
-                style={chosen.method === m ? styleAccent : undefined}
+                className="rounded-xl border-2 px-3 py-2 text-sm font-medium transition"
+                style={optionStyle(chosen.method === m)}
               >
                 {m === "card" ? "Card" : m === "klarna" ? "Klarna" : "Clearpay"}
               </button>
@@ -160,7 +184,10 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
         </div>
       )}
 
-      <div className="mt-4 border-t pt-3 space-y-1.5 text-sm">
+      <div
+        className="mt-4 pt-3 space-y-1.5 text-sm border-t"
+        style={accent ? { borderColor: `color-mix(in oklab, ${accent} 25%, transparent)` } : undefined}
+      >
         <div className="flex items-baseline justify-between">
           <span className="opacity-70">{chosen.mode === "deposit" ? "Deposit" : "Subtotal"}</span>
           <span>{formatGBP(baseCents)}</span>
@@ -177,11 +204,15 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
             <span>{formatGBP(stripeFeeCents)}</span>
           </div>
         )}
-        <div className="flex items-baseline justify-between border-t pt-2 mt-1">
+        <div
+          className="flex items-baseline justify-between border-t pt-2 mt-1"
+          style={accent ? { borderColor: `color-mix(in oklab, ${accent} 25%, transparent)` } : undefined}
+        >
           <span className="font-medium">{chosen.mode === "deposit" ? "Deposit today" : "Total today"}</span>
-          <span className="text-lg font-semibold">{formatGBP(totalCents)}</span>
+          <span className="text-lg font-bold" style={headingStyle}>{formatGBP(totalCents)}</span>
         </div>
       </div>
     </div>
   );
 }
+
