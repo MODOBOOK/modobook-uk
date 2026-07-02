@@ -92,7 +92,7 @@ function PrivacyPage() {
             <li>Complain to the Information Commissioner's Office (<a href="https://ico.org.uk" target="_blank" rel="noreferrer">ico.org.uk</a>, 0303 123 1113).</li>
           </ul>
           <p>
-            To exercise any of these rights, email <a href="mailto:privacy@modobook.co.uk">privacy@modobook.co.uk</a>.
+            To exercise any of these rights, email <a href="mailto:info@modobook.co.uk">info@modobook.co.uk</a>.
             We respond within one calendar month.
           </p>
 
@@ -122,7 +122,7 @@ function PrivacyPage() {
           <h2>10. Data Protection Officer &amp; Controller contact</h2>
           <p>
             <strong>Controller:</strong> MODO Ltd, Scotland, United Kingdom.<br />
-            <strong>Data Protection contact:</strong> <a href="mailto:privacy@modobook.co.uk">privacy@modobook.co.uk</a>
+            <strong>Data Protection contact:</strong> <a href="mailto:info@modobook.co.uk">info@modobook.co.uk</a>
             <br />
             For clinical data held about you as a patient, the practitioner who
             treated you is the Data Controller — contact them directly, or email us
