@@ -32,6 +32,8 @@ type Props = {
   accent?: string;
   /** Optional per-treatment deposit total in pence, overrides clinic default. */
   depositOverrideCents?: number | null;
+  /** When set, treats totalAmount as a per-session amount for a split payment plan. */
+  splitInfo?: { sessionCount: number } | null;
 };
 
 
