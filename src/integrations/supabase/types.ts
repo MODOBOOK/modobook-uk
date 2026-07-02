@@ -1220,6 +1220,8 @@ export type Database = {
           email: string | null
           emergency_contact_name: string | null
           emergency_contact_phone: string | null
+          erasure_reason: string | null
+          erasure_requested_at: string | null
           full_name: string
           gender: string | null
           gp_address: string | null
@@ -1257,6 +1259,8 @@ export type Database = {
           email?: string | null
           emergency_contact_name?: string | null
           emergency_contact_phone?: string | null
+          erasure_reason?: string | null
+          erasure_requested_at?: string | null
           full_name: string
           gender?: string | null
           gp_address?: string | null
@@ -1294,6 +1298,8 @@ export type Database = {
           email?: string | null
           emergency_contact_name?: string | null
           emergency_contact_phone?: string | null
+          erasure_reason?: string | null
+          erasure_requested_at?: string | null
           full_name?: string
           gender?: string | null
           gp_address?: string | null
@@ -4879,6 +4885,7 @@ export type Database = {
             Args: { p_appointment_id: string; p_confirm_late?: boolean }
             Returns: Json
           }
+      patient_request_erasure: { Args: { p_slug: string }; Returns: Json }
       patient_reschedule_appointment: {
         Args: {
           p_appointment_id: string
