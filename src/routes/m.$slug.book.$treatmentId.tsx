@@ -787,8 +787,23 @@ function BookTreatmentPage() {
               </div>
               <div className="sm:col-span-2">
                 <Label htmlFor="line1">Address line 1</Label>
-                <Input id="line1" value={form.addressLine1} onChange={(e) => setForm({ ...form, addressLine1: e.target.value })} />
+                <AddressAutocomplete
+                  id="line1"
+                  value={form.addressLine1}
+                  country="gb"
+                  onChange={(v) => setForm({ ...form, addressLine1: v })}
+                  onSelect={(a) =>
+                    setForm({
+                      ...form,
+                      addressLine1: a.line1,
+                      city: a.city || form.city,
+                      postcode: a.postcode || form.postcode,
+                      country: a.country || form.country,
+                    })
+                  }
+                />
               </div>
+
               <div className="sm:col-span-2">
                 <Label htmlFor="line2">Address line 2 (optional)</Label>
                 <Input id="line2" value={form.addressLine2} onChange={(e) => setForm({ ...form, addressLine2: e.target.value })} />
