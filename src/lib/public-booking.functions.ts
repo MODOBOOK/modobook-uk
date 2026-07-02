@@ -729,8 +729,10 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
       patientUserId?: string | null;
       practitionerId?: string | null;
       packagePurchases?: { packageId: string }[];
+      paymentChoice?: PaymentChoice | null;
     }) => input,
   )
+
   .handler(async ({ data }) => {
     const sb = publicClient();
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
