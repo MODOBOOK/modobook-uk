@@ -170,7 +170,7 @@ export function getStripeSetupSummary() {
   const mode = getStripeMode();
   const key = getStripeSecretKey()?.trim();
   const clientId = process.env.STRIPE_CONNECT_CLIENT_ID?.trim();
-  const redirectUri = "https://modo-book.lovable.app/api/public/stripe/oauth-callback";
+  const redirectUri = "https://modobook.uk/api/public/stripe/oauth-callback";
 
   return {
     mode,
