@@ -206,6 +206,35 @@ function Account() {
 
   useEffect(() => { loadAll(); /* eslint-disable-next-line */ }, [slug]);
 
+  // Refresh my details in real time when the practitioner (or another tab)
+  // updates my clinic record — greeting/name/contact reflect immediately.
+  useEffect(() => {
+    if (!profile?.id) return;
+    const channel = supabase
+      .channel(`clinic_clients-${profile.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "clinic_clients", filter: `profile_id=eq.${profile.id}` },
+        async () => {
+          const { data: client } = await supabase
+            .from("clinic_clients")
+            .select("id, full_name, email, phone, dob, gender, address_line1, address_line2, county, postcode, preferred_contact, emergency_contact_name, emergency_contact_phone, gp_name, gp_address")
+            .eq("profile_id", profile.id)
+            .maybeSingle();
+          if (client) {
+            setMyClient(client);
+            setPatientName(client.full_name ?? patientName);
+          }
+        },
+      )
+      .subscribe();
+    // Also refresh on tab focus in case realtime missed an event.
+    const onFocus = () => { loadAll(); };
+    window.addEventListener("focus", onFocus);
+    return () => { supabase.removeChannel(channel); window.removeEventListener("focus", onFocus); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile?.id]);
+
   // If we've just returned from Stripe Checkout, reconcile the session so the
   // appointment flips to "paid" even when the connected-account webhook isn't
   // wired. This is idempotent — the webhook still runs the same update.
