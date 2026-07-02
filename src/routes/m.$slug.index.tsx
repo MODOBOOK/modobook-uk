@@ -1205,7 +1205,7 @@ function BookPage() {
             </div>
             <div
               id="fav-carousel"
-              className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-3 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
             >
               {favs.map((t) => {
                 const img = (t as Treatment & { picture_url?: string | null }).picture_url;
@@ -1215,23 +1215,23 @@ function BookPage() {
                     key={t.id}
                     to="/m/$slug/book/$treatmentId"
                     params={{ slug, treatmentId: t.id }}
-                    className="group flex w-[78%] shrink-0 snap-start flex-col overflow-hidden rounded-2xl border bg-card shadow-sm transition hover:shadow-md sm:w-[calc((100%-2rem)/3)]"
+                    className="group flex w-[78%] shrink-0 snap-start flex-col overflow-hidden rounded-2xl border bg-card shadow-sm transition hover:shadow-md sm:w-[calc((100%-1.5rem)/3)]"
                     style={{ borderColor: `${brand}1f`, backgroundColor: menuCardBg }}
                   >
                     {img && (
-                      <div className="aspect-[4/3] w-full overflow-hidden bg-muted">
+                      <div className="aspect-[16/10] w-full overflow-hidden bg-muted">
                         <img src={img} alt={t.name} className="h-full w-full object-cover transition group-hover:scale-[1.03]" loading="lazy" />
                       </div>
                     )}
-                    <div className="flex flex-1 flex-col gap-1 p-4">
-                      <div className="text-base font-semibold sm:text-lg" style={{ color: menuNameColor }}>{t.name}</div>
+                    <div className="flex flex-1 flex-col gap-0.5 p-3">
+                      <div className="text-sm font-semibold sm:text-base" style={{ color: menuNameColor }}>{t.name}</div>
                       {sessions && (
-                        <div className="text-xs font-semibold uppercase tracking-wide" style={{ color: brand }}>
+                        <div className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: brand }}>
                           {sessions}
                         </div>
                       )}
-                      {t.description && <div className="line-clamp-2 text-sm opacity-70">{t.description}</div>}
-                      <div className="mt-2 flex items-center justify-between text-sm">
+                      {t.description && <div className="line-clamp-1 text-xs opacity-70">{t.description}</div>}
+                      <div className="mt-1.5 flex items-center justify-between text-xs">
                         <span className="opacity-70">{durationFor(t)} min</span>
                         <span className="font-semibold" style={{ color: menuPriceColor }}>{formatPrice(priceFor(t), (t as any).price_mode)}</span>
                       </div>
