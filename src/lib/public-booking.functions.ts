@@ -552,8 +552,19 @@ export const requestBooking = createServerFn({ method: "POST" })
     } catch (e) {
       console.error("[requestBooking] checkout failed", e);
     }
+    // If we handed the patient off to Stripe, hold the slot briefly. If they
+    // abandon the payment the hold expires and availability re-opens; the
+    // webhook clears the hold and confirms the appointment on success.
+    if (checkoutUrl) {
+      const holdUntil = new Date(Date.now() + 30 * 60 * 1000).toISOString();
+      await supabaseAdmin
+        .from("appointments")
+        .update({ status: "pending", payment_hold_expires_at: holdUntil } as never)
+        .eq("id", id);
+    }
     return { id, consents, medicalForms, checkoutUrl };
   });
+
 
 
 // Build a Checkout Session on the practitioner's Connect account for a deposit
