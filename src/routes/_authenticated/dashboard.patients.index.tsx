@@ -387,6 +387,40 @@ function PatientsPage() {
           )}
         </SheetContent>
       </Sheet>
+
+      <ImportCsvDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        onImport={async (rows) => {
+          const res: any = await importCsv({ data: { rows } });
+          toast.success(`Imported ${res.inserted}, updated ${res.updated}${res.skipped ? `, skipped ${res.skipped}` : ""}`);
+          setImportOpen(false);
+          refresh();
+        }}
+      />
+
+      <CreateGroupDialog
+        open={groupOpen}
+        onOpenChange={setGroupOpen}
+        clients={clients}
+        onSave={async (name, ids) => {
+          await assignGroup({ data: { client_ids: ids, group_name: name } });
+          toast.success(`Added ${ids.length} to "${name}"`);
+          setGroupOpen(false);
+          refresh();
+        }}
+      />
+
+      <MergeDuplicatesDialog
+        open={mergeOpen}
+        onOpenChange={setMergeOpen}
+        loadGroups={async () => (await findDupes()) as any}
+        onMerge={async (keep_id, merge_ids) => {
+          await doMerge({ data: { keep_id, merge_ids } });
+          toast.success("Merged");
+          refresh();
+        }}
+      />
     </div>
   );
 }
