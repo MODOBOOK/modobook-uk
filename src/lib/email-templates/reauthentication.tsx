@@ -1,14 +1,6 @@
 import * as React from 'react'
-
-import {
-  Body,
-  Container,
-  Head,
-  Heading,
-  Html,
-  Preview,
-  Text,
-} from '@react-email/components'
+import { Heading, Html, Preview, Text } from '@react-email/components'
+import { Head, ModoShell, styles } from './_modo-brand'
 
 interface ReauthenticationEmailProps {
   token: string
@@ -17,42 +9,18 @@ interface ReauthenticationEmailProps {
 export const ReauthenticationEmail = ({ token }: ReauthenticationEmailProps) => (
   <Html lang="en" dir="ltr">
     <Head />
-    <Preview>Your verification code</Preview>
-    <Body style={main}>
-      <Container style={container}>
-        <Heading style={h1}>Confirm reauthentication</Heading>
-        <Text style={text}>Use the code below to confirm your identity:</Text>
-        <Text style={codeStyle}>{token}</Text>
-        <Text style={footer}>
-          This code will expire shortly. If you didn't request this, you can
-          safely ignore this email.
-        </Text>
-      </Container>
-    </Body>
+    <Preview>Your MODO verification code</Preview>
+    <ModoShell preview={null} siteName="MODO">
+      <Heading style={styles.h1}>Confirm it&rsquo;s you</Heading>
+      <Text style={styles.text}>Use the code below to confirm your identity:</Text>
+      <div style={styles.buttonWrap}>
+        <span style={styles.code}>{token}</span>
+      </div>
+      <Text style={styles.muted}>
+        This code expires shortly. If you didn&rsquo;t request it, you can safely ignore this email.
+      </Text>
+    </ModoShell>
   </Html>
 )
 
 export default ReauthenticationEmail
-
-const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif' }
-const container = { padding: '20px 25px' }
-const h1 = {
-  fontSize: '22px',
-  fontWeight: 'bold' as const,
-  color: '#000000',
-  margin: '0 0 20px',
-}
-const text = {
-  fontSize: '14px',
-  color: '#55575d',
-  lineHeight: '1.5',
-  margin: '0 0 25px',
-}
-const codeStyle = {
-  fontFamily: 'Courier, monospace',
-  fontSize: '22px',
-  fontWeight: 'bold' as const,
-  color: '#000000',
-  margin: '0 0 30px',
-}
-const footer = { fontSize: '12px', color: '#999999', margin: '30px 0 0' }
