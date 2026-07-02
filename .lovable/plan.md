@@ -1,40 +1,102 @@
-## Goal
 
-Let patients tick multiple packages the same way they already tick multiple treatments on `/m/{slug}`, mix packages and treatments in a single selection, and take them all through checkout together.
+# Stripe Standard Connect — Full Breakdown (Express removed)
 
-## Customer menu (`m.$slug.index.tsx`)
+Every practitioner connects their **own** Stripe account via OAuth. Full Stripe Dashboard + mobile app access. They own payouts, refunds, disputes, bank details. MODO is just the platform routing checkouts to them. **Express is being removed entirely.**
 
-- Add a `selectedPackageIds` state next to the existing `selectedIds` and a "Select" toggle in the top-right of every package card (same visual style as the treatment card's check button).
-- Clear both arrays when the location changes.
-- Sticky bottom bar (currently "N treatments selected"):
-  - Show combined count, e.g. `2 treatments · 1 package`.
-  - Total = sum of treatment prices + sum of package prices (first-session for packages counts once).
-  - "Continue" links to `/m/$slug/book-multi` with a new search shape: `?ids=<treatmentIds>&pkgs=<packageIds>`.
+---
 
-## Booking flow (`m.$slug.book-multi.tsx`)
+## Step 1 — You enable Standard in Stripe (2 min, one-time, manual)
 
-- Extend `searchSchema` with `pkgs: z.string().optional()`; forward `packageIds` into the loader.
-- Update `getMultiBookingContext` (server fn) to accept `packageIds` and return the selected package rows joined with their included treatments so the page can render them alongside treatments.
-- Render a "Packages" block above the treatments list on the review step, each with sessions/price/included-treatments summary.
-- Duration/timeslot logic: only the first session of each package is booked in this appointment (existing single-package behaviour); subsequent sessions remain to be scheduled after purchase — surface a small note under the package block.
-- Totals, deposit, and Stripe line items include package prices; add-ons continue to attach to treatments only.
-- `redirectPath` (auth bounce) preserves both `ids` and `pkgs` params.
+I can't do this from code. In your **platform** Stripe Dashboard:
 
-## Checkout persistence
+1. **Connect → Settings → Integration**
+2. Under **OAuth for Standard accounts**, toggle **ON**
+3. Set the **Redirect URI** to exactly:
+   ```
+   https://modo-book.lovable.app/api/public/stripe/oauth-callback
+   ```
+4. Copy the **Client ID** (`ca_XXXXXXXXXXXX`) and send it to me — I'll store it as `STRIPE_CONNECT_CLIENT_ID`
+5. (Optional but recommended) Turn OFF Express onboarding in the same settings page
 
-- When creating the appointment(s), keep the current treatment appointments as-is and additionally insert one `package_purchases` row per selected package (owner = patient, package_id, sessions_remaining = session_count − 1, expires_at from `expiry_days`).
-- If the package has a `treatment_ids[0]`, create the first-session appointment against that treatment and mark it as the first redeemed session; otherwise create a placeholder appointment with `notes = "Package: <name> — session 1 of N"`.
-- Confirmation email lists purchased packages plus booked treatments.
+---
 
-## Technical notes
+## Step 2 — Database changes
 
-- Files touched: `src/routes/m.$slug.index.tsx`, `src/routes/m.$slug.book-multi.tsx`, `src/lib/booking.functions.ts` (multi-context loader + create-appointment path), `src/lib/packages.functions.ts` (only if we add a helper for expanding packages).
-- No schema changes required — `package_purchases` and existing appointment columns are sufficient.
-- Type-safe search params: use `zodValidator(fallback(...))` per project convention.
-- The existing "Book" button on each package card stays for users who want a single package flow; the new checkbox is purely additive.
+- Add `stripe_oauth_state` (text, nullable) to `profiles` — short-lived CSRF token
+- Keep `stripe_connect_account_id` — Standard also returns `acct_...`
+- No `stripe_account_type` needed (Standard only now)
+- Existing Express account IDs in the DB: I'll leave the rows but mark them `stripe_connect_onboarding_status = 'legacy_express'` so the UI forces them to reconnect via Standard
 
-## Out of scope
+---
 
-- Scheduling all package sessions at checkout (still a follow-up flow).
-- Applying discount codes to packages.
-- Add-ons on packages.
+## Step 3 — Three new endpoints
+
+### A. `POST /api/public/stripe/oauth-start` — auth required
+- Generates random `state`, saves to `profiles.stripe_oauth_state`
+- Returns `{ url }` pointing at `https://connect.stripe.com/oauth/authorize` with `response_type=code`, `client_id`, `scope=read_write`, `state`, `redirect_uri`, prefilled `stripe_user[email]`
+
+### B. `GET /api/public/stripe/oauth-callback` — public, verified by `state`
+- Reads `?code=...&state=...`
+- Looks up profile by `state` (single-use, expires 10 min)
+- Exchanges code at `https://connect.stripe.com/oauth/token` using your platform secret key
+- Stripe returns `{ stripe_user_id: "acct_..." }`
+- Saves account id, sets `stripe_connect_onboarding_status='complete'`, clears `state`
+- Redirects to `/dashboard/payments?connected=1`
+
+### C. `POST /api/public/stripe/oauth-disconnect` — auth required
+- Calls Stripe `POST /oauth/deauthorize`
+- Nulls `stripe_connect_account_id`, resets status
+
+---
+
+## Step 4 — Payments dashboard UI
+
+Replace the current Express card entirely with:
+
+```text
+Connect Stripe
+
+Payments go directly to your own Stripe account. You'll see everything
+in your Stripe Dashboard and mobile app — payouts, refunds, disputes.
+
+Don't have Stripe yet? Create a free account at stripe.com first
+(takes ~5 min), then click below.
+
+[ Connect with Stripe ]  ← opens OAuth in new tab
+```
+
+After connect: show account ID, live/test mode, balance, payouts (existing UI), and a **Disconnect** button.
+
+Legacy Express accounts get a red banner: *"Express is deprecated. Reconnect with your own Stripe account →"*
+
+---
+
+## Step 5 — Checkout code
+
+`maybeCreateBookingCheckout` already does direct charges on the connected account via `Stripe-Account` header. Works identically for Standard. **Zero logic change.**
+
+---
+
+## Step 6 — Webhooks
+
+Existing Connect webhook keeps working for both. Add one new event:
+- `account.application.deauthorized` — fires if practitioner revokes MODO from their Stripe. Handler nulls their account ID.
+
+---
+
+## Step 7 — Rip out Express
+
+- Remove Express create-account calls from `stripe.functions.ts` / `stripe.server.ts`
+- Remove Express-specific UI (create Express account button, Express onboarding link handler, "paste your acct_ id" fallback)
+- Keep `stripe_connect_account_id` reads — same column, Standard uses it
+- Remove "Express Dashboard login" helper text
+
+---
+
+## What I need from you before coding
+
+1. Confirm: full removal of Express, Standard-only
+2. Enable OAuth for Standard in Stripe (Step 1)
+3. Send me the `ca_...` client ID
+
+Once I have those, I'll ship Steps 2–7 in one pass.
