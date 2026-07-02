@@ -108,6 +108,8 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
   }, [value, availableModes, availableMethods, effectiveDepositCents, treatmentTotalCents]);
 
   if (!configured || availableModes.length === 0 || availableMethods.length === 0) return null;
+  // Free bookings (£0) skip payment entirely — no platform/processing fees.
+  if (treatmentTotalCents <= 0) return null;
 
   const o = opts as ConfiguredOptions;
 
