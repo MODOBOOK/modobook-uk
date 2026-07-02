@@ -667,7 +667,22 @@ function TreatmentDialog({
           {sessionCount < 2 && (
             <p className="text-xs text-muted-foreground">Set 2 or more sessions to enable split payments.</p>
           )}
+          <div className="pt-2 border-t">
+            <Label className="text-xs text-muted-foreground">Deposit for this treatment (£)</Label>
+            <Input
+              type="number"
+              min={0}
+              step="0.01"
+              placeholder="Leave blank to use your default deposit"
+              value={depositOverride}
+              onChange={(e) => setDepositOverride(e.target.value)}
+            />
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              Overrides the default deposit set in Settings → Payments for this treatment only. Requires deposit payments to be enabled.
+            </p>
+          </div>
         </div>
+
 
 
         <div className="rounded-md border p-3 space-y-3">
