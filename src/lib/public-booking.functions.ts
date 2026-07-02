@@ -509,6 +509,7 @@ async function maybeCreateBookingCheckout(args: {
     payment_card_full_enabled?: boolean | null;
     payment_klarna_enabled?: boolean | null;
     payment_clearpay_enabled?: boolean | null;
+    payment_pass_fees_to_customer?: boolean | null;
   } | null;
   appointmentIds: string[];
   totalAmount: number;
@@ -539,26 +540,55 @@ async function maybeCreateBookingCheckout(args: {
   if (p.payment_clearpay_enabled) methodTypes.push("afterpay_clearpay");
   if (methodTypes.length === 0) methodTypes.push("card");
 
+  // Practitioner-set surcharge passed to the customer.
+  // Worst-case across enabled methods so the practitioner nets the full amount
+  // regardless of which method the patient selects at Stripe checkout.
+  let surchargeCents = 0;
+  if (p.payment_pass_fees_to_customer) {
+    const bnplOn = !!(p.payment_klarna_enabled || p.payment_clearpay_enabled);
+    const feePercent = bnplOn ? 5.9 : 2.9; // Klarna/Clearpay ~5%+ vs card ~2.9%
+    const fixed = 30; // 30p per transaction
+    surchargeCents = Math.ceil((amountCents * feePercent) / 100 + fixed);
+  }
+
   const origin = process.env.PUBLIC_APP_URL || process.env.APP_URL || "https://modo-book.lovable.app";
   const successUrl = `${origin}/m/${p.slug ?? ""}/account?paid=1`;
   const cancelUrl = `${origin}/m/${p.slug ?? ""}`;
 
   try {
     const { createCheckoutSession } = await import("./stripe.server");
-    const session = await createCheckoutSession({
-      accountId: p.stripe_connect_account_id,
-      lineItems: [
-        {
-          quantity: 1,
-          price_data: {
-            currency: "gbp",
-            unit_amount: amountCents,
-            product_data: {
-              name: kind === "deposit" ? `Deposit — ${args.description}` : args.description,
-            },
+    const lineItems: Array<{
+      quantity: number;
+      price_data: {
+        currency: string;
+        unit_amount: number;
+        product_data: { name: string };
+      };
+    }> = [
+      {
+        quantity: 1,
+        price_data: {
+          currency: "gbp",
+          unit_amount: amountCents,
+          product_data: {
+            name: kind === "deposit" ? `Deposit — ${args.description}` : args.description,
           },
         },
-      ],
+      },
+    ];
+    if (surchargeCents > 0) {
+      lineItems.push({
+        quantity: 1,
+        price_data: {
+          currency: "gbp",
+          unit_amount: surchargeCents,
+          product_data: { name: "Booking / processing fee" },
+        },
+      });
+    }
+    const session = await createCheckoutSession({
+      accountId: p.stripe_connect_account_id,
+      lineItems,
       successUrl,
       cancelUrl,
       customerEmail: args.patientEmail,
@@ -566,6 +596,7 @@ async function maybeCreateBookingCheckout(args: {
       metadata: {
         appointment_ids: args.appointmentIds.join(","),
         kind,
+        surcharge_cents: String(surchargeCents),
       },
     });
     return session.url ?? null;
@@ -574,6 +605,7 @@ async function maybeCreateBookingCheckout(args: {
     return null;
   }
 }
+
 
 
 
