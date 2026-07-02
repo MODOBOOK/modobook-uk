@@ -30,6 +30,8 @@ import {
   Copy, GripVertical, Info, Star, CircleDot, ListTodo,
 } from "lucide-react";
 import { toast } from "sonner";
+import { AiGenerateFormDialog } from "@/components/medical-forms/AiGenerateFormDialog";
+import { Sparkles } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard/medical-forms")({
   ssr: false,
