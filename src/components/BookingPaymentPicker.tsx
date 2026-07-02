@@ -63,10 +63,11 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
     if (!configured) return [] as Array<"deposit" | "full">;
     const arr: Array<"deposit" | "full"> = [];
     const o = opts as ConfiguredOptions;
-    if (o.depositEnabled && effectiveDepositCents >= 100 && effectiveDepositCents < treatmentTotalCents) arr.push("deposit");
+    // Deposits don't apply when the patient chose a split payment plan (each session is charged in full).
+    if (!splitInfo && o.depositEnabled && effectiveDepositCents >= 100 && effectiveDepositCents < treatmentTotalCents) arr.push("deposit");
     if (o.cardEnabled || o.klarnaEnabled || o.clearpayEnabled) arr.push("full");
     return arr;
-  }, [configured, opts, effectiveDepositCents, treatmentTotalCents]);
+  }, [configured, opts, effectiveDepositCents, treatmentTotalCents, splitInfo]);
 
 
   const availableMethods = useMemo(() => {
