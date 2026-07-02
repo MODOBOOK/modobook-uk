@@ -109,6 +109,7 @@ function FormsPage() {
   const [newCatOpen, setNewCatOpen] = useState(false);
   const [newForm, setNewForm] = useState(false);
   const [catName, setCatName] = useState("");
+  const [aiOpen, setAiOpen] = useState(false);
 
   async function refresh() {
     const [f, c] = await Promise.all([fetchForms(), fetchCats()]);
