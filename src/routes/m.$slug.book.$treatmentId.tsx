@@ -923,6 +923,7 @@ function BookTreatmentPage() {
             ? Math.round(Number((treatment as { deposit_amount?: number | null }).deposit_amount) * 100)
             : null
         }
+        splitInfo={splitAllowed && paymentPlan === "split" ? { sessionCount } : null}
       />
 
 

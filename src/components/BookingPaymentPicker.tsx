@@ -32,6 +32,8 @@ type Props = {
   accent?: string;
   /** Optional per-treatment deposit total in pence, overrides clinic default. */
   depositOverrideCents?: number | null;
+  /** When set, treats totalAmount as a per-session amount for a split payment plan. */
+  splitInfo?: { sessionCount: number } | null;
 };
 
 
@@ -39,7 +41,7 @@ function formatGBP(pence: number) {
   return `£${(pence / 100).toFixed(2)}`;
 }
 
-export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accent, depositOverrideCents }: Props) {
+export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accent, depositOverrideCents, splitInfo }: Props) {
   const fn = useServerFn(getPublicPaymentOptions);
   const q = useQuery({
     queryKey: ["publicPaymentOptions", slug],
@@ -61,10 +63,11 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
     if (!configured) return [] as Array<"deposit" | "full">;
     const arr: Array<"deposit" | "full"> = [];
     const o = opts as ConfiguredOptions;
-    if (o.depositEnabled && effectiveDepositCents >= 100 && effectiveDepositCents < treatmentTotalCents) arr.push("deposit");
+    // Deposits don't apply when the patient chose a split payment plan (each session is charged in full).
+    if (!splitInfo && o.depositEnabled && effectiveDepositCents >= 100 && effectiveDepositCents < treatmentTotalCents) arr.push("deposit");
     if (o.cardEnabled || o.klarnaEnabled || o.clearpayEnabled) arr.push("full");
     return arr;
-  }, [configured, opts, effectiveDepositCents, treatmentTotalCents]);
+  }, [configured, opts, effectiveDepositCents, treatmentTotalCents, splitInfo]);
 
 
   const availableMethods = useMemo(() => {
@@ -198,8 +201,10 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
                 className="text-left rounded-xl border-2 px-3 py-2.5 transition"
                 style={optionStyle(chosen?.mode === "full")}
               >
-                <div className="text-sm font-semibold">Pay in full</div>
-                <div className="text-xs opacity-75">£{totalAmount.toFixed(2)} now</div>
+                <div className="text-sm font-semibold">{splitInfo ? "Pay per session" : "Pay in full"}</div>
+                <div className="text-xs opacity-75">
+                  £{totalAmount.toFixed(2)} now{splitInfo ? ` — then £${totalAmount.toFixed(2)} at each of your remaining ${splitInfo.sessionCount - 1} session${splitInfo.sessionCount - 1 === 1 ? "" : "s"}` : ""}
+                </div>
               </button>
             )}
           </div>

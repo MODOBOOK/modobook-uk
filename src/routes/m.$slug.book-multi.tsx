@@ -1273,6 +1273,14 @@ function MultiBookPage() {
                     if (overrides.length === 0) return null;
                     return Math.round(overrides.reduce((a, b) => a + b, 0) * 100);
                   })()}
+                  splitInfo={(() => {
+                    const splitOnes = splitEligibleTreatments.filter((t) => selectedPaymentPlan(t) === "split");
+                    if (splitOnes.length === 0) return null;
+                    const maxSessions = Math.max(
+                      ...splitOnes.map((t) => Math.max(2, Number((t as { session_count?: number }).session_count ?? 2))),
+                    );
+                    return { sessionCount: maxSessions };
+                  })()}
                 />
 
                 {(() => {
