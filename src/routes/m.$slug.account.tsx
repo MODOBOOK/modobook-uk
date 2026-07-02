@@ -226,14 +226,16 @@ function Account() {
         "postgres_changes",
         { event: "*", schema: "public", table: "clinic_clients", filter: `profile_id=eq.${profile.id}` },
         async () => {
+          const { data: linkedId } = await supabase.rpc("current_patient_client_id", { _profile_id: profile.id });
+          if (!linkedId) return;
           const { data: client } = await supabase
             .from("clinic_clients")
             .select("id, full_name, email, phone, dob, gender, address_line1, address_line2, county, postcode, preferred_contact, emergency_contact_name, emergency_contact_phone, gp_name, gp_address")
-            .eq("profile_id", profile.id)
+            .eq("id", linkedId as string)
             .maybeSingle();
           if (client) {
             setMyClient(client);
-            setPatientName(client.full_name ?? patientName);
+            if (client.full_name && client.full_name.trim()) setPatientName(client.full_name);
           }
         },
       )
