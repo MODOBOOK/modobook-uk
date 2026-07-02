@@ -139,7 +139,7 @@ function RootComponent() {
     const host = window.location.hostname.toLowerCase();
     const path = window.location.pathname;
 
-    const ZONES = [".modobook.co.uk", ".modobook.app"];
+    const ZONES = [".modobook.co.uk", ".modobook.uk", ".modobook.app"];
     const zone = ZONES.find((z) => host.endsWith(z));
     if (!zone) return;
     const sub = host.slice(0, -zone.length);
