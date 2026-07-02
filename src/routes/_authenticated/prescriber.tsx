@@ -152,29 +152,85 @@ function PrescriberLayout() {
           <Outlet />
         </main>
 
-        <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-7 border-t bg-background/95 backdrop-blur lg:hidden">
-          {nav.map((tab) => {
-            const active = tab.exact ? pathname === tab.to : pathname.startsWith(tab.to);
-            const count = badges[tab.key] ?? 0;
-            return (
-              <Link
-                key={tab.to}
-                to={tab.to}
-                className={cn(
-                  "relative flex flex-col items-center justify-center gap-1 py-2.5 text-[11px] font-medium transition",
-                  active ? "text-primary" : "text-muted-foreground",
-                )}
+        <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden">
+          {nav
+            .filter((t) => (mobilePrimaryKeys as readonly string[]).includes(t.key))
+            .map((tab) => {
+              const active = tab.exact ? pathname === tab.to : pathname.startsWith(tab.to);
+              const count = badges[tab.key] ?? 0;
+              return (
+                <Link
+                  key={tab.to}
+                  to={tab.to}
+                  className={cn(
+                    "relative flex flex-col items-center justify-center gap-1 py-2.5 text-[10px] font-medium transition",
+                    active ? "text-primary" : "text-muted-foreground",
+                  )}
+                >
+                  <tab.icon className="h-5 w-5" />
+                  <span className="truncate">{tab.shortLabel}</span>
+                  {count > 0 && (
+                    <span className="absolute right-4 top-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">
+                      {count}
+                    </span>
+                  )}
+                </Link>
+              );
+            })}
+          <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
+            <SheetTrigger asChild>
+              <button
+                type="button"
+                className="relative flex flex-col items-center justify-center gap-1 py-2.5 text-[10px] font-medium text-muted-foreground transition"
               >
-                <tab.icon className="h-5 w-5" />
-                {tab.label}
-                {count > 0 && (
-                  <span className="absolute right-3 top-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">
-                    {count}
-                  </span>
+                <MoreHorizontal className="h-5 w-5" />
+                <span>More</span>
+              </button>
+            </SheetTrigger>
+            <SheetContent side="bottom" className="rounded-t-2xl pb-[env(safe-area-inset-bottom)]">
+              <SheetHeader>
+                <SheetTitle className="font-serif text-lg">More</SheetTitle>
+              </SheetHeader>
+              <div className="mt-4 grid grid-cols-3 gap-2">
+                {nav
+                  .filter((t) => !(mobilePrimaryKeys as readonly string[]).includes(t.key))
+                  .map((tab) => {
+                    const active = tab.exact ? pathname === tab.to : pathname.startsWith(tab.to);
+                    return (
+                      <Link
+                        key={tab.to}
+                        to={tab.to}
+                        onClick={() => setMoreOpen(false)}
+                        className={cn(
+                          "flex flex-col items-center justify-center gap-2 rounded-xl border p-4 text-xs font-medium transition",
+                          active ? "border-primary bg-primary/5 text-primary" : "text-muted-foreground hover:bg-muted",
+                        )}
+                      >
+                        <tab.icon className="h-5 w-5" />
+                        <span className="text-center">{tab.label}</span>
+                      </Link>
+                    );
+                  })}
+                {hasClinic && (
+                  <Link
+                    to="/dashboard"
+                    onClick={() => setMoreOpen(false)}
+                    className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed p-4 text-xs font-medium text-muted-foreground hover:bg-muted"
+                  >
+                    <Building2 className="h-5 w-5" />
+                    <span className="text-center">Clinic dashboard</span>
+                  </Link>
                 )}
-              </Link>
-            );
-          })}
+              </div>
+              <Button
+                variant="ghost"
+                className="mt-4 w-full justify-center text-muted-foreground"
+                onClick={() => { setMoreOpen(false); void signOut(); }}
+              >
+                <LogOut className="mr-2 h-4 w-4" /> Sign out
+              </Button>
+            </SheetContent>
+          </Sheet>
         </nav>
       </div>
     </div>
