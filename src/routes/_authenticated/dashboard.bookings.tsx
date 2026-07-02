@@ -920,6 +920,7 @@ function CheckoutSheet({
   const getOrCreateClient = useServerFn(getOrCreateClientForAppointment);
   const markNoShow = useServerFn(markAppointmentNoShow);
   const blockClient = useServerFn(setClientBlocked);
+  const refund = useServerFn(refundAppointment);
   const navigate = useNavigate();
 
   const [notes, setNotes] = useState(a.practitioner_notes ?? "");
