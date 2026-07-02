@@ -69,6 +69,7 @@ export const confirmCheckoutSession = createServerFn({ method: "POST" })
         : session.payment_intent?.id ?? null;
 
     let updated = 0;
+    const notifyIds: string[] = [];
     for (const apptId of ids) {
       const { data: cur } = await supabaseAdmin
         .from("appointments")
@@ -97,7 +98,15 @@ export const confirmCheckoutSession = createServerFn({ method: "POST" })
         .from("appointments")
         .update(patch as never)
         .eq("id", apptId);
-      if (!error) updated += 1;
+      if (!error) {
+        updated += 1;
+        if (!alreadyPaid) notifyIds.push(apptId);
+      }
+    }
+
+    if (notifyIds.length > 0) {
+      const { sendBookingNotifications } = await import("@/lib/email/send-branded.server");
+      await Promise.all(notifyIds.map((id) => sendBookingNotifications(id)));
     }
 
     return { ok: true as const, updated };
