@@ -3645,6 +3645,11 @@ export type Database = {
           specialties: string[]
           stripe_connect_account_id: string | null
           stripe_connect_onboarding_status: string | null
+          stripe_fee_bnpl_fixed_cents: number
+          stripe_fee_bnpl_percent: number
+          stripe_fee_card_fixed_cents: number
+          stripe_fee_card_percent: number
+          stripe_fee_pass_to_patient: boolean
           tagline: string | null
           terms_html: string | null
           terms_required: boolean
@@ -3750,6 +3755,11 @@ export type Database = {
           specialties?: string[]
           stripe_connect_account_id?: string | null
           stripe_connect_onboarding_status?: string | null
+          stripe_fee_bnpl_fixed_cents?: number
+          stripe_fee_bnpl_percent?: number
+          stripe_fee_card_fixed_cents?: number
+          stripe_fee_card_percent?: number
+          stripe_fee_pass_to_patient?: boolean
           tagline?: string | null
           terms_html?: string | null
           terms_required?: boolean
@@ -3855,6 +3865,11 @@ export type Database = {
           specialties?: string[]
           stripe_connect_account_id?: string | null
           stripe_connect_onboarding_status?: string | null
+          stripe_fee_bnpl_fixed_cents?: number
+          stripe_fee_bnpl_percent?: number
+          stripe_fee_card_fixed_cents?: number
+          stripe_fee_card_percent?: number
+          stripe_fee_pass_to_patient?: boolean
           tagline?: string | null
           terms_html?: string | null
           terms_required?: boolean
