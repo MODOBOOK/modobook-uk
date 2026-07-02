@@ -101,7 +101,7 @@ export async function sendBrandedEmail(opts: SendBrandedOptions): Promise<{ ok: 
     payload: {
       message_id: messageId,
       to: recipient,
-      from: `${fromDisplayName} <noreply@${FROM_DOMAIN}>`,
+      from: `${fromDisplayName} <info@${FROM_DOMAIN}>`,
       reply_to: opts.replyTo || undefined,
       sender_domain: SENDER_DOMAIN,
       subject,
