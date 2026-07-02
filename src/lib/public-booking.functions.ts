@@ -527,12 +527,14 @@ export const requestBooking = createServerFn({ method: "POST" })
         totalAmount: data.basePrice,
         patientEmail: data.patientEmail,
         description: `Booking with ${prof?.clinic_name ?? "clinic"}`,
+        choice: data.paymentChoice ?? null,
       });
     } catch (e) {
       console.error("[requestBooking] checkout failed", e);
     }
     return { id, consents, medicalForms, checkoutUrl };
   });
+
 
 // Build a Checkout Session on the practitioner's Connect account for a deposit
 // (or full amount) when the clinic has payments configured. Returns the hosted URL
