@@ -259,7 +259,7 @@ function PatientProfilePage() {
       </Section>
 
       <SectionDark
-        title="Appointments"
+        title={`Appointments (${visibleAppts.length})`}
         actions={
           <>
             <Button size="sm" variant="ghost" className="text-white hover:bg-white/10 hover:text-white" onClick={() => setShowCancelled(s => !s)}>
@@ -274,13 +274,7 @@ function PatientProfilePage() {
         {visibleAppts.length === 0 ? (
           <div className="px-4 py-6 text-center text-sm text-muted-foreground">No appointments.</div>
         ) : visibleAppts.map(a => (
-          <div key={a.id} className="flex items-center justify-between border-b px-4 py-3 last:border-0">
-            <div className="min-w-0">
-              <div className="font-medium">{new Date(a.scheduled_date + "T" + a.start_time).toLocaleString([], { day: "2-digit", month: "short", year: "numeric", hour: "numeric", minute: "2-digit" })}</div>
-              <div className="text-xs uppercase tracking-wider text-primary">{a.treatments?.name ?? "Treatment"}</div>
-            </div>
-            <Badge variant={a.status === "cancelled" ? "destructive" : "outline"}>{a.status}</Badge>
-          </div>
+          <AppointmentRow key={a.id} appt={a} />
         ))}
       </SectionDark>
 
@@ -318,9 +312,17 @@ function PatientProfilePage() {
 
       {/* Prescriptions (structured records) */}
       <PrescriptionsSection clientId={id} client={client} profileId={profileId} />
+        </div>
 
-      {/* Footer actions */}
-      <div className="flex flex-wrap gap-2 pt-4">
+        {/* Right column: activity timeline + concerns */}
+        <aside className="min-w-0 space-y-4">
+          <ConcernsCard clientId={id} />
+          <CommsTimeline clientId={id} refreshKey={commsRefresh} />
+        </aside>
+      </div>
+
+      {/* Footer actions — pinned to the very bottom on all screens */}
+      <div className="flex flex-wrap gap-2 pt-6">
         <Button variant="outline" className="flex-1" onClick={archive}>
           {client.archived ? "Reactivate patient" : "Deactivate patient"}
         </Button>
@@ -331,14 +333,7 @@ function PatientProfilePage() {
           <Trash2 className="mr-1.5 h-3.5 w-3.5" />Delete
         </Button>
       </div>
-        </div>
 
-        {/* Right column: activity timeline + concerns */}
-        <aside className="min-w-0 space-y-4">
-          <ConcernsCard clientId={id} />
-          <CommsTimeline clientId={id} refreshKey={commsRefresh} />
-        </aside>
-      </div>
 
       {editing && (
         <EditDialog
