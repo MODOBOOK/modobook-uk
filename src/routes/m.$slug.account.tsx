@@ -119,10 +119,11 @@ function Account() {
       // Linked clinic_client (RLS-scoped to me)
       const { data: client } = await supabase
         .from("clinic_clients")
-        .select("id, full_name")
+        .select("id, full_name, email, phone, dob, gender, address_line1, address_line2, county, postcode, preferred_contact, emergency_contact_name, emergency_contact_phone, gp_name, gp_address")
         .eq("profile_id", prof.id)
         .maybeSingle();
       setPatientName(client?.full_name ?? sess.session.user.email?.split("@")[0] ?? "");
+      setMyClient(client ?? null);
 
       // Appointments — exclude "pending" placeholders that haven't been paid yet.
       // These are Stripe checkout holds; until Stripe confirms payment the
