@@ -66,6 +66,7 @@ export type ClinicThemeInput = {
   header_button_label?: string;
   // Hero
   hero_height?: string;
+  hero_fit?: string;
   hero_overlay_opacity?: number;
   hero_overlay_color?: string;
   hero_text_alignment?: string;

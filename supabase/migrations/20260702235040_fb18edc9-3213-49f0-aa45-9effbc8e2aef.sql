@@ -1,0 +1,1 @@
+ALTER TABLE public.clinic_theme ADD COLUMN IF NOT EXISTS hero_fit text NOT NULL DEFAULT 'contain';

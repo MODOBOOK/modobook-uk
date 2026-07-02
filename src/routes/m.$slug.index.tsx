@@ -557,6 +557,8 @@ function BookPage() {
       {/* Hero image / carousel (layout: {layoutKey}) */}
       {(() => {
         const heroHeight = theme?.hero_height ?? "medium";
+        const heroFit = (theme?.hero_fit ?? "contain") as "contain" | "cover";
+        const isNatural = heroHeight === "natural";
         const heroOverlayOpacity = theme?.hero_overlay_opacity ?? 0.25;
         const heroOverlayColor = theme?.hero_overlay_color ?? "#000000";
         const heroAlign = theme?.hero_text_alignment ?? "center";
@@ -566,22 +568,23 @@ function BookPage() {
           : heroHeight === "short" ? "h-36 sm:h-44"
           : heroHeight === "tall" ? "h-64 sm:h-[26rem]"
           : heroHeight === "extra_tall" ? "h-[26rem] sm:h-[36rem]"
+          : heroHeight === "huge" ? "h-[70vh] sm:h-[85vh]"
           : "h-56 sm:h-[22rem]";
-        const splitHeight = heroHeight === "short" ? "h-36 sm:h-52" : heroHeight === "tall" ? "h-56 sm:h-80" : heroHeight === "extra_tall" ? "h-[26rem] sm:h-[40rem]" : "h-44 sm:h-64";
-        const blankHeight = heroHeight === "short" ? "h-32 sm:h-44" : heroHeight === "tall" ? "h-56 sm:h-72" : heroHeight === "extra_tall" ? "h-[26rem] sm:h-[36rem]" : "h-44 sm:h-56";
+        const splitHeight = heroHeight === "short" ? "h-36 sm:h-52" : heroHeight === "tall" ? "h-56 sm:h-80" : heroHeight === "extra_tall" ? "h-[26rem] sm:h-[40rem]" : heroHeight === "huge" ? "h-[70vh] sm:h-[85vh]" : "h-44 sm:h-64";
+        const blankHeight = heroHeight === "short" ? "h-32 sm:h-44" : heroHeight === "tall" ? "h-56 sm:h-72" : heroHeight === "extra_tall" ? "h-[26rem] sm:h-[36rem]" : heroHeight === "huge" ? "h-[65vh] sm:h-[80vh]" : "h-44 sm:h-56";
         const alignCls = heroAlign === "left" ? "text-left items-start" : heroAlign === "right" ? "text-right items-end" : "text-center items-center";
         return (
           <div className="relative">
             {layoutKey === "magazine" ? (
               heroUrl ? (
-                <HeroImage src={heroUrl} heightClass={heightCls} />
+                <HeroImage src={heroUrl} heightClass={heightCls} fit={heroFit} natural={isNatural} />
               ) : (
                 <div className="h-20 w-full" style={{ background: `linear-gradient(135deg, ${brand}, ${accent})` }} />
               )
             ) : carouselEnabled && carouselUrls.length > 0 ? (
-              <HeroCarousel urls={carouselUrls} heightClass={heightCls} />
+              <HeroCarousel urls={carouselUrls} heightClass={heightCls} fit={heroFit} natural={isNatural} />
             ) : heroUrl ? (
-              <HeroImage src={heroUrl} heightClass={layoutKey === "split" ? splitHeight : heightCls} />
+              <HeroImage src={heroUrl} heightClass={layoutKey === "split" ? splitHeight : heightCls} fit={heroFit} natural={isNatural} />
             ) : (
               <div
                 className={`${blankHeight} w-full`}
@@ -2306,7 +2309,21 @@ function TreatmentRow({
 
 
 
-function HeroImage({ src, heightClass }: { src: string; heightClass: string }) {
+function HeroImage({ src, heightClass, fit = "contain", natural = false }: { src: string; heightClass: string; fit?: "contain" | "cover"; natural?: boolean }) {
+  if (natural) {
+    return (
+      <div className="relative w-full overflow-hidden bg-muted/40">
+        <img src={src} alt="" className="block w-full h-auto" />
+      </div>
+    );
+  }
+  if (fit === "cover") {
+    return (
+      <div className={`relative w-full overflow-hidden bg-muted/40 ${heightClass}`}>
+        <img src={src} alt="" className="absolute inset-0 h-full w-full object-cover" />
+      </div>
+    );
+  }
   return (
     <div className={`relative w-full overflow-hidden bg-muted/40 ${heightClass}`}>
       <img
@@ -2320,22 +2337,31 @@ function HeroImage({ src, heightClass }: { src: string; heightClass: string }) {
   );
 }
 
-function HeroCarousel({ urls, heightClass }: { urls: string[]; heightClass?: string }) {
+function HeroCarousel({ urls, heightClass, fit = "contain", natural = false }: { urls: string[]; heightClass?: string; fit?: "contain" | "cover"; natural?: boolean }) {
   const [i, setI] = useState(0);
   useEffect(() => {
     if (urls.length < 2) return;
     const t = setInterval(() => setI((x) => (x + 1) % urls.length), 4500);
     return () => clearInterval(t);
   }, [urls.length]);
+  const containerH = natural ? "" : (heightClass || "h-56 sm:h-[22rem]");
   return (
-    <div className={`relative w-full overflow-hidden ${heightClass || "h-56 sm:h-[22rem]"}`}>
+    <div className={`relative w-full overflow-hidden ${containerH}`}>
       {urls.map((u, idx) => (
         <div
           key={u + idx}
-          className={`absolute inset-0 transition-opacity duration-700 ${idx === i ? "opacity-100" : "opacity-0"}`}
+          className={`${natural ? "" : "absolute inset-0"} transition-opacity duration-700 ${idx === i ? "opacity-100" : "opacity-0 pointer-events-none " + (natural ? "hidden" : "")}`}
         >
-          <img src={u} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full scale-110 object-cover opacity-30 blur-2xl" />
-          <img src={u} alt="" className="relative z-10 h-full w-full object-contain" />
+          {natural ? (
+            <img src={u} alt="" className="block w-full h-auto" />
+          ) : fit === "cover" ? (
+            <img src={u} alt="" className="absolute inset-0 h-full w-full object-cover" />
+          ) : (
+            <>
+              <img src={u} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full scale-110 object-cover opacity-30 blur-2xl" />
+              <img src={u} alt="" className="relative z-10 h-full w-full object-contain" />
+            </>
+          )}
         </div>
       ))}
       {urls.length > 1 && (
