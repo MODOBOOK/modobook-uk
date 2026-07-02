@@ -7,6 +7,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useServerFn } from "@tanstack/react-start";
 import {
   startStripeStandardConnect,
+  checkStripeConnectSetup,
   disconnectStripe,
   refreshStripeStatus,
   getStripePayouts,
@@ -35,6 +36,18 @@ type PayoutsData = {
   pending: Record<string, number>;
   instantAvailable: Record<string, number>;
   payouts: PayoutRow[];
+};
+
+type StripeSetupCheck = {
+  ok: boolean;
+  mode: "live" | "sandbox";
+  hasSecretKey: boolean;
+  secretKeyType: string;
+  hasConnectClientId: boolean;
+  connectClientIdType: string;
+  redirectUri: string;
+  stripeReachable: boolean;
+  message: string;
 };
 
 function formatMoney(cents: number, currency: string) {
@@ -68,6 +81,7 @@ function PaymentsPage() {
   };
   const router = useRouter();
   const startConnect = useServerFn(startStripeStandardConnect);
+  const checkSetup = useServerFn(checkStripeConnectSetup);
   const disconnect = useServerFn(disconnectStripe);
   const refresh = useServerFn(refreshStripeStatus);
   const loadPayouts = useServerFn(getStripePayouts);
@@ -76,6 +90,8 @@ function PaymentsPage() {
   const [payouts, setPayouts] = useState<PayoutsData | null>(null);
   const [payoutsLoading, setPayoutsLoading] = useState(false);
   const [payoutsError, setPayoutsError] = useState<string | null>(null);
+  const [setupCheck, setSetupCheck] = useState<StripeSetupCheck | null>(null);
+  const [setupLoading, setSetupLoading] = useState(false);
 
   const connected = !!profile.stripe_connect_account_id;
   const isLegacyExpress = connected && profile.stripe_connect_type !== "standard";
@@ -148,6 +164,22 @@ function PaymentsPage() {
       toast.error(e instanceof Error ? e.message : "Failed to start Stripe connection.");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function runSetupCheck() {
+    setSetupLoading(true);
+    try {
+      const res = await checkSetup({});
+      setSetupCheck(res);
+      if (res.ok) toast.success("Stripe setup looks valid");
+      else toast.error("Stripe setup needs attention");
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Could not check Stripe setup.";
+      setSetupCheck(null);
+      toast.error(message);
+    } finally {
+      setSetupLoading(false);
     }
   }
 
@@ -255,6 +287,26 @@ function PaymentsPage() {
                 <ExternalLink className="mr-2 h-4 w-4" />
                 Connect with Stripe
               </Button>
+              <Button type="button" variant="outline" onClick={runSetupCheck} disabled={setupLoading}>
+                <RefreshCw className={`mr-2 h-4 w-4 ${setupLoading ? "animate-spin" : ""}`} />
+                Check Stripe setup
+              </Button>
+              {setupCheck && (
+                <Alert variant={setupCheck.ok ? "default" : "destructive"}>
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>{setupCheck.ok ? "Stripe setup looks valid" : "Stripe setup issue"}</AlertTitle>
+                  <AlertDescription className="space-y-2">
+                    <p>{setupCheck.message}</p>
+                    <div className="grid gap-1 text-xs">
+                      <div>Mode: {setupCheck.mode}</div>
+                      <div>Secret key: {setupCheck.hasSecretKey ? setupCheck.secretKeyType : "missing"}</div>
+                      <div>Connect client ID: {setupCheck.hasConnectClientId ? setupCheck.connectClientIdType : "missing"}</div>
+                      <div>Stripe reachable: {setupCheck.stripeReachable ? "yes" : "no"}</div>
+                      <div className="break-all">Redirect URI: {setupCheck.redirectUri}</div>
+                    </div>
+                  </AlertDescription>
+                </Alert>
+              )}
             </>
           ) : (
             <>
