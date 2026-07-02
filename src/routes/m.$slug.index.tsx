@@ -557,6 +557,8 @@ function BookPage() {
       {/* Hero image / carousel (layout: {layoutKey}) */}
       {(() => {
         const heroHeight = theme?.hero_height ?? "medium";
+        const heroFit = (theme?.hero_fit ?? "contain") as "contain" | "cover";
+        const isNatural = heroHeight === "natural";
         const heroOverlayOpacity = theme?.hero_overlay_opacity ?? 0.25;
         const heroOverlayColor = theme?.hero_overlay_color ?? "#000000";
         const heroAlign = theme?.hero_text_alignment ?? "center";
@@ -566,22 +568,23 @@ function BookPage() {
           : heroHeight === "short" ? "h-36 sm:h-44"
           : heroHeight === "tall" ? "h-64 sm:h-[26rem]"
           : heroHeight === "extra_tall" ? "h-[26rem] sm:h-[36rem]"
+          : heroHeight === "huge" ? "h-[70vh] sm:h-[85vh]"
           : "h-56 sm:h-[22rem]";
-        const splitHeight = heroHeight === "short" ? "h-36 sm:h-52" : heroHeight === "tall" ? "h-56 sm:h-80" : heroHeight === "extra_tall" ? "h-[26rem] sm:h-[40rem]" : "h-44 sm:h-64";
-        const blankHeight = heroHeight === "short" ? "h-32 sm:h-44" : heroHeight === "tall" ? "h-56 sm:h-72" : heroHeight === "extra_tall" ? "h-[26rem] sm:h-[36rem]" : "h-44 sm:h-56";
+        const splitHeight = heroHeight === "short" ? "h-36 sm:h-52" : heroHeight === "tall" ? "h-56 sm:h-80" : heroHeight === "extra_tall" ? "h-[26rem] sm:h-[40rem]" : heroHeight === "huge" ? "h-[70vh] sm:h-[85vh]" : "h-44 sm:h-64";
+        const blankHeight = heroHeight === "short" ? "h-32 sm:h-44" : heroHeight === "tall" ? "h-56 sm:h-72" : heroHeight === "extra_tall" ? "h-[26rem] sm:h-[36rem]" : heroHeight === "huge" ? "h-[65vh] sm:h-[80vh]" : "h-44 sm:h-56";
         const alignCls = heroAlign === "left" ? "text-left items-start" : heroAlign === "right" ? "text-right items-end" : "text-center items-center";
         return (
           <div className="relative">
             {layoutKey === "magazine" ? (
               heroUrl ? (
-                <HeroImage src={heroUrl} heightClass={heightCls} />
+                <HeroImage src={heroUrl} heightClass={heightCls} fit={heroFit} natural={isNatural} />
               ) : (
                 <div className="h-20 w-full" style={{ background: `linear-gradient(135deg, ${brand}, ${accent})` }} />
               )
             ) : carouselEnabled && carouselUrls.length > 0 ? (
-              <HeroCarousel urls={carouselUrls} heightClass={heightCls} />
+              <HeroCarousel urls={carouselUrls} heightClass={heightCls} fit={heroFit} natural={isNatural} />
             ) : heroUrl ? (
-              <HeroImage src={heroUrl} heightClass={layoutKey === "split" ? splitHeight : heightCls} />
+              <HeroImage src={heroUrl} heightClass={layoutKey === "split" ? splitHeight : heightCls} fit={heroFit} natural={isNatural} />
             ) : (
               <div
                 className={`${blankHeight} w-full`}
