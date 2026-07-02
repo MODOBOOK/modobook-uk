@@ -148,6 +148,8 @@ function BookTreatmentPage() {
   const [paymentPlan, setPaymentPlan] = useState<"full" | "split">("full");
   const [splitAgreed, setSplitAgreed] = useState(false);
   const [discount, setDiscount] = useState<AppliedDiscount | null>(null);
+  const [paymentChoice, setPaymentChoice] = useState<PaymentChoice | null>(null);
+
 
 
   // Patient auth gate: 'pending' until they pick a path
