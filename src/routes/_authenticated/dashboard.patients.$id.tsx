@@ -27,7 +27,7 @@ import {
 import {
   ArrowLeft, Mail, Phone as PhoneIcon, MessageSquare, Edit2, Plus, Trash2, Camera,
   Upload, FileText, AlertTriangle, Download, Loader2, ClipboardList, X, Check,
-  CalendarPlus, CreditCard, FileSignature, Send,
+  CalendarPlus, CreditCard, FileSignature, Send, ChevronDown, ChevronRight,
 } from "lucide-react";
 import { toast } from "sonner";
 import { ConcernsCard } from "@/components/patient/ConcernsCard";
@@ -259,7 +259,7 @@ function PatientProfilePage() {
       </Section>
 
       <SectionDark
-        title="Appointments"
+        title={`Appointments (${visibleAppts.length})`}
         actions={
           <>
             <Button size="sm" variant="ghost" className="text-white hover:bg-white/10 hover:text-white" onClick={() => setShowCancelled(s => !s)}>
@@ -274,13 +274,7 @@ function PatientProfilePage() {
         {visibleAppts.length === 0 ? (
           <div className="px-4 py-6 text-center text-sm text-muted-foreground">No appointments.</div>
         ) : visibleAppts.map(a => (
-          <div key={a.id} className="flex items-center justify-between border-b px-4 py-3 last:border-0">
-            <div className="min-w-0">
-              <div className="font-medium">{new Date(a.scheduled_date + "T" + a.start_time).toLocaleString([], { day: "2-digit", month: "short", year: "numeric", hour: "numeric", minute: "2-digit" })}</div>
-              <div className="text-xs uppercase tracking-wider text-primary">{a.treatments?.name ?? "Treatment"}</div>
-            </div>
-            <Badge variant={a.status === "cancelled" ? "destructive" : "outline"}>{a.status}</Badge>
-          </div>
+          <AppointmentRow key={a.id} appt={a} />
         ))}
       </SectionDark>
 
@@ -318,9 +312,17 @@ function PatientProfilePage() {
 
       {/* Prescriptions (structured records) */}
       <PrescriptionsSection clientId={id} client={client} profileId={profileId} />
+        </div>
 
-      {/* Footer actions */}
-      <div className="flex flex-wrap gap-2 pt-4">
+        {/* Right column: activity timeline + concerns */}
+        <aside className="min-w-0 space-y-4">
+          <ConcernsCard clientId={id} />
+          <CommsTimeline clientId={id} refreshKey={commsRefresh} />
+        </aside>
+      </div>
+
+      {/* Footer actions — pinned to the very bottom on all screens */}
+      <div className="flex flex-wrap gap-2 pt-6">
         <Button variant="outline" className="flex-1" onClick={archive}>
           {client.archived ? "Reactivate patient" : "Deactivate patient"}
         </Button>
@@ -331,14 +333,7 @@ function PatientProfilePage() {
           <Trash2 className="mr-1.5 h-3.5 w-3.5" />Delete
         </Button>
       </div>
-        </div>
 
-        {/* Right column: activity timeline + concerns */}
-        <aside className="min-w-0 space-y-4">
-          <ConcernsCard clientId={id} />
-          <CommsTimeline clientId={id} refreshKey={commsRefresh} />
-        </aside>
-      </div>
 
       {editing && (
         <EditDialog
@@ -400,6 +395,68 @@ function Row({ label, value }: { label: string; value?: string | null }) {
     <div className="border-b py-2 last:border-0">
       <div className="text-xs text-muted-foreground">{label}</div>
       <div className="break-words font-medium">{value || <span className="text-muted-foreground">—</span>}</div>
+    </div>
+  );
+}
+
+function AppointmentRow({ appt }: { appt: any }) {
+  const [open, setOpen] = useState(false);
+  const dt = new Date(appt.scheduled_date + "T" + appt.start_time);
+  const dateLabel = dt.toLocaleString([], { day: "2-digit", month: "short", year: "numeric", hour: "numeric", minute: "2-digit" });
+  const treatment = appt.treatments?.name ?? "Treatment";
+  const priceCents = appt.total_amount_cents ?? appt.price_cents ?? appt.treatments?.price_cents;
+  const price = typeof priceCents === "number" ? `£${(priceCents / 100).toFixed(2)}` : null;
+  const paid = appt.payment_status === "paid" || appt.status === "paid";
+  const location = appt.locations?.name || appt.location_name;
+  const practitioner = appt.practitioners?.full_name || appt.practitioner_name;
+  return (
+    <div className="border-b last:border-0">
+      <button
+        type="button"
+        onClick={() => setOpen(s => !s)}
+        className="flex w-full items-center gap-2 px-4 py-3 text-left transition hover:bg-muted/40"
+      >
+        {open ? <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />}
+        <div className="min-w-0 flex-1">
+          <div className="truncate font-medium">{dateLabel}</div>
+          <div className="truncate text-xs uppercase tracking-wider text-primary">{treatment}</div>
+        </div>
+        <Badge variant={appt.status === "cancelled" ? "destructive" : "outline"} className="shrink-0">{appt.status}</Badge>
+      </button>
+      {open && (
+        <div className="space-y-1.5 border-t bg-muted/30 px-4 py-3 text-xs">
+          {price && (
+            <div className="flex justify-between gap-2">
+              <span className="text-muted-foreground">Price</span>
+              <span className="font-medium">{price} {paid ? <Badge variant="secondary" className="ml-1 h-4 px-1.5 text-[9px]">Paid</Badge> : null}</span>
+            </div>
+          )}
+          {location && (
+            <div className="flex justify-between gap-2">
+              <span className="text-muted-foreground">Location</span>
+              <span className="break-words text-right font-medium">{location}</span>
+            </div>
+          )}
+          {practitioner && (
+            <div className="flex justify-between gap-2">
+              <span className="text-muted-foreground">Practitioner</span>
+              <span className="break-words text-right font-medium">{practitioner}</span>
+            </div>
+          )}
+          {appt.duration_minutes && (
+            <div className="flex justify-between gap-2">
+              <span className="text-muted-foreground">Duration</span>
+              <span className="font-medium">{appt.duration_minutes} min</span>
+            </div>
+          )}
+          {appt.notes && (
+            <div>
+              <div className="text-muted-foreground">Notes</div>
+              <div className="whitespace-pre-wrap break-words">{appt.notes}</div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
