@@ -115,7 +115,7 @@ export function getStripe(): Stripe {
 }
 
 export function getStripeConnectClientId() {
-  const id = process.env.STRIPE_CONNECT_CLIENT_ID;
+  const id = process.env.STRIPE_CONNECT_CLIENT_ID?.trim();
   if (!id) {
     throw new StripePlatformSetupError(
       "Stripe Connect client ID is not configured. Add STRIPE_CONNECT_CLIENT_ID (starts with ca_...).",
@@ -123,8 +123,13 @@ export function getStripeConnectClientId() {
     );
   }
   if (!id.startsWith("ca_")) {
+    const hint = id.startsWith("acct_")
+      ? " You entered a connected account ID (acct_...). Use the platform Connect Client ID instead."
+      : id.startsWith("pk_") || id.startsWith("sk_")
+        ? " You entered a Stripe API key. Use the platform Connect Client ID instead."
+        : "";
     throw new StripePlatformSetupError(
-      "STRIPE_CONNECT_CLIENT_ID must be the Connect client ID from Stripe (starts with ca_).",
+      `STRIPE_CONNECT_CLIENT_ID must be the Connect client ID from Stripe (starts with ca_).${hint}`,
       "invalid_secret_mode",
     );
   }
