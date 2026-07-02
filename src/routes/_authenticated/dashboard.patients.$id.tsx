@@ -36,6 +36,7 @@ import { EmailComposerDialog } from "@/components/patient/EmailComposerDialog";
 import { SendFormDialog } from "@/components/patient/SendFormDialog";
 import { ClientFormsList } from "@/components/patient/ClientFormsList";
 import { ConsultationDocCard } from "@/components/patient/ConsultationDocCard";
+import { AdhocPaymentLinkDialog } from "@/components/patient/AdhocPaymentLinkDialog";
 
 import { logCommunication } from "@/lib/patient-hub.functions";
 
