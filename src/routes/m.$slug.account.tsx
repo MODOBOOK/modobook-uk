@@ -118,14 +118,24 @@ function Account() {
       if (!prof) throw new Error("Practitioner not found");
       setProfile(prof as Profile);
 
-      // Linked clinic_client (RLS-scoped to me)
-      const { data: client } = await supabase
-        .from("clinic_clients")
-        .select("id, full_name, email, phone, dob, gender, address_line1, address_line2, county, postcode, preferred_contact, emergency_contact_name, emergency_contact_phone, gp_name, gp_address")
-        .eq("profile_id", prof.id)
-        .maybeSingle();
-      setPatientName(client?.full_name ?? sess.session.user.email?.split("@")[0] ?? "");
-      setMyClient(client ?? null);
+      // Linked clinic_client (RLS-scoped to me). Read via the security-definer
+      // RPC to bypass any RLS/timing race right after link_patient_account.
+      const { data: linkedId } = await supabase.rpc("current_patient_client_id", { _profile_id: prof.id });
+      let client: any = null;
+      if (linkedId) {
+        const { data: c } = await supabase
+          .from("clinic_clients")
+          .select("id, full_name, email, phone, dob, gender, address_line1, address_line2, county, postcode, preferred_contact, emergency_contact_name, emergency_contact_phone, gp_name, gp_address")
+          .eq("id", linkedId as string)
+          .maybeSingle();
+        client = c ?? null;
+      }
+      const metaName = (sess.session.user.user_metadata as { full_name?: string } | null)?.full_name?.trim();
+      const emailPrefix = sess.session.user.email?.split("@")[0] ?? "";
+      const display = (client?.full_name && client.full_name.trim()) || metaName || emailPrefix;
+      setPatientName(display);
+      setMyClient(client);
+
 
       // Appointments — exclude "pending" placeholders that haven't been paid yet.
       // These are Stripe checkout holds; until Stripe confirms payment the
