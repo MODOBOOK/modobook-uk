@@ -23,6 +23,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
 import { Clock, MapPin, CheckCircle2, LogIn, UserPlus, UserCheck } from "lucide-react";
 import { DiscountCodeBox, type AppliedDiscount } from "@/components/DiscountCodeBox";
+import { AddressAutocomplete } from "@/components/AddressAutocomplete";
+
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 type Rule = Database["public"]["Tables"]["availability_rules"]["Row"];
