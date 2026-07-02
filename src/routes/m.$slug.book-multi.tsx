@@ -453,6 +453,8 @@ function MultiBookPage() {
           patientUserId,
           practitionerId: (typeof window !== "undefined" ? window.sessionStorage.getItem(`modo:practitionerId:${slug}`) : null) || null,
           packagePurchases: selectedPackages.map((p) => ({ packageId: p.id })),
+          paymentChoice,
+
         },
       });
       if ((res as { checkoutUrl?: string | null }).checkoutUrl) {
