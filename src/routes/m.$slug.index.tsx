@@ -2306,7 +2306,21 @@ function TreatmentRow({
 
 
 
-function HeroImage({ src, heightClass }: { src: string; heightClass: string }) {
+function HeroImage({ src, heightClass, fit = "contain", natural = false }: { src: string; heightClass: string; fit?: "contain" | "cover"; natural?: boolean }) {
+  if (natural) {
+    return (
+      <div className="relative w-full overflow-hidden bg-muted/40">
+        <img src={src} alt="" className="block w-full h-auto" />
+      </div>
+    );
+  }
+  if (fit === "cover") {
+    return (
+      <div className={`relative w-full overflow-hidden bg-muted/40 ${heightClass}`}>
+        <img src={src} alt="" className="absolute inset-0 h-full w-full object-cover" />
+      </div>
+    );
+  }
   return (
     <div className={`relative w-full overflow-hidden bg-muted/40 ${heightClass}`}>
       <img
@@ -2320,22 +2334,31 @@ function HeroImage({ src, heightClass }: { src: string; heightClass: string }) {
   );
 }
 
-function HeroCarousel({ urls, heightClass }: { urls: string[]; heightClass?: string }) {
+function HeroCarousel({ urls, heightClass, fit = "contain", natural = false }: { urls: string[]; heightClass?: string; fit?: "contain" | "cover"; natural?: boolean }) {
   const [i, setI] = useState(0);
   useEffect(() => {
     if (urls.length < 2) return;
     const t = setInterval(() => setI((x) => (x + 1) % urls.length), 4500);
     return () => clearInterval(t);
   }, [urls.length]);
+  const containerH = natural ? "" : (heightClass || "h-56 sm:h-[22rem]");
   return (
-    <div className={`relative w-full overflow-hidden ${heightClass || "h-56 sm:h-[22rem]"}`}>
+    <div className={`relative w-full overflow-hidden ${containerH}`}>
       {urls.map((u, idx) => (
         <div
           key={u + idx}
-          className={`absolute inset-0 transition-opacity duration-700 ${idx === i ? "opacity-100" : "opacity-0"}`}
+          className={`${natural ? "" : "absolute inset-0"} transition-opacity duration-700 ${idx === i ? "opacity-100" : "opacity-0 pointer-events-none " + (natural ? "hidden" : "")}`}
         >
-          <img src={u} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full scale-110 object-cover opacity-30 blur-2xl" />
-          <img src={u} alt="" className="relative z-10 h-full w-full object-contain" />
+          {natural ? (
+            <img src={u} alt="" className="block w-full h-auto" />
+          ) : fit === "cover" ? (
+            <img src={u} alt="" className="absolute inset-0 h-full w-full object-cover" />
+          ) : (
+            <>
+              <img src={u} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full scale-110 object-cover opacity-30 blur-2xl" />
+              <img src={u} alt="" className="relative z-10 h-full w-full object-contain" />
+            </>
+          )}
         </div>
       ))}
       {urls.length > 1 && (
