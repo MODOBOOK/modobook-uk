@@ -1370,12 +1370,13 @@ function MultiBookPage() {
                 </Button>
               )}
               <Button
-                size="sm"
+                size="lg"
                 onClick={goNext}
                 disabled={step === "selection" ? !selectionValid : !datetimeValid}
+                className="h-12 px-6 text-base font-semibold shadow-md"
                 style={{ backgroundColor: brand, color: "#fff" }}
               >
-                Continue <ChevronRight className="ml-1 h-4 w-4" />
+                Book <ChevronRight className="ml-1 h-5 w-5" />
               </Button>
             </div>
           </div>
