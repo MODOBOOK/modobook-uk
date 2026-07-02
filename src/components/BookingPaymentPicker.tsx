@@ -201,8 +201,10 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
                 className="text-left rounded-xl border-2 px-3 py-2.5 transition"
                 style={optionStyle(chosen?.mode === "full")}
               >
-                <div className="text-sm font-semibold">Pay in full</div>
-                <div className="text-xs opacity-75">£{totalAmount.toFixed(2)} now</div>
+                <div className="text-sm font-semibold">{splitInfo ? "Pay per session" : "Pay in full"}</div>
+                <div className="text-xs opacity-75">
+                  £{totalAmount.toFixed(2)} now{splitInfo ? ` — then £${totalAmount.toFixed(2)} at each of your remaining ${splitInfo.sessionCount - 1} session${splitInfo.sessionCount - 1 === 1 ? "" : "s"}` : ""}
+                </div>
               </button>
             )}
           </div>
