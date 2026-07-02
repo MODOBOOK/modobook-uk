@@ -42,6 +42,7 @@ import {
   completeAppointmentCheckout,
 } from "@/lib/payment-links.functions";
 import { refundAppointment } from "@/lib/stripe.functions";
+import { listMyLocations } from "@/lib/locations.functions";
 import {
   getOrCreateClientForAppointment,
   markAppointmentNoShow,
@@ -77,6 +78,7 @@ type Appt = {
   allergies_text: string | null;
   treatments: { name: string; color?: string | null } | null;
   locations: { name: string } | null;
+  location_id?: string | null;
 };
 
 type BlockedTime = {
