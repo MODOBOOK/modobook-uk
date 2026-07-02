@@ -47,6 +47,30 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
                   ? session.payment_intent
                   : session.payment_intent?.id ?? null;
 
+              // Amount actually paid toward the treatment (exclude the platform
+              // surcharge we added as a separate line item so the practitioner
+              // sees the true paid-vs-outstanding balance).
+              const surchargeCents = Number(metadata.surcharge_cents ?? 0) || 0;
+              const totalCents = Number(session.amount_total ?? 0) || 0;
+              const treatmentPaidCents = Math.max(0, totalCents - surchargeCents);
+
+              const buildApptPatch = (kind: string) => {
+                const patch: Record<string, unknown> = {
+                  status: "confirmed",
+                  payment_hold_expires_at: null,
+                  stripe_payment_intent_id: paymentIntentId,
+                };
+                if (kind === "deposit") {
+                  patch.deposit_paid_at = new Date().toISOString();
+                  patch.payment_status = "paid";
+                } else {
+                  patch.payment_status = "paid";
+                  patch.payment_method = "stripe_link";
+                  patch.checkout_completed_at = new Date().toISOString();
+                }
+                return patch;
+              };
+
               if (paymentLinkId) {
                 const { data: pl } = await supabaseAdmin
                   .from("payment_links")
@@ -62,15 +86,14 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
                 const apptId = pl?.appointment_id || metadata.appointment_id;
                 if (apptId) {
                   const kind = pl?.kind || metadata.kind || "deposit";
-                  const patch: Record<string, unknown> = {};
-                  if (kind === "deposit") {
-                    patch.deposit_paid_at = new Date().toISOString();
-                    patch.payment_status = "paid";
-                  } else {
-                    patch.payment_status = "paid";
-                    patch.payment_method = "stripe_link";
-                    patch.checkout_completed_at = new Date().toISOString();
-                  }
+                  const patch = buildApptPatch(kind);
+                  // Increment amount_paid_cents by the treatment portion of this charge.
+                  const { data: cur } = await supabaseAdmin
+                    .from("appointments")
+                    .select("amount_paid_cents")
+                    .eq("id", apptId)
+                    .maybeSingle();
+                  patch.amount_paid_cents = Number((cur as { amount_paid_cents?: number } | null)?.amount_paid_cents ?? 0) + treatmentPaidCents;
                   await supabaseAdmin
                     .from("appointments")
                     .update(patch as never)
@@ -81,23 +104,41 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
                 const ids = String(metadata.appointment_ids).split(",").map((s) => s.trim()).filter(Boolean);
                 if (ids.length > 0) {
                   const kind = metadata.kind || "deposit";
-                  const patch: Record<string, unknown> = {};
-                  if (kind === "deposit") {
-                    patch.deposit_paid_at = new Date().toISOString();
-                    patch.payment_status = "paid";
-                  } else {
-                    patch.payment_status = "paid";
-                    patch.payment_method = "stripe_link";
-                    patch.checkout_completed_at = new Date().toISOString();
+                  const perAppt = Math.round(treatmentPaidCents / ids.length);
+                  for (const apptId of ids) {
+                    const patch = buildApptPatch(kind);
+                    const { data: cur } = await supabaseAdmin
+                      .from("appointments")
+                      .select("amount_paid_cents")
+                      .eq("id", apptId)
+                      .maybeSingle();
+                    patch.amount_paid_cents = Number((cur as { amount_paid_cents?: number } | null)?.amount_paid_cents ?? 0) + perAppt;
+                    await supabaseAdmin
+                      .from("appointments")
+                      .update(patch as never)
+                      .eq("id", apptId);
                   }
-                  await supabaseAdmin
-                    .from("appointments")
-                    .update(patch as never)
-                    .in("id", ids);
                 }
               }
               break;
 
+            }
+
+            case "checkout.session.expired": {
+              // Patient abandoned the checkout — release the slot immediately.
+              const session = event.data.object as Stripe.Checkout.Session;
+              const metadata = session.metadata ?? {};
+              if (metadata.appointment_ids) {
+                const ids = String(metadata.appointment_ids).split(",").map((s) => s.trim()).filter(Boolean);
+                if (ids.length > 0) {
+                  await supabaseAdmin
+                    .from("appointments")
+                    .update({ status: "cancelled", payment_hold_expires_at: null } as never)
+                    .in("id", ids)
+                    .eq("payment_status", "pending");
+                }
+              }
+              break;
             }
 
             case "checkout.session.async_payment_failed": {
@@ -114,6 +155,7 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
               }
               break;
             }
+
 
             case "charge.refunded": {
               const charge = event.data.object as Stripe.Charge;

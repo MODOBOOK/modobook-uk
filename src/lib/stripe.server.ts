@@ -171,8 +171,13 @@ export async function createCheckoutSession(params: {
   customerEmail?: string;
   paymentMethodTypes?: Stripe.Checkout.SessionCreateParams.PaymentMethodType[];
   metadata?: Record<string, string>;
+  expiresInMinutes?: number;
 }) {
   const stripe = getStripe();
+  // Stripe requires expires_at to be at least 30 minutes ahead — used so
+  // abandoned checkouts release the slot hold in a timely manner.
+  const minutes = Math.max(30, params.expiresInMinutes ?? 30);
+  const expiresAt = Math.floor(Date.now() / 1000) + minutes * 60;
   return stripe.checkout.sessions.create(
     {
       mode: "payment",
@@ -182,10 +187,12 @@ export async function createCheckoutSession(params: {
       cancel_url: params.cancelUrl,
       customer_email: params.customerEmail,
       metadata: params.metadata,
+      expires_at: expiresAt,
     },
     { stripeAccount: params.accountId },
   );
 }
+
 
 export async function createRefund(paymentIntentId: string, accountId: string, amount?: number) {
   const stripe = getStripe();

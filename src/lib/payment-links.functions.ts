@@ -148,7 +148,21 @@ export const completeAppointmentCheckout = createServerFn({ method: "POST" })
       patch.payment_status = "paid";
       patch.payment_method = data.method;
       patch.checkout_completed_at = new Date().toISOString();
+      // Record the outstanding balance as paid so paid/outstanding badges
+      // stay accurate after an in-person checkout.
+      const { data: cur } = await context.supabase
+        .from("appointments")
+        .select("total_amount, amount_paid_cents")
+        .eq("id", data.appointmentId)
+        .eq("profile_id", profile.id)
+        .maybeSingle();
+      const totalCents = Math.round(Number((cur as { total_amount?: number | null } | null)?.total_amount ?? 0) * 100);
+      const already = Number((cur as { amount_paid_cents?: number } | null)?.amount_paid_cents ?? 0);
+      const discount = Number(data.discountCents ?? 0);
+      const remaining = Math.max(0, totalCents - already - discount);
+      patch.amount_paid_cents = already + remaining;
     }
+
     const { error } = await context.supabase
       .from("appointments")
       .update(patch as never)

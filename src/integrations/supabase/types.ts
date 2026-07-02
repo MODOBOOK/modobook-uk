@@ -420,6 +420,7 @@ export type Database = {
           aftercare_html: string | null
           aftercare_sent_at: string | null
           allergies_text: string | null
+          amount_paid_cents: number
           base_amount: number | null
           checkout_completed_at: string | null
           checkout_discount_cents: number | null
@@ -449,6 +450,7 @@ export type Database = {
           patient_name: string
           patient_phone: string | null
           patient_user_id: string | null
+          payment_hold_expires_at: string | null
           payment_method: string | null
           payment_status: Database["public"]["Enums"]["payment_status"] | null
           practitioner_id: string | null
@@ -471,6 +473,7 @@ export type Database = {
           aftercare_html?: string | null
           aftercare_sent_at?: string | null
           allergies_text?: string | null
+          amount_paid_cents?: number
           base_amount?: number | null
           checkout_completed_at?: string | null
           checkout_discount_cents?: number | null
@@ -500,6 +503,7 @@ export type Database = {
           patient_name: string
           patient_phone?: string | null
           patient_user_id?: string | null
+          payment_hold_expires_at?: string | null
           payment_method?: string | null
           payment_status?: Database["public"]["Enums"]["payment_status"] | null
           practitioner_id?: string | null
@@ -522,6 +526,7 @@ export type Database = {
           aftercare_html?: string | null
           aftercare_sent_at?: string | null
           allergies_text?: string | null
+          amount_paid_cents?: number
           base_amount?: number | null
           checkout_completed_at?: string | null
           checkout_discount_cents?: number | null
@@ -551,6 +556,7 @@ export type Database = {
           patient_name?: string
           patient_phone?: string | null
           patient_user_id?: string | null
+          payment_hold_expires_at?: string | null
           payment_method?: string | null
           payment_status?: Database["public"]["Enums"]["payment_status"] | null
           practitioner_id?: string | null

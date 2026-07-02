@@ -63,6 +63,8 @@ type Appt = {
   status: string;
   payment_status: string;
   total_amount: number | null;
+  amount_paid_cents: number | null;
+
   notes: string | null;
   practitioner_notes: string | null;
   aftercare_html: string | null;
@@ -1020,11 +1022,23 @@ function CheckoutSheet({
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        <Badge variant={cancelled ? "destructive" : "outline"}>{a.status}</Badge>
-        <Badge variant={a.payment_status === "paid" ? "default" : "secondary"}>{a.payment_status}</Badge>
-        {a.total_amount != null && <Badge variant="outline">£{Number(a.total_amount).toFixed(2)}</Badge>}
-      </div>
+      {(() => {
+        const totalDue = Number(a.total_amount ?? 0);
+        const paid = Number(a.amount_paid_cents ?? 0) / 100;
+        const outstanding = Math.max(0, totalDue - paid);
+        return (
+          <div className="flex flex-wrap gap-2">
+            <Badge variant={cancelled ? "destructive" : "outline"}>{a.status}</Badge>
+            <Badge variant={a.payment_status === "paid" ? "default" : "secondary"}>{a.payment_status}</Badge>
+            {a.total_amount != null && <Badge variant="outline">Total £{totalDue.toFixed(2)}</Badge>}
+            {paid > 0 && <Badge className="bg-emerald-600 text-white hover:bg-emerald-600">Paid £{paid.toFixed(2)}</Badge>}
+            {outstanding > 0 && a.total_amount != null && (
+              <Badge className="bg-amber-500 text-white hover:bg-amber-500">Outstanding £{outstanding.toFixed(2)}</Badge>
+            )}
+          </div>
+        );
+      })()}
+
 
       {(a.patient_email || a.patient_phone) && (
         <div className="text-xs text-muted-foreground">
@@ -1113,8 +1127,15 @@ function CheckoutSheet({
         <div className="border-t pt-2 text-sm">
           <div className="flex justify-between text-muted-foreground"><span>Subtotal</span><span>£{subtotal.toFixed(2)}</span></div>
           {discountValue > 0 && <div className="flex justify-between text-emerald-600"><span>Discount</span><span>-£{discountValue.toFixed(2)}</span></div>}
-          <div className="flex justify-between font-bold"><span>Total</span><span>£{total.toFixed(2)}</span></div>
+          {Number(a.amount_paid_cents ?? 0) > 0 && (
+            <div className="flex justify-between text-emerald-700"><span>Already paid</span><span>-£{(Number(a.amount_paid_cents ?? 0) / 100).toFixed(2)}</span></div>
+          )}
+          <div className="flex justify-between font-bold">
+            <span>Outstanding</span>
+            <span>£{Math.max(0, total - Number(a.amount_paid_cents ?? 0) / 100).toFixed(2)}</span>
+          </div>
         </div>
+
         <div className="grid grid-cols-2 gap-2">
           <Button disabled={busy} className="bg-slate-900 text-white hover:bg-slate-800" onClick={sendStripeLink}>
             <Link2 className="h-4 w-4 mr-1" /> Stripe link

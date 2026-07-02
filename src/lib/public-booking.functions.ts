@@ -294,13 +294,25 @@ export const getDayAvailability = createServerFn({ method: "GET" })
 
     const { data: appts } = await supabaseAdmin
       .from("appointments")
-      .select("start_time,end_time,location_id,status")
+      .select("start_time,end_time,location_id,status,payment_status,payment_hold_expires_at")
       .eq("profile_id", data.profileId)
       .eq("scheduled_date", data.date)
       .neq("status", "cancelled");
 
+    // Release slots that were held for a Stripe checkout that the patient
+    // abandoned: an unpaid pending appointment whose hold timestamp has passed
+    // no longer blocks availability.
+    const nowMs = Date.now();
+    const activeAppts = (appts ?? []).filter((a) => {
+      const held = (a as { payment_hold_expires_at?: string | null }).payment_hold_expires_at;
+      const paid = (a as { payment_status?: string }).payment_status === "paid";
+      const pending = a.status === "pending";
+      if (!held || paid || !pending) return true;
+      return new Date(held).getTime() > nowMs;
+    });
+
     // Daily cap: if reached, block the date entirely.
-    if (dailyCap != null && (appts ?? []).length >= Number(dailyCap)) {
+    if (dailyCap != null && activeAppts.length >= Number(dailyCap)) {
       isBlocked = true;
     }
 
@@ -312,11 +324,12 @@ export const getDayAvailability = createServerFn({ method: "GET" })
       const mm = String(total % 60).padStart(2, "0");
       return `${hh}:${mm}:${String(s ?? 0).padStart(2, "0")}`;
     };
-    const paddedAppts = (appts ?? []).map((a) => ({
+    const paddedAppts = activeAppts.map((a) => ({
       ...a,
       start_time: bufferBefore ? padTime(a.start_time, -bufferBefore) : a.start_time,
       end_time: bufferAfter ? padTime(a.end_time, bufferAfter) : a.end_time,
     }));
+
 
     const { data: overrides } = await sb
       .from("availability_overrides")
@@ -539,8 +552,19 @@ export const requestBooking = createServerFn({ method: "POST" })
     } catch (e) {
       console.error("[requestBooking] checkout failed", e);
     }
+    // If we handed the patient off to Stripe, hold the slot briefly. If they
+    // abandon the payment the hold expires and availability re-opens; the
+    // webhook clears the hold and confirms the appointment on success.
+    if (checkoutUrl) {
+      const holdUntil = new Date(Date.now() + 30 * 60 * 1000).toISOString();
+      await supabaseAdmin
+        .from("appointments")
+        .update({ status: "pending", payment_hold_expires_at: holdUntil } as never)
+        .eq("id", id);
+    }
     return { id, consents, medicalForms, checkoutUrl };
   });
+
 
 
 // Build a Checkout Session on the practitioner's Connect account for a deposit
@@ -899,8 +923,18 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
     } catch (e) {
       console.error("[requestMultiBooking] checkout failed", e);
     }
+    // Slot hold while patient completes Stripe checkout; abandoned bookings
+    // auto-release when the hold expires (see getDayAvailability filter).
+    if (checkoutUrl && created.length > 0) {
+      const holdUntil = new Date(Date.now() + 30 * 60 * 1000).toISOString();
+      await supabaseAdmin
+        .from("appointments")
+        .update({ status: "pending", payment_hold_expires_at: holdUntil } as never)
+        .in("id", created.map((c) => c.id));
+    }
     return { appointments: created, consents, medicalForms, packagePurchases, checkoutUrl };
 
   });
+
 
 
