@@ -611,6 +611,29 @@ async function maybeCreateBookingCheckout(args: {
     || !!p.payment_klarna_enabled
     || !!p.payment_clearpay_enabled;
 
+  // Look up per-treatment deposit overrides for the appointments in this booking.
+  // Treatment-level `deposit_amount` is in GBP (numeric) and overrides the
+  // profile-wide default when set.
+  async function computeDepositTotalCents(): Promise<number> {
+    if (args.appointmentIds.length === 0) return 0;
+    try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: rows } = await supabaseAdmin
+        .from("appointments")
+        .select("treatments(deposit_amount)")
+        .in("id", args.appointmentIds);
+      let total = 0;
+      for (const r of rows ?? []) {
+        const t = (r as { treatments?: { deposit_amount?: number | null } | null }).treatments;
+        const override = t?.deposit_amount != null ? Math.round(Number(t.deposit_amount) * 100) : null;
+        total += override != null && override > 0 ? override : depositPer;
+      }
+      return total;
+    } catch {
+      return depositPer * args.appointmentIds.length;
+    }
+  }
+
   // Decide deposit vs full based on the patient's explicit choice when given,
   // otherwise fall back to legacy behaviour (deposit if configured).
   let kind: "deposit" | "checkout";
@@ -618,8 +641,9 @@ async function maybeCreateBookingCheckout(args: {
   const wantsDeposit = args.choice
     ? args.choice.mode === "deposit"
     : depositEnabled && depositPer >= 100;
-  if (wantsDeposit && depositEnabled && depositPer >= 100) {
-    amountCents = depositPer * args.appointmentIds.length;
+  if (wantsDeposit && depositEnabled) {
+    amountCents = await computeDepositTotalCents();
+    if (amountCents < 100) return null;
     kind = "deposit";
   } else if (fullEnabled) {
     amountCents = Math.round(args.totalAmount * 100);
@@ -628,6 +652,7 @@ async function maybeCreateBookingCheckout(args: {
     return null;
   }
   if (amountCents < 100) return null;
+
 
   // Build allowed methods. When the patient picked one, restrict Stripe to
   // just that method so the fee we add matches the chosen rail exactly.
