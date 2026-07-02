@@ -593,7 +593,7 @@ async function maybeCreateBookingCheckout(args: {
         price_data: {
           currency: "gbp",
           unit_amount: surchargeCents,
-          product_data: { name: "Booking / processing fee" },
+          product_data: { name: "Platform fee" },
         },
       });
     }
