@@ -4,7 +4,18 @@ import { useEffect, useMemo } from "react";
 import { getPublicPaymentOptions, type PaymentChoice } from "@/lib/public-booking.functions";
 import { CreditCard } from "lucide-react";
 
-type Options = Awaited<ReturnType<typeof getPublicPaymentOptions>>;
+type ConfiguredOptions = {
+  configured: true;
+  cardEnabled: boolean;
+  klarnaEnabled: boolean;
+  clearpayEnabled: boolean;
+  depositEnabled: boolean;
+  depositCents: number;
+  passFees: boolean;
+  surcharges: { cardPercent: number; bnplPercent: number; depositPercent: number };
+};
+
+
 
 type Props = {
   slug: string;
