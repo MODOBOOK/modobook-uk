@@ -130,6 +130,28 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
+  // Wildcard subdomain routing: {slug}.modobook.co.uk → /m/{slug}
+  // Attach the apex + `*.modobook.co.uk` in Project Settings → Domains, then
+  // each practitioner slug automatically resolves at their subdomain.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const host = window.location.hostname.toLowerCase();
+    const path = window.location.pathname;
+
+    if (!host.endsWith(".modobook.co.uk")) return;
+    const sub = host.slice(0, -".modobook.co.uk".length);
+
+    const RESERVED = new Set(["www", "app", "api", "notify", "mail", "admin", "dashboard"]);
+    if (!sub || sub.includes(".") || RESERVED.has(sub)) return;
+
+    if (path.startsWith("/m/") || path.startsWith("/auth")) return;
+
+    const suffix = path === "/" ? "" : path;
+    const search = window.location.search;
+    const hash = window.location.hash;
+    window.location.replace(`/m/${sub}${suffix}${search}${hash}`);
+  }, []);
+
   useEffect(() => {
     const { data: listener } = supabase.auth.onAuthStateChange((event) => {
       if (event === "SIGNED_OUT") {
