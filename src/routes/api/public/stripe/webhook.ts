@@ -134,6 +134,7 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
                 return patch;
               };
 
+              const notifyIds: string[] = [];
               if (paymentLinkId) {
                 const { data: pl } = await supabaseAdmin
                   .from("payment_links")
@@ -153,14 +154,17 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
                   // Increment amount_paid_cents by the treatment portion of this charge.
                   const { data: cur } = await supabaseAdmin
                     .from("appointments")
-                    .select("amount_paid_cents")
+                    .select("amount_paid_cents, payment_status")
                     .eq("id", apptId)
                     .maybeSingle();
-                  patch.amount_paid_cents = Number((cur as { amount_paid_cents?: number } | null)?.amount_paid_cents ?? 0) + treatmentPaidCents;
+                  const already = cur as { amount_paid_cents?: number; payment_status?: string } | null;
+                  const alreadyPaid = already?.payment_status === "paid";
+                  patch.amount_paid_cents = Number(already?.amount_paid_cents ?? 0) + treatmentPaidCents;
                   await supabaseAdmin
                     .from("appointments")
                     .update(patch as never)
                     .eq("id", apptId);
+                  if (!alreadyPaid) notifyIds.push(apptId);
                 }
               } else if (metadata.appointment_ids) {
                 // Checkout Session created directly for a booking (deposit / full)
@@ -172,16 +176,23 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
                     const patch = buildApptPatch(kind);
                     const { data: cur } = await supabaseAdmin
                       .from("appointments")
-                      .select("amount_paid_cents")
+                      .select("amount_paid_cents, payment_status")
                       .eq("id", apptId)
                       .maybeSingle();
-                    patch.amount_paid_cents = Number((cur as { amount_paid_cents?: number } | null)?.amount_paid_cents ?? 0) + perAppt;
+                    const already = cur as { amount_paid_cents?: number; payment_status?: string } | null;
+                    const alreadyPaid = already?.payment_status === "paid";
+                    patch.amount_paid_cents = Number(already?.amount_paid_cents ?? 0) + perAppt;
                     await supabaseAdmin
                       .from("appointments")
                       .update(patch as never)
                       .eq("id", apptId);
+                    if (!alreadyPaid) notifyIds.push(apptId);
                   }
                 }
+              }
+              if (notifyIds.length > 0) {
+                const { sendBookingNotifications } = await import("@/lib/email/send-branded.server");
+                await Promise.all(notifyIds.map((id) => sendBookingNotifications(id)));
               }
               break;
 
