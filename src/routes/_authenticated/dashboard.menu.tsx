@@ -142,10 +142,10 @@ function MenuPage() {
         <CardContent className="flex items-center justify-between gap-3 p-4">
           <div className="min-w-0">
             <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Your booking link</p>
-            <p className="mt-0.5 truncate text-sm font-semibold">/m/{profile.slug}</p>
+            <p className="mt-0.5 truncate text-sm font-semibold">/{profile.slug}</p>
           </div>
           <Button size="sm" asChild className="rounded-full">
-            <a href={`/m/${profile.slug}`} target="_blank" rel="noreferrer">
+            <a href={`/${profile.slug}`} target="_blank" rel="noreferrer">
               <ExternalLink className="mr-1.5 h-4 w-4" /> Open
             </a>
           </Button>

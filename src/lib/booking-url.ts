@@ -1,7 +1,7 @@
 /**
  * Canonical practitioner booking URL.
  *
- * Uses the path form `https://modobook.uk/m/{slug}` so every practitioner
+ * Uses the path form `https://modobook.uk/{slug}` so every practitioner
  * link works automatically the moment the domain is connected — no per-slug
  * wildcard DNS or per-slug domain entry required.
  *
@@ -19,7 +19,7 @@ function isBrandedHost(host: string): string | null {
 
 export function buildBookingUrl(slug: string, path = ""): string {
   const suffix = path && !path.startsWith("/") ? `/${path}` : path;
-  return `https://${PRIMARY_ZONE}/m/${slug}${suffix}`;
+  return `https://${PRIMARY_ZONE}/${slug}${suffix}`;
 }
 
 /** Short label without the protocol, for display in the UI. */

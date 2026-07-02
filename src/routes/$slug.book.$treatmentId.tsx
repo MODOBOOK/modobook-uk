@@ -37,7 +37,7 @@ function fromIsoDate(iso: string) {
   return new Date(y, m - 1, d);
 }
 
-export const Route = createFileRoute("/m/$slug/book/$treatmentId")({
+export const Route = createFileRoute("/$slug/book/$treatmentId")({
   loader: ({ params }) => getBookingContext({ data: { slug: params.slug, treatmentId: params.treatmentId } }),
   component: BookTreatmentPage,
 });
@@ -66,7 +66,7 @@ function formatSessionSpacing(days?: number | null) {
 }
 
 function BookTreatmentPage() {
-  const { slug } = useParams({ from: "/m/$slug/book/$treatmentId" });
+  const { slug } = useParams({ from: "/$slug/book/$treatmentId" });
   const ctx = Route.useLoaderData();
   const treatment = ctx.treatment;
   const settings = (ctx as { settings?: import("@/lib/public-booking.functions").PublicBookingSettings }).settings;
@@ -77,7 +77,7 @@ function BookTreatmentPage() {
   const maxLeadDays = settings?.booking_max_lead_days ?? 90;
   const minNoticeHours = settings?.booking_min_notice_hours ?? 0;
   const smartTimes = settings?.booking_smart_times_enabled === true;
-  const redirectPath = `/m/${slug}/book/${treatment.id}`;
+  const redirectPath = `/${slug}/book/${treatment.id}`;
   const duration = treatment.duration ?? 30;
   const price = Number(treatment.price ?? 0);
 
@@ -480,7 +480,7 @@ function BookTreatmentPage() {
               </ul>
               {patientUserId && (
                 <p className="mt-3 text-xs opacity-70">
-                  These are also available anytime in your <Link to="/m/$slug/account" params={{ slug }} className="underline">patient account</Link>.
+                  These are also available anytime in your <Link to="/$slug/account" params={{ slug }} className="underline">patient account</Link>.
                 </p>
               )}
             </div>
@@ -503,7 +503,7 @@ function BookTreatmentPage() {
             </div>
           )}
           <div className="mt-6">
-            <Link to="/m/$slug" params={{ slug }}>
+            <Link to="/$slug" params={{ slug }}>
               <Button variant="outline">Back to clinic</Button>
             </Link>
           </div>
@@ -517,7 +517,7 @@ function BookTreatmentPage() {
     <main className="min-h-screen" style={pageStyle}>
       <div className="mx-auto max-w-3xl px-4 py-10">
       <div className="mb-6">
-        <Link to="/m/$slug" params={{ slug }} className="text-sm opacity-70 hover:underline">
+        <Link to="/$slug" params={{ slug }} className="text-sm opacity-70 hover:underline">
           ← Back to {ctx.clinicName}
         </Link>
       </div>
@@ -673,7 +673,7 @@ function BookTreatmentPage() {
             </p>
             <div className="grid gap-2 sm:grid-cols-3">
               <Link
-                to="/m/$slug/auth"
+                to="/$slug/auth"
                 params={{ slug }}
                 search={{ redirect: redirectPath }}
               >
@@ -682,7 +682,7 @@ function BookTreatmentPage() {
                 </Button>
               </Link>
               <Link
-                to="/m/$slug/auth"
+                to="/$slug/auth"
                 params={{ slug }}
                 search={{ tab: "signup", redirect: redirectPath }}
               >

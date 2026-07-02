@@ -11,7 +11,7 @@ import { Star } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/m/$slug/reviews")({
+export const Route = createFileRoute("/$slug/reviews")({
   loader: async ({ params }) => getPractitionerReviews({ data: { slug: params.slug } }),
   head: ({ loaderData }) => ({
     meta: [
@@ -34,7 +34,7 @@ function Stars({ value }: { value: number }) {
 
 function Reviews() {
   const { patientReviews, testimonials, profile } = Route.useLoaderData();
-  const { slug } = useParams({ from: "/m/$slug/reviews" });
+  const { slug } = useParams({ from: "/$slug/reviews" });
   const submit = useServerFn(submitPatientReview);
   const [rating, setRating] = useState(5);
   const [title, setTitle] = useState("");
@@ -96,7 +96,7 @@ function Reviews() {
         ) : (
           <div className="rounded-lg border bg-muted/30 p-4 text-sm">
             <p>Sign in as a patient to leave a review.</p>
-            <Link to="/m/$slug/auth" params={{ slug }} className="mt-2 inline-block"><Button size="sm">Sign in / sign up</Button></Link>
+            <Link to="/$slug/auth" params={{ slug }} className="mt-2 inline-block"><Button size="sm">Sign in / sign up</Button></Link>
           </div>
         )}
       </section>

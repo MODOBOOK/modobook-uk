@@ -6,7 +6,7 @@ import { MapPin, Award, Clock, Sparkles, MessageCircle, ShieldCheck, HeartHandsh
 import { resolveDisplayNames } from "@/lib/display-name";
 
 
-export const Route = createFileRoute("/m/$slug/about")({
+export const Route = createFileRoute("/$slug/about")({
   loader: async ({ params }) => getPractitionerBio({ data: { slug: params.slug } }),
   head: ({ loaderData }) => {
     const name = loaderData?.profile ? resolveDisplayNames(loaderData.profile).primary : "practitioner";

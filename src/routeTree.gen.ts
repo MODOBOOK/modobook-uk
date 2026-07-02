@@ -16,8 +16,9 @@ import { Route as PrescriberHubRouteImport } from './routes/prescriber-hub'
 import { Route as FeaturesRouteImport } from './routes/features'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
+import { Route as SlugRouteImport } from './routes/$slug'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as MSlugRouteImport } from './routes/m.$slug'
+import { Route as SlugIndexRouteImport } from './routes/$slug.index'
 import { Route as FTokenRouteImport } from './routes/f.$token'
 import { Route as CTokenRouteImport } from './routes/c.$token'
 import { Route as BookSlugRouteImport } from './routes/book.$slug'
@@ -27,15 +28,14 @@ import { Route as AuthenticatedHubRouteImport } from './routes/_authenticated/hu
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAdminPrescribersRouteImport } from './routes/_authenticated/admin-prescribers'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
-import { Route as MSlugIndexRouteImport } from './routes/m.$slug.index'
+import { Route as SlugReviewsRouteImport } from './routes/$slug.reviews'
+import { Route as SlugBookMultiRouteImport } from './routes/$slug.book-multi'
+import { Route as SlugAuthRouteImport } from './routes/$slug.auth'
+import { Route as SlugAccountRouteImport } from './routes/$slug.account'
+import { Route as SlugAboutRouteImport } from './routes/$slug.about'
 import { Route as AuthenticatedPrescriberIndexRouteImport } from './routes/_authenticated/prescriber.index'
 import { Route as AuthenticatedHubIndexRouteImport } from './routes/_authenticated/hub.index'
 import { Route as AuthenticatedDashboardIndexRouteImport } from './routes/_authenticated/dashboard.index'
-import { Route as MSlugReviewsRouteImport } from './routes/m.$slug.reviews'
-import { Route as MSlugBookMultiRouteImport } from './routes/m.$slug.book-multi'
-import { Route as MSlugAuthRouteImport } from './routes/m.$slug.auth'
-import { Route as MSlugAccountRouteImport } from './routes/m.$slug.account'
-import { Route as MSlugAboutRouteImport } from './routes/m.$slug.about'
 import { Route as AuthenticatedPrescriberVisitsRouteImport } from './routes/_authenticated/prescriber.visits'
 import { Route as AuthenticatedPrescriberLibraryRouteImport } from './routes/_authenticated/prescriber.library'
 import { Route as AuthenticatedPrescriberDirectionsRouteImport } from './routes/_authenticated/prescriber.directions'
@@ -75,10 +75,10 @@ import { Route as AuthenticatedDashboardAiImportRouteImport } from './routes/_au
 import { Route as AuthenticatedDashboardAftercareRouteImport } from './routes/_authenticated/dashboard.aftercare'
 import { Route as AuthenticatedDashboardAddonsRouteImport } from './routes/_authenticated/dashboard.addons'
 import { Route as AuthenticatedDashboardAboutRouteImport } from './routes/_authenticated/dashboard.about'
+import { Route as SlugManageTokenRouteImport } from './routes/$slug.manage.$token'
+import { Route as SlugBookTreatmentIdRouteImport } from './routes/$slug.book.$treatmentId'
 import { Route as AuthenticatedDashboardPatientsIndexRouteImport } from './routes/_authenticated/dashboard.patients.index'
 import { Route as AuthenticatedDashboardConsultationsIndexRouteImport } from './routes/_authenticated/dashboard.consultations.index'
-import { Route as MSlugManageTokenRouteImport } from './routes/m.$slug.manage.$token'
-import { Route as MSlugBookTreatmentIdRouteImport } from './routes/m.$slug.book.$treatmentId'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
@@ -122,15 +122,20 @@ const AuthenticatedRoute = AuthenticatedRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SlugRoute = SlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const MSlugRoute = MSlugRouteImport.update({
-  id: '/m/$slug',
-  path: '/m/$slug',
-  getParentRoute: () => rootRouteImport,
+const SlugIndexRoute = SlugIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => SlugRoute,
 } as any)
 const FTokenRoute = FTokenRouteImport.update({
   id: '/f/$token',
@@ -178,10 +183,30 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const MSlugIndexRoute = MSlugIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => MSlugRoute,
+const SlugReviewsRoute = SlugReviewsRouteImport.update({
+  id: '/reviews',
+  path: '/reviews',
+  getParentRoute: () => SlugRoute,
+} as any)
+const SlugBookMultiRoute = SlugBookMultiRouteImport.update({
+  id: '/book-multi',
+  path: '/book-multi',
+  getParentRoute: () => SlugRoute,
+} as any)
+const SlugAuthRoute = SlugAuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => SlugRoute,
+} as any)
+const SlugAccountRoute = SlugAccountRouteImport.update({
+  id: '/account',
+  path: '/account',
+  getParentRoute: () => SlugRoute,
+} as any)
+const SlugAboutRoute = SlugAboutRouteImport.update({
+  id: '/about',
+  path: '/about',
+  getParentRoute: () => SlugRoute,
 } as any)
 const AuthenticatedPrescriberIndexRoute =
   AuthenticatedPrescriberIndexRouteImport.update({
@@ -200,31 +225,6 @@ const AuthenticatedDashboardIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
-const MSlugReviewsRoute = MSlugReviewsRouteImport.update({
-  id: '/reviews',
-  path: '/reviews',
-  getParentRoute: () => MSlugRoute,
-} as any)
-const MSlugBookMultiRoute = MSlugBookMultiRouteImport.update({
-  id: '/book-multi',
-  path: '/book-multi',
-  getParentRoute: () => MSlugRoute,
-} as any)
-const MSlugAuthRoute = MSlugAuthRouteImport.update({
-  id: '/auth',
-  path: '/auth',
-  getParentRoute: () => MSlugRoute,
-} as any)
-const MSlugAccountRoute = MSlugAccountRouteImport.update({
-  id: '/account',
-  path: '/account',
-  getParentRoute: () => MSlugRoute,
-} as any)
-const MSlugAboutRoute = MSlugAboutRouteImport.update({
-  id: '/about',
-  path: '/about',
-  getParentRoute: () => MSlugRoute,
-} as any)
 const AuthenticatedPrescriberVisitsRoute =
   AuthenticatedPrescriberVisitsRouteImport.update({
     id: '/visits',
@@ -458,6 +458,16 @@ const AuthenticatedDashboardAboutRoute =
     path: '/about',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
+const SlugManageTokenRoute = SlugManageTokenRouteImport.update({
+  id: '/manage/$token',
+  path: '/manage/$token',
+  getParentRoute: () => SlugRoute,
+} as any)
+const SlugBookTreatmentIdRoute = SlugBookTreatmentIdRouteImport.update({
+  id: '/book/$treatmentId',
+  path: '/book/$treatmentId',
+  getParentRoute: () => SlugRoute,
+} as any)
 const AuthenticatedDashboardPatientsIndexRoute =
   AuthenticatedDashboardPatientsIndexRouteImport.update({
     id: '/',
@@ -470,16 +480,6 @@ const AuthenticatedDashboardConsultationsIndexRoute =
     path: '/consultations/',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
-const MSlugManageTokenRoute = MSlugManageTokenRouteImport.update({
-  id: '/manage/$token',
-  path: '/manage/$token',
-  getParentRoute: () => MSlugRoute,
-} as any)
-const MSlugBookTreatmentIdRoute = MSlugBookTreatmentIdRouteImport.update({
-  id: '/book/$treatmentId',
-  path: '/book/$treatmentId',
-  getParentRoute: () => MSlugRoute,
-} as any)
 const LovableEmailQueueProcessRoute =
   LovableEmailQueueProcessRouteImport.update({
     id: '/lovable/email/queue/process',
@@ -528,12 +528,18 @@ const AuthenticatedDashboardConsultationsIdRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/$slug': typeof SlugRouteWithChildren
   '/auth': typeof AuthRoute
   '/features': typeof FeaturesRoute
   '/prescriber-hub': typeof PrescriberHubRoute
   '/reset-password': typeof ResetPasswordRoute
   '/terms': typeof TermsRoute
   '/who-its-for': typeof WhoItsForRoute
+  '/$slug/about': typeof SlugAboutRoute
+  '/$slug/account': typeof SlugAccountRoute
+  '/$slug/auth': typeof SlugAuthRoute
+  '/$slug/book-multi': typeof SlugBookMultiRoute
+  '/$slug/reviews': typeof SlugReviewsRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/admin-prescribers': typeof AuthenticatedAdminPrescribersRoute
   '/dashboard': typeof AuthenticatedDashboardRouteWithChildren
@@ -543,7 +549,9 @@ export interface FileRoutesByFullPath {
   '/book/$slug': typeof BookSlugRoute
   '/c/$token': typeof CTokenRoute
   '/f/$token': typeof FTokenRoute
-  '/m/$slug': typeof MSlugRouteWithChildren
+  '/$slug/': typeof SlugIndexRoute
+  '/$slug/book/$treatmentId': typeof SlugBookTreatmentIdRoute
+  '/$slug/manage/$token': typeof SlugManageTokenRoute
   '/dashboard/about': typeof AuthenticatedDashboardAboutRoute
   '/dashboard/addons': typeof AuthenticatedDashboardAddonsRoute
   '/dashboard/aftercare': typeof AuthenticatedDashboardAftercareRoute
@@ -583,15 +591,9 @@ export interface FileRoutesByFullPath {
   '/prescriber/directions': typeof AuthenticatedPrescriberDirectionsRoute
   '/prescriber/library': typeof AuthenticatedPrescriberLibraryRoute
   '/prescriber/visits': typeof AuthenticatedPrescriberVisitsRoute
-  '/m/$slug/about': typeof MSlugAboutRoute
-  '/m/$slug/account': typeof MSlugAccountRoute
-  '/m/$slug/auth': typeof MSlugAuthRoute
-  '/m/$slug/book-multi': typeof MSlugBookMultiRoute
-  '/m/$slug/reviews': typeof MSlugReviewsRoute
   '/dashboard/': typeof AuthenticatedDashboardIndexRoute
   '/hub/': typeof AuthenticatedHubIndexRoute
   '/prescriber/': typeof AuthenticatedPrescriberIndexRoute
-  '/m/$slug/': typeof MSlugIndexRoute
   '/dashboard/consultations/$id': typeof AuthenticatedDashboardConsultationsIdRoute
   '/dashboard/patients/$id': typeof AuthenticatedDashboardPatientsIdRoute
   '/api/public/medical-form/$token': typeof ApiPublicMedicalFormTokenRoute
@@ -600,8 +602,6 @@ export interface FileRoutesByFullPath {
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
-  '/m/$slug/book/$treatmentId': typeof MSlugBookTreatmentIdRoute
-  '/m/$slug/manage/$token': typeof MSlugManageTokenRoute
   '/dashboard/consultations/': typeof AuthenticatedDashboardConsultationsIndexRoute
   '/dashboard/patients/': typeof AuthenticatedDashboardPatientsIndexRoute
 }
@@ -613,12 +613,20 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/terms': typeof TermsRoute
   '/who-its-for': typeof WhoItsForRoute
+  '/$slug/about': typeof SlugAboutRoute
+  '/$slug/account': typeof SlugAccountRoute
+  '/$slug/auth': typeof SlugAuthRoute
+  '/$slug/book-multi': typeof SlugBookMultiRoute
+  '/$slug/reviews': typeof SlugReviewsRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/admin-prescribers': typeof AuthenticatedAdminPrescribersRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/book/$slug': typeof BookSlugRoute
   '/c/$token': typeof CTokenRoute
   '/f/$token': typeof FTokenRoute
+  '/$slug': typeof SlugIndexRoute
+  '/$slug/book/$treatmentId': typeof SlugBookTreatmentIdRoute
+  '/$slug/manage/$token': typeof SlugManageTokenRoute
   '/dashboard/about': typeof AuthenticatedDashboardAboutRoute
   '/dashboard/addons': typeof AuthenticatedDashboardAddonsRoute
   '/dashboard/aftercare': typeof AuthenticatedDashboardAftercareRoute
@@ -657,15 +665,9 @@ export interface FileRoutesByTo {
   '/prescriber/directions': typeof AuthenticatedPrescriberDirectionsRoute
   '/prescriber/library': typeof AuthenticatedPrescriberLibraryRoute
   '/prescriber/visits': typeof AuthenticatedPrescriberVisitsRoute
-  '/m/$slug/about': typeof MSlugAboutRoute
-  '/m/$slug/account': typeof MSlugAccountRoute
-  '/m/$slug/auth': typeof MSlugAuthRoute
-  '/m/$slug/book-multi': typeof MSlugBookMultiRoute
-  '/m/$slug/reviews': typeof MSlugReviewsRoute
   '/dashboard': typeof AuthenticatedDashboardIndexRoute
   '/hub': typeof AuthenticatedHubIndexRoute
   '/prescriber': typeof AuthenticatedPrescriberIndexRoute
-  '/m/$slug': typeof MSlugIndexRoute
   '/dashboard/consultations/$id': typeof AuthenticatedDashboardConsultationsIdRoute
   '/dashboard/patients/$id': typeof AuthenticatedDashboardPatientsIdRoute
   '/api/public/medical-form/$token': typeof ApiPublicMedicalFormTokenRoute
@@ -674,14 +676,13 @@ export interface FileRoutesByTo {
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
-  '/m/$slug/book/$treatmentId': typeof MSlugBookTreatmentIdRoute
-  '/m/$slug/manage/$token': typeof MSlugManageTokenRoute
   '/dashboard/consultations': typeof AuthenticatedDashboardConsultationsIndexRoute
   '/dashboard/patients': typeof AuthenticatedDashboardPatientsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/$slug': typeof SlugRouteWithChildren
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/auth': typeof AuthRoute
   '/features': typeof FeaturesRoute
@@ -689,6 +690,11 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/terms': typeof TermsRoute
   '/who-its-for': typeof WhoItsForRoute
+  '/$slug/about': typeof SlugAboutRoute
+  '/$slug/account': typeof SlugAccountRoute
+  '/$slug/auth': typeof SlugAuthRoute
+  '/$slug/book-multi': typeof SlugBookMultiRoute
+  '/$slug/reviews': typeof SlugReviewsRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/admin-prescribers': typeof AuthenticatedAdminPrescribersRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRouteWithChildren
@@ -698,7 +704,9 @@ export interface FileRoutesById {
   '/book/$slug': typeof BookSlugRoute
   '/c/$token': typeof CTokenRoute
   '/f/$token': typeof FTokenRoute
-  '/m/$slug': typeof MSlugRouteWithChildren
+  '/$slug/': typeof SlugIndexRoute
+  '/$slug/book/$treatmentId': typeof SlugBookTreatmentIdRoute
+  '/$slug/manage/$token': typeof SlugManageTokenRoute
   '/_authenticated/dashboard/about': typeof AuthenticatedDashboardAboutRoute
   '/_authenticated/dashboard/addons': typeof AuthenticatedDashboardAddonsRoute
   '/_authenticated/dashboard/aftercare': typeof AuthenticatedDashboardAftercareRoute
@@ -738,15 +746,9 @@ export interface FileRoutesById {
   '/_authenticated/prescriber/directions': typeof AuthenticatedPrescriberDirectionsRoute
   '/_authenticated/prescriber/library': typeof AuthenticatedPrescriberLibraryRoute
   '/_authenticated/prescriber/visits': typeof AuthenticatedPrescriberVisitsRoute
-  '/m/$slug/about': typeof MSlugAboutRoute
-  '/m/$slug/account': typeof MSlugAccountRoute
-  '/m/$slug/auth': typeof MSlugAuthRoute
-  '/m/$slug/book-multi': typeof MSlugBookMultiRoute
-  '/m/$slug/reviews': typeof MSlugReviewsRoute
   '/_authenticated/dashboard/': typeof AuthenticatedDashboardIndexRoute
   '/_authenticated/hub/': typeof AuthenticatedHubIndexRoute
   '/_authenticated/prescriber/': typeof AuthenticatedPrescriberIndexRoute
-  '/m/$slug/': typeof MSlugIndexRoute
   '/_authenticated/dashboard/consultations/$id': typeof AuthenticatedDashboardConsultationsIdRoute
   '/_authenticated/dashboard/patients/$id': typeof AuthenticatedDashboardPatientsIdRoute
   '/api/public/medical-form/$token': typeof ApiPublicMedicalFormTokenRoute
@@ -755,8 +757,6 @@ export interface FileRoutesById {
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
-  '/m/$slug/book/$treatmentId': typeof MSlugBookTreatmentIdRoute
-  '/m/$slug/manage/$token': typeof MSlugManageTokenRoute
   '/_authenticated/dashboard/consultations/': typeof AuthenticatedDashboardConsultationsIndexRoute
   '/_authenticated/dashboard/patients/': typeof AuthenticatedDashboardPatientsIndexRoute
 }
@@ -764,12 +764,18 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/$slug'
     | '/auth'
     | '/features'
     | '/prescriber-hub'
     | '/reset-password'
     | '/terms'
     | '/who-its-for'
+    | '/$slug/about'
+    | '/$slug/account'
+    | '/$slug/auth'
+    | '/$slug/book-multi'
+    | '/$slug/reviews'
     | '/admin'
     | '/admin-prescribers'
     | '/dashboard'
@@ -779,7 +785,9 @@ export interface FileRouteTypes {
     | '/book/$slug'
     | '/c/$token'
     | '/f/$token'
-    | '/m/$slug'
+    | '/$slug/'
+    | '/$slug/book/$treatmentId'
+    | '/$slug/manage/$token'
     | '/dashboard/about'
     | '/dashboard/addons'
     | '/dashboard/aftercare'
@@ -819,15 +827,9 @@ export interface FileRouteTypes {
     | '/prescriber/directions'
     | '/prescriber/library'
     | '/prescriber/visits'
-    | '/m/$slug/about'
-    | '/m/$slug/account'
-    | '/m/$slug/auth'
-    | '/m/$slug/book-multi'
-    | '/m/$slug/reviews'
     | '/dashboard/'
     | '/hub/'
     | '/prescriber/'
-    | '/m/$slug/'
     | '/dashboard/consultations/$id'
     | '/dashboard/patients/$id'
     | '/api/public/medical-form/$token'
@@ -836,8 +838,6 @@ export interface FileRouteTypes {
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
-    | '/m/$slug/book/$treatmentId'
-    | '/m/$slug/manage/$token'
     | '/dashboard/consultations/'
     | '/dashboard/patients/'
   fileRoutesByTo: FileRoutesByTo
@@ -849,12 +849,20 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/terms'
     | '/who-its-for'
+    | '/$slug/about'
+    | '/$slug/account'
+    | '/$slug/auth'
+    | '/$slug/book-multi'
+    | '/$slug/reviews'
     | '/admin'
     | '/admin-prescribers'
     | '/onboarding'
     | '/book/$slug'
     | '/c/$token'
     | '/f/$token'
+    | '/$slug'
+    | '/$slug/book/$treatmentId'
+    | '/$slug/manage/$token'
     | '/dashboard/about'
     | '/dashboard/addons'
     | '/dashboard/aftercare'
@@ -893,15 +901,9 @@ export interface FileRouteTypes {
     | '/prescriber/directions'
     | '/prescriber/library'
     | '/prescriber/visits'
-    | '/m/$slug/about'
-    | '/m/$slug/account'
-    | '/m/$slug/auth'
-    | '/m/$slug/book-multi'
-    | '/m/$slug/reviews'
     | '/dashboard'
     | '/hub'
     | '/prescriber'
-    | '/m/$slug'
     | '/dashboard/consultations/$id'
     | '/dashboard/patients/$id'
     | '/api/public/medical-form/$token'
@@ -910,13 +912,12 @@ export interface FileRouteTypes {
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
-    | '/m/$slug/book/$treatmentId'
-    | '/m/$slug/manage/$token'
     | '/dashboard/consultations'
     | '/dashboard/patients'
   id:
     | '__root__'
     | '/'
+    | '/$slug'
     | '/_authenticated'
     | '/auth'
     | '/features'
@@ -924,6 +925,11 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/terms'
     | '/who-its-for'
+    | '/$slug/about'
+    | '/$slug/account'
+    | '/$slug/auth'
+    | '/$slug/book-multi'
+    | '/$slug/reviews'
     | '/_authenticated/admin'
     | '/_authenticated/admin-prescribers'
     | '/_authenticated/dashboard'
@@ -933,7 +939,9 @@ export interface FileRouteTypes {
     | '/book/$slug'
     | '/c/$token'
     | '/f/$token'
-    | '/m/$slug'
+    | '/$slug/'
+    | '/$slug/book/$treatmentId'
+    | '/$slug/manage/$token'
     | '/_authenticated/dashboard/about'
     | '/_authenticated/dashboard/addons'
     | '/_authenticated/dashboard/aftercare'
@@ -973,15 +981,9 @@ export interface FileRouteTypes {
     | '/_authenticated/prescriber/directions'
     | '/_authenticated/prescriber/library'
     | '/_authenticated/prescriber/visits'
-    | '/m/$slug/about'
-    | '/m/$slug/account'
-    | '/m/$slug/auth'
-    | '/m/$slug/book-multi'
-    | '/m/$slug/reviews'
     | '/_authenticated/dashboard/'
     | '/_authenticated/hub/'
     | '/_authenticated/prescriber/'
-    | '/m/$slug/'
     | '/_authenticated/dashboard/consultations/$id'
     | '/_authenticated/dashboard/patients/$id'
     | '/api/public/medical-form/$token'
@@ -990,14 +992,13 @@ export interface FileRouteTypes {
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
-    | '/m/$slug/book/$treatmentId'
-    | '/m/$slug/manage/$token'
     | '/_authenticated/dashboard/consultations/'
     | '/_authenticated/dashboard/patients/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  SlugRoute: typeof SlugRouteWithChildren
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   AuthRoute: typeof AuthRoute
   FeaturesRoute: typeof FeaturesRoute
@@ -1008,7 +1009,6 @@ export interface RootRouteChildren {
   BookSlugRoute: typeof BookSlugRoute
   CTokenRoute: typeof CTokenRoute
   FTokenRoute: typeof FTokenRoute
-  MSlugRoute: typeof MSlugRouteWithChildren
   ApiPublicMedicalFormTokenRoute: typeof ApiPublicMedicalFormTokenRoute
   ApiPublicStripeOauthCallbackRoute: typeof ApiPublicStripeOauthCallbackRoute
   ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
@@ -1068,6 +1068,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/$slug': {
+      id: '/$slug'
+      path: '/$slug'
+      fullPath: '/$slug'
+      preLoaderRoute: typeof SlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -1075,12 +1082,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/m/$slug': {
-      id: '/m/$slug'
-      path: '/m/$slug'
-      fullPath: '/m/$slug'
-      preLoaderRoute: typeof MSlugRouteImport
-      parentRoute: typeof rootRouteImport
+    '/$slug/': {
+      id: '/$slug/'
+      path: '/'
+      fullPath: '/$slug/'
+      preLoaderRoute: typeof SlugIndexRouteImport
+      parentRoute: typeof SlugRoute
     }
     '/f/$token': {
       id: '/f/$token'
@@ -1145,12 +1152,40 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/m/$slug/': {
-      id: '/m/$slug/'
-      path: '/'
-      fullPath: '/m/$slug/'
-      preLoaderRoute: typeof MSlugIndexRouteImport
-      parentRoute: typeof MSlugRoute
+    '/$slug/reviews': {
+      id: '/$slug/reviews'
+      path: '/reviews'
+      fullPath: '/$slug/reviews'
+      preLoaderRoute: typeof SlugReviewsRouteImport
+      parentRoute: typeof SlugRoute
+    }
+    '/$slug/book-multi': {
+      id: '/$slug/book-multi'
+      path: '/book-multi'
+      fullPath: '/$slug/book-multi'
+      preLoaderRoute: typeof SlugBookMultiRouteImport
+      parentRoute: typeof SlugRoute
+    }
+    '/$slug/auth': {
+      id: '/$slug/auth'
+      path: '/auth'
+      fullPath: '/$slug/auth'
+      preLoaderRoute: typeof SlugAuthRouteImport
+      parentRoute: typeof SlugRoute
+    }
+    '/$slug/account': {
+      id: '/$slug/account'
+      path: '/account'
+      fullPath: '/$slug/account'
+      preLoaderRoute: typeof SlugAccountRouteImport
+      parentRoute: typeof SlugRoute
+    }
+    '/$slug/about': {
+      id: '/$slug/about'
+      path: '/about'
+      fullPath: '/$slug/about'
+      preLoaderRoute: typeof SlugAboutRouteImport
+      parentRoute: typeof SlugRoute
     }
     '/_authenticated/prescriber/': {
       id: '/_authenticated/prescriber/'
@@ -1172,41 +1207,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/dashboard/'
       preLoaderRoute: typeof AuthenticatedDashboardIndexRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
-    }
-    '/m/$slug/reviews': {
-      id: '/m/$slug/reviews'
-      path: '/reviews'
-      fullPath: '/m/$slug/reviews'
-      preLoaderRoute: typeof MSlugReviewsRouteImport
-      parentRoute: typeof MSlugRoute
-    }
-    '/m/$slug/book-multi': {
-      id: '/m/$slug/book-multi'
-      path: '/book-multi'
-      fullPath: '/m/$slug/book-multi'
-      preLoaderRoute: typeof MSlugBookMultiRouteImport
-      parentRoute: typeof MSlugRoute
-    }
-    '/m/$slug/auth': {
-      id: '/m/$slug/auth'
-      path: '/auth'
-      fullPath: '/m/$slug/auth'
-      preLoaderRoute: typeof MSlugAuthRouteImport
-      parentRoute: typeof MSlugRoute
-    }
-    '/m/$slug/account': {
-      id: '/m/$slug/account'
-      path: '/account'
-      fullPath: '/m/$slug/account'
-      preLoaderRoute: typeof MSlugAccountRouteImport
-      parentRoute: typeof MSlugRoute
-    }
-    '/m/$slug/about': {
-      id: '/m/$slug/about'
-      path: '/about'
-      fullPath: '/m/$slug/about'
-      preLoaderRoute: typeof MSlugAboutRouteImport
-      parentRoute: typeof MSlugRoute
     }
     '/_authenticated/prescriber/visits': {
       id: '/_authenticated/prescriber/visits'
@@ -1481,6 +1481,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardAboutRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
+    '/$slug/manage/$token': {
+      id: '/$slug/manage/$token'
+      path: '/manage/$token'
+      fullPath: '/$slug/manage/$token'
+      preLoaderRoute: typeof SlugManageTokenRouteImport
+      parentRoute: typeof SlugRoute
+    }
+    '/$slug/book/$treatmentId': {
+      id: '/$slug/book/$treatmentId'
+      path: '/book/$treatmentId'
+      fullPath: '/$slug/book/$treatmentId'
+      preLoaderRoute: typeof SlugBookTreatmentIdRouteImport
+      parentRoute: typeof SlugRoute
+    }
     '/_authenticated/dashboard/patients/': {
       id: '/_authenticated/dashboard/patients/'
       path: '/'
@@ -1494,20 +1508,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/dashboard/consultations/'
       preLoaderRoute: typeof AuthenticatedDashboardConsultationsIndexRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
-    }
-    '/m/$slug/manage/$token': {
-      id: '/m/$slug/manage/$token'
-      path: '/manage/$token'
-      fullPath: '/m/$slug/manage/$token'
-      preLoaderRoute: typeof MSlugManageTokenRouteImport
-      parentRoute: typeof MSlugRoute
-    }
-    '/m/$slug/book/$treatmentId': {
-      id: '/m/$slug/book/$treatmentId'
-      path: '/book/$treatmentId'
-      fullPath: '/m/$slug/book/$treatmentId'
-      preLoaderRoute: typeof MSlugBookTreatmentIdRouteImport
-      parentRoute: typeof MSlugRoute
     }
     '/lovable/email/queue/process': {
       id: '/lovable/email/queue/process'
@@ -1567,6 +1567,30 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface SlugRouteChildren {
+  SlugAboutRoute: typeof SlugAboutRoute
+  SlugAccountRoute: typeof SlugAccountRoute
+  SlugAuthRoute: typeof SlugAuthRoute
+  SlugBookMultiRoute: typeof SlugBookMultiRoute
+  SlugReviewsRoute: typeof SlugReviewsRoute
+  SlugIndexRoute: typeof SlugIndexRoute
+  SlugBookTreatmentIdRoute: typeof SlugBookTreatmentIdRoute
+  SlugManageTokenRoute: typeof SlugManageTokenRoute
+}
+
+const SlugRouteChildren: SlugRouteChildren = {
+  SlugAboutRoute: SlugAboutRoute,
+  SlugAccountRoute: SlugAccountRoute,
+  SlugAuthRoute: SlugAuthRoute,
+  SlugBookMultiRoute: SlugBookMultiRoute,
+  SlugReviewsRoute: SlugReviewsRoute,
+  SlugIndexRoute: SlugIndexRoute,
+  SlugBookTreatmentIdRoute: SlugBookTreatmentIdRoute,
+  SlugManageTokenRoute: SlugManageTokenRoute,
+}
+
+const SlugRouteWithChildren = SlugRoute._addFileChildren(SlugRouteChildren)
 
 interface AuthenticatedDashboardPatientsRouteChildren {
   AuthenticatedDashboardPatientsIdRoute: typeof AuthenticatedDashboardPatientsIdRoute
@@ -1745,32 +1769,9 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
   AuthenticatedRouteChildren,
 )
 
-interface MSlugRouteChildren {
-  MSlugAboutRoute: typeof MSlugAboutRoute
-  MSlugAccountRoute: typeof MSlugAccountRoute
-  MSlugAuthRoute: typeof MSlugAuthRoute
-  MSlugBookMultiRoute: typeof MSlugBookMultiRoute
-  MSlugReviewsRoute: typeof MSlugReviewsRoute
-  MSlugIndexRoute: typeof MSlugIndexRoute
-  MSlugBookTreatmentIdRoute: typeof MSlugBookTreatmentIdRoute
-  MSlugManageTokenRoute: typeof MSlugManageTokenRoute
-}
-
-const MSlugRouteChildren: MSlugRouteChildren = {
-  MSlugAboutRoute: MSlugAboutRoute,
-  MSlugAccountRoute: MSlugAccountRoute,
-  MSlugAuthRoute: MSlugAuthRoute,
-  MSlugBookMultiRoute: MSlugBookMultiRoute,
-  MSlugReviewsRoute: MSlugReviewsRoute,
-  MSlugIndexRoute: MSlugIndexRoute,
-  MSlugBookTreatmentIdRoute: MSlugBookTreatmentIdRoute,
-  MSlugManageTokenRoute: MSlugManageTokenRoute,
-}
-
-const MSlugRouteWithChildren = MSlugRoute._addFileChildren(MSlugRouteChildren)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  SlugRoute: SlugRouteWithChildren,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   AuthRoute: AuthRoute,
   FeaturesRoute: FeaturesRoute,
@@ -1781,7 +1782,6 @@ const rootRouteChildren: RootRouteChildren = {
   BookSlugRoute: BookSlugRoute,
   CTokenRoute: CTokenRoute,
   FTokenRoute: FTokenRoute,
-  MSlugRoute: MSlugRouteWithChildren,
   ApiPublicMedicalFormTokenRoute: ApiPublicMedicalFormTokenRoute,
   ApiPublicStripeOauthCallbackRoute: ApiPublicStripeOauthCallbackRoute,
   ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,
@@ -1792,3 +1792,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

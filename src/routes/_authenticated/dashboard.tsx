@@ -190,7 +190,7 @@ function DashboardLayout() {
             )}
           </Link>
           <Button variant="outline" size="sm" asChild>
-            <a href={`/m/${profile.slug}`} target="_blank" rel="noreferrer">Preview</a>
+            <a href={`/${profile.slug}`} target="_blank" rel="noreferrer">Preview</a>
           </Button>
         </header>
 
@@ -222,7 +222,7 @@ function DashboardLayout() {
               </Button>
             </Link>
             <Button variant="outline" size="sm" className="rounded-full px-5" asChild>
-              <a href={`/m/${profile.slug}`} target="_blank" rel="noreferrer">
+              <a href={`/${profile.slug}`} target="_blank" rel="noreferrer">
                 Preview booking link
               </a>
             </Button>
