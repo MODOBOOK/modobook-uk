@@ -509,48 +509,65 @@ function ApptCard({
   const treatmentName = a.treatments?.name ?? a.treatment_name_snapshot ?? "Treatment";
   const hoursUntil = hoursBetweenNowAnd(a.scheduled_date, a.start_time);
   const rescheduleTooLate = allowReschedule && hoursUntil < rescheduleCutoffHours;
+  const [open, setOpen] = useState(false);
   return (
     <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="flex items-center justify-between gap-2 text-base">
-          <span style={{ color: brand }}>{treatmentName}</span>
-          <Badge variant={a.status === "confirmed" ? "default" : a.status === "cancelled" ? "destructive" : "secondary"}>{a.status ?? "pending"}</Badge>
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3 text-sm">
-        <div className="flex flex-wrap gap-x-4 gap-y-1 text-muted-foreground">
-          <span className="inline-flex items-center gap-1"><CalendarIcon className="h-3.5 w-3.5" />{a.scheduled_date}</span>
-          <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{a.start_time?.slice(0, 5)}–{a.end_time?.slice(0, 5)}</span>
-          {a.locations?.name && <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{a.locations.name}</span>}
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="flex w-full items-center justify-between gap-2 px-6 py-4 text-left hover:bg-muted/30 rounded-t-lg"
+        aria-expanded={open}
+      >
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 text-base font-semibold" style={{ color: brand }}>
+            <span className="truncate">{treatmentName}</span>
+          </div>
+          <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
+            <span className="inline-flex items-center gap-1"><CalendarIcon className="h-3.5 w-3.5" />{a.scheduled_date}</span>
+            <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{a.start_time?.slice(0, 5)}–{a.end_time?.slice(0, 5)}</span>
+          </div>
         </div>
-        {(allowCancel || allowReschedule) && a.status !== "cancelled" && a.status !== "completed" && (
-          <div className="flex flex-wrap items-center gap-2 pt-1">
-            {allowReschedule && a.treatment_id && remaining > 0 && !rescheduleTooLate && (
-              <Link to="/m/$slug/book/$treatmentId" params={{ slug, treatmentId: a.treatment_id }}>
-                <Button size="sm" variant="outline">Reschedule ({remaining} left)</Button>
-              </Link>
-            )}
-            {allowReschedule && rescheduleTooLate && (
-              <span className="text-[11px] text-muted-foreground">Reschedule needs {rescheduleCutoffHours}h notice — please contact the clinic.</span>
-            )}
-            {allowReschedule && !rescheduleTooLate && remaining === 0 && (
-              <span className="text-[11px] text-muted-foreground">Reschedule limit reached — please contact the clinic.</span>
-            )}
-            {allowCancel && onCancel && (
-              <Button size="sm" variant="ghost" onClick={onCancel}>Cancel appointment</Button>
-            )}
-            {allowCancel && cancelCutoffHours > 0 && (
-              <span className="text-[11px] text-muted-foreground">Free cancel up to {cancelCutoffHours}h before</span>
-            )}
-          </div>
-        )}
-        {aftercare.length > 0 && (
-          <div className="space-y-2 pt-2">
-            <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Aftercare</div>
-            {aftercare.map((ac) => <InlineAftercare key={ac.id} ac={ac} brand={brand} />)}
-          </div>
-        )}
-      </CardContent>
+        <div className="flex items-center gap-2 shrink-0">
+          <Badge variant={a.status === "confirmed" ? "default" : a.status === "cancelled" ? "destructive" : "secondary"}>{a.status ?? "pending"}</Badge>
+          <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
+        </div>
+      </button>
+      {open && (
+        <CardContent className="space-y-3 border-t pt-4 text-sm">
+          {a.locations?.name && (
+            <div className="flex flex-wrap gap-x-4 gap-y-1 text-muted-foreground">
+              <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{a.locations.name}</span>
+            </div>
+          )}
+          {(allowCancel || allowReschedule) && a.status !== "cancelled" && a.status !== "completed" && (
+            <div className="flex flex-wrap items-center gap-2 pt-1">
+              {allowReschedule && a.treatment_id && remaining > 0 && !rescheduleTooLate && (
+                <Link to="/m/$slug/book/$treatmentId" params={{ slug, treatmentId: a.treatment_id }}>
+                  <Button size="sm" variant="outline">Reschedule ({remaining} left)</Button>
+                </Link>
+              )}
+              {allowReschedule && rescheduleTooLate && (
+                <span className="text-[11px] text-muted-foreground">Reschedule needs {rescheduleCutoffHours}h notice — please contact the clinic.</span>
+              )}
+              {allowReschedule && !rescheduleTooLate && remaining === 0 && (
+                <span className="text-[11px] text-muted-foreground">Reschedule limit reached — please contact the clinic.</span>
+              )}
+              {allowCancel && onCancel && (
+                <Button size="sm" variant="ghost" onClick={onCancel}>Cancel appointment</Button>
+              )}
+              {allowCancel && cancelCutoffHours > 0 && (
+                <span className="text-[11px] text-muted-foreground">Free cancel up to {cancelCutoffHours}h before</span>
+              )}
+            </div>
+          )}
+          {aftercare.length > 0 && (
+            <div className="space-y-2 pt-2">
+              <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Aftercare</div>
+              {aftercare.map((ac) => <InlineAftercare key={ac.id} ac={ac} brand={brand} />)}
+            </div>
+          )}
+        </CardContent>
+      )}
     </Card>
   );
 }
