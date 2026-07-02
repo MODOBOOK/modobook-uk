@@ -458,22 +458,31 @@ function Account() {
       />
 
 
-      {/* Medical forms */}
+      {/* Medical forms — only those still needing completion. Every new
+          appointment triggers a fresh row, so a prior submission for another
+          appointment should not be shown here as "Complete" (that only makes
+          patients think the current appointment's form is already done). */}
       <Section title="Medical forms" icon={ClipboardCheck} brand={brand}>
-        {forms.length === 0 ? <Empty msg="No medical forms sent yet." /> : (
-          <div className="space-y-2">
-            {forms.map((f) => (
-              <RowItem
-                key={f.id}
-                title={f.medical_form_templates?.name ?? "Medical form"}
-                meta={f.status === "submitted" ? `Completed ${new Date(f.submitted_at).toLocaleDateString()}` : "Awaiting your completion"}
-                badge={f.status === "submitted" ? "Complete" : "Pending"}
-                badgeOk={f.status === "submitted"}
-                href={`/f/${f.token}?returnTo=${encodeURIComponent(`/m/${slug}/account`)}`}
-              />
-            ))}
-          </div>
-        )}
+        {(() => {
+          const pending = forms.filter((f) => f.status !== "submitted");
+          if (pending.length === 0) {
+            return <Empty msg="No medical forms need your attention right now." />;
+          }
+          return (
+            <div className="space-y-2">
+              {pending.map((f) => (
+                <RowItem
+                  key={f.id}
+                  title={f.medical_form_templates?.name ?? "Medical form"}
+                  meta="Awaiting your completion"
+                  badge="Pending"
+                  badgeOk={false}
+                  href={`/f/${f.token}?returnTo=${encodeURIComponent(`/m/${slug}/account`)}`}
+                />
+              ))}
+            </div>
+          );
+        })()}
       </Section>
 
       {/* Consent forms */}
