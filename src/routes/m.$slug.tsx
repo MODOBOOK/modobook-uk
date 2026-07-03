@@ -48,9 +48,20 @@ export const Route = createFileRoute("/m/$slug")({
           : []),
       ];
     })(),
-    links: loaderData?.theme?.favicon_url
-      ? [{ rel: "icon", href: loaderData.theme.favicon_url }]
-      : undefined,
+    links: (() => {
+      const icon = loaderData?.theme?.favicon_url || loaderData?.theme?.logo_url || loaderData?.profile?.avatar_url;
+      if (!icon) return undefined;
+      // Override every icon rel the root route sets so the practitioner's mark
+      // wins on browser tabs and installed PWA/home-screen icons.
+      return [
+        { rel: "icon", href: icon },
+        { rel: "icon", type: "image/png", href: icon },
+        { rel: "icon", type: "image/png", sizes: "192x192", href: icon },
+        { rel: "icon", type: "image/png", sizes: "512x512", href: icon },
+        { rel: "shortcut icon", href: icon },
+        { rel: "apple-touch-icon", href: icon },
+      ];
+    })(),
   }),
   component: ModoLayout,
 });
