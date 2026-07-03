@@ -281,6 +281,13 @@ function FillFormPage() {
           </div>
         </div>
 
+        {prefilled && stepIdx === 0 && (
+          <div className="rounded-md border border-sky-300 bg-sky-50 p-3 text-xs text-sky-900">
+            We've pre-filled some of your contact details from your record. Please review and update anything that's changed. Medical questions must be answered fresh each visit.
+          </div>
+        )}
+
+
         <Card className="space-y-4 p-5">
           <h2 className="text-lg font-bold">{step.title}</h2>
           {step.elements.filter((el) => isVisible(el, responses)).map((el) => <RenderElement key={el.id} el={el} value={responses[el.id]} onChange={(v) => setField(el.id, v)} />)}
