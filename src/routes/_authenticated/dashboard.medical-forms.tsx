@@ -512,8 +512,9 @@ function FormEditor({ formId, onClose, cats }: { formId: string; onClose: () => 
 
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-bold">Form Template</h2>
-        <Button variant="link" size="sm" onClick={() => toast.info("Preview coming soon")}>Preview</Button>
+        <Button variant="link" size="sm" onClick={() => setPreviewOpen(true)}>Preview</Button>
       </div>
+      <PreviewDialog open={previewOpen} onOpenChange={setPreviewOpen} schema={schema} name={name} />
 
       <div className="space-y-4">
         {schema.steps.map((step, idx) => (
