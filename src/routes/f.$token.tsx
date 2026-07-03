@@ -95,6 +95,8 @@ function FillFormPage() {
   const [done, setDone] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
+  const [prefilled, setPrefilled] = useState(false);
+
   useEffect(() => {
     (async () => {
       try {
@@ -103,7 +105,15 @@ function FillFormPage() {
         const r = payload.form ? { ...payload.form, template_schema: normalizeMedicalSchema(payload.form.template_schema) } : null;
         setData(r);
         if (r?.status === "submitted") setDone(true);
-        if (r?.response) setResponses(r.response);
+        if (r?.response && Object.keys(r.response).length > 0) {
+          setResponses(r.response);
+        } else if (r?.client_contact && r.status !== "submitted") {
+          const pf = buildPrefill(r.template_schema, r.client_contact);
+          if (Object.keys(pf).length > 0) {
+            setResponses(pf);
+            setPrefilled(true);
+          }
+        }
         if (!r || payload.fallbackSlug) setFallbackSlug(payload.fallbackSlug ?? r?.slug ?? null);
       } catch {
         setData(null);
