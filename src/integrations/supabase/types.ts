@@ -4804,6 +4804,7 @@ export type Database = {
         Args: { p_token: string }
         Returns: {
           brand_color: string
+          client_contact: Json
           clinic_name: string
           form_id: string
           patient_name: string
