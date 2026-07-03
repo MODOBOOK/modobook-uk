@@ -4620,6 +4620,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      _profile_id_for_user: { Args: { p_user_id: string }; Returns: string }
+      _user_id_for_profile: { Args: { p_profile_id: string }; Returns: string }
       add_walk_in_consent_forms: {
         Args: { p_referral_id: string; p_template_ids: string[] }
         Returns: number
