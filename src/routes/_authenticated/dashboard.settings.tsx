@@ -8,6 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { SaveReminder } from "@/components/SaveReminder";
+import { Mail, ExternalLink } from "lucide-react";
+
 
 export const Route = createFileRoute("/_authenticated/dashboard/settings")({
   ssr: false,
