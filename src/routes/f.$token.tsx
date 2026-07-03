@@ -423,8 +423,10 @@ function RenderElement({ el, value, onChange }: { el: FormElement; value: any; o
     return (
       <div className="space-y-1.5">
         <Label className="text-sm">{el.label}{reqMark}</Label>
-        <Input placeholder="Type your full name to sign" value={value ?? ""} onChange={(e) => onChange(e.target.value)} />
-        <p className="text-xs text-muted-foreground">By typing your name you confirm your electronic signature.</p>
+        <SignaturePad
+          value={typeof value === "string" && value.startsWith("data:image") ? value : null}
+          onChange={(v) => onChange(v ?? "")}
+        />
         {help}
       </div>
     );

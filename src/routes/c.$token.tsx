@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { ConsentSectionsView, type ConsentSection } from "@/components/ConsentSections";
+import { SignaturePad } from "@/components/SignaturePad";
 
 function publicClient() {
   return createClient<Database>(
@@ -56,18 +57,25 @@ function ConsentPage() {
   const submit = useServerFn(submitConsent);
   const { token } = Route.useParams();
   const [name, setName] = useState(consent.patient_name ?? "");
+  const [signatureData, setSignatureData] = useState<string | null>(null);
   const [agreed, setAgreed] = useState(false);
   const [done, setDone] = useState(consent.status === "signed");
   const [submitting, setSubmitting] = useState(false);
 
   async function handleSubmit() {
-    if (!name || !agreed) {
-      toast.error("Please type your full name and tick to agree.");
+    if (consent.requires_signature && (!name.trim() || !signatureData || !agreed)) {
+      toast.error("Please type your name, draw your signature, and tick to agree.");
       return;
     }
     setSubmitting(true);
     try {
-      await submit({ data: { token, signatureName: name, signatureData: `typed:${name}` } });
+      await submit({
+        data: {
+          token,
+          signatureName: name,
+          signatureData: signatureData ?? `typed:${name}`,
+        },
+      });
       setDone(true);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could not submit");
@@ -113,9 +121,13 @@ function ConsentPage() {
 
           {consent.requires_signature && (
             <>
-              <div>
-                <Label htmlFor="sig-name">Type your full name as signature</Label>
-                <Input id="sig-name" value={name} onChange={(e) => setName(e.target.value)} />
+              <div className="space-y-1.5">
+                <Label htmlFor="sig-name">Full name</Label>
+                <Input id="sig-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Jane Smith" />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Signature</Label>
+                <SignaturePad value={signatureData} onChange={setSignatureData} />
               </div>
               <label className="flex items-start gap-2 text-sm">
                 <input
