@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CheckCircle2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { SignaturePad } from "@/components/SignaturePad";
 
 type FormElement = {
   id: string;
