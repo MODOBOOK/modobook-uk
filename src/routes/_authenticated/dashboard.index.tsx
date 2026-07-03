@@ -230,6 +230,29 @@ function DashboardIndex() {
         <QuickAction to="/dashboard/pre-treatment" icon={Info} label="Pre-treatment" />
       </div>
 
+      {/* Platform email setup */}
+      <a
+        href="https://lovable.dev/projects/ad2db8dc-b519-4cbc-b7c4-dc1d5eed30c6/cloud/emails"
+        target="_blank"
+        rel="noreferrer"
+        className="block"
+      >
+        <Card className="border-border/60 transition hover:border-accent hover:shadow-luxe">
+          <CardContent className="flex items-center gap-4 p-5">
+            <div className="grid size-11 shrink-0 place-items-center rounded-full bg-primary/15 text-primary">
+              <Mail className="size-5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] font-medium uppercase tracking-[0.25em] text-muted-foreground">Email setup</p>
+              <p className="mt-1 font-serif text-lg">Platform email</p>
+              <p className="text-sm text-muted-foreground">Open Lovable Email Settings to verify notify.modobook.uk</p>
+            </div>
+            <ExternalLink className="size-5 text-muted-foreground" />
+          </CardContent>
+        </Card>
+      </a>
+
+
       {/* Prescriber Hub — central, always visible */}
       <Link to="/hub" className="block">
         <Card className="border-2 border-primary/50 bg-gradient-to-br from-primary/10 via-background to-background transition hover:border-primary hover:shadow-luxe">
