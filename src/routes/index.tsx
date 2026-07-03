@@ -33,7 +33,10 @@ import {
   Syringe,
   HandshakeIcon,
   ArrowRight,
+  Mail,
+  ExternalLink,
 } from "lucide-react";
+
 // Icon-led visuals — no AI imagery used in hero blocks for now.
 
 export const Route = createFileRoute("/")({
