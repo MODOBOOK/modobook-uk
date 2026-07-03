@@ -844,3 +844,208 @@ function ElementPicker({ open, onClose, onPick }: { open: boolean; onClose: () =
   );
 }
 
+function PreviewDialog({
+  open, onOpenChange, schema, name,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  schema: FormSchema;
+  name: string;
+}) {
+  const [stepIdx, setStepIdx] = useState(0);
+  const [responses, setResponses] = useState<Record<string, any>>({});
+  useEffect(() => { if (open) { setStepIdx(0); setResponses({}); } }, [open]);
+
+  const steps = schema.steps ?? [];
+  const step = steps[stepIdx];
+  const isLast = stepIdx === steps.length - 1;
+
+  function isVisible(el: FormElement): boolean {
+    if (!el.logic || !el.logic.showIfId) return true;
+    const v = responses[el.logic.showIfId];
+    const target = el.logic.equals;
+    if (!target) return true;
+    if (Array.isArray(v)) return v.includes(target);
+    if (typeof v === "boolean") return (target === "Checked") === v;
+    return String(v ?? "") === target;
+  }
+
+  function setField(id: string, v: any) {
+    setResponses((s) => ({ ...s, [id]: v }));
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>Preview — {name || "Untitled form"}</DialogTitle>
+        </DialogHeader>
+
+        {!step ? (
+          <p className="text-sm text-muted-foreground">No steps to preview.</p>
+        ) : (
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              Step {stepIdx + 1} of {steps.length}
+              <div className="ml-auto flex gap-1">
+                {steps.map((_, i) => (
+                  <span key={i} className={`h-1.5 w-6 rounded ${i <= stepIdx ? "bg-primary" : "bg-muted"}`} />
+                ))}
+              </div>
+            </div>
+
+            <Card className="space-y-4 p-5">
+              <h2 className="text-lg font-bold">{step.title}</h2>
+              {step.elements.filter(isVisible).map((el) => (
+                <PreviewElement key={el.id} el={el} value={responses[el.id]} onChange={(v) => setField(el.id, v)} />
+              ))}
+            </Card>
+
+            <div className="flex gap-2">
+              {stepIdx > 0 && (
+                <Button variant="outline" className="flex-1" onClick={() => setStepIdx((i) => i - 1)}>Back</Button>
+              )}
+              <Button
+                className="flex-1"
+                onClick={() => {
+                  if (isLast) { toast.success("End of preview"); onOpenChange(false); }
+                  else setStepIdx((i) => i + 1);
+                }}
+              >
+                {isLast ? "Finish" : "Next"}
+              </Button>
+            </div>
+            <p className="text-center text-[11px] text-muted-foreground">Preview only — nothing is submitted.</p>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function PreviewElement({ el, value, onChange }: { el: FormElement; value: any; onChange: (v: any) => void }) {
+  const reqMark = el.required ? <span className="text-destructive"> *</span> : null;
+  const help = el.helpText ? <p className="text-xs text-muted-foreground">{el.helpText}</p> : null;
+
+  if (el.type === "heading") {
+    const T = (el.level === 1 ? "h1" : el.level === 3 ? "h3" : "h2") as any;
+    const cls = el.level === 1 ? "text-2xl font-bold" : el.level === 3 ? "text-base font-bold" : "text-lg font-bold";
+    return <T className={cls}>{el.text}</T>;
+  }
+  if (el.type === "paragraph") return <p className="text-sm text-muted-foreground">{el.text}</p>;
+  if (el.type === "info") {
+    const tones: Record<string, string> = {
+      info: "border-sky-300 bg-sky-50 text-sky-900",
+      warning: "border-amber-300 bg-amber-50 text-amber-900",
+      success: "border-emerald-300 bg-emerald-50 text-emerald-900",
+    };
+    return <div className={`rounded-md border p-3 text-sm ${tones[el.variant ?? "info"]}`}>{el.text}</div>;
+  }
+  if (el.type === "separator") return <hr />;
+  if (el.type === "space") return <div className="h-3" />;
+  if (el.type === "field") {
+    const t = el.fieldType ?? "text";
+    return (
+      <div className="space-y-1.5">
+        <Label className="text-sm">{el.label}{reqMark}</Label>
+        {t === "textarea" ? (
+          <Textarea rows={3} placeholder={el.placeholder} value={value ?? ""} onChange={(e) => onChange(e.target.value)} />
+        ) : (
+          <Input type={t} placeholder={el.placeholder} value={value ?? ""} onChange={(e) => onChange(e.target.value)} />
+        )}
+        {help}
+      </div>
+    );
+  }
+  if (el.type === "select") {
+    return (
+      <div className="space-y-1.5">
+        <Label className="text-sm">{el.label}{reqMark}</Label>
+        <Select value={value ?? ""} onValueChange={onChange}>
+          <SelectTrigger><SelectValue placeholder="Select…" /></SelectTrigger>
+          <SelectContent>
+            {(el.options ?? []).map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        {help}
+      </div>
+    );
+  }
+  if (el.type === "radio") {
+    return (
+      <div className="space-y-1.5">
+        <Label className="text-sm">{el.label}{reqMark}</Label>
+        <div className="space-y-1.5">
+          {(el.options ?? []).map((o) => (
+            <label key={o} className={`flex cursor-pointer items-center gap-2 rounded-md border p-2.5 text-sm ${value === o ? "border-primary bg-primary/5" : ""}`}>
+              <input type="radio" name={el.id} checked={value === o} onChange={() => onChange(o)} />
+              <span>{o}</span>
+            </label>
+          ))}
+        </div>
+        {help}
+      </div>
+    );
+  }
+  if (el.type === "checkbox_group") {
+    const arr: string[] = Array.isArray(value) ? value : [];
+    return (
+      <div className="space-y-1.5">
+        <Label className="text-sm">{el.label}{reqMark}</Label>
+        <div className="space-y-1.5">
+          {(el.options ?? []).map((o) => {
+            const checked = arr.includes(o);
+            return (
+              <label key={o} className={`flex cursor-pointer items-start gap-2 rounded-md border p-2.5 text-sm ${checked ? "border-primary bg-primary/5" : ""}`}>
+                <Checkbox className="mt-0.5" checked={checked} onCheckedChange={(c) => onChange(c ? [...arr, o] : arr.filter((x) => x !== o))} />
+                <span>{o}</span>
+              </label>
+            );
+          })}
+        </div>
+        {help}
+      </div>
+    );
+  }
+  if (el.type === "checkbox") {
+    return (
+      <div className="space-y-1">
+        <label className="flex items-start gap-2 text-sm">
+          <Checkbox className="mt-0.5" checked={!!value} onCheckedChange={(c) => onChange(!!c)} />
+          <span>{el.label}{reqMark}</span>
+        </label>
+        {help}
+      </div>
+    );
+  }
+  if (el.type === "rating") {
+    const max = el.max ?? 5;
+    const v = Number(value) || 0;
+    return (
+      <div className="space-y-1.5">
+        <Label className="text-sm">{el.label}{reqMark}</Label>
+        <div className="flex gap-1">
+          {Array.from({ length: max }).map((_, i) => (
+            <button key={i} type="button" onClick={() => onChange(i + 1)} className="text-2xl leading-none">
+              <span className={i < v ? "text-amber-500" : "text-muted-foreground/40"}>★</span>
+            </button>
+          ))}
+        </div>
+        {help}
+      </div>
+    );
+  }
+  if (el.type === "signature") {
+    return (
+      <div className="space-y-1.5">
+        <Label className="text-sm">{el.label}{reqMark}</Label>
+        <Input placeholder="Type your full name to sign" value={value ?? ""} onChange={(e) => onChange(e.target.value)} />
+        <p className="text-xs text-muted-foreground">By typing your name you confirm your electronic signature.</p>
+        {help}
+      </div>
+    );
+  }
+  return null;
+}
+
+
