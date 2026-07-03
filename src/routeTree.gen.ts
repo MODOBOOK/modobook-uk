@@ -87,6 +87,7 @@ import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/em
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api/public/stripe/webhook'
 import { Route as ApiPublicStripeOauthCallbackRouteImport } from './routes/api/public/stripe/oauth-callback'
+import { Route as ApiPublicPushDispatchRouteImport } from './routes/api/public/push/dispatch'
 import { Route as ApiPublicMedicalFormTokenRouteImport } from './routes/api.public.medical-form.$token'
 import { Route as AuthenticatedDashboardPatientsIdRouteImport } from './routes/_authenticated/dashboard.patients.$id'
 import { Route as AuthenticatedDashboardConsultationsIdRouteImport } from './routes/_authenticated/dashboard.consultations.$id'
@@ -525,6 +526,11 @@ const ApiPublicStripeOauthCallbackRoute =
     path: '/api/public/stripe/oauth-callback',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicPushDispatchRoute = ApiPublicPushDispatchRouteImport.update({
+  id: '/api/public/push/dispatch',
+  path: '/api/public/push/dispatch',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicMedicalFormTokenRoute =
   ApiPublicMedicalFormTokenRouteImport.update({
     id: '/api/public/medical-form/$token',
@@ -616,6 +622,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/consultations/$id': typeof AuthenticatedDashboardConsultationsIdRoute
   '/dashboard/patients/$id': typeof AuthenticatedDashboardPatientsIdRoute
   '/api/public/medical-form/$token': typeof ApiPublicMedicalFormTokenRoute
+  '/api/public/push/dispatch': typeof ApiPublicPushDispatchRoute
   '/api/public/stripe/oauth-callback': typeof ApiPublicStripeOauthCallbackRoute
   '/api/public/stripe/webhook': typeof ApiPublicStripeWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -693,6 +700,7 @@ export interface FileRoutesByTo {
   '/dashboard/consultations/$id': typeof AuthenticatedDashboardConsultationsIdRoute
   '/dashboard/patients/$id': typeof AuthenticatedDashboardPatientsIdRoute
   '/api/public/medical-form/$token': typeof ApiPublicMedicalFormTokenRoute
+  '/api/public/push/dispatch': typeof ApiPublicPushDispatchRoute
   '/api/public/stripe/oauth-callback': typeof ApiPublicStripeOauthCallbackRoute
   '/api/public/stripe/webhook': typeof ApiPublicStripeWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -777,6 +785,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/consultations/$id': typeof AuthenticatedDashboardConsultationsIdRoute
   '/_authenticated/dashboard/patients/$id': typeof AuthenticatedDashboardPatientsIdRoute
   '/api/public/medical-form/$token': typeof ApiPublicMedicalFormTokenRoute
+  '/api/public/push/dispatch': typeof ApiPublicPushDispatchRoute
   '/api/public/stripe/oauth-callback': typeof ApiPublicStripeOauthCallbackRoute
   '/api/public/stripe/webhook': typeof ApiPublicStripeWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -861,6 +870,7 @@ export interface FileRouteTypes {
     | '/dashboard/consultations/$id'
     | '/dashboard/patients/$id'
     | '/api/public/medical-form/$token'
+    | '/api/public/push/dispatch'
     | '/api/public/stripe/oauth-callback'
     | '/api/public/stripe/webhook'
     | '/lovable/email/auth/preview'
@@ -938,6 +948,7 @@ export interface FileRouteTypes {
     | '/dashboard/consultations/$id'
     | '/dashboard/patients/$id'
     | '/api/public/medical-form/$token'
+    | '/api/public/push/dispatch'
     | '/api/public/stripe/oauth-callback'
     | '/api/public/stripe/webhook'
     | '/lovable/email/auth/preview'
@@ -1021,6 +1032,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/consultations/$id'
     | '/_authenticated/dashboard/patients/$id'
     | '/api/public/medical-form/$token'
+    | '/api/public/push/dispatch'
     | '/api/public/stripe/oauth-callback'
     | '/api/public/stripe/webhook'
     | '/lovable/email/auth/preview'
@@ -1047,6 +1059,7 @@ export interface RootRouteChildren {
   FTokenRoute: typeof FTokenRoute
   MSlugRoute: typeof MSlugRouteWithChildren
   ApiPublicMedicalFormTokenRoute: typeof ApiPublicMedicalFormTokenRoute
+  ApiPublicPushDispatchRoute: typeof ApiPublicPushDispatchRoute
   ApiPublicStripeOauthCallbackRoute: typeof ApiPublicStripeOauthCallbackRoute
   ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
@@ -1602,6 +1615,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicStripeOauthCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/push/dispatch': {
+      id: '/api/public/push/dispatch'
+      path: '/api/public/push/dispatch'
+      fullPath: '/api/public/push/dispatch'
+      preLoaderRoute: typeof ApiPublicPushDispatchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/medical-form/$token': {
       id: '/api/public/medical-form/$token'
       path: '/api/public/medical-form/$token'
@@ -1855,6 +1875,7 @@ const rootRouteChildren: RootRouteChildren = {
   FTokenRoute: FTokenRoute,
   MSlugRoute: MSlugRouteWithChildren,
   ApiPublicMedicalFormTokenRoute: ApiPublicMedicalFormTokenRoute,
+  ApiPublicPushDispatchRoute: ApiPublicPushDispatchRoute,
   ApiPublicStripeOauthCallbackRoute: ApiPublicStripeOauthCallbackRoute,
   ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
@@ -1864,13 +1885,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

@@ -15,6 +15,7 @@ import {
   markNotificationRead,
   type NotificationRow,
 } from "@/lib/notifications.functions";
+import { PushToggle } from "@/components/PushToggle";
 
 function timeAgo(iso: string) {
   const s = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
@@ -125,6 +126,11 @@ export function NotificationsBell({ className }: { className?: string }) {
             </Button>
           )}
         </div>
+
+        <div className="border-b bg-muted/30 px-4 py-2">
+          <PushToggle />
+        </div>
+
 
         {items.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-2 px-6 py-10 text-center">

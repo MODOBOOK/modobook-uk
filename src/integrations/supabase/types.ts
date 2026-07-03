@@ -4020,6 +4020,27 @@ export type Database = {
           },
         ]
       }
+      push_dispatch_config: {
+        Row: {
+          id: boolean
+          secret: string
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          id?: boolean
+          secret: string
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          id?: boolean
+          secret?: string
+          updated_at?: string
+          url?: string
+        }
+        Relationships: []
+      }
       quiz_responses: {
         Row: {
           answers: Json
