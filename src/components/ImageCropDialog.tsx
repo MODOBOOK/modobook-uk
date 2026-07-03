@@ -93,7 +93,7 @@ export function ImageCropDialog({
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) onCancel(); }}>
       <DialogContent className="max-w-2xl">
-        <DialogHeader><DialogTitle>Crop image</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>Crop or fit image</DialogTitle></DialogHeader>
         <div className="relative h-[60vh] w-full bg-muted overflow-hidden rounded">
           {src && (
             <Cropper
@@ -131,7 +131,7 @@ export function ImageCropDialog({
           <Button type="button" variant="ghost" onClick={onCancel}>Cancel</Button>
           {file && (
             <Button type="button" variant="outline" onClick={() => onConfirm(file)} disabled={busy}>
-              Use full image
+              Use full image — fit
             </Button>
           )}
           <Button type="button" onClick={confirm} disabled={busy || !area}>

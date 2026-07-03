@@ -33,6 +33,8 @@ const DEFAULTS: ClinicThemeInput = {
   layout_key: "classic",
   hero_carousel_enabled: false,
   hero_carousel_urls: [],
+  hero_height: "medium",
+  hero_fit: "contain",
   welcome_card_show_logo: true,
   welcome_card_show_name: true,
   welcome_card_show_tagline: false,
@@ -739,7 +741,7 @@ function BrandingPage() {
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Logo, tab icon & banner</CardTitle>
-          <p className="text-xs text-muted-foreground">Banner images now keep the full upload visible on mobile. Crop is optional if you want to trim the image.</p>
+          <p className="text-xs text-muted-foreground">Upload your banner, then choose whether it shows the full image or fills the space.</p>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
           <div className="sm:col-span-2">
@@ -749,6 +751,27 @@ function BrandingPage() {
           {(state.layout_key ?? "classic") === "classic" && (
             <ImageUploader label="Banner image" value={state.hero_image_url} onChange={(v) => set("hero_image_url", v)} profileId={profileId} folder="hero" previewClass="mt-2 h-40 w-full rounded-md bg-muted/30 object-contain" />
           )}
+          <div className="space-y-1.5">
+            <Label>Banner fit</Label>
+            <select className="h-10 w-full rounded-md border bg-background px-3 text-sm" value={state.hero_fit ?? "contain"} onChange={(e) => set("hero_fit", e.target.value)}>
+              <option value="natural">Fit image to its own size</option>
+              <option value="contain">Fit whole image inside banner</option>
+              <option value="cover">Fill banner, crop edges</option>
+            </select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Banner size</Label>
+            <select className="h-10 w-full rounded-md border bg-background px-3 text-sm" value={state.hero_height ?? "medium"} onChange={(e) => set("hero_height", e.target.value)} disabled={(state.hero_fit ?? "contain") === "natural"}>
+              <option value="short">Short</option>
+              <option value="medium">Medium</option>
+              <option value="tall">Tall</option>
+              <option value="extra_tall">Extra tall</option>
+              <option value="huge">Huge</option>
+            </select>
+            {(state.hero_fit ?? "contain") === "natural" && (
+              <p className="text-[11px] text-muted-foreground">Using the image's own size so none of it is cropped.</p>
+            )}
+          </div>
           <div className="space-y-1.5 sm:col-span-2">
             <Label>Banner title</Label>
             <Input value={state.hero_heading ?? ""} onChange={(e) => set("hero_heading", e.target.value || null)} />
@@ -831,28 +854,9 @@ function BrandingPage() {
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Hero section</CardTitle>
-          <p className="text-xs text-muted-foreground">Top image on your booking page.</p>
+          <p className="text-xs text-muted-foreground">Text and overlay on the top image of your booking page.</p>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <div className="space-y-1.5">
-            <Label>Hero height</Label>
-            <select className="h-10 w-full rounded-md border bg-background px-3 text-sm" value={state.hero_height ?? "medium"} onChange={(e) => set("hero_height", e.target.value)}>
-              <option value="short">Short</option>
-              <option value="medium">Medium</option>
-              <option value="tall">Tall</option>
-              <option value="extra_tall">Extra tall</option>
-              <option value="huge">Huge</option>
-              <option value="natural">Fit to image (auto height)</option>
-            </select>
-          </div>
-          <div className="space-y-1.5">
-            <Label>Image fit</Label>
-            <select className="h-10 w-full rounded-md border bg-background px-3 text-sm" value={state.hero_fit ?? "contain"} onChange={(e) => set("hero_fit", e.target.value)}>
-              <option value="contain">Fit whole image (letterbox)</option>
-              <option value="cover">Fill & crop</option>
-            </select>
-            <p className="text-[11px] text-muted-foreground">"Fit to image" ignores this and shows the picture at its natural size.</p>
-          </div>
           <div className="space-y-1.5">
             <Label>Text alignment</Label>
             <select className="h-10 w-full rounded-md border bg-background px-3 text-sm" value={state.hero_text_alignment ?? "center"} onChange={(e) => set("hero_text_alignment", e.target.value)}>
