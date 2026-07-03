@@ -338,6 +338,7 @@ function FormEditor({ formId, onClose, cats }: { formId: string; onClose: () => 
   const [selectedTreatments, setSelectedTreatments] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [pickerStep, setPickerStep] = useState<string | null>(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   useEffect(() => {
     (async () => {
