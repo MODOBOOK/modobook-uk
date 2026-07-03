@@ -557,8 +557,9 @@ function BookPage() {
       {/* Hero image / carousel (layout: {layoutKey}) */}
       {(() => {
         const heroHeight = theme?.hero_height ?? "medium";
-        const heroFit = (theme?.hero_fit ?? "contain") as "contain" | "cover";
-        const isNatural = heroHeight === "natural";
+        const heroFitRaw = (theme?.hero_fit ?? "contain") as string;
+        const heroFit = heroFitRaw === "cover" ? "cover" : "contain";
+        const isNatural = heroHeight === "natural" || heroFitRaw === "natural";
         const heroOverlayOpacity = theme?.hero_overlay_opacity ?? 0.25;
         const heroOverlayColor = theme?.hero_overlay_color ?? "#000000";
         const heroAlign = theme?.hero_text_alignment ?? "center";
@@ -2313,7 +2314,7 @@ function HeroImage({ src, heightClass, fit = "contain", natural = false }: { src
   if (natural) {
     return (
       <div className="relative w-full overflow-hidden bg-muted/40">
-        <img src={src} alt="" className="block w-full h-auto" />
+        <img src={src} alt="" className="block h-auto w-full" />
       </div>
     );
   }
@@ -2332,7 +2333,7 @@ function HeroImage({ src, heightClass, fit = "contain", natural = false }: { src
         aria-hidden="true"
         className="absolute inset-0 h-full w-full scale-110 object-cover opacity-30 blur-2xl"
       />
-      <img src={src} alt="" className="relative z-10 h-full w-full object-contain" />
+      <img src={src} alt="" className="relative z-10 h-full w-full object-contain object-center" />
     </div>
   );
 }
@@ -2353,13 +2354,13 @@ function HeroCarousel({ urls, heightClass, fit = "contain", natural = false }: {
           className={`${natural ? "" : "absolute inset-0"} transition-opacity duration-700 ${idx === i ? "opacity-100" : "opacity-0 pointer-events-none " + (natural ? "hidden" : "")}`}
         >
           {natural ? (
-            <img src={u} alt="" className="block w-full h-auto" />
+            <img src={u} alt="" className="block h-auto w-full" />
           ) : fit === "cover" ? (
             <img src={u} alt="" className="absolute inset-0 h-full w-full object-cover" />
           ) : (
             <>
               <img src={u} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full scale-110 object-cover opacity-30 blur-2xl" />
-              <img src={u} alt="" className="relative z-10 h-full w-full object-contain" />
+              <img src={u} alt="" className="relative z-10 h-full w-full object-contain object-center" />
             </>
           )}
         </div>
