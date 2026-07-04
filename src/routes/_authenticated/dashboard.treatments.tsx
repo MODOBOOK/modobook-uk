@@ -96,6 +96,10 @@ type TreatmentForm = {
   price_mode: "fixed" | "from" | "poa" | "free";
   badge: "recommended" | "popular" | "new" | "bestseller" | null;
   deposit_amount: number | null;
+  requires_prescriber: boolean;
+  prescriber_user_id: string | null;
+  prescriber_routing: "same_address" | "clinic_visit" | "in_person_consult";
+  prescriber_note: string | null;
 };
 
 
