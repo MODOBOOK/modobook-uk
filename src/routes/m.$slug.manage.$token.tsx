@@ -6,6 +6,7 @@ import { describeCancellationRules, type CancellationRule } from "@/lib/policy";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Calendar, Clock, MapPin } from "lucide-react";
+import { SafeHtml } from "@/components/SafeHtml";
 
 export const Route = createFileRoute("/m/$slug/manage/$token")({
   loader: async ({ params }) => getAppointmentByToken({ data: { token: params.token } }),
@@ -87,7 +88,12 @@ function ManagePage() {
       {(appt as any).aftercare_html && (
         <Card>
           <CardHeader><CardTitle className="text-base">Aftercare</CardTitle></CardHeader>
-          <CardContent className="text-sm whitespace-pre-wrap">{(appt as any).aftercare_html}</CardContent>
+          <CardContent className="text-sm">
+            <SafeHtml
+              html={(appt as any).aftercare_html}
+              className="prose prose-sm max-w-none prose-headings:mt-2 prose-headings:mb-1 prose-p:my-1 prose-ul:my-1 prose-li:my-0.5"
+            />
+          </CardContent>
         </Card>
       )}
 

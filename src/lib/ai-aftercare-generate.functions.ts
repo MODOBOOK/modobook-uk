@@ -4,9 +4,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 /* ============================================================
    Generate an aftercare template from a description or uploaded
    sources. Returns { name, delay_hours, body_html } — where
-   body_html is well-structured HTML with <h3> section headings
-   and <ul>/<p> content, so it renders as easy-to-read sections
-   in the patient hub and email.
+   body_html intentionally contains plain readable text only.
    ============================================================ */
 
 const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
@@ -39,33 +37,58 @@ RULES
 - Never invent claims. Do not diagnose. Do not recommend specific medications by brand.
 - If practitioner notes name a specific treatment, tailor the aftercare to it.
 - Keep bullets short and scannable.
-- Do NOT include ids, markdown, or code fences. Output ONLY the JSON object.`;
+- Do NOT include ids, markdown, HTML tags, code-like text, angle brackets, or code fences.
+- Every visible word must be patient-readable plain English, not markup or code.
+- Output ONLY the JSON object.`;
 
 type RawSection = { title?: unknown; body?: unknown; bullets?: unknown };
 
-function escapeHtml(s: string) {
-  return s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
+function decodeEntities(s: string) {
+  const named: Record<string, string> = {
+    amp: "&",
+    lt: "<",
+    gt: ">",
+    quot: '"',
+    apos: "'",
+    nbsp: " ",
+  };
+  return s.replace(/&(#x?[0-9a-f]+|[a-z]+);/gi, (match, entity) => {
+    const key = String(entity).toLowerCase();
+    if (key.startsWith("#x")) {
+      const code = Number.parseInt(key.slice(2), 16);
+      return Number.isFinite(code) ? String.fromCodePoint(code) : match;
+    }
+    if (key.startsWith("#")) {
+      const code = Number.parseInt(key.slice(1), 10);
+      return Number.isFinite(code) ? String.fromCodePoint(code) : match;
+    }
+    return named[key] ?? match;
+  });
 }
 
-function sectionsToHtml(sections: { title: string; body?: string; bullets?: string[] }[]): string {
-  const parts: string[] = [];
+function toPlainText(s: string) {
+  return decodeEntities(s)
+    .replace(/<\s*br\s*\/?\s*>/gi, "\n")
+    .replace(/<\s*li[^>]*>/gi, "• ")
+    .replace(/<\/\s*(p|div|h[1-6]|li|ul|ol|section|article)\s*>/gi, "\n")
+    .replace(/<[^>]*>/g, "")
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n[ \t]+/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+function sectionsToPlainText(sections: { title: string; body?: string; bullets?: string[] }[]): string {
+  const blocks: string[] = [];
   for (const s of sections) {
-    parts.push(`<h3>${escapeHtml(s.title)}</h3>`);
-    if (s.body && s.body.trim()) {
-      parts.push(`<p>${escapeHtml(s.body.trim())}</p>`);
-    }
+    const lines = [toPlainText(s.title)].filter(Boolean);
+    if (s.body && s.body.trim()) lines.push(toPlainText(s.body));
     if (s.bullets && s.bullets.length) {
-      parts.push(
-        `<ul>${s.bullets.map((b) => `<li>${escapeHtml(b)}</li>`).join("")}</ul>`,
-      );
+      lines.push(...s.bullets.map((b) => `• ${toPlainText(b)}`).filter((b) => b !== "• "));
     }
+    if (lines.length) blocks.push(lines.join("\n"));
   }
-  return parts.join("\n");
+  return blocks.join("\n\n");
 }
 
 function sanitize(raw: any): { name: string; delay_hours: number; body_html: string } {
@@ -77,13 +100,14 @@ function sanitize(raw: any): { name: string; delay_hours: number; body_html: str
   const inSections: RawSection[] = Array.isArray(raw?.sections) ? raw.sections : [];
   const sections = inSections
     .map((s) => {
-      const title = typeof s?.title === "string" ? s.title.trim() : "";
+      const title = typeof s?.title === "string" ? toPlainText(s.title) : "";
       if (!title) return null;
-      const body = typeof s?.body === "string" ? s.body.trim() : "";
+      const body = typeof s?.body === "string" ? toPlainText(s.body) : "";
       const bullets = Array.isArray(s?.bullets)
         ? (s!.bullets as unknown[])
             .filter((b): b is string => typeof b === "string" && b.trim().length > 0)
-            .map((b) => b.trim())
+            .map((b) => toPlainText(b))
+            .filter(Boolean)
         : [];
       return { title, body, bullets };
     })
@@ -97,7 +121,7 @@ function sanitize(raw: any): { name: string; delay_hours: number; body_html: str
     });
   }
 
-  return { name, delay_hours, body_html: sectionsToHtml(sections) };
+  return { name: toPlainText(name), delay_hours, body_html: sectionsToPlainText(sections) };
 }
 
 export const generateAftercareFromUpload = createServerFn({ method: "POST" })

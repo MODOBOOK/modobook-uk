@@ -69,15 +69,57 @@ const ALLOWED_TYPES = new Set([
 
 function nid() { return Math.random().toString(36).slice(2, 9); }
 
+function decodeEntities(s: string) {
+  const named: Record<string, string> = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " " };
+  return s.replace(/&(#x?[0-9a-f]+|[a-z]+);/gi, (match, entity) => {
+    const key = String(entity).toLowerCase();
+    if (key.startsWith("#x")) {
+      const code = Number.parseInt(key.slice(2), 16);
+      return Number.isFinite(code) ? String.fromCodePoint(code) : match;
+    }
+    if (key.startsWith("#")) {
+      const code = Number.parseInt(key.slice(1), 10);
+      return Number.isFinite(code) ? String.fromCodePoint(code) : match;
+    }
+    return named[key] ?? match;
+  });
+}
+
+function visibleText(value: string) {
+  return decodeEntities(value)
+    .replace(/<\s*br\s*\/?\s*>/gi, "\n")
+    .replace(/<\/\s*(p|div|h[1-6]|li|ul|ol|section|article)\s*>/gi, "\n")
+    .replace(/<[^>]*>/g, "")
+    .replace(/[`{}\[\]<>]/g, "")
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function cleanVisibleStrings(el: Element): Element {
+  const out: Element = { ...el };
+  for (const key of ["text", "label", "placeholder", "helpText"] as const) {
+    if (typeof out[key] === "string") out[key] = visibleText(out[key] as string);
+  }
+  if (Array.isArray(out.options)) {
+    out.options = out.options
+      .filter((option): option is string => typeof option === "string" && option.trim().length > 0)
+      .map(visibleText)
+      .filter(Boolean);
+  }
+  return out;
+}
+
 function sanitize(raw: any): { name: string; description: string; schema: { steps: any[] } } {
-  const name = typeof raw?.name === "string" && raw.name.trim() ? raw.name.trim().slice(0, 120) : "AI generated form";
-  const description = typeof raw?.description === "string" ? raw.description.trim().slice(0, 200) : "";
+  const name = typeof raw?.name === "string" && raw.name.trim() ? visibleText(raw.name).slice(0, 120) : "AI generated form";
+  const description = typeof raw?.description === "string" ? visibleText(raw.description).slice(0, 200) : "";
   const inSteps: Step[] = Array.isArray(raw?.schema?.steps) ? raw.schema.steps : [];
-  const steps = inSteps.map((s, i) => {
-    const title = typeof s?.title === "string" && s.title.trim() ? s.title.trim() : `Step ${i + 1}`;
+  const steps: Array<{ id: string; title: string; elements: any[] }> = inSteps.map((s, i) => {
+    const title = typeof s?.title === "string" && s.title.trim() ? visibleText(s.title) : `Step ${i + 1}`;
     const elements = (Array.isArray(s?.elements) ? s.elements : [])
       .filter((el: any) => el && typeof el === "object" && ALLOWED_TYPES.has(el.type))
-      .map((el: any) => ({ ...el, id: nid() }));
+      .map((el: any) => ({ ...cleanVisibleStrings(el), id: nid() }));
     return { id: nid(), title, elements };
   }).filter((s) => s.elements.length > 0);
   if (steps.length === 0) {

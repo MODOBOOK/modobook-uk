@@ -1,6 +1,34 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+function decodeEntities(s: string) {
+  const named: Record<string, string> = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " " };
+  return s.replace(/&(#x?[0-9a-f]+|[a-z]+);/gi, (match, entity) => {
+    const key = String(entity).toLowerCase();
+    if (key.startsWith("#x")) {
+      const code = Number.parseInt(key.slice(2), 16);
+      return Number.isFinite(code) ? String.fromCodePoint(code) : match;
+    }
+    if (key.startsWith("#")) {
+      const code = Number.parseInt(key.slice(1), 10);
+      return Number.isFinite(code) ? String.fromCodePoint(code) : match;
+    }
+    return named[key] ?? match;
+  });
+}
+
+function plainAftercareText(value: string | null | undefined) {
+  return decodeEntities(value ?? "")
+    .replace(/<\s*br\s*\/?\s*>/gi, "\n")
+    .replace(/<\s*li[^>]*>/gi, "• ")
+    .replace(/<\/\s*(p|div|h[1-6]|li|ul|ol|section|article)\s*>/gi, "\n")
+    .replace(/<[^>]*>/g, "")
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n[ \t]+/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
 async function getProfileId(supabase: any, userId: string) {
   const { data } = await supabase.from("profiles").select("id").eq("user_id", userId).maybeSingle();
   return data?.id ?? null;
@@ -39,7 +67,7 @@ export const cloneSystemAftercareTemplate = createServerFn({ method: "POST" })
         profile_id: profileId,
         is_system: false,
         name: `${src.name} (my copy)`,
-        body_html: src.body_html,
+        body_html: plainAftercareText(src.body_html),
         delay_hours: src.delay_hours,
         category: src.category,
         summary: src.summary,
@@ -56,10 +84,11 @@ export const saveAftercareTemplate = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const profileId = await getProfileId(context.supabase, context.userId);
     if (!profileId) throw new Error("Profile not found");
+    const body_html = plainAftercareText(data.body_html);
     if (data.id) {
       const { data: row, error } = await context.supabase
         .from("aftercare_templates")
-        .update({ name: data.name, body_html: data.body_html, delay_hours: data.delay_hours, show_on_public: !!data.show_on_public })
+        .update({ name: data.name, body_html, delay_hours: data.delay_hours, show_on_public: !!data.show_on_public })
         .eq("id", data.id)
         .eq("profile_id", profileId)
         .select()
@@ -69,7 +98,7 @@ export const saveAftercareTemplate = createServerFn({ method: "POST" })
     }
     const { data: row, error } = await context.supabase
       .from("aftercare_templates")
-      .insert({ profile_id: profileId, name: data.name, body_html: data.body_html, delay_hours: data.delay_hours, show_on_public: !!data.show_on_public })
+      .insert({ profile_id: profileId, name: data.name, body_html, delay_hours: data.delay_hours, show_on_public: !!data.show_on_public })
       .select()
       .single();
     if (error) throw error;
