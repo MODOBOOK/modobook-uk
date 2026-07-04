@@ -456,7 +456,7 @@ function MultiBookPage() {
             for (const t of splitEligibleTreatments) {
               const sessions = Math.max(1, Number((t as { session_count?: number }).session_count ?? 1));
               if (selectedPaymentPlan(t) === "split") {
-                lines.push(`${t.name}: split into ${sessions} payments (£${(priceFor(t) / sessions).toFixed(2)} per session)`);
+                lines.push(`${t.name}: pay over ${sessions} appointments (£${(priceFor(t) / sessions).toFixed(2)} per appointment)`);
               } else {
                 lines.push(`${t.name}: pay in full for ${sessions} sessions`);
               }
@@ -927,12 +927,12 @@ function MultiBookPage() {
                                     }}
                                   >
                                     <span className="text-sm font-semibold" style={{ color: brand }}>
-                                      {opt === "full" ? "Pay in full" : `Split into ${sessions} payments`}
+                                      {opt === "full" ? "Pay in full" : `Pay over ${sessions} appointments`}
                                     </span>
                                     <span className="text-xs opacity-70">
                                       {opt === "full"
                                         ? `£${fullPrice.toFixed(2)} total`
-                                        : `£${perSession.toFixed(2)} per session · charged at each visit`}
+                                        : `£${perSession.toFixed(2)} per appointment · charged at each visit`}
                                     </span>
                                   </button>
                                 );
@@ -953,7 +953,7 @@ function MultiBookPage() {
                             onChange={(e) => setSplitAgreed(e.target.checked)}
                           />
                           <span>
-                            I agree to pay the split-payment amount at each session
+                            I agree to pay the amount at each appointment
                             {(() => {
                               const parts = splitEligibleTreatments
                                 .filter((t) => selectedPaymentPlan(t) === "split")
@@ -1334,11 +1334,11 @@ function MultiBookPage() {
                         : !allClinicVisitsConsented || !allConsented
                           ? "Please give prescriber consent above"
                           : anySplit && !splitAgreed
-                            ? "Tick the split-payment agreement to continue"
+                            ? "Tick the payment-plan agreement to continue"
                             : isDeposit
                               ? `Book & pay deposit today`
                               : anySplit
-                                ? `Book & pay £${dueToday.toFixed(2)} today (rest at each session)`
+                                ? `Book & pay £${dueToday.toFixed(2)} today (rest at each appointment)`
                                 : `Confirm ${treatments.length} booking${treatments.length === 1 ? "" : "s"} · £${totalAfterDiscount.toFixed(2)}`;
                   return (
                     <Button

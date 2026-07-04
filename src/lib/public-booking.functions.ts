@@ -857,8 +857,8 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
       const sessionCount = Math.max(1, Number(b.sessionCount ?? 1));
       const paymentNote = sessionCount > 1
         ? b.paymentPlan === "split"
-          ? `Payment plan: Split into ${sessionCount} sessions (£${((b.priceCents / 100) / sessionCount).toFixed(2)} per session)`
-          : `Payment plan: Pay in full for ${sessionCount} sessions`
+          ? `Payment plan: Pay over ${sessionCount} appointments (£${((b.priceCents / 100) / sessionCount).toFixed(2)} per appointment)`
+          : `Payment plan: Pay in full for ${sessionCount} appointments`
         : null;
       const appointmentNotes = [data.notes, paymentNote].filter(Boolean).join("\n") || null;
       const { error } = await sb.from("appointments").insert({
