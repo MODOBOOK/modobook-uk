@@ -62,11 +62,16 @@ function AftercarePage() {
         <Link to="/dashboard" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:underline">
           <ArrowLeft className="h-4 w-4" /> Dashboard
         </Link>
-        <Button
-          onClick={() => openEditor({ id: "", name: "", body_html: "", delay_hours: 2 })}
-        >
-          <Plus className="mr-1 h-4 w-4" /> New template
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={() => setAiOpen(true)}>
+            <Wand2 className="mr-1 h-4 w-4" /> Generate with AI
+          </Button>
+          <Button
+            onClick={() => openEditor({ id: "", name: "", body_html: "", delay_hours: 2 })}
+          >
+            <Plus className="mr-1 h-4 w-4" /> New template
+          </Button>
+        </div>
       </div>
 
       <header>
