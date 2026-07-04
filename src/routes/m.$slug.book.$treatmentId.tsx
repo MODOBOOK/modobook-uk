@@ -293,50 +293,54 @@ function BookTreatmentPage() {
       ...dayRules.map((r: Rule) => ({ start_time: r.start_time, end_time: r.end_time, slot_interval: r.slot_interval })),
       ...overrideRules.map((o) => ({ start_time: o.start_time, end_time: o.end_time, slot_interval: o.slot_interval })),
     ];
-    const out: string[] = [];
-    for (const r of allRules) {
-      const step = r.slot_interval ?? duration;
-      const start = toMinutes(r.start_time);
-      const end = toMinutes(r.end_time);
-      // Candidate start times
-      const candidates = new Set<number>();
-      if (smartTimes && busy.length > 0) {
-        // Only show slots within 1 hour before/after existing bookings
-        const WINDOW = 60;
-        for (const b of busy) {
-          for (let t = b.start - duration; t >= b.start - duration - WINDOW && t >= start; t -= step) {
-            if (t + duration <= end) candidates.add(t);
+    const buildOut = (useSmart: boolean) => {
+      const local: string[] = [];
+      for (const r of allRules) {
+        const step = r.slot_interval ?? duration;
+        const start = toMinutes(r.start_time);
+        const end = toMinutes(r.end_time);
+        const candidates = new Set<number>();
+        if (useSmart && busy.length > 0) {
+          const WINDOW = 60;
+          for (const b of busy) {
+            for (let t = b.start - duration; t >= b.start - duration - WINDOW && t >= start; t -= step) {
+              if (t + duration <= end) candidates.add(t);
+            }
+            for (let t = b.end; t <= b.end + WINDOW && t + duration <= end; t += step) {
+              if (t >= start) candidates.add(t);
+            }
           }
-          for (let t = b.end; t <= b.end + WINDOW && t + duration <= end; t += step) {
-            if (t >= start) candidates.add(t);
-          }
+        } else {
+          for (let t = start; t + duration <= end; t += step) candidates.add(t);
         }
-      } else {
-        for (let t = start; t + duration <= end; t += step) candidates.add(t);
+        for (const t of Array.from(candidates).sort((a, z) => a - z)) {
+          const slotEnd = t + duration;
+          const overlap = busy.some(
+            (b) =>
+              (!locationId || !b.locId || b.locId === locationId) &&
+              t < b.end &&
+              slotEnd > b.start,
+          );
+          if (!overlap) local.push(fromMinutes(t));
+        }
       }
-      for (const t of Array.from(candidates).sort((a, z) => a - z)) {
-        const slotEnd = t + duration;
-        const overlap = busy.some(
-          (b) =>
-            (!locationId || !b.locId || b.locId === locationId) &&
-            t < b.end &&
-            slotEnd > b.start,
-        );
-        if (!overlap) out.push(fromMinutes(t));
-      }
-    }
-    let out2 = Array.from(new Set(out)).sort();
-    // Apply minimum notice for today's date
-    {
+      return local;
+    };
+    const applyNotice = (arr: string[]) => {
       const todayLocalIso = (() => {
         const n = new Date();
         return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, "0")}-${String(n.getDate()).padStart(2, "0")}`;
       })();
-      if (date === todayLocalIso) {
-        const now = new Date();
-        const cutoff = now.getHours() * 60 + now.getMinutes() + Math.max(0, minNoticeHours) * 60;
-        out2 = out2.filter((s) => toMinutes(s) >= cutoff);
-      }
+      if (date !== todayLocalIso) return arr;
+      const now = new Date();
+      const cutoff = now.getHours() * 60 + now.getMinutes() + Math.max(0, minNoticeHours) * 60;
+      return arr.filter((s) => toMinutes(s) >= cutoff);
+    };
+    let out2 = applyNotice(Array.from(new Set(buildOut(smartTimes))).sort());
+    // Smart-times fallback: if clustering left no bookable times, widen to the
+    // full standard grid so the day isn't falsely shown as fully booked.
+    if (smartTimes && out2.length === 0) {
+      out2 = applyNotice(Array.from(new Set(buildOut(false))).sort());
     }
     return out2;
 
