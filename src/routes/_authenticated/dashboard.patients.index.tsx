@@ -453,10 +453,23 @@ function PatientsPage() {
         open={importOpen}
         onOpenChange={setImportOpen}
         onImport={async (rows) => {
-          const res: any = await importCsv({ data: { rows } });
-          const detail = res.skippedDetails?.length ? ` — first issue: ${res.skippedDetails[0]}` : "";
-          toast.success(`Imported ${res.inserted}, updated ${res.updated}${res.skipped ? `, skipped ${res.skipped}${detail}` : ""}`);
-          setImportOpen(false);
+          try {
+            const res: any = await importCsv({ data: { rows } });
+            const detail = res.skippedDetails?.length ? ` — first issue: ${res.skippedDetails[0]}` : "";
+            const total = (res.inserted || 0) + (res.updated || 0);
+            if (total === 0 && res.skipped) {
+              toast.error(`Import skipped all ${res.skipped} row(s)${detail}`);
+            } else {
+              toast.success(`Imported ${res.inserted}, updated ${res.updated}${res.skipped ? `, skipped ${res.skipped}${detail}` : ""}`);
+            }
+            setImportOpen(false);
+            refresh();
+          } catch (e) {
+            toast.error(e instanceof Error ? e.message : "CSV import failed");
+            throw e;
+          }
+        }}
+      />
 
           refresh();
         }}
