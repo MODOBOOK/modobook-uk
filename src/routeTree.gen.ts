@@ -67,6 +67,7 @@ import { Route as AuthenticatedDashboardNewAppointmentRouteImport } from './rout
 import { Route as AuthenticatedDashboardModelSlotsRouteImport } from './routes/_authenticated/dashboard.model-slots'
 import { Route as AuthenticatedDashboardMenuRouteImport } from './routes/_authenticated/dashboard.menu'
 import { Route as AuthenticatedDashboardMedicalFormsRouteImport } from './routes/_authenticated/dashboard.medical-forms'
+import { Route as AuthenticatedDashboardMarketingRouteImport } from './routes/_authenticated/dashboard.marketing'
 import { Route as AuthenticatedDashboardLocationsRouteImport } from './routes/_authenticated/dashboard.locations'
 import { Route as AuthenticatedDashboardDiscountsRouteImport } from './routes/_authenticated/dashboard.discounts'
 import { Route as AuthenticatedDashboardConsentFormsRouteImport } from './routes/_authenticated/dashboard.consent-forms'
@@ -82,6 +83,7 @@ import { Route as AuthenticatedDashboardAftercareRouteImport } from './routes/_a
 import { Route as AuthenticatedDashboardAddonsRouteImport } from './routes/_authenticated/dashboard.addons'
 import { Route as AuthenticatedDashboardAboutRouteImport } from './routes/_authenticated/dashboard.about'
 import { Route as AuthenticatedDashboardPatientsIndexRouteImport } from './routes/_authenticated/dashboard.patients.index'
+import { Route as AuthenticatedDashboardMarketingIndexRouteImport } from './routes/_authenticated/dashboard.marketing.index'
 import { Route as AuthenticatedDashboardConsultationsIndexRouteImport } from './routes/_authenticated/dashboard.consultations.index'
 import { Route as MSlugManageTokenRouteImport } from './routes/m.$slug.manage.$token'
 import { Route as MSlugBookTreatmentIdRouteImport } from './routes/m.$slug.book.$treatmentId'
@@ -415,6 +417,12 @@ const AuthenticatedDashboardMedicalFormsRoute =
     path: '/medical-forms',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
+const AuthenticatedDashboardMarketingRoute =
+  AuthenticatedDashboardMarketingRouteImport.update({
+    id: '/marketing',
+    path: '/marketing',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
 const AuthenticatedDashboardLocationsRoute =
   AuthenticatedDashboardLocationsRouteImport.update({
     id: '/locations',
@@ -504,6 +512,12 @@ const AuthenticatedDashboardPatientsIndexRoute =
     id: '/',
     path: '/',
     getParentRoute: () => AuthenticatedDashboardPatientsRoute,
+  } as any)
+const AuthenticatedDashboardMarketingIndexRoute =
+  AuthenticatedDashboardMarketingIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedDashboardMarketingRoute,
   } as any)
 const AuthenticatedDashboardConsultationsIndexRoute =
   AuthenticatedDashboardConsultationsIndexRouteImport.update({
@@ -633,6 +647,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/consent-forms': typeof AuthenticatedDashboardConsentFormsRoute
   '/dashboard/discounts': typeof AuthenticatedDashboardDiscountsRoute
   '/dashboard/locations': typeof AuthenticatedDashboardLocationsRoute
+  '/dashboard/marketing': typeof AuthenticatedDashboardMarketingRouteWithChildren
   '/dashboard/medical-forms': typeof AuthenticatedDashboardMedicalFormsRoute
   '/dashboard/menu': typeof AuthenticatedDashboardMenuRoute
   '/dashboard/model-slots': typeof AuthenticatedDashboardModelSlotsRoute
@@ -684,6 +699,7 @@ export interface FileRoutesByFullPath {
   '/m/$slug/book/$treatmentId': typeof MSlugBookTreatmentIdRoute
   '/m/$slug/manage/$token': typeof MSlugManageTokenRoute
   '/dashboard/consultations/': typeof AuthenticatedDashboardConsultationsIndexRoute
+  '/dashboard/marketing/': typeof AuthenticatedDashboardMarketingIndexRoute
   '/dashboard/patients/': typeof AuthenticatedDashboardPatientsIndexRoute
 }
 export interface FileRoutesByTo {
@@ -769,6 +785,7 @@ export interface FileRoutesByTo {
   '/m/$slug/book/$treatmentId': typeof MSlugBookTreatmentIdRoute
   '/m/$slug/manage/$token': typeof MSlugManageTokenRoute
   '/dashboard/consultations': typeof AuthenticatedDashboardConsultationsIndexRoute
+  '/dashboard/marketing': typeof AuthenticatedDashboardMarketingIndexRoute
   '/dashboard/patients': typeof AuthenticatedDashboardPatientsIndexRoute
 }
 export interface FileRoutesById {
@@ -810,6 +827,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/consent-forms': typeof AuthenticatedDashboardConsentFormsRoute
   '/_authenticated/dashboard/discounts': typeof AuthenticatedDashboardDiscountsRoute
   '/_authenticated/dashboard/locations': typeof AuthenticatedDashboardLocationsRoute
+  '/_authenticated/dashboard/marketing': typeof AuthenticatedDashboardMarketingRouteWithChildren
   '/_authenticated/dashboard/medical-forms': typeof AuthenticatedDashboardMedicalFormsRoute
   '/_authenticated/dashboard/menu': typeof AuthenticatedDashboardMenuRoute
   '/_authenticated/dashboard/model-slots': typeof AuthenticatedDashboardModelSlotsRoute
@@ -861,6 +879,7 @@ export interface FileRoutesById {
   '/m/$slug/book/$treatmentId': typeof MSlugBookTreatmentIdRoute
   '/m/$slug/manage/$token': typeof MSlugManageTokenRoute
   '/_authenticated/dashboard/consultations/': typeof AuthenticatedDashboardConsultationsIndexRoute
+  '/_authenticated/dashboard/marketing/': typeof AuthenticatedDashboardMarketingIndexRoute
   '/_authenticated/dashboard/patients/': typeof AuthenticatedDashboardPatientsIndexRoute
 }
 export interface FileRouteTypes {
@@ -902,6 +921,7 @@ export interface FileRouteTypes {
     | '/dashboard/consent-forms'
     | '/dashboard/discounts'
     | '/dashboard/locations'
+    | '/dashboard/marketing'
     | '/dashboard/medical-forms'
     | '/dashboard/menu'
     | '/dashboard/model-slots'
@@ -953,6 +973,7 @@ export interface FileRouteTypes {
     | '/m/$slug/book/$treatmentId'
     | '/m/$slug/manage/$token'
     | '/dashboard/consultations/'
+    | '/dashboard/marketing/'
     | '/dashboard/patients/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -1038,6 +1059,7 @@ export interface FileRouteTypes {
     | '/m/$slug/book/$treatmentId'
     | '/m/$slug/manage/$token'
     | '/dashboard/consultations'
+    | '/dashboard/marketing'
     | '/dashboard/patients'
   id:
     | '__root__'
@@ -1078,6 +1100,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/consent-forms'
     | '/_authenticated/dashboard/discounts'
     | '/_authenticated/dashboard/locations'
+    | '/_authenticated/dashboard/marketing'
     | '/_authenticated/dashboard/medical-forms'
     | '/_authenticated/dashboard/menu'
     | '/_authenticated/dashboard/model-slots'
@@ -1129,6 +1152,7 @@ export interface FileRouteTypes {
     | '/m/$slug/book/$treatmentId'
     | '/m/$slug/manage/$token'
     | '/_authenticated/dashboard/consultations/'
+    | '/_authenticated/dashboard/marketing/'
     | '/_authenticated/dashboard/patients/'
   fileRoutesById: FileRoutesById
 }
@@ -1570,6 +1594,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardMedicalFormsRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
+    '/_authenticated/dashboard/marketing': {
+      id: '/_authenticated/dashboard/marketing'
+      path: '/marketing'
+      fullPath: '/dashboard/marketing'
+      preLoaderRoute: typeof AuthenticatedDashboardMarketingRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
     '/_authenticated/dashboard/locations': {
       id: '/_authenticated/dashboard/locations'
       path: '/locations'
@@ -1674,6 +1705,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/dashboard/patients/'
       preLoaderRoute: typeof AuthenticatedDashboardPatientsIndexRouteImport
       parentRoute: typeof AuthenticatedDashboardPatientsRoute
+    }
+    '/_authenticated/dashboard/marketing/': {
+      id: '/_authenticated/dashboard/marketing/'
+      path: '/'
+      fullPath: '/dashboard/marketing/'
+      preLoaderRoute: typeof AuthenticatedDashboardMarketingIndexRouteImport
+      parentRoute: typeof AuthenticatedDashboardMarketingRoute
     }
     '/_authenticated/dashboard/consultations/': {
       id: '/_authenticated/dashboard/consultations/'
@@ -1790,6 +1828,21 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthenticatedDashboardMarketingRouteChildren {
+  AuthenticatedDashboardMarketingIndexRoute: typeof AuthenticatedDashboardMarketingIndexRoute
+}
+
+const AuthenticatedDashboardMarketingRouteChildren: AuthenticatedDashboardMarketingRouteChildren =
+  {
+    AuthenticatedDashboardMarketingIndexRoute:
+      AuthenticatedDashboardMarketingIndexRoute,
+  }
+
+const AuthenticatedDashboardMarketingRouteWithChildren =
+  AuthenticatedDashboardMarketingRoute._addFileChildren(
+    AuthenticatedDashboardMarketingRouteChildren,
+  )
+
 interface AuthenticatedDashboardPatientsRouteChildren {
   AuthenticatedDashboardPatientsIdRoute: typeof AuthenticatedDashboardPatientsIdRoute
   AuthenticatedDashboardPatientsIndexRoute: typeof AuthenticatedDashboardPatientsIndexRoute
@@ -1823,6 +1876,7 @@ interface AuthenticatedDashboardRouteChildren {
   AuthenticatedDashboardConsentFormsRoute: typeof AuthenticatedDashboardConsentFormsRoute
   AuthenticatedDashboardDiscountsRoute: typeof AuthenticatedDashboardDiscountsRoute
   AuthenticatedDashboardLocationsRoute: typeof AuthenticatedDashboardLocationsRoute
+  AuthenticatedDashboardMarketingRoute: typeof AuthenticatedDashboardMarketingRouteWithChildren
   AuthenticatedDashboardMedicalFormsRoute: typeof AuthenticatedDashboardMedicalFormsRoute
   AuthenticatedDashboardMenuRoute: typeof AuthenticatedDashboardMenuRoute
   AuthenticatedDashboardModelSlotsRoute: typeof AuthenticatedDashboardModelSlotsRoute
@@ -1863,6 +1917,8 @@ const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
       AuthenticatedDashboardConsentFormsRoute,
     AuthenticatedDashboardDiscountsRoute: AuthenticatedDashboardDiscountsRoute,
     AuthenticatedDashboardLocationsRoute: AuthenticatedDashboardLocationsRoute,
+    AuthenticatedDashboardMarketingRoute:
+      AuthenticatedDashboardMarketingRouteWithChildren,
     AuthenticatedDashboardMedicalFormsRoute:
       AuthenticatedDashboardMedicalFormsRoute,
     AuthenticatedDashboardMenuRoute: AuthenticatedDashboardMenuRoute,
