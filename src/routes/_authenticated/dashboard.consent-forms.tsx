@@ -30,9 +30,11 @@ import {
   Trash2,
   Search,
   Eye,
+  Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 import { ConsentSectionsEditor, ConsentSectionsView, type ConsentSection } from "@/components/ConsentSections";
+import { AiGenerateConsentDialog } from "@/components/medical-forms/AiGenerateConsentDialog";
 
 export const Route = createFileRoute("/_authenticated/dashboard/consent-forms")({
   component: ConsentFormsPage,
