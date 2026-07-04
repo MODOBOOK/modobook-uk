@@ -11,6 +11,9 @@ interface Props {
   reviewUrl?: string
   logoUrl?: string | null
   brandColor?: string | null
+  subjectOverride?: string | null
+  introOverride?: string | null
+  closingOverride?: string | null
 }
 
 const Email = ({
@@ -21,28 +24,38 @@ const Email = ({
   reviewUrl = 'https://modobook.uk',
   logoUrl,
   brandColor,
+  introOverride,
+  closingOverride,
 }: Props) => (
   <Html lang="en" dir="ltr">
     <Head />
     <Preview>How was your visit to {clinicName}?</Preview>
     <ModoShell preview="" siteName={clinicName} logoUrl={logoUrl} brandColor={brandColor}>
       <Heading as="h1" style={styles.h1}>How was your visit?</Heading>
-      <Text style={styles.text}>
-        Hi {patientName}, thanks for choosing {clinicName}
-        {treatmentName ? ` for your ${treatmentName}` : ''}
-        {practitionerName ? ` with ${practitionerName}` : ''}. We'd love to hear how it went — it only takes a minute.
-      </Text>
+      {introOverride?.trim() ? (
+        <Text style={styles.text}>{introOverride}</Text>
+      ) : (
+        <Text style={styles.text}>
+          Hi {patientName}, thanks for choosing {clinicName}
+          {treatmentName ? ` for your ${treatmentName}` : ''}
+          {practitionerName ? ` with ${practitionerName}` : ''}. We'd love to hear how it went — it only takes a minute.
+        </Text>
+      )}
       <Section style={styles.buttonWrap}>
         <Button href={reviewUrl} style={brandedButton(brandColor)}>Leave a review</Button>
       </Section>
-      <Text style={styles.muted}>Your feedback helps other patients and helps us keep improving.</Text>
+      <Text style={styles.muted}>{closingOverride?.trim() || 'Your feedback helps other patients and helps us keep improving.'}</Text>
     </ModoShell>
   </Html>
 )
 
 export const template = {
   component: Email,
-  subject: (d: Record<string, unknown>) => `How was your visit to ${(d.clinicName as string) || 'MODO'}?`,
+  subject: (d: Record<string, unknown>) => {
+    const override = (d.subjectOverride as string | null | undefined)?.trim()
+    if (override) return override
+    return `How was your visit to ${(d.clinicName as string) || 'MODO'}?`
+  },
   displayName: 'Review request',
   previewData: {
     patientName: 'Alex',
