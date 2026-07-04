@@ -38,16 +38,19 @@ export const Route = createFileRoute('/api/public/hooks/appointment-reminders')(
           for (const rule of rules as any[]) {
             // Window: appointments starting in [hours_before-5min, hours_before+5min]
             const targetMs = nowMs + rule.hours_before * 3600_000
-            const windowStart = new Date(targetMs - 6 * 60_000).toISOString()
-            const windowEnd = new Date(targetMs + 6 * 60_000).toISOString()
+            const windowStartMs = targetMs - 6 * 60_000
+            const windowEndMs = targetMs + 6 * 60_000
+            // Broad date filter (UTC dates covering both edges) — final match uses start_time.
+            const startDate = new Date(windowStartMs).toISOString().slice(0, 10)
+            const endDate = new Date(windowEndMs).toISOString().slice(0, 10)
 
             const { data: appts, error: apptErr } = await supabaseAdmin
               .from('appointments')
               .select('id, patient_name, patient_email, scheduled_date, start_time, manage_token, profile_id, status, treatments(name), practitioners(name), locations(name, address_line1, city, postcode), profiles(clinic_name, slug)')
               .eq('profile_id', rule.profile_id)
               .in('status', ['confirmed', 'pending'])
-              .gte('starts_at', windowStart)
-              .lte('starts_at', windowEnd)
+              .gte('scheduled_date', startDate)
+              .lte('scheduled_date', endDate)
 
             if (apptErr) {
               console.error('[reminders] appt query failed', apptErr)
@@ -57,6 +60,9 @@ export const Route = createFileRoute('/api/public/hooks/appointment-reminders')(
             for (const raw of appts ?? []) {
               const a = raw as any
               if (!a.patient_email) continue
+              // Precise time check
+              const apptMs = new Date(`${a.scheduled_date}T${a.start_time}:00`).getTime()
+              if (Number.isNaN(apptMs) || apptMs < windowStartMs || apptMs > windowEndMs) continue
 
               // Skip if already sent
               const { data: already } = await supabaseAdmin
