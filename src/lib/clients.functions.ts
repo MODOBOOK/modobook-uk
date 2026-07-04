@@ -12,9 +12,44 @@ export const listClients = createServerFn({ method: "GET" })
     const profileId = await getProfileId(context.supabase, context.userId);
     if (!profileId) return [];
     const { data, error } = await context.supabase
-      .from("clinic_clients").select("*").eq("profile_id", profileId).order("full_name");
+      .from("clinic_clients").select("*").eq("profile_id", profileId).eq("archived", false).order("full_name");
     if (error) throw error;
     return data ?? [];
+  });
+
+export const listArchivedClients = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const profileId = await getProfileId(context.supabase, context.userId);
+    if (!profileId) return [];
+    const { data, error } = await context.supabase
+      .from("clinic_clients").select("*").eq("profile_id", profileId).eq("archived", true).order("full_name");
+    if (error) throw error;
+    return data ?? [];
+  });
+
+export const restoreClient = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { id: string }) => input)
+  .handler(async ({ data, context }) => {
+    const profileId = await getProfileId(context.supabase, context.userId);
+    if (!profileId) throw new Error("No profile");
+    const { error } = await context.supabase
+      .from("clinic_clients").update({ archived: false }).eq("id", data.id).eq("profile_id", profileId);
+    if (error) throw error;
+    return { ok: true };
+  });
+
+export const permanentlyDeleteClient = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { id: string }) => input)
+  .handler(async ({ data, context }) => {
+    const profileId = await getProfileId(context.supabase, context.userId);
+    if (!profileId) throw new Error("No profile");
+    const { error } = await context.supabase
+      .from("clinic_clients").delete().eq("id", data.id).eq("profile_id", profileId);
+    if (error) throw error;
+    return { ok: true };
   });
 
 export const getClient = createServerFn({ method: "GET" })
