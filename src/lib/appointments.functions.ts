@@ -115,7 +115,46 @@ export const cancelAppointmentByToken = createServerFn({ method: "POST" })
   .inputValidator((input: { token: string }) => input)
   .handler(async ({ data }) => {
     const sb = publicClient();
+    // Load appointment first (for email context) via existing manage-token RPC
+    type ApptCtx = {
+      id?: string;
+      patient_name?: string;
+      patient_email?: string;
+      scheduled_date?: string;
+      start_time?: string;
+      treatment_name?: string;
+      clinic_name?: string;
+      clinic_slug?: string;
+    };
+    let apptRow: ApptCtx | null = null;
+    try {
+      const { data: row } = await sb.rpc("get_appointment_by_manage_token", { p_token: data.token }).single();
+      apptRow = (row as unknown as ApptCtx | null) ?? null;
+    } catch { /* ignore */ }
+
     const { data: ok, error } = await sb.rpc("cancel_appointment_by_token", { p_token: data.token });
     if (error) throw error;
+
+    const a: ApptCtx | null = apptRow;
+    if (ok && a && a.patient_email && a.id) {
+      try {
+        const { tryEnqueueAppEmail, formatBookingDateTime } = await import("@/lib/email/send.server");
+        const origin = process.env.PUBLIC_APP_URL || process.env.APP_URL || "https://modobook.uk";
+        void tryEnqueueAppEmail({
+          templateName: "booking-cancellation",
+          recipientEmail: a.patient_email,
+          messageId: `booking-cancel-${a.id}`,
+          templateData: {
+            patientName: (a.patient_name ?? "").split(" ")[0] || "there",
+            clinicName: a.clinic_name ?? "MODO",
+            treatmentName: a.treatment_name ?? "your appointment",
+            dateTime: a.scheduled_date && a.start_time
+              ? formatBookingDateTime(a.scheduled_date, a.start_time) : "",
+            cancelledBy: "patient",
+            rebookUrl: a.clinic_slug ? `${origin}/m/${a.clinic_slug}` : origin,
+          },
+        });
+      } catch (e) { console.error("[cancelAppointmentByToken] email failed", e); }
+    }
     return { ok: !!ok };
   });

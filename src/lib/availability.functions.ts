@@ -127,16 +127,45 @@ export const updateAppointmentNotes = createServerFn({ method: "POST" })
 
 export const cancelAppointment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { id: string }) => d)
+  .inputValidator((d: { id: string; reason?: string }) => d)
   .handler(async ({ data, context }) => {
     const profileId = await getProfileId(context.supabase, context.userId);
     if (!profileId) throw new Error("Profile not found");
+    const { data: appt } = await context.supabase
+      .from("appointments")
+      .select("id, patient_name, patient_email, scheduled_date, start_time, treatments(name)")
+      .eq("id", data.id)
+      .eq("profile_id", profileId)
+      .maybeSingle();
     const { error } = await context.supabase
       .from("appointments")
       .update({ status: "cancelled" })
       .eq("id", data.id)
       .eq("profile_id", profileId);
     if (error) throw error;
+
+    if (appt?.patient_email) {
+      try {
+        const { data: prof } = await context.supabase
+          .from("profiles").select("clinic_name, slug").eq("id", profileId).maybeSingle();
+        const { tryEnqueueAppEmail, formatBookingDateTime } = await import("@/lib/email/send.server");
+        const origin = process.env.PUBLIC_APP_URL || process.env.APP_URL || "https://modobook.uk";
+        void tryEnqueueAppEmail({
+          templateName: "booking-cancellation",
+          recipientEmail: appt.patient_email,
+          messageId: `booking-cancel-${appt.id}`,
+          templateData: {
+            patientName: (appt.patient_name ?? "").split(" ")[0] || "there",
+            clinicName: prof?.clinic_name ?? "MODO",
+            treatmentName: (appt as { treatments?: { name?: string } | null }).treatments?.name ?? "your appointment",
+            dateTime: formatBookingDateTime(appt.scheduled_date as string, appt.start_time as string),
+            cancelledBy: "clinic",
+            reason: data.reason,
+            rebookUrl: prof?.slug ? `${origin}/m/${prof.slug}` : origin,
+          },
+        });
+      } catch (e) { console.error("[cancelAppointment] email failed", e); }
+    }
     return { ok: true };
   });
 

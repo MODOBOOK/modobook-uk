@@ -53,14 +53,26 @@ export function SendFormDialog({
     if (!templateId) { toast.error("Choose a form"); return; }
     setBusy(true);
     try {
-      const res: any = await send({ data: { client_id: client.id, template_id: templateId, email: email || undefined, phone: phone || undefined } });
+      const res: any = await send({
+        data: {
+          client_id: client.id,
+          template_id: templateId,
+          email: email || undefined,
+          phone: phone || undefined,
+          sendEmail: !!options?.thenEmail && !!email,
+        },
+      });
       if (!res?.token) throw new Error("No form token returned");
       const url = `${window.location.origin}/f/${res.token}`;
       setLink(url);
-      toast.success("Form saved to patient's account");
+      if (options?.thenEmail && email) {
+        await logComm({ data: { clientId: client.id, channel: "email", subject: `${selectedForm?.name ?? "Form"} from ${clinicName || "your clinic"}`, body: url } });
+        toast.success(`Form emailed to ${email}`);
+      } else {
+        toast.success("Form saved to patient's account");
+      }
       onSent?.();
-      if (options?.thenEmail && email) await sendEmail(url);
-      else if (options?.thenSms && phone) await sendSms(url);
+      if (options?.thenSms && phone) await sendSms(url);
       else if (options?.thenWa && phone) await sendWa(url);
     } catch (e) {
       const msg = e instanceof Error ? e.message : typeof e === "string" ? e : (e as any)?.message ?? "Failed to create form";
@@ -74,13 +86,28 @@ export function SendFormDialog({
   }
 
   async function sendEmail(urlOverride?: string) {
+    // Manual re-send from the "Link ready" panel: use branded server email
     const url = urlOverride || link;
-    if (!url || !email) return;
-    const subject = encodeURIComponent(`${selectedForm?.name ?? "Form"} from ${clinicName || "your clinic"}`);
-    const body = encodeURIComponent(`Hi ${client.full_name},\n\nPlease complete the following form before your appointment:\n\n${url}\n\nThank you,\n${clinicName ?? ""}`);
-    window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
-    await logComm({ data: { clientId: client.id, channel: "email", subject: decodeURIComponent(subject), body: url } });
-    onSent?.();
+    if (!url || !email || !templateId) return;
+    try {
+      // Re-run the server flow with sendEmail=true; server will create a new form + email
+      const res: any = await send({
+        data: {
+          client_id: client.id,
+          template_id: templateId,
+          email,
+          phone: phone || undefined,
+          sendEmail: true,
+        },
+      });
+      if (res?.token) {
+        await logComm({ data: { clientId: client.id, channel: "email", subject: `${selectedForm?.name ?? "Form"} from ${clinicName || "your clinic"}`, body: `${window.location.origin}/f/${res.token}` } });
+        toast.success(`Emailed to ${email}`);
+        onSent?.();
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to send email");
+    }
   }
   async function sendSms(urlOverride?: string) {
     const url = urlOverride || link;
