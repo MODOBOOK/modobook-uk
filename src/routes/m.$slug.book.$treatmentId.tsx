@@ -326,19 +326,21 @@ function BookTreatmentPage() {
       }
       return local;
     };
-    let out = buildOut(smartTimes);
-    let out2 = Array.from(new Set(out)).sort();
-    // Apply minimum notice for today's date
-    {
+    const applyNotice = (arr: string[]) => {
       const todayLocalIso = (() => {
         const n = new Date();
         return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, "0")}-${String(n.getDate()).padStart(2, "0")}`;
       })();
-      if (date === todayLocalIso) {
-        const now = new Date();
-        const cutoff = now.getHours() * 60 + now.getMinutes() + Math.max(0, minNoticeHours) * 60;
-        out2 = out2.filter((s) => toMinutes(s) >= cutoff);
-      }
+      if (date !== todayLocalIso) return arr;
+      const now = new Date();
+      const cutoff = now.getHours() * 60 + now.getMinutes() + Math.max(0, minNoticeHours) * 60;
+      return arr.filter((s) => toMinutes(s) >= cutoff);
+    };
+    let out2 = applyNotice(Array.from(new Set(buildOut(smartTimes))).sort());
+    // Smart-times fallback: if clustering left no bookable times, widen to the
+    // full standard grid so the day isn't falsely shown as fully booked.
+    if (smartTimes && out2.length === 0) {
+      out2 = applyNotice(Array.from(new Set(buildOut(false))).sort());
     }
     return out2;
 
