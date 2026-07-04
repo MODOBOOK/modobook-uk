@@ -68,8 +68,7 @@ function EmailsPage() {
   if (loading) return <div className="p-8 text-center"><Loader2 className="h-5 w-5 animate-spin mx-auto" /></div>
 
   const grouped = {
-    transactional: EMAILS.filter((e) => e.category === 'transactional'),
-    auth: EMAILS.filter((e) => e.category === 'auth'),
+    transactional: EMAILS,
   }
 
   return (
