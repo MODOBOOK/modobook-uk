@@ -108,28 +108,42 @@ export function AiGenerateFormDialog({
         {step === "input" ? (
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Upload photo or PDF</Label>
-              {file ? (
-                <div className="flex items-center justify-between gap-2 rounded-md border p-2 text-sm">
-                  <span className="truncate">{file.name}</span>
-                  <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setFile(null)}>
-                    <X className="h-4 w-4" />
-                  </Button>
+              <Label>Upload photos or PDFs</Label>
+              {files.length > 0 && (
+                <div className="space-y-1.5">
+                  {files.map((f, idx) => (
+                    <div key={idx} className="flex items-center justify-between gap-2 rounded-md border p-2 text-sm">
+                      <span className="truncate">{f.name}</span>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-7 w-7"
+                        onClick={() => setFiles((prev) => prev.filter((_, i) => i !== idx))}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
                 </div>
-              ) : (
-                <label className="flex cursor-pointer flex-col items-center gap-1 rounded-md border border-dashed p-6 text-center text-sm text-muted-foreground hover:bg-muted/50">
-                  <Upload className="h-5 w-5" />
-                  <span>Click to choose a file</span>
-                  <span className="text-xs">JPG, PNG or PDF · up to 15MB</span>
-                  <input
-                    type="file"
-                    accept="image/*,application/pdf"
-                    className="hidden"
-                    onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-                  />
-                </label>
               )}
+              <label className="flex cursor-pointer flex-col items-center gap-1 rounded-md border border-dashed p-6 text-center text-sm text-muted-foreground hover:bg-muted/50">
+                <Upload className="h-5 w-5" />
+                <span>{files.length ? "Add more files" : "Click to choose files"}</span>
+                <span className="text-xs">JPG, PNG or PDF · up to 15MB each · multiple allowed</span>
+                <input
+                  type="file"
+                  accept="image/*,application/pdf"
+                  multiple
+                  className="hidden"
+                  onChange={(e) => {
+                    const picked = Array.from(e.target.files ?? []);
+                    if (picked.length) setFiles((prev) => [...prev, ...picked]);
+                    e.currentTarget.value = "";
+                  }}
+                />
+              </label>
             </div>
+
 
             <div className="space-y-2">
               <Label>Notes (optional)</Label>
