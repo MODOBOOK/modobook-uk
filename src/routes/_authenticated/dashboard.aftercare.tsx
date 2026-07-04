@@ -17,8 +17,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ArrowLeft, Plus, Pencil, Trash2, Copy, Sparkles } from "lucide-react";
+import { ArrowLeft, Plus, Pencil, Trash2, Copy, Sparkles, Wand2 } from "lucide-react";
 import { toast } from "sonner";
+import { AiGenerateAftercareDialog } from "@/components/aftercare/AiGenerateAftercareDialog";
 
 export const Route = createFileRoute("/_authenticated/dashboard/aftercare")({
   component: AftercarePage,
@@ -41,6 +42,7 @@ function AftercarePage() {
   const tQ = useQuery({ queryKey: ["my-treatments-basic"], queryFn: () => listTreatments() });
   const [editing, setEditing] = useState<Tpl | null>(null);
   const [open, setOpen] = useState(false);
+  const [aiOpen, setAiOpen] = useState(false);
   const [treatmentIds, setTreatmentIds] = useState<string[]>([]);
 
   const openEditor = async (tpl: Tpl) => {
@@ -60,11 +62,16 @@ function AftercarePage() {
         <Link to="/dashboard" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:underline">
           <ArrowLeft className="h-4 w-4" /> Dashboard
         </Link>
-        <Button
-          onClick={() => openEditor({ id: "", name: "", body_html: "", delay_hours: 2 })}
-        >
-          <Plus className="mr-1 h-4 w-4" /> New template
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={() => setAiOpen(true)}>
+            <Wand2 className="mr-1 h-4 w-4" /> Generate with AI
+          </Button>
+          <Button
+            onClick={() => openEditor({ id: "", name: "", body_html: "", delay_hours: 2 })}
+          >
+            <Plus className="mr-1 h-4 w-4" /> New template
+          </Button>
+        </div>
       </div>
 
       <header>
@@ -169,7 +176,7 @@ function AftercarePage() {
       })()}
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-xl">
+        <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto flex flex-col">
           <DialogHeader>
             <DialogTitle>{editing?.id ? "Edit template" : "New aftercare template"}</DialogTitle>
           </DialogHeader>
@@ -278,6 +285,21 @@ function AftercarePage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AiGenerateAftercareDialog
+        open={aiOpen}
+        onOpenChange={setAiOpen}
+        onGenerated={(out) => {
+          setEditing({
+            id: "",
+            name: out.name,
+            body_html: out.body_html,
+            delay_hours: out.delay_hours,
+          });
+          setTreatmentIds([]);
+          setOpen(true);
+        }}
+      />
     </div>
   );
 }
