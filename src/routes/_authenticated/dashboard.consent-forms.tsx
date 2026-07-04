@@ -30,9 +30,11 @@ import {
   Trash2,
   Search,
   Eye,
+  Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 import { ConsentSectionsEditor, ConsentSectionsView, type ConsentSection } from "@/components/ConsentSections";
+import { AiGenerateConsentDialog } from "@/components/medical-forms/AiGenerateConsentDialog";
 
 export const Route = createFileRoute("/_authenticated/dashboard/consent-forms")({
   component: ConsentFormsPage,
@@ -55,6 +57,8 @@ function ConsentFormsPage() {
   const [editing, setEditing] = useState<Tpl | null>(null);
   const [query, setQuery] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
+  const [aiOpen, setAiOpen] = useState(false);
+  const [aiSystem, setAiSystem] = useState(false);
 
 
   function newBlank() {
@@ -144,6 +148,12 @@ function ConsentFormsPage() {
           )}
         </div>
         <div className="flex flex-wrap gap-2">
+          <Button
+            size="sm"
+            onClick={() => { setAiSystem(false); setAiOpen(true); }}
+          >
+            <Sparkles className="mr-2 h-4 w-4" /> Generate with AI
+          </Button>
           <Button onClick={newBlank} size="sm" variant="outline">
             <FileSignature className="mr-2 h-4 w-4" /> New blank consent
           </Button>
@@ -168,6 +178,15 @@ function ConsentFormsPage() {
               }
             >
               <FileSignature className="mr-2 h-4 w-4" /> New system template
+            </Button>
+          )}
+          {isAdmin && (
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => { setAiSystem(true); setAiOpen(true); }}
+            >
+              <Sparkles className="mr-2 h-4 w-4" /> AI system template
             </Button>
           )}
         </div>
@@ -283,6 +302,13 @@ function ConsentFormsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AiGenerateConsentDialog
+        open={aiOpen}
+        onOpenChange={setAiOpen}
+        onCreated={refresh}
+        isSystem={aiSystem && isAdmin}
+      />
 
     </div>
   );
