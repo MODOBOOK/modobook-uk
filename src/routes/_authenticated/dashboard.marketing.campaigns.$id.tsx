@@ -59,7 +59,7 @@ function CampaignEditor() {
 
   useEffect(() => {
     let alive = true
-    Promise.all([get({ data: { id } }), segsFn({}), tmplsFn({})])
+    Promise.all([get({ data: { id } }), segsFn(), tmplsFn()])
       .then(([c, s, t]) => {
         if (!alive) return
         setCampaign(c); setName((c as any).name); setSubject((c as any).subject || '')
