@@ -78,6 +78,7 @@ function PatientProfilePage() {
   const get = useServerFn(getClient);
   const upsert = useServerFn(upsertClient);
   const remove = useServerFn(deleteClient);
+  const removeForever = useServerFn(permanentlyDeleteClient);
   const listAppt = useServerFn(listMyAppointments);
   const listConsults = useServerFn(listConsultationsForPatient);
   const createConsult = useServerFn(createConsultation);
