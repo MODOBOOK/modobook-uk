@@ -234,6 +234,7 @@ export async function sendBookingConfirmationEmails(appointmentIds: string[]) {
       recipientEmail: a.patient_email,
       messageId: `booking-confirm-${a.id}`,
       templateData: {
+        profileId: a.profile_id,
         patientName: (a.patient_name ?? '').split(' ')[0] || 'there',
         clinicName: a.profiles?.clinic_name ?? branding.clinicName,
         treatmentName: a.treatments?.name ?? 'your treatment',
