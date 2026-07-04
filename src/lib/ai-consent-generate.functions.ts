@@ -17,7 +17,7 @@ const SYSTEM_PROMPT = `You draft UK aesthetics clinic consent forms as structure
 Return ONLY raw JSON (no markdown fences) with this exact shape:
 {
   "name": string,                 // short title, e.g. "Anti-wrinkle (Botox) consent"
-  "treatment_type": string,       // short tag, e.g. "anti_wrinkle", "filler", "peel", "laser"
+  "treatment_type": string,       // short plain-English category, e.g. "Anti-wrinkle treatment", "Dermal filler", "Skin peel", "Laser treatment"
   "summary": string,              // one-line summary (<= 160 chars)
   "requires_signature": true,
   "sections": [
@@ -42,10 +42,39 @@ RULES
 - Be conservative and medically responsible; do NOT invent claims.
 - If the practitioner's notes name a specific treatment, tailor the form to it.
 - If sources are attached (photos/PDFs of an existing consent), preserve their intent and add anything obviously missing.
-- Do NOT include ids. Do NOT include markdown. Do NOT wrap in code fences.
+- Do NOT include ids. Do NOT include markdown, HTML tags, code-like text, underscores, variable names, or code fences.
+- Every visible word must be patient-readable plain English, not markup or code.
 - Output ONLY the JSON object.`;
 
 function nid() { return Math.random().toString(36).slice(2, 9); }
+
+function decodeEntities(s: string) {
+  const named: Record<string, string> = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " " };
+  return s.replace(/&(#x?[0-9a-f]+|[a-z]+);/gi, (match, entity) => {
+    const key = String(entity).toLowerCase();
+    if (key.startsWith("#x")) {
+      const code = Number.parseInt(key.slice(2), 16);
+      return Number.isFinite(code) ? String.fromCodePoint(code) : match;
+    }
+    if (key.startsWith("#")) {
+      const code = Number.parseInt(key.slice(1), 10);
+      return Number.isFinite(code) ? String.fromCodePoint(code) : match;
+    }
+    return named[key] ?? match;
+  });
+}
+
+function visibleText(value: string) {
+  return decodeEntities(value)
+    .replace(/<\s*br\s*\/?\s*>/gi, "\n")
+    .replace(/<\/\s*(p|div|h[1-6]|li|ul|ol|section|article)\s*>/gi, "\n")
+    .replace(/<[^>]*>/g, "")
+    .replace(/[`{}[\]<>]/g, "")
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
 
 type RawSection = { title?: unknown; body?: unknown; bullets?: unknown };
 
@@ -57,24 +86,25 @@ function sanitize(raw: any): {
   sections: ConsentSection[];
 } {
   const name = typeof raw?.name === "string" && raw.name.trim()
-    ? raw.name.trim().slice(0, 140)
+    ? visibleText(raw.name).slice(0, 140)
     : "AI generated consent";
   const treatment_type = typeof raw?.treatment_type === "string"
-    ? raw.treatment_type.trim().slice(0, 60)
+    ? visibleText(raw.treatment_type).slice(0, 60)
     : "";
   const summary = typeof raw?.summary === "string"
-    ? raw.summary.trim().slice(0, 240)
+    ? visibleText(raw.summary).slice(0, 240)
     : "";
   const inSections: RawSection[] = Array.isArray(raw?.sections) ? raw.sections : [];
   const sections: ConsentSection[] = inSections
     .map((s): ConsentSection | null => {
-      const title = typeof s?.title === "string" && s.title.trim() ? s.title.trim() : "";
+      const title = typeof s?.title === "string" && s.title.trim() ? visibleText(s.title) : "";
       if (!title) return null;
-      const body = typeof s?.body === "string" ? s.body.trim() : "";
+      const body = typeof s?.body === "string" ? visibleText(s.body) : "";
       const bullets = Array.isArray(s?.bullets)
         ? (s!.bullets as unknown[])
             .filter((b): b is string => typeof b === "string" && b.trim().length > 0)
-            .map((b) => b.trim())
+            .map((b) => visibleText(b))
+            .filter(Boolean)
         : [];
       const out: ConsentSection = { title } as ConsentSection;
       if (body) (out as any).body = body;
