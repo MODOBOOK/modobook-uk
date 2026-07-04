@@ -148,6 +148,12 @@ function ConsentFormsPage() {
           )}
         </div>
         <div className="flex flex-wrap gap-2">
+          <Button
+            size="sm"
+            onClick={() => { setAiSystem(false); setAiOpen(true); }}
+          >
+            <Sparkles className="mr-2 h-4 w-4" /> Generate with AI
+          </Button>
           <Button onClick={newBlank} size="sm" variant="outline">
             <FileSignature className="mr-2 h-4 w-4" /> New blank consent
           </Button>
