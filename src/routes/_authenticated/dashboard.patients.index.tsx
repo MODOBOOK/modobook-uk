@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { listClients, upsertClient, deleteClient, importClientsCsv, assignClientsToGroup, findDuplicateClients, mergeClients } from "@/lib/clients.functions";
+import { listClients, listArchivedClients, restoreClient, upsertClient, deleteClient, importClientsCsv, assignClientsToGroup, findDuplicateClients, mergeClients } from "@/lib/clients.functions";
 import { listMyAppointments } from "@/lib/availability.functions";
 import { createConsultation, listConsultationsForPatient } from "@/lib/consultations.functions";
 import { Button } from "@/components/ui/button";
