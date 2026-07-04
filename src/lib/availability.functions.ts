@@ -148,7 +148,8 @@ export const cancelAppointment = createServerFn({ method: "POST" })
       try {
         const { data: prof } = await context.supabase
           .from("profiles").select("clinic_name, slug").eq("id", profileId).maybeSingle();
-        const { tryEnqueueAppEmail, formatBookingDateTime } = await import("@/lib/email/send.server");
+        const { tryEnqueueAppEmail, formatBookingDateTime, getPractitionerBranding } = await import("@/lib/email/send.server");
+        const branding = await getPractitionerBranding(profileId);
         const origin = process.env.PUBLIC_APP_URL || process.env.APP_URL || "https://modobook.uk";
         void tryEnqueueAppEmail({
           templateName: "booking-cancellation",
@@ -156,12 +157,14 @@ export const cancelAppointment = createServerFn({ method: "POST" })
           messageId: `booking-cancel-${appt.id}`,
           templateData: {
             patientName: (appt.patient_name ?? "").split(" ")[0] || "there",
-            clinicName: prof?.clinic_name ?? "MODO",
+            clinicName: prof?.clinic_name ?? branding.clinicName,
             treatmentName: (appt as { treatments?: { name?: string } | null }).treatments?.name ?? "your appointment",
             dateTime: formatBookingDateTime(appt.scheduled_date as string, appt.start_time as string),
             cancelledBy: "clinic",
             reason: data.reason,
             rebookUrl: prof?.slug ? `${origin}/m/${prof.slug}` : origin,
+            logoUrl: branding.logoUrl,
+            brandColor: branding.brandColor,
           },
         });
       } catch (e) { console.error("[cancelAppointment] email failed", e); }
