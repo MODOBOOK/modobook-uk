@@ -82,26 +82,33 @@ function sanitize(raw: any): { name: string; description: string; schema: { step
 export const generateFormFromUpload = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i: {
-    fileDataUrl?: string;   // data:<mime>;base64,....  (image/* or application/pdf)
+    fileDataUrl?: string;   // legacy single-file input
     fileName?: string;
-    notes?: string;         // free-text description or additional instructions
+    files?: Array<{ dataUrl: string; name?: string }>;  // multiple files
+    notes?: string;
   }) => i ?? {})
   .handler(async ({ data }) => {
     const apiKey = process.env.LOVABLE_API_KEY;
     if (!apiKey) throw new Error("LOVABLE_API_KEY is not configured");
 
-    if (!data.fileDataUrl && !data.notes?.trim()) {
+    const files: Array<{ dataUrl: string; name?: string }> = [];
+    if (data.files?.length) files.push(...data.files);
+    if (data.fileDataUrl) files.push({ dataUrl: data.fileDataUrl, name: data.fileName });
+
+    if (!files.length && !data.notes?.trim()) {
       throw new Error("Upload a photo/PDF or type notes to describe the form.");
     }
 
     const userContent: any[] = [];
     const instruction = data.notes?.trim()
-      ? `Build a medical / consultation form. Additional notes from the practitioner:\n${data.notes.trim()}`
-      : "Convert the attached form into the JSON schema.";
+      ? `Build a medical / consultation form by combining the attached source(s) into ONE cohesive form. Merge duplicate questions and keep a logical order. Additional notes from the practitioner:\n${data.notes.trim()}`
+      : files.length > 1
+        ? "Combine the attached forms into ONE cohesive JSON schema. Merge duplicate questions and keep a logical order."
+        : "Convert the attached form into the JSON schema.";
     userContent.push({ type: "text", text: instruction });
 
-    if (data.fileDataUrl) {
-      const url = data.fileDataUrl;
+    for (const f of files) {
+      const url = f.dataUrl;
       const mimeMatch = /^data:([^;]+);base64,/.exec(url);
       const mime = mimeMatch?.[1] ?? "";
       if (mime.startsWith("image/")) {
@@ -109,10 +116,10 @@ export const generateFormFromUpload = createServerFn({ method: "POST" })
       } else if (mime === "application/pdf") {
         userContent.push({
           type: "file",
-          file: { filename: data.fileName || "form.pdf", file_data: url },
+          file: { filename: f.name || "form.pdf", file_data: url },
         });
       } else if (mime) {
-        throw new Error(`Unsupported file type: ${mime}. Upload a photo or PDF.`);
+        throw new Error(`Unsupported file type: ${mime}. Upload photos or PDFs.`);
       }
     }
 
