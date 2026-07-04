@@ -100,6 +100,7 @@ import { Route as ApiPublicPushDispatchRouteImport } from './routes/api/public/p
 import { Route as ApiPublicMedicalFormTokenRouteImport } from './routes/api.public.medical-form.$token'
 import { Route as ApiPublicHooksReviewEmailsRouteImport } from './routes/api/public/hooks/review-emails'
 import { Route as ApiPublicHooksMarketingDispatchRouteImport } from './routes/api/public/hooks/marketing-dispatch'
+import { Route as ApiPublicHooksDailyScheduleDigestRouteImport } from './routes/api/public/hooks/daily-schedule-digest'
 import { Route as ApiPublicHooksAppointmentRemindersRouteImport } from './routes/api/public/hooks/appointment-reminders'
 import { Route as AuthenticatedDashboardPatientsIdRouteImport } from './routes/_authenticated/dashboard.patients.$id'
 import { Route as AuthenticatedDashboardMarketingTemplatesRouteImport } from './routes/_authenticated/dashboard.marketing.templates'
@@ -616,6 +617,12 @@ const ApiPublicHooksMarketingDispatchRoute =
     path: '/api/public/hooks/marketing-dispatch',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksDailyScheduleDigestRoute =
+  ApiPublicHooksDailyScheduleDigestRouteImport.update({
+    id: '/api/public/hooks/daily-schedule-digest',
+    path: '/api/public/hooks/daily-schedule-digest',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksAppointmentRemindersRoute =
   ApiPublicHooksAppointmentRemindersRouteImport.update({
     id: '/api/public/hooks/appointment-reminders',
@@ -740,6 +747,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/marketing/templates': typeof AuthenticatedDashboardMarketingTemplatesRoute
   '/dashboard/patients/$id': typeof AuthenticatedDashboardPatientsIdRoute
   '/api/public/hooks/appointment-reminders': typeof ApiPublicHooksAppointmentRemindersRoute
+  '/api/public/hooks/daily-schedule-digest': typeof ApiPublicHooksDailyScheduleDigestRoute
   '/api/public/hooks/marketing-dispatch': typeof ApiPublicHooksMarketingDispatchRoute
   '/api/public/hooks/review-emails': typeof ApiPublicHooksReviewEmailsRoute
   '/api/public/medical-form/$token': typeof ApiPublicMedicalFormTokenRoute
@@ -833,6 +841,7 @@ export interface FileRoutesByTo {
   '/dashboard/marketing/templates': typeof AuthenticatedDashboardMarketingTemplatesRoute
   '/dashboard/patients/$id': typeof AuthenticatedDashboardPatientsIdRoute
   '/api/public/hooks/appointment-reminders': typeof ApiPublicHooksAppointmentRemindersRoute
+  '/api/public/hooks/daily-schedule-digest': typeof ApiPublicHooksDailyScheduleDigestRoute
   '/api/public/hooks/marketing-dispatch': typeof ApiPublicHooksMarketingDispatchRoute
   '/api/public/hooks/review-emails': typeof ApiPublicHooksReviewEmailsRoute
   '/api/public/medical-form/$token': typeof ApiPublicMedicalFormTokenRoute
@@ -934,6 +943,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/marketing/templates': typeof AuthenticatedDashboardMarketingTemplatesRoute
   '/_authenticated/dashboard/patients/$id': typeof AuthenticatedDashboardPatientsIdRoute
   '/api/public/hooks/appointment-reminders': typeof ApiPublicHooksAppointmentRemindersRoute
+  '/api/public/hooks/daily-schedule-digest': typeof ApiPublicHooksDailyScheduleDigestRoute
   '/api/public/hooks/marketing-dispatch': typeof ApiPublicHooksMarketingDispatchRoute
   '/api/public/hooks/review-emails': typeof ApiPublicHooksReviewEmailsRoute
   '/api/public/medical-form/$token': typeof ApiPublicMedicalFormTokenRoute
@@ -1035,6 +1045,7 @@ export interface FileRouteTypes {
     | '/dashboard/marketing/templates'
     | '/dashboard/patients/$id'
     | '/api/public/hooks/appointment-reminders'
+    | '/api/public/hooks/daily-schedule-digest'
     | '/api/public/hooks/marketing-dispatch'
     | '/api/public/hooks/review-emails'
     | '/api/public/medical-form/$token'
@@ -1128,6 +1139,7 @@ export interface FileRouteTypes {
     | '/dashboard/marketing/templates'
     | '/dashboard/patients/$id'
     | '/api/public/hooks/appointment-reminders'
+    | '/api/public/hooks/daily-schedule-digest'
     | '/api/public/hooks/marketing-dispatch'
     | '/api/public/hooks/review-emails'
     | '/api/public/medical-form/$token'
@@ -1228,6 +1240,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/marketing/templates'
     | '/_authenticated/dashboard/patients/$id'
     | '/api/public/hooks/appointment-reminders'
+    | '/api/public/hooks/daily-schedule-digest'
     | '/api/public/hooks/marketing-dispatch'
     | '/api/public/hooks/review-emails'
     | '/api/public/medical-form/$token'
@@ -1265,6 +1278,7 @@ export interface RootRouteChildren {
   MSlugRoute: typeof MSlugRouteWithChildren
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   ApiPublicHooksAppointmentRemindersRoute: typeof ApiPublicHooksAppointmentRemindersRoute
+  ApiPublicHooksDailyScheduleDigestRoute: typeof ApiPublicHooksDailyScheduleDigestRoute
   ApiPublicHooksMarketingDispatchRoute: typeof ApiPublicHooksMarketingDispatchRoute
   ApiPublicHooksReviewEmailsRoute: typeof ApiPublicHooksReviewEmailsRoute
   ApiPublicMedicalFormTokenRoute: typeof ApiPublicMedicalFormTokenRoute
@@ -1917,6 +1931,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksMarketingDispatchRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/daily-schedule-digest': {
+      id: '/api/public/hooks/daily-schedule-digest'
+      path: '/api/public/hooks/daily-schedule-digest'
+      fullPath: '/api/public/hooks/daily-schedule-digest'
+      preLoaderRoute: typeof ApiPublicHooksDailyScheduleDigestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/appointment-reminders': {
       id: '/api/public/hooks/appointment-reminders'
       path: '/api/public/hooks/appointment-reminders'
@@ -2245,6 +2266,8 @@ const rootRouteChildren: RootRouteChildren = {
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   ApiPublicHooksAppointmentRemindersRoute:
     ApiPublicHooksAppointmentRemindersRoute,
+  ApiPublicHooksDailyScheduleDigestRoute:
+    ApiPublicHooksDailyScheduleDigestRoute,
   ApiPublicHooksMarketingDispatchRoute: ApiPublicHooksMarketingDispatchRoute,
   ApiPublicHooksReviewEmailsRoute: ApiPublicHooksReviewEmailsRoute,
   ApiPublicMedicalFormTokenRoute: ApiPublicMedicalFormTokenRoute,
