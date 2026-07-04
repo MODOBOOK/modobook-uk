@@ -43,6 +43,30 @@ export async function enqueueAppEmail(
 
   const messageId = input.messageId || crypto.randomUUID()
 
+  // Merge practitioner override wording (subject/intro/closing) when a
+  // profileId is passed in templateData. Templates that accept the *Override
+  // props render them; templates that don't ignore them.
+  const baseData = { ...(input.templateData || {}) } as Record<string, unknown>
+  const profileId = baseData.profileId as string | undefined
+  if (profileId) {
+    try {
+      const { data: cust } = await supabase
+        .from('email_customizations')
+        .select('subject_override, intro_override, closing_override')
+        .eq('profile_id', profileId)
+        .eq('template_key', input.templateName as string)
+        .maybeSingle()
+      if (cust) {
+        if (cust.subject_override) baseData.subjectOverride = cust.subject_override
+        if (cust.intro_override) baseData.introOverride = cust.intro_override
+        if (cust.closing_override) baseData.closingOverride = cust.closing_override
+      }
+    } catch (e) {
+      console.error('[email] failed to load customization', e)
+    }
+  }
+
+
   // Dedup by message_id (skip if this exact send was already recorded)
   if (input.messageId) {
     const { data: existing } = await supabase
@@ -101,13 +125,13 @@ export async function enqueueAppEmail(
     if (stored?.token) unsubscribeToken = stored.token
   }
 
-  const element = React.createElement(template.component, input.templateData || {})
+  const element = React.createElement(template.component, baseData)
   const html = await render(element)
   const text = await render(element, { plainText: true })
 
   const subject =
     typeof template.subject === 'function'
-      ? template.subject(input.templateData || {})
+      ? template.subject(baseData)
       : template.subject
 
   await supabase.from('email_send_log').insert({
@@ -210,6 +234,7 @@ export async function sendBookingConfirmationEmails(appointmentIds: string[]) {
       recipientEmail: a.patient_email,
       messageId: `booking-confirm-${a.id}`,
       templateData: {
+        profileId: a.profile_id,
         patientName: (a.patient_name ?? '').split(' ')[0] || 'there',
         clinicName: a.profiles?.clinic_name ?? branding.clinicName,
         treatmentName: a.treatments?.name ?? 'your treatment',
