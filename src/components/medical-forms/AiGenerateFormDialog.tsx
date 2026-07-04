@@ -31,34 +31,32 @@ export function AiGenerateFormDialog({
   const generate = useServerFn(generateFormFromUpload);
   const save = useServerFn(saveForm);
 
-  const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
   const [notes, setNotes] = useState("");
   const [busy, setBusy] = useState(false);
   const [step, setStep] = useState<"input" | "preview">("input");
   const [preview, setPreview] = useState<{ name: string; description: string; schema: any } | null>(null);
 
   function reset() {
-    setFile(null); setNotes(""); setBusy(false); setStep("input"); setPreview(null);
+    setFiles([]); setNotes(""); setBusy(false); setStep("input"); setPreview(null);
   }
 
   async function handleGenerate() {
-    if (!file && !notes.trim()) {
-      toast.error("Upload a photo/PDF or type notes describing the form.");
+    if (!files.length && !notes.trim()) {
+      toast.error("Upload photos/PDFs or type notes describing the form.");
       return;
     }
-    if (file && file.size > MAX_BYTES) {
-      toast.error("File too large (max 15MB).");
+    const tooBig = files.find((f) => f.size > MAX_BYTES);
+    if (tooBig) {
+      toast.error(`"${tooBig.name}" is too large (max 15MB).`);
       return;
     }
     setBusy(true);
     try {
-      let fileDataUrl: string | undefined;
-      let fileName: string | undefined;
-      if (file) {
-        fileDataUrl = await readFileAsDataUrl(file);
-        fileName = file.name;
-      }
-      const out = await generate({ data: { fileDataUrl, fileName, notes } });
+      const encoded = await Promise.all(
+        files.map(async (f) => ({ dataUrl: await readFileAsDataUrl(f), name: f.name })),
+      );
+      const out = await generate({ data: { files: encoded, notes } });
       setPreview(out);
       setStep("preview");
     } catch (e) {
