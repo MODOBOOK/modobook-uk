@@ -976,7 +976,10 @@ function TreatmentDialog({
               price_mode: priceMode,
               badge: badge === "none" ? null : badge,
               deposit_amount: depositOverride.trim() === "" ? null : Math.max(0, Number(depositOverride)),
-
+              requires_prescriber: requiresPrescriber,
+              prescriber_user_id: requiresPrescriber ? (prescriberUserId || null) : null,
+              prescriber_routing: prescriberRouting,
+              prescriber_note: prescriberNote.trim() ? prescriberNote.trim() : null,
             })
 
           }
