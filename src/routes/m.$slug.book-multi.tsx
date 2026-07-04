@@ -410,6 +410,7 @@ function MultiBookPage() {
     setSubmitting(true);
     try {
       const applicableIds = new Set(discount?.applies_to_treatment_ids ?? []);
+      const depositOverridesSplit = paymentChoice?.mode === "deposit";
       const bookings = treatments.map((t) => {
         let price = priceFor(t);
         if (discount && applicableIds.has(t.id)) {
@@ -423,7 +424,7 @@ function MultiBookPage() {
           durationMin: durationFor(t),
           priceCents: Math.round(price * 100),
           sessionCount: Math.max(1, Number((t as { session_count?: number }).session_count ?? 1)),
-          paymentPlan: selectedPaymentPlan(t),
+          paymentPlan: depositOverridesSplit ? ("full" as const) : selectedPaymentPlan(t),
           clinicVisitId: visitSelections[t.id] ?? null,
         };
       });
@@ -1260,35 +1261,64 @@ function MultiBookPage() {
                   </Card>
                 )}
 
-                <BookingPaymentPicker
-                  slug={slug}
-                  totalAmount={totalAfterDiscount}
-                  value={paymentChoice}
-                  onChange={setPaymentChoice}
-                  accent={brand}
-                  depositOverrideCents={(() => {
-                    const overrides = treatments
-                      .map((t) => (t as { deposit_amount?: number | null }).deposit_amount)
-                      .filter((v): v is number => v != null && v > 0);
-                    if (overrides.length === 0) return null;
-                    return Math.round(overrides.reduce((a, b) => a + b, 0) * 100);
-                  })()}
-                  splitInfo={(() => {
-                    const splitOnes = splitEligibleTreatments.filter((t) => selectedPaymentPlan(t) === "split");
-                    if (splitOnes.length === 0) return null;
-                    const maxSessions = Math.max(
-                      ...splitOnes.map((t) => Math.max(2, Number((t as { session_count?: number }).session_count ?? 2))),
-                    );
-                    return { sessionCount: maxSessions };
-                  })()}
-                />
-
                 {(() => {
                   const anySplit = splitEligibleTreatments.some((t) => selectedPaymentPlan(t) === "split");
+                  // Per-session today: split treatments contribute price/sessions; others contribute full price.
+                  let perSessionToday = 0;
+                  let remainingPerSession = 0;
+                  treatments.forEach((t) => {
+                    const sessions = Math.max(1, Number((t as { session_count?: number }).session_count ?? 1));
+                    const isSplit =
+                      Boolean((t as { allow_split_payment?: boolean }).allow_split_payment) &&
+                      sessions > 1 &&
+                      selectedPaymentPlan(t) === "split";
+                    if (isSplit) {
+                      perSessionToday += priceFor(t) / sessions;
+                      remainingPerSession += priceFor(t) / sessions;
+                    } else {
+                      perSessionToday += priceFor(t);
+                    }
+                  });
+                  // Apply proportional discount to the today figure.
+                  if (totalPrice > 0 && discountTotal > 0) {
+                    perSessionToday = Math.max(0, perSessionToday - (perSessionToday / totalPrice) * discountTotal);
+                    remainingPerSession = Math.max(0, remainingPerSession - (remainingPerSession / totalPrice) * discountTotal);
+                  }
+                  const maxSessions = anySplit
+                    ? Math.max(
+                        ...splitEligibleTreatments
+                          .filter((t) => selectedPaymentPlan(t) === "split")
+                          .map((t) => Math.max(2, Number((t as { session_count?: number }).session_count ?? 2))),
+                      )
+                    : 0;
+                  return (
+                    <BookingPaymentPicker
+                      slug={slug}
+                      totalAmount={anySplit ? perSessionToday : totalAfterDiscount}
+                      value={paymentChoice}
+                      onChange={setPaymentChoice}
+                      accent={brand}
+                      depositOverrideCents={(() => {
+                        const overrides = treatments
+                          .map((t) => (t as { deposit_amount?: number | null }).deposit_amount)
+                          .filter((v): v is number => v != null && v > 0);
+                        if (overrides.length === 0) return null;
+                        return Math.round(overrides.reduce((a, b) => a + b, 0) * 100);
+                      })()}
+                      splitInfo={anySplit ? { sessionCount: maxSessions, remainingPerSessionCents: Math.round(remainingPerSession * 100) } : null}
+                    />
+                  );
+                })()}
+
+                {(() => {
+                  const isDeposit = paymentChoice?.mode === "deposit";
+                  // Deposit overrides split: charge deposit today, balance at appointment.
+                  const anySplit = !isDeposit && splitEligibleTreatments.some((t) => selectedPaymentPlan(t) === "split");
                   let dueToday = 0;
                   treatments.forEach((t) => {
                     const sessions = Math.max(1, Number((t as { session_count?: number }).session_count ?? 1));
                     const isSplit =
+                      !isDeposit &&
                       Boolean((t as { allow_split_payment?: boolean }).allow_split_payment) &&
                       sessions > 1 &&
                       selectedPaymentPlan(t) === "split";
@@ -1305,9 +1335,11 @@ function MultiBookPage() {
                           ? "Please give prescriber consent above"
                           : anySplit && !splitAgreed
                             ? "Tick the split-payment agreement to continue"
-                            : anySplit
-                              ? `Book & pay £${dueToday.toFixed(2)} today (rest at each session)`
-                              : `Confirm ${treatments.length} booking${treatments.length === 1 ? "" : "s"} · £${totalAfterDiscount.toFixed(2)}`;
+                            : isDeposit
+                              ? `Book & pay deposit today`
+                              : anySplit
+                                ? `Book & pay £${dueToday.toFixed(2)} today (rest at each session)`
+                                : `Confirm ${treatments.length} booking${treatments.length === 1 ? "" : "s"} · £${totalAfterDiscount.toFixed(2)}`;
                   return (
                     <Button
                       className="mt-4 w-full"
