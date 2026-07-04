@@ -2,9 +2,16 @@
 // clinic's behalf. Renders plain-text-style body (newlines preserved) inside
 // the branded MODO shell using the practitioner's logo/colour.
 import * as React from 'react'
-import { Head, Html, Preview, Text } from '@react-email/components'
-import { ModoShell, styles } from './_modo-brand'
+import { Button, Head, Html, Preview, Section, Text } from '@react-email/components'
+import { ModoShell, brandedButton, styles } from './_modo-brand'
 import type { TemplateEntry } from './registry'
+
+export interface PatientMessageAction {
+  label: string
+  url: string
+  /** Visual style: 'primary' fills with brand colour, 'secondary' is outlined. */
+  variant?: 'primary' | 'secondary'
+}
 
 export interface PatientMessageData {
   subject?: string
@@ -14,6 +21,8 @@ export interface PatientMessageData {
   brandColor?: string | null
   /** Optional prefix (e.g. "COPY — sent to patient") shown above the body. */
   copyNotice?: string | null
+  /** Optional call-to-action buttons rendered below the body. */
+  actions?: PatientMessageAction[]
 }
 
 export function PatientMessageEmail(data: PatientMessageData) {
@@ -24,8 +33,16 @@ export function PatientMessageEmail(data: PatientMessageData) {
     logoUrl,
     brandColor,
     copyNotice,
+    actions,
   } = data
   const paragraphs = String(body).split(/\n{2,}/)
+  const primaryStyle = brandedButton(brandColor)
+  const secondaryStyle: React.CSSProperties = {
+    ...styles.button,
+    backgroundColor: '#ffffff',
+    color: brandColor || '#2b2620',
+    border: `1.5px solid ${brandColor || '#2b2620'}`,
+  }
   return (
     <Html>
       <Head />
@@ -46,6 +63,22 @@ export function PatientMessageEmail(data: PatientMessageData) {
             ))}
           </Text>
         ))}
+        {actions && actions.length > 0 ? (
+          <Section style={{ textAlign: 'center', margin: '28px 0 8px' }}>
+            {actions.map((a, i) => (
+              <Button
+                key={i}
+                href={a.url}
+                style={{
+                  ...(a.variant === 'secondary' ? secondaryStyle : primaryStyle),
+                  margin: '6px 6px',
+                }}
+              >
+                {a.label}
+              </Button>
+            ))}
+          </Section>
+        ) : null}
       </ModoShell>
     </Html>
   )
