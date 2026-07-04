@@ -339,6 +339,24 @@ function TreatmentDialog({
   const [duration, setDuration] = useState(treatment?.duration ?? 30);
   const [price, setPrice] = useState(treatment?.price ?? 0);
   const [description, setDescription] = useState(treatment?.description ?? "");
+  const [aiDescLoading, setAiDescLoading] = useState(false);
+  const runGenerateDesc = useServerFn(generateTreatmentDescription);
+  async function handleGenerateDescription() {
+    if (!name.trim()) {
+      toast.error("Enter a treatment name first");
+      return;
+    }
+    setAiDescLoading(true);
+    try {
+      const r = await runGenerateDesc({ data: { name: name.trim(), notes: description.trim() || undefined } });
+      setDescription(r.description);
+      toast.success("Description generated");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to generate");
+    } finally {
+      setAiDescLoading(false);
+    }
+  }
   const [active, setActive] = useState(treatment?.active ?? true);
   const [consentIds, setConsentIds] = useState<string[]>([]);
   const [addons, setAddons] = useState<AddonLink[]>([]);
