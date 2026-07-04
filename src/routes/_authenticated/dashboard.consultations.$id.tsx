@@ -623,7 +623,7 @@ function Step7({ log, onChange }: any) {
 
   return (
     <div className="space-y-4">
-      <Header n={7} title="Treatment performed" subtitle="Record each product used, batch numbers, and dosing." />
+      <Header n={7} title="Treatment performed" subtitle="Record products used, face mapping, and dosing." />
 
       {products.length === 0 && (
         <div className="rounded-lg border border-dashed bg-muted/40 p-6 text-center text-xs text-muted-foreground">
@@ -649,6 +649,12 @@ function Step7({ log, onChange }: any) {
           <span className="font-semibold">£{total.toFixed(2)}</span>
         </div>
       )}
+
+      <FaceMapAnnotator
+        title="Face map — treatment performed"
+        value={log?.face_map}
+        onChange={(v) => onChange({ ...log, face_map: v })}
+      />
 
       <Separator />
 
