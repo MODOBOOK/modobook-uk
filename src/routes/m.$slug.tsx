@@ -89,8 +89,8 @@ export const Route = createFileRoute("/m/$slug")({
         const manifest = {
           name: headerName,
           short_name: headerName.slice(0, 12) || "Clinic",
-          start_url: `/m/${loaderData?.profile?.slug ?? ""}`,
-          scope: `/m/${loaderData?.profile?.slug ?? ""}`,
+          start_url: `/m/${loaderData?.slug ?? ""}`,
+          scope: `/m/${loaderData?.slug ?? ""}`,
           display: "standalone",
           background_color: bgColor,
           theme_color: themeColor,
