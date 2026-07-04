@@ -414,6 +414,80 @@ export type Database = {
           },
         ]
       }
+      appointment_reminder_rules: {
+        Row: {
+          closing: string | null
+          created_at: string
+          enabled: boolean
+          hours_before: number
+          id: string
+          intro: string | null
+          profile_id: string
+          subject: string | null
+        }
+        Insert: {
+          closing?: string | null
+          created_at?: string
+          enabled?: boolean
+          hours_before: number
+          id?: string
+          intro?: string | null
+          profile_id: string
+          subject?: string | null
+        }
+        Update: {
+          closing?: string | null
+          created_at?: string
+          enabled?: boolean
+          hours_before?: number
+          id?: string
+          intro?: string | null
+          profile_id?: string
+          subject?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_reminder_rules_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      appointment_reminders_sent: {
+        Row: {
+          appointment_id: string
+          rule_id: string
+          sent_at: string
+        }
+        Insert: {
+          appointment_id: string
+          rule_id: string
+          sent_at?: string
+        }
+        Update: {
+          appointment_id?: string
+          rule_id?: string
+          sent_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_reminders_sent_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointment_reminders_sent_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "appointment_reminder_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       appointments: {
         Row: {
           addon_ids: string[] | null
@@ -2000,6 +2074,41 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "discount_codes_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_customizations: {
+        Row: {
+          closing_override: string | null
+          intro_override: string | null
+          profile_id: string
+          subject_override: string | null
+          template_key: string
+          updated_at: string
+        }
+        Insert: {
+          closing_override?: string | null
+          intro_override?: string | null
+          profile_id: string
+          subject_override?: string | null
+          template_key: string
+          updated_at?: string
+        }
+        Update: {
+          closing_override?: string | null
+          intro_override?: string | null
+          profile_id?: string
+          subject_override?: string | null
+          template_key?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_customizations_profile_id_fkey"
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
