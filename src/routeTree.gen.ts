@@ -99,7 +99,11 @@ import { Route as ApiPublicMedicalFormTokenRouteImport } from './routes/api.publ
 import { Route as ApiPublicHooksReviewEmailsRouteImport } from './routes/api/public/hooks/review-emails'
 import { Route as ApiPublicHooksMarketingDispatchRouteImport } from './routes/api/public/hooks/marketing-dispatch'
 import { Route as AuthenticatedDashboardPatientsIdRouteImport } from './routes/_authenticated/dashboard.patients.$id'
+import { Route as AuthenticatedDashboardMarketingTemplatesRouteImport } from './routes/_authenticated/dashboard.marketing.templates'
+import { Route as AuthenticatedDashboardMarketingSegmentsRouteImport } from './routes/_authenticated/dashboard.marketing.segments'
+import { Route as AuthenticatedDashboardMarketingAnalyticsRouteImport } from './routes/_authenticated/dashboard.marketing.analytics'
 import { Route as AuthenticatedDashboardConsultationsIdRouteImport } from './routes/_authenticated/dashboard.consultations.$id'
+import { Route as AuthenticatedDashboardMarketingCampaignsIdRouteImport } from './routes/_authenticated/dashboard.marketing.campaigns.$id'
 
 const WhoItsForRoute = WhoItsForRouteImport.update({
   id: '/who-its-for',
@@ -603,11 +607,35 @@ const AuthenticatedDashboardPatientsIdRoute =
     path: '/$id',
     getParentRoute: () => AuthenticatedDashboardPatientsRoute,
   } as any)
+const AuthenticatedDashboardMarketingTemplatesRoute =
+  AuthenticatedDashboardMarketingTemplatesRouteImport.update({
+    id: '/templates',
+    path: '/templates',
+    getParentRoute: () => AuthenticatedDashboardMarketingRoute,
+  } as any)
+const AuthenticatedDashboardMarketingSegmentsRoute =
+  AuthenticatedDashboardMarketingSegmentsRouteImport.update({
+    id: '/segments',
+    path: '/segments',
+    getParentRoute: () => AuthenticatedDashboardMarketingRoute,
+  } as any)
+const AuthenticatedDashboardMarketingAnalyticsRoute =
+  AuthenticatedDashboardMarketingAnalyticsRouteImport.update({
+    id: '/analytics',
+    path: '/analytics',
+    getParentRoute: () => AuthenticatedDashboardMarketingRoute,
+  } as any)
 const AuthenticatedDashboardConsultationsIdRoute =
   AuthenticatedDashboardConsultationsIdRouteImport.update({
     id: '/consultations/$id',
     path: '/consultations/$id',
     getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardMarketingCampaignsIdRoute =
+  AuthenticatedDashboardMarketingCampaignsIdRouteImport.update({
+    id: '/campaigns/$id',
+    path: '/campaigns/$id',
+    getParentRoute: () => AuthenticatedDashboardMarketingRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -684,6 +712,9 @@ export interface FileRoutesByFullPath {
   '/prescriber/': typeof AuthenticatedPrescriberIndexRoute
   '/m/$slug/': typeof MSlugIndexRoute
   '/dashboard/consultations/$id': typeof AuthenticatedDashboardConsultationsIdRoute
+  '/dashboard/marketing/analytics': typeof AuthenticatedDashboardMarketingAnalyticsRoute
+  '/dashboard/marketing/segments': typeof AuthenticatedDashboardMarketingSegmentsRoute
+  '/dashboard/marketing/templates': typeof AuthenticatedDashboardMarketingTemplatesRoute
   '/dashboard/patients/$id': typeof AuthenticatedDashboardPatientsIdRoute
   '/api/public/hooks/marketing-dispatch': typeof ApiPublicHooksMarketingDispatchRoute
   '/api/public/hooks/review-emails': typeof ApiPublicHooksReviewEmailsRoute
@@ -701,6 +732,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/consultations/': typeof AuthenticatedDashboardConsultationsIndexRoute
   '/dashboard/marketing/': typeof AuthenticatedDashboardMarketingIndexRoute
   '/dashboard/patients/': typeof AuthenticatedDashboardPatientsIndexRoute
+  '/dashboard/marketing/campaigns/$id': typeof AuthenticatedDashboardMarketingCampaignsIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -770,6 +802,9 @@ export interface FileRoutesByTo {
   '/prescriber': typeof AuthenticatedPrescriberIndexRoute
   '/m/$slug': typeof MSlugIndexRoute
   '/dashboard/consultations/$id': typeof AuthenticatedDashboardConsultationsIdRoute
+  '/dashboard/marketing/analytics': typeof AuthenticatedDashboardMarketingAnalyticsRoute
+  '/dashboard/marketing/segments': typeof AuthenticatedDashboardMarketingSegmentsRoute
+  '/dashboard/marketing/templates': typeof AuthenticatedDashboardMarketingTemplatesRoute
   '/dashboard/patients/$id': typeof AuthenticatedDashboardPatientsIdRoute
   '/api/public/hooks/marketing-dispatch': typeof ApiPublicHooksMarketingDispatchRoute
   '/api/public/hooks/review-emails': typeof ApiPublicHooksReviewEmailsRoute
@@ -787,6 +822,7 @@ export interface FileRoutesByTo {
   '/dashboard/consultations': typeof AuthenticatedDashboardConsultationsIndexRoute
   '/dashboard/marketing': typeof AuthenticatedDashboardMarketingIndexRoute
   '/dashboard/patients': typeof AuthenticatedDashboardPatientsIndexRoute
+  '/dashboard/marketing/campaigns/$id': typeof AuthenticatedDashboardMarketingCampaignsIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -864,6 +900,9 @@ export interface FileRoutesById {
   '/_authenticated/prescriber/': typeof AuthenticatedPrescriberIndexRoute
   '/m/$slug/': typeof MSlugIndexRoute
   '/_authenticated/dashboard/consultations/$id': typeof AuthenticatedDashboardConsultationsIdRoute
+  '/_authenticated/dashboard/marketing/analytics': typeof AuthenticatedDashboardMarketingAnalyticsRoute
+  '/_authenticated/dashboard/marketing/segments': typeof AuthenticatedDashboardMarketingSegmentsRoute
+  '/_authenticated/dashboard/marketing/templates': typeof AuthenticatedDashboardMarketingTemplatesRoute
   '/_authenticated/dashboard/patients/$id': typeof AuthenticatedDashboardPatientsIdRoute
   '/api/public/hooks/marketing-dispatch': typeof ApiPublicHooksMarketingDispatchRoute
   '/api/public/hooks/review-emails': typeof ApiPublicHooksReviewEmailsRoute
@@ -881,6 +920,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/consultations/': typeof AuthenticatedDashboardConsultationsIndexRoute
   '/_authenticated/dashboard/marketing/': typeof AuthenticatedDashboardMarketingIndexRoute
   '/_authenticated/dashboard/patients/': typeof AuthenticatedDashboardPatientsIndexRoute
+  '/_authenticated/dashboard/marketing/campaigns/$id': typeof AuthenticatedDashboardMarketingCampaignsIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -958,6 +998,9 @@ export interface FileRouteTypes {
     | '/prescriber/'
     | '/m/$slug/'
     | '/dashboard/consultations/$id'
+    | '/dashboard/marketing/analytics'
+    | '/dashboard/marketing/segments'
+    | '/dashboard/marketing/templates'
     | '/dashboard/patients/$id'
     | '/api/public/hooks/marketing-dispatch'
     | '/api/public/hooks/review-emails'
@@ -975,6 +1018,7 @@ export interface FileRouteTypes {
     | '/dashboard/consultations/'
     | '/dashboard/marketing/'
     | '/dashboard/patients/'
+    | '/dashboard/marketing/campaigns/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -1044,6 +1088,9 @@ export interface FileRouteTypes {
     | '/prescriber'
     | '/m/$slug'
     | '/dashboard/consultations/$id'
+    | '/dashboard/marketing/analytics'
+    | '/dashboard/marketing/segments'
+    | '/dashboard/marketing/templates'
     | '/dashboard/patients/$id'
     | '/api/public/hooks/marketing-dispatch'
     | '/api/public/hooks/review-emails'
@@ -1061,6 +1108,7 @@ export interface FileRouteTypes {
     | '/dashboard/consultations'
     | '/dashboard/marketing'
     | '/dashboard/patients'
+    | '/dashboard/marketing/campaigns/$id'
   id:
     | '__root__'
     | '/'
@@ -1137,6 +1185,9 @@ export interface FileRouteTypes {
     | '/_authenticated/prescriber/'
     | '/m/$slug/'
     | '/_authenticated/dashboard/consultations/$id'
+    | '/_authenticated/dashboard/marketing/analytics'
+    | '/_authenticated/dashboard/marketing/segments'
+    | '/_authenticated/dashboard/marketing/templates'
     | '/_authenticated/dashboard/patients/$id'
     | '/api/public/hooks/marketing-dispatch'
     | '/api/public/hooks/review-emails'
@@ -1154,6 +1205,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/consultations/'
     | '/_authenticated/dashboard/marketing/'
     | '/_authenticated/dashboard/patients/'
+    | '/_authenticated/dashboard/marketing/campaigns/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -1818,6 +1870,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardPatientsIdRouteImport
       parentRoute: typeof AuthenticatedDashboardPatientsRoute
     }
+    '/_authenticated/dashboard/marketing/templates': {
+      id: '/_authenticated/dashboard/marketing/templates'
+      path: '/templates'
+      fullPath: '/dashboard/marketing/templates'
+      preLoaderRoute: typeof AuthenticatedDashboardMarketingTemplatesRouteImport
+      parentRoute: typeof AuthenticatedDashboardMarketingRoute
+    }
+    '/_authenticated/dashboard/marketing/segments': {
+      id: '/_authenticated/dashboard/marketing/segments'
+      path: '/segments'
+      fullPath: '/dashboard/marketing/segments'
+      preLoaderRoute: typeof AuthenticatedDashboardMarketingSegmentsRouteImport
+      parentRoute: typeof AuthenticatedDashboardMarketingRoute
+    }
+    '/_authenticated/dashboard/marketing/analytics': {
+      id: '/_authenticated/dashboard/marketing/analytics'
+      path: '/analytics'
+      fullPath: '/dashboard/marketing/analytics'
+      preLoaderRoute: typeof AuthenticatedDashboardMarketingAnalyticsRouteImport
+      parentRoute: typeof AuthenticatedDashboardMarketingRoute
+    }
     '/_authenticated/dashboard/consultations/$id': {
       id: '/_authenticated/dashboard/consultations/$id'
       path: '/consultations/$id'
@@ -1825,17 +1898,36 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardConsultationsIdRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
+    '/_authenticated/dashboard/marketing/campaigns/$id': {
+      id: '/_authenticated/dashboard/marketing/campaigns/$id'
+      path: '/campaigns/$id'
+      fullPath: '/dashboard/marketing/campaigns/$id'
+      preLoaderRoute: typeof AuthenticatedDashboardMarketingCampaignsIdRouteImport
+      parentRoute: typeof AuthenticatedDashboardMarketingRoute
+    }
   }
 }
 
 interface AuthenticatedDashboardMarketingRouteChildren {
+  AuthenticatedDashboardMarketingAnalyticsRoute: typeof AuthenticatedDashboardMarketingAnalyticsRoute
+  AuthenticatedDashboardMarketingSegmentsRoute: typeof AuthenticatedDashboardMarketingSegmentsRoute
+  AuthenticatedDashboardMarketingTemplatesRoute: typeof AuthenticatedDashboardMarketingTemplatesRoute
   AuthenticatedDashboardMarketingIndexRoute: typeof AuthenticatedDashboardMarketingIndexRoute
+  AuthenticatedDashboardMarketingCampaignsIdRoute: typeof AuthenticatedDashboardMarketingCampaignsIdRoute
 }
 
 const AuthenticatedDashboardMarketingRouteChildren: AuthenticatedDashboardMarketingRouteChildren =
   {
+    AuthenticatedDashboardMarketingAnalyticsRoute:
+      AuthenticatedDashboardMarketingAnalyticsRoute,
+    AuthenticatedDashboardMarketingSegmentsRoute:
+      AuthenticatedDashboardMarketingSegmentsRoute,
+    AuthenticatedDashboardMarketingTemplatesRoute:
+      AuthenticatedDashboardMarketingTemplatesRoute,
     AuthenticatedDashboardMarketingIndexRoute:
       AuthenticatedDashboardMarketingIndexRoute,
+    AuthenticatedDashboardMarketingCampaignsIdRoute:
+      AuthenticatedDashboardMarketingCampaignsIdRoute,
   }
 
 const AuthenticatedDashboardMarketingRouteWithChildren =
