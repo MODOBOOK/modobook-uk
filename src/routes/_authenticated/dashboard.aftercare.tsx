@@ -285,6 +285,21 @@ function AftercarePage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AiGenerateAftercareDialog
+        open={aiOpen}
+        onOpenChange={setAiOpen}
+        onGenerated={(out) => {
+          setEditing({
+            id: "",
+            name: out.name,
+            body_html: out.body_html,
+            delay_hours: out.delay_hours,
+          });
+          setTreatmentIds([]);
+          setOpen(true);
+        }}
+      />
     </div>
   );
 }
