@@ -116,7 +116,7 @@ export const cancelAppointmentByToken = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const sb = publicClient();
     // Load appointment first (for email context) via existing manage-token RPC
-    let apptRow: {
+    type ApptCtx = {
       id?: string;
       patient_name?: string;
       patient_email?: string;
@@ -125,16 +125,17 @@ export const cancelAppointmentByToken = createServerFn({ method: "POST" })
       treatment_name?: string;
       clinic_name?: string;
       clinic_slug?: string;
-    } | null = null;
+    };
+    let apptRow: ApptCtx | null = null;
     try {
       const { data: row } = await sb.rpc("get_appointment_by_manage_token", { p_token: data.token }).single();
-      apptRow = (row ?? null) as typeof apptRow;
+      apptRow = (row as unknown as ApptCtx | null) ?? null;
     } catch { /* ignore */ }
 
     const { data: ok, error } = await sb.rpc("cancel_appointment_by_token", { p_token: data.token });
     if (error) throw error;
 
-    const a = apptRow;
+    const a: ApptCtx | null = apptRow;
     if (ok && a && a.patient_email && a.id) {
       try {
         const { tryEnqueueAppEmail, formatBookingDateTime } = await import("@/lib/email/send.server");
