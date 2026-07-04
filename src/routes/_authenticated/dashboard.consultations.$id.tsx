@@ -790,6 +790,22 @@ function Step8({ invoice, email, patientName, consultationId, onChange, onComple
         }
       }
 
+      // Generate the branded invoice PDF (with the pay-now button baked in)
+      // and upload to storage so we can link it in the email.
+      const { generateInvoicePdf } = await import("@/lib/invoice-pdf");
+      const pdfArgs = profileToInvoiceArgs(profile);
+      const doc = await generateInvoicePdf({ ...pdfArgs, paymentLink: paymentLink ?? undefined });
+      const pdfBlob = doc.output("blob");
+      const { data: { user } } = await supabase.auth.getUser();
+      const pdfPath = `${user!.id}/invoices/${consultationId}-${Date.now()}.pdf`;
+      const up = await supabase.storage
+        .from("clinic-assets")
+        .upload(pdfPath, pdfBlob, { upsert: true, contentType: "application/pdf" });
+      if (up.error) throw up.error;
+      const TEN_YEARS = 60 * 60 * 24 * 365 * 10;
+      const signed = await supabase.storage.from("clinic-assets").createSignedUrl(pdfPath, TEN_YEARS);
+      const pdfUrl = signed.data?.signedUrl ?? null;
+
       const clinicName = profile?.clinic_name || profile?.full_name || "your clinic";
       const itemsText = items
         .map(i => `• ${i.description || "Treatment"} × ${i.qty} — £${(Number(i.qty) * Number(i.unitPrice)).toFixed(2)}`)
@@ -799,7 +815,8 @@ function Step8({ invoice, email, patientName, consultationId, onChange, onComple
         `Please find your invoice from ${clinicName} below.\n\n` +
         `${itemsText}\n\n` +
         `Total: £${amountNum.toFixed(2)}\n\n` +
-        (paymentLink ? `Pay securely online:\n${paymentLink}\n\n` : "") +
+        (pdfUrl ? `View your branded invoice PDF:\n${pdfUrl}\n\n` : "") +
+        (paymentLink ? `Press here to pay now:\n${paymentLink}\n\n` : "") +
         `Reference: ${consultationId?.slice(0, 8).toUpperCase() ?? ""}\n\n` +
         `Thank you,\n${profile?.full_name ?? clinicName}`;
 
@@ -807,7 +824,7 @@ function Step8({ invoice, email, patientName, consultationId, onChange, onComple
       const res = await sendAppEmail({
         templateName: "patient-message",
         recipientEmail: sendEmail,
-        idempotencyKey: `invoice-${consultationId}-${Math.round(amountNum * 100)}`,
+        idempotencyKey: `invoice-${consultationId}-${Math.round(amountNum * 100)}-${Date.now()}`,
         templateData: {
           subject: `Your invoice from ${clinicName}`,
           body,
