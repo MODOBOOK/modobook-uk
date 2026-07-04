@@ -1,7 +1,7 @@
 // Shared MODO branding for auth emails. Keep pure inline styles — email clients
 // don't support Tailwind or external CSS.
 import * as React from 'react'
-import { Body, Container, Head, Hr, Section, Text } from '@react-email/components'
+import { Body, Container, Head, Hr, Img, Section, Text } from '@react-email/components'
 
 export const brand = {
   bg: '#ffffff',
