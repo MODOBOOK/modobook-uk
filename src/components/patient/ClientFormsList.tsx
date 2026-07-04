@@ -141,7 +141,12 @@ function EditField({ el, value, onChange }: { el: El; value: any; onChange: (v: 
     );
   }
   if (t === "signature") {
-    return <Input value={value ?? ""} onChange={(e) => onChange(e.target.value)} placeholder="Type full name to sign" />;
+    return (
+      <SignaturePad
+        value={typeof value === "string" && value.startsWith("data:image") ? value : null}
+        onChange={(v) => onChange(v ?? "")}
+      />
+    );
   }
   // fallback
   return <Input value={value ?? ""} onChange={(e) => onChange(e.target.value)} />;
