@@ -1,7 +1,7 @@
 // Shared MODO branding for auth emails. Keep pure inline styles — email clients
 // don't support Tailwind or external CSS.
 import * as React from 'react'
-import { Body, Container, Head, Hr, Section, Text } from '@react-email/components'
+import { Body, Container, Head, Hr, Img, Section, Text } from '@react-email/components'
 
 export const brand = {
   bg: '#ffffff',
@@ -107,19 +107,41 @@ export function ModoShell({
   preview,
   children,
   siteName,
+  logoUrl,
+  brandColor,
 }: {
   preview: React.ReactNode
   children: React.ReactNode
   siteName?: string
+  /** Practitioner logo URL — replaces the MODO wordmark when provided. */
+  logoUrl?: string | null
+  /** Practitioner brand colour — used as the tagline accent when provided. */
+  brandColor?: string | null
 }) {
   const _preview = preview // silence unused warning; Preview is set by caller
   void _preview
+  const accent = brandColor || brand.accent
   return (
     <Body style={styles.main}>
       <Container style={styles.container}>
         <Section>
-          <Text style={styles.wordmark}>MODO</Text>
-          <Text style={styles.tagline}>The Modern Aesthetics Studio</Text>
+          {logoUrl ? (
+            <Section style={{ textAlign: 'center', margin: '0 0 20px' }}>
+              <Img
+                src={logoUrl}
+                alt={siteName || 'Clinic logo'}
+                height="56"
+                style={{ height: '56px', width: 'auto', margin: '0 auto', display: 'inline-block' }}
+              />
+            </Section>
+          ) : (
+            <>
+              <Text style={styles.wordmark}>{siteName || 'MODO'}</Text>
+              <Text style={{ ...styles.tagline, color: accent }}>
+                {siteName ? 'Appointment update' : 'The Modern Aesthetics Studio'}
+              </Text>
+            </>
+          )}
         </Section>
         {children}
         <Hr style={styles.hr} />
@@ -131,6 +153,12 @@ export function ModoShell({
       </Container>
     </Body>
   )
+}
+
+/** Merge the base button style with a practitioner brand colour when set. */
+export function brandedButton(brandColor?: string | null) {
+  if (!brandColor) return styles.button
+  return { ...styles.button, backgroundColor: brandColor }
 }
 
 export { Head }

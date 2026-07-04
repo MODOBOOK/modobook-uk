@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { Html, Preview, Heading, Text, Button, Section } from '@react-email/components'
-import { ModoShell, Head, styles } from './_modo-brand'
+import { ModoShell, Head, styles, brandedButton } from './_modo-brand'
 import type { TemplateEntry } from './registry'
 
 interface Props {
@@ -12,6 +12,8 @@ interface Props {
   locationAddress?: string
   dateTime?: string
   manageUrl?: string
+  logoUrl?: string | null
+  brandColor?: string | null
 }
 
 const Email = ({
@@ -23,11 +25,13 @@ const Email = ({
   locationAddress,
   dateTime = 'your appointment',
   manageUrl,
+  logoUrl,
+  brandColor,
 }: Props) => (
   <Html lang="en" dir="ltr">
     <Head />
     <Preview>Your {clinicName} booking is confirmed</Preview>
-    <ModoShell preview="" siteName={clinicName}>
+    <ModoShell preview="" siteName={clinicName} logoUrl={logoUrl} brandColor={brandColor}>
       <Heading as="h1" style={styles.h1}>Your booking is confirmed</Heading>
       <Text style={styles.text}>Hi {patientName}, thanks for booking with {clinicName}.</Text>
       <Section style={{ backgroundColor: '#efe7d8', borderRadius: 12, padding: '16px 18px', margin: '8px 0 20px' }}>
@@ -39,7 +43,7 @@ const Email = ({
       </Section>
       {manageUrl && (
         <Section style={styles.buttonWrap}>
-          <Button href={manageUrl} style={styles.button}>Manage booking</Button>
+          <Button href={manageUrl} style={brandedButton(brandColor)}>Manage booking</Button>
         </Section>
       )}
       <Text style={styles.muted}>If anything changes, use the link above to reschedule or cancel.</Text>

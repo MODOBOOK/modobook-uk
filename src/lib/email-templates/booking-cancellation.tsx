@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { Html, Preview, Heading, Text, Button, Section } from '@react-email/components'
-import { ModoShell, Head, styles } from './_modo-brand'
+import { ModoShell, Head, styles, brandedButton } from './_modo-brand'
 import type { TemplateEntry } from './registry'
 
 interface Props {
@@ -11,6 +11,8 @@ interface Props {
   cancelledBy?: 'clinic' | 'patient'
   reason?: string
   rebookUrl?: string
+  logoUrl?: string | null
+  brandColor?: string | null
 }
 
 const Email = ({
@@ -21,11 +23,13 @@ const Email = ({
   cancelledBy = 'clinic',
   reason,
   rebookUrl,
+  logoUrl,
+  brandColor,
 }: Props) => (
   <Html lang="en" dir="ltr">
     <Head />
     <Preview>Your {clinicName} appointment has been cancelled</Preview>
-    <ModoShell preview="" siteName={clinicName}>
+    <ModoShell preview="" siteName={clinicName} logoUrl={logoUrl} brandColor={brandColor}>
       <Heading as="h1" style={styles.h1}>Your appointment has been cancelled</Heading>
       <Text style={styles.text}>
         Hi {patientName},{' '}
@@ -40,7 +44,7 @@ const Email = ({
       )}
       {rebookUrl && (
         <Section style={styles.buttonWrap}>
-          <Button href={rebookUrl} style={styles.button}>Book another time</Button>
+          <Button href={rebookUrl} style={brandedButton(brandColor)}>Book another time</Button>
         </Section>
       )}
       <Text style={styles.muted}>If you have any questions, just reply to this email.</Text>

@@ -262,9 +262,10 @@ export const sendFormToClient = createServerFn({ method: "POST" })
         const [{ data: tpl }, { data: client }, { data: profile }] = await Promise.all([
           context.supabase.from("medical_form_templates").select("name").eq("id", data.template_id).maybeSingle(),
           context.supabase.from("clinic_clients").select("full_name, profile_id").eq("id", data.client_id).maybeSingle(),
-          context.supabase.from("profiles").select("clinic_name").eq("user_id", context.userId).maybeSingle(),
+          context.supabase.from("profiles").select("id, clinic_name").eq("user_id", context.userId).maybeSingle(),
         ]);
-        const { tryEnqueueAppEmail } = await import("@/lib/email/send.server");
+        const { tryEnqueueAppEmail, getPractitionerBranding } = await import("@/lib/email/send.server");
+        const branding = await getPractitionerBranding((profile as { id?: string } | null)?.id);
         const origin = process.env.PUBLIC_APP_URL || process.env.APP_URL || "https://modobook.uk";
         void tryEnqueueAppEmail({
           templateName: "medical-form-request",
@@ -272,9 +273,11 @@ export const sendFormToClient = createServerFn({ method: "POST" })
           messageId: `form-request-${formId}`,
           templateData: {
             patientName: (client?.full_name ?? "").split(" ")[0] || "there",
-            clinicName: profile?.clinic_name ?? "MODO",
+            clinicName: profile?.clinic_name ?? branding.clinicName,
             formName: tpl?.name ?? "medical form",
             formUrl: `${origin}/f/${token}`,
+            logoUrl: branding.logoUrl,
+            brandColor: branding.brandColor,
           },
         });
       } catch (e) { console.error("[sendFormToClient] email failed", e); }

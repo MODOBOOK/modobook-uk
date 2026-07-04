@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { Html, Preview, Heading, Text, Button, Section } from '@react-email/components'
-import { ModoShell, Head, styles } from './_modo-brand'
+import { ModoShell, Head, styles, brandedButton } from './_modo-brand'
 import type { TemplateEntry } from './registry'
 
 interface Props {
@@ -9,6 +9,8 @@ interface Props {
   treatmentName?: string
   practitionerName?: string
   reviewUrl?: string
+  logoUrl?: string | null
+  brandColor?: string | null
 }
 
 const Email = ({
@@ -17,11 +19,13 @@ const Email = ({
   treatmentName,
   practitionerName,
   reviewUrl = 'https://modobook.uk',
+  logoUrl,
+  brandColor,
 }: Props) => (
   <Html lang="en" dir="ltr">
     <Head />
     <Preview>How was your visit to {clinicName}?</Preview>
-    <ModoShell preview="" siteName={clinicName}>
+    <ModoShell preview="" siteName={clinicName} logoUrl={logoUrl} brandColor={brandColor}>
       <Heading as="h1" style={styles.h1}>How was your visit?</Heading>
       <Text style={styles.text}>
         Hi {patientName}, thanks for choosing {clinicName}
@@ -29,7 +33,7 @@ const Email = ({
         {practitionerName ? ` with ${practitionerName}` : ''}. We'd love to hear how it went — it only takes a minute.
       </Text>
       <Section style={styles.buttonWrap}>
-        <Button href={reviewUrl} style={styles.button}>Leave a review</Button>
+        <Button href={reviewUrl} style={brandedButton(brandColor)}>Leave a review</Button>
       </Section>
       <Text style={styles.muted}>Your feedback helps other patients and helps us keep improving.</Text>
     </ModoShell>

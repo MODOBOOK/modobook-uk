@@ -575,12 +575,13 @@ export const requestBooking = createServerFn({ method: "POST" })
         .eq("id", id);
     }
 
-    // Fire booking confirmation email (skipped for pending Stripe holds — the
-    // Stripe webhook handles the confirmed-after-payment case separately if wired).
+    // Fire booking confirmation email now for non-Stripe bookings. Bookings
+    // routed through Stripe checkout are emailed by the Stripe webhook once
+    // payment succeeds so patients don't get "confirmed" before they've paid.
     if (!checkoutUrl && data.patientEmail) {
       try {
-        const { tryEnqueueAppEmail, formatBookingDateTime } = await import("@/lib/email/send.server");
-        const [{ data: tRow }, { data: locRow }, { data: pracRow }] = await Promise.all([
+        const { tryEnqueueAppEmail, formatBookingDateTime, getPractitionerBranding } = await import("@/lib/email/send.server");
+        const [{ data: tRow }, { data: locRow }, { data: pracRow }, branding] = await Promise.all([
           supabaseAdmin.from("treatments").select("name").eq("id", data.treatmentId).maybeSingle(),
           data.locationId
             ? supabaseAdmin.from("locations").select("name, address_line1, city, postcode").eq("id", data.locationId).maybeSingle()
@@ -588,6 +589,7 @@ export const requestBooking = createServerFn({ method: "POST" })
           data.practitionerId
             ? supabaseAdmin.from("practitioners").select("name").eq("id", data.practitionerId).maybeSingle()
             : Promise.resolve({ data: null } as { data: null }),
+          getPractitionerBranding(data.profileId),
         ]);
         const { data: created } = await supabaseAdmin
           .from("appointments").select("manage_token").eq("id", id).maybeSingle();
@@ -602,13 +604,15 @@ export const requestBooking = createServerFn({ method: "POST" })
           messageId: `booking-confirm-${id}`,
           templateData: {
             patientName: data.patientName.split(" ")[0] || data.patientName,
-            clinicName: prof?.clinic_name ?? "MODO",
+            clinicName: prof?.clinic_name ?? branding.clinicName,
             treatmentName: (tRow as { name?: string } | null)?.name ?? "your treatment",
             practitionerName: (pracRow as { name?: string } | null)?.name,
             locationName: loc?.name,
             locationAddress: loc ? [loc.address_line1, loc.city, loc.postcode].filter(Boolean).join(", ") : undefined,
             dateTime: formatBookingDateTime(data.date, data.startTime),
             manageUrl,
+            logoUrl: branding.logoUrl,
+            brandColor: branding.brandColor,
           },
         });
       } catch (e) { console.error("[requestBooking] email failed", e); }
