@@ -190,9 +190,30 @@ function FillFormPage() {
     </Centered>
   );
 
-  const steps: FormStep[] = Array.isArray(data.template_schema) ? data.template_schema : [];
+  const rawSteps: FormStep[] = Array.isArray(data.template_schema) ? data.template_schema : [];
+  // Guarantee every medical form ends with a signature — append one if the
+  // template doesn't already include a signature element anywhere.
+  const hasSignature = rawSteps.some((s) => s.elements.some((el) => el.type === "signature"));
+  const steps: FormStep[] = hasSignature
+    ? rawSteps
+    : [
+        ...rawSteps,
+        {
+          id: "signature",
+          title: "Signature",
+          elements: [
+            {
+              id: "signature",
+              type: "signature",
+              label: "Please sign to confirm the information above is accurate",
+              required: true,
+            } as FormElement,
+          ],
+        },
+      ];
   const step = steps[stepIdx];
   const isLast = stepIdx === steps.length - 1;
+
 
   if (!steps.length || !step) {
     return (
