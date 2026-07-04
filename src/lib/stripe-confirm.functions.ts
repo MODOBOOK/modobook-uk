@@ -28,10 +28,14 @@ export const confirmCheckoutSession = createServerFn({ method: "POST" })
       ?.stripe_connect_account_id;
     if (!accountId) return { ok: false, reason: "no_connected_account" as const };
 
-    const key =
-      process.env.STRIPE_TEST_API_KEY ||
-      process.env.STRIPE_SECRET_KEY ||
-      process.env.STRIPE_PLATFORM_SECRET_KEY;
+    const isLiveSession = sessionId.startsWith("cs_live_");
+    const key = isLiveSession
+      ? process.env.STRIPE_LIVE_API_KEY ||
+        process.env.STRIPE_SECRET_KEY ||
+        process.env.STRIPE_PLATFORM_SECRET_KEY
+      : process.env.STRIPE_TEST_API_KEY ||
+        process.env.STRIPE_SECRET_KEY ||
+        process.env.STRIPE_PLATFORM_SECRET_KEY;
     if (!key) return { ok: false, reason: "no_key" as const };
 
     const Stripe = (await import("stripe")).default;
