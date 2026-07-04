@@ -131,9 +131,13 @@ export const deleteClient = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { id: string }) => input)
   .handler(async ({ data, context }) => {
-    const { error } = await context.supabase.from("clinic_clients").delete().eq("id", data.id);
+    const profileId = await getProfileId(context.supabase, context.userId);
+    if (!profileId) throw new Error("No profile");
+    // Soft delete — move to archive instead of hard delete
+    const { error } = await context.supabase
+      .from("clinic_clients").update({ archived: true }).eq("id", data.id).eq("profile_id", profileId);
     if (error) throw error;
-    return { ok: true };
+    return { ok: true, archived: true };
   });
 
 /* ---------- Notes ---------- */
