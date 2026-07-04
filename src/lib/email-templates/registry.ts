@@ -4,6 +4,7 @@ import { template as bookingCancellation } from './booking-cancellation'
 import { template as medicalFormRequest } from './medical-form-request'
 import { template as reviewRequest } from './review-request'
 import { template as marketingBroadcast } from './marketing-broadcast'
+import { template as patientMessage } from './patient-message'
 
 export interface TemplateEntry {
   component: ComponentType<any>
@@ -23,4 +24,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'medical-form-request': medicalFormRequest,
   'review-request': reviewRequest,
   'marketing-broadcast': marketingBroadcast,
+  'patient-message': patientMessage,
 }

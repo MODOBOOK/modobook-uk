@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { listEmailTemplates, upsertEmailTemplate, deleteEmailTemplate, logCommunication } from "@/lib/patient-hub.functions";
+import { listEmailTemplates, upsertEmailTemplate, deleteEmailTemplate, sendPatientEmail } from "@/lib/patient-hub.functions";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,13 +45,14 @@ export function EmailComposerDialog({
   const listTpl = useServerFn(listEmailTemplates);
   const saveTpl = useServerFn(upsertEmailTemplate);
   const delTpl = useServerFn(deleteEmailTemplate);
-  const log = useServerFn(logCommunication);
+  const sendEmail = useServerFn(sendPatientEmail);
 
   const [templates, setTemplates] = useState<Template[]>([]);
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
   const [selectedTpl, setSelectedTpl] = useState<string>("");
-  const [bccSelf, setBccSelf] = useState(true);
+  const [ccSelf, setCcSelf] = useState(true);
+  const [sending, setSending] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -96,21 +97,22 @@ export function EmailComposerDialog({
   async function send() {
     if (!client.email) { toast.error("Patient has no email address"); return; }
     if (!subject.trim() || !body.trim()) { toast.error("Subject and message required"); return; }
-    // Open mail client + log to comms
-    const params = new URLSearchParams({ subject: renderedSubject, body: renderedBody });
-    if (bccSelf) {
-      // mailto allows bcc via param
-      params.set("bcc", "");
+    setSending(true);
+    try {
+      await sendEmail({ data: {
+        clientId: client.id,
+        subject: renderedSubject,
+        body: renderedBody,
+        ccSelf,
+      } });
+      toast.success(ccSelf ? "Email sent from Modo — you've been CC'd" : "Email sent from Modo");
+      onOpenChange(false);
+      onSent?.();
+    } catch (e: any) {
+      toast.error(e?.message || "Failed to send email");
+    } finally {
+      setSending(false);
     }
-    const href = `mailto:${encodeURIComponent(client.email)}?${params.toString()}`;
-    window.location.href = href;
-    await log({ data: {
-      clientId: client.id, channel: "email",
-      subject: renderedSubject, body: renderedBody,
-    } });
-    toast.success("Email opened in your mail app & logged");
-    onOpenChange(false);
-    onSent?.();
   }
 
   return (
@@ -179,14 +181,16 @@ export function EmailComposerDialog({
           )}
 
           <label className="flex items-center gap-2 text-xs text-muted-foreground">
-            <input type="checkbox" checked={bccSelf} onChange={e => setBccSelf(e.target.checked)} />
-            BCC myself
+            <input type="checkbox" checked={ccSelf} onChange={e => setCcSelf(e.target.checked)} />
+            Send me a copy
           </label>
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={send}><Send className="mr-1.5 h-4 w-4" />Send email</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={sending}>Cancel</Button>
+          <Button onClick={send} disabled={sending}>
+            <Send className="mr-1.5 h-4 w-4" />{sending ? "Sending…" : "Send email"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
