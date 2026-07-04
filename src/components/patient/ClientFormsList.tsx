@@ -15,6 +15,7 @@ import {
 import { toast } from "sonner";
 import { SendFormDialog } from "./SendFormDialog";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { SignaturePad } from "@/components/SignaturePad";
 
 type El = {
   id: string;
