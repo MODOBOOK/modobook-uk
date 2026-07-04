@@ -28,7 +28,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Shield, Trash2, UserPlus, ExternalLink, CreditCard, Plus, Link as LinkIcon, Search, KeyRound, Power } from "lucide-react";
+import { Shield, Trash2, UserPlus, ExternalLink, CreditCard, Plus, Link as LinkIcon, Search, KeyRound, Power, Mail } from "lucide-react";
 
 
 
