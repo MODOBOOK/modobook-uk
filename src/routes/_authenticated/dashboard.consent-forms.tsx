@@ -303,6 +303,13 @@ function ConsentFormsPage() {
         </DialogContent>
       </Dialog>
 
+      <AiGenerateConsentDialog
+        open={aiOpen}
+        onOpenChange={setAiOpen}
+        onCreated={refresh}
+        isSystem={aiSystem && isAdmin}
+      />
+
     </div>
   );
 }
