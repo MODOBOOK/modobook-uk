@@ -766,6 +766,7 @@ function ServiceRow({
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+      </div>
     </div>
   );
 }
