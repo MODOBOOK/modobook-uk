@@ -29,6 +29,34 @@ export const Route = createFileRoute("/_authenticated/dashboard/aftercare")({
 
 type Tpl = { id: string; name: string; body_html: string; delay_hours: number; is_system?: boolean; category?: string | null; summary?: string | null; show_on_public?: boolean };
 
+function decodeEntities(s: string) {
+  const named: Record<string, string> = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " " };
+  return s.replace(/&(#x?[0-9a-f]+|[a-z]+);/gi, (match, entity) => {
+    const key = String(entity).toLowerCase();
+    if (key.startsWith("#x")) {
+      const code = Number.parseInt(key.slice(2), 16);
+      return Number.isFinite(code) ? String.fromCodePoint(code) : match;
+    }
+    if (key.startsWith("#")) {
+      const code = Number.parseInt(key.slice(1), 10);
+      return Number.isFinite(code) ? String.fromCodePoint(code) : match;
+    }
+    return named[key] ?? match;
+  });
+}
+
+function plainAftercareText(value: string) {
+  return decodeEntities(value)
+    .replace(/<\s*br\s*\/?\s*>/gi, "\n")
+    .replace(/<\s*li[^>]*>/gi, "• ")
+    .replace(/<\/\s*(p|div|h[1-6]|li|ul|ol|section|article)\s*>/gi, "\n")
+    .replace(/<[^>]*>/g, "")
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n[ \t]+/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
 function AftercarePage() {
   const list = useServerFn(listAftercareTemplates);
   const save = useServerFn(saveAftercareTemplate);
@@ -46,7 +74,7 @@ function AftercarePage() {
   const [treatmentIds, setTreatmentIds] = useState<string[]>([]);
 
   const openEditor = async (tpl: Tpl) => {
-    setEditing(tpl);
+    setEditing({ ...tpl, body_html: plainAftercareText(tpl.body_html ?? "") });
     setOpen(true);
     if (tpl.id) {
       const ids = await getTplTreatments({ data: { template_id: tpl.id } });
