@@ -242,36 +242,54 @@ function EmailEditDialog({
   onClose: () => void
   onSave: (payload: { subject_override: string | null; intro_override: string | null; closing_override: string | null }) => void
 }) {
-  const [subject, setSubject] = useState(existing?.subject_override ?? '')
-  const [intro, setIntro] = useState(existing?.intro_override ?? '')
-  const [closing, setClosing] = useState(existing?.closing_override ?? '')
+  const defaults = EMAIL_DEFAULTS[def.key] ?? { subject: '', intro: '', closing: '', variables: [] as string[] }
+  const [subject, setSubject] = useState<string>(existing?.subject_override ?? defaults.subject)
+  const [intro, setIntro] = useState<string>(existing?.intro_override ?? defaults.intro)
+  const [closing, setClosing] = useState<string>(existing?.closing_override ?? defaults.closing)
+
+  const resetToDefaults = () => {
+    setSubject(defaults.subject)
+    setIntro(defaults.intro)
+    setClosing(defaults.closing)
+  }
 
   return (
     <Dialog open onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="max-w-lg">
         <DialogHeader><DialogTitle>Edit {def.name}</DialogTitle></DialogHeader>
         <div className="space-y-3">
-          <p className="text-xs text-muted-foreground">Leave a field blank to use the default wording. Booking details, dates, and manage-links are added automatically.</p>
+          <p className="text-xs text-muted-foreground">
+            These fields are pre-filled with the wording the system sends today. Edit whatever you like — keep any bits you want to leave as-is. Booking details, dates, and manage-links are always added automatically.
+          </p>
+          {defaults.variables.length > 0 && (
+            <p className="text-xs text-muted-foreground">
+              <span className="font-medium">Auto-fills:</span>{' '}
+              {defaults.variables.map((v) => <code key={v} className="mx-0.5 rounded bg-muted px-1 py-0.5">{`{{${v}}}`}</code>)}
+            </p>
+          )}
           <div>
             <Label>Subject line</Label>
-            <Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Default subject" />
+            <Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder={defaults.subject || 'Default subject'} />
           </div>
           <div>
             <Label>Opening line</Label>
-            <Textarea rows={3} value={intro} onChange={(e) => setIntro(e.target.value)} placeholder={`e.g. Hi {{first_name}}, we can't wait to see you.`} />
+            <Textarea rows={3} value={intro} onChange={(e) => setIntro(e.target.value)} placeholder={defaults.intro} />
           </div>
           <div>
             <Label>Closing / sign-off</Label>
-            <Textarea rows={3} value={closing} onChange={(e) => setClosing(e.target.value)} placeholder="e.g. Warmly, the team at Aesthetics by Nurse Ryan" />
+            <Textarea rows={3} value={closing} onChange={(e) => setClosing(e.target.value)} placeholder={defaults.closing} />
           </div>
         </div>
-        <DialogFooter>
-          <Button variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button onClick={() => onSave({
-            subject_override: subject.trim() || null,
-            intro_override: intro.trim() || null,
-            closing_override: closing.trim() || null,
-          })}>Save</Button>
+        <DialogFooter className="sm:justify-between">
+          <Button type="button" variant="ghost" size="sm" onClick={resetToDefaults}>Reset to default</Button>
+          <div className="flex gap-2">
+            <Button variant="ghost" onClick={onClose}>Cancel</Button>
+            <Button onClick={() => onSave({
+              subject_override: subject.trim() || null,
+              intro_override: intro.trim() || null,
+              closing_override: closing.trim() || null,
+            })}>Save</Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
