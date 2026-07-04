@@ -28,4 +28,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'review-request': reviewRequest,
   'marketing-broadcast': marketingBroadcast,
   'patient-message': patientMessage,
+  'admin-broadcast': adminBroadcast,
 }
