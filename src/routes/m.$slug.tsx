@@ -49,10 +49,11 @@ export const Route = createFileRoute("/m/$slug")({
       ];
     })(),
     links: (() => {
-      const icon = loaderData?.theme?.favicon_url || loaderData?.theme?.logo_url || loaderData?.profile?.avatar_url;
+      // Only override the default MODO favicon when the practitioner has
+      // explicitly uploaded a browser tab icon. Do NOT fall back to their
+      // logo or avatar — MODO branding should show otherwise.
+      const icon = loaderData?.theme?.favicon_url;
       if (!icon) return undefined;
-      // Override every icon rel the root route sets so the practitioner's mark
-      // wins on browser tabs and installed PWA/home-screen icons.
       return [
         { rel: "icon", href: icon },
         { rel: "icon", type: "image/png", href: icon },
@@ -62,6 +63,7 @@ export const Route = createFileRoute("/m/$slug")({
         { rel: "apple-touch-icon", href: icon },
       ];
     })(),
+
   }),
   component: ModoLayout,
 });
