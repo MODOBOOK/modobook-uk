@@ -765,31 +765,71 @@ function Step8({ invoice, email, patientName, consultationId, onChange, onComple
     if (amountNum <= 0) { toast.error("Add at least one line item"); return; }
     setEmailing(true);
     try {
-      const { generateInvoicePdf } = await import("@/lib/invoice-pdf");
       const profile = await loadProfileForPdf();
-      const doc = await generateInvoicePdf(profileToInvoiceArgs(profile));
-      const blob = doc.output("blob");
-      const url = URL.createObjectURL(blob);
-      // Trigger a download of the PDF so the practitioner can attach it,
-      // then open mail client pre-populated with body + payment link.
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `invoice-${(patientName || "patient").replace(/\s+/g, "-").toLowerCase()}.pdf`;
-      a.click();
-      setTimeout(() => URL.revokeObjectURL(url), 1500);
 
-      const subject = encodeURIComponent(`Your invoice from ${profile?.clinic_name || profile?.full_name || "your clinic"}`);
-      const itemsText = items.map(i => `• ${i.description} × ${i.qty} — £${(Number(i.qty) * Number(i.unitPrice)).toFixed(2)}`).join("\n");
-      const body = encodeURIComponent(
-        `Hi ${patientName ?? ""},\n\nPlease find your invoice attached.\n\n${itemsText}\n\nTotal: £${amountNum.toFixed(2)}\n` +
-        (invoice?.payment_link ? `\nPay securely: ${invoice.payment_link}\n` : "") +
-        `\nThank you,\n${profile?.full_name ?? profile?.clinic_name ?? ""}`
-      );
-      window.location.href = `mailto:${sendEmail}?subject=${subject}&body=${body}`;
-      onChange({ ...invoice, items, amount: amountNum, status: invoice?.status ?? "sent", sent_at: invoice?.sent_at ?? new Date().toISOString() });
-      toast.success("Invoice downloaded — attach it to the open email draft");
+      // Auto-create a Stripe payment link if we don't already have one.
+      let paymentLink: string | null = invoice?.payment_link ?? null;
+      let paymentLinkId: string | null = invoice?.payment_link_id ?? null;
+      if (!paymentLink) {
+        try {
+          const row: any = await createLink({
+            data: {
+              amountCents: Math.round(amountNum * 100),
+              description: items.map(i => i.description).filter(Boolean).join(", ") || `Consultation ${consultationId?.slice(0, 8) ?? ""}`,
+              kind: "checkout",
+              recipientEmail: sendEmail || null,
+              recipientName: patientName || null,
+            },
+          });
+          paymentLink = row.stripe_url;
+          paymentLinkId = row.id;
+        } catch (e: any) {
+          toast.error(e?.message ?? "Could not create Stripe payment link");
+          setEmailing(false);
+          return;
+        }
+      }
+
+      const clinicName = profile?.clinic_name || profile?.full_name || "your clinic";
+      const itemsText = items
+        .map(i => `• ${i.description || "Treatment"} × ${i.qty} — £${(Number(i.qty) * Number(i.unitPrice)).toFixed(2)}`)
+        .join("\n");
+      const body =
+        `Hi ${patientName ?? "there"},\n\n` +
+        `Please find your invoice from ${clinicName} below.\n\n` +
+        `${itemsText}\n\n` +
+        `Total: £${amountNum.toFixed(2)}\n\n` +
+        (paymentLink ? `Pay securely online:\n${paymentLink}\n\n` : "") +
+        `Reference: ${consultationId?.slice(0, 8).toUpperCase() ?? ""}\n\n` +
+        `Thank you,\n${profile?.full_name ?? clinicName}`;
+
+      const { sendAppEmail } = await import("@/lib/email/send");
+      const res = await sendAppEmail({
+        templateName: "patient-message",
+        recipientEmail: sendEmail,
+        idempotencyKey: `invoice-${consultationId}-${Math.round(amountNum * 100)}`,
+        templateData: {
+          subject: `Your invoice from ${clinicName}`,
+          body,
+          clinicName,
+          logoUrl: profile?.invoice_show_logo === false ? null : (profile?.avatar_url ?? null),
+          brandColor: profile?.brand_color ?? null,
+        },
+      });
+      if (!res.ok) throw new Error(res.error || "Send failed");
+
+      onChange({
+        ...invoice,
+        items,
+        amount: amountNum,
+        payment_link: paymentLink,
+        payment_link_id: paymentLinkId,
+        status: "sent",
+        sent_at: new Date().toISOString(),
+      });
+      toast.success("Invoice sent to patient via MODO");
     } catch (e: any) {
-      toast.error(e?.message ?? "Could not prepare email");
+      toast.error(e?.message ?? "Could not send invoice");
     } finally {
       setEmailing(false);
     }
@@ -854,7 +894,7 @@ function Step8({ invoice, email, patientName, consultationId, onChange, onComple
         </Button>
         <Button variant="outline" onClick={emailInvoiceWithPdf} disabled={emailing}>
           {emailing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-          Email invoice (PDF)
+          Send invoice via MODO
         </Button>
         <Button variant="ghost" onClick={() => onChange({ ...invoice, items, amount: amountNum, status: "paid", paid_at: new Date().toISOString() })}>
           Mark as paid

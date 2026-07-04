@@ -6,6 +6,7 @@ export interface SendAppEmailInput {
     | 'booking-cancellation'
     | 'medical-form-request'
     | 'review-request'
+    | 'patient-message'
   recipientEmail: string
   idempotencyKey?: string
   templateData?: Record<string, unknown>
