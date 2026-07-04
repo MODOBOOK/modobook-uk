@@ -182,16 +182,22 @@ export async function generateInvoicePdf(d: InvoiceData): Promise<jsPDF> {
   doc.setFont("helvetica", "normal").setTextColor(30);
   y += 36;
 
-  // Payment link
+  // Payment link — big tappable "Press here to pay now" button
   if (d.paymentLink) {
-    if (y > H - 160) { doc.addPage(); y = M; }
-    doc.setFontSize(10).setTextColor(60);
-    doc.text("Pay securely online:", M, y);
-    y += 14;
-    doc.setTextColor(br, bg, bb);
-    doc.textWithLink(d.paymentLink, M, y, { url: d.paymentLink });
+    if (y > H - 180) { doc.addPage(); y = M; }
+    const btnW = 260;
+    const btnH = 44;
+    const btnX = M;
+    const btnY = y;
+    doc.setFillColor(br, bg, bb);
+    doc.roundedRect(btnX, btnY, btnW, btnH, 8, 8, "F");
+    doc.link(btnX, btnY, btnW, btnH, { url: d.paymentLink });
+    doc.setFont("helvetica", "bold").setFontSize(13).setTextColor(255, 255, 255);
+    doc.text("PRESS HERE TO PAY NOW", btnX + btnW / 2, btnY + btnH / 2 + 4, { align: "center" });
+    doc.setFont("helvetica", "normal").setFontSize(9).setTextColor(120);
+    doc.text("Secure payment powered by Stripe", btnX, btnY + btnH + 14);
     doc.setTextColor(60);
-    y += 22;
+    y = btnY + btnH + 30;
   }
 
   // Bank details
