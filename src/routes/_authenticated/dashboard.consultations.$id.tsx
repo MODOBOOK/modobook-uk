@@ -21,6 +21,7 @@ import {
 import { toast } from "sonner";
 import { ClientFormsList } from "@/components/patient/ClientFormsList";
 import { ProductEntryCard, type LogProduct } from "@/components/consultation/ProductEntryCard";
+import { FaceMapAnnotator } from "@/components/consultation/FaceMapAnnotator";
 import { ConsentSectionsView, type ConsentSection } from "@/components/ConsentSections";
 
 export const Route = createFileRoute("/_authenticated/dashboard/consultations/$id")({
@@ -368,11 +369,17 @@ function Step2({ concerns, onChange }: { concerns: any; onChange: (v: any) => vo
 function Step3({ profileId, consultationId, assessment, photos, onChangeAssess, onChangePhotos }: any) {
   return (
     <div className="space-y-4">
-      <Header n={3} title="Assessment" subtitle="Clinical notes and before photos." />
+      <Header n={3} title="Assessment" subtitle="Clinical notes, face mapping and before photos." />
       <div className="space-y-1.5">
         <Label>Clinical assessment</Label>
         <Textarea rows={5} value={assessment?.notes ?? ""} onChange={(e) => onChangeAssess({ ...assessment, notes: e.target.value })} placeholder="Skin condition, muscle tone, asymmetries…" />
       </div>
+
+      <FaceMapAnnotator
+        title="Face map — assessment"
+        value={assessment?.face_map}
+        onChange={(v) => onChangeAssess({ ...assessment, face_map: v })}
+      />
 
       <PhotoGrid label="Before photos" photos={photos ?? []} onChange={onChangePhotos} profileId={profileId} consultationId={consultationId} />
     </div>
@@ -397,6 +404,12 @@ function Step4({ plan, onChange }: any) {
           <Input type="number" inputMode="numeric" value={plan?.followup_weeks ?? ""} onChange={(e) => onChange({ ...plan, followup_weeks: e.target.value })} />
         </div>
       </div>
+
+      <FaceMapAnnotator
+        title="Face map — treatment plan"
+        value={plan?.face_map}
+        onChange={(v) => onChange({ ...plan, face_map: v })}
+      />
     </div>
   );
 }
