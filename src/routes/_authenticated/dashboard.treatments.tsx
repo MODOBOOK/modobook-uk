@@ -471,6 +471,14 @@ function TreatmentDialog({
         ? String((treatment as { deposit_amount?: number | null }).deposit_amount)
         : "",
     );
+    setRequiresPrescriber(Boolean(treatment?.requires_prescriber));
+    setPrescriberUserId(treatment?.prescriber_user_id ?? "");
+    setPrescriberRouting(
+      (treatment?.prescriber_routing as "same_address" | "clinic_visit" | "in_person_consult" | null) ?? "same_address",
+    );
+    setPrescriberNote(treatment?.prescriber_note ?? "");
+
+
 
 
     if (treatment?.id) {
