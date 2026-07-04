@@ -221,9 +221,24 @@ function PatientsPage() {
   }
 
   async function handleDelete(id: string) {
-    if (!confirm("Delete this client?")) return;
-    await remove({ data: { id } });
-    refresh();
+    if (!confirm("Move this patient to the archive? You can restore them later.")) return;
+    try {
+      await remove({ data: { id } });
+      toast.success("Patient archived");
+      refresh();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to archive");
+    }
+  }
+
+  async function handleRestore(id: string) {
+    try {
+      await restore({ data: { id } });
+      toast.success("Patient restored");
+      refresh();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to restore");
+    }
   }
 
   return (
@@ -234,7 +249,7 @@ function PatientsPage() {
           <p className="text-xs text-muted-foreground">Manage your patient contacts</p>
         </div>
         <div className="shrink-0 text-xs text-muted-foreground">
-          {allEntries.length} total
+          {allEntries.length} {view === "archived" ? "archived" : "total"}
         </div>
       </header>
 
@@ -243,6 +258,23 @@ function PatientsPage() {
         <ActionPill icon={Plus} label="Add Patient" onClick={openAdd} primary />
         <ActionPill icon={Users} label="Create Group" onClick={() => setGroupOpen(true)} />
         <ActionPill icon={Combine} label="Merge Duplicates" onClick={() => setMergeOpen(true)} />
+      </div>
+
+      <div className="inline-flex rounded-lg border p-0.5 text-xs">
+        <button
+          type="button"
+          onClick={() => setView("active")}
+          className={`rounded-md px-3 py-1.5 font-medium ${view === "active" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+        >
+          Active ({clients.length})
+        </button>
+        <button
+          type="button"
+          onClick={() => setView("archived")}
+          className={`rounded-md px-3 py-1.5 font-medium ${view === "archived" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+        >
+          Archived ({archivedClients.length})
+        </button>
       </div>
 
       <div className="relative">
