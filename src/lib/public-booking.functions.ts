@@ -580,41 +580,8 @@ export const requestBooking = createServerFn({ method: "POST" })
     // payment succeeds so patients don't get "confirmed" before they've paid.
     if (!checkoutUrl && data.patientEmail) {
       try {
-        const { tryEnqueueAppEmail, formatBookingDateTime, getPractitionerBranding } = await import("@/lib/email/send.server");
-        const [{ data: tRow }, { data: locRow }, { data: pracRow }, branding] = await Promise.all([
-          supabaseAdmin.from("treatments").select("name").eq("id", data.treatmentId).maybeSingle(),
-          data.locationId
-            ? supabaseAdmin.from("locations").select("name, address_line1, city, postcode").eq("id", data.locationId).maybeSingle()
-            : Promise.resolve({ data: null } as { data: null }),
-          data.practitionerId
-            ? supabaseAdmin.from("practitioners").select("name").eq("id", data.practitionerId).maybeSingle()
-            : Promise.resolve({ data: null } as { data: null }),
-          getPractitionerBranding(data.profileId),
-        ]);
-        const { data: created } = await supabaseAdmin
-          .from("appointments").select("manage_token").eq("id", id).maybeSingle();
-        const origin = process.env.PUBLIC_APP_URL || process.env.APP_URL || "https://modobook.uk";
-        const manageUrl = created?.manage_token && prof?.slug
-          ? `${origin}/m/${prof.slug}/manage/${created.manage_token}`
-          : undefined;
-        const loc = locRow as { name?: string; address_line1?: string; city?: string; postcode?: string } | null;
-        await tryEnqueueAppEmail({
-          templateName: "booking-confirmation",
-          recipientEmail: data.patientEmail,
-          messageId: `booking-confirm-${id}`,
-          templateData: {
-            patientName: data.patientName.split(" ")[0] || data.patientName,
-            clinicName: prof?.clinic_name ?? branding.clinicName,
-            treatmentName: (tRow as { name?: string } | null)?.name ?? "your treatment",
-            practitionerName: (pracRow as { name?: string } | null)?.name,
-            locationName: loc?.name,
-            locationAddress: loc ? [loc.address_line1, loc.city, loc.postcode].filter(Boolean).join(", ") : undefined,
-            dateTime: formatBookingDateTime(data.date, data.startTime),
-            manageUrl,
-            logoUrl: branding.logoUrl,
-            brandColor: branding.brandColor,
-          },
-        });
+        const { sendBookingConfirmationEmails } = await import("@/lib/email/send.server");
+        await sendBookingConfirmationEmails([id]);
       } catch (e) { console.error("[requestBooking] email failed", e); }
     }
 
@@ -1013,6 +980,16 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
         .update({ status: "pending", payment_hold_expires_at: holdUntil } as never)
         .in("id", created.map((c) => c.id));
     }
+
+    // Non-payment bookings should still receive confirmations. Payment bookings
+    // are confirmed by the checkout webhook after money is taken.
+    if (!checkoutUrl && data.patientEmail && created.length > 0) {
+      try {
+        const { sendBookingConfirmationEmails } = await import("@/lib/email/send.server");
+        await sendBookingConfirmationEmails(created.map((c) => c.id));
+      } catch (e) { console.error("[requestMultiBooking] email failed", e); }
+    }
+
     return { appointments: created, consents, medicalForms, packagePurchases, checkoutUrl };
 
   });

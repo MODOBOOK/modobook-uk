@@ -96,6 +96,13 @@ export const createAppointmentForPatient = createServerFn({ method: "POST" })
       .eq("id", id)
       .single();
 
+    if (data.patientEmail) {
+      try {
+        const { sendBookingConfirmationEmails } = await import("@/lib/email/send.server");
+        await sendBookingConfirmationEmails([id]);
+      } catch (e) { console.error("[createAppointmentForPatient] email failed", e); }
+    }
+
     return { id, manageToken: created?.manage_token ?? null };
   });
 
