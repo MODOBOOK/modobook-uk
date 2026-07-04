@@ -894,7 +894,7 @@ function Step8({ invoice, email, patientName, consultationId, onChange, onComple
         </Button>
         <Button variant="outline" onClick={emailInvoiceWithPdf} disabled={emailing}>
           {emailing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-          Email invoice (PDF)
+          Send invoice via MODO
         </Button>
         <Button variant="ghost" onClick={() => onChange({ ...invoice, items, amount: amountNum, status: "paid", paid_at: new Date().toISOString() })}>
           Mark as paid
