@@ -265,7 +265,7 @@ function EmailEditDialog({
           {defaults.variables.length > 0 && (
             <p className="text-xs text-muted-foreground">
               <span className="font-medium">Auto-fills:</span>{' '}
-              {defaults.variables.map((v) => <code key={v} className="mx-0.5 rounded bg-muted px-1 py-0.5">{`{{${v}}}`}</code>)}
+              {defaults.variables.map((v: string) => <code key={v} className="mx-0.5 rounded bg-muted px-1 py-0.5">{`{{${v}}}`}</code>)}
             </p>
           )}
           <div>
