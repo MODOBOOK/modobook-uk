@@ -27,22 +27,16 @@ type EmailDef = {
   key: string
   name: string
   description: string
-  category: 'transactional' | 'auth' | 'marketing'
   editable: boolean
 }
 
 const EMAILS: EmailDef[] = [
-  { key: 'booking-confirmation', name: 'Booking confirmation', description: 'Sent to the patient after they book & pay.', category: 'transactional', editable: true },
-  { key: 'booking-cancellation', name: 'Booking cancellation', description: 'Sent when a booking is cancelled.', category: 'transactional', editable: true },
-  { key: 'appointment-reminder', name: 'Appointment reminder', description: 'Base template used by the reminder rules below.', category: 'transactional', editable: true },
-  { key: 'medical-form-request', name: 'Medical form request', description: 'Asks the patient to complete a medical form.', category: 'transactional', editable: true },
-  { key: 'review-request', name: 'Review request', description: 'Sent after treatment asking for a review.', category: 'transactional', editable: true },
-  { key: 'patient-message', name: 'Patient message', description: 'Practitioner-composed one-off message.', category: 'transactional', editable: true },
-  { key: 'signup', name: 'Account signup', description: 'Confirms new patient accounts.', category: 'auth', editable: false },
-  { key: 'magiclink', name: 'Magic link', description: 'Passwordless sign-in email.', category: 'auth', editable: false },
-  { key: 'recovery', name: 'Password reset', description: 'Sent when a user requests a password reset.', category: 'auth', editable: false },
-  { key: 'invite', name: 'Invite', description: 'Invitations to join.', category: 'auth', editable: false },
-  { key: 'email_change', name: 'Email change confirmation', description: 'Confirms an email change.', category: 'auth', editable: false },
+  { key: 'booking-confirmation', name: 'Booking confirmation', description: 'Sent to the patient after they book & pay.', editable: true },
+  { key: 'booking-cancellation', name: 'Booking cancellation', description: 'Sent when a booking is cancelled.', editable: true },
+  { key: 'appointment-reminder', name: 'Appointment reminder', description: 'Base template used by the reminder rules below.', editable: true },
+  { key: 'medical-form-request', name: 'Medical form request', description: 'Asks the patient to complete a medical form.', editable: true },
+  { key: 'review-request', name: 'Review request', description: 'Sent after treatment asking for a review.', editable: true },
+  { key: 'patient-message', name: 'Patient message', description: 'Practitioner-composed one-off message.', editable: true },
 ]
 
 function EmailsPage() {
