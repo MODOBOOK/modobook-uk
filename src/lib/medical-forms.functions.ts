@@ -243,7 +243,7 @@ export const submitFormByToken = createServerFn({ method: "POST" })
 /* ---------- Standalone send-to-patient (no appointment) ---------- */
 export const sendFormToClient = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: { client_id: string; template_id: string; email?: string; phone?: string }) => i)
+  .inputValidator((i: { client_id: string; template_id: string; email?: string; phone?: string; sendEmail?: boolean }) => i)
   .handler(async ({ data, context }) => {
     const { data: row, error } = await context.supabase.rpc("send_medical_form_to_client", {
       p_client_id: data.client_id,
@@ -252,9 +252,35 @@ export const sendFormToClient = createServerFn({ method: "POST" })
       p_phone: data.phone ?? null,
     } as any);
     if (error) throw error;
-    // row is a setof: take first
     const r = Array.isArray(row) ? row[0] : row;
-    return { id: r.id as string, token: r.token as string };
+    const formId = r.id as string;
+    const token = r.token as string;
+
+    // Send branded email invite when requested and email present
+    if (data.sendEmail && data.email) {
+      try {
+        const [{ data: tpl }, { data: client }, { data: profile }] = await Promise.all([
+          context.supabase.from("medical_form_templates").select("name").eq("id", data.template_id).maybeSingle(),
+          context.supabase.from("clinic_clients").select("full_name, profile_id").eq("id", data.client_id).maybeSingle(),
+          context.supabase.from("profiles").select("clinic_name").eq("user_id", context.userId).maybeSingle(),
+        ]);
+        const { tryEnqueueAppEmail } = await import("@/lib/email/send.server");
+        const origin = process.env.PUBLIC_APP_URL || process.env.APP_URL || "https://modobook.uk";
+        void tryEnqueueAppEmail({
+          templateName: "medical-form-request",
+          recipientEmail: data.email,
+          messageId: `form-request-${formId}`,
+          templateData: {
+            patientName: (client?.full_name ?? "").split(" ")[0] || "there",
+            clinicName: profile?.clinic_name ?? "MODO",
+            formName: tpl?.name ?? "medical form",
+            formUrl: `${origin}/f/${token}`,
+          },
+        });
+      } catch (e) { console.error("[sendFormToClient] email failed", e); }
+    }
+
+    return { id: formId, token };
   });
 
 export const listFormsForClient = createServerFn({ method: "GET" })
