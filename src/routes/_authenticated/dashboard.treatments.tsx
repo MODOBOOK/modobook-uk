@@ -14,6 +14,7 @@ import {
   getTreatmentAftercareIds,
   setTreatmentAftercareIds,
 } from "@/lib/aftercare-templates.functions";
+import { listMyConnectedPrescribers } from "@/lib/prescriber.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
