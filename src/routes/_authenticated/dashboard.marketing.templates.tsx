@@ -28,7 +28,7 @@ function TemplatesPage() {
   const [name, setName] = useState(''); const [subject, setSubject] = useState('')
   const [preheader, setPreheader] = useState(''); const [bodyText, setBodyText] = useState('')
 
-  useEffect(() => { list({}).then((r) => setItems(r as any[])).catch((e) => toast.error(e.message)).finally(() => setLoading(false)) }, [])
+  useEffect(() => { list().then((r) => setItems(r as any[])).catch((e) => toast.error(e.message)).finally(() => setLoading(false)) }, [])
 
   function openNew() {
     setEditing(null); setName(''); setSubject(''); setPreheader(''); setBodyText(''); setOpen(true)

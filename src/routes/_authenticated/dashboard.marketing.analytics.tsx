@@ -19,7 +19,7 @@ function AnalyticsPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    list({}).then((rows) => {
+    list().then((rows) => {
       const sent = (rows as any[]).filter((c) => c.status === 'sent')
       setCampaigns(sent); if (sent[0]) setSelected(sent[0].id)
     }).finally(() => setLoading(false))

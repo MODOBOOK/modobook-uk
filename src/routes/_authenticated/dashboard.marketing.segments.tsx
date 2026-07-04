@@ -38,7 +38,7 @@ function SegmentsPage() {
   const [previewingCount, setPreviewingCount] = useState<number | null>(null)
 
   useEffect(() => {
-    list({}).then((r) => setItems(r as any[])).catch((e) => toast.error(e.message)).finally(() => setLoading(false))
+    list().then((r) => setItems(r as any[])).catch((e) => toast.error(e.message)).finally(() => setLoading(false))
   }, [])
 
   function openNew() {

@@ -51,7 +51,7 @@ function CampaignsPage() {
 
   useEffect(() => {
     let alive = true
-    Promise.all([list({}), overview({})])
+    Promise.all([list(), overview()])
       .then(([rows, s]) => { if (alive) { setItems(rows as Campaign[]); setStats(s) } })
       .catch((e) => toast.error(e.message))
       .finally(() => alive && setLoading(false))
