@@ -76,6 +76,18 @@ function sanitize(raw: any): { name: string; description: string; schema: { step
       { id: nid(), type: "paragraph", text: "AI could not extract fields from this source." },
     ] });
   }
+  // Always guarantee a signature field so patients can sign the form
+  const hasSignature = steps.some((s) => (s.elements as any[]).some((el) => el?.type === "signature"));
+  if (!hasSignature) {
+    steps.push({
+      id: nid(),
+      title: "Signature",
+      elements: [
+        { id: nid(), type: "paragraph", text: "By signing below, I confirm the information above is accurate to the best of my knowledge." },
+        { id: nid(), type: "signature", label: "Patient signature", required: true },
+      ],
+    });
+  }
   return { name, description, schema: { steps } };
 }
 
