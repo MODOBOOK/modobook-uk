@@ -11,6 +11,9 @@ interface Props {
   formUrl?: string
   logoUrl?: string | null
   brandColor?: string | null
+  subjectOverride?: string | null
+  introOverride?: string | null
+  closingOverride?: string | null
 }
 
 const Email = ({
@@ -21,16 +24,22 @@ const Email = ({
   formUrl = 'https://modobook.uk',
   logoUrl,
   brandColor,
+  introOverride,
+  closingOverride,
 }: Props) => (
   <Html lang="en" dir="ltr">
     <Head />
     <Preview>{clinicName} needs you to complete {formName}</Preview>
     <ModoShell preview="" siteName={clinicName} logoUrl={logoUrl} brandColor={brandColor}>
       <Heading as="h1" style={styles.h1}>Please complete your form</Heading>
-      <Text style={styles.text}>
-        Hi {patientName}, {clinicName} has sent you <strong>{formName}</strong> to complete ahead of your appointment.
-        It only takes a few minutes.
-      </Text>
+      {introOverride?.trim() ? (
+        <Text style={styles.text}>{introOverride}</Text>
+      ) : (
+        <Text style={styles.text}>
+          Hi {patientName}, {clinicName} has sent you <strong>{formName}</strong> to complete ahead of your appointment.
+          It only takes a few minutes.
+        </Text>
+      )}
       {dueBy && (
         <Section style={{ backgroundColor: '#efe7d8', borderRadius: 12, padding: '12px 16px', margin: '4px 0 18px' }}>
           <Text style={{ ...styles.muted, margin: 0 }}>Please complete by <strong>{dueBy}</strong>.</Text>
@@ -39,7 +48,7 @@ const Email = ({
       <Section style={styles.buttonWrap}>
         <Button href={formUrl} style={brandedButton(brandColor)}>Open form</Button>
       </Section>
-      <Text style={styles.muted}>Your answers are shared securely with your practitioner.</Text>
+      <Text style={styles.muted}>{closingOverride?.trim() || 'Your answers are shared securely with your practitioner.'}</Text>
     </ModoShell>
   </Html>
 )
@@ -47,6 +56,8 @@ const Email = ({
 export const template = {
   component: Email,
   subject: (d: Record<string, unknown>) => {
+    const override = (d.subjectOverride as string | null | undefined)?.trim()
+    if (override) return override
     const clinic = (d.clinicName as string) || 'MODO'
     const form = (d.formName as string) || 'medical form'
     return `Please complete your ${form} — ${clinic}`
