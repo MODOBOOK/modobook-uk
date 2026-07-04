@@ -110,15 +110,27 @@ function PatientsPage() {
 
   // Aggregate appointment-based patients that aren't yet in clients list (read-only)
   const allEntries = useMemo(() => {
+    if (view === "archived") {
+      const q = search.trim().toLowerCase();
+      const arr = archivedClients;
+      return q
+        ? arr.filter((c) =>
+            c.full_name.toLowerCase().includes(q) ||
+            (c.email ?? "").toLowerCase().includes(q) ||
+            (c.phone ?? "").toLowerCase().includes(q))
+        : arr;
+    }
     const fromClients: Client[] = clients;
     const knownEmails = new Set(clients.map((c) => (c.email ?? "").toLowerCase()).filter(Boolean));
     const knownNames = new Set(clients.map((c) => c.full_name.toLowerCase()));
+    const archivedEmails = new Set(archivedClients.map((c) => (c.email ?? "").toLowerCase()).filter(Boolean));
+    const archivedNames = new Set(archivedClients.map((c) => c.full_name.toLowerCase()));
     const synthetic = new Map<string, Client>();
     for (const a of appts) {
       const email = (a.patient_email ?? "").toLowerCase();
       const nm = (a.patient_name ?? "").toLowerCase();
-      if (email && knownEmails.has(email)) continue;
-      if (!email && nm && knownNames.has(nm)) continue;
+      if (email && (knownEmails.has(email) || archivedEmails.has(email))) continue;
+      if (!email && nm && (knownNames.has(nm) || archivedNames.has(nm))) continue;
       const key = email || nm || a.id;
       if (synthetic.has(key)) continue;
       synthetic.set(key, {
@@ -137,7 +149,7 @@ function PatientsPage() {
           (c.email ?? "").toLowerCase().includes(q) ||
           (c.phone ?? "").toLowerCase().includes(q))
       : arr;
-  }, [clients, appts, search]);
+  }, [clients, archivedClients, appts, search, view]);
 
   const grouped = useMemo(() => {
     const sorted = [...allEntries].sort((a, b) => a.full_name.localeCompare(b.full_name));
