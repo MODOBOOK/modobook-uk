@@ -83,6 +83,7 @@ import { Route as AuthenticatedDashboardAiImportRouteImport } from './routes/_au
 import { Route as AuthenticatedDashboardAftercareRouteImport } from './routes/_authenticated/dashboard.aftercare'
 import { Route as AuthenticatedDashboardAddonsRouteImport } from './routes/_authenticated/dashboard.addons'
 import { Route as AuthenticatedDashboardAboutRouteImport } from './routes/_authenticated/dashboard.about'
+import { Route as AuthenticatedAdminEmailsRouteImport } from './routes/_authenticated/admin.emails'
 import { Route as AuthenticatedDashboardPatientsIndexRouteImport } from './routes/_authenticated/dashboard.patients.index'
 import { Route as AuthenticatedDashboardMarketingIndexRouteImport } from './routes/_authenticated/dashboard.marketing.index'
 import { Route as AuthenticatedDashboardConsultationsIndexRouteImport } from './routes/_authenticated/dashboard.consultations.index'
@@ -519,6 +520,12 @@ const AuthenticatedDashboardAboutRoute =
     path: '/about',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
+const AuthenticatedAdminEmailsRoute =
+  AuthenticatedAdminEmailsRouteImport.update({
+    id: '/emails',
+    path: '/emails',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedDashboardPatientsIndexRoute =
   AuthenticatedDashboardPatientsIndexRouteImport.update({
     id: '/',
@@ -662,7 +669,7 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/who-its-for': typeof WhoItsForRoute
-  '/admin': typeof AuthenticatedAdminRoute
+  '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/admin-prescribers': typeof AuthenticatedAdminPrescribersRoute
   '/dashboard': typeof AuthenticatedDashboardRouteWithChildren
   '/hub': typeof AuthenticatedHubRouteWithChildren
@@ -675,6 +682,7 @@ export interface FileRoutesByFullPath {
   '/m/$slug': typeof MSlugRouteWithChildren
   '/privacy/breach-response': typeof PrivacyBreachResponseRoute
   '/privacy/dpia': typeof PrivacyDpiaRoute
+  '/admin/emails': typeof AuthenticatedAdminEmailsRoute
   '/dashboard/about': typeof AuthenticatedDashboardAboutRoute
   '/dashboard/addons': typeof AuthenticatedDashboardAddonsRoute
   '/dashboard/aftercare': typeof AuthenticatedDashboardAftercareRoute
@@ -760,7 +768,7 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/who-its-for': typeof WhoItsForRoute
-  '/admin': typeof AuthenticatedAdminRoute
+  '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/admin-prescribers': typeof AuthenticatedAdminPrescribersRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/book/$slug': typeof BookSlugRoute
@@ -769,6 +777,7 @@ export interface FileRoutesByTo {
   '/f/$token': typeof FTokenRoute
   '/privacy/breach-response': typeof PrivacyBreachResponseRoute
   '/privacy/dpia': typeof PrivacyDpiaRoute
+  '/admin/emails': typeof AuthenticatedAdminEmailsRoute
   '/dashboard/about': typeof AuthenticatedDashboardAboutRoute
   '/dashboard/addons': typeof AuthenticatedDashboardAddonsRoute
   '/dashboard/aftercare': typeof AuthenticatedDashboardAftercareRoute
@@ -854,7 +863,7 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/who-its-for': typeof WhoItsForRoute
-  '/_authenticated/admin': typeof AuthenticatedAdminRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/admin-prescribers': typeof AuthenticatedAdminPrescribersRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRouteWithChildren
   '/_authenticated/hub': typeof AuthenticatedHubRouteWithChildren
@@ -867,6 +876,7 @@ export interface FileRoutesById {
   '/m/$slug': typeof MSlugRouteWithChildren
   '/privacy/breach-response': typeof PrivacyBreachResponseRoute
   '/privacy/dpia': typeof PrivacyDpiaRoute
+  '/_authenticated/admin/emails': typeof AuthenticatedAdminEmailsRoute
   '/_authenticated/dashboard/about': typeof AuthenticatedDashboardAboutRoute
   '/_authenticated/dashboard/addons': typeof AuthenticatedDashboardAddonsRoute
   '/_authenticated/dashboard/aftercare': typeof AuthenticatedDashboardAftercareRoute
@@ -967,6 +977,7 @@ export interface FileRouteTypes {
     | '/m/$slug'
     | '/privacy/breach-response'
     | '/privacy/dpia'
+    | '/admin/emails'
     | '/dashboard/about'
     | '/dashboard/addons'
     | '/dashboard/aftercare'
@@ -1061,6 +1072,7 @@ export interface FileRouteTypes {
     | '/f/$token'
     | '/privacy/breach-response'
     | '/privacy/dpia'
+    | '/admin/emails'
     | '/dashboard/about'
     | '/dashboard/addons'
     | '/dashboard/aftercare'
@@ -1158,6 +1170,7 @@ export interface FileRouteTypes {
     | '/m/$slug'
     | '/privacy/breach-response'
     | '/privacy/dpia'
+    | '/_authenticated/admin/emails'
     | '/_authenticated/dashboard/about'
     | '/_authenticated/dashboard/addons'
     | '/_authenticated/dashboard/aftercare'
@@ -1785,6 +1798,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardAboutRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
+    '/_authenticated/admin/emails': {
+      id: '/_authenticated/admin/emails'
+      path: '/emails'
+      fullPath: '/admin/emails'
+      preLoaderRoute: typeof AuthenticatedAdminEmailsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/dashboard/patients/': {
       id: '/_authenticated/dashboard/patients/'
       path: '/'
@@ -1948,6 +1968,17 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminEmailsRoute: typeof AuthenticatedAdminEmailsRoute
+}
+
+const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminEmailsRoute: AuthenticatedAdminEmailsRoute,
+}
+
+const AuthenticatedAdminRouteWithChildren =
+  AuthenticatedAdminRoute._addFileChildren(AuthenticatedAdminRouteChildren)
 
 interface AuthenticatedDashboardMarketingRouteChildren {
   AuthenticatedDashboardMarketingAnalyticsRoute: typeof AuthenticatedDashboardMarketingAnalyticsRoute
@@ -2137,7 +2168,7 @@ const AuthenticatedPrescriberRouteWithChildren =
   )
 
 interface AuthenticatedRouteChildren {
-  AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
   AuthenticatedAdminPrescribersRoute: typeof AuthenticatedAdminPrescribersRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRouteWithChildren
   AuthenticatedHubRoute: typeof AuthenticatedHubRouteWithChildren
@@ -2146,7 +2177,7 @@ interface AuthenticatedRouteChildren {
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
-  AuthenticatedAdminRoute: AuthenticatedAdminRoute,
+  AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
   AuthenticatedAdminPrescribersRoute: AuthenticatedAdminPrescribersRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRouteWithChildren,
   AuthenticatedHubRoute: AuthenticatedHubRouteWithChildren,

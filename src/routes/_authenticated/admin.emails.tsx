@@ -263,7 +263,7 @@ function BroadcastDialog({
   const disabled =
     !subject.trim() || !message.trim() ||
     (audience === 'user' && !email.trim()) ||
-    ((ctaText.trim() && !ctaUrl.trim()) || (!ctaText.trim() && ctaUrl.trim()))
+    Boolean((ctaText.trim() && !ctaUrl.trim()) || (!ctaText.trim() && ctaUrl.trim()))
 
   return (
     <Dialog open onOpenChange={(v) => !v && !busy && onClose()}>
