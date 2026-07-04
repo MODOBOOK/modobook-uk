@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import {
-  getClient, upsertClient, deleteClient,
+  getClient, upsertClient, deleteClient, permanentlyDeleteClient,
   listClientNotes, upsertClientNote, deleteClientNote, toggleClientNoteVisibility,
   listClientFiles, addClientFile, deleteClientFile,
   listClientPrescriptions, upsertClientPrescription, deleteClientPrescription,
@@ -78,6 +78,7 @@ function PatientProfilePage() {
   const get = useServerFn(getClient);
   const upsert = useServerFn(upsertClient);
   const remove = useServerFn(deleteClient);
+  const removeForever = useServerFn(permanentlyDeleteClient);
   const listAppt = useServerFn(listMyAppointments);
   const listConsults = useServerFn(listConsultationsForPatient);
   const createConsult = useServerFn(createConsultation);
@@ -141,9 +142,14 @@ function PatientProfilePage() {
     URL.revokeObjectURL(url);
   }
   async function fullDelete() {
-    if (!confirm("Permanently delete this patient and all their records?")) return;
-    await remove({ data: { id } });
-    navigate({ to: "/dashboard/patients" });
+    if (!confirm("Permanently delete this patient and all their records? This cannot be undone.")) return;
+    try {
+      await removeForever({ data: { id } });
+      toast.success("Patient permanently deleted");
+      navigate({ to: "/dashboard/patients" });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to delete");
+    }
   }
 
   if (!client) return <div className="flex justify-center py-20"><Loader2 className="h-6 w-6 animate-spin" /></div>;

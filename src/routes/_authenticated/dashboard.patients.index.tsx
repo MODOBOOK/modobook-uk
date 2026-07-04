@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { listClients, upsertClient, deleteClient, importClientsCsv, assignClientsToGroup, findDuplicateClients, mergeClients } from "@/lib/clients.functions";
+import { listClients, listArchivedClients, restoreClient, upsertClient, deleteClient, importClientsCsv, assignClientsToGroup, findDuplicateClients, mergeClients } from "@/lib/clients.functions";
 import { listMyAppointments } from "@/lib/availability.functions";
 import { createConsultation, listConsultationsForPatient } from "@/lib/consultations.functions";
 import { Button } from "@/components/ui/button";
@@ -72,11 +72,15 @@ const EMPTY_FORM: Omit<Client, "id"> = {
 
 function PatientsPage() {
   const list = useServerFn(listClients);
+  const listArchived = useServerFn(listArchivedClients);
+  const restore = useServerFn(restoreClient);
   const upsert = useServerFn(upsertClient);
   const remove = useServerFn(deleteClient);
   const listAppt = useServerFn(listMyAppointments);
 
   const [clients, setClients] = useState<Client[]>([]);
+  const [archivedClients, setArchivedClients] = useState<Client[]>([]);
+  const [view, setView] = useState<"active" | "archived">("active");
   const [appts, setAppts] = useState<Appt[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -95,8 +99,9 @@ function PatientsPage() {
   const doMerge = useServerFn(mergeClients);
 
   async function refresh() {
-    const [c, a] = await Promise.all([list(), listAppt()]);
+    const [c, ar, a] = await Promise.all([list(), listArchived(), listAppt()]);
     setClients(c as Client[]);
+    setArchivedClients(ar as Client[]);
     setAppts(a as Appt[]);
     setLoading(false);
   }
@@ -105,15 +110,27 @@ function PatientsPage() {
 
   // Aggregate appointment-based patients that aren't yet in clients list (read-only)
   const allEntries = useMemo(() => {
+    if (view === "archived") {
+      const q = search.trim().toLowerCase();
+      const arr = archivedClients;
+      return q
+        ? arr.filter((c) =>
+            c.full_name.toLowerCase().includes(q) ||
+            (c.email ?? "").toLowerCase().includes(q) ||
+            (c.phone ?? "").toLowerCase().includes(q))
+        : arr;
+    }
     const fromClients: Client[] = clients;
     const knownEmails = new Set(clients.map((c) => (c.email ?? "").toLowerCase()).filter(Boolean));
     const knownNames = new Set(clients.map((c) => c.full_name.toLowerCase()));
+    const archivedEmails = new Set(archivedClients.map((c) => (c.email ?? "").toLowerCase()).filter(Boolean));
+    const archivedNames = new Set(archivedClients.map((c) => c.full_name.toLowerCase()));
     const synthetic = new Map<string, Client>();
     for (const a of appts) {
       const email = (a.patient_email ?? "").toLowerCase();
       const nm = (a.patient_name ?? "").toLowerCase();
-      if (email && knownEmails.has(email)) continue;
-      if (!email && nm && knownNames.has(nm)) continue;
+      if (email && (knownEmails.has(email) || archivedEmails.has(email))) continue;
+      if (!email && nm && (knownNames.has(nm) || archivedNames.has(nm))) continue;
       const key = email || nm || a.id;
       if (synthetic.has(key)) continue;
       synthetic.set(key, {
@@ -132,7 +149,7 @@ function PatientsPage() {
           (c.email ?? "").toLowerCase().includes(q) ||
           (c.phone ?? "").toLowerCase().includes(q))
       : arr;
-  }, [clients, appts, search]);
+  }, [clients, archivedClients, appts, search, view]);
 
   const grouped = useMemo(() => {
     const sorted = [...allEntries].sort((a, b) => a.full_name.localeCompare(b.full_name));
@@ -204,9 +221,24 @@ function PatientsPage() {
   }
 
   async function handleDelete(id: string) {
-    if (!confirm("Delete this client?")) return;
-    await remove({ data: { id } });
-    refresh();
+    if (!confirm("Move this patient to the archive? You can restore them later.")) return;
+    try {
+      await remove({ data: { id } });
+      toast.success("Patient archived");
+      refresh();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to archive");
+    }
+  }
+
+  async function handleRestore(id: string) {
+    try {
+      await restore({ data: { id } });
+      toast.success("Patient restored");
+      refresh();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to restore");
+    }
   }
 
   return (
@@ -217,7 +249,7 @@ function PatientsPage() {
           <p className="text-xs text-muted-foreground">Manage your patient contacts</p>
         </div>
         <div className="shrink-0 text-xs text-muted-foreground">
-          {allEntries.length} total
+          {allEntries.length} {view === "archived" ? "archived" : "total"}
         </div>
       </header>
 
@@ -226,6 +258,23 @@ function PatientsPage() {
         <ActionPill icon={Plus} label="Add Patient" onClick={openAdd} primary />
         <ActionPill icon={Users} label="Create Group" onClick={() => setGroupOpen(true)} />
         <ActionPill icon={Combine} label="Merge Duplicates" onClick={() => setMergeOpen(true)} />
+      </div>
+
+      <div className="inline-flex rounded-lg border p-0.5 text-xs">
+        <button
+          type="button"
+          onClick={() => setView("active")}
+          className={`rounded-md px-3 py-1.5 font-medium ${view === "active" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+        >
+          Active ({clients.length})
+        </button>
+        <button
+          type="button"
+          onClick={() => setView("archived")}
+          className={`rounded-md px-3 py-1.5 font-medium ${view === "archived" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+        >
+          Archived ({archivedClients.length})
+        </button>
       </div>
 
       <div className="relative">
@@ -295,7 +344,19 @@ function PatientsPage() {
                         <div className="truncate text-xs font-medium text-red-600">Allergies: {c.allergies}</div>
                       )}
                     </div>
-                    <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
+                    {view === "archived" ? (
+                      <span
+                        role="button"
+                        tabIndex={0}
+                        onClick={(e) => { e.stopPropagation(); handleRestore(c.id); }}
+                        onKeyDown={(e) => { if (e.key === "Enter") { e.stopPropagation(); handleRestore(c.id); } }}
+                        className="shrink-0 rounded-md border px-2 py-1 text-xs font-medium text-primary hover:bg-primary/10"
+                      >
+                        Restore
+                      </span>
+                    ) : (
+                      <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
+                    )}
                   </button>
                 ))}
               </div>
@@ -392,14 +453,25 @@ function PatientsPage() {
         open={importOpen}
         onOpenChange={setImportOpen}
         onImport={async (rows) => {
-          const res: any = await importCsv({ data: { rows } });
-          const detail = res.skippedDetails?.length ? ` — first issue: ${res.skippedDetails[0]}` : "";
-          toast.success(`Imported ${res.inserted}, updated ${res.updated}${res.skipped ? `, skipped ${res.skipped}${detail}` : ""}`);
-          setImportOpen(false);
-
-          refresh();
+          try {
+            const res: any = await importCsv({ data: { rows } });
+            const detail = res.skippedDetails?.length ? ` — first issue: ${res.skippedDetails[0]}` : "";
+            const total = (res.inserted || 0) + (res.updated || 0);
+            if (total === 0 && res.skipped) {
+              toast.error(`Import skipped all ${res.skipped} row(s)${detail}`);
+            } else {
+              toast.success(`Imported ${res.inserted}, updated ${res.updated}${res.skipped ? `, skipped ${res.skipped}${detail}` : ""}`);
+            }
+            setImportOpen(false);
+            refresh();
+          } catch (e) {
+            toast.error(e instanceof Error ? e.message : "CSV import failed");
+            throw e;
+          }
         }}
       />
+
+
 
       <CreateGroupDialog
         open={groupOpen}
