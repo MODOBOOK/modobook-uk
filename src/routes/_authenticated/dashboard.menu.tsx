@@ -104,7 +104,7 @@ const groups: { title: string; items: Item[] }[] = [
   {
     title: "Communications",
     items: [
-      { label: "Email templates", description: "Edit the wording of booking, review & message emails", to: "/dashboard/marketing/templates", icon: Mail, ...T.taupe },
+      { label: "Emails", description: "Edit wording, set up appointment reminders & more", to: "/dashboard/emails", icon: Mail, ...T.taupe },
       { label: "Marketing", description: "Send branded campaigns to opted-in patients", to: "/dashboard/marketing", icon: Megaphone, ...T.espresso },
     ],
   },
