@@ -10,7 +10,7 @@ import { Loader2 } from "lucide-react";
 export const Route = createFileRoute("/m/$slug")({
   loader: async ({ params }) => {
     const { profile, theme } = await getPractitionerBio({ data: { slug: params.slug } });
-    return { profile, theme };
+    return { profile, theme, slug: params.slug };
   },
   pendingComponent: () => (
     <div className="flex min-h-screen items-center justify-center">
@@ -49,20 +49,66 @@ export const Route = createFileRoute("/m/$slug")({
       ];
     })(),
     links: (() => {
-      // Only override the default MODO favicon when the practitioner has
-      // explicitly uploaded a browser tab icon. Do NOT fall back to their
-      // logo or avatar — MODO branding should show otherwise.
-      const icon = loaderData?.theme?.favicon_url;
-      if (!icon) return undefined;
-      return [
-        { rel: "icon", href: icon },
-        { rel: "icon", type: "image/png", href: icon },
-        { rel: "icon", type: "image/png", sizes: "192x192", href: icon },
-        { rel: "icon", type: "image/png", sizes: "512x512", href: icon },
-        { rel: "shortcut icon", href: icon },
-        { rel: "apple-touch-icon", href: icon },
-      ];
+      // Browser tab favicon: only override MODO's default when the practitioner
+      // explicitly uploaded a favicon. Do NOT fall back to their logo/avatar.
+      const favicon = loaderData?.theme?.favicon_url;
+      // Home-screen icon (Add to Home Screen on iOS/Android): prefer the
+      // practitioner's logo so their brand shows on the patient's device.
+      const homeIcon =
+        loaderData?.theme?.logo_url ||
+        loaderData?.theme?.favicon_url ||
+        loaderData?.profile.avatar_url ||
+        null;
+
+      const headerName = loaderData?.profile
+        ? resolveDisplayNames(loaderData.profile).primary
+        : "Clinic";
+      const themeColor = loaderData?.theme?.primary_color || "#2b2118";
+      const bgColor = loaderData?.theme?.background_color || "#f5efe6";
+
+      const links: Array<Record<string, string>> = [];
+
+      if (favicon) {
+        links.push(
+          { rel: "icon", href: favicon },
+          { rel: "icon", type: "image/png", href: favicon },
+          { rel: "icon", type: "image/png", sizes: "192x192", href: favicon },
+          { rel: "icon", type: "image/png", sizes: "512x512", href: favicon },
+          { rel: "shortcut icon", href: favicon },
+        );
+      }
+
+      if (homeIcon) {
+        links.push(
+          { rel: "apple-touch-icon", href: homeIcon },
+          { rel: "apple-touch-icon", sizes: "180x180", href: homeIcon },
+        );
+
+        // Per-practitioner web app manifest so Android/desktop PWA installs
+        // use the practitioner's logo and name on the home screen.
+        const manifest = {
+          name: headerName,
+          short_name: headerName.slice(0, 12) || "Clinic",
+          start_url: `/m/${loaderData?.slug ?? ""}`,
+          scope: `/m/${loaderData?.slug ?? ""}`,
+          display: "standalone",
+          background_color: bgColor,
+          theme_color: themeColor,
+          icons: [
+            { src: homeIcon, sizes: "192x192", type: "image/png", purpose: "any" },
+            { src: homeIcon, sizes: "512x512", type: "image/png", purpose: "any" },
+            { src: homeIcon, sizes: "512x512", type: "image/png", purpose: "maskable" },
+          ],
+        };
+        const manifestHref =
+          "data:application/manifest+json;charset=utf-8," +
+          encodeURIComponent(JSON.stringify(manifest));
+        links.push({ rel: "manifest", href: manifestHref });
+      }
+
+      return links.length ? links : undefined;
     })(),
+
 
   }),
   component: ModoLayout,
