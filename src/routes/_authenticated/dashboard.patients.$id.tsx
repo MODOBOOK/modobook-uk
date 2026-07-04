@@ -241,6 +241,10 @@ function PatientProfilePage() {
         <Row label="Preferred contact" value={client.preferred_contact} />
         <Row label="Marketing opt-in" value={client.marketing_opt_in ? "✓ Yes" : "No"} />
         <Row label="How did you hear about us?" value={client.how_heard} />
+        <div className="mt-2 flex items-start gap-2 rounded-md border border-blue-200 bg-blue-50/60 p-2 text-xs text-blue-800">
+          <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+          <span>Address, postcode, DOB, phone and allergies are pulled over automatically when this patient completes a medical form.</span>
+        </div>
       </Section>
 
       {/* Emergency contact */}
@@ -249,7 +253,12 @@ function PatientProfilePage() {
         <Row label="GP address" value={client.gp_address} />
         <Row label="Emergency contact name" value={client.emergency_contact_name} />
         <Row label="Emergency contact phone" value={client.emergency_contact_phone} />
+        <div className="mt-2 flex items-start gap-2 rounded-md border border-blue-200 bg-blue-50/60 p-2 text-xs text-blue-800">
+          <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+          <span>GP details and next-of-kin / emergency contact are pulled over automatically when this patient completes a medical form.</span>
+        </div>
       </Section>
+
 
       {/* Medical forms (sent / completed) */}
       <Section title="Medical forms">
