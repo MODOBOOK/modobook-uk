@@ -1310,11 +1310,14 @@ function MultiBookPage() {
                 })()}
 
                 {(() => {
-                  const anySplit = splitEligibleTreatments.some((t) => selectedPaymentPlan(t) === "split");
+                  const isDeposit = paymentChoice?.mode === "deposit";
+                  // Deposit overrides split: charge deposit today, balance at appointment.
+                  const anySplit = !isDeposit && splitEligibleTreatments.some((t) => selectedPaymentPlan(t) === "split");
                   let dueToday = 0;
                   treatments.forEach((t) => {
                     const sessions = Math.max(1, Number((t as { session_count?: number }).session_count ?? 1));
                     const isSplit =
+                      !isDeposit &&
                       Boolean((t as { allow_split_payment?: boolean }).allow_split_payment) &&
                       sessions > 1 &&
                       selectedPaymentPlan(t) === "split";
@@ -1331,9 +1334,11 @@ function MultiBookPage() {
                           ? "Please give prescriber consent above"
                           : anySplit && !splitAgreed
                             ? "Tick the split-payment agreement to continue"
-                            : anySplit
-                              ? `Book & pay £${dueToday.toFixed(2)} today (rest at each session)`
-                              : `Confirm ${treatments.length} booking${treatments.length === 1 ? "" : "s"} · £${totalAfterDiscount.toFixed(2)}`;
+                            : isDeposit
+                              ? `Book & pay deposit today`
+                              : anySplit
+                                ? `Book & pay £${dueToday.toFixed(2)} today (rest at each session)`
+                                : `Confirm ${treatments.length} booking${treatments.length === 1 ? "" : "s"} · £${totalAfterDiscount.toFixed(2)}`;
                   return (
                     <Button
                       className="mt-4 w-full"
