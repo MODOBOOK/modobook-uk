@@ -344,7 +344,19 @@ function PatientsPage() {
                         <div className="truncate text-xs font-medium text-red-600">Allergies: {c.allergies}</div>
                       )}
                     </div>
-                    <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
+                    {view === "archived" ? (
+                      <span
+                        role="button"
+                        tabIndex={0}
+                        onClick={(e) => { e.stopPropagation(); handleRestore(c.id); }}
+                        onKeyDown={(e) => { if (e.key === "Enter") { e.stopPropagation(); handleRestore(c.id); } }}
+                        className="shrink-0 rounded-md border px-2 py-1 text-xs font-medium text-primary hover:bg-primary/10"
+                      >
+                        Restore
+                      </span>
+                    ) : (
+                      <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
+                    )}
                   </button>
                 ))}
               </div>
