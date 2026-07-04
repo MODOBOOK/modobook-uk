@@ -14,6 +14,7 @@ import {
   getTreatmentAftercareIds,
   setTreatmentAftercareIds,
 } from "@/lib/aftercare-templates.functions";
+import { listMyConnectedPrescribers } from "@/lib/prescriber.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -54,6 +55,10 @@ type Treatment = {
   price_mode?: "fixed" | "from" | "poa" | "free" | null;
   badge?: "recommended" | "popular" | "new" | "bestseller" | null;
   deposit_amount?: number | null;
+  requires_prescriber?: boolean | null;
+  prescriber_user_id?: string | null;
+  prescriber_routing?: "same_address" | "clinic_visit" | "in_person_consult" | null;
+  prescriber_note?: string | null;
 };
 
 
@@ -91,6 +96,10 @@ type TreatmentForm = {
   price_mode: "fixed" | "from" | "poa" | "free";
   badge: "recommended" | "popular" | "new" | "bestseller" | null;
   deposit_amount: number | null;
+  requires_prescriber: boolean;
+  prescriber_user_id: string | null;
+  prescriber_routing: "same_address" | "clinic_visit" | "in_person_consult";
+  prescriber_note: string | null;
 };
 
 
@@ -392,7 +401,23 @@ function TreatmentDialog({
       : "",
   );
 
-
+  const [requiresPrescriber, setRequiresPrescriber] = useState<boolean>(
+    Boolean(treatment?.requires_prescriber),
+  );
+  const [prescriberUserId, setPrescriberUserId] = useState<string>(
+    treatment?.prescriber_user_id ?? "",
+  );
+  const [prescriberRouting, setPrescriberRouting] = useState<"same_address" | "clinic_visit" | "in_person_consult">(
+    (treatment?.prescriber_routing as "same_address" | "clinic_visit" | "in_person_consult" | null) ?? "same_address",
+  );
+  const [prescriberNote, setPrescriberNote] = useState<string>(treatment?.prescriber_note ?? "");
+  const fetchPrescribers = useServerFn(listMyConnectedPrescribers);
+  const [prescribers, setPrescribers] = useState<{ user_id: string; name: string; regulatory_body: string | null }[]>([]);
+  useEffect(() => {
+    fetchPrescribers()
+      .then((r) => setPrescribers(r as any))
+      .catch(() => setPrescribers([]));
+  }, [fetchPrescribers]);
 
 
   const topLevel = useMemo(() => categories.filter((c) => !c.parent_id), [categories]);
@@ -446,6 +471,14 @@ function TreatmentDialog({
         ? String((treatment as { deposit_amount?: number | null }).deposit_amount)
         : "",
     );
+    setRequiresPrescriber(Boolean(treatment?.requires_prescriber));
+    setPrescriberUserId(treatment?.prescriber_user_id ?? "");
+    setPrescriberRouting(
+      (treatment?.prescriber_routing as "same_address" | "clinic_visit" | "in_person_consult" | null) ?? "same_address",
+    );
+    setPrescriberNote(treatment?.prescriber_note ?? "");
+
+
 
 
     if (treatment?.id) {
@@ -840,6 +873,76 @@ function TreatmentDialog({
             </div>
           </div>
         </details>
+
+        {/* Prescriber allocation */}
+        <div className="rounded-md border p-3 space-y-3">
+          <div className="flex items-center justify-between gap-2">
+            <div>
+              <Label className="m-0">Requires a prescriber</Label>
+              <p className="text-xs text-muted-foreground">
+                Turn on for treatments that need an independent prescriber (e.g. anti-wrinkle, filler).
+              </p>
+            </div>
+            <Switch checked={requiresPrescriber} onCheckedChange={setRequiresPrescriber} />
+          </div>
+
+          {requiresPrescriber && (
+            <div className="space-y-3 border-t pt-3">
+              <div>
+                <Label className="text-xs text-muted-foreground">Assigned prescriber</Label>
+                {prescribers.length === 0 ? (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    You aren't connected to any approved prescribers yet.{" "}
+                    <Link to="/hub/connections" className="font-medium text-primary hover:underline">
+                      Connect with one
+                    </Link>{" "}
+                    using their MODO code, then come back to allocate them here.
+                  </p>
+                ) : (
+                  <Select value={prescriberUserId || undefined} onValueChange={(v) => setPrescriberUserId(v)}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Pick a prescriber" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {prescribers.map((p) => (
+                        <SelectItem key={p.user_id} value={p.user_id}>
+                          {p.name}{p.regulatory_body ? ` · ${p.regulatory_body}` : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+
+              <div>
+                <Label className="text-xs text-muted-foreground">Consultation routing</Label>
+                <Select
+                  value={prescriberRouting}
+                  onValueChange={(v) => setPrescriberRouting(v as "same_address" | "clinic_visit" | "in_person_consult")}
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="same_address">Remote — prescriber reviews at same address</SelectItem>
+                    <SelectItem value="clinic_visit">Prescriber attends the clinic</SelectItem>
+                    <SelectItem value="in_person_consult">Patient sees prescriber in person</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label className="text-xs text-muted-foreground">Note to the prescriber (optional)</Label>
+                <Textarea
+                  rows={2}
+                  value={prescriberNote}
+                  onChange={(e) => setPrescriberNote(e.target.value)}
+                  placeholder="e.g. Please confirm suitability before we proceed."
+                />
+              </div>
+            </div>
+          )}
+        </div>
       </div>
       <DialogFooter>
         <Button
@@ -873,7 +976,10 @@ function TreatmentDialog({
               price_mode: priceMode,
               badge: badge === "none" ? null : badge,
               deposit_amount: depositOverride.trim() === "" ? null : Math.max(0, Number(depositOverride)),
-
+              requires_prescriber: requiresPrescriber,
+              prescriber_user_id: requiresPrescriber ? (prescriberUserId || null) : null,
+              prescriber_routing: prescriberRouting,
+              prescriber_note: prescriberNote.trim() ? prescriberNote.trim() : null,
             })
 
           }
