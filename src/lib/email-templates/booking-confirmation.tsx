@@ -14,6 +14,9 @@ interface Props {
   manageUrl?: string
   logoUrl?: string | null
   brandColor?: string | null
+  subjectOverride?: string | null
+  introOverride?: string | null
+  closingOverride?: string | null
 }
 
 const Email = ({
@@ -27,13 +30,15 @@ const Email = ({
   manageUrl,
   logoUrl,
   brandColor,
+  introOverride,
+  closingOverride,
 }: Props) => (
   <Html lang="en" dir="ltr">
     <Head />
     <Preview>Your {clinicName} booking is confirmed</Preview>
     <ModoShell preview="" siteName={clinicName} logoUrl={logoUrl} brandColor={brandColor}>
       <Heading as="h1" style={styles.h1}>Your booking is confirmed</Heading>
-      <Text style={styles.text}>Hi {patientName}, thanks for booking with {clinicName}.</Text>
+      <Text style={styles.text}>{introOverride?.trim() || `Hi ${patientName}, thanks for booking with ${clinicName}.`}</Text>
       <Section style={{ backgroundColor: '#efe7d8', borderRadius: 12, padding: '16px 18px', margin: '8px 0 20px' }}>
         <Text style={{ ...styles.text, margin: '0 0 6px' }}><strong>{treatmentName}</strong></Text>
         <Text style={{ ...styles.muted, margin: '0 0 4px' }}>{dateTime}</Text>
@@ -46,7 +51,7 @@ const Email = ({
           <Button href={manageUrl} style={brandedButton(brandColor)}>Manage booking</Button>
         </Section>
       )}
-      <Text style={styles.muted}>If anything changes, use the link above to reschedule or cancel.</Text>
+      <Text style={styles.muted}>{closingOverride?.trim() || 'If anything changes, use the link above to reschedule or cancel.'}</Text>
     </ModoShell>
   </Html>
 )
