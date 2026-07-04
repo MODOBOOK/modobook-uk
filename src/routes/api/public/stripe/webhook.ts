@@ -94,6 +94,10 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const connectedAccountId = (event as unknown as { account?: string }).account ?? null;
 
+        // Collect appointment IDs paid by this Stripe event so we can send
+        // branded booking-confirmation emails once the money's in.
+        const paidAppointmentIds: string[] = [];
+
         try {
           switch (event.type) {
             case "checkout.session.completed":
@@ -161,6 +165,7 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
                     .from("appointments")
                     .update(patch as never)
                     .eq("id", apptId);
+                  paidAppointmentIds.push(apptId);
                 }
               } else if (metadata.appointment_ids) {
                 // Checkout Session created directly for a booking (deposit / full)
@@ -180,6 +185,7 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
                       .from("appointments")
                       .update(patch as never)
                       .eq("id", apptId);
+                    paidAppointmentIds.push(apptId);
                   }
                 }
               }
