@@ -134,22 +134,23 @@ export const cancelAppointmentByToken = createServerFn({ method: "POST" })
     const { data: ok, error } = await sb.rpc("cancel_appointment_by_token", { p_token: data.token });
     if (error) throw error;
 
-    if (ok && apptRow?.patient_email && apptRow.id) {
+    const a = apptRow;
+    if (ok && a && a.patient_email && a.id) {
       try {
         const { tryEnqueueAppEmail, formatBookingDateTime } = await import("@/lib/email/send.server");
         const origin = process.env.PUBLIC_APP_URL || process.env.APP_URL || "https://modobook.uk";
         void tryEnqueueAppEmail({
           templateName: "booking-cancellation",
-          recipientEmail: apptRow.patient_email,
-          messageId: `booking-cancel-${apptRow.id}`,
+          recipientEmail: a.patient_email,
+          messageId: `booking-cancel-${a.id}`,
           templateData: {
-            patientName: (apptRow.patient_name ?? "").split(" ")[0] || "there",
-            clinicName: apptRow.clinic_name ?? "MODO",
-            treatmentName: apptRow.treatment_name ?? "your appointment",
-            dateTime: apptRow.scheduled_date && apptRow.start_time
-              ? formatBookingDateTime(apptRow.scheduled_date, apptRow.start_time) : "",
+            patientName: (a.patient_name ?? "").split(" ")[0] || "there",
+            clinicName: a.clinic_name ?? "MODO",
+            treatmentName: a.treatment_name ?? "your appointment",
+            dateTime: a.scheduled_date && a.start_time
+              ? formatBookingDateTime(a.scheduled_date, a.start_time) : "",
             cancelledBy: "patient",
-            rebookUrl: apptRow.clinic_slug ? `${origin}/m/${apptRow.clinic_slug}` : origin,
+            rebookUrl: a.clinic_slug ? `${origin}/m/${a.clinic_slug}` : origin,
           },
         });
       } catch (e) { console.error("[cancelAppointmentByToken] email failed", e); }
