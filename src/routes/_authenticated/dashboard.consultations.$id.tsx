@@ -797,7 +797,7 @@ function Step8({ invoice, email, patientName, consultationId, onChange, onComple
       const doc = await generateInvoicePdf({ ...pdfArgs, paymentLink: paymentLink ?? undefined });
       const pdfBlob = doc.output("blob");
       const { data: { user } } = await supabase.auth.getUser();
-      const pdfPath = `${user!.id}/invoices/${consultationId}-${Date.now()}.pdf`;
+      const pdfPath = `${profile!.id}/invoices/${consultationId}-${Date.now()}.pdf`;
       const up = await supabase.storage
         .from("clinic-assets")
         .upload(pdfPath, pdfBlob, { upsert: true, contentType: "application/pdf" });
