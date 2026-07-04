@@ -55,6 +55,10 @@ type Treatment = {
   price_mode?: "fixed" | "from" | "poa" | "free" | null;
   badge?: "recommended" | "popular" | "new" | "bestseller" | null;
   deposit_amount?: number | null;
+  requires_prescriber?: boolean | null;
+  prescriber_user_id?: string | null;
+  prescriber_routing?: "same_address" | "clinic_visit" | "in_person_consult" | null;
+  prescriber_note?: string | null;
 };
 
 
