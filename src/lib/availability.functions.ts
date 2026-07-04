@@ -151,7 +151,7 @@ export const cancelAppointment = createServerFn({ method: "POST" })
         const { tryEnqueueAppEmail, formatBookingDateTime, getPractitionerBranding } = await import("@/lib/email/send.server");
         const branding = await getPractitionerBranding(profileId);
         const origin = process.env.PUBLIC_APP_URL || process.env.APP_URL || "https://modobook.uk";
-        void tryEnqueueAppEmail({
+        await tryEnqueueAppEmail({
           templateName: "booking-cancellation",
           recipientEmail: appt.patient_email,
           messageId: `booking-cancel-${appt.id}`,

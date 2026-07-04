@@ -598,7 +598,7 @@ export const requestBooking = createServerFn({ method: "POST" })
           ? `${origin}/m/${prof.slug}/manage/${created.manage_token}`
           : undefined;
         const loc = locRow as { name?: string; address_line1?: string; city?: string; postcode?: string } | null;
-        void tryEnqueueAppEmail({
+        await tryEnqueueAppEmail({
           templateName: "booking-confirmation",
           recipientEmail: data.patientEmail,
           messageId: `booking-confirm-${id}`,
