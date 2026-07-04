@@ -2,6 +2,9 @@
 // don't support Tailwind or external CSS.
 import * as React from 'react'
 import { Body, Container, Head, Hr, Img, Section, Text } from '@react-email/components'
+import modoLogo from '@/assets/modo-logo.png.asset.json'
+
+const MODO_LOGO_URL = modoLogo.url
 
 export const brand = {
   bg: '#ffffff',
@@ -120,28 +123,20 @@ export function ModoShell({
 }) {
   const _preview = preview // silence unused warning; Preview is set by caller
   void _preview
-  const accent = brandColor || brand.accent
+  // Fallback to the MODO wordmark+monogram brand image when no practitioner
+  // logo is supplied. Emails need an absolute URL — asset paths are relative.
+  const brandLogo = logoUrl || `https://modobook.uk${MODO_LOGO_URL}`
+  const alt = logoUrl ? (siteName || 'Clinic logo') : 'MODO'
   return (
     <Body style={styles.main}>
       <Container style={styles.container}>
-        <Section>
-          {logoUrl ? (
-            <Section style={{ textAlign: 'center', margin: '0 0 20px' }}>
-              <Img
-                src={logoUrl}
-                alt={siteName || 'Clinic logo'}
-                height="56"
-                style={{ height: '56px', width: 'auto', margin: '0 auto', display: 'inline-block' }}
-              />
-            </Section>
-          ) : (
-            <>
-              <Text style={styles.wordmark}>{siteName || 'MODO'}</Text>
-              <Text style={{ ...styles.tagline, color: accent }}>
-                {siteName ? 'Appointment update' : 'The Modern Aesthetics Studio'}
-              </Text>
-            </>
-          )}
+        <Section style={{ textAlign: 'center', margin: '0 0 24px' }}>
+          <Img
+            src={brandLogo}
+            alt={alt}
+            height="64"
+            style={{ height: '64px', width: 'auto', margin: '0 auto', display: 'inline-block' }}
+          />
         </Section>
         {children}
         <Hr style={styles.hr} />
