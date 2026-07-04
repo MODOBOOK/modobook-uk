@@ -15,7 +15,7 @@ import {
   Info,
   Stethoscope,
   Wallet,
-  Mail,
+  Wallet,
 } from "lucide-react";
 
 import { listMyAppointments } from "@/lib/availability.functions";
