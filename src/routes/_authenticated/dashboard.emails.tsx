@@ -178,26 +178,6 @@ function EmailsPage() {
         </div>
       </section>
 
-      {/* Auth emails */}
-      <section className="space-y-3">
-        <div>
-          <h2 className="text-xl font-serif">Account emails</h2>
-          <p className="text-sm text-muted-foreground">Signup, password reset and other account emails. Wording is managed centrally to keep account security messages consistent.</p>
-        </div>
-        <div className="space-y-2">
-          {grouped.auth.map((e) => (
-            <Card key={e.key}>
-              <CardContent className="p-4 flex items-center gap-4">
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium">{e.name}</p>
-                  <p className="text-sm text-muted-foreground">{e.description}</p>
-                </div>
-                <Badge variant="outline">Fixed</Badge>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </section>
 
       {editing && (
         <EmailEditDialog
