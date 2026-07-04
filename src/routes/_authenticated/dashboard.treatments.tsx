@@ -643,9 +643,29 @@ function TreatmentDialog({
         </div>
 
         <div>
-          <Label>Description</Label>
+          <div className="flex items-center justify-between gap-2">
+            <Label>Description</Label>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={handleGenerateDescription}
+              disabled={aiDescLoading || !name.trim()}
+            >
+              {aiDescLoading ? (
+                <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Sparkles className="mr-2 h-3.5 w-3.5" />
+              )}
+              {description.trim() ? "Rewrite with AI" : "Generate with AI"}
+            </Button>
+          </div>
           <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            AI uses the treatment name (and any notes you've typed) to draft a short, patient-friendly description.
+          </p>
         </div>
+
 
         {/* Sessions & split payment */}
         <div className="rounded-md border p-3 space-y-3">
