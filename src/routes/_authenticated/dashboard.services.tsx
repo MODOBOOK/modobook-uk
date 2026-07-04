@@ -694,39 +694,43 @@ function ServiceRow({
 }) {
   const currentVal = treat.category_id ?? "__none__";
   return (
-    <div className="flex flex-wrap items-center gap-2 py-2">
-      <span
-        className="h-2.5 w-2.5 shrink-0 rounded-full"
-        style={{ backgroundColor: treat.color || "hsl(var(--muted-foreground))" }}
-        aria-label="Calendar colour"
-      />
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium text-[hsl(var(--primary))]">{treat.name}</p>
-        <p className="text-[11px] text-muted-foreground">
-          £{treat.price} · {treat.duration} min
-        </p>
+    <div className="flex flex-col gap-2 py-2 sm:flex-row sm:flex-wrap sm:items-center">
+      <div className="flex min-w-0 flex-1 items-center gap-2">
+        <span
+          className="h-2.5 w-2.5 shrink-0 rounded-full"
+          style={{ backgroundColor: treat.color || "hsl(var(--muted-foreground))" }}
+          aria-label="Calendar colour"
+        />
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-medium leading-tight text-[hsl(var(--primary))] break-words">{treat.name}</p>
+          <p className="text-[11px] text-muted-foreground">
+            £{treat.price} · {treat.duration} min
+          </p>
+        </div>
       </div>
-      {onChangeCategory && picker && (
-        <Select
-          value={currentVal}
-          onValueChange={(v) => onChangeCategory(v === "__none__" ? null : v)}
-        >
-          <SelectTrigger className="h-8 w-[220px] text-xs" aria-label="Move to category or subcategory">
-            <SelectValue placeholder="Move to category…" />
-          </SelectTrigger>
-          <SelectContent className="max-h-[320px]">
-            <SelectItem value="__none__">— Uncategorised —</SelectItem>
-            {picker.map((c) => (
-              <SelectItem key={c.id} value={c.id} className="text-xs">
-                <span style={{ paddingLeft: c.depth * 12 }} className="inline-block">
-                  {c.depth > 0 ? "↳ " : ""}
-                  {c.label}
-                </span>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      )}
+      <div className="flex items-center gap-2">
+        {onChangeCategory && picker && (
+          <Select
+            value={currentVal}
+            onValueChange={(v) => onChangeCategory(v === "__none__" ? null : v)}
+          >
+            <SelectTrigger className="h-8 w-[180px] text-xs sm:w-[220px]" aria-label="Move to category or subcategory">
+              <SelectValue placeholder="Move to category…" />
+            </SelectTrigger>
+            <SelectContent className="max-h-[320px]">
+              <SelectItem value="__none__">— Uncategorised —</SelectItem>
+              {picker.map((c) => (
+                <SelectItem key={c.id} value={c.id} className="text-xs">
+                  <span style={{ paddingLeft: c.depth * 12 }} className="inline-block">
+                    {c.depth > 0 ? "↳ " : ""}
+                    {c.label}
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -762,6 +766,7 @@ function ServiceRow({
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+      </div>
     </div>
   );
 }
