@@ -125,7 +125,7 @@ export function AiGenerateConsentDialog({
             <div className="space-y-2">
               <Label>Describe the treatment</Label>
               <Textarea
-                placeholder='e.g. "Botox for forehead lines and crow\'s feet — include risks, contraindications and 24hr aftercare."'
+                placeholder={`e.g. "Botox for forehead lines and crow's feet — include risks, contraindications and 24hr aftercare."`}
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 rows={4}
