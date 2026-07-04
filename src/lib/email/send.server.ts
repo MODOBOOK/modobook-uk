@@ -45,7 +45,9 @@ export async function enqueueAppEmail(
 
   // Merge practitioner override wording (subject/intro/closing) when a
   // profileId is passed in templateData. Templates that accept the *Override
-  // props render them; templates that don't ignore them.
+  // props render them; templates that don't ignore them. {{var}} placeholders
+  // are interpolated using the current template data so overrides can still
+  // include the patient/clinic/appointment info.
   const baseData = { ...(input.templateData || {}) } as Record<string, unknown>
   const profileId = baseData.profileId as string | undefined
   if (profileId) {
@@ -57,14 +59,24 @@ export async function enqueueAppEmail(
         .eq('template_key', input.templateName as string)
         .maybeSingle()
       if (cust) {
-        if (cust.subject_override) baseData.subjectOverride = cust.subject_override
-        if (cust.intro_override) baseData.introOverride = cust.intro_override
-        if (cust.closing_override) baseData.closingOverride = cust.closing_override
+        const { interpolateOverride } = await import('@/lib/email-templates/defaults')
+        const vars: Record<string, string | undefined | null> = {
+          patient_name: baseData.patientName as string | undefined,
+          clinic_name: baseData.clinicName as string | undefined,
+          treatment_name: baseData.treatmentName as string | undefined,
+          practitioner_name: baseData.practitionerName as string | undefined,
+          date_time: baseData.dateTime as string | undefined,
+          form_name: baseData.formName as string | undefined,
+        }
+        if (cust.subject_override) baseData.subjectOverride = interpolateOverride(cust.subject_override, vars)
+        if (cust.intro_override) baseData.introOverride = interpolateOverride(cust.intro_override, vars)
+        if (cust.closing_override) baseData.closingOverride = interpolateOverride(cust.closing_override, vars)
       }
     } catch (e) {
       console.error('[email] failed to load customization', e)
     }
   }
+
 
 
   // Dedup by message_id (skip if this exact send was already recorded)
