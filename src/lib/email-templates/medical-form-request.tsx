@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { Html, Preview, Heading, Text, Button, Section } from '@react-email/components'
-import { ModoShell, Head, styles } from './_modo-brand'
+import { ModoShell, Head, styles, brandedButton } from './_modo-brand'
 import type { TemplateEntry } from './registry'
 
 interface Props {
@@ -9,6 +9,8 @@ interface Props {
   formName?: string
   dueBy?: string
   formUrl?: string
+  logoUrl?: string | null
+  brandColor?: string | null
 }
 
 const Email = ({
@@ -17,11 +19,13 @@ const Email = ({
   formName = 'a medical form',
   dueBy,
   formUrl = 'https://modobook.uk',
+  logoUrl,
+  brandColor,
 }: Props) => (
   <Html lang="en" dir="ltr">
     <Head />
     <Preview>{clinicName} needs you to complete {formName}</Preview>
-    <ModoShell preview="" siteName={clinicName}>
+    <ModoShell preview="" siteName={clinicName} logoUrl={logoUrl} brandColor={brandColor}>
       <Heading as="h1" style={styles.h1}>Please complete your form</Heading>
       <Text style={styles.text}>
         Hi {patientName}, {clinicName} has sent you <strong>{formName}</strong> to complete ahead of your appointment.
@@ -33,7 +37,7 @@ const Email = ({
         </Section>
       )}
       <Section style={styles.buttonWrap}>
-        <Button href={formUrl} style={styles.button}>Open form</Button>
+        <Button href={formUrl} style={brandedButton(brandColor)}>Open form</Button>
       </Section>
       <Text style={styles.muted}>Your answers are shared securely with your practitioner.</Text>
     </ModoShell>
