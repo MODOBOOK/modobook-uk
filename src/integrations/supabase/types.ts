@@ -1232,6 +1232,8 @@ export type Database = {
           id: string
           is_blocked: boolean
           marketing_opt_in: boolean
+          marketing_opt_in_at: string | null
+          marketing_opt_in_source: string | null
           medical_form_data: Json | null
           medical_form_updated_at: string | null
           no_show_count: number
@@ -1271,6 +1273,8 @@ export type Database = {
           id?: string
           is_blocked?: boolean
           marketing_opt_in?: boolean
+          marketing_opt_in_at?: string | null
+          marketing_opt_in_source?: string | null
           medical_form_data?: Json | null
           medical_form_updated_at?: string | null
           no_show_count?: number
@@ -1310,6 +1314,8 @@ export type Database = {
           id?: string
           is_blocked?: boolean
           marketing_opt_in?: boolean
+          marketing_opt_in_at?: string | null
+          marketing_opt_in_source?: string | null
           medical_form_data?: Json | null
           medical_form_updated_at?: string | null
           no_show_count?: number
@@ -2281,6 +2287,221 @@ export type Database = {
           {
             foreignKeyName: "locations_profile_id_fkey"
             columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketing_campaign_recipients: {
+        Row: {
+          campaign_id: string
+          client_id: string | null
+          created_at: string
+          email: string
+          error_message: string | null
+          id: string
+          message_id: string
+          practitioner_id: string
+          status: string
+        }
+        Insert: {
+          campaign_id: string
+          client_id?: string | null
+          created_at?: string
+          email: string
+          error_message?: string | null
+          id?: string
+          message_id: string
+          practitioner_id: string
+          status?: string
+        }
+        Update: {
+          campaign_id?: string
+          client_id?: string | null
+          created_at?: string
+          email?: string
+          error_message?: string | null
+          id?: string
+          message_id?: string
+          practitioner_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketing_campaign_recipients_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketing_campaign_recipients_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clinic_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketing_campaign_recipients_practitioner_id_fkey"
+            columns: ["practitioner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketing_campaigns: {
+        Row: {
+          body_json: Json
+          created_at: string
+          failed_count: number
+          id: string
+          name: string
+          practitioner_id: string
+          preheader: string | null
+          recipient_count: number
+          scheduled_for: string | null
+          segment_id: string | null
+          sent_at: string | null
+          sent_count: number
+          status: string
+          subject: string
+          suppressed_count: number
+          unsubscribed_count: number
+          updated_at: string
+        }
+        Insert: {
+          body_json?: Json
+          created_at?: string
+          failed_count?: number
+          id?: string
+          name: string
+          practitioner_id: string
+          preheader?: string | null
+          recipient_count?: number
+          scheduled_for?: string | null
+          segment_id?: string | null
+          sent_at?: string | null
+          sent_count?: number
+          status?: string
+          subject?: string
+          suppressed_count?: number
+          unsubscribed_count?: number
+          updated_at?: string
+        }
+        Update: {
+          body_json?: Json
+          created_at?: string
+          failed_count?: number
+          id?: string
+          name?: string
+          practitioner_id?: string
+          preheader?: string | null
+          recipient_count?: number
+          scheduled_for?: string | null
+          segment_id?: string | null
+          sent_at?: string | null
+          sent_count?: number
+          status?: string
+          subject?: string
+          suppressed_count?: number
+          unsubscribed_count?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketing_campaigns_practitioner_id_fkey"
+            columns: ["practitioner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketing_campaigns_segment_id_fkey"
+            columns: ["segment_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_segments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketing_segments: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          kind: string
+          name: string
+          practitioner_id: string
+          rules: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          kind?: string
+          name: string
+          practitioner_id: string
+          rules?: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          kind?: string
+          name?: string
+          practitioner_id?: string
+          rules?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketing_segments_practitioner_id_fkey"
+            columns: ["practitioner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketing_templates: {
+        Row: {
+          body_json: Json
+          created_at: string
+          id: string
+          name: string
+          practitioner_id: string
+          preheader: string | null
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          body_json?: Json
+          created_at?: string
+          id?: string
+          name: string
+          practitioner_id: string
+          preheader?: string | null
+          subject?: string
+          updated_at?: string
+        }
+        Update: {
+          body_json?: Json
+          created_at?: string
+          id?: string
+          name?: string
+          practitioner_id?: string
+          preheader?: string | null
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketing_templates_practitioner_id_fkey"
+            columns: ["practitioner_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
