@@ -176,7 +176,7 @@ function AftercarePage() {
       })()}
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-xl">
+        <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto flex flex-col">
           <DialogHeader>
             <DialogTitle>{editing?.id ? "Edit template" : "New aftercare template"}</DialogTitle>
           </DialogHeader>
