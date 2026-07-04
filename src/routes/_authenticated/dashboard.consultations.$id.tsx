@@ -677,7 +677,7 @@ function Step8({ invoice, email, patientName, consultationId, onChange, onComple
     const { data: { user } } = await supabase.auth.getUser();
     const { data: profile } = await supabase
       .from("profiles")
-      .select("clinic_name, full_name, address, email, phone, brand_color, avatar_url, hero_url, invoice_bank_name, invoice_account_name, invoice_sort_code, invoice_account_number, invoice_iban, invoice_swift, invoice_payment_reference, invoice_footer_notes, invoice_vat_number, invoice_company_number, invoice_show_bank_details, invoice_show_logo")
+      .select("id, clinic_name, full_name, address, email, phone, brand_color, avatar_url, hero_url, invoice_bank_name, invoice_account_name, invoice_sort_code, invoice_account_number, invoice_iban, invoice_swift, invoice_payment_reference, invoice_footer_notes, invoice_vat_number, invoice_company_number, invoice_show_bank_details, invoice_show_logo")
       .eq("user_id", user!.id).single();
     return profile;
   }
@@ -797,7 +797,7 @@ function Step8({ invoice, email, patientName, consultationId, onChange, onComple
       const doc = await generateInvoicePdf({ ...pdfArgs, paymentLink: paymentLink ?? undefined });
       const pdfBlob = doc.output("blob");
       const { data: { user } } = await supabase.auth.getUser();
-      const pdfPath = `${user!.id}/invoices/${consultationId}-${Date.now()}.pdf`;
+      const pdfPath = `${profile!.id}/invoices/${consultationId}-${Date.now()}.pdf`;
       const up = await supabase.storage
         .from("clinic-assets")
         .upload(pdfPath, pdfBlob, { upsert: true, contentType: "application/pdf" });
