@@ -22,6 +22,7 @@ import { Route as PrivacyDpiaRouteImport } from './routes/privacy.dpia'
 import { Route as PrivacyBreachResponseRouteImport } from './routes/privacy.breach-response'
 import { Route as MSlugRouteImport } from './routes/m.$slug'
 import { Route as FTokenRouteImport } from './routes/f.$token'
+import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
 import { Route as CTokenRouteImport } from './routes/c.$token'
 import { Route as BookSlugRouteImport } from './routes/book.$slug'
 import { Route as AuthenticatedPrescriberRouteImport } from './routes/_authenticated/prescriber'
@@ -39,6 +40,7 @@ import { Route as MSlugBookMultiRouteImport } from './routes/m.$slug.book-multi'
 import { Route as MSlugAuthRouteImport } from './routes/m.$slug.auth'
 import { Route as MSlugAccountRouteImport } from './routes/m.$slug.account'
 import { Route as MSlugAboutRouteImport } from './routes/m.$slug.about'
+import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as AuthenticatedPrescriberVisitsRouteImport } from './routes/_authenticated/prescriber.visits'
 import { Route as AuthenticatedPrescriberLibraryRouteImport } from './routes/_authenticated/prescriber.library'
 import { Route as AuthenticatedPrescriberDirectionsRouteImport } from './routes/_authenticated/prescriber.directions'
@@ -82,6 +84,8 @@ import { Route as AuthenticatedDashboardPatientsIndexRouteImport } from './route
 import { Route as AuthenticatedDashboardConsultationsIndexRouteImport } from './routes/_authenticated/dashboard.consultations.index'
 import { Route as MSlugManageTokenRouteImport } from './routes/m.$slug.manage.$token'
 import { Route as MSlugBookTreatmentIdRouteImport } from './routes/m.$slug.book.$treatmentId'
+import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
+import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
@@ -154,6 +158,11 @@ const MSlugRoute = MSlugRouteImport.update({
 const FTokenRoute = FTokenRouteImport.update({
   id: '/f/$token',
   path: '/f/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
+  id: '/email/unsubscribe',
+  path: '/email/unsubscribe',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CTokenRoute = CTokenRouteImport.update({
@@ -243,6 +252,11 @@ const MSlugAboutRoute = MSlugAboutRouteImport.update({
   id: '/about',
   path: '/about',
   getParentRoute: () => MSlugRoute,
+} as any)
+const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
+  id: '/lovable/email/suppression',
+  path: '/lovable/email/suppression',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedPrescriberVisitsRoute =
   AuthenticatedPrescriberVisitsRouteImport.update({
@@ -499,6 +513,18 @@ const MSlugBookTreatmentIdRoute = MSlugBookTreatmentIdRouteImport.update({
   path: '/book/$treatmentId',
   getParentRoute: () => MSlugRoute,
 } as any)
+const LovableEmailTransactionalSendRoute =
+  LovableEmailTransactionalSendRouteImport.update({
+    id: '/lovable/email/transactional/send',
+    path: '/lovable/email/transactional/send',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const LovableEmailTransactionalPreviewRoute =
+  LovableEmailTransactionalPreviewRouteImport.update({
+    id: '/lovable/email/transactional/preview',
+    path: '/lovable/email/transactional/preview',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const LovableEmailQueueProcessRoute =
   LovableEmailQueueProcessRouteImport.update({
     id: '/lovable/email/queue/process',
@@ -567,6 +593,7 @@ export interface FileRoutesByFullPath {
   '/prescriber': typeof AuthenticatedPrescriberRouteWithChildren
   '/book/$slug': typeof BookSlugRoute
   '/c/$token': typeof CTokenRoute
+  '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/f/$token': typeof FTokenRoute
   '/m/$slug': typeof MSlugRouteWithChildren
   '/privacy/breach-response': typeof PrivacyBreachResponseRoute
@@ -610,6 +637,7 @@ export interface FileRoutesByFullPath {
   '/prescriber/directions': typeof AuthenticatedPrescriberDirectionsRoute
   '/prescriber/library': typeof AuthenticatedPrescriberLibraryRoute
   '/prescriber/visits': typeof AuthenticatedPrescriberVisitsRoute
+  '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/m/$slug/about': typeof MSlugAboutRoute
   '/m/$slug/account': typeof MSlugAccountRoute
   '/m/$slug/auth': typeof MSlugAuthRoute
@@ -628,6 +656,8 @@ export interface FileRoutesByFullPath {
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
   '/m/$slug/book/$treatmentId': typeof MSlugBookTreatmentIdRoute
   '/m/$slug/manage/$token': typeof MSlugManageTokenRoute
   '/dashboard/consultations/': typeof AuthenticatedDashboardConsultationsIndexRoute
@@ -647,6 +677,7 @@ export interface FileRoutesByTo {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/book/$slug': typeof BookSlugRoute
   '/c/$token': typeof CTokenRoute
+  '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/f/$token': typeof FTokenRoute
   '/privacy/breach-response': typeof PrivacyBreachResponseRoute
   '/privacy/dpia': typeof PrivacyDpiaRoute
@@ -688,6 +719,7 @@ export interface FileRoutesByTo {
   '/prescriber/directions': typeof AuthenticatedPrescriberDirectionsRoute
   '/prescriber/library': typeof AuthenticatedPrescriberLibraryRoute
   '/prescriber/visits': typeof AuthenticatedPrescriberVisitsRoute
+  '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/m/$slug/about': typeof MSlugAboutRoute
   '/m/$slug/account': typeof MSlugAccountRoute
   '/m/$slug/auth': typeof MSlugAuthRoute
@@ -706,6 +738,8 @@ export interface FileRoutesByTo {
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
   '/m/$slug/book/$treatmentId': typeof MSlugBookTreatmentIdRoute
   '/m/$slug/manage/$token': typeof MSlugManageTokenRoute
   '/dashboard/consultations': typeof AuthenticatedDashboardConsultationsIndexRoute
@@ -730,6 +764,7 @@ export interface FileRoutesById {
   '/_authenticated/prescriber': typeof AuthenticatedPrescriberRouteWithChildren
   '/book/$slug': typeof BookSlugRoute
   '/c/$token': typeof CTokenRoute
+  '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/f/$token': typeof FTokenRoute
   '/m/$slug': typeof MSlugRouteWithChildren
   '/privacy/breach-response': typeof PrivacyBreachResponseRoute
@@ -773,6 +808,7 @@ export interface FileRoutesById {
   '/_authenticated/prescriber/directions': typeof AuthenticatedPrescriberDirectionsRoute
   '/_authenticated/prescriber/library': typeof AuthenticatedPrescriberLibraryRoute
   '/_authenticated/prescriber/visits': typeof AuthenticatedPrescriberVisitsRoute
+  '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/m/$slug/about': typeof MSlugAboutRoute
   '/m/$slug/account': typeof MSlugAccountRoute
   '/m/$slug/auth': typeof MSlugAuthRoute
@@ -791,6 +827,8 @@ export interface FileRoutesById {
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
   '/m/$slug/book/$treatmentId': typeof MSlugBookTreatmentIdRoute
   '/m/$slug/manage/$token': typeof MSlugManageTokenRoute
   '/_authenticated/dashboard/consultations/': typeof AuthenticatedDashboardConsultationsIndexRoute
@@ -815,6 +853,7 @@ export interface FileRouteTypes {
     | '/prescriber'
     | '/book/$slug'
     | '/c/$token'
+    | '/email/unsubscribe'
     | '/f/$token'
     | '/m/$slug'
     | '/privacy/breach-response'
@@ -858,6 +897,7 @@ export interface FileRouteTypes {
     | '/prescriber/directions'
     | '/prescriber/library'
     | '/prescriber/visits'
+    | '/lovable/email/suppression'
     | '/m/$slug/about'
     | '/m/$slug/account'
     | '/m/$slug/auth'
@@ -876,6 +916,8 @@ export interface FileRouteTypes {
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
+    | '/lovable/email/transactional/preview'
+    | '/lovable/email/transactional/send'
     | '/m/$slug/book/$treatmentId'
     | '/m/$slug/manage/$token'
     | '/dashboard/consultations/'
@@ -895,6 +937,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/book/$slug'
     | '/c/$token'
+    | '/email/unsubscribe'
     | '/f/$token'
     | '/privacy/breach-response'
     | '/privacy/dpia'
@@ -936,6 +979,7 @@ export interface FileRouteTypes {
     | '/prescriber/directions'
     | '/prescriber/library'
     | '/prescriber/visits'
+    | '/lovable/email/suppression'
     | '/m/$slug/about'
     | '/m/$slug/account'
     | '/m/$slug/auth'
@@ -954,6 +998,8 @@ export interface FileRouteTypes {
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
+    | '/lovable/email/transactional/preview'
+    | '/lovable/email/transactional/send'
     | '/m/$slug/book/$treatmentId'
     | '/m/$slug/manage/$token'
     | '/dashboard/consultations'
@@ -977,6 +1023,7 @@ export interface FileRouteTypes {
     | '/_authenticated/prescriber'
     | '/book/$slug'
     | '/c/$token'
+    | '/email/unsubscribe'
     | '/f/$token'
     | '/m/$slug'
     | '/privacy/breach-response'
@@ -1020,6 +1067,7 @@ export interface FileRouteTypes {
     | '/_authenticated/prescriber/directions'
     | '/_authenticated/prescriber/library'
     | '/_authenticated/prescriber/visits'
+    | '/lovable/email/suppression'
     | '/m/$slug/about'
     | '/m/$slug/account'
     | '/m/$slug/auth'
@@ -1038,6 +1086,8 @@ export interface FileRouteTypes {
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
+    | '/lovable/email/transactional/preview'
+    | '/lovable/email/transactional/send'
     | '/m/$slug/book/$treatmentId'
     | '/m/$slug/manage/$token'
     | '/_authenticated/dashboard/consultations/'
@@ -1056,8 +1106,10 @@ export interface RootRouteChildren {
   WhoItsForRoute: typeof WhoItsForRoute
   BookSlugRoute: typeof BookSlugRoute
   CTokenRoute: typeof CTokenRoute
+  EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   FTokenRoute: typeof FTokenRoute
   MSlugRoute: typeof MSlugRouteWithChildren
+  LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   ApiPublicMedicalFormTokenRoute: typeof ApiPublicMedicalFormTokenRoute
   ApiPublicPushDispatchRoute: typeof ApiPublicPushDispatchRoute
   ApiPublicStripeOauthCallbackRoute: typeof ApiPublicStripeOauthCallbackRoute
@@ -1065,6 +1117,8 @@ export interface RootRouteChildren {
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
+  LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
+  LovableEmailTransactionalSendRoute: typeof LovableEmailTransactionalSendRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1158,6 +1212,13 @@ declare module '@tanstack/react-router' {
       path: '/f/$token'
       fullPath: '/f/$token'
       preLoaderRoute: typeof FTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/email/unsubscribe': {
+      id: '/email/unsubscribe'
+      path: '/email/unsubscribe'
+      fullPath: '/email/unsubscribe'
+      preLoaderRoute: typeof EmailUnsubscribeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/c/$token': {
@@ -1278,6 +1339,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/m/$slug/about'
       preLoaderRoute: typeof MSlugAboutRouteImport
       parentRoute: typeof MSlugRoute
+    }
+    '/lovable/email/suppression': {
+      id: '/lovable/email/suppression'
+      path: '/lovable/email/suppression'
+      fullPath: '/lovable/email/suppression'
+      preLoaderRoute: typeof LovableEmailSuppressionRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/prescriber/visits': {
       id: '/_authenticated/prescriber/visits'
@@ -1580,6 +1648,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MSlugBookTreatmentIdRouteImport
       parentRoute: typeof MSlugRoute
     }
+    '/lovable/email/transactional/send': {
+      id: '/lovable/email/transactional/send'
+      path: '/lovable/email/transactional/send'
+      fullPath: '/lovable/email/transactional/send'
+      preLoaderRoute: typeof LovableEmailTransactionalSendRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/transactional/preview': {
+      id: '/lovable/email/transactional/preview'
+      path: '/lovable/email/transactional/preview'
+      fullPath: '/lovable/email/transactional/preview'
+      preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/lovable/email/queue/process': {
       id: '/lovable/email/queue/process'
       path: '/lovable/email/queue/process'
@@ -1872,8 +1954,10 @@ const rootRouteChildren: RootRouteChildren = {
   WhoItsForRoute: WhoItsForRoute,
   BookSlugRoute: BookSlugRoute,
   CTokenRoute: CTokenRoute,
+  EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   FTokenRoute: FTokenRoute,
   MSlugRoute: MSlugRouteWithChildren,
+  LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   ApiPublicMedicalFormTokenRoute: ApiPublicMedicalFormTokenRoute,
   ApiPublicPushDispatchRoute: ApiPublicPushDispatchRoute,
   ApiPublicStripeOauthCallbackRoute: ApiPublicStripeOauthCallbackRoute,
@@ -1881,17 +1965,9 @@ const rootRouteChildren: RootRouteChildren = {
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
+  LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
+  LovableEmailTransactionalSendRoute: LovableEmailTransactionalSendRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
