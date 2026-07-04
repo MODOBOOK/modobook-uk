@@ -277,6 +277,65 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
           return new Response("Handler error", { status: 500 });
         }
 
+        // Send branded booking-confirmation emails for appointments paid in
+        // this event. Non-blocking — never fail the webhook because email
+        // rendering failed. Idempotent via message_id = booking-confirm-<id>.
+        if (paidAppointmentIds.length > 0) {
+          try {
+            const { tryEnqueueAppEmail, formatBookingDateTime, getPractitionerBranding } = await import("@/lib/email/send.server");
+            const origin = process.env.PUBLIC_APP_URL || process.env.APP_URL || "https://modobook.uk";
+            const { data: appts } = await supabaseAdmin
+              .from("appointments")
+              .select("id, patient_name, patient_email, scheduled_date, start_time, manage_token, profile_id, treatments(name), practitioners(name), locations(name, address_line1, city, postcode), profiles(clinic_name, slug)")
+              .in("id", paidAppointmentIds);
+            const brandingCache = new Map<string, Awaited<ReturnType<typeof getPractitionerBranding>>>();
+            for (const raw of appts ?? []) {
+              const a = raw as {
+                id: string;
+                patient_name: string | null;
+                patient_email: string | null;
+                scheduled_date: string;
+                start_time: string;
+                manage_token: string | null;
+                profile_id: string;
+                treatments?: { name?: string } | null;
+                practitioners?: { name?: string } | null;
+                locations?: { name?: string; address_line1?: string; city?: string; postcode?: string } | null;
+                profiles?: { clinic_name?: string; slug?: string } | null;
+              };
+              if (!a.patient_email) continue;
+              let branding = brandingCache.get(a.profile_id);
+              if (!branding) {
+                branding = await getPractitionerBranding(a.profile_id);
+                brandingCache.set(a.profile_id, branding);
+              }
+              const manageUrl = a.manage_token && a.profiles?.slug
+                ? `${origin}/m/${a.profiles.slug}/manage/${a.manage_token}`
+                : undefined;
+              const loc = a.locations;
+              void tryEnqueueAppEmail({
+                templateName: "booking-confirmation",
+                recipientEmail: a.patient_email,
+                messageId: `booking-confirm-${a.id}`,
+                templateData: {
+                  patientName: (a.patient_name ?? "").split(" ")[0] || "there",
+                  clinicName: a.profiles?.clinic_name ?? branding.clinicName,
+                  treatmentName: a.treatments?.name ?? "your treatment",
+                  practitionerName: a.practitioners?.name,
+                  locationName: loc?.name,
+                  locationAddress: loc ? [loc.address_line1, loc.city, loc.postcode].filter(Boolean).join(", ") : undefined,
+                  dateTime: formatBookingDateTime(a.scheduled_date, a.start_time),
+                  manageUrl,
+                  logoUrl: branding.logoUrl,
+                  brandColor: branding.brandColor,
+                },
+              });
+            }
+          } catch (e) {
+            console.error("[stripe-webhook] confirmation email failed", e);
+          }
+        }
+
         return new Response("ok", { status: 200 });
       },
     },
