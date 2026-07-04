@@ -267,7 +267,7 @@ export const sendFormToClient = createServerFn({ method: "POST" })
         const { tryEnqueueAppEmail, getPractitionerBranding } = await import("@/lib/email/send.server");
         const branding = await getPractitionerBranding((profile as { id?: string } | null)?.id);
         const origin = process.env.PUBLIC_APP_URL || process.env.APP_URL || "https://modobook.uk";
-        void tryEnqueueAppEmail({
+        await tryEnqueueAppEmail({
           templateName: "medical-form-request",
           recipientEmail: data.email,
           messageId: `form-request-${formId}`,

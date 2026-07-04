@@ -313,7 +313,7 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
                 ? `${origin}/m/${a.profiles.slug}/manage/${a.manage_token}`
                 : undefined;
               const loc = a.locations;
-              void tryEnqueueAppEmail({
+              await tryEnqueueAppEmail({
                 templateName: "booking-confirmation",
                 recipientEmail: a.patient_email,
                 messageId: `booking-confirm-${a.id}`,

@@ -144,7 +144,7 @@ export const cancelAppointmentByToken = createServerFn({ method: "POST" })
           .from("appointments").select("profile_id").eq("id", a.id).maybeSingle();
         const branding = await getPractitionerBranding((apptFull as { profile_id?: string } | null)?.profile_id);
         const origin = process.env.PUBLIC_APP_URL || process.env.APP_URL || "https://modobook.uk";
-        void tryEnqueueAppEmail({
+        await tryEnqueueAppEmail({
           templateName: "booking-cancellation",
           recipientEmail: a.patient_email,
           messageId: `booking-cancel-${a.id}`,
