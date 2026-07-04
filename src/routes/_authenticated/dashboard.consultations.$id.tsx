@@ -815,10 +815,12 @@ function Step8({ invoice, email, patientName, consultationId, onChange, onComple
         `Please find your invoice from ${clinicName} below.\n\n` +
         `${itemsText}\n\n` +
         `Total: £${amountNum.toFixed(2)}\n\n` +
-        (pdfUrl ? `View your branded invoice PDF:\n${pdfUrl}\n\n` : "") +
-        (paymentLink ? `Press here to pay now:\n${paymentLink}\n\n` : "") +
         `Reference: ${consultationId?.slice(0, 8).toUpperCase() ?? ""}\n\n` +
         `Thank you,\n${profile?.full_name ?? clinicName}`;
+
+      const actions: { label: string; url: string; variant?: "primary" | "secondary" }[] = [];
+      if (paymentLink) actions.push({ label: "Pay now", url: paymentLink, variant: "primary" });
+      if (pdfUrl) actions.push({ label: "View invoice PDF", url: pdfUrl, variant: "secondary" });
 
       const { sendAppEmail } = await import("@/lib/email/send");
       const res = await sendAppEmail({
@@ -831,6 +833,7 @@ function Step8({ invoice, email, patientName, consultationId, onChange, onComple
           clinicName,
           logoUrl: profile?.invoice_show_logo === false ? null : (profile?.avatar_url ?? null),
           brandColor: profile?.brand_color ?? null,
+          actions,
         },
       });
       if (!res.ok) throw new Error(res.error || "Send failed");
