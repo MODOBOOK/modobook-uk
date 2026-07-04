@@ -107,6 +107,45 @@ export type Database = {
           },
         ]
       }
+      admin_broadcasts: {
+        Row: {
+          audience: string
+          created_at: string
+          cta_text: string | null
+          cta_url: string | null
+          id: string
+          message: string
+          recipient_count: number
+          recipient_email: string | null
+          sent_by: string | null
+          subject: string
+        }
+        Insert: {
+          audience: string
+          created_at?: string
+          cta_text?: string | null
+          cta_url?: string | null
+          id?: string
+          message: string
+          recipient_count?: number
+          recipient_email?: string | null
+          sent_by?: string | null
+          subject: string
+        }
+        Update: {
+          audience?: string
+          created_at?: string
+          cta_text?: string | null
+          cta_url?: string | null
+          id?: string
+          message?: string
+          recipient_count?: number
+          recipient_email?: string | null
+          sent_by?: string | null
+          subject?: string
+        }
+        Relationships: []
+      }
       admin_invites: {
         Row: {
           accepted_at: string | null
@@ -3318,6 +3357,39 @@ export type Database = {
           profile_id?: string
           row_id?: string | null
           table_name?: string
+        }
+        Relationships: []
+      }
+      platform_email_customizations: {
+        Row: {
+          closing_override: string | null
+          created_at: string
+          id: string
+          intro_override: string | null
+          subject_override: string | null
+          template_key: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          closing_override?: string | null
+          created_at?: string
+          id?: string
+          intro_override?: string | null
+          subject_override?: string | null
+          template_key: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          closing_override?: string | null
+          created_at?: string
+          id?: string
+          intro_override?: string | null
+          subject_override?: string | null
+          template_key?: string
+          updated_at?: string
+          updated_by?: string | null
         }
         Relationships: []
       }

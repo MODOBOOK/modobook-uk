@@ -131,6 +131,33 @@ export const Route = createFileRoute("/lovable/email/auth/webhook")({
           )
         }
 
+        // Load platform-wide admin customizations for this auth email type.
+        // Uses a service-role client below; safe to preload here with a
+        // publishable client too, but reuse the service client after we
+        // create it. For simplicity we defer to after supabase is created.
+        const supabaseUrlEarly = import.meta.env.VITE_SUPABASE_URL
+        const supabaseServiceKeyEarly = process.env.SUPABASE_SERVICE_ROLE_KEY
+        let subjectOverride: string | null = null
+        let introOverride: string | null = null
+        let closingOverride: string | null = null
+        if (supabaseUrlEarly && supabaseServiceKeyEarly) {
+          try {
+            const tmpClient = createClient(supabaseUrlEarly, supabaseServiceKeyEarly)
+            const { data: cust } = await tmpClient
+              .from('platform_email_customizations')
+              .select('subject_override, intro_override, closing_override')
+              .eq('template_key', emailType)
+              .maybeSingle()
+            if (cust) {
+              subjectOverride = cust.subject_override
+              introOverride = cust.intro_override
+              closingOverride = cust.closing_override
+            }
+          } catch (e) {
+            console.warn('Failed to load platform email customization', { emailType, error: e })
+          }
+        }
+
         // Build template props from payload.data (HookData structure)
         const templateProps = {
           siteName: SITE_NAME,
@@ -141,6 +168,8 @@ export const Route = createFileRoute("/lovable/email/auth/webhook")({
           email: payload.data.email,
           oldEmail: payload.data.old_email,
           newEmail: payload.data.new_email,
+          introOverride,
+          closingOverride,
         }
 
         // Render React Email to HTML and plain text
@@ -179,7 +208,7 @@ export const Route = createFileRoute("/lovable/email/auth/webhook")({
             to: payload.data.email,
             from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
             sender_domain: SENDER_DOMAIN,
-            subject: EMAIL_SUBJECTS[emailType] || 'Notification',
+            subject: subjectOverride || EMAIL_SUBJECTS[emailType] || 'Notification',
             html,
             text,
             purpose: 'transactional',

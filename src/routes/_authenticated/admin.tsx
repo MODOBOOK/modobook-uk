@@ -28,7 +28,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Shield, Trash2, UserPlus, ExternalLink, CreditCard, Plus, Link as LinkIcon, Search, KeyRound, Power } from "lucide-react";
+import { Shield, Trash2, UserPlus, ExternalLink, CreditCard, Plus, Link as LinkIcon, Search, KeyRound, Power, Mail } from "lucide-react";
 
 
 
@@ -122,11 +122,18 @@ function AdminPage() {
             Monitor practitioners using MODO and manage admin access.
           </p>
         </div>
-        <Link to="/admin-prescribers">
-          <Button variant="outline" size="sm">
-            <Shield className="mr-2 h-4 w-4" /> Prescriber verifications
-          </Button>
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link to="/admin/emails">
+            <Button variant="outline" size="sm">
+              <Mail className="mr-2 h-4 w-4" /> Emails & broadcasts
+            </Button>
+          </Link>
+          <Link to="/admin-prescribers">
+            <Button variant="outline" size="sm">
+              <Shield className="mr-2 h-4 w-4" /> Prescriber verifications
+            </Button>
+          </Link>
+        </div>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3">
