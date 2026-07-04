@@ -72,11 +72,15 @@ const EMPTY_FORM: Omit<Client, "id"> = {
 
 function PatientsPage() {
   const list = useServerFn(listClients);
+  const listArchived = useServerFn(listArchivedClients);
+  const restore = useServerFn(restoreClient);
   const upsert = useServerFn(upsertClient);
   const remove = useServerFn(deleteClient);
   const listAppt = useServerFn(listMyAppointments);
 
   const [clients, setClients] = useState<Client[]>([]);
+  const [archivedClients, setArchivedClients] = useState<Client[]>([]);
+  const [view, setView] = useState<"active" | "archived">("active");
   const [appts, setAppts] = useState<Appt[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -95,8 +99,9 @@ function PatientsPage() {
   const doMerge = useServerFn(mergeClients);
 
   async function refresh() {
-    const [c, a] = await Promise.all([list(), listAppt()]);
+    const [c, ar, a] = await Promise.all([list(), listArchived(), listAppt()]);
     setClients(c as Client[]);
+    setArchivedClients(ar as Client[]);
     setAppts(a as Appt[]);
     setLoading(false);
   }
