@@ -401,7 +401,23 @@ function TreatmentDialog({
       : "",
   );
 
-
+  const [requiresPrescriber, setRequiresPrescriber] = useState<boolean>(
+    Boolean(treatment?.requires_prescriber),
+  );
+  const [prescriberUserId, setPrescriberUserId] = useState<string>(
+    treatment?.prescriber_user_id ?? "",
+  );
+  const [prescriberRouting, setPrescriberRouting] = useState<"same_address" | "clinic_visit" | "in_person_consult">(
+    (treatment?.prescriber_routing as "same_address" | "clinic_visit" | "in_person_consult" | null) ?? "same_address",
+  );
+  const [prescriberNote, setPrescriberNote] = useState<string>(treatment?.prescriber_note ?? "");
+  const fetchPrescribers = useServerFn(listMyConnectedPrescribers);
+  const [prescribers, setPrescribers] = useState<{ user_id: string; name: string; regulatory_body: string | null }[]>([]);
+  useEffect(() => {
+    fetchPrescribers()
+      .then((r) => setPrescribers(r as any))
+      .catch(() => setPrescribers([]));
+  }, [fetchPrescribers]);
 
 
   const topLevel = useMemo(() => categories.filter((c) => !c.parent_id), [categories]);
