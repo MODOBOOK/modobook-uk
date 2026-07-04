@@ -59,6 +59,8 @@ const Email = ({
 export const template = {
   component: Email,
   subject: (d: Record<string, unknown>) => {
+    const override = (d.subjectOverride as string | null | undefined)?.trim()
+    if (override) return override
     const clinic = (d.clinicName as string) || 'MODO'
     return `Booking confirmed — ${clinic}`
   },
