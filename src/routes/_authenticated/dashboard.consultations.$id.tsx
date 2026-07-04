@@ -369,17 +369,11 @@ function Step2({ concerns, onChange }: { concerns: any; onChange: (v: any) => vo
 function Step3({ profileId, consultationId, assessment, photos, onChangeAssess, onChangePhotos }: any) {
   return (
     <div className="space-y-4">
-      <Header n={3} title="Assessment" subtitle="Clinical notes, face mapping and before photos." />
+      <Header n={3} title="Assessment" subtitle="Clinical notes and before photos." />
       <div className="space-y-1.5">
         <Label>Clinical assessment</Label>
         <Textarea rows={5} value={assessment?.notes ?? ""} onChange={(e) => onChangeAssess({ ...assessment, notes: e.target.value })} placeholder="Skin condition, muscle tone, asymmetries…" />
       </div>
-
-      <FaceMapAnnotator
-        title="Face map — assessment"
-        value={assessment?.face_map}
-        onChange={(v) => onChangeAssess({ ...assessment, face_map: v })}
-      />
 
       <PhotoGrid label="Before photos" photos={photos ?? []} onChange={onChangePhotos} profileId={profileId} consultationId={consultationId} />
     </div>
