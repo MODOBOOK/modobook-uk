@@ -2,6 +2,9 @@
 // don't support Tailwind or external CSS.
 import * as React from 'react'
 import { Body, Container, Head, Hr, Img, Section, Text } from '@react-email/components'
+import modoLogo from '@/assets/modo-logo.png.asset.json'
+
+const MODO_LOGO_URL = modoLogo.url
 
 export const brand = {
   bg: '#ffffff',
