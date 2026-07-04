@@ -471,9 +471,7 @@ function PatientsPage() {
         }}
       />
 
-          refresh();
-        }}
-      />
+
 
       <CreateGroupDialog
         open={groupOpen}
