@@ -10,7 +10,7 @@ import { Loader2 } from "lucide-react";
 export const Route = createFileRoute("/m/$slug")({
   loader: async ({ params }) => {
     const { profile, theme } = await getPractitionerBio({ data: { slug: params.slug } });
-    return { profile, theme };
+    return { profile, theme, slug: params.slug };
   },
   pendingComponent: () => (
     <div className="flex min-h-screen items-center justify-center">
