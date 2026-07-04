@@ -173,3 +173,89 @@ export const deleteEmailTemplate = createServerFn({ method: "POST" })
     if (error) throw error;
     return { ok: true };
   });
+
+// ============ SEND PATIENT EMAIL (from Modo, CC practitioner) ============
+
+export const sendPatientEmail = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: {
+    clientId: string;
+    subject: string;
+    body: string;
+    ccSelf?: boolean;
+  }) => input)
+  .handler(async ({ data, context }) => {
+    const pid = await getProfileId(context.supabase, context.userId);
+    if (!pid) throw new Error("No profile");
+
+    // Load the client (scoped by profile_id via RLS)
+    const { data: client, error: cErr } = await context.supabase
+      .from("clinic_clients")
+      .select("id, full_name, email")
+      .eq("id", data.clientId)
+      .eq("profile_id", pid)
+      .maybeSingle();
+    if (cErr) throw cErr;
+    if (!client?.email) throw new Error("Patient has no email address");
+
+    // Practitioner auth email (for reply-to and copy)
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: userInfo } = await supabaseAdmin.auth.admin.getUserById(context.userId);
+    const practitionerEmail = userInfo?.user?.email || null;
+
+    const { getPractitionerBranding, tryEnqueueAppEmail } = await import("@/lib/email/send.server");
+    const branding = await getPractitionerBranding(pid);
+
+    const subject = data.subject.trim();
+    const body = data.body;
+    if (!subject || !body.trim()) throw new Error("Subject and message required");
+
+    const baseId = crypto.randomUUID();
+
+    // 1) Send to patient — from Modo, reply-to practitioner
+    await tryEnqueueAppEmail({
+      templateName: "patient-message",
+      recipientEmail: client.email,
+      messageId: `${baseId}-patient`,
+      replyTo: practitionerEmail || undefined,
+      templateData: {
+        subject,
+        body,
+        clinicName: branding.clinicName,
+        logoUrl: branding.logoUrl,
+        brandColor: branding.brandColor,
+      },
+    });
+
+    // 2) Copy to practitioner
+    if (data.ccSelf !== false && practitionerEmail) {
+      await tryEnqueueAppEmail({
+        templateName: "patient-message",
+        recipientEmail: practitionerEmail,
+        messageId: `${baseId}-copy`,
+        templateData: {
+          subject: `[Copy] ${subject}`,
+          body,
+          clinicName: branding.clinicName,
+          logoUrl: branding.logoUrl,
+          brandColor: branding.brandColor,
+          copyNotice: `Copy of the email sent to ${client.full_name} <${client.email}>.`,
+        },
+      });
+    }
+
+    // 3) Log to communications
+    await context.supabase.from("client_communications").insert({
+      profile_id: pid,
+      client_id: client.id,
+      channel: "email",
+      direction: "outbound",
+      subject,
+      body,
+      meta: { cc_practitioner: !!practitionerEmail && data.ccSelf !== false, sent_via: "modo" },
+      status: "sent",
+    });
+
+    return { ok: true };
+  });
+
