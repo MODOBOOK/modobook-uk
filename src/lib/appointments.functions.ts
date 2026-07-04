@@ -115,7 +115,44 @@ export const cancelAppointmentByToken = createServerFn({ method: "POST" })
   .inputValidator((input: { token: string }) => input)
   .handler(async ({ data }) => {
     const sb = publicClient();
+    // Load appointment first (for email context) via existing manage-token RPC
+    let apptRow: {
+      id?: string;
+      patient_name?: string;
+      patient_email?: string;
+      scheduled_date?: string;
+      start_time?: string;
+      treatment_name?: string;
+      clinic_name?: string;
+      clinic_slug?: string;
+    } | null = null;
+    try {
+      const { data: row } = await sb.rpc("get_appointment_by_manage_token", { p_token: data.token }).single();
+      apptRow = row as typeof apptRow;
+    } catch { /* ignore */ }
+
     const { data: ok, error } = await sb.rpc("cancel_appointment_by_token", { p_token: data.token });
     if (error) throw error;
+
+    if (ok && apptRow?.patient_email && apptRow.id) {
+      try {
+        const { tryEnqueueAppEmail, formatBookingDateTime } = await import("@/lib/email/send.server");
+        const origin = process.env.PUBLIC_APP_URL || process.env.APP_URL || "https://modobook.uk";
+        void tryEnqueueAppEmail({
+          templateName: "booking-cancellation",
+          recipientEmail: apptRow.patient_email,
+          messageId: `booking-cancel-${apptRow.id}`,
+          templateData: {
+            patientName: (apptRow.patient_name ?? "").split(" ")[0] || "there",
+            clinicName: apptRow.clinic_name ?? "MODO",
+            treatmentName: apptRow.treatment_name ?? "your appointment",
+            dateTime: apptRow.scheduled_date && apptRow.start_time
+              ? formatBookingDateTime(apptRow.scheduled_date, apptRow.start_time) : "",
+            cancelledBy: "patient",
+            rebookUrl: apptRow.clinic_slug ? `${origin}/m/${apptRow.clinic_slug}` : origin,
+          },
+        });
+      } catch (e) { console.error("[cancelAppointmentByToken] email failed", e); }
+    }
     return { ok: !!ok };
   });
