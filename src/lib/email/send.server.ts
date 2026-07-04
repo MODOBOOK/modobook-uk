@@ -24,6 +24,8 @@ export interface EnqueueAppEmailInput {
   /** Stable id — used both as message_id and idempotency_key. If a row already
    * exists in email_send_log with this message_id, the send is skipped. */
   messageId?: string
+  /** Optional Reply-To header (e.g. so patient replies go to practitioner). */
+  replyTo?: string
 }
 
 export async function enqueueAppEmail(
@@ -130,6 +132,7 @@ export async function enqueueAppEmail(
       idempotency_key: messageId,
       unsubscribe_token: unsubscribeToken,
       queued_at: new Date().toISOString(),
+      ...(input.replyTo ? { reply_to: input.replyTo } : {}),
     },
   })
 
