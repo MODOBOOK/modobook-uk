@@ -550,7 +550,7 @@ function BookTreatmentPage() {
           {showPrices && (
             sessionCount > 1 ? (
               <span className="text-sm">
-                <span className="font-semibold" style={{ color: brand }}>From £{(price / sessionCount).toFixed(2)} per session</span>
+                <span className="font-semibold" style={{ color: brand }}>From £{(price / sessionCount).toFixed(2)} per appointment</span>
                 <span className="opacity-60"> or £{price.toFixed(2)} paid upfront</span>
               </span>
             ) : (
@@ -788,7 +788,7 @@ function BookTreatmentPage() {
                   <div className="text-xs opacity-70">
                     {opt === "full"
                       ? `£${price.toFixed(2)} total`
-                      : `£${per} per session · charged at each visit`}
+                      : `£${per} per appointment · charged at each visit`}
                   </div>
                 </button>
               );
@@ -805,8 +805,8 @@ function BookTreatmentPage() {
                   onChange={(e) => setSplitAgreed(e.target.checked)}
                 />
                 <span>
-                  I agree to pay <strong>£{(price / sessionCount).toFixed(2)}</strong> per session,
-                  across <strong>{sessionCount} payments</strong> (total £{price.toFixed(2)}), charged at each visit to complete this treatment plan.
+                  I agree to pay <strong>£{(price / sessionCount).toFixed(2)}</strong> per appointment,
+                  across <strong>{sessionCount} appointments</strong> (total £{price.toFixed(2)}), charged at each visit to complete this treatment plan.
                   <span className="text-destructive"> *</span>
                 </span>
               </label>
