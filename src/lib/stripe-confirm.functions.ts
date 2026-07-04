@@ -28,10 +28,14 @@ export const confirmCheckoutSession = createServerFn({ method: "POST" })
       ?.stripe_connect_account_id;
     if (!accountId) return { ok: false, reason: "no_connected_account" as const };
 
-    const key =
-      process.env.STRIPE_TEST_API_KEY ||
-      process.env.STRIPE_SECRET_KEY ||
-      process.env.STRIPE_PLATFORM_SECRET_KEY;
+    const isLiveSession = sessionId.startsWith("cs_live_");
+    const key = isLiveSession
+      ? process.env.STRIPE_LIVE_API_KEY ||
+        process.env.STRIPE_SECRET_KEY ||
+        process.env.STRIPE_PLATFORM_SECRET_KEY
+      : process.env.STRIPE_TEST_API_KEY ||
+        process.env.STRIPE_SECRET_KEY ||
+        process.env.STRIPE_PLATFORM_SECRET_KEY;
     if (!key) return { ok: false, reason: "no_key" as const };
 
     const Stripe = (await import("stripe")).default;
@@ -69,6 +73,7 @@ export const confirmCheckoutSession = createServerFn({ method: "POST" })
         : session.payment_intent?.id ?? null;
 
     let updated = 0;
+    const confirmedAppointmentIds: string[] = [];
     for (const apptId of ids) {
       const { data: cur } = await supabaseAdmin
         .from("appointments")
@@ -97,7 +102,19 @@ export const confirmCheckoutSession = createServerFn({ method: "POST" })
         .from("appointments")
         .update(patch as never)
         .eq("id", apptId);
-      if (!error) updated += 1;
+      if (!error) {
+        updated += 1;
+        confirmedAppointmentIds.push(apptId);
+      }
+    }
+
+    if (confirmedAppointmentIds.length > 0) {
+      try {
+        const { sendBookingConfirmationEmails } = await import("@/lib/email/send.server");
+        await sendBookingConfirmationEmails(confirmedAppointmentIds);
+      } catch (e) {
+        console.error("[confirmCheckoutSession] confirmation email failed", e);
+      }
     }
 
     return { ok: true as const, updated };

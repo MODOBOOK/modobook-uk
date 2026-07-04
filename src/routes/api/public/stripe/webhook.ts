@@ -61,16 +61,20 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
         const secrets = getWebhookSecrets();
         if (secrets.length === 0) return new Response("Webhook secret not configured", { status: 500 });
 
-        const key =
-          process.env.STRIPE_TEST_API_KEY ||
-          process.env.STRIPE_SECRET_KEY ||
-          process.env.STRIPE_PLATFORM_SECRET_KEY;
-        if (!key) return new Response("Stripe key not configured", { status: 500 });
-
         const signature = request.headers.get("stripe-signature");
         if (!signature) return new Response("Missing signature", { status: 400 });
 
         const rawBody = await request.text();
+        const isLiveEvent = rawBody.includes('"livemode":true');
+        const key = isLiveEvent
+          ? process.env.STRIPE_LIVE_API_KEY ||
+            process.env.STRIPE_SECRET_KEY ||
+            process.env.STRIPE_PLATFORM_SECRET_KEY
+          : process.env.STRIPE_TEST_API_KEY ||
+            process.env.STRIPE_SECRET_KEY ||
+            process.env.STRIPE_PLATFORM_SECRET_KEY;
+        if (!key) return new Response("Stripe key not configured", { status: 500 });
+
         const stripe = new Stripe(key, { apiVersion: "2026-06-24.dahlia", typescript: true });
 
         let parsed: Awaited<ReturnType<typeof parseStripeWebhook>>;
