@@ -48,7 +48,16 @@ RULES
 - Every question a patient must answer -> required: true.
 - If the source ends with a signature line, add a "signature" element.
 - Do NOT invent unrelated fields. Do NOT include ids (the app assigns them).
-- Output ONLY the JSON object.`;
+- Output ONLY the JSON object.
+
+PLAIN-ENGLISH WORDING (CRITICAL — applies to every user-visible string: "name", "description", step "title", element "text", "label", "placeholder", "helpText", "options"):
+- Write everything as natural, plain English sentences a patient would read. Never as code.
+- NO snake_case, camelCase, kebab-case, ALL_CAPS_CONSTANTS, or programmer-style identifiers. "full_name" -> "Full name". "dob" -> "Date of birth". "gpName" -> "GP name".
+- NO code fences, backticks, angle brackets, curly/square brackets, JSON, HTML tags, markdown syntax, or template placeholders like {{name}} or \${x}.
+- NO field keys, variable names, type annotations, or references to "field", "input", "schema", "JSON" in visible text.
+- Use sentence case for labels and titles. Use normal punctuation and spaces. Options like "Yes"/"No" stay natural words, never "yes_no" or "Y/N".
+- Placeholders and help text must be short, friendly sentences ("e.g. 07123 456789"), not code samples.`;
+
 
 type Element = Record<string, unknown>;
 type Step = { title: string; elements: Element[] };
