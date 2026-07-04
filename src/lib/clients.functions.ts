@@ -326,8 +326,29 @@ export const importClientsCsv = createServerFn({ method: "POST" })
     const skipped: string[] = [];
 
     for (const row of data.rows) {
-      const full_name = pick(row, ["full_name", "name", "patient", "patient name", "client name"]);
-      if (!full_name) { skipped.push("(missing name)"); continue; }
+      let full_name = pick(row, [
+        "full_name", "fullname", "full name",
+        "name", "patient", "patient name", "client name", "customer name", "contact name",
+        "display name", "displayname",
+      ]);
+      if (!full_name) {
+        const first = pick(row, [
+          "first_name", "firstname", "first name", "first",
+          "given_name", "given name", "givenname",
+          "forename", "fname",
+        ]);
+        const middle = pick(row, ["middle_name", "middle name", "middlename", "middle"]);
+        const last = pick(row, [
+          "last_name", "lastname", "last name", "last",
+          "surname", "family_name", "family name", "familyname", "lname",
+        ]);
+        full_name = [first, middle, last].filter(Boolean).join(" ").trim();
+      }
+      if (!full_name) {
+        const title = pick(row, ["title", "salutation"]);
+        if (title) full_name = title;
+      }
+      if (!full_name) { skipped.push(`(missing name) columns: ${Object.keys(row).join(", ")}`); continue; }
       const email = pick(row, ["email", "email address"]).toLowerCase() || null;
       const phone = pick(row, ["phone", "mobile", "telephone", "contact number"]) || null;
       const dob = parseDob(pick(row, ["dob", "date of birth", "birthday", "birth date"]));
