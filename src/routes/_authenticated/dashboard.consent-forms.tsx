@@ -57,6 +57,8 @@ function ConsentFormsPage() {
   const [editing, setEditing] = useState<Tpl | null>(null);
   const [query, setQuery] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
+  const [aiOpen, setAiOpen] = useState(false);
+  const [aiSystem, setAiSystem] = useState(false);
 
 
   function newBlank() {
