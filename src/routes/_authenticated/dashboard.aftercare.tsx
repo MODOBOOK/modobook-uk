@@ -42,6 +42,7 @@ function AftercarePage() {
   const tQ = useQuery({ queryKey: ["my-treatments-basic"], queryFn: () => listTreatments() });
   const [editing, setEditing] = useState<Tpl | null>(null);
   const [open, setOpen] = useState(false);
+  const [aiOpen, setAiOpen] = useState(false);
   const [treatmentIds, setTreatmentIds] = useState<string[]>([]);
 
   const openEditor = async (tpl: Tpl) => {
