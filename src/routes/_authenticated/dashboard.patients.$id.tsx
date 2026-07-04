@@ -142,13 +142,13 @@ function PatientProfilePage() {
     URL.revokeObjectURL(url);
   }
   async function fullDelete() {
-    if (!confirm("Permanently delete this patient and all their records? This cannot be undone.")) return;
+    if (!confirm("Move this patient to the archive? You can restore them later from the Archived tab.")) return;
     try {
-      await removeForever({ data: { id } });
-      toast.success("Patient permanently deleted");
+      await remove({ data: { id } });
+      toast.success("Patient moved to archive");
       navigate({ to: "/dashboard/patients" });
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Failed to delete");
+      toast.error(e instanceof Error ? e.message : "Failed to archive");
     }
   }
 
