@@ -31,34 +31,32 @@ export function AiGenerateFormDialog({
   const generate = useServerFn(generateFormFromUpload);
   const save = useServerFn(saveForm);
 
-  const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
   const [notes, setNotes] = useState("");
   const [busy, setBusy] = useState(false);
   const [step, setStep] = useState<"input" | "preview">("input");
   const [preview, setPreview] = useState<{ name: string; description: string; schema: any } | null>(null);
 
   function reset() {
-    setFile(null); setNotes(""); setBusy(false); setStep("input"); setPreview(null);
+    setFiles([]); setNotes(""); setBusy(false); setStep("input"); setPreview(null);
   }
 
   async function handleGenerate() {
-    if (!file && !notes.trim()) {
-      toast.error("Upload a photo/PDF or type notes describing the form.");
+    if (!files.length && !notes.trim()) {
+      toast.error("Upload photos/PDFs or type notes describing the form.");
       return;
     }
-    if (file && file.size > MAX_BYTES) {
-      toast.error("File too large (max 15MB).");
+    const tooBig = files.find((f) => f.size > MAX_BYTES);
+    if (tooBig) {
+      toast.error(`"${tooBig.name}" is too large (max 15MB).`);
       return;
     }
     setBusy(true);
     try {
-      let fileDataUrl: string | undefined;
-      let fileName: string | undefined;
-      if (file) {
-        fileDataUrl = await readFileAsDataUrl(file);
-        fileName = file.name;
-      }
-      const out = await generate({ data: { fileDataUrl, fileName, notes } });
+      const encoded = await Promise.all(
+        files.map(async (f) => ({ dataUrl: await readFileAsDataUrl(f), name: f.name })),
+      );
+      const out = await generate({ data: { files: encoded, notes } });
       setPreview(out);
       setStep("preview");
     } catch (e) {
@@ -110,28 +108,42 @@ export function AiGenerateFormDialog({
         {step === "input" ? (
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Upload photo or PDF</Label>
-              {file ? (
-                <div className="flex items-center justify-between gap-2 rounded-md border p-2 text-sm">
-                  <span className="truncate">{file.name}</span>
-                  <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setFile(null)}>
-                    <X className="h-4 w-4" />
-                  </Button>
+              <Label>Upload photos or PDFs</Label>
+              {files.length > 0 && (
+                <div className="space-y-1.5">
+                  {files.map((f, idx) => (
+                    <div key={idx} className="flex items-center justify-between gap-2 rounded-md border p-2 text-sm">
+                      <span className="truncate">{f.name}</span>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-7 w-7"
+                        onClick={() => setFiles((prev) => prev.filter((_, i) => i !== idx))}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
                 </div>
-              ) : (
-                <label className="flex cursor-pointer flex-col items-center gap-1 rounded-md border border-dashed p-6 text-center text-sm text-muted-foreground hover:bg-muted/50">
-                  <Upload className="h-5 w-5" />
-                  <span>Click to choose a file</span>
-                  <span className="text-xs">JPG, PNG or PDF · up to 15MB</span>
-                  <input
-                    type="file"
-                    accept="image/*,application/pdf"
-                    className="hidden"
-                    onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-                  />
-                </label>
               )}
+              <label className="flex cursor-pointer flex-col items-center gap-1 rounded-md border border-dashed p-6 text-center text-sm text-muted-foreground hover:bg-muted/50">
+                <Upload className="h-5 w-5" />
+                <span>{files.length ? "Add more files" : "Click to choose files"}</span>
+                <span className="text-xs">JPG, PNG or PDF · up to 15MB each · multiple allowed</span>
+                <input
+                  type="file"
+                  accept="image/*,application/pdf"
+                  multiple
+                  className="hidden"
+                  onChange={(e) => {
+                    const picked = Array.from(e.target.files ?? []);
+                    if (picked.length) setFiles((prev) => [...prev, ...picked]);
+                    e.currentTarget.value = "";
+                  }}
+                />
+              </label>
             </div>
+
 
             <div className="space-y-2">
               <Label>Notes (optional)</Label>
