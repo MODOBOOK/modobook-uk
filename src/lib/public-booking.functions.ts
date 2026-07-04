@@ -574,6 +574,46 @@ export const requestBooking = createServerFn({ method: "POST" })
         .update({ status: "pending", payment_hold_expires_at: holdUntil } as never)
         .eq("id", id);
     }
+
+    // Fire booking confirmation email (skipped for pending Stripe holds — the
+    // Stripe webhook handles the confirmed-after-payment case separately if wired).
+    if (!checkoutUrl && data.patientEmail) {
+      try {
+        const { tryEnqueueAppEmail, formatBookingDateTime } = await import("@/lib/email/send.server");
+        const [{ data: tRow }, { data: locRow }, { data: pracRow }] = await Promise.all([
+          supabaseAdmin.from("treatments").select("name").eq("id", data.treatmentId).maybeSingle(),
+          data.locationId
+            ? supabaseAdmin.from("locations").select("name, address_line1, city, postcode").eq("id", data.locationId).maybeSingle()
+            : Promise.resolve({ data: null } as { data: null }),
+          data.practitionerId
+            ? supabaseAdmin.from("practitioners").select("name").eq("id", data.practitionerId).maybeSingle()
+            : Promise.resolve({ data: null } as { data: null }),
+        ]);
+        const { data: created } = await supabaseAdmin
+          .from("appointments").select("manage_token").eq("id", id).maybeSingle();
+        const origin = process.env.PUBLIC_APP_URL || process.env.APP_URL || "https://modobook.uk";
+        const manageUrl = created?.manage_token && prof?.slug
+          ? `${origin}/m/${prof.slug}/manage/${created.manage_token}`
+          : undefined;
+        const loc = locRow as { name?: string; address_line1?: string; city?: string; postcode?: string } | null;
+        void tryEnqueueAppEmail({
+          templateName: "booking-confirmation",
+          recipientEmail: data.patientEmail,
+          messageId: `booking-confirm-${id}`,
+          templateData: {
+            patientName: data.patientName.split(" ")[0] || data.patientName,
+            clinicName: prof?.clinic_name ?? "MODO",
+            treatmentName: (tRow as { name?: string } | null)?.name ?? "your treatment",
+            practitionerName: (pracRow as { name?: string } | null)?.name,
+            locationName: loc?.name,
+            locationAddress: loc ? [loc.address_line1, loc.city, loc.postcode].filter(Boolean).join(", ") : undefined,
+            dateTime: formatBookingDateTime(data.date, data.startTime),
+            manageUrl,
+          },
+        });
+      } catch (e) { console.error("[requestBooking] email failed", e); }
+    }
+
     return { id, consents, medicalForms, checkoutUrl };
   });
 
