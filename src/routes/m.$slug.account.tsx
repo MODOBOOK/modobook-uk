@@ -267,13 +267,12 @@ function Account() {
         if ((res as { ok?: boolean }).ok) {
           toast.success("Payment confirmed");
           loadAll();
+          url.searchParams.delete("session_id");
+          url.searchParams.delete("paid");
+          window.history.replaceState({}, "", url.pathname + (url.search ? url.search : ""));
         }
       } catch (e) {
         console.error("[confirmCheckoutSession] failed", e);
-      } finally {
-        url.searchParams.delete("session_id");
-        url.searchParams.delete("paid");
-        window.history.replaceState({}, "", url.pathname + (url.search ? url.search : ""));
       }
     })();
     return () => { cancelled = true; };
