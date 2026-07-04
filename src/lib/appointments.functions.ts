@@ -128,7 +128,7 @@ export const cancelAppointmentByToken = createServerFn({ method: "POST" })
     } | null = null;
     try {
       const { data: row } = await sb.rpc("get_appointment_by_manage_token", { p_token: data.token }).single();
-      apptRow = row as typeof apptRow;
+      apptRow = (row ?? null) as typeof apptRow;
     } catch { /* ignore */ }
 
     const { data: ok, error } = await sb.rpc("cancel_appointment_by_token", { p_token: data.token });
