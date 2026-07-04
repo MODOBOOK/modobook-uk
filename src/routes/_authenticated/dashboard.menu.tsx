@@ -26,6 +26,8 @@ import {
   Search,
   Users,
   Info,
+  Mail,
+  Megaphone,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -97,6 +99,13 @@ const groups: { title: string; items: Item[] }[] = [
     title: "Payments",
     items: [
       { label: "Payments & payouts", description: "Connect Stripe & manage payouts", to: "/dashboard/payments", icon: CreditCard, ...T.espresso },
+    ],
+  },
+  {
+    title: "Communications",
+    items: [
+      { label: "Email templates", description: "Edit the wording of booking, review & message emails", to: "/dashboard/marketing/templates", icon: Mail, ...T.taupe },
+      { label: "Marketing", description: "Send branded campaigns to opted-in patients", to: "/dashboard/marketing", icon: Megaphone, ...T.espresso },
     ],
   },
   {
