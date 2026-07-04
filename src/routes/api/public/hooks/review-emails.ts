@@ -18,7 +18,7 @@ export const Route = createFileRoute('/api/public/hooks/review-emails')({
         }
 
         const { supabaseAdmin } = await import('@/integrations/supabase/client.server')
-        const { tryEnqueueAppEmail } = await import('@/lib/email/send.server')
+        const { tryEnqueueAppEmail, getPractitionerBranding } = await import('@/lib/email/send.server')
 
         const now = new Date()
         // Look back 24h so we don't email months-old appointments if the cron was down
@@ -45,6 +45,7 @@ export const Route = createFileRoute('/api/public/hooks/review-emails')({
         const origin = process.env.PUBLIC_APP_URL || process.env.APP_URL || 'https://modobook.uk'
         let queued = 0
         let skipped = 0
+        const brandingCache = new Map<string, Awaited<ReturnType<typeof getPractitionerBranding>>>()
 
         for (const row of rows ?? []) {
           const r = row as {
@@ -63,6 +64,12 @@ export const Route = createFileRoute('/api/public/hooks/review-emails')({
           // Skip if appointment end is still in the future
           if (r.scheduled_date === todayIso && r.end_time > nowTime) { skipped++; continue }
 
+          let branding = brandingCache.get(r.profile_id)
+          if (!branding) {
+            branding = await getPractitionerBranding(r.profile_id)
+            brandingCache.set(r.profile_id, branding)
+          }
+
           const messageId = `review-${r.id}`
           const result = await tryEnqueueAppEmail({
             templateName: 'review-request',
@@ -70,10 +77,12 @@ export const Route = createFileRoute('/api/public/hooks/review-emails')({
             messageId,
             templateData: {
               patientName: (r.patient_name ?? '').split(' ')[0] || 'there',
-              clinicName: r.profiles?.clinic_name ?? 'MODO',
+              clinicName: r.profiles?.clinic_name ?? branding.clinicName,
               treatmentName: r.treatments?.name,
               practitionerName: r.practitioners?.name,
               reviewUrl: r.profiles?.slug ? `${origin}/m/${r.profiles.slug}/reviews` : origin,
+              logoUrl: branding.logoUrl,
+              brandColor: branding.brandColor,
             },
           })
           if (result.skipped) skipped++
