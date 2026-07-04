@@ -404,6 +404,12 @@ function Step4({ plan, onChange }: any) {
           <Input type="number" inputMode="numeric" value={plan?.followup_weeks ?? ""} onChange={(e) => onChange({ ...plan, followup_weeks: e.target.value })} />
         </div>
       </div>
+
+      <FaceMapAnnotator
+        title="Face map — treatment plan"
+        value={plan?.face_map}
+        onChange={(v) => onChange({ ...plan, face_map: v })}
+      />
     </div>
   );
 }
