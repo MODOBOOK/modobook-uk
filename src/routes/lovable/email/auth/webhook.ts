@@ -149,9 +149,16 @@ export const Route = createFileRoute("/lovable/email/auth/webhook")({
               .eq('template_key', emailType)
               .maybeSingle()
             if (cust) {
-              subjectOverride = cust.subject_override
-              introOverride = cust.intro_override
-              closingOverride = cust.closing_override
+              const { interpolateOverride } = await import('@/lib/email-templates/defaults')
+              const vars = {
+                site_name: SITE_NAME,
+                email: payload.data.email as string | undefined,
+                new_email: payload.data.new_email as string | undefined,
+                old_email: payload.data.old_email as string | undefined,
+              }
+              subjectOverride = cust.subject_override ? interpolateOverride(cust.subject_override, vars) : null
+              introOverride = cust.intro_override ? interpolateOverride(cust.intro_override, vars) : null
+              closingOverride = cust.closing_override ? interpolateOverride(cust.closing_override, vars) : null
             }
           } catch (e) {
             console.warn('Failed to load platform email customization', { emailType, error: e })
