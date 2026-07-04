@@ -1,102 +1,82 @@
+## Email marketing for practitioners
 
-# Stripe Standard Connect — Full Breakdown (Express removed)
+A dedicated Marketing area in the practitioner dashboard for sending branded broadcasts to opted-in patients, with reusable segments, templates, scheduling, and per-campaign analytics. Reuses existing MODO email infrastructure (queue, suppression, unsubscribe, practitioner branding).
 
-Every practitioner connects their **own** Stripe account via OAuth. Full Stripe Dashboard + mobile app access. They own payouts, refunds, disputes, bank details. MODO is just the platform routing checkouts to them. **Express is being removed entirely.**
+### 1. Consent (opt-in)
 
----
+- Add `marketing_opt_in` (bool, default false) + `marketing_opt_in_at` (timestamp) to `clinic_clients`.
+- Public booking form: add an explicit unticked "I'd like to receive occasional updates and offers from {clinic}" checkbox. Stores true only when ticked.
+- Patient-facing "Manage preferences" page (reuses unsubscribe token flow) so patients can opt in/out any time. Unsubscribing from a marketing email flips this flag off (auth emails and transactional booking emails are unaffected — those keep using `suppressed_emails` only for hard bounces/complaints).
+- Practitioner client detail view: read-only badge showing opt-in status + timestamp, plus a manual toggle (audit-logged) for in-person consent capture.
 
-## Step 1 — You enable Standard in Stripe (2 min, one-time, manual)
+### 2. Segments (audience lists)
 
-I can't do this from code. In your **platform** Stripe Dashboard:
+New table `marketing_segments` per practitioner. Each segment is either:
+- **Dynamic** — filter rules evaluated at send time: last-visit window, treatment(s) received, tag, age of client record, has upcoming appointment (yes/no), gender, location.
+- **Static** — a snapshotted list of client IDs (`marketing_segment_members`).
 
-1. **Connect → Settings → Integration**
-2. Under **OAuth for Standard accounts**, toggle **ON**
-3. Set the **Redirect URI** to exactly:
-   ```
-   https://modo-book.lovable.app/api/public/stripe/oauth-callback
-   ```
-4. Copy the **Client ID** (`ca_XXXXXXXXXXXX`) and send it to me — I'll store it as `STRIPE_CONNECT_CLIENT_ID`
-5. (Optional but recommended) Turn OFF Express onboarding in the same settings page
+Segment builder UI: rule chips + live count preview ("Matches 142 opted-in patients"). Counts always exclude non-opted-in and suppressed addresses.
 
----
+### 3. Templates & drafts
 
-## Step 2 — Database changes
+New table `marketing_templates` (practitioner-scoped). Rich composer:
+- Subject, preheader, body (block-based: heading, paragraph, image, button, divider). No raw HTML input — safe blocks only.
+- Automatic MODO shell wrap with practitioner logo/colour (same `getPractitionerBranding` used elsewhere).
+- Variables: `{{first_name}}`, `{{clinic_name}}`, `{{unsubscribe_url}}` (auto-appended in footer if missing).
+- Save as template, duplicate, delete. Drafts are campaigns with `status = 'draft'`.
 
-- Add `stripe_oauth_state` (text, nullable) to `profiles` — short-lived CSRF token
-- Keep `stripe_connect_account_id` — Standard also returns `acct_...`
-- No `stripe_account_type` needed (Standard only now)
-- Existing Express account IDs in the DB: I'll leave the rows but mark them `stripe_connect_onboarding_status = 'legacy_express'` so the UI forces them to reconnect via Standard
+### 4. Campaigns (broadcasts)
 
----
+New table `marketing_campaigns`: name, subject, preheader, body_json, segment_id, status (`draft` | `scheduled` | `sending` | `sent` | `cancelled`), scheduled_for, sent_at, totals.
 
-## Step 3 — Three new endpoints
+Send flow:
+1. Compose → pick segment → preview (renders with sample patient) → send test to self → schedule or send now.
+2. On send/schedule: resolve segment → filter to `marketing_opt_in = true` AND not in `suppressed_emails` → enqueue one row per recipient into a new `marketing_emails` pgmq queue with per-recipient rendered HTML and a unique `message_id` (`campaign-{campaignId}-{clientId}`).
+3. Existing queue processor handles delivery, retries, DLQ, and logging into `email_send_log` (already dedupe-friendly by `message_id`).
+4. Scheduled sends: `pg_cron` job every minute calls `/api/public/hooks/marketing-dispatch` which finds campaigns with `status='scheduled' AND scheduled_for <= now()` and enqueues them.
 
-### A. `POST /api/public/stripe/oauth-start` — auth required
-- Generates random `state`, saves to `profiles.stripe_oauth_state`
-- Returns `{ url }` pointing at `https://connect.stripe.com/oauth/authorize` with `response_type=code`, `client_id`, `scope=read_write`, `state`, `redirect_uri`, prefilled `stripe_user[email]`
+Rate/safety:
+- Hard cap: max 1 campaign per practitioner per 6 hours, max 2000 recipients per campaign (raise later on request).
+- Practitioner must have verified branding + a reply-to email set before first send.
+- Every campaign includes the practitioner's clinic name and a one-click unsubscribe link. Footer includes clinic address if set on profile.
 
-### B. `GET /api/public/stripe/oauth-callback` — public, verified by `state`
-- Reads `?code=...&state=...`
-- Looks up profile by `state` (single-use, expires 10 min)
-- Exchanges code at `https://connect.stripe.com/oauth/token` using your platform secret key
-- Stripe returns `{ stripe_user_id: "acct_..." }`
-- Saves account id, sets `stripe_connect_onboarding_status='complete'`, clears `state`
-- Redirects to `/dashboard/payments?connected=1`
+### 5. Analytics
 
-### C. `POST /api/public/stripe/oauth-disconnect` — auth required
-- Calls Stripe `POST /oauth/deauthorize`
-- Nulls `stripe_connect_account_id`, resets status
+Per-campaign dashboard, computed from `email_send_log` deduped by `message_id`:
+- Recipients, sent, failed, suppressed, unsubscribed-from-this-campaign.
+- Timeline of sends. Failure reasons table.
+- Open/click tracking is **out of scope for v1** (would need tracking pixel + link rewriting infrastructure; call out as a follow-up).
 
----
+Marketing overview page: last 30 days totals, most recent campaigns, unsubscribe rate trend.
 
-## Step 4 — Payments dashboard UI
+### 6. Navigation
 
-Replace the current Express card entirely with:
-
-```text
-Connect Stripe
-
-Payments go directly to your own Stripe account. You'll see everything
-in your Stripe Dashboard and mobile app — payouts, refunds, disputes.
-
-Don't have Stripe yet? Create a free account at stripe.com first
-(takes ~5 min), then click below.
-
-[ Connect with Stripe ]  ← opens OAuth in new tab
-```
-
-After connect: show account ID, live/test mode, balance, payouts (existing UI), and a **Disconnect** button.
-
-Legacy Express accounts get a red banner: *"Express is deprecated. Reconnect with your own Stripe account →"*
+New "Marketing" section in the practitioner dashboard sidebar with three tabs: **Campaigns**, **Segments**, **Templates**. Guarded by `_authenticated` layout and practitioner role check.
 
 ---
 
-## Step 5 — Checkout code
+### Technical notes
 
-`maybeCreateBookingCheckout` already does direct charges on the connected account via `Stripe-Account` header. Works identically for Standard. **Zero logic change.**
+**Migrations (single migration file):**
+- `clinic_clients`: add `marketing_opt_in bool default false`, `marketing_opt_in_at timestamptz`, `marketing_opt_in_source text`.
+- New tables: `marketing_segments`, `marketing_segment_members`, `marketing_templates`, `marketing_campaigns`, `marketing_campaign_recipients` (join for per-recipient status/message_id).
+- All in `public` with explicit `GRANT SELECT, INSERT, UPDATE, DELETE ... TO authenticated;` + `GRANT ALL ... TO service_role;` + RLS policies scoped to `practitioner_id = auth.uid()` (via existing role helpers).
+- New pgmq queue `marketing_emails` created by extending the email-infra queue set (reuses existing `enqueue_email` RPC pattern; queue processor already loops over queues).
 
----
+**Server functions** (`src/lib/marketing.functions.ts`, all with `requireSupabaseAuth`):
+`listCampaigns`, `getCampaign`, `saveCampaignDraft`, `sendCampaignNow`, `scheduleCampaign`, `cancelScheduledCampaign`, `sendTestEmail`, `listSegments`, `saveSegment`, `previewSegmentCount`, `listTemplates`, `saveTemplate`, `getCampaignAnalytics`.
 
-## Step 6 — Webhooks
+**Server route** (public, cron-called): `src/routes/api/public/hooks/marketing-dispatch.ts` — authenticates via `apikey` header, dispatches due scheduled campaigns.
 
-Existing Connect webhook keeps working for both. Add one new event:
-- `account.application.deauthorized` — fires if practitioner revokes MODO from their Stripe. Handler nulls their account ID.
+**Email template**: `src/lib/email-templates/marketing-broadcast.tsx` — renders block JSON inside `ModoShell` with practitioner branding, guaranteed unsubscribe footer.
 
----
+**Public booking form**: add opt-in checkbox to existing booking components; server-side flag write in `public-booking.functions.ts`.
 
-## Step 7 — Rip out Express
+**Unsubscribe route**: extend existing `src/routes/unsubscribe.tsx` to flip `marketing_opt_in=false` when the token was issued for a marketing send (recorded in token metadata).
 
-- Remove Express create-account calls from `stripe.functions.ts` / `stripe.server.ts`
-- Remove Express-specific UI (create Express account button, Express onboarding link handler, "paste your acct_ id" fallback)
-- Keep `stripe_connect_account_id` reads — same column, Standard uses it
-- Remove "Express Dashboard login" helper text
+### Out of scope for v1
 
----
-
-## What I need from you before coding
-
-1. Confirm: full removal of Express, Standard-only
-2. Enable OAuth for Standard in Stripe (Step 1)
-3. Send me the `ca_...` client ID
-
-Once I have those, I'll ship Steps 2–7 in one pass.
+- Open/click tracking (pixel + link rewriter).
+- A/B testing, drip sequences, automations.
+- Importing external contact lists (only existing `clinic_clients` are eligible).
+- SMS marketing.

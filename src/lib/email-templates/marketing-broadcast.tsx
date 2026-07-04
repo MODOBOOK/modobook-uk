@@ -1,0 +1,136 @@
+// Marketing broadcast email template — renders block JSON inside the MODO
+// branded shell with the practitioner's logo & colour. Blocks are safe
+// primitives (heading, paragraph, image, button, divider, spacer). No raw
+// HTML input is accepted.
+import * as React from 'react'
+import { Head, Html, Preview, Section, Text, Heading, Img, Button, Hr, Link } from '@react-email/components'
+import { ModoShell, styles, brand, brandedButton } from './_modo-brand'
+import type { TemplateEntry } from './registry'
+
+export type Block =
+  | { type: 'heading'; text: string; level?: 1 | 2 | 3 }
+  | { type: 'paragraph'; text: string }
+  | { type: 'image'; src: string; alt?: string }
+  | { type: 'button'; text: string; url: string }
+  | { type: 'divider' }
+  | { type: 'spacer'; size?: 'sm' | 'md' | 'lg' }
+
+export interface MarketingBroadcastData {
+  subject?: string
+  preheader?: string
+  blocks?: Block[]
+  clinicName?: string
+  logoUrl?: string | null
+  brandColor?: string | null
+  unsubscribeUrl?: string
+  firstName?: string
+}
+
+function interpolate(text: string, data: Record<string, string | undefined>): string {
+  return String(text || '').replace(/\{\{\s*(\w+)\s*\}\}/g, (_m, key) => data[key] ?? '')
+}
+
+function renderBlock(
+  block: Block,
+  idx: number,
+  data: Record<string, string | undefined>,
+  brandColor?: string | null,
+): React.ReactNode {
+  switch (block.type) {
+    case 'heading': {
+      const size = block.level === 1 ? '26px' : block.level === 3 ? '18px' : '22px'
+      return (
+        <Heading key={idx} style={{ ...styles.h1, fontSize: size, margin: '18px 0 12px' }}>
+          {interpolate(block.text, data)}
+        </Heading>
+      )
+    }
+    case 'paragraph':
+      return (
+        <Text key={idx} style={styles.text}>
+          {interpolate(block.text, data)}
+        </Text>
+      )
+    case 'image':
+      if (!block.src) return null
+      return (
+        <Section key={idx} style={{ textAlign: 'center', margin: '18px 0' }}>
+          <Img
+            src={block.src}
+            alt={block.alt || ''}
+            style={{ maxWidth: '100%', height: 'auto', borderRadius: '12px', margin: '0 auto' }}
+          />
+        </Section>
+      )
+    case 'button':
+      if (!block.url) return null
+      return (
+        <Section key={idx} style={styles.buttonWrap}>
+          <Button href={block.url} style={brandedButton(brandColor)}>
+            {interpolate(block.text || 'Learn more', data)}
+          </Button>
+        </Section>
+      )
+    case 'divider':
+      return <Hr key={idx} style={styles.hr} />
+    case 'spacer': {
+      const h = block.size === 'lg' ? '32px' : block.size === 'sm' ? '8px' : '18px'
+      return <div key={idx} style={{ height: h }} />
+    }
+    default:
+      return null
+  }
+}
+
+export function MarketingBroadcastEmail(data: MarketingBroadcastData) {
+  const {
+    subject = 'A note from your clinic',
+    preheader = '',
+    blocks = [],
+    clinicName = 'MODO',
+    logoUrl,
+    brandColor,
+    unsubscribeUrl = 'https://modobook.uk/unsubscribe',
+    firstName = '',
+  } = data
+  const vars = { first_name: firstName, clinic_name: clinicName, unsubscribe_url: unsubscribeUrl }
+  return (
+    <Html>
+      <Head />
+      <Preview>{preheader || subject}</Preview>
+      <ModoShell preview={preheader} siteName={clinicName} logoUrl={logoUrl} brandColor={brandColor}>
+        {blocks.length === 0 ? (
+          <Text style={styles.text}>(no content)</Text>
+        ) : (
+          blocks.map((b, i) => renderBlock(b, i, vars, brandColor))
+        )}
+        <Hr style={styles.hr} />
+        <Text style={{ ...styles.footer, marginBottom: 8 }}>
+          You&rsquo;re receiving this because you opted in to marketing emails from {clinicName}.
+        </Text>
+        <Text style={styles.footer}>
+          <Link href={unsubscribeUrl} style={{ color: brand.muted, textDecoration: 'underline' }}>
+            Unsubscribe
+          </Link>
+        </Text>
+      </ModoShell>
+    </Html>
+  )
+}
+
+export const template: TemplateEntry = {
+  component: MarketingBroadcastEmail,
+  subject: (data) => (data as MarketingBroadcastData).subject || 'A note from your clinic',
+  displayName: 'Marketing broadcast',
+  previewData: {
+    subject: 'A little update from us',
+    preheader: 'Something new we thought you\'d like',
+    clinicName: 'Sample Clinic',
+    firstName: 'Alex',
+    blocks: [
+      { type: 'heading', text: 'Hi {{first_name}}!' },
+      { type: 'paragraph', text: 'We wanted to share a quick update...' },
+      { type: 'button', text: 'Book now', url: 'https://modobook.uk' },
+    ],
+  },
+}
