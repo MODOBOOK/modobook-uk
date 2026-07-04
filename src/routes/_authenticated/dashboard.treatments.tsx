@@ -25,8 +25,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Plus, Trash2, Pencil, FileText, X, Tag, PlusCircle } from "lucide-react";
+import { Plus, Trash2, Pencil, FileText, X, Tag, PlusCircle, Sparkles, Loader2 } from "lucide-react";
 import { SearchableMultiPicker } from "@/components/ui/searchable-multi-picker";
+import { generateTreatmentDescription } from "@/lib/ai-treatment-description.functions";
 
 
 export const Route = createFileRoute("/_authenticated/dashboard/treatments")({
@@ -338,6 +339,24 @@ function TreatmentDialog({
   const [duration, setDuration] = useState(treatment?.duration ?? 30);
   const [price, setPrice] = useState(treatment?.price ?? 0);
   const [description, setDescription] = useState(treatment?.description ?? "");
+  const [aiDescLoading, setAiDescLoading] = useState(false);
+  const runGenerateDesc = useServerFn(generateTreatmentDescription);
+  async function handleGenerateDescription() {
+    if (!name.trim()) {
+      toast.error("Enter a treatment name first");
+      return;
+    }
+    setAiDescLoading(true);
+    try {
+      const r = await runGenerateDesc({ data: { name: name.trim(), notes: description.trim() || undefined } });
+      setDescription(r.description);
+      toast.success("Description generated");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to generate");
+    } finally {
+      setAiDescLoading(false);
+    }
+  }
   const [active, setActive] = useState(treatment?.active ?? true);
   const [consentIds, setConsentIds] = useState<string[]>([]);
   const [addons, setAddons] = useState<AddonLink[]>([]);
@@ -624,9 +643,29 @@ function TreatmentDialog({
         </div>
 
         <div>
-          <Label>Description</Label>
+          <div className="flex items-center justify-between gap-2">
+            <Label>Description</Label>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={handleGenerateDescription}
+              disabled={aiDescLoading || !name.trim()}
+            >
+              {aiDescLoading ? (
+                <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Sparkles className="mr-2 h-3.5 w-3.5" />
+              )}
+              {description.trim() ? "Rewrite with AI" : "Generate with AI"}
+            </Button>
+          </div>
           <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            AI uses the treatment name (and any notes you've typed) to draft a short, patient-friendly description.
+          </p>
         </div>
+
 
         {/* Sessions & split payment */}
         <div className="rounded-md border p-3 space-y-3">
