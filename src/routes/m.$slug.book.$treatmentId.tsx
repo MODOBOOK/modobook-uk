@@ -944,7 +944,7 @@ function BookTreatmentPage() {
           ? "Booking…"
           : splitAllowed && paymentPlan === "split"
             ? !splitAgreed
-              ? "Tick the split-payment agreement to continue"
+              ? "Tick the payment-plan agreement to continue"
               : `Book & pay £${(price / sessionCount).toFixed(2)} today (${sessionCount} × £${(price / sessionCount).toFixed(2)})`
             : showPrices && price > 0
               ? `Book & pay £${price.toFixed(2)}`

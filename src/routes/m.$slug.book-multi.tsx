@@ -1334,11 +1334,11 @@ function MultiBookPage() {
                         : !allClinicVisitsConsented || !allConsented
                           ? "Please give prescriber consent above"
                           : anySplit && !splitAgreed
-                            ? "Tick the split-payment agreement to continue"
+                            ? "Tick the payment-plan agreement to continue"
                             : isDeposit
                               ? `Book & pay deposit today`
                               : anySplit
-                                ? `Book & pay £${dueToday.toFixed(2)} today (rest at each session)`
+                                ? `Book & pay £${dueToday.toFixed(2)} today (rest at each appointment)`
                                 : `Confirm ${treatments.length} booking${treatments.length === 1 ? "" : "s"} · £${totalAfterDiscount.toFixed(2)}`;
                   return (
                     <Button
