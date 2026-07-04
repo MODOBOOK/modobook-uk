@@ -21,6 +21,7 @@ import {
 import { toast } from "sonner";
 import { ClientFormsList } from "@/components/patient/ClientFormsList";
 import { ProductEntryCard, type LogProduct } from "@/components/consultation/ProductEntryCard";
+import { FaceMapAnnotator } from "@/components/consultation/FaceMapAnnotator";
 import { ConsentSectionsView, type ConsentSection } from "@/components/ConsentSections";
 
 export const Route = createFileRoute("/_authenticated/dashboard/consultations/$id")({
