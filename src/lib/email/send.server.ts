@@ -125,13 +125,13 @@ export async function enqueueAppEmail(
     if (stored?.token) unsubscribeToken = stored.token
   }
 
-  const element = React.createElement(template.component, input.templateData || {})
+  const element = React.createElement(template.component, baseData)
   const html = await render(element)
   const text = await render(element, { plainText: true })
 
   const subject =
     typeof template.subject === 'function'
-      ? template.subject(input.templateData || {})
+      ? template.subject(baseData)
       : template.subject
 
   await supabase.from('email_send_log').insert({
