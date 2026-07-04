@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WhoItsForRouteImport } from './routes/who-its-for'
+import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PrivacyRouteImport } from './routes/privacy'
@@ -99,6 +100,11 @@ import { Route as AuthenticatedDashboardConsultationsIdRouteImport } from './rou
 const WhoItsForRoute = WhoItsForRouteImport.update({
   id: '/who-its-for',
   path: '/who-its-for',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UnsubscribeRoute = UnsubscribeRouteImport.update({
+  id: '/unsubscribe',
+  path: '/unsubscribe',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TermsRoute = TermsRouteImport.update({
@@ -584,6 +590,7 @@ export interface FileRoutesByFullPath {
   '/privacy': typeof PrivacyRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/terms': typeof TermsRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/who-its-for': typeof WhoItsForRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/admin-prescribers': typeof AuthenticatedAdminPrescribersRoute
@@ -671,6 +678,7 @@ export interface FileRoutesByTo {
   '/privacy': typeof PrivacyRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/terms': typeof TermsRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/who-its-for': typeof WhoItsForRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/admin-prescribers': typeof AuthenticatedAdminPrescribersRoute
@@ -755,6 +763,7 @@ export interface FileRoutesById {
   '/privacy': typeof PrivacyRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/terms': typeof TermsRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/who-its-for': typeof WhoItsForRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/admin-prescribers': typeof AuthenticatedAdminPrescribersRoute
@@ -844,6 +853,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/reset-password'
     | '/terms'
+    | '/unsubscribe'
     | '/who-its-for'
     | '/admin'
     | '/admin-prescribers'
@@ -931,6 +941,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/reset-password'
     | '/terms'
+    | '/unsubscribe'
     | '/who-its-for'
     | '/admin'
     | '/admin-prescribers'
@@ -1014,6 +1025,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/reset-password'
     | '/terms'
+    | '/unsubscribe'
     | '/who-its-for'
     | '/_authenticated/admin'
     | '/_authenticated/admin-prescribers'
@@ -1103,6 +1115,7 @@ export interface RootRouteChildren {
   PrivacyRoute: typeof PrivacyRouteWithChildren
   ResetPasswordRoute: typeof ResetPasswordRoute
   TermsRoute: typeof TermsRoute
+  UnsubscribeRoute: typeof UnsubscribeRoute
   WhoItsForRoute: typeof WhoItsForRoute
   BookSlugRoute: typeof BookSlugRoute
   CTokenRoute: typeof CTokenRoute
@@ -1128,6 +1141,13 @@ declare module '@tanstack/react-router' {
       path: '/who-its-for'
       fullPath: '/who-its-for'
       preLoaderRoute: typeof WhoItsForRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/unsubscribe': {
+      id: '/unsubscribe'
+      path: '/unsubscribe'
+      fullPath: '/unsubscribe'
+      preLoaderRoute: typeof UnsubscribeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/terms': {
@@ -1951,6 +1971,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyRoute: PrivacyRouteWithChildren,
   ResetPasswordRoute: ResetPasswordRoute,
   TermsRoute: TermsRoute,
+  UnsubscribeRoute: UnsubscribeRoute,
   WhoItsForRoute: WhoItsForRoute,
   BookSlugRoute: BookSlugRoute,
   CTokenRoute: CTokenRoute,
