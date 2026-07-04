@@ -412,7 +412,7 @@ function BookTreatmentPage() {
             }
             if (splitAllowed && paymentPlan === "split") {
               const per = (effectivePrice / sessionCount).toFixed(2);
-              lines.push(`Payment plan: Split into ${sessionCount} sessions (£${per} per session)`);
+              lines.push(`Payment plan: Pay over ${sessionCount} appointments (£${per} per appointment)`);
             } else if (sessionCount > 1) {
               lines.push(`Payment plan: Pay in full for ${sessionCount} sessions`);
             }
@@ -783,7 +783,7 @@ function BookTreatmentPage() {
                   }}
                 >
                   <div className="text-sm font-semibold" style={{ color: brand }}>
-                    {opt === "full" ? "Pay in full" : `Split into ${sessionCount} payments`}
+                    {opt === "full" ? "Pay in full" : `Pay over ${sessionCount} appointments`}
                   </div>
                   <div className="text-xs opacity-70">
                     {opt === "full"

@@ -927,7 +927,7 @@ function MultiBookPage() {
                                     }}
                                   >
                                     <span className="text-sm font-semibold" style={{ color: brand }}>
-                                      {opt === "full" ? "Pay in full" : `Split into ${sessions} payments`}
+                                      {opt === "full" ? "Pay in full" : `Pay over ${sessions} appointments`}
                                     </span>
                                     <span className="text-xs opacity-70">
                                       {opt === "full"
