@@ -137,32 +137,6 @@ function SettingsPage() {
       </div>
       <SaveReminder />
 
-      {/* PLATFORM EMAIL */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Mail className="h-5 w-5 text-primary" />
-            Platform email
-          </CardTitle>
-          <CardDescription>
-            Manage your sender domain and DNS records for MODO emails.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-sm text-muted-foreground">
-            Emails are sent from <strong>notify.modobook.uk</strong>. Open Lovable Email Settings to copy the NS records and verify DNS.
-          </p>
-          <Button asChild variant="outline">
-            <a
-              href="https://lovable.dev/projects/ad2db8dc-b519-4cbc-b7c4-dc1d5eed30c6/cloud/emails"
-              target="_blank"
-              rel="noreferrer"
-            >
-              Open Email Settings <ExternalLink className="ml-2 h-4 w-4" />
-            </a>
-          </Button>
-        </CardContent>
-      </Card>
 
       {/* BOOKING WINDOW */}
 
