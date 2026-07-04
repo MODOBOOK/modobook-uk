@@ -69,7 +69,7 @@ function visibleText(value: string) {
     .replace(/<\s*br\s*\/?\s*>/gi, "\n")
     .replace(/<\/\s*(p|div|h[1-6]|li|ul|ol|section|article)\s*>/gi, "\n")
     .replace(/<[^>]*>/g, "")
-    .replace(/[`{}[\]<>]/g, "")
+    .replace(/[`{}\[\]<>]/g, "")
     .replace(/([a-z])([A-Z])/g, "$1 $2")
     .replace(/[_-]+/g, " ")
     .replace(/\s+/g, " ")
