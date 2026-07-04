@@ -115,7 +115,7 @@ function sanitize(raw: any): { name: string; description: string; schema: { step
   const name = typeof raw?.name === "string" && raw.name.trim() ? visibleText(raw.name).slice(0, 120) : "AI generated form";
   const description = typeof raw?.description === "string" ? visibleText(raw.description).slice(0, 200) : "";
   const inSteps: Step[] = Array.isArray(raw?.schema?.steps) ? raw.schema.steps : [];
-  const steps = inSteps.map((s, i) => {
+  const steps: Array<{ id: string; title: string; elements: any[] }> = inSteps.map((s, i) => {
     const title = typeof s?.title === "string" && s.title.trim() ? visibleText(s.title) : `Step ${i + 1}`;
     const elements = (Array.isArray(s?.elements) ? s.elements : [])
       .filter((el: any) => el && typeof el === "object" && ALLOWED_TYPES.has(el.type))
