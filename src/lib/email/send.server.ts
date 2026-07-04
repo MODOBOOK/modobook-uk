@@ -7,7 +7,7 @@ import * as React from 'react'
 import { render } from 'react-email'
 import { TEMPLATES } from '@/lib/email-templates/registry'
 
-const SITE_NAME = 'modobook-uk'
+const SITE_NAME = 'Modo Book'
 const SENDER_DOMAIN = 'notify.modobook.uk'
 const FROM_DOMAIN = 'modobook.uk'
 

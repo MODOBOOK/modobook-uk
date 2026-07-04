@@ -31,7 +31,7 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
 }
 
 // Configuration
-const SITE_NAME = "modo-book"
+const SITE_NAME = "Modo Book"
 const SENDER_DOMAIN = "notify.modobook.co.uk"
 const ROOT_DOMAIN = "modobook.co.uk"
 const FROM_DOMAIN = "notify.modobook.co.uk"
