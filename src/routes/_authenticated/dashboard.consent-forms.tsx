@@ -180,6 +180,15 @@ function ConsentFormsPage() {
               <FileSignature className="mr-2 h-4 w-4" /> New system template
             </Button>
           )}
+          {isAdmin && (
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => { setAiSystem(true); setAiOpen(true); }}
+            >
+              <Sparkles className="mr-2 h-4 w-4" /> AI system template
+            </Button>
+          )}
         </div>
       </div>
 
