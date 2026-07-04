@@ -95,6 +95,7 @@ import { Route as ApiPublicStripeOauthCallbackRouteImport } from './routes/api/p
 import { Route as ApiPublicPushDispatchRouteImport } from './routes/api/public/push/dispatch'
 import { Route as ApiPublicMedicalFormTokenRouteImport } from './routes/api.public.medical-form.$token'
 import { Route as ApiPublicHooksReviewEmailsRouteImport } from './routes/api/public/hooks/review-emails'
+import { Route as ApiPublicHooksMarketingDispatchRouteImport } from './routes/api/public/hooks/marketing-dispatch'
 import { Route as AuthenticatedDashboardPatientsIdRouteImport } from './routes/_authenticated/dashboard.patients.$id'
 import { Route as AuthenticatedDashboardConsultationsIdRouteImport } from './routes/_authenticated/dashboard.consultations.$id'
 
@@ -576,6 +577,12 @@ const ApiPublicHooksReviewEmailsRoute =
     path: '/api/public/hooks/review-emails',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksMarketingDispatchRoute =
+  ApiPublicHooksMarketingDispatchRouteImport.update({
+    id: '/api/public/hooks/marketing-dispatch',
+    path: '/api/public/hooks/marketing-dispatch',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedDashboardPatientsIdRoute =
   AuthenticatedDashboardPatientsIdRouteImport.update({
     id: '/$id',
@@ -663,6 +670,7 @@ export interface FileRoutesByFullPath {
   '/m/$slug/': typeof MSlugIndexRoute
   '/dashboard/consultations/$id': typeof AuthenticatedDashboardConsultationsIdRoute
   '/dashboard/patients/$id': typeof AuthenticatedDashboardPatientsIdRoute
+  '/api/public/hooks/marketing-dispatch': typeof ApiPublicHooksMarketingDispatchRoute
   '/api/public/hooks/review-emails': typeof ApiPublicHooksReviewEmailsRoute
   '/api/public/medical-form/$token': typeof ApiPublicMedicalFormTokenRoute
   '/api/public/push/dispatch': typeof ApiPublicPushDispatchRoute
@@ -747,6 +755,7 @@ export interface FileRoutesByTo {
   '/m/$slug': typeof MSlugIndexRoute
   '/dashboard/consultations/$id': typeof AuthenticatedDashboardConsultationsIdRoute
   '/dashboard/patients/$id': typeof AuthenticatedDashboardPatientsIdRoute
+  '/api/public/hooks/marketing-dispatch': typeof ApiPublicHooksMarketingDispatchRoute
   '/api/public/hooks/review-emails': typeof ApiPublicHooksReviewEmailsRoute
   '/api/public/medical-form/$token': typeof ApiPublicMedicalFormTokenRoute
   '/api/public/push/dispatch': typeof ApiPublicPushDispatchRoute
@@ -838,6 +847,7 @@ export interface FileRoutesById {
   '/m/$slug/': typeof MSlugIndexRoute
   '/_authenticated/dashboard/consultations/$id': typeof AuthenticatedDashboardConsultationsIdRoute
   '/_authenticated/dashboard/patients/$id': typeof AuthenticatedDashboardPatientsIdRoute
+  '/api/public/hooks/marketing-dispatch': typeof ApiPublicHooksMarketingDispatchRoute
   '/api/public/hooks/review-emails': typeof ApiPublicHooksReviewEmailsRoute
   '/api/public/medical-form/$token': typeof ApiPublicMedicalFormTokenRoute
   '/api/public/push/dispatch': typeof ApiPublicPushDispatchRoute
@@ -929,6 +939,7 @@ export interface FileRouteTypes {
     | '/m/$slug/'
     | '/dashboard/consultations/$id'
     | '/dashboard/patients/$id'
+    | '/api/public/hooks/marketing-dispatch'
     | '/api/public/hooks/review-emails'
     | '/api/public/medical-form/$token'
     | '/api/public/push/dispatch'
@@ -1013,6 +1024,7 @@ export interface FileRouteTypes {
     | '/m/$slug'
     | '/dashboard/consultations/$id'
     | '/dashboard/patients/$id'
+    | '/api/public/hooks/marketing-dispatch'
     | '/api/public/hooks/review-emails'
     | '/api/public/medical-form/$token'
     | '/api/public/push/dispatch'
@@ -1103,6 +1115,7 @@ export interface FileRouteTypes {
     | '/m/$slug/'
     | '/_authenticated/dashboard/consultations/$id'
     | '/_authenticated/dashboard/patients/$id'
+    | '/api/public/hooks/marketing-dispatch'
     | '/api/public/hooks/review-emails'
     | '/api/public/medical-form/$token'
     | '/api/public/push/dispatch'
@@ -1136,6 +1149,7 @@ export interface RootRouteChildren {
   FTokenRoute: typeof FTokenRoute
   MSlugRoute: typeof MSlugRouteWithChildren
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
+  ApiPublicHooksMarketingDispatchRoute: typeof ApiPublicHooksMarketingDispatchRoute
   ApiPublicHooksReviewEmailsRoute: typeof ApiPublicHooksReviewEmailsRoute
   ApiPublicMedicalFormTokenRoute: typeof ApiPublicMedicalFormTokenRoute
   ApiPublicPushDispatchRoute: typeof ApiPublicPushDispatchRoute
@@ -1752,6 +1766,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksReviewEmailsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/marketing-dispatch': {
+      id: '/api/public/hooks/marketing-dispatch'
+      path: '/api/public/hooks/marketing-dispatch'
+      fullPath: '/api/public/hooks/marketing-dispatch'
+      preLoaderRoute: typeof ApiPublicHooksMarketingDispatchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/dashboard/patients/$id': {
       id: '/_authenticated/dashboard/patients/$id'
       path: '/$id'
@@ -2000,6 +2021,7 @@ const rootRouteChildren: RootRouteChildren = {
   FTokenRoute: FTokenRoute,
   MSlugRoute: MSlugRouteWithChildren,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
+  ApiPublicHooksMarketingDispatchRoute: ApiPublicHooksMarketingDispatchRoute,
   ApiPublicHooksReviewEmailsRoute: ApiPublicHooksReviewEmailsRoute,
   ApiPublicMedicalFormTokenRoute: ApiPublicMedicalFormTokenRoute,
   ApiPublicPushDispatchRoute: ApiPublicPushDispatchRoute,
