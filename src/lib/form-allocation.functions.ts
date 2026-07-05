@@ -41,7 +41,7 @@ export const listFormAllocation = createServerFn({ method: "GET" })
     ] = await Promise.all([
       supabase
         .from("treatments")
-        .select("id, name, is_active")
+        .select("id, name")
         .eq("profile_id", profileId)
         .order("name"),
       supabase
