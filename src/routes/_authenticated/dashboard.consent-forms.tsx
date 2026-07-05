@@ -319,6 +319,37 @@ function ConsentFormsPage() {
               onChange={(v) => setEditing(v)}
             />
           )}
+          {editing && !(editing.is_system && !isAdmin) && !(isAdmin && editing.is_system) && (
+            <div className="space-y-1.5 rounded-lg border p-3">
+              <Label className="text-sm font-semibold">Attach to treatments</Label>
+              <p className="text-xs text-muted-foreground">
+                Selected treatments will automatically use this consent form when patients book.
+              </p>
+              {treatments.length === 0 ? (
+                <p className="text-xs text-muted-foreground">No treatments yet.</p>
+              ) : (
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {treatments.map((tr) => {
+                    const checked = treatmentIds.includes(tr.id);
+                    return (
+                      <button
+                        key={tr.id}
+                        type="button"
+                        onClick={() =>
+                          setTreatmentIds((prev) =>
+                            prev.includes(tr.id) ? prev.filter((x) => x !== tr.id) : [...prev, tr.id],
+                          )
+                        }
+                        className={`rounded-full border px-2.5 py-1 text-xs transition ${checked ? "bg-foreground text-background border-foreground" : "bg-background hover:bg-muted"}`}
+                      >
+                        {tr.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
           <DialogFooter className="gap-2">
             <Button variant="ghost" onClick={() => setEditing(null)}>
               Close
