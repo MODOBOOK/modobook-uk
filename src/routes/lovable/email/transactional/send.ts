@@ -273,6 +273,22 @@ export const Route = createFileRoute("/lovable/email/transactional/send")({
           status: 'pending',
         })
 
+        // Resolve Reply-To: the caller is the practitioner sending to a patient,
+        // so replies should land in the practitioner's inbox. Look up their
+        // profile email; fall back to their auth email.
+        let replyTo: string | undefined
+        try {
+          const { data: prof } = await supabase
+            .from('profiles')
+            .select('email')
+            .eq('id', user.id)
+            .maybeSingle()
+          const profEmail = (prof as { email?: string | null } | null)?.email?.trim()
+          replyTo = profEmail || user.email || undefined
+        } catch {
+          replyTo = user.email || undefined
+        }
+
         const { error: enqueueError } = await supabase.rpc('enqueue_email', {
           queue_name: 'transactional_emails',
           payload: {
@@ -288,6 +304,7 @@ export const Route = createFileRoute("/lovable/email/transactional/send")({
             idempotency_key: idempotencyKey,
             unsubscribe_token: unsubscribeToken,
             queued_at: new Date().toISOString(),
+            ...(replyTo ? { reply_to: replyTo } : {}),
           },
         })
 
