@@ -11,7 +11,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { Trash2, Plus, Repeat } from "lucide-react";
+import { Trash2, Plus, Repeat, CalendarDays, CalendarRange, Clock } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { format } from "date-fns";
 import {
   listAvailabilityRules,
   upsertAvailabilityRule,
@@ -22,12 +25,16 @@ import {
   listBlockedDates,
   addBlockedDate,
   deleteBlockedDate,
+  listBlockedTimes,
+  addBlockedTime,
+  deleteBlockedTime,
   getRotaSettings,
   setRotaAnchor,
   listPractitioners,
 } from "@/lib/availability.functions";
 import { listMyLocations } from "@/lib/locations.functions";
 import { WEEK_LETTERS, weekLetterFor, toMondayIso } from "@/lib/rota";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/dashboard/availability")({
   ssr: false,
