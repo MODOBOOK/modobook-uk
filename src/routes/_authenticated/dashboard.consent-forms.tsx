@@ -56,6 +56,9 @@ function ConsentFormsPage() {
   const save = useServerFn(saveConsentTemplate);
   const remove = useServerFn(deleteConsentTemplate);
   const checkAdmin = useServerFn(amIAdmin);
+  const listTreatments = useServerFn(listMyTreatmentsBasic);
+  const getTplTreatments = useServerFn(getConsentTemplateTreatmentIds);
+  const setTplTreatments = useServerFn(setConsentTemplateTreatmentIds);
 
   const [rows, setRows] = useState<Tpl[]>([]);
   const [loading, setLoading] = useState(true);
@@ -64,10 +67,25 @@ function ConsentFormsPage() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
   const [aiSystem, setAiSystem] = useState(false);
+  const [treatments, setTreatments] = useState<{ id: string; name: string }[]>([]);
+  const [treatmentIds, setTreatmentIds] = useState<string[]>([]);
 
+  async function openEditor(tpl: Tpl) {
+    setEditing(tpl);
+    if (tpl.id && !tpl.is_system) {
+      try {
+        const ids = await getTplTreatments({ data: { template_id: tpl.id } });
+        setTreatmentIds(ids as string[]);
+      } catch {
+        setTreatmentIds([]);
+      }
+    } else {
+      setTreatmentIds([]);
+    }
+  }
 
   function newBlank() {
-    setEditing({
+    openEditor({
       id: undefined as any,
       name: "New consent form",
       treatment_type: "",
@@ -97,6 +115,7 @@ function ConsentFormsPage() {
   useEffect(() => {
     refresh();
     checkAdmin().then((r) => setIsAdmin(r.admin)).catch(() => {});
+    listTreatments().then((t) => setTreatments(t as { id: string; name: string }[])).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -104,7 +123,7 @@ function ConsentFormsPage() {
   async function handleSave() {
     if (!editing) return;
     try {
-      await save({
+      const saved = await save({
         data: {
           id: editing.id,
           name: editing.name,
@@ -116,6 +135,11 @@ function ConsentFormsPage() {
           is_system: isAdmin ? !!editing.is_system : false,
         },
       });
+      const tplId = (saved as any)?.id ?? editing.id;
+      // Only attach to treatments for practitioner-owned templates
+      if (tplId && !(isAdmin && editing.is_system)) {
+        await setTplTreatments({ data: { template_id: tplId, treatment_ids: treatmentIds } });
+      }
       toast.success("Saved");
       setEditing(null);
       refresh();
