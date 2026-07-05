@@ -469,18 +469,24 @@ function FormEditor({ formId, onClose, cats }: { formId: string; onClose: () => 
     <div className="mx-auto max-w-3xl space-y-4 pb-24">
       <header className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3">
         <Button size="icon" variant="ghost" onClick={onClose}><X className="h-5 w-5" /></Button>
-        <h1 className="truncate text-xl font-bold">{formId ? "Edit Form" : "Add Form"}</h1>
+        <h1 className="truncate text-xl font-bold">{isSystem ? "Attach system form" : formId ? "Edit Form" : "Add Form"}</h1>
         <Button onClick={handleSave} disabled={saving}>
           {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}Save
         </Button>
       </header>
 
+      {isSystem && (
+        <div className="rounded-md border bg-muted/40 p-3 text-xs text-muted-foreground">
+          This is a system form — the content is read-only. You can still attach it to your treatments below.
+        </div>
+      )}
+
       <Card className="space-y-3 p-4">
         <Field label="Name">
-          <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Name of the template" />
+          <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Name of the template" disabled={isSystem} />
         </Field>
         <Field label="Validity">
-          <Select value={validity} onValueChange={setValidity}>
+          <Select value={validity} onValueChange={setValidity} disabled={isSystem}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="always_required">Always Required</SelectItem>
@@ -492,7 +498,7 @@ function FormEditor({ formId, onClose, cats }: { formId: string; onClose: () => 
           </Select>
         </Field>
         <Field label="Add to a category">
-          <Select value={categoryId ?? "none"} onValueChange={(v) => setCategoryId(v === "none" ? null : v)}>
+          <Select value={categoryId ?? "none"} onValueChange={(v) => setCategoryId(v === "none" ? null : v)} disabled={isSystem}>
             <SelectTrigger><SelectValue placeholder="Choose a category" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="none">No category</SelectItem>
