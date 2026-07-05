@@ -587,13 +587,13 @@ function MultiBookPage() {
     (!reqDob || form.dob) &&
     (!reqAddress || form.addressLine1),
   );
-  const selectionValid = (treatments.length > 0 || selectedPackages.length > 0) && (ctx.locations.length <= 1 || !!locationId);
-  const datetimeValid = !!slot;
+  const selectionValid = treatments.length > 0 || selectedPackages.length > 0;
+  const locationValid = ctx.locations.length <= 1 || !!locationId;
+  const datetimeValid = !!slot && locationValid;
 
   const stepsMeta: BookingStep[] = [
     { key: "treatment", label: "Treatment", done: treatments.length > 0 || selectedPackages.length > 0, active: step === "selection" && !(treatments.length > 0 || selectedPackages.length > 0) },
-    { key: "location", label: "Location", done: ctx.locations.length <= 1 ? true : !!locationId, active: step === "selection" && !(ctx.locations.length <= 1 ? true : !!locationId) },
-    { key: "datetime", label: "Date & Time", done: !!slot, active: step === "datetime" && !slot },
+    { key: "datetime", label: "Location & Time", done: !!slot && locationValid, active: step === "datetime" && !(!!slot && locationValid) },
     { key: "details", label: "Your Details", done: detailsDone, active: step === "details" && !detailsDone },
     { key: "payment", label: "Payment", done: !!paymentChoice || totalAfterDiscount <= 0, active: step === "details" && !paymentChoice && totalAfterDiscount > 0 },
   ];
