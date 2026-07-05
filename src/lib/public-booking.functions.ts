@@ -431,7 +431,7 @@ export const getMonthAvailability = createServerFn({ method: "GET" })
 
 
 export type PaymentChoice = {
-  mode: "deposit" | "full";
+  mode: "deposit" | "full" | "cash";
   method: "card" | "klarna" | "clearpay";
 };
 
