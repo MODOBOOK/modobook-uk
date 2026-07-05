@@ -59,6 +59,7 @@ function NewAppointmentPage() {
   const [addrPostcode, setAddrPostcode] = useState("");
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
+  const submitLockRef = useRef(false);
   const [sendDeposit, setSendDeposit] = useState(false);
   const [depositAmount, setDepositAmount] = useState("");
   const [depositHours, setDepositHours] = useState("24");
