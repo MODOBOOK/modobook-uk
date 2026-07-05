@@ -674,7 +674,7 @@ async function maybeCreateBookingCheckout(args: {
   patientEmail: string;
   description: string;
   choice?: PaymentChoice | null;
-}): Promise<string | null> {
+}): Promise<BookingPaymentResult | null> {
   const p = args.profile;
   if (!p) return null;
   // Patient chose to pay in cash at the appointment — skip Stripe entirely.
