@@ -817,17 +817,24 @@ async function maybeCreateBookingCheckout(args: {
         },
       });
     }
+    const saveCardOnFile = !!p.save_card_on_file;
+    // When save-card-on-file is on, force card-only (no BNPL / wallets)
+    // so we always end up with a reusable PaymentMethod.
+    const effectiveMethodTypes = saveCardOnFile ? ["card"] : methodTypes;
     const session = await createCheckoutSession({
       accountId: p.stripe_connect_account_id,
       lineItems,
       successUrl,
       cancelUrl,
       customerEmail: args.patientEmail,
-      paymentMethodTypes: methodTypes as never,
+      paymentMethodTypes: effectiveMethodTypes as never,
+      saveCardOnFile,
       metadata: {
         appointment_ids: args.appointmentIds.join(","),
         kind,
         surcharge_cents: String(surchargeCents),
+        save_card_on_file: saveCardOnFile ? "1" : "0",
+        patient_email: args.patientEmail,
       },
     });
     return session.url ?? null;
