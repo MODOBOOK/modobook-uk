@@ -142,26 +142,35 @@ function AcceptInvitePage() {
             </div>
           ) : (
             <>
+              <div className="rounded-md border bg-muted/40 p-3 text-xs text-muted-foreground">
+                Already have a MODO account with this email?{" "}
+                <button
+                  type="button"
+                  className="underline font-medium text-foreground"
+                  onClick={() => navigate({ to: "/auth", search: { next: `/staff-accept/${token}` } as any })}
+                >
+                  Sign in instead
+                </button>{" "}
+                to link this invite to your existing account.
+              </div>
               <div>
                 <Label>Email</Label>
                 <Input value={state.email} disabled />
               </div>
               <div>
-                <Label>Set a password</Label>
+                <Label>Set a password (new account)</Label>
                 <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" />
               </div>
               <div>
                 <Label>Confirm password</Label>
                 <Input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} autoComplete="new-password" />
               </div>
-              <Button className="w-full" onClick={signUpAndAccept} disabled={working}>
-                {working ? "Creating account…" : "Accept & continue"}
+              <Button className="w-full" onClick={createAccountAndAccept} disabled={working}>
+                {working ? "Creating account…" : "Create account & accept"}
               </Button>
-              <p className="text-xs text-muted-foreground text-center">
-                Already have a MODO account? Enter your existing password to sign in.
-              </p>
             </>
           )}
+
         </CardContent>
       </Card>
     </div>
