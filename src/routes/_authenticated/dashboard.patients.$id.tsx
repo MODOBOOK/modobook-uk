@@ -319,6 +319,9 @@ function PatientProfilePage() {
           </div>
         )}
       </Section>
+      {/* Card on file (for no-show / late cancel charges) */}
+      <CardOnFileSection client={client} onReload={reload} />
+
       {/* Notes */}
       <NotesSection clientId={id} />
 
