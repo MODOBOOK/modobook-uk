@@ -435,6 +435,23 @@ export type PaymentChoice = {
   method: "card" | "klarna" | "clearpay";
 };
 
+// A booking either hands the patient off to Stripe's hosted checkout page,
+// or (when the practitioner has opted into save-card-on-file) renders our
+// own embedded Stripe Elements form so we can hide Apple Pay / Google Pay /
+// Link. Exactly one of these will be non-null.
+export type BookingPaymentResult =
+  | { kind: "hosted"; checkoutUrl: string }
+  | {
+      kind: "embedded";
+      clientSecret: string;
+      paymentIntentId: string;
+      publishableKey: string;
+      connectedAccountId: string;
+      amountCents: number;
+      currency: string;
+      returnUrl: string;
+    };
+
 export const getPublicPaymentOptions = createServerFn({ method: "GET" })
   .inputValidator((input: { slug: string }) => input)
   .handler(async ({ data }) => {
