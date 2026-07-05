@@ -442,7 +442,7 @@ export const getPublicPaymentOptions = createServerFn({ method: "GET" })
     const { data: prof } = await supabaseAdmin
       .from("profiles")
       .select(
-        "stripe_connect_account_id,stripe_connect_onboarding_status,payment_card_full_enabled,payment_deposit_enabled,payment_klarna_enabled,payment_clearpay_enabled,payment_pass_fees_to_customer,deposit_amount_cents,payment_surcharge_card_enabled,payment_surcharge_card_percent,payment_surcharge_bnpl_enabled,payment_surcharge_bnpl_percent,payment_surcharge_deposit_enabled,payment_surcharge_deposit_percent,stripe_fee_pass_to_patient,stripe_fee_card_percent,stripe_fee_card_fixed_cents,stripe_fee_bnpl_percent,stripe_fee_bnpl_fixed_cents,allow_pay_in_clinic",
+        "stripe_connect_account_id,stripe_connect_onboarding_status,payment_card_full_enabled,payment_deposit_enabled,payment_klarna_enabled,payment_clearpay_enabled,payment_pass_fees_to_customer,deposit_amount_cents,payment_surcharge_card_enabled,payment_surcharge_card_percent,payment_surcharge_bnpl_enabled,payment_surcharge_bnpl_percent,payment_surcharge_deposit_enabled,payment_surcharge_deposit_percent,stripe_fee_pass_to_patient,stripe_fee_card_percent,stripe_fee_card_fixed_cents,stripe_fee_bnpl_percent,stripe_fee_bnpl_fixed_cents,allow_pay_in_clinic,cash_only_balance",
       )
       .eq("slug", data.slug.toLowerCase())
       .maybeSingle();
@@ -451,13 +451,16 @@ export const getPublicPaymentOptions = createServerFn({ method: "GET" })
     }
     const active = !!prof.stripe_connect_account_id
       && (!prof.stripe_connect_onboarding_status || prof.stripe_connect_onboarding_status === "active");
+    const cashOnlyBalance = !!(prof as { cash_only_balance?: boolean }).cash_only_balance;
     return {
       configured: active,
-      cardEnabled: prof.payment_card_full_enabled !== false,
-      klarnaEnabled: !!prof.payment_klarna_enabled,
-      clearpayEnabled: !!prof.payment_clearpay_enabled,
+      // When cash-only-for-balance is on, patients cannot pay the full price online.
+      cardEnabled: prof.payment_card_full_enabled !== false && !cashOnlyBalance,
+      klarnaEnabled: !!prof.payment_klarna_enabled && !cashOnlyBalance,
+      clearpayEnabled: !!prof.payment_clearpay_enabled && !cashOnlyBalance,
       depositEnabled: !!prof.payment_deposit_enabled,
       cashEnabled: prof.allow_pay_in_clinic !== false,
+      cashOnlyBalance,
       depositCents: Math.max(0, Number(prof.deposit_amount_cents ?? 0)),
       passFees: !!prof.payment_pass_fees_to_customer,
       surcharges: {

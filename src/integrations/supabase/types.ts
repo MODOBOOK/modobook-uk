@@ -4117,6 +4117,7 @@ export type Database = {
           booking_smart_times_enabled: boolean
           brand_color: string | null
           cancellation_rules: Json | null
+          cash_only_balance: boolean
           chooser_consultation_treatment_id: string | null
           chooser_consultation_treatment_ids: string[]
           chooser_enabled: boolean
@@ -4231,6 +4232,7 @@ export type Database = {
           booking_smart_times_enabled?: boolean
           brand_color?: string | null
           cancellation_rules?: Json | null
+          cash_only_balance?: boolean
           chooser_consultation_treatment_id?: string | null
           chooser_consultation_treatment_ids?: string[]
           chooser_enabled?: boolean
@@ -4345,6 +4347,7 @@ export type Database = {
           booking_smart_times_enabled?: boolean
           brand_color?: string | null
           cancellation_rules?: Json | null
+          cash_only_balance?: boolean
           chooser_consultation_treatment_id?: string | null
           chooser_consultation_treatment_ids?: string[]
           chooser_enabled?: boolean
