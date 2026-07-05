@@ -743,7 +743,11 @@ function BookTreatmentPage() {
               const checked = addonPicks.has(a.id);
               const base = a.price_cents / 100;
               const net = addonNet(a);
-              const hasDiscount = (a.discount_percent ?? 0) > 0;
+              const hasDiscount = (a.discount_percent ?? 0) > 0 || (a.discount_amount ?? 0) > 0;
+              const discountLabel =
+                a.discount_amount != null && a.discount_amount > 0
+                  ? `£${a.discount_amount.toFixed(2)} off`
+                  : `${a.discount_percent}% off`;
               return (
                 <button
                   key={a.id}
