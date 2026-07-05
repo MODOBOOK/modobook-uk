@@ -78,9 +78,7 @@ export const inviteStaff = createServerFn({ method: "POST" })
       const branding = await getPractitionerBranding(profileId);
       const { data: prof } = await context.supabase
         .from("profiles").select("clinic_name").eq("id", profileId).maybeSingle();
-      const inviter = undefined;
       const origin = process.env.PUBLIC_APP_URL || process.env.APP_URL || "https://modobook.uk";
-      const inviter = [prof?.first_name, prof?.last_name].filter(Boolean).join(" ").trim() || undefined;
       const roleLabel = data.role === "admin" ? "Admin" : data.role === "practitioner" ? "Practitioner" : data.role === "receptionist" ? "Receptionist" : "Viewer";
       await tryEnqueueAppEmail({
         templateName: "staff-invite",
