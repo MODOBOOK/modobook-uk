@@ -803,6 +803,54 @@ async function maybeCreateBookingCheckout(args: {
   const successUrl = `${origin}/m/${p.slug ?? ""}/account?paid=1&session_id={CHECKOUT_SESSION_ID}`;
   const cancelUrl = `${origin}/m/${p.slug ?? ""}`;
 
+  const saveCardOnFile = !!p.save_card_on_file;
+  const metadata = {
+    appointment_ids: args.appointmentIds.join(","),
+    kind,
+    surcharge_cents: String(surchargeCents),
+    save_card_on_file: saveCardOnFile ? "1" : "0",
+    patient_email: args.patientEmail,
+  };
+
+  // Save-card-on-file: skip Stripe's hosted checkout entirely (it re-adds
+  // Apple Pay + Link even when payment_method_types is ['card']) and drive an
+  // embedded Payment Element on our own page. Wallets and Link are hidden
+  // client-side. The total charged still includes any platform surcharge.
+  if (saveCardOnFile) {
+    try {
+      const { createSaveCardPaymentIntent } = await import("./stripe.server");
+      const publishableKey = process.env.STRIPE_PUBLISHABLE_KEY;
+      if (!publishableKey) {
+        console.error("[maybeCreateBookingCheckout] STRIPE_PUBLISHABLE_KEY missing");
+        return null;
+      }
+      const totalCents = amountCents + surchargeCents;
+      const intent = await createSaveCardPaymentIntent({
+        accountId: p.stripe_connect_account_id,
+        amountCents: totalCents,
+        currency: "gbp",
+        customerEmail: args.patientEmail,
+        description: kind === "deposit" ? `Deposit — ${args.description}` : args.description,
+        metadata,
+      });
+      if (!intent.clientSecret) return null;
+      const returnUrl = `${origin}/m/${p.slug ?? ""}/account?paid=1&pi=${intent.paymentIntentId}`;
+      return {
+        kind: "embedded",
+        clientSecret: intent.clientSecret,
+        paymentIntentId: intent.paymentIntentId,
+        publishableKey,
+        connectedAccountId: p.stripe_connect_account_id,
+        amountCents: totalCents,
+        currency: "gbp",
+        returnUrl,
+      };
+    } catch (e) {
+      console.error("[maybeCreateBookingCheckout] save-card PI error", e);
+      return null;
+    }
+  }
+
   try {
     const { createCheckoutSession } = await import("./stripe.server");
     const lineItems: Array<{
@@ -834,27 +882,18 @@ async function maybeCreateBookingCheckout(args: {
         },
       });
     }
-    const saveCardOnFile = !!p.save_card_on_file;
-    // When save-card-on-file is on, force card-only (no BNPL / wallets)
-    // so we always end up with a reusable PaymentMethod.
-    const effectiveMethodTypes = saveCardOnFile ? ["card"] : methodTypes;
     const session = await createCheckoutSession({
       accountId: p.stripe_connect_account_id,
       lineItems,
       successUrl,
       cancelUrl,
       customerEmail: args.patientEmail,
-      paymentMethodTypes: effectiveMethodTypes as never,
-      saveCardOnFile,
-      metadata: {
-        appointment_ids: args.appointmentIds.join(","),
-        kind,
-        surcharge_cents: String(surchargeCents),
-        save_card_on_file: saveCardOnFile ? "1" : "0",
-        patient_email: args.patientEmail,
-      },
+      paymentMethodTypes: methodTypes as never,
+      saveCardOnFile: false,
+      metadata,
     });
-    return session.url ?? null;
+    if (!session.url) return null;
+    return { kind: "hosted", checkoutUrl: session.url };
   } catch (e) {
     console.error("[maybeCreateBookingCheckout] stripe error", e);
     return null;
