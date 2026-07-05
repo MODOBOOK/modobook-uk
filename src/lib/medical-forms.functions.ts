@@ -144,12 +144,23 @@ export const saveForm = createServerFn({ method: "POST" })
       if (error) throw error;
       id = row.id;
     }
-    // sync treatment links
+    // sync treatment links — scope to current practitioner's treatments so
+    // this doesn't affect other practitioners who share a system template.
     if (data.treatment_ids) {
-      await context.supabase.from("treatment_medical_forms").delete().eq("template_id", id);
-      if (data.treatment_ids.length) {
+      const { data: myTreatments } = await context.supabase
+        .from("treatments").select("id").eq("profile_id", profileId);
+      const myIds = (myTreatments ?? []).map((t: any) => t.id as string);
+      if (myIds.length) {
+        await context.supabase
+          .from("treatment_medical_forms")
+          .delete()
+          .eq("template_id", id)
+          .in("treatment_id", myIds);
+      }
+      const allowed = data.treatment_ids.filter((tid) => myIds.includes(tid));
+      if (allowed.length) {
         await context.supabase.from("treatment_medical_forms").insert(
-          data.treatment_ids.map((tid) => ({ template_id: id!, treatment_id: tid })),
+          allowed.map((tid) => ({ template_id: id!, treatment_id: tid })),
         );
       }
     }
