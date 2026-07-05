@@ -7,6 +7,11 @@ import {
   saveConsentTemplate,
   deleteConsentTemplate,
 } from "@/lib/templates.functions";
+import {
+  getConsentTemplateTreatmentIds,
+  setConsentTemplateTreatmentIds,
+} from "@/lib/treatment-consents.functions";
+import { listMyTreatmentsBasic } from "@/lib/aftercare-templates.functions";
 import { amIAdmin } from "@/lib/admin.functions";
 
 import { Button } from "@/components/ui/button";
