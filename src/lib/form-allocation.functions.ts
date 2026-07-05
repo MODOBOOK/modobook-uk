@@ -92,7 +92,7 @@ export const listFormAllocation = createServerFn({ method: "GET" })
       treatments: (treatments ?? []) as { id: string; name: string }[],
       medicalForms: (mfs ?? []) as { id: string; name: string; is_system: boolean }[],
       consents: (cts ?? []) as { id: string; name: string; is_system: boolean }[],
-      aftercares: (acs ?? []) as { id: string; name: string; delay_hours: number }[],
+      aftercares: (acs ?? []) as { id: string; name: string; delay_hours: number; is_system: boolean }[],
       links,
     };
   });
