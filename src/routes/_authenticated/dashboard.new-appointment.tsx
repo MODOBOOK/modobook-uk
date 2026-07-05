@@ -294,12 +294,34 @@ function NewAppointmentPage() {
             <Label>Treatment *</Label>
             <Select value={treatmentId} onValueChange={setTreatmentId}>
               <SelectTrigger><SelectValue placeholder="Select treatment" /></SelectTrigger>
-              <SelectContent>
-                {treatments.map((t) => (
-                  <SelectItem key={t.id} value={t.id}>
-                    {t.name} — £{Number(t.price ?? 0).toFixed(2)} · {t.duration}min
-                  </SelectItem>
-                ))}
+              <SelectContent className="max-h-[60vh]">
+                {(() => {
+                  const byCat = new Map<string | null, Treatment[]>();
+                  for (const t of treatments) {
+                    const k = t.category_id ?? null;
+                    if (!byCat.has(k)) byCat.set(k, []);
+                    byCat.get(k)!.push(t);
+                  }
+                  const groups: { key: string; name: string; items: Treatment[] }[] = [];
+                  for (const c of categories) {
+                    const items = byCat.get(c.id);
+                    if (items && items.length) groups.push({ key: c.id, name: c.name, items });
+                  }
+                  const uncategorised = byCat.get(null);
+                  if (uncategorised && uncategorised.length) {
+                    groups.push({ key: "uncategorised", name: "Uncategorised", items: uncategorised });
+                  }
+                  return groups.map((g) => (
+                    <SelectGroup key={g.key}>
+                      <SelectLabel>{g.name}</SelectLabel>
+                      {g.items.map((t) => (
+                        <SelectItem key={t.id} value={t.id}>
+                          {t.name} — £{Number(t.price ?? 0).toFixed(2)} · {t.duration}min
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  ));
+                })()}
               </SelectContent>
             </Select>
           </div>
@@ -318,7 +340,35 @@ function NewAppointmentPage() {
           )}
           <div>
             <Label>Date *</Label>
-            <Input type="date" value={date} onChange={(e) => { setDate(e.target.value); setStartTime(""); }} />
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className={cn("w-full justify-start text-left font-normal", !date && "text-muted-foreground")}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {date ? format(new Date(date + "T00:00:00"), "PPP") : <span>Pick a date</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0 pointer-events-auto" align="start">
+                <Calendar
+                  mode="single"
+                  selected={date ? new Date(date + "T00:00:00") : undefined}
+                  onSelect={(d) => {
+                    if (!d) return;
+                    const yyyy = d.getFullYear();
+                    const mm = String(d.getMonth() + 1).padStart(2, "0");
+                    const dd = String(d.getDate()).padStart(2, "0");
+                    setDate(`${yyyy}-${mm}-${dd}`);
+                    setStartTime("");
+                  }}
+                  disabled={(d) => d < new Date(new Date().setHours(0, 0, 0, 0))}
+                  initialFocus
+                  className="p-3 pointer-events-auto"
+                />
+              </PopoverContent>
+            </Popover>
           </div>
           {date && (
             <div>
