@@ -169,7 +169,7 @@ function FormAllocationPage() {
               <Sparkles className="size-4 text-primary" /> Auto-match with AI
             </CardTitle>
             <p className="mt-1 text-sm text-muted-foreground">
-              Let AI suggest the right forms for every treatment in one go.
+              AI stages suggestions — review them below, then hit <strong>Save all</strong> to commit.
             </p>
           </div>
           <div className="flex gap-2">
@@ -182,6 +182,25 @@ function FormAllocationPage() {
           </div>
         </CardHeader>
       </Card>
+
+      {Object.keys(local).length > 0 && (
+        <div className="sticky top-2 z-20 flex items-center justify-between gap-3 rounded-lg border border-primary/40 bg-primary/5 px-4 py-3 shadow-sm backdrop-blur">
+          <div className="flex items-center gap-2 text-sm">
+            <AlertCircle className="size-4 text-primary" />
+            <span>
+              <strong>{Object.keys(local).length}</strong> unsaved change{Object.keys(local).length === 1 ? "" : "s"} — don't forget to save.
+            </span>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="ghost" size="sm" onClick={() => setLocal({})} disabled={savingAll}>
+              Discard
+            </Button>
+            <Button size="sm" onClick={saveAll} disabled={savingAll}>
+              {savingAll ? <Loader2 className="size-4 animate-spin" /> : "Save all"}
+            </Button>
+          </div>
+        </div>
+      )}
 
       <div className="relative">
         <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
