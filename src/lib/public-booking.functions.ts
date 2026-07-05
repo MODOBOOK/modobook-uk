@@ -74,6 +74,9 @@ export const getBookingContext = createServerFn({ method: "GET" })
       .from("availability_rules")
       .select("*")
       .eq("profile_id", profile.id);
+    const { data: anchorRes } = await sb.rpc("get_rota_anchor", { p_profile_id: profile.id });
+    const rotaAnchor = (anchorRes as string | null) ?? null;
+
 
     const { data: theme } = await sb
       .from("clinic_theme")
@@ -110,8 +113,10 @@ export const getBookingContext = createServerFn({ method: "GET" })
       modelSlots: modelSlots ?? [],
       bookableFrom,
       settings,
+      rotaAnchor,
     };
   });
+
 
 export type PublicBookingSettings = {
   booking_min_notice_hours: number;
@@ -212,6 +217,9 @@ export const getMultiBookingContext = createServerFn({ method: "GET" })
       .from("availability_rules")
       .select("*")
       .eq("profile_id", profile.id);
+    const { data: anchorRes2 } = await sb.rpc("get_rota_anchor", { p_profile_id: profile.id });
+    const rotaAnchor = (anchorRes2 as string | null) ?? null;
+
 
     const { data: theme } = await sb
       .from("clinic_theme")
@@ -260,8 +268,10 @@ export const getMultiBookingContext = createServerFn({ method: "GET" })
       bookableFrom,
       settings: extractBookingSettings(profile as Record<string, unknown>),
       selectedPackages,
+      rotaAnchor,
     };
   });
+
 
 
 
@@ -374,7 +384,7 @@ export const getMonthAvailability = createServerFn({ method: "GET" })
 
     const { data: rules } = await sb
       .from("availability_rules")
-      .select("day_of_week,location_id")
+      .select("day_of_week,location_id,cycle_length,weeks_mask")
       .eq("profile_id", data.profileId);
     const { data: blocked } = await sb
       .from("blocked_dates")
@@ -389,6 +399,10 @@ export const getMonthAvailability = createServerFn({ method: "GET" })
       .gte("date", startIso)
       .lte("date", endIso);
 
+    const { data: anchorRes } = await sb.rpc("get_rota_anchor", { p_profile_id: data.profileId });
+    const anchorIso = (anchorRes as string | null) ?? null;
+    const { ruleAppliesOnDate } = await import("@/lib/rota");
+
     const matchLoc = (rowLoc: string | null) =>
       !data.locationId || !rowLoc || rowLoc === data.locationId;
     const activeDays = Array.from(
@@ -396,8 +410,23 @@ export const getMonthAvailability = createServerFn({ method: "GET" })
     );
     const blockedDates = (blocked ?? []).filter((b) => matchLoc(b.location_id)).map((b) => b.date);
     const overrideDates = (overrides ?? []).filter((o) => matchLoc(o.location_id)).map((o) => o.date);
-    return { activeDays, blockedDates, overrideDates };
+
+    // Expand rota-aware open dates across the month
+    const openDates: string[] = [];
+    const monthDays = new Date(Date.UTC(data.year, data.month, 0)).getUTCDate();
+    for (let d = 1; d <= monthDays; d++) {
+      const dt = new Date(Date.UTC(data.year, data.month - 1, d));
+      const iso = dt.toISOString().slice(0, 10);
+      const dow = dt.getUTCDay();
+      const applicable = (rules ?? []).filter(
+        (r) => r.day_of_week === dow && matchLoc(r.location_id) && ruleAppliesOnDate(r, iso, anchorIso),
+      );
+      if (applicable.length > 0) openDates.push(iso);
+    }
+
+    return { activeDays, blockedDates, overrideDates, openDates, rotaAnchor: anchorIso };
   });
+
 
 
 

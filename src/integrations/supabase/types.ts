@@ -810,36 +810,45 @@ export type Database = {
       availability_rules: {
         Row: {
           created_at: string
+          cycle_length: number
           day_of_week: number
           end_time: string
           id: string
           location_id: string | null
+          practitioner_id: string | null
           profile_id: string
           slot_interval: number
           start_time: string
           updated_at: string
+          weeks_mask: number
         }
         Insert: {
           created_at?: string
+          cycle_length?: number
           day_of_week: number
           end_time: string
           id?: string
           location_id?: string | null
+          practitioner_id?: string | null
           profile_id: string
           slot_interval?: number
           start_time: string
           updated_at?: string
+          weeks_mask?: number
         }
         Update: {
           created_at?: string
+          cycle_length?: number
           day_of_week?: number
           end_time?: string
           id?: string
           location_id?: string | null
+          practitioner_id?: string | null
           profile_id?: string
           slot_interval?: number
           start_time?: string
           updated_at?: string
+          weeks_mask?: number
         }
         Relationships: [
           {
@@ -847,6 +856,13 @@ export type Database = {
             columns: ["location_id"]
             isOneToOne: false
             referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "availability_rules_practitioner_id_fkey"
+            columns: ["practitioner_id"]
+            isOneToOne: false
+            referencedRelation: "practitioners"
             referencedColumns: ["id"]
           },
           {
@@ -4162,6 +4178,7 @@ export type Database = {
           require_medical_forms_before_appt: boolean
           require_phone: boolean
           role: Database["public"]["Enums"]["app_role"]
+          rota_anchor_date: string | null
           show_prices_on_booking: boolean
           slug: string | null
           sms_reminders_enabled: boolean
@@ -4275,6 +4292,7 @@ export type Database = {
           require_medical_forms_before_appt?: boolean
           require_phone?: boolean
           role?: Database["public"]["Enums"]["app_role"]
+          rota_anchor_date?: string | null
           show_prices_on_booking?: boolean
           slug?: string | null
           sms_reminders_enabled?: boolean
@@ -4388,6 +4406,7 @@ export type Database = {
           require_medical_forms_before_appt?: boolean
           require_phone?: boolean
           role?: Database["public"]["Enums"]["app_role"]
+          rota_anchor_date?: string | null
           show_prices_on_booking?: boolean
           slug?: string | null
           sms_reminders_enabled?: boolean
@@ -5306,6 +5325,7 @@ export type Database = {
           quiz_outro: string
         }[]
       }
+      get_rota_anchor: { Args: { p_profile_id: string }; Returns: string }
       has_accepted_current_terms: { Args: never; Returns: boolean }
       has_role: {
         Args: {

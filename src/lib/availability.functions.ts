@@ -33,7 +33,12 @@ type RuleInput = {
   end_time: string;
   slot_interval?: number;
   location_id?: string | null;
+  cycle_length?: number;
+  weeks_mask?: number;
+  practitioner_id?: string | null;
 };
+
+
 
 export const upsertAvailabilityRule = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -42,6 +47,9 @@ export const upsertAvailabilityRule = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const profileId = await getProfileId(supabase, userId);
     if (!profileId) throw new Error("Profile not found");
+    const cycle = data.cycle_length && [1, 2, 4].includes(data.cycle_length) ? data.cycle_length : 1;
+    const maxMask = (1 << cycle) - 1;
+    const mask = Math.max(1, Math.min(maxMask, data.weeks_mask ?? 1));
     const payload = {
       profile_id: profileId,
       day_of_week: data.day_of_week,
@@ -49,7 +57,11 @@ export const upsertAvailabilityRule = createServerFn({ method: "POST" })
       end_time: data.end_time,
       slot_interval: data.slot_interval ?? 30,
       location_id: data.location_id ?? null,
+      cycle_length: cycle,
+      weeks_mask: mask,
+      practitioner_id: data.practitioner_id ?? null,
     };
+
     if (data.id) {
       const { data: row, error } = await supabase
         .from("availability_rules")
@@ -370,3 +382,45 @@ export const deleteBlockedTime = createServerFn({ method: "POST" })
   });
 
 
+
+// ---------- Rota (multi-week cycle) settings ----------
+
+export const getRotaSettings = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const profileId = await getProfileId(context.supabase, context.userId);
+    if (!profileId) return { rota_anchor_date: null as string | null };
+    const { data } = await context.supabase
+      .from("profiles")
+      .select("rota_anchor_date")
+      .eq("id", profileId)
+      .maybeSingle();
+    return { rota_anchor_date: (data?.rota_anchor_date as string | null) ?? null };
+  });
+
+export const setRotaAnchor = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { date: string | null }) => d)
+  .handler(async ({ data, context }) => {
+    const profileId = await getProfileId(context.supabase, context.userId);
+    if (!profileId) throw new Error("Profile not found");
+    const { error } = await context.supabase
+      .from("profiles")
+      .update({ rota_anchor_date: data.date })
+      .eq("id", profileId);
+    if (error) throw error;
+    return { ok: true };
+  });
+
+export const listPractitioners = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const profileId = await getProfileId(context.supabase, context.userId);
+    if (!profileId) return [];
+    const { data } = await context.supabase
+      .from("practitioners")
+      .select("id, name")
+      .eq("profile_id", profileId)
+      .order("name");
+    return data ?? [];
+  });
