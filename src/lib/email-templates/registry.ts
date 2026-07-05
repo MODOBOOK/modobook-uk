@@ -30,4 +30,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'marketing-broadcast': marketingBroadcast,
   'patient-message': patientMessage,
   'admin-broadcast': adminBroadcast,
+  'staff-invite': staffInvite,
 }
