@@ -648,6 +648,16 @@ export const requestBooking = createServerFn({ method: "POST" })
         .eq("id", id);
     }
 
+    // No Stripe payment required: promote to the practitioner's normal status
+    // (usually "confirmed"). This UPDATE transition is what fires the new-booking
+    // notification trigger — so it only fires for real, non-abandoned bookings.
+    if (!payment) {
+      await supabaseAdmin
+        .from("appointments")
+        .update({ status: finalStatus } as never)
+        .eq("id", id);
+    }
+
     // Fire booking confirmation email now for non-Stripe bookings. Bookings
     // routed through Stripe are emailed by the webhook once payment succeeds
     // so patients don't get "confirmed" before they've paid.
