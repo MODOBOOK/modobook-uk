@@ -143,7 +143,11 @@ function MultiBookPage() {
     color: brand,
   };
 
-  const [locationId, setLocationId] = useState<string | null>(ctx.locations[0]?.id ?? null);
+  const initialLocationId =
+    (search.locationId && ctx.locations.some((l: Loc) => l.id === search.locationId))
+      ? search.locationId
+      : (ctx.locations[0]?.id ?? null);
+  const [locationId, setLocationId] = useState<string | null>(initialLocationId);
 
   const priceFor = (t: Treatment) => {
     if (locationId) {
