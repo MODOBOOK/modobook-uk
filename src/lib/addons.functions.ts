@@ -30,6 +30,7 @@ export type AddonLinkRow = {
   treatment_id: string | null;
   category_id: string | null;
   discount_percent: number | null;
+  discount_amount: number | null;
 };
 
 /* ============ Practitioner ============ */
