@@ -88,7 +88,7 @@ export const inviteStaff = createServerFn({ method: "POST" })
           inviteeName: data.name.trim().split(" ")[0] || "there",
           clinicName: prof?.clinic_name ?? branding.clinicName,
           role: roleLabel,
-          inviterName: inviter,
+          inviterName: undefined,
           acceptUrl: `${origin}/staff-accept/${token}`,
           logoUrl: branding.logoUrl,
           brandColor: branding.brandColor,
