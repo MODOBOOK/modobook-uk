@@ -111,6 +111,38 @@ function textToParagraphHtml(text: string) {
     .join("");
 }
 
+// Category descriptions can be long — clamp to 2 lines and show a Read more
+// toggle. Rendered inside an AccordionTrigger (which is itself a button), so
+// clicks must not bubble up and toggle the accordion.
+function CategoryDescription({ text, color }: { text: string; color: string }) {
+  const [expanded, setExpanded] = useState(false);
+  const isLong = text.length > 120;
+  if (!isLong) {
+    return <div className="mt-1 text-sm font-normal opacity-80">{text}</div>;
+  }
+  return (
+    <div className="mt-1">
+      <div
+        className={`text-sm font-normal opacity-80 ${expanded ? "" : "line-clamp-2"}`}
+      >
+        {text}
+      </div>
+      <button
+        type="button"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setExpanded((v) => !v);
+        }}
+        className="mt-1 text-xs font-semibold underline underline-offset-4 opacity-90"
+        style={{ color }}
+      >
+        {expanded ? "Show less" : "Read more"}
+      </button>
+    </div>
+  );
+}
+
 function WelcomeIntroBlock({
   heading,
   html,
