@@ -83,3 +83,45 @@ export const getConsentTemplate = createServerFn({ method: "GET" })
     if (error) throw error;
     return row;
   });
+
+/** Get treatments this consent template is currently attached to (for the current practitioner). */
+export const getConsentTemplateTreatmentIds = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: { template_id: string }) => i)
+  .handler(async ({ data, context }) => {
+    const { data: profile } = await context.supabase
+      .from("profiles").select("id").eq("user_id", context.userId).maybeSingle();
+    if (!profile) return [];
+    const { data: rows, error } = await context.supabase
+      .from("treatment_consents")
+      .select("treatment_id")
+      .eq("consent_template_id", data.template_id)
+      .eq("profile_id", profile.id);
+    if (error) throw error;
+    return (rows ?? []).map((r: any) => r.treatment_id as string);
+  });
+
+/** Replace the set of treatments this consent template is attached to (for the current practitioner). */
+export const setConsentTemplateTreatmentIds = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: { template_id: string; treatment_ids: string[] }) => i)
+  .handler(async ({ data, context }) => {
+    const { data: profile } = await context.supabase
+      .from("profiles").select("id").eq("user_id", context.userId).maybeSingle();
+    if (!profile) throw new Error("Profile not found");
+    await context.supabase
+      .from("treatment_consents")
+      .delete()
+      .eq("consent_template_id", data.template_id)
+      .eq("profile_id", profile.id);
+    if (data.treatment_ids.length) {
+      const rows = data.treatment_ids.map((tid) => ({
+        treatment_id: tid,
+        consent_template_id: data.template_id,
+        profile_id: profile.id,
+      }));
+      const { error } = await context.supabase.from("treatment_consents").insert(rows);
+      if (error) throw error;
+    }
+    return { ok: true };
+  });

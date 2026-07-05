@@ -7,6 +7,11 @@ import {
   saveConsentTemplate,
   deleteConsentTemplate,
 } from "@/lib/templates.functions";
+import {
+  getConsentTemplateTreatmentIds,
+  setConsentTemplateTreatmentIds,
+} from "@/lib/treatment-consents.functions";
+import { listMyTreatmentsBasic } from "@/lib/aftercare-templates.functions";
 import { amIAdmin } from "@/lib/admin.functions";
 
 import { Button } from "@/components/ui/button";
@@ -51,6 +56,9 @@ function ConsentFormsPage() {
   const save = useServerFn(saveConsentTemplate);
   const remove = useServerFn(deleteConsentTemplate);
   const checkAdmin = useServerFn(amIAdmin);
+  const listTreatments = useServerFn(listMyTreatmentsBasic);
+  const getTplTreatments = useServerFn(getConsentTemplateTreatmentIds);
+  const setTplTreatments = useServerFn(setConsentTemplateTreatmentIds);
 
   const [rows, setRows] = useState<Tpl[]>([]);
   const [loading, setLoading] = useState(true);
@@ -59,10 +67,25 @@ function ConsentFormsPage() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
   const [aiSystem, setAiSystem] = useState(false);
+  const [treatments, setTreatments] = useState<{ id: string; name: string }[]>([]);
+  const [treatmentIds, setTreatmentIds] = useState<string[]>([]);
 
+  async function openEditor(tpl: Tpl) {
+    setEditing(tpl);
+    if (tpl.id && !tpl.is_system) {
+      try {
+        const ids = await getTplTreatments({ data: { template_id: tpl.id } });
+        setTreatmentIds(ids as string[]);
+      } catch {
+        setTreatmentIds([]);
+      }
+    } else {
+      setTreatmentIds([]);
+    }
+  }
 
   function newBlank() {
-    setEditing({
+    openEditor({
       id: undefined as any,
       name: "New consent form",
       treatment_type: "",
@@ -92,6 +115,7 @@ function ConsentFormsPage() {
   useEffect(() => {
     refresh();
     checkAdmin().then((r) => setIsAdmin(r.admin)).catch(() => {});
+    listTreatments().then((t) => setTreatments(t as { id: string; name: string }[])).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -99,7 +123,7 @@ function ConsentFormsPage() {
   async function handleSave() {
     if (!editing) return;
     try {
-      await save({
+      const saved = await save({
         data: {
           id: editing.id,
           name: editing.name,
@@ -111,6 +135,11 @@ function ConsentFormsPage() {
           is_system: isAdmin ? !!editing.is_system : false,
         },
       });
+      const tplId = (saved as any)?.id ?? editing.id;
+      // Only attach to treatments for practitioner-owned templates
+      if (tplId && !(isAdmin && editing.is_system)) {
+        await setTplTreatments({ data: { template_id: tplId, treatment_ids: treatmentIds } });
+      }
       toast.success("Saved");
       setEditing(null);
       refresh();
@@ -217,8 +246,8 @@ function ConsentFormsPage() {
                 key={t.id}
                 t={t}
                 editable={isAdmin}
-                onPreview={() => setEditing(t)}
-                onEdit={isAdmin ? () => setEditing(t) : undefined}
+                onPreview={() => openEditor(t)}
+                onEdit={isAdmin ? () => openEditor(t) : undefined}
                 onClone={async () => {
                   await clone({ data: { template_id: t.id } });
                   toast.success("Cloned to your templates");
@@ -256,7 +285,7 @@ function ConsentFormsPage() {
                 key={t.id}
                 t={t}
                 editable
-                onEdit={() => setEditing(t)}
+                onEdit={() => openEditor(t)}
                 onDelete={async () => {
                   if (!confirm("Delete this consent template?")) return;
                   await remove({ data: { id: t.id } });
@@ -289,6 +318,37 @@ function ConsentFormsPage() {
               disabled={editing.is_system && !isAdmin}
               onChange={(v) => setEditing(v)}
             />
+          )}
+          {editing && !(editing.is_system && !isAdmin) && !(isAdmin && editing.is_system) && (
+            <div className="space-y-1.5 rounded-lg border p-3">
+              <Label className="text-sm font-semibold">Attach to treatments</Label>
+              <p className="text-xs text-muted-foreground">
+                Selected treatments will automatically use this consent form when patients book.
+              </p>
+              {treatments.length === 0 ? (
+                <p className="text-xs text-muted-foreground">No treatments yet.</p>
+              ) : (
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {treatments.map((tr) => {
+                    const checked = treatmentIds.includes(tr.id);
+                    return (
+                      <button
+                        key={tr.id}
+                        type="button"
+                        onClick={() =>
+                          setTreatmentIds((prev) =>
+                            prev.includes(tr.id) ? prev.filter((x) => x !== tr.id) : [...prev, tr.id],
+                          )
+                        }
+                        className={`rounded-full border px-2.5 py-1 text-xs transition ${checked ? "bg-foreground text-background border-foreground" : "bg-background hover:bg-muted"}`}
+                      >
+                        {tr.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           )}
           <DialogFooter className="gap-2">
             <Button variant="ghost" onClick={() => setEditing(null)}>
