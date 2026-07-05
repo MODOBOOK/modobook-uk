@@ -123,21 +123,25 @@ function ConsentFormsPage() {
   async function handleSave() {
     if (!editing) return;
     try {
-      const saved = await save({
-        data: {
-          id: editing.id,
-          name: editing.name,
-          treatment_type: editing.treatment_type,
-          body_markdown: editing.body_markdown ?? "",
-          requires_signature: editing.requires_signature,
-          sections: editing.sections ?? null,
-          summary: editing.summary ?? null,
-          is_system: isAdmin ? !!editing.is_system : false,
-        },
-      });
-      const tplId = (saved as any)?.id ?? editing.id;
-      // Attach to this practitioner's treatments (safe for both own and system templates —
-      // links are scoped per practitioner).
+      const readOnly = editing.is_system && !isAdmin;
+      let tplId = editing.id;
+      if (!readOnly) {
+        const saved = await save({
+          data: {
+            id: editing.id,
+            name: editing.name,
+            treatment_type: editing.treatment_type,
+            body_markdown: editing.body_markdown ?? "",
+            requires_signature: editing.requires_signature,
+            sections: editing.sections ?? null,
+            summary: editing.summary ?? null,
+            is_system: isAdmin ? !!editing.is_system : false,
+          },
+        });
+        tplId = (saved as any)?.id ?? editing.id;
+      }
+      // Always update this practitioner's treatment attachments (works for
+      // system templates too — links are scoped per practitioner).
       if (tplId) {
         await setTplTreatments({ data: { template_id: tplId, treatment_ids: treatmentIds } });
       }
