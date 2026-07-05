@@ -47,6 +47,9 @@ export const upsertAvailabilityRule = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const profileId = await getProfileId(supabase, userId);
     if (!profileId) throw new Error("Profile not found");
+    const cycle = data.cycle_length && [1, 2, 4].includes(data.cycle_length) ? data.cycle_length : 1;
+    const maxMask = (1 << cycle) - 1;
+    const mask = Math.max(1, Math.min(maxMask, data.weeks_mask ?? 1));
     const payload = {
       profile_id: profileId,
       day_of_week: data.day_of_week,
@@ -54,7 +57,11 @@ export const upsertAvailabilityRule = createServerFn({ method: "POST" })
       end_time: data.end_time,
       slot_interval: data.slot_interval ?? 30,
       location_id: data.location_id ?? null,
+      cycle_length: cycle,
+      weeks_mask: mask,
+      practitioner_id: data.practitioner_id ?? null,
     };
+
     if (data.id) {
       const { data: row, error } = await supabase
         .from("availability_rules")
