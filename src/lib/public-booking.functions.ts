@@ -457,6 +457,7 @@ export const getPublicPaymentOptions = createServerFn({ method: "GET" })
       klarnaEnabled: !!prof.payment_klarna_enabled,
       clearpayEnabled: !!prof.payment_clearpay_enabled,
       depositEnabled: !!prof.payment_deposit_enabled,
+      cashEnabled: prof.allow_pay_in_clinic !== false,
       depositCents: Math.max(0, Number(prof.deposit_amount_cents ?? 0)),
       passFees: !!prof.payment_pass_fees_to_customer,
       surcharges: {
