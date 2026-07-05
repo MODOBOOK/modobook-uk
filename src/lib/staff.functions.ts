@@ -249,3 +249,26 @@ export const getMyStaffMembership = createServerFn({ method: "GET" })
       dataScope: data.data_scope as StaffScope,
     };
   });
+
+// List every clinic the current signed-in user has been invited into as staff.
+// Self-read is allowed by the "Staff can read their own row" policy on staff_members.
+export const listMyStaffMemberships = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data, error } = await context.supabase
+      .from("staff_members")
+      .select("id, profile_id, role, data_scope, status, accepted_at, profiles(clinic_name, first_name, last_name, avatar_url)")
+      .eq("user_id", context.userId)
+      .order("accepted_at", { ascending: false });
+    if (error) throw error;
+    return (data ?? []).map((r: any) => ({
+      id: r.id as string,
+      profileId: r.profile_id as string,
+      role: r.role as StaffRole,
+      dataScope: r.data_scope as StaffScope,
+      status: r.status as StaffStatus,
+      acceptedAt: r.accepted_at as string | null,
+      clinicName: r.profiles?.clinic_name ?? [r.profiles?.first_name, r.profiles?.last_name].filter(Boolean).join(" ") ?? "Clinic",
+      logoUrl: r.profiles?.avatar_url ?? null,
+    }));
+  });

@@ -48,31 +48,40 @@ function AcceptInvitePage() {
     try {
       await accept({ data: { token } });
       toast.success("Invite accepted!");
-      navigate({ to: "/dashboard" });
+      navigate({ to: "/dashboard/invites" });
     } catch (e: any) { toast.error(e?.message ?? "Failed"); }
     finally { setWorking(false); }
   }
-  async function signUpAndAccept() {
+  async function createAccountAndAccept() {
     if (state.status !== "ok") return;
     if (password.length < 8) { toast.error("Password must be at least 8 characters"); return; }
     if (password !== confirm) { toast.error("Passwords don't match"); return; }
     setWorking(true);
     try {
-      // Try sign up first
       const { error: signUpErr } = await supabase.auth.signUp({
         email: state.email, password,
         options: { emailRedirectTo: `${window.location.origin}/staff-accept/${token}` },
       });
-      if (signUpErr && !/already/i.test(signUpErr.message)) throw signUpErr;
-      // Sign in (works whether newly created or existing)
+      if (signUpErr) {
+        // If the address already has an account, do NOT silently sign them in —
+        // that has caused confusion (users think they made a fresh account and
+        // ended up back in their existing one). Send them through /auth instead.
+        if (/already|registered|exists/i.test(signUpErr.message)) {
+          toast.info("An account already exists for this email — sign in to link the invite.");
+          navigate({ to: "/auth", search: { next: `/staff-accept/${token}` } as any });
+          return;
+        }
+        throw signUpErr;
+      }
       const { error: signInErr } = await supabase.auth.signInWithPassword({ email: state.email, password });
       if (signInErr) throw signInErr;
       await accept({ data: { token } });
       toast.success(`Welcome to ${state.clinicName}!`);
-      navigate({ to: "/dashboard" });
+      navigate({ to: "/dashboard/invites" });
     } catch (e: any) { toast.error(e?.message ?? "Failed"); }
     finally { setWorking(false); }
   }
+
 
   if (state.status === "loading") {
     return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading invite…</div>;
@@ -133,26 +142,35 @@ function AcceptInvitePage() {
             </div>
           ) : (
             <>
+              <div className="rounded-md border bg-muted/40 p-3 text-xs text-muted-foreground">
+                Already have a MODO account with this email?{" "}
+                <button
+                  type="button"
+                  className="underline font-medium text-foreground"
+                  onClick={() => navigate({ to: "/auth", search: { next: `/staff-accept/${token}` } as any })}
+                >
+                  Sign in instead
+                </button>{" "}
+                to link this invite to your existing account.
+              </div>
               <div>
                 <Label>Email</Label>
                 <Input value={state.email} disabled />
               </div>
               <div>
-                <Label>Set a password</Label>
+                <Label>Set a password (new account)</Label>
                 <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" />
               </div>
               <div>
                 <Label>Confirm password</Label>
                 <Input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} autoComplete="new-password" />
               </div>
-              <Button className="w-full" onClick={signUpAndAccept} disabled={working}>
-                {working ? "Creating account…" : "Accept & continue"}
+              <Button className="w-full" onClick={createAccountAndAccept} disabled={working}>
+                {working ? "Creating account…" : "Create account & accept"}
               </Button>
-              <p className="text-xs text-muted-foreground text-center">
-                Already have a MODO account? Enter your existing password to sign in.
-              </p>
             </>
           )}
+
         </CardContent>
       </Card>
     </div>

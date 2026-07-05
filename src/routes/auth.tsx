@@ -18,6 +18,7 @@ export const Route = createFileRoute("/auth")({
   ssr: false,
   validateSearch: (s: Record<string, unknown>) => ({
     as: s.as === "prescriber" ? "prescriber" : undefined,
+    next: typeof s.next === "string" && s.next.startsWith("/") ? s.next : undefined,
   }),
   head: () => ({
     meta: [
@@ -31,8 +32,12 @@ export const Route = createFileRoute("/auth")({
 function AuthPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const { as } = Route.useSearch();
+  const { as, next } = Route.useSearch();
   const isPrescriberFlow = as === "prescriber";
+  const postAuthTo = () =>
+    next
+      ? ({ to: next } as any)
+      : { to: isPrescriberFlow ? "/hub/verification" : "/dashboard" };
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [forgotOpen, setForgotOpen] = useState(false);
@@ -66,7 +71,7 @@ function AuthPage() {
     if (result.redirected) {
       return;
     }
-    router.navigate({ to: isPrescriberFlow ? "/hub/verification" : "/dashboard" });
+    router.navigate(postAuthTo());
   }
 
   async function handleSignIn(e: React.FormEvent) {
@@ -78,7 +83,7 @@ function AuthPage() {
       toast.error(error.message);
       return;
     }
-    router.navigate({ to: isPrescriberFlow ? "/hub/verification" : "/dashboard" });
+    router.navigate(postAuthTo());
   }
 
   async function handleSignUp(e: React.FormEvent) {

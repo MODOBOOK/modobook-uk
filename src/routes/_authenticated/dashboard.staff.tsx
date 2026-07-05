@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Trash2, Plus, Mail, RefreshCw, ShieldCheck, Stethoscope, UserRound, Eye } from "lucide-react";
+import { Trash2, Plus, Mail, RefreshCw, ShieldCheck, Stethoscope, UserRound, Eye, AlertTriangle } from "lucide-react";
 import { listStaff, inviteStaff, updateStaff, revokeStaff, resendStaffInvite, type StaffRole, type StaffScope, type StaffStatus } from "@/lib/staff.functions";
 import { listPractitioners } from "@/lib/availability.functions";
 
@@ -43,6 +44,8 @@ function StaffPage() {
 
   const [staff, setStaff] = useState<Staff[]>([]);
   const [practitioners, setPractitioners] = useState<Practitioner[]>([]);
+  const [ownerEmail, setOwnerEmail] = useState<string | null>(null);
+  useEffect(() => { supabase.auth.getUser().then(({ data }) => setOwnerEmail(data.user?.email ?? null)); }, []);
   const [dlgOpen, setDlgOpen] = useState(false);
   const [editing, setEditing] = useState<Staff | null>(null);
   const [saving, setSaving] = useState(false);
@@ -200,6 +203,16 @@ function StaffPage() {
                 disabled={!!editing}
                 placeholder="sam@example.com"
               />
+              {!editing && ownerEmail && form.email.trim().toLowerCase() === ownerEmail.toLowerCase() && (
+                <div className="mt-2 flex gap-2 items-start rounded-md border border-destructive/40 bg-destructive/5 p-2 text-xs text-destructive">
+                  <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+                  <span>
+                    That's the email you use to sign in as the clinic owner. Inviting your own
+                    login as staff won't create a second account — use a different address (a
+                    "you+viewer@…" alias works with Gmail/Outlook).
+                  </span>
+                </div>
+              )}
             </div>
             <div>
               <Label>Role</Label>
@@ -248,7 +261,7 @@ function StaffPage() {
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setDlgOpen(false)}>Cancel</Button>
-            <Button onClick={save} disabled={saving || !form.name || (!editing && !form.email)}>
+            <Button onClick={save} disabled={saving || !form.name || (!editing && !form.email) || (!editing && !!ownerEmail && form.email.trim().toLowerCase() === ownerEmail.toLowerCase())}>
               <Mail className="h-4 w-4 mr-1" />
               {saving ? "Saving…" : editing ? "Save changes" : "Send invite"}
             </Button>
