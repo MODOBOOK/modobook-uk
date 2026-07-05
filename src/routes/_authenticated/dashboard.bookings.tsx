@@ -36,6 +36,7 @@ import {
   deleteBlockedTime,
   addAvailabilityOverride,
   listAvailabilityRules,
+  listAvailabilityOverrides,
 } from "@/lib/availability.functions";
 import {
   createPaymentLink,
@@ -97,6 +98,7 @@ const HOURS = Array.from({ length: END_HOUR - START_HOUR + 1 }, (_, i) => START_
 
 type ViewMode = "day" | "3day" | "week" | "month";
 type AvailRule = { day_of_week: number; start_time: string; end_time: string };
+type Override = { date: string; start_time: string; end_time: string; location_id: string | null };
 
 function startOfWeek(d: Date) {
   const c = new Date(d);
@@ -134,10 +136,12 @@ function BookingsPage() {
   const list = useServerFn(listMyAppointments);
   const listBlocks = useServerFn(listBlockedTimes);
   const listRules = useServerFn(listAvailabilityRules);
+  const listOverrides = useServerFn(listAvailabilityOverrides);
   const listLocations = useServerFn(listMyLocations);
   const [appts, setAppts] = useState<Appt[]>([]);
   const [blocks, setBlocks] = useState<BlockedTime[]>([]);
   const [rules, setRules] = useState<AvailRule[]>([]);
+  const [overrides, setOverrides] = useState<Override[]>([]);
   const [locations, setLocations] = useState<{ id: string; name: string }[]>([]);
   const [locationFilter, setLocationFilter] = useState<string>("all");
   const [loading, setLoading] = useState(true);
@@ -154,10 +158,11 @@ function BookingsPage() {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   async function refresh() {
-    const [a, b, r, l] = await Promise.all([list(), listBlocks(), listRules(), listLocations()]);
+    const [a, b, r, o, l] = await Promise.all([list(), listBlocks(), listRules(), listOverrides(), listLocations()]);
     setAppts(a as Appt[]);
     setBlocks(b as BlockedTime[]);
     setRules((r as AvailRule[]) ?? []);
+    setOverrides((o as Override[]) ?? []);
     setLocations(((l as any[]) ?? []).map((x) => ({ id: x.id, name: x.name })));
   }
 
@@ -230,12 +235,15 @@ function BookingsPage() {
   function unavailableSegments(d: Date): { top: number; height: number }[] {
     const dow = d.getDay();
     const dayRules = rulesByDow.get(dow) ?? [];
-    if (dayRules.length === 0) {
+    const iso = ymd(d);
+    const dayOverrides = overrides.filter((o) => o.date === iso);
+    const windows: [number, number][] = [
+      ...dayRules.map((r) => [parseTime(r.start_time), parseTime(r.end_time)] as [number, number]),
+      ...dayOverrides.map((o) => [parseTime(o.start_time), parseTime(o.end_time)] as [number, number]),
+    ].sort((a, b) => a[0] - b[0]);
+    if (windows.length === 0) {
       return [{ top: 0, height: (END_HOUR - START_HOUR + 1) * HOUR_HEIGHT }];
     }
-    const windows = dayRules
-      .map((r) => [parseTime(r.start_time), parseTime(r.end_time)] as [number, number])
-      .sort((a, b) => a[0] - b[0]);
     // merge overlapping
     const merged: [number, number][] = [];
     for (const w of windows) {
@@ -575,6 +583,7 @@ function BookingsPage() {
         onOpenChange={setShowUnblock}
         blocks={blocks}
         onRemoved={(id) => setBlocks((p) => p.filter((b) => b.id !== id))}
+        onOpened={refresh}
       />
     </div>
   );
@@ -846,10 +855,11 @@ function BlockTimeDialog({
 }
 
 function UnblockDialog({
-  open, onOpenChange, blocks, onRemoved,
+  open, onOpenChange, blocks, onRemoved, onOpened,
 }: {
   open: boolean; onOpenChange: (v: boolean) => void;
   blocks: BlockedTime[]; onRemoved: (id: string) => void;
+  onOpened?: () => void | Promise<void>;
 }) {
   const del = useServerFn(deleteBlockedTime);
   const addOverride = useServerFn(addAvailabilityOverride);
@@ -879,6 +889,7 @@ function UnblockDialog({
         await addOverride({ data: { date, start_time: start, end_time: end, slot_interval: interval } });
       }
       toast.success(`Opened ${dates.length} day${dates.length === 1 ? "" : "s"} · ${start}–${end}`);
+      await onOpened?.();
       onOpenChange(false);
     } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
   }
