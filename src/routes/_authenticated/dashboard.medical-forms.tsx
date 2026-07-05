@@ -528,6 +528,11 @@ function FormEditor({ formId, onClose, cats }: { formId: string; onClose: () => 
         <Button variant="link" size="sm" onClick={() => setPreviewOpen(true)}>Preview</Button>
       </div>
       <PreviewDialog open={previewOpen} onOpenChange={setPreviewOpen} schema={schema} name={name} />
+      {isSystem ? (
+        <div className="rounded-md border bg-muted/20 p-4 text-xs text-muted-foreground">
+          System forms cannot be edited. Click <span className="font-medium">Preview</span> to see the questions patients will answer, or use the library on the previous screen to copy this into your own editable form.
+        </div>
+      ) : (
 
       <div className="space-y-4">
         {schema.steps.map((step, idx) => (
