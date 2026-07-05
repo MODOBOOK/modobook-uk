@@ -2154,7 +2154,7 @@ function CategoryTree({
                     )}
                   </div>
                   {node.description && (
-                    <div className="mt-1 text-sm font-normal opacity-80">{node.description}</div>
+                    <CategoryDescription text={node.description} color={isSub ? catBg : catText} />
                   )}
                 </div>
               </AccordionTrigger>
