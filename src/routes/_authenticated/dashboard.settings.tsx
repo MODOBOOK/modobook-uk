@@ -52,6 +52,7 @@ function SettingsPage() {
     stripe_fee_bnpl_fixed_cents: Number(profile.stripe_fee_bnpl_fixed_cents ?? 20),
     require_deposit_to_confirm: !!profile.require_deposit_to_confirm,
     allow_pay_in_clinic: profile.allow_pay_in_clinic !== false,
+    cash_only_balance: !!(profile as { cash_only_balance?: boolean }).cash_only_balance,
     show_prices_on_booking: profile.show_prices_on_booking !== false,
     enforce_cancellation_fee: !!profile.enforce_cancellation_fee,
     // patient rules
