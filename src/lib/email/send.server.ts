@@ -50,14 +50,24 @@ export async function enqueueAppEmail(
   // include the patient/clinic/appointment info.
   const baseData = { ...(input.templateData || {}) } as Record<string, unknown>
   const profileId = baseData.profileId as string | undefined
+  // Auto-resolve Reply-To from the practitioner's profile email so patient
+  // replies land in the practitioner's inbox instead of a no-reply address.
+  let resolvedReplyTo = input.replyTo
   if (profileId) {
     try {
-      const { data: cust } = await supabase
-        .from('email_customizations')
-        .select('subject_override, intro_override, closing_override')
-        .eq('profile_id', profileId)
-        .eq('template_key', input.templateName as string)
-        .maybeSingle()
+      const [{ data: cust }, { data: prof }] = await Promise.all([
+        supabase
+          .from('email_customizations')
+          .select('subject_override, intro_override, closing_override')
+          .eq('profile_id', profileId)
+          .eq('template_key', input.templateName as string)
+          .maybeSingle(),
+        supabase
+          .from('profiles')
+          .select('email')
+          .eq('id', profileId)
+          .maybeSingle(),
+      ])
       if (cust) {
         const { interpolateOverride } = await import('@/lib/email-templates/defaults')
         const vars: Record<string, string | undefined | null> = {
@@ -72,8 +82,10 @@ export async function enqueueAppEmail(
         if (cust.intro_override) baseData.introOverride = interpolateOverride(cust.intro_override, vars)
         if (cust.closing_override) baseData.closingOverride = interpolateOverride(cust.closing_override, vars)
       }
+      const profEmail = (prof as { email?: string | null } | null)?.email?.trim()
+      if (!resolvedReplyTo && profEmail) resolvedReplyTo = profEmail
     } catch (e) {
-      console.error('[email] failed to load customization', e)
+      console.error('[email] failed to load customization/profile email', e)
     }
   }
 
