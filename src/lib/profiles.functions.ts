@@ -252,7 +252,7 @@ export const updateProfile = createServerFn({ method: "POST" })
       "stripe_fee_pass_to_patient","stripe_fee_card_percent","stripe_fee_card_fixed_cents",
       "stripe_fee_bnpl_percent","stripe_fee_bnpl_fixed_cents",
       "payment_card_full_enabled","payment_deposit_enabled","require_deposit_to_confirm",
-      "allow_pay_in_clinic","show_prices_on_booking","enforce_cancellation_fee",
+      "allow_pay_in_clinic","cash_only_balance","show_prices_on_booking","enforce_cancellation_fee",
       "require_account_to_book","require_phone","require_dob","require_address",
       "require_medical_forms_before_appt","allow_patient_reschedule","allow_patient_cancel",
       "patient_reschedule_max","patient_reschedule_cutoff_hours","patient_cancel_cutoff_hours","late_cancel_mode",
