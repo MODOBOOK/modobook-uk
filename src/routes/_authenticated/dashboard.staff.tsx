@@ -203,6 +203,16 @@ function StaffPage() {
                 disabled={!!editing}
                 placeholder="sam@example.com"
               />
+              {!editing && ownerEmail && form.email.trim().toLowerCase() === ownerEmail.toLowerCase() && (
+                <div className="mt-2 flex gap-2 items-start rounded-md border border-destructive/40 bg-destructive/5 p-2 text-xs text-destructive">
+                  <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+                  <span>
+                    That's the email you use to sign in as the clinic owner. Inviting your own
+                    login as staff won't create a second account — use a different address (a
+                    "you+viewer@…" alias works with Gmail/Outlook).
+                  </span>
+                </div>
+              )}
             </div>
             <div>
               <Label>Role</Label>
