@@ -413,11 +413,10 @@ function AssignPanel({
               <label key={c.id} className="flex items-center gap-3 p-2">
                 <input type="checkbox" className="h-4 w-4" checked={ticked} onChange={() => toggleCat(c.id)} />
                 <span className="flex-1 text-sm">{c.parent_id ? "↳ " : ""}{c.name}</span>
-                {ticked && (
-                  <DiscountEditor
-                    value={val}
-                    onChange={(kind, v) => setDisc(cats, setCats, c.id, kind, v)}
-                  />
+                {ticked && renderEditor(
+                  val,
+                  (k) => setKindFor(cats, setCats, c.id, k),
+                  (v) => setValueFor(cats, setCats, c.id, v),
                 )}
               </label>
             );
