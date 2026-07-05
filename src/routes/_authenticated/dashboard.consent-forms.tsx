@@ -72,7 +72,7 @@ function ConsentFormsPage() {
 
   async function openEditor(tpl: Tpl) {
     setEditing(tpl);
-    if (tpl.id && !tpl.is_system) {
+    if (tpl.id) {
       try {
         const ids = await getTplTreatments({ data: { template_id: tpl.id } });
         setTreatmentIds(ids as string[]);
@@ -123,21 +123,26 @@ function ConsentFormsPage() {
   async function handleSave() {
     if (!editing) return;
     try {
-      const saved = await save({
-        data: {
-          id: editing.id,
-          name: editing.name,
-          treatment_type: editing.treatment_type,
-          body_markdown: editing.body_markdown ?? "",
-          requires_signature: editing.requires_signature,
-          sections: editing.sections ?? null,
-          summary: editing.summary ?? null,
-          is_system: isAdmin ? !!editing.is_system : false,
-        },
-      });
-      const tplId = (saved as any)?.id ?? editing.id;
-      // Only attach to treatments for practitioner-owned templates
-      if (tplId && !(isAdmin && editing.is_system)) {
+      const readOnly = editing.is_system && !isAdmin;
+      let tplId = editing.id;
+      if (!readOnly) {
+        const saved = await save({
+          data: {
+            id: editing.id,
+            name: editing.name,
+            treatment_type: editing.treatment_type,
+            body_markdown: editing.body_markdown ?? "",
+            requires_signature: editing.requires_signature,
+            sections: editing.sections ?? null,
+            summary: editing.summary ?? null,
+            is_system: isAdmin ? !!editing.is_system : false,
+          },
+        });
+        tplId = (saved as any)?.id ?? editing.id;
+      }
+      // Always update this practitioner's treatment attachments (works for
+      // system templates too — links are scoped per practitioner).
+      if (tplId) {
         await setTplTreatments({ data: { template_id: tplId, treatment_ids: treatmentIds } });
       }
       toast.success("Saved");
@@ -319,7 +324,7 @@ function ConsentFormsPage() {
               onChange={(v) => setEditing(v)}
             />
           )}
-          {editing && !(editing.is_system && !isAdmin) && !(isAdmin && editing.is_system) && (
+          {editing && editing.id && (
             <div className="space-y-1.5 rounded-lg border p-3">
               <Label className="text-sm font-semibold">Attach to treatments</Label>
               <p className="text-xs text-muted-foreground">
@@ -354,9 +359,13 @@ function ConsentFormsPage() {
             <Button variant="ghost" onClick={() => setEditing(null)}>
               Close
             </Button>
-            {editing && (!editing.is_system || isAdmin) && (
+            {editing && (
               <Button onClick={handleSave}>
-                {editing.is_system ? "Save system template" : "Save consent form"}
+                {editing.is_system && !isAdmin
+                  ? "Save attachments"
+                  : editing.is_system
+                    ? "Save system template"
+                    : "Save consent form"}
               </Button>
             )}
           </DialogFooter>

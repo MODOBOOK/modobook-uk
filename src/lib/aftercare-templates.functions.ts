@@ -161,10 +161,18 @@ export const getAftercareTemplateTreatmentIds = createServerFn({ method: "GET" }
   .middleware([requireSupabaseAuth])
   .inputValidator((i: { template_id: string }) => i)
   .handler(async ({ data, context }) => {
+    const { data: profile } = await context.supabase
+      .from("profiles").select("id").eq("user_id", context.userId).maybeSingle();
+    if (!profile) return [];
+    const { data: myTreatments } = await context.supabase
+      .from("treatments").select("id").eq("profile_id", profile.id);
+    const myIds = (myTreatments ?? []).map((t: any) => t.id as string);
+    if (!myIds.length) return [];
     const { data: rows, error } = await context.supabase
       .from("treatment_aftercare_templates")
       .select("treatment_id")
-      .eq("template_id", data.template_id);
+      .eq("template_id", data.template_id)
+      .in("treatment_id", myIds);
     if (error) throw error;
     return (rows ?? []).map((r: any) => r.treatment_id as string);
   });
@@ -173,14 +181,26 @@ export const setAftercareTemplateTreatmentIds = createServerFn({ method: "POST" 
   .middleware([requireSupabaseAuth])
   .inputValidator((i: { template_id: string; treatment_ids: string[] }) => i)
   .handler(async ({ data, context }) => {
-    await context.supabase
-      .from("treatment_aftercare_templates")
-      .delete()
-      .eq("template_id", data.template_id);
-    if (data.treatment_ids.length) {
+    // Scope both delete and insert to the current practitioner's treatments so
+    // attaching a system template does not clobber other practitioners' links.
+    const { data: profile } = await context.supabase
+      .from("profiles").select("id").eq("user_id", context.userId).maybeSingle();
+    if (!profile) throw new Error("Profile not found");
+    const { data: myTreatments } = await context.supabase
+      .from("treatments").select("id").eq("profile_id", profile.id);
+    const myIds = (myTreatments ?? []).map((t: any) => t.id as string);
+    if (myIds.length) {
+      await context.supabase
+        .from("treatment_aftercare_templates")
+        .delete()
+        .eq("template_id", data.template_id)
+        .in("treatment_id", myIds);
+    }
+    const allowed = data.treatment_ids.filter((tid) => myIds.includes(tid));
+    if (allowed.length) {
       const { error } = await context.supabase
         .from("treatment_aftercare_templates")
-        .insert(data.treatment_ids.map((tid) => ({ treatment_id: tid, template_id: data.template_id })));
+        .insert(allowed.map((tid) => ({ treatment_id: tid, template_id: data.template_id })));
       if (error) throw error;
     }
     return { ok: true };

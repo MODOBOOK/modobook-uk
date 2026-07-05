@@ -179,8 +179,8 @@ function AftercarePage() {
                           {t.summary && <div className="truncate text-xs text-muted-foreground">{t.summary}</div>}
                         </div>
                         <div className="flex gap-1 shrink-0">
-                          <Button size="sm" variant="outline" onClick={() => openEditor({ ...t, id: "", name: t.name })}>
-                            Preview
+                          <Button size="sm" variant="outline" onClick={() => openEditor(t)}>
+                            Attach
                           </Button>
                           <Button
                             size="sm"
@@ -190,7 +190,7 @@ function AftercarePage() {
                               toast.success("Added to your templates");
                             }}
                           >
-                            <Copy className="mr-1 h-3.5 w-3.5" /> Use
+                            <Copy className="mr-1 h-3.5 w-3.5" /> Copy & edit
                           </Button>
                         </div>
                       </div>
@@ -206,16 +206,28 @@ function AftercarePage() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto flex flex-col">
           <DialogHeader>
-            <DialogTitle>{editing?.id ? "Edit template" : "New aftercare template"}</DialogTitle>
+            <DialogTitle>
+              {editing?.is_system
+                ? "Attach to treatments"
+                : editing?.id
+                  ? "Edit template"
+                  : "New aftercare template"}
+            </DialogTitle>
           </DialogHeader>
           {editing && (
             <div className="space-y-3">
+              {editing.is_system && (
+                <p className="rounded-md border bg-muted/40 p-2 text-xs text-muted-foreground">
+                  This is a system template — you can attach it to your treatments but the content is read-only. Use <span className="font-medium">Copy &amp; edit</span> in the library to make your own version.
+                </p>
+              )}
               <div className="space-y-1.5">
                 <Label>Name</Label>
                 <Input
                   value={editing.name}
                   onChange={(e) => setEditing({ ...editing, name: e.target.value })}
                   placeholder="e.g. Lip filler aftercare"
+                  disabled={!!editing.is_system}
                 />
               </div>
               <div className="space-y-1.5">
@@ -225,6 +237,7 @@ function AftercarePage() {
                   value={editing.body_html}
                   onChange={(e) => setEditing({ ...editing, body_html: e.target.value })}
                   placeholder="Write the aftercare instructions sent to the patient."
+                  disabled={!!editing.is_system}
                 />
               </div>
               <div className="space-y-1.5 max-w-[200px]">
@@ -236,21 +249,24 @@ function AftercarePage() {
                   onChange={(e) =>
                     setEditing({ ...editing, delay_hours: Math.max(0, Number(e.target.value) || 0) })
                   }
+                  disabled={!!editing.is_system}
                 />
               </div>
 
-              <label className="flex items-start gap-3 rounded-lg border p-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  className="mt-1 h-4 w-4"
-                  checked={!!editing.show_on_public}
-                  onChange={(e) => setEditing({ ...editing, show_on_public: e.target.checked })}
-                />
-                <span className="text-sm">
-                  <span className="font-semibold">Show on booking page (Pre + Post Care)</span>
-                  <span className="block text-xs text-muted-foreground">Patients can read this from the “Care Guide” button on your booking page before they book.</span>
-                </span>
-              </label>
+              {!editing.is_system && (
+                <label className="flex items-start gap-3 rounded-lg border p-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="mt-1 h-4 w-4"
+                    checked={!!editing.show_on_public}
+                    onChange={(e) => setEditing({ ...editing, show_on_public: e.target.checked })}
+                  />
+                  <span className="text-sm">
+                    <span className="font-semibold">Show on booking page (Pre + Post Care)</span>
+                    <span className="block text-xs text-muted-foreground">Patients can read this from the "Care Guide" button on your booking page before they book.</span>
+                  </span>
+                </label>
+              )}
 
               <div className="space-y-1.5 rounded-lg border p-3">
                 <Label className="text-sm font-semibold">Auto-attach to treatments</Label>
@@ -289,16 +305,19 @@ function AftercarePage() {
               disabled={!editing?.name.trim()}
               onClick={async () => {
                 if (!editing) return;
-                const saved = await save({
-                  data: {
-                    id: editing.id || undefined,
-                    name: editing.name.trim(),
-                    body_html: editing.body_html,
-                    delay_hours: editing.delay_hours,
-                    show_on_public: !!editing.show_on_public,
-                  },
-                });
-                const tplId = (saved as any)?.id ?? editing.id;
+                let tplId: string | undefined = editing.id || undefined;
+                if (!editing.is_system) {
+                  const saved = await save({
+                    data: {
+                      id: editing.id || undefined,
+                      name: editing.name.trim(),
+                      body_html: editing.body_html,
+                      delay_hours: editing.delay_hours,
+                      show_on_public: !!editing.show_on_public,
+                    },
+                  });
+                  tplId = (saved as any)?.id ?? editing.id;
+                }
                 if (tplId) {
                   await setTplTreatments({ data: { template_id: tplId, treatment_ids: treatmentIds } });
                 }
@@ -308,7 +327,7 @@ function AftercarePage() {
                 toast.success("Saved");
               }}
             >
-              Save
+              {editing?.is_system ? "Save attachments" : "Save"}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -336,6 +336,7 @@ function FormEditor({ formId, onClose, cats }: { formId: string; onClose: () => 
   const [schema, setSchema] = useState<FormSchema>(defaultSchema());
   const [treatments, setTreatments] = useState<{ id: string; name: string }[]>([]);
   const [selectedTreatments, setSelectedTreatments] = useState<string[]>([]);
+  const [isSystem, setIsSystem] = useState(false);
   const [saving, setSaving] = useState(false);
   const [pickerStep, setPickerStep] = useState<string | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -343,16 +344,21 @@ function FormEditor({ formId, onClose, cats }: { formId: string; onClose: () => 
   useEffect(() => {
     (async () => {
       const tr: any = await fetchTreatments();
-      setTreatments(tr ?? []);
+      const trs = (tr ?? []) as { id: string; name: string }[];
+      setTreatments(trs);
       if (formId) {
         const row: any = await fetchOne({ data: { id: formId } });
         setName(row.name);
         setDescription(row.description ?? "");
         setCategoryId(row.category_id ?? null);
         setValidity(row.validity ?? "always_required");
+        setIsSystem(!!row.is_system);
         const sc = row.schema && typeof row.schema === "object" && Array.isArray(row.schema.steps) ? row.schema : defaultSchema();
         setSchema(sc);
-        const linked = (row.treatment_medical_forms ?? []).map((x: any) => x.treatment_id);
+        const myIds = new Set(trs.map((t) => t.id));
+        const linked = (row.treatment_medical_forms ?? [])
+          .map((x: any) => x.treatment_id as string)
+          .filter((id: string) => myIds.has(id));
         setSelectedTreatments(linked);
       }
     })();
@@ -463,18 +469,24 @@ function FormEditor({ formId, onClose, cats }: { formId: string; onClose: () => 
     <div className="mx-auto max-w-3xl space-y-4 pb-24">
       <header className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3">
         <Button size="icon" variant="ghost" onClick={onClose}><X className="h-5 w-5" /></Button>
-        <h1 className="truncate text-xl font-bold">{formId ? "Edit Form" : "Add Form"}</h1>
+        <h1 className="truncate text-xl font-bold">{isSystem ? "Attach system form" : formId ? "Edit Form" : "Add Form"}</h1>
         <Button onClick={handleSave} disabled={saving}>
           {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}Save
         </Button>
       </header>
 
+      {isSystem && (
+        <div className="rounded-md border bg-muted/40 p-3 text-xs text-muted-foreground">
+          This is a system form — the content is read-only. You can still attach it to your treatments below.
+        </div>
+      )}
+
       <Card className="space-y-3 p-4">
         <Field label="Name">
-          <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Name of the template" />
+          <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Name of the template" disabled={isSystem} />
         </Field>
         <Field label="Validity">
-          <Select value={validity} onValueChange={setValidity}>
+          <Select value={validity} onValueChange={setValidity} disabled={isSystem}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="always_required">Always Required</SelectItem>
@@ -486,7 +498,7 @@ function FormEditor({ formId, onClose, cats }: { formId: string; onClose: () => 
           </Select>
         </Field>
         <Field label="Add to a category">
-          <Select value={categoryId ?? "none"} onValueChange={(v) => setCategoryId(v === "none" ? null : v)}>
+          <Select value={categoryId ?? "none"} onValueChange={(v) => setCategoryId(v === "none" ? null : v)} disabled={isSystem}>
             <SelectTrigger><SelectValue placeholder="Choose a category" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="none">No category</SelectItem>
@@ -516,6 +528,11 @@ function FormEditor({ formId, onClose, cats }: { formId: string; onClose: () => 
         <Button variant="link" size="sm" onClick={() => setPreviewOpen(true)}>Preview</Button>
       </div>
       <PreviewDialog open={previewOpen} onOpenChange={setPreviewOpen} schema={schema} name={name} />
+      {isSystem ? (
+        <div className="rounded-md border bg-muted/20 p-4 text-xs text-muted-foreground">
+          System forms cannot be edited. Click <span className="font-medium">Preview</span> to see the questions patients will answer, or use the library on the previous screen to copy this into your own editable form.
+        </div>
+      ) : (
 
       <div className="space-y-4">
         {schema.steps.map((step, idx) => (
@@ -561,6 +578,7 @@ function FormEditor({ formId, onClose, cats }: { formId: string; onClose: () => 
           <Plus className="mr-2 h-4 w-4" />Add Step
         </Button>
       </div>
+      )}
 
       <ElementPicker
         open={!!pickerStep}
