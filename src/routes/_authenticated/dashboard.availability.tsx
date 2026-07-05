@@ -223,17 +223,59 @@ function AvailabilityPage() {
   async function removeOverride(id: string) {
     try { await delOv({ data: { id } }); await refresh(); } catch (err: any) { toast.error(err?.message ?? "Failed"); }
   }
-  async function addBlock(e: React.FormEvent) {
-    e.preventDefault();
+  function fmtISO(d: Date) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${dd}`;
+  }
+  function expandRange(from: Date, to: Date): string[] {
+    const out: string[] = [];
+    const cur = new Date(from);
+    while (cur <= to) { out.push(fmtISO(cur)); cur.setDate(cur.getDate() + 1); }
+    return out;
+  }
+  function weekOf(d: Date): string[] {
+    const day = d.getDay(); // 0=Sun..6=Sat
+    const diff = day === 0 ? -6 : 1 - day;
+    const mon = new Date(d); mon.setDate(mon.getDate() + diff);
+    return expandRange(mon, new Date(mon.getFullYear(), mon.getMonth(), mon.getDate() + 6));
+  }
+
+  async function submitTimeOff() {
+    const locId = blLoc === "none" ? null : blLoc;
+    const reason = blReason || undefined;
+    setSavingBl(true);
     try {
-      await addBl({ data: { date: blDate, reason: blReason || undefined, location_id: blLoc === "none" ? null : blLoc } });
-      toast.success("Day closed");
+      if (blMode === "time") {
+        if (!blTimeDate) { toast.error("Pick a date"); return; }
+        if (blTimeStart >= blTimeEnd) { toast.error("End time must be after start"); return; }
+        await addBlT({ data: { date: fmtISO(blTimeDate), start_time: blTimeStart, end_time: blTimeEnd, reason, location_id: locId } });
+        toast.success("Time block added");
+      } else {
+        let dates: string[] = [];
+        if (blMode === "days") dates = blDays.map(fmtISO);
+        else if (blMode === "range" && blRange.from && blRange.to) dates = expandRange(blRange.from, blRange.to);
+        else if (blMode === "weeks") dates = Array.from(new Set(blWeekDates.flatMap(weekOf)));
+        dates = Array.from(new Set(dates));
+        if (dates.length === 0) { toast.error("Pick at least one date"); return; }
+        const existing = new Set(blocked.filter((b) => (b.location_id ?? null) === (locId ?? null)).map((b) => b.date));
+        const toAdd = dates.filter((d) => !existing.has(d));
+        if (toAdd.length === 0) { toast.info("Those dates are already closed"); return; }
+        await Promise.all(toAdd.map((date) => addBl({ data: { date, reason, location_id: locId } })));
+        toast.success(`${toAdd.length} ${toAdd.length === 1 ? "day" : "days"} closed`);
+      }
       setBlReason("");
+      setBlDays([]); setBlRange({}); setBlWeekDates([]);
       await refresh();
     } catch (err: any) { toast.error(err?.message ?? "Failed"); }
+    finally { setSavingBl(false); }
   }
   async function removeBlock(id: string) {
     try { await delBl({ data: { id } }); await refresh(); } catch (err: any) { toast.error(err?.message ?? "Failed"); }
+  }
+  async function removeBlockTime(id: string) {
+    try { await delBlT({ data: { id } }); await refresh(); } catch (err: any) { toast.error(err?.message ?? "Failed"); }
   }
 
   // Group rules for grid rendering: [weekIdx][dow] -> Rule[]
