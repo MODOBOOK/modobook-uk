@@ -261,7 +261,7 @@ function StaffPage() {
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setDlgOpen(false)}>Cancel</Button>
-            <Button onClick={save} disabled={saving || !form.name || (!editing && !form.email)}>
+            <Button onClick={save} disabled={saving || !form.name || (!editing && !form.email) || (!editing && !!ownerEmail && form.email.trim().toLowerCase() === ownerEmail.toLowerCase())}>
               <Mail className="h-4 w-4 mr-1" />
               {saving ? "Saving…" : editing ? "Save changes" : "Send invite"}
             </Button>
