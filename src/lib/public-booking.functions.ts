@@ -534,7 +534,11 @@ export const requestBooking = createServerFn({ method: "POST" })
     if (prof?.require_account_to_book && !data.patientUserId) {
       throw new Error("Please sign in to book — this clinic requires an account.");
     }
-    const status = prof?.auto_confirm_bookings === false ? "pending" : "confirmed";
+    // Auto-confirm target status once we know payment isn't required. We always
+    // insert as "pending" first so the notify_new_booking trigger doesn't fire
+    // for bookings that end up abandoning Stripe checkout.
+    const finalStatus = prof?.auto_confirm_bookings === false ? "pending" : "confirmed";
+    const status = "pending";
 
     const { data: blk } = await sb
       .from("clinic_clients")
