@@ -180,7 +180,7 @@ export async function enqueueAppEmail(
       idempotency_key: messageId,
       unsubscribe_token: unsubscribeToken,
       queued_at: new Date().toISOString(),
-      ...(input.replyTo ? { reply_to: input.replyTo } : {}),
+      ...(resolvedReplyTo ? { reply_to: resolvedReplyTo } : {}),
     },
   })
 
