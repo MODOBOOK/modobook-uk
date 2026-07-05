@@ -141,6 +141,7 @@ export const updateProfile = createServerFn({ method: "POST" })
       require_deposit_to_confirm?: boolean;
       allow_pay_in_clinic?: boolean;
       cash_only_balance?: boolean;
+      save_card_on_file?: boolean;
       show_prices_on_booking?: boolean;
       enforce_cancellation_fee?: boolean;
       // Patient rules
