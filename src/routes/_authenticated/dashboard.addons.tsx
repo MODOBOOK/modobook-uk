@@ -456,9 +456,8 @@ function AssignPanel({
               <option value="amount">£ off</option>
             </select>
             <Input
-              type="number"
-              min={0}
-              max={bulkKind === "percent" ? 100 : undefined}
+              type="text"
+              inputMode="decimal"
               placeholder={bulkKind === "percent" ? "%" : "£"}
               value={bulkValue}
               onChange={(e) => setBulkValue(e.target.value)}
