@@ -583,6 +583,7 @@ function BookingsPage() {
         onOpenChange={setShowUnblock}
         blocks={blocks}
         onRemoved={(id) => setBlocks((p) => p.filter((b) => b.id !== id))}
+        onOpened={refresh}
       />
     </div>
   );
