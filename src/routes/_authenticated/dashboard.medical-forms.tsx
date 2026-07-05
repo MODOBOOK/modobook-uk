@@ -578,6 +578,7 @@ function FormEditor({ formId, onClose, cats }: { formId: string; onClose: () => 
           <Plus className="mr-2 h-4 w-4" />Add Step
         </Button>
       </div>
+      )}
 
       <ElementPicker
         open={!!pickerStep}
