@@ -308,6 +308,12 @@ function SettingsPage() {
             onChange={(v) => set("allow_pay_in_clinic", v)}
           />
           <ToggleRow
+            label="Cash only for remaining balance"
+            hint="Patients pay the deposit online, then bring the rest in cash. Hides the 'Pay in full online' option."
+            checked={s.cash_only_balance}
+            onChange={(v) => set("cash_only_balance", v)}
+          />
+          <ToggleRow
             label="Show prices on booking page"
             hint="Turn off to hide prices (good for consult-led clinics)."
             checked={s.show_prices_on_booking}
