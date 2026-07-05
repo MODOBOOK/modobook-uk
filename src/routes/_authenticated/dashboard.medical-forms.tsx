@@ -336,6 +336,7 @@ function FormEditor({ formId, onClose, cats }: { formId: string; onClose: () => 
   const [schema, setSchema] = useState<FormSchema>(defaultSchema());
   const [treatments, setTreatments] = useState<{ id: string; name: string }[]>([]);
   const [selectedTreatments, setSelectedTreatments] = useState<string[]>([]);
+  const [isSystem, setIsSystem] = useState(false);
   const [saving, setSaving] = useState(false);
   const [pickerStep, setPickerStep] = useState<string | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -343,16 +344,21 @@ function FormEditor({ formId, onClose, cats }: { formId: string; onClose: () => 
   useEffect(() => {
     (async () => {
       const tr: any = await fetchTreatments();
-      setTreatments(tr ?? []);
+      const trs = (tr ?? []) as { id: string; name: string }[];
+      setTreatments(trs);
       if (formId) {
         const row: any = await fetchOne({ data: { id: formId } });
         setName(row.name);
         setDescription(row.description ?? "");
         setCategoryId(row.category_id ?? null);
         setValidity(row.validity ?? "always_required");
+        setIsSystem(!!row.is_system);
         const sc = row.schema && typeof row.schema === "object" && Array.isArray(row.schema.steps) ? row.schema : defaultSchema();
         setSchema(sc);
-        const linked = (row.treatment_medical_forms ?? []).map((x: any) => x.treatment_id);
+        const myIds = new Set(trs.map((t) => t.id));
+        const linked = (row.treatment_medical_forms ?? [])
+          .map((x: any) => x.treatment_id as string)
+          .filter((id: string) => myIds.has(id));
         setSelectedTreatments(linked);
       }
     })();
