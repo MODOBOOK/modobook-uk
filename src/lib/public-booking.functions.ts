@@ -618,10 +618,11 @@ export const requestBooking = createServerFn({ method: "POST" })
         });
       }
     }
-    // Optional Stripe Checkout for deposit / full payment
-    let checkoutUrl: string | null = null;
+    // Optional Stripe payment for deposit / full payment (hosted checkout or
+    // embedded Payment Element depending on the save-card-on-file setting).
+    let payment: BookingPaymentResult | null = null;
     try {
-      checkoutUrl = await maybeCreateBookingCheckout({
+      payment = await maybeCreateBookingCheckout({
         profile: prof,
         appointmentIds: [id],
         totalAmount: data.basePrice,
@@ -635,7 +636,7 @@ export const requestBooking = createServerFn({ method: "POST" })
     // If we handed the patient off to Stripe, hold the slot briefly. If they
     // abandon the payment the hold expires and availability re-opens; the
     // webhook clears the hold and confirms the appointment on success.
-    if (checkoutUrl) {
+    if (payment) {
       const holdUntil = new Date(Date.now() + 30 * 60 * 1000).toISOString();
       await supabaseAdmin
         .from("appointments")
@@ -644,16 +645,18 @@ export const requestBooking = createServerFn({ method: "POST" })
     }
 
     // Fire booking confirmation email now for non-Stripe bookings. Bookings
-    // routed through Stripe checkout are emailed by the Stripe webhook once
-    // payment succeeds so patients don't get "confirmed" before they've paid.
-    if (!checkoutUrl && data.patientEmail) {
+    // routed through Stripe are emailed by the webhook once payment succeeds
+    // so patients don't get "confirmed" before they've paid.
+    if (!payment && data.patientEmail) {
       try {
         const { sendBookingConfirmationEmails } = await import("@/lib/email/send.server");
         await sendBookingConfirmationEmails([id]);
       } catch (e) { console.error("[requestBooking] email failed", e); }
     }
 
-    return { id, consents, medicalForms, checkoutUrl };
+    const checkoutUrl = payment?.kind === "hosted" ? payment.checkoutUrl : null;
+    const embeddedPayment = payment?.kind === "embedded" ? payment : null;
+    return { id, consents, medicalForms, checkoutUrl, embeddedPayment };
   });
 
 
