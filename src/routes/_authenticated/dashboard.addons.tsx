@@ -215,6 +215,9 @@ function AddonsPage() {
   );
 }
 
+type DiscountValue = { percent: number | null; amount: number | null };
+const EMPTY_DISC: DiscountValue = { percent: null, amount: null };
+
 function AssignPanel({
   addon, currentLinks, treatments, categories, onClose, onSave,
 }: {
@@ -224,63 +227,76 @@ function AssignPanel({
   categories: Category[];
   onClose: () => void;
   onSave: (payload: {
-    treatments: { id: string; discount_percent?: number | null }[];
-    categories: { id: string; discount_percent?: number | null }[];
+    treatments: { id: string; discount_percent?: number | null; discount_amount?: number | null }[];
+    categories: { id: string; discount_percent?: number | null; discount_amount?: number | null }[];
   }) => void;
 }) {
-  // state: maps of id → discount (null = no discount, undefined = unticked)
   const initialCats = useMemo(() => {
-    const m = new Map<string, number | null>();
-    currentLinks.filter((l) => l.category_id).forEach((l) => m.set(l.category_id!, l.discount_percent ?? null));
+    const m = new Map<string, DiscountValue>();
+    currentLinks.filter((l) => l.category_id).forEach((l) =>
+      m.set(l.category_id!, { percent: l.discount_percent ?? null, amount: l.discount_amount ?? null })
+    );
     return m;
   }, [currentLinks]);
   const initialTreats = useMemo(() => {
-    const m = new Map<string, number | null>();
-    currentLinks.filter((l) => l.treatment_id).forEach((l) => m.set(l.treatment_id!, l.discount_percent ?? null));
+    const m = new Map<string, DiscountValue>();
+    currentLinks.filter((l) => l.treatment_id).forEach((l) =>
+      m.set(l.treatment_id!, { percent: l.discount_percent ?? null, amount: l.discount_amount ?? null })
+    );
     return m;
   }, [currentLinks]);
 
-  const [cats, setCats] = useState<Map<string, number | null>>(initialCats);
-  const [treats, setTreats] = useState<Map<string, number | null>>(initialTreats);
-  const [bulkDisc, setBulkDisc] = useState<string>("");
+  const [cats, setCats] = useState<Map<string, DiscountValue>>(initialCats);
+  const [treats, setTreats] = useState<Map<string, DiscountValue>>(initialTreats);
+  const [bulkKind, setBulkKind] = useState<"percent" | "amount">("percent");
+  const [bulkValue, setBulkValue] = useState<string>("");
 
   function toggleCat(id: string) {
     const n = new Map(cats);
-    if (n.has(id)) n.delete(id); else n.set(id, null);
-    setCats(n);
-  }
-  function setCatDisc(id: string, v: string) {
-    const n = new Map(cats);
-    n.set(id, v === "" ? null : Math.max(0, Math.min(100, parseFloat(v))));
+    if (n.has(id)) n.delete(id); else n.set(id, { ...EMPTY_DISC });
     setCats(n);
   }
   function toggleTreat(id: string) {
     const n = new Map(treats);
-    if (n.has(id)) n.delete(id); else n.set(id, null);
+    if (n.has(id)) n.delete(id); else n.set(id, { ...EMPTY_DISC });
     setTreats(n);
   }
-  function setTreatDisc(id: string, v: string) {
-    const n = new Map(treats);
-    n.set(id, v === "" ? null : Math.max(0, Math.min(100, parseFloat(v))));
-    setTreats(n);
+  function setDisc(
+    map: Map<string, DiscountValue>,
+    setMap: (m: Map<string, DiscountValue>) => void,
+    id: string,
+    kind: "percent" | "amount",
+    v: string,
+  ) {
+    const n = new Map(map);
+    const cur = n.get(id) ?? { ...EMPTY_DISC };
+    const parsed = v === "" ? null : Math.max(0, parseFloat(v));
+    if (kind === "percent") {
+      n.set(id, { percent: parsed == null ? null : Math.min(100, parsed), amount: null });
+    } else {
+      n.set(id, { percent: null, amount: parsed });
+    }
+    setMap(n);
   }
 
   function applyBulk() {
-    const v = bulkDisc === "" ? null : Math.max(0, Math.min(100, parseFloat(bulkDisc)));
+    const parsed = bulkValue === "" ? null : Math.max(0, parseFloat(bulkValue));
+    const v: DiscountValue = bulkKind === "percent"
+      ? { percent: parsed == null ? null : Math.min(100, parsed), amount: null }
+      : { percent: null, amount: parsed };
     const nc = new Map(cats); for (const k of nc.keys()) nc.set(k, v); setCats(nc);
     const nt = new Map(treats); for (const k of nt.keys()) nt.set(k, v); setTreats(nt);
   }
 
   function selectAllCats() {
-    const n = new Map(cats); categories.forEach((c) => { if (!n.has(c.id)) n.set(c.id, null); }); setCats(n);
+    const n = new Map(cats); categories.forEach((c) => { if (!n.has(c.id)) n.set(c.id, { ...EMPTY_DISC }); }); setCats(n);
   }
   function clearCats() { setCats(new Map()); }
   function selectAllTreats() {
-    const n = new Map(treats); treatments.forEach((t) => { if (!n.has(t.id)) n.set(t.id, null); }); setTreats(n);
+    const n = new Map(treats); treatments.forEach((t) => { if (!n.has(t.id)) n.set(t.id, { ...EMPTY_DISC }); }); setTreats(n);
   }
   function clearTreats() { setTreats(new Map()); }
 
-  // group treatments by category
   const treatsByCat = useMemo(() => {
     const m = new Map<string | null, Treatment[]>();
     treatments.forEach((t) => {
@@ -292,6 +308,36 @@ function AssignPanel({
   }, [treatments]);
   const catName = (id: string | null) => categories.find((c) => c.id === id)?.name ?? "Uncategorised";
 
+  function DiscountEditor({
+    value, onChange,
+  }: { value: DiscountValue; onChange: (kind: "percent" | "amount", v: string) => void }) {
+    const kind: "percent" | "amount" = value.amount != null ? "amount" : "percent";
+    const shown = kind === "percent" ? (value.percent ?? "") : (value.amount ?? "");
+    return (
+      <div className="flex items-center gap-1">
+        <select
+          className="h-8 rounded border bg-background px-1 text-xs"
+          value={kind}
+          onChange={(e) => onChange(e.target.value as "percent" | "amount", "")}
+        >
+          <option value="percent">% off</option>
+          <option value="amount">£ off</option>
+        </select>
+        <Input
+          type="number"
+          min={0}
+          max={kind === "percent" ? 100 : undefined}
+          placeholder={kind === "percent" ? "%" : "£"}
+          value={shown}
+          onChange={(e) => onChange(kind, e.target.value)}
+          className="h-8 w-20"
+        />
+      </div>
+    );
+  }
+
+  const basePrice = (addon.price_cents ?? 0) / 100;
+
   return (
     <div className="space-y-4">
       <SheetHeader>
@@ -300,12 +346,31 @@ function AssignPanel({
 
       <Card>
         <CardContent className="p-3">
-          <Label className="text-xs">Apply discount to all ticked</Label>
-          <div className="mt-1 flex gap-2">
-            <Input type="number" min={0} max={100} placeholder="%" value={bulkDisc} onChange={(e) => setBulkDisc(e.target.value)} className="w-24" />
+          <div className="text-xs text-muted-foreground">
+            Standard price <span className="font-semibold text-foreground">£{basePrice.toFixed(2)}</span>{" "}
+            · patients see this crossed out when a discount is set.
+          </div>
+          <Label className="mt-2 block text-xs">Apply discount to all ticked</Label>
+          <div className="mt-1 flex flex-wrap gap-2">
+            <select
+              className="h-9 rounded-md border bg-background px-2 text-sm"
+              value={bulkKind}
+              onChange={(e) => setBulkKind(e.target.value as "percent" | "amount")}
+            >
+              <option value="percent">% off</option>
+              <option value="amount">£ off</option>
+            </select>
+            <Input
+              type="number"
+              min={0}
+              max={bulkKind === "percent" ? 100 : undefined}
+              placeholder={bulkKind === "percent" ? "%" : "£"}
+              value={bulkValue}
+              onChange={(e) => setBulkValue(e.target.value)}
+              className="w-24"
+            />
             <Button variant="outline" onClick={applyBulk}>Apply to ticked</Button>
           </div>
-          <p className="mt-1 text-[11px] text-muted-foreground">Patients see this discount on the add-on at booking.</p>
         </CardContent>
       </Card>
 
@@ -323,14 +388,16 @@ function AssignPanel({
           {categories.length === 0 && <div className="p-3 text-xs text-muted-foreground">No categories yet.</div>}
           {categories.map((c) => {
             const ticked = cats.has(c.id);
+            const val = cats.get(c.id) ?? EMPTY_DISC;
             return (
               <label key={c.id} className="flex items-center gap-3 p-2">
                 <input type="checkbox" className="h-4 w-4" checked={ticked} onChange={() => toggleCat(c.id)} />
                 <span className="flex-1 text-sm">{c.parent_id ? "↳ " : ""}{c.name}</span>
                 {ticked && (
-                  <Input type="number" min={0} max={100} placeholder="% off"
-                    value={cats.get(c.id) ?? ""} onChange={(e) => setCatDisc(c.id, e.target.value)}
-                    className="h-8 w-24" />
+                  <DiscountEditor
+                    value={val}
+                    onChange={(kind, v) => setDisc(cats, setCats, c.id, kind, v)}
+                  />
                 )}
               </label>
             );
@@ -354,14 +421,16 @@ function AssignPanel({
               <div className="divide-y">
                 {items.map((t) => {
                   const ticked = treats.has(t.id);
+                  const val = treats.get(t.id) ?? EMPTY_DISC;
                   return (
                     <label key={t.id} className="flex items-center gap-3 p-2">
                       <input type="checkbox" className="h-4 w-4" checked={ticked} onChange={() => toggleTreat(t.id)} />
                       <span className="flex-1 text-sm">{t.name}</span>
                       {ticked && (
-                        <Input type="number" min={0} max={100} placeholder="% off"
-                          value={treats.get(t.id) ?? ""} onChange={(e) => setTreatDisc(t.id, e.target.value)}
-                          className="h-8 w-24" />
+                        <DiscountEditor
+                          value={val}
+                          onChange={(kind, v) => setDisc(treats, setTreats, t.id, kind, v)}
+                        />
                       )}
                     </label>
                   );
@@ -375,8 +444,12 @@ function AssignPanel({
       <div className="sticky bottom-0 -mx-4 flex gap-2 border-t bg-background px-4 py-3 sm:mx-0 sm:rounded-b-2xl">
         <Button variant="outline" className="flex-1" onClick={onClose}>Cancel</Button>
         <Button className="flex-1" onClick={() => onSave({
-          treatments: Array.from(treats.entries()).map(([id, d]) => ({ id, discount_percent: d ?? null })),
-          categories: Array.from(cats.entries()).map(([id, d]) => ({ id, discount_percent: d ?? null })),
+          treatments: Array.from(treats.entries()).map(([id, d]) => ({
+            id, discount_percent: d.percent, discount_amount: d.amount,
+          })),
+          categories: Array.from(cats.entries()).map(([id, d]) => ({
+            id, discount_percent: d.percent, discount_amount: d.amount,
+          })),
         })}>Save assignments</Button>
       </div>
     </div>
