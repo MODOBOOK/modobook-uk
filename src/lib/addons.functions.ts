@@ -101,8 +101,8 @@ export const setAddonLinks = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: {
     addon_id: string;
-    treatments: { id: string; discount_percent?: number | null }[];
-    categories: { id: string; discount_percent?: number | null }[];
+    treatments: { id: string; discount_percent?: number | null; discount_amount?: number | null }[];
+    categories: { id: string; discount_percent?: number | null; discount_amount?: number | null }[];
   }) => input)
   .handler(async ({ data, context }) => {
     const pid = await getProfileId(context.supabase, context.userId);
@@ -117,10 +117,12 @@ export const setAddonLinks = createServerFn({ method: "POST" })
       ...data.treatments.map((t) => ({
         addon_id: data.addon_id, treatment_id: t.id, category_id: null,
         discount_percent: t.discount_percent ?? null,
+        discount_amount: t.discount_amount ?? null,
       })),
       ...data.categories.map((c) => ({
         addon_id: data.addon_id, treatment_id: null, category_id: c.id,
         discount_percent: c.discount_percent ?? null,
+        discount_amount: c.discount_amount ?? null,
       })),
     ];
     if (rows.length) {
