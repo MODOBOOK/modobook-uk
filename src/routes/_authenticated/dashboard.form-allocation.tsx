@@ -155,11 +155,21 @@ function FormAllocationPage() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 p-4 md:p-6">
-      <header className="space-y-1">
-        <h1 className="text-2xl font-semibold tracking-tight">Attach forms to treatments</h1>
-        <p className="text-sm text-muted-foreground">
-          Everything you tick here is automatically sent to the patient on booking — medical intake, consent, and aftercare.
-        </p>
+      <header className="flex flex-wrap items-start justify-between gap-3">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-semibold tracking-tight">Attach forms to treatments</h1>
+          <p className="text-sm text-muted-foreground">
+            Everything you tick here is automatically sent to the patient on booking — medical intake, consent, and aftercare.
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="ghost" onClick={() => setLocal({})} disabled={savingAll || Object.keys(local).length === 0}>
+            Discard
+          </Button>
+          <Button onClick={saveAll} disabled={savingAll || Object.keys(local).length === 0}>
+            {savingAll ? <Loader2 className="size-4 animate-spin" /> : `Save all${Object.keys(local).length ? ` (${Object.keys(local).length})` : ""}`}
+          </Button>
+        </div>
       </header>
 
       <Card>
@@ -191,14 +201,9 @@ function FormAllocationPage() {
               <strong>{Object.keys(local).length}</strong> unsaved change{Object.keys(local).length === 1 ? "" : "s"} — don't forget to save.
             </span>
           </div>
-          <div className="flex gap-2">
-            <Button variant="ghost" size="sm" onClick={() => setLocal({})} disabled={savingAll}>
-              Discard
-            </Button>
-            <Button size="sm" onClick={saveAll} disabled={savingAll}>
-              {savingAll ? <Loader2 className="size-4 animate-spin" /> : "Save all"}
-            </Button>
-          </div>
+          <Button size="sm" onClick={saveAll} disabled={savingAll}>
+            {savingAll ? <Loader2 className="size-4 animate-spin" /> : "Save all"}
+          </Button>
         </div>
       )}
 
