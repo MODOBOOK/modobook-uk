@@ -359,9 +359,13 @@ function ConsentFormsPage() {
             <Button variant="ghost" onClick={() => setEditing(null)}>
               Close
             </Button>
-            {editing && (!editing.is_system || isAdmin) && (
+            {editing && (
               <Button onClick={handleSave}>
-                {editing.is_system ? "Save system template" : "Save consent form"}
+                {editing.is_system && !isAdmin
+                  ? "Save attachments"
+                  : editing.is_system
+                    ? "Save system template"
+                    : "Save consent form"}
               </Button>
             )}
           </DialogFooter>
