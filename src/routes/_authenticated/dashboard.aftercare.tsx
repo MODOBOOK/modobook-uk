@@ -179,8 +179,8 @@ function AftercarePage() {
                           {t.summary && <div className="truncate text-xs text-muted-foreground">{t.summary}</div>}
                         </div>
                         <div className="flex gap-1 shrink-0">
-                          <Button size="sm" variant="outline" onClick={() => openEditor({ ...t, id: "", name: t.name })}>
-                            Preview
+                          <Button size="sm" variant="outline" onClick={() => openEditor(t)}>
+                            Attach
                           </Button>
                           <Button
                             size="sm"
@@ -190,7 +190,7 @@ function AftercarePage() {
                               toast.success("Added to your templates");
                             }}
                           >
-                            <Copy className="mr-1 h-3.5 w-3.5" /> Use
+                            <Copy className="mr-1 h-3.5 w-3.5" /> Copy & edit
                           </Button>
                         </div>
                       </div>
