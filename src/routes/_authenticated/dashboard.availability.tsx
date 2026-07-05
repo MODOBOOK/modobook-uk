@@ -233,14 +233,6 @@ function AvailabilityPage() {
     return practitioners.find((p) => p.id === id)?.name;
   }
 
-  function weeksLabel(r: Rule): string {
-    const cycle = r.cycle_length ?? 1;
-    if (cycle === 1) return "Every week";
-    const mask = r.weeks_mask ?? 1;
-    const letters: string[] = [];
-    for (let i = 0; i < cycle; i++) if (mask & (1 << i)) letters.push(WEEK_LETTERS[i]);
-    return `Week ${letters.join(", ")}`;
-  }
 
   return (
     <div className="space-y-6 max-w-5xl">
