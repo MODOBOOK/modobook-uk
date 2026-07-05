@@ -470,16 +470,105 @@ function AvailabilityPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="timeoff">
+        <TabsContent value="timeoff" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Close a day</CardTitle>
-              <CardDescription>Block a date so patients cannot book that day.</CardDescription>
+              <CardTitle>Add time off</CardTitle>
+              <CardDescription>Block days, ranges, whole weeks, or a portion of a single day.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <form onSubmit={addBlock} className="grid gap-3 sm:grid-cols-2 md:grid-cols-5 md:items-end">
-                <div><Label>Date</Label><Input type="date" value={blDate} onChange={(e) => setBlDate(e.target.value)} /></div>
-                <div className="md:col-span-2"><Label>Reason (optional)</Label><Input value={blReason} onChange={(e) => setBlReason(e.target.value)} placeholder="Holiday, training…" /></div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {([
+                  { k: "days", label: "Days", icon: CalendarDays },
+                  { k: "range", label: "Range", icon: CalendarRange },
+                  { k: "weeks", label: "Weeks", icon: Repeat },
+                  { k: "time", label: "Time block", icon: Clock },
+                ] as const).map(({ k, label, icon: Icon }) => (
+                  <button
+                    key={k}
+                    type="button"
+                    onClick={() => setBlMode(k)}
+                    className={cn(
+                      "flex items-center justify-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors",
+                      blMode === k
+                        ? "border-primary bg-primary/10 text-primary font-medium"
+                        : "border-border hover:bg-muted"
+                    )}
+                  >
+                    <Icon className="h-4 w-4" />{label}
+                  </button>
+                ))}
+              </div>
+
+              <div className="rounded-lg border p-3 flex flex-col items-center bg-muted/20">
+                {blMode === "days" && (
+                  <>
+                    <Calendar
+                      mode="multiple"
+                      selected={blDays}
+                      onSelect={(dates) => setBlDays(dates ?? [])}
+                      disabled={{ before: new Date(new Date().setHours(0,0,0,0)) }}
+                      className="pointer-events-auto"
+                    />
+                    <p className="text-xs text-muted-foreground mt-2">
+                      {blDays.length === 0 ? "Tap days to select" : `${blDays.length} day${blDays.length === 1 ? "" : "s"} selected`}
+                    </p>
+                  </>
+                )}
+                {blMode === "range" && (
+                  <>
+                    <Calendar
+                      mode="range"
+                      selected={blRange as any}
+                      onSelect={(r: any) => setBlRange(r ?? {})}
+                      numberOfMonths={2}
+                      disabled={{ before: new Date(new Date().setHours(0,0,0,0)) }}
+                      className="pointer-events-auto"
+                    />
+                    <p className="text-xs text-muted-foreground mt-2">
+                      {blRange.from && blRange.to
+                        ? `${format(blRange.from, "PP")} → ${format(blRange.to, "PP")}`
+                        : "Pick a start and end date"}
+                    </p>
+                  </>
+                )}
+                {blMode === "weeks" && (
+                  <>
+                    <Calendar
+                      mode="multiple"
+                      selected={blWeekDates}
+                      onSelect={(dates) => setBlWeekDates(dates ?? [])}
+                      disabled={{ before: new Date(new Date().setHours(0,0,0,0)) }}
+                      showWeekNumber
+                      className="pointer-events-auto"
+                    />
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Click any day to select its whole week (Mon–Sun). {blWeekDates.length > 0 && `${Array.from(new Set(blWeekDates.flatMap(weekOf))).length} days`}
+                    </p>
+                  </>
+                )}
+                {blMode === "time" && (
+                  <div className="w-full grid gap-3 sm:grid-cols-3">
+                    <div className="sm:col-span-3 flex justify-center">
+                      <Calendar
+                        mode="single"
+                        selected={blTimeDate}
+                        onSelect={setBlTimeDate}
+                        disabled={{ before: new Date(new Date().setHours(0,0,0,0)) }}
+                        className="pointer-events-auto"
+                      />
+                    </div>
+                    <div><Label>Start</Label><Input type="time" value={blTimeStart} onChange={(e) => setBlTimeStart(e.target.value)} /></div>
+                    <div><Label>End</Label><Input type="time" value={blTimeEnd} onChange={(e) => setBlTimeEnd(e.target.value)} /></div>
+                  </div>
+                )}
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <Label>Reason (optional)</Label>
+                  <Input value={blReason} onChange={(e) => setBlReason(e.target.value)} placeholder="Holiday, training…" />
+                </div>
                 <div>
                   <Label>Location</Label>
                   <Select value={blLoc} onValueChange={setBlLoc}>
@@ -490,20 +579,48 @@ function AvailabilityPage() {
                     </SelectContent>
                   </Select>
                 </div>
-                <Button type="submit" variant="destructive"><Plus className="h-4 w-4 mr-1" />Close</Button>
-              </form>
-              {blocked.length === 0 ? (
-                <div className="text-sm text-muted-foreground">No closed dates.</div>
+              </div>
+              <div className="flex justify-end">
+                <Button onClick={submitTimeOff} disabled={savingBl} variant="destructive">
+                  <Plus className="h-4 w-4 mr-1" />
+                  {savingBl ? "Saving…" : "Add time off"}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Scheduled time off</CardTitle>
+              <CardDescription>Upcoming closures and time blocks.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {blocked.length === 0 && blockedTimes.length === 0 ? (
+                <div className="text-sm text-muted-foreground">No time off scheduled.</div>
               ) : (
                 <div className="space-y-2">
                   {blocked.map((b) => (
-                    <div key={b.id} className="flex items-center justify-between gap-3 rounded border px-3 py-2 text-sm">
-                      <div>
-                        <span className="font-medium">{b.date}</span>
-                        {b.reason && <span className="text-muted-foreground ml-3">{b.reason}</span>}
-                        <span className="ml-3 text-xs rounded bg-muted px-2 py-0.5">{locName(b.location_id) ?? "All locations"}</span>
+                    <div key={`d-${b.id}`} className="flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-sm bg-gradient-to-br from-destructive/5 to-transparent">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <CalendarDays className="h-4 w-4 text-destructive" />
+                        <span className="font-medium">{format(new Date(b.date + "T00:00:00"), "EEE d MMM yyyy")}</span>
+                        <Badge variant="outline" className="text-xs">All day</Badge>
+                        {b.reason && <span className="text-muted-foreground">· {b.reason}</span>}
+                        <span className="text-xs rounded-full bg-muted px-2 py-0.5">{locName(b.location_id) ?? "All locations"}</span>
                       </div>
                       <Button variant="ghost" size="icon" onClick={() => removeBlock(b.id)}><Trash2 className="h-4 w-4" /></Button>
+                    </div>
+                  ))}
+                  {blockedTimes.map((b) => (
+                    <div key={`t-${b.id}`} className="flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-sm bg-gradient-to-br from-destructive/5 to-transparent">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Clock className="h-4 w-4 text-destructive" />
+                        <span className="font-medium">{format(new Date(b.date + "T00:00:00"), "EEE d MMM yyyy")}</span>
+                        <Badge variant="outline" className="text-xs">{b.start_time.slice(0,5)}–{b.end_time.slice(0,5)}</Badge>
+                        {b.reason && <span className="text-muted-foreground">· {b.reason}</span>}
+                        <span className="text-xs rounded-full bg-muted px-2 py-0.5">{locName(b.location_id) ?? "All locations"}</span>
+                      </div>
+                      <Button variant="ghost" size="icon" onClick={() => removeBlockTime(b.id)}><Trash2 className="h-4 w-4" /></Button>
                     </div>
                   ))}
                 </div>
