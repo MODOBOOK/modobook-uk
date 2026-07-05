@@ -48,7 +48,7 @@ function AcceptInvitePage() {
     try {
       await accept({ data: { token } });
       toast.success("Invite accepted!");
-      navigate({ to: "/dashboard" });
+      navigate({ to: "/dashboard/invites" });
     } catch (e: any) { toast.error(e?.message ?? "Failed"); }
     finally { setWorking(false); }
   }
