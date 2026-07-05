@@ -28,10 +28,10 @@ function FormAllocationPage() {
   const setCons = useServerFn(setTreatmentConsents);
   const setAft = useServerFn(setTreatmentAftercareIds);
   const suggest = useServerFn(suggestFormMatches);
-  const commit = useServerFn(commitFormMatches);
 
   const query = useQuery({ queryKey: ["form-allocation"], queryFn: () => load() });
   const [savingRow, setSavingRow] = useState<string | null>(null);
+  const [savingAll, setSavingAll] = useState(false);
   const [aiBusy, setAiBusy] = useState(false);
   const [search, setSearch] = useState("");
   const [local, setLocal] = useState<Record<string, Links>>({});
