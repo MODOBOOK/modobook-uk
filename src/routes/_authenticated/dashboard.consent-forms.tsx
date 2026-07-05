@@ -285,7 +285,7 @@ function ConsentFormsPage() {
                 key={t.id}
                 t={t}
                 editable
-                onEdit={() => setEditing(t)}
+                onEdit={() => openEditor(t)}
                 onDelete={async () => {
                   if (!confirm("Delete this consent template?")) return;
                   await remove({ data: { id: t.id } });
