@@ -403,7 +403,7 @@ function BookingsPage() {
       <p className="text-xs text-muted-foreground">
         {loading
           ? "Loading…"
-          : `${filteredAppts.length} bookings · ${filteredBlocks.length} blocked${
+          : `${filteredAppts.filter((a) => a.status !== "cancelled").length} bookings · ${filteredBlocks.length} blocked${
               locationFilter !== "all" ? ` · ${locations.find((l) => l.id === locationFilter)?.name ?? ""}` : ""
             }`}
       </p>
