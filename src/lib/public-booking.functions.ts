@@ -431,7 +431,7 @@ export const getMonthAvailability = createServerFn({ method: "GET" })
 
 
 export type PaymentChoice = {
-  mode: "deposit" | "full";
+  mode: "deposit" | "full" | "cash";
   method: "card" | "klarna" | "clearpay";
 };
 
@@ -442,7 +442,7 @@ export const getPublicPaymentOptions = createServerFn({ method: "GET" })
     const { data: prof } = await supabaseAdmin
       .from("profiles")
       .select(
-        "stripe_connect_account_id,stripe_connect_onboarding_status,payment_card_full_enabled,payment_deposit_enabled,payment_klarna_enabled,payment_clearpay_enabled,payment_pass_fees_to_customer,deposit_amount_cents,payment_surcharge_card_enabled,payment_surcharge_card_percent,payment_surcharge_bnpl_enabled,payment_surcharge_bnpl_percent,payment_surcharge_deposit_enabled,payment_surcharge_deposit_percent,stripe_fee_pass_to_patient,stripe_fee_card_percent,stripe_fee_card_fixed_cents,stripe_fee_bnpl_percent,stripe_fee_bnpl_fixed_cents",
+        "stripe_connect_account_id,stripe_connect_onboarding_status,payment_card_full_enabled,payment_deposit_enabled,payment_klarna_enabled,payment_clearpay_enabled,payment_pass_fees_to_customer,deposit_amount_cents,payment_surcharge_card_enabled,payment_surcharge_card_percent,payment_surcharge_bnpl_enabled,payment_surcharge_bnpl_percent,payment_surcharge_deposit_enabled,payment_surcharge_deposit_percent,stripe_fee_pass_to_patient,stripe_fee_card_percent,stripe_fee_card_fixed_cents,stripe_fee_bnpl_percent,stripe_fee_bnpl_fixed_cents,allow_pay_in_clinic",
       )
       .eq("slug", data.slug.toLowerCase())
       .maybeSingle();
@@ -457,6 +457,7 @@ export const getPublicPaymentOptions = createServerFn({ method: "GET" })
       klarnaEnabled: !!prof.payment_klarna_enabled,
       clearpayEnabled: !!prof.payment_clearpay_enabled,
       depositEnabled: !!prof.payment_deposit_enabled,
+      cashEnabled: prof.allow_pay_in_clinic !== false,
       depositCents: Math.max(0, Number(prof.deposit_amount_cents ?? 0)),
       passFees: !!prof.payment_pass_fees_to_customer,
       surcharges: {
@@ -654,8 +655,11 @@ async function maybeCreateBookingCheckout(args: {
 }): Promise<string | null> {
   const p = args.profile;
   if (!p) return null;
+  // Patient chose to pay in cash at the appointment — skip Stripe entirely.
+  if (args.choice?.mode === "cash") return null;
   if (!p.stripe_connect_account_id) return null;
   if (p.stripe_connect_onboarding_status && p.stripe_connect_onboarding_status !== "active") return null;
+
 
   const depositEnabled = !!p.payment_deposit_enabled;
   const depositPer = Math.max(0, Number(p.deposit_amount_cents ?? 0));
