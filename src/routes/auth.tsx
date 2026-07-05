@@ -71,7 +71,7 @@ function AuthPage() {
     if (result.redirected) {
       return;
     }
-    router.navigate({ to: isPrescriberFlow ? "/hub/verification" : "/dashboard" });
+    router.navigate(postAuthTo());
   }
 
   async function handleSignIn(e: React.FormEvent) {
@@ -83,7 +83,7 @@ function AuthPage() {
       toast.error(error.message);
       return;
     }
-    router.navigate({ to: isPrescriberFlow ? "/hub/verification" : "/dashboard" });
+    router.navigate(postAuthTo());
   }
 
   async function handleSignUp(e: React.FormEvent) {
