@@ -187,9 +187,18 @@ function BrandingPage() {
     toast.success("Card style preset applied");
   }
 
-  function applyColorPalette(palette: ColorPalette) {
-    setState((s) => ({ ...s, ...palette.colors }));
-    toast.success(`${palette.name} palette applied`);
+  async function applyColorPalette(palette: ColorPalette) {
+    const next: ClinicThemeInput = { ...state, ...palette.colors, preset_key: null };
+    setState(next);
+    setSaving(true);
+    try {
+      await save({ data: next });
+      toast.success(`${palette.name} palette applied and saved`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to save palette");
+    } finally {
+      setSaving(false);
+    }
   }
 
   const [customColors, setCustomColors] = useState<[string, string, string, string]>([
