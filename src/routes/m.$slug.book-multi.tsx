@@ -786,7 +786,7 @@ function MultiBookPage() {
                                 <span className="opacity-50 line-through mr-2">£{base.toFixed(2)}</span>
                                 <span className="font-semibold" style={{ color: brand }}>£{net.toFixed(2)}</span>
                                 <div className="text-[10px] font-semibold text-emerald-600">
-                                  {a.discount_percent}% off
+                                  {discountLabel}
                                 </div>
                               </>
                             ) : (
