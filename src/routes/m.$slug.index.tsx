@@ -1048,6 +1048,7 @@ function BookPage() {
               consultTreatmentIds.length === 1 ? (
                 <Link
                   to="/m/$slug/book/$treatmentId"
+                    search={{ locationId: locationId ?? undefined }}
                   params={{ slug, treatmentId: consultTreatmentIds[0] }}
                   className="block"
                 >
@@ -1148,6 +1149,7 @@ function BookPage() {
               {consultTreatmentId ? (
                 <Link
                   to="/m/$slug/book/$treatmentId"
+                    search={{ locationId: locationId ?? undefined }}
                   params={{ slug, treatmentId: consultTreatmentId }}
                   className="mt-3 inline-block rounded-full px-5 py-2 text-sm font-semibold text-white transition hover:opacity-90"
                   style={{ backgroundColor: brand }}
@@ -1226,6 +1228,7 @@ function BookPage() {
                     {img && (
                       <Link
                         to="/m/$slug/book/$treatmentId"
+                    search={{ locationId: locationId ?? undefined }}
                         params={{ slug, treatmentId: t.id }}
                         className="block aspect-[16/10] w-full overflow-hidden bg-muted"
                       >
@@ -1260,6 +1263,7 @@ function BookPage() {
                         <span className="opacity-70">{durationFor(t)} min</span>
                         <Link
                           to="/m/$slug/book/$treatmentId"
+                    search={{ locationId: locationId ?? undefined }}
                           params={{ slug, treatmentId: t.id }}
                           className="rounded-full px-4 py-2 text-xs font-semibold text-white shadow-sm"
                           style={{ backgroundColor: brand }}
@@ -1588,6 +1592,7 @@ function BookPage() {
                                   </button>
                                   <Link
                                     to="/m/$slug/book/$treatmentId"
+                    search={{ locationId: locationId ?? undefined }}
                                     params={{ slug, treatmentId: firstTreatmentId }}
                                     className="modo-btn px-4 py-1.5 text-sm font-semibold"
                                   >
