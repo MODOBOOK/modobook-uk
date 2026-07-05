@@ -246,8 +246,8 @@ function ConsentFormsPage() {
                 key={t.id}
                 t={t}
                 editable={isAdmin}
-                onPreview={() => setEditing(t)}
-                onEdit={isAdmin ? () => setEditing(t) : undefined}
+                onPreview={() => openEditor(t)}
+                onEdit={isAdmin ? () => openEditor(t) : undefined}
                 onClone={async () => {
                   await clone({ data: { template_id: t.id } });
                   toast.success("Cloned to your templates");
