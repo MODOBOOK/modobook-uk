@@ -1307,6 +1307,7 @@ function MultiBookPage() {
                       perSessionToday += priceFor(t);
                     }
                   });
+                  perSessionToday += addonsExtraPrice;
                   // Apply proportional discount to the today figure.
                   if (totalPrice > 0 && discountTotal > 0) {
                     perSessionToday = Math.max(0, perSessionToday - (perSessionToday / totalPrice) * discountTotal);
@@ -1352,6 +1353,7 @@ function MultiBookPage() {
                       selectedPaymentPlan(t) === "split";
                     dueToday += isSplit ? priceFor(t) / sessions : priceFor(t);
                   });
+                  dueToday += addonsExtraPrice;
                   if (totalPrice > 0) dueToday = Math.max(0, dueToday - (dueToday / totalPrice) * discountTotal);
                   const btnLabel = submitting
                     ? "Booking…"
