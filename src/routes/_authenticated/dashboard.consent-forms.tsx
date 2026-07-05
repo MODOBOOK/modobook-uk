@@ -324,7 +324,7 @@ function ConsentFormsPage() {
               onChange={(v) => setEditing(v)}
             />
           )}
-          {editing && !(editing.is_system && !isAdmin) && !(isAdmin && editing.is_system) && (
+          {editing && editing.id && (
             <div className="space-y-1.5 rounded-lg border p-3">
               <Label className="text-sm font-semibold">Attach to treatments</Label>
               <p className="text-xs text-muted-foreground">
