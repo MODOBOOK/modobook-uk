@@ -7,6 +7,7 @@ import { template as marketingBroadcast } from './marketing-broadcast'
 import { template as patientMessage } from './patient-message'
 import { template as appointmentReminder } from './appointment-reminder'
 import { template as adminBroadcast } from './admin-broadcast'
+import { template as staffInvite } from './staff-invite'
 
 export interface TemplateEntry {
   component: ComponentType<any>
