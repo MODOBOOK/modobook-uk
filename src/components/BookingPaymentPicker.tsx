@@ -205,7 +205,7 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
                 style={optionStyle(chosen?.mode === "deposit")}
               >
                 <div className="text-sm font-semibold">Pay deposit</div>
-                <div className="text-xs opacity-75">{formatGBP(effectiveDepositCents)} now — balance at your appointment</div>
+                <div className="text-xs opacity-75">{formatGBP(effectiveDepositCents)} now — {o.cashOnlyBalance ? `remaining £${((treatmentTotalCents - effectiveDepositCents) / 100).toFixed(2)} in cash at your appointment` : "balance at your appointment"}</div>
               </button>
             )}
             {availableModes.includes("full") && (
