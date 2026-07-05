@@ -246,6 +246,31 @@ function TreatmentsPage() {
     });
   }, [items, categoryById]);
 
+  const inlineEdit = search.back === "services";
+
+  if (inlineEdit) {
+    return (
+      <Dialog
+        open
+        onOpenChange={(o) => {
+          if (!o) {
+            setEditing(null);
+            setOpen(false);
+            navigate({ to: "/dashboard/services" });
+          }
+        }}
+      >
+        <TreatmentDialog
+          treatment={editing}
+          categories={categories}
+          consentTemplates={consentTemplates}
+          allTreatments={items}
+          onSave={handleSave}
+        />
+      </Dialog>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4 flex-wrap">
@@ -270,6 +295,7 @@ function TreatmentsPage() {
 
         </Dialog>
       </div>
+
 
       {loading ? (
         <p className="text-muted-foreground">Loading…</p>
