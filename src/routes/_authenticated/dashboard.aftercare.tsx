@@ -216,12 +216,18 @@ function AftercarePage() {
           </DialogHeader>
           {editing && (
             <div className="space-y-3">
+              {editing.is_system && (
+                <p className="rounded-md border bg-muted/40 p-2 text-xs text-muted-foreground">
+                  This is a system template — you can attach it to your treatments but the content is read-only. Use <span className="font-medium">Copy &amp; edit</span> in the library to make your own version.
+                </p>
+              )}
               <div className="space-y-1.5">
                 <Label>Name</Label>
                 <Input
                   value={editing.name}
                   onChange={(e) => setEditing({ ...editing, name: e.target.value })}
                   placeholder="e.g. Lip filler aftercare"
+                  disabled={!!editing.is_system}
                 />
               </div>
               <div className="space-y-1.5">
@@ -231,6 +237,7 @@ function AftercarePage() {
                   value={editing.body_html}
                   onChange={(e) => setEditing({ ...editing, body_html: e.target.value })}
                   placeholder="Write the aftercare instructions sent to the patient."
+                  disabled={!!editing.is_system}
                 />
               </div>
               <div className="space-y-1.5 max-w-[200px]">
@@ -242,21 +249,24 @@ function AftercarePage() {
                   onChange={(e) =>
                     setEditing({ ...editing, delay_hours: Math.max(0, Number(e.target.value) || 0) })
                   }
+                  disabled={!!editing.is_system}
                 />
               </div>
 
-              <label className="flex items-start gap-3 rounded-lg border p-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  className="mt-1 h-4 w-4"
-                  checked={!!editing.show_on_public}
-                  onChange={(e) => setEditing({ ...editing, show_on_public: e.target.checked })}
-                />
-                <span className="text-sm">
-                  <span className="font-semibold">Show on booking page (Pre + Post Care)</span>
-                  <span className="block text-xs text-muted-foreground">Patients can read this from the “Care Guide” button on your booking page before they book.</span>
-                </span>
-              </label>
+              {!editing.is_system && (
+                <label className="flex items-start gap-3 rounded-lg border p-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="mt-1 h-4 w-4"
+                    checked={!!editing.show_on_public}
+                    onChange={(e) => setEditing({ ...editing, show_on_public: e.target.checked })}
+                  />
+                  <span className="text-sm">
+                    <span className="font-semibold">Show on booking page (Pre + Post Care)</span>
+                    <span className="block text-xs text-muted-foreground">Patients can read this from the "Care Guide" button on your booking page before they book.</span>
+                  </span>
+                </label>
+              )}
 
               <div className="space-y-1.5 rounded-lg border p-3">
                 <Label className="text-sm font-semibold">Auto-attach to treatments</Label>
