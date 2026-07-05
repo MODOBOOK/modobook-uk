@@ -82,6 +82,7 @@ const groups: { title: string; items: Item[] }[] = [
       { label: "Consent forms", description: "Templates sent at booking", to: "/dashboard/consent-forms", icon: FileSignature, ...T.ivory },
       { label: "Pre-treatment info", description: "Advice patients can read before booking", to: "/dashboard/pre-treatment", icon: Info, ...T.mocha },
       { label: "Aftercare templates", description: "Reusable post-treatment messages — auto-sent 2h after", to: "/dashboard/aftercare", icon: FileText, ...T.sand },
+      { label: "Attach forms", description: "Allocate medical, consent & aftercare to each treatment — auto-sent on booking", to: "/dashboard/form-allocation", icon: Sparkles, ...T.taupe },
     ],
   },
   {
