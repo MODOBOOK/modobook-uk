@@ -298,6 +298,123 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
             }
 
 
+            case "payment_intent.succeeded": {
+              // Save-card-on-file flow uses an embedded Payment Element on
+              // our own page instead of Stripe hosted Checkout. There is no
+              // checkout.session.completed event to hook into — instead this
+              // payment_intent.succeeded fires on the connected account when
+              // the patient confirms the card.
+              const pi = event.data.object as Stripe.PaymentIntent;
+              const metadata = pi.metadata ?? {};
+              if (metadata.save_card_on_file !== "1") break;
+              if (!metadata.appointment_ids) break;
+              if (!connectedAccountId) break;
+
+              const surchargeCents = Number(metadata.surcharge_cents ?? 0) || 0;
+              const totalCents = Number(pi.amount_received ?? pi.amount ?? 0) || 0;
+              const treatmentPaidCents = Math.max(0, totalCents - surchargeCents);
+              const kind = metadata.kind || "deposit";
+
+              const buildApptPatch = () => {
+                const patch: Record<string, unknown> = {
+                  status: "confirmed",
+                  payment_hold_expires_at: null,
+                  stripe_payment_intent_id: pi.id,
+                };
+                if (kind === "deposit") {
+                  patch.deposit_paid_at = new Date().toISOString();
+                  patch.payment_status = "paid";
+                } else {
+                  patch.payment_status = "paid";
+                  patch.payment_method = "stripe_link";
+                  patch.checkout_completed_at = new Date().toISOString();
+                }
+                return patch;
+              };
+
+              const ids = String(metadata.appointment_ids)
+                .split(",")
+                .map((s) => s.trim())
+                .filter(Boolean);
+              const perAppt = ids.length > 0 ? Math.round(treatmentPaidCents / ids.length) : 0;
+              for (const apptId of ids) {
+                const patch = buildApptPatch();
+                const { data: cur } = await supabaseAdmin
+                  .from("appointments")
+                  .select("amount_paid_cents")
+                  .eq("id", apptId)
+                  .maybeSingle();
+                patch.amount_paid_cents =
+                  Number((cur as { amount_paid_cents?: number } | null)?.amount_paid_cents ?? 0) + perAppt;
+                await supabaseAdmin
+                  .from("appointments")
+                  .update(patch as never)
+                  .eq("id", apptId);
+                paidAppointmentIds.push(apptId);
+              }
+
+              // Persist the saved PaymentMethod onto clinic_clients so the
+              // practitioner can charge no-show / late-cancel fees later.
+              try {
+                const full = await stripe.paymentIntents.retrieve(
+                  pi.id,
+                  { expand: ["payment_method"] },
+                  { stripeAccount: connectedAccountId },
+                );
+                const pm = full.payment_method as Stripe.PaymentMethod | null;
+                const customerId =
+                  typeof full.customer === "string"
+                    ? full.customer
+                    : full.customer?.id ?? null;
+                const card = pm?.card;
+                const email = (metadata.patient_email || "").toLowerCase();
+                if (customerId && pm?.id && card && email && paidAppointmentIds[0]) {
+                  const { data: appt } = await supabaseAdmin
+                    .from("appointments")
+                    .select("profile_id")
+                    .eq("id", paidAppointmentIds[0])
+                    .maybeSingle();
+                  const profileId = (appt as { profile_id?: string } | null)?.profile_id ?? null;
+                  if (profileId) {
+                    const { data: existing } = await supabaseAdmin
+                      .from("clinic_clients")
+                      .select("id, full_name")
+                      .eq("profile_id", profileId)
+                      .ilike("email", email)
+                      .maybeSingle();
+                    const patch = {
+                      stripe_customer_id: customerId,
+                      stripe_payment_method_id: pm.id,
+                      card_brand: card.brand,
+                      card_last4: card.last4,
+                      card_exp_month: card.exp_month,
+                      card_exp_year: card.exp_year,
+                      card_saved_at: new Date().toISOString(),
+                      card_save_consent_at: new Date().toISOString(),
+                    };
+                    if (existing?.id) {
+                      await supabaseAdmin
+                        .from("clinic_clients")
+                        .update(patch as never)
+                        .eq("id", existing.id);
+                    } else {
+                      await supabaseAdmin
+                        .from("clinic_clients")
+                        .insert({
+                          profile_id: profileId,
+                          email,
+                          full_name: email,
+                          ...patch,
+                        } as never);
+                    }
+                  }
+                }
+              } catch (e) {
+                console.error("[stripe/webhook] embedded card-on-file capture failed", e);
+              }
+              break;
+            }
+
             case "charge.refunded": {
               const charge = event.data.object as Stripe.Charge;
               const pi = typeof charge.payment_intent === "string" ? charge.payment_intent : charge.payment_intent?.id;

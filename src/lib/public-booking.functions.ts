@@ -435,6 +435,23 @@ export type PaymentChoice = {
   method: "card" | "klarna" | "clearpay";
 };
 
+// A booking either hands the patient off to Stripe's hosted checkout page,
+// or (when the practitioner has opted into save-card-on-file) renders our
+// own embedded Stripe Elements form so we can hide Apple Pay / Google Pay /
+// Link. Exactly one of these will be non-null.
+export type BookingPaymentResult =
+  | { kind: "hosted"; checkoutUrl: string }
+  | {
+      kind: "embedded";
+      clientSecret: string;
+      paymentIntentId: string;
+      publishableKey: string;
+      connectedAccountId: string;
+      amountCents: number;
+      currency: string;
+      returnUrl: string;
+    };
+
 export const getPublicPaymentOptions = createServerFn({ method: "GET" })
   .inputValidator((input: { slug: string }) => input)
   .handler(async ({ data }) => {
@@ -601,10 +618,11 @@ export const requestBooking = createServerFn({ method: "POST" })
         });
       }
     }
-    // Optional Stripe Checkout for deposit / full payment
-    let checkoutUrl: string | null = null;
+    // Optional Stripe payment for deposit / full payment (hosted checkout or
+    // embedded Payment Element depending on the save-card-on-file setting).
+    let payment: BookingPaymentResult | null = null;
     try {
-      checkoutUrl = await maybeCreateBookingCheckout({
+      payment = await maybeCreateBookingCheckout({
         profile: prof,
         appointmentIds: [id],
         totalAmount: data.basePrice,
@@ -618,7 +636,7 @@ export const requestBooking = createServerFn({ method: "POST" })
     // If we handed the patient off to Stripe, hold the slot briefly. If they
     // abandon the payment the hold expires and availability re-opens; the
     // webhook clears the hold and confirms the appointment on success.
-    if (checkoutUrl) {
+    if (payment) {
       const holdUntil = new Date(Date.now() + 30 * 60 * 1000).toISOString();
       await supabaseAdmin
         .from("appointments")
@@ -627,16 +645,18 @@ export const requestBooking = createServerFn({ method: "POST" })
     }
 
     // Fire booking confirmation email now for non-Stripe bookings. Bookings
-    // routed through Stripe checkout are emailed by the Stripe webhook once
-    // payment succeeds so patients don't get "confirmed" before they've paid.
-    if (!checkoutUrl && data.patientEmail) {
+    // routed through Stripe are emailed by the webhook once payment succeeds
+    // so patients don't get "confirmed" before they've paid.
+    if (!payment && data.patientEmail) {
       try {
         const { sendBookingConfirmationEmails } = await import("@/lib/email/send.server");
         await sendBookingConfirmationEmails([id]);
       } catch (e) { console.error("[requestBooking] email failed", e); }
     }
 
-    return { id, consents, medicalForms, checkoutUrl };
+    const checkoutUrl = payment?.kind === "hosted" ? payment.checkoutUrl : null;
+    const embeddedPayment = payment?.kind === "embedded" ? payment : null;
+    return { id, consents, medicalForms, checkoutUrl, embeddedPayment };
   });
 
 
@@ -674,7 +694,7 @@ async function maybeCreateBookingCheckout(args: {
   patientEmail: string;
   description: string;
   choice?: PaymentChoice | null;
-}): Promise<string | null> {
+}): Promise<BookingPaymentResult | null> {
   const p = args.profile;
   if (!p) return null;
   // Patient chose to pay in cash at the appointment — skip Stripe entirely.
@@ -786,6 +806,54 @@ async function maybeCreateBookingCheckout(args: {
   const successUrl = `${origin}/m/${p.slug ?? ""}/account?paid=1&session_id={CHECKOUT_SESSION_ID}`;
   const cancelUrl = `${origin}/m/${p.slug ?? ""}`;
 
+  const saveCardOnFile = !!p.save_card_on_file;
+  const metadata = {
+    appointment_ids: args.appointmentIds.join(","),
+    kind,
+    surcharge_cents: String(surchargeCents),
+    save_card_on_file: saveCardOnFile ? "1" : "0",
+    patient_email: args.patientEmail,
+  };
+
+  // Save-card-on-file: skip Stripe's hosted checkout entirely (it re-adds
+  // Apple Pay + Link even when payment_method_types is ['card']) and drive an
+  // embedded Payment Element on our own page. Wallets and Link are hidden
+  // client-side. The total charged still includes any platform surcharge.
+  if (saveCardOnFile) {
+    try {
+      const { createSaveCardPaymentIntent } = await import("./stripe.server");
+      const publishableKey = process.env.STRIPE_PUBLISHABLE_KEY;
+      if (!publishableKey) {
+        console.error("[maybeCreateBookingCheckout] STRIPE_PUBLISHABLE_KEY missing");
+        return null;
+      }
+      const totalCents = amountCents + surchargeCents;
+      const intent = await createSaveCardPaymentIntent({
+        accountId: p.stripe_connect_account_id,
+        amountCents: totalCents,
+        currency: "gbp",
+        customerEmail: args.patientEmail,
+        description: kind === "deposit" ? `Deposit — ${args.description}` : args.description,
+        metadata,
+      });
+      if (!intent.clientSecret) return null;
+      const returnUrl = `${origin}/m/${p.slug ?? ""}/account?paid=1&pi=${intent.paymentIntentId}`;
+      return {
+        kind: "embedded",
+        clientSecret: intent.clientSecret,
+        paymentIntentId: intent.paymentIntentId,
+        publishableKey,
+        connectedAccountId: p.stripe_connect_account_id,
+        amountCents: totalCents,
+        currency: "gbp",
+        returnUrl,
+      };
+    } catch (e) {
+      console.error("[maybeCreateBookingCheckout] save-card PI error", e);
+      return null;
+    }
+  }
+
   try {
     const { createCheckoutSession } = await import("./stripe.server");
     const lineItems: Array<{
@@ -817,27 +885,18 @@ async function maybeCreateBookingCheckout(args: {
         },
       });
     }
-    const saveCardOnFile = !!p.save_card_on_file;
-    // When save-card-on-file is on, force card-only (no BNPL / wallets)
-    // so we always end up with a reusable PaymentMethod.
-    const effectiveMethodTypes = saveCardOnFile ? ["card"] : methodTypes;
     const session = await createCheckoutSession({
       accountId: p.stripe_connect_account_id,
       lineItems,
       successUrl,
       cancelUrl,
       customerEmail: args.patientEmail,
-      paymentMethodTypes: effectiveMethodTypes as never,
-      saveCardOnFile,
-      metadata: {
-        appointment_ids: args.appointmentIds.join(","),
-        kind,
-        surcharge_cents: String(surchargeCents),
-        save_card_on_file: saveCardOnFile ? "1" : "0",
-        patient_email: args.patientEmail,
-      },
+      paymentMethodTypes: methodTypes as never,
+      saveCardOnFile: false,
+      metadata,
     });
-    return session.url ?? null;
+    if (!session.url) return null;
+    return { kind: "hosted", checkoutUrl: session.url };
   } catch (e) {
     console.error("[maybeCreateBookingCheckout] stripe error", e);
     return null;
@@ -1044,10 +1103,10 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
       }
     }
 
-    let checkoutUrl: string | null = null;
+    let payment: BookingPaymentResult | null = null;
     try {
       const totalAmount = data.bookings.reduce((sum, b) => sum + b.priceCents / 100, 0);
-      checkoutUrl = await maybeCreateBookingCheckout({
+      payment = await maybeCreateBookingCheckout({
         profile: prof,
         appointmentIds: created.map((c) => c.id),
         totalAmount,
@@ -1059,9 +1118,9 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
     } catch (e) {
       console.error("[requestMultiBooking] checkout failed", e);
     }
-    // Slot hold while patient completes Stripe checkout; abandoned bookings
+    // Slot hold while patient completes Stripe payment; abandoned bookings
     // auto-release when the hold expires (see getDayAvailability filter).
-    if (checkoutUrl && created.length > 0) {
+    if (payment && created.length > 0) {
       const holdUntil = new Date(Date.now() + 30 * 60 * 1000).toISOString();
       await supabaseAdmin
         .from("appointments")
@@ -1070,15 +1129,17 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
     }
 
     // Non-payment bookings should still receive confirmations. Payment bookings
-    // are confirmed by the checkout webhook after money is taken.
-    if (!checkoutUrl && data.patientEmail && created.length > 0) {
+    // are confirmed by the webhook after money is taken.
+    if (!payment && data.patientEmail && created.length > 0) {
       try {
         const { sendBookingConfirmationEmails } = await import("@/lib/email/send.server");
         await sendBookingConfirmationEmails(created.map((c) => c.id));
       } catch (e) { console.error("[requestMultiBooking] email failed", e); }
     }
 
-    return { appointments: created, consents, medicalForms, packagePurchases, checkoutUrl };
+    const checkoutUrl = payment?.kind === "hosted" ? payment.checkoutUrl : null;
+    const embeddedPayment = payment?.kind === "embedded" ? payment : null;
+    return { appointments: created, consents, medicalForms, packagePurchases, checkoutUrl, embeddedPayment };
 
   });
 
