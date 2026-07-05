@@ -136,8 +136,9 @@ function ConsentFormsPage() {
         },
       });
       const tplId = (saved as any)?.id ?? editing.id;
-      // Only attach to treatments for practitioner-owned templates
-      if (tplId && !(isAdmin && editing.is_system)) {
+      // Attach to this practitioner's treatments (safe for both own and system templates —
+      // links are scoped per practitioner).
+      if (tplId) {
         await setTplTreatments({ data: { template_id: tplId, treatment_ids: treatmentIds } });
       }
       toast.success("Saved");
