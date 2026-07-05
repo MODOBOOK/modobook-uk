@@ -207,11 +207,20 @@ function BrandingPage() {
       return next;
     });
   }
-  function applyCustomPalette() {
+  async function applyCustomPalette() {
     const valid = customColors.every((c) => /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(c));
     if (!valid) { toast.error("Enter valid hex codes (e.g. #faf7f2)"); return; }
-    setState((s) => ({ ...s, ...buildCustomPalette(customColors), preset_key: null }));
-    toast.success("Custom palette applied — overrides any preset colours");
+    const next: ClinicThemeInput = { ...state, ...buildCustomPalette(customColors), preset_key: null };
+    setState(next);
+    setSaving(true);
+    try {
+      await save({ data: next });
+      toast.success("Custom palette applied and saved — overrides any preset colours");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to save custom palette");
+    } finally {
+      setSaving(false);
+    }
   }
 
   const activePaletteKey = COLOR_PALETTES.find(
