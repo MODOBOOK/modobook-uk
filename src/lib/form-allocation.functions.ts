@@ -58,8 +58,9 @@ export const listFormAllocation = createServerFn({ method: "GET" })
         .order("name"),
       supabase
         .from("aftercare_templates")
-        .select("id, name, delay_hours")
-        .eq("profile_id", profileId)
+        .select("id, name, delay_hours, is_system")
+        .or(ownOrSystem)
+        .order("is_system", { ascending: false })
         .order("name"),
       supabase.from("treatment_medical_forms").select("treatment_id, template_id"),
       supabase.from("treatment_consents").select("treatment_id, consent_template_id"),
