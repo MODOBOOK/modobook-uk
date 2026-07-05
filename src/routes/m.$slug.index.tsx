@@ -1766,8 +1766,18 @@ function BookPage() {
                     (l) => l.treatment_id === addonPrompt.treatmentId && l.addon_id === a.id,
                   );
                   const pct = link?.discount_percent ?? null;
+                  const amount = link?.discount_amount ?? null;
                   const basePrice = Number(a.price ?? 0);
-                  const finalPrice = pct ? basePrice * (1 - pct / 100) : basePrice;
+                  const finalPrice = amount != null && amount > 0
+                    ? Math.max(0, basePrice - amount)
+                    : pct
+                      ? basePrice * (1 - pct / 100)
+                      : basePrice;
+                  const discountText = amount != null && amount > 0
+                    ? `£${amount.toFixed(2)} off add-on`
+                    : pct
+                      ? `${pct}% off add-on`
+                      : null;
                   return (
                     <button
                       key={a.id}
@@ -1792,14 +1802,14 @@ function BookPage() {
                           <div className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{a.description}</div>
                         )}
                         <div className="mt-1 text-[11px] text-muted-foreground">+{a.duration} min</div>
-                        {pct ? (
+                        {discountText ? (
                           <div className="mt-1 inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
-                            {pct}% off add-on
+                            {discountText}
                           </div>
                         ) : null}
                       </div>
                       <div className="whitespace-nowrap text-sm font-semibold text-right" style={{ color: menuPriceColor }}>
-                        {pct ? (
+                        {discountText ? (
                           <>
                             <span className="block text-xs text-muted-foreground line-through">+£{basePrice.toFixed(2)}</span>
                             +£{finalPrice.toFixed(2)}
