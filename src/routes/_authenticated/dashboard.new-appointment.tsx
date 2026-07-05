@@ -34,13 +34,15 @@ export const Route = createFileRoute("/_authenticated/dashboard/new-appointment"
   component: NewAppointmentPage,
 });
 
-type Treatment = { id: string; name: string; price: number | null; duration: number | null };
+type Treatment = { id: string; name: string; price: number | null; duration: number | null; category_id: string | null };
 type Location = { id: string; name: string };
+type Category = { id: string; name: string; sort_order: number | null };
 
 function NewAppointmentPage() {
   const { profile } = Route.useLoaderData();
   const navigate = useNavigate();
   const [treatments, setTreatments] = useState<Treatment[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
   const [treatmentId, setTreatmentId] = useState("");
   const [locationId, setLocationId] = useState<string>("");
