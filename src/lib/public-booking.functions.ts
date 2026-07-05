@@ -974,7 +974,8 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
     if (prof?.require_account_to_book && !data.patientUserId) {
       throw new Error("Please sign in to book — this clinic requires an account.");
     }
-    const status = prof?.auto_confirm_bookings === false ? "pending" : "confirmed";
+    const finalStatus = prof?.auto_confirm_bookings === false ? "pending" : "confirmed";
+    const status = "pending";
     const { data: blk } = await sb
       .from("clinic_clients")
       .select("id")
