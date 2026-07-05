@@ -105,7 +105,10 @@ export const updateStaff = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const profileId = await getProfileId(context.supabase, context.userId);
     if (!profileId) throw new Error("Profile not found");
-    const patch: Record<string, unknown> = {};
+    const patch: {
+      name?: string; role?: StaffRole; data_scope?: StaffScope;
+      practitioner_id?: string | null; status?: StaffStatus;
+    } = {};
     if (data.name !== undefined) patch.name = data.name;
     if (data.role !== undefined) patch.role = data.role;
     if (data.data_scope !== undefined) patch.data_scope = data.data_scope;
