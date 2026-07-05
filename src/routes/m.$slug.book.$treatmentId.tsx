@@ -73,6 +73,7 @@ function formatSessionSpacing(days?: number | null) {
 
 function BookTreatmentPage() {
   const { slug } = useParams({ from: "/m/$slug/book/$treatmentId" });
+  const search = Route.useSearch();
   const ctx = Route.useLoaderData();
   const treatment = ctx.treatment;
   const settings = (ctx as { settings?: import("@/lib/public-booking.functions").PublicBookingSettings }).settings;
