@@ -84,6 +84,7 @@ const navItems = [
   { label: "Consent forms", to: "/dashboard/consent-forms", icon: FileSignature },
   { label: "Pre-treatment info", to: "/dashboard/pre-treatment", icon: Info },
   { label: "Aftercare templates", to: "/dashboard/aftercare", icon: HeartPulse },
+  { label: "Attach forms", to: "/dashboard/form-allocation", icon: Sparkles },
 
   { label: "Booking flow", to: "/dashboard/booking-flow", icon: HelpCircle },
   { label: "Availability", to: "/dashboard/availability", icon: CalendarDays },
