@@ -737,29 +737,6 @@ function MultiBookPage() {
                 </CardContent>
               </Card>
 
-              {ctx.locations.length > 1 && (
-                <Card className="mb-6">
-                  <CardHeader>
-                    <CardTitle className="text-base" style={headingStyle}>Location</CardTitle>
-                  </CardHeader>
-                  <CardContent className="flex flex-wrap gap-2">
-                    {ctx.locations.map((l: Loc) => {
-                      const selected = locationId === l.id;
-                      return (
-                        <Button
-                          key={l.id}
-                          variant={selected ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => setLocationId(l.id)}
-                          style={selected ? { backgroundColor: brand, borderColor: brand, color: "#fff" } : { color: brand, borderColor: `${brand}55` }}
-                        >
-                          <MapPin className="mr-1 h-4 w-4" />{l.name}
-                        </Button>
-                      );
-                    })}
-                  </CardContent>
-                </Card>
-              )}
 
               {availableAddons.length > 0 && (
                 <Card className="mb-6">
