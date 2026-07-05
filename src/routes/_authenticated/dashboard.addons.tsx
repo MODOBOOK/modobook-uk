@@ -63,6 +63,7 @@ function AddonsPage() {
 
   const [editOpen, setEditOpen] = useState(false);
   const [editing, setEditing] = useState<Partial<AddonRow> | null>(null);
+  const [editKind, setEditKind] = useState<DiscountKind>("percent");
   const [linksOpen, setLinksOpen] = useState<AddonRow | null>(null);
 
   async function refresh() {
