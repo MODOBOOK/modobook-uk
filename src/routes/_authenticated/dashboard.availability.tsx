@@ -13,7 +13,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { Trash2, Plus, Repeat, CalendarDays, CalendarRange, Clock } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
 import {
   listAvailabilityRules,
