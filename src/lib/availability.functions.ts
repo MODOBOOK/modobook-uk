@@ -382,3 +382,45 @@ export const deleteBlockedTime = createServerFn({ method: "POST" })
   });
 
 
+
+// ---------- Rota (multi-week cycle) settings ----------
+
+export const getRotaSettings = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const profileId = await getProfileId(context.supabase, context.userId);
+    if (!profileId) return { rota_anchor_date: null as string | null };
+    const { data } = await context.supabase
+      .from("profiles")
+      .select("rota_anchor_date")
+      .eq("id", profileId)
+      .maybeSingle();
+    return { rota_anchor_date: (data?.rota_anchor_date as string | null) ?? null };
+  });
+
+export const setRotaAnchor = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { date: string | null }) => d)
+  .handler(async ({ data, context }) => {
+    const profileId = await getProfileId(context.supabase, context.userId);
+    if (!profileId) throw new Error("Profile not found");
+    const { error } = await context.supabase
+      .from("profiles")
+      .update({ rota_anchor_date: data.date })
+      .eq("id", profileId);
+    if (error) throw error;
+    return { ok: true };
+  });
+
+export const listPractitioners = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const profileId = await getProfileId(context.supabase, context.userId);
+    if (!profileId) return [];
+    const { data } = await context.supabase
+      .from("practitioners")
+      .select("id, display_name")
+      .eq("profile_id", profileId)
+      .order("display_name");
+    return data ?? [];
+  });
