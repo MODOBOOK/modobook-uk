@@ -51,6 +51,7 @@ export const listAddons = createServerFn({ method: "GET" })
       links: ((links ?? []) as any[]).map((l) => ({
         id: l.id, addon_id: l.addon_id, treatment_id: l.treatment_id,
         category_id: l.category_id, discount_percent: l.discount_percent,
+        discount_amount: l.discount_amount ?? null,
       })) as AddonLinkRow[],
     };
   });
