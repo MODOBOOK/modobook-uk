@@ -37,6 +37,7 @@ import {
   addAvailabilityOverride,
   listAvailabilityRules,
   listAvailabilityOverrides,
+  listBlockedDates,
 } from "@/lib/availability.functions";
 import {
   createPaymentLink,
