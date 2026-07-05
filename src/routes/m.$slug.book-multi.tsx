@@ -183,6 +183,7 @@ function MultiBookPage() {
     });
   const addonNet = (a: PublicAddon) => {
     const base = a.price_cents / 100;
+    if (a.discount_amount != null) return Math.max(0, base - a.discount_amount);
     const d = a.discount_percent ?? 0;
     return base * (1 - d / 100);
   };
