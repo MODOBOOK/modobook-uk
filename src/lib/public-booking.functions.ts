@@ -113,8 +113,10 @@ export const getBookingContext = createServerFn({ method: "GET" })
       modelSlots: modelSlots ?? [],
       bookableFrom,
       settings,
+      rotaAnchor,
     };
   });
+
 
 export type PublicBookingSettings = {
   booking_min_notice_hours: number;
