@@ -587,13 +587,13 @@ function MultiBookPage() {
     (!reqDob || form.dob) &&
     (!reqAddress || form.addressLine1),
   );
-  const selectionValid = (treatments.length > 0 || selectedPackages.length > 0) && (ctx.locations.length <= 1 || !!locationId);
-  const datetimeValid = !!slot;
+  const selectionValid = treatments.length > 0 || selectedPackages.length > 0;
+  const locationValid = ctx.locations.length <= 1 || !!locationId;
+  const datetimeValid = !!slot && locationValid;
 
   const stepsMeta: BookingStep[] = [
     { key: "treatment", label: "Treatment", done: treatments.length > 0 || selectedPackages.length > 0, active: step === "selection" && !(treatments.length > 0 || selectedPackages.length > 0) },
-    { key: "location", label: "Location", done: ctx.locations.length <= 1 ? true : !!locationId, active: step === "selection" && !(ctx.locations.length <= 1 ? true : !!locationId) },
-    { key: "datetime", label: "Date & Time", done: !!slot, active: step === "datetime" && !slot },
+    { key: "datetime", label: "Location & Time", done: !!slot && locationValid, active: step === "datetime" && !(!!slot && locationValid) },
     { key: "details", label: "Your Details", done: detailsDone, active: step === "details" && !detailsDone },
     { key: "payment", label: "Payment", done: !!paymentChoice || totalAfterDiscount <= 0, active: step === "details" && !paymentChoice && totalAfterDiscount > 0 },
   ];
@@ -737,29 +737,6 @@ function MultiBookPage() {
                 </CardContent>
               </Card>
 
-              {ctx.locations.length > 1 && (
-                <Card className="mb-6">
-                  <CardHeader>
-                    <CardTitle className="text-base" style={headingStyle}>Location</CardTitle>
-                  </CardHeader>
-                  <CardContent className="flex flex-wrap gap-2">
-                    {ctx.locations.map((l: Loc) => {
-                      const selected = locationId === l.id;
-                      return (
-                        <Button
-                          key={l.id}
-                          variant={selected ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => setLocationId(l.id)}
-                          style={selected ? { backgroundColor: brand, borderColor: brand, color: "#fff" } : { color: brand, borderColor: `${brand}55` }}
-                        >
-                          <MapPin className="mr-1 h-4 w-4" />{l.name}
-                        </Button>
-                      );
-                    })}
-                  </CardContent>
-                </Card>
-              )}
 
               {availableAddons.length > 0 && (
                 <Card className="mb-6">
@@ -819,7 +796,7 @@ function MultiBookPage() {
           {step === "datetime" && (
             <Card className="mb-6">
               <CardHeader>
-                <CardTitle className="text-base" style={headingStyle}>Pick a date & time</CardTitle>
+                <CardTitle className="text-base" style={headingStyle}>Pick a location, date & time</CardTitle>
                 {bookableFrom && (
                   <p className="text-xs text-muted-foreground mt-1">
                     Bookable from {fromIsoDate(bookableFrom).toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" })}
@@ -827,7 +804,29 @@ function MultiBookPage() {
                 )}
               </CardHeader>
               <CardContent className="space-y-5">
+                {ctx.locations.length > 1 && (
+                  <div>
+                    <Label className="mb-2 block text-sm font-semibold">Location</Label>
+                    <div className="flex flex-wrap gap-2">
+                      {ctx.locations.map((l: Loc) => {
+                        const selected = locationId === l.id;
+                        return (
+                          <Button
+                            key={l.id}
+                            variant={selected ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => { setLocationId(l.id); setSlot(null); }}
+                            style={selected ? { backgroundColor: brand, borderColor: brand, color: "#fff" } : { color: brand, borderColor: `${brand}55` }}
+                          >
+                            <MapPin className="mr-1 h-4 w-4" />{l.name}
+                          </Button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
                 <div className="flex justify-center">
+
                   <Calendar
                     mode="single"
                     selected={fromIsoDate(date)}
