@@ -430,7 +430,12 @@ function MultiBookPage() {
     try {
       const applicableIds = new Set(discount?.applies_to_treatment_ids ?? []);
       const depositOverridesSplit = paymentChoice?.mode === "deposit";
-      const bookings = treatments.map((t) => {
+      const pickedAddonTotalCents = Math.round(
+        availableAddons
+          .filter((a) => addonPicks.has(a.id))
+          .reduce((sum, a) => sum + addonNet(a), 0) * 100,
+      );
+      const bookings = treatments.map((t, index) => {
         let price = priceFor(t);
         if (discount && applicableIds.has(t.id)) {
           const off = discount.kind === "percent"
@@ -438,10 +443,11 @@ function MultiBookPage() {
             : discount.amount;
           price = Math.max(0, price - Math.min(off, price));
         }
+        const priceCents = Math.round(price * 100) + (index === 0 ? pickedAddonTotalCents : 0);
         return {
           treatmentId: t.id,
           durationMin: durationFor(t),
-          priceCents: Math.round(price * 100),
+          priceCents,
           sessionCount: Math.max(1, Number((t as { session_count?: number }).session_count ?? 1)),
           paymentPlan: depositOverridesSplit ? ("full" as const) : selectedPaymentPlan(t),
           clinicVisitId: visitSelections[t.id] ?? null,
