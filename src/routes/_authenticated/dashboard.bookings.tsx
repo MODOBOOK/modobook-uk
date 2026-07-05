@@ -240,8 +240,17 @@ function BookingsPage() {
   /** Returns greyed-out segments [topPx, heightPx] for hours with no availability. */
   function unavailableSegments(d: Date): { top: number; height: number }[] {
     const dow = d.getDay();
-    const dayRules = rulesByDow.get(dow) ?? [];
     const iso = ymd(d);
+    // Whole-day blocks (respect location filter: block applies if unscoped or matches)
+    const isBlockedDay = blockedDates.some(
+      (bd) =>
+        bd.date === iso &&
+        (locationFilter === "all" || bd.location_id == null || bd.location_id === locationFilter)
+    );
+    if (isBlockedDay) {
+      return [{ top: 0, height: (END_HOUR - START_HOUR + 1) * HOUR_HEIGHT }];
+    }
+    const dayRules = rulesByDow.get(dow) ?? [];
     const dayOverrides = overrides.filter((o) => o.date === iso);
     const windows: [number, number][] = [
       ...dayRules.map((r) => [parseTime(r.start_time), parseTime(r.end_time)] as [number, number]),
