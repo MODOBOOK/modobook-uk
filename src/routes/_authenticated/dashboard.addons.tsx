@@ -79,8 +79,8 @@ function AddonsPage() {
     return links.filter((l) => l.addon_id === addonId);
   }
 
-  function openCreate() { setEditing({ name: "", price_cents: 0, duration_min: 0, discount_percent: null, discount_amount: null, active: true }); setEditOpen(true); }
-  function openEdit(a: AddonRow) { setEditing(a); setEditOpen(true); }
+  function openCreate() { setEditing({ name: "", price_cents: 0, duration_min: 0, discount_percent: null, discount_amount: null, active: true }); setEditKind("percent"); setEditOpen(true); }
+  function openEdit(a: AddonRow) { setEditing(a); setEditKind((a.discount_amount ?? 0) > 0 ? "amount" : "percent"); setEditOpen(true); }
 
   async function saveAddon() {
     if (!editing?.name?.trim()) { toast.error("Name required"); return; }
