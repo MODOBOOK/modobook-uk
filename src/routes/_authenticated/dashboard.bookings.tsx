@@ -235,12 +235,15 @@ function BookingsPage() {
   function unavailableSegments(d: Date): { top: number; height: number }[] {
     const dow = d.getDay();
     const dayRules = rulesByDow.get(dow) ?? [];
-    if (dayRules.length === 0) {
+    const iso = ymd(d);
+    const dayOverrides = overrides.filter((o) => o.date === iso);
+    const windows: [number, number][] = [
+      ...dayRules.map((r) => [parseTime(r.start_time), parseTime(r.end_time)] as [number, number]),
+      ...dayOverrides.map((o) => [parseTime(o.start_time), parseTime(o.end_time)] as [number, number]),
+    ].sort((a, b) => a[0] - b[0]);
+    if (windows.length === 0) {
       return [{ top: 0, height: (END_HOUR - START_HOUR + 1) * HOUR_HEIGHT }];
     }
-    const windows = dayRules
-      .map((r) => [parseTime(r.start_time), parseTime(r.end_time)] as [number, number])
-      .sort((a, b) => a[0] - b[0]);
     // merge overlapping
     const merged: [number, number][] = [];
     for (const w of windows) {
