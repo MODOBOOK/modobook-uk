@@ -855,10 +855,11 @@ function BlockTimeDialog({
 }
 
 function UnblockDialog({
-  open, onOpenChange, blocks, onRemoved,
+  open, onOpenChange, blocks, onRemoved, onOpened,
 }: {
   open: boolean; onOpenChange: (v: boolean) => void;
   blocks: BlockedTime[]; onRemoved: (id: string) => void;
+  onOpened?: () => void | Promise<void>;
 }) {
   const del = useServerFn(deleteBlockedTime);
   const addOverride = useServerFn(addAvailabilityOverride);
@@ -888,6 +889,7 @@ function UnblockDialog({
         await addOverride({ data: { date, start_time: start, end_time: end, slot_interval: interval } });
       }
       toast.success(`Opened ${dates.length} day${dates.length === 1 ? "" : "s"} · ${start}–${end}`);
+      await onOpened?.();
       onOpenChange(false);
     } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
   }
