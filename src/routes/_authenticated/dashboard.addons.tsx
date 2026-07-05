@@ -194,17 +194,16 @@ function AddonsPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label className="text-xs">Price (£)</Label>
-                  <Input type="number" min={0} step="0.01" value={poundsFromCents(editing.price_cents)}
+                  <Input type="text" inputMode="decimal" value={poundsFromCents(editing.price_cents)}
                     onChange={(e) => setEditing({ ...editing, price_cents: Math.round(parseFloat(e.target.value || "0") * 100) })} />
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs">Duration (min)</Label>
-                  <Input type="number" min={0} value={editing.duration_min ?? 0}
+                  <Input type="text" inputMode="numeric" value={editing.duration_min ?? 0}
                     onChange={(e) => setEditing({ ...editing, duration_min: parseInt(e.target.value || "0") })} />
                 </div>
               </div>
               {(() => {
-                const kind: DiscountKind = (editing.discount_amount ?? 0) > 0 ? "amount" : "percent";
                 const standard = (editing.price_cents ?? 0) / 100;
                 const preview = netAddonPrice({
                   price_cents: editing.price_cents ?? 0,
@@ -218,28 +217,27 @@ function AddonsPage() {
                     <div className="mt-1 grid grid-cols-[110px_minmax(0,1fr)] gap-2">
                       <select
                         className="h-9 rounded-md border bg-background px-2 text-sm"
-                        value={kind}
+                        value={editKind}
                         onChange={(e) => {
                           const next = e.target.value as DiscountKind;
+                          setEditKind(next);
                           setEditing(next === "percent"
-                            ? { ...editing, discount_percent: editing.discount_percent ?? null, discount_amount: null }
-                            : { ...editing, discount_percent: null, discount_amount: editing.discount_amount ?? null });
+                            ? { ...editing, discount_amount: null }
+                            : { ...editing, discount_percent: null });
                         }}
                       >
                         <option value="percent">% off</option>
                         <option value="amount">£ off</option>
                       </select>
                       <Input
-                        type="number"
-                        min={0}
-                        max={kind === "percent" ? 100 : undefined}
-                        step={kind === "percent" ? "1" : "0.01"}
-                        placeholder={kind === "percent" ? "No discount" : "No discount"}
-                        value={kind === "percent" ? (editing.discount_percent ?? "") : (editing.discount_amount ?? "")}
+                        type="text"
+                        inputMode="decimal"
+                        placeholder={editKind === "percent" ? "No discount" : "No discount"}
+                        value={editKind === "percent" ? (editing.discount_percent ?? "") : (editing.discount_amount ?? "")}
                         onChange={(e) => {
                           const raw = e.target.value;
                           const parsed = raw === "" ? null : Math.max(0, parseFloat(raw));
-                          setEditing(kind === "percent"
+                          setEditing(editKind === "percent"
                             ? { ...editing, discount_percent: parsed == null ? null : Math.min(100, parsed), discount_amount: null }
                             : { ...editing, discount_percent: null, discount_amount: parsed });
                         }}
