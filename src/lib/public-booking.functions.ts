@@ -1103,10 +1103,10 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
       }
     }
 
-    let checkoutUrl: string | null = null;
+    let payment: BookingPaymentResult | null = null;
     try {
       const totalAmount = data.bookings.reduce((sum, b) => sum + b.priceCents / 100, 0);
-      checkoutUrl = await maybeCreateBookingCheckout({
+      payment = await maybeCreateBookingCheckout({
         profile: prof,
         appointmentIds: created.map((c) => c.id),
         totalAmount,
@@ -1118,9 +1118,9 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
     } catch (e) {
       console.error("[requestMultiBooking] checkout failed", e);
     }
-    // Slot hold while patient completes Stripe checkout; abandoned bookings
+    // Slot hold while patient completes Stripe payment; abandoned bookings
     // auto-release when the hold expires (see getDayAvailability filter).
-    if (checkoutUrl && created.length > 0) {
+    if (payment && created.length > 0) {
       const holdUntil = new Date(Date.now() + 30 * 60 * 1000).toISOString();
       await supabaseAdmin
         .from("appointments")
@@ -1129,15 +1129,17 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
     }
 
     // Non-payment bookings should still receive confirmations. Payment bookings
-    // are confirmed by the checkout webhook after money is taken.
-    if (!checkoutUrl && data.patientEmail && created.length > 0) {
+    // are confirmed by the webhook after money is taken.
+    if (!payment && data.patientEmail && created.length > 0) {
       try {
         const { sendBookingConfirmationEmails } = await import("@/lib/email/send.server");
         await sendBookingConfirmationEmails(created.map((c) => c.id));
       } catch (e) { console.error("[requestMultiBooking] email failed", e); }
     }
 
-    return { appointments: created, consents, medicalForms, packagePurchases, checkoutUrl };
+    const checkoutUrl = payment?.kind === "hosted" ? payment.checkoutUrl : null;
+    const embeddedPayment = payment?.kind === "embedded" ? payment : null;
+    return { appointments: created, consents, medicalForms, packagePurchases, checkoutUrl, embeddedPayment };
 
   });
 
