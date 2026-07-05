@@ -76,6 +76,9 @@ function AvailabilityPage() {
   const listBl = useServerFn(listBlockedDates);
   const addBl = useServerFn(addBlockedDate);
   const delBl = useServerFn(deleteBlockedDate);
+  const listBlT = useServerFn(listBlockedTimes);
+  const addBlT = useServerFn(addBlockedTime);
+  const delBlT = useServerFn(deleteBlockedTime);
   const getRota = useServerFn(getRotaSettings);
   const setAnchor = useServerFn(setRotaAnchor);
 
