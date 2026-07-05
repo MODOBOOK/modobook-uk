@@ -220,11 +220,22 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
                 </div>
               </button>
             )}
+            {availableModes.includes("cash") && (
+              <button
+                type="button"
+                onClick={() => selectMode("cash")}
+                className="text-left rounded-xl border-2 px-3 py-2.5 transition sm:col-span-2"
+                style={optionStyle(chosen?.mode === "cash")}
+              >
+                <div className="text-sm font-semibold">Pay in cash at your appointment</div>
+                <div className="text-xs opacity-75">Nothing to pay now — please bring £{totalAmount.toFixed(2)} in cash on the day.</div>
+              </button>
+            )}
           </div>
         </div>
       )}
 
-      {availableMethods.length > 0 && (
+      {!isCash && availableMethods.length > 0 && (
         <div>
           <div className="text-[11px] uppercase tracking-[0.14em] opacity-60 mb-2">Method</div>
           <div className="grid grid-cols-3 gap-2">
@@ -244,34 +255,47 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
       )}
 
       {chosen ? (
-        <div
-          className="mt-4 pt-3 space-y-1.5 text-sm border-t"
-          style={accent ? { borderColor: `color-mix(in oklab, ${accent} 25%, transparent)` } : undefined}
-        >
-          <div className="flex items-baseline justify-between">
-            <span className="opacity-70">{chosen.mode === "deposit" ? "Deposit" : "Subtotal"}</span>
-            <span>{formatGBP(baseCents)}</span>
-          </div>
-          {clinicFeeCents > 0 && (
-            <div className="flex items-baseline justify-between">
-              <span className="opacity-70">Platform fee ({pct}%)</span>
-              <span>{formatGBP(clinicFeeCents)}</span>
-            </div>
-          )}
-          {stripeFeeCents > 0 && (
-            <div className="flex items-baseline justify-between">
-              <span className="opacity-70">Platform fee</span>
-              <span>{formatGBP(stripeFeeCents)}</span>
-            </div>
-          )}
+        isCash ? (
           <div
-            className="flex items-baseline justify-between border-t pt-2 mt-1"
+            className="mt-4 pt-3 text-sm border-t"
             style={accent ? { borderColor: `color-mix(in oklab, ${accent} 25%, transparent)` } : undefined}
           >
-            <span className="font-medium">{chosen.mode === "deposit" ? "Deposit today" : "Total today"}</span>
-            <span className="text-lg font-bold" style={headingStyle}>{formatGBP(totalCents)}</span>
+            <div className="flex items-baseline justify-between">
+              <span className="font-medium">Due at appointment</span>
+              <span className="text-lg font-bold" style={headingStyle}>{formatGBP(treatmentTotalCents)}</span>
+            </div>
+            <p className="mt-1 text-xs opacity-70">You won't be charged online. Please bring cash on the day.</p>
           </div>
-        </div>
+        ) : (
+          <div
+            className="mt-4 pt-3 space-y-1.5 text-sm border-t"
+            style={accent ? { borderColor: `color-mix(in oklab, ${accent} 25%, transparent)` } : undefined}
+          >
+            <div className="flex items-baseline justify-between">
+              <span className="opacity-70">{chosen.mode === "deposit" ? "Deposit" : "Subtotal"}</span>
+              <span>{formatGBP(baseCents)}</span>
+            </div>
+            {clinicFeeCents > 0 && (
+              <div className="flex items-baseline justify-between">
+                <span className="opacity-70">Platform fee ({pct}%)</span>
+                <span>{formatGBP(clinicFeeCents)}</span>
+              </div>
+            )}
+            {stripeFeeCents > 0 && (
+              <div className="flex items-baseline justify-between">
+                <span className="opacity-70">Platform fee</span>
+                <span>{formatGBP(stripeFeeCents)}</span>
+              </div>
+            )}
+            <div
+              className="flex items-baseline justify-between border-t pt-2 mt-1"
+              style={accent ? { borderColor: `color-mix(in oklab, ${accent} 25%, transparent)` } : undefined}
+            >
+              <span className="font-medium">{chosen.mode === "deposit" ? "Deposit today" : "Total today"}</span>
+              <span className="text-lg font-bold" style={headingStyle}>{formatGBP(totalCents)}</span>
+            </div>
+          </div>
+        )
       ) : (
         <div
           className="mt-4 pt-3 text-sm border-t"
@@ -284,4 +308,5 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
   );
 
 }
+
 
