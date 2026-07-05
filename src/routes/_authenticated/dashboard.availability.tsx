@@ -257,16 +257,16 @@ function AvailabilityPage() {
         </TabsList>
 
         <TabsContent value="weekly" className="space-y-4">
-          <Card>
+          <Card className="border-primary/10 bg-gradient-to-br from-background to-muted/40">
             <CardHeader>
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <CardTitle className="flex items-center gap-2"><Repeat className="h-4 w-4" /> Rota cycle</CardTitle>
+                  <CardTitle className="flex items-center gap-2"><Repeat className="h-4 w-4 text-primary" /> Rota cycle</CardTitle>
                   <CardDescription>Repeat weekly, fortnightly, or on a 4-week rota.</CardDescription>
                 </div>
                 <div className="flex items-center gap-2">
                   <Select value={String(cycleLength)} onValueChange={(v) => updateCycle(Number(v))}>
-                    <SelectTrigger className="w-[220px]"><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="w-[220px] bg-background"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="1">Every week</SelectItem>
                       <SelectItem value="2">Every 2 weeks (A / B)</SelectItem>
@@ -274,25 +274,37 @@ function AvailabilityPage() {
                     </SelectContent>
                   </Select>
                   {cycleLength > 1 && (
-                    <Badge variant="secondary">This week: {WEEK_LETTERS[thisWeekLetter]}</Badge>
+                    <Badge variant="secondary" className="rounded-full">This week · {WEEK_LETTERS[thisWeekLetter]}</Badge>
                   )}
                 </div>
               </div>
             </CardHeader>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Weekly grid</CardTitle>
-              <CardDescription>Tap a cell to add a shift. Existing shifts show location and practitioner.</CardDescription>
+          <Card className="overflow-hidden">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <CardTitle>Weekly schedule</CardTitle>
+                  <CardDescription>Tap a cell to add or edit a shift.</CardDescription>
+                </div>
+                <div className="text-xs text-muted-foreground hidden sm:block">
+                  {rules.length} shift{rules.length === 1 ? "" : "s"}
+                </div>
+              </div>
             </CardHeader>
-            <CardContent className="overflow-x-auto">
+            <CardContent className="overflow-x-auto pb-6">
               <div className="min-w-[720px]">
-                <div className="grid" style={{ gridTemplateColumns: `70px repeat(7, minmax(90px, 1fr))` }}>
+                <div className="grid gap-1" style={{ gridTemplateColumns: `56px repeat(7, minmax(90px, 1fr))` }}>
                   <div></div>
-                  {DAYS_SHORT.map((d) => (
-                    <div key={d} className="text-xs font-medium text-muted-foreground px-2 py-2 text-center">{d}</div>
-                  ))}
+                  {DAYS_SHORT.map((d, i) => {
+                    const isToday = new Date().getDay() === DOW_ORDER[i];
+                    return (
+                      <div key={d} className={"text-[11px] uppercase tracking-wider font-semibold px-2 py-2 text-center " + (isToday ? "text-primary" : "text-muted-foreground")}>
+                        {d}
+                      </div>
+                    );
+                  })}
                   {Array.from({ length: cycleLength }).map((_, weekIdx) => (
                     <FragmentRow
                       key={weekIdx}
@@ -300,23 +312,50 @@ function AvailabilityPage() {
                       isCurrent={cycleLength > 1 && weekIdx === thisWeekLetter}
                       renderCell={(dow) => {
                         const cell = rulesFor(dow, weekIdx);
+                        const isToday = new Date().getDay() === dow;
                         return (
                           <button
                             type="button"
                             onClick={() => (cell.length === 0 ? openAdd(dow, weekIdx) : openEdit(cell[0]))}
-                            className="min-h-[72px] border rounded-md m-1 p-1.5 text-left hover:bg-muted/60 transition flex flex-col gap-1"
+                            className={
+                              "group relative min-h-[80px] w-full rounded-xl p-1.5 text-left transition-all flex flex-col gap-1 " +
+                              (cell.length === 0
+                                ? "border border-dashed border-border/70 hover:border-primary/50 hover:bg-primary/5"
+                                : "border border-transparent bg-gradient-to-br from-primary/10 to-primary/5 hover:shadow-md hover:from-primary/15") +
+                              (isToday ? " ring-1 ring-primary/30" : "")
+                            }
                           >
                             {cell.length === 0 ? (
-                              <span className="text-[11px] text-muted-foreground flex items-center gap-1"><Plus className="h-3 w-3" /> Add</span>
+                              <span className="text-[11px] text-muted-foreground/70 flex items-center gap-1 m-auto opacity-0 group-hover:opacity-100 transition">
+                                <Plus className="h-3 w-3" /> Add
+                              </span>
                             ) : (
                               cell.slice(0, 2).map((r) => (
-                                <div key={r.id} className="text-[11px] leading-tight rounded bg-primary/10 text-foreground px-1.5 py-1">
-                                  <div className="font-mono">{r.start_time.slice(0,5)}–{r.end_time.slice(0,5)}</div>
-                                  {locName(r.location_id) && <div className="truncate text-muted-foreground">{locName(r.location_id)}</div>}
+                                <div key={r.id} className="text-[11px] leading-tight rounded-lg bg-background/80 backdrop-blur px-2 py-1.5 shadow-sm">
+                                  <div className="font-mono font-medium tabular-nums">{r.start_time.slice(0,5)}–{r.end_time.slice(0,5)}</div>
+                                  {locName(r.location_id) && (
+                                    <div className="flex items-center gap-1 mt-0.5 text-muted-foreground truncate">
+                                      <span className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
+                                      <span className="truncate">{locName(r.location_id)}</span>
+                                    </div>
+                                  )}
+                                  {pracName(r.practitioner_id) && (
+                                    <div className="truncate text-[10px] text-muted-foreground/80">{pracName(r.practitioner_id)}</div>
+                                  )}
                                 </div>
                               ))
                             )}
-                            {cell.length > 2 && <div className="text-[10px] text-muted-foreground">+{cell.length - 2} more</div>}
+                            {cell.length > 2 && <div className="text-[10px] text-muted-foreground pl-1">+{cell.length - 2} more</div>}
+                            {cell.length > 0 && (
+                              <span
+                                role="button"
+                                aria-label="Delete shift"
+                                onClick={(e) => { e.stopPropagation(); removeRule(cell[0].id); }}
+                                className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition p-1 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </span>
+                            )}
                           </button>
                         );
                       }}
@@ -324,36 +363,9 @@ function AvailabilityPage() {
                   ))}
                 </div>
               </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>All shifts</CardTitle>
-              <CardDescription>{rules.length} shift{rules.length === 1 ? "" : "s"} configured</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {rules.length === 0 && <div className="text-sm text-muted-foreground">No shifts yet. Tap a cell above to add one.</div>}
-              {rules
-                .slice()
-                .sort((a, b) => (DOW_ORDER.indexOf(a.day_of_week) - DOW_ORDER.indexOf(b.day_of_week)) || a.start_time.localeCompare(b.start_time))
-                .map((r) => (
-                  <div key={r.id} className="flex items-center justify-between gap-3 rounded border px-3 py-2 text-sm">
-                    <button className="text-left flex-1" onClick={() => openEdit(r)}>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-medium">{DAYS_SHORT[DOW_ORDER.indexOf(r.day_of_week)] ?? DAYS_SHORT[r.day_of_week]}</span>
-                        <span className="font-mono">{r.start_time.slice(0,5)}–{r.end_time.slice(0,5)}</span>
-                        <span className="text-muted-foreground">· every {r.slot_interval} min</span>
-                        <Badge variant="outline">{weeksLabel(r)}</Badge>
-                        {locName(r.location_id) && <Badge variant="secondary">{locName(r.location_id)}</Badge>}
-                        {pracName(r.practitioner_id) && <Badge>{pracName(r.practitioner_id)}</Badge>}
-                      </div>
-                    </button>
-                    <Button variant="ghost" size="icon" onClick={() => removeRule(r.id)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
+              {rules.length === 0 && (
+                <div className="mt-4 text-center text-sm text-muted-foreground">No shifts yet — tap any cell to add your first.</div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
