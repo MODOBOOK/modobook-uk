@@ -85,6 +85,7 @@ function AvailabilityPage() {
   const [rules, setRules] = useState<Rule[]>([]);
   const [overrides, setOverrides] = useState<Override[]>([]);
   const [blocked, setBlocked] = useState<Blocked[]>([]);
+  const [blockedTimes, setBlockedTimes] = useState<BlockedTime[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
   const [practitioners, setPractitioners] = useState<Practitioner[]>([]);
   const [anchorDate, setAnchorDate] = useState<string | null>(null);
