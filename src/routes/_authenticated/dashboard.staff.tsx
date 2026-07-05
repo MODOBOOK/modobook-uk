@@ -44,6 +44,8 @@ function StaffPage() {
 
   const [staff, setStaff] = useState<Staff[]>([]);
   const [practitioners, setPractitioners] = useState<Practitioner[]>([]);
+  const [ownerEmail, setOwnerEmail] = useState<string | null>(null);
+  useEffect(() => { supabase.auth.getUser().then(({ data }) => setOwnerEmail(data.user?.email ?? null)); }, []);
   const [dlgOpen, setDlgOpen] = useState(false);
   const [editing, setEditing] = useState<Staff | null>(null);
   const [saving, setSaving] = useState(false);
