@@ -1434,7 +1434,7 @@ function BookPage() {
                                       </p>
                                       {s.notes && <p className="mt-1 text-xs italic text-muted-foreground">{s.notes}</p>}
                                       <a
-                                        href={`/m/${slug}/book/${t.id}?model=${s.id}`}
+                                        href={`/m/${slug}/book/${t.id}?model=${s.id}${locationId ? `&locationId=${locationId}` : ""}`}
                                         className="mt-2 inline-block rounded-md px-3 py-1.5 text-xs font-semibold text-white"
                                         style={{ backgroundColor: brand }}
                                       >
