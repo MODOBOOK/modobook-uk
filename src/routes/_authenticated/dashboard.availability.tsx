@@ -114,14 +114,23 @@ function AvailabilityPage() {
   const [blDate, setBlDate] = useState(today);
   const [blReason, setBlReason] = useState("");
   const [blLoc, setBlLoc] = useState<string>("none");
+  const [blMode, setBlMode] = useState<"days" | "range" | "weeks" | "time">("days");
+  const [blDays, setBlDays] = useState<Date[]>([]);
+  const [blRange, setBlRange] = useState<{ from?: Date; to?: Date }>({});
+  const [blWeekDates, setBlWeekDates] = useState<Date[]>([]);
+  const [blTimeDate, setBlTimeDate] = useState<Date | undefined>(new Date());
+  const [blTimeStart, setBlTimeStart] = useState("09:00");
+  const [blTimeEnd, setBlTimeEnd] = useState("12:00");
+  const [savingBl, setSavingBl] = useState(false);
 
   async function refresh() {
-    const [r, l, p, o, b, rota] = await Promise.all([list(), listLocs(), listPracts(), listOv(), listBl(), getRota()]);
+    const [r, l, p, o, b, bt, rota] = await Promise.all([list(), listLocs(), listPracts(), listOv(), listBl(), listBlT(), getRota()]);
     setRules(r as Rule[]);
     setLocations(l as Location[]);
     setPractitioners(p as Practitioner[]);
     setOverrides(o as Override[]);
     setBlocked(b as Blocked[]);
+    setBlockedTimes(bt as BlockedTime[]);
     setAnchorDate((rota as { rota_anchor_date: string | null })?.rota_anchor_date ?? null);
     // Derive cycle length from existing rules (max seen)
     const maxCycle = Math.max(1, ...((r as Rule[]).map((x) => x.cycle_length ?? 1)));
