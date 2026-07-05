@@ -8,12 +8,12 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { SearchableMultiPicker } from "@/components/ui/searchable-multi-picker";
 import { toast } from "sonner";
-import { Loader2, FileText, FileSignature, HeartPulse, Sparkles, Search } from "lucide-react";
+import { Loader2, FileText, FileSignature, HeartPulse, Sparkles, Search, AlertCircle } from "lucide-react";
 import { listFormAllocation } from "@/lib/form-allocation.functions";
 import { setTreatmentFormIds } from "@/lib/medical-forms.functions";
 import { setTreatmentConsents } from "@/lib/treatment-consents.functions";
 import { setTreatmentAftercareIds } from "@/lib/aftercare-templates.functions";
-import { suggestFormMatches, commitFormMatches } from "@/lib/ai-forms.functions";
+import { suggestFormMatches } from "@/lib/ai-forms.functions";
 
 export const Route = createFileRoute("/_authenticated/dashboard/form-allocation")({
   head: () => ({ meta: [{ title: "Attach forms — MODO" }] }),
@@ -28,10 +28,10 @@ function FormAllocationPage() {
   const setCons = useServerFn(setTreatmentConsents);
   const setAft = useServerFn(setTreatmentAftercareIds);
   const suggest = useServerFn(suggestFormMatches);
-  const commit = useServerFn(commitFormMatches);
 
   const query = useQuery({ queryKey: ["form-allocation"], queryFn: () => load() });
   const [savingRow, setSavingRow] = useState<string | null>(null);
+  const [savingAll, setSavingAll] = useState(false);
   const [aiBusy, setAiBusy] = useState(false);
   const [search, setSearch] = useState("");
   const [local, setLocal] = useState<Record<string, Links>>({});
@@ -79,27 +79,68 @@ function FormAllocationPage() {
   }
 
   async function runAi(mode: "merge" | "replace") {
+    if (!data) return;
     setAiBusy(true);
     try {
       const r = await suggest({ data: {} });
-      const matches = r.treatments.map((t) => {
+      const staged: Record<string, Links> = {};
+      for (const t of data.treatments) {
+        const existing = data.links[t.id] ?? { medical: [], consent: [], aftercare: [] };
         const m = r.matches.find((x) => x.treatment_id === t.id);
-        return {
-          treatment_id: t.id,
-          medical_form_ids: m?.medical_form_ids ?? [],
-          consent_ids: m?.consent_ids ?? [],
-          aftercare_ids: m?.aftercare_ids ?? [],
-        };
-      });
-      const res = await commit({ data: { matches, mode } });
-      toast.success(`AI linked ${res.medical} medical · ${res.consent} consent · ${res.aftercare} aftercare`);
-      if (res.errors.length) toast.error(res.errors[0]);
+        const suggMed = m?.medical_form_ids ?? [];
+        const suggCon = m?.consent_ids ?? [];
+        const suggAft = m?.aftercare_ids ?? [];
+        const next: Links =
+          mode === "replace"
+            ? { medical: suggMed, consent: suggCon, aftercare: suggAft }
+            : {
+                medical: Array.from(new Set([...existing.medical, ...suggMed])),
+                consent: Array.from(new Set([...existing.consent, ...suggCon])),
+                aftercare: Array.from(new Set([...existing.aftercare, ...suggAft])),
+              };
+        // Only stage if actually different from what's saved
+        const same =
+          next.medical.length === existing.medical.length &&
+          next.medical.every((x) => existing.medical.includes(x)) &&
+          next.consent.length === existing.consent.length &&
+          next.consent.every((x) => existing.consent.includes(x)) &&
+          next.aftercare.length === existing.aftercare.length &&
+          next.aftercare.every((x) => existing.aftercare.includes(x));
+        if (!same) staged[t.id] = next;
+      }
+      setLocal((prev) => ({ ...prev, ...staged }));
+      const count = Object.keys(staged).length;
+      if (count === 0) {
+        toast.info("AI had nothing new to suggest.");
+      } else {
+        toast.success(`AI staged changes for ${count} treatment${count === 1 ? "" : "s"}. Review, then Save all.`);
+      }
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setAiBusy(false);
+    }
+  }
+
+  async function saveAll() {
+    const entries = Object.entries(local);
+    if (entries.length === 0) return;
+    setSavingAll(true);
+    try {
+      for (const [tid, cur] of entries) {
+        await Promise.all([
+          setMed({ data: { treatment_id: tid, template_ids: cur.medical } }),
+          setCons({ data: { treatmentId: tid, consentTemplateIds: cur.consent } }),
+          setAft({ data: { treatment_id: tid, template_ids: cur.aftercare } }),
+        ]);
+      }
+      toast.success(`Saved ${entries.length} treatment${entries.length === 1 ? "" : "s"}`);
       await query.refetch();
       setLocal({});
     } catch (e) {
       toast.error((e as Error).message);
     } finally {
-      setAiBusy(false);
+      setSavingAll(false);
     }
   }
 
@@ -128,7 +169,7 @@ function FormAllocationPage() {
               <Sparkles className="size-4 text-primary" /> Auto-match with AI
             </CardTitle>
             <p className="mt-1 text-sm text-muted-foreground">
-              Let AI suggest the right forms for every treatment in one go.
+              AI stages suggestions — review them below, then hit <strong>Save all</strong> to commit.
             </p>
           </div>
           <div className="flex gap-2">
@@ -141,6 +182,25 @@ function FormAllocationPage() {
           </div>
         </CardHeader>
       </Card>
+
+      {Object.keys(local).length > 0 && (
+        <div className="sticky top-2 z-20 flex items-center justify-between gap-3 rounded-lg border border-primary/40 bg-primary/5 px-4 py-3 shadow-sm backdrop-blur">
+          <div className="flex items-center gap-2 text-sm">
+            <AlertCircle className="size-4 text-primary" />
+            <span>
+              <strong>{Object.keys(local).length}</strong> unsaved change{Object.keys(local).length === 1 ? "" : "s"} — don't forget to save.
+            </span>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="ghost" size="sm" onClick={() => setLocal({})} disabled={savingAll}>
+              Discard
+            </Button>
+            <Button size="sm" onClick={saveAll} disabled={savingAll}>
+              {savingAll ? <Loader2 className="size-4 animate-spin" /> : "Save all"}
+            </Button>
+          </div>
+        </div>
+      )}
 
       <div className="relative">
         <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
