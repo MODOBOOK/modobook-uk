@@ -3,6 +3,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getBookingContext, getDayAvailability, getMonthAvailability, requestBooking, type PaymentChoice } from "@/lib/public-booking.functions";
+import { ruleAppliesOnDate } from "@/lib/rota";
+
 import { BookingPaymentPicker } from "@/components/BookingPaymentPicker";
 import { BookingProgress, type BookingStep } from "@/components/BookingProgress";
 
