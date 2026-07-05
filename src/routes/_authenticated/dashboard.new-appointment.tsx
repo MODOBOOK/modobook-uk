@@ -206,10 +206,12 @@ function NewAppointmentPage() {
 
 
   async function submit() {
+    if (submitLockRef.current) return;
     if (!treatment || !date || !startTime || !patientName || !patientEmail) {
       toast.error("Fill in treatment, date, time, patient name and email");
       return;
     }
+    submitLockRef.current = true;
     setSaving(true);
     try {
       const result = await createAppointmentForPatient({
