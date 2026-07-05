@@ -241,6 +241,9 @@ function BookTreatmentPage() {
     if (!data) return false;
     if (data.blockedDates.includes(iso)) return true;
     if (data.overrideDates.includes(iso)) return false;
+    if (Array.isArray((data as { openDates?: string[] }).openDates)) {
+      return !(data as { openDates: string[] }).openDates.includes(iso);
+    }
     return !data.activeDays.includes(d.getDay());
   };
 
@@ -253,14 +256,18 @@ function BookTreatmentPage() {
   }, [date]);
 
   const dayRules = useMemo(
-    () =>
-      ctx.rules.filter(
+    () => {
+      const anchor = (ctx as { rotaAnchor?: string | null }).rotaAnchor ?? null;
+      return ctx.rules.filter(
         (r: Rule) =>
           r.day_of_week === dow &&
-          (!locationId || !r.location_id || r.location_id === locationId),
-      ),
-    [ctx.rules, dow, locationId],
+          (!locationId || !r.location_id || r.location_id === locationId) &&
+          ruleAppliesOnDate(r as unknown as { cycle_length?: number; weeks_mask?: number }, date, anchor),
+      );
+    },
+    [ctx.rules, dow, locationId, date, (ctx as { rotaAnchor?: string | null }).rotaAnchor],
   );
+
 
   const dayQuery = useQuery({
     queryKey: ["dayAvail", ctx.profileId, date, locationId],
