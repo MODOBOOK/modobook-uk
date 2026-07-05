@@ -5325,6 +5325,7 @@ export type Database = {
           quiz_outro: string
         }[]
       }
+      get_rota_anchor: { Args: { p_profile_id: string }; Returns: string }
       has_accepted_current_terms: { Args: never; Returns: boolean }
       has_role: {
         Args: {
