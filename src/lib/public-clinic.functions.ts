@@ -109,8 +109,8 @@ export const getPublicClinic = createServerFn({ method: "GET" })
         .gte("slot_date", new Date().toISOString().slice(0, 10))
         .order("slot_date", { ascending: true }),
       treatmentIds.length
-        ? supabase.from("treatment_addons").select("treatment_id, addon_id").in("treatment_id", treatmentIds)
-        : Promise.resolve({ data: [] as { treatment_id: string; addon_id: string }[] }),
+        ? supabase.from("treatment_addons").select("treatment_id, addon_id, discount_percent, discount_amount").in("treatment_id", treatmentIds)
+        : Promise.resolve({ data: [] as { treatment_id: string; addon_id: string; discount_percent: number | null; discount_amount: number | null }[] }),
       supabase.from("practitioners").select("id, name, professional_title, photo_url, bio, display_order").eq("profile_id", profile.id).eq("active", true).order("display_order"),
       supabase.from("location_practitioners").select("location_id, practitioner_id, display_order"),
       supabase.rpc("get_about_page_by_slug", { p_slug: data.slug.toLowerCase() }),
