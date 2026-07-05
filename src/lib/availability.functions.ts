@@ -419,8 +419,8 @@ export const listPractitioners = createServerFn({ method: "GET" })
     if (!profileId) return [];
     const { data } = await context.supabase
       .from("practitioners")
-      .select("id, display_name")
+      .select("id, name")
       .eq("profile_id", profileId)
-      .order("display_name");
+      .order("name");
     return data ?? [];
   });
