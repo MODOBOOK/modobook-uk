@@ -4543,6 +4543,78 @@ export type Database = {
           },
         ]
       }
+      staff_members: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          data_scope: Database["public"]["Enums"]["staff_scope"]
+          id: string
+          invite_expires_at: string | null
+          invite_token: string | null
+          invited_at: string
+          invited_email: string
+          last_active_at: string | null
+          name: string
+          practitioner_id: string | null
+          profile_id: string
+          role: Database["public"]["Enums"]["staff_role"]
+          status: Database["public"]["Enums"]["staff_status"]
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          data_scope?: Database["public"]["Enums"]["staff_scope"]
+          id?: string
+          invite_expires_at?: string | null
+          invite_token?: string | null
+          invited_at?: string
+          invited_email: string
+          last_active_at?: string | null
+          name: string
+          practitioner_id?: string | null
+          profile_id: string
+          role: Database["public"]["Enums"]["staff_role"]
+          status?: Database["public"]["Enums"]["staff_status"]
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          data_scope?: Database["public"]["Enums"]["staff_scope"]
+          id?: string
+          invite_expires_at?: string | null
+          invite_token?: string | null
+          invited_at?: string
+          invited_email?: string
+          last_active_at?: string | null
+          name?: string
+          practitioner_id?: string | null
+          profile_id?: string
+          role?: Database["public"]["Enums"]["staff_role"]
+          status?: Database["public"]["Enums"]["staff_status"]
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_members_practitioner_id_fkey"
+            columns: ["practitioner_id"]
+            isOneToOne: false
+            referencedRelation: "practitioners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_members_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscription_plans: {
         Row: {
           active: boolean
@@ -5327,6 +5399,13 @@ export type Database = {
       }
       get_rota_anchor: { Args: { p_profile_id: string }; Returns: string }
       has_accepted_current_terms: { Args: never; Returns: boolean }
+      has_clinic_role: {
+        Args: {
+          _profile_id: string
+          _role: Database["public"]["Enums"]["staff_role"]
+        }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -5336,6 +5415,9 @@ export type Database = {
       }
       is_active_profile: { Args: { _profile_id: string }; Returns: boolean }
       is_active_profile_path: { Args: { path: string }; Returns: boolean }
+      is_clinic_member: { Args: { _profile_id: string }; Returns: boolean }
+      is_clinic_owner: { Args: { _profile_id: string }; Returns: boolean }
+      is_clinic_staff: { Args: { _profile_id: string }; Returns: boolean }
       is_linked_to_practitioner_profile: {
         Args: { _profile_id: string }
         Returns: boolean
@@ -5398,6 +5480,7 @@ export type Database = {
         }
         Returns: number
       }
+      my_clinic_profile_id: { Args: never; Returns: string }
       patient_cancel_appointment:
         | { Args: { p_appointment_id: string }; Returns: Json }
         | {
@@ -5517,6 +5600,9 @@ export type Database = {
       payment_mode: "full" | "deposit" | "pay_in_clinic"
       payment_status: "pending" | "paid" | "refunded" | "failed"
       prescriber_status: "pending" | "approved" | "rejected" | "more_info"
+      staff_role: "admin" | "practitioner" | "receptionist" | "viewer"
+      staff_scope: "clinic" | "own"
+      staff_status: "invited" | "active" | "disabled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -5657,6 +5743,9 @@ export const Constants = {
       payment_mode: ["full", "deposit", "pay_in_clinic"],
       payment_status: ["pending", "paid", "refunded", "failed"],
       prescriber_status: ["pending", "approved", "rejected", "more_info"],
+      staff_role: ["admin", "practitioner", "receptionist", "viewer"],
+      staff_scope: ["clinic", "own"],
+      staff_status: ["invited", "active", "disabled"],
     },
   },
 } as const

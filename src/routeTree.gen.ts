@@ -19,6 +19,7 @@ import { Route as FeaturesRouteImport } from './routes/features'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as StaffAcceptTokenRouteImport } from './routes/staff-accept.$token'
 import { Route as PrivacyDpiaRouteImport } from './routes/privacy.dpia'
 import { Route as PrivacyBreachResponseRouteImport } from './routes/privacy.breach-response'
 import { Route as MSlugRouteImport } from './routes/m.$slug'
@@ -53,6 +54,7 @@ import { Route as AuthenticatedHubReferralsRouteImport } from './routes/_authent
 import { Route as AuthenticatedHubPrescribingRouteImport } from './routes/_authenticated/hub.prescribing'
 import { Route as AuthenticatedHubConnectionsRouteImport } from './routes/_authenticated/hub.connections'
 import { Route as AuthenticatedDashboardTreatmentsRouteImport } from './routes/_authenticated/dashboard.treatments'
+import { Route as AuthenticatedDashboardStaffRouteImport } from './routes/_authenticated/dashboard.staff'
 import { Route as AuthenticatedDashboardSettingsRouteImport } from './routes/_authenticated/dashboard.settings'
 import { Route as AuthenticatedDashboardServicesRouteImport } from './routes/_authenticated/dashboard.services'
 import { Route as AuthenticatedDashboardReviewsRouteImport } from './routes/_authenticated/dashboard.reviews'
@@ -156,6 +158,11 @@ const AuthenticatedRoute = AuthenticatedRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StaffAcceptTokenRoute = StaffAcceptTokenRouteImport.update({
+  id: '/staff-accept/$token',
+  path: '/staff-accept/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyDpiaRoute = PrivacyDpiaRouteImport.update({
@@ -339,6 +346,12 @@ const AuthenticatedDashboardTreatmentsRoute =
   AuthenticatedDashboardTreatmentsRouteImport.update({
     id: '/treatments',
     path: '/treatments',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardStaffRoute =
+  AuthenticatedDashboardStaffRouteImport.update({
+    id: '/staff',
+    path: '/staff',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
 const AuthenticatedDashboardSettingsRoute =
@@ -689,6 +702,7 @@ export interface FileRoutesByFullPath {
   '/m/$slug': typeof MSlugRouteWithChildren
   '/privacy/breach-response': typeof PrivacyBreachResponseRoute
   '/privacy/dpia': typeof PrivacyDpiaRoute
+  '/staff-accept/$token': typeof StaffAcceptTokenRoute
   '/admin/emails': typeof AuthenticatedAdminEmailsRoute
   '/dashboard/about': typeof AuthenticatedDashboardAboutRoute
   '/dashboard/addons': typeof AuthenticatedDashboardAddonsRoute
@@ -720,6 +734,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/reviews': typeof AuthenticatedDashboardReviewsRoute
   '/dashboard/services': typeof AuthenticatedDashboardServicesRoute
   '/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
+  '/dashboard/staff': typeof AuthenticatedDashboardStaffRoute
   '/dashboard/treatments': typeof AuthenticatedDashboardTreatmentsRoute
   '/hub/connections': typeof AuthenticatedHubConnectionsRoute
   '/hub/prescribing': typeof AuthenticatedHubPrescribingRoute
@@ -785,6 +800,7 @@ export interface FileRoutesByTo {
   '/f/$token': typeof FTokenRoute
   '/privacy/breach-response': typeof PrivacyBreachResponseRoute
   '/privacy/dpia': typeof PrivacyDpiaRoute
+  '/staff-accept/$token': typeof StaffAcceptTokenRoute
   '/admin/emails': typeof AuthenticatedAdminEmailsRoute
   '/dashboard/about': typeof AuthenticatedDashboardAboutRoute
   '/dashboard/addons': typeof AuthenticatedDashboardAddonsRoute
@@ -814,6 +830,7 @@ export interface FileRoutesByTo {
   '/dashboard/reviews': typeof AuthenticatedDashboardReviewsRoute
   '/dashboard/services': typeof AuthenticatedDashboardServicesRoute
   '/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
+  '/dashboard/staff': typeof AuthenticatedDashboardStaffRoute
   '/dashboard/treatments': typeof AuthenticatedDashboardTreatmentsRoute
   '/hub/connections': typeof AuthenticatedHubConnectionsRoute
   '/hub/prescribing': typeof AuthenticatedHubPrescribingRoute
@@ -885,6 +902,7 @@ export interface FileRoutesById {
   '/m/$slug': typeof MSlugRouteWithChildren
   '/privacy/breach-response': typeof PrivacyBreachResponseRoute
   '/privacy/dpia': typeof PrivacyDpiaRoute
+  '/staff-accept/$token': typeof StaffAcceptTokenRoute
   '/_authenticated/admin/emails': typeof AuthenticatedAdminEmailsRoute
   '/_authenticated/dashboard/about': typeof AuthenticatedDashboardAboutRoute
   '/_authenticated/dashboard/addons': typeof AuthenticatedDashboardAddonsRoute
@@ -916,6 +934,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/reviews': typeof AuthenticatedDashboardReviewsRoute
   '/_authenticated/dashboard/services': typeof AuthenticatedDashboardServicesRoute
   '/_authenticated/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
+  '/_authenticated/dashboard/staff': typeof AuthenticatedDashboardStaffRoute
   '/_authenticated/dashboard/treatments': typeof AuthenticatedDashboardTreatmentsRoute
   '/_authenticated/hub/connections': typeof AuthenticatedHubConnectionsRoute
   '/_authenticated/hub/prescribing': typeof AuthenticatedHubPrescribingRoute
@@ -987,6 +1006,7 @@ export interface FileRouteTypes {
     | '/m/$slug'
     | '/privacy/breach-response'
     | '/privacy/dpia'
+    | '/staff-accept/$token'
     | '/admin/emails'
     | '/dashboard/about'
     | '/dashboard/addons'
@@ -1018,6 +1038,7 @@ export interface FileRouteTypes {
     | '/dashboard/reviews'
     | '/dashboard/services'
     | '/dashboard/settings'
+    | '/dashboard/staff'
     | '/dashboard/treatments'
     | '/hub/connections'
     | '/hub/prescribing'
@@ -1083,6 +1104,7 @@ export interface FileRouteTypes {
     | '/f/$token'
     | '/privacy/breach-response'
     | '/privacy/dpia'
+    | '/staff-accept/$token'
     | '/admin/emails'
     | '/dashboard/about'
     | '/dashboard/addons'
@@ -1112,6 +1134,7 @@ export interface FileRouteTypes {
     | '/dashboard/reviews'
     | '/dashboard/services'
     | '/dashboard/settings'
+    | '/dashboard/staff'
     | '/dashboard/treatments'
     | '/hub/connections'
     | '/hub/prescribing'
@@ -1182,6 +1205,7 @@ export interface FileRouteTypes {
     | '/m/$slug'
     | '/privacy/breach-response'
     | '/privacy/dpia'
+    | '/staff-accept/$token'
     | '/_authenticated/admin/emails'
     | '/_authenticated/dashboard/about'
     | '/_authenticated/dashboard/addons'
@@ -1213,6 +1237,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/reviews'
     | '/_authenticated/dashboard/services'
     | '/_authenticated/dashboard/settings'
+    | '/_authenticated/dashboard/staff'
     | '/_authenticated/dashboard/treatments'
     | '/_authenticated/hub/connections'
     | '/_authenticated/hub/prescribing'
@@ -1276,6 +1301,7 @@ export interface RootRouteChildren {
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   FTokenRoute: typeof FTokenRoute
   MSlugRoute: typeof MSlugRouteWithChildren
+  StaffAcceptTokenRoute: typeof StaffAcceptTokenRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   ApiPublicHooksAppointmentRemindersRoute: typeof ApiPublicHooksAppointmentRemindersRoute
   ApiPublicHooksDailyScheduleDigestRoute: typeof ApiPublicHooksDailyScheduleDigestRoute
@@ -1362,6 +1388,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/staff-accept/$token': {
+      id: '/staff-accept/$token'
+      path: '/staff-accept/$token'
+      fullPath: '/staff-accept/$token'
+      preLoaderRoute: typeof StaffAcceptTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy/dpia': {
@@ -1600,6 +1633,13 @@ declare module '@tanstack/react-router' {
       path: '/treatments'
       fullPath: '/dashboard/treatments'
       preLoaderRoute: typeof AuthenticatedDashboardTreatmentsRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/staff': {
+      id: '/_authenticated/dashboard/staff'
+      path: '/staff'
+      fullPath: '/dashboard/staff'
+      preLoaderRoute: typeof AuthenticatedDashboardStaffRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
     '/_authenticated/dashboard/settings': {
@@ -2077,6 +2117,7 @@ interface AuthenticatedDashboardRouteChildren {
   AuthenticatedDashboardReviewsRoute: typeof AuthenticatedDashboardReviewsRoute
   AuthenticatedDashboardServicesRoute: typeof AuthenticatedDashboardServicesRoute
   AuthenticatedDashboardSettingsRoute: typeof AuthenticatedDashboardSettingsRoute
+  AuthenticatedDashboardStaffRoute: typeof AuthenticatedDashboardStaffRoute
   AuthenticatedDashboardTreatmentsRoute: typeof AuthenticatedDashboardTreatmentsRoute
   AuthenticatedDashboardIndexRoute: typeof AuthenticatedDashboardIndexRoute
   AuthenticatedDashboardConsultationsIdRoute: typeof AuthenticatedDashboardConsultationsIdRoute
@@ -2126,6 +2167,7 @@ const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
     AuthenticatedDashboardReviewsRoute: AuthenticatedDashboardReviewsRoute,
     AuthenticatedDashboardServicesRoute: AuthenticatedDashboardServicesRoute,
     AuthenticatedDashboardSettingsRoute: AuthenticatedDashboardSettingsRoute,
+    AuthenticatedDashboardStaffRoute: AuthenticatedDashboardStaffRoute,
     AuthenticatedDashboardTreatmentsRoute:
       AuthenticatedDashboardTreatmentsRoute,
     AuthenticatedDashboardIndexRoute: AuthenticatedDashboardIndexRoute,
@@ -2263,6 +2305,7 @@ const rootRouteChildren: RootRouteChildren = {
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   FTokenRoute: FTokenRoute,
   MSlugRoute: MSlugRouteWithChildren,
+  StaffAcceptTokenRoute: StaffAcceptTokenRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   ApiPublicHooksAppointmentRemindersRoute:
     ApiPublicHooksAppointmentRemindersRoute,
@@ -2283,13 +2326,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

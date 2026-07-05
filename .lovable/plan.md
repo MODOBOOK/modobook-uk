@@ -1,46 +1,81 @@
-## Goal
-Rebuild the Availability page so weekly hours are visualised as a grid, and each rule can repeat on a **rota** (every week, A/B fortnight, or up to a 4-week A/B/C/D cycle). Each rule keeps its own location and (optionally) practitioner.
 
-## New concepts
-- **Rota cycle**: 1, 2, or 4 weeks. Default `1` = every week (current behaviour, no change for existing users).
-- **Week in cycle**: which weeks a rule is active. Stored as a bitmask of week letters (A=1, B=2, C=4, D=8). Example: A+C on a 4-week rota = `5`.
-- **Anchor date**: a single fixed Monday saved on the profile. "Which letter is this week" is computed as `floor(weeksSince(anchor) / 1) % cycleLength`. That way A/B/C/D stays stable across devices without any per-rule date field.
+## 1. Time off — multi-select picker
 
-## Database changes
-`availability_rules` — add:
-- `cycle_length smallint not null default 1` (1, 2, or 4)
-- `weeks_mask smallint not null default 1` (bitmask; `1` means "week A only", which for cycle=1 = every week)
-- `practitioner_id uuid null` (optional — for multi-practitioner clinics; nullable so single-user setups ignore it)
+Enhance the existing Time-off tab on `dashboard.availability.tsx` with a single "Add time off" dialog that lets the user pick:
 
-`profiles` — add:
-- `rota_anchor_date date` (nullable; set to the Monday of the week the user first enables a >1 cycle)
+- **Individual dates** — click days on a calendar (multi-select mode)
+- **Date range** — from → to (range mode)
+- **Whole week(s)** — click a week to select Mon–Sun (week mode)
+- **Timed block on one day** — start/end times (existing)
 
-Same fields added to `availability_overrides` isn't needed — overrides remain one-off dates.
+Under the hood everything still writes to the existing `blocked_dates` (all-day) and `blocked_times` (timed) tables — the dialog just expands a selection into multiple `blocked_dates` inserts in one go. No schema change needed.
 
-Availability generation in `public-booking.functions.ts` gets a helper: given a date, compute `letter = floor(daysSince(anchor)/7) % cycleLength`, then include a rule only if `weeks_mask & (1<<letter)` is set. Also filter by `practitioner_id` when the booking flow passes one.
+UI: a mode toggle (Days · Range · Weeks · Time block), a `Calendar` with the matching `mode`, an optional reason, and location filter. Confirm inserts every selected date and refreshes the list.
 
-## UI (`dashboard.availability.tsx`)
-Three-tab layout, mobile-first:
+## 2. Staff & permissions
 
-1. **Weekly hours** (default)
-   - Top control: **Rota cycle** dropdown — "Every week / Every 2 weeks (A, B) / 4-week rota (A, B, C, D)". Shows a small "This week = B" chip.
-   - **Grid**: 7 columns (Mon–Sun) × cycle rows (A only, or A/B, or A/B/C/D). Each cell shows the shifts for that day+week with a coloured location dot. Tap a cell → sheet to add/edit/delete shifts (time range, location, optional practitioner, slot interval).
-   - Rules list underneath — same data, flat readable form ("Mon 9:00–17:00 · Harley St · Week A only").
+### Roles (app-level, not clinical `practitioners`)
 
-2. **One-off dates** — existing overrides UI, unchanged.
-3. **Time off** — existing blocked dates + blocked times, unchanged.
+New enum `staff_role`: `admin`, `practitioner`, `receptionist`, `viewer`.
 
-## Server functions
-- `upsertAvailabilityRule` accepts `cycle_length`, `weeks_mask`, `practitioner_id`.
-- New `setRotaAnchor({ date })` — called once when the user first picks cycle > 1.
-- Booking-side `getDayAvailability` respects the mask.
+- **admin** — full dashboard access (settings, staff, billing). Not bookable — never appears in practitioner pickers.
+- **practitioner** — bookable clinician; sees own calendar + patients; edits own availability. Linked to a `practitioners` row.
+- **receptionist** — manages bookings & patients; no clinical notes; not bookable.
+- **viewer** — read-only across schedule & patients.
 
-## Out of scope for this pass
-- Editing existing multi-location pricing.
-- Practitioner assignment UI beyond a dropdown on each shift (uses existing `practitioners` table).
-- Migrating locked historic bookings — new rules only affect future slot generation.
+Data scope note: you said "manager decides", so we add a **`data_scope`** column per staff row: `clinic` (see everything) or `own` (practitioners only see their own). Admin toggles it when inviting/editing.
 
-## Technical notes
-- Existing rows migrate cleanly: `cycle_length=1, weeks_mask=1` = "every week", identical to today's behaviour. No data backfill needed.
-- Bitmask keeps the schema tiny (one small int) and lets a rule apply to arbitrary combos like "A and C only".
-- Anchor date being on the profile (not per-rule) means renumbering (A becomes B) never happens accidentally when a user edits one shift.
+### Schema
+
+```text
+staff_members
+  id, profile_id (owner clinic), user_id (nullable until accepted),
+  invited_email, name, role staff_role, data_scope ('clinic'|'own'),
+  practitioner_id (nullable, only for role=practitioner),
+  status ('invited'|'active'|'disabled'),
+  invited_at, accepted_at, invite_token, invite_expires_at
+
++ helper fn: has_staff_role(_user_id, _profile_id, _role) SECURITY DEFINER
++ helper fn: staff_profile_id(_user_id) -> the clinic this staff belongs to
+```
+
+RLS: the clinic owner (existing `profiles.user_id`) manages their `staff_members`. A staff `user_id` can read their own row.
+
+Existing RLS on clinical tables (`appointments`, `clinic_clients`, etc.) currently scopes by `profile_id = <owner>`. To let staff act on their clinic's data we extend those policies with `OR user is active staff of that profile_id`. This is a wide change — we'll do it via a single helper `is_clinic_member(profile_id)` used by all policy updates so it stays consistent.
+
+### Invite flow
+
+1. Admin opens **Settings → Staff**, clicks *Invite*, fills email + name + role + scope (+ practitioner link if role=practitioner).
+2. Server fn creates a `staff_members` row (`status=invited`, random `invite_token`, 7-day expiry) and sends the magic-link email via existing app-email infrastructure with template `staff-invite`.
+3. Recipient clicks link → `/staff-accept/$token` → signs up / signs in → server fn matches token, sets `user_id`, `status=active`.
+4. On next login they land in the owner clinic's dashboard. Their role gates UI (hide Settings/Billing for non-admins, hide clinical notes for receptionist, disable edits for viewer).
+
+### UI
+
+New route `dashboard.staff.tsx`:
+- Staff list (name, email, role badge, scope, status, last active)
+- Invite dialog
+- Edit dialog (change role / scope / disable / revoke)
+- Resend invite
+
+Sidebar nav item "Staff" visible only to admin + owner.
+
+Practitioner picker (booking, availability, etc.) already reads `practitioners`. Admins without a `practitioner_id` never appear there — no change required, just don't auto-create a practitioner row for admin invites.
+
+## Out of scope
+- Per-record ACLs beyond role + data_scope
+- Two-factor for staff
+- Audit log UI (rows will still be written but no viewer this pass)
+- Migrating existing `practitioners` rows into `staff_members` — those stay as clinical entities; staff invites are a parallel table linked by `practitioner_id`.
+
+## Rollout order
+1. Time-off multi-select dialog (frontend only, no migration).
+2. Migration: `staff_members` + helpers + `is_clinic_member`.
+3. Extend RLS on the tables staff need (appointments, clinic_clients, availability, treatments read).
+4. Server fns: `listStaff`, `inviteStaff`, `updateStaff`, `revokeStaff`, `acceptStaffInvite`.
+5. Email template `staff-invite`.
+6. `/dashboard/staff` route + invite dialog.
+7. `/staff-accept/$token` public route.
+8. Role-based UI gating in sidebar + settings pages.
+
+Confirm and I'll build in that order (part 1 first as a quick win, then the staff system as a follow-up commit).
