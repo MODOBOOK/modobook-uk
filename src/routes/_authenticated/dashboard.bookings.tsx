@@ -37,6 +37,7 @@ import {
   addAvailabilityOverride,
   listAvailabilityRules,
   listAvailabilityOverrides,
+  listBlockedDates,
 } from "@/lib/availability.functions";
 import {
   createPaymentLink,
@@ -99,6 +100,7 @@ const HOURS = Array.from({ length: END_HOUR - START_HOUR + 1 }, (_, i) => START_
 type ViewMode = "day" | "3day" | "week" | "month";
 type AvailRule = { day_of_week: number; start_time: string; end_time: string };
 type Override = { date: string; start_time: string; end_time: string; location_id: string | null };
+type BlockedDate = { date: string; location_id: string | null };
 
 function startOfWeek(d: Date) {
   const c = new Date(d);
@@ -137,11 +139,13 @@ function BookingsPage() {
   const listBlocks = useServerFn(listBlockedTimes);
   const listRules = useServerFn(listAvailabilityRules);
   const listOverrides = useServerFn(listAvailabilityOverrides);
+  const listBlockedDatesFn = useServerFn(listBlockedDates);
   const listLocations = useServerFn(listMyLocations);
   const [appts, setAppts] = useState<Appt[]>([]);
   const [blocks, setBlocks] = useState<BlockedTime[]>([]);
   const [rules, setRules] = useState<AvailRule[]>([]);
   const [overrides, setOverrides] = useState<Override[]>([]);
+  const [blockedDates, setBlockedDates] = useState<BlockedDate[]>([]);
   const [locations, setLocations] = useState<{ id: string; name: string }[]>([]);
   const [locationFilter, setLocationFilter] = useState<string>("all");
   const [loading, setLoading] = useState(true);
@@ -158,13 +162,15 @@ function BookingsPage() {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   async function refresh() {
-    const [a, b, r, o, l] = await Promise.all([list(), listBlocks(), listRules(), listOverrides(), listLocations()]);
+    const [a, b, r, o, bd, l] = await Promise.all([list(), listBlocks(), listRules(), listOverrides(), listBlockedDatesFn(), listLocations()]);
     setAppts(a as Appt[]);
     setBlocks(b as BlockedTime[]);
     setRules((r as AvailRule[]) ?? []);
     setOverrides((o as Override[]) ?? []);
+    setBlockedDates((bd as BlockedDate[]) ?? []);
     setLocations(((l as any[]) ?? []).map((x) => ({ id: x.id, name: x.name })));
   }
+
 
   useEffect(() => {
     (async () => {
@@ -234,8 +240,17 @@ function BookingsPage() {
   /** Returns greyed-out segments [topPx, heightPx] for hours with no availability. */
   function unavailableSegments(d: Date): { top: number; height: number }[] {
     const dow = d.getDay();
-    const dayRules = rulesByDow.get(dow) ?? [];
     const iso = ymd(d);
+    // Whole-day blocks (respect location filter: block applies if unscoped or matches)
+    const isBlockedDay = blockedDates.some(
+      (bd) =>
+        bd.date === iso &&
+        (locationFilter === "all" || bd.location_id == null || bd.location_id === locationFilter)
+    );
+    if (isBlockedDay) {
+      return [{ top: 0, height: (END_HOUR - START_HOUR + 1) * HOUR_HEIGHT }];
+    }
+    const dayRules = rulesByDow.get(dow) ?? [];
     const dayOverrides = overrides.filter((o) => o.date === iso);
     const windows: [number, number][] = [
       ...dayRules.map((r) => [parseTime(r.start_time), parseTime(r.end_time)] as [number, number]),
