@@ -524,6 +524,24 @@ export const requestBooking = createServerFn({ method: "POST" })
       .eq("is_blocked", true)
       .maybeSingle();
     if (blk) throw new Error("Unable to book online. Please contact the clinic directly.");
+
+    // Idempotency guard: reject duplicate submissions of the same booking
+    // (same clinic + treatment + slot + patient email) inside a 5-minute window.
+    {
+      const cutoff = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+      const { data: dup } = await sb
+        .from("appointments")
+        .select("id")
+        .eq("profile_id", data.profileId)
+        .eq("treatment_id", data.treatmentId)
+        .eq("scheduled_date", data.date)
+        .eq("start_time", data.startTime)
+        .ilike("patient_email", data.patientEmail)
+        .gte("created_at", cutoff)
+        .maybeSingle();
+      if (dup) return { id: dup.id as string, consents: [], medicalForms: [], checkoutUrl: null };
+    }
+
     const id = crypto.randomUUID();
     const { error } = await sb.from("appointments").insert({
       id,
