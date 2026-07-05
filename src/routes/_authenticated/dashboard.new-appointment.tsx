@@ -12,12 +12,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup, SelectLabel } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Check, ChevronsUpDown, UserPlus } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { Check, ChevronsUpDown, UserPlus, CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 
@@ -31,13 +34,15 @@ export const Route = createFileRoute("/_authenticated/dashboard/new-appointment"
   component: NewAppointmentPage,
 });
 
-type Treatment = { id: string; name: string; price: number | null; duration: number | null };
+type Treatment = { id: string; name: string; price: number | null; duration: number | null; category_id: string | null };
 type Location = { id: string; name: string };
+type Category = { id: string; name: string; sort_order: number | null };
 
 function NewAppointmentPage() {
   const { profile } = Route.useLoaderData();
   const navigate = useNavigate();
   const [treatments, setTreatments] = useState<Treatment[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
   const [treatmentId, setTreatmentId] = useState("");
   const [locationId, setLocationId] = useState<string>("");
@@ -76,11 +81,19 @@ function NewAppointmentPage() {
     (async () => {
       const { data: t } = await supabase
         .from("treatments")
-        .select("id,name,price,duration")
+        .select("id,name,price,duration,category_id")
         .eq("profile_id", profile.id)
         .eq("active", true)
         .order("name");
-      setTreatments(t ?? []);
+      setTreatments((t ?? []) as Treatment[]);
+      const { data: cats } = await supabase
+        .from("treatment_categories")
+        .select("id,name,sort_order")
+        .eq("profile_id", profile.id)
+        .eq("kind", "treatment")
+        .order("sort_order")
+        .order("name");
+      setCategories((cats ?? []) as Category[]);
       const { data: l } = await supabase
         .from("locations")
         .select("id,name")
@@ -281,12 +294,34 @@ function NewAppointmentPage() {
             <Label>Treatment *</Label>
             <Select value={treatmentId} onValueChange={setTreatmentId}>
               <SelectTrigger><SelectValue placeholder="Select treatment" /></SelectTrigger>
-              <SelectContent>
-                {treatments.map((t) => (
-                  <SelectItem key={t.id} value={t.id}>
-                    {t.name} — £{Number(t.price ?? 0).toFixed(2)} · {t.duration}min
-                  </SelectItem>
-                ))}
+              <SelectContent className="max-h-[60vh]">
+                {(() => {
+                  const byCat = new Map<string | null, Treatment[]>();
+                  for (const t of treatments) {
+                    const k = t.category_id ?? null;
+                    if (!byCat.has(k)) byCat.set(k, []);
+                    byCat.get(k)!.push(t);
+                  }
+                  const groups: { key: string; name: string; items: Treatment[] }[] = [];
+                  for (const c of categories) {
+                    const items = byCat.get(c.id);
+                    if (items && items.length) groups.push({ key: c.id, name: c.name, items });
+                  }
+                  const uncategorised = byCat.get(null);
+                  if (uncategorised && uncategorised.length) {
+                    groups.push({ key: "uncategorised", name: "Uncategorised", items: uncategorised });
+                  }
+                  return groups.map((g) => (
+                    <SelectGroup key={g.key}>
+                      <SelectLabel>{g.name}</SelectLabel>
+                      {g.items.map((t) => (
+                        <SelectItem key={t.id} value={t.id}>
+                          {t.name} — £{Number(t.price ?? 0).toFixed(2)} · {t.duration}min
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  ));
+                })()}
               </SelectContent>
             </Select>
           </div>
@@ -305,7 +340,35 @@ function NewAppointmentPage() {
           )}
           <div>
             <Label>Date *</Label>
-            <Input type="date" value={date} onChange={(e) => { setDate(e.target.value); setStartTime(""); }} />
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className={cn("w-full justify-start text-left font-normal", !date && "text-muted-foreground")}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {date ? format(new Date(date + "T00:00:00"), "PPP") : <span>Pick a date</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0 pointer-events-auto" align="start">
+                <Calendar
+                  mode="single"
+                  selected={date ? new Date(date + "T00:00:00") : undefined}
+                  onSelect={(d) => {
+                    if (!d) return;
+                    const yyyy = d.getFullYear();
+                    const mm = String(d.getMonth() + 1).padStart(2, "0");
+                    const dd = String(d.getDate()).padStart(2, "0");
+                    setDate(`${yyyy}-${mm}-${dd}`);
+                    setStartTime("");
+                  }}
+                  disabled={(d) => d < new Date(new Date().setHours(0, 0, 0, 0))}
+                  initialFocus
+                  className="p-3 pointer-events-auto"
+                />
+              </PopoverContent>
+            </Popover>
           </div>
           {date && (
             <div>
