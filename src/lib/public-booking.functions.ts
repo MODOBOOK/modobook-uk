@@ -74,6 +74,9 @@ export const getBookingContext = createServerFn({ method: "GET" })
       .from("availability_rules")
       .select("*")
       .eq("profile_id", profile.id);
+    const { data: anchorRes } = await sb.rpc("get_rota_anchor", { p_profile_id: profile.id });
+    const rotaAnchor = (anchorRes as string | null) ?? null;
+
 
     const { data: theme } = await sb
       .from("clinic_theme")
