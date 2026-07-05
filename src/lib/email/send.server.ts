@@ -263,7 +263,95 @@ export async function sendBookingConfirmationEmails(appointmentIds: string[]) {
     results.push({ appointmentId: a.id, ok: res.ok, skipped: res.skipped, error: res.error })
   }
 
+  // Also enqueue medical form + consent request emails so patients get direct links
+  await sendBookingFormRequestEmails(appointmentIds, origin, brandingCache).catch((e) =>
+    console.error('[email] form-request enqueue failed', e),
+  )
+
   return results
+}
+
+/** For every unsubmitted medical form and unsigned consent on the given
+ *  appointments, enqueue a `medical-form-request` email pointing at the
+ *  patient-facing token URL. Reuses the medical-form-request template for
+ *  consents by setting formName to the consent name and formUrl to /c/{token}. */
+export async function sendBookingFormRequestEmails(
+  appointmentIds: string[],
+  origin: string,
+  brandingCache?: Map<string, PractitionerBranding>,
+) {
+  if (appointmentIds.length === 0) return
+  const { supabaseAdmin } = await import('@/integrations/supabase/client.server')
+
+  const [{ data: forms }, { data: consents }] = await Promise.all([
+    supabaseAdmin
+      .from('appointment_medical_forms')
+      .select('id, token, appointment_id, submitted_at, medical_form_templates(name), appointments(patient_name, patient_email, profile_id, profiles(clinic_name))')
+      .in('appointment_id', appointmentIds)
+      .is('submitted_at', null),
+    supabaseAdmin
+      .from('appointment_consents')
+      .select('id, token, appointment_id, signed_at, consent_templates(name), appointments(patient_name, patient_email, profile_id, profiles(clinic_name))')
+      .in('appointment_id', appointmentIds)
+      .is('signed_at', null),
+  ])
+
+  const cache = brandingCache ?? new Map<string, PractitionerBranding>()
+  const brandingFor = async (pid: string) => {
+    let b = cache.get(pid)
+    if (!b) { b = await getPractitionerBranding(pid); cache.set(pid, b) }
+    return b
+  }
+
+  type FormRow = {
+    id: string; token: string | null; appointment_id: string;
+    medical_form_templates?: { name?: string } | null;
+    appointments?: { patient_name?: string | null; patient_email?: string | null; profile_id?: string; profiles?: { clinic_name?: string } | null } | null;
+  }
+  for (const raw of (forms ?? []) as FormRow[]) {
+    const a = raw.appointments
+    if (!a?.patient_email || !raw.token || !a.profile_id) continue
+    const branding = await brandingFor(a.profile_id)
+    await tryEnqueueAppEmail({
+      templateName: 'medical-form-request',
+      recipientEmail: a.patient_email,
+      messageId: `form-request-${raw.id}`,
+      templateData: {
+        profileId: a.profile_id,
+        patientName: (a.patient_name ?? '').split(' ')[0] || 'there',
+        clinicName: a.profiles?.clinic_name ?? branding.clinicName,
+        formName: raw.medical_form_templates?.name ?? 'medical form',
+        formUrl: `${origin}/f/${raw.token}`,
+        logoUrl: branding.logoUrl,
+        brandColor: branding.brandColor,
+      },
+    })
+  }
+
+  type ConsentRow = {
+    id: string; token: string | null; appointment_id: string;
+    consent_templates?: { name?: string } | null;
+    appointments?: { patient_name?: string | null; patient_email?: string | null; profile_id?: string; profiles?: { clinic_name?: string } | null } | null;
+  }
+  for (const raw of (consents ?? []) as ConsentRow[]) {
+    const a = raw.appointments
+    if (!a?.patient_email || !raw.token || !a.profile_id) continue
+    const branding = await brandingFor(a.profile_id)
+    await tryEnqueueAppEmail({
+      templateName: 'medical-form-request',
+      recipientEmail: a.patient_email,
+      messageId: `consent-request-${raw.id}`,
+      templateData: {
+        profileId: a.profile_id,
+        patientName: (a.patient_name ?? '').split(' ')[0] || 'there',
+        clinicName: a.profiles?.clinic_name ?? branding.clinicName,
+        formName: raw.consent_templates?.name ?? 'consent form',
+        formUrl: `${origin}/c/${raw.token}`,
+        logoUrl: branding.logoUrl,
+        brandColor: branding.brandColor,
+      },
+    })
+  }
 }
 
 export function formatBookingDateTime(date: string, startTime: string): string {
