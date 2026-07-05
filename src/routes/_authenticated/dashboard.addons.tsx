@@ -419,9 +419,8 @@ function AssignPanel({
           <option value="amount">£ off</option>
         </select>
         <Input
-          type="number"
-          min={0}
-          max={val.kind === "percent" ? 100 : undefined}
+          type="text"
+          inputMode="decimal"
           placeholder={val.kind === "percent" ? "%" : "£"}
           value={shown}
           onChange={(e) => onValue(e.target.value)}
