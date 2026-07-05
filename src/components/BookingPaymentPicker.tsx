@@ -10,6 +10,7 @@ type ConfiguredOptions = {
   klarnaEnabled: boolean;
   clearpayEnabled: boolean;
   depositEnabled: boolean;
+  cashEnabled: boolean;
   depositCents: number;
   passFees: boolean;
   surcharges: { cardPercent: number; bnplPercent: number; depositPercent: number };
