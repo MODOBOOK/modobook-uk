@@ -79,6 +79,7 @@ const navItems = [
   { label: "Model slots", to: "/dashboard/model-slots", icon: Sparkles },
   { label: "Locations", to: "/dashboard/locations", icon: MapPin },
   { label: "Practitioners", to: "/dashboard/practitioners", icon: Users },
+  { label: "Staff", to: "/dashboard/staff", icon: Users },
   { label: "Medical forms", to: "/dashboard/medical-forms", icon: FileText },
   { label: "Consent forms", to: "/dashboard/consent-forms", icon: FileSignature },
   { label: "Pre-treatment info", to: "/dashboard/pre-treatment", icon: Info },
