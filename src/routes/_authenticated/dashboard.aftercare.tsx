@@ -327,7 +327,7 @@ function AftercarePage() {
                 toast.success("Saved");
               }}
             >
-              Save
+              {editing?.is_system ? "Save attachments" : "Save"}
             </Button>
           </DialogFooter>
         </DialogContent>
