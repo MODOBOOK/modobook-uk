@@ -72,7 +72,7 @@ function ConsentFormsPage() {
 
   async function openEditor(tpl: Tpl) {
     setEditing(tpl);
-    if (tpl.id && !tpl.is_system) {
+    if (tpl.id) {
       try {
         const ids = await getTplTreatments({ data: { template_id: tpl.id } });
         setTreatmentIds(ids as string[]);
