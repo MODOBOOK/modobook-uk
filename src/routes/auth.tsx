@@ -32,8 +32,12 @@ export const Route = createFileRoute("/auth")({
 function AuthPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const { as } = Route.useSearch();
+  const { as, next } = Route.useSearch();
   const isPrescriberFlow = as === "prescriber";
+  const postAuthTo = () =>
+    next
+      ? ({ to: next } as any)
+      : { to: isPrescriberFlow ? "/hub/verification" : "/dashboard" };
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [forgotOpen, setForgotOpen] = useState(false);
