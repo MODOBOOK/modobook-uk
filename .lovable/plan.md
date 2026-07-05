@@ -1,42 +1,37 @@
-# Workspace switcher for one login, many roles
+# Revised: safe path for staff view-only access
 
-## Problem
+## Why the original plan is too risky in one turn
 
-Auth uses one account per email. When you accepted the staff invite with your personal email, it signed you back into your existing owner account instead of creating a second one. The fix is to stop treating "owner" and "staff-view-only" as different accounts and instead treat them as **workspaces the same account can switch between**.
+Your data model scopes everything by `profile_id = auth.uid()` — 40+ server functions and every RLS policy. A full workspace switcher means rewriting all of them plus adding staff-SELECT policies to every table. That's not safe to do in one pass.
 
-## What the user will see
+## Recommended path — two phases
 
-- A workspace picker in the dashboard header (top-left, next to the MODO mark).
-- It lists:
-  - "My clinic" (their own practitioner profile), if they have one.
-  - Every practitioner who has invited them as staff, with the role badge (View only, Manager, etc.).
-- Picking a workspace reloads the dashboard scoped to that practitioner. All lists (bookings, clients, revenue, aftercare, etc.) show that workspace's data only.
-- View-only staff see the dashboard in read mode: edit / create / delete buttons are hidden, and any write action shows "You have view-only access".
-- The staff invite acceptance flow no longer tries to create a new auth account. If the email already has one, it just links the staff membership to the existing account and tells the user "You've been added — switch to {Clinic name} from the workspace menu".
+### Phase 1 (now): fix the specific bug the user hit
 
-## How it works (technical)
+The confusing bit was: staff invite acceptance silently signed you into your existing owner account, so it *looked* like nothing happened. That's a UX problem I can fix cleanly.
 
-1. **Active workspace** stored in `localStorage` (`modo.activeWorkspaceId`) + a React context (`WorkspaceProvider`) at the `_authenticated` layout. Default = owner's own practitioner id; falls back to first staff membership.
-2. **Resolver hook** `useActiveWorkspace()` returns `{ practitionerId, role, isOwner, canWrite }`. All existing dashboard queries switch from "my practitioner id" → `practitionerId` from this hook.
-3. **Staff membership lookup**: new server fn `listMyWorkspaces` returns own practitioner + rows from `staff_members` where `user_id = auth.uid()` and `status = 'active'`, joined to the inviting practitioner's name/avatar.
-4. **Write-guard**: `canWrite` = `isOwner || role in ('manager','admin')`. UI hides write controls; server fns already enforce practitioner ownership via RLS, so view-only staff simply can't mutate.
-5. **Staff-accept route** (`/staff-accept/:token`):
-   - If already signed in → link membership to current user, redirect to `/dashboard` with a toast to switch workspace.
-   - If signed out with an email that already has an account → send to `/auth` with `?next=/staff-accept/:token`, then link on return.
-   - If brand-new email → normal sign-up, then link.
-   No more `supabase.auth.signUp` attempts on existing emails.
-6. **Header switcher component**: dropdown showing workspaces, active one checked, role badge on each.
+- On the invite-accept page, when the email already has an account, stop trying to `signUp` + `signInWithPassword` silently. Instead show a clear card: **"An account already exists for {email}. Sign in to link this invite to that account."** with a Sign-in button and a "Use a different email" link.
+- After sign-in returns to `/staff-accept/:token`, call `acceptStaffInvite` (which just writes the `staff_members` row with `user_id = auth.uid()`), then land on a new page `/dashboard/invites` that lists the clinics you've been added to with a clear "You have view-only access — full switching coming soon" note.
+- Add a **red banner** on the invite page when it detects the invited email is already the currently-signed-in owner's own email, saying "You can't invite your own owner email as staff — use a different email or a `+viewer` alias."
 
-## Files touched
+Result: no more surprise "logged into the wrong account" moment, and staff memberships are still recorded correctly for phase 2.
 
-- New: `src/lib/workspaces.functions.ts`, `src/context/WorkspaceContext.tsx`, `src/components/WorkspaceSwitcher.tsx`.
-- Edited: `src/routes/_authenticated.tsx` (wrap in provider), dashboard header, `src/routes/staff-accept.$token.tsx`, and the ~6 dashboard queries that hard-code the owner's practitioner id.
-- Migration: add `user_id` (nullable, fk to auth.users) and `status` to `staff_members` if not already present, plus RLS policy `staff_members_self_read` so a signed-in user can see their own memberships.
+### Phase 2 (separate change, later): the real switcher
 
-## Out of scope for this change
+When you're ready for real cross-account viewing, I'll:
+- Add view-only staff SELECT policies to each data table (one migration).
+- Add `context.activeProfileId` to the auth middleware, defaulting to `userId`, overridable via a header for verified staff.
+- Migrate server functions one dashboard section at a time (bookings, then clients, then reports…), verifying each before moving on.
+- Ship the workspace switcher dropdown and per-section read-only guards.
 
-- Per-role granular permissions beyond view-only vs full (manager/admin distinction stays as-is).
-- Cross-workspace notifications badge.
-- Owner-side "seat billing" changes.
+## Files touched in Phase 1
 
-Confirm and I'll build it.
+- `src/routes/staff-accept.$token.tsx` — replace silent sign-up with clear existing-account flow.
+- `src/routes/_authenticated/dashboard.invites.tsx` — new page listing your staff memberships.
+- `src/routes/_authenticated/dashboard.menu.tsx` — add "Invited clinics" link.
+- `src/lib/staff.functions.ts` — new `listMyStaffMemberships` server fn (self-read via existing "Staff can read their own row" policy).
+- `src/routes/_authenticated/dashboard.staff.tsx` — warn if the invited email matches the owner's login email.
+
+No database migration needed for phase 1 — the `staff_members` table already has `user_id`, `status`, and the self-read policy.
+
+Approve this revised plan and I'll build phase 1 now.
