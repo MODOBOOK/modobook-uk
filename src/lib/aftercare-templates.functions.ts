@@ -161,10 +161,18 @@ export const getAftercareTemplateTreatmentIds = createServerFn({ method: "GET" }
   .middleware([requireSupabaseAuth])
   .inputValidator((i: { template_id: string }) => i)
   .handler(async ({ data, context }) => {
+    const { data: profile } = await context.supabase
+      .from("profiles").select("id").eq("user_id", context.userId).maybeSingle();
+    if (!profile) return [];
+    const { data: myTreatments } = await context.supabase
+      .from("treatments").select("id").eq("profile_id", profile.id);
+    const myIds = (myTreatments ?? []).map((t: any) => t.id as string);
+    if (!myIds.length) return [];
     const { data: rows, error } = await context.supabase
       .from("treatment_aftercare_templates")
       .select("treatment_id")
-      .eq("template_id", data.template_id);
+      .eq("template_id", data.template_id)
+      .in("treatment_id", myIds);
     if (error) throw error;
     return (rows ?? []).map((r: any) => r.treatment_id as string);
   });
