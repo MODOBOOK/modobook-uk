@@ -167,7 +167,7 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
     };
   };
 
-  const selectMode = (mode: "deposit" | "full") => {
+  const selectMode = (mode: "deposit" | "full" | "cash") => {
     if (!chosen) {
       onChange({ mode, method: availableMethods[0] ?? "card" });
     } else {
@@ -182,6 +182,8 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
       onChange({ ...chosen, method });
     }
   };
+
+  const isCash = chosen?.mode === "cash";
 
   return (
     <div className="rounded-2xl border-2 p-4 sm:p-5" style={cardStyle}>
