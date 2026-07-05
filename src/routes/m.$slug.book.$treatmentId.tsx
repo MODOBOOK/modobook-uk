@@ -40,6 +40,10 @@ function fromIsoDate(iso: string) {
 }
 
 export const Route = createFileRoute("/m/$slug/book/$treatmentId")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    locationId: typeof search.locationId === "string" ? search.locationId : undefined,
+    model: typeof search.model === "string" ? search.model : undefined,
+  }),
   loader: ({ params }) => getBookingContext({ data: { slug: params.slug, treatmentId: params.treatmentId } }),
   component: BookTreatmentPage,
 });
