@@ -63,12 +63,13 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
   const treatmentTotalCents = Math.round(totalAmount * 100);
 
   const availableModes = useMemo(() => {
-    if (!configured) return [] as Array<"deposit" | "full">;
-    const arr: Array<"deposit" | "full"> = [];
+    if (!configured) return [] as Array<"deposit" | "full" | "cash">;
+    const arr: Array<"deposit" | "full" | "cash"> = [];
     const o = opts as ConfiguredOptions;
     // Deposit is always an option when configured — patient may prefer it over splitting.
     if (o.depositEnabled && effectiveDepositCents >= 100 && effectiveDepositCents < treatmentTotalCents) arr.push("deposit");
     if (o.cardEnabled || o.klarnaEnabled || o.clearpayEnabled) arr.push("full");
+    if (o.cashEnabled) arr.push("cash");
     return arr;
   }, [configured, opts, effectiveDepositCents, treatmentTotalCents]);
 
