@@ -315,6 +315,12 @@ function SettingsPage() {
             onChange={(v) => set("cash_only_balance", v)}
           />
           <ToggleRow
+            label="Save card on file for no-shows / late cancels"
+            hint="Card details are stored securely via Stripe against the patient's profile (card-only, no Apple/Google Pay). Make sure your booking terms tell the patient this will happen — that acceptance is their GDPR consent to store the card."
+            checked={s.save_card_on_file}
+            onChange={(v) => set("save_card_on_file", v)}
+          />
+          <ToggleRow
             label="Show prices on booking page"
             hint="Turn off to hide prices (good for consult-led clinics)."
             checked={s.show_prices_on_booking}
