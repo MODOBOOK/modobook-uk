@@ -479,6 +479,24 @@ function BookTreatmentPage() {
           }});
         } catch { /* non-fatal */ }
       }
+      const emb = (res as { embeddedPayment?: {
+        clientSecret: string;
+        paymentIntentId: string;
+        publishableKey: string;
+        connectedAccountId: string;
+        amountCents: number;
+        currency: string;
+        returnUrl: string;
+      } | null }).embeddedPayment;
+      if (emb) {
+        // Stash the embedded PI details in sessionStorage so the pay page
+        // can read them without exposing them in the URL.
+        try {
+          sessionStorage.setItem(`modo:pay:${emb.paymentIntentId}`, JSON.stringify(emb));
+        } catch { /* non-fatal */ }
+        window.location.href = `/m/${slug}/pay?pi=${encodeURIComponent(emb.paymentIntentId)}`;
+        return;
+      }
       if ((res as { checkoutUrl?: string | null }).checkoutUrl) {
         window.location.href = (res as { checkoutUrl: string }).checkoutUrl;
         return;
