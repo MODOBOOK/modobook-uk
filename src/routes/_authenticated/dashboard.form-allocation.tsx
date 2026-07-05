@@ -8,12 +8,12 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { SearchableMultiPicker } from "@/components/ui/searchable-multi-picker";
 import { toast } from "sonner";
-import { Loader2, FileText, FileSignature, HeartPulse, Sparkles, Search } from "lucide-react";
+import { Loader2, FileText, FileSignature, HeartPulse, Sparkles, Search, AlertCircle } from "lucide-react";
 import { listFormAllocation } from "@/lib/form-allocation.functions";
 import { setTreatmentFormIds } from "@/lib/medical-forms.functions";
 import { setTreatmentConsents } from "@/lib/treatment-consents.functions";
 import { setTreatmentAftercareIds } from "@/lib/aftercare-templates.functions";
-import { suggestFormMatches, commitFormMatches } from "@/lib/ai-forms.functions";
+import { suggestFormMatches } from "@/lib/ai-forms.functions";
 
 export const Route = createFileRoute("/_authenticated/dashboard/form-allocation")({
   head: () => ({ meta: [{ title: "Attach forms — MODO" }] }),
