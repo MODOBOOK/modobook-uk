@@ -98,6 +98,7 @@ const HOURS = Array.from({ length: END_HOUR - START_HOUR + 1 }, (_, i) => START_
 
 type ViewMode = "day" | "3day" | "week" | "month";
 type AvailRule = { day_of_week: number; start_time: string; end_time: string };
+type Override = { date: string; start_time: string; end_time: string; location_id: string | null };
 
 function startOfWeek(d: Date) {
   const c = new Date(d);
