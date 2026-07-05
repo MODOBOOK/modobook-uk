@@ -199,14 +199,19 @@ function BrandingPage() {
     setCustomColors((c) => {
       const next = [...c] as [string, string, string, string];
       next[idx] = hex;
+      // Live-apply valid palettes so custom colours immediately override
+      // any preset palette / style preset that was previously selected.
+      if (next.every((v) => /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(v))) {
+        setState((s) => ({ ...s, ...buildCustomPalette(next), preset_key: null }));
+      }
       return next;
     });
   }
   function applyCustomPalette() {
     const valid = customColors.every((c) => /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(c));
     if (!valid) { toast.error("Enter valid hex codes (e.g. #faf7f2)"); return; }
-    setState((s) => ({ ...s, ...buildCustomPalette(customColors) }));
-    toast.success("Custom palette applied");
+    setState((s) => ({ ...s, ...buildCustomPalette(customColors), preset_key: null }));
+    toast.success("Custom palette applied — overrides any preset colours");
   }
 
   const activePaletteKey = COLOR_PALETTES.find(
