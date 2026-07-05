@@ -305,16 +305,19 @@ function AftercarePage() {
               disabled={!editing?.name.trim()}
               onClick={async () => {
                 if (!editing) return;
-                const saved = await save({
-                  data: {
-                    id: editing.id || undefined,
-                    name: editing.name.trim(),
-                    body_html: editing.body_html,
-                    delay_hours: editing.delay_hours,
-                    show_on_public: !!editing.show_on_public,
-                  },
-                });
-                const tplId = (saved as any)?.id ?? editing.id;
+                let tplId: string | undefined = editing.id || undefined;
+                if (!editing.is_system) {
+                  const saved = await save({
+                    data: {
+                      id: editing.id || undefined,
+                      name: editing.name.trim(),
+                      body_html: editing.body_html,
+                      delay_hours: editing.delay_hours,
+                      show_on_public: !!editing.show_on_public,
+                    },
+                  });
+                  tplId = (saved as any)?.id ?? editing.id;
+                }
                 if (tplId) {
                   await setTplTreatments({ data: { template_id: tplId, treatment_ids: treatmentIds } });
                 }
