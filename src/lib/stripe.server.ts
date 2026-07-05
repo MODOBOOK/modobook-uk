@@ -288,6 +288,77 @@ export async function createCheckoutSession(params: {
   return stripe.checkout.sessions.create(create, { stripeAccount: params.accountId });
 }
 
+// Create a PaymentIntent for the save-card-on-file flow.
+// We render an embedded Stripe Elements form on our own page so we can hide
+// Apple Pay, Google Pay and Link (which Stripe hosted Checkout re-adds even
+// when payment_method_types is ['card']). The returned client_secret drives
+// the client-side Payment Element; on success the connected-account webhook
+// fires `payment_intent.succeeded` and captures the card details onto the
+// clinic_clients row so no-show / late-cancel fees can be charged later.
+export async function createSaveCardPaymentIntent(params: {
+  accountId: string;
+  amountCents: number;
+  currency?: string;
+  customerEmail: string;
+  customerName?: string | null;
+  description: string;
+  metadata?: Record<string, string>;
+}) {
+  const stripe = getStripe();
+  const currency = params.currency ?? "gbp";
+
+  // Reuse an existing Customer on the connected account when the patient has
+  // already been captured, so the saved PaymentMethod stays associated with
+  // the same clinic-client identity.
+  let customerId: string | null = null;
+  try {
+    const existing = await stripe.customers.list(
+      { email: params.customerEmail, limit: 1 },
+      { stripeAccount: params.accountId },
+    );
+    customerId = existing.data[0]?.id ?? null;
+  } catch {
+    customerId = null;
+  }
+  if (!customerId) {
+    const created = await stripe.customers.create(
+      {
+        email: params.customerEmail,
+        name: params.customerName ?? undefined,
+      },
+      { stripeAccount: params.accountId },
+    );
+    customerId = created.id;
+  }
+
+  const pi = await stripe.paymentIntents.create(
+    {
+      amount: params.amountCents,
+      currency,
+      customer: customerId,
+      description: params.description,
+      // Card-only. No wallets, no Link — those are hidden by the client-side
+      // Payment Element options as well, but locking method types here means
+      // Stripe rejects wallet confirmation attempts server-side too.
+      payment_method_types: ["card"],
+      // Save the resulting PaymentMethod for later off-session charges.
+      setup_future_usage: "off_session",
+      metadata: {
+        ...(params.metadata ?? {}),
+        save_card_on_file: "1",
+      },
+      receipt_email: params.customerEmail,
+    },
+    { stripeAccount: params.accountId },
+  );
+
+  return {
+    clientSecret: pi.client_secret,
+    paymentIntentId: pi.id,
+    customerId,
+  };
+}
+
 // Retrieve a completed Checkout Session with the PI + PM expanded so we can
 // read the saved card details (brand, last4, exp) after checkout.session.completed.
 export async function retrieveCheckoutSessionWithPaymentMethod(
