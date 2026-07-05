@@ -796,7 +796,7 @@ function MultiBookPage() {
           {step === "datetime" && (
             <Card className="mb-6">
               <CardHeader>
-                <CardTitle className="text-base" style={headingStyle}>Pick a date & time</CardTitle>
+                <CardTitle className="text-base" style={headingStyle}>Pick a location, date & time</CardTitle>
                 {bookableFrom && (
                   <p className="text-xs text-muted-foreground mt-1">
                     Bookable from {fromIsoDate(bookableFrom).toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" })}
@@ -804,7 +804,29 @@ function MultiBookPage() {
                 )}
               </CardHeader>
               <CardContent className="space-y-5">
+                {ctx.locations.length > 1 && (
+                  <div>
+                    <Label className="mb-2 block text-sm font-semibold">Location</Label>
+                    <div className="flex flex-wrap gap-2">
+                      {ctx.locations.map((l: Loc) => {
+                        const selected = locationId === l.id;
+                        return (
+                          <Button
+                            key={l.id}
+                            variant={selected ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => { setLocationId(l.id); setSlot(null); }}
+                            style={selected ? { backgroundColor: brand, borderColor: brand, color: "#fff" } : { color: brand, borderColor: `${brand}55` }}
+                          >
+                            <MapPin className="mr-1 h-4 w-4" />{l.name}
+                          </Button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
                 <div className="flex justify-center">
+
                   <Calendar
                     mode="single"
                     selected={fromIsoDate(date)}
