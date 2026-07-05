@@ -111,6 +111,38 @@ function textToParagraphHtml(text: string) {
     .join("");
 }
 
+// Category descriptions can be long — clamp to 2 lines and show a Read more
+// toggle. Rendered inside an AccordionTrigger (which is itself a button), so
+// clicks must not bubble up and toggle the accordion.
+function CategoryDescription({ text, color }: { text: string; color: string }) {
+  const [expanded, setExpanded] = useState(false);
+  const isLong = text.length > 120;
+  if (!isLong) {
+    return <div className="mt-1 text-sm font-normal opacity-80">{text}</div>;
+  }
+  return (
+    <div className="mt-1">
+      <div
+        className={`text-sm font-normal opacity-80 ${expanded ? "" : "line-clamp-2"}`}
+      >
+        {text}
+      </div>
+      <button
+        type="button"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setExpanded((v) => !v);
+        }}
+        className="mt-1 text-xs font-semibold underline underline-offset-4 opacity-90"
+        style={{ color }}
+      >
+        {expanded ? "Show less" : "Read more"}
+      </button>
+    </div>
+  );
+}
+
 function WelcomeIntroBlock({
   heading,
   html,
@@ -308,7 +340,11 @@ function BookPage() {
   const introHeading = aboutPage?.intro_heading?.trim() || "";
   const legacyIntroBody = aboutPage?.intro_body?.trim() || "";
   const welcomeHtml = profile.welcome_intro_html?.trim() || (legacyIntroBody ? textToParagraphHtml(legacyIntroBody) : "");
-  const introExpandable = Boolean((aboutPage as { intro_expandable?: boolean } | null | undefined)?.intro_expandable);
+  // Auto-expandable when the intro is long-ish so the menu isn't buried under
+  // a wall of text. Practitioner can still force it off via aboutPage flag.
+  const introFlag = (aboutPage as { intro_expandable?: boolean } | null | undefined)?.intro_expandable;
+  const introLength = (welcomeHtml || "").replace(/<[^>]*>/g, "").trim().length;
+  const introExpandable = introFlag ?? introLength > 240;
 
   const [locationId, setLocationId] = useState<string | null>(null);
   const [directionsOpen, setDirectionsOpen] = useState(false);
@@ -2118,7 +2154,7 @@ function CategoryTree({
                     )}
                   </div>
                   {node.description && (
-                    <div className="mt-1 text-sm font-normal opacity-80">{node.description}</div>
+                    <CategoryDescription text={node.description} color={isSub ? catBg : catText} />
                   )}
                 </div>
               </AccordionTrigger>
