@@ -73,7 +73,7 @@ function formatSessionSpacing(days?: number | null) {
   return `every ${days} day${days === 1 ? "" : "s"}`;
 }
 
-const searchSchema = z.object({ ids: z.string().optional(), pkgs: z.string().optional() });
+const searchSchema = z.object({ ids: z.string().optional(), pkgs: z.string().optional(), locationId: z.string().optional() });
 
 export const Route = createFileRoute("/m/$slug/book-multi")({
   validateSearch: searchSchema,
