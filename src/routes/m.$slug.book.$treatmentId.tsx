@@ -219,8 +219,11 @@ function BookTreatmentPage() {
       if (next.has(id)) next.delete(id); else next.add(id);
       return next;
     });
-  const addonNet = (a: PublicAddon) =>
-    (a.price_cents / 100) * (1 - (a.discount_percent ?? 0) / 100);
+  const addonNet = (a: PublicAddon) => {
+    const base = a.price_cents / 100;
+    if (a.discount_amount != null) return Math.max(0, base - a.discount_amount);
+    return base * (1 - (a.discount_percent ?? 0) / 100);
+  };
 
 
 
