@@ -206,7 +206,13 @@ function AftercarePage() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto flex flex-col">
           <DialogHeader>
-            <DialogTitle>{editing?.id ? "Edit template" : "New aftercare template"}</DialogTitle>
+            <DialogTitle>
+              {editing?.is_system
+                ? "Attach to treatments"
+                : editing?.id
+                  ? "Edit template"
+                  : "New aftercare template"}
+            </DialogTitle>
           </DialogHeader>
           {editing && (
             <div className="space-y-3">
