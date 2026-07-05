@@ -278,6 +278,7 @@ function NewAppointmentPage() {
       toast.error(e instanceof Error ? e.message : "Failed");
     } finally {
       setSaving(false);
+      submitLockRef.current = false;
     }
   }
 
