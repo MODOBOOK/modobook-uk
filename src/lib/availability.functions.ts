@@ -33,7 +33,12 @@ type RuleInput = {
   end_time: string;
   slot_interval?: number;
   location_id?: string | null;
+  cycle_length?: number;
+  weeks_mask?: number;
+  practitioner_id?: string | null;
 };
+
+
 
 export const upsertAvailabilityRule = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
