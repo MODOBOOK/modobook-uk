@@ -88,9 +88,13 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
   useEffect(() => {
     if (!value || !configured) return;
     const chosenMode = availableModes.includes(value.mode) ? value.mode : availableModes[0];
-    const chosenMethod = availableMethods.includes(value.method) ? value.method : availableMethods[0];
+    // Cash mode doesn't need a method; keep any prior method for stability.
+    const needsMethod = chosenMode !== "cash";
+    const chosenMethod = availableMethods.includes(value.method)
+      ? value.method
+      : (availableMethods[0] ?? value.method);
     const normalizedMode = chosenMode === "deposit" && effectiveDepositCents === treatmentTotalCents ? "full" : chosenMode;
-    if (!chosenMode || !chosenMethod) {
+    if (!chosenMode || (needsMethod && !chosenMethod)) {
       onChange(null);
     } else if (normalizedMode !== value.mode || chosenMethod !== value.method) {
       onChange({ mode: normalizedMode, method: chosenMethod });
@@ -108,7 +112,10 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
   }, [value, availableModes, availableMethods, effectiveDepositCents, treatmentTotalCents]);
 
 
-  if (!configured || availableModes.length === 0 || availableMethods.length === 0) return null;
+  if (!configured || availableModes.length === 0) return null;
+  // Method picker only required when at least one non-cash mode is available.
+  const hasNonCashMode = availableModes.some((m) => m !== "cash");
+  if (hasNonCashMode && availableMethods.length === 0) return null;
   // Free bookings (£0) skip payment entirely — no platform/processing fees.
   if (treatmentTotalCents <= 0) return null;
 
