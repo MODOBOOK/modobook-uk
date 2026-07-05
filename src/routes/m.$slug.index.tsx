@@ -1710,6 +1710,7 @@ function BookPage() {
                   search={{
                     ids: selectedIds.join(","),
                     pkgs: selectedPackageIds.join(","),
+                    locationId: locationId ?? undefined,
                   }}
                 >
                   <Button size="lg" className="h-12 px-6 text-base font-semibold shadow-md" style={{ backgroundColor: brand, color: "#fff" }}>

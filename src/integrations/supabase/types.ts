@@ -19,6 +19,7 @@ export type Database = {
           addon_id: string
           category_id: string | null
           created_at: string
+          discount_amount: number | null
           discount_percent: number | null
           id: string
           treatment_id: string | null
@@ -27,6 +28,7 @@ export type Database = {
           addon_id: string
           category_id?: string | null
           created_at?: string
+          discount_amount?: number | null
           discount_percent?: number | null
           id?: string
           treatment_id?: string | null
@@ -35,6 +37,7 @@ export type Database = {
           addon_id?: string
           category_id?: string | null
           created_at?: string
+          discount_amount?: number | null
           discount_percent?: number | null
           id?: string
           treatment_id?: string | null

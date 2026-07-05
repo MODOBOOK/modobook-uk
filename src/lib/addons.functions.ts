@@ -30,6 +30,7 @@ export type AddonLinkRow = {
   treatment_id: string | null;
   category_id: string | null;
   discount_percent: number | null;
+  discount_amount: number | null;
 };
 
 /* ============ Practitioner ============ */
@@ -50,6 +51,7 @@ export const listAddons = createServerFn({ method: "GET" })
       links: ((links ?? []) as any[]).map((l) => ({
         id: l.id, addon_id: l.addon_id, treatment_id: l.treatment_id,
         category_id: l.category_id, discount_percent: l.discount_percent,
+        discount_amount: l.discount_amount ?? null,
       })) as AddonLinkRow[],
     };
   });
@@ -99,8 +101,8 @@ export const setAddonLinks = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: {
     addon_id: string;
-    treatments: { id: string; discount_percent?: number | null }[];
-    categories: { id: string; discount_percent?: number | null }[];
+    treatments: { id: string; discount_percent?: number | null; discount_amount?: number | null }[];
+    categories: { id: string; discount_percent?: number | null; discount_amount?: number | null }[];
   }) => input)
   .handler(async ({ data, context }) => {
     const pid = await getProfileId(context.supabase, context.userId);
@@ -115,10 +117,12 @@ export const setAddonLinks = createServerFn({ method: "POST" })
       ...data.treatments.map((t) => ({
         addon_id: data.addon_id, treatment_id: t.id, category_id: null,
         discount_percent: t.discount_percent ?? null,
+        discount_amount: t.discount_amount ?? null,
       })),
       ...data.categories.map((c) => ({
         addon_id: data.addon_id, treatment_id: null, category_id: c.id,
         discount_percent: c.discount_percent ?? null,
+        discount_amount: c.discount_amount ?? null,
       })),
     ];
     if (rows.length) {
@@ -135,7 +139,8 @@ export type PublicAddon = {
   name: string;
   price_cents: number;
   duration_min: number;
-  discount_percent: number | null; // best (highest) applicable discount
+  discount_percent: number | null; // best (highest currency saving) applicable percent
+  discount_amount: number | null;  // best (highest) fixed amount off, in pounds
 };
 
 export const listAddonsForBooking = createServerFn({ method: "POST" })
@@ -180,22 +185,38 @@ export const listAddonsForBooking = createServerFn({ method: "POST" })
     if (!orFilters.length) return [];
     const { data: links } = await supabase
       .from("addon_links")
-      .select("addon_id, discount_percent, addons!inner(id, name, price_cents, duration_min, active, profile_id, sort_order)")
+      .select("addon_id, discount_percent, discount_amount, addons!inner(id, name, price_cents, duration_min, active, profile_id, sort_order)")
       .or(orFilters.join(","));
 
+    // For each addon, choose the link that yields the biggest saving.
     const best = new Map<string, PublicAddon>();
+    const saving = (a: { price_cents: number }, pct: number | null, amt: number | null) => {
+      const base = a.price_cents / 100;
+      const sPct = pct != null ? base * (pct / 100) : 0;
+      const sAmt = amt != null ? Math.min(base, amt) : 0;
+      // Prefer whichever is larger; if both, whichever saves more (they don't stack).
+      return Math.max(sPct, sAmt);
+    };
     for (const l of (links ?? []) as any[]) {
       const a = l.addons;
       if (!a || !a.active || a.profile_id !== profile.id) continue;
+      const pct = l.discount_percent != null ? Number(l.discount_percent) : null;
+      const amt = l.discount_amount != null ? Number(l.discount_amount) : null;
       const cur = best.get(a.id);
-      const disc = l.discount_percent != null ? Number(l.discount_percent) : null;
+      const thisSaving = saving(a, pct, amt);
       if (!cur) {
         best.set(a.id, {
           id: a.id, name: a.name, price_cents: a.price_cents,
-          duration_min: a.duration_min, discount_percent: disc,
+          duration_min: a.duration_min,
+          discount_percent: pct,
+          discount_amount: amt,
         });
-      } else if (disc != null && (cur.discount_percent == null || disc > cur.discount_percent)) {
-        cur.discount_percent = disc;
+      } else {
+        const curSaving = saving(a, cur.discount_percent, cur.discount_amount);
+        if (thisSaving > curSaving) {
+          cur.discount_percent = pct;
+          cur.discount_amount = amt;
+        }
       }
     }
     return Array.from(best.values()).sort((a, b) => a.name.localeCompare(b.name));

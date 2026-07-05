@@ -73,7 +73,7 @@ function formatSessionSpacing(days?: number | null) {
   return `every ${days} day${days === 1 ? "" : "s"}`;
 }
 
-const searchSchema = z.object({ ids: z.string().optional(), pkgs: z.string().optional() });
+const searchSchema = z.object({ ids: z.string().optional(), pkgs: z.string().optional(), locationId: z.string().optional() });
 
 export const Route = createFileRoute("/m/$slug/book-multi")({
   validateSearch: searchSchema,
@@ -143,7 +143,11 @@ function MultiBookPage() {
     color: brand,
   };
 
-  const [locationId, setLocationId] = useState<string | null>(ctx.locations[0]?.id ?? null);
+  const initialLocationId =
+    (search.locationId && ctx.locations.some((l: Loc) => l.id === search.locationId))
+      ? search.locationId
+      : (ctx.locations[0]?.id ?? null);
+  const [locationId, setLocationId] = useState<string | null>(initialLocationId);
 
   const priceFor = (t: Treatment) => {
     if (locationId) {
@@ -179,6 +183,7 @@ function MultiBookPage() {
     });
   const addonNet = (a: PublicAddon) => {
     const base = a.price_cents / 100;
+    if (a.discount_amount != null) return Math.max(0, base - a.discount_amount);
     const d = a.discount_percent ?? 0;
     return base * (1 - d / 100);
   };
@@ -750,7 +755,11 @@ function MultiBookPage() {
                       const checked = addonPicks.has(a.id);
                       const base = a.price_cents / 100;
                       const net = addonNet(a);
-                      const hasDiscount = (a.discount_percent ?? 0) > 0;
+                      const hasDiscount = (a.discount_percent ?? 0) > 0 || (a.discount_amount ?? 0) > 0;
+                      const discountLabel =
+                        a.discount_amount != null && a.discount_amount > 0
+                          ? `£${a.discount_amount.toFixed(2)} off`
+                          : `${a.discount_percent}% off`;
                       return (
                         <button
                           key={a.id}
@@ -777,7 +786,7 @@ function MultiBookPage() {
                                 <span className="opacity-50 line-through mr-2">£{base.toFixed(2)}</span>
                                 <span className="font-semibold" style={{ color: brand }}>£{net.toFixed(2)}</span>
                                 <div className="text-[10px] font-semibold text-emerald-600">
-                                  {a.discount_percent}% off
+                                  {discountLabel}
                                 </div>
                               </>
                             ) : (

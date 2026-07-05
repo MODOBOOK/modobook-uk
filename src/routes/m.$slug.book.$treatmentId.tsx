@@ -219,8 +219,11 @@ function BookTreatmentPage() {
       if (next.has(id)) next.delete(id); else next.add(id);
       return next;
     });
-  const addonNet = (a: PublicAddon) =>
-    (a.price_cents / 100) * (1 - (a.discount_percent ?? 0) / 100);
+  const addonNet = (a: PublicAddon) => {
+    const base = a.price_cents / 100;
+    if (a.discount_amount != null) return Math.max(0, base - a.discount_amount);
+    return base * (1 - (a.discount_percent ?? 0) / 100);
+  };
 
 
 
@@ -740,7 +743,11 @@ function BookTreatmentPage() {
               const checked = addonPicks.has(a.id);
               const base = a.price_cents / 100;
               const net = addonNet(a);
-              const hasDiscount = (a.discount_percent ?? 0) > 0;
+              const hasDiscount = (a.discount_percent ?? 0) > 0 || (a.discount_amount ?? 0) > 0;
+              const discountLabel =
+                a.discount_amount != null && a.discount_amount > 0
+                  ? `£${a.discount_amount.toFixed(2)} off`
+                  : `${a.discount_percent}% off`;
               return (
                 <button
                   key={a.id}
@@ -767,7 +774,7 @@ function BookTreatmentPage() {
                         <span className="opacity-50 line-through mr-2">£{base.toFixed(2)}</span>
                         <span className="font-semibold" style={{ color: brand }}>£{net.toFixed(2)}</span>
                         <div className="text-[10px] font-semibold text-emerald-600">
-                          {a.discount_percent}% off
+                          {discountLabel}
                         </div>
                       </>
                     ) : (
