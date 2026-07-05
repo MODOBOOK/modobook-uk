@@ -268,8 +268,10 @@ export const getMultiBookingContext = createServerFn({ method: "GET" })
       bookableFrom,
       settings: extractBookingSettings(profile as Record<string, unknown>),
       selectedPackages,
+      rotaAnchor,
     };
   });
+
 
 
 
