@@ -193,6 +193,74 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
                   }
                 }
               }
+
+              // Card-on-file capture (GDPR: only when the practitioner has
+              // opted in and the patient paid with card). We store the Stripe
+              // Customer + PaymentMethod on clinic_clients so no-show / late
+              // cancel fees can be charged later off-session.
+              if (metadata.save_card_on_file === "1" && connectedAccountId) {
+                try {
+                  const full = await stripe.checkout.sessions.retrieve(
+                    session.id,
+                    { expand: ["payment_intent", "payment_intent.payment_method"] },
+                    { stripeAccount: connectedAccountId },
+                  );
+                  const pi = full.payment_intent as Stripe.PaymentIntent | null;
+                  const pm = pi?.payment_method as Stripe.PaymentMethod | null;
+                  const customerId = typeof full.customer === "string"
+                    ? full.customer
+                    : full.customer?.id ?? null;
+                  const card = pm?.card;
+                  const email = (metadata.patient_email || full.customer_details?.email || "").toLowerCase();
+                  if (customerId && pm?.id && card && email) {
+                    // Look up profile_id from the first paid appointment.
+                    let profileId: string | null = null;
+                    if (paidAppointmentIds[0]) {
+                      const { data: appt } = await supabaseAdmin
+                        .from("appointments")
+                        .select("profile_id")
+                        .eq("id", paidAppointmentIds[0])
+                        .maybeSingle();
+                      profileId = (appt as { profile_id?: string } | null)?.profile_id ?? null;
+                    }
+                    if (profileId) {
+                      const { data: existing } = await supabaseAdmin
+                        .from("clinic_clients")
+                        .select("id")
+                        .eq("profile_id", profileId)
+                        .ilike("email", email)
+                        .maybeSingle();
+                      const patch = {
+                        stripe_customer_id: customerId,
+                        stripe_payment_method_id: pm.id,
+                        card_brand: card.brand,
+                        card_last4: card.last4,
+                        card_exp_month: card.exp_month,
+                        card_exp_year: card.exp_year,
+                        card_saved_at: new Date().toISOString(),
+                        card_save_consent_at: new Date().toISOString(),
+                      };
+                      if (existing?.id) {
+                        await supabaseAdmin
+                          .from("clinic_clients")
+                          .update(patch as never)
+                          .eq("id", existing.id);
+                      } else {
+                        await supabaseAdmin
+                          .from("clinic_clients")
+                          .insert({
+                            profile_id: profileId,
+                            email,
+                            full_name: full.customer_details?.name || email,
+                            ...patch,
+                          } as never);
+                      }
+                    }
+                  }
+                } catch (e) {
+                  console.error("[stripe/webhook] card-on-file capture failed", e);
+                }
+              }
               break;
 
             }

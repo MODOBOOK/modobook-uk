@@ -39,6 +39,7 @@ import { ConsultationDocCard } from "@/components/patient/ConsultationDocCard";
 
 import { logCommunication } from "@/lib/patient-hub.functions";
 import { createPaymentLink } from "@/lib/payment-links.functions";
+import { chargeCardOnFile, removeCardOnFile } from "@/lib/card-on-file.functions";
 
 
 export const Route = createFileRoute("/_authenticated/dashboard/patients/$id")({
@@ -318,6 +319,9 @@ function PatientProfilePage() {
           </div>
         )}
       </Section>
+      {/* Card on file (for no-show / late cancel charges) */}
+      <CardOnFileSection client={client} onReload={reload} />
+
       {/* Notes */}
       <NotesSection clientId={id} />
 
@@ -497,6 +501,121 @@ function AvatarUpload({ client, onUpload }: { client: any; onUpload: (f: File) =
       </div>
       <input ref={ref} type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) onUpload(f); e.target.value = ""; }} />
     </button>
+  );
+}
+
+function CardOnFileSection({ client, onReload }: { client: any; onReload: () => void }) {
+  const charge = useServerFn(chargeCardOnFile);
+  const remove = useServerFn(removeCardOnFile);
+  const [amount, setAmount] = useState("");
+  const [reason, setReason] = useState("No-show fee");
+  const [busy, setBusy] = useState(false);
+
+  const brand = client?.card_brand as string | null | undefined;
+  const last4 = client?.card_last4 as string | null | undefined;
+  const expM = client?.card_exp_month as number | null | undefined;
+  const expY = client?.card_exp_year as number | null | undefined;
+  const hasCard = !!(client?.stripe_customer_id && client?.stripe_payment_method_id && last4);
+
+  async function doCharge() {
+    const amt = Math.round(Number(amount) * 100);
+    if (!amt || amt < 100) {
+      toast.error("Enter an amount of £1.00 or more.");
+      return;
+    }
+    if (!reason.trim()) {
+      toast.error("Add a reason for the charge.");
+      return;
+    }
+    if (!confirm(`Charge £${(amt / 100).toFixed(2)} to card ending ${last4}?\n\nReason: ${reason}`)) return;
+    setBusy(true);
+    try {
+      await charge({ data: { clientId: client.id, amountCents: amt, description: reason.trim() } });
+      toast.success("Card charged.");
+      setAmount("");
+      onReload();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Charge failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function doRemove() {
+    if (!confirm("Remove this patient's saved card? They'll need to re-consent at their next booking to store a new one.")) return;
+    setBusy(true);
+    try {
+      await remove({ data: { clientId: client.id } });
+      toast.success("Card on file removed.");
+      onReload();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to remove card");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Card>
+      <CardContent className="space-y-3 p-4">
+        <div className="flex items-center gap-2">
+          <CreditCard className="h-4 w-4 text-muted-foreground" />
+          <div className="text-sm font-medium">Card on file</div>
+        </div>
+        {!hasCard ? (
+          <div className="text-xs text-muted-foreground">
+            No card saved. A card is stored automatically when the patient pays online at booking
+            (only if you have the “Save card on file” setting on).
+          </div>
+        ) : (
+          <>
+            <div className="flex flex-wrap items-center gap-2 rounded-md border bg-muted/30 px-3 py-2 text-sm">
+              <span className="font-medium uppercase">{brand}</span>
+              <span className="text-muted-foreground">•••• {last4}</span>
+              {expM && expY ? (
+                <span className="text-xs text-muted-foreground">
+                  exp {String(expM).padStart(2, "0")}/{String(expY).slice(-2)}
+                </span>
+              ) : null}
+            </div>
+            <div className="grid gap-2 sm:grid-cols-[120px_1fr_auto]">
+              <div>
+                <Label className="text-xs">Amount (£)</Label>
+                <Input
+                  inputMode="decimal"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  placeholder="0.00"
+                  disabled={busy}
+                />
+              </div>
+              <div>
+                <Label className="text-xs">Reason</Label>
+                <Input
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  placeholder="No-show / late-cancel fee"
+                  disabled={busy}
+                />
+              </div>
+              <div className="flex items-end gap-2">
+                <Button size="sm" onClick={doCharge} disabled={busy}>
+                  {busy ? <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> : <CreditCard className="mr-1 h-3.5 w-3.5" />}
+                  Charge
+                </Button>
+                <Button size="sm" variant="outline" onClick={doRemove} disabled={busy}>
+                  <Trash2 className="mr-1 h-3.5 w-3.5" />Remove
+                </Button>
+              </div>
+            </div>
+            <div className="text-[11px] text-muted-foreground">
+              Off-session charge — some banks may still require 3-D Secure. If declined for that reason,
+              send a fresh payment link instead.
+            </div>
+          </>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 

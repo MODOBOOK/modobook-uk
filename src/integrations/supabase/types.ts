@@ -1350,6 +1350,12 @@ export type Database = {
           avatar_url: string | null
           block_reason: string | null
           blocked_at: string | null
+          card_brand: string | null
+          card_exp_month: number | null
+          card_exp_year: number | null
+          card_last4: string | null
+          card_save_consent_at: string | null
+          card_saved_at: string | null
           city: string | null
           country: string | null
           county: string | null
@@ -1380,6 +1386,8 @@ export type Database = {
           postcode: string | null
           preferred_contact: string | null
           profile_id: string
+          stripe_customer_id: string | null
+          stripe_payment_method_id: string | null
           updated_at: string
         }
         Insert: {
@@ -1391,6 +1399,12 @@ export type Database = {
           avatar_url?: string | null
           block_reason?: string | null
           blocked_at?: string | null
+          card_brand?: string | null
+          card_exp_month?: number | null
+          card_exp_year?: number | null
+          card_last4?: string | null
+          card_save_consent_at?: string | null
+          card_saved_at?: string | null
           city?: string | null
           country?: string | null
           county?: string | null
@@ -1421,6 +1435,8 @@ export type Database = {
           postcode?: string | null
           preferred_contact?: string | null
           profile_id: string
+          stripe_customer_id?: string | null
+          stripe_payment_method_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -1432,6 +1448,12 @@ export type Database = {
           avatar_url?: string | null
           block_reason?: string | null
           blocked_at?: string | null
+          card_brand?: string | null
+          card_exp_month?: number | null
+          card_exp_year?: number | null
+          card_last4?: string | null
+          card_save_consent_at?: string | null
+          card_saved_at?: string | null
           city?: string | null
           country?: string | null
           county?: string | null
@@ -1462,6 +1484,8 @@ export type Database = {
           postcode?: string | null
           preferred_contact?: string | null
           profile_id?: string
+          stripe_customer_id?: string | null
+          stripe_payment_method_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -4189,6 +4213,7 @@ export type Database = {
           require_phone: boolean
           role: Database["public"]["Enums"]["app_role"]
           rota_anchor_date: string | null
+          save_card_on_file: boolean
           show_prices_on_booking: boolean
           slug: string | null
           sms_reminders_enabled: boolean
@@ -4304,6 +4329,7 @@ export type Database = {
           require_phone?: boolean
           role?: Database["public"]["Enums"]["app_role"]
           rota_anchor_date?: string | null
+          save_card_on_file?: boolean
           show_prices_on_booking?: boolean
           slug?: string | null
           sms_reminders_enabled?: boolean
@@ -4419,6 +4445,7 @@ export type Database = {
           require_phone?: boolean
           role?: Database["public"]["Enums"]["app_role"]
           rota_anchor_date?: string | null
+          save_card_on_file?: boolean
           show_prices_on_booking?: boolean
           slug?: string | null
           sms_reminders_enabled?: boolean

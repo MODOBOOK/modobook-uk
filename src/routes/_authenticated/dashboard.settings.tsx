@@ -53,6 +53,7 @@ function SettingsPage() {
     require_deposit_to_confirm: !!profile.require_deposit_to_confirm,
     allow_pay_in_clinic: profile.allow_pay_in_clinic !== false,
     cash_only_balance: !!(profile as { cash_only_balance?: boolean }).cash_only_balance,
+    save_card_on_file: !!(profile as { save_card_on_file?: boolean }).save_card_on_file,
     show_prices_on_booking: profile.show_prices_on_booking !== false,
     enforce_cancellation_fee: !!profile.enforce_cancellation_fee,
     // patient rules
@@ -312,6 +313,12 @@ function SettingsPage() {
             hint="Patients pay the deposit online, then bring the rest in cash. Hides the 'Pay in full online' option."
             checked={s.cash_only_balance}
             onChange={(v) => set("cash_only_balance", v)}
+          />
+          <ToggleRow
+            label="Save card on file for no-shows / late cancels"
+            hint="Card details are stored securely via Stripe against the patient's profile (card-only, no Apple/Google Pay). Make sure your booking terms tell the patient this will happen — that acceptance is their GDPR consent to store the card."
+            checked={s.save_card_on_file}
+            onChange={(v) => set("save_card_on_file", v)}
           />
           <ToggleRow
             label="Show prices on booking page"

@@ -246,22 +246,83 @@ export async function createCheckoutSession(params: {
   paymentMethodTypes?: Stripe.Checkout.SessionCreateParams.PaymentMethodType[];
   metadata?: Record<string, string>;
   expiresInMinutes?: number;
+  // When true, forces card-only and saves the resulting card as a reusable
+  // PaymentMethod on a Stripe Customer for later off-session charges
+  // (no-shows, late-cancel fees). Wallets (Apple/Google Pay) are excluded
+  // because their tokens are not consistently reusable off-session.
+  saveCardOnFile?: boolean;
 }) {
   const stripe = getStripe();
   // Stripe requires expires_at to be at least 30 minutes ahead — used so
   // abandoned checkouts release the slot hold in a timely manner.
   const minutes = Math.max(30, params.expiresInMinutes ?? 30);
   const expiresAt = Math.floor(Date.now() / 1000) + minutes * 60;
-  return stripe.checkout.sessions.create(
-    {
-      mode: "payment",
-      payment_method_types: params.paymentMethodTypes ?? ["card"],
-      line_items: params.lineItems,
-      success_url: params.successUrl,
-      cancel_url: params.cancelUrl,
-      customer_email: params.customerEmail,
+
+  const create: Stripe.Checkout.SessionCreateParams = {
+    mode: "payment",
+    payment_method_types: params.saveCardOnFile
+      ? ["card"]
+      : (params.paymentMethodTypes ?? ["card"]),
+    line_items: params.lineItems,
+    success_url: params.successUrl,
+    cancel_url: params.cancelUrl,
+    customer_email: params.customerEmail,
+    metadata: params.metadata,
+    expires_at: expiresAt,
+  };
+
+  if (params.saveCardOnFile) {
+    // Force a Customer on the connected account so the PaymentMethod
+    // returned from this Checkout is attached and reusable off-session.
+    create.customer_creation = "always";
+    create.payment_intent_data = {
+      setup_future_usage: "off_session",
       metadata: params.metadata,
-      expires_at: expiresAt,
+    };
+    // Exclude wallets — Apple/Google Pay tokens are not reliably reusable.
+    create.payment_method_options = {
+      card: { request_three_d_secure: "automatic" },
+    };
+  }
+
+  return stripe.checkout.sessions.create(create, { stripeAccount: params.accountId });
+}
+
+// Retrieve a completed Checkout Session with the PI + PM expanded so we can
+// read the saved card details (brand, last4, exp) after checkout.session.completed.
+export async function retrieveCheckoutSessionWithPaymentMethod(
+  accountId: string,
+  sessionId: string,
+) {
+  const stripe = getStripe();
+  return stripe.checkout.sessions.retrieve(
+    sessionId,
+    { expand: ["payment_intent", "payment_intent.payment_method"] },
+    { stripeAccount: accountId },
+  );
+}
+
+// Charge a saved card on file off-session (no-show / late-cancel fees).
+export async function chargeSavedCardOffSession(params: {
+  accountId: string;
+  customerId: string;
+  paymentMethodId: string;
+  amountCents: number;
+  currency?: string;
+  description: string;
+  metadata?: Record<string, string>;
+}) {
+  const stripe = getStripe();
+  return stripe.paymentIntents.create(
+    {
+      amount: Math.round(params.amountCents),
+      currency: (params.currency ?? "gbp").toLowerCase(),
+      customer: params.customerId,
+      payment_method: params.paymentMethodId,
+      off_session: true,
+      confirm: true,
+      description: params.description,
+      metadata: params.metadata,
     },
     { stripeAccount: params.accountId },
   );
