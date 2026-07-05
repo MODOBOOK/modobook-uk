@@ -1,0 +1,1 @@
+ALTER TABLE public.addon_links ADD COLUMN IF NOT EXISTS discount_amount numeric;
