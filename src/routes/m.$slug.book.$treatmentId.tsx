@@ -40,6 +40,10 @@ function fromIsoDate(iso: string) {
 }
 
 export const Route = createFileRoute("/m/$slug/book/$treatmentId")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    locationId: typeof search.locationId === "string" ? search.locationId : undefined,
+    model: typeof search.model === "string" ? search.model : undefined,
+  }),
   loader: ({ params }) => getBookingContext({ data: { slug: params.slug, treatmentId: params.treatmentId } }),
   component: BookTreatmentPage,
 });
@@ -69,6 +73,7 @@ function formatSessionSpacing(days?: number | null) {
 
 function BookTreatmentPage() {
   const { slug } = useParams({ from: "/m/$slug/book/$treatmentId" });
+  const search = Route.useSearch();
   const ctx = Route.useLoaderData();
   const treatment = ctx.treatment;
   const settings = (ctx as { settings?: import("@/lib/public-booking.functions").PublicBookingSettings }).settings;
@@ -106,9 +111,11 @@ function BookTreatmentPage() {
     color: brand,
   };
 
-  const [locationId, setLocationId] = useState<string | null>(
-    ctx.locations[0]?.id ?? null,
-  );
+  const [locationId, setLocationId] = useState<string | null>(() => {
+    const preselected = search.locationId;
+    if (preselected && ctx.locations.some((l: Loc) => l.id === preselected)) return preselected;
+    return ctx.locations[0]?.id ?? null;
+  });
 
   const modelSlotsAll = (ctx as { modelSlots?: Array<{ id: string; location_id: string | null; slot_date: string; start_time: string; end_time: string; price_mode: "fixed" | "percent"; price_value: number }> }).modelSlots ?? [];
   const modelMode = modelSlotsAll.length > 0;
