@@ -21,6 +21,8 @@ export type AddonRow = {
   name: string;
   price_cents: number;
   duration_min: number;
+  discount_percent: number | null;
+  discount_amount: number | null;
   active: boolean;
   sort_order: number;
 };
@@ -60,6 +62,7 @@ export const upsertAddon = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: {
     id?: string; name: string; price_cents: number; duration_min: number;
+    discount_percent?: number | null; discount_amount?: number | null;
     active?: boolean; sort_order?: number;
   }) => input)
   .handler(async ({ data, context }) => {
@@ -70,6 +73,8 @@ export const upsertAddon = createServerFn({ method: "POST" })
       name: data.name.trim(),
       price_cents: data.price_cents | 0,
       duration_min: data.duration_min | 0,
+      discount_percent: data.discount_percent == null ? null : Math.min(100, Math.max(0, Number(data.discount_percent))),
+      discount_amount: data.discount_amount == null ? null : Math.max(0, Number(data.discount_amount)),
       active: data.active ?? true,
       sort_order: data.sort_order ?? 0,
     };
@@ -185,7 +190,7 @@ export const listAddonsForBooking = createServerFn({ method: "POST" })
     if (!orFilters.length) return [];
     const { data: links } = await supabase
       .from("addon_links")
-      .select("addon_id, discount_percent, discount_amount, addons!inner(id, name, price_cents, duration_min, active, profile_id, sort_order)")
+      .select("addon_id, discount_percent, discount_amount, addons!inner(id, name, price_cents, duration_min, discount_percent, discount_amount, active, profile_id, sort_order)")
       .or(orFilters.join(","));
 
     // For each addon, choose the link that yields the biggest saving.
@@ -200,8 +205,12 @@ export const listAddonsForBooking = createServerFn({ method: "POST" })
     for (const l of (links ?? []) as any[]) {
       const a = l.addons;
       if (!a || !a.active || a.profile_id !== profile.id) continue;
-      const pct = l.discount_percent != null ? Number(l.discount_percent) : null;
-      const amt = l.discount_amount != null ? Number(l.discount_amount) : null;
+      const pct = l.discount_percent != null
+        ? Number(l.discount_percent)
+        : (a.discount_percent != null ? Number(a.discount_percent) : null);
+      const amt = l.discount_amount != null
+        ? Number(l.discount_amount)
+        : (a.discount_amount != null ? Number(a.discount_amount) : null);
       const cur = best.get(a.id);
       const thisSaving = saving(a, pct, amt);
       if (!cur) {

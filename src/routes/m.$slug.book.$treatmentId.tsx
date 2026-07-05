@@ -224,6 +224,20 @@ function BookTreatmentPage() {
     if (a.discount_amount != null) return Math.max(0, base - a.discount_amount);
     return base * (1 - (a.discount_percent ?? 0) / 100);
   };
+  const pickedAddons = availableAddons.filter((a) => addonPicks.has(a.id));
+  const addonsExtraPrice = pickedAddons.reduce((s, a) => s + addonNet(a), 0);
+  const totalBeforeDiscount = price + addonsExtraPrice;
+  const discountTotal = useMemo(() => {
+    if (!discount || !discount.applies_to_treatment_ids.includes(treatment.id)) return 0;
+    const off = discount.kind === "percent"
+      ? price * (discount.amount / 100)
+      : discount.amount;
+    return Math.min(off, price);
+  }, [discount, price, treatment.id]);
+  const totalAfterDiscount = Math.max(0, totalBeforeDiscount - discountTotal);
+  const dueTodayAmount = splitAllowed && paymentPlan === "split"
+    ? totalAfterDiscount / sessionCount
+    : totalAfterDiscount;
 
 
 
@@ -404,6 +418,8 @@ function BookTreatmentPage() {
         discountOff = Math.min(discountOff, effectivePrice);
         effectivePrice = Math.max(0, effectivePrice - discountOff);
       }
+      const picked = availableAddons.filter((a) => addonPicks.has(a.id));
+      effectivePrice += picked.reduce((sum, a) => sum + addonNet(a), 0);
 
       const res = await reqFn({
         data: {
@@ -426,7 +442,6 @@ function BookTreatmentPage() {
             country: form.country,
           },
           notes: (() => {
-            const picked = availableAddons.filter((a) => addonPicks.has(a.id));
             const lines: string[] = [];
             if (form.notes) lines.push(form.notes);
             if (picked.length) lines.push("Add-ons: " + picked.map((a) => `${a.name} (£${addonNet(a).toFixed(2)})`).join(", "));
@@ -797,7 +812,7 @@ function BookTreatmentPage() {
           <CardContent className="grid gap-2 sm:grid-cols-2">
             {(["full", "split"] as const).map((opt) => {
               const selected = paymentPlan === opt;
-              const per = (price / sessionCount).toFixed(2);
+              const per = (totalAfterDiscount / sessionCount).toFixed(2);
               return (
                 <button
                   key={opt}
@@ -814,7 +829,7 @@ function BookTreatmentPage() {
                   </div>
                   <div className="text-xs opacity-70">
                     {opt === "full"
-                      ? `£${price.toFixed(2)} total`
+                      ? `£${totalAfterDiscount.toFixed(2)} total`
                       : `£${per} per appointment · charged at each visit`}
                   </div>
                 </button>
@@ -832,8 +847,8 @@ function BookTreatmentPage() {
                   onChange={(e) => setSplitAgreed(e.target.checked)}
                 />
                 <span>
-                  I agree to pay <strong>£{(price / sessionCount).toFixed(2)}</strong> per appointment,
-                  across <strong>{sessionCount} appointments</strong> (total £{price.toFixed(2)}), charged at each visit to complete this treatment plan.
+                  I agree to pay <strong>£{(totalAfterDiscount / sessionCount).toFixed(2)}</strong> per appointment,
+                  across <strong>{sessionCount} appointments</strong> (total £{totalAfterDiscount.toFixed(2)}), charged at each visit to complete this treatment plan.
                   <span className="text-destructive"> *</span>
                 </span>
               </label>
@@ -941,7 +956,7 @@ function BookTreatmentPage() {
 
       <BookingPaymentPicker
         slug={slug}
-        totalAmount={splitAllowed && paymentPlan === "split" ? price / sessionCount : price}
+        totalAmount={dueTodayAmount}
         value={paymentChoice}
         onChange={setPaymentChoice}
         accent={brand}
@@ -962,7 +977,7 @@ function BookTreatmentPage() {
           !slot || submitting || !form.name || !form.email ||
           (reqPhone && !form.phone) || (reqDob && !form.dob) ||
           (splitAllowed && paymentPlan === "split" && !splitAgreed) ||
-          (price > 0 && !paymentChoice)
+          (totalAfterDiscount > 0 && !paymentChoice)
         }
         onClick={submit}
         style={{ backgroundColor: brand, color: "#fff" }}
@@ -972,9 +987,9 @@ function BookTreatmentPage() {
           : splitAllowed && paymentPlan === "split"
             ? !splitAgreed
               ? "Tick the payment-plan agreement to continue"
-              : `Book & pay £${(price / sessionCount).toFixed(2)} today (${sessionCount} × £${(price / sessionCount).toFixed(2)})`
-            : showPrices && price > 0
-              ? `Book & pay £${price.toFixed(2)}`
+              : `Book & pay £${dueTodayAmount.toFixed(2)} today (${sessionCount} × £${(totalAfterDiscount / sessionCount).toFixed(2)})`
+            : showPrices && totalAfterDiscount > 0
+              ? `Book & pay £${totalAfterDiscount.toFixed(2)}`
               : "Confirm booking"}
       </Button>
       </>

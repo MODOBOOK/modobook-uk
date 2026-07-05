@@ -29,9 +29,22 @@ export const Route = createFileRoute("/_authenticated/dashboard/addons")({
 
 type Treatment = { id: string; name: string; price: number | null; category_id: string | null };
 type Category = { id: string; name: string; parent_id: string | null };
+type DiscountKind = "percent" | "amount";
 
 function poundsFromCents(c?: number | null) {
   return ((c ?? 0) / 100).toFixed(2);
+}
+
+function netAddonPrice(addon: Pick<AddonRow, "price_cents" | "discount_percent" | "discount_amount">) {
+  const base = (addon.price_cents ?? 0) / 100;
+  if ((addon.discount_amount ?? 0) > 0) return Math.max(0, base - Number(addon.discount_amount));
+  return base * (1 - Number(addon.discount_percent ?? 0) / 100);
+}
+
+function addonDiscountLabel(addon: Pick<AddonRow, "discount_percent" | "discount_amount">) {
+  if ((addon.discount_amount ?? 0) > 0) return `£${Number(addon.discount_amount).toFixed(2)} off`;
+  if ((addon.discount_percent ?? 0) > 0) return `${Number(addon.discount_percent)}% off`;
+  return null;
 }
 
 function AddonsPage() {
@@ -65,7 +78,7 @@ function AddonsPage() {
     return links.filter((l) => l.addon_id === addonId);
   }
 
-  function openCreate() { setEditing({ name: "", price_cents: 0, duration_min: 0, active: true }); setEditOpen(true); }
+  function openCreate() { setEditing({ name: "", price_cents: 0, duration_min: 0, discount_percent: null, discount_amount: null, active: true }); setEditOpen(true); }
   function openEdit(a: AddonRow) { setEditing(a); setEditOpen(true); }
 
   async function saveAddon() {
@@ -76,6 +89,8 @@ function AddonsPage() {
         name: editing.name!,
         price_cents: editing.price_cents ?? 0,
         duration_min: editing.duration_min ?? 0,
+        discount_percent: editing.discount_percent ?? null,
+        discount_amount: editing.discount_amount ?? null,
         active: editing.active ?? true,
         sort_order: editing.sort_order ?? 0,
       }});
@@ -116,6 +131,8 @@ function AddonsPage() {
             const my = linksFor(a.id);
             const tCount = my.filter((l) => l.treatment_id).length;
             const cCount = my.filter((l) => l.category_id).length;
+            const discountLabel = addonDiscountLabel(a);
+            const netPrice = netAddonPrice(a);
             return (
               <Card key={a.id}>
                 <CardContent className="p-3">
@@ -129,7 +146,16 @@ function AddonsPage() {
                         {!a.active && <Badge variant="outline" className="text-[10px]">Inactive</Badge>}
                       </div>
                       <div className="text-xs text-muted-foreground">
-                        £{poundsFromCents(a.price_cents)} · {a.duration_min} min
+                        {discountLabel ? (
+                          <>
+                            <span className="line-through opacity-60">£{poundsFromCents(a.price_cents)}</span>{" "}
+                            <span className="font-semibold text-foreground">£{netPrice.toFixed(2)}</span>{" "}
+                            <span>· {discountLabel}</span>
+                          </>
+                        ) : (
+                          <>£{poundsFromCents(a.price_cents)}</>
+                        )}{" "}
+                        · {a.duration_min} min
                       </div>
                       <div className="mt-1 flex flex-wrap gap-1.5">
                         {cCount > 0 && <Badge variant="secondary" className="text-[10px]">{cCount} categor{cCount === 1 ? "y" : "ies"}</Badge>}
@@ -176,6 +202,58 @@ function AddonsPage() {
                     onChange={(e) => setEditing({ ...editing, duration_min: parseInt(e.target.value || "0") })} />
                 </div>
               </div>
+              {(() => {
+                const kind: DiscountKind = (editing.discount_amount ?? 0) > 0 ? "amount" : "percent";
+                const standard = (editing.price_cents ?? 0) / 100;
+                const preview = netAddonPrice({
+                  price_cents: editing.price_cents ?? 0,
+                  discount_percent: editing.discount_percent ?? null,
+                  discount_amount: editing.discount_amount ?? null,
+                });
+                const hasDiscount = preview < standard;
+                return (
+                  <div className="rounded-md border p-3">
+                    <Label className="text-xs">Discount shown to patients</Label>
+                    <div className="mt-1 grid grid-cols-[110px_minmax(0,1fr)] gap-2">
+                      <select
+                        className="h-9 rounded-md border bg-background px-2 text-sm"
+                        value={kind}
+                        onChange={(e) => {
+                          const next = e.target.value as DiscountKind;
+                          setEditing(next === "percent"
+                            ? { ...editing, discount_percent: editing.discount_percent ?? null, discount_amount: null }
+                            : { ...editing, discount_percent: null, discount_amount: editing.discount_amount ?? null });
+                        }}
+                      >
+                        <option value="percent">% off</option>
+                        <option value="amount">£ off</option>
+                      </select>
+                      <Input
+                        type="number"
+                        min={0}
+                        max={kind === "percent" ? 100 : undefined}
+                        step={kind === "percent" ? "1" : "0.01"}
+                        placeholder={kind === "percent" ? "No discount" : "No discount"}
+                        value={kind === "percent" ? (editing.discount_percent ?? "") : (editing.discount_amount ?? "")}
+                        onChange={(e) => {
+                          const raw = e.target.value;
+                          const parsed = raw === "" ? null : Math.max(0, parseFloat(raw));
+                          setEditing(kind === "percent"
+                            ? { ...editing, discount_percent: parsed == null ? null : Math.min(100, parsed), discount_amount: null }
+                            : { ...editing, discount_percent: null, discount_amount: parsed });
+                        }}
+                      />
+                    </div>
+                    <div className="mt-2 text-xs text-muted-foreground">
+                      {hasDiscount ? (
+                        <>Patient sees <span className="line-through">£{standard.toFixed(2)}</span> <span className="font-semibold text-foreground">£{preview.toFixed(2)}</span>.</>
+                      ) : (
+                        <>Leave blank for no discount.</>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
               <label className="flex items-center justify-between rounded-md border p-2">
                 <span className="text-sm">Active</span>
                 <Switch checked={editing.active ?? true} onCheckedChange={(v) => setEditing({ ...editing, active: v })} />
@@ -215,7 +293,6 @@ function AddonsPage() {
   );
 }
 
-type DiscountKind = "percent" | "amount";
 type DiscountValue = { kind: DiscountKind; percent: number | null; amount: number | null };
 const EMPTY_DISC: DiscountValue = { kind: "percent", percent: null, amount: null };
 
