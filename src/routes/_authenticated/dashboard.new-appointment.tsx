@@ -81,11 +81,19 @@ function NewAppointmentPage() {
     (async () => {
       const { data: t } = await supabase
         .from("treatments")
-        .select("id,name,price,duration")
+        .select("id,name,price,duration,category_id")
         .eq("profile_id", profile.id)
         .eq("active", true)
         .order("name");
-      setTreatments(t ?? []);
+      setTreatments((t ?? []) as Treatment[]);
+      const { data: cats } = await supabase
+        .from("treatment_categories")
+        .select("id,name,sort_order")
+        .eq("profile_id", profile.id)
+        .eq("kind", "treatment")
+        .order("sort_order")
+        .order("name");
+      setCategories((cats ?? []) as Category[]);
       const { data: l } = await supabase
         .from("locations")
         .select("id,name")
