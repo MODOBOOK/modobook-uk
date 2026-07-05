@@ -136,10 +136,12 @@ function BookingsPage() {
   const list = useServerFn(listMyAppointments);
   const listBlocks = useServerFn(listBlockedTimes);
   const listRules = useServerFn(listAvailabilityRules);
+  const listOverrides = useServerFn(listAvailabilityOverrides);
   const listLocations = useServerFn(listMyLocations);
   const [appts, setAppts] = useState<Appt[]>([]);
   const [blocks, setBlocks] = useState<BlockedTime[]>([]);
   const [rules, setRules] = useState<AvailRule[]>([]);
+  const [overrides, setOverrides] = useState<Override[]>([]);
   const [locations, setLocations] = useState<{ id: string; name: string }[]>([]);
   const [locationFilter, setLocationFilter] = useState<string>("all");
   const [loading, setLoading] = useState(true);
@@ -156,10 +158,11 @@ function BookingsPage() {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   async function refresh() {
-    const [a, b, r, l] = await Promise.all([list(), listBlocks(), listRules(), listLocations()]);
+    const [a, b, r, o, l] = await Promise.all([list(), listBlocks(), listRules(), listOverrides(), listLocations()]);
     setAppts(a as Appt[]);
     setBlocks(b as BlockedTime[]);
     setRules((r as AvailRule[]) ?? []);
+    setOverrides((o as Override[]) ?? []);
     setLocations(((l as any[]) ?? []).map((x) => ({ id: x.id, name: x.name })));
   }
 
