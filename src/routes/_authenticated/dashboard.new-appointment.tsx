@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { getMyProfile } from "@/lib/profiles.functions";
 import { createAppointmentForPatient } from "@/lib/appointments.functions";
@@ -59,6 +59,7 @@ function NewAppointmentPage() {
   const [addrPostcode, setAddrPostcode] = useState("");
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
+  const submitLockRef = useRef(false);
   const [sendDeposit, setSendDeposit] = useState(false);
   const [depositAmount, setDepositAmount] = useState("");
   const [depositHours, setDepositHours] = useState("24");
@@ -205,10 +206,12 @@ function NewAppointmentPage() {
 
 
   async function submit() {
+    if (submitLockRef.current) return;
     if (!treatment || !date || !startTime || !patientName || !patientEmail) {
       toast.error("Fill in treatment, date, time, patient name and email");
       return;
     }
+    submitLockRef.current = true;
     setSaving(true);
     try {
       const result = await createAppointmentForPatient({
@@ -275,6 +278,7 @@ function NewAppointmentPage() {
       toast.error(e instanceof Error ? e.message : "Failed");
     } finally {
       setSaving(false);
+      submitLockRef.current = false;
     }
   }
 

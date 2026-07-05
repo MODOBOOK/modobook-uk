@@ -40,6 +40,24 @@ export const createAppointmentForPatient = createServerFn({ method: "POST" })
       .single();
     if (pErr || !profile) throw new Error("Profile not found");
 
+    // Idempotency: if an identical appointment for this practitioner + patient +
+    // treatment + slot was created in the last 5 minutes, return that one instead
+    // of writing a duplicate. Guards against double-click / retry duplicates.
+    {
+      const cutoff = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+      const { data: dup } = await supabase
+        .from("appointments")
+        .select("id")
+        .eq("profile_id", profile.id)
+        .eq("treatment_id", data.treatmentId)
+        .eq("scheduled_date", data.date)
+        .eq("start_time", data.startTime)
+        .ilike("patient_email", data.patientEmail)
+        .gte("created_at", cutoff)
+        .maybeSingle();
+      if (dup) return { id: dup.id as string, manageToken: null };
+    }
+
     const id = crypto.randomUUID();
     const { error } = await supabase.from("appointments").insert({
       id,

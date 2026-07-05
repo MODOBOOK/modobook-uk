@@ -524,6 +524,24 @@ export const requestBooking = createServerFn({ method: "POST" })
       .eq("is_blocked", true)
       .maybeSingle();
     if (blk) throw new Error("Unable to book online. Please contact the clinic directly.");
+
+    // Idempotency guard: reject duplicate submissions of the same booking
+    // (same clinic + treatment + slot + patient email) inside a 5-minute window.
+    {
+      const cutoff = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+      const { data: dup } = await sb
+        .from("appointments")
+        .select("id")
+        .eq("profile_id", data.profileId)
+        .eq("treatment_id", data.treatmentId)
+        .eq("scheduled_date", data.date)
+        .eq("start_time", data.startTime)
+        .ilike("patient_email", data.patientEmail)
+        .gte("created_at", cutoff)
+        .maybeSingle();
+      if (dup) return { id: dup.id as string, consents: [], medicalForms: [], checkoutUrl: null };
+    }
+
     const id = crypto.randomUUID();
     const { error } = await sb.from("appointments").insert({
       id,
@@ -881,6 +899,32 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
       .eq("is_blocked", true)
       .maybeSingle();
     if (blk) throw new Error("Unable to book online. Please contact the clinic directly.");
+
+    // Idempotency: if the exact same multi-booking (same clinic, patient email,
+    // date + start time, and treatment ids) was submitted in the last 5 minutes,
+    // return the existing appointments instead of duplicating them.
+    {
+      const cutoff = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+      const treatmentIds = data.bookings.map((b) => b.treatmentId);
+      const { data: recent } = await sb
+        .from("appointments")
+        .select("id, treatment_id, start_time")
+        .eq("profile_id", data.profileId)
+        .eq("scheduled_date", data.date)
+        .in("treatment_id", treatmentIds)
+        .ilike("patient_email", data.patientEmail)
+        .gte("created_at", cutoff);
+      if (recent && recent.length >= data.bookings.length) {
+        const existing = recent
+          .filter((r) => treatmentIds.includes(r.treatment_id as string))
+          .slice(0, data.bookings.length)
+          .map((r) => ({ id: r.id as string, treatmentId: r.treatment_id as string }));
+        if (existing.length === data.bookings.length) {
+          return { appointments: existing, consents: [], medicalForms: [], packagePurchases: [], checkoutUrl: null };
+        }
+      }
+    }
+
     let cursor = data.startTime;
     const created: { id: string; treatmentId: string }[] = [];
     const consents: { token: string; consent_template_id: string }[] = [];
