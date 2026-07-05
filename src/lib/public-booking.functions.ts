@@ -534,7 +534,11 @@ export const requestBooking = createServerFn({ method: "POST" })
     if (prof?.require_account_to_book && !data.patientUserId) {
       throw new Error("Please sign in to book — this clinic requires an account.");
     }
-    const status = prof?.auto_confirm_bookings === false ? "pending" : "confirmed";
+    // Auto-confirm target status once we know payment isn't required. We always
+    // insert as "pending" first so the notify_new_booking trigger doesn't fire
+    // for bookings that end up abandoning Stripe checkout.
+    const finalStatus = prof?.auto_confirm_bookings === false ? "pending" : "confirmed";
+    const status = "pending";
 
     const { data: blk } = await sb
       .from("clinic_clients")
@@ -641,6 +645,16 @@ export const requestBooking = createServerFn({ method: "POST" })
       await supabaseAdmin
         .from("appointments")
         .update({ status: "pending", payment_hold_expires_at: holdUntil } as never)
+        .eq("id", id);
+    }
+
+    // No Stripe payment required: promote to the practitioner's normal status
+    // (usually "confirmed"). This UPDATE transition is what fires the new-booking
+    // notification trigger — so it only fires for real, non-abandoned bookings.
+    if (!payment) {
+      await supabaseAdmin
+        .from("appointments")
+        .update({ status: finalStatus } as never)
         .eq("id", id);
     }
 
@@ -960,7 +974,8 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
     if (prof?.require_account_to_book && !data.patientUserId) {
       throw new Error("Please sign in to book — this clinic requires an account.");
     }
-    const status = prof?.auto_confirm_bookings === false ? "pending" : "confirmed";
+    const finalStatus = prof?.auto_confirm_bookings === false ? "pending" : "confirmed";
+    const status = "pending";
     const { data: blk } = await sb
       .from("clinic_clients")
       .select("id")
@@ -1125,6 +1140,15 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
       await supabaseAdmin
         .from("appointments")
         .update({ status: "pending", payment_hold_expires_at: holdUntil } as never)
+        .in("id", created.map((c) => c.id));
+    }
+
+    // No Stripe payment required: promote from the placeholder "pending" state
+    // to the practitioner's normal status so the new-booking trigger fires.
+    if (!payment && created.length > 0) {
+      await supabaseAdmin
+        .from("appointments")
+        .update({ status: finalStatus } as never)
         .in("id", created.map((c) => c.id));
     }
 
