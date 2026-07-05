@@ -655,8 +655,11 @@ async function maybeCreateBookingCheckout(args: {
 }): Promise<string | null> {
   const p = args.profile;
   if (!p) return null;
+  // Patient chose to pay in cash at the appointment — skip Stripe entirely.
+  if (args.choice?.mode === "cash") return null;
   if (!p.stripe_connect_account_id) return null;
   if (p.stripe_connect_onboarding_status && p.stripe_connect_onboarding_status !== "active") return null;
+
 
   const depositEnabled = !!p.payment_deposit_enabled;
   const depositPer = Math.max(0, Number(p.deposit_amount_cents ?? 0));
