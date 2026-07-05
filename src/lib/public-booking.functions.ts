@@ -1143,6 +1143,15 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
         .in("id", created.map((c) => c.id));
     }
 
+    // No Stripe payment required: promote from the placeholder "pending" state
+    // to the practitioner's normal status so the new-booking trigger fires.
+    if (!payment && created.length > 0) {
+      await supabaseAdmin
+        .from("appointments")
+        .update({ status: finalStatus } as never)
+        .in("id", created.map((c) => c.id));
+    }
+
     // Non-payment bookings should still receive confirmations. Payment bookings
     // are confirmed by the webhook after money is taken.
     if (!payment && data.patientEmail && created.length > 0) {
