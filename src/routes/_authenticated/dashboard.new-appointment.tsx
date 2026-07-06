@@ -38,6 +38,20 @@ export const Route = createFileRoute("/_authenticated/dashboard/new-appointment"
 type Treatment = { id: string; name: string; price: number | null; duration: number | null; category_id: string | null };
 type Location = { id: string; name: string };
 type Category = { id: string; name: string; sort_order: number | null };
+type ModelSlot = {
+  id: string;
+  treatment_id: string;
+  location_id: string | null;
+  slot_date: string;
+  start_time: string;
+  end_time: string;
+  price_mode: "fixed" | "percent";
+  price_value: number;
+  notes: string | null;
+  booked_appointment_id: string | null;
+  active: boolean;
+  category: string | null;
+};
 
 function NewAppointmentPage() {
   const { profile } = Route.useLoaderData();
