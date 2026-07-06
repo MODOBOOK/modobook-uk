@@ -6,7 +6,9 @@ import { CreditCard } from "lucide-react";
 
 type ConfiguredOptions = {
   configured: true;
+  requireDepositToConfirm: boolean;
   cardEnabled: boolean;
+  fullCardEnabled: boolean;
   klarnaEnabled: boolean;
   clearpayEnabled: boolean;
   depositEnabled: boolean;
@@ -67,9 +69,13 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
     if (!configured) return [] as Array<"deposit" | "full" | "cash">;
     const arr: Array<"deposit" | "full" | "cash"> = [];
     const o = opts as ConfiguredOptions;
+    if (o.requireDepositToConfirm) {
+      if (o.depositEnabled && effectiveDepositCents >= 100) arr.push("deposit");
+      return arr;
+    }
     // Deposit is always an option when configured — patient may prefer it over splitting.
     if (o.depositEnabled && effectiveDepositCents >= 100 && effectiveDepositCents < treatmentTotalCents) arr.push("deposit");
-    if (o.cardEnabled || o.klarnaEnabled || o.clearpayEnabled) arr.push("full");
+    if (o.fullCardEnabled || o.klarnaEnabled || o.clearpayEnabled) arr.push("full");
     if (o.cashEnabled) arr.push("cash");
     return arr;
   }, [configured, opts, effectiveDepositCents, treatmentTotalCents]);
@@ -80,14 +86,25 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
     const o = opts as ConfiguredOptions;
     const arr: Array<"card" | "klarna" | "clearpay"> = [];
     if (o.cardEnabled) arr.push("card");
+    if (o.requireDepositToConfirm) return arr;
     if (o.klarnaEnabled) arr.push("klarna");
     if (o.clearpayEnabled) arr.push("clearpay");
     return arr;
   }, [configured, opts]);
 
-  // If the externally controlled value is no longer valid (e.g. deposit now equals full price), coerce it.
+  // If the externally controlled value is no longer valid, coerce it. Required
+  // deposits are always deposit + card so the server can take payment and save
+  // the reusable card before the appointment is confirmed.
   useEffect(() => {
-    if (!value || !configured) return;
+    if (!configured) return;
+    const o = opts as ConfiguredOptions;
+    if (o.requireDepositToConfirm && o.depositEnabled && availableMethods.includes("card")) {
+      if (value?.mode !== "deposit" || value.method !== "card") {
+        onChange({ mode: "deposit", method: "card" });
+      }
+      return;
+    }
+    if (!value) return;
     const chosenMode = availableModes.includes(value.mode) ? value.mode : availableModes[0];
     // Cash mode doesn't need a method; keep any prior method for stability.
     const needsMethod = chosenMode !== "cash";
@@ -100,17 +117,21 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
     } else if (normalizedMode !== value.mode || chosenMethod !== value.method) {
       onChange({ mode: normalizedMode, method: chosenMethod });
     }
-  }, [value, configured, availableModes, availableMethods, effectiveDepositCents, treatmentTotalCents, onChange]);
+  }, [value, configured, opts, availableModes, availableMethods, effectiveDepositCents, treatmentTotalCents, onChange]);
 
 
   const chosen = useMemo(() => {
     if (!value) return null;
+    const o = opts as ConfiguredOptions;
+    if (o.requireDepositToConfirm && o.depositEnabled && availableMethods.includes("card")) {
+      return { mode: "deposit" as const, method: "card" as const };
+    }
     const mode = availableModes.includes(value.mode) ? value.mode : (availableModes[0] ?? "full");
     const method = availableMethods.includes(value.method) ? value.method : (availableMethods[0] ?? "card");
     // When deposit equals the full price, treat it as a full payment.
     const normalizedMode = mode === "deposit" && effectiveDepositCents === treatmentTotalCents ? "full" : mode;
     return { mode: normalizedMode, method };
-  }, [value, availableModes, availableMethods, effectiveDepositCents, treatmentTotalCents]);
+  }, [value, opts, availableModes, availableMethods, effectiveDepositCents, treatmentTotalCents]);
 
 
   if (!configured || availableModes.length === 0) return null;
@@ -121,6 +142,7 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
   if (treatmentTotalCents <= 0) return null;
 
   const o = opts as ConfiguredOptions;
+  const forceDepositCard = o.requireDepositToConfirm;
 
   const baseCents = chosen?.mode === "deposit" ? effectiveDepositCents : treatmentTotalCents;
   const pct = !chosen
@@ -201,11 +223,12 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
               <button
                 type="button"
                 onClick={() => selectMode("deposit")}
+                disabled={forceDepositCard}
                 className="text-left rounded-xl border-2 px-3 py-2.5 transition"
                 style={optionStyle(chosen?.mode === "deposit")}
               >
                 <div className="text-sm font-semibold">Pay deposit</div>
-                <div className="text-xs opacity-75">{formatGBP(effectiveDepositCents)} now — {o.cashOnlyBalance ? `remaining £${((treatmentTotalCents - effectiveDepositCents) / 100).toFixed(2)} in cash at your appointment` : "balance at your appointment"}</div>
+                <div className="text-xs opacity-75">{formatGBP(effectiveDepositCents)} now — card saved securely for the clinic's booking policy</div>
               </button>
             )}
             {availableModes.includes("full") && (
@@ -245,6 +268,7 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
                 key={m}
                 type="button"
                 onClick={() => selectMethod(m)}
+                disabled={forceDepositCard}
                 className="rounded-xl border-2 px-3 py-2 text-sm font-medium transition"
                 style={optionStyle(chosen?.method === m)}
               >
