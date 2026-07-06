@@ -36,26 +36,22 @@ export function TreatmentPlansPanel({
   const update = useServerFn(updatePlan);
   const send = useServerFn(sendPlan);
   const del = useServerFn(deletePlan);
-  const listTpls = useServerFn(listPlanTemplates);
+  const suggest = useServerFn(suggestPlanForClient);
 
   const [plans, setPlans] = useState<any[]>([]);
-  const [templates, setTemplates] = useState<any[]>([]);
   const [treatments, setTreatments] = useState<Treatment[]>([]);
   const [loading, setLoading] = useState(true);
   const [newOpen, setNewOpen] = useState(false);
-  const [selectedTpl, setSelectedTpl] = useState<string>("blank");
   const [newName, setNewName] = useState("");
+  const [aiContext, setAiContext] = useState("");
+  const [suggesting, setSuggesting] = useState(false);
   const [editing, setEditing] = useState<any | null>(null);
 
   const refresh = async () => {
     setLoading(true);
     try {
-      const [p, t] = await Promise.all([
-        list({ data: { clientId } }),
-        listTpls(),
-      ]);
+      const p = await list({ data: { clientId } });
       setPlans(p);
-      setTemplates(t);
     } finally {
       setLoading(false);
     }
@@ -73,28 +69,50 @@ export function TreatmentPlansPanel({
     })();
   }, [clientId]);
 
-  const handleCreate = async () => {
+  const openEditor = async (planId: string) => {
+    const fresh = await list({ data: { clientId } });
+    setPlans(fresh);
+    const found = fresh.find((p: any) => p.id === planId);
+    if (found) setEditing(found);
+  };
+
+  const handleCreateBlank = async () => {
     try {
       const plan = await create({
         data: {
           clientId,
-          templateId: selectedTpl === "blank" ? null : selectedTpl,
           consultationId: consultationId ?? null,
           name: newName || undefined,
         },
       });
-      toast.success("Plan created");
+      toast.success("Plan created — tailor it to the patient");
       setNewOpen(false);
       setNewName("");
-      setSelectedTpl("blank");
-      await refresh();
-      // Open editor
-      const fresh = await list({ data: { clientId } });
-      const found = fresh.find((p: any) => p.id === plan.id);
-      setPlans(fresh);
-      if (found) setEditing(found);
+      await openEditor(plan.id);
     } catch (e: any) {
       toast.error(e.message);
+    }
+  };
+
+  const handleAiSuggest = async () => {
+    setSuggesting(true);
+    try {
+      const plan = await suggest({
+        data: {
+          clientId,
+          consultationId: consultationId ?? null,
+          extraContext: aiContext || null,
+        },
+      });
+      toast.success("AI drafted a plan — review and edit before sending");
+      setNewOpen(false);
+      setAiContext("");
+      setNewName("");
+      await openEditor(plan.id);
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setSuggesting(false);
     }
   };
 
