@@ -398,7 +398,7 @@ function NewAppointmentPage() {
         <CardContent className="space-y-3">
           <div>
             <Label>Treatment *</Label>
-            <Select value={treatmentId} onValueChange={setTreatmentId}>
+            <Select value={treatmentId} onValueChange={(v) => { setTreatmentId(v); setModelSlotId(null); setModelPriceOverride(null); }}>
               <SelectTrigger><SelectValue placeholder="Select treatment" /></SelectTrigger>
               <SelectContent className="max-h-[60vh]">
                 {(() => {
