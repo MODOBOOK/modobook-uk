@@ -257,8 +257,16 @@ function BookingsPage() {
     if (isBlockedDay) {
       return [{ top: 0, height: (END_HOUR - START_HOUR + 1) * HOUR_HEIGHT }];
     }
-    const dayRules = rulesByDow.get(dow) ?? [];
-    const dayOverrides = overrides.filter((o) => o.date === iso);
+    const dayRules = (rulesByDow.get(dow) ?? []).filter(
+      (r) =>
+        (locationFilter === "all" || r.location_id == null || r.location_id === locationFilter) &&
+        ruleAppliesOnDate(r as unknown as { cycle_length?: number; weeks_mask?: number }, iso, rotaAnchor),
+    );
+    const dayOverrides = overrides.filter(
+      (o) =>
+        o.date === iso &&
+        (locationFilter === "all" || o.location_id == null || o.location_id === locationFilter),
+    );
     const windows: [number, number][] = [
       ...dayRules.map((r) => [parseTime(r.start_time), parseTime(r.end_time)] as [number, number]),
       ...dayOverrides.map((o) => [parseTime(o.start_time), parseTime(o.end_time)] as [number, number]),
@@ -273,9 +281,23 @@ function BookingsPage() {
       if (last && w[0] <= last[1]) last[1] = Math.max(last[1], w[1]);
       else merged.push([w[0], w[1]]);
     }
+    // Subtract blocked_times windows (whole-day blocks handled above)
+    const dayBlockWindows = (blocksByDate.get(iso) ?? [])
+      .filter((b) => locationFilter === "all" || b.location_id == null || b.location_id === locationFilter)
+      .map((b) => [parseTime(b.start_time), parseTime(b.end_time)] as [number, number]);
+    let available: [number, number][] = merged;
+    for (const [bs, be] of dayBlockWindows) {
+      const next: [number, number][] = [];
+      for (const [s, e] of available) {
+        if (be <= s || bs >= e) { next.push([s, e]); continue; }
+        if (bs > s) next.push([s, bs]);
+        if (be < e) next.push([be, e]);
+      }
+      available = next;
+    }
     const segs: { top: number; height: number }[] = [];
     let cursor = START_HOUR;
-    for (const [s, e] of merged) {
+    for (const [s, e] of available) {
       const segStart = Math.max(cursor, START_HOUR);
       const segEnd = Math.min(s, END_HOUR + 1);
       if (segEnd > segStart) {
@@ -294,6 +316,7 @@ function BookingsPage() {
     }
     return segs;
   }
+
 
   function navPrev() {
     if (view === "day") setAnchor(addDays(anchor, -1));
