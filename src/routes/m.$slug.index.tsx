@@ -1491,8 +1491,11 @@ function BookPage() {
                                         <div key={s.id} className="rounded-xl border bg-white p-3">
                                           <p className="text-sm font-semibold">{t.name}</p>
                                           <p className="text-xs text-muted-foreground">
-                                            {new Date(s.slot_date + "T00:00:00").toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" })} · {s.start_time.slice(0,5)}–{s.end_time.slice(0,5)}
+                                            {s.is_flexible
+                                              ? "Any date & time — pick when to book"
+                                              : `${new Date((s.slot_date ?? "") + "T00:00:00").toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" })} · ${(s.start_time ?? "").slice(0,5)}–${(s.end_time ?? "").slice(0,5)}`}
                                           </p>
+
                                           <p className="mt-1 text-sm">
                                             <span className="line-through text-muted-foreground">£{base.toFixed(2)}</span>{" "}
                                             <span className="font-bold text-emerald-600">£{final.toFixed(2)}</span>
