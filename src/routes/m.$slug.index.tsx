@@ -1448,8 +1448,8 @@ function BookPage() {
                   {(() => {
                     const treatById = new Map(treatments.map((t) => [t.id, t]));
                     const slots = modelSlots
-                      .filter((s) => !locationId || !s.location_id || s.location_id === locationId)
                       .filter((s) => treatById.has(s.treatment_id));
+                    const locById = new Map(locations.map((l) => [l.id, l]));
                     const modelPosition = profile.model_slots_position === "bottom" ? "bottom" : "top";
 
                     const groupedSlots: { category: string; items: typeof slots }[] = (() => {
