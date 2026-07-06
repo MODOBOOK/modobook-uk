@@ -69,28 +69,38 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
     if (!configured) return [] as Array<"deposit" | "full" | "cash">;
     const arr: Array<"deposit" | "full" | "cash"> = [];
     const o = opts as ConfiguredOptions;
+    // If the deposit equals or exceeds the treatment total, the deposit
+    // effectively IS the full payment — hide the deposit option and only
+    // offer "Pay in full".
+    const depositMakesSense = o.depositEnabled && effectiveDepositCents >= 100 && effectiveDepositCents < treatmentTotalCents;
     if (o.requireDepositToConfirm) {
-      if (o.depositEnabled && effectiveDepositCents >= 100) arr.push("deposit");
+      if (depositMakesSense) arr.push("deposit");
       if (o.fullCardEnabled || o.klarnaEnabled || o.clearpayEnabled) arr.push("full");
       return arr;
     }
-    // Deposit is always an option when configured — patient may prefer it over splitting.
-    if (o.depositEnabled && effectiveDepositCents >= 100 && effectiveDepositCents < treatmentTotalCents) arr.push("deposit");
+    if (depositMakesSense) arr.push("deposit");
     if (o.fullCardEnabled || o.klarnaEnabled || o.clearpayEnabled) arr.push("full");
     if (o.cashEnabled) arr.push("cash");
     return arr;
   }, [configured, opts, effectiveDepositCents, treatmentTotalCents]);
 
 
+  // Methods depend on the selected mode: deposits are always card-only
+  // (Klarna/Clearpay can't save a reusable card on file). Full payments allow
+  // any method the clinic has enabled.
   const availableMethods = useMemo(() => {
     if (!configured) return [] as Array<"card" | "klarna" | "clearpay">;
     const o = opts as ConfiguredOptions;
+    const mode = value?.mode ?? availableModes[0];
+    if (mode === "deposit") {
+      return o.cardEnabled ? (["card"] as Array<"card" | "klarna" | "clearpay">) : [];
+    }
     const arr: Array<"card" | "klarna" | "clearpay"> = [];
     if (o.cardEnabled) arr.push("card");
     if (o.klarnaEnabled) arr.push("klarna");
     if (o.clearpayEnabled) arr.push("clearpay");
     return arr;
-  }, [configured, opts]);
+  }, [configured, opts, value?.mode, availableModes]);
 
   // If the externally controlled value is no longer valid, coerce it. Required
   // deposits are always deposit + card so the server can take payment and save
