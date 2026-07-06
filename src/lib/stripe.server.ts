@@ -303,6 +303,7 @@ export async function createSaveCardPaymentIntent(params: {
   customerName?: string | null;
   description: string;
   metadata?: Record<string, string>;
+  saveForFutureUse?: boolean;
 }) {
   const stripe = getStripe();
   const currency = params.currency ?? "gbp";
@@ -347,11 +348,12 @@ export async function createSaveCardPaymentIntent(params: {
       payment_method_options: {
         link: { display: "never" },
       } as unknown as Stripe.PaymentIntentCreateParams.PaymentMethodOptions,
-      // Save the resulting PaymentMethod for later off-session charges.
-      setup_future_usage: "off_session",
+      // Save the resulting PaymentMethod for later off-session charges when
+      // the practitioner has save-card-on-file enabled.
+      ...(params.saveForFutureUse ? { setup_future_usage: "off_session" as const } : {}),
       metadata: {
         ...(params.metadata ?? {}),
-        save_card_on_file: "1",
+        save_card_on_file: params.saveForFutureUse ? "1" : "0",
       },
       receipt_email: params.customerEmail,
     },
