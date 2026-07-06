@@ -562,8 +562,9 @@ export const requestBooking = createServerFn({ method: "POST" })
         .eq("start_time", data.startTime)
         .ilike("patient_email", data.patientEmail)
         .gte("created_at", cutoff)
+        .neq("status", "cancelled")
         .maybeSingle();
-      if (dup) return { id: dup.id as string, consents: [], medicalForms: [], checkoutUrl: null };
+      if (dup) return { id: dup.id as string, consents: [], medicalForms: [], checkoutUrl: null, embeddedPayment: null };
     }
 
     const id = crypto.randomUUID();
@@ -1012,7 +1013,8 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
         .eq("scheduled_date", data.date)
         .in("treatment_id", treatmentIds)
         .ilike("patient_email", data.patientEmail)
-        .gte("created_at", cutoff);
+        .gte("created_at", cutoff)
+        .neq("status", "cancelled");
       if (recent && recent.length >= data.bookings.length) {
         const existing = recent
           .filter((r) => treatmentIds.includes(r.treatment_id as string))
