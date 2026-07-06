@@ -2326,9 +2326,10 @@ function TreatmentRow({
       <button
         type="button"
         onClick={onToggle}
+        disabled={capInfo?.full}
         aria-pressed={selected}
-        aria-label={selected ? "Deselect" : "Select"}
-        className={`mt-0.5 flex flex-shrink-0 items-center justify-center rounded-full border-2 transition ${checkSize}`}
+        aria-label={capInfo?.full ? "Fully booked" : selected ? "Deselect" : "Select"}
+        className={`mt-0.5 flex flex-shrink-0 items-center justify-center rounded-full border-2 transition ${checkSize} ${capInfo?.full ? "cursor-not-allowed opacity-40" : ""}`}
         style={
           selected
             ? { backgroundColor: brand, borderColor: brand, color: "#fff" }
@@ -2337,6 +2338,7 @@ function TreatmentRow({
       >
         {selected && <Check className="h-3 w-3" />}
       </button>
+
       <button type="button" onClick={() => setExpanded((v) => !v)} className="min-w-0 flex-1 text-left">
         {picture && (
           <div className={`float-right ml-3 overflow-hidden rounded-lg bg-muted ${thumbSize} ${expanded ? "hidden" : ""}`}>
