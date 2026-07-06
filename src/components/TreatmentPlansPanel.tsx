@@ -276,6 +276,7 @@ export function TreatmentPlansPanel({
       {editing && (
         <EditPlanDialog
           plan={editing}
+          clientId={clientId}
           treatments={treatments}
           onClose={() => setEditing(null)}
           onSaved={() => {
@@ -290,16 +291,20 @@ export function TreatmentPlansPanel({
 
 function EditPlanDialog({
   plan,
+  clientId,
   treatments,
   onClose,
   onSaved,
 }: {
   plan: any;
+  clientId: string;
   treatments: Treatment[];
   onClose: () => void;
   onSaved: () => void;
 }) {
   const update = useServerFn(updatePlan);
+  const aiSession = useServerFn(suggestPlanSession);
+  const [aiBusyIdx, setAiBusyIdx] = useState<number | null>(null);
   const [name, setName] = useState(plan.name);
   const [description, setDescription] = useState(plan.description ?? "");
   const [bookingMode, setBookingMode] = useState(plan.booking_mode);
