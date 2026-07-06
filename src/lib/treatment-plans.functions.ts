@@ -361,6 +361,116 @@ export const acceptPlan = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+// =================== AI SUGGEST ===================
+
+export const suggestPlanForClient = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { clientId: string; consultationId?: string | null; extraContext?: string | null }) => d)
+  .handler(async ({ data, context }) => {
+    const pid = await getProfileId(context.supabase, context.userId);
+    if (!pid) throw new Error("No profile");
+
+    const [{ data: client }, { data: concerns }, { data: treatments }] = await Promise.all([
+      context.supabase.from("clinic_clients").select("id, full_name, date_of_birth, notes").eq("id", data.clientId).maybeSingle(),
+      context.supabase.from("client_concerns").select("label, severity, notes, resolved").eq("client_id", data.clientId).eq("resolved", false),
+      context.supabase.from("treatments").select("id, name, price, duration, description").eq("profile_id", pid).eq("active", true),
+    ]);
+    if (!client) throw new Error("Client not found");
+    let consultation: any = null;
+    if (data.consultationId) {
+      const { data: c } = await context.supabase
+        .from("consultations")
+        .select("concerns, assessment, treatment_plan, notes")
+        .eq("id", data.consultationId)
+        .maybeSingle();
+      consultation = c;
+    }
+
+    const apiKey = process.env.LOVABLE_API_KEY;
+    if (!apiKey) throw new Error("LOVABLE_API_KEY not configured");
+
+    const treatmentList = (treatments || []).map((t: any) => `- ${t.id} | ${t.name}${t.duration ? ` (${t.duration}min)` : ""}`).join("\n");
+    const concernsText = (concerns || []).map((c: any) => `- ${c.label}${c.severity ? ` (severity ${c.severity})` : ""}${c.notes ? `: ${c.notes}` : ""}`).join("\n") || "(none logged)";
+    const consultationText = consultation
+      ? `Consultation concerns: ${JSON.stringify(consultation.concerns ?? {})}\nAssessment: ${JSON.stringify(consultation.assessment ?? {})}\nProposed plan: ${JSON.stringify(consultation.treatment_plan ?? {})}\nNotes: ${consultation.notes ?? ""}`
+      : "(no consultation attached)";
+
+    const system = `You are an aesthetics clinic practitioner planning a bespoke multi-session treatment course for one specific patient. Tailor sessions to their concerns. Only use treatments from the provided list (by id). Return ONLY valid JSON matching this shape:
+{
+  "name": string,
+  "description": string,
+  "bookingMode": "rolling" | "upfront",
+  "paymentMode": "per_session" | "course_upfront" | "deposit_then_per_session",
+  "sessions": [ { "treatmentId": string, "sessionNumber": number, "intervalWeeksFromPrevious": number, "notes": string } ]
+}
+Rules: 2-8 sessions. Session 1 has intervalWeeksFromPrevious 0. Use realistic intervals for the treatments chosen. Notes should be short and patient-specific.`;
+
+    const user = `Patient: ${client.full_name}
+Active concerns:
+${concernsText}
+
+${consultationText}
+
+Available treatments (use these ids only):
+${treatmentList}
+
+${data.extraContext ? `Additional context from practitioner: ${data.extraContext}` : ""}`;
+
+    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Lovable-API-Key": apiKey },
+      body: JSON.stringify({
+        model: "google/gemini-3-flash-preview",
+        messages: [
+          { role: "system", content: system },
+          { role: "user", content: user },
+        ],
+        response_format: { type: "json_object" },
+      }),
+    });
+    if (res.status === 402) throw new Error("AI credits exhausted. Add credits in workspace settings.");
+    if (res.status === 429) throw new Error("AI rate limit hit. Try again shortly.");
+    if (!res.ok) throw new Error(`AI request failed (${res.status})`);
+    const body = (await res.json()) as any;
+    const raw = body.choices?.[0]?.message?.content ?? "{}";
+    let parsed: any;
+    try { parsed = JSON.parse(raw); } catch { throw new Error("AI returned invalid JSON"); }
+
+    const validIds = new Set((treatments || []).map((t: any) => t.id));
+    const sessions = (parsed.sessions || [])
+      .filter((s: any) => s.treatmentId && validIds.has(s.treatmentId))
+      .map((s: any, i: number) => ({
+        session_number: i + 1,
+        treatment_id: s.treatmentId,
+        interval_weeks_from_previous: i === 0 ? 0 : Number(s.intervalWeeksFromPrevious) || 4,
+        notes: s.notes ?? null,
+      }));
+    if (!sessions.length) throw new Error("AI could not build a plan. Add treatments and concerns and try again.");
+
+    const bookingMode = parsed.bookingMode === "upfront" ? "upfront" : "rolling";
+    const paymentMode = ["per_session", "course_upfront", "deposit_then_per_session"].includes(parsed.paymentMode) ? parsed.paymentMode : "per_session";
+
+    const { data: plan, error } = await context.supabase
+      .from("treatment_plans")
+      .insert({
+        profile_id: pid,
+        client_id: data.clientId,
+        consultation_id: data.consultationId ?? null,
+        name: parsed.name?.trim() || "Personalised treatment plan",
+        description: parsed.description ?? null,
+        booking_mode: bookingMode,
+        payment_mode: paymentMode,
+        status: "draft",
+      })
+      .select()
+      .single();
+    if (error) throw error;
+
+    const rows = sessions.map((s: any) => ({ ...s, plan_id: plan.id }));
+    await context.supabase.from("treatment_plan_sessions").insert(rows);
+    return plan;
+  });
+
 export const declinePlan = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { id: string }) => d)
