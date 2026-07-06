@@ -1,6 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+async function getProfileId(supabase: any, userId: string): Promise<string | null> {
+  const { data } = await supabase.from("profiles").select("id").eq("user_id", userId).maybeSingle();
+  return data?.id ?? null;
+}
+
 // Charge the saved card on file for the current practitioner's clinic client.
 // Used for no-shows, late-cancel fees, etc. Off-session — the patient is not
 // present and gave consent via the practitioner's booking terms when saving
