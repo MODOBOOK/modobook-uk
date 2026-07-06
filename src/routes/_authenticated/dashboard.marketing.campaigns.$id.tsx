@@ -123,10 +123,13 @@ function CampaignEditor() {
     catch (e) { toast.error(e instanceof Error ? e.message : 'Failed') }
   }
 
-  async function doTest() {
-    if (!testEmail) return
+  async function doTest(toSelf = false) {
+    if (!toSelf && !testEmail) return
     await doSave(true)
-    try { await sendTest({ data: { id, to: testEmail } }); toast.success(`Test sent to ${testEmail}`) }
+    try {
+      const r = await sendTest({ data: { id, to: toSelf ? null : testEmail } })
+      toast.success(`Test sent to ${(r as any).sentTo || testEmail}`)
+    }
     catch (e) { toast.error(e instanceof Error ? e.message : 'Failed') }
   }
 
