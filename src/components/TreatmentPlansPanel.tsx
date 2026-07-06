@@ -552,6 +552,44 @@ function EditPlanDialog({
                       disabled={s.locked}
                     />
                   </div>
+                  <div className="space-y-1.5 pt-1 border-t">
+                    <div>
+                      <Label className="text-[11px] text-muted-foreground uppercase tracking-wide">Session purpose (shown to patient)</Label>
+                      <Textarea
+                        rows={2}
+                        className="text-xs"
+                        placeholder="What this session targets and why"
+                        value={s.sessionPurpose}
+                        onChange={(e) =>
+                          setSessions((prev) => prev.map((x, i) => (i === idx ? { ...x, sessionPurpose: e.target.value } : x)))
+                        }
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-[11px] text-muted-foreground uppercase tracking-wide">Expected results</Label>
+                      <Textarea
+                        rows={2}
+                        className="text-xs"
+                        placeholder="What the patient should notice after this session"
+                        value={s.expectedResults}
+                        onChange={(e) =>
+                          setSessions((prev) => prev.map((x, i) => (i === idx ? { ...x, expectedResults: e.target.value } : x)))
+                        }
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-[11px] text-muted-foreground uppercase tracking-wide">Downtime &amp; aftercare</Label>
+                      <Textarea
+                        rows={2}
+                        className="text-xs"
+                        placeholder="Expected downtime, side effects, aftercare notes"
+                        value={s.downtime}
+                        onChange={(e) =>
+                          setSessions((prev) => prev.map((x, i) => (i === idx ? { ...x, downtime: e.target.value } : x)))
+                        }
+                      />
+                    </div>
+                  </div>
                 </div>
               );
             })}
