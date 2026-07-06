@@ -562,8 +562,9 @@ export const requestBooking = createServerFn({ method: "POST" })
         .eq("start_time", data.startTime)
         .ilike("patient_email", data.patientEmail)
         .gte("created_at", cutoff)
+        .neq("status", "cancelled")
         .maybeSingle();
-      if (dup) return { id: dup.id as string, consents: [], medicalForms: [], checkoutUrl: null };
+      if (dup) return { id: dup.id as string, consents: [], medicalForms: [], checkoutUrl: null, embeddedPayment: null };
     }
 
     const id = crypto.randomUUID();
