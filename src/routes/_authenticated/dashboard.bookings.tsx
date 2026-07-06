@@ -646,6 +646,10 @@ function MonthView({
   apptsByDate,
   blocksByDate,
   rulesByDow,
+  blockedDates,
+  overrides,
+  rotaAnchor,
+  locationFilter,
   todayStr,
   onPickDay,
 }: {
@@ -653,6 +657,10 @@ function MonthView({
   apptsByDate: Map<string, Appt[]>;
   blocksByDate: Map<string, BlockedTime[]>;
   rulesByDow: Map<number, AvailRule[]>;
+  blockedDates: BlockedDate[];
+  overrides: Override[];
+  rotaAnchor: string | null;
+  locationFilter: string;
   todayStr: string;
   onPickDay: (d: Date) => void;
 }) {
@@ -674,12 +682,20 @@ function MonthView({
           const inMonth = d.getMonth() === monthStart.getMonth();
           const dayAppts = apptsByDate.get(key) ?? [];
           const dayBlocks = blocksByDate.get(key) ?? [];
-          const hasAvail = (rulesByDow.get(d.getDay()) ?? []).length > 0;
+          const matchLoc = (locId: string | null | undefined) =>
+            locationFilter === "all" || locId == null || locId === locationFilter;
+          const activeRules = (rulesByDow.get(d.getDay()) ?? []).filter(
+            (r) => matchLoc(r.location_id) && ruleAppliesOnDate(r as unknown as { cycle_length?: number; weeks_mask?: number }, key, rotaAnchor),
+          );
+          const hasOverride = overrides.some((o) => o.date === key && matchLoc(o.location_id));
+          const hasAvail = activeRules.length > 0 || hasOverride;
           const isPast = key < todayStr;
-          const fullyBlocked = dayBlocks.some(
-            (b: any) => !b.start_time || (b.start_time <= "00:00" && b.end_time >= "23:59")
+          const isBlockedDay = blockedDates.some((bd) => bd.date === key && matchLoc(bd.location_id));
+          const fullyBlocked = isBlockedDay || dayBlocks.some(
+            (b: any) => matchLoc(b.location_id) && (!b.start_time || (b.start_time <= "00:00" && b.end_time >= "23:59")),
           );
           const unavailable = !hasAvail || fullyBlocked || isPast;
+
           const isToday = key === todayStr;
           let title = "";
           if (isPast) title = "Past date";
