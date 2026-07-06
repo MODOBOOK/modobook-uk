@@ -277,7 +277,7 @@ export const sendPlan = createServerFn({ method: "POST" })
 
     const { data: plan, error: planErr } = await context.supabase
       .from("treatment_plans")
-      .select("id, name, description, client:clinic_clients(full_name, email), profile:profiles(clinic_name, slug)")
+      .select("id, name, description, patient_token, client:clinic_clients(full_name, email), profile:profiles(clinic_name, slug)")
       .eq("id", data.id)
       .eq("profile_id", pid)
       .maybeSingle();
@@ -287,7 +287,7 @@ export const sendPlan = createServerFn({ method: "POST" })
     const clientEmail = (plan as any).client?.email as string | undefined;
     const clientName = ((plan as any).client?.full_name as string | undefined) || "there";
     const clinicName = ((plan as any).profile?.clinic_name as string | undefined) || "your clinic";
-    const slug = (plan as any).profile?.slug as string | undefined;
+    const token = (plan as any).patient_token as string | undefined;
 
     const { error } = await context.supabase
       .from("treatment_plans")
