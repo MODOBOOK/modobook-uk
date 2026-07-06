@@ -37,7 +37,7 @@ import { SendFormDialog } from "@/components/patient/SendFormDialog";
 import { ClientFormsList } from "@/components/patient/ClientFormsList";
 import { ConsultationDocCard } from "@/components/patient/ConsultationDocCard";
 
-import { logCommunication } from "@/lib/patient-hub.functions";
+import { logCommunication, sendPatientEmail } from "@/lib/patient-hub.functions";
 import { createPaymentLink } from "@/lib/payment-links.functions";
 import { chargeCardOnFile, removeCardOnFile } from "@/lib/card-on-file.functions";
 import { TreatmentPlansPanel } from "@/components/TreatmentPlansPanel";
@@ -1116,6 +1116,8 @@ function PaymentLinkDialog({
 }) {
   const create = useServerFn(createPaymentLink);
   const logComm = useServerFn(logCommunication);
+  const sendEmailFn = useServerFn(sendPatientEmail);
+  const [emailing, setEmailing] = useState(false);
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
   const [busy, setBusy] = useState(false);
@@ -1165,11 +1167,6 @@ function PaymentLinkDialog({
     }
   }
 
-  const emailHref = client.email && url
-    ? `mailto:${client.email}?subject=${encodeURIComponent(`Payment link${clinicName ? ` — ${clinicName}` : ""}`)}&body=${encodeURIComponent(
-        `Hi ${client.full_name?.split(" ")[0] || ""},\n\nHere is your payment link:\n${url}\n\nThank you,\n${clinicName || ""}`,
-      )}`
-    : null;
   const smsHref = client.phone && url ? `sms:${client.phone}?&body=${encodeURIComponent(`Payment link: ${url}`)}` : null;
   const waHref = client.phone && url ? `https://wa.me/${client.phone.replace(/\D/g, "")}?text=${encodeURIComponent(`Payment link: ${url}`)}` : null;
 
@@ -1178,6 +1175,23 @@ function PaymentLinkDialog({
       await logComm({ data: { clientId: client.id, channel: channel === "whatsapp" ? "sms" : channel, body: `Payment link sent: ${url}` } });
       onSent();
     } catch { /* ignore */ }
+  }
+
+  async function handleSendEmail() {
+    if (!client.email || !url) return;
+    setEmailing(true);
+    try {
+      const firstName = client.full_name?.split(" ")[0] || "there";
+      const subject = `Payment link${clinicName ? ` from ${clinicName}` : ""}`;
+      const body = `Hi ${firstName},\n\nHere is your payment link:\n\n${url}\n\nThank you,\n${clinicName || ""}`.trim();
+      await sendEmailFn({ data: { clientId: client.id, subject, body } });
+      await markLogged("email");
+      toast.success("Payment link emailed to patient");
+    } catch (e: any) {
+      toast.error(e?.message || "Could not send email");
+    } finally {
+      setEmailing(false);
+    }
   }
 
   return (
@@ -1203,9 +1217,10 @@ function PaymentLinkDialog({
             <div className="rounded-md border bg-muted/50 p-2 text-xs break-all">{url}</div>
             <div className="flex flex-wrap gap-2">
               <Button size="sm" variant="outline" onClick={async () => { try { await navigator.clipboard.writeText(url); toast.success("Copied"); } catch { /* */ } }}>Copy link</Button>
-              {emailHref && (
-                <Button size="sm" variant="outline" asChild onClick={() => markLogged("email")}>
-                  <a href={emailHref}><Mail className="mr-1.5 h-4 w-4" />Email</a>
+              {client.email && (
+                <Button size="sm" variant="outline" onClick={handleSendEmail} disabled={emailing}>
+                  {emailing ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Mail className="mr-1.5 h-4 w-4" />}
+                  Email
                 </Button>
               )}
               {smsHref && (
