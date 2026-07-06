@@ -55,7 +55,6 @@ import { Route as AuthenticatedHubReferralsRouteImport } from './routes/_authent
 import { Route as AuthenticatedHubPrescribingRouteImport } from './routes/_authenticated/hub.prescribing'
 import { Route as AuthenticatedHubConnectionsRouteImport } from './routes/_authenticated/hub.connections'
 import { Route as AuthenticatedDashboardTreatmentsRouteImport } from './routes/_authenticated/dashboard.treatments'
-import { Route as AuthenticatedDashboardTreatmentPlansRouteImport } from './routes/_authenticated/dashboard.treatment-plans'
 import { Route as AuthenticatedDashboardStaffRouteImport } from './routes/_authenticated/dashboard.staff'
 import { Route as AuthenticatedDashboardSettingsRouteImport } from './routes/_authenticated/dashboard.settings'
 import { Route as AuthenticatedDashboardServicesRouteImport } from './routes/_authenticated/dashboard.services'
@@ -356,12 +355,6 @@ const AuthenticatedDashboardTreatmentsRoute =
   AuthenticatedDashboardTreatmentsRouteImport.update({
     id: '/treatments',
     path: '/treatments',
-    getParentRoute: () => AuthenticatedDashboardRoute,
-  } as any)
-const AuthenticatedDashboardTreatmentPlansRoute =
-  AuthenticatedDashboardTreatmentPlansRouteImport.update({
-    id: '/treatment-plans',
-    path: '/treatment-plans',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
 const AuthenticatedDashboardStaffRoute =
@@ -770,7 +763,6 @@ export interface FileRoutesByFullPath {
   '/dashboard/services': typeof AuthenticatedDashboardServicesRoute
   '/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
   '/dashboard/staff': typeof AuthenticatedDashboardStaffRoute
-  '/dashboard/treatment-plans': typeof AuthenticatedDashboardTreatmentPlansRoute
   '/dashboard/treatments': typeof AuthenticatedDashboardTreatmentsRoute
   '/hub/connections': typeof AuthenticatedHubConnectionsRoute
   '/hub/prescribing': typeof AuthenticatedHubPrescribingRoute
@@ -871,7 +863,6 @@ export interface FileRoutesByTo {
   '/dashboard/services': typeof AuthenticatedDashboardServicesRoute
   '/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
   '/dashboard/staff': typeof AuthenticatedDashboardStaffRoute
-  '/dashboard/treatment-plans': typeof AuthenticatedDashboardTreatmentPlansRoute
   '/dashboard/treatments': typeof AuthenticatedDashboardTreatmentsRoute
   '/hub/connections': typeof AuthenticatedHubConnectionsRoute
   '/hub/prescribing': typeof AuthenticatedHubPrescribingRoute
@@ -980,7 +971,6 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/services': typeof AuthenticatedDashboardServicesRoute
   '/_authenticated/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
   '/_authenticated/dashboard/staff': typeof AuthenticatedDashboardStaffRoute
-  '/_authenticated/dashboard/treatment-plans': typeof AuthenticatedDashboardTreatmentPlansRoute
   '/_authenticated/dashboard/treatments': typeof AuthenticatedDashboardTreatmentsRoute
   '/_authenticated/hub/connections': typeof AuthenticatedHubConnectionsRoute
   '/_authenticated/hub/prescribing': typeof AuthenticatedHubPrescribingRoute
@@ -1089,7 +1079,6 @@ export interface FileRouteTypes {
     | '/dashboard/services'
     | '/dashboard/settings'
     | '/dashboard/staff'
-    | '/dashboard/treatment-plans'
     | '/dashboard/treatments'
     | '/hub/connections'
     | '/hub/prescribing'
@@ -1190,7 +1179,6 @@ export interface FileRouteTypes {
     | '/dashboard/services'
     | '/dashboard/settings'
     | '/dashboard/staff'
-    | '/dashboard/treatment-plans'
     | '/dashboard/treatments'
     | '/hub/connections'
     | '/hub/prescribing'
@@ -1298,7 +1286,6 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/services'
     | '/_authenticated/dashboard/settings'
     | '/_authenticated/dashboard/staff'
-    | '/_authenticated/dashboard/treatment-plans'
     | '/_authenticated/dashboard/treatments'
     | '/_authenticated/hub/connections'
     | '/_authenticated/hub/prescribing'
@@ -1704,13 +1691,6 @@ declare module '@tanstack/react-router' {
       path: '/treatments'
       fullPath: '/dashboard/treatments'
       preLoaderRoute: typeof AuthenticatedDashboardTreatmentsRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
-    }
-    '/_authenticated/dashboard/treatment-plans': {
-      id: '/_authenticated/dashboard/treatment-plans'
-      path: '/treatment-plans'
-      fullPath: '/dashboard/treatment-plans'
-      preLoaderRoute: typeof AuthenticatedDashboardTreatmentPlansRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
     '/_authenticated/dashboard/staff': {
@@ -2219,7 +2199,6 @@ interface AuthenticatedDashboardRouteChildren {
   AuthenticatedDashboardServicesRoute: typeof AuthenticatedDashboardServicesRoute
   AuthenticatedDashboardSettingsRoute: typeof AuthenticatedDashboardSettingsRoute
   AuthenticatedDashboardStaffRoute: typeof AuthenticatedDashboardStaffRoute
-  AuthenticatedDashboardTreatmentPlansRoute: typeof AuthenticatedDashboardTreatmentPlansRoute
   AuthenticatedDashboardTreatmentsRoute: typeof AuthenticatedDashboardTreatmentsRoute
   AuthenticatedDashboardIndexRoute: typeof AuthenticatedDashboardIndexRoute
   AuthenticatedDashboardConsultationsIdRoute: typeof AuthenticatedDashboardConsultationsIdRoute
@@ -2273,8 +2252,6 @@ const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
     AuthenticatedDashboardServicesRoute: AuthenticatedDashboardServicesRoute,
     AuthenticatedDashboardSettingsRoute: AuthenticatedDashboardSettingsRoute,
     AuthenticatedDashboardStaffRoute: AuthenticatedDashboardStaffRoute,
-    AuthenticatedDashboardTreatmentPlansRoute:
-      AuthenticatedDashboardTreatmentPlansRoute,
     AuthenticatedDashboardTreatmentsRoute:
       AuthenticatedDashboardTreatmentsRoute,
     AuthenticatedDashboardIndexRoute: AuthenticatedDashboardIndexRoute,
