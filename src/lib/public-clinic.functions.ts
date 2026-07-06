@@ -151,9 +151,10 @@ export const getPublicClinic = createServerFn({ method: "GET" })
       aboutPage: (aboutRpc.data as Json) ?? ({} as Json),
       careGuides: careGuides.data ?? [],
       pretreatment: pretreatment.data ?? [],
-
+      bookingCounts: (bookingCounts.data ?? []) as { treatment_id: string; booked_count: number }[],
     };
   });
+
 
 
 
