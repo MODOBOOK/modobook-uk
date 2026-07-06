@@ -92,7 +92,7 @@ const navItems = [
   { label: "Bookings", to: "/dashboard/bookings", icon: Users },
   { label: "Patients", to: "/dashboard/patients", icon: Users },
   { label: "Consultations", to: "/dashboard/consultations", icon: ClipboardList },
-  { label: "Treatment plans", to: "/dashboard/treatment-plans", icon: ClipboardList },
+  
   { label: "Reviews", to: "/dashboard/reviews", icon: Star },
   { label: "Marketing", to: "/dashboard/marketing", icon: Mail },
   { label: "Payments", to: "/dashboard/payments", icon: CreditCard },

@@ -9,14 +9,14 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2, Send, Copy, CheckCircle2, Clock, ClipboardList } from "lucide-react";
+import { Plus, Trash2, Send, Copy, CheckCircle2, ClipboardList, Sparkles, Loader2 } from "lucide-react";
 import {
   listPlansForClient,
   createPlanForClient,
   updatePlan,
   sendPlan,
   deletePlan,
-  listPlanTemplates,
+  suggestPlanForClient,
 } from "@/lib/treatment-plans.functions";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -36,26 +36,22 @@ export function TreatmentPlansPanel({
   const update = useServerFn(updatePlan);
   const send = useServerFn(sendPlan);
   const del = useServerFn(deletePlan);
-  const listTpls = useServerFn(listPlanTemplates);
+  const suggest = useServerFn(suggestPlanForClient);
 
   const [plans, setPlans] = useState<any[]>([]);
-  const [templates, setTemplates] = useState<any[]>([]);
   const [treatments, setTreatments] = useState<Treatment[]>([]);
   const [loading, setLoading] = useState(true);
   const [newOpen, setNewOpen] = useState(false);
-  const [selectedTpl, setSelectedTpl] = useState<string>("blank");
   const [newName, setNewName] = useState("");
+  const [aiContext, setAiContext] = useState("");
+  const [suggesting, setSuggesting] = useState(false);
   const [editing, setEditing] = useState<any | null>(null);
 
   const refresh = async () => {
     setLoading(true);
     try {
-      const [p, t] = await Promise.all([
-        list({ data: { clientId } }),
-        listTpls(),
-      ]);
+      const p = await list({ data: { clientId } });
       setPlans(p);
-      setTemplates(t);
     } finally {
       setLoading(false);
     }
@@ -73,28 +69,50 @@ export function TreatmentPlansPanel({
     })();
   }, [clientId]);
 
-  const handleCreate = async () => {
+  const openEditor = async (planId: string) => {
+    const fresh = await list({ data: { clientId } });
+    setPlans(fresh);
+    const found = fresh.find((p: any) => p.id === planId);
+    if (found) setEditing(found);
+  };
+
+  const handleCreateBlank = async () => {
     try {
       const plan = await create({
         data: {
           clientId,
-          templateId: selectedTpl === "blank" ? null : selectedTpl,
           consultationId: consultationId ?? null,
           name: newName || undefined,
         },
       });
-      toast.success("Plan created");
+      toast.success("Plan created — tailor it to the patient");
       setNewOpen(false);
       setNewName("");
-      setSelectedTpl("blank");
-      await refresh();
-      // Open editor
-      const fresh = await list({ data: { clientId } });
-      const found = fresh.find((p: any) => p.id === plan.id);
-      setPlans(fresh);
-      if (found) setEditing(found);
+      await openEditor(plan.id);
     } catch (e: any) {
       toast.error(e.message);
+    }
+  };
+
+  const handleAiSuggest = async () => {
+    setSuggesting(true);
+    try {
+      const plan = await suggest({
+        data: {
+          clientId,
+          consultationId: consultationId ?? null,
+          extraContext: aiContext || null,
+        },
+      });
+      toast.success("AI drafted a plan — review and edit before sending");
+      setNewOpen(false);
+      setAiContext("");
+      setNewName("");
+      await openEditor(plan.id);
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setSuggesting(false);
     }
   };
 
@@ -197,38 +215,38 @@ export function TreatmentPlansPanel({
         <DialogContent>
           <DialogHeader>
             <DialogTitle>New treatment plan</DialogTitle>
-            <DialogDescription>Start blank or from a template you've saved.</DialogDescription>
+            <DialogDescription>Every plan is tailored to this patient's concerns. Let AI draft one from their consultation & concerns, or build from scratch.</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
-            <div>
-              <Label>Template</Label>
-              <Select value={selectedTpl} onValueChange={setSelectedTpl}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="blank">Blank plan</SelectItem>
-                  {templates.map((t) => (
-                    <SelectItem key={t.id} value={t.id}>
-                      {t.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
             <div>
               <Label>Plan name (optional)</Label>
               <Input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="e.g. Skin rejuvenation course" />
             </div>
+            <div>
+              <Label>Extra context for AI (optional)</Label>
+              <Textarea
+                value={aiContext}
+                onChange={(e) => setAiContext(e.target.value)}
+                rows={3}
+                placeholder="e.g. Prefers minimal downtime; budget-conscious; wants results before wedding in 3 months"
+              />
+            </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setNewOpen(false)}>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button variant="outline" onClick={() => setNewOpen(false)} disabled={suggesting}>
               Cancel
             </Button>
-            <Button onClick={handleCreate}>Create</Button>
+            <Button variant="outline" onClick={handleCreateBlank} disabled={suggesting}>
+              Build from scratch
+            </Button>
+            <Button onClick={handleAiSuggest} disabled={suggesting}>
+              {suggesting ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Sparkles className="h-4 w-4 mr-1" />}
+              AI suggest plan
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
 
       {/* Edit plan */}
       {editing && (
