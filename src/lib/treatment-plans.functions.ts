@@ -542,6 +542,88 @@ ${data.extraContext ? `Additional context from practitioner: ${data.extraContext
     return plan;
   });
 
+/**
+ * Generate AI content for a single session (session purpose, expected results,
+ * downtime) given the chosen treatment + client context. Does not persist —
+ * caller applies the result to the in-progress edit.
+ */
+export const suggestPlanSession = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: {
+    clientId: string;
+    treatmentId: string;
+    sessionNumber: number;
+    extraContext?: string | null;
+  }) => d)
+  .handler(async ({ data, context }) => {
+    const pid = await getProfileId(context.supabase, context.userId);
+    if (!pid) throw new Error("No profile");
+
+    const [{ data: client }, { data: concerns }, { data: treatment }] = await Promise.all([
+      context.supabase.from("clinic_clients").select("full_name, notes").eq("id", data.clientId).maybeSingle(),
+      context.supabase.from("client_concerns").select("label, severity, notes, resolved").eq("client_id", data.clientId).eq("resolved", false),
+      context.supabase.from("treatments").select("id, name, description, duration").eq("id", data.treatmentId).eq("profile_id", pid).maybeSingle(),
+    ]);
+    if (!client) throw new Error("Client not found");
+    if (!treatment) throw new Error("Treatment not found");
+
+    const apiKey = process.env.LOVABLE_API_KEY;
+    if (!apiKey) throw new Error("LOVABLE_API_KEY not configured");
+
+    const concernsText = (concerns || [])
+      .map((c: any) => `- ${c.label}${c.severity ? ` (severity ${c.severity})` : ""}${c.notes ? `: ${c.notes}` : ""}`)
+      .join("\n") || "(none logged)";
+
+    const system = `You are an aesthetics clinic practitioner writing patient-facing copy for a single session inside a bespoke treatment plan. Return ONLY valid JSON:
+{
+  "sessionPurpose": string,
+  "expectedResults": string,
+  "downtime": string,
+  "notes": string
+}
+- sessionPurpose: 1-2 short sentences on why this session, what it targets for THIS patient.
+- expectedResults: 1-2 short sentences of realistic outcomes to notice after this session.
+- downtime: brief expected downtime, side effects and aftercare guidance.
+- notes: short practitioner-facing note (optional, may be empty).
+Warm, plain-English, patient-facing.`;
+
+    const user = `Patient: ${client.full_name}
+Session number in plan: ${data.sessionNumber}
+Treatment: ${treatment.name}${treatment.duration ? ` (${treatment.duration} min)` : ""}
+${treatment.description ? `Treatment info: ${treatment.description}` : ""}
+
+Active concerns:
+${concernsText}
+
+${data.extraContext ? `Additional context: ${data.extraContext}` : ""}`;
+
+    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Lovable-API-Key": apiKey },
+      body: JSON.stringify({
+        model: "google/gemini-3-flash-preview",
+        messages: [
+          { role: "system", content: system },
+          { role: "user", content: user },
+        ],
+        response_format: { type: "json_object" },
+      }),
+    });
+    if (res.status === 402) throw new Error("AI credits exhausted. Add credits in workspace settings.");
+    if (res.status === 429) throw new Error("AI rate limit hit. Try again shortly.");
+    if (!res.ok) throw new Error(`AI request failed (${res.status})`);
+    const body = (await res.json()) as any;
+    const raw = body.choices?.[0]?.message?.content ?? "{}";
+    let parsed: any;
+    try { parsed = JSON.parse(raw); } catch { throw new Error("AI returned invalid JSON"); }
+    return {
+      sessionPurpose: String(parsed.sessionPurpose ?? "").trim(),
+      expectedResults: String(parsed.expectedResults ?? "").trim(),
+      downtime: String(parsed.downtime ?? "").trim(),
+      notes: String(parsed.notes ?? "").trim(),
+    };
+  });
+
 export const declinePlan = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { id: string }) => d)
