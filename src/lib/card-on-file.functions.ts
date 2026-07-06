@@ -95,6 +95,8 @@ export const removeCardOnFile = createServerFn({ method: "POST" })
   .inputValidator((input: { clientId: string }) => input)
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+    const profileId = await getProfileId(supabase, userId);
+    if (!profileId) throw new Error("No profile");
 
     const { data: client } = await supabase
       .from("clinic_clients")
@@ -107,13 +109,13 @@ export const removeCardOnFile = createServerFn({ method: "POST" })
       stripe_payment_method_id: string | null;
     } | null;
     if (!c) throw new Error("Client not found");
-    if (c.profile_id !== userId) throw new Error("Not authorised");
+    if (c.profile_id !== profileId) throw new Error("Not authorised");
 
     if (c.stripe_payment_method_id) {
       const { data: prof } = await supabase
         .from("profiles")
         .select("stripe_connect_account_id")
-        .eq("id", userId)
+        .eq("id", profileId)
         .maybeSingle();
       const accountId = (prof as { stripe_connect_account_id?: string } | null)?.stripe_connect_account_id;
       if (accountId) {
