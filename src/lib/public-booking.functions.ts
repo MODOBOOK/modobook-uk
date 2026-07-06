@@ -837,8 +837,17 @@ async function maybeCreateBookingCheckout(args: {
   // card. Klarna / Clearpay don't produce a reusable off-session card token,
   // so those must go through hosted Stripe Checkout on the practitioner's
   // connected account as normal.
-  const payingByCard = methodTypes.length === 1 && methodTypes[0] === "card";
-  if (saveCardOnFile && payingByCard) {
+  // Route to embedded save-card whenever the effective payment is card:
+  // either the patient explicitly picked card, or they didn't pick anything
+  // and card is enabled (default). Klarna / Clearpay explicit picks skip
+  // this and go through hosted Checkout since they can't save a reusable card.
+  const chosenMethod = args.choice?.method;
+  const effectivelyCard =
+    chosenMethod === "card" || (!chosenMethod && enabled.card);
+  if (saveCardOnFile && effectivelyCard) {
+    // Force card-only for this intent so surcharge math and the Payment
+    // Element render match.
+    methodTypes = ["card"];
     try {
       const { createSaveCardPaymentIntent } = await import("./stripe.server");
       const publishableKey = process.env.STRIPE_PUBLISHABLE_KEY;
