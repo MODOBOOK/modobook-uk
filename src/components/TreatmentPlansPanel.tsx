@@ -197,16 +197,16 @@ export function TreatmentPlansPanel({
                       <Send className="h-3 w-3 mr-1" /> Send to patient
                     </Button>
                   )}
-                  {p.status !== "draft" && (
+                  {p.status !== "draft" && p.patient_token && (
                     <Button
                       size="sm"
                       variant="ghost"
                       onClick={() => {
-                        navigator.clipboard.writeText(`${window.location.origin}/m/${window.location.pathname}`);
+                        navigator.clipboard.writeText(`${window.location.origin}/plan/${p.patient_token}`);
                         toast.success("Link copied");
                       }}
                     >
-                      <Copy className="h-3 w-3 mr-1" /> Share
+                      <Copy className="h-3 w-3 mr-1" /> Copy patient link
                     </Button>
                   )}
                   <Button size="sm" variant="ghost" onClick={() => handleDelete(p.id)}>
