@@ -679,6 +679,22 @@ function TreatmentDialog({
         </div>
 
         <div>
+          <Label>Booking cap (total spots)</Label>
+          <Input
+            type="number"
+            min={0}
+            placeholder="Unlimited"
+            value={bookingCap}
+            onChange={(e) => setBookingCap(e.target.value)}
+          />
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            Limit how many patients can ever book this treatment. Patients see "X of Y spots left" and the Book button is disabled once full. Leave empty for unlimited.
+          </p>
+        </div>
+
+
+
+        <div>
           <div className="flex items-center justify-between gap-2">
             <Label>Description</Label>
             <Button
