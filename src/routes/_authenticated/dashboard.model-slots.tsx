@@ -219,7 +219,7 @@ function SlotEditor({ existing, treatments, locations, onClose, onSaved }: {
 
   async function submit() {
     if (selectedIds.length === 0) { toast.error("Select at least one treatment"); return; }
-    if (!date || !startT || !endT) { toast.error("Fill date and times"); return; }
+    if (!isFlexible && (!date || !startT || !endT)) { toast.error("Fill date and times, or turn on 'Any date/time'"); return; }
     const v = Number(value);
     if (!Number.isFinite(v) || v < 0) { toast.error("Enter a valid price"); return; }
     if (mode === "percent" && v > 100) { toast.error("Percent must be ≤ 100"); return; }
@@ -229,21 +229,27 @@ function SlotEditor({ existing, treatments, locations, onClose, onSaved }: {
           id: existing!.id,
           treatment_id: selectedIds[0],
           location_id: locationId || null,
-          slot_date: date, start_time: startT, end_time: endT,
+          is_flexible: isFlexible,
+          slot_date: isFlexible ? null : date,
+          start_time: isFlexible ? null : startT,
+          end_time: isFlexible ? null : endT,
           price_mode: mode, price_value: v,
           notes: notes || null, active, category: category.trim() || null,
         }});
       } else {
-        const windows = [
-          { date, start: startT, end: endT },
-          ...extraWindows.filter((w) => w.date && w.start && w.end),
-        ];
+        const windows = isFlexible
+          ? [{ date: null, start: null, end: null }]
+          : [
+              { date, start: startT, end: endT },
+              ...extraWindows.filter((w) => w.date && w.start && w.end),
+            ];
         let count = 0;
         for (const w of windows) {
           for (const tid of selectedIds) {
             await save({ data: {
               treatment_id: tid,
               location_id: locationId || null,
+              is_flexible: isFlexible,
               slot_date: w.date, start_time: w.start, end_time: w.end,
               price_mode: mode, price_value: v,
               notes: notes || null, active, category: category.trim() || null,
@@ -259,6 +265,8 @@ function SlotEditor({ existing, treatments, locations, onClose, onSaved }: {
       onSaved();
     } catch (e) { toast.error((e as Error).message); }
   }
+
+
 
 
   const previewT = allTreatments.find((x) => x.id === selectedIds[0]);
