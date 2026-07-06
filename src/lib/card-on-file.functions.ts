@@ -15,6 +15,8 @@ export const chargeCardOnFile = createServerFn({ method: "POST" })
   .inputValidator((input: { clientId: string; amountCents: number; description: string }) => input)
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+    const profileId = await getProfileId(supabase, userId);
+    if (!profileId) throw new Error("No profile");
 
     if (!data.clientId) throw new Error("Missing client");
     if (!data.amountCents || data.amountCents < 100) {
