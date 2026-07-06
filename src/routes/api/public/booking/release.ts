@@ -41,9 +41,11 @@ export const Route = createFileRoute("/api/public/booking/release")({
           const stripe = getStripe();
           let pi: Stripe.PaymentIntent;
           try {
-            pi = await stripe.paymentIntents.retrieve(paymentIntentId, {
-              stripeAccount: accountId,
-            });
+            pi = await stripe.paymentIntents.retrieve(
+              paymentIntentId,
+              undefined,
+              { stripeAccount: accountId },
+            );
           } catch {
             return new Response(JSON.stringify({ ok: false }), {
               status: 404,
