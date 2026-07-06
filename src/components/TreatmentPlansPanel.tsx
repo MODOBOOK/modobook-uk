@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2, Send, Copy, CheckCircle2, ClipboardList, Sparkles, Loader2 } from "lucide-react";
+import { Plus, Trash2, Send, Copy, CheckCircle2, ClipboardList, Sparkles, Loader2, ArrowUp, ArrowDown } from "lucide-react";
 import {
   listPlansForClient,
   createPlanForClient,
@@ -17,6 +17,7 @@ import {
   sendPlan,
   deletePlan,
   suggestPlanForClient,
+  suggestPlanSession,
 } from "@/lib/treatment-plans.functions";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -275,6 +276,7 @@ export function TreatmentPlansPanel({
       {editing && (
         <EditPlanDialog
           plan={editing}
+          clientId={clientId}
           treatments={treatments}
           onClose={() => setEditing(null)}
           onSaved={() => {
@@ -289,16 +291,20 @@ export function TreatmentPlansPanel({
 
 function EditPlanDialog({
   plan,
+  clientId,
   treatments,
   onClose,
   onSaved,
 }: {
   plan: any;
+  clientId: string;
   treatments: Treatment[];
   onClose: () => void;
   onSaved: () => void;
 }) {
   const update = useServerFn(updatePlan);
+  const aiSession = useServerFn(suggestPlanSession);
+  const [aiBusyIdx, setAiBusyIdx] = useState<number | null>(null);
   const [name, setName] = useState(plan.name);
   const [description, setDescription] = useState(plan.description ?? "");
   const [bookingMode, setBookingMode] = useState(plan.booking_mode);
@@ -354,15 +360,64 @@ function EditPlanDialog({
       {
         treatmentId: null,
         sessionNumber: prev.length + 1,
-        intervalWeeksFromPrevious: 4,
+        intervalWeeksFromPrevious: prev.length === 0 ? 0 : 4,
         notes: "",
         priceOverride: "",
+        sessionPurpose: "",
+        expectedResults: "",
+        downtime: "",
       },
     ]);
   };
   const removeSession = (idx: number) => {
     setSessions((prev) => prev.filter((_, i) => i !== idx).map((s, i) => ({ ...s, sessionNumber: i + 1 })));
   };
+  const moveSession = (idx: number, dir: -1 | 1) => {
+    setSessions((prev) => {
+      const target = idx + dir;
+      if (target < 0 || target >= prev.length) return prev;
+      if (prev[idx].locked || prev[target].locked) return prev;
+      const next = prev.slice();
+      [next[idx], next[target]] = [next[target], next[idx]];
+      return next.map((s, i) => ({ ...s, sessionNumber: i + 1, intervalWeeksFromPrevious: i === 0 ? 0 : (s.intervalWeeksFromPrevious || 4) }));
+    });
+  };
+  const generateAiForSession = async (idx: number) => {
+    const s = sessions[idx];
+    if (!s.treatmentId) {
+      toast.error("Pick a treatment first");
+      return;
+    }
+    setAiBusyIdx(idx);
+    try {
+      const r: any = await aiSession({
+        data: {
+          clientId,
+          treatmentId: s.treatmentId,
+          sessionNumber: s.sessionNumber,
+        },
+      });
+      setSessions((prev) =>
+        prev.map((x, i) =>
+          i === idx
+            ? {
+                ...x,
+                sessionPurpose: r.sessionPurpose || x.sessionPurpose,
+                expectedResults: r.expectedResults || x.expectedResults,
+                downtime: r.downtime || x.downtime,
+                notes: x.notes || r.notes || "",
+              }
+            : x,
+        ),
+      );
+      toast.success("AI filled this session");
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setAiBusyIdx(null);
+    }
+  };
+
 
   const save = async () => {
     try {
@@ -505,18 +560,42 @@ function EditPlanDialog({
               const t = s.treatmentId ? treatmentMap.get(s.treatmentId) : null;
               return (
                 <div key={idx} className="rounded border p-2 space-y-2">
-                  <div className="flex items-center justify-between text-xs">
+                  <div className="flex items-center justify-between text-xs gap-2">
                     <span className="font-medium">Session {s.sessionNumber}</span>
-                    {s.locked ? (
-                      <Badge variant="secondary" className="text-xs">
-                        <CheckCircle2 className="h-3 w-3 mr-1" /> Booked
-                      </Badge>
-                    ) : (
-                      <Button size="sm" variant="ghost" onClick={() => removeSession(idx)}>
-                        <Trash2 className="h-3 w-3 text-destructive" />
-                      </Button>
-                    )}
+                    <div className="flex items-center gap-1">
+                      {!s.locked && (
+                        <>
+                          <Button size="sm" variant="ghost" className="h-7 w-7 p-0" disabled={idx === 0 || sessions[idx - 1]?.locked} onClick={() => moveSession(idx, -1)} title="Move up">
+                            <ArrowUp className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button size="sm" variant="ghost" className="h-7 w-7 p-0" disabled={idx === sessions.length - 1} onClick={() => moveSession(idx, 1)} title="Move down">
+                            <ArrowDown className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 px-2 text-xs"
+                            disabled={!s.treatmentId || aiBusyIdx === idx}
+                            onClick={() => generateAiForSession(idx)}
+                            title={s.treatmentId ? "Generate this session with AI" : "Pick a treatment first"}
+                          >
+                            {aiBusyIdx === idx ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                            <span className="ml-1">AI</span>
+                          </Button>
+                        </>
+                      )}
+                      {s.locked ? (
+                        <Badge variant="secondary" className="text-xs">
+                          <CheckCircle2 className="h-3 w-3 mr-1" /> Booked
+                        </Badge>
+                      ) : (
+                        <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => removeSession(idx)}>
+                          <Trash2 className="h-3 w-3 text-destructive" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
+
                   <div className="grid grid-cols-2 gap-2">
                     <Select
                       value={s.treatmentId ?? ""}
