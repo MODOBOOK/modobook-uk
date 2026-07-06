@@ -79,6 +79,12 @@ function NewAppointmentPage() {
   const [depositAmount, setDepositAmount] = useState("");
   const [depositHours, setDepositHours] = useState("24");
   const createLink = useServerFn(createPaymentLink);
+  const fetchModelSlots = useServerFn(listMyModelSlots);
+  const [modelSlots, setModelSlots] = useState<ModelSlot[]>([]);
+  const [modelSlotId, setModelSlotId] = useState<string | null>(null);
+  const [modelPriceOverride, setModelPriceOverride] = useState<number | null>(null);
+  const [modelExpanded, setModelExpanded] = useState(true);
+
 
   type ClientRow = { id: string; full_name: string; email: string | null; phone: string | null; dob: string | null; address: string | null };
   type TemplateRow = { id: string; name: string };
