@@ -45,9 +45,17 @@ export const Route = createFileRoute("/m/$slug/pay")({
 function PayPage() {
   const { slug } = useParams({ from: "/m/$slug/pay" });
   const { pi } = useSearch({ from: "/m/$slug/pay" });
+  const { theme } = Route.useLoaderData();
   const [details, setDetails] = useState<EmbeddedPayment | null>(null);
   const [stripe, setStripe] = useState<Stripe | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const brand = theme?.primary_color || "#111827";
+  const accent = theme?.accent_color || brand;
+  const cardBg = theme?.menu_card_bg || "#ffffff";
+  const cardBorder = theme?.menu_card_border_color || "rgba(0,0,0,0.1)";
+  const textColor = theme?.text_color || "inherit";
+  const headingFont = theme?.heading_font || "inherit";
 
   useEffect(() => {
     if (!pi) {
