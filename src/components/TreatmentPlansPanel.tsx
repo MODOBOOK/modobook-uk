@@ -188,6 +188,19 @@ export function TreatmentPlansPanel({
                 <div className="text-xs text-muted-foreground">
                   {completed} of {total} completed
                 </div>
+                {p.status === "declined" && (p.decline_reason || (p.decline_tags && p.decline_tags.length > 0)) && (
+                  <div className="rounded-md border border-destructive/30 bg-destructive/5 p-2 text-xs space-y-1">
+                    <div className="font-medium text-destructive">Patient feedback</div>
+                    {p.decline_tags?.length > 0 && (
+                      <div className="flex flex-wrap gap-1">
+                        {p.decline_tags.map((tag: string) => (
+                          <Badge key={tag} variant="outline" className="text-[10px]">{tag.replace(/_/g, " ")}</Badge>
+                        ))}
+                      </div>
+                    )}
+                    {p.decline_reason && <div className="text-foreground/80">{p.decline_reason}</div>}
+                  </div>
+                )}
                 <div className="flex flex-wrap gap-2 pt-1">
                   <Button size="sm" variant="outline" onClick={() => setEditing(p)}>
                     Edit
@@ -197,16 +210,16 @@ export function TreatmentPlansPanel({
                       <Send className="h-3 w-3 mr-1" /> Send to patient
                     </Button>
                   )}
-                  {p.status !== "draft" && (
+                  {p.status !== "draft" && p.patient_token && (
                     <Button
                       size="sm"
                       variant="ghost"
                       onClick={() => {
-                        navigator.clipboard.writeText(`${window.location.origin}/m/${window.location.pathname}`);
+                        navigator.clipboard.writeText(`${window.location.origin}/plan/${p.patient_token}`);
                         toast.success("Link copied");
                       }}
                     >
-                      <Copy className="h-3 w-3 mr-1" /> Share
+                      <Copy className="h-3 w-3 mr-1" /> Copy patient link
                     </Button>
                   )}
                   <Button size="sm" variant="ghost" onClick={() => handleDelete(p.id)}>
@@ -310,6 +323,9 @@ function EditPlanDialog({
         locked: !!s.appointment_id,
         defaultPrice: s.treatment?.price ?? null,
         priceOverride: s.price_cents_override != null ? String(s.price_cents_override / 100) : "",
+        expectedResults: s.expected_results ?? "",
+        downtime: s.downtime ?? "",
+        sessionPurpose: s.session_purpose ?? "",
       })),
   );
 
@@ -369,6 +385,9 @@ function EditPlanDialog({
               intervalWeeksFromPrevious: s.intervalWeeksFromPrevious,
               notes: s.notes,
               priceCentsOverride: s.priceOverride ? Math.round(parseFloat(s.priceOverride) * 100) : null,
+              expectedResults: s.expectedResults || null,
+              downtime: s.downtime || null,
+              sessionPurpose: s.sessionPurpose || null,
             })),
         },
       });
@@ -545,6 +564,44 @@ function EditPlanDialog({
                       }
                       disabled={s.locked}
                     />
+                  </div>
+                  <div className="space-y-1.5 pt-1 border-t">
+                    <div>
+                      <Label className="text-[11px] text-muted-foreground uppercase tracking-wide">Session purpose (shown to patient)</Label>
+                      <Textarea
+                        rows={2}
+                        className="text-xs"
+                        placeholder="What this session targets and why"
+                        value={s.sessionPurpose}
+                        onChange={(e) =>
+                          setSessions((prev) => prev.map((x, i) => (i === idx ? { ...x, sessionPurpose: e.target.value } : x)))
+                        }
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-[11px] text-muted-foreground uppercase tracking-wide">Expected results</Label>
+                      <Textarea
+                        rows={2}
+                        className="text-xs"
+                        placeholder="What the patient should notice after this session"
+                        value={s.expectedResults}
+                        onChange={(e) =>
+                          setSessions((prev) => prev.map((x, i) => (i === idx ? { ...x, expectedResults: e.target.value } : x)))
+                        }
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-[11px] text-muted-foreground uppercase tracking-wide">Downtime &amp; aftercare</Label>
+                      <Textarea
+                        rows={2}
+                        className="text-xs"
+                        placeholder="Expected downtime, side effects, aftercare notes"
+                        value={s.downtime}
+                        onChange={(e) =>
+                          setSessions((prev) => prev.map((x, i) => (i === idx ? { ...x, downtime: e.target.value } : x)))
+                        }
+                      />
+                    </div>
                   </div>
                 </div>
               );

@@ -4983,12 +4983,15 @@ export type Database = {
         Row: {
           appointment_id: string | null
           created_at: string
+          downtime: string | null
+          expected_results: string | null
           id: string
           interval_weeks_from_previous: number | null
           notes: string | null
           plan_id: string
           price_cents_override: number | null
           session_number: number
+          session_purpose: string | null
           status: string
           suggested_date: string | null
           treatment_id: string | null
@@ -4997,12 +5000,15 @@ export type Database = {
         Insert: {
           appointment_id?: string | null
           created_at?: string
+          downtime?: string | null
+          expected_results?: string | null
           id?: string
           interval_weeks_from_previous?: number | null
           notes?: string | null
           plan_id: string
           price_cents_override?: number | null
           session_number: number
+          session_purpose?: string | null
           status?: string
           suggested_date?: string | null
           treatment_id?: string | null
@@ -5011,12 +5017,15 @@ export type Database = {
         Update: {
           appointment_id?: string | null
           created_at?: string
+          downtime?: string | null
+          expected_results?: string | null
           id?: string
           interval_weeks_from_previous?: number | null
           notes?: string | null
           plan_id?: string
           price_cents_override?: number | null
           session_number?: number
+          session_purpose?: string | null
           status?: string
           suggested_date?: string | null
           treatment_id?: string | null
@@ -5154,6 +5163,9 @@ export type Database = {
           course_paid: boolean
           course_price_cents: number | null
           created_at: string
+          decline_reason: string | null
+          decline_tags: string[] | null
+          declined_at: string | null
           deposit_cents: number | null
           deposit_paid: boolean
           description: string | null
@@ -5161,6 +5173,7 @@ export type Database = {
           discount_percent: number | null
           id: string
           name: string
+          patient_token: string | null
           payment_mode: string
           profile_id: string
           sent_at: string | null
@@ -5177,6 +5190,9 @@ export type Database = {
           course_paid?: boolean
           course_price_cents?: number | null
           created_at?: string
+          decline_reason?: string | null
+          decline_tags?: string[] | null
+          declined_at?: string | null
           deposit_cents?: number | null
           deposit_paid?: boolean
           description?: string | null
@@ -5184,6 +5200,7 @@ export type Database = {
           discount_percent?: number | null
           id?: string
           name: string
+          patient_token?: string | null
           payment_mode?: string
           profile_id: string
           sent_at?: string | null
@@ -5200,6 +5217,9 @@ export type Database = {
           course_paid?: boolean
           course_price_cents?: number | null
           created_at?: string
+          decline_reason?: string | null
+          decline_tags?: string[] | null
+          declined_at?: string | null
           deposit_cents?: number | null
           deposit_paid?: boolean
           description?: string | null
@@ -5207,6 +5227,7 @@ export type Database = {
           discount_percent?: number | null
           id?: string
           name?: string
+          patient_token?: string | null
           payment_mode?: string
           profile_id?: string
           sent_at?: string | null
@@ -5619,6 +5640,7 @@ export type Database = {
           treatment_name: string
         }[]
       }
+      get_plan_by_token: { Args: { _token: string }; Returns: Json }
       get_public_profile_by_slug: {
         Args: { p_slug: string }
         Returns: {
@@ -5857,6 +5879,15 @@ export type Database = {
           owner_kind: string
           user_id: string
         }[]
+      }
+      respond_to_plan_by_token: {
+        Args: {
+          _accept: boolean
+          _reason?: string
+          _tags?: string[]
+          _token: string
+        }
+        Returns: Json
       }
       save_walk_in_medical_form_response: {
         Args: { p_form_id: string; p_referral_id: string; p_response: Json }

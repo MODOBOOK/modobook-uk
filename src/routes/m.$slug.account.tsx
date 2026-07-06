@@ -1128,18 +1128,6 @@ function PatientTreatmentPlans({ slug, brand }: { slug: string; brand: string })
 
   useEffect(() => { refresh(); /* eslint-disable-next-line */ }, [slug]);
 
-  const respond = async (id: string, accept: boolean) => {
-    try {
-      const mod = await import("@/lib/treatment-plans.functions");
-      if (accept) await mod.acceptPlan({ data: { id } });
-      else await mod.declinePlan({ data: { id } });
-      toast.success(accept ? "Plan accepted" : "Plan declined");
-      refresh();
-    } catch (e: any) {
-      toast.error(e.message);
-    }
-  };
-
   if (loading) return null;
   if (plans.length === 0) return null;
 
@@ -1165,46 +1153,28 @@ function PatientTreatmentPlans({ slug, brand }: { slug: string; brand: string })
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
-                <div>
-                  <div className="h-2 rounded-full bg-muted overflow-hidden">
-                    <div className="h-full transition-all" style={{ width: `${pct}%`, backgroundColor: brand }} />
-                  </div>
-                  <div className="mt-1 text-xs text-muted-foreground">{done} of {total} sessions complete</div>
-                </div>
-                <div className="space-y-1">
-                  {(p.sessions || [])
-                    .slice()
-                    .sort((a: any, b: any) => a.session_number - b.session_number)
-                    .map((s: any) => (
-                      <div key={s.id} className="flex items-center justify-between text-sm border-b py-1 last:border-0">
-                        <span>
-                          <span className="font-medium">{s.session_number}.</span>{" "}
-                          {s.treatment?.name ?? "Session"}
-                          {s.interval_weeks_from_previous && s.session_number > 1 && (
-                            <span className="text-muted-foreground ml-1 text-xs">
-                              (+{s.interval_weeks_from_previous} wks)
-                            </span>
-                          )}
-                        </span>
-                        <Badge variant="outline" className="text-xs">{s.status}</Badge>
-                      </div>
-                    ))}
-                </div>
-                {p.status === "sent" && (
-                  <div className="flex gap-2">
-                    <Button size="sm" onClick={() => respond(p.id, true)} style={{ backgroundColor: brand }}>
-                      Accept plan
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={() => respond(p.id, false)}>
-                      Decline
-                    </Button>
+                {total > 0 && (
+                  <div>
+                    <div className="h-2 rounded-full bg-muted overflow-hidden">
+                      <div className="h-full transition-all" style={{ width: `${pct}%`, backgroundColor: brand }} />
+                    </div>
+                    <div className="mt-1 text-xs text-muted-foreground">{done} of {total} sessions complete</div>
                   </div>
                 )}
-                {(p.status === "accepted" || p.status === "in_progress") && (
-                  <Link to="/m/$slug" params={{ slug }}>
-                    <Button size="sm" style={{ backgroundColor: brand }}>Book next session</Button>
-                  </Link>
-                )}
+                <div className="flex flex-wrap gap-2">
+                  {p.patient_token && (
+                    <a href={`/plan/${p.patient_token}`} target="_blank" rel="noreferrer">
+                      <Button size="sm" style={{ backgroundColor: brand }}>
+                        {p.status === "sent" ? "Review & respond" : "View full plan"}
+                      </Button>
+                    </a>
+                  )}
+                  {(p.status === "accepted" || p.status === "in_progress") && (
+                    <Link to="/m/$slug" params={{ slug }}>
+                      <Button size="sm" variant="outline">Book next session</Button>
+                    </Link>
+                  )}
+                </div>
               </CardContent>
             </Card>
           );

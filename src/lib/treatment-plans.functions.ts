@@ -213,6 +213,9 @@ export const updatePlan = createServerFn({ method: "POST" })
       suggestedDate?: string | null;
       notes?: string | null;
       priceCentsOverride?: number | null;
+      expectedResults?: string | null;
+      downtime?: string | null;
+      sessionPurpose?: string | null;
     }>;
   }) => d)
   .handler(async ({ data, context }) => {
@@ -253,6 +256,9 @@ export const updatePlan = createServerFn({ method: "POST" })
         suggested_date: s.suggestedDate ?? null,
         notes: s.notes ?? null,
         price_cents_override: s.priceCentsOverride ?? null,
+        expected_results: s.expectedResults ?? null,
+        downtime: s.downtime ?? null,
+        session_purpose: s.sessionPurpose ?? null,
       }));
       if (rows.length) {
         const { error } = await context.supabase.from("treatment_plan_sessions").insert(rows);
@@ -271,7 +277,7 @@ export const sendPlan = createServerFn({ method: "POST" })
 
     const { data: plan, error: planErr } = await context.supabase
       .from("treatment_plans")
-      .select("id, name, description, client:clinic_clients(full_name, email), profile:profiles(clinic_name, slug)")
+      .select("id, name, description, patient_token, client:clinic_clients(full_name, email), profile:profiles(clinic_name, slug)")
       .eq("id", data.id)
       .eq("profile_id", pid)
       .maybeSingle();
@@ -281,7 +287,7 @@ export const sendPlan = createServerFn({ method: "POST" })
     const clientEmail = (plan as any).client?.email as string | undefined;
     const clientName = ((plan as any).client?.full_name as string | undefined) || "there";
     const clinicName = ((plan as any).profile?.clinic_name as string | undefined) || "your clinic";
-    const slug = (plan as any).profile?.slug as string | undefined;
+    const token = (plan as any).patient_token as string | undefined;
 
     const { error } = await context.supabase
       .from("treatment_plans")
@@ -291,10 +297,10 @@ export const sendPlan = createServerFn({ method: "POST" })
     if (error) throw error;
 
     let emailed = false;
-    if (clientEmail && slug) {
+    if (clientEmail && token) {
       try {
         const origin = process.env.PUBLIC_APP_URL || process.env.APP_URL || "https://modobook.uk";
-        const planUrl = `${origin}/m/${slug}/account`;
+        const planUrl = `${origin}/plan/${token}`;
         const { tryEnqueueAppEmail, getPractitionerBranding } = await import("@/lib/email/send.server");
         const branding = await getPractitionerBranding(pid);
         const firstName = String(clientName).split(" ")[0] || "there";
@@ -450,9 +456,22 @@ export const suggestPlanForClient = createServerFn({ method: "POST" })
   "description": string,
   "bookingMode": "rolling" | "upfront",
   "paymentMode": "per_session" | "course_upfront" | "deposit_then_per_session",
-  "sessions": [ { "treatmentId": string, "sessionNumber": number, "intervalWeeksFromPrevious": number, "notes": string } ]
+  "sessions": [ {
+    "treatmentId": string,
+    "sessionNumber": number,
+    "intervalWeeksFromPrevious": number,
+    "notes": string,
+    "sessionPurpose": string,
+    "expectedResults": string,
+    "downtime": string
+  } ]
 }
-Rules: 2-8 sessions. Session 1 has intervalWeeksFromPrevious 0. Use realistic intervals for the treatments chosen. Notes should be short and patient-specific.`;
+Rules: 2-8 sessions. Session 1 has intervalWeeksFromPrevious 0. Use realistic intervals for the treatments chosen. Notes should be short and patient-specific.
+For every session also fill:
+- sessionPurpose: 1-2 short sentences on why this session, what it targets.
+- expectedResults: 1-2 short sentences of realistic outcomes the patient should notice after this session.
+- downtime: brief expected downtime, side effects and aftercare guidance for this session (e.g. "Mild redness 24h, avoid sun 48h").
+Keep the language warm, plain-English and patient-facing.`;
 
     const user = `Patient: ${client.full_name}
 Active concerns:
@@ -493,6 +512,9 @@ ${data.extraContext ? `Additional context from practitioner: ${data.extraContext
         treatment_id: s.treatmentId,
         interval_weeks_from_previous: i === 0 ? 0 : Number(s.intervalWeeksFromPrevious) || 4,
         notes: s.notes ?? null,
+        session_purpose: s.sessionPurpose ?? null,
+        expected_results: s.expectedResults ?? null,
+        downtime: s.downtime ?? null,
       }));
     if (!sessions.length) throw new Error("AI could not build a plan. Add treatments and concerns and try again.");
 
@@ -537,4 +559,39 @@ export const declinePlan = createServerFn({ method: "POST" })
       .eq("id", data.id);
     if (error) throw error;
     return { ok: true };
+  });
+
+// =================== PUBLIC (tokenised) ===================
+
+export const getPlanByToken = createServerFn({ method: "GET" })
+  .inputValidator((d: { token: string }) => d)
+  .handler(async ({ data }) => {
+    const { createClient } = await import("@supabase/supabase-js");
+    const sb = createClient(
+      process.env.SUPABASE_URL!,
+      process.env.SUPABASE_PUBLISHABLE_KEY!,
+      { auth: { storage: undefined, persistSession: false, autoRefreshToken: false } },
+    );
+    const { data: res, error } = await sb.rpc("get_plan_by_token", { _token: data.token });
+    if (error) throw error;
+    return res as any;
+  });
+
+export const respondToPlanByToken = createServerFn({ method: "POST" })
+  .inputValidator((d: { token: string; accept: boolean; reason?: string | null; tags?: string[] | null }) => d)
+  .handler(async ({ data }) => {
+    const { createClient } = await import("@supabase/supabase-js");
+    const sb = createClient(
+      process.env.SUPABASE_URL!,
+      process.env.SUPABASE_PUBLISHABLE_KEY!,
+      { auth: { storage: undefined, persistSession: false, autoRefreshToken: false } },
+    );
+    const { data: res, error } = await sb.rpc("respond_to_plan_by_token", {
+      _token: data.token,
+      _accept: data.accept,
+      _reason: data.reason ?? null,
+      _tags: data.tags ?? null,
+    });
+    if (error) throw error;
+    return res as any;
   });
