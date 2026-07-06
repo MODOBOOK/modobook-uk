@@ -320,6 +320,79 @@ function NewAppointmentPage() {
         </p>
       </div>
 
+      {modelSlots.length > 0 && (() => {
+        const treatById = new Map(treatments.map((t) => [t.id, t]));
+        const visible = modelSlots.filter((s) => treatById.has(s.treatment_id));
+        if (visible.length === 0) return null;
+        return (
+          <div className="rounded-2xl border-2 border-fuchsia-400/40 bg-fuchsia-50/40 p-3 dark:bg-fuchsia-950/10">
+            <button
+              type="button"
+              onClick={() => setModelExpanded((v) => !v)}
+              className="flex w-full items-center gap-2 text-left"
+            >
+              <Sparkles className="h-4 w-4 text-fuchsia-600" />
+              <h3 className="text-sm font-bold text-fuchsia-700 dark:text-fuchsia-300">Model slots</h3>
+              <span className="text-xs opacity-60">Discounted dates & times</span>
+              <span className="ml-auto rounded-full bg-fuchsia-600/10 px-2 py-0.5 text-[11px] font-medium text-fuchsia-700 dark:text-fuchsia-300">
+                {visible.length}
+              </span>
+              <ChevronDown className={`h-4 w-4 text-fuchsia-600 transition-transform ${modelExpanded ? "rotate-180" : ""}`} />
+            </button>
+            {modelExpanded && (
+              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                {visible.map((s) => {
+                  const t = treatById.get(s.treatment_id)!;
+                  const base = Number(t.price ?? 0);
+                  const final = s.price_mode === "fixed"
+                    ? Number(s.price_value)
+                    : Math.max(0, base * (1 - Number(s.price_value) / 100));
+                  const selected = modelSlotId === s.id;
+                  return (
+                    <button
+                      key={s.id}
+                      type="button"
+                      onClick={() => {
+                        setTreatmentId(t.id);
+                        setLocationId(s.location_id ?? "");
+                        setDate(s.slot_date);
+                        setStartTime(s.start_time.slice(0, 5));
+                        setModelSlotId(s.id);
+                        setModelPriceOverride(final);
+                      }}
+                      className={`rounded-xl border p-3 text-left transition ${selected ? "border-fuchsia-500 bg-white shadow-sm ring-2 ring-fuchsia-300" : "border-border bg-white hover:border-fuchsia-300"}`}
+                    >
+                      <p className="text-sm font-semibold">{t.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(s.slot_date + "T00:00:00").toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" })} · {s.start_time.slice(0,5)}–{s.end_time.slice(0,5)}
+                      </p>
+                      <p className="mt-1 text-sm">
+                        <span className="line-through text-muted-foreground">£{base.toFixed(2)}</span>{" "}
+                        <span className="font-bold text-emerald-600">£{final.toFixed(2)}</span>
+                      </p>
+                      {s.notes && <p className="mt-1 text-xs italic text-muted-foreground">{s.notes}</p>}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+            {modelSlotId && (
+              <div className="mt-3 flex items-center justify-between rounded-lg bg-white/70 px-3 py-2 text-xs">
+                <span className="text-muted-foreground">Model slot applied — price will use the discounted rate.</span>
+                <button
+                  type="button"
+                  onClick={() => { setModelSlotId(null); setModelPriceOverride(null); }}
+                  className="font-medium text-fuchsia-700 hover:underline"
+                >
+                  Clear
+                </button>
+              </div>
+            )}
+          </div>
+        );
+      })()}
+
+
       <Card>
         <CardHeader><CardTitle>Treatment</CardTitle></CardHeader>
         <CardContent className="space-y-3">
