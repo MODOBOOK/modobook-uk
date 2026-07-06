@@ -130,6 +130,7 @@ export const updateProfile = createServerFn({ method: "POST" })
       payment_surcharge_deposit_enabled?: boolean;
       payment_surcharge_deposit_percent?: number;
       stripe_fee_pass_to_patient?: boolean;
+      stripe_fee_bnpl_pass_to_patient?: boolean;
       stripe_fee_card_percent?: number;
       stripe_fee_card_fixed_cents?: number;
       stripe_fee_bnpl_percent?: number;
