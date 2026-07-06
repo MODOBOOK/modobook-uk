@@ -565,14 +565,13 @@ export const requestBooking = createServerFn({ method: "POST" })
         .neq("status", "cancelled")
         .maybeSingle();
       if (dup) {
-        const unpaidPending = dup.status === "pending" && dup.payment_status !== "paid";
-        if (unpaidPending && bookingNeedsStripePayment(prof, data.paymentChoice ?? null)) {
+        const unpaidBooking = dup.payment_status !== "paid";
+        if (unpaidBooking && bookingNeedsStripePayment(prof, data.paymentChoice ?? null)) {
           await supabaseAdmin
             .from("appointments")
             .update({ status: "cancelled", payment_hold_expires_at: null } as never)
             .eq("id", dup.id as string)
-            .eq("status", "pending")
-            .eq("payment_status", "pending");
+            .neq("payment_status", "paid");
         } else {
           return { id: dup.id as string, consents: [], medicalForms: [], checkoutUrl: null, embeddedPayment: null };
         }
@@ -852,11 +851,17 @@ async function maybeCreateBookingCheckout(args: {
   const cancelUrl = `${origin}/m/${p.slug ?? ""}`;
 
   const saveCardOnFile = !!p.save_card_on_file;
+  const chosenMethod = args.choice?.method;
+  const effectivelyCard =
+    chosenMethod === "card" || (!chosenMethod && enabled.card);
+  // Deposits paid by card must both take the deposit and attach the card to
+  // the connected Stripe Customer for the clinic's no-show / late-cancel file.
+  const shouldSaveCardOnFile = saveCardOnFile || (kind === "deposit" && effectivelyCard);
   const metadata = {
     appointment_ids: args.appointmentIds.join(","),
     kind,
     surcharge_cents: String(surchargeCents),
-    save_card_on_file: saveCardOnFile ? "1" : "0",
+    save_card_on_file: shouldSaveCardOnFile ? "1" : "0",
     patient_email: args.patientEmail,
   };
 
@@ -872,9 +877,6 @@ async function maybeCreateBookingCheckout(args: {
   // either the patient explicitly picked card, or they didn't pick anything
   // and card is enabled (default). Klarna / Clearpay explicit picks skip
   // this and go through hosted Checkout since they can't save a reusable card.
-  const chosenMethod = args.choice?.method;
-  const effectivelyCard =
-    chosenMethod === "card" || (!chosenMethod && enabled.card);
   if (effectivelyCard) {
     // Force card-only for this intent so surcharge math and the Payment
     // Element render match.
@@ -894,7 +896,7 @@ async function maybeCreateBookingCheckout(args: {
         customerEmail: args.patientEmail,
         description: kind === "deposit" ? `Deposit — ${args.description}` : args.description,
         metadata,
-        saveForFutureUse: saveCardOnFile,
+        saveForFutureUse: shouldSaveCardOnFile,
       });
       if (!intent.clientSecret) return null;
       const returnUrl = `${origin}/m/${p.slug ?? ""}/account?paid=1&pi=${intent.paymentIntentId}`;
@@ -1077,16 +1079,15 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
           .slice(0, data.bookings.length)
           .map((r) => ({ id: r.id as string, treatmentId: r.treatment_id as string }));
         if (existing.length === data.bookings.length) {
-          const unpaidPending = recent
+          const unpaidBooking = recent
             .filter((r) => existing.some((e) => e.id === (r.id as string)))
-            .every((r) => r.status === "pending" && r.payment_status !== "paid");
-          if (unpaidPending && bookingNeedsStripePayment(prof, data.paymentChoice ?? null)) {
+            .every((r) => r.payment_status !== "paid");
+          if (unpaidBooking && bookingNeedsStripePayment(prof, data.paymentChoice ?? null)) {
             await supabaseAdmin
               .from("appointments")
               .update({ status: "cancelled", payment_hold_expires_at: null } as never)
               .in("id", existing.map((e) => e.id))
-              .eq("status", "pending")
-              .eq("payment_status", "pending");
+              .neq("payment_status", "paid");
           } else {
             return { appointments: existing, consents: [], medicalForms: [], packagePurchases: [], checkoutUrl: null, embeddedPayment: null };
           }
