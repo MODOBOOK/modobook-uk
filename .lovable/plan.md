@@ -1,37 +1,82 @@
-# Revised: safe path for staff view-only access
+## Treatment Plans
 
-## Why the original plan is too risky in one turn
+A multi-session course of treatments a practitioner proposes to a patient (often after a consultation), which the patient reviews in their hub, accepts, then books and pays for under the practitioner's chosen rules.
 
-Your data model scopes everything by `profile_id = auth.uid()` — 40+ server functions and every RLS policy. A full workspace switcher means rewriting all of them plus adding staff-SELECT policies to every table. That's not safe to do in one pass.
+### Data model (new tables)
 
-## Recommended path — two phases
+**`treatment_plan_templates`** — reusable plans practitioner builds once
+- `profile_id`, `name`, `description`, `default_interval_weeks`
+- `booking_mode` `'upfront' | 'rolling'`
+- `payment_mode` `'per_session' | 'course_upfront' | 'deposit_then_per_session'`
+- `course_price_cents` (nullable, for upfront), `deposit_cents` (nullable)
+- `is_active`
 
-### Phase 1 (now): fix the specific bug the user hit
+**`treatment_plan_template_items`**
+- `template_id`, `treatment_id`, `session_number`, `interval_weeks_from_previous`, `notes`
 
-The confusing bit was: staff invite acceptance silently signed you into your existing owner account, so it *looked* like nothing happened. That's a UX problem I can fix cleanly.
+**`treatment_plans`** — a plan assigned to a specific patient
+- `profile_id` (practitioner), `client_id` (`clinic_clients.id`)
+- `consultation_id` (nullable), `template_id` (nullable)
+- `name`, `description`
+- `booking_mode`, `payment_mode`, `course_price_cents`, `deposit_cents`
+- `status` `'draft' | 'sent' | 'accepted' | 'declined' | 'in_progress' | 'completed' | 'cancelled'`
+- `sent_at`, `accepted_at`, `completed_at`
 
-- On the invite-accept page, when the email already has an account, stop trying to `signUp` + `signInWithPassword` silently. Instead show a clear card: **"An account already exists for {email}. Sign in to link this invite to that account."** with a Sign-in button and a "Use a different email" link.
-- After sign-in returns to `/staff-accept/:token`, call `acceptStaffInvite` (which just writes the `staff_members` row with `user_id = auth.uid()`), then land on a new page `/dashboard/invites` that lists the clinics you've been added to with a clear "You have view-only access — full switching coming soon" note.
-- Add a **red banner** on the invite page when it detects the invited email is already the currently-signed-in owner's own email, saying "You can't invite your own owner email as staff — use a different email or a `+viewer` alias."
+**`treatment_plan_sessions`**
+- `plan_id`, `session_number`, `treatment_id`
+- `interval_weeks_from_previous`
+- `suggested_date` (nullable)
+- `appointment_id` (nullable — set when booked)
+- `status` `'pending' | 'booked' | 'completed' | 'skipped'`
+- `notes`
 
-Result: no more surprise "logged into the wrong account" moment, and staff memberships are still recorded correctly for phase 2.
+RLS: practitioner owns rows via `profile_id = auth.uid()`; patient reads their own plans via `clinic_clients` link (email/phone match through existing `patient-hub` pattern).
 
-### Phase 2 (separate change, later): the real switcher
+### Practitioner UX
 
-When you're ready for real cross-account viewing, I'll:
-- Add view-only staff SELECT policies to each data table (one migration).
-- Add `context.activeProfileId` to the auth middleware, defaulting to `userId`, overridable via a header for verified staff.
-- Migrate server functions one dashboard section at a time (bookings, then clients, then reports…), verifying each before moving on.
-- Ship the workspace switcher dropdown and per-section read-only guards.
+- **New route `/dashboard/treatment-plans`** — list templates, create/edit template with drag-to-order sessions.
+- **On patient profile (`dashboard.patients.$id`)** — "Treatment plans" section: create from template / build manually / view existing. Shows progress "2 of 6 completed".
+- **On consultation page (`dashboard.consultations.$id`)** — "Create treatment plan from this consultation" button → prefills `consultation_id`, opens plan builder.
+- Plan builder lets practitioner pick booking mode + payment mode per plan.
+- "Send to patient" action sets status → `sent`, emails patient a summary with a hub link.
 
-## Files touched in Phase 1
+### Patient UX (hub)
 
-- `src/routes/staff-accept.$token.tsx` — replace silent sign-up with clear existing-account flow.
-- `src/routes/_authenticated/dashboard.invites.tsx` — new page listing your staff memberships.
-- `src/routes/_authenticated/dashboard.menu.tsx` — add "Invited clinics" link.
-- `src/lib/staff.functions.ts` — new `listMyStaffMemberships` server fn (self-read via existing "Staff can read their own row" policy).
-- `src/routes/_authenticated/dashboard.staff.tsx` — warn if the invited email matches the owner's login email.
+- **New tab in `/hub` — "Treatment plans"** shows all sent/accepted plans.
+- Plan detail page: overview card (progress bar, X of Y sessions), list of sessions with dates/status, "Accept plan" CTA when `sent`.
+- After acceptance:
+  - `upfront` booking → picks all session dates in one flow with suggested intervals prefilled
+  - `rolling` → book session 1 now, after each completed appointment show "Book your next session" prompt
+- Payment enforced at booking based on `payment_mode`:
+  - `per_session` → normal per-appointment payment
+  - `course_upfront` → single Stripe checkout for `course_price_cents` on acceptance, all subsequent bookings free
+  - `deposit_then_per_session` → `deposit_cents` on acceptance, remainder per session
+- Existing `BookingPaymentPicker` reused; plan enforces which options appear.
 
-No database migration needed for phase 1 — the `staff_members` table already has `user_id`, `status`, and the self-read policy.
+### Emails
 
-Approve this revised plan and I'll build phase 1 now.
+- New app email template `treatment-plan-sent`: branded summary listing sessions + CTA button to hub plan page.
+- Triggered on "Send to patient".
+
+### Server functions (new file `src/lib/treatment-plans.functions.ts`)
+
+- `listPlanTemplates`, `upsertPlanTemplate`, `deletePlanTemplate`
+- `createPlanForClient` (from template or blank; optional `consultation_id`)
+- `listPlansForClient`, `getPlan` (practitioner)
+- `updatePlan`, `sendPlan`, `cancelPlan`
+- `getPlanForPatient` (auth as patient via hub), `acceptPlan`, `declinePlan`
+- `bookPlanSession` (links appointment to session), auto-called from existing booking flow when `?planSession=<id>` query param present
+- `markSessionCompleted` (called from webhook / appointment completion)
+
+### Integration points
+
+- Extend `checkout.session.completed` webhook and appointment completion path to update `treatment_plan_sessions.status` when the appointment ties to a plan session.
+- Extend `BookingPaymentPicker` / `m.$slug.pay` to accept `planSessionId` and enforce plan payment rules.
+
+### Rollout order in this build
+
+1. Migration (tables + RLS + grants).
+2. Server functions.
+3. Practitioner: templates page, patient-profile section, consultation button.
+4. Patient hub: plans tab + detail + accept flow.
+5. Booking integration + email template.

@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { getConsultation, updateConsultation, ensureConsultationPatient } from "@/lib/consultations.functions";
+import { TreatmentPlansPanel } from "@/components/TreatmentPlansPanel";
 import { createPaymentLink } from "@/lib/payment-links.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { listMyConsentTemplates, getConsentTemplate } from "@/lib/treatment-consents.functions";
@@ -231,6 +232,10 @@ export function ConsultationWizard() {
         {step === 7 && <Step7 log={c.treatment_log} onChange={(v: any) => setField("treatment_log", v)} />}
         {step === 8 && <Step8 invoice={c.invoice} email={c.patient_email} patientName={c.patient_name} consultationId={c.id} onChange={(v: any) => setField("invoice", v)} onComplete={complete} completed={c.status === "completed"} />}
       </CardContent></Card>
+
+      {c.patient_id && (
+        <TreatmentPlansPanel clientId={c.patient_id} consultationId={c.id} profileId={c.profile_id} />
+      )}
 
       {/* Sticky nav */}
       <div className="fixed inset-x-0 bottom-0 z-30 border-t bg-background/95 px-3 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:px-6">
