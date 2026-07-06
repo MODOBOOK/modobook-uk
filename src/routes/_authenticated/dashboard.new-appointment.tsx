@@ -257,9 +257,10 @@ function NewAppointmentPage() {
             ? { line1: addrLine1, city: addrCity, postcode: addrPostcode }
             : null,
           notes: notes || undefined,
-          basePrice: Number(treatment.price ?? 0),
+          basePrice: modelPriceOverride ?? Number(treatment.price ?? 0),
           extraConsentTemplateIds: [...pickedConsentIds],
           medicalFormTemplateIds: [...pickedMedicalIds],
+          modelSlotId: modelSlotId,
         },
       });
       const manageUrl = result.manageToken
