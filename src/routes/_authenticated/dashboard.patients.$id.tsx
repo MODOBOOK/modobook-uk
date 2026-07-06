@@ -40,6 +40,7 @@ import { ConsultationDocCard } from "@/components/patient/ConsultationDocCard";
 import { logCommunication } from "@/lib/patient-hub.functions";
 import { createPaymentLink } from "@/lib/payment-links.functions";
 import { chargeCardOnFile, removeCardOnFile } from "@/lib/card-on-file.functions";
+import { TreatmentPlansPanel } from "@/components/TreatmentPlansPanel";
 
 
 export const Route = createFileRoute("/_authenticated/dashboard/patients/$id")({
