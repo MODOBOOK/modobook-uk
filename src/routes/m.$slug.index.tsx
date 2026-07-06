@@ -2256,8 +2256,10 @@ function CategoryTree({
                     priceColor={priceColor}
                     size={size}
                     bold={bold}
+                    capInfo={capFor(t)}
                   />
                 ))}
+
               </AccordionContent>
             </AccordionItem>
           </Accordion>
