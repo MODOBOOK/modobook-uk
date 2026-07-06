@@ -50,6 +50,7 @@ import {
   markAppointmentNoShow,
   setClientBlocked,
 } from "@/lib/patient-actions.functions";
+import { getCardOnFileForAppointment, chargeCardOnFile } from "@/lib/card-on-file.functions";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/dashboard/bookings")({
