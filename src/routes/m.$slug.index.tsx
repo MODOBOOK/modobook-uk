@@ -613,7 +613,7 @@ function BookPage() {
   const modelPosition = profile.model_slots_position === "bottom" ? "bottom" : "top";
 
   const modelSlotsBlock = totalPublicModelSlotCount === 0 ? null : (
-    <section className="mx-auto mt-6 max-w-3xl px-4" data-section="model-slots">
+    <section className={`mx-auto max-w-3xl px-4 ${modelPosition === "top" ? "mt-6" : "mt-8"}`} data-section="model-slots">
       <div
         className="overflow-hidden rounded-2xl border-2 shadow-sm"
         style={{ borderColor: `${brand}55`, backgroundColor: `${brand}08` }}
