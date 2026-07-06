@@ -555,7 +555,7 @@ export const requestBooking = createServerFn({ method: "POST" })
       const cutoff = new Date(Date.now() - 5 * 60 * 1000).toISOString();
       const { data: dup } = await sb
         .from("appointments")
-        .select("id")
+        .select("id,status,payment_status,payment_hold_expires_at")
         .eq("profile_id", data.profileId)
         .eq("treatment_id", data.treatmentId)
         .eq("scheduled_date", data.date)
@@ -564,7 +564,19 @@ export const requestBooking = createServerFn({ method: "POST" })
         .gte("created_at", cutoff)
         .neq("status", "cancelled")
         .maybeSingle();
-      if (dup) return { id: dup.id as string, consents: [], medicalForms: [], checkoutUrl: null, embeddedPayment: null };
+      if (dup) {
+        const unpaidPending = dup.status === "pending" && dup.payment_status !== "paid";
+        if (unpaidPending && bookingNeedsStripePayment(prof, data.paymentChoice ?? null)) {
+          await supabaseAdmin
+            .from("appointments")
+            .update({ status: "cancelled", payment_hold_expires_at: null } as never)
+            .eq("id", dup.id as string)
+            .eq("status", "pending")
+            .eq("payment_status", "pending");
+        } else {
+          return { id: dup.id as string, consents: [], medicalForms: [], checkoutUrl: null, embeddedPayment: null };
+        }
+      }
     }
 
     const id = crypto.randomUUID();
@@ -637,6 +649,24 @@ export const requestBooking = createServerFn({ method: "POST" })
       });
     } catch (e) {
       console.error("[requestBooking] checkout failed", e);
+      if (bookingNeedsStripePayment(prof, data.paymentChoice ?? null)) {
+        await supabaseAdmin
+          .from("appointments")
+          .update({ status: "cancelled", payment_hold_expires_at: null } as never)
+          .eq("id", id)
+          .eq("status", "pending")
+          .eq("payment_status", "pending");
+        throw new Error("Card payment could not be started. Please try again — your appointment has not been confirmed.");
+      }
+    }
+    if (!payment && bookingNeedsStripePayment(prof, data.paymentChoice ?? null)) {
+      await supabaseAdmin
+        .from("appointments")
+        .update({ status: "cancelled", payment_hold_expires_at: null } as never)
+        .eq("id", id)
+        .eq("status", "pending")
+        .eq("payment_status", "pending");
+      throw new Error("Card payment could not be started. Please try again — your appointment has not been confirmed.");
     }
     // If we handed the patient off to Stripe, hold the slot briefly. If they
     // abandon the payment the hold expires and availability re-opens; the
@@ -944,6 +974,31 @@ function addMinutesToTime(time: string, mins: number) {
   return `${hh}:${mm}:00`;
 }
 
+function bookingNeedsStripePayment(
+  profile: {
+    stripe_connect_account_id?: string | null;
+    stripe_connect_onboarding_status?: string | null;
+    payment_deposit_enabled?: boolean | null;
+    deposit_amount_cents?: number | null;
+    payment_card_full_enabled?: boolean | null;
+    payment_klarna_enabled?: boolean | null;
+    payment_clearpay_enabled?: boolean | null;
+  } | null,
+  choice?: PaymentChoice | null,
+) {
+  if (choice?.mode === "cash") return false;
+  if (choice?.mode === "deposit" || choice?.mode === "full") return true;
+  if (!profile) return false;
+  if (!profile.stripe_connect_account_id) return false;
+  if (profile.stripe_connect_onboarding_status && profile.stripe_connect_onboarding_status !== "active") return false;
+  const depositConfigured = !!profile.payment_deposit_enabled && Math.max(0, Number(profile.deposit_amount_cents ?? 0)) >= 100;
+  const onlinePaymentConfigured =
+    profile.payment_card_full_enabled !== false ||
+    !!profile.payment_klarna_enabled ||
+    !!profile.payment_clearpay_enabled;
+  return depositConfigured || onlinePaymentConfigured;
+}
+
 export const requestMultiBooking = createServerFn({ method: "POST" })
   .inputValidator(
     (input: {
@@ -1009,7 +1064,7 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
       const treatmentIds = data.bookings.map((b) => b.treatmentId);
       const { data: recent } = await sb
         .from("appointments")
-        .select("id, treatment_id, start_time")
+        .select("id, treatment_id, start_time, status, payment_status, payment_hold_expires_at")
         .eq("profile_id", data.profileId)
         .eq("scheduled_date", data.date)
         .in("treatment_id", treatmentIds)
@@ -1022,7 +1077,19 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
           .slice(0, data.bookings.length)
           .map((r) => ({ id: r.id as string, treatmentId: r.treatment_id as string }));
         if (existing.length === data.bookings.length) {
-          return { appointments: existing, consents: [], medicalForms: [], packagePurchases: [], checkoutUrl: null };
+          const unpaidPending = recent
+            .filter((r) => existing.some((e) => e.id === (r.id as string)))
+            .every((r) => r.status === "pending" && r.payment_status !== "paid");
+          if (unpaidPending && bookingNeedsStripePayment(prof, data.paymentChoice ?? null)) {
+            await supabaseAdmin
+              .from("appointments")
+              .update({ status: "cancelled", payment_hold_expires_at: null } as never)
+              .in("id", existing.map((e) => e.id))
+              .eq("status", "pending")
+              .eq("payment_status", "pending");
+          } else {
+            return { appointments: existing, consents: [], medicalForms: [], packagePurchases: [], checkoutUrl: null, embeddedPayment: null };
+          }
         }
       }
     }
@@ -1149,6 +1216,24 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
 
     } catch (e) {
       console.error("[requestMultiBooking] checkout failed", e);
+      if (bookingNeedsStripePayment(prof, data.paymentChoice ?? null) && created.length > 0) {
+        await supabaseAdmin
+          .from("appointments")
+          .update({ status: "cancelled", payment_hold_expires_at: null } as never)
+          .in("id", created.map((c) => c.id))
+          .eq("status", "pending")
+          .eq("payment_status", "pending");
+        throw new Error("Card payment could not be started. Please try again — your appointments have not been confirmed.");
+      }
+    }
+    if (!payment && bookingNeedsStripePayment(prof, data.paymentChoice ?? null) && created.length > 0) {
+      await supabaseAdmin
+        .from("appointments")
+        .update({ status: "cancelled", payment_hold_expires_at: null } as never)
+        .in("id", created.map((c) => c.id))
+        .eq("status", "pending")
+        .eq("payment_status", "pending");
+      throw new Error("Card payment could not be started. Please try again — your appointments have not been confirmed.");
     }
     // Slot hold while patient completes Stripe payment; abandoned bookings
     // auto-release when the hold expires (see getDayAvailability filter).
