@@ -787,7 +787,13 @@ async function maybeCreateBookingCheckout(args: {
   // otherwise fall back to legacy behaviour (deposit if configured).
   let kind: "deposit" | "checkout";
   let amountCents: number;
-  const wantsDeposit = depositRequiredForProfile(p)
+  // Patient's explicit "full" choice always wins — paying the full amount
+  // (including via Klarna/Clearpay on the practitioner's Stripe account)
+  // satisfies any deposit requirement. Only fall back to forcing a deposit
+  // when the patient hasn't opted for full payment.
+  const wantsDeposit = args.choice?.mode === "full"
+    ? false
+    : depositRequiredForProfile(p)
     ? true
     : args.choice
     ? args.choice.mode === "deposit"
