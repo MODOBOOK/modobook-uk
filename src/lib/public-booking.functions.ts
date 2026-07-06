@@ -641,7 +641,7 @@ export const requestBooking = createServerFn({ method: "POST" })
     // abandon the payment the hold expires and availability re-opens; the
     // webhook clears the hold and confirms the appointment on success.
     if (payment) {
-      const holdUntil = new Date(Date.now() + 30 * 60 * 1000).toISOString();
+      const holdUntil = new Date(Date.now() + 10 * 60 * 1000).toISOString();
       await supabaseAdmin
         .from("appointments")
         .update({ status: "pending", payment_hold_expires_at: holdUntil } as never)
@@ -1150,7 +1150,7 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
     // Slot hold while patient completes Stripe payment; abandoned bookings
     // auto-release when the hold expires (see getDayAvailability filter).
     if (payment && created.length > 0) {
-      const holdUntil = new Date(Date.now() + 30 * 60 * 1000).toISOString();
+      const holdUntil = new Date(Date.now() + 10 * 60 * 1000).toISOString();
       await supabaseAdmin
         .from("appointments")
         .update({ status: "pending", payment_hold_expires_at: holdUntil } as never)
