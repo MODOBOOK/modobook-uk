@@ -1,0 +1,2 @@
+UPDATE public.appointments SET status='confirmed', payment_status='paid', deposit_paid_at=now(), payment_hold_expires_at=NULL, stripe_payment_intent_id='pi_3TqAKW67JaZzAL8j0Nxl2qoJ', amount_paid_cents=100 WHERE id='8283dbc9-4563-49ae-804e-371a5da29575';
+UPDATE public.clinic_clients SET stripe_customer_id='cus_UpfQdS1M23uc7Y', stripe_payment_method_id='pm_1TqAL367JaZzAL8jYFLgn04v', card_brand='mastercard', card_last4='3599', card_exp_month=9, card_exp_year=2029, card_saved_at=now(), card_save_consent_at=now() WHERE id='08287893-c86e-4a35-b54c-d76aa5175687';
