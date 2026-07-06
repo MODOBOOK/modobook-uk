@@ -460,6 +460,12 @@ function TreatmentDialog({
     (treatment?.prescriber_routing as "same_address" | "clinic_visit" | "in_person_consult" | null) ?? "same_address",
   );
   const [prescriberNote, setPrescriberNote] = useState<string>(treatment?.prescriber_note ?? "");
+  const [bookingCap, setBookingCap] = useState<string>(
+    (treatment as { booking_cap?: number | null } | null)?.booking_cap != null
+      ? String((treatment as { booking_cap?: number | null }).booking_cap)
+      : "",
+  );
+
   const fetchPrescribers = useServerFn(listMyConnectedPrescribers);
   const [prescribers, setPrescribers] = useState<{ user_id: string; name: string; regulatory_body: string | null }[]>([]);
   useEffect(() => {
