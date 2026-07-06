@@ -460,6 +460,7 @@ export const getPublicPaymentOptions = createServerFn({ method: "GET" })
       .from("profiles")
       .select(
         "stripe_connect_account_id,stripe_connect_onboarding_status,payment_card_full_enabled,payment_deposit_enabled,payment_klarna_enabled,payment_clearpay_enabled,payment_pass_fees_to_customer,deposit_amount_cents,payment_surcharge_card_enabled,payment_surcharge_card_percent,payment_surcharge_bnpl_enabled,payment_surcharge_bnpl_percent,payment_surcharge_deposit_enabled,payment_surcharge_deposit_percent,stripe_fee_pass_to_patient,stripe_fee_card_percent,stripe_fee_card_fixed_cents,stripe_fee_bnpl_percent,stripe_fee_bnpl_fixed_cents,allow_pay_in_clinic,cash_only_balance",
+        "stripe_connect_account_id,stripe_connect_onboarding_status,payment_card_full_enabled,payment_deposit_enabled,require_deposit_to_confirm,payment_klarna_enabled,payment_clearpay_enabled,payment_pass_fees_to_customer,deposit_amount_cents,payment_surcharge_card_enabled,payment_surcharge_card_percent,payment_surcharge_bnpl_enabled,payment_surcharge_bnpl_percent,payment_surcharge_deposit_enabled,payment_surcharge_deposit_percent,stripe_fee_pass_to_patient,stripe_fee_card_percent,stripe_fee_card_fixed_cents,stripe_fee_bnpl_percent,stripe_fee_bnpl_fixed_cents,allow_pay_in_clinic,cash_only_balance",
       )
       .eq("slug", data.slug.toLowerCase())
       .maybeSingle();
@@ -469,13 +470,17 @@ export const getPublicPaymentOptions = createServerFn({ method: "GET" })
     const active = !!prof.stripe_connect_account_id
       && (!prof.stripe_connect_onboarding_status || prof.stripe_connect_onboarding_status === "active");
     const cashOnlyBalance = !!(prof as { cash_only_balance?: boolean }).cash_only_balance;
+    const depositEnabled = !!prof.payment_deposit_enabled;
+    const fullCardEnabled = prof.payment_card_full_enabled !== false && !cashOnlyBalance;
     return {
       configured: active,
+      requireDepositToConfirm: !!prof.require_deposit_to_confirm || depositEnabled,
       // When cash-only-for-balance is on, patients cannot pay the full price online.
-      cardEnabled: prof.payment_card_full_enabled !== false && !cashOnlyBalance,
+      cardEnabled: fullCardEnabled || depositEnabled,
+      fullCardEnabled,
       klarnaEnabled: !!prof.payment_klarna_enabled && !cashOnlyBalance,
       clearpayEnabled: !!prof.payment_clearpay_enabled && !cashOnlyBalance,
-      depositEnabled: !!prof.payment_deposit_enabled,
+      depositEnabled,
       cashEnabled: prof.allow_pay_in_clinic !== false,
       cashOnlyBalance,
       depositCents: Math.max(0, Number(prof.deposit_amount_cents ?? 0)),
@@ -534,6 +539,7 @@ export const requestBooking = createServerFn({ method: "POST" })
     if (prof?.require_account_to_book && !data.patientUserId) {
       throw new Error("Please sign in to book — this clinic requires an account.");
     }
+    const paymentChoice = normaliseBookingPaymentChoice(prof, data.paymentChoice ?? null);
     // Auto-confirm target status once we know payment isn't required. We always
     // insert as "pending" first so the notify_new_booking trigger doesn't fire
     // for bookings that end up abandoning Stripe checkout.
@@ -566,7 +572,7 @@ export const requestBooking = createServerFn({ method: "POST" })
         .maybeSingle();
       if (dup) {
         const unpaidBooking = dup.payment_status !== "paid";
-        if (unpaidBooking && bookingNeedsStripePayment(prof, data.paymentChoice ?? null)) {
+        if (unpaidBooking && bookingNeedsStripePayment(prof, paymentChoice)) {
           await supabaseAdmin
             .from("appointments")
             .update({ status: "cancelled", payment_hold_expires_at: null } as never)
@@ -644,11 +650,11 @@ export const requestBooking = createServerFn({ method: "POST" })
         totalAmount: data.basePrice,
         patientEmail: data.patientEmail,
         description: `Booking with ${prof?.clinic_name ?? "clinic"}`,
-        choice: data.paymentChoice ?? null,
+        choice: paymentChoice,
       });
     } catch (e) {
       console.error("[requestBooking] checkout failed", e);
-      if (bookingNeedsStripePayment(prof, data.paymentChoice ?? null)) {
+      if (bookingNeedsStripePayment(prof, paymentChoice)) {
         await supabaseAdmin
           .from("appointments")
           .update({ status: "cancelled", payment_hold_expires_at: null } as never)
@@ -658,7 +664,7 @@ export const requestBooking = createServerFn({ method: "POST" })
         throw new Error("Card payment could not be started. Please try again — your appointment has not been confirmed.");
       }
     }
-    if (!payment && bookingNeedsStripePayment(prof, data.paymentChoice ?? null)) {
+    if (!payment && bookingNeedsStripePayment(prof, paymentChoice)) {
       await supabaseAdmin
         .from("appointments")
         .update({ status: "cancelled", payment_hold_expires_at: null } as never)
@@ -741,8 +747,10 @@ async function maybeCreateBookingCheckout(args: {
 }): Promise<BookingPaymentResult | null> {
   const p = args.profile;
   if (!p) return null;
-  // Patient chose to pay in cash at the appointment — skip Stripe entirely.
-  if (args.choice?.mode === "cash") return null;
+  // Patient chose to pay in cash at the appointment — skip Stripe only when
+  // this clinic has not made an upfront deposit mandatory. Never trust a stale
+  // client-side cash choice to bypass a required deposit/card capture.
+  if (args.choice?.mode === "cash" && !depositRequiredForProfile(p)) return null;
   if (!p.stripe_connect_account_id) return null;
   if (p.stripe_connect_onboarding_status && p.stripe_connect_onboarding_status !== "active") return null;
 
@@ -780,7 +788,9 @@ async function maybeCreateBookingCheckout(args: {
   // otherwise fall back to legacy behaviour (deposit if configured).
   let kind: "deposit" | "checkout";
   let amountCents: number;
-  const wantsDeposit = args.choice
+  const wantsDeposit = depositRequiredForProfile(p)
+    ? true
+    : args.choice
     ? args.choice.mode === "deposit"
     : depositEnabled && depositPer >= 100;
   if (wantsDeposit && depositEnabled) {
@@ -851,9 +861,9 @@ async function maybeCreateBookingCheckout(args: {
   const cancelUrl = `${origin}/m/${p.slug ?? ""}`;
 
   const saveCardOnFile = !!p.save_card_on_file;
-  const chosenMethod = args.choice?.method;
+  const chosenMethod = kind === "deposit" ? "card" : args.choice?.method;
   const effectivelyCard =
-    chosenMethod === "card" || (!chosenMethod && enabled.card);
+    kind === "deposit" || chosenMethod === "card" || (!chosenMethod && enabled.card);
   // Deposits paid by card must both take the deposit and attach the card to
   // the connected Stripe Customer for the clinic's no-show / late-cancel file.
   const shouldSaveCardOnFile = saveCardOnFile || (kind === "deposit" && effectivelyCard);
@@ -981,6 +991,7 @@ function bookingNeedsStripePayment(
     stripe_connect_account_id?: string | null;
     stripe_connect_onboarding_status?: string | null;
     payment_deposit_enabled?: boolean | null;
+    require_deposit_to_confirm?: boolean | null;
     deposit_amount_cents?: number | null;
     payment_card_full_enabled?: boolean | null;
     payment_klarna_enabled?: boolean | null;
@@ -993,12 +1004,30 @@ function bookingNeedsStripePayment(
   if (!profile) return false;
   if (!profile.stripe_connect_account_id) return false;
   if (profile.stripe_connect_onboarding_status && profile.stripe_connect_onboarding_status !== "active") return false;
-  const depositConfigured = !!profile.payment_deposit_enabled && Math.max(0, Number(profile.deposit_amount_cents ?? 0)) >= 100;
+  const depositConfigured =
+    !!profile.require_deposit_to_confirm ||
+    (!!profile.payment_deposit_enabled && Math.max(0, Number(profile.deposit_amount_cents ?? 0)) >= 100);
   const onlinePaymentConfigured =
     profile.payment_card_full_enabled !== false ||
     !!profile.payment_klarna_enabled ||
     !!profile.payment_clearpay_enabled;
   return depositConfigured || onlinePaymentConfigured;
+}
+
+function depositRequiredForProfile(profile: { payment_deposit_enabled?: boolean | null; require_deposit_to_confirm?: boolean | null } | null) {
+  return !!profile && (!!profile.require_deposit_to_confirm || !!profile.payment_deposit_enabled);
+}
+
+function normaliseBookingPaymentChoice(
+  profile: { payment_deposit_enabled?: boolean | null; require_deposit_to_confirm?: boolean | null } | null,
+  choice?: PaymentChoice | null,
+): PaymentChoice | null {
+  // Deposits are mandatory whenever the clinic enables deposits, and deposits
+  // must be card-only so Stripe can both charge today and save the card for file.
+  if (depositRequiredForProfile(profile) || choice?.mode === "deposit") {
+    return { mode: "deposit", method: "card" };
+  }
+  return choice ?? null;
 }
 
 export const requestMultiBooking = createServerFn({ method: "POST" })
@@ -1047,6 +1076,7 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
     if (prof?.require_account_to_book && !data.patientUserId) {
       throw new Error("Please sign in to book — this clinic requires an account.");
     }
+    const paymentChoice = normaliseBookingPaymentChoice(prof, data.paymentChoice ?? null);
     const finalStatus = prof?.auto_confirm_bookings === false ? "pending" : "confirmed";
     const status = "pending";
     const { data: blk } = await sb
@@ -1082,7 +1112,7 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
           const unpaidBooking = recent
             .filter((r) => existing.some((e) => e.id === (r.id as string)))
             .every((r) => r.payment_status !== "paid");
-          if (unpaidBooking && bookingNeedsStripePayment(prof, data.paymentChoice ?? null)) {
+          if (unpaidBooking && bookingNeedsStripePayment(prof, paymentChoice)) {
             await supabaseAdmin
               .from("appointments")
               .update({ status: "cancelled", payment_hold_expires_at: null } as never)
@@ -1212,12 +1242,12 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
         totalAmount,
         patientEmail: data.patientEmail,
         description: `Booking with ${prof?.clinic_name ?? "clinic"}`,
-        choice: data.paymentChoice ?? null,
+        choice: paymentChoice,
       });
 
     } catch (e) {
       console.error("[requestMultiBooking] checkout failed", e);
-      if (bookingNeedsStripePayment(prof, data.paymentChoice ?? null) && created.length > 0) {
+      if (bookingNeedsStripePayment(prof, paymentChoice) && created.length > 0) {
         await supabaseAdmin
           .from("appointments")
           .update({ status: "cancelled", payment_hold_expires_at: null } as never)
@@ -1227,7 +1257,7 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
         throw new Error("Card payment could not be started. Please try again — your appointments have not been confirmed.");
       }
     }
-    if (!payment && bookingNeedsStripePayment(prof, data.paymentChoice ?? null) && created.length > 0) {
+    if (!payment && bookingNeedsStripePayment(prof, paymentChoice) && created.length > 0) {
       await supabaseAdmin
         .from("appointments")
         .update({ status: "cancelled", payment_hold_expires_at: null } as never)
