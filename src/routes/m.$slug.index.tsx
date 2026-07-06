@@ -508,6 +508,15 @@ function BookPage() {
     }
     return t.duration ?? 0;
   };
+  const bookingCountMap = new Map(bookingCounts.map((c) => [c.treatment_id, Number(c.booked_count)]));
+  const capFor = (t: Treatment) => {
+    const cap = (t as { booking_cap?: number | null }).booking_cap ?? null;
+    if (cap == null) return null;
+    const count = bookingCountMap.get(t.id) ?? 0;
+    const left = Math.max(0, cap - count);
+    return { cap, count, left, full: left <= 0 };
+  };
+
   const isAvailableAtLocation = (t: Treatment) => {
     if (!locationId) return true;
     const rows = pricing.filter((p) => p.treatment_id === t.id);
