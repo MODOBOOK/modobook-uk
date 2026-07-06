@@ -2289,6 +2289,7 @@ function TreatmentRow({
   priceColor,
   size,
   bold,
+  capInfo,
 }: {
   t: Treatment;
   slug: string;
@@ -2297,7 +2298,9 @@ function TreatmentRow({
   brand: string;
   selected: boolean;
   onToggle: () => void;
+  capInfo?: { cap: number; count: number; left: number; full: boolean } | null;
 } & MenuStyleProps) {
+
   const [expanded, setExpanded] = useState(false);
   const desc = t.description ?? "";
   const isLong = desc.length > 110;
