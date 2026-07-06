@@ -202,6 +202,8 @@ export const updatePlan = createServerFn({ method: "POST" })
     paymentMode?: PaymentMode;
     coursePriceCents?: number | null;
     depositCents?: number | null;
+    discountCents?: number | null;
+    discountPercent?: number | null;
     status?: string;
     sessions?: Array<{
       id?: string;
@@ -210,6 +212,7 @@ export const updatePlan = createServerFn({ method: "POST" })
       intervalWeeksFromPrevious?: number | null;
       suggestedDate?: string | null;
       notes?: string | null;
+      priceCentsOverride?: number | null;
     }>;
   }) => d)
   .handler(async ({ data, context }) => {
@@ -223,6 +226,8 @@ export const updatePlan = createServerFn({ method: "POST" })
     if (data.paymentMode !== undefined) patch.payment_mode = data.paymentMode;
     if (data.coursePriceCents !== undefined) patch.course_price_cents = data.coursePriceCents;
     if (data.depositCents !== undefined) patch.deposit_cents = data.depositCents;
+    if (data.discountCents !== undefined) patch.discount_cents = data.discountCents;
+    if (data.discountPercent !== undefined) patch.discount_percent = data.discountPercent;
     if (data.status !== undefined) patch.status = data.status;
 
     if (Object.keys(patch).length) {
@@ -235,7 +240,6 @@ export const updatePlan = createServerFn({ method: "POST" })
     }
 
     if (data.sessions) {
-      // simple replace strategy: delete pending/booked-less sessions and reinsert
       await context.supabase
         .from("treatment_plan_sessions")
         .delete()
@@ -248,6 +252,7 @@ export const updatePlan = createServerFn({ method: "POST" })
         interval_weeks_from_previous: s.intervalWeeksFromPrevious ?? null,
         suggested_date: s.suggestedDate ?? null,
         notes: s.notes ?? null,
+        price_cents_override: s.priceCentsOverride ?? null,
       }));
       if (rows.length) {
         const { error } = await context.supabase.from("treatment_plan_sessions").insert(rows);
@@ -263,13 +268,57 @@ export const sendPlan = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const pid = await getProfileId(context.supabase, context.userId);
     if (!pid) throw new Error("No profile");
+
+    const { data: plan, error: planErr } = await context.supabase
+      .from("treatment_plans")
+      .select("id, name, description, client:clinic_clients(full_name, email), profile:profiles(clinic_name, slug)")
+      .eq("id", data.id)
+      .eq("profile_id", pid)
+      .maybeSingle();
+    if (planErr) throw planErr;
+    if (!plan) throw new Error("Plan not found");
+
+    const clientEmail = (plan as any).client?.email as string | undefined;
+    const clientName = ((plan as any).client?.full_name as string | undefined) || "there";
+    const clinicName = ((plan as any).profile?.clinic_name as string | undefined) || "your clinic";
+    const slug = (plan as any).profile?.slug as string | undefined;
+
     const { error } = await context.supabase
       .from("treatment_plans")
       .update({ status: "sent", sent_at: new Date().toISOString() })
       .eq("id", data.id)
       .eq("profile_id", pid);
     if (error) throw error;
-    return { ok: true };
+
+    let emailed = false;
+    if (clientEmail && slug) {
+      try {
+        const origin = process.env.PUBLIC_APP_URL || process.env.APP_URL || "https://modobook.uk";
+        const planUrl = `${origin}/m/${slug}/account`;
+        const { tryEnqueueAppEmail, getPractitionerBranding } = await import("@/lib/email/send.server");
+        const branding = await getPractitionerBranding(pid);
+        const firstName = String(clientName).split(" ")[0] || "there";
+        const res = await tryEnqueueAppEmail({
+          templateName: "patient-message",
+          recipientEmail: clientEmail,
+          messageId: `plan-sent-${data.id}-${Date.now()}`,
+          templateData: {
+            profileId: pid,
+            subject: `Your treatment plan from ${clinicName}`,
+            body: `Hi ${firstName},\n\n${clinicName} has prepared a personalised treatment plan for you: "${(plan as any).name}".\n\nTap the button below to review the sessions, pricing and next steps, and to accept the plan when you're ready.\n\nSpeak soon,\n${clinicName}`,
+            clinicName,
+            logoUrl: branding.logoUrl,
+            brandColor: branding.brandColor,
+            actions: [{ label: "View your treatment plan", url: planUrl, variant: "primary" }],
+          },
+        });
+        emailed = !!res.ok;
+      } catch (e) {
+        console.error("[sendPlan] email enqueue failed", e);
+      }
+    }
+
+    return { ok: true, emailed };
   });
 
 export const cancelPlan = createServerFn({ method: "POST" })
