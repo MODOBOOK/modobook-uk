@@ -833,7 +833,12 @@ async function maybeCreateBookingCheckout(args: {
   // Apple Pay + Link even when payment_method_types is ['card']) and drive an
   // embedded Payment Element on our own page. Wallets and Link are hidden
   // client-side. The total charged still includes any platform surcharge.
-  if (saveCardOnFile) {
+  // Only route to the embedded save-card flow when the patient is paying by
+  // card. Klarna / Clearpay don't produce a reusable off-session card token,
+  // so those must go through hosted Stripe Checkout on the practitioner's
+  // connected account as normal.
+  const payingByCard = methodTypes.length === 1 && methodTypes[0] === "card";
+  if (saveCardOnFile && payingByCard) {
     try {
       const { createSaveCardPaymentIntent } = await import("./stripe.server");
       const publishableKey = process.env.STRIPE_PUBLISHABLE_KEY;
