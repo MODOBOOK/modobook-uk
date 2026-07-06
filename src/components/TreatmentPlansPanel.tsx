@@ -560,18 +560,42 @@ function EditPlanDialog({
               const t = s.treatmentId ? treatmentMap.get(s.treatmentId) : null;
               return (
                 <div key={idx} className="rounded border p-2 space-y-2">
-                  <div className="flex items-center justify-between text-xs">
+                  <div className="flex items-center justify-between text-xs gap-2">
                     <span className="font-medium">Session {s.sessionNumber}</span>
-                    {s.locked ? (
-                      <Badge variant="secondary" className="text-xs">
-                        <CheckCircle2 className="h-3 w-3 mr-1" /> Booked
-                      </Badge>
-                    ) : (
-                      <Button size="sm" variant="ghost" onClick={() => removeSession(idx)}>
-                        <Trash2 className="h-3 w-3 text-destructive" />
-                      </Button>
-                    )}
+                    <div className="flex items-center gap-1">
+                      {!s.locked && (
+                        <>
+                          <Button size="sm" variant="ghost" className="h-7 w-7 p-0" disabled={idx === 0 || sessions[idx - 1]?.locked} onClick={() => moveSession(idx, -1)} title="Move up">
+                            <ArrowUp className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button size="sm" variant="ghost" className="h-7 w-7 p-0" disabled={idx === sessions.length - 1} onClick={() => moveSession(idx, 1)} title="Move down">
+                            <ArrowDown className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 px-2 text-xs"
+                            disabled={!s.treatmentId || aiBusyIdx === idx}
+                            onClick={() => generateAiForSession(idx)}
+                            title={s.treatmentId ? "Generate this session with AI" : "Pick a treatment first"}
+                          >
+                            {aiBusyIdx === idx ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                            <span className="ml-1">AI</span>
+                          </Button>
+                        </>
+                      )}
+                      {s.locked ? (
+                        <Badge variant="secondary" className="text-xs">
+                          <CheckCircle2 className="h-3 w-3 mr-1" /> Booked
+                        </Badge>
+                      ) : (
+                        <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => removeSession(idx)}>
+                          <Trash2 className="h-3 w-3 text-destructive" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
+
                   <div className="grid grid-cols-2 gap-2">
                     <Select
                       value={s.treatmentId ?? ""}
