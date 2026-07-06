@@ -360,15 +360,64 @@ function EditPlanDialog({
       {
         treatmentId: null,
         sessionNumber: prev.length + 1,
-        intervalWeeksFromPrevious: 4,
+        intervalWeeksFromPrevious: prev.length === 0 ? 0 : 4,
         notes: "",
         priceOverride: "",
+        sessionPurpose: "",
+        expectedResults: "",
+        downtime: "",
       },
     ]);
   };
   const removeSession = (idx: number) => {
     setSessions((prev) => prev.filter((_, i) => i !== idx).map((s, i) => ({ ...s, sessionNumber: i + 1 })));
   };
+  const moveSession = (idx: number, dir: -1 | 1) => {
+    setSessions((prev) => {
+      const target = idx + dir;
+      if (target < 0 || target >= prev.length) return prev;
+      if (prev[idx].locked || prev[target].locked) return prev;
+      const next = prev.slice();
+      [next[idx], next[target]] = [next[target], next[idx]];
+      return next.map((s, i) => ({ ...s, sessionNumber: i + 1, intervalWeeksFromPrevious: i === 0 ? 0 : (s.intervalWeeksFromPrevious || 4) }));
+    });
+  };
+  const generateAiForSession = async (idx: number) => {
+    const s = sessions[idx];
+    if (!s.treatmentId) {
+      toast.error("Pick a treatment first");
+      return;
+    }
+    setAiBusyIdx(idx);
+    try {
+      const r: any = await aiSession({
+        data: {
+          clientId,
+          treatmentId: s.treatmentId,
+          sessionNumber: s.sessionNumber,
+        },
+      });
+      setSessions((prev) =>
+        prev.map((x, i) =>
+          i === idx
+            ? {
+                ...x,
+                sessionPurpose: r.sessionPurpose || x.sessionPurpose,
+                expectedResults: r.expectedResults || x.expectedResults,
+                downtime: r.downtime || x.downtime,
+                notes: x.notes || r.notes || "",
+              }
+            : x,
+        ),
+      );
+      toast.success("AI filled this session");
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setAiBusyIdx(null);
+    }
+  };
+
 
   const save = async () => {
     try {
