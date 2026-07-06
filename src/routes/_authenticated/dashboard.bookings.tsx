@@ -38,7 +38,9 @@ import {
   listAvailabilityRules,
   listAvailabilityOverrides,
   listBlockedDates,
+  getRotaSettings,
 } from "@/lib/availability.functions";
+import { ruleAppliesOnDate } from "@/lib/rota";
 import {
   createPaymentLink,
   completeAppointmentCheckout,
