@@ -62,7 +62,12 @@ function PlanTokenPage() {
     try {
       const r: any = await respondToPlanByToken({ data: { token, accept: true } });
       if (!r?.ok) throw new Error(r?.error || "Could not accept plan");
-      toast.success("Plan accepted");
+      toast.success("Plan accepted — let's book your first session");
+      const slug = r.slug || state?.clinic?.slug;
+      if (slug) {
+        window.location.href = `/m/${slug}`;
+        return;
+      }
       refresh();
     } catch (e: any) {
       toast.error(e.message);
