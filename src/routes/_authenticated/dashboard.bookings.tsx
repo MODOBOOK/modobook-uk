@@ -38,7 +38,9 @@ import {
   listAvailabilityRules,
   listAvailabilityOverrides,
   listBlockedDates,
+  getRotaSettings,
 } from "@/lib/availability.functions";
+import { ruleAppliesOnDate } from "@/lib/rota";
 import {
   createPaymentLink,
   completeAppointmentCheckout,
@@ -99,7 +101,7 @@ const END_HOUR = 23;
 const HOURS = Array.from({ length: END_HOUR - START_HOUR + 1 }, (_, i) => START_HOUR + i);
 
 type ViewMode = "day" | "3day" | "week" | "month";
-type AvailRule = { day_of_week: number; start_time: string; end_time: string };
+type AvailRule = { day_of_week: number; start_time: string; end_time: string; location_id?: string | null; cycle_length?: number; weeks_mask?: number };
 type Override = { date: string; start_time: string; end_time: string; location_id: string | null };
 type BlockedDate = { date: string; location_id: string | null };
 
@@ -141,12 +143,14 @@ function BookingsPage() {
   const listRules = useServerFn(listAvailabilityRules);
   const listOverrides = useServerFn(listAvailabilityOverrides);
   const listBlockedDatesFn = useServerFn(listBlockedDates);
+  const getRota = useServerFn(getRotaSettings);
   const listLocations = useServerFn(listMyLocations);
   const [appts, setAppts] = useState<Appt[]>([]);
   const [blocks, setBlocks] = useState<BlockedTime[]>([]);
   const [rules, setRules] = useState<AvailRule[]>([]);
   const [overrides, setOverrides] = useState<Override[]>([]);
   const [blockedDates, setBlockedDates] = useState<BlockedDate[]>([]);
+  const [rotaAnchor, setRotaAnchor] = useState<string | null>(null);
   const [locations, setLocations] = useState<{ id: string; name: string }[]>([]);
   const [locationFilter, setLocationFilter] = useState<string>("all");
   const [loading, setLoading] = useState(true);
@@ -163,14 +167,16 @@ function BookingsPage() {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   async function refresh() {
-    const [a, b, r, o, bd, l] = await Promise.all([list(), listBlocks(), listRules(), listOverrides(), listBlockedDatesFn(), listLocations()]);
+    const [a, b, r, o, bd, l, rota] = await Promise.all([list(), listBlocks(), listRules(), listOverrides(), listBlockedDatesFn(), listLocations(), getRota()]);
     setAppts(a as Appt[]);
     setBlocks(b as BlockedTime[]);
     setRules((r as AvailRule[]) ?? []);
     setOverrides((o as Override[]) ?? []);
     setBlockedDates((bd as BlockedDate[]) ?? []);
     setLocations(((l as any[]) ?? []).map((x) => ({ id: x.id, name: x.name })));
+    setRotaAnchor((rota as { rota_anchor_date?: string | null } | null)?.rota_anchor_date ?? null);
   }
+
 
 
   useEffect(() => {
@@ -251,8 +257,16 @@ function BookingsPage() {
     if (isBlockedDay) {
       return [{ top: 0, height: (END_HOUR - START_HOUR + 1) * HOUR_HEIGHT }];
     }
-    const dayRules = rulesByDow.get(dow) ?? [];
-    const dayOverrides = overrides.filter((o) => o.date === iso);
+    const dayRules = (rulesByDow.get(dow) ?? []).filter(
+      (r) =>
+        (locationFilter === "all" || r.location_id == null || r.location_id === locationFilter) &&
+        ruleAppliesOnDate(r as unknown as { cycle_length?: number; weeks_mask?: number }, iso, rotaAnchor),
+    );
+    const dayOverrides = overrides.filter(
+      (o) =>
+        o.date === iso &&
+        (locationFilter === "all" || o.location_id == null || o.location_id === locationFilter),
+    );
     const windows: [number, number][] = [
       ...dayRules.map((r) => [parseTime(r.start_time), parseTime(r.end_time)] as [number, number]),
       ...dayOverrides.map((o) => [parseTime(o.start_time), parseTime(o.end_time)] as [number, number]),
@@ -267,9 +281,23 @@ function BookingsPage() {
       if (last && w[0] <= last[1]) last[1] = Math.max(last[1], w[1]);
       else merged.push([w[0], w[1]]);
     }
+    // Subtract blocked_times windows (whole-day blocks handled above)
+    const dayBlockWindows = (blocksByDate.get(iso) ?? [])
+      .filter((b) => locationFilter === "all" || b.location_id == null || b.location_id === locationFilter)
+      .map((b) => [parseTime(b.start_time), parseTime(b.end_time)] as [number, number]);
+    let available: [number, number][] = merged;
+    for (const [bs, be] of dayBlockWindows) {
+      const next: [number, number][] = [];
+      for (const [s, e] of available) {
+        if (be <= s || bs >= e) { next.push([s, e]); continue; }
+        if (bs > s) next.push([s, bs]);
+        if (be < e) next.push([be, e]);
+      }
+      available = next;
+    }
     const segs: { top: number; height: number }[] = [];
     let cursor = START_HOUR;
-    for (const [s, e] of merged) {
+    for (const [s, e] of available) {
       const segStart = Math.max(cursor, START_HOUR);
       const segEnd = Math.min(s, END_HOUR + 1);
       if (segEnd > segStart) {
@@ -288,6 +316,7 @@ function BookingsPage() {
     }
     return segs;
   }
+
 
   function navPrev() {
     if (view === "day") setAnchor(addDays(anchor, -1));
@@ -438,9 +467,14 @@ function BookingsPage() {
           apptsByDate={apptsByDate}
           blocksByDate={blocksByDate}
           rulesByDow={rulesByDow}
+          blockedDates={blockedDates}
+          overrides={overrides}
+          rotaAnchor={rotaAnchor}
+          locationFilter={locationFilter}
           todayStr={todayStr}
           onPickDay={(d) => { setAnchor(d); setView("day"); }}
         />
+
       ) : (
         <Card className="overflow-hidden" style={{ ["--gutter" as any]: "44px" }}>
           <div
@@ -612,6 +646,10 @@ function MonthView({
   apptsByDate,
   blocksByDate,
   rulesByDow,
+  blockedDates,
+  overrides,
+  rotaAnchor,
+  locationFilter,
   todayStr,
   onPickDay,
 }: {
@@ -619,6 +657,10 @@ function MonthView({
   apptsByDate: Map<string, Appt[]>;
   blocksByDate: Map<string, BlockedTime[]>;
   rulesByDow: Map<number, AvailRule[]>;
+  blockedDates: BlockedDate[];
+  overrides: Override[];
+  rotaAnchor: string | null;
+  locationFilter: string;
   todayStr: string;
   onPickDay: (d: Date) => void;
 }) {
@@ -640,12 +682,20 @@ function MonthView({
           const inMonth = d.getMonth() === monthStart.getMonth();
           const dayAppts = apptsByDate.get(key) ?? [];
           const dayBlocks = blocksByDate.get(key) ?? [];
-          const hasAvail = (rulesByDow.get(d.getDay()) ?? []).length > 0;
+          const matchLoc = (locId: string | null | undefined) =>
+            locationFilter === "all" || locId == null || locId === locationFilter;
+          const activeRules = (rulesByDow.get(d.getDay()) ?? []).filter(
+            (r) => matchLoc(r.location_id) && ruleAppliesOnDate(r as unknown as { cycle_length?: number; weeks_mask?: number }, key, rotaAnchor),
+          );
+          const hasOverride = overrides.some((o) => o.date === key && matchLoc(o.location_id));
+          const hasAvail = activeRules.length > 0 || hasOverride;
           const isPast = key < todayStr;
-          const fullyBlocked = dayBlocks.some(
-            (b: any) => !b.start_time || (b.start_time <= "00:00" && b.end_time >= "23:59")
+          const isBlockedDay = blockedDates.some((bd) => bd.date === key && matchLoc(bd.location_id));
+          const fullyBlocked = isBlockedDay || dayBlocks.some(
+            (b: any) => matchLoc(b.location_id) && (!b.start_time || (b.start_time <= "00:00" && b.end_time >= "23:59")),
           );
           const unavailable = !hasAvail || fullyBlocked || isPast;
+
           const isToday = key === todayStr;
           let title = "";
           if (isPast) title = "Past date";
