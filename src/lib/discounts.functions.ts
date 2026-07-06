@@ -203,10 +203,12 @@ export const getPublicModelSlots = createServerFn({ method: "GET" })
     const { data: rows, error } = await (sb as any)
       .from("model_slots").select("*")
       .eq("profile_id", profile.id)
-      .gte("slot_date", today)
+      .or(`is_flexible.eq.true,slot_date.gte.${today}`)
+      .order("is_flexible", { ascending: false })
       .order("slot_date", { ascending: true })
       .order("start_time", { ascending: true });
     if (error) throw error;
     return rows ?? [];
   });
+
 
