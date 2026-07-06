@@ -101,7 +101,7 @@ const END_HOUR = 23;
 const HOURS = Array.from({ length: END_HOUR - START_HOUR + 1 }, (_, i) => START_HOUR + i);
 
 type ViewMode = "day" | "3day" | "week" | "month";
-type AvailRule = { day_of_week: number; start_time: string; end_time: string };
+type AvailRule = { day_of_week: number; start_time: string; end_time: string; location_id?: string | null; cycle_length?: number; weeks_mask?: number };
 type Override = { date: string; start_time: string; end_time: string; location_id: string | null };
 type BlockedDate = { date: string; location_id: string | null };
 
