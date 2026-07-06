@@ -241,8 +241,15 @@ function PlanTokenPage() {
             </CardContent>
           </Card>
         ) : plan.status === "accepted" || plan.status === "in_progress" ? (
-          <Card><CardContent className="pt-6 flex items-center gap-2 text-emerald-700">
-            <CheckCircle2 className="h-4 w-4" /> You've accepted this plan. Your practitioner will be in touch to book your next session.
+          <Card><CardContent className="pt-6 space-y-3">
+            <div className="flex items-center gap-2 text-emerald-700 text-sm">
+              <CheckCircle2 className="h-4 w-4" /> You've accepted this plan.
+            </div>
+            {clinic?.slug && (
+              <Button size="lg" onClick={() => { window.location.href = `/m/${clinic.slug}`; }} style={{ backgroundColor: brand }}>
+                Book first session
+              </Button>
+            )}
           </CardContent></Card>
         ) : null}
 
