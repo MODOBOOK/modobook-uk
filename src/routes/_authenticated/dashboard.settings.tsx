@@ -222,34 +222,6 @@ function SettingsPage() {
             onChange={(v) => set("payment_clearpay_enabled", v)}
           />
           <div className="rounded-md border p-3 space-y-3">
-            <div className="text-sm font-medium">Platform fees passed to patient</div>
-            <p className="text-xs text-muted-foreground">
-              Adds a "Platform fee" line on Stripe checkout so the patient covers the cost. Shown as a
-              platform fee — not a separate charge.
-            </p>
-            <SurchargeRow
-              label="Full card payment"
-              enabled={s.payment_surcharge_card_enabled}
-              percent={s.payment_surcharge_card_percent}
-              onToggle={(v) => set("payment_surcharge_card_enabled", v)}
-              onPercent={(v) => set("payment_surcharge_card_percent", v)}
-            />
-            <SurchargeRow
-              label="Klarna & Clearpay"
-              enabled={s.payment_surcharge_bnpl_enabled}
-              percent={s.payment_surcharge_bnpl_percent}
-              onToggle={(v) => set("payment_surcharge_bnpl_enabled", v)}
-              onPercent={(v) => set("payment_surcharge_bnpl_percent", v)}
-            />
-            <SurchargeRow
-              label="Deposits"
-              enabled={s.payment_surcharge_deposit_enabled}
-              percent={s.payment_surcharge_deposit_percent}
-              onToggle={(v) => set("payment_surcharge_deposit_enabled", v)}
-              onPercent={(v) => set("payment_surcharge_deposit_percent", v)}
-            />
-          </div>
-          <div className="rounded-md border p-3 space-y-3">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <div className="text-sm font-medium">Stripe processing fee</div>
