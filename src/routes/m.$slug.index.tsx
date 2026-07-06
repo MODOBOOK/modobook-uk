@@ -350,6 +350,7 @@ function BookPage() {
   const [directionsOpen, setDirectionsOpen] = useState(false);
   const [careGuideOpen, setCareGuideOpen] = useState(false);
   const [expandedFavId, setExpandedFavId] = useState<string | null>(null);
+  const [modelSlotsOpen, setModelSlotsOpen] = useState(true);
 
   const preItems = (pretreatment ?? []).length > 0
     ? (pretreatment ?? []).map((p) => ({ id: p.id, name: p.name, body_html: p.body_html, summary: p.summary, bullets: Array.isArray(p.bullets) ? p.bullets : [] }))
@@ -1437,52 +1438,70 @@ function BookPage() {
                         .map(([category, items]) => ({ category, items }));
                     })();
 
+                    const totalSlotCount = slots.length;
                     const modelBlock = slots.length === 0 ? null : (
                       <div
                         className={`${modelPosition === "top" ? "mb-5" : "mt-5"} rounded-2xl border-2 p-3`}
                         style={{ borderColor: `${brand}55`, backgroundColor: `${brand}08` }}
                       >
-                        <div className="mb-2 flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setModelSlotsOpen((v) => !v)}
+                          className="flex w-full items-center gap-2 text-left"
+                          aria-expanded={modelSlotsOpen}
+                        >
                           <Sparkles className="h-4 w-4" style={{ color: brand }} />
                           <h3 className="text-sm font-bold" style={{ color: brand }}>Model slots</h3>
                           <span className="text-xs opacity-60">Discounted dates & times</span>
-                        </div>
-                        <div className="space-y-3">
-                          {groupedSlots.map((g) => (
-                            <div key={g.category}>
-                              {groupedSlots.length > 1 && (
-                                <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider opacity-70">{g.category}</p>
-                              )}
-                              <div className="grid gap-2 sm:grid-cols-2">
-                                {g.items.map((s) => {
-                                  const t = treatById.get(s.treatment_id)!;
-                                  const base = priceFor(t);
-                                  const final = s.price_mode === "fixed" ? Number(s.price_value) : Math.max(0, base * (1 - Number(s.price_value) / 100));
-                                  return (
-                                    <div key={s.id} className="rounded-xl border bg-white p-3">
-                                      <p className="text-sm font-semibold">{t.name}</p>
-                                      <p className="text-xs text-muted-foreground">
-                                        {new Date(s.slot_date + "T00:00:00").toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" })} · {s.start_time.slice(0,5)}–{s.end_time.slice(0,5)}
-                                      </p>
-                                      <p className="mt-1 text-sm">
-                                        <span className="line-through text-muted-foreground">£{base.toFixed(2)}</span>{" "}
-                                        <span className="font-bold text-emerald-600">£{final.toFixed(2)}</span>
-                                      </p>
-                                      {s.notes && <p className="mt-1 text-xs italic text-muted-foreground">{s.notes}</p>}
-                                      <a
-                                        href={`/m/${slug}/book/${t.id}?model=${s.id}${locationId ? `&locationId=${locationId}` : ""}`}
-                                        className="mt-2 inline-block rounded-md px-3 py-1.5 text-xs font-semibold text-white"
-                                        style={{ backgroundColor: brand }}
-                                      >
-                                        Book this slot
-                                      </a>
-                                    </div>
-                                  );
-                                })}
+                          <span
+                            className="ml-auto rounded-full px-2 py-0.5 text-[11px] font-medium"
+                            style={{ backgroundColor: `${brand}18`, color: brand }}
+                          >
+                            {totalSlotCount}
+                          </span>
+                          <ChevronDown
+                            className={`h-4 w-4 transition-transform ${modelSlotsOpen ? "rotate-180" : ""}`}
+                            style={{ color: brand }}
+                          />
+                        </button>
+                        {modelSlotsOpen && (
+                          <div className="mt-3 space-y-3">
+                            {groupedSlots.map((g) => (
+                              <div key={g.category}>
+                                {groupedSlots.length > 1 && (
+                                  <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider opacity-70">{g.category}</p>
+                                )}
+                                <div className="grid gap-2 sm:grid-cols-2">
+                                  {g.items.map((s) => {
+                                    const t = treatById.get(s.treatment_id)!;
+                                    const base = priceFor(t);
+                                    const final = s.price_mode === "fixed" ? Number(s.price_value) : Math.max(0, base * (1 - Number(s.price_value) / 100));
+                                    return (
+                                      <div key={s.id} className="rounded-xl border bg-white p-3">
+                                        <p className="text-sm font-semibold">{t.name}</p>
+                                        <p className="text-xs text-muted-foreground">
+                                          {new Date(s.slot_date + "T00:00:00").toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" })} · {s.start_time.slice(0,5)}–{s.end_time.slice(0,5)}
+                                        </p>
+                                        <p className="mt-1 text-sm">
+                                          <span className="line-through text-muted-foreground">£{base.toFixed(2)}</span>{" "}
+                                          <span className="font-bold text-emerald-600">£{final.toFixed(2)}</span>
+                                        </p>
+                                        {s.notes && <p className="mt-1 text-xs italic text-muted-foreground">{s.notes}</p>}
+                                        <a
+                                          href={`/m/${slug}/book/${t.id}?model=${s.id}${locationId ? `&locationId=${locationId}` : ""}`}
+                                          className="mt-2 inline-block rounded-md px-3 py-1.5 text-xs font-semibold text-white"
+                                          style={{ backgroundColor: brand }}
+                                        >
+                                          Book this slot
+                                        </a>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
                               </div>
-                            </div>
-                          ))}
-                        </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     );
 

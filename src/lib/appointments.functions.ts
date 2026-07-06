@@ -29,6 +29,7 @@ export const createAppointmentForPatient = createServerFn({ method: "POST" })
       basePrice: number;
       extraConsentTemplateIds?: string[];
       medicalFormTemplateIds?: string[];
+      modelSlotId?: string | null;
     }) => input,
   )
   .handler(async ({ data, context }) => {
@@ -78,8 +79,19 @@ export const createAppointmentForPatient = createServerFn({ method: "POST" })
       base_amount: data.basePrice,
       total_amount: data.basePrice,
       created_by_practitioner: true,
+      model_slot_id: data.modelSlotId ?? null,
     });
     if (error) throw new Error(error.message);
+
+    // Mark the model slot as booked so it disappears from public listings.
+    if (data.modelSlotId) {
+      await supabase
+        .from("model_slots")
+        .update({ booked_appointment_id: id })
+        .eq("id", data.modelSlotId)
+        .eq("profile_id", profile.id)
+        .is("booked_appointment_id", null);
+    }
 
     // Auto-create consents from treatment links
     const { data: links } = await supabase

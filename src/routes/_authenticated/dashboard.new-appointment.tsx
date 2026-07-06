@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { getMyProfile } from "@/lib/profiles.functions";
 import { createAppointmentForPatient } from "@/lib/appointments.functions";
 import { createPaymentLink } from "@/lib/payment-links.functions";
+import { listMyModelSlots } from "@/lib/discounts.functions";
 import { listClients } from "@/lib/clients.functions";
 import { listConsentTemplates } from "@/lib/templates.functions";
 import { listMedicalTemplates } from "@/lib/templates.functions";
@@ -18,7 +19,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { Check, ChevronsUpDown, UserPlus, CalendarIcon } from "lucide-react";
+import { Check, ChevronsUpDown, UserPlus, CalendarIcon, Sparkles, ChevronDown } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -37,6 +38,20 @@ export const Route = createFileRoute("/_authenticated/dashboard/new-appointment"
 type Treatment = { id: string; name: string; price: number | null; duration: number | null; category_id: string | null };
 type Location = { id: string; name: string };
 type Category = { id: string; name: string; sort_order: number | null };
+type ModelSlot = {
+  id: string;
+  treatment_id: string;
+  location_id: string | null;
+  slot_date: string;
+  start_time: string;
+  end_time: string;
+  price_mode: "fixed" | "percent";
+  price_value: number;
+  notes: string | null;
+  booked_appointment_id: string | null;
+  active: boolean;
+  category: string | null;
+};
 
 function NewAppointmentPage() {
   const { profile } = Route.useLoaderData();
@@ -64,6 +79,12 @@ function NewAppointmentPage() {
   const [depositAmount, setDepositAmount] = useState("");
   const [depositHours, setDepositHours] = useState("24");
   const createLink = useServerFn(createPaymentLink);
+  const fetchModelSlots = useServerFn(listMyModelSlots);
+  const [modelSlots, setModelSlots] = useState<ModelSlot[]>([]);
+  const [modelSlotId, setModelSlotId] = useState<string | null>(null);
+  const [modelPriceOverride, setModelPriceOverride] = useState<number | null>(null);
+  const [modelExpanded, setModelExpanded] = useState(true);
+
 
   type ClientRow = { id: string; full_name: string; email: string | null; phone: string | null; dob: string | null; address: string | null };
   type TemplateRow = { id: string; name: string };
@@ -102,14 +123,21 @@ function NewAppointmentPage() {
         .eq("active", true);
       setLocations(l ?? []);
       try {
-        const [cs, cons, meds] = await Promise.all([
+        const [cs, cons, meds, ms] = await Promise.all([
           fetchClients() as Promise<ClientRow[]>,
           fetchConsents() as Promise<TemplateRow[]>,
           fetchMedical() as Promise<TemplateRow[]>,
+          fetchModelSlots() as Promise<ModelSlot[]>,
         ]);
         setClients(cs ?? []);
         setConsentTemplates((cons ?? []).map((r) => ({ id: r.id, name: r.name })));
         setMedicalTemplates((meds ?? []).map((r) => ({ id: r.id, name: r.name })));
+        const todayIso = new Date().toISOString().slice(0, 10);
+        setModelSlots(
+          (ms ?? [])
+            .filter((s) => s.active && !s.booked_appointment_id && s.slot_date >= todayIso)
+            .sort((a, b) => (a.slot_date + a.start_time).localeCompare(b.slot_date + b.start_time)),
+        );
       } catch { /* ignore */ }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -229,9 +257,10 @@ function NewAppointmentPage() {
             ? { line1: addrLine1, city: addrCity, postcode: addrPostcode }
             : null,
           notes: notes || undefined,
-          basePrice: Number(treatment.price ?? 0),
+          basePrice: modelPriceOverride ?? Number(treatment.price ?? 0),
           extraConsentTemplateIds: [...pickedConsentIds],
           medicalFormTemplateIds: [...pickedMedicalIds],
+          modelSlotId: modelSlotId,
         },
       });
       const manageUrl = result.manageToken
@@ -291,12 +320,85 @@ function NewAppointmentPage() {
         </p>
       </div>
 
+      {modelSlots.length > 0 && (() => {
+        const treatById = new Map(treatments.map((t) => [t.id, t]));
+        const visible = modelSlots.filter((s) => treatById.has(s.treatment_id));
+        if (visible.length === 0) return null;
+        return (
+          <div className="rounded-2xl border-2 border-fuchsia-400/40 bg-fuchsia-50/40 p-3 dark:bg-fuchsia-950/10">
+            <button
+              type="button"
+              onClick={() => setModelExpanded((v) => !v)}
+              className="flex w-full items-center gap-2 text-left"
+            >
+              <Sparkles className="h-4 w-4 text-fuchsia-600" />
+              <h3 className="text-sm font-bold text-fuchsia-700 dark:text-fuchsia-300">Model slots</h3>
+              <span className="text-xs opacity-60">Discounted dates & times</span>
+              <span className="ml-auto rounded-full bg-fuchsia-600/10 px-2 py-0.5 text-[11px] font-medium text-fuchsia-700 dark:text-fuchsia-300">
+                {visible.length}
+              </span>
+              <ChevronDown className={`h-4 w-4 text-fuchsia-600 transition-transform ${modelExpanded ? "rotate-180" : ""}`} />
+            </button>
+            {modelExpanded && (
+              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                {visible.map((s) => {
+                  const t = treatById.get(s.treatment_id)!;
+                  const base = Number(t.price ?? 0);
+                  const final = s.price_mode === "fixed"
+                    ? Number(s.price_value)
+                    : Math.max(0, base * (1 - Number(s.price_value) / 100));
+                  const selected = modelSlotId === s.id;
+                  return (
+                    <button
+                      key={s.id}
+                      type="button"
+                      onClick={() => {
+                        setTreatmentId(t.id);
+                        setLocationId(s.location_id ?? "");
+                        setDate(s.slot_date);
+                        setStartTime(s.start_time.slice(0, 5));
+                        setModelSlotId(s.id);
+                        setModelPriceOverride(final);
+                      }}
+                      className={`rounded-xl border p-3 text-left transition ${selected ? "border-fuchsia-500 bg-white shadow-sm ring-2 ring-fuchsia-300" : "border-border bg-white hover:border-fuchsia-300"}`}
+                    >
+                      <p className="text-sm font-semibold">{t.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(s.slot_date + "T00:00:00").toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" })} · {s.start_time.slice(0,5)}–{s.end_time.slice(0,5)}
+                      </p>
+                      <p className="mt-1 text-sm">
+                        <span className="line-through text-muted-foreground">£{base.toFixed(2)}</span>{" "}
+                        <span className="font-bold text-emerald-600">£{final.toFixed(2)}</span>
+                      </p>
+                      {s.notes && <p className="mt-1 text-xs italic text-muted-foreground">{s.notes}</p>}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+            {modelSlotId && (
+              <div className="mt-3 flex items-center justify-between rounded-lg bg-white/70 px-3 py-2 text-xs">
+                <span className="text-muted-foreground">Model slot applied — price will use the discounted rate.</span>
+                <button
+                  type="button"
+                  onClick={() => { setModelSlotId(null); setModelPriceOverride(null); }}
+                  className="font-medium text-fuchsia-700 hover:underline"
+                >
+                  Clear
+                </button>
+              </div>
+            )}
+          </div>
+        );
+      })()}
+
+
       <Card>
         <CardHeader><CardTitle>Treatment</CardTitle></CardHeader>
         <CardContent className="space-y-3">
           <div>
             <Label>Treatment *</Label>
-            <Select value={treatmentId} onValueChange={setTreatmentId}>
+            <Select value={treatmentId} onValueChange={(v) => { setTreatmentId(v); setModelSlotId(null); setModelPriceOverride(null); }}>
               <SelectTrigger><SelectValue placeholder="Select treatment" /></SelectTrigger>
               <SelectContent className="max-h-[60vh]">
                 {(() => {
