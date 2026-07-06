@@ -341,6 +341,12 @@ export async function createSaveCardPaymentIntent(params: {
       // Payment Element options as well, but locking method types here means
       // Stripe rejects wallet confirmation attempts server-side too.
       payment_method_types: ["card"],
+      // Explicitly suppress Link (the "fast checkout with Link" banner) —
+      // Stripe's Payment Element re-injects it even when it's not in
+      // payment_method_types unless we tell the intent to never display it.
+      payment_method_options: {
+        link: { display: "never" },
+      } as unknown as Stripe.PaymentIntentCreateParams.PaymentMethodOptions,
       // Save the resulting PaymentMethod for later off-session charges.
       setup_future_usage: "off_session",
       metadata: {
