@@ -1594,7 +1594,9 @@ function BookPage() {
                                 priceColor={menuPriceColor}
                                 size={menuSize}
                                 bold={menuTreatmentBold}
+                                capInfo={capFor(t)}
                               />
+
                             ))}
                           </div>
                         )}
