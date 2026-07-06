@@ -637,6 +637,15 @@ export const requestBooking = createServerFn({ method: "POST" })
       });
     } catch (e) {
       console.error("[requestBooking] checkout failed", e);
+      if (bookingNeedsStripePayment(prof, data.paymentChoice ?? null)) {
+        await supabaseAdmin
+          .from("appointments")
+          .update({ status: "cancelled", payment_hold_expires_at: null } as never)
+          .eq("id", id)
+          .eq("status", "pending")
+          .eq("payment_status", "pending");
+        throw new Error("Card payment could not be started. Please try again — your appointment has not been confirmed.");
+      }
     }
     // If we handed the patient off to Stripe, hold the slot briefly. If they
     // abandon the payment the hold expires and availability re-opens; the
@@ -944,6 +953,27 @@ function addMinutesToTime(time: string, mins: number) {
   return `${hh}:${mm}:00`;
 }
 
+function bookingNeedsStripePayment(
+  profile: {
+    payment_deposit_enabled?: boolean | null;
+    deposit_amount_cents?: number | null;
+    payment_card_full_enabled?: boolean | null;
+    payment_klarna_enabled?: boolean | null;
+    payment_clearpay_enabled?: boolean | null;
+  } | null,
+  choice?: PaymentChoice | null,
+) {
+  if (choice?.mode === "cash") return false;
+  if (choice?.mode === "deposit" || choice?.mode === "full") return true;
+  if (!profile) return false;
+  const depositConfigured = !!profile.payment_deposit_enabled && Math.max(0, Number(profile.deposit_amount_cents ?? 0)) >= 100;
+  const onlinePaymentConfigured =
+    profile.payment_card_full_enabled !== false ||
+    !!profile.payment_klarna_enabled ||
+    !!profile.payment_clearpay_enabled;
+  return depositConfigured || onlinePaymentConfigured;
+}
+
 export const requestMultiBooking = createServerFn({ method: "POST" })
   .inputValidator(
     (input: {
@@ -1149,6 +1179,15 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
 
     } catch (e) {
       console.error("[requestMultiBooking] checkout failed", e);
+      if (bookingNeedsStripePayment(prof, data.paymentChoice ?? null) && created.length > 0) {
+        await supabaseAdmin
+          .from("appointments")
+          .update({ status: "cancelled", payment_hold_expires_at: null } as never)
+          .in("id", created.map((c) => c.id))
+          .eq("status", "pending")
+          .eq("payment_status", "pending");
+        throw new Error("Card payment could not be started. Please try again — your appointments have not been confirmed.");
+      }
     }
     // Slot hold while patient completes Stripe payment; abandoned bookings
     // auto-release when the hold expires (see getDayAvailability filter).
