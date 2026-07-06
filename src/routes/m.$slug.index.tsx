@@ -2243,7 +2243,9 @@ function CategoryTree({
                     bold={bold}
                     categoryBold={categoryBold}
                     headingFont={headingFont}
+                    capFor={capFor}
                   />
+
                 )}
                 {node.treatments.map((t) => (
                   <TreatmentRow
