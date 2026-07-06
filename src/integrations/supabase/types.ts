@@ -4987,6 +4987,7 @@ export type Database = {
           interval_weeks_from_previous: number | null
           notes: string | null
           plan_id: string
+          price_cents_override: number | null
           session_number: number
           status: string
           suggested_date: string | null
@@ -5000,6 +5001,7 @@ export type Database = {
           interval_weeks_from_previous?: number | null
           notes?: string | null
           plan_id: string
+          price_cents_override?: number | null
           session_number: number
           status?: string
           suggested_date?: string | null
@@ -5013,6 +5015,7 @@ export type Database = {
           interval_weeks_from_previous?: number | null
           notes?: string | null
           plan_id?: string
+          price_cents_override?: number | null
           session_number?: number
           status?: string
           suggested_date?: string | null
@@ -5154,6 +5157,8 @@ export type Database = {
           deposit_cents: number | null
           deposit_paid: boolean
           description: string | null
+          discount_cents: number | null
+          discount_percent: number | null
           id: string
           name: string
           payment_mode: string
@@ -5175,6 +5180,8 @@ export type Database = {
           deposit_cents?: number | null
           deposit_paid?: boolean
           description?: string | null
+          discount_cents?: number | null
+          discount_percent?: number | null
           id?: string
           name: string
           payment_mode?: string
@@ -5196,6 +5203,8 @@ export type Database = {
           deposit_cents?: number | null
           deposit_paid?: boolean
           description?: string | null
+          discount_cents?: number | null
+          discount_percent?: number | null
           id?: string
           name?: string
           payment_mode?: string

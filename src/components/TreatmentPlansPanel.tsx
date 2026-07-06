@@ -157,6 +157,7 @@ export function TreatmentPlansPanel({
           plans.map((p) => {
             const completed = (p.sessions || []).filter((s: any) => s.status === "completed").length;
             const total = (p.sessions || []).length;
+            const { subtotal, discount, grandTotal } = computePlanPricing(p);
             return (
               <div key={p.id} className="rounded-lg border p-3 space-y-2">
                 <div className="flex items-start justify-between gap-2">
@@ -167,6 +168,14 @@ export function TreatmentPlansPanel({
                     </div>
                   </div>
                   <Badge variant={statusVariant(p.status)}>{p.status}</Badge>
+                </div>
+                <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm">
+                  <span className="font-medium">Total {formatMoney(grandTotal)}</span>
+                  {discount > 0 && (
+                    <span className="text-xs text-muted-foreground">
+                      <span className="line-through">{formatMoney(subtotal)}</span> · {formatMoney(discount)} off
+                    </span>
+                  )}
                 </div>
                 {total > 0 && (
                   <div className="h-2 rounded-full bg-muted overflow-hidden">
@@ -207,6 +216,7 @@ export function TreatmentPlansPanel({
               </div>
             );
           })
+
         )}
       </CardContent>
 
@@ -282,6 +292,11 @@ function EditPlanDialog({
   const [paymentMode, setPaymentMode] = useState(plan.payment_mode);
   const [coursePrice, setCoursePrice] = useState(plan.course_price_cents ? String(plan.course_price_cents / 100) : "");
   const [deposit, setDeposit] = useState(plan.deposit_cents ? String(plan.deposit_cents / 100) : "");
+  const [discountType, setDiscountType] = useState<"none" | "percent" | "fixed">(
+    plan.discount_percent ? "percent" : plan.discount_cents ? "fixed" : "none",
+  );
+  const [discountPercent, setDiscountPercent] = useState(plan.discount_percent ? String(plan.discount_percent) : "");
+  const [discountAmount, setDiscountAmount] = useState(plan.discount_cents ? String(plan.discount_cents / 100) : "");
   const [sessions, setSessions] = useState<any[]>(
     (plan.sessions || [])
       .slice()
@@ -293,8 +308,29 @@ function EditPlanDialog({
         intervalWeeksFromPrevious: s.interval_weeks_from_previous ?? 4,
         notes: s.notes ?? "",
         locked: !!s.appointment_id,
+        defaultPrice: s.treatment?.price ?? null,
+        priceOverride: s.price_cents_override != null ? String(s.price_cents_override / 100) : "",
       })),
   );
+
+  const treatmentMap = new Map(treatments.map((t) => [t.id, t]));
+
+  const subtotalPounds = sessions.reduce((sum, s) => {
+    if (s.priceOverride !== "" && s.priceOverride != null) {
+      const v = parseFloat(s.priceOverride);
+      if (!isNaN(v)) return sum + v;
+    }
+    const t = s.treatmentId ? treatmentMap.get(s.treatmentId) : null;
+    return sum + (t?.price ?? 0);
+  }, 0);
+
+  const discountPounds =
+    discountType === "percent"
+      ? subtotalPounds * (Math.min(100, Math.max(0, parseFloat(discountPercent) || 0)) / 100)
+      : discountType === "fixed"
+        ? Math.min(subtotalPounds, parseFloat(discountAmount) || 0)
+        : 0;
+  const grandTotalPounds = Math.max(0, subtotalPounds - discountPounds);
 
   const addSession = () => {
     setSessions((prev) => [
@@ -304,6 +340,7 @@ function EditPlanDialog({
         sessionNumber: prev.length + 1,
         intervalWeeksFromPrevious: 4,
         notes: "",
+        priceOverride: "",
       },
     ]);
   };
@@ -322,6 +359,8 @@ function EditPlanDialog({
           paymentMode,
           coursePriceCents: coursePrice ? Math.round(parseFloat(coursePrice) * 100) : null,
           depositCents: deposit ? Math.round(parseFloat(deposit) * 100) : null,
+          discountCents: discountType === "fixed" && discountAmount ? Math.round(parseFloat(discountAmount) * 100) : null,
+          discountPercent: discountType === "percent" && discountPercent ? parseFloat(discountPercent) : null,
           sessions: sessions
             .filter((s) => !s.locked)
             .map((s) => ({
@@ -329,6 +368,7 @@ function EditPlanDialog({
               sessionNumber: s.sessionNumber,
               intervalWeeksFromPrevious: s.intervalWeeksFromPrevious,
               notes: s.notes,
+              priceCentsOverride: s.priceOverride ? Math.round(parseFloat(s.priceOverride) * 100) : null,
             })),
         },
       });
@@ -359,9 +399,7 @@ function EditPlanDialog({
             <div>
               <Label>Booking</Label>
               <Select value={bookingMode} onValueChange={(v) => setBookingMode(v as any)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
+                <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="rolling">Rolling (book one at a time)</SelectItem>
                   <SelectItem value="upfront">Upfront (book all sessions)</SelectItem>
@@ -371,9 +409,7 @@ function EditPlanDialog({
             <div>
               <Label>Payment</Label>
               <Select value={paymentMode} onValueChange={(v) => setPaymentMode(v as any)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
+                <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="per_session">Pay per session</SelectItem>
                   <SelectItem value="course_upfront">Pay course upfront</SelectItem>
@@ -383,18 +419,61 @@ function EditPlanDialog({
             </div>
           </div>
 
-          {paymentMode === "course_upfront" && (
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label>Course price (£)</Label>
-              <Input type="number" step="0.01" value={coursePrice} onChange={(e) => setCoursePrice(e.target.value)} />
+              <Label>Course price override (£)</Label>
+              <Input
+                type="number"
+                step="0.01"
+                placeholder="Auto from sessions"
+                value={coursePrice}
+                onChange={(e) => setCoursePrice(e.target.value)}
+              />
+              <p className="text-[11px] text-muted-foreground mt-1">Optional. Leave blank to use the sum of session prices.</p>
             </div>
-          )}
-          {paymentMode === "deposit_then_per_session" && (
-            <div>
-              <Label>Deposit (£)</Label>
-              <Input type="number" step="0.01" value={deposit} onChange={(e) => setDeposit(e.target.value)} />
+            {paymentMode === "deposit_then_per_session" && (
+              <div>
+                <Label>Deposit (£)</Label>
+                <Input type="number" step="0.01" value={deposit} onChange={(e) => setDeposit(e.target.value)} />
+              </div>
+            )}
+          </div>
+
+          <div className="rounded-lg border p-3 space-y-2">
+            <div className="flex items-center justify-between">
+              <Label>Discount</Label>
+              <Select value={discountType} onValueChange={(v) => setDiscountType(v as any)}>
+                <SelectTrigger className="w-40 h-8 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No discount</SelectItem>
+                  <SelectItem value="percent">Percentage (%)</SelectItem>
+                  <SelectItem value="fixed">Fixed amount (£)</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-          )}
+            {discountType === "percent" && (
+              <Input type="number" step="0.1" min="0" max="100" placeholder="e.g. 10"
+                value={discountPercent} onChange={(e) => setDiscountPercent(e.target.value)} />
+            )}
+            {discountType === "fixed" && (
+              <Input type="number" step="0.01" min="0" placeholder="e.g. 50"
+                value={discountAmount} onChange={(e) => setDiscountAmount(e.target.value)} />
+            )}
+            <div className="flex items-center justify-between pt-1 text-sm">
+              <span className="text-muted-foreground">Subtotal</span>
+              <span>{formatPounds(subtotalPounds)}</span>
+            </div>
+            {discountPounds > 0 && (
+              <div className="flex items-center justify-between text-sm text-emerald-700">
+                <span>Discount</span>
+                <span>−{formatPounds(discountPounds)}</span>
+              </div>
+            )}
+            <div className="flex items-center justify-between font-medium">
+              <span>Total</span>
+              <span>{formatPounds(grandTotalPounds)}</span>
+            </div>
+          </div>
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
@@ -403,62 +482,77 @@ function EditPlanDialog({
                 <Plus className="h-3 w-3 mr-1" /> Add session
               </Button>
             </div>
-            {sessions.map((s, idx) => (
-              <div key={idx} className="rounded border p-2 space-y-2">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-medium">Session {s.sessionNumber}</span>
-                  {s.locked ? (
-                    <Badge variant="secondary" className="text-xs">
-                      <CheckCircle2 className="h-3 w-3 mr-1" /> Booked
-                    </Badge>
-                  ) : (
-                    <Button size="sm" variant="ghost" onClick={() => removeSession(idx)}>
-                      <Trash2 className="h-3 w-3 text-destructive" />
-                    </Button>
-                  )}
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <Select
-                    value={s.treatmentId ?? ""}
-                    onValueChange={(v) =>
-                      setSessions((prev) => prev.map((x, i) => (i === idx ? { ...x, treatmentId: v } : x)))
-                    }
-                    disabled={s.locked}
-                  >
-                    <SelectTrigger className="text-xs">
-                      <SelectValue placeholder="Choose treatment" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {treatments.map((t) => (
-                        <SelectItem key={t.id} value={t.id}>
-                          {t.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <div className="flex items-center gap-1">
+            {sessions.map((s, idx) => {
+              const t = s.treatmentId ? treatmentMap.get(s.treatmentId) : null;
+              return (
+                <div key={idx} className="rounded border p-2 space-y-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-medium">Session {s.sessionNumber}</span>
+                    {s.locked ? (
+                      <Badge variant="secondary" className="text-xs">
+                        <CheckCircle2 className="h-3 w-3 mr-1" /> Booked
+                      </Badge>
+                    ) : (
+                      <Button size="sm" variant="ghost" onClick={() => removeSession(idx)}>
+                        <Trash2 className="h-3 w-3 text-destructive" />
+                      </Button>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Select
+                      value={s.treatmentId ?? ""}
+                      onValueChange={(v) =>
+                        setSessions((prev) => prev.map((x, i) => (i === idx ? { ...x, treatmentId: v } : x)))
+                      }
+                      disabled={s.locked}
+                    >
+                      <SelectTrigger className="text-xs">
+                        <SelectValue placeholder="Choose treatment" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {treatments.map((tt) => (
+                          <SelectItem key={tt.id} value={tt.id}>
+                            {tt.name}{tt.price != null ? ` — £${tt.price}` : ""}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <div className="flex items-center gap-1">
+                      <Input
+                        type="number"
+                        className="text-xs"
+                        value={s.intervalWeeksFromPrevious}
+                        onChange={(e) =>
+                          setSessions((prev) =>
+                            prev.map((x, i) => (i === idx ? { ...x, intervalWeeksFromPrevious: parseInt(e.target.value) || 0 } : x)),
+                          )
+                        }
+                        disabled={s.locked || idx === 0}
+                      />
+                      <span className="text-xs text-muted-foreground whitespace-nowrap">wks after prev</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Label className="text-xs whitespace-nowrap">Price override (£)</Label>
                     <Input
                       type="number"
+                      step="0.01"
                       className="text-xs"
-                      value={s.intervalWeeksFromPrevious}
+                      placeholder={t?.price != null ? `Default £${t.price}` : "Enter price"}
+                      value={s.priceOverride}
                       onChange={(e) =>
-                        setSessions((prev) =>
-                          prev.map((x, i) => (i === idx ? { ...x, intervalWeeksFromPrevious: parseInt(e.target.value) || 0 } : x)),
-                        )
+                        setSessions((prev) => prev.map((x, i) => (i === idx ? { ...x, priceOverride: e.target.value } : x)))
                       }
-                      disabled={s.locked || idx === 0}
+                      disabled={s.locked}
                     />
-                    <span className="text-xs text-muted-foreground">wks after prev</span>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
           <Button onClick={save}>Save plan</Button>
         </DialogFooter>
       </DialogContent>
@@ -478,3 +572,29 @@ function paymentModeLabel(m: string) {
   if (m === "deposit_then_per_session") return "Deposit + per session";
   return "Pay per session";
 }
+
+function formatPounds(v: number) {
+  return `£${(Math.round(v * 100) / 100).toFixed(2)}`;
+}
+
+function formatMoney(cents: number) {
+  return formatPounds(cents / 100);
+}
+
+/** Compute subtotal (sum of session prices), discount and grand total in cents. */
+function computePlanPricing(p: any): { subtotal: number; discount: number; grandTotal: number } {
+  const sessions = (p.sessions || []) as any[];
+  const subtotal = sessions.reduce((sum, s) => {
+    if (s.price_cents_override != null) return sum + s.price_cents_override;
+    const treatmentPrice = s.treatment?.price;
+    if (typeof treatmentPrice === "number") return sum + Math.round(treatmentPrice * 100);
+    return sum;
+  }, 0);
+  const base = p.course_price_cents != null ? p.course_price_cents : subtotal;
+  let discount = 0;
+  if (p.discount_percent) discount = Math.round(base * (Number(p.discount_percent) / 100));
+  else if (p.discount_cents) discount = Math.min(base, Number(p.discount_cents));
+  const grandTotal = Math.max(0, base - discount);
+  return { subtotal: base, discount, grandTotal };
+}
+
