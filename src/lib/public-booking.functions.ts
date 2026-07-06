@@ -850,14 +850,19 @@ async function maybeCreateBookingCheckout(args: {
   let surchargeCents = pct > 0 ? Math.ceil((amountCents * pct) / 100) : 0;
 
   // Optionally add Stripe's own processing fee (rate% + fixed) for the chosen rail.
-  if (p.stripe_fee_pass_to_patient) {
+  {
     const isBnpl = args.choice
       ? args.choice.method === "klarna" || args.choice.method === "clearpay"
       : methodTypes.includes("klarna") || methodTypes.includes("afterpay_clearpay");
-    const stripePct = Number((isBnpl ? p.stripe_fee_bnpl_percent : p.stripe_fee_card_percent) ?? 0);
-    const stripeFixed = Math.round(Number((isBnpl ? p.stripe_fee_bnpl_fixed_cents : p.stripe_fee_card_fixed_cents) ?? 0));
-    const stripeCents = Math.ceil((amountCents * stripePct) / 100) + Math.max(0, stripeFixed);
-    surchargeCents += stripeCents;
+    const cardPassOn = !!p.stripe_fee_pass_to_patient;
+    const bnplPassOn = !!(p as { stripe_fee_bnpl_pass_to_patient?: boolean }).stripe_fee_bnpl_pass_to_patient;
+    const passOn = isBnpl ? bnplPassOn : cardPassOn;
+    if (passOn) {
+      const stripePct = Number((isBnpl ? p.stripe_fee_bnpl_percent : p.stripe_fee_card_percent) ?? 0);
+      const stripeFixed = Math.round(Number((isBnpl ? p.stripe_fee_bnpl_fixed_cents : p.stripe_fee_card_fixed_cents) ?? 0));
+      const stripeCents = Math.ceil((amountCents * stripePct) / 100) + Math.max(0, stripeFixed);
+      surchargeCents += stripeCents;
+    }
   }
 
 
