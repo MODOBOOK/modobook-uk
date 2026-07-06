@@ -119,6 +119,7 @@ export function ConsultationWizard() {
   const { id } = Route.useParams();
   const get = useServerFn(getConsultation);
   const update = useServerFn(updateConsultation);
+  const ensurePatient = useServerFn(ensureConsultationPatient);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -133,6 +134,13 @@ export function ConsultationWizard() {
       setC(data);
       setStep(data.current_step ?? 1);
       setLoading(false);
+      // Auto-link to a patient record so the treatment plans panel is usable
+      if (!data.patient_id && data.patient_name) {
+        try {
+          const res: any = await ensurePatient({ data: { id } });
+          if (res?.patient_id) setC((prev: any) => prev ? ({ ...prev, patient_id: res.patient_id }) : prev);
+        } catch { /* ignore */ }
+      }
     })();
   }, [id]); // eslint-disable-line
 
