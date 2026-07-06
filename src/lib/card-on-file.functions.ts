@@ -1,6 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+async function getProfileId(supabase: any, userId: string): Promise<string | null> {
+  const { data } = await supabase.from("profiles").select("id").eq("user_id", userId).maybeSingle();
+  return data?.id ?? null;
+}
+
 // Charge the saved card on file for the current practitioner's clinic client.
 // Used for no-shows, late-cancel fees, etc. Off-session — the patient is not
 // present and gave consent via the practitioner's booking terms when saving
@@ -10,6 +15,8 @@ export const chargeCardOnFile = createServerFn({ method: "POST" })
   .inputValidator((input: { clientId: string; amountCents: number; description: string }) => input)
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+    const profileId = await getProfileId(supabase, userId);
+    if (!profileId) throw new Error("No profile");
 
     if (!data.clientId) throw new Error("Missing client");
     if (!data.amountCents || data.amountCents < 100) {
@@ -34,7 +41,7 @@ export const chargeCardOnFile = createServerFn({ method: "POST" })
       stripe_customer_id: string | null;
       stripe_payment_method_id: string | null;
     };
-    if (c.profile_id !== userId) throw new Error("Not authorised for this client");
+    if (c.profile_id !== profileId) throw new Error("Not authorised for this client");
     if (!c.stripe_customer_id || !c.stripe_payment_method_id) {
       throw new Error("This patient has no card on file yet.");
     }
@@ -42,7 +49,7 @@ export const chargeCardOnFile = createServerFn({ method: "POST" })
     const { data: prof } = await supabase
       .from("profiles")
       .select("stripe_connect_account_id, stripe_connect_onboarding_status")
-      .eq("id", userId)
+      .eq("id", profileId)
       .maybeSingle();
     const p = prof as {
       stripe_connect_account_id: string | null;
@@ -88,6 +95,8 @@ export const removeCardOnFile = createServerFn({ method: "POST" })
   .inputValidator((input: { clientId: string }) => input)
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+    const profileId = await getProfileId(supabase, userId);
+    if (!profileId) throw new Error("No profile");
 
     const { data: client } = await supabase
       .from("clinic_clients")
@@ -100,13 +109,13 @@ export const removeCardOnFile = createServerFn({ method: "POST" })
       stripe_payment_method_id: string | null;
     } | null;
     if (!c) throw new Error("Client not found");
-    if (c.profile_id !== userId) throw new Error("Not authorised");
+    if (c.profile_id !== profileId) throw new Error("Not authorised");
 
     if (c.stripe_payment_method_id) {
       const { data: prof } = await supabase
         .from("profiles")
         .select("stripe_connect_account_id")
-        .eq("id", userId)
+        .eq("id", profileId)
         .maybeSingle();
       const accountId = (prof as { stripe_connect_account_id?: string } | null)?.stripe_connect_account_id;
       if (accountId) {
