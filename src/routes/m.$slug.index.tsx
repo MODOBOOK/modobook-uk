@@ -1291,6 +1291,12 @@ function BookPage() {
                           {sessions}
                         </div>
                       )}
+                      {(() => {
+                        const c = capFor(t);
+                        if (!c) return null;
+                        if (c.full) return <div className="text-[11px] font-semibold uppercase tracking-wide text-rose-600">Fully booked</div>;
+                        return <div className="text-[11px] font-semibold uppercase tracking-wide text-emerald-600">Only {c.left} of {c.cap} spots left</div>;
+                      })()}
                       {t.description && (
                         <div className={`text-xs leading-relaxed opacity-70 ${isExpanded ? "" : "line-clamp-1"}`}>
                           {t.description}
@@ -1310,17 +1316,24 @@ function BookPage() {
                       )}
                       <div className="mt-auto flex items-center justify-between border-t pt-2 text-xs" style={{ borderColor: `${brand}1f` }}>
                         <span className="opacity-70">{durationFor(t)} min</span>
-                        <Link
-                          to="/m/$slug/book/$treatmentId"
-                    search={{ locationId: locationId ?? undefined }}
-                          params={{ slug, treatmentId: t.id }}
-                          className="rounded-full px-4 py-2 text-xs font-semibold text-white shadow-sm"
-                          style={{ backgroundColor: brand }}
-                        >
-                          Book
-                        </Link>
+                        {capFor(t)?.full ? (
+                          <span className="rounded-full px-4 py-2 text-xs font-semibold text-white shadow-sm opacity-60" style={{ backgroundColor: "#6b7280" }}>
+                            Fully booked
+                          </span>
+                        ) : (
+                          <Link
+                            to="/m/$slug/book/$treatmentId"
+                            search={{ locationId: locationId ?? undefined }}
+                            params={{ slug, treatmentId: t.id }}
+                            className="rounded-full px-4 py-2 text-xs font-semibold text-white shadow-sm"
+                            style={{ backgroundColor: brand }}
+                          >
+                            Book
+                          </Link>
+                        )}
                       </div>
                     </div>
+
                   </div>
                 );
               })}
