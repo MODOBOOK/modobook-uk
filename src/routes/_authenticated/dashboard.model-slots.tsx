@@ -115,10 +115,17 @@ function ModelSlotsPage() {
                   <p className="truncate text-sm font-semibold">{t?.name ?? "(deleted)"}</p>
                   <p className="text-xs text-muted-foreground">
                     <Calendar className="-mt-0.5 mr-1 inline h-3 w-3" />
-                    {new Date(s.slot_date + "T00:00:00").toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" })}{" "}
-                    · {s.start_time.slice(0, 5)}–{s.end_time.slice(0, 5)}
+                    {s.is_flexible ? (
+                      <span className="font-medium text-fuchsia-700">Any date &amp; time — patient picks</span>
+                    ) : (
+                      <>
+                        {new Date((s.slot_date ?? "") + "T00:00:00").toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" })}{" "}
+                        · {(s.start_time ?? "").slice(0, 5)}–{(s.end_time ?? "").slice(0, 5)}
+                      </>
+                    )}
                     {s.location_id && lById.get(s.location_id) ? ` · ${lById.get(s.location_id)!.name}` : ""}
                   </p>
+
                   {s.category && (
                     <p className="mt-0.5 inline-block rounded-full bg-fuchsia-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-fuchsia-700">{s.category}</p>
                   )}
