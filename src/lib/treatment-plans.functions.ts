@@ -213,6 +213,9 @@ export const updatePlan = createServerFn({ method: "POST" })
       suggestedDate?: string | null;
       notes?: string | null;
       priceCentsOverride?: number | null;
+      expectedResults?: string | null;
+      downtime?: string | null;
+      sessionPurpose?: string | null;
     }>;
   }) => d)
   .handler(async ({ data, context }) => {
@@ -253,6 +256,9 @@ export const updatePlan = createServerFn({ method: "POST" })
         suggested_date: s.suggestedDate ?? null,
         notes: s.notes ?? null,
         price_cents_override: s.priceCentsOverride ?? null,
+        expected_results: s.expectedResults ?? null,
+        downtime: s.downtime ?? null,
+        session_purpose: s.sessionPurpose ?? null,
       }));
       if (rows.length) {
         const { error } = await context.supabase.from("treatment_plan_sessions").insert(rows);
