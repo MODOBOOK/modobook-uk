@@ -372,6 +372,9 @@ function EditPlanDialog({
               intervalWeeksFromPrevious: s.intervalWeeksFromPrevious,
               notes: s.notes,
               priceCentsOverride: s.priceOverride ? Math.round(parseFloat(s.priceOverride) * 100) : null,
+              expectedResults: s.expectedResults || null,
+              downtime: s.downtime || null,
+              sessionPurpose: s.sessionPurpose || null,
             })),
         },
       });
