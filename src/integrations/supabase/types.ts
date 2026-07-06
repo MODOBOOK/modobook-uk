@@ -5711,6 +5711,10 @@ export type Database = {
       }
       is_active_profile: { Args: { _profile_id: string }; Returns: boolean }
       is_active_profile_path: { Args: { path: string }; Returns: boolean }
+      is_clinic_client_for_user: {
+        Args: { _client_id: string }
+        Returns: boolean
+      }
       is_clinic_member: { Args: { _profile_id: string }; Returns: boolean }
       is_clinic_owner: { Args: { _profile_id: string }; Returns: boolean }
       is_clinic_staff: { Args: { _profile_id: string }; Returns: boolean }
