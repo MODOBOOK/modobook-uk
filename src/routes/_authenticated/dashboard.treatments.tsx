@@ -60,7 +60,9 @@ type Treatment = {
   prescriber_user_id?: string | null;
   prescriber_routing?: "same_address" | "clinic_visit" | "in_person_consult" | null;
   prescriber_note?: string | null;
+  booking_cap?: number | null;
 };
+
 
 
 type Category = {
