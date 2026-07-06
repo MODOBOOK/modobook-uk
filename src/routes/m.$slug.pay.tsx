@@ -49,6 +49,7 @@ function PayPage() {
   const [details, setDetails] = useState<EmbeddedPayment | null>(null);
   const [stripe, setStripe] = useState<Stripe | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [confirmed, setConfirmed] = useState(false);
 
   const brand = theme?.primary_color || "#111827";
   const accent = theme?.accent_color || brand;
@@ -89,6 +90,44 @@ function PayPage() {
       cancelled = true;
     };
   }, [details]);
+
+  // Release the slot immediately if the patient abandons the page before
+  // confirming payment. sendBeacon survives tab close / navigation and posts
+  // to our public /release endpoint, which cancels the PI on the connected
+  // account and cancels the pending appointments so availability re-opens.
+  useEffect(() => {
+    if (!details || confirmed) return;
+    const release = () => {
+      try {
+        const payload = JSON.stringify({
+          paymentIntentId: details.paymentIntentId,
+          accountId: details.connectedAccountId,
+        });
+        const blob = new Blob([payload], { type: "application/json" });
+        navigator.sendBeacon("/api/public/booking/release", blob);
+        // Clear the sessionStorage entry so a re-open of /pay doesn't retry
+        // the same expired PI.
+        try {
+          sessionStorage.removeItem(`modo:pay:${details.paymentIntentId}`);
+        } catch {
+          /* ignore */
+        }
+      } catch {
+        /* ignore */
+      }
+    };
+    const onPageHide = () => release();
+    const onVisibility = () => {
+      if (document.visibilityState === "hidden") release();
+    };
+    window.addEventListener("pagehide", onPageHide);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      window.removeEventListener("pagehide", onPageHide);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, [details, confirmed]);
+
 
   const options = useMemo(() => {
     if (!details) return null;
@@ -145,7 +184,12 @@ function PayPage() {
               <span className="text-xl font-semibold">{amountLabel}</span>
             </div>
             <Elements stripe={stripe} options={options}>
-              <CardForm returnUrl={details.returnUrl} brand={brand} accent={accent} />
+              <CardForm
+                returnUrl={details.returnUrl}
+                brand={brand}
+                accent={accent}
+                onConfirming={() => setConfirmed(true)}
+              />
             </Elements>
           </div>
         )}
@@ -162,10 +206,12 @@ function CardForm({
   returnUrl,
   brand,
   accent,
+  onConfirming,
 }: {
   returnUrl: string;
   brand: string;
   accent: string;
+  onConfirming: () => void;
 }) {
   const stripe = useStripe();
   const elements = useElements();
@@ -177,6 +223,9 @@ function CardForm({
     if (!stripe || !elements) return;
     setSubmitting(true);
     setMessage(null);
+    // Mark as confirming so the page-abandon beacon doesn't fire when Stripe
+    // redirects to return_url on success.
+    onConfirming();
     const { error } = await stripe.confirmPayment({
       elements,
       confirmParams: { return_url: returnUrl },
