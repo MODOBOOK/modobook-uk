@@ -24,11 +24,13 @@ export const Route = createFileRoute("/_authenticated/dashboard/model-slots")({
 
 type Slot = {
   id: string; treatment_id: string; location_id: string | null;
-  slot_date: string; start_time: string; end_time: string;
+  slot_date: string | null; start_time: string | null; end_time: string | null;
   price_mode: "fixed" | "percent"; price_value: number;
   notes: string | null; booked_appointment_id: string | null; active: boolean;
   category: string | null;
+  is_flexible?: boolean | null;
 };
+
 type Treat = { id: string; name: string; price: number; duration: number };
 type Loc = { id: string; name: string };
 
