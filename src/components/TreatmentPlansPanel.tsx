@@ -157,6 +157,7 @@ export function TreatmentPlansPanel({
           plans.map((p) => {
             const completed = (p.sessions || []).filter((s: any) => s.status === "completed").length;
             const total = (p.sessions || []).length;
+            const { subtotal, discount, grandTotal } = computePlanPricing(p);
             return (
               <div key={p.id} className="rounded-lg border p-3 space-y-2">
                 <div className="flex items-start justify-between gap-2">
@@ -167,6 +168,14 @@ export function TreatmentPlansPanel({
                     </div>
                   </div>
                   <Badge variant={statusVariant(p.status)}>{p.status}</Badge>
+                </div>
+                <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm">
+                  <span className="font-medium">Total {formatMoney(grandTotal)}</span>
+                  {discount > 0 && (
+                    <span className="text-xs text-muted-foreground">
+                      <span className="line-through">{formatMoney(subtotal)}</span> · {formatMoney(discount)} off
+                    </span>
+                  )}
                 </div>
                 {total > 0 && (
                   <div className="h-2 rounded-full bg-muted overflow-hidden">
@@ -207,6 +216,7 @@ export function TreatmentPlansPanel({
               </div>
             );
           })
+
         )}
       </CardContent>
 
