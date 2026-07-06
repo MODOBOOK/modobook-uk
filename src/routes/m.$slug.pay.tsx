@@ -8,6 +8,7 @@ import {
   useStripe,
 } from "@stripe/react-stripe-js";
 import { Button } from "@/components/ui/button";
+import { getPractitionerBio } from "@/lib/practitioner-public.functions";
 
 // Embedded Payment Element flow used only when the practitioner has
 // "Save card on file" enabled. The booking server function returned an
