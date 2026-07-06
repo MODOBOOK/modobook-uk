@@ -4976,6 +4976,263 @@ export type Database = {
           },
         ]
       }
+      treatment_plan_sessions: {
+        Row: {
+          appointment_id: string | null
+          created_at: string
+          id: string
+          interval_weeks_from_previous: number | null
+          notes: string | null
+          plan_id: string
+          session_number: number
+          status: string
+          suggested_date: string | null
+          treatment_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          appointment_id?: string | null
+          created_at?: string
+          id?: string
+          interval_weeks_from_previous?: number | null
+          notes?: string | null
+          plan_id: string
+          session_number: number
+          status?: string
+          suggested_date?: string | null
+          treatment_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          appointment_id?: string | null
+          created_at?: string
+          id?: string
+          interval_weeks_from_previous?: number | null
+          notes?: string | null
+          plan_id?: string
+          session_number?: number
+          status?: string
+          suggested_date?: string | null
+          treatment_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "treatment_plan_sessions_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treatment_plan_sessions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "treatment_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treatment_plan_sessions_treatment_id_fkey"
+            columns: ["treatment_id"]
+            isOneToOne: false
+            referencedRelation: "treatments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      treatment_plan_template_items: {
+        Row: {
+          created_at: string
+          id: string
+          interval_weeks_from_previous: number | null
+          notes: string | null
+          session_number: number
+          template_id: string
+          treatment_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          interval_weeks_from_previous?: number | null
+          notes?: string | null
+          session_number: number
+          template_id: string
+          treatment_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          interval_weeks_from_previous?: number | null
+          notes?: string | null
+          session_number?: number
+          template_id?: string
+          treatment_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "treatment_plan_template_items_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "treatment_plan_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treatment_plan_template_items_treatment_id_fkey"
+            columns: ["treatment_id"]
+            isOneToOne: false
+            referencedRelation: "treatments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      treatment_plan_templates: {
+        Row: {
+          booking_mode: string
+          course_price_cents: number | null
+          created_at: string
+          default_interval_weeks: number
+          deposit_cents: number | null
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          payment_mode: string
+          profile_id: string
+          updated_at: string
+        }
+        Insert: {
+          booking_mode?: string
+          course_price_cents?: number | null
+          created_at?: string
+          default_interval_weeks?: number
+          deposit_cents?: number | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          payment_mode?: string
+          profile_id: string
+          updated_at?: string
+        }
+        Update: {
+          booking_mode?: string
+          course_price_cents?: number | null
+          created_at?: string
+          default_interval_weeks?: number
+          deposit_cents?: number | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          payment_mode?: string
+          profile_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "treatment_plan_templates_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      treatment_plans: {
+        Row: {
+          accepted_at: string | null
+          booking_mode: string
+          client_id: string
+          completed_at: string | null
+          consultation_id: string | null
+          course_paid: boolean
+          course_price_cents: number | null
+          created_at: string
+          deposit_cents: number | null
+          deposit_paid: boolean
+          description: string | null
+          id: string
+          name: string
+          payment_mode: string
+          profile_id: string
+          sent_at: string | null
+          status: string
+          template_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          booking_mode?: string
+          client_id: string
+          completed_at?: string | null
+          consultation_id?: string | null
+          course_paid?: boolean
+          course_price_cents?: number | null
+          created_at?: string
+          deposit_cents?: number | null
+          deposit_paid?: boolean
+          description?: string | null
+          id?: string
+          name: string
+          payment_mode?: string
+          profile_id: string
+          sent_at?: string | null
+          status?: string
+          template_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          booking_mode?: string
+          client_id?: string
+          completed_at?: string | null
+          consultation_id?: string | null
+          course_paid?: boolean
+          course_price_cents?: number | null
+          created_at?: string
+          deposit_cents?: number | null
+          deposit_paid?: boolean
+          description?: string | null
+          id?: string
+          name?: string
+          payment_mode?: string
+          profile_id?: string
+          sent_at?: string | null
+          status?: string
+          template_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "treatment_plans_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clinic_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treatment_plans_consultation_id_fkey"
+            columns: ["consultation_id"]
+            isOneToOne: false
+            referencedRelation: "consultations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treatment_plans_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treatment_plans_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "treatment_plan_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       treatments: {
         Row: {
           active: boolean | null
