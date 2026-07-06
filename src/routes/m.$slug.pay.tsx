@@ -91,6 +91,44 @@ function PayPage() {
     };
   }, [details]);
 
+  // Release the slot immediately if the patient abandons the page before
+  // confirming payment. sendBeacon survives tab close / navigation and posts
+  // to our public /release endpoint, which cancels the PI on the connected
+  // account and cancels the pending appointments so availability re-opens.
+  useEffect(() => {
+    if (!details || confirmed) return;
+    const release = () => {
+      try {
+        const payload = JSON.stringify({
+          paymentIntentId: details.paymentIntentId,
+          accountId: details.connectedAccountId,
+        });
+        const blob = new Blob([payload], { type: "application/json" });
+        navigator.sendBeacon("/api/public/booking/release", blob);
+        // Clear the sessionStorage entry so a re-open of /pay doesn't retry
+        // the same expired PI.
+        try {
+          sessionStorage.removeItem(`modo:pay:${details.paymentIntentId}`);
+        } catch {
+          /* ignore */
+        }
+      } catch {
+        /* ignore */
+      }
+    };
+    const onPageHide = () => release();
+    const onVisibility = () => {
+      if (document.visibilityState === "hidden") release();
+    };
+    window.addEventListener("pagehide", onPageHide);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      window.removeEventListener("pagehide", onPageHide);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, [details, confirmed]);
+
+
   const options = useMemo(() => {
     if (!details) return null;
     return {
