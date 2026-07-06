@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2, Send, Copy, CheckCircle2, ClipboardList, Sparkles, Loader2 } from "lucide-react";
+import { Plus, Trash2, Send, Copy, CheckCircle2, ClipboardList, Sparkles, Loader2, ArrowUp, ArrowDown } from "lucide-react";
 import {
   listPlansForClient,
   createPlanForClient,
@@ -17,6 +17,7 @@ import {
   sendPlan,
   deletePlan,
   suggestPlanForClient,
+  suggestPlanSession,
 } from "@/lib/treatment-plans.functions";
 import { supabase } from "@/integrations/supabase/client";
 
