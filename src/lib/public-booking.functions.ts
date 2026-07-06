@@ -1013,7 +1013,8 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
         .eq("scheduled_date", data.date)
         .in("treatment_id", treatmentIds)
         .ilike("patient_email", data.patientEmail)
-        .gte("created_at", cutoff);
+        .gte("created_at", cutoff)
+        .neq("status", "cancelled");
       if (recent && recent.length >= data.bookings.length) {
         const existing = recent
           .filter((r) => treatmentIds.includes(r.treatment_id as string))
