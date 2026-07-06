@@ -46,6 +46,7 @@ function SettingsPage() {
     payment_surcharge_deposit_enabled: !!profile.payment_surcharge_deposit_enabled,
     payment_surcharge_deposit_percent: Number(profile.payment_surcharge_deposit_percent ?? 0),
     stripe_fee_pass_to_patient: !!profile.stripe_fee_pass_to_patient,
+    stripe_fee_bnpl_pass_to_patient: !!(profile as { stripe_fee_bnpl_pass_to_patient?: boolean }).stripe_fee_bnpl_pass_to_patient,
     stripe_fee_card_percent: Number(profile.stripe_fee_card_percent ?? 1.5),
     stripe_fee_card_fixed_cents: Number(profile.stripe_fee_card_fixed_cents ?? 20),
     stripe_fee_bnpl_percent: Number(profile.stripe_fee_bnpl_percent ?? 5.4),
@@ -222,16 +223,24 @@ function SettingsPage() {
             onChange={(v) => set("payment_clearpay_enabled", v)}
           />
           <div className="rounded-md border p-3 space-y-3">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <div className="text-sm font-medium">Stripe processing fee</div>
-                <p className="text-xs text-muted-foreground">
-                  Stripe's own rate per transaction. Toggle on to add it to the "Platform fee" so the patient covers it. Defaults are UK domestic — edit to match your Stripe pricing.
-                </p>
-              </div>
+            <div>
+              <div className="text-sm font-medium">Stripe processing fee</div>
+              <p className="text-xs text-muted-foreground">
+                Stripe's own rate per transaction. Toggle on to pass it to the patient at checkout. Defaults are UK domestic — edit to match your Stripe pricing.
+              </p>
+            </div>
+            <div className="flex items-center justify-between gap-3 rounded-md bg-muted/40 p-2">
+              <div className="text-sm">Pass to patient — card payments</div>
               <Switch
                 checked={s.stripe_fee_pass_to_patient}
                 onCheckedChange={(v) => set("stripe_fee_pass_to_patient", v)}
+              />
+            </div>
+            <div className="flex items-center justify-between gap-3 rounded-md bg-muted/40 p-2">
+              <div className="text-sm">Pass to patient — Klarna &amp; Clearpay</div>
+              <Switch
+                checked={s.stripe_fee_bnpl_pass_to_patient}
+                onCheckedChange={(v) => set("stripe_fee_bnpl_pass_to_patient", v)}
               />
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
