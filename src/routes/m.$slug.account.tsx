@@ -1109,5 +1109,111 @@ function DataPrivacySection({
   );
 }
 
+function PatientTreatmentPlans({ slug, brand }: { slug: string; brand: string }) {
+  const [plans, setPlans] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const refresh = async () => {
+    setLoading(true);
+    try {
+      const mod = await import("@/lib/treatment-plans.functions");
+      const rows = await mod.listMyPlansForPractitioner({ data: { slug } });
+      setPlans(rows);
+    } catch {
+      setPlans([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { refresh(); /* eslint-disable-next-line */ }, [slug]);
+
+  const respond = async (id: string, accept: boolean) => {
+    try {
+      const mod = await import("@/lib/treatment-plans.functions");
+      if (accept) await mod.acceptPlan({ data: { id } });
+      else await mod.declinePlan({ data: { id } });
+      toast.success(accept ? "Plan accepted" : "Plan declined");
+      refresh();
+    } catch (e: any) {
+      toast.error(e.message);
+    }
+  };
+
+  if (loading) return null;
+  if (plans.length === 0) return null;
+
+  return (
+    <section className="mt-8">
+      <h2 className="mb-3 flex items-center gap-2 text-base font-semibold" style={{ color: brand }}>
+        <ClipboardCheck className="h-4 w-4" />Treatment plans
+      </h2>
+      <div className="space-y-3">
+        {plans.map((p: any) => {
+          const total = (p.sessions || []).length;
+          const done = (p.sessions || []).filter((s: any) => s.status === "completed").length;
+          const pct = total ? (done / total) * 100 : 0;
+          return (
+            <Card key={p.id}>
+              <CardHeader className="pb-2">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <CardTitle className="text-base">{p.name}</CardTitle>
+                    {p.description && <p className="text-xs text-muted-foreground mt-1">{p.description}</p>}
+                  </div>
+                  <Badge>{p.status}</Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div>
+                  <div className="h-2 rounded-full bg-muted overflow-hidden">
+                    <div className="h-full transition-all" style={{ width: `${pct}%`, backgroundColor: brand }} />
+                  </div>
+                  <div className="mt-1 text-xs text-muted-foreground">{done} of {total} sessions complete</div>
+                </div>
+                <div className="space-y-1">
+                  {(p.sessions || [])
+                    .slice()
+                    .sort((a: any, b: any) => a.session_number - b.session_number)
+                    .map((s: any) => (
+                      <div key={s.id} className="flex items-center justify-between text-sm border-b py-1 last:border-0">
+                        <span>
+                          <span className="font-medium">{s.session_number}.</span>{" "}
+                          {s.treatment?.name ?? "Session"}
+                          {s.interval_weeks_from_previous && s.session_number > 1 && (
+                            <span className="text-muted-foreground ml-1 text-xs">
+                              (+{s.interval_weeks_from_previous} wks)
+                            </span>
+                          )}
+                        </span>
+                        <Badge variant="outline" className="text-xs">{s.status}</Badge>
+                      </div>
+                    ))}
+                </div>
+                {p.status === "sent" && (
+                  <div className="flex gap-2">
+                    <Button size="sm" onClick={() => respond(p.id, true)} style={{ backgroundColor: brand }}>
+                      Accept plan
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => respond(p.id, false)}>
+                      Decline
+                    </Button>
+                  </div>
+                )}
+                {(p.status === "accepted" || p.status === "in_progress") && (
+                  <Link to="/m/$slug" params={{ slug }}>
+                    <Button size="sm" style={{ backgroundColor: brand }}>Book next session</Button>
+                  </Link>
+                )}
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+
 
 
