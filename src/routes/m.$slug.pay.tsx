@@ -94,9 +94,18 @@ function PayPage() {
     if (!details) return null;
     return {
       clientSecret: details.clientSecret,
-      appearance: { theme: "stripe" as const },
+      appearance: {
+        theme: "stripe" as const,
+        variables: {
+          colorPrimary: brand,
+          colorBackground: cardBg,
+          colorText: textColor === "inherit" ? "#0f172a" : textColor,
+          fontFamily: theme?.body_font || "system-ui, sans-serif",
+          borderRadius: "8px",
+        },
+      },
     };
-  }, [details]);
+  }, [details, brand, cardBg, textColor, theme?.body_font]);
 
   const amountLabel = details
     ? new Intl.NumberFormat("en-GB", {
@@ -106,13 +115,13 @@ function PayPage() {
     : "";
 
   return (
-    <main className="min-h-screen bg-background">
+    <main className="min-h-screen" style={{ color: textColor }}>
       <div className="mx-auto max-w-lg px-4 py-10">
-        <h1 className="text-2xl font-semibold">Complete your payment</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Enter your card details below. Your card will also be securely saved
-          for any future no-show or late-cancellation fees, as per this
-          clinic's booking policy.
+        <h1 className="text-2xl font-semibold" style={{ fontFamily: headingFont, color: textColor }}>
+          Complete your payment
+        </h1>
+        <p className="mt-1 text-sm opacity-75">
+          Your card will be securely saved as per this clinic's booking policy.
         </p>
 
         {error && (
@@ -127,19 +136,22 @@ function PayPage() {
         )}
 
         {!error && details && stripe && options && (
-          <div className="mt-6 rounded-xl border bg-card p-4 shadow-sm">
+          <div
+            className="mt-6 rounded-xl border p-4 shadow-sm"
+            style={{ backgroundColor: cardBg, borderColor: cardBorder }}
+          >
             <div className="mb-4 flex items-baseline justify-between">
-              <span className="text-sm text-muted-foreground">Amount</span>
+              <span className="text-sm opacity-75">Amount</span>
               <span className="text-xl font-semibold">{amountLabel}</span>
             </div>
             <Elements stripe={stripe} options={options}>
-              <CardForm returnUrl={details.returnUrl} />
+              <CardForm returnUrl={details.returnUrl} brand={brand} accent={accent} />
             </Elements>
           </div>
         )}
 
         {!error && (!details || !stripe) && (
-          <p className="mt-6 text-sm text-muted-foreground">Loading secure payment form…</p>
+          <p className="mt-6 text-sm opacity-75">Loading secure payment form…</p>
         )}
       </div>
     </main>
