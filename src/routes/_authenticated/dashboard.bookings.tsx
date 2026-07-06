@@ -1016,7 +1016,18 @@ function CheckoutSheet({
   const markNoShow = useServerFn(markAppointmentNoShow);
   const blockClient = useServerFn(setClientBlocked);
   const refund = useServerFn(refundAppointment);
+  const loadCard = useServerFn(getCardOnFileForAppointment);
+  const chargeCard = useServerFn(chargeCardOnFile);
   const navigate = useNavigate();
+
+  const [card, setCard] = useState<{ clientId: string; hasCard: boolean; brand: string | null; last4: string | null } | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    loadCard({ data: { appointmentId: a.id } })
+      .then((r) => { if (!cancelled) setCard(r as never); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [a.id, loadCard]);
 
   const [notes, setNotes] = useState(a.practitioner_notes ?? "");
   const [aftercare, setAftercare] = useState(a.aftercare_html ?? "");
