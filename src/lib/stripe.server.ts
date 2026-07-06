@@ -303,6 +303,7 @@ export async function createSaveCardPaymentIntent(params: {
   customerName?: string | null;
   description: string;
   metadata?: Record<string, string>;
+  saveForFutureUse?: boolean;
 }) {
   const stripe = getStripe();
   const currency = params.currency ?? "gbp";
