@@ -4223,6 +4223,7 @@ export type Database = {
           stripe_connect_onboarding_status: string | null
           stripe_connect_type: string | null
           stripe_fee_bnpl_fixed_cents: number
+          stripe_fee_bnpl_pass_to_patient: boolean
           stripe_fee_bnpl_percent: number
           stripe_fee_card_fixed_cents: number
           stripe_fee_card_percent: number
@@ -4339,6 +4340,7 @@ export type Database = {
           stripe_connect_onboarding_status?: string | null
           stripe_connect_type?: string | null
           stripe_fee_bnpl_fixed_cents?: number
+          stripe_fee_bnpl_pass_to_patient?: boolean
           stripe_fee_bnpl_percent?: number
           stripe_fee_card_fixed_cents?: number
           stripe_fee_card_percent?: number
@@ -4455,6 +4457,7 @@ export type Database = {
           stripe_connect_onboarding_status?: string | null
           stripe_connect_type?: string | null
           stripe_fee_bnpl_fixed_cents?: number
+          stripe_fee_bnpl_pass_to_patient?: boolean
           stripe_fee_bnpl_percent?: number
           stripe_fee_card_fixed_cents?: number
           stripe_fee_card_percent?: number
