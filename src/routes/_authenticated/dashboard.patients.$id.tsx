@@ -320,11 +320,12 @@ function PatientProfilePage() {
           </div>
         )}
       </Section>
+      {/* Treatment plans */}
+      <TreatmentPlansPanel clientId={id} profileId={profileId} />
+
       {/* Card on file (for no-show / late cancel charges) */}
       <CardOnFileSection client={client} onReload={reload} />
 
-      {/* Treatment plans */}
-      <TreatmentPlansPanel clientId={id} profileId={profileId} />
 
       {/* Notes */}
       <NotesSection clientId={id} />
