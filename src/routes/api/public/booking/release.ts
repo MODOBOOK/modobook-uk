@@ -73,9 +73,11 @@ export const Route = createFileRoute("/api/public/booking/release")({
 
           // Best-effort cancel the PI so it can't be resumed on the abandoned tab.
           try {
-            await stripe.paymentIntents.cancel(paymentIntentId, {
-              stripeAccount: accountId,
-            });
+            await stripe.paymentIntents.cancel(
+              paymentIntentId,
+              undefined,
+              { stripeAccount: accountId },
+            );
           } catch {
             // Already cancelled / not cancellable — fine.
           }
