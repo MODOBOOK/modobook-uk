@@ -188,6 +188,19 @@ export function TreatmentPlansPanel({
                 <div className="text-xs text-muted-foreground">
                   {completed} of {total} completed
                 </div>
+                {p.status === "declined" && (p.decline_reason || (p.decline_tags && p.decline_tags.length > 0)) && (
+                  <div className="rounded-md border border-destructive/30 bg-destructive/5 p-2 text-xs space-y-1">
+                    <div className="font-medium text-destructive">Patient feedback</div>
+                    {p.decline_tags?.length > 0 && (
+                      <div className="flex flex-wrap gap-1">
+                        {p.decline_tags.map((tag: string) => (
+                          <Badge key={tag} variant="outline" className="text-[10px]">{tag.replace(/_/g, " ")}</Badge>
+                        ))}
+                      </div>
+                    )}
+                    {p.decline_reason && <div className="text-foreground/80">{p.decline_reason}</div>}
+                  </div>
+                )}
                 <div className="flex flex-wrap gap-2 pt-1">
                   <Button size="sm" variant="outline" onClick={() => setEditing(p)}>
                     Edit
