@@ -104,10 +104,11 @@ export const getPublicClinic = createServerFn({ method: "GET" })
       supabase.from("concerns").select("*").eq("profile_id", profile.id).order("sort_order"),
       supabase.from("concern_treatments").select("concern_id, treatment_id, sort_order").eq("profile_id", profile.id),
       supabase.from("model_slots")
-        .select("id, treatment_id, location_id, slot_date, start_time, end_time, price_mode, price_value, notes, booked_appointment_id, active")
+        .select("id, treatment_id, location_id, slot_date, start_time, end_time, price_mode, price_value, notes, booked_appointment_id, active, is_flexible")
         .eq("profile_id", profile.id).eq("active", true).is("booked_appointment_id", null)
-        .gte("slot_date", new Date().toISOString().slice(0, 10))
+        .or(`is_flexible.eq.true,slot_date.gte.${new Date().toISOString().slice(0, 10)}`)
         .order("slot_date", { ascending: true }),
+
       treatmentIds.length
         ? supabase.from("treatment_addons").select("treatment_id, addon_id, discount_percent, discount_amount").in("treatment_id", treatmentIds)
         : Promise.resolve({ data: [] as { treatment_id: string; addon_id: string; discount_percent: number | null; discount_amount: number | null }[] }),
