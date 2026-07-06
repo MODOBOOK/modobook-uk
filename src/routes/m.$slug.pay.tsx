@@ -206,10 +206,12 @@ function CardForm({
   returnUrl,
   brand,
   accent,
+  onConfirming,
 }: {
   returnUrl: string;
   brand: string;
   accent: string;
+  onConfirming: () => void;
 }) {
   const stripe = useStripe();
   const elements = useElements();
@@ -221,6 +223,9 @@ function CardForm({
     if (!stripe || !elements) return;
     setSubmitting(true);
     setMessage(null);
+    // Mark as confirming so the page-abandon beacon doesn't fire when Stripe
+    // redirects to return_url on success.
+    onConfirming();
     const { error } = await stripe.confirmPayment({
       elements,
       confirmParams: { return_url: returnUrl },
