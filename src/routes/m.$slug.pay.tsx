@@ -8,6 +8,7 @@ import {
   useStripe,
 } from "@stripe/react-stripe-js";
 import { Button } from "@/components/ui/button";
+import { getPractitionerBio } from "@/lib/practitioner-public.functions";
 
 // Embedded Payment Element flow used only when the practitioner has
 // "Save card on file" enabled. The booking server function returned an
@@ -34,15 +35,27 @@ export const Route = createFileRoute("/m/$slug/pay")({
     pi: typeof search.pi === "string" ? search.pi : undefined,
   }),
   ssr: false,
+  loader: async ({ params }) => {
+    const { theme } = await getPractitionerBio({ data: { slug: params.slug } });
+    return { theme };
+  },
   component: PayPage,
 });
 
 function PayPage() {
   const { slug } = useParams({ from: "/m/$slug/pay" });
   const { pi } = useSearch({ from: "/m/$slug/pay" });
+  const { theme } = Route.useLoaderData();
   const [details, setDetails] = useState<EmbeddedPayment | null>(null);
   const [stripe, setStripe] = useState<Stripe | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const brand = theme?.primary_color || "#111827";
+  const accent = theme?.accent_color || brand;
+  const cardBg = theme?.menu_card_bg || "#ffffff";
+  const cardBorder = theme?.menu_card_border_color || "rgba(0,0,0,0.1)";
+  const textColor = theme?.text_color || "inherit";
+  const headingFont = theme?.heading_font || "inherit";
 
   useEffect(() => {
     if (!pi) {
@@ -81,9 +94,18 @@ function PayPage() {
     if (!details) return null;
     return {
       clientSecret: details.clientSecret,
-      appearance: { theme: "stripe" as const },
+      appearance: {
+        theme: "stripe" as const,
+        variables: {
+          colorPrimary: brand,
+          colorBackground: cardBg,
+          colorText: textColor === "inherit" ? "#0f172a" : textColor,
+          fontFamily: theme?.body_font || "system-ui, sans-serif",
+          borderRadius: "8px",
+        },
+      },
     };
-  }, [details]);
+  }, [details, brand, cardBg, textColor, theme?.body_font]);
 
   const amountLabel = details
     ? new Intl.NumberFormat("en-GB", {
@@ -93,13 +115,13 @@ function PayPage() {
     : "";
 
   return (
-    <main className="min-h-screen bg-background">
+    <main className="min-h-screen" style={{ color: textColor }}>
       <div className="mx-auto max-w-lg px-4 py-10">
-        <h1 className="text-2xl font-semibold">Complete your payment</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Enter your card details below. Your card will also be securely saved
-          for any future no-show or late-cancellation fees, as per this
-          clinic's booking policy.
+        <h1 className="text-2xl font-semibold" style={{ fontFamily: headingFont, color: textColor }}>
+          Complete your payment
+        </h1>
+        <p className="mt-1 text-sm opacity-75">
+          Your card will be securely saved as per this clinic's booking policy.
         </p>
 
         {error && (
@@ -114,26 +136,37 @@ function PayPage() {
         )}
 
         {!error && details && stripe && options && (
-          <div className="mt-6 rounded-xl border bg-card p-4 shadow-sm">
+          <div
+            className="mt-6 rounded-xl border p-4 shadow-sm"
+            style={{ backgroundColor: cardBg, borderColor: cardBorder }}
+          >
             <div className="mb-4 flex items-baseline justify-between">
-              <span className="text-sm text-muted-foreground">Amount</span>
+              <span className="text-sm opacity-75">Amount</span>
               <span className="text-xl font-semibold">{amountLabel}</span>
             </div>
             <Elements stripe={stripe} options={options}>
-              <CardForm returnUrl={details.returnUrl} />
+              <CardForm returnUrl={details.returnUrl} brand={brand} accent={accent} />
             </Elements>
           </div>
         )}
 
         {!error && (!details || !stripe) && (
-          <p className="mt-6 text-sm text-muted-foreground">Loading secure payment form…</p>
+          <p className="mt-6 text-sm opacity-75">Loading secure payment form…</p>
         )}
       </div>
     </main>
   );
 }
 
-function CardForm({ returnUrl }: { returnUrl: string }) {
+function CardForm({
+  returnUrl,
+  brand,
+  accent,
+}: {
+  returnUrl: string;
+  brand: string;
+  accent: string;
+}) {
   const stripe = useStripe();
   const elements = useElements();
   const [submitting, setSubmitting] = useState(false);
@@ -148,7 +181,6 @@ function CardForm({ returnUrl }: { returnUrl: string }) {
       elements,
       confirmParams: { return_url: returnUrl },
     });
-    // If confirmPayment returns without redirecting, an error occurred.
     if (error) {
       setMessage(error.message ?? "Payment failed. Please try again.");
       setSubmitting(false);
@@ -160,9 +192,6 @@ function CardForm({ returnUrl }: { returnUrl: string }) {
       <PaymentElement
         options={{
           layout: "tabs",
-          // Hide Apple Pay, Google Pay and Link explicitly — the practitioner
-          // opted into card-on-file capture, and wallet / Link tokens are not
-          // consistently reusable off-session.
           wallets: { applePay: "never", googlePay: "never" },
           fields: { billingDetails: { address: "auto" } },
           paymentMethodOrder: ["card"],
@@ -173,14 +202,14 @@ function CardForm({ returnUrl }: { returnUrl: string }) {
           {message}
         </p>
       )}
-      <Button type="submit" disabled={!stripe || submitting} className="w-full">
-        {submitting ? "Processing…" : "Pay & save card"}
+      <Button
+        type="submit"
+        disabled={!stripe || submitting}
+        className="w-full"
+        style={{ backgroundColor: brand, color: "#ffffff", borderColor: accent }}
+      >
+        {submitting ? "Processing…" : "Pay now"}
       </Button>
-      <p className="text-[11px] text-muted-foreground">
-        Your card is stored securely by Stripe. It will only be charged
-        automatically for balances your clinic has authorised (e.g. no-show
-        fees).
-      </p>
     </form>
   );
 }
