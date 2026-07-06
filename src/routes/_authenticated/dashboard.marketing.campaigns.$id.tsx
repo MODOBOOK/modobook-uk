@@ -123,10 +123,13 @@ function CampaignEditor() {
     catch (e) { toast.error(e instanceof Error ? e.message : 'Failed') }
   }
 
-  async function doTest() {
-    if (!testEmail) return
+  async function doTest(toSelf = false) {
+    if (!toSelf && !testEmail) return
     await doSave(true)
-    try { await sendTest({ data: { id, to: testEmail } }); toast.success(`Test sent to ${testEmail}`) }
+    try {
+      const r = await sendTest({ data: { id, to: toSelf ? null : testEmail } })
+      toast.success(`Test sent to ${(r as any).sentTo || testEmail}`)
+    }
     catch (e) { toast.error(e instanceof Error ? e.message : 'Failed') }
   }
 
@@ -210,9 +213,14 @@ function CampaignEditor() {
                 {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}Save draft
               </Button>
 
-              <div className="flex gap-2">
-                <Input type="email" placeholder="you@example.com" value={testEmail} onChange={(e) => setTestEmail(e.target.value)} />
-                <Button variant="outline" onClick={doTest} disabled={!testEmail}><Eye className="h-4 w-4" /></Button>
+              <div className="space-y-2">
+                <Button variant="secondary" className="w-full" onClick={() => doTest(true)}>
+                  <Eye className="h-4 w-4 mr-2" />Send preview to me
+                </Button>
+                <div className="flex gap-2">
+                  <Input type="email" placeholder="someone@example.com" value={testEmail} onChange={(e) => setTestEmail(e.target.value)} />
+                  <Button variant="outline" onClick={() => doTest(false)} disabled={!testEmail}><Eye className="h-4 w-4" /></Button>
+                </div>
               </div>
 
               <Button className="w-full" onClick={doSendNow} disabled={!recipientCount}>

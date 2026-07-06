@@ -470,15 +470,23 @@ export const sendCampaignNow = createServerFn({ method: 'POST' })
 export const sendTestEmail = createServerFn({ method: 'POST' })
   .middleware([requireSupabaseAuth])
   .inputValidator((raw: unknown) => z.object({
-    id: z.string().uuid(), to: z.string().email(),
+    id: z.string().uuid(),
+    to: z.string().email().optional().nullable(),
   }).parse(raw))
   .handler(async ({ data, context }) => {
     const c = await assertOwnCampaign(context.supabase, context.userId, data.id)
+    // Default the preview recipient to the practitioner's own email.
+    const claimsEmail = (context.claims as any)?.email as string | undefined
+    const recipient = (data.to && data.to.trim()) || claimsEmail
+    if (!recipient) throw new Error('No email address available for preview')
+    if (!c.subject || !Array.isArray(c.body_json) || c.body_json.length === 0) {
+      throw new Error('Add a subject and some content before previewing')
+    }
     const { tryEnqueueAppEmail, getPractitionerBranding } = await import('@/lib/email/send.server')
     const branding = await getPractitionerBranding(context.userId)
     const res = await tryEnqueueAppEmail({
       templateName: 'marketing-broadcast',
-      recipientEmail: data.to,
+      recipientEmail: recipient,
       messageId: `campaign-test-${c.id}-${Date.now()}`,
       templateData: {
         subject: `[TEST] ${c.subject || 'Untitled'}`,
@@ -492,7 +500,7 @@ export const sendTestEmail = createServerFn({ method: 'POST' })
       },
     })
     if (!res.ok && !res.skipped) throw new Error(res.error || 'Failed to send test')
-    return { ok: true }
+    return { ok: true, sentTo: recipient }
   })
 
 export const getCampaignAnalytics = createServerFn({ method: 'POST' })
