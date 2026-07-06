@@ -865,7 +865,7 @@ async function maybeCreateBookingCheckout(args: {
     kind === "deposit" || chosenMethod === "card" || (!chosenMethod && enabled.card);
   // Deposits paid by card must both take the deposit and attach the card to
   // the connected Stripe Customer for the clinic's no-show / late-cancel file.
-  const shouldSaveCardOnFile = saveCardOnFile || (kind === "deposit" && effectivelyCard);
+  const shouldSaveCardOnFile = effectivelyCard && (saveCardOnFile || kind === "deposit");
   const metadata = {
     appointment_ids: args.appointmentIds.join(","),
     kind,
@@ -1023,7 +1023,7 @@ function normaliseBookingPaymentChoice(
 ): PaymentChoice | null {
   // Deposits are mandatory whenever the clinic enables deposits, and deposits
   // must be card-only so Stripe can both charge today and save the card for file.
-  if (depositRequiredForProfile(profile) || choice?.mode === "deposit") {
+  if (choice?.mode === "deposit" || (depositRequiredForProfile(profile) && choice?.mode !== "full")) {
     return { mode: "deposit", method: "card" };
   }
   return choice ?? null;

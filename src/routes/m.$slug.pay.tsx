@@ -241,7 +241,7 @@ function CardForm({
       <PaymentElement
         options={{
           layout: "tabs",
-          wallets: { applePay: "never", googlePay: "never" },
+          wallets: { applePay: "never", googlePay: "never", link: "never" },
           fields: { billingDetails: { address: "auto" } },
           paymentMethodOrder: ["card"],
         }}
