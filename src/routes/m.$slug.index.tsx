@@ -958,7 +958,7 @@ function BookPage() {
         </section>
       )}
 
-      {!locationId && modelSlotsBlock}
+      {/* Model slots now render inside the Treatments tab after the user presses "I know what I want". */}
 
       {/* Contact us */}
       {(() => {
