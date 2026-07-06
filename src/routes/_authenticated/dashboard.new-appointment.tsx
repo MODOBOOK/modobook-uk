@@ -123,14 +123,21 @@ function NewAppointmentPage() {
         .eq("active", true);
       setLocations(l ?? []);
       try {
-        const [cs, cons, meds] = await Promise.all([
+        const [cs, cons, meds, ms] = await Promise.all([
           fetchClients() as Promise<ClientRow[]>,
           fetchConsents() as Promise<TemplateRow[]>,
           fetchMedical() as Promise<TemplateRow[]>,
+          fetchModelSlots() as Promise<ModelSlot[]>,
         ]);
         setClients(cs ?? []);
         setConsentTemplates((cons ?? []).map((r) => ({ id: r.id, name: r.name })));
         setMedicalTemplates((meds ?? []).map((r) => ({ id: r.id, name: r.name })));
+        const todayIso = new Date().toISOString().slice(0, 10);
+        setModelSlots(
+          (ms ?? [])
+            .filter((s) => s.active && !s.booked_appointment_id && s.slot_date >= todayIso)
+            .sort((a, b) => (a.slot_date + a.start_time).localeCompare(b.slot_date + b.start_time)),
+        );
       } catch { /* ignore */ }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
