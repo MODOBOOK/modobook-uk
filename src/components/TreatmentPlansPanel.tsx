@@ -310,6 +310,9 @@ function EditPlanDialog({
         locked: !!s.appointment_id,
         defaultPrice: s.treatment?.price ?? null,
         priceOverride: s.price_cents_override != null ? String(s.price_cents_override / 100) : "",
+        expectedResults: s.expected_results ?? "",
+        downtime: s.downtime ?? "",
+        sessionPurpose: s.session_purpose ?? "",
       })),
   );
 

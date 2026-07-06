@@ -22,6 +22,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as StaffAcceptTokenRouteImport } from './routes/staff-accept.$token'
 import { Route as PrivacyDpiaRouteImport } from './routes/privacy.dpia'
 import { Route as PrivacyBreachResponseRouteImport } from './routes/privacy.breach-response'
+import { Route as PlanTokenRouteImport } from './routes/plan.$token'
 import { Route as MSlugRouteImport } from './routes/m.$slug'
 import { Route as FTokenRouteImport } from './routes/f.$token'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
@@ -178,6 +179,11 @@ const PrivacyBreachResponseRoute = PrivacyBreachResponseRouteImport.update({
   id: '/breach-response',
   path: '/breach-response',
   getParentRoute: () => PrivacyRoute,
+} as any)
+const PlanTokenRoute = PlanTokenRouteImport.update({
+  id: '/plan/$token',
+  path: '/plan/$token',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const MSlugRoute = MSlugRouteImport.update({
   id: '/m/$slug',
@@ -726,6 +732,7 @@ export interface FileRoutesByFullPath {
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/f/$token': typeof FTokenRoute
   '/m/$slug': typeof MSlugRouteWithChildren
+  '/plan/$token': typeof PlanTokenRoute
   '/privacy/breach-response': typeof PrivacyBreachResponseRoute
   '/privacy/dpia': typeof PrivacyDpiaRoute
   '/staff-accept/$token': typeof StaffAcceptTokenRoute
@@ -828,6 +835,7 @@ export interface FileRoutesByTo {
   '/c/$token': typeof CTokenRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/f/$token': typeof FTokenRoute
+  '/plan/$token': typeof PlanTokenRoute
   '/privacy/breach-response': typeof PrivacyBreachResponseRoute
   '/privacy/dpia': typeof PrivacyDpiaRoute
   '/staff-accept/$token': typeof StaffAcceptTokenRoute
@@ -934,6 +942,7 @@ export interface FileRoutesById {
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/f/$token': typeof FTokenRoute
   '/m/$slug': typeof MSlugRouteWithChildren
+  '/plan/$token': typeof PlanTokenRoute
   '/privacy/breach-response': typeof PrivacyBreachResponseRoute
   '/privacy/dpia': typeof PrivacyDpiaRoute
   '/staff-accept/$token': typeof StaffAcceptTokenRoute
@@ -1042,6 +1051,7 @@ export interface FileRouteTypes {
     | '/email/unsubscribe'
     | '/f/$token'
     | '/m/$slug'
+    | '/plan/$token'
     | '/privacy/breach-response'
     | '/privacy/dpia'
     | '/staff-accept/$token'
@@ -1144,6 +1154,7 @@ export interface FileRouteTypes {
     | '/c/$token'
     | '/email/unsubscribe'
     | '/f/$token'
+    | '/plan/$token'
     | '/privacy/breach-response'
     | '/privacy/dpia'
     | '/staff-accept/$token'
@@ -1249,6 +1260,7 @@ export interface FileRouteTypes {
     | '/email/unsubscribe'
     | '/f/$token'
     | '/m/$slug'
+    | '/plan/$token'
     | '/privacy/breach-response'
     | '/privacy/dpia'
     | '/staff-accept/$token'
@@ -1351,6 +1363,7 @@ export interface RootRouteChildren {
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   FTokenRoute: typeof FTokenRoute
   MSlugRoute: typeof MSlugRouteWithChildren
+  PlanTokenRoute: typeof PlanTokenRoute
   StaffAcceptTokenRoute: typeof StaffAcceptTokenRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   ApiPublicBookingReleaseRoute: typeof ApiPublicBookingReleaseRoute
@@ -1461,6 +1474,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/privacy/breach-response'
       preLoaderRoute: typeof PrivacyBreachResponseRouteImport
       parentRoute: typeof PrivacyRoute
+    }
+    '/plan/$token': {
+      id: '/plan/$token'
+      path: '/plan/$token'
+      fullPath: '/plan/$token'
+      preLoaderRoute: typeof PlanTokenRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/m/$slug': {
       id: '/m/$slug'
@@ -2391,6 +2411,7 @@ const rootRouteChildren: RootRouteChildren = {
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   FTokenRoute: FTokenRoute,
   MSlugRoute: MSlugRouteWithChildren,
+  PlanTokenRoute: PlanTokenRoute,
   StaffAcceptTokenRoute: StaffAcceptTokenRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   ApiPublicBookingReleaseRoute: ApiPublicBookingReleaseRoute,
