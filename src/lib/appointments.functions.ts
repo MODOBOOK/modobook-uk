@@ -29,6 +29,7 @@ export const createAppointmentForPatient = createServerFn({ method: "POST" })
       basePrice: number;
       extraConsentTemplateIds?: string[];
       medicalFormTemplateIds?: string[];
+      modelSlotId?: string | null;
     }) => input,
   )
   .handler(async ({ data, context }) => {
