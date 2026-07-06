@@ -1519,6 +1519,11 @@ function BookPage() {
                                               ? "Any date & time — pick when to book"
                                               : `${new Date((s.slot_date ?? "") + "T00:00:00").toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" })} · ${(s.start_time ?? "").slice(0,5)}–${(s.end_time ?? "").slice(0,5)}`}
                                           </p>
+                                          {s.location_id && locById.get(s.location_id) && (
+                                            <p className="mt-0.5 text-[11px] font-medium" style={{ color: brand }}>
+                                              📍 {locById.get(s.location_id)!.name}
+                                            </p>
+                                          )}
 
                                           <p className="mt-1 text-sm">
                                             <span className="line-through text-muted-foreground">£{base.toFixed(2)}</span>{" "}
@@ -1526,7 +1531,7 @@ function BookPage() {
                                           </p>
                                           {s.notes && <p className="mt-1 text-xs italic text-muted-foreground">{s.notes}</p>}
                                           <a
-                                            href={`/m/${slug}/book/${t.id}?model=${s.id}${locationId ? `&locationId=${locationId}` : ""}`}
+                                            href={`/m/${slug}/book/${t.id}?model=${s.id}${s.location_id ? `&locationId=${s.location_id}` : locationId ? `&locationId=${locationId}` : ""}`}
                                             className="mt-2 inline-block rounded-md px-3 py-1.5 text-xs font-semibold text-white"
                                             style={{ backgroundColor: brand }}
                                           >
