@@ -254,10 +254,13 @@ function BookPage() {
       concernLinks: { concern_id: string; treatment_id: string }[];
       modelSlots?: {
         id: string; treatment_id: string; location_id: string | null;
-        slot_date: string; start_time: string; end_time: string;
+        slot_date: string | null; start_time: string | null; end_time: string | null;
         price_mode: "fixed" | "percent"; price_value: number; notes: string | null;
         category?: string | null;
+        is_flexible?: boolean | null;
       }[];
+      bookingCounts?: { treatment_id: string; booked_count: number }[];
+
       addonLinks?: { treatment_id: string; addon_id: string; discount_percent: number | null; discount_amount: number | null }[];
       practitioners?: { id: string; name: string; professional_title: string | null; photo_url: string | null; bio: string | null; display_order: number }[];
       locationPractitioners?: { location_id: string; practitioner_id: string; display_order: number }[];
