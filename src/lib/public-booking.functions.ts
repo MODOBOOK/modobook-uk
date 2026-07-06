@@ -845,7 +845,7 @@ async function maybeCreateBookingCheckout(args: {
   const chosenMethod = args.choice?.method;
   const effectivelyCard =
     chosenMethod === "card" || (!chosenMethod && enabled.card);
-  if (saveCardOnFile && effectivelyCard) {
+  if (effectivelyCard) {
     // Force card-only for this intent so surcharge math and the Payment
     // Element render match.
     methodTypes = ["card"];
@@ -864,6 +864,7 @@ async function maybeCreateBookingCheckout(args: {
         customerEmail: args.patientEmail,
         description: kind === "deposit" ? `Deposit — ${args.description}` : args.description,
         metadata,
+        saveForFutureUse: saveCardOnFile,
       });
       if (!intent.clientSecret) return null;
       const returnUrl = `${origin}/m/${p.slug ?? ""}/account?paid=1&pi=${intent.paymentIntentId}`;
