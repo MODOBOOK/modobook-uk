@@ -60,7 +60,9 @@ type Treatment = {
   prescriber_user_id?: string | null;
   prescriber_routing?: "same_address" | "clinic_visit" | "in_person_consult" | null;
   prescriber_note?: string | null;
+  booking_cap?: number | null;
 };
+
 
 
 type Category = {
@@ -101,7 +103,9 @@ type TreatmentForm = {
   prescriber_user_id: string | null;
   prescriber_routing: "same_address" | "clinic_visit" | "in_person_consult";
   prescriber_note: string | null;
+  booking_cap: number | null;
 };
+
 
 
 
@@ -456,6 +460,12 @@ function TreatmentDialog({
     (treatment?.prescriber_routing as "same_address" | "clinic_visit" | "in_person_consult" | null) ?? "same_address",
   );
   const [prescriberNote, setPrescriberNote] = useState<string>(treatment?.prescriber_note ?? "");
+  const [bookingCap, setBookingCap] = useState<string>(
+    (treatment as { booking_cap?: number | null } | null)?.booking_cap != null
+      ? String((treatment as { booking_cap?: number | null }).booking_cap)
+      : "",
+  );
+
   const fetchPrescribers = useServerFn(listMyConnectedPrescribers);
   const [prescribers, setPrescribers] = useState<{ user_id: string; name: string; regulatory_body: string | null }[]>([]);
   useEffect(() => {
@@ -667,6 +677,22 @@ function TreatmentDialog({
             <p className="mt-1 text-[11px] text-muted-foreground">Shows a small label next to the service.</p>
           </div>
         </div>
+
+        <div>
+          <Label>Booking cap (total spots)</Label>
+          <Input
+            type="number"
+            min={0}
+            placeholder="Unlimited"
+            value={bookingCap}
+            onChange={(e) => setBookingCap(e.target.value)}
+          />
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            Limit how many patients can ever book this treatment. Patients see "X of Y spots left" and the Book button is disabled once full. Leave empty for unlimited.
+          </p>
+        </div>
+
+
 
         <div>
           <div className="flex items-center justify-between gap-2">
@@ -1045,7 +1071,9 @@ function TreatmentDialog({
               prescriber_user_id: requiresPrescriber ? (prescriberUserId || null) : null,
               prescriber_routing: prescriberRouting,
               prescriber_note: prescriberNote.trim() ? prescriberNote.trim() : null,
+              booking_cap: bookingCap.trim() === "" ? null : Math.max(0, Math.floor(Number(bookingCap))),
             })
+
 
           }
           disabled={!name}

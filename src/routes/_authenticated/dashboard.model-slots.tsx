@@ -24,11 +24,13 @@ export const Route = createFileRoute("/_authenticated/dashboard/model-slots")({
 
 type Slot = {
   id: string; treatment_id: string; location_id: string | null;
-  slot_date: string; start_time: string; end_time: string;
+  slot_date: string | null; start_time: string | null; end_time: string | null;
   price_mode: "fixed" | "percent"; price_value: number;
   notes: string | null; booked_appointment_id: string | null; active: boolean;
   category: string | null;
+  is_flexible?: boolean | null;
 };
+
 type Treat = { id: string; name: string; price: number; duration: number };
 type Loc = { id: string; name: string };
 
@@ -113,10 +115,17 @@ function ModelSlotsPage() {
                   <p className="truncate text-sm font-semibold">{t?.name ?? "(deleted)"}</p>
                   <p className="text-xs text-muted-foreground">
                     <Calendar className="-mt-0.5 mr-1 inline h-3 w-3" />
-                    {new Date(s.slot_date + "T00:00:00").toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" })}{" "}
-                    · {s.start_time.slice(0, 5)}–{s.end_time.slice(0, 5)}
+                    {s.is_flexible ? (
+                      <span className="font-medium text-fuchsia-700">Any date &amp; time — patient picks</span>
+                    ) : (
+                      <>
+                        {new Date((s.slot_date ?? "") + "T00:00:00").toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" })}{" "}
+                        · {(s.start_time ?? "").slice(0, 5)}–{(s.end_time ?? "").slice(0, 5)}
+                      </>
+                    )}
                     {s.location_id && lById.get(s.location_id) ? ` · ${lById.get(s.location_id)!.name}` : ""}
                   </p>
+
                   {s.category && (
                     <p className="mt-0.5 inline-block rounded-full bg-fuchsia-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-fuchsia-700">{s.category}</p>
                   )}
@@ -173,6 +182,9 @@ function SlotEditor({ existing, treatments, locations, onClose, onSaved }: {
   const [notes, setNotes] = useState(existing?.notes ?? "");
   const [active, setActive] = useState(existing?.active ?? true);
   const [category, setCategory] = useState(existing?.category ?? "");
+  const [isFlexible, setIsFlexible] = useState<boolean>(!!existing?.is_flexible);
+
+
 
 
   // Inline "create new treatment" state
@@ -207,7 +219,7 @@ function SlotEditor({ existing, treatments, locations, onClose, onSaved }: {
 
   async function submit() {
     if (selectedIds.length === 0) { toast.error("Select at least one treatment"); return; }
-    if (!date || !startT || !endT) { toast.error("Fill date and times"); return; }
+    if (!isFlexible && (!date || !startT || !endT)) { toast.error("Fill date and times, or turn on 'Any date/time'"); return; }
     const v = Number(value);
     if (!Number.isFinite(v) || v < 0) { toast.error("Enter a valid price"); return; }
     if (mode === "percent" && v > 100) { toast.error("Percent must be ≤ 100"); return; }
@@ -217,21 +229,27 @@ function SlotEditor({ existing, treatments, locations, onClose, onSaved }: {
           id: existing!.id,
           treatment_id: selectedIds[0],
           location_id: locationId || null,
-          slot_date: date, start_time: startT, end_time: endT,
+          is_flexible: isFlexible,
+          slot_date: isFlexible ? null : date,
+          start_time: isFlexible ? null : startT,
+          end_time: isFlexible ? null : endT,
           price_mode: mode, price_value: v,
           notes: notes || null, active, category: category.trim() || null,
         }});
       } else {
-        const windows = [
-          { date, start: startT, end: endT },
-          ...extraWindows.filter((w) => w.date && w.start && w.end),
-        ];
+        const windows = isFlexible
+          ? [{ date: null, start: null, end: null }]
+          : [
+              { date, start: startT, end: endT },
+              ...extraWindows.filter((w) => w.date && w.start && w.end),
+            ];
         let count = 0;
         for (const w of windows) {
           for (const tid of selectedIds) {
             await save({ data: {
               treatment_id: tid,
               location_id: locationId || null,
+              is_flexible: isFlexible,
               slot_date: w.date, start_time: w.start, end_time: w.end,
               price_mode: mode, price_value: v,
               notes: notes || null, active, category: category.trim() || null,
@@ -247,6 +265,8 @@ function SlotEditor({ existing, treatments, locations, onClose, onSaved }: {
       onSaved();
     } catch (e) { toast.error((e as Error).message); }
   }
+
+
 
 
   const previewT = allTreatments.find((x) => x.id === selectedIds[0]);
@@ -309,27 +329,40 @@ function SlotEditor({ existing, treatments, locations, onClose, onSaved }: {
               </Select>
             </div>
           )}
-          <div className="grid grid-cols-3 gap-3">
-            <div><Label>Date</Label><Input type="date" value={date} onChange={(e) => setDate(e.target.value)} /></div>
-            <div><Label>Start</Label><Input type="time" value={startT} onChange={(e) => setStartT(e.target.value)} /></div>
-            <div><Label>End</Label><Input type="time" value={endT} onChange={(e) => setEndT(e.target.value)} /></div>
-          </div>
-          {!isEdit && (
-            <div className="space-y-2">
-              {extraWindows.map((w, i) => (
-                <div key={i} className="grid grid-cols-[1fr_1fr_1fr_auto] gap-2 items-end">
-                  <div><Label className="text-xs">Date</Label><Input type="date" value={w.date} onChange={(e) => setExtraWindows((c) => c.map((x, ix) => ix === i ? { ...x, date: e.target.value } : x))} /></div>
-                  <div><Label className="text-xs">Start</Label><Input type="time" value={w.start} onChange={(e) => setExtraWindows((c) => c.map((x, ix) => ix === i ? { ...x, start: e.target.value } : x))} /></div>
-                  <div><Label className="text-xs">End</Label><Input type="time" value={w.end} onChange={(e) => setExtraWindows((c) => c.map((x, ix) => ix === i ? { ...x, end: e.target.value } : x))} /></div>
-                  <Button type="button" size="sm" variant="ghost" onClick={() => setExtraWindows((c) => c.filter((_, ix) => ix !== i))}><Trash2 className="h-4 w-4" /></Button>
-                </div>
-              ))}
-              <Button type="button" size="sm" variant="outline" onClick={() => setExtraWindows((c) => [...c, { date: "", start: "10:00", end: "11:00" }])}>
-                <Plus className="mr-1 h-3.5 w-3.5" />Add another date/time
-              </Button>
-              <p className="text-xs text-muted-foreground">Each window will create its own model slot for each selected treatment. Patients can book any back-to-back time within the window.</p>
+          <div className="flex items-start justify-between gap-3 rounded-md border border-dashed p-3">
+            <div className="min-w-0">
+              <Label className="m-0">Any date &amp; time</Label>
+              <p className="mt-0.5 text-[11px] text-muted-foreground">Patient picks any time in your normal availability at the model price — no fixed window.</p>
             </div>
+            <Switch checked={isFlexible} onCheckedChange={setIsFlexible} />
+          </div>
+
+          {!isFlexible && (
+            <>
+              <div className="grid grid-cols-3 gap-3">
+                <div><Label>Date</Label><Input type="date" value={date} onChange={(e) => setDate(e.target.value)} /></div>
+                <div><Label>Start</Label><Input type="time" value={startT} onChange={(e) => setStartT(e.target.value)} /></div>
+                <div><Label>End</Label><Input type="time" value={endT} onChange={(e) => setEndT(e.target.value)} /></div>
+              </div>
+              {!isEdit && (
+                <div className="space-y-2">
+                  {extraWindows.map((w, i) => (
+                    <div key={i} className="grid grid-cols-[1fr_1fr_1fr_auto] gap-2 items-end">
+                      <div><Label className="text-xs">Date</Label><Input type="date" value={w.date} onChange={(e) => setExtraWindows((c) => c.map((x, ix) => ix === i ? { ...x, date: e.target.value } : x))} /></div>
+                      <div><Label className="text-xs">Start</Label><Input type="time" value={w.start} onChange={(e) => setExtraWindows((c) => c.map((x, ix) => ix === i ? { ...x, start: e.target.value } : x))} /></div>
+                      <div><Label className="text-xs">End</Label><Input type="time" value={w.end} onChange={(e) => setExtraWindows((c) => c.map((x, ix) => ix === i ? { ...x, end: e.target.value } : x))} /></div>
+                      <Button type="button" size="sm" variant="ghost" onClick={() => setExtraWindows((c) => c.filter((_, ix) => ix !== i))}><Trash2 className="h-4 w-4" /></Button>
+                    </div>
+                  ))}
+                  <Button type="button" size="sm" variant="outline" onClick={() => setExtraWindows((c) => [...c, { date: "", start: "10:00", end: "11:00" }])}>
+                    <Plus className="mr-1 h-3.5 w-3.5" />Add another date/time
+                  </Button>
+                  <p className="text-xs text-muted-foreground">Each window will create its own model slot for each selected treatment. Patients can book any back-to-back time within the window.</p>
+                </div>
+              )}
+            </>
           )}
+
 
           <div className="grid grid-cols-2 gap-3">
             <div>

@@ -144,7 +144,9 @@ export const updateTreatment = createServerFn({ method: "POST" })
       prescriber_user_id?: string | null;
       prescriber_routing?: "same_address" | "clinic_visit" | "in_person_consult";
       prescriber_note?: string | null;
+      booking_cap?: number | null;
     }) => input,
+
 
 
 
@@ -188,6 +190,8 @@ export const updateTreatment = createServerFn({ method: "POST" })
     if (data.prescriber_user_id !== undefined) update.prescriber_user_id = data.prescriber_user_id;
     if (data.prescriber_routing !== undefined) update.prescriber_routing = data.prescriber_routing;
     if (data.prescriber_note !== undefined) update.prescriber_note = data.prescriber_note;
+    if (data.booking_cap !== undefined) update.booking_cap = data.booking_cap;
+
 
 
     const { data: treatment, error } = await supabase

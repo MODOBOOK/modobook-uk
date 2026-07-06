@@ -205,7 +205,7 @@ function WelcomeIntroBlock({
 type Theme = Database["public"]["Tables"]["clinic_theme"]["Row"];
 
 function BookPage() {
-  const { profile, treatments, packages, locations, categories, pricing, theme, reviews, concernAreas, concerns, concernLinks, modelSlots = [], addonLinks = [], practitioners = [], locationPractitioners = [], aboutPage, careGuides = [], pretreatment = [] } =
+  const { profile, treatments, packages, locations, categories, pricing, theme, reviews, concernAreas, concerns, concernLinks, modelSlots = [], addonLinks = [], practitioners = [], locationPractitioners = [], aboutPage, careGuides = [], pretreatment = [], bookingCounts = [] } =
     Route.useLoaderData() as {
       profile: {
         id: string;
@@ -254,10 +254,13 @@ function BookPage() {
       concernLinks: { concern_id: string; treatment_id: string }[];
       modelSlots?: {
         id: string; treatment_id: string; location_id: string | null;
-        slot_date: string; start_time: string; end_time: string;
+        slot_date: string | null; start_time: string | null; end_time: string | null;
         price_mode: "fixed" | "percent"; price_value: number; notes: string | null;
         category?: string | null;
+        is_flexible?: boolean | null;
       }[];
+      bookingCounts?: { treatment_id: string; booked_count: number }[];
+
       addonLinks?: { treatment_id: string; addon_id: string; discount_percent: number | null; discount_amount: number | null }[];
       practitioners?: { id: string; name: string; professional_title: string | null; photo_url: string | null; bio: string | null; display_order: number }[];
       locationPractitioners?: { location_id: string; practitioner_id: string; display_order: number }[];
@@ -505,6 +508,15 @@ function BookPage() {
     }
     return t.duration ?? 0;
   };
+  const bookingCountMap = new Map(bookingCounts.map((c) => [c.treatment_id, Number(c.booked_count)]));
+  const capFor = (t: Treatment) => {
+    const cap = (t as { booking_cap?: number | null }).booking_cap ?? null;
+    if (cap == null) return null;
+    const count = bookingCountMap.get(t.id) ?? 0;
+    const left = Math.max(0, cap - count);
+    return { cap, count, left, full: left <= 0 };
+  };
+
   const isAvailableAtLocation = (t: Treatment) => {
     if (!locationId) return true;
     const rows = pricing.filter((p) => p.treatment_id === t.id);
@@ -1279,6 +1291,12 @@ function BookPage() {
                           {sessions}
                         </div>
                       )}
+                      {(() => {
+                        const c = capFor(t);
+                        if (!c) return null;
+                        if (c.full) return <div className="text-[11px] font-semibold uppercase tracking-wide text-rose-600">Fully booked</div>;
+                        return <div className="text-[11px] font-semibold uppercase tracking-wide text-emerald-600">Only {c.left} of {c.cap} spots left</div>;
+                      })()}
                       {t.description && (
                         <div className={`text-xs leading-relaxed opacity-70 ${isExpanded ? "" : "line-clamp-1"}`}>
                           {t.description}
@@ -1298,17 +1316,24 @@ function BookPage() {
                       )}
                       <div className="mt-auto flex items-center justify-between border-t pt-2 text-xs" style={{ borderColor: `${brand}1f` }}>
                         <span className="opacity-70">{durationFor(t)} min</span>
-                        <Link
-                          to="/m/$slug/book/$treatmentId"
-                    search={{ locationId: locationId ?? undefined }}
-                          params={{ slug, treatmentId: t.id }}
-                          className="rounded-full px-4 py-2 text-xs font-semibold text-white shadow-sm"
-                          style={{ backgroundColor: brand }}
-                        >
-                          Book
-                        </Link>
+                        {capFor(t)?.full ? (
+                          <span className="rounded-full px-4 py-2 text-xs font-semibold text-white shadow-sm opacity-60" style={{ backgroundColor: "#6b7280" }}>
+                            Fully booked
+                          </span>
+                        ) : (
+                          <Link
+                            to="/m/$slug/book/$treatmentId"
+                            search={{ locationId: locationId ?? undefined }}
+                            params={{ slug, treatmentId: t.id }}
+                            className="rounded-full px-4 py-2 text-xs font-semibold text-white shadow-sm"
+                            style={{ backgroundColor: brand }}
+                          >
+                            Book
+                          </Link>
+                        )}
                       </div>
                     </div>
+
                   </div>
                 );
               })}
@@ -1396,7 +1421,9 @@ function BookPage() {
                           priceColor={menuPriceColor}
                           size={menuSize}
                           bold={menuTreatmentBold}
+                          capInfo={capFor(t)}
                         />
+
                       ))}
                     </div>
                   )}
@@ -1488,8 +1515,11 @@ function BookPage() {
                                         <div key={s.id} className="rounded-xl border bg-white p-3">
                                           <p className="text-sm font-semibold">{t.name}</p>
                                           <p className="text-xs text-muted-foreground">
-                                            {new Date(s.slot_date + "T00:00:00").toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" })} · {s.start_time.slice(0,5)}–{s.end_time.slice(0,5)}
+                                            {s.is_flexible
+                                              ? "Any date & time — pick when to book"
+                                              : `${new Date((s.slot_date ?? "") + "T00:00:00").toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" })} · ${(s.start_time ?? "").slice(0,5)}–${(s.end_time ?? "").slice(0,5)}`}
                                           </p>
+
                                           <p className="mt-1 text-sm">
                                             <span className="line-through text-muted-foreground">£{base.toFixed(2)}</span>{" "}
                                             <span className="font-bold text-emerald-600">£{final.toFixed(2)}</span>
@@ -1537,7 +1567,9 @@ function BookPage() {
                             bold={menuTreatmentBold}
                             categoryBold={menuCategoryBold}
                             headingFont={headingFont}
+                            capFor={capFor}
                           />
+
                         )}
                         {tree.uncategorised.length > 0 && (
                           <div className="mt-4 space-y-2">
@@ -1562,7 +1594,9 @@ function BookPage() {
                                 priceColor={menuPriceColor}
                                 size={menuSize}
                                 bold={menuTreatmentBold}
+                                capInfo={capFor(t)}
                               />
+
                             ))}
                           </div>
                         )}
@@ -2121,6 +2155,7 @@ function CategoryTree({
   bold,
   categoryBold,
   headingFont,
+  capFor,
 }: {
   nodes: CatNode[];
   slug: string;
@@ -2140,6 +2175,8 @@ function CategoryTree({
   bold: boolean;
   categoryBold: boolean;
   headingFont: string;
+  capFor: (t: Treatment) => { cap: number; count: number; left: number; full: boolean } | null;
+
 }) {
   const visible = nodes.filter(
     (n) =>
@@ -2210,7 +2247,9 @@ function CategoryTree({
                     bold={bold}
                     categoryBold={categoryBold}
                     headingFont={headingFont}
+                    capFor={capFor}
                   />
+
                 )}
                 {node.treatments.map((t) => (
                   <TreatmentRow
@@ -2228,8 +2267,10 @@ function CategoryTree({
                     priceColor={priceColor}
                     size={size}
                     bold={bold}
+                    capInfo={capFor(t)}
                   />
                 ))}
+
               </AccordionContent>
             </AccordionItem>
           </Accordion>
@@ -2252,6 +2293,7 @@ function TreatmentRow({
   priceColor,
   size,
   bold,
+  capInfo,
 }: {
   t: Treatment;
   slug: string;
@@ -2260,7 +2302,9 @@ function TreatmentRow({
   brand: string;
   selected: boolean;
   onToggle: () => void;
+  capInfo?: { cap: number; count: number; left: number; full: boolean } | null;
 } & MenuStyleProps) {
+
   const [expanded, setExpanded] = useState(false);
   const desc = t.description ?? "";
   const isLong = desc.length > 110;
@@ -2286,9 +2330,10 @@ function TreatmentRow({
       <button
         type="button"
         onClick={onToggle}
+        disabled={capInfo?.full}
         aria-pressed={selected}
-        aria-label={selected ? "Deselect" : "Select"}
-        className={`mt-0.5 flex flex-shrink-0 items-center justify-center rounded-full border-2 transition ${checkSize}`}
+        aria-label={capInfo?.full ? "Fully booked" : selected ? "Deselect" : "Select"}
+        className={`mt-0.5 flex flex-shrink-0 items-center justify-center rounded-full border-2 transition ${checkSize} ${capInfo?.full ? "cursor-not-allowed opacity-40" : ""}`}
         style={
           selected
             ? { backgroundColor: brand, borderColor: brand, color: "#fff" }
@@ -2297,6 +2342,7 @@ function TreatmentRow({
       >
         {selected && <Check className="h-3 w-3" />}
       </button>
+
       <button type="button" onClick={() => setExpanded((v) => !v)} className="min-w-0 flex-1 text-left">
         {picture && (
           <div className={`float-right ml-3 overflow-hidden rounded-lg bg-muted ${thumbSize} ${expanded ? "hidden" : ""}`}>
@@ -2360,7 +2406,19 @@ function TreatmentRow({
               Split payment available
             </span>
           )}
+          {capInfo && (
+            capInfo.full ? (
+              <span className="rounded-full bg-rose-100 px-2 py-0.5 text-xs font-semibold text-rose-700">
+                Fully booked
+              </span>
+            ) : (
+              <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">
+                Only {capInfo.left} of {capInfo.cap} left
+              </span>
+            )
+          )}
         </div>
+
 
         {expanded && picture && (
           <div className="mt-3 overflow-hidden rounded-lg bg-muted">

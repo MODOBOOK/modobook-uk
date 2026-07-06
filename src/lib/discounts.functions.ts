@@ -141,9 +141,10 @@ export const upsertModelSlot = createServerFn({ method: "POST" })
     id?: string;
     treatment_id: string;
     location_id?: string | null;
-    slot_date: string;
-    start_time: string;
-    end_time: string;
+    slot_date?: string | null;
+    start_time?: string | null;
+    end_time?: string | null;
+    is_flexible?: boolean;
     price_mode: "fixed" | "percent";
     price_value: number;
     notes?: string | null;
@@ -152,13 +153,15 @@ export const upsertModelSlot = createServerFn({ method: "POST" })
   }) => i)
   .handler(async ({ data, context }) => {
     const pid = await ownProfileId(context.supabase, context.userId);
+    const flexible = !!data.is_flexible;
     const row = {
       profile_id: pid,
       treatment_id: data.treatment_id,
       location_id: data.location_id ?? null,
-      slot_date: data.slot_date,
-      start_time: data.start_time,
-      end_time: data.end_time,
+      slot_date: flexible ? null : data.slot_date,
+      start_time: flexible ? null : data.start_time,
+      end_time: flexible ? null : data.end_time,
+      is_flexible: flexible,
       price_mode: data.price_mode,
       price_value: data.price_value,
       notes: data.notes ?? null,
@@ -176,6 +179,7 @@ export const upsertModelSlot = createServerFn({ method: "POST" })
     if (error) throw error;
     return { id: ins.id };
   });
+
 
 export const deleteModelSlot = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -199,10 +203,12 @@ export const getPublicModelSlots = createServerFn({ method: "GET" })
     const { data: rows, error } = await (sb as any)
       .from("model_slots").select("*")
       .eq("profile_id", profile.id)
-      .gte("slot_date", today)
+      .or(`is_flexible.eq.true,slot_date.gte.${today}`)
+      .order("is_flexible", { ascending: false })
       .order("slot_date", { ascending: true })
       .order("start_time", { ascending: true });
     if (error) throw error;
     return rows ?? [];
   });
+
 
