@@ -467,9 +467,14 @@ function BookingsPage() {
           apptsByDate={apptsByDate}
           blocksByDate={blocksByDate}
           rulesByDow={rulesByDow}
+          blockedDates={blockedDates}
+          overrides={overrides}
+          rotaAnchor={rotaAnchor}
+          locationFilter={locationFilter}
           todayStr={todayStr}
           onPickDay={(d) => { setAnchor(d); setView("day"); }}
         />
+
       ) : (
         <Card className="overflow-hidden" style={{ ["--gutter" as any]: "44px" }}>
           <div
