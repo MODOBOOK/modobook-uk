@@ -184,7 +184,12 @@ function PayPage() {
               <span className="text-xl font-semibold">{amountLabel}</span>
             </div>
             <Elements stripe={stripe} options={options}>
-              <CardForm returnUrl={details.returnUrl} brand={brand} accent={accent} />
+              <CardForm
+                returnUrl={details.returnUrl}
+                brand={brand}
+                accent={accent}
+                onConfirming={() => setConfirmed(true)}
+              />
             </Elements>
           </div>
         )}
