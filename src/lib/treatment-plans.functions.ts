@@ -560,3 +560,38 @@ export const declinePlan = createServerFn({ method: "POST" })
     if (error) throw error;
     return { ok: true };
   });
+
+// =================== PUBLIC (tokenised) ===================
+
+export const getPlanByToken = createServerFn({ method: "GET" })
+  .inputValidator((d: { token: string }) => d)
+  .handler(async ({ data }) => {
+    const { createClient } = await import("@supabase/supabase-js");
+    const sb = createClient(
+      process.env.SUPABASE_URL!,
+      process.env.SUPABASE_PUBLISHABLE_KEY!,
+      { auth: { storage: undefined, persistSession: false, autoRefreshToken: false } },
+    );
+    const { data: res, error } = await sb.rpc("get_plan_by_token", { _token: data.token });
+    if (error) throw error;
+    return res as any;
+  });
+
+export const respondToPlanByToken = createServerFn({ method: "POST" })
+  .inputValidator((d: { token: string; accept: boolean; reason?: string | null; tags?: string[] | null }) => d)
+  .handler(async ({ data }) => {
+    const { createClient } = await import("@supabase/supabase-js");
+    const sb = createClient(
+      process.env.SUPABASE_URL!,
+      process.env.SUPABASE_PUBLISHABLE_KEY!,
+      { auth: { storage: undefined, persistSession: false, autoRefreshToken: false } },
+    );
+    const { data: res, error } = await sb.rpc("respond_to_plan_by_token", {
+      _token: data.token,
+      _accept: data.accept,
+      _reason: data.reason ?? null,
+      _tags: data.tags ?? null,
+    });
+    if (error) throw error;
+    return res as any;
+  });
