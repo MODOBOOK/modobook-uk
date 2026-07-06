@@ -1694,7 +1694,7 @@ function BookPage() {
                       );
                     }
                     return (
-                      <Accordion type="multiple" defaultValue={groups.map((g) => g.id)} className="w-full space-y-2">
+                      <Accordion type="multiple" className="w-full space-y-2">
                         {groups.map((g) => (
                           <AccordionItem key={g.id} value={g.id} className="rounded-xl border px-3" style={{ borderColor: `${brand}26` }}>
                             <AccordionTrigger className="text-left text-base font-semibold" style={{ color: brand }}>
