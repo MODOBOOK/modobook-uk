@@ -158,7 +158,15 @@ function PayPage() {
   );
 }
 
-function CardForm({ returnUrl }: { returnUrl: string }) {
+function CardForm({
+  returnUrl,
+  brand,
+  accent,
+}: {
+  returnUrl: string;
+  brand: string;
+  accent: string;
+}) {
   const stripe = useStripe();
   const elements = useElements();
   const [submitting, setSubmitting] = useState(false);
@@ -173,7 +181,6 @@ function CardForm({ returnUrl }: { returnUrl: string }) {
       elements,
       confirmParams: { return_url: returnUrl },
     });
-    // If confirmPayment returns without redirecting, an error occurred.
     if (error) {
       setMessage(error.message ?? "Payment failed. Please try again.");
       setSubmitting(false);
@@ -185,9 +192,6 @@ function CardForm({ returnUrl }: { returnUrl: string }) {
       <PaymentElement
         options={{
           layout: "tabs",
-          // Hide Apple Pay, Google Pay and Link explicitly — the practitioner
-          // opted into card-on-file capture, and wallet / Link tokens are not
-          // consistently reusable off-session.
           wallets: { applePay: "never", googlePay: "never" },
           fields: { billingDetails: { address: "auto" } },
           paymentMethodOrder: ["card"],
@@ -198,14 +202,14 @@ function CardForm({ returnUrl }: { returnUrl: string }) {
           {message}
         </p>
       )}
-      <Button type="submit" disabled={!stripe || submitting} className="w-full">
-        {submitting ? "Processing…" : "Pay & save card"}
+      <Button
+        type="submit"
+        disabled={!stripe || submitting}
+        className="w-full"
+        style={{ backgroundColor: brand, color: "#ffffff", borderColor: accent }}
+      >
+        {submitting ? "Processing…" : "Pay now"}
       </Button>
-      <p className="text-[11px] text-muted-foreground">
-        Your card is stored securely by Stripe. It will only be charged
-        automatically for balances your clinic has authorised (e.g. no-show
-        fees).
-      </p>
     </form>
   );
 }
