@@ -297,10 +297,10 @@ export const sendPlan = createServerFn({ method: "POST" })
     if (error) throw error;
 
     let emailed = false;
-    if (clientEmail && slug) {
+    if (clientEmail && token) {
       try {
         const origin = process.env.PUBLIC_APP_URL || process.env.APP_URL || "https://modobook.uk";
-        const planUrl = `${origin}/m/${slug}/account`;
+        const planUrl = `${origin}/plan/${token}`;
         const { tryEnqueueAppEmail, getPractitionerBranding } = await import("@/lib/email/send.server");
         const branding = await getPractitionerBranding(pid);
         const firstName = String(clientName).split(" ")[0] || "there";
