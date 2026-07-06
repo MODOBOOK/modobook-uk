@@ -350,7 +350,7 @@ function BookPage() {
   const [directionsOpen, setDirectionsOpen] = useState(false);
   const [careGuideOpen, setCareGuideOpen] = useState(false);
   const [expandedFavId, setExpandedFavId] = useState<string | null>(null);
-  const [modelSlotsOpen, setModelSlotsOpen] = useState(true);
+  const [modelSlotsOpen, setModelSlotsOpen] = useState(false);
 
   const preItems = (pretreatment ?? []).length > 0
     ? (pretreatment ?? []).map((p) => ({ id: p.id, name: p.name, body_html: p.body_html, summary: p.summary, bullets: Array.isArray(p.bullets) ? p.bullets : [] }))
