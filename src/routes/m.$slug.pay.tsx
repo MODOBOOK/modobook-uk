@@ -49,6 +49,7 @@ function PayPage() {
   const [details, setDetails] = useState<EmbeddedPayment | null>(null);
   const [stripe, setStripe] = useState<Stripe | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [confirmed, setConfirmed] = useState(false);
 
   const brand = theme?.primary_color || "#111827";
   const accent = theme?.accent_color || brand;
