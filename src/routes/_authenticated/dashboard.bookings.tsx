@@ -50,6 +50,7 @@ import {
   markAppointmentNoShow,
   setClientBlocked,
 } from "@/lib/patient-actions.functions";
+import { getCardOnFileForAppointment, chargeCardOnFile } from "@/lib/card-on-file.functions";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/dashboard/bookings")({
@@ -1015,7 +1016,18 @@ function CheckoutSheet({
   const markNoShow = useServerFn(markAppointmentNoShow);
   const blockClient = useServerFn(setClientBlocked);
   const refund = useServerFn(refundAppointment);
+  const loadCard = useServerFn(getCardOnFileForAppointment);
+  const chargeCard = useServerFn(chargeCardOnFile);
   const navigate = useNavigate();
+
+  const [card, setCard] = useState<{ clientId: string; hasCard: boolean; brand: string | null; last4: string | null } | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    loadCard({ data: { appointmentId: a.id } })
+      .then((r) => { if (!cancelled) setCard(r as never); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [a.id, loadCard]);
 
   const [notes, setNotes] = useState(a.practitioner_notes ?? "");
   const [aftercare, setAftercare] = useState(a.aftercare_html ?? "");
@@ -1268,6 +1280,38 @@ function CheckoutSheet({
           <Button disabled={busy} variant="outline" onClick={() => markPaidWith("cash")}>Cash</Button>
           <Button disabled={busy} variant="outline" onClick={() => markPaidWith("bank_transfer")}>Bank transfer</Button>
         </div>
+
+        {card?.hasCard && card.clientId && (
+          <div className="border-t pt-2">
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={busy}
+              className="w-full border-emerald-600/40 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+              onClick={async () => {
+                const outstanding = Math.max(0, total - Number(a.amount_paid_cents ?? 0) / 100);
+                const suggested = outstanding > 0 ? outstanding.toFixed(2) : "";
+                const input = prompt(
+                  `Charge saved card ${card.brand ?? ""} ending ${card.last4 ?? "••••"}\n\nAmount (£):`,
+                  suggested,
+                );
+                if (input === null) return;
+                const amt = Number(input);
+                if (!isFinite(amt) || amt < 1) { toast.error("Enter an amount of £1.00 or more"); return; }
+                const reason = prompt("Reason for this charge (shown on the receipt):", checkoutNotes || "No-show / late cancel fee");
+                if (!reason?.trim()) { toast.error("Reason required"); return; }
+                if (!confirm(`Charge £${amt.toFixed(2)} to card ending ${card.last4}?\n\nReason: ${reason}`)) return;
+                setBusy(true);
+                try {
+                  await chargeCard({ data: { clientId: card.clientId, amountCents: Math.round(amt * 100), description: reason.trim() } });
+                  toast.success(`Charged £${amt.toFixed(2)} to card on file`);
+                } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
+              }}
+            >
+              <Percent className="h-3.5 w-3.5 mr-1" /> Charge card on file · {card.brand ?? "Card"} •••• {card.last4 ?? "••••"}
+            </Button>
+          </div>
+        )}
 
         {a.stripe_payment_intent_id && Number(a.amount_paid_cents ?? 0) > Number(a.amount_refunded_cents ?? 0) && (
           <div className="border-t pt-2 space-y-1.5">
