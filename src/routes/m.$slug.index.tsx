@@ -958,6 +958,8 @@ function BookPage() {
         </section>
       )}
 
+      {!locationId && modelSlotsBlock}
+
       {/* Contact us */}
       {(() => {
         if (!showContact) return null;
