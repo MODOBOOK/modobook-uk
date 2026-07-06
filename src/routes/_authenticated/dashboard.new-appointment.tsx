@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { getMyProfile } from "@/lib/profiles.functions";
 import { createAppointmentForPatient } from "@/lib/appointments.functions";
 import { createPaymentLink } from "@/lib/payment-links.functions";
+import { listMyModelSlots } from "@/lib/discounts.functions";
 import { listClients } from "@/lib/clients.functions";
 import { listConsentTemplates } from "@/lib/templates.functions";
 import { listMedicalTemplates } from "@/lib/templates.functions";
