@@ -35,6 +35,10 @@ export const Route = createFileRoute("/m/$slug/pay")({
     pi: typeof search.pi === "string" ? search.pi : undefined,
   }),
   ssr: false,
+  loader: async ({ params }) => {
+    const { theme } = await getPractitionerBio({ data: { slug: params.slug } });
+    return { theme };
+  },
   component: PayPage,
 });
 
