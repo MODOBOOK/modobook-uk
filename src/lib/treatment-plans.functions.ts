@@ -371,7 +371,7 @@ export const suggestPlanForClient = createServerFn({ method: "POST" })
     if (!pid) throw new Error("No profile");
 
     const [{ data: client }, { data: concerns }, { data: treatments }] = await Promise.all([
-      context.supabase.from("clinic_clients").select("id, full_name, date_of_birth, notes").eq("id", data.clientId).maybeSingle(),
+      context.supabase.from("clinic_clients").select("id, full_name, notes").eq("id", data.clientId).maybeSingle(),
       context.supabase.from("client_concerns").select("label, severity, notes, resolved").eq("client_id", data.clientId).eq("resolved", false),
       context.supabase.from("treatments").select("id, name, price, duration, description").eq("profile_id", pid).eq("active", true),
     ]);
