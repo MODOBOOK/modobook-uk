@@ -456,9 +456,22 @@ export const suggestPlanForClient = createServerFn({ method: "POST" })
   "description": string,
   "bookingMode": "rolling" | "upfront",
   "paymentMode": "per_session" | "course_upfront" | "deposit_then_per_session",
-  "sessions": [ { "treatmentId": string, "sessionNumber": number, "intervalWeeksFromPrevious": number, "notes": string } ]
+  "sessions": [ {
+    "treatmentId": string,
+    "sessionNumber": number,
+    "intervalWeeksFromPrevious": number,
+    "notes": string,
+    "sessionPurpose": string,
+    "expectedResults": string,
+    "downtime": string
+  } ]
 }
-Rules: 2-8 sessions. Session 1 has intervalWeeksFromPrevious 0. Use realistic intervals for the treatments chosen. Notes should be short and patient-specific.`;
+Rules: 2-8 sessions. Session 1 has intervalWeeksFromPrevious 0. Use realistic intervals for the treatments chosen. Notes should be short and patient-specific.
+For every session also fill:
+- sessionPurpose: 1-2 short sentences on why this session, what it targets.
+- expectedResults: 1-2 short sentences of realistic outcomes the patient should notice after this session.
+- downtime: brief expected downtime, side effects and aftercare guidance for this session (e.g. "Mild redness 24h, avoid sun 48h").
+Keep the language warm, plain-English and patient-facing.`;
 
     const user = `Patient: ${client.full_name}
 Active concerns:
@@ -499,6 +512,9 @@ ${data.extraContext ? `Additional context from practitioner: ${data.extraContext
         treatment_id: s.treatmentId,
         interval_weeks_from_previous: i === 0 ? 0 : Number(s.intervalWeeksFromPrevious) || 4,
         notes: s.notes ?? null,
+        session_purpose: s.sessionPurpose ?? null,
+        expected_results: s.expectedResults ?? null,
+        downtime: s.downtime ?? null,
       }));
     if (!sessions.length) throw new Error("AI could not build a plan. Add treatments and concerns and try again.");
 
