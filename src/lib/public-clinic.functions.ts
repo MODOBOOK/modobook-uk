@@ -126,7 +126,9 @@ export const getPublicClinic = createServerFn({ method: "GET" })
         .eq("show_on_public", true)
         .eq("active", true)
         .order("sort_order"),
+      supabase.rpc("get_public_treatment_booking_counts", { p_profile_id: profile.id }),
     ]);
+
 
 
 
