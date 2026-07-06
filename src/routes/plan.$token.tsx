@@ -62,7 +62,12 @@ function PlanTokenPage() {
     try {
       const r: any = await respondToPlanByToken({ data: { token, accept: true } });
       if (!r?.ok) throw new Error(r?.error || "Could not accept plan");
-      toast.success("Plan accepted");
+      toast.success("Plan accepted — let's book your first session");
+      const slug = r.slug || state?.clinic?.slug;
+      if (slug) {
+        window.location.href = `/m/${slug}`;
+        return;
+      }
       refresh();
     } catch (e: any) {
       toast.error(e.message);
@@ -236,8 +241,15 @@ function PlanTokenPage() {
             </CardContent>
           </Card>
         ) : plan.status === "accepted" || plan.status === "in_progress" ? (
-          <Card><CardContent className="pt-6 flex items-center gap-2 text-emerald-700">
-            <CheckCircle2 className="h-4 w-4" /> You've accepted this plan. Your practitioner will be in touch to book your next session.
+          <Card><CardContent className="pt-6 space-y-3">
+            <div className="flex items-center gap-2 text-emerald-700 text-sm">
+              <CheckCircle2 className="h-4 w-4" /> You've accepted this plan.
+            </div>
+            {clinic?.slug && (
+              <Button size="lg" onClick={() => { window.location.href = `/m/${clinic.slug}`; }} style={{ backgroundColor: brand }}>
+                Book first session
+              </Button>
+            )}
           </CardContent></Card>
         ) : null}
 
