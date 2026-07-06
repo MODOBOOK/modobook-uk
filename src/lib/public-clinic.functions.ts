@@ -99,7 +99,7 @@ export const getPublicClinic = createServerFn({ method: "GET" })
     ];
 
 
-    const [concernAreas, concerns, concernLinks, modelSlots, addonLinks, practitioners, locationPractitioners, aboutRpc, careGuides, pretreatment] = await Promise.all([
+    const [concernAreas, concerns, concernLinks, modelSlots, addonLinks, practitioners, locationPractitioners, aboutRpc, careGuides, pretreatment, bookingCounts] = await Promise.all([
       supabase.from("concern_areas").select("*").eq("profile_id", profile.id).order("sort_order"),
       supabase.from("concerns").select("*").eq("profile_id", profile.id).order("sort_order"),
       supabase.from("concern_treatments").select("concern_id, treatment_id, sort_order").eq("profile_id", profile.id),
