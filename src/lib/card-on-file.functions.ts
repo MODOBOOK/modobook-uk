@@ -41,7 +41,7 @@ export const chargeCardOnFile = createServerFn({ method: "POST" })
       stripe_customer_id: string | null;
       stripe_payment_method_id: string | null;
     };
-    if (c.profile_id !== userId) throw new Error("Not authorised for this client");
+    if (c.profile_id !== profileId) throw new Error("Not authorised for this client");
     if (!c.stripe_customer_id || !c.stripe_payment_method_id) {
       throw new Error("This patient has no card on file yet.");
     }
@@ -49,7 +49,7 @@ export const chargeCardOnFile = createServerFn({ method: "POST" })
     const { data: prof } = await supabase
       .from("profiles")
       .select("stripe_connect_account_id, stripe_connect_onboarding_status")
-      .eq("id", userId)
+      .eq("id", profileId)
       .maybeSingle();
     const p = prof as {
       stripe_connect_account_id: string | null;
