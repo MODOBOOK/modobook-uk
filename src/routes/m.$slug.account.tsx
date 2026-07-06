@@ -400,6 +400,9 @@ function Account() {
         onSaved={() => { setEditOpen(false); loadAll(); }}
       />
 
+      {/* Treatment plans */}
+      <PatientTreatmentPlans slug={slug} brand={brand} />
+
       {/* Appointments (tabs) */}
       <section className="mt-8">
         <h2 className="mb-3 flex items-center gap-2 text-base font-semibold" style={{ color: brand }}>
