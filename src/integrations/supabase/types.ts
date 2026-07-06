@@ -2800,15 +2800,16 @@ export type Database = {
           booked_appointment_id: string | null
           category: string | null
           created_at: string
-          end_time: string
+          end_time: string | null
           id: string
+          is_flexible: boolean
           location_id: string | null
           notes: string | null
           price_mode: string
           price_value: number
           profile_id: string
-          slot_date: string
-          start_time: string
+          slot_date: string | null
+          start_time: string | null
           treatment_id: string
           updated_at: string
         }
@@ -2817,15 +2818,16 @@ export type Database = {
           booked_appointment_id?: string | null
           category?: string | null
           created_at?: string
-          end_time: string
+          end_time?: string | null
           id?: string
+          is_flexible?: boolean
           location_id?: string | null
           notes?: string | null
           price_mode?: string
           price_value: number
           profile_id: string
-          slot_date: string
-          start_time: string
+          slot_date?: string | null
+          start_time?: string | null
           treatment_id: string
           updated_at?: string
         }
@@ -2834,15 +2836,16 @@ export type Database = {
           booked_appointment_id?: string | null
           category?: string | null
           created_at?: string
-          end_time?: string
+          end_time?: string | null
           id?: string
+          is_flexible?: boolean
           location_id?: string | null
           notes?: string | null
           price_mode?: string
           price_value?: number
           profile_id?: string
-          slot_date?: string
-          start_time?: string
+          slot_date?: string | null
+          start_time?: string | null
           treatment_id?: string
           updated_at?: string
         }
@@ -5276,6 +5279,7 @@ export type Database = {
           auto_send_aftercare: boolean
           auto_send_medical_forms: boolean
           badge: string | null
+          booking_cap: number | null
           category_id: string | null
           color: string | null
           consent_form_url: string | null
@@ -5320,6 +5324,7 @@ export type Database = {
           auto_send_aftercare?: boolean
           auto_send_medical_forms?: boolean
           badge?: string | null
+          booking_cap?: number | null
           category_id?: string | null
           color?: string | null
           consent_form_url?: string | null
@@ -5364,6 +5369,7 @@ export type Database = {
           auto_send_aftercare?: boolean
           auto_send_medical_forms?: boolean
           badge?: string | null
+          booking_cap?: number | null
           category_id?: string | null
           color?: string | null
           consent_form_url?: string | null
@@ -5715,6 +5721,13 @@ export type Database = {
           updated_at: string
           welcome_intro_html: string
           whatsapp_reminders_enabled: boolean
+        }[]
+      }
+      get_public_treatment_booking_counts: {
+        Args: { p_profile_id: string }
+        Returns: {
+          booked_count: number
+          treatment_id: string
         }[]
       }
       get_quiz_config_by_slug: {
