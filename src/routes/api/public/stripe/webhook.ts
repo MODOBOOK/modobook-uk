@@ -299,14 +299,12 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
 
 
             case "payment_intent.succeeded": {
-              // Save-card-on-file flow uses an embedded Payment Element on
-              // our own page instead of Stripe hosted Checkout. There is no
-              // checkout.session.completed event to hook into — instead this
-              // payment_intent.succeeded fires on the connected account when
-              // the patient confirms the card.
+              // Embedded card payments use our own Payment Element instead of
+              // Stripe hosted Checkout. There is no checkout.session.completed
+              // event to hook into — this payment_intent.succeeded fires on
+              // the connected account when the patient pays.
               const pi = event.data.object as Stripe.PaymentIntent;
               const metadata = pi.metadata ?? {};
-              if (metadata.save_card_on_file !== "1") break;
               if (!metadata.appointment_ids) break;
               if (!connectedAccountId) break;
 
@@ -353,9 +351,10 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
                 paidAppointmentIds.push(apptId);
               }
 
-              // Persist the saved PaymentMethod onto clinic_clients so the
-              // practitioner can charge no-show / late-cancel fees later.
-              try {
+              // Persist the saved PaymentMethod onto clinic_clients only when
+              // the practitioner has enabled save-card-on-file. Embedded card
+              // deposit payments still confirm here, but do not store cards.
+              if (metadata.save_card_on_file === "1") try {
                 const full = await stripe.paymentIntents.retrieve(
                   pi.id,
                   { expand: ["payment_method"] },
