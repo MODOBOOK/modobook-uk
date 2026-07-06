@@ -2149,6 +2149,7 @@ function CategoryTree({
   bold,
   categoryBold,
   headingFont,
+  capFor,
 }: {
   nodes: CatNode[];
   slug: string;
@@ -2168,6 +2169,8 @@ function CategoryTree({
   bold: boolean;
   categoryBold: boolean;
   headingFont: string;
+  capFor: (t: Treatment) => { cap: number; count: number; left: number; full: boolean } | null;
+
 }) {
   const visible = nodes.filter(
     (n) =>
