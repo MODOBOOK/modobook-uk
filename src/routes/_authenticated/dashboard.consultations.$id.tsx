@@ -232,6 +232,10 @@ export function ConsultationWizard() {
         {step === 8 && <Step8 invoice={c.invoice} email={c.patient_email} patientName={c.patient_name} consultationId={c.id} onChange={(v: any) => setField("invoice", v)} onComplete={complete} completed={c.status === "completed"} />}
       </CardContent></Card>
 
+      {c.patient_id && (
+        <TreatmentPlansPanel clientId={c.patient_id} consultationId={c.id} profileId={c.profile_id} />
+      )}
+
       {/* Sticky nav */}
       <div className="fixed inset-x-0 bottom-0 z-30 border-t bg-background/95 px-3 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:px-6">
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-3">
