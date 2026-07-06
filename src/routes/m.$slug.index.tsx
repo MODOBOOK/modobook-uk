@@ -595,6 +595,108 @@ function BookPage() {
   const heroHeading = theme?.hero_heading;
   const heroSubheading = theme?.hero_subheading;
   const logoUrl = theme?.logo_url;
+  const publicModelSlots = modelSlots.filter((s) => treatById.has(s.treatment_id));
+  const locById = new Map(locations.map((l) => [l.id, l]));
+  const groupedPublicModelSlots: { category: string; items: typeof publicModelSlots }[] = (() => {
+    if (publicModelSlots.length === 0) return [];
+    const map = new Map<string, typeof publicModelSlots>();
+    for (const s of publicModelSlots) {
+      const key = (s.category && s.category.trim()) || "General";
+      if (!map.has(key)) map.set(key, [] as typeof publicModelSlots);
+      map.get(key)!.push(s);
+    }
+    return Array.from(map.entries())
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([category, items]) => ({ category, items }));
+  })();
+  const totalPublicModelSlotCount = publicModelSlots.length;
+  const modelPosition = profile.model_slots_position === "bottom" ? "bottom" : "top";
+
+  const modelSlotsBlock = totalPublicModelSlotCount === 0 ? null : (
+    <section className="mx-auto mt-6 max-w-3xl px-4" data-section="model-slots">
+      <div
+        className="overflow-hidden rounded-2xl border-2 shadow-sm"
+        style={{ borderColor: `${brand}55`, backgroundColor: `${brand}08` }}
+      >
+        <button
+          type="button"
+          onClick={() => setModelSlotsOpen((v) => !v)}
+          className="flex w-full items-center gap-3 px-4 py-4 text-left sm:px-5 sm:py-5"
+          aria-expanded={modelSlotsOpen}
+        >
+          <span
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
+            style={{ backgroundColor: `${brand}18`, color: brand }}
+          >
+            <Sparkles className="h-5 w-5" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <h2 className="text-base font-bold sm:text-lg" style={{ color: brand }}>Model slots</h2>
+            <p className="truncate text-xs opacity-70">Discounted model appointments available</p>
+          </div>
+          <span
+            className="shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold"
+            style={{ backgroundColor: `${brand}18`, color: brand }}
+          >
+            {totalPublicModelSlotCount} available
+          </span>
+          <ChevronDown
+            className={`h-5 w-5 shrink-0 transition-transform ${modelSlotsOpen ? "rotate-180" : ""}`}
+            style={{ color: brand }}
+          />
+        </button>
+        {modelSlotsOpen && (
+          <div className="border-t px-3 pb-3 pt-3 sm:px-4 sm:pb-4" style={{ borderColor: `${brand}20` }}>
+            <div className="space-y-3">
+              {groupedPublicModelSlots.map((g) => (
+                <div key={g.category}>
+                  {groupedPublicModelSlots.length > 1 && (
+                    <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider opacity-70">{g.category}</p>
+                  )}
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {g.items.map((s) => {
+                      const t = treatById.get(s.treatment_id)!;
+                      const base = priceFor(t);
+                      const final = s.price_mode === "fixed" ? Number(s.price_value) : Math.max(0, base * (1 - Number(s.price_value) / 100));
+                      return (
+                        <div key={s.id} className="rounded-xl border bg-white p-3">
+                          <p className="text-sm font-semibold">{t.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {s.is_flexible
+                              ? "Any date & time — pick when to book"
+                              : `${new Date((s.slot_date ?? "") + "T00:00:00").toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" })} · ${(s.start_time ?? "").slice(0,5)}–${(s.end_time ?? "").slice(0,5)}`}
+                          </p>
+                          {s.location_id && locById.get(s.location_id) && (
+                            <p className="mt-0.5 text-[11px] font-medium" style={{ color: brand }}>
+                              📍 {locById.get(s.location_id)!.name}
+                            </p>
+                          )}
+                          <p className="mt-1 text-sm">
+                            <span className="line-through text-muted-foreground">£{base.toFixed(2)}</span>{" "}
+                            <span className="font-bold text-emerald-600">£{final.toFixed(2)}</span>
+                          </p>
+                          {s.notes && <p className="mt-1 text-xs italic text-muted-foreground">{s.notes}</p>}
+                          <Link
+                            to="/m/$slug/book/$treatmentId"
+                            search={{ model: s.id, locationId: s.location_id ?? locationId ?? undefined }}
+                            params={{ slug, treatmentId: t.id }}
+                            className="mt-2 inline-block rounded-md px-3 py-1.5 text-xs font-semibold text-white"
+                            style={{ backgroundColor: brand }}
+                          >
+                            Book this slot
+                          </Link>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </section>
+  );
 
   return (
     <main className="min-h-screen pb-16" style={pageStyle}>
