@@ -35,6 +35,7 @@ import { CommsTimeline } from "@/components/patient/CommsTimeline";
 import { EmailComposerDialog } from "@/components/patient/EmailComposerDialog";
 import { SendFormDialog } from "@/components/patient/SendFormDialog";
 import { ClientFormsList } from "@/components/patient/ClientFormsList";
+import { ClientConsentsList } from "@/components/patient/ClientConsentsList";
 import { ConsultationDocCard } from "@/components/patient/ConsultationDocCard";
 
 import { logCommunication, sendPatientEmail } from "@/lib/patient-hub.functions";
