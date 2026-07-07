@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { listConsentsForClient, sendConsentToClient, listMyConsentTemplates } from "@/lib/treatment-consents.functions";
+import { getConsentForClient, listConsentsForClient, sendConsentToClient, listMyConsentTemplates } from "@/lib/treatment-consents.functions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ShieldCheck, Send, Loader2, CheckCircle2, Clock, ExternalLink, Copy } from "lucide-react";
+import { ConsentSectionsView, type ConsentSection } from "@/components/ConsentSections";
+import { ShieldCheck, Send, Loader2, CheckCircle2, Clock, Eye, Copy } from "lucide-react";
 import { toast } from "sonner";
 
 export function ClientConsentsList({
@@ -19,13 +20,17 @@ export function ClientConsentsList({
   const list = useServerFn(listConsentsForClient);
   const listTemplates = useServerFn(listMyConsentTemplates);
   const send = useServerFn(sendConsentToClient);
+  const getConsent = useServerFn(getConsentForClient);
 
   const [rows, setRows] = useState<any[]>([]);
   const [templates, setTemplates] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [sendOpen, setSendOpen] = useState(false);
+  const [viewOpen, setViewOpen] = useState(false);
   const [templateId, setTemplateId] = useState<string>("");
   const [sending, setSending] = useState(false);
+  const [viewLoading, setViewLoading] = useState(false);
+  const [selectedConsent, setSelectedConsent] = useState<any>(null);
   const [bump, setBump] = useState(0);
 
   useEffect(() => {
@@ -70,6 +75,21 @@ export function ClientConsentsList({
       toast.error(e instanceof Error ? e.message : "Failed to send");
     } finally {
       setSending(false);
+    }
+  }
+
+  async function openConsent(token: string) {
+    setViewOpen(true);
+    setSelectedConsent(null);
+    setViewLoading(true);
+    try {
+      const row = await getConsent({ data: { client_id: client.id, token } });
+      setSelectedConsent(row);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to open consent form");
+      setViewOpen(false);
+    } finally {
+      setViewLoading(false);
     }
   }
 
@@ -119,9 +139,9 @@ export function ClientConsentsList({
                   </Button>
                 )}
                 <Button size="sm" variant="outline" className="h-7 px-2" asChild>
-                  <a href={url} target="_blank" rel="noreferrer" title={signed ? "View" : "Open"}>
-                    <ExternalLink className="h-3.5 w-3.5" />
-                  </a>
+                  <button type="button" onClick={() => openConsent(r.token)} title="View consent form">
+                    <Eye className="h-3.5 w-3.5" />
+                  </button>
                 </Button>
               </div>
             );
@@ -158,6 +178,45 @@ export function ClientConsentsList({
               {sending ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Send className="mr-1.5 h-3.5 w-3.5" />}
               Send
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={viewOpen} onOpenChange={setViewOpen}>
+        <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{selectedConsent?.template_name ?? "Consent form"}</DialogTitle>
+          </DialogHeader>
+          {viewLoading ? (
+            <div className="flex justify-center py-10"><Loader2 className="h-5 w-5 animate-spin" /></div>
+          ) : selectedConsent ? (
+            <div className="space-y-4">
+              <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                <Badge variant={selectedConsent.status === "signed" ? "default" : "secondary"}>
+                  {selectedConsent.status === "signed" ? "Signed" : "Pending"}
+                </Badge>
+                {selectedConsent.signed_at && <span>Signed {new Date(selectedConsent.signed_at).toLocaleString()}</span>}
+                {selectedConsent.signature_name && <span>by {selectedConsent.signature_name}</span>}
+              </div>
+              <ConsentSectionsView
+                sections={(selectedConsent.template_sections as ConsentSection[] | null) ?? null}
+                summary={selectedConsent.template_summary as string | null | undefined}
+                fallbackBody={selectedConsent.template_body}
+              />
+              {selectedConsent.signature_data && (
+                <div className="space-y-1.5 rounded-md border bg-muted/30 p-3">
+                  <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Signature</div>
+                  {String(selectedConsent.signature_data).startsWith("data:image") ? (
+                    <img src={selectedConsent.signature_data} alt="Patient signature" className="max-h-32 rounded border bg-white" />
+                  ) : (
+                    <div className="text-sm">{selectedConsent.signature_name || selectedConsent.signature_data}</div>
+                  )}
+                </div>
+              )}
+            </div>
+          ) : null}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setViewOpen(false)}>Close</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
