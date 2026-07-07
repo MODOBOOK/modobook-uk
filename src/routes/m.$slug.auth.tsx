@@ -71,12 +71,21 @@ function PatientAuth() {
     e.preventDefault();
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: { emailRedirectTo: `${window.location.origin}${search.redirect ?? `/m/${slug}/account`}` },
+        options: {
+          emailRedirectTo: `${window.location.origin}${search.redirect ?? `/m/${slug}/account`}`,
+          data: { full_name: name, phone },
+        },
       });
       if (error) throw error;
+      // If email confirmation is required (or the email is already registered),
+      // no session is returned — skip the authenticated ensurePatient call.
+      if (!data.session) {
+        toast.success("Check your email to confirm your account, then sign in.");
+        return;
+      }
       await ensure({ data: { fullName: name, phone, linkSlug: slug } });
       toast.success("Account created");
       goAfterAuth();
