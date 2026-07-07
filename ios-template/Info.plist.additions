@@ -1,0 +1,35 @@
+<!--
+  Additions to paste into ios/App/App/Info.plist after running `npx cap add ios`.
+  These are the iOS usage strings and background modes required for the
+  practitioner app's native features.
+-->
+
+<key>NSCameraUsageDescription</key>
+<string>Modo uses the camera so you can attach photos to patient records with their consent. Photos are uploaded to your clinic's secure storage and are not kept on this device.</string>
+
+<key>NSPhotoLibraryUsageDescription</key>
+<string>Modo can attach existing photos from your library to patient records with their consent. Selected photos are uploaded to your clinic's secure storage.</string>
+
+<key>NSPhotoLibraryAddUsageDescription</key>
+<string>Modo can save exported reports to your photo library when you choose to.</string>
+
+<key>NSFaceIDUsageDescription</key>
+<string>Modo uses Face ID to keep patient information private on your device.</string>
+
+<key>NSUserTrackingUsageDescription</key>
+<string>Modo does not track you across other apps or websites.</string>
+
+<key>UIBackgroundModes</key>
+<array>
+  <string>remote-notification</string>
+</array>
+
+<key>ITSAppUsesNonExemptEncryption</key>
+<false/>
+
+<!-- App Transport Security: HTTPS-only, no exceptions. -->
+<key>NSAppTransportSecurity</key>
+<dict>
+  <key>NSAllowsArbitraryLoads</key>
+  <false/>
+</dict>

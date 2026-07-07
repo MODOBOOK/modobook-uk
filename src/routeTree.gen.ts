@@ -17,6 +17,7 @@ import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PrescriberHubRouteImport } from './routes/prescriber-hub'
 import { Route as FeaturesRouteImport } from './routes/features'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AppRouteImport } from './routes/app'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as StaffAcceptTokenRouteImport } from './routes/staff-accept.$token'
@@ -61,6 +62,7 @@ import { Route as AuthenticatedDashboardSettingsRouteImport } from './routes/_au
 import { Route as AuthenticatedDashboardServicesRouteImport } from './routes/_authenticated/dashboard.services'
 import { Route as AuthenticatedDashboardReviewsRouteImport } from './routes/_authenticated/dashboard.reviews'
 import { Route as AuthenticatedDashboardReferralsRouteImport } from './routes/_authenticated/dashboard.referrals'
+import { Route as AuthenticatedDashboardPrivacyRouteImport } from './routes/_authenticated/dashboard.privacy'
 import { Route as AuthenticatedDashboardPreTreatmentRouteImport } from './routes/_authenticated/dashboard.pre-treatment'
 import { Route as AuthenticatedDashboardPractitionersRouteImport } from './routes/_authenticated/dashboard.practitioners'
 import { Route as AuthenticatedDashboardPoliciesRouteImport } from './routes/_authenticated/dashboard.policies'
@@ -154,6 +156,11 @@ const FeaturesRoute = FeaturesRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppRoute = AppRouteImport.update({
+  id: '/app',
+  path: '/app',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
@@ -391,6 +398,12 @@ const AuthenticatedDashboardReferralsRoute =
   AuthenticatedDashboardReferralsRouteImport.update({
     id: '/referrals',
     path: '/referrals',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardPrivacyRoute =
+  AuthenticatedDashboardPrivacyRouteImport.update({
+    id: '/privacy',
+    path: '/privacy',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
 const AuthenticatedDashboardPreTreatmentRoute =
@@ -713,6 +726,7 @@ const AuthenticatedDashboardMarketingCampaignsIdRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/app': typeof AppRoute
   '/auth': typeof AuthRoute
   '/features': typeof FeaturesRoute
   '/prescriber-hub': typeof PrescriberHubRoute
@@ -765,6 +779,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/policies': typeof AuthenticatedDashboardPoliciesRoute
   '/dashboard/practitioners': typeof AuthenticatedDashboardPractitionersRoute
   '/dashboard/pre-treatment': typeof AuthenticatedDashboardPreTreatmentRoute
+  '/dashboard/privacy': typeof AuthenticatedDashboardPrivacyRoute
   '/dashboard/referrals': typeof AuthenticatedDashboardReferralsRoute
   '/dashboard/reviews': typeof AuthenticatedDashboardReviewsRoute
   '/dashboard/services': typeof AuthenticatedDashboardServicesRoute
@@ -820,6 +835,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/app': typeof AppRoute
   '/auth': typeof AuthRoute
   '/features': typeof FeaturesRoute
   '/prescriber-hub': typeof PrescriberHubRoute
@@ -866,6 +882,7 @@ export interface FileRoutesByTo {
   '/dashboard/policies': typeof AuthenticatedDashboardPoliciesRoute
   '/dashboard/practitioners': typeof AuthenticatedDashboardPractitionersRoute
   '/dashboard/pre-treatment': typeof AuthenticatedDashboardPreTreatmentRoute
+  '/dashboard/privacy': typeof AuthenticatedDashboardPrivacyRoute
   '/dashboard/referrals': typeof AuthenticatedDashboardReferralsRoute
   '/dashboard/reviews': typeof AuthenticatedDashboardReviewsRoute
   '/dashboard/services': typeof AuthenticatedDashboardServicesRoute
@@ -923,6 +940,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
+  '/app': typeof AppRoute
   '/auth': typeof AuthRoute
   '/features': typeof FeaturesRoute
   '/prescriber-hub': typeof PrescriberHubRoute
@@ -975,6 +993,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/policies': typeof AuthenticatedDashboardPoliciesRoute
   '/_authenticated/dashboard/practitioners': typeof AuthenticatedDashboardPractitionersRoute
   '/_authenticated/dashboard/pre-treatment': typeof AuthenticatedDashboardPreTreatmentRoute
+  '/_authenticated/dashboard/privacy': typeof AuthenticatedDashboardPrivacyRoute
   '/_authenticated/dashboard/referrals': typeof AuthenticatedDashboardReferralsRoute
   '/_authenticated/dashboard/reviews': typeof AuthenticatedDashboardReviewsRoute
   '/_authenticated/dashboard/services': typeof AuthenticatedDashboardServicesRoute
@@ -1032,6 +1051,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/app'
     | '/auth'
     | '/features'
     | '/prescriber-hub'
@@ -1084,6 +1104,7 @@ export interface FileRouteTypes {
     | '/dashboard/policies'
     | '/dashboard/practitioners'
     | '/dashboard/pre-treatment'
+    | '/dashboard/privacy'
     | '/dashboard/referrals'
     | '/dashboard/reviews'
     | '/dashboard/services'
@@ -1139,6 +1160,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/app'
     | '/auth'
     | '/features'
     | '/prescriber-hub'
@@ -1185,6 +1207,7 @@ export interface FileRouteTypes {
     | '/dashboard/policies'
     | '/dashboard/practitioners'
     | '/dashboard/pre-treatment'
+    | '/dashboard/privacy'
     | '/dashboard/referrals'
     | '/dashboard/reviews'
     | '/dashboard/services'
@@ -1241,6 +1264,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/app'
     | '/auth'
     | '/features'
     | '/prescriber-hub'
@@ -1293,6 +1317,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/policies'
     | '/_authenticated/dashboard/practitioners'
     | '/_authenticated/dashboard/pre-treatment'
+    | '/_authenticated/dashboard/privacy'
     | '/_authenticated/dashboard/referrals'
     | '/_authenticated/dashboard/reviews'
     | '/_authenticated/dashboard/services'
@@ -1350,6 +1375,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
+  AppRoute: typeof AppRoute
   AuthRoute: typeof AuthRoute
   FeaturesRoute: typeof FeaturesRoute
   PrescriberHubRoute: typeof PrescriberHubRoute
@@ -1438,6 +1464,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app': {
+      id: '/app'
+      path: '/app'
+      fullPath: '/app'
+      preLoaderRoute: typeof AppRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -1746,6 +1779,13 @@ declare module '@tanstack/react-router' {
       path: '/referrals'
       fullPath: '/dashboard/referrals'
       preLoaderRoute: typeof AuthenticatedDashboardReferralsRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/privacy': {
+      id: '/_authenticated/dashboard/privacy'
+      path: '/privacy'
+      fullPath: '/dashboard/privacy'
+      preLoaderRoute: typeof AuthenticatedDashboardPrivacyRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
     '/_authenticated/dashboard/pre-treatment': {
@@ -2214,6 +2254,7 @@ interface AuthenticatedDashboardRouteChildren {
   AuthenticatedDashboardPoliciesRoute: typeof AuthenticatedDashboardPoliciesRoute
   AuthenticatedDashboardPractitionersRoute: typeof AuthenticatedDashboardPractitionersRoute
   AuthenticatedDashboardPreTreatmentRoute: typeof AuthenticatedDashboardPreTreatmentRoute
+  AuthenticatedDashboardPrivacyRoute: typeof AuthenticatedDashboardPrivacyRoute
   AuthenticatedDashboardReferralsRoute: typeof AuthenticatedDashboardReferralsRoute
   AuthenticatedDashboardReviewsRoute: typeof AuthenticatedDashboardReviewsRoute
   AuthenticatedDashboardServicesRoute: typeof AuthenticatedDashboardServicesRoute
@@ -2267,6 +2308,7 @@ const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
       AuthenticatedDashboardPractitionersRoute,
     AuthenticatedDashboardPreTreatmentRoute:
       AuthenticatedDashboardPreTreatmentRoute,
+    AuthenticatedDashboardPrivacyRoute: AuthenticatedDashboardPrivacyRoute,
     AuthenticatedDashboardReferralsRoute: AuthenticatedDashboardReferralsRoute,
     AuthenticatedDashboardReviewsRoute: AuthenticatedDashboardReviewsRoute,
     AuthenticatedDashboardServicesRoute: AuthenticatedDashboardServicesRoute,
@@ -2398,6 +2440,7 @@ const MSlugRouteWithChildren = MSlugRoute._addFileChildren(MSlugRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
+  AppRoute: AppRoute,
   AuthRoute: AuthRoute,
   FeaturesRoute: FeaturesRoute,
   PrescriberHubRoute: PrescriberHubRoute,
