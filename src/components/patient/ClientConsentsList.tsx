@@ -13,9 +13,13 @@ import { toast } from "sonner";
 export function ClientConsentsList({
   client,
   refreshKey = 0,
+  openSendKey = 0,
+  onSent,
 }: {
-  client: { id: string; full_name: string; email?: string | null };
+  client: { id: string; full_name: string; email?: string | null; phone?: string | null };
   refreshKey?: number;
+  openSendKey?: number;
+  onSent?: () => void;
 }) {
   const list = useServerFn(listConsentsForClient);
   const listTemplates = useServerFn(listMyConsentTemplates);
@@ -42,6 +46,12 @@ export function ClientConsentsList({
       .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
   }, [client.id, refreshKey, bump, list]);
+
+  useEffect(() => {
+    if (openSendKey > 0) void openSend();
+    // openSend intentionally omitted so this only reacts to the external trigger.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openSendKey]);
 
   async function openSend() {
     setSendOpen(true);
@@ -71,6 +81,7 @@ export function ClientConsentsList({
       setSendOpen(false);
       setTemplateId("");
       setBump((x) => x + 1);
+      onSent?.();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to send");
     } finally {
@@ -138,10 +149,8 @@ export function ClientConsentsList({
                     <Copy className="h-3.5 w-3.5" />
                   </Button>
                 )}
-                <Button size="sm" variant="outline" className="h-7 px-2" asChild>
-                  <button type="button" onClick={() => openConsent(r.token)} title="View consent form">
-                    <Eye className="h-3.5 w-3.5" />
-                  </button>
+                <Button size="sm" variant="outline" className="h-7 px-2" onClick={() => openConsent(r.token)} title="View consent form">
+                  <Eye className="h-3.5 w-3.5" />
                 </Button>
               </div>
             );
