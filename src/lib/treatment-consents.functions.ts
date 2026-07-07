@@ -1,6 +1,72 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+/** List all consents (per-appointment + standalone) for a client. */
+export const listConsentsForClient = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: { client_id: string }) => i)
+  .handler(async ({ data, context }) => {
+    const { data: rows, error } = await (context.supabase.rpc as any)(
+      "list_consents_for_client",
+      { p_client_id: data.client_id },
+    );
+    if (error) throw error;
+    return (rows ?? []) as Array<{
+      id: string;
+      token: string;
+      status: string;
+      signed_at: string | null;
+      signature_name: string | null;
+      created_at: string;
+      appointment_id: string | null;
+      template_id: string;
+      template_name: string;
+    }>;
+  });
+
+/** Send a consent form to a client outside of any appointment. */
+export const sendConsentToClient = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: { client_id: string; template_id: string; email?: string; sendEmail?: boolean }) => i)
+  .handler(async ({ data, context }) => {
+    const { data: row, error } = await (context.supabase.rpc as any)(
+      "send_consent_to_client",
+      { p_client_id: data.client_id, p_template_id: data.template_id },
+    );
+    if (error) throw error;
+    const r = Array.isArray(row) ? row[0] : row;
+    const id = r.id as string;
+    const token = r.token as string;
+
+    if (data.sendEmail && data.email) {
+      try {
+        const [{ data: tpl }, { data: client }, { data: profile }] = await Promise.all([
+          context.supabase.from("consent_templates").select("name").eq("id", data.template_id).maybeSingle(),
+          context.supabase.from("clinic_clients").select("full_name").eq("id", data.client_id).maybeSingle(),
+          context.supabase.from("profiles").select("id, clinic_name").eq("user_id", context.userId).maybeSingle(),
+        ]);
+        const { tryEnqueueAppEmail, getPractitionerBranding } = await import("@/lib/email/send.server");
+        const branding = await getPractitionerBranding((profile as { id?: string } | null)?.id);
+        const origin = process.env.PUBLIC_APP_URL || process.env.APP_URL || "https://modobook.uk";
+        await tryEnqueueAppEmail({
+          templateName: "medical-form-request",
+          recipientEmail: data.email,
+          messageId: `consent-request-${id}`,
+          templateData: {
+            patientName: (client?.full_name ?? "").split(" ")[0] || "there",
+            clinicName: profile?.clinic_name ?? branding.clinicName,
+            formName: tpl?.name ?? "consent form",
+            formUrl: `${origin}/c/${token}`,
+            logoUrl: branding.logoUrl,
+            brandColor: branding.brandColor,
+          },
+        });
+      } catch (e) { console.error("[sendConsentToClient] email failed", e); }
+    }
+
+    return { id, token };
+  });
+
 export const getTreatmentConsents = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { treatmentId: string }) => input)
