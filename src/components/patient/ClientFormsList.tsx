@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { SendFormDialog } from "./SendFormDialog";
+import { ClientConsentsList } from "./ClientConsentsList";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { SignaturePad } from "@/components/SignaturePad";
 
@@ -332,11 +333,13 @@ export function ClientFormsList({
   clinicName,
   refreshKey = 0,
   compact = false,
+  includeConsents = false,
 }: {
   client: { id: string; full_name: string; email?: string | null; phone?: string | null };
   clinicName?: string;
   refreshKey?: number;
   compact?: boolean;
+  includeConsents?: boolean;
 }) {
   const list = useServerFn(listFormsForClient);
   const [rows, setRows] = useState<any[]>([]);
@@ -428,6 +431,15 @@ export function ClientFormsList({
         clinicName={clinicName}
         onSent={() => setBump((x) => x + 1)}
       />
+
+      {includeConsents && (
+        <div className="border-t pt-3">
+          <ClientConsentsList
+            client={{ id: client.id, full_name: client.full_name, email: client.email }}
+            refreshKey={refreshKey}
+          />
+        </div>
+      )}
     </div>
   );
 }
