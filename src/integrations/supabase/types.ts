@@ -2107,6 +2107,33 @@ export type Database = {
           },
         ]
       }
+      device_push_tokens: {
+        Row: {
+          created_at: string
+          id: string
+          last_seen_at: string
+          platform: string
+          token: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_seen_at?: string
+          platform: string
+          token: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_seen_at?: string
+          platform?: string
+          token?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       discount_codes: {
         Row: {
           active: boolean
@@ -4160,6 +4187,7 @@ export type Database = {
           contact_sms_number: string | null
           contact_whatsapp_number: string | null
           created_at: string
+          deletion_requested_at: string | null
           deposit_amount_cents: number | null
           deposit_policy_text: string | null
           discount_stack_mode: string
@@ -4277,6 +4305,7 @@ export type Database = {
           contact_sms_number?: string | null
           contact_whatsapp_number?: string | null
           created_at?: string
+          deletion_requested_at?: string | null
           deposit_amount_cents?: number | null
           deposit_policy_text?: string | null
           discount_stack_mode?: string
@@ -4394,6 +4423,7 @@ export type Database = {
           contact_sms_number?: string | null
           contact_whatsapp_number?: string | null
           created_at?: string
+          deletion_requested_at?: string | null
           deposit_amount_cents?: number | null
           deposit_policy_text?: string | null
           discount_stack_mode?: string
