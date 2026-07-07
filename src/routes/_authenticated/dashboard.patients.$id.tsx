@@ -95,6 +95,7 @@ function PatientProfilePage() {
   const [editing, setEditing] = useState<null | "personal" | "emergency">(null);
   const [emailOpen, setEmailOpen] = useState(false);
   const [sendFormOpen, setSendFormOpen] = useState(false);
+  const [sendConsentKey, setSendConsentKey] = useState(0);
   const [payLinkOpen, setPayLinkOpen] = useState(false);
   const [commsRefresh, setCommsRefresh] = useState(0);
   const logComm = useServerFn(logCommunication);
@@ -195,6 +196,9 @@ function PatientProfilePage() {
           <Button size="sm" variant="outline" className="shrink-0" onClick={() => setSendFormOpen(true)}>
             <FileText className="mr-1.5 h-4 w-4" />Send form
           </Button>
+          <Button size="sm" variant="outline" className="shrink-0" onClick={() => setSendConsentKey((x) => x + 1)}>
+            <FileSignature className="mr-1.5 h-4 w-4" />Send consent
+          </Button>
           <Button size="sm" variant="outline" className="shrink-0" onClick={async () => {
             try {
               const r: any = await createConsult({ data: { patient_name: client.full_name, patient_email: client.email || undefined, patient_phone: client.phone || undefined, patient_id: client.id } });
@@ -269,12 +273,13 @@ function PatientProfilePage() {
 
 
       {/* Medical forms (sent / completed) */}
-      <Section title="Medical forms">
+      <Section title="Medical & consent forms">
         <ClientFormsList
           client={{ id: client.id, full_name: client.full_name, email: client.email, phone: client.phone }}
           clinicName={clinicName}
           refreshKey={commsRefresh}
           includeConsents
+          openConsentSendKey={sendConsentKey}
         />
       </Section>
 

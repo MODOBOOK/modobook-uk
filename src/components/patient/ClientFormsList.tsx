@@ -334,12 +334,14 @@ export function ClientFormsList({
   refreshKey = 0,
   compact = false,
   includeConsents = false,
+  openConsentSendKey = 0,
 }: {
   client: { id: string; full_name: string; email?: string | null; phone?: string | null };
   clinicName?: string;
   refreshKey?: number;
   compact?: boolean;
   includeConsents?: boolean;
+  openConsentSendKey?: number;
 }) {
   const list = useServerFn(listFormsForClient);
   const [rows, setRows] = useState<any[]>([]);
@@ -347,6 +349,7 @@ export function ClientFormsList({
   const [sendOpen, setSendOpen] = useState(false);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [bump, setBump] = useState(0);
+  const [consentSendKey, setConsentSendKey] = useState(0);
 
   useEffect(() => {
     let alive = true;
@@ -374,9 +377,16 @@ export function ClientFormsList({
           <FileText className="h-4 w-4 text-primary" />Medical forms
           {rows.length > 0 && <Badge variant="secondary" className="text-[10px]">{rows.length}</Badge>}
         </div>
-        <Button size="sm" variant="outline" onClick={() => setSendOpen(true)}>
-          <Send className="mr-1.5 h-3.5 w-3.5" />Add form
-        </Button>
+        <div className="flex flex-wrap justify-end gap-2">
+          <Button size="sm" variant="outline" onClick={() => setSendOpen(true)}>
+            <Send className="mr-1.5 h-3.5 w-3.5" />Add medical form
+          </Button>
+          {includeConsents && (
+            <Button size="sm" variant="outline" onClick={() => setConsentSendKey((x) => x + 1)}>
+              <Send className="mr-1.5 h-3.5 w-3.5" />Add consent form
+            </Button>
+          )}
+        </div>
       </div>
 
       {loading ? (
@@ -435,8 +445,10 @@ export function ClientFormsList({
       {includeConsents && (
         <div className="border-t pt-3">
           <ClientConsentsList
-            client={{ id: client.id, full_name: client.full_name, email: client.email }}
+            client={{ id: client.id, full_name: client.full_name, email: client.email, phone: client.phone }}
             refreshKey={refreshKey}
+            openSendKey={openConsentSendKey + consentSendKey}
+            onSent={() => setBump((x) => x + 1)}
           />
         </div>
       )}
