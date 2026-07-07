@@ -1,82 +1,87 @@
-## Treatment Plans
+# Practitioner iOS App (Capacitor)
 
-A multi-session course of treatments a practitioner proposes to a patient (often after a consultation), which the patient reviews in their hub, accepts, then books and pays for under the practitioner's chosen rules.
+## Approach
 
-### Data model (new tables)
+The app is a TanStack Start SSR app on Cloudflare Workers, so we can't ship a fully static bundle. The realistic App Store path is a **Capacitor iOS shell** that loads the practitioner side from the published domain (`modobook.uk`), plus native plugins for push, camera and Face ID so Apple sees genuine native functionality (bare webview wrappers get rejected under App Store Review Guideline 4.2).
 
-**`treatment_plan_templates`** — reusable plans practitioner builds once
-- `profile_id`, `name`, `description`, `default_interval_weeks`
-- `booking_mode` `'upfront' | 'rolling'`
-- `payment_mode` `'per_session' | 'course_upfront' | 'deposit_then_per_session'`
-- `course_price_cents` (nullable, for upfront), `deposit_cents` (nullable)
-- `is_active`
+The web app already handles auth, routing and RLS; the native shell adds hardware access and native notifications on top.
 
-**`treatment_plan_template_items`**
-- `template_id`, `treatment_id`, `session_number`, `interval_weeks_from_previous`, `notes`
+## What I'll build
 
-**`treatment_plans`** — a plan assigned to a specific patient
-- `profile_id` (practitioner), `client_id` (`clinic_clients.id`)
-- `consultation_id` (nullable), `template_id` (nullable)
-- `name`, `description`
-- `booking_mode`, `payment_mode`, `course_price_cents`, `deposit_cents`
-- `status` `'draft' | 'sent' | 'accepted' | 'declined' | 'in_progress' | 'completed' | 'cancelled'`
-- `sent_at`, `accepted_at`, `completed_at`
+### 1. Capacitor scaffold
+- Add `@capacitor/core`, `@capacitor/cli`, `@capacitor/ios`.
+- `capacitor.config.ts` with:
+  - `appId: uk.modobook.practitioner`
+  - `appName: Modo Practitioner`
+  - `server.url: https://modobook.uk` (production) with `androidScheme: 'https'`
+  - `server.allowNavigation: ['modobook.uk', '*.lovable.app']`
+- `npx cap add ios` — creates the `ios/` Xcode project committed to the repo.
 
-**`treatment_plan_sessions`**
-- `plan_id`, `session_number`, `treatment_id`
-- `interval_weeks_from_previous`
-- `suggested_date` (nullable)
-- `appointment_id` (nullable — set when booked)
-- `status` `'pending' | 'booked' | 'completed' | 'skipped'`
-- `notes`
+### 2. Practitioner-only entry
+- New route `/app` that redirects: signed-in practitioners → `/dashboard` or `/hub`, others → `/auth?next=/app`.
+- Capacitor `server.url` points at `https://modobook.uk/app` so the app always lands on the practitioner side. Patient booking URLs (`/m/...`, `/book/...`) open in the system browser via `@capacitor/browser` when tapped from inside the app.
+- A `useIsNativeApp()` hook (checks `Capacitor.isNativePlatform()`) hides patient-facing nav items and the "Switch to clinic" links you don't want in the iOS build.
 
-RLS: practitioner owns rows via `profile_id = auth.uid()`; patient reads their own plans via `clinic_clients` link (email/phone match through existing `patient-hub` pattern).
+### 3. Native features
 
-### Practitioner UX
+**Push notifications** (`@capacitor/push-notifications`)
+- Registers APNs token on login, stores it in a new `device_push_tokens` table (user_id, token, platform, last_seen) alongside your existing web-push table.
+- Server function `sendNativePush` uses Apple's HTTP/2 APNs endpoint with a signed JWT (APNs key + team + key id kept as Cloud secrets).
+- Reuses your existing notification triggers (new referral, appointment reminder, consent signed) — just fans out to native tokens too.
 
-- **New route `/dashboard/treatment-plans`** — list templates, create/edit template with drag-to-order sessions.
-- **On patient profile (`dashboard.patients.$id`)** — "Treatment plans" section: create from template / build manually / view existing. Shows progress "2 of 6 completed".
-- **On consultation page (`dashboard.consultations.$id`)** — "Create treatment plan from this consultation" button → prefills `consultation_id`, opens plan builder.
-- Plan builder lets practitioner pick booking mode + payment mode per plan.
-- "Send to patient" action sets status → `sent`, emails patient a summary with a hub link.
+**Camera / photo library** (`@capacitor/camera`)
+- Wrap the existing `ImageUploader` component so on native it calls `Camera.getPhoto({ source: Prompt })` instead of the `<input type=file>` — same upload endpoint, better UX for patient photos and signatures.
 
-### Patient UX (hub)
+**Face ID** (`@capacitor-community/biometric-auth`)
+- On app launch (and on resume after >5 min in background), require Face ID before revealing the webview. Setting toggle in `/dashboard/settings` → "Require Face ID".
+- Falls back to passcode; if biometry unavailable, skipped.
 
-- **New tab in `/hub` — "Treatment plans"** shows all sent/accepted plans.
-- Plan detail page: overview card (progress bar, X of Y sessions), list of sessions with dates/status, "Accept plan" CTA when `sent`.
-- After acceptance:
-  - `upfront` booking → picks all session dates in one flow with suggested intervals prefilled
-  - `rolling` → book session 1 now, after each completed appointment show "Book your next session" prompt
-- Payment enforced at booking based on `payment_mode`:
-  - `per_session` → normal per-appointment payment
-  - `course_upfront` → single Stripe checkout for `course_price_cents` on acceptance, all subsequent bookings free
-  - `deposit_then_per_session` → `deposit_cents` on acceptance, remainder per session
-- Existing `BookingPaymentPicker` reused; plan enforces which options appear.
+### 4. GDPR compliance additions
+- **App Privacy manifest** (`ios/App/App/PrivacyInfo.xcprivacy`) declaring data categories collected (name, email, health, photos), tracking = none, required-reason API declarations for file timestamps / UserDefaults.
+- **App Tracking Transparency**: not requested (we don't track across apps) — documented in privacy manifest.
+- **On first launch**: native consent screen (rendered in the web app, gated by `?firstRun=1`) covering data processing, health data handling, push opt-in, right to erasure. Stored in existing `terms_acceptances` table with a new `native_app_v1` key.
+- **Data export & delete**: add `/dashboard/settings/privacy` with "Download my data" (JSON export server function) and "Delete my account" (soft-delete + 30-day purge job) — Apple requires an in-app account deletion path since 2022.
+- **Info.plist usage strings**: `NSCameraUsageDescription`, `NSPhotoLibraryUsageDescription`, `NSFaceIDUsageDescription`, `NSUserNotificationUsageDescription` — all with GDPR-appropriate wording ("used only to attach photos to patient records you control").
+- **No third-party analytics SDKs** in the native shell.
 
-### Emails
+### 5. App Store assets (scaffolded, you fill in)
+- App icon set (1024 + all iOS sizes) generated from `src/assets/modo-logo.png`.
+- Splash screen via `@capacitor/splash-screen` using brand colours.
+- `README-ios.md` with the exact steps for building/archiving in Xcode, TestFlight upload, and App Store Connect metadata (privacy answers, screenshots list, review notes explaining the clinic-management purpose).
 
-- New app email template `treatment-plan-sent`: branded summary listing sessions + CTA button to hub plan page.
-- Triggered on "Send to patient".
+## What you'll need to do yourself
+These need a Mac + Apple Developer account and can't be done from Lovable:
+1. Open `ios/App/App.xcworkspace` in Xcode on a Mac.
+2. Sign in with your Apple Developer account, set the team, generate provisioning profiles.
+3. Upload an APNs auth key (.p8) — I'll add a form in `/dashboard/settings/notifications` to paste the key + team id + key id, stored as Cloud secrets.
+4. Fill App Store Connect metadata using the template I'll generate.
+5. `npx cap sync ios` + Archive + upload — instructions in `README-ios.md`.
 
-### Server functions (new file `src/lib/treatment-plans.functions.ts`)
+## Files I'll create / edit
 
-- `listPlanTemplates`, `upsertPlanTemplate`, `deletePlanTemplate`
-- `createPlanForClient` (from template or blank; optional `consultation_id`)
-- `listPlansForClient`, `getPlan` (practitioner)
-- `updatePlan`, `sendPlan`, `cancelPlan`
-- `getPlanForPatient` (auth as patient via hub), `acceptPlan`, `declinePlan`
-- `bookPlanSession` (links appointment to session), auto-called from existing booking flow when `?planSession=<id>` query param present
-- `markSessionCompleted` (called from webhook / appointment completion)
+**New**
+- `capacitor.config.ts`
+- `ios/` (generated by `cap add ios`, committed)
+- `src/lib/native.ts` — `useIsNativeApp`, `useFaceIdGate`, camera wrapper
+- `src/lib/apns.functions.ts` + `src/lib/apns.server.ts` — APNs sender
+- `src/routes/app.tsx` — practitioner entry redirect
+- `src/routes/_authenticated/dashboard.settings.privacy.tsx` — export/delete
+- `src/components/native/FaceIdGate.tsx`
+- `src/components/native/FirstRunConsent.tsx`
+- `supabase/migrations/…_device_push_tokens.sql`
+- `README-ios.md`
+- `ios/App/App/PrivacyInfo.xcprivacy` + Info.plist edits
 
-### Integration points
+**Edited**
+- `package.json` — Capacitor deps
+- `src/components/ImageUploader.tsx` — native camera path
+- `src/routes/_authenticated/dashboard.settings.tsx` — Face ID toggle + APNs key form
+- `src/routes/_authenticated/prescriber.tsx` + `dashboard.tsx` — hide non-practitioner links when `isNativeApp`
+- notification dispatch code — fan out to native tokens
 
-- Extend `checkout.session.completed` webhook and appointment completion path to update `treatment_plan_sessions.status` when the appointment ties to a plan session.
-- Extend `BookingPaymentPicker` / `m.$slug.pay` to accept `planSessionId` and enforce plan payment rules.
+## Heads-up on cost & timing
+- Apple Developer Program: $99/year (yours, not something I can provision).
+- App Store review typically 1–3 days; medical/clinic apps sometimes get extra scrutiny — the privacy manifest, in-app deletion, and clear practitioner-only positioning in the review notes are what get it through.
+- Because the app loads `modobook.uk`, every web deploy updates the app instantly without resubmitting to Apple — you only resubmit when native code (plugins, permissions, icons) changes.
 
-### Rollout order in this build
-
-1. Migration (tables + RLS + grants).
-2. Server functions.
-3. Practitioner: templates page, patient-profile section, consultation button.
-4. Patient hub: plans tab + detail + accept flow.
-5. Booking integration + email template.
+Approve and I'll start with the Capacitor scaffold + native feature wiring, then the GDPR routes, then generate the Xcode project and README.
