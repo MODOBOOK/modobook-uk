@@ -35,7 +35,6 @@ import { CommsTimeline } from "@/components/patient/CommsTimeline";
 import { EmailComposerDialog } from "@/components/patient/EmailComposerDialog";
 import { SendFormDialog } from "@/components/patient/SendFormDialog";
 import { ClientFormsList } from "@/components/patient/ClientFormsList";
-import { ClientConsentsList } from "@/components/patient/ClientConsentsList";
 import { ConsultationDocCard } from "@/components/patient/ConsultationDocCard";
 
 import { logCommunication, sendPatientEmail } from "@/lib/patient-hub.functions";
@@ -275,14 +274,7 @@ function PatientProfilePage() {
           client={{ id: client.id, full_name: client.full_name, email: client.email, phone: client.phone }}
           clinicName={clinicName}
           refreshKey={commsRefresh}
-        />
-      </Section>
-
-      {/* Consent forms */}
-      <Section title="Consent forms">
-        <ClientConsentsList
-          client={{ id: client.id, full_name: client.full_name, email: client.email }}
-          refreshKey={commsRefresh}
+          includeConsents
         />
       </Section>
 
