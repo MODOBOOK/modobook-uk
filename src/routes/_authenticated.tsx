@@ -1,6 +1,9 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { TermsAcceptanceGate } from "@/components/TermsAcceptanceGate";
+import { FaceIdGate } from "@/components/native/FaceIdGate";
+import { NativeBootstrap } from "@/components/native/NativeBootstrap";
+import { FirstRunConsent } from "@/components/native/FirstRunConsent";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -16,9 +19,11 @@ export const Route = createFileRoute("/_authenticated")({
 
 function AuthenticatedLayout() {
   return (
-    <>
+    <FaceIdGate>
       <TermsAcceptanceGate />
+      <FirstRunConsent />
+      <NativeBootstrap />
       <Outlet />
-    </>
+    </FaceIdGate>
   );
 }
