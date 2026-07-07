@@ -5618,6 +5618,10 @@ export type Database = {
           patient_name: string
           requires_signature: boolean
           scheduled_date: string
+          signature_data: string
+          signature_name: string
+          signed_at: string
+          signed_url: string
           slug: string
           start_time: string
           status: string
