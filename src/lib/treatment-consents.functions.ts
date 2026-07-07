@@ -24,6 +24,29 @@ export const listConsentsForClient = createServerFn({ method: "GET" })
     }>;
   });
 
+/** Load one consent form for viewing from a patient profile. */
+export const getConsentForClient = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: { client_id: string; token: string }) => i)
+  .handler(async ({ data, context }) => {
+    const { data: rows, error: listError } = await (context.supabase.rpc as any)(
+      "list_consents_for_client",
+      { p_client_id: data.client_id },
+    );
+    if (listError) throw listError;
+    const allowed = (rows ?? []).some((r: any) => r.token === data.token);
+    if (!allowed) throw new Error("Consent form not found");
+
+    const { data: consentRows, error } = await (context.supabase.rpc as any)(
+      "get_consent_by_token",
+      { p_token: data.token },
+    );
+    if (error) throw error;
+    const row = Array.isArray(consentRows) ? consentRows[0] : consentRows;
+    if (!row) throw new Error("Consent form not found");
+    return row;
+  });
+
 /** Send a consent form to a client outside of any appointment. */
 export const sendConsentToClient = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
