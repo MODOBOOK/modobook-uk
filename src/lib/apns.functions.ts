@@ -54,13 +54,15 @@ export const exportMyAccountData = createServerFn({ method: "POST" })
       .from("terms_acceptances")
       .select("*")
       .eq("user_id", userId);
-    return JSON.parse(JSON.stringify({
-      exported_at: new Date().toISOString(),
-      user_id: userId,
-      profile: profile.data ?? null,
-      device_tokens: tokens.data ?? [],
-      terms_acceptances: acceptances.data ?? [],
-    })) as { exported_at: string; user_id: string; profile: Record<string, unknown> | null; device_tokens: Array<Record<string, unknown>>; terms_acceptances: Array<Record<string, unknown>> };
+    return {
+      json: JSON.stringify({
+        exported_at: new Date().toISOString(),
+        user_id: userId,
+        profile: profile.data ?? null,
+        device_tokens: tokens.data ?? [],
+        terms_acceptances: acceptances.data ?? [],
+      }, null, 2),
+    };
   });
 
 /**
