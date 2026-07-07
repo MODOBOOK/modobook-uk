@@ -35,6 +35,15 @@ function PatientAuth() {
   const [forgotOpen, setForgotOpen] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
 
+  async function waitForSession() {
+    for (let i = 0; i < 8; i += 1) {
+      const { data } = await supabase.auth.getSession();
+      if (data.session) return data.session;
+      await new Promise((resolve) => setTimeout(resolve, 150));
+    }
+    return null;
+  }
+
   async function sendReset(e: React.FormEvent) {
     e.preventDefault();
     const target = forgotEmail || loginEmail;
@@ -80,11 +89,24 @@ function PatientAuth() {
         },
       });
       if (error) throw error;
-      // If email confirmation is required (or the email is already registered),
-      // no session is returned — skip the authenticated ensurePatient call.
-      if (!data.session) {
-        toast.success("Check your email to confirm your account, then sign in.");
-        return;
+      let session = data.session ?? (await waitForSession());
+
+      // Repeated signups for an existing confirmed email return no session.
+      // If the password matches, sign them in and continue instead of leaving
+      // them stuck on the account creation screen.
+      if (!session) {
+        const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+        if (!signInError) session = await waitForSession();
+
+        if (!session) {
+          const message = signInError?.message.toLowerCase() ?? "";
+          if (message.includes("email not confirmed")) {
+            toast.success("Check your email to confirm your account, then sign in.");
+          } else {
+            toast.error("This email already has an account. Sign in or reset your password.");
+          }
+          return;
+        }
       }
       await ensure({ data: { fullName: name, phone, linkSlug: slug } });
       toast.success("Account created");
@@ -102,6 +124,7 @@ function PatientAuth() {
     try {
       const { error } = await supabase.auth.signInWithPassword({ email: loginEmail, password: loginPassword });
       if (error) throw error;
+      await waitForSession();
       await ensure({ data: { fullName: loginEmail.split("@")[0], linkSlug: slug } });
       goAfterAuth();
     } catch (err) {
