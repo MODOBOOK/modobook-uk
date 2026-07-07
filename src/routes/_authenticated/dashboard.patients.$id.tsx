@@ -278,6 +278,14 @@ function PatientProfilePage() {
         />
       </Section>
 
+      {/* Consent forms */}
+      <Section title="Consent forms">
+        <ClientConsentsList
+          client={{ id: client.id, full_name: client.full_name, email: client.email }}
+          refreshKey={commsRefresh}
+        />
+      </Section>
+
       <SectionDark
         title={`Appointments (${visibleAppts.length})`}
         actions={
