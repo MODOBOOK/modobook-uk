@@ -45,18 +45,22 @@ export const exportMyAccountData = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
-    const [{ data: profile }, { data: tokens }, { data: acceptances }] = await Promise.all([
-      supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
-      supabase.from("device_push_tokens").select("platform,last_seen_at,created_at").eq("user_id", userId),
-      supabase.from("terms_acceptances").select("*").eq("user_id", userId),
-    ]);
-    return {
+    const profile = await supabase.from("profiles").select("*").eq("id", userId).maybeSingle();
+    const tokens = await supabase
+      .from("device_push_tokens")
+      .select("platform,last_seen_at,created_at")
+      .eq("user_id", userId);
+    const acceptances = await (supabase as unknown as { from: (t: string) => { select: (c: string) => { eq: (k: string, v: string) => Promise<{ data: unknown[] | null }> } } })
+      .from("terms_acceptances")
+      .select("*")
+      .eq("user_id", userId);
+    return JSON.parse(JSON.stringify({
       exported_at: new Date().toISOString(),
       user_id: userId,
-      profile: profile ?? null,
-      device_tokens: tokens ?? [],
-      terms_acceptances: acceptances ?? [],
-    };
+      profile: profile.data ?? null,
+      device_tokens: tokens.data ?? [],
+      terms_acceptances: acceptances.data ?? [],
+    })) as { exported_at: string; user_id: string; profile: Record<string, unknown> | null; device_tokens: Array<Record<string, unknown>>; terms_acceptances: Array<Record<string, unknown>> };
   });
 
 /**
