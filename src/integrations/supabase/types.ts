@@ -5798,6 +5798,20 @@ export type Database = {
           visit_id: string
         }[]
       }
+      list_consents_for_client: {
+        Args: { p_client_id: string }
+        Returns: {
+          appointment_id: string
+          created_at: string
+          id: string
+          signature_name: string
+          signed_at: string
+          status: string
+          template_id: string
+          template_name: string
+          token: string
+        }[]
+      }
       list_linked_practitioner_consent_forms: {
         Args: { p_practitioner_profile_id: string }
         Returns: {
@@ -5905,6 +5919,13 @@ export type Database = {
       save_walk_in_medical_form_response: {
         Args: { p_form_id: string; p_referral_id: string; p_response: Json }
         Returns: boolean
+      }
+      send_consent_to_client: {
+        Args: { p_client_id: string; p_template_id: string }
+        Returns: {
+          id: string
+          token: string
+        }[]
       }
       send_medical_form_to_client: {
         Args: {
