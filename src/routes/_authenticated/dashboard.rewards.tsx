@@ -38,10 +38,15 @@ function RewardsSettingsPage() {
   const qc = useQueryClient();
   const fetchSettings = useServerFn(getMyReferralSettings);
   const save = useServerFn(saveReferralSettings);
+  const fetchReferrals = useServerFn(getMyClinicReferrals);
 
   const q = useQuery({
     queryKey: ["my-referral-settings"],
     queryFn: () => fetchSettings(),
+  });
+  const referralsQ = useQuery({
+    queryKey: ["my-clinic-referrals"],
+    queryFn: () => fetchReferrals(),
   });
 
   const [enabled, setEnabled] = useState(false);
