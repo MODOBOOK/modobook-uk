@@ -166,6 +166,7 @@ function RewardsSettingsPage() {
       await save({
         data: {
           enabled,
+          show_on_public_page: showOnPublic,
           referrer_credit_kind: creditKind,
           referrer_credit_pennies: referrerCreditPennies,
           referrer_credit_percent: referrerCreditPercent || 10,
