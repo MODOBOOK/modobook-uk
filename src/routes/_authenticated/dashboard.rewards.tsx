@@ -108,6 +108,7 @@ function RewardsSettingsPage() {
     if (!q.data) return;
     const s = q.data as any;
     setEnabled(s.enabled);
+    setShowOnPublic(!!s.show_on_public_page);
     setCreditKind((s.referrer_credit_kind as CreditKind) ?? "pennies");
     setCreditOn(
       s.referrer_credit_kind === "percent"
