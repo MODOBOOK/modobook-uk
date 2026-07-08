@@ -260,3 +260,14 @@ function TabLink({
     </Link>
   );
 }
+
+function RewardsTabLink({ slug }: { slug: string }) {
+  const fetchPublic = useServerFn(getPublicRewardsOverview);
+  const q = useQuery({
+    queryKey: ["public-rewards-visible", slug],
+    queryFn: () => fetchPublic({ data: { slug } }),
+    staleTime: 60_000,
+  });
+  if (!q.data || q.data.visible !== true) return null;
+  return <TabLink slug={slug} to="/m/$slug/rewards" label="Rewards" />;
+}
