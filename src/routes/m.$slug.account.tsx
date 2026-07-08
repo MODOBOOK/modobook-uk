@@ -430,7 +430,7 @@ function Account() {
         const careCount = activeAftercare.length + notes.length;
         return (
           <Tabs defaultValue="appointments" className="mt-8">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="appointments">
                 Visits{upcoming.length > 0 && <span className="ml-1 text-xs opacity-70">({upcoming.length})</span>}
               </TabsTrigger>
@@ -440,6 +440,7 @@ function Account() {
               <TabsTrigger value="care">
                 Care{careCount > 0 && <span className="ml-1 text-xs opacity-70">({careCount})</span>}
               </TabsTrigger>
+              <TabsTrigger value="rewards">Rewards</TabsTrigger>
               <TabsTrigger value="account">Account</TabsTrigger>
             </TabsList>
 
