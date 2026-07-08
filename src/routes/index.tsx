@@ -424,6 +424,7 @@ export function SiteHeader() {
         <nav className="hidden items-center gap-6 text-sm md:flex">
           <Link to="/features" className="text-muted-foreground hover:text-foreground">Features</Link>
           <Link to="/prescriber-hub" className="text-muted-foreground hover:text-foreground">Prescriber Hub</Link>
+          <Link to="/rewards" className="text-muted-foreground hover:text-foreground">Rewards</Link>
           <Link to="/who-its-for" className="text-muted-foreground hover:text-foreground">Who it's for</Link>
         </nav>
         <div className="flex items-center gap-3">
@@ -453,6 +454,7 @@ export function SiteFooter() {
         <FooterCol title="Platform" links={[
           { label: "Features", to: "/features" },
           { label: "Prescriber Hub", to: "/prescriber-hub" },
+          { label: "Rewards", to: "/rewards" },
           { label: "Who it's for", to: "/who-its-for" },
         ]} />
         <FooterCol title="Get started" links={[
