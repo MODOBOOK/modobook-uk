@@ -1264,8 +1264,9 @@ function RewardsHero({ slug, brand }: { slug: string; brand: string }) {
             </div>
           </div>
           <Button size="sm" onClick={() => {
-            const el = document.querySelector('[data-state][role="tab"][value="rewards"]') as HTMLElement | null;
+            const el = document.getElementById("tab-rewards");
             el?.click();
+            el?.scrollIntoView({ behavior: "smooth", block: "start" });
           }} style={{ background: brand, color: "white" }}>
             View rewards <ArrowRight className="ml-1 h-4 w-4" />
           </Button>
