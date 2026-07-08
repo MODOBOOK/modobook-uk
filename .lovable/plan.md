@@ -1,87 +1,64 @@
-# Practitioner iOS App (Capacitor)
+# Referrals & Rewards — build plan
 
-## Approach
+Your answers:
+- Toggleable by practitioner: **credit £**, **points**, **friend discount** — each independent
+- Amounts: practitioner sets their own (schema already supports)
+- Trigger: **after friend's first paid appointment completes**
+- No cap
 
-The app is a TanStack Start SSR app on Cloudflare Workers, so we can't ship a fully static bundle. The realistic App Store path is a **Capacitor iOS shell** that loads the practitioner side from the published domain (`modobook.uk`), plus native plugins for push, camera and Face ID so Apple sees genuine native functionality (bare webview wrappers get rejected under App Store Review Guideline 4.2).
+Schema already exists (`clinic_referral_settings`, `patient_referral_codes`, `patient_referrals`, `patient_points_ledger`, `patient_credit_ledger`), so this is entirely UI + server logic.
 
-The web app already handles auth, routing and RLS; the native shell adds hardware access and native notifications on top.
+---
 
-## What I'll build
+## 1. Practitioner: Rewards settings page
+New route `/_authenticated/dashboard/rewards` (linked from dashboard sidebar).
+- Master **Enable rewards** toggle
+- Three independent reward toggles + amount fields:
+  - Referrer £ credit (pennies) — with "off" toggle
+  - Referrer points — with "off" toggle
+  - Friend's first-booking discount (pennies) — with "off" toggle
+- Headline & description (shown to patients on their share page)
+- Live preview card of what patients will see
+- Save via `saveReferralSettings` server fn (upsert on `clinic_referral_settings`)
 
-### 1. Capacitor scaffold
-- Add `@capacitor/core`, `@capacitor/cli`, `@capacitor/ios`.
-- `capacitor.config.ts` with:
-  - `appId: uk.modobook.practitioner`
-  - `appName: Modo Practitioner`
-  - `server.url: https://modobook.uk` (production) with `androidScheme: 'https'`
-  - `server.allowNavigation: ['modobook.uk', '*.lovable.app']`
-- `npx cap add ios` — creates the `ios/` Xcode project committed to the repo.
+## 2. Patient: Rewards hub tab
+New tab under `/hub` → `/_authenticated/hub/rewards`.
+- Show clinic's headline/description + reward amounts
+- **Their unique code + share link** (`/r/{code}`) with copy + native share
+  - Auto-generate code on first visit if none exists
+- **Balances** per clinic: credit £ (sum of credit ledger) and points (sum of points ledger)
+- **Referral history**: pending / rewarded / rejected, with dates
+- If clinic has rewards disabled → friendly "not offered yet" state
 
-### 2. Practitioner-only entry
-- New route `/app` that redirects: signed-in practitioners → `/dashboard` or `/hub`, others → `/auth?next=/app`.
-- Capacitor `server.url` points at `https://modobook.uk/app` so the app always lands on the practitioner side. Patient booking URLs (`/m/...`, `/book/...`) open in the system browser via `@capacitor/browser` when tapped from inside the app.
-- A `useIsNativeApp()` hook (checks `Capacitor.isNativePlatform()`) hides patient-facing nav items and the "Switch to clinic" links you don't want in the iOS build.
+## 3. Public share landing `/r/$code`
+- Look up code → resolve clinic → redirect to that clinic's booking page (`/m/{slug}`) with `?ref={code}` in URL
+- Store referral code in sessionStorage so it survives the booking wizard
 
-### 3. Native features
+## 4. Booking flow: apply friend discount
+- When booking page loads with `?ref=`, verify code + friend-discount is enabled
+- Show "You'll get £X off your first booking, courtesy of [referrer's first name]"
+- On successful booking creation: insert `patient_referrals` row (status='pending') linking the referrer, code, referred appointment/client, and snapshotting reward amounts
+- Apply `friend_credit_pennies` as a discount on the appointment total (write into existing payment/discount fields on `appointments`)
 
-**Push notifications** (`@capacitor/push-notifications`)
-- Registers APNs token on login, stores it in a new `device_push_tokens` table (user_id, token, platform, last_seen) alongside your existing web-push table.
-- Server function `sendNativePush` uses Apple's HTTP/2 APNs endpoint with a signed JWT (APNs key + team + key id kept as Cloud secrets).
-- Reuses your existing notification triggers (new referral, appointment reminder, consent signed) — just fans out to native tokens too.
+## 5. Auto-payout trigger
+Postgres trigger on `appointments`: when status transitions into a paid-complete state (existing status enum — I'll match your current "completed_paid" convention), for any pending `patient_referrals` row where `referred_appointment_id = NEW.id`:
+- Insert into `patient_credit_ledger` (+referrer_credit_pennies) and `patient_points_ledger` (+referrer_points)
+- Set `patient_referrals.status='rewarded'` and `rewarded_at=now()`
+- Idempotent: only fires once per referral
 
-**Camera / photo library** (`@capacitor/camera`)
-- Wrap the existing `ImageUploader` component so on native it calls `Camera.getPhoto({ source: Prompt })` instead of the `<input type=file>` — same upload endpoint, better UX for patient photos and signatures.
+## 6. Redeem credit at checkout
+When a patient books at a clinic where they have credit balance > 0, offer a "Apply £X credit" checkbox that deducts up to the appointment total and writes a negative row to `patient_credit_ledger` on booking confirmation.
 
-**Face ID** (`@capacitor-community/biometric-auth`)
-- On app launch (and on resume after >5 min in background), require Face ID before revealing the webview. Setting toggle in `/dashboard/settings` → "Require Face ID".
-- Falls back to passcode; if biometry unavailable, skipped.
+---
 
-### 4. GDPR compliance additions
-- **App Privacy manifest** (`ios/App/App/PrivacyInfo.xcprivacy`) declaring data categories collected (name, email, health, photos), tracking = none, required-reason API declarations for file timestamps / UserDefaults.
-- **App Tracking Transparency**: not requested (we don't track across apps) — documented in privacy manifest.
-- **On first launch**: native consent screen (rendered in the web app, gated by `?firstRun=1`) covering data processing, health data handling, push opt-in, right to erasure. Stored in existing `terms_acceptances` table with a new `native_app_v1` key.
-- **Data export & delete**: add `/dashboard/settings/privacy` with "Download my data" (JSON export server function) and "Delete my account" (soft-delete + 30-day purge job) — Apple requires an in-app account deletion path since 2022.
-- **Info.plist usage strings**: `NSCameraUsageDescription`, `NSPhotoLibraryUsageDescription`, `NSFaceIDUsageDescription`, `NSUserNotificationUsageDescription` — all with GDPR-appropriate wording ("used only to attach photos to patient records you control").
-- **No third-party analytics SDKs** in the native shell.
+## Technical notes
+- All server fns use `requireSupabaseAuth` — RLS on referral tables is already user-scoped
+- Trigger runs as `SECURITY DEFINER` and is idempotent via `WHERE rewarded_at IS NULL`
+- Public code lookup uses the existing `anon SELECT` policy on `patient_referral_codes`
+- No new tables needed
 
-### 5. App Store assets (scaffolded, you fill in)
-- App icon set (1024 + all iOS sizes) generated from `src/assets/modo-logo.png`.
-- Splash screen via `@capacitor/splash-screen` using brand colours.
-- `README-ios.md` with the exact steps for building/archiving in Xcode, TestFlight upload, and App Store Connect metadata (privacy answers, screenshots list, review notes explaining the clinic-management purpose).
+## Suggested build order
+Phase A (this turn): #1 practitioner settings + #2 patient hub + #3 share landing — gets the feature visible end-to-end.
+Phase B (next turn): #4 friend-discount at booking + #5 auto-payout trigger + #6 credit redemption — the money flow.
 
-## What you'll need to do yourself
-These need a Mac + Apple Developer account and can't be done from Lovable:
-1. Open `ios/App/App.xcworkspace` in Xcode on a Mac.
-2. Sign in with your Apple Developer account, set the team, generate provisioning profiles.
-3. Upload an APNs auth key (.p8) — I'll add a form in `/dashboard/settings/notifications` to paste the key + team id + key id, stored as Cloud secrets.
-4. Fill App Store Connect metadata using the template I'll generate.
-5. `npx cap sync ios` + Archive + upload — instructions in `README-ios.md`.
-
-## Files I'll create / edit
-
-**New**
-- `capacitor.config.ts`
-- `ios/` (generated by `cap add ios`, committed)
-- `src/lib/native.ts` — `useIsNativeApp`, `useFaceIdGate`, camera wrapper
-- `src/lib/apns.functions.ts` + `src/lib/apns.server.ts` — APNs sender
-- `src/routes/app.tsx` — practitioner entry redirect
-- `src/routes/_authenticated/dashboard.settings.privacy.tsx` — export/delete
-- `src/components/native/FaceIdGate.tsx`
-- `src/components/native/FirstRunConsent.tsx`
-- `supabase/migrations/…_device_push_tokens.sql`
-- `README-ios.md`
-- `ios/App/App/PrivacyInfo.xcprivacy` + Info.plist edits
-
-**Edited**
-- `package.json` — Capacitor deps
-- `src/components/ImageUploader.tsx` — native camera path
-- `src/routes/_authenticated/dashboard.settings.tsx` — Face ID toggle + APNs key form
-- `src/routes/_authenticated/prescriber.tsx` + `dashboard.tsx` — hide non-practitioner links when `isNativeApp`
-- notification dispatch code — fan out to native tokens
-
-## Heads-up on cost & timing
-- Apple Developer Program: $99/year (yours, not something I can provision).
-- App Store review typically 1–3 days; medical/clinic apps sometimes get extra scrutiny — the privacy manifest, in-app deletion, and clear practitioner-only positioning in the review notes are what get it through.
-- Because the app loads `modobook.uk`, every web deploy updates the app instantly without resubmitting to Apple — you only resubmit when native code (plugins, permissions, icons) changes.
-
-Approve and I'll start with the Capacitor scaffold + native feature wiring, then the GDPR routes, then generate the Xcode project and README.
+Splitting keeps each turn reviewable. Say **"go"** to start Phase A, or tell me to reshuffle.

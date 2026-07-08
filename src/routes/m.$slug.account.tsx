@@ -353,6 +353,9 @@ function Account() {
         </div>
         <div className="flex flex-col gap-2 sm:flex-row">
           <Button size="sm" variant="outline" onClick={() => setEditOpen(true)}>Edit my details</Button>
+          <Link to="/m/$slug/rewards" params={{ slug }}>
+            <Button size="sm" variant="outline">Refer & earn</Button>
+          </Link>
           <Link to="/m/$slug" params={{ slug }}>
             <Button size="sm" variant="outline">Back to clinic</Button>
           </Link>

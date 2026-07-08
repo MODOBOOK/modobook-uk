@@ -21,6 +21,7 @@ import { Route as AppRouteImport } from './routes/app'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as StaffAcceptTokenRouteImport } from './routes/staff-accept.$token'
+import { Route as RCodeRouteImport } from './routes/r.$code'
 import { Route as PrivacyDpiaRouteImport } from './routes/privacy.dpia'
 import { Route as PrivacyBreachResponseRouteImport } from './routes/privacy.breach-response'
 import { Route as PlanTokenRouteImport } from './routes/plan.$token'
@@ -39,6 +40,7 @@ import { Route as MSlugIndexRouteImport } from './routes/m.$slug.index'
 import { Route as AuthenticatedPrescriberIndexRouteImport } from './routes/_authenticated/prescriber.index'
 import { Route as AuthenticatedHubIndexRouteImport } from './routes/_authenticated/hub.index'
 import { Route as AuthenticatedDashboardIndexRouteImport } from './routes/_authenticated/dashboard.index'
+import { Route as MSlugRewardsRouteImport } from './routes/m.$slug.rewards'
 import { Route as MSlugReviewsRouteImport } from './routes/m.$slug.reviews'
 import { Route as MSlugPayRouteImport } from './routes/m.$slug.pay'
 import { Route as MSlugBookMultiRouteImport } from './routes/m.$slug.book-multi'
@@ -60,6 +62,7 @@ import { Route as AuthenticatedDashboardTreatmentsRouteImport } from './routes/_
 import { Route as AuthenticatedDashboardStaffRouteImport } from './routes/_authenticated/dashboard.staff'
 import { Route as AuthenticatedDashboardSettingsRouteImport } from './routes/_authenticated/dashboard.settings'
 import { Route as AuthenticatedDashboardServicesRouteImport } from './routes/_authenticated/dashboard.services'
+import { Route as AuthenticatedDashboardRewardsRouteImport } from './routes/_authenticated/dashboard.rewards'
 import { Route as AuthenticatedDashboardReviewsRouteImport } from './routes/_authenticated/dashboard.reviews'
 import { Route as AuthenticatedDashboardReferralsRouteImport } from './routes/_authenticated/dashboard.referrals'
 import { Route as AuthenticatedDashboardPrivacyRouteImport } from './routes/_authenticated/dashboard.privacy'
@@ -177,6 +180,11 @@ const StaffAcceptTokenRoute = StaffAcceptTokenRouteImport.update({
   path: '/staff-accept/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RCodeRoute = RCodeRouteImport.update({
+  id: '/r/$code',
+  path: '/r/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PrivacyDpiaRoute = PrivacyDpiaRouteImport.update({
   id: '/dpia',
   path: '/dpia',
@@ -270,6 +278,11 @@ const AuthenticatedDashboardIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
+const MSlugRewardsRoute = MSlugRewardsRouteImport.update({
+  id: '/rewards',
+  path: '/rewards',
+  getParentRoute: () => MSlugRoute,
+} as any)
 const MSlugReviewsRoute = MSlugReviewsRouteImport.update({
   id: '/reviews',
   path: '/reviews',
@@ -386,6 +399,12 @@ const AuthenticatedDashboardServicesRoute =
   AuthenticatedDashboardServicesRouteImport.update({
     id: '/services',
     path: '/services',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardRewardsRoute =
+  AuthenticatedDashboardRewardsRouteImport.update({
+    id: '/rewards',
+    path: '/rewards',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
 const AuthenticatedDashboardReviewsRoute =
@@ -749,6 +768,7 @@ export interface FileRoutesByFullPath {
   '/plan/$token': typeof PlanTokenRoute
   '/privacy/breach-response': typeof PrivacyBreachResponseRoute
   '/privacy/dpia': typeof PrivacyDpiaRoute
+  '/r/$code': typeof RCodeRoute
   '/staff-accept/$token': typeof StaffAcceptTokenRoute
   '/admin/emails': typeof AuthenticatedAdminEmailsRoute
   '/dashboard/about': typeof AuthenticatedDashboardAboutRoute
@@ -782,6 +802,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/privacy': typeof AuthenticatedDashboardPrivacyRoute
   '/dashboard/referrals': typeof AuthenticatedDashboardReferralsRoute
   '/dashboard/reviews': typeof AuthenticatedDashboardReviewsRoute
+  '/dashboard/rewards': typeof AuthenticatedDashboardRewardsRoute
   '/dashboard/services': typeof AuthenticatedDashboardServicesRoute
   '/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
   '/dashboard/staff': typeof AuthenticatedDashboardStaffRoute
@@ -803,6 +824,7 @@ export interface FileRoutesByFullPath {
   '/m/$slug/book-multi': typeof MSlugBookMultiRoute
   '/m/$slug/pay': typeof MSlugPayRoute
   '/m/$slug/reviews': typeof MSlugReviewsRoute
+  '/m/$slug/rewards': typeof MSlugRewardsRoute
   '/dashboard/': typeof AuthenticatedDashboardIndexRoute
   '/hub/': typeof AuthenticatedHubIndexRoute
   '/prescriber/': typeof AuthenticatedPrescriberIndexRoute
@@ -854,6 +876,7 @@ export interface FileRoutesByTo {
   '/plan/$token': typeof PlanTokenRoute
   '/privacy/breach-response': typeof PrivacyBreachResponseRoute
   '/privacy/dpia': typeof PrivacyDpiaRoute
+  '/r/$code': typeof RCodeRoute
   '/staff-accept/$token': typeof StaffAcceptTokenRoute
   '/admin/emails': typeof AuthenticatedAdminEmailsRoute
   '/dashboard/about': typeof AuthenticatedDashboardAboutRoute
@@ -885,6 +908,7 @@ export interface FileRoutesByTo {
   '/dashboard/privacy': typeof AuthenticatedDashboardPrivacyRoute
   '/dashboard/referrals': typeof AuthenticatedDashboardReferralsRoute
   '/dashboard/reviews': typeof AuthenticatedDashboardReviewsRoute
+  '/dashboard/rewards': typeof AuthenticatedDashboardRewardsRoute
   '/dashboard/services': typeof AuthenticatedDashboardServicesRoute
   '/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
   '/dashboard/staff': typeof AuthenticatedDashboardStaffRoute
@@ -906,6 +930,7 @@ export interface FileRoutesByTo {
   '/m/$slug/book-multi': typeof MSlugBookMultiRoute
   '/m/$slug/pay': typeof MSlugPayRoute
   '/m/$slug/reviews': typeof MSlugReviewsRoute
+  '/m/$slug/rewards': typeof MSlugRewardsRoute
   '/dashboard': typeof AuthenticatedDashboardIndexRoute
   '/hub': typeof AuthenticatedHubIndexRoute
   '/prescriber': typeof AuthenticatedPrescriberIndexRoute
@@ -963,6 +988,7 @@ export interface FileRoutesById {
   '/plan/$token': typeof PlanTokenRoute
   '/privacy/breach-response': typeof PrivacyBreachResponseRoute
   '/privacy/dpia': typeof PrivacyDpiaRoute
+  '/r/$code': typeof RCodeRoute
   '/staff-accept/$token': typeof StaffAcceptTokenRoute
   '/_authenticated/admin/emails': typeof AuthenticatedAdminEmailsRoute
   '/_authenticated/dashboard/about': typeof AuthenticatedDashboardAboutRoute
@@ -996,6 +1022,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/privacy': typeof AuthenticatedDashboardPrivacyRoute
   '/_authenticated/dashboard/referrals': typeof AuthenticatedDashboardReferralsRoute
   '/_authenticated/dashboard/reviews': typeof AuthenticatedDashboardReviewsRoute
+  '/_authenticated/dashboard/rewards': typeof AuthenticatedDashboardRewardsRoute
   '/_authenticated/dashboard/services': typeof AuthenticatedDashboardServicesRoute
   '/_authenticated/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
   '/_authenticated/dashboard/staff': typeof AuthenticatedDashboardStaffRoute
@@ -1017,6 +1044,7 @@ export interface FileRoutesById {
   '/m/$slug/book-multi': typeof MSlugBookMultiRoute
   '/m/$slug/pay': typeof MSlugPayRoute
   '/m/$slug/reviews': typeof MSlugReviewsRoute
+  '/m/$slug/rewards': typeof MSlugRewardsRoute
   '/_authenticated/dashboard/': typeof AuthenticatedDashboardIndexRoute
   '/_authenticated/hub/': typeof AuthenticatedHubIndexRoute
   '/_authenticated/prescriber/': typeof AuthenticatedPrescriberIndexRoute
@@ -1074,6 +1102,7 @@ export interface FileRouteTypes {
     | '/plan/$token'
     | '/privacy/breach-response'
     | '/privacy/dpia'
+    | '/r/$code'
     | '/staff-accept/$token'
     | '/admin/emails'
     | '/dashboard/about'
@@ -1107,6 +1136,7 @@ export interface FileRouteTypes {
     | '/dashboard/privacy'
     | '/dashboard/referrals'
     | '/dashboard/reviews'
+    | '/dashboard/rewards'
     | '/dashboard/services'
     | '/dashboard/settings'
     | '/dashboard/staff'
@@ -1128,6 +1158,7 @@ export interface FileRouteTypes {
     | '/m/$slug/book-multi'
     | '/m/$slug/pay'
     | '/m/$slug/reviews'
+    | '/m/$slug/rewards'
     | '/dashboard/'
     | '/hub/'
     | '/prescriber/'
@@ -1179,6 +1210,7 @@ export interface FileRouteTypes {
     | '/plan/$token'
     | '/privacy/breach-response'
     | '/privacy/dpia'
+    | '/r/$code'
     | '/staff-accept/$token'
     | '/admin/emails'
     | '/dashboard/about'
@@ -1210,6 +1242,7 @@ export interface FileRouteTypes {
     | '/dashboard/privacy'
     | '/dashboard/referrals'
     | '/dashboard/reviews'
+    | '/dashboard/rewards'
     | '/dashboard/services'
     | '/dashboard/settings'
     | '/dashboard/staff'
@@ -1231,6 +1264,7 @@ export interface FileRouteTypes {
     | '/m/$slug/book-multi'
     | '/m/$slug/pay'
     | '/m/$slug/reviews'
+    | '/m/$slug/rewards'
     | '/dashboard'
     | '/hub'
     | '/prescriber'
@@ -1287,6 +1321,7 @@ export interface FileRouteTypes {
     | '/plan/$token'
     | '/privacy/breach-response'
     | '/privacy/dpia'
+    | '/r/$code'
     | '/staff-accept/$token'
     | '/_authenticated/admin/emails'
     | '/_authenticated/dashboard/about'
@@ -1320,6 +1355,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/privacy'
     | '/_authenticated/dashboard/referrals'
     | '/_authenticated/dashboard/reviews'
+    | '/_authenticated/dashboard/rewards'
     | '/_authenticated/dashboard/services'
     | '/_authenticated/dashboard/settings'
     | '/_authenticated/dashboard/staff'
@@ -1341,6 +1377,7 @@ export interface FileRouteTypes {
     | '/m/$slug/book-multi'
     | '/m/$slug/pay'
     | '/m/$slug/reviews'
+    | '/m/$slug/rewards'
     | '/_authenticated/dashboard/'
     | '/_authenticated/hub/'
     | '/_authenticated/prescriber/'
@@ -1390,6 +1427,7 @@ export interface RootRouteChildren {
   FTokenRoute: typeof FTokenRoute
   MSlugRoute: typeof MSlugRouteWithChildren
   PlanTokenRoute: typeof PlanTokenRoute
+  RCodeRoute: typeof RCodeRoute
   StaffAcceptTokenRoute: typeof StaffAcceptTokenRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   ApiPublicBookingReleaseRoute: typeof ApiPublicBookingReleaseRoute
@@ -1492,6 +1530,13 @@ declare module '@tanstack/react-router' {
       path: '/staff-accept/$token'
       fullPath: '/staff-accept/$token'
       preLoaderRoute: typeof StaffAcceptTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/r/$code': {
+      id: '/r/$code'
+      path: '/r/$code'
+      fullPath: '/r/$code'
+      preLoaderRoute: typeof RCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy/dpia': {
@@ -1619,6 +1664,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/dashboard/'
       preLoaderRoute: typeof AuthenticatedDashboardIndexRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/m/$slug/rewards': {
+      id: '/m/$slug/rewards'
+      path: '/rewards'
+      fullPath: '/m/$slug/rewards'
+      preLoaderRoute: typeof MSlugRewardsRouteImport
+      parentRoute: typeof MSlugRoute
     }
     '/m/$slug/reviews': {
       id: '/m/$slug/reviews'
@@ -1765,6 +1817,13 @@ declare module '@tanstack/react-router' {
       path: '/services'
       fullPath: '/dashboard/services'
       preLoaderRoute: typeof AuthenticatedDashboardServicesRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/rewards': {
+      id: '/_authenticated/dashboard/rewards'
+      path: '/rewards'
+      fullPath: '/dashboard/rewards'
+      preLoaderRoute: typeof AuthenticatedDashboardRewardsRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
     '/_authenticated/dashboard/reviews': {
@@ -2257,6 +2316,7 @@ interface AuthenticatedDashboardRouteChildren {
   AuthenticatedDashboardPrivacyRoute: typeof AuthenticatedDashboardPrivacyRoute
   AuthenticatedDashboardReferralsRoute: typeof AuthenticatedDashboardReferralsRoute
   AuthenticatedDashboardReviewsRoute: typeof AuthenticatedDashboardReviewsRoute
+  AuthenticatedDashboardRewardsRoute: typeof AuthenticatedDashboardRewardsRoute
   AuthenticatedDashboardServicesRoute: typeof AuthenticatedDashboardServicesRoute
   AuthenticatedDashboardSettingsRoute: typeof AuthenticatedDashboardSettingsRoute
   AuthenticatedDashboardStaffRoute: typeof AuthenticatedDashboardStaffRoute
@@ -2311,6 +2371,7 @@ const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
     AuthenticatedDashboardPrivacyRoute: AuthenticatedDashboardPrivacyRoute,
     AuthenticatedDashboardReferralsRoute: AuthenticatedDashboardReferralsRoute,
     AuthenticatedDashboardReviewsRoute: AuthenticatedDashboardReviewsRoute,
+    AuthenticatedDashboardRewardsRoute: AuthenticatedDashboardRewardsRoute,
     AuthenticatedDashboardServicesRoute: AuthenticatedDashboardServicesRoute,
     AuthenticatedDashboardSettingsRoute: AuthenticatedDashboardSettingsRoute,
     AuthenticatedDashboardStaffRoute: AuthenticatedDashboardStaffRoute,
@@ -2418,6 +2479,7 @@ interface MSlugRouteChildren {
   MSlugBookMultiRoute: typeof MSlugBookMultiRoute
   MSlugPayRoute: typeof MSlugPayRoute
   MSlugReviewsRoute: typeof MSlugReviewsRoute
+  MSlugRewardsRoute: typeof MSlugRewardsRoute
   MSlugIndexRoute: typeof MSlugIndexRoute
   MSlugBookTreatmentIdRoute: typeof MSlugBookTreatmentIdRoute
   MSlugManageTokenRoute: typeof MSlugManageTokenRoute
@@ -2430,6 +2492,7 @@ const MSlugRouteChildren: MSlugRouteChildren = {
   MSlugBookMultiRoute: MSlugBookMultiRoute,
   MSlugPayRoute: MSlugPayRoute,
   MSlugReviewsRoute: MSlugReviewsRoute,
+  MSlugRewardsRoute: MSlugRewardsRoute,
   MSlugIndexRoute: MSlugIndexRoute,
   MSlugBookTreatmentIdRoute: MSlugBookTreatmentIdRoute,
   MSlugManageTokenRoute: MSlugManageTokenRoute,
@@ -2455,6 +2518,7 @@ const rootRouteChildren: RootRouteChildren = {
   FTokenRoute: FTokenRoute,
   MSlugRoute: MSlugRouteWithChildren,
   PlanTokenRoute: PlanTokenRoute,
+  RCodeRoute: RCodeRoute,
   StaffAcceptTokenRoute: StaffAcceptTokenRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   ApiPublicBookingReleaseRoute: ApiPublicBookingReleaseRoute,
