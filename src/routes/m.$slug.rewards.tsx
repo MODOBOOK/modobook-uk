@@ -34,12 +34,12 @@ function RewardsPage() {
   const [signedIn, setSignedIn] = useState(false);
 
   // Guard sign-in ourselves (this route is public).
-  useState(() => {
+  useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       setSignedIn(!!data.session);
       setAuthChecked(true);
     });
-  });
+  }, []);
 
   const q = useQuery({
     queryKey: ["my-rewards", slug],
