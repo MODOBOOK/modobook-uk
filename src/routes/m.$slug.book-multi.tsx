@@ -1153,6 +1153,11 @@ function MultiBookPage() {
                     </CardContent>
                   </Card>
                 )}
+                <Card className="mb-6">
+                  <CardContent className="p-4">
+                    <ReferralCodeInput clinicSlug={slug} brand={brand} />
+                  </CardContent>
+                </Card>
                 {prescriberItems.length > 0 && (
                   <Card className="mb-6 border-2" style={{ borderColor: accent }}>
                     <CardContent className="space-y-4 p-4">
