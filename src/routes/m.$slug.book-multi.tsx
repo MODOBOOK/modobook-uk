@@ -29,6 +29,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
 import { Clock, MapPin, CheckCircle2, LogIn, UserPlus, UserCheck, ChevronLeft, ChevronRight, CalendarDays } from "lucide-react";
 import { DiscountCodeBox, type AppliedDiscount } from "@/components/DiscountCodeBox";
+import { ReferralCodeInput } from "@/components/ReferralCodeInput";
+import { linkReferralToAppointment } from "@/lib/rewards.functions";
 import { AddressAutocomplete } from "@/components/AddressAutocomplete";
 
 import { toast } from "sonner";
@@ -532,8 +534,20 @@ function MultiBookPage() {
       }
       setConfirmed(res);
 
-      // Referrals are created automatically by the database trigger on appointment insert
-      // (using clinic_visit_id when routing is 'clinic_visit'). No separate client call.
+      // Link a referral code (entered on this page) to the new appointments so
+      // the reward pays out automatically. Idempotent per appointment.
+      try {
+        const refCode = typeof window !== "undefined"
+          ? sessionStorage.getItem("modo_ref_code")
+          : null;
+        if (refCode && res.appointments?.length) {
+          for (const a of res.appointments) {
+            try { await linkReferralToAppointment({ data: { appointmentId: a.id, code: refCode } }); } catch { /* ignore */ }
+          }
+          sessionStorage.removeItem("modo_ref_code");
+        }
+      } catch { /* non-fatal */ }
+
 
 
     } catch (e) {
@@ -1139,6 +1153,11 @@ function MultiBookPage() {
                     </CardContent>
                   </Card>
                 )}
+                <Card className="mb-6">
+                  <CardContent className="p-4">
+                    <ReferralCodeInput clinicSlug={slug} brand={brand} />
+                  </CardContent>
+                </Card>
                 {prescriberItems.length > 0 && (
                   <Card className="mb-6 border-2" style={{ borderColor: accent }}>
                     <CardContent className="space-y-4 p-4">

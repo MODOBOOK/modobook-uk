@@ -1294,18 +1294,21 @@ function RewardsTabContent({ slug, brand }: { slug: string; brand: string }) {
     );
   }
 
-  const shareUrl = d.code ? `${typeof window !== "undefined" ? window.location.origin : ""}/r/${d.code}` : "";
+  const shareText = d.code
+    ? `Book with ${d.clinic.name} and use my referral code ${d.code} at checkout.`
+    : "";
   const copy = async () => {
-    if (!shareUrl) return;
-    try { await navigator.clipboard.writeText(shareUrl); toast.success("Link copied"); }
+    if (!d.code) return;
+    try { await navigator.clipboard.writeText(d.code); toast.success("Code copied"); }
     catch { toast.error("Couldn't copy"); }
   };
   const share = async () => {
-    if (!shareUrl) return;
+    if (!d.code) return;
     if (typeof navigator !== "undefined" && (navigator as any).share) {
-      try { await (navigator as any).share({ title: "Referral", url: shareUrl }); return; } catch { /* fall through */ }
+      try { await (navigator as any).share({ title: "Referral code", text: shareText }); return; } catch { /* fall through */ }
     }
-    copy();
+    try { await navigator.clipboard.writeText(shareText); toast.success("Message copied — paste it to your friend"); }
+    catch { toast.error("Couldn't copy"); }
   };
 
   const you: string[] = [];
@@ -1328,6 +1331,9 @@ function RewardsTabContent({ slug, brand }: { slug: string; brand: string }) {
           <div className="font-serif text-4xl tracking-widest" style={{ color: brand }}>
             {d.code ?? <Loader2 className="mx-auto h-6 w-6 animate-spin" />}
           </div>
+          <p className="text-xs text-muted-foreground">
+            Share this code with a friend — they enter it on the booking page to unlock their reward, and you get yours when they attend.
+          </p>
           <div className="flex flex-wrap justify-center gap-2 text-xs">
             {friend.map((b) => <Badge key={`f-${b}`} variant="secondary">Friend: {b}</Badge>)}
             {you.map((b) => <Badge key={`y-${b}`} variant="secondary">You: {b}</Badge>)}
@@ -1337,10 +1343,9 @@ function RewardsTabContent({ slug, brand }: { slug: string; brand: string }) {
               <Share2 className="mr-2 h-4 w-4" /> Share
             </Button>
             <Button variant="outline" onClick={copy} disabled={!d.code}>
-              <Copy className="mr-2 h-4 w-4" /> Copy link
+              <Copy className="mr-2 h-4 w-4" /> Copy code
             </Button>
           </div>
-          {d.code && <div className="break-all text-xs text-muted-foreground">{shareUrl}</div>}
         </CardContent>
       </Card>
 
