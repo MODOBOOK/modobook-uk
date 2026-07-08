@@ -49,6 +49,7 @@ export const saveReferralSettings = createServerFn({ method: "POST" })
         {
           clinic_profile_id: userId,
           enabled: data.enabled,
+          show_on_public_page: data.show_on_public_page,
           referrer_credit_kind: data.referrer_credit_kind,
           referrer_credit_pennies: data.referrer_credit_pennies,
           referrer_credit_percent: data.referrer_credit_percent,
