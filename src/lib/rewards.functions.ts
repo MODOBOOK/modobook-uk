@@ -21,9 +21,18 @@ export const getMyReferralSettings = createServerFn({ method: "GET" })
 
 const SaveSchema = z.object({
   enabled: z.boolean(),
+  referrer_credit_kind: z.enum(["pennies", "percent"]).default("pennies"),
   referrer_credit_pennies: z.number().int().min(0).max(1_000_000),
+  referrer_credit_percent: z.number().int().min(0).max(100),
   referrer_points: z.number().int().min(0).max(100_000),
+  friend_credit_kind: z.enum(["pennies", "percent"]).default("pennies"),
   friend_credit_pennies: z.number().int().min(0).max(1_000_000),
+  friend_credit_percent: z.number().int().min(0).max(100),
+  points_redemption_enabled: z.boolean().default(false),
+  points_per_pound_redeem: z.number().int().min(1).max(10_000).default(20),
+  earn_on_spend_enabled: z.boolean().default(false),
+  points_per_pound_earn: z.number().min(0).max(1000).default(1),
+  tiers_enabled: z.boolean().default(false),
   headline: z.string().trim().max(120).nullable().optional(),
   description: z.string().trim().max(600).nullable().optional(),
 });
@@ -39,16 +48,100 @@ export const saveReferralSettings = createServerFn({ method: "POST" })
         {
           clinic_profile_id: userId,
           enabled: data.enabled,
+          referrer_credit_kind: data.referrer_credit_kind,
           referrer_credit_pennies: data.referrer_credit_pennies,
+          referrer_credit_percent: data.referrer_credit_percent,
           referrer_points: data.referrer_points,
+          friend_credit_kind: data.friend_credit_kind,
           friend_credit_pennies: data.friend_credit_pennies,
+          friend_credit_percent: data.friend_credit_percent,
+          points_redemption_enabled: data.points_redemption_enabled,
+          points_per_pound_redeem: data.points_per_pound_redeem,
+          earn_on_spend_enabled: data.earn_on_spend_enabled,
+          points_per_pound_earn: data.points_per_pound_earn,
+          tiers_enabled: data.tiers_enabled,
           trigger_event: "completed_paid",
           max_rewarded_per_year: null,
           headline: data.headline ?? null,
           description: data.description ?? null,
-        },
+        } as never,
         { onConflict: "clinic_profile_id" },
       );
+    if (error) throw error;
+    return { ok: true };
+  });
+
+// -------------------- Practitioner: reward tiers CRUD --------------------
+
+export type RewardTier = {
+  id: string;
+  label: string;
+  points_cost: number;
+  reward_kind: "credit_pennies" | "free_addon" | "custom";
+  reward_value: number;
+  description: string | null;
+  enabled: boolean;
+  sort_order: number;
+};
+
+export const listMyRewardTiers = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const { data, error } = await (supabase as any)
+      .from("clinic_reward_tiers")
+      .select("*")
+      .eq("clinic_profile_id", userId)
+      .order("sort_order", { ascending: true })
+      .order("points_cost", { ascending: true });
+    if (error) throw error;
+    return (data ?? []) as RewardTier[];
+  });
+
+const TierSchema = z.object({
+  id: z.string().uuid().optional(),
+  label: z.string().trim().min(1).max(80),
+  points_cost: z.number().int().min(1).max(1_000_000),
+  reward_kind: z.enum(["credit_pennies", "free_addon", "custom"]),
+  reward_value: z.number().int().min(0).max(1_000_000),
+  description: z.string().trim().max(240).nullable().optional(),
+  enabled: z.boolean().default(true),
+  sort_order: z.number().int().min(0).max(9999).default(0),
+});
+
+export const upsertRewardTier = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: z.infer<typeof TierSchema>) => TierSchema.parse(data))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const row = {
+      ...(data.id ? { id: data.id } : {}),
+      clinic_profile_id: userId,
+      label: data.label,
+      points_cost: data.points_cost,
+      reward_kind: data.reward_kind,
+      reward_value: data.reward_value,
+      description: data.description ?? null,
+      enabled: data.enabled,
+      sort_order: data.sort_order,
+    };
+    const { error } = await (supabase as any)
+      .from("clinic_reward_tiers")
+      .upsert(row);
+    if (error) throw error;
+    return { ok: true };
+  });
+
+export const deleteRewardTier = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string }) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { error } = await (supabase as any)
+      .from("clinic_reward_tiers")
+      .delete()
+      .eq("id", data.id)
+      .eq("clinic_profile_id", userId);
     if (error) throw error;
     return { ok: true };
   });
