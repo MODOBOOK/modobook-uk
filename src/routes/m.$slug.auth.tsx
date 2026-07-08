@@ -100,10 +100,14 @@ function PatientAuth() {
 
         if (!session) {
           const message = signInError?.message.toLowerCase() ?? "";
-          if (message.includes("email not confirmed")) {
-            toast.success("Check your email to confirm your account, then sign in.");
+          if (message.includes("email not confirmed") || message.includes("not confirmed")) {
+            // Fresh signup pending confirmation — the "already has an account" wording
+            // was scaring off customers whose practitioner had just added them.
+            toast.success("Almost done — we've emailed you a link to activate your account. Click it, then sign in.");
+          } else if (message.includes("invalid") || message.includes("credentials")) {
+            toast.error("Looks like this email is already registered but the password didn't match. Try 'Forgot password' to reset it.");
           } else {
-            toast.error("This email already has an account. Sign in or reset your password.");
+            toast.error(signInError?.message || "Couldn't finish sign up. Please try again.");
           }
           return;
         }
