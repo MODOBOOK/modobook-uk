@@ -53,6 +53,96 @@ export const saveReferralSettings = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+// -------------------- Practitioner: recent referrals --------------------
+
+export const getMyClinicReferrals = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const { data, error } = await supabase
+      .from("patient_referrals")
+      .select(
+        "id, code, status, reward_credit_pennies, reward_points, friend_credit_pennies, rewarded_at, created_at, referred_email, referrer_user_id",
+      )
+      .eq("clinic_profile_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(100);
+    if (error) throw error;
+    return data ?? [];
+  });
+
+// -------------------- Patient: link a referral code to a booking --------------------
+
+const LinkSchema = z.object({
+  appointmentId: z.string().uuid(),
+  code: z.string().trim().min(3).max(32),
+});
+
+/**
+ * Called from the booking success handler when the friend arrived via a
+ * share link (sessionStorage `mb_ref_code`). Creates a pending
+ * patient_referrals row so the auto-payout trigger can settle it once the
+ * appointment is completed and paid. Idempotent per appointment.
+ */
+export const linkReferralToAppointment = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: z.infer<typeof LinkSchema>) => LinkSchema.parse(data))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const code = data.code.toUpperCase();
+
+    // Resolve code -> referrer + clinic
+    const { data: codeRow } = await supabase
+      .from("patient_referral_codes")
+      .select("patient_user_id, clinic_profile_id")
+      .eq("code", code)
+      .maybeSingle();
+    if (!codeRow) return { ok: false, reason: "unknown_code" };
+    if (codeRow.patient_user_id === userId) return { ok: false, reason: "self_referral" };
+
+    // Load appointment for reward context
+    const { data: appt } = await supabase
+      .from("appointments")
+      .select("id, profile_id, patient_email, patient_user_id")
+      .eq("id", data.appointmentId)
+      .maybeSingle();
+    if (!appt) return { ok: false, reason: "no_appointment" };
+
+    // Get clinic settings snapshot for rewards
+    const { data: settings } = await supabase
+      .from("clinic_referral_settings")
+      .select("enabled, referrer_credit_pennies, referrer_points, friend_credit_pennies")
+      .eq("clinic_profile_id", codeRow.clinic_profile_id)
+      .maybeSingle();
+    if (!settings?.enabled) return { ok: false, reason: "program_off" };
+
+    // Idempotent: skip if this appointment already has a referral row
+    const { data: existing } = await supabase
+      .from("patient_referrals")
+      .select("id")
+      .eq("referred_appointment_id", data.appointmentId)
+      .maybeSingle();
+    if (existing) return { ok: true, referralId: existing.id, deduped: true };
+
+    const { data: inserted, error: insErr } = await supabase
+      .from("patient_referrals")
+      .insert({
+        referrer_user_id: codeRow.patient_user_id,
+        clinic_profile_id: codeRow.clinic_profile_id,
+        code,
+        referred_appointment_id: data.appointmentId,
+        referred_email: appt.patient_email ?? null,
+        status: "booked",
+        reward_credit_pennies: settings.referrer_credit_pennies ?? 0,
+        reward_points: settings.referrer_points ?? 0,
+        friend_credit_pennies: settings.friend_credit_pennies ?? 0,
+      })
+      .select("id")
+      .maybeSingle();
+    if (insErr) throw insErr;
+    return { ok: true, referralId: inserted?.id };
+  });
+
 // -------------------- Patient: my rewards at a clinic --------------------
 
 const SlugSchema = z.object({ slug: z.string().trim().min(1).max(120) });
