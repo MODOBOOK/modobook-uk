@@ -20,6 +20,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import { Clock, MapPin, CheckCircle2, LogIn, UserPlus, UserCheck } from "lucide-react";
+import { PublicRewardsBanner } from "@/components/PublicRewardsBanner";
 import { DiscountCodeBox, type AppliedDiscount } from "@/components/DiscountCodeBox";
 import { AddressAutocomplete } from "@/components/AddressAutocomplete";
 
