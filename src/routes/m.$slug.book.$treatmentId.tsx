@@ -20,6 +20,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import { Clock, MapPin, CheckCircle2, LogIn, UserPlus, UserCheck } from "lucide-react";
+import { PublicRewardsBanner } from "@/components/PublicRewardsBanner";
 import { DiscountCodeBox, type AppliedDiscount } from "@/components/DiscountCodeBox";
 import { AddressAutocomplete } from "@/components/AddressAutocomplete";
 
@@ -589,6 +590,10 @@ function BookTreatmentPage() {
         <Link to="/m/$slug" params={{ slug }} className="text-sm opacity-70 hover:underline">
           ← Back to {ctx.clinicName}
         </Link>
+      </div>
+
+      <div className="-mx-4 sm:mx-0">
+        <PublicRewardsBanner slug={slug} brand={brand} />
       </div>
 
       {(() => {

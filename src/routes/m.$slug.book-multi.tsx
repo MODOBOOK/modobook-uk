@@ -34,6 +34,7 @@ import { AddressAutocomplete } from "@/components/AddressAutocomplete";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 import { SafeHtml } from "@/components/SafeHtml";
+import { PublicRewardsBanner } from "@/components/PublicRewardsBanner";
 
 type Rule = Database["public"]["Tables"]["availability_rules"]["Row"];
 type Loc = Database["public"]["Tables"]["locations"]["Row"];
@@ -706,6 +707,10 @@ function MultiBookPage() {
             <Link to="/m/$slug" params={{ slug }} className="text-sm opacity-70 hover:underline">
               ← Back to {ctx.clinicName}
             </Link>
+          </div>
+
+          <div className="-mx-4 sm:mx-0">
+            <PublicRewardsBanner slug={slug} brand={brand} />
           </div>
 
           <BookingProgress steps={stepsMeta} accent={brand} />
