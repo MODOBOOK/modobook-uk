@@ -570,6 +570,11 @@ function Account() {
             </TabsContent>
 
             {/* ACCOUNT */}
+            {/* REWARDS */}
+            <TabsContent value="rewards" className="mt-4">
+              <RewardsTabContent slug={slug} brand={brand} />
+            </TabsContent>
+
             <TabsContent value="account" className="mt-4 space-y-6">
               <div>
                 <div className="mb-2 flex items-center gap-2 text-sm font-semibold" style={{ color: brand }}>
