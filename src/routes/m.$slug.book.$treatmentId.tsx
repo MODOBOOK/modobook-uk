@@ -10,6 +10,7 @@ import { BookingProgress, type BookingStep } from "@/components/BookingProgress"
 
 import { listAddonsForBooking, type PublicAddon } from "@/lib/addons.functions";
 import { ensurePatient, getMyPatient, updateMyPatient } from "@/lib/patient.functions";
+import { linkReferralToAppointment } from "@/lib/rewards.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -205,6 +206,7 @@ function BookTreatmentPage() {
   const dayFn = useServerFn(getDayAvailability);
   const monthFn = useServerFn(getMonthAvailability);
   const reqFn = useServerFn(requestBooking);
+  const linkReferral = useServerFn(linkReferralToAppointment);
 
   // Add-ons for this treatment
   const addonsQuery = useQuery({
@@ -479,6 +481,17 @@ function BookTreatmentPage() {
           }});
         } catch { /* non-fatal */ }
       }
+      // If this booking came from a referral share link, register it now so
+      // the reward can pay out automatically when the appointment completes.
+      try {
+        const refCode = typeof window !== "undefined"
+          ? sessionStorage.getItem("modo_ref_code")
+          : null;
+        if (refCode && res.id) {
+          await linkReferral({ data: { appointmentId: res.id, code: refCode } });
+          sessionStorage.removeItem("modo_ref_code");
+        }
+      } catch { /* non-fatal */ }
       const emb = (res as { embeddedPayment?: {
         clientSecret: string;
         paymentIntentId: string;
