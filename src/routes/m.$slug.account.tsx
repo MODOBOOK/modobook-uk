@@ -406,6 +406,9 @@ function Account() {
         onSaved={() => { setEditOpen(false); loadAll(); }}
       />
 
+      {/* Rewards hero — always at the top so it's forefront */}
+      <RewardsHero slug={slug} brand={brand} />
+
       {/* Treatment plans */}
       <PatientTreatmentPlans slug={slug} brand={brand} />
 
