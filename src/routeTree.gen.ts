@@ -39,6 +39,7 @@ import { Route as MSlugIndexRouteImport } from './routes/m.$slug.index'
 import { Route as AuthenticatedPrescriberIndexRouteImport } from './routes/_authenticated/prescriber.index'
 import { Route as AuthenticatedHubIndexRouteImport } from './routes/_authenticated/hub.index'
 import { Route as AuthenticatedDashboardIndexRouteImport } from './routes/_authenticated/dashboard.index'
+import { Route as MSlugRewardsRouteImport } from './routes/m.$slug.rewards'
 import { Route as MSlugReviewsRouteImport } from './routes/m.$slug.reviews'
 import { Route as MSlugPayRouteImport } from './routes/m.$slug.pay'
 import { Route as MSlugBookMultiRouteImport } from './routes/m.$slug.book-multi'
@@ -271,6 +272,11 @@ const AuthenticatedDashboardIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
+const MSlugRewardsRoute = MSlugRewardsRouteImport.update({
+  id: '/rewards',
+  path: '/rewards',
+  getParentRoute: () => MSlugRoute,
+} as any)
 const MSlugReviewsRoute = MSlugReviewsRouteImport.update({
   id: '/reviews',
   path: '/reviews',
@@ -811,6 +817,7 @@ export interface FileRoutesByFullPath {
   '/m/$slug/book-multi': typeof MSlugBookMultiRoute
   '/m/$slug/pay': typeof MSlugPayRoute
   '/m/$slug/reviews': typeof MSlugReviewsRoute
+  '/m/$slug/rewards': typeof MSlugRewardsRoute
   '/dashboard/': typeof AuthenticatedDashboardIndexRoute
   '/hub/': typeof AuthenticatedHubIndexRoute
   '/prescriber/': typeof AuthenticatedPrescriberIndexRoute
@@ -915,6 +922,7 @@ export interface FileRoutesByTo {
   '/m/$slug/book-multi': typeof MSlugBookMultiRoute
   '/m/$slug/pay': typeof MSlugPayRoute
   '/m/$slug/reviews': typeof MSlugReviewsRoute
+  '/m/$slug/rewards': typeof MSlugRewardsRoute
   '/dashboard': typeof AuthenticatedDashboardIndexRoute
   '/hub': typeof AuthenticatedHubIndexRoute
   '/prescriber': typeof AuthenticatedPrescriberIndexRoute
@@ -1027,6 +1035,7 @@ export interface FileRoutesById {
   '/m/$slug/book-multi': typeof MSlugBookMultiRoute
   '/m/$slug/pay': typeof MSlugPayRoute
   '/m/$slug/reviews': typeof MSlugReviewsRoute
+  '/m/$slug/rewards': typeof MSlugRewardsRoute
   '/_authenticated/dashboard/': typeof AuthenticatedDashboardIndexRoute
   '/_authenticated/hub/': typeof AuthenticatedHubIndexRoute
   '/_authenticated/prescriber/': typeof AuthenticatedPrescriberIndexRoute
@@ -1139,6 +1148,7 @@ export interface FileRouteTypes {
     | '/m/$slug/book-multi'
     | '/m/$slug/pay'
     | '/m/$slug/reviews'
+    | '/m/$slug/rewards'
     | '/dashboard/'
     | '/hub/'
     | '/prescriber/'
@@ -1243,6 +1253,7 @@ export interface FileRouteTypes {
     | '/m/$slug/book-multi'
     | '/m/$slug/pay'
     | '/m/$slug/reviews'
+    | '/m/$slug/rewards'
     | '/dashboard'
     | '/hub'
     | '/prescriber'
@@ -1354,6 +1365,7 @@ export interface FileRouteTypes {
     | '/m/$slug/book-multi'
     | '/m/$slug/pay'
     | '/m/$slug/reviews'
+    | '/m/$slug/rewards'
     | '/_authenticated/dashboard/'
     | '/_authenticated/hub/'
     | '/_authenticated/prescriber/'
@@ -1632,6 +1644,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/dashboard/'
       preLoaderRoute: typeof AuthenticatedDashboardIndexRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/m/$slug/rewards': {
+      id: '/m/$slug/rewards'
+      path: '/rewards'
+      fullPath: '/m/$slug/rewards'
+      preLoaderRoute: typeof MSlugRewardsRouteImport
+      parentRoute: typeof MSlugRoute
     }
     '/m/$slug/reviews': {
       id: '/m/$slug/reviews'
@@ -2440,6 +2459,7 @@ interface MSlugRouteChildren {
   MSlugBookMultiRoute: typeof MSlugBookMultiRoute
   MSlugPayRoute: typeof MSlugPayRoute
   MSlugReviewsRoute: typeof MSlugReviewsRoute
+  MSlugRewardsRoute: typeof MSlugRewardsRoute
   MSlugIndexRoute: typeof MSlugIndexRoute
   MSlugBookTreatmentIdRoute: typeof MSlugBookTreatmentIdRoute
   MSlugManageTokenRoute: typeof MSlugManageTokenRoute
@@ -2452,6 +2472,7 @@ const MSlugRouteChildren: MSlugRouteChildren = {
   MSlugBookMultiRoute: MSlugBookMultiRoute,
   MSlugPayRoute: MSlugPayRoute,
   MSlugReviewsRoute: MSlugReviewsRoute,
+  MSlugRewardsRoute: MSlugRewardsRoute,
   MSlugIndexRoute: MSlugIndexRoute,
   MSlugBookTreatmentIdRoute: MSlugBookTreatmentIdRoute,
   MSlugManageTokenRoute: MSlugManageTokenRoute,
