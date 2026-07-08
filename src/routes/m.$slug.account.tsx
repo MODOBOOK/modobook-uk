@@ -558,9 +558,9 @@ function Account() {
         )}
       </Section>
 
-      <DataPrivacySection
+      <PrivacyContactSection
         slug={slug}
-        profileId={profile!.id}
+        profile={profile!}
         brand={brand}
         onErased={async () => {
           await supabase.auth.signOut();
