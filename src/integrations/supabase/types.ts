@@ -1541,12 +1541,21 @@ export type Database = {
           clinic_profile_id: string
           created_at: string
           description: string | null
+          earn_on_spend_enabled: boolean
           enabled: boolean
+          friend_credit_kind: string
           friend_credit_pennies: number
+          friend_credit_percent: number
           headline: string | null
           max_rewarded_per_year: number | null
+          points_per_pound_earn: number
+          points_per_pound_redeem: number
+          points_redemption_enabled: boolean
+          referrer_credit_kind: string
           referrer_credit_pennies: number
+          referrer_credit_percent: number
           referrer_points: number
+          tiers_enabled: boolean
           trigger_event: string
           updated_at: string
         }
@@ -1554,12 +1563,21 @@ export type Database = {
           clinic_profile_id: string
           created_at?: string
           description?: string | null
+          earn_on_spend_enabled?: boolean
           enabled?: boolean
+          friend_credit_kind?: string
           friend_credit_pennies?: number
+          friend_credit_percent?: number
           headline?: string | null
           max_rewarded_per_year?: number | null
+          points_per_pound_earn?: number
+          points_per_pound_redeem?: number
+          points_redemption_enabled?: boolean
+          referrer_credit_kind?: string
           referrer_credit_pennies?: number
+          referrer_credit_percent?: number
           referrer_points?: number
+          tiers_enabled?: boolean
           trigger_event?: string
           updated_at?: string
         }
@@ -1567,13 +1585,64 @@ export type Database = {
           clinic_profile_id?: string
           created_at?: string
           description?: string | null
+          earn_on_spend_enabled?: boolean
           enabled?: boolean
+          friend_credit_kind?: string
           friend_credit_pennies?: number
+          friend_credit_percent?: number
           headline?: string | null
           max_rewarded_per_year?: number | null
+          points_per_pound_earn?: number
+          points_per_pound_redeem?: number
+          points_redemption_enabled?: boolean
+          referrer_credit_kind?: string
           referrer_credit_pennies?: number
+          referrer_credit_percent?: number
           referrer_points?: number
+          tiers_enabled?: boolean
           trigger_event?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      clinic_reward_tiers: {
+        Row: {
+          clinic_profile_id: string
+          created_at: string
+          description: string | null
+          enabled: boolean
+          id: string
+          label: string
+          points_cost: number
+          reward_kind: string
+          reward_value: number
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          clinic_profile_id: string
+          created_at?: string
+          description?: string | null
+          enabled?: boolean
+          id?: string
+          label: string
+          points_cost: number
+          reward_kind?: string
+          reward_value?: number
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          clinic_profile_id?: string
+          created_at?: string
+          description?: string | null
+          enabled?: boolean
+          id?: string
+          label?: string
+          points_cost?: number
+          reward_kind?: string
+          reward_value?: number
+          sort_order?: number
           updated_at?: string
         }
         Relationships: []
