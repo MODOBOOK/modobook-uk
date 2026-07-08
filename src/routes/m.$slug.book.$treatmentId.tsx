@@ -206,6 +206,7 @@ function BookTreatmentPage() {
   const dayFn = useServerFn(getDayAvailability);
   const monthFn = useServerFn(getMonthAvailability);
   const reqFn = useServerFn(requestBooking);
+  const linkReferral = useServerFn(linkReferralToAppointment);
 
   // Add-ons for this treatment
   const addonsQuery = useQuery({
