@@ -82,8 +82,25 @@ function RewardsPage() {
   // back to the public overview so the marketing view still renders.
   const s = (my?.settings ?? (pub?.visible ? pub.settings : null)) as any;
   const enabled = !!s?.enabled;
+  const publiclyVisible = pub?.visible === true;
   const tiers = pub?.visible ? pub.tiers : [];
   const clinicName = my?.clinic.name ?? (pub?.visible ? pub.clinic.name : "Clinic");
+
+  // If the clinic hasn't turned rewards on OR hasn't opted to show them
+  // publicly, don't advertise the programme here at all.
+  if (!enabled || !publiclyVisible) {
+    return (
+      <div className="mx-auto max-w-2xl space-y-5 px-4 py-16 text-center">
+        <h1 className="font-serif text-2xl">Rewards</h1>
+        <p className="text-sm text-muted-foreground">
+          {clinicName} isn't running a rewards programme right now.
+        </p>
+        <Link to="/m/$slug" params={{ slug }}>
+          <Button variant="ghost" size="sm">Back to clinic</Button>
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-2xl space-y-5 px-4 py-8">
@@ -96,20 +113,14 @@ function RewardsPage() {
         </h1>
         <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
           {s?.description ||
-            (enabled
-              ? "Share your code with friends. When they complete their first appointment, we'll add your reward automatically."
-              : `${clinicName} hasn't turned on their rewards programme yet — check back soon.`)}
+            "Share your code with friends. When they complete their first appointment, we'll add your reward automatically."}
         </p>
       </div>
 
-      {!enabled ? (
-        <Card>
-          <CardContent className="py-8 text-center text-sm text-muted-foreground">
-            Rewards aren't currently offered by this clinic.
-          </CardContent>
-        </Card>
-      ) : (
-        <>
+      <>
+          {/* How the whole scheme works — plain-English explainer */}
+          <HowItWorksCard settings={s} tiersCount={tiers.length} clinicName={clinicName} />
+
           {/* Public marketing overview — visible to everyone, signed in or not */}
           <RewardsOverviewCard settings={s} />
 
