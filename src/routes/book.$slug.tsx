@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { MapPin, Clock, Phone, Calendar, Star, Loader2 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import { SafeHtml } from "@/components/SafeHtml";
+import { PublicRewardsBanner } from "@/components/PublicRewardsBanner";
 
 export const Route = createFileRoute("/book/$slug")({
   loader: async ({ params }) => {
@@ -31,6 +32,7 @@ export const Route = createFileRoute("/book/$slug")({
 });
 
 function ClinicPage() {
+  const { slug } = Route.useParams();
   const { profile, treatments, packages, testimonials, aboutPage } = Route.useLoaderData() as {
     profile: Database["public"]["Tables"]["profiles"]["Row"];
     treatments: Database["public"]["Tables"]["treatments"]["Row"][];
@@ -76,6 +78,10 @@ function ClinicPage() {
             <img src={profile.hero_url} alt={profile.clinic_name || "Clinic"} className="h-64 w-full object-cover sm:h-80" />
           </div>
         )}
+
+        <div className="mb-10">
+          <PublicRewardsBanner slug={profile.slug || slug} brand={brandColor} />
+        </div>
 
         <div className="mb-10 grid gap-8 lg:grid-cols-3">
           <div className="lg:col-span-2">
