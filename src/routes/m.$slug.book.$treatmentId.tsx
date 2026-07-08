@@ -988,6 +988,9 @@ function BookTreatmentPage() {
               />
             </div>
           )}
+          <div className="sm:col-span-2">
+            <ReferralCodeInput clinicSlug={slug} brand={brand} />
+          </div>
         </CardContent>
       </Card>
 
