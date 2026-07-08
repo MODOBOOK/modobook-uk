@@ -959,6 +959,9 @@ function BookPage() {
         </section>
       )}
 
+      {/* Rewards & referrals — appears when the practitioner opts in on their Rewards dashboard */}
+      <PublicRewardsBanner slug={slug} brand={brand} />
+
       {/* Model slots now render inside the Treatments tab after the user presses "I know what I want". */}
 
       {/* Contact us */}
@@ -1446,11 +1449,6 @@ function BookPage() {
           </section>
         );
       })()}
-
-
-      {/* Rewards & referrals — appears when the practitioner opts in on their Rewards dashboard */}
-      <PublicRewardsBanner slug={slug} brand={brand} />
-
       {/* Treatments + Packages */}
 
       {locationId && (!chooserOn || mode === "know" || mode === "consult" || (mode === "unsure" && concernsConfirmed && pickedConcernIds.length > 0)) ? (
