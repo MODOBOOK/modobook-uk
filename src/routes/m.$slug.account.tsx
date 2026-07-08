@@ -440,7 +440,7 @@ function Account() {
               <TabsTrigger value="care">
                 Care{careCount > 0 && <span className="ml-1 text-xs opacity-70">({careCount})</span>}
               </TabsTrigger>
-              <TabsTrigger value="rewards">Rewards</TabsTrigger>
+              <TabsTrigger value="rewards" id="tab-rewards">Rewards</TabsTrigger>
               <TabsTrigger value="account">Account</TabsTrigger>
             </TabsList>
 
