@@ -29,6 +29,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
 import { Clock, MapPin, CheckCircle2, LogIn, UserPlus, UserCheck, ChevronLeft, ChevronRight, CalendarDays } from "lucide-react";
 import { DiscountCodeBox, type AppliedDiscount } from "@/components/DiscountCodeBox";
+import { ReferralCodeInput } from "@/components/ReferralCodeInput";
+import { linkReferralToAppointment } from "@/lib/rewards.functions";
 import { AddressAutocomplete } from "@/components/AddressAutocomplete";
 
 import { toast } from "sonner";
