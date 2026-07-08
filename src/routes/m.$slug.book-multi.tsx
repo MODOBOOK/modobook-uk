@@ -534,8 +534,20 @@ function MultiBookPage() {
       }
       setConfirmed(res);
 
-      // Referrals are created automatically by the database trigger on appointment insert
-      // (using clinic_visit_id when routing is 'clinic_visit'). No separate client call.
+      // Link a referral code (entered on this page) to the new appointments so
+      // the reward pays out automatically. Idempotent per appointment.
+      try {
+        const refCode = typeof window !== "undefined"
+          ? sessionStorage.getItem("modo_ref_code")
+          : null;
+        if (refCode && res.appointments?.length) {
+          for (const a of res.appointments) {
+            try { await linkReferralToAppointment({ data: { appointmentId: a.id, code: refCode } }); } catch { /* ignore */ }
+          }
+          sessionStorage.removeItem("modo_ref_code");
+        }
+      } catch { /* non-fatal */ }
+
 
 
     } catch (e) {
