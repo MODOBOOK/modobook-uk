@@ -34,6 +34,7 @@ import { AddressAutocomplete } from "@/components/AddressAutocomplete";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 import { SafeHtml } from "@/components/SafeHtml";
+import { PublicRewardsBanner } from "@/components/PublicRewardsBanner";
 
 type Rule = Database["public"]["Tables"]["availability_rules"]["Row"];
 type Loc = Database["public"]["Tables"]["locations"]["Row"];
