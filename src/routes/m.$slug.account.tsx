@@ -989,59 +989,12 @@ function EditMyDetailsDialog({
   );
 }
 
-function DataPrivacySection({
-  slug, profileId, brand, onErased,
-}: { slug: string; profileId: string; brand: string; onErased: () => void | Promise<void> }) {
-  const [exporting, setExporting] = useState(false);
+function PrivacyContactSection({
+  slug, profile, brand, onErased,
+}: { slug: string; profile: Profile; brand: string; onErased: () => void | Promise<void> }) {
   const [erasing, setErasing] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmText, setConfirmText] = useState("");
-
-  async function exportData() {
-    setExporting(true);
-    try {
-      const [
-        { data: { user } },
-        clientRes, apptsRes, formsRes, consentsRes, notesRes,
-        aftercareRes, paymentsRes, prescriptionsRes,
-      ] = await Promise.all([
-        supabase.auth.getUser(),
-        supabase.from("clinic_clients").select("*").eq("profile_id", profileId),
-        supabase.from("appointments").select("*").eq("profile_id", profileId),
-        supabase.from("appointment_medical_forms").select("*").eq("profile_id", profileId),
-        supabase.from("appointment_consents").select("*").eq("profile_id", profileId),
-        supabase.from("client_notes").select("*").eq("profile_id", profileId).eq("visible_to_patient", true),
-        supabase.from("appointment_aftercare").select("*").eq("profile_id", profileId),
-        supabase.from("payments").select("*").eq("profile_id", profileId),
-        supabase.from("client_prescriptions").select("*").eq("profile_id", profileId),
-      ]);
-      const bundle = {
-        exported_at: new Date().toISOString(),
-        clinic_slug: slug,
-        user: { id: user?.id, email: user?.email },
-        client_record: clientRes.data ?? [],
-        appointments: apptsRes.data ?? [],
-        medical_forms: formsRes.data ?? [],
-        consents: consentsRes.data ?? [],
-        notes_shared_with_you: notesRes.data ?? [],
-        aftercare: aftercareRes.data ?? [],
-        payments: paymentsRes.data ?? [],
-        prescriptions: prescriptionsRes.data ?? [],
-      };
-      const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `modo-${slug}-my-data-${new Date().toISOString().slice(0,10)}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
-      toast.success("Your data has been downloaded.");
-    } catch (e: any) {
-      toast.error(e?.message || "Export failed");
-    } finally {
-      setExporting(false);
-    }
-  }
 
   async function requestErasure() {
     setErasing(true);
@@ -1053,29 +1006,57 @@ function DataPrivacySection({
     await onErased();
   }
 
+  const email = profile.email;
+  const phone = profile.phone;
+  const sms = profile.contact_sms_number;
+  const wa = profile.contact_whatsapp_number;
+  const hasAnyContact = !!(email || phone || sms || wa);
+
   return (
     <section className="mt-8">
       <h2 className="mb-3 flex items-center gap-2 text-base font-semibold" style={{ color: brand }}>
-        <ShieldCheck className="h-4 w-4" />Data & privacy
+        <ShieldCheck className="h-4 w-4" />Contact & privacy
       </h2>
       <Card>
         <CardContent className="grid gap-4 p-4 sm:grid-cols-2">
           <div className="space-y-2">
-            <div className="text-sm font-medium">Download my data</div>
+            <div className="text-sm font-medium">Contact your practitioner</div>
             <p className="text-xs text-muted-foreground">
-              Get a copy of everything this clinic holds about you — profile, bookings, forms, consents, prescriptions and payments — as a JSON file.
+              Need to reach {profile.full_name ?? profile.clinic_name ?? "your practitioner"} directly? Use the details below.
             </p>
-            <Button variant="outline" size="sm" onClick={exportData} disabled={exporting}>
-              {exporting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Download JSON
-            </Button>
+            {hasAnyContact ? (
+              <div className="space-y-1 text-sm">
+                {email && (
+                  <a href={`mailto:${email}`} className="flex items-center gap-2 underline">
+                    <Mail className="h-4 w-4" /> {email}
+                  </a>
+                )}
+                {phone && (
+                  <a href={`tel:${phone}`} className="flex items-center gap-2 underline">
+                    <Phone className="h-4 w-4" /> {phone}
+                  </a>
+                )}
+                {sms && sms !== phone && (
+                  <a href={`sms:${sms}`} className="flex items-center gap-2 underline">
+                    <Phone className="h-4 w-4" /> {sms} (SMS)
+                  </a>
+                )}
+                {wa && (
+                  <a href={`https://wa.me/${wa.replace(/\D/g, "")}`} target="_blank" rel="noreferrer" className="flex items-center gap-2 underline">
+                    <Phone className="h-4 w-4" /> {wa} (WhatsApp)
+                  </a>
+                )}
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground">No contact details published yet.</p>
+            )}
           </div>
           <div className="space-y-2">
             <div className="text-sm font-medium">Erase my personal details</div>
             <p className="text-xs text-muted-foreground">
               Removes your name, contact, address, GP and emergency-contact details from this clinic.
               Clinical records (medical forms, consents, prescriptions and bookings) are anonymised and
-              retained for UK statutory periods (8 years clinical, 10 years prescriptions, 7 years financial).
-              Your patient login for this clinic will be removed.
+              retained for UK statutory periods. Your patient login for this clinic will be removed.
             </p>
             <Button variant="destructive" size="sm" onClick={() => setConfirmOpen(true)}>
               Request erasure
@@ -1111,6 +1092,7 @@ function DataPrivacySection({
     </section>
   );
 }
+
 
 function PatientTreatmentPlans({ slug, brand }: { slug: string; brand: string }) {
   const [plans, setPlans] = useState<any[]>([]);
