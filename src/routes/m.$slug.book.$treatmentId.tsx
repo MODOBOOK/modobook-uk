@@ -481,6 +481,17 @@ function BookTreatmentPage() {
           }});
         } catch { /* non-fatal */ }
       }
+      // If this booking came from a referral share link, register it now so
+      // the reward can pay out automatically when the appointment completes.
+      try {
+        const refCode = typeof window !== "undefined"
+          ? sessionStorage.getItem("mb_ref_code")
+          : null;
+        if (refCode && res.id) {
+          await linkReferral({ data: { appointmentId: res.id, code: refCode } });
+          sessionStorage.removeItem("mb_ref_code");
+        }
+      } catch { /* non-fatal */ }
       const emb = (res as { embeddedPayment?: {
         clientSecret: string;
         paymentIntentId: string;
