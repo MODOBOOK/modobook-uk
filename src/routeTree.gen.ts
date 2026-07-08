@@ -60,6 +60,7 @@ import { Route as AuthenticatedDashboardTreatmentsRouteImport } from './routes/_
 import { Route as AuthenticatedDashboardStaffRouteImport } from './routes/_authenticated/dashboard.staff'
 import { Route as AuthenticatedDashboardSettingsRouteImport } from './routes/_authenticated/dashboard.settings'
 import { Route as AuthenticatedDashboardServicesRouteImport } from './routes/_authenticated/dashboard.services'
+import { Route as AuthenticatedDashboardRewardsRouteImport } from './routes/_authenticated/dashboard.rewards'
 import { Route as AuthenticatedDashboardReviewsRouteImport } from './routes/_authenticated/dashboard.reviews'
 import { Route as AuthenticatedDashboardReferralsRouteImport } from './routes/_authenticated/dashboard.referrals'
 import { Route as AuthenticatedDashboardPrivacyRouteImport } from './routes/_authenticated/dashboard.privacy'
@@ -386,6 +387,12 @@ const AuthenticatedDashboardServicesRoute =
   AuthenticatedDashboardServicesRouteImport.update({
     id: '/services',
     path: '/services',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardRewardsRoute =
+  AuthenticatedDashboardRewardsRouteImport.update({
+    id: '/rewards',
+    path: '/rewards',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
 const AuthenticatedDashboardReviewsRoute =
@@ -782,6 +789,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/privacy': typeof AuthenticatedDashboardPrivacyRoute
   '/dashboard/referrals': typeof AuthenticatedDashboardReferralsRoute
   '/dashboard/reviews': typeof AuthenticatedDashboardReviewsRoute
+  '/dashboard/rewards': typeof AuthenticatedDashboardRewardsRoute
   '/dashboard/services': typeof AuthenticatedDashboardServicesRoute
   '/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
   '/dashboard/staff': typeof AuthenticatedDashboardStaffRoute
@@ -885,6 +893,7 @@ export interface FileRoutesByTo {
   '/dashboard/privacy': typeof AuthenticatedDashboardPrivacyRoute
   '/dashboard/referrals': typeof AuthenticatedDashboardReferralsRoute
   '/dashboard/reviews': typeof AuthenticatedDashboardReviewsRoute
+  '/dashboard/rewards': typeof AuthenticatedDashboardRewardsRoute
   '/dashboard/services': typeof AuthenticatedDashboardServicesRoute
   '/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
   '/dashboard/staff': typeof AuthenticatedDashboardStaffRoute
@@ -996,6 +1005,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/privacy': typeof AuthenticatedDashboardPrivacyRoute
   '/_authenticated/dashboard/referrals': typeof AuthenticatedDashboardReferralsRoute
   '/_authenticated/dashboard/reviews': typeof AuthenticatedDashboardReviewsRoute
+  '/_authenticated/dashboard/rewards': typeof AuthenticatedDashboardRewardsRoute
   '/_authenticated/dashboard/services': typeof AuthenticatedDashboardServicesRoute
   '/_authenticated/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
   '/_authenticated/dashboard/staff': typeof AuthenticatedDashboardStaffRoute
@@ -1107,6 +1117,7 @@ export interface FileRouteTypes {
     | '/dashboard/privacy'
     | '/dashboard/referrals'
     | '/dashboard/reviews'
+    | '/dashboard/rewards'
     | '/dashboard/services'
     | '/dashboard/settings'
     | '/dashboard/staff'
@@ -1210,6 +1221,7 @@ export interface FileRouteTypes {
     | '/dashboard/privacy'
     | '/dashboard/referrals'
     | '/dashboard/reviews'
+    | '/dashboard/rewards'
     | '/dashboard/services'
     | '/dashboard/settings'
     | '/dashboard/staff'
@@ -1320,6 +1332,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/privacy'
     | '/_authenticated/dashboard/referrals'
     | '/_authenticated/dashboard/reviews'
+    | '/_authenticated/dashboard/rewards'
     | '/_authenticated/dashboard/services'
     | '/_authenticated/dashboard/settings'
     | '/_authenticated/dashboard/staff'
@@ -1765,6 +1778,13 @@ declare module '@tanstack/react-router' {
       path: '/services'
       fullPath: '/dashboard/services'
       preLoaderRoute: typeof AuthenticatedDashboardServicesRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/rewards': {
+      id: '/_authenticated/dashboard/rewards'
+      path: '/rewards'
+      fullPath: '/dashboard/rewards'
+      preLoaderRoute: typeof AuthenticatedDashboardRewardsRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
     '/_authenticated/dashboard/reviews': {
@@ -2257,6 +2277,7 @@ interface AuthenticatedDashboardRouteChildren {
   AuthenticatedDashboardPrivacyRoute: typeof AuthenticatedDashboardPrivacyRoute
   AuthenticatedDashboardReferralsRoute: typeof AuthenticatedDashboardReferralsRoute
   AuthenticatedDashboardReviewsRoute: typeof AuthenticatedDashboardReviewsRoute
+  AuthenticatedDashboardRewardsRoute: typeof AuthenticatedDashboardRewardsRoute
   AuthenticatedDashboardServicesRoute: typeof AuthenticatedDashboardServicesRoute
   AuthenticatedDashboardSettingsRoute: typeof AuthenticatedDashboardSettingsRoute
   AuthenticatedDashboardStaffRoute: typeof AuthenticatedDashboardStaffRoute
@@ -2311,6 +2332,7 @@ const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
     AuthenticatedDashboardPrivacyRoute: AuthenticatedDashboardPrivacyRoute,
     AuthenticatedDashboardReferralsRoute: AuthenticatedDashboardReferralsRoute,
     AuthenticatedDashboardReviewsRoute: AuthenticatedDashboardReviewsRoute,
+    AuthenticatedDashboardRewardsRoute: AuthenticatedDashboardRewardsRoute,
     AuthenticatedDashboardServicesRoute: AuthenticatedDashboardServicesRoute,
     AuthenticatedDashboardSettingsRoute: AuthenticatedDashboardSettingsRoute,
     AuthenticatedDashboardStaffRoute: AuthenticatedDashboardStaffRoute,
