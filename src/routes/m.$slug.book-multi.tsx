@@ -709,6 +709,10 @@ function MultiBookPage() {
             </Link>
           </div>
 
+          <div className="-mx-4 sm:mx-0">
+            <PublicRewardsBanner slug={slug} brand={brand} />
+          </div>
+
           <BookingProgress steps={stepsMeta} accent={brand} />
           {summaryChip}
 
