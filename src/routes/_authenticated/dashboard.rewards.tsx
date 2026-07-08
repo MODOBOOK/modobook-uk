@@ -74,6 +74,7 @@ function RewardsSettingsPage() {
 
   // Main toggle
   const [enabled, setEnabled] = useState(false);
+  const [showOnPublic, setShowOnPublic] = useState(false);
 
   // Referrer credit
   const [creditOn, setCreditOn] = useState(true);
