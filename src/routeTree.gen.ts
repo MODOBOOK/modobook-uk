@@ -21,6 +21,7 @@ import { Route as AppRouteImport } from './routes/app'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as StaffAcceptTokenRouteImport } from './routes/staff-accept.$token'
+import { Route as RCodeRouteImport } from './routes/r.$code'
 import { Route as PrivacyDpiaRouteImport } from './routes/privacy.dpia'
 import { Route as PrivacyBreachResponseRouteImport } from './routes/privacy.breach-response'
 import { Route as PlanTokenRouteImport } from './routes/plan.$token'
@@ -177,6 +178,11 @@ const IndexRoute = IndexRouteImport.update({
 const StaffAcceptTokenRoute = StaffAcceptTokenRouteImport.update({
   id: '/staff-accept/$token',
   path: '/staff-accept/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RCodeRoute = RCodeRouteImport.update({
+  id: '/r/$code',
+  path: '/r/$code',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyDpiaRoute = PrivacyDpiaRouteImport.update({
@@ -762,6 +768,7 @@ export interface FileRoutesByFullPath {
   '/plan/$token': typeof PlanTokenRoute
   '/privacy/breach-response': typeof PrivacyBreachResponseRoute
   '/privacy/dpia': typeof PrivacyDpiaRoute
+  '/r/$code': typeof RCodeRoute
   '/staff-accept/$token': typeof StaffAcceptTokenRoute
   '/admin/emails': typeof AuthenticatedAdminEmailsRoute
   '/dashboard/about': typeof AuthenticatedDashboardAboutRoute
@@ -869,6 +876,7 @@ export interface FileRoutesByTo {
   '/plan/$token': typeof PlanTokenRoute
   '/privacy/breach-response': typeof PrivacyBreachResponseRoute
   '/privacy/dpia': typeof PrivacyDpiaRoute
+  '/r/$code': typeof RCodeRoute
   '/staff-accept/$token': typeof StaffAcceptTokenRoute
   '/admin/emails': typeof AuthenticatedAdminEmailsRoute
   '/dashboard/about': typeof AuthenticatedDashboardAboutRoute
@@ -980,6 +988,7 @@ export interface FileRoutesById {
   '/plan/$token': typeof PlanTokenRoute
   '/privacy/breach-response': typeof PrivacyBreachResponseRoute
   '/privacy/dpia': typeof PrivacyDpiaRoute
+  '/r/$code': typeof RCodeRoute
   '/staff-accept/$token': typeof StaffAcceptTokenRoute
   '/_authenticated/admin/emails': typeof AuthenticatedAdminEmailsRoute
   '/_authenticated/dashboard/about': typeof AuthenticatedDashboardAboutRoute
@@ -1093,6 +1102,7 @@ export interface FileRouteTypes {
     | '/plan/$token'
     | '/privacy/breach-response'
     | '/privacy/dpia'
+    | '/r/$code'
     | '/staff-accept/$token'
     | '/admin/emails'
     | '/dashboard/about'
@@ -1200,6 +1210,7 @@ export interface FileRouteTypes {
     | '/plan/$token'
     | '/privacy/breach-response'
     | '/privacy/dpia'
+    | '/r/$code'
     | '/staff-accept/$token'
     | '/admin/emails'
     | '/dashboard/about'
@@ -1310,6 +1321,7 @@ export interface FileRouteTypes {
     | '/plan/$token'
     | '/privacy/breach-response'
     | '/privacy/dpia'
+    | '/r/$code'
     | '/staff-accept/$token'
     | '/_authenticated/admin/emails'
     | '/_authenticated/dashboard/about'
@@ -1415,6 +1427,7 @@ export interface RootRouteChildren {
   FTokenRoute: typeof FTokenRoute
   MSlugRoute: typeof MSlugRouteWithChildren
   PlanTokenRoute: typeof PlanTokenRoute
+  RCodeRoute: typeof RCodeRoute
   StaffAcceptTokenRoute: typeof StaffAcceptTokenRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   ApiPublicBookingReleaseRoute: typeof ApiPublicBookingReleaseRoute
@@ -1517,6 +1530,13 @@ declare module '@tanstack/react-router' {
       path: '/staff-accept/$token'
       fullPath: '/staff-accept/$token'
       preLoaderRoute: typeof StaffAcceptTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/r/$code': {
+      id: '/r/$code'
+      path: '/r/$code'
+      fullPath: '/r/$code'
+      preLoaderRoute: typeof RCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy/dpia': {
@@ -2498,6 +2518,7 @@ const rootRouteChildren: RootRouteChildren = {
   FTokenRoute: FTokenRoute,
   MSlugRoute: MSlugRouteWithChildren,
   PlanTokenRoute: PlanTokenRoute,
+  RCodeRoute: RCodeRoute,
   StaffAcceptTokenRoute: StaffAcceptTokenRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   ApiPublicBookingReleaseRoute: ApiPublicBookingReleaseRoute,
