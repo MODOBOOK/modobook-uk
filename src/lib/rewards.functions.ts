@@ -21,6 +21,7 @@ export const getMyReferralSettings = createServerFn({ method: "GET" })
 
 const SaveSchema = z.object({
   enabled: z.boolean(),
+  show_on_public_page: z.boolean().default(false),
   referrer_credit_kind: z.enum(["pennies", "percent"]).default("pennies"),
   referrer_credit_pennies: z.number().int().min(0).max(1_000_000),
   referrer_credit_percent: z.number().int().min(0).max(100),
