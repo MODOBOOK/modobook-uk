@@ -198,7 +198,6 @@ function RewardsPage() {
             </Card>
           )}
         </>
-      )}
 
       <Separator />
       <div className="text-center">
