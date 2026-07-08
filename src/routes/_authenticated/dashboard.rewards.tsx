@@ -109,9 +109,9 @@ function RewardsSettingsPage() {
     setEnabled(s.enabled);
     setCreditKind((s.referrer_credit_kind as CreditKind) ?? "pennies");
     setCreditOn(
-      (s.referrer_credit_kind === "percent"
-        ? s.referrer_credit_percent > 0
-        : s.referrer_credit_pennies > 0) ?? true,
+      s.referrer_credit_kind === "percent"
+        ? (s.referrer_credit_percent ?? 0) > 0
+        : (s.referrer_credit_pennies ?? 0) > 0,
     );
     setCreditPounds(String((s.referrer_credit_pennies || 2000) / 100));
     setCreditPercent(String(s.referrer_credit_percent ?? 10));
@@ -121,9 +121,9 @@ function RewardsSettingsPage() {
 
     setFriendKind((s.friend_credit_kind as CreditKind) ?? "pennies");
     setFriendOn(
-      (s.friend_credit_kind === "percent"
-        ? s.friend_credit_percent > 0
-        : s.friend_credit_pennies > 0) ?? true,
+      s.friend_credit_kind === "percent"
+        ? (s.friend_credit_percent ?? 0) > 0
+        : (s.friend_credit_pennies ?? 0) > 0,
     );
     setFriendPounds(String((s.friend_credit_pennies || 1000) / 100));
     setFriendPercent(String(s.friend_credit_percent ?? 10));
