@@ -1536,6 +1536,48 @@ export type Database = {
           },
         ]
       }
+      clinic_referral_settings: {
+        Row: {
+          clinic_profile_id: string
+          created_at: string
+          description: string | null
+          enabled: boolean
+          friend_credit_pennies: number
+          headline: string | null
+          max_rewarded_per_year: number | null
+          referrer_credit_pennies: number
+          referrer_points: number
+          trigger_event: string
+          updated_at: string
+        }
+        Insert: {
+          clinic_profile_id: string
+          created_at?: string
+          description?: string | null
+          enabled?: boolean
+          friend_credit_pennies?: number
+          headline?: string | null
+          max_rewarded_per_year?: number | null
+          referrer_credit_pennies?: number
+          referrer_points?: number
+          trigger_event?: string
+          updated_at?: string
+        }
+        Update: {
+          clinic_profile_id?: string
+          created_at?: string
+          description?: string | null
+          enabled?: boolean
+          friend_credit_pennies?: number
+          headline?: string | null
+          max_rewarded_per_year?: number | null
+          referrer_credit_pennies?: number
+          referrer_points?: number
+          trigger_event?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       clinic_testimonials: {
         Row: {
           author_name: string
@@ -3125,6 +3167,78 @@ export type Database = {
           },
         ]
       }
+      patient_credit_ledger: {
+        Row: {
+          clinic_profile_id: string
+          created_at: string
+          delta_pennies: number
+          id: string
+          note: string | null
+          patient_user_id: string
+          reason: string
+          ref_id: string | null
+          ref_type: string | null
+        }
+        Insert: {
+          clinic_profile_id: string
+          created_at?: string
+          delta_pennies: number
+          id?: string
+          note?: string | null
+          patient_user_id: string
+          reason: string
+          ref_id?: string | null
+          ref_type?: string | null
+        }
+        Update: {
+          clinic_profile_id?: string
+          created_at?: string
+          delta_pennies?: number
+          id?: string
+          note?: string | null
+          patient_user_id?: string
+          reason?: string
+          ref_id?: string | null
+          ref_type?: string | null
+        }
+        Relationships: []
+      }
+      patient_points_ledger: {
+        Row: {
+          clinic_profile_id: string
+          created_at: string
+          delta: number
+          id: string
+          note: string | null
+          patient_user_id: string
+          reason: string
+          ref_id: string | null
+          ref_type: string | null
+        }
+        Insert: {
+          clinic_profile_id: string
+          created_at?: string
+          delta: number
+          id?: string
+          note?: string | null
+          patient_user_id: string
+          reason: string
+          ref_id?: string | null
+          ref_type?: string | null
+        }
+        Update: {
+          clinic_profile_id?: string
+          created_at?: string
+          delta?: number
+          id?: string
+          note?: string | null
+          patient_user_id?: string
+          reason?: string
+          ref_id?: string | null
+          ref_type?: string | null
+        }
+        Relationships: []
+      }
       patient_practitioner_links: {
         Row: {
           created_at: string
@@ -3160,6 +3274,87 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      patient_referral_codes: {
+        Row: {
+          clinic_profile_id: string
+          code: string
+          created_at: string
+          id: string
+          patient_user_id: string
+        }
+        Insert: {
+          clinic_profile_id: string
+          code: string
+          created_at?: string
+          id?: string
+          patient_user_id: string
+        }
+        Update: {
+          clinic_profile_id?: string
+          code?: string
+          created_at?: string
+          id?: string
+          patient_user_id?: string
+        }
+        Relationships: []
+      }
+      patient_referrals: {
+        Row: {
+          clinic_profile_id: string
+          code: string
+          created_at: string
+          friend_credit_pennies: number
+          id: string
+          referred_appointment_id: string | null
+          referred_client_id: string | null
+          referred_email: string | null
+          referred_phone: string | null
+          referrer_user_id: string
+          rejected_reason: string | null
+          reward_credit_pennies: number
+          reward_points: number
+          rewarded_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          clinic_profile_id: string
+          code: string
+          created_at?: string
+          friend_credit_pennies?: number
+          id?: string
+          referred_appointment_id?: string | null
+          referred_client_id?: string | null
+          referred_email?: string | null
+          referred_phone?: string | null
+          referrer_user_id: string
+          rejected_reason?: string | null
+          reward_credit_pennies?: number
+          reward_points?: number
+          rewarded_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          clinic_profile_id?: string
+          code?: string
+          created_at?: string
+          friend_credit_pennies?: number
+          id?: string
+          referred_appointment_id?: string | null
+          referred_client_id?: string | null
+          referred_email?: string | null
+          referred_phone?: string | null
+          referrer_user_id?: string
+          rejected_reason?: string | null
+          reward_credit_pennies?: number
+          reward_points?: number
+          rewarded_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       patient_reviews: {
         Row: {
