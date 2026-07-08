@@ -219,6 +219,18 @@ function RewardsSettingsPage() {
         </CardHeader>
       </Card>
 
+      <Card className={enabled ? "" : "pointer-events-none opacity-50"}>
+        <CardHeader className="flex flex-row items-start justify-between gap-4 space-y-0">
+          <div>
+            <CardTitle className="text-base">Show rewards on my public page</CardTitle>
+            <CardDescription>
+              Adds a "Rewards" tab to your /m/{"{slug}"} page so visitors can see the programme, tiers and how it works. Auto-generated from your settings below — nothing to write.
+            </CardDescription>
+          </div>
+          <Switch checked={showOnPublic} onCheckedChange={setShowOnPublic} />
+        </CardHeader>
+      </Card>
+
       <div className={enabled ? "space-y-6" : "pointer-events-none space-y-6 opacity-50"}>
         <section className="space-y-3">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
