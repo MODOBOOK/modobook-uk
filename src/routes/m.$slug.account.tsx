@@ -12,11 +12,14 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Loader2, Calendar as CalendarIcon, Clock, MapPin, FileText, StickyNote,
   ClipboardCheck, Receipt, ShieldCheck, ExternalLink, Sparkles, HeartPulse,
-  Mail, Phone, AlertTriangle, ChevronDown,
+  Mail, Phone, AlertTriangle, ChevronDown, Gift, Copy, Share2, Coins, ArrowRight,
 } from "lucide-react";
 import { toast } from "sonner";
 import { describeCancellationRules, type CancellationRule } from "@/lib/policy";
 import { SafeHtml } from "@/components/SafeHtml";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { getMyRewardsForClinic } from "@/lib/rewards.functions";
 
 
 export const Route = createFileRoute("/m/$slug/account")({
