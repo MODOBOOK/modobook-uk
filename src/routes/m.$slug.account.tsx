@@ -904,6 +904,8 @@ function EditMyDetailsDialog({
     onSaved();
   }
 
+  const [showMore, setShowMore] = useState(false);
+
   const field = (label: string, key: string, type: string = "text") => (
     <div className="space-y-1">
       <label className="text-xs font-medium text-muted-foreground">{label}</label>
@@ -918,65 +920,53 @@ function EditMyDetailsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Edit my details</DialogTitle>
-          <DialogDescription>Update your personal, contact, and emergency information.</DialogDescription>
+          <DialogTitle>My details</DialogTitle>
+          <DialogDescription>Keep your basics up to date.</DialogDescription>
         </DialogHeader>
         <div className="grid gap-3">
           {field("Full name", "full_name")}
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {field("Email", "email", "email")}
-            {field("Phone", "phone", "tel")}
-          </div>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {field("Date of birth", "dob", "date")}
-            <div className="space-y-1">
-              <label className="text-xs font-medium text-muted-foreground">Gender</label>
-              <select
-                className="w-full rounded-md border px-3 py-2 text-sm"
-                value={f?.gender ?? ""}
-                onChange={(e) => setF({ ...f, gender: e.target.value })}
-              >
-                <option value="">Select…</option>
-                {["Female","Male","Non-binary","Other","Prefer not to say"].map(g => <option key={g} value={g}>{g}</option>)}
-              </select>
+          {field("Email", "email", "email")}
+          {field("Phone", "phone", "tel")}
+          {field("Date of birth", "dob", "date")}
+
+          <button
+            type="button"
+            className="mt-1 text-left text-xs font-medium text-muted-foreground underline underline-offset-2"
+            onClick={() => setShowMore((s) => !s)}
+          >
+            {showMore ? "Hide additional details" : "Add address, emergency contact & GP"}
+          </button>
+
+          {showMore && (
+            <div className="grid gap-3 rounded-md border bg-muted/20 p-3">
+              <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Address</div>
+              {field("Address line 1", "address_line1")}
+              <div className="grid grid-cols-2 gap-3">
+                {field("County", "county")}
+                {field("Postcode", "postcode")}
+              </div>
+
+              <div className="pt-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Emergency contact</div>
+              <div className="grid grid-cols-2 gap-3">
+                {field("Name", "emergency_contact_name")}
+                {field("Phone", "emergency_contact_phone", "tel")}
+              </div>
+
+              <div className="pt-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">GP</div>
+              {field("GP name", "gp_name")}
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-muted-foreground">GP address</label>
+                <textarea
+                  rows={2}
+                  className="w-full rounded-md border px-3 py-2 text-sm"
+                  value={f?.gp_address ?? ""}
+                  onChange={(e) => setF({ ...f, gp_address: e.target.value })}
+                />
+              </div>
             </div>
-          </div>
-          <div className="pt-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Address</div>
-          {field("Address line 1", "address_line1")}
-          {field("Address line 2", "address_line2")}
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {field("County", "county")}
-            {field("Postcode", "postcode")}
-          </div>
-          <div className="space-y-1">
-            <label className="text-xs font-medium text-muted-foreground">Preferred contact</label>
-            <select
-              className="w-full rounded-md border px-3 py-2 text-sm"
-              value={f?.preferred_contact ?? ""}
-              onChange={(e) => setF({ ...f, preferred_contact: e.target.value })}
-            >
-              <option value="">Any</option>
-              {["Email","Phone","SMS"].map(g => <option key={g} value={g}>{g}</option>)}
-            </select>
-          </div>
-          <div className="pt-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Emergency contact</div>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {field("Contact name", "emergency_contact_name")}
-            {field("Contact phone", "emergency_contact_phone", "tel")}
-          </div>
-          <div className="pt-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">GP</div>
-          {field("GP name", "gp_name")}
-          <div className="space-y-1">
-            <label className="text-xs font-medium text-muted-foreground">GP address</label>
-            <textarea
-              rows={2}
-              className="w-full rounded-md border px-3 py-2 text-sm"
-              value={f?.gp_address ?? ""}
-              onChange={(e) => setF({ ...f, gp_address: e.target.value })}
-            />
-          </div>
+          )}
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={saving}>Cancel</Button>
@@ -988,6 +978,7 @@ function EditMyDetailsDialog({
     </Dialog>
   );
 }
+
 
 function PrivacyContactSection({
   slug, profile, brand, onErased,
