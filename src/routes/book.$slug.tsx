@@ -32,6 +32,7 @@ export const Route = createFileRoute("/book/$slug")({
 });
 
 function ClinicPage() {
+  const { slug } = Route.useParams();
   const { profile, treatments, packages, testimonials, aboutPage } = Route.useLoaderData() as {
     profile: Database["public"]["Tables"]["profiles"]["Row"];
     treatments: Database["public"]["Tables"]["treatments"]["Row"][];
@@ -79,7 +80,7 @@ function ClinicPage() {
         )}
 
         <div className="mb-10">
-          <PublicRewardsBanner slug={profile.slug ?? slugFromProfile(profile)} brand={brandColor} />
+          <PublicRewardsBanner slug={profile.slug || slug} brand={brandColor} />
         </div>
 
         <div className="mb-10 grid gap-8 lg:grid-cols-3">
@@ -203,10 +204,6 @@ function textToParagraphHtml(text: string) {
     .filter(Boolean)
     .map((paragraph) => `<p>${paragraph.replace(/\n/g, "<br />")}</p>`)
     .join("");
-}
-
-function slugFromProfile(profile: Database["public"]["Tables"]["profiles"]["Row"]) {
-  return profile.slug || "";
 }
 
 function TreatmentCard({
