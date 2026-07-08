@@ -45,6 +45,7 @@ import { formatPrice, BADGE_LABEL, badgeClasses, type TreatmentBadge } from "@/l
 
 
 import { describeCancellationRules } from "@/lib/policy";
+import { PublicRewardsBanner } from "@/components/PublicRewardsBanner";
 
 
 type Treatment = Database["public"]["Tables"]["treatments"]["Row"];
@@ -1446,6 +1447,9 @@ function BookPage() {
         );
       })()}
 
+
+      {/* Rewards & referrals — appears when the practitioner opts in on their Rewards dashboard */}
+      <PublicRewardsBanner slug={slug} brand={brand} />
 
       {/* Treatments + Packages */}
 

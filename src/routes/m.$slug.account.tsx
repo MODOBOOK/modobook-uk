@@ -2,7 +2,7 @@ import { createFileRoute, Link, useParams, useNavigate } from "@tanstack/react-r
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -12,11 +12,14 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Loader2, Calendar as CalendarIcon, Clock, MapPin, FileText, StickyNote,
   ClipboardCheck, Receipt, ShieldCheck, ExternalLink, Sparkles, HeartPulse,
-  Mail, Phone, AlertTriangle, ChevronDown,
+  Mail, Phone, AlertTriangle, ChevronDown, Gift, Copy, Share2, Coins, ArrowRight,
 } from "lucide-react";
 import { toast } from "sonner";
 import { describeCancellationRules, type CancellationRule } from "@/lib/policy";
 import { SafeHtml } from "@/components/SafeHtml";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { getMyRewardsForClinic } from "@/lib/rewards.functions";
 
 
 export const Route = createFileRoute("/m/$slug/account")({
@@ -403,6 +406,9 @@ function Account() {
         onSaved={() => { setEditOpen(false); loadAll(); }}
       />
 
+      {/* Rewards hero — always at the top so it's forefront */}
+      <RewardsHero slug={slug} brand={brand} />
+
       {/* Treatment plans */}
       <PatientTreatmentPlans slug={slug} brand={brand} />
 
@@ -424,7 +430,7 @@ function Account() {
         const careCount = activeAftercare.length + notes.length;
         return (
           <Tabs defaultValue="appointments" className="mt-8">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="appointments">
                 Visits{upcoming.length > 0 && <span className="ml-1 text-xs opacity-70">({upcoming.length})</span>}
               </TabsTrigger>
@@ -434,6 +440,7 @@ function Account() {
               <TabsTrigger value="care">
                 Care{careCount > 0 && <span className="ml-1 text-xs opacity-70">({careCount})</span>}
               </TabsTrigger>
+              <TabsTrigger value="rewards">Rewards</TabsTrigger>
               <TabsTrigger value="account">Account</TabsTrigger>
             </TabsList>
 
@@ -563,6 +570,11 @@ function Account() {
             </TabsContent>
 
             {/* ACCOUNT */}
+            {/* REWARDS */}
+            <TabsContent value="rewards" className="mt-4">
+              <RewardsTabContent slug={slug} brand={brand} />
+            </TabsContent>
+
             <TabsContent value="account" className="mt-4 space-y-6">
               <div>
                 <div className="mb-2 flex items-center gap-2 text-sm font-semibold" style={{ color: brand }}>
@@ -1190,6 +1202,208 @@ function PatientTreatmentPlans({ slug, brand }: { slug: string; brand: string })
   );
 }
 
+function fmtRewardsGBP(pennies: number) {
+  return new Intl.NumberFormat("en-GB", {
+    style: "currency", currency: "GBP",
+    minimumFractionDigits: pennies % 100 === 0 ? 0 : 2,
+  }).format(pennies / 100);
+}
 
+function useMyRewards(slug: string) {
+  const fetchRewards = useServerFn(getMyRewardsForClinic);
+  return useQuery({
+    queryKey: ["portal-rewards", slug],
+    queryFn: () => fetchRewards({ data: { slug } }),
+    staleTime: 30_000,
+  });
+}
 
+function RewardsHero({ slug, brand }: { slug: string; brand: string }) {
+  const q = useMyRewards(slug);
+  const d = q.data;
+  const s: any = d?.settings;
+  if (!d || !s?.enabled) return null;
+
+  const you: string[] = [];
+  if (s.referrer_credit_kind === "percent" && s.referrer_credit_percent > 0)
+    you.push(`${s.referrer_credit_percent}% off`);
+  else if (s.referrer_credit_pennies > 0)
+    you.push(`${fmtRewardsGBP(s.referrer_credit_pennies)} credit`);
+  if (s.referrer_points > 0) you.push(`${s.referrer_points} pts`);
+  const friend: string[] = [];
+  if (s.friend_credit_kind === "percent" && s.friend_credit_percent > 0)
+    friend.push(`${s.friend_credit_percent}% off first booking`);
+  else if (s.friend_credit_pennies > 0)
+    friend.push(`${fmtRewardsGBP(s.friend_credit_pennies)} off first booking`);
+
+  return (
+    <section className="mt-4">
+      <div
+        className="overflow-hidden rounded-2xl border shadow-sm"
+        style={{ background: `linear-gradient(135deg, ${brand}18, ${brand}05)`, borderColor: `${brand}30` }}
+      >
+        <div className="flex flex-wrap items-center justify-between gap-4 p-5">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl" style={{ background: `${brand}20`, color: brand }}>
+              <Gift className="h-5 w-5" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: brand }}>Refer & earn</div>
+              <div className="mt-0.5 flex flex-wrap items-baseline gap-x-4 gap-y-1">
+                <span className="text-sm">
+                  <span className="font-semibold">{fmtRewardsGBP(d.creditPennies)}</span> credit
+                </span>
+                <span className="text-sm">
+                  <span className="font-semibold">{d.points}</span> pts
+                </span>
+              </div>
+              <div className="mt-1 text-xs text-muted-foreground">
+                {friend.length > 0 && <>Friend gets {friend.join(" · ")}. </>}
+                {you.length > 0 && <>You get {you.join(" + ")}.</>}
+              </div>
+            </div>
+          </div>
+          <Button size="sm" onClick={() => {
+            const el = document.querySelector('[data-state][role="tab"][value="rewards"]') as HTMLElement | null;
+            el?.click();
+          }} style={{ background: brand, color: "white" }}>
+            View rewards <ArrowRight className="ml-1 h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function RewardsTabContent({ slug, brand }: { slug: string; brand: string }) {
+  const q = useMyRewards(slug);
+  if (q.isLoading) return <div className="p-6 text-center text-sm text-muted-foreground">Loading…</div>;
+  if (q.error) return <div className="p-6 text-center text-sm text-destructive">{(q.error as Error).message}</div>;
+  const d = q.data!;
+  const s: any = d.settings;
+  const enabled = !!s?.enabled;
+
+  if (!enabled) {
+    return (
+      <Card>
+        <CardContent className="py-8 text-center text-sm text-muted-foreground">
+          {d.clinic.name} hasn't turned on rewards yet — check back soon.
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const shareUrl = d.code ? `${typeof window !== "undefined" ? window.location.origin : ""}/r/${d.code}` : "";
+  const copy = async () => {
+    if (!shareUrl) return;
+    try { await navigator.clipboard.writeText(shareUrl); toast.success("Link copied"); }
+    catch { toast.error("Couldn't copy"); }
+  };
+  const share = async () => {
+    if (!shareUrl) return;
+    if (typeof navigator !== "undefined" && (navigator as any).share) {
+      try { await (navigator as any).share({ title: "Referral", url: shareUrl }); return; } catch { /* fall through */ }
+    }
+    copy();
+  };
+
+  const you: string[] = [];
+  if (s.referrer_credit_kind === "percent" && s.referrer_credit_percent > 0)
+    you.push(`${s.referrer_credit_percent}% off next booking`);
+  else if (s.referrer_credit_pennies > 0)
+    you.push(`${fmtRewardsGBP(s.referrer_credit_pennies)} credit`);
+  if (s.referrer_points > 0) you.push(`${s.referrer_points} loyalty points`);
+  const friend: string[] = [];
+  if (s.friend_credit_kind === "percent" && s.friend_credit_percent > 0)
+    friend.push(`${s.friend_credit_percent}% off first booking`);
+  else if (s.friend_credit_pennies > 0)
+    friend.push(`${fmtRewardsGBP(s.friend_credit_pennies)} off first booking`);
+
+  return (
+    <div className="space-y-5">
+      <Card className="border-l-4" style={{ borderLeftColor: brand }}>
+        <CardContent className="space-y-4 p-5 text-center">
+          <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Your referral code</div>
+          <div className="font-serif text-4xl tracking-widest" style={{ color: brand }}>
+            {d.code ?? <Loader2 className="mx-auto h-6 w-6 animate-spin" />}
+          </div>
+          <div className="flex flex-wrap justify-center gap-2 text-xs">
+            {friend.map((b) => <Badge key={`f-${b}`} variant="secondary">Friend: {b}</Badge>)}
+            {you.map((b) => <Badge key={`y-${b}`} variant="secondary">You: {b}</Badge>)}
+          </div>
+          <div className="flex flex-col justify-center gap-2 sm:flex-row">
+            <Button onClick={share} disabled={!d.code} style={{ background: brand, color: "white" }}>
+              <Share2 className="mr-2 h-4 w-4" /> Share
+            </Button>
+            <Button variant="outline" onClick={copy} disabled={!d.code}>
+              <Copy className="mr-2 h-4 w-4" /> Copy link
+            </Button>
+          </div>
+          {d.code && <div className="break-all text-xs text-muted-foreground">{shareUrl}</div>}
+        </CardContent>
+      </Card>
+
+      <div className="grid grid-cols-2 gap-3">
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-1.5 text-xs uppercase tracking-wide text-muted-foreground">
+              <Coins className="h-4 w-4" /> Credit
+            </div>
+            <div className="mt-1 font-serif text-2xl">{fmtRewardsGBP(d.creditPennies)}</div>
+            <div className="mt-1 text-xs text-muted-foreground">Applied at your next booking</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-1.5 text-xs uppercase tracking-wide text-muted-foreground">
+              <Sparkles className="h-4 w-4" /> Points
+            </div>
+            <div className="mt-1 font-serif text-2xl">{d.points}</div>
+            <div className="mt-1 text-xs text-muted-foreground">
+              {s.points_redemption_enabled && s.points_per_pound_redeem
+                ? `${s.points_per_pound_redeem} pts = £1`
+                : "Earned across referrals"}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="text-center">
+        <Link to="/m/$slug/rewards" params={{ slug }}>
+          <Button variant="ghost" size="sm">See full details, tiers & FAQ <ArrowRight className="ml-1 h-4 w-4" /></Button>
+        </Link>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Your referrals</CardTitle>
+          <CardDescription>Rewards pay out after your friend's first paid appointment.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {d.referrals.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No referrals yet — share your code to get started.</p>
+          ) : d.referrals.map((r) => (
+            <div key={r.id} className="flex items-center justify-between rounded-md border p-3 text-sm">
+              <div>
+                <div className="font-medium">
+                  {r.reward_credit_pennies > 0 && `+${fmtRewardsGBP(r.reward_credit_pennies)}`}
+                  {r.reward_credit_pennies > 0 && r.reward_points > 0 && " · "}
+                  {r.reward_points > 0 && `+${r.reward_points} pts`}
+                  {r.reward_credit_pennies === 0 && r.reward_points === 0 && "Referral"}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  {new Date(r.created_at).toLocaleDateString()}
+                  {r.rewarded_at && ` · paid out ${new Date(r.rewarded_at).toLocaleDateString()}`}
+                </div>
+              </div>
+              <Badge variant={r.status === "rewarded" ? "default" : r.status === "rejected" ? "destructive" : "secondary"}>
+                {r.status}
+              </Badge>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
 

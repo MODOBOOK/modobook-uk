@@ -1555,6 +1555,7 @@ export type Database = {
           referrer_credit_pennies: number
           referrer_credit_percent: number
           referrer_points: number
+          show_on_public_page: boolean
           tiers_enabled: boolean
           trigger_event: string
           updated_at: string
@@ -1577,6 +1578,7 @@ export type Database = {
           referrer_credit_pennies?: number
           referrer_credit_percent?: number
           referrer_points?: number
+          show_on_public_page?: boolean
           tiers_enabled?: boolean
           trigger_event?: string
           updated_at?: string
@@ -1599,6 +1601,7 @@ export type Database = {
           referrer_credit_pennies?: number
           referrer_credit_percent?: number
           referrer_points?: number
+          show_on_public_page?: boolean
           tiers_enabled?: boolean
           trigger_event?: string
           updated_at?: string

@@ -21,6 +21,7 @@ export const getMyReferralSettings = createServerFn({ method: "GET" })
 
 const SaveSchema = z.object({
   enabled: z.boolean(),
+  show_on_public_page: z.boolean().default(false),
   referrer_credit_kind: z.enum(["pennies", "percent"]).default("pennies"),
   referrer_credit_pennies: z.number().int().min(0).max(1_000_000),
   referrer_credit_percent: z.number().int().min(0).max(100),
@@ -48,6 +49,7 @@ export const saveReferralSettings = createServerFn({ method: "POST" })
         {
           clinic_profile_id: userId,
           enabled: data.enabled,
+          show_on_public_page: data.show_on_public_page,
           referrer_credit_kind: data.referrer_credit_kind,
           referrer_credit_pennies: data.referrer_credit_pennies,
           referrer_credit_percent: data.referrer_credit_percent,
@@ -387,3 +389,58 @@ export const resolveReferralCode = createServerFn({ method: "GET" })
       headline: settings.headline ?? null,
     };
   });
+
+// -------------------- Public: rewards overview for a clinic's public page --------------------
+
+/**
+ * Anonymous read used by the public /m/$slug page and the /m/$slug/rewards
+ * marketing view. Returns settings + reward tiers ONLY when the practitioner
+ * has both enabled the programme AND opted to show it publicly.
+ */
+export const getPublicRewardsOverview = createServerFn({ method: "GET" })
+  .inputValidator((data: z.infer<typeof SlugSchema>) => SlugSchema.parse(data))
+  .handler(async ({ data }) => {
+    const supabasePublic = createClient<Database>(
+      process.env.SUPABASE_URL!,
+      process.env.SUPABASE_PUBLISHABLE_KEY!,
+      { auth: { storage: undefined, persistSession: false, autoRefreshToken: false } },
+    );
+
+    const { data: prof } = await supabasePublic
+      .from("profiles")
+      .select("id, user_id, slug, full_name, clinic_name")
+      .eq("slug", data.slug)
+      .maybeSingle();
+    if (!prof) return { visible: false as const };
+
+    const clinicProfileId = prof.user_id as string;
+
+    const [{ data: settings }, { data: tiers }] = await Promise.all([
+      supabasePublic
+        .from("clinic_referral_settings")
+        .select("*")
+        .eq("clinic_profile_id", clinicProfileId)
+        .maybeSingle(),
+      (supabasePublic as any)
+        .from("clinic_reward_tiers")
+        .select("*")
+        .eq("clinic_profile_id", clinicProfileId)
+        .eq("enabled", true)
+        .order("sort_order", { ascending: true })
+        .order("points_cost", { ascending: true }),
+    ]);
+
+    const showPublic = !!(settings as any)?.show_on_public_page && !!settings?.enabled;
+    if (!showPublic) return { visible: false as const };
+
+    return {
+      visible: true as const,
+      clinic: {
+        slug: prof.slug,
+        name: prof.clinic_name ?? prof.full_name ?? "Clinic",
+      },
+      settings,
+      tiers: (tiers ?? []) as RewardTier[],
+    };
+  });
+

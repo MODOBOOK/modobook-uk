@@ -74,6 +74,7 @@ function RewardsSettingsPage() {
 
   // Main toggle
   const [enabled, setEnabled] = useState(false);
+  const [showOnPublic, setShowOnPublic] = useState(false);
 
   // Referrer credit
   const [creditOn, setCreditOn] = useState(true);
@@ -107,6 +108,7 @@ function RewardsSettingsPage() {
     if (!q.data) return;
     const s = q.data as any;
     setEnabled(s.enabled);
+    setShowOnPublic(!!s.show_on_public_page);
     setCreditKind((s.referrer_credit_kind as CreditKind) ?? "pennies");
     setCreditOn(
       s.referrer_credit_kind === "percent"
@@ -164,6 +166,7 @@ function RewardsSettingsPage() {
       await save({
         data: {
           enabled,
+          show_on_public_page: showOnPublic,
           referrer_credit_kind: creditKind,
           referrer_credit_pennies: referrerCreditPennies,
           referrer_credit_percent: referrerCreditPercent || 10,
@@ -213,6 +216,18 @@ function RewardsSettingsPage() {
             </CardDescription>
           </div>
           <Switch checked={enabled} onCheckedChange={setEnabled} />
+        </CardHeader>
+      </Card>
+
+      <Card className={enabled ? "" : "pointer-events-none opacity-50"}>
+        <CardHeader className="flex flex-row items-start justify-between gap-4 space-y-0">
+          <div>
+            <CardTitle className="text-base">Show rewards on my public page</CardTitle>
+            <CardDescription>
+              Adds a "Rewards" tab to your /m/{"{slug}"} page so visitors can see the programme, tiers and how it works. Auto-generated from your settings below — nothing to write.
+            </CardDescription>
+          </div>
+          <Switch checked={showOnPublic} onCheckedChange={setShowOnPublic} />
         </CardHeader>
       </Card>
 
