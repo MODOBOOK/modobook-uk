@@ -406,53 +406,6 @@ function Account() {
       {/* Treatment plans */}
       <PatientTreatmentPlans slug={slug} brand={brand} />
 
-      {/* Appointments (tabs) */}
-      <section className="mt-8">
-        <h2 className="mb-3 flex items-center gap-2 text-base font-semibold" style={{ color: brand }}>
-          <CalendarIcon className="h-4 w-4" />Appointments
-        </h2>
-        <Tabs defaultValue="upcoming">
-          <TabsList className="mb-3">
-            <TabsTrigger value="upcoming">Upcoming {upcoming.length > 0 && `(${upcoming.length})`}</TabsTrigger>
-            <TabsTrigger value="previous">Previous {past.length > 0 && `(${past.length})`}</TabsTrigger>
-          </TabsList>
-          <TabsContent value="upcoming">
-            {upcoming.length === 0 ? (
-              <Empty msg="No upcoming appointments." cta={<Link to="/m/$slug" params={{ slug }}><Button size="sm">Book a treatment</Button></Link>} />
-            ) : (
-              <div className="space-y-3">
-                {upcoming.map((a) => (
-                  <ApptCard
-                    key={a.id} a={a} brand={brand}
-                    allowCancel={!!profile?.allow_patient_cancel}
-                    allowReschedule={!!profile?.allow_patient_reschedule}
-                    cancelCutoffHours={profile?.patient_cancel_cutoff_hours ?? 0}
-                    rescheduleCutoffHours={profile?.patient_reschedule_cutoff_hours ?? 0}
-                    maxReschedules={profile?.patient_reschedule_max ?? 999}
-                    slug={slug}
-                    onCancel={() => openCancel(a)}
-                  />
-                ))}
-              </div>
-            )}
-          </TabsContent>
-          <TabsContent value="previous">
-            {past.length === 0 ? (
-              <Empty msg="No previous appointments yet." />
-            ) : (
-              <div className="space-y-3">
-                {past.map((a) => (
-                  <ApptCard
-                    key={a.id} a={a} brand={brand} slug={slug}
-                    aftercare={aftercareByAppt.get(a.id) ?? []}
-                  />
-                ))}
-              </div>
-            )}
-          </TabsContent>
-        </Tabs>
-      </section>
-
       <CancelDialog
         open={!!cancelTarget}
         onOpenChange={(v) => { if (!v) setCancelTarget(null); }}
@@ -464,115 +417,192 @@ function Account() {
         onConfirm={performCancel}
       />
 
+      {(() => {
+        const pendingForms = forms.filter((f) => f.status !== "submitted");
+        const pendingConsents = consents.filter((c) => c.status !== "signed");
+        const paperworkCount = pendingForms.length + pendingConsents.length;
+        const careCount = activeAftercare.length + notes.length;
+        return (
+          <Tabs defaultValue="appointments" className="mt-8">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="appointments">
+                Visits{upcoming.length > 0 && <span className="ml-1 text-xs opacity-70">({upcoming.length})</span>}
+              </TabsTrigger>
+              <TabsTrigger value="paperwork">
+                Paperwork{paperworkCount > 0 && <span className="ml-1 text-xs opacity-70">({paperworkCount})</span>}
+              </TabsTrigger>
+              <TabsTrigger value="care">
+                Care{careCount > 0 && <span className="ml-1 text-xs opacity-70">({careCount})</span>}
+              </TabsTrigger>
+              <TabsTrigger value="account">Account</TabsTrigger>
+            </TabsList>
 
-      {/* Medical forms — only those still needing completion. Every new
-          appointment triggers a fresh row, so a prior submission for another
-          appointment should not be shown here as "Complete" (that only makes
-          patients think the current appointment's form is already done). */}
-      <Section title="Medical forms" icon={ClipboardCheck} brand={brand}>
-        {(() => {
-          const pending = forms.filter((f) => f.status !== "submitted");
-          if (pending.length === 0) {
-            return <Empty msg="No medical forms need your attention right now." />;
-          }
-          return (
-            <div className="space-y-2">
-              {pending.map((f) => (
-                <RowItem
-                  key={f.id}
-                  title={f.medical_form_templates?.name ?? "Medical form"}
-                  meta="Awaiting your completion"
-                  badge="Pending"
-                  badgeOk={false}
-                  href={`/f/${f.token}?returnTo=${encodeURIComponent(`/m/${slug}/account`)}`}
-                />
-              ))}
-            </div>
-          );
-        })()}
-      </Section>
+            {/* VISITS */}
+            <TabsContent value="appointments" className="mt-4">
+              <Tabs defaultValue="upcoming">
+                <TabsList className="mb-3">
+                  <TabsTrigger value="upcoming">Upcoming {upcoming.length > 0 && `(${upcoming.length})`}</TabsTrigger>
+                  <TabsTrigger value="previous">Previous {past.length > 0 && `(${past.length})`}</TabsTrigger>
+                </TabsList>
+                <TabsContent value="upcoming">
+                  {upcoming.length === 0 ? (
+                    <Empty msg="No upcoming appointments." cta={<Link to="/m/$slug" params={{ slug }}><Button size="sm">Book a treatment</Button></Link>} />
+                  ) : (
+                    <div className="space-y-3">
+                      {upcoming.map((a) => (
+                        <ApptCard
+                          key={a.id} a={a} brand={brand}
+                          allowCancel={!!profile?.allow_patient_cancel}
+                          allowReschedule={!!profile?.allow_patient_reschedule}
+                          cancelCutoffHours={profile?.patient_cancel_cutoff_hours ?? 0}
+                          rescheduleCutoffHours={profile?.patient_reschedule_cutoff_hours ?? 0}
+                          maxReschedules={profile?.patient_reschedule_max ?? 999}
+                          slug={slug}
+                          onCancel={() => openCancel(a)}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </TabsContent>
+                <TabsContent value="previous">
+                  {past.length === 0 ? (
+                    <Empty msg="No previous appointments yet." />
+                  ) : (
+                    <div className="space-y-3">
+                      {past.map((a) => (
+                        <ApptCard
+                          key={a.id} a={a} brand={brand} slug={slug}
+                          aftercare={aftercareByAppt.get(a.id) ?? []}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </TabsContent>
+              </Tabs>
+            </TabsContent>
 
-      {/* Consent forms */}
-      <Section title="Consent forms" icon={ShieldCheck} brand={brand}>
-        {consents.length === 0 ? <Empty msg="No consent forms yet." /> : (
-          <div className="space-y-2">
-            {consents.map((c) => (
-              <RowItem
-                key={c.id}
-                title={c.consent_templates?.name ?? "Consent form"}
-                meta={c.status === "signed" ? `Signed ${new Date(c.signed_at).toLocaleDateString()}` : "Awaiting your signature"}
-                badge={c.status === "signed" ? "Signed" : "Pending"}
-                badgeOk={c.status === "signed"}
-                href={`/c/${c.token}`}
-              />
-            ))}
-          </div>
-        )}
-      </Section>
-
-      {/* Aftercare (active only — older or superseded aftercare is tucked into Previous appointments) */}
-      <Section title="Aftercare guidance" icon={HeartPulse} brand={brand}>
-        {activeAftercare.length === 0 ? (
-          <Empty msg="Your practitioner will share aftercare here after your appointment. Older aftercare is filed under Previous appointments." />
-        ) : (
-          <div className="space-y-3">
-            {activeAftercare.map((ac) => <AftercareCard key={ac.id} ac={ac} brand={brand} appts={appts} />)}
-          </div>
-        )}
-      </Section>
-
-      {/* Shared notes */}
-      <Section title="Notes from your practitioner" icon={StickyNote} brand={brand}>
-        {notes.length === 0 ? <Empty msg="No shared notes yet." /> : (
-          <div className="space-y-3">
-            {notes.map((n) => (
-              <Card key={n.id} className="border-l-4" style={{ borderLeftColor: brand }}>
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                    <Sparkles className="h-3 w-3" />Shared note · {new Date(n.shared_at || n.created_at).toLocaleDateString()}
-                  </div>
-                  <div className="mt-1 whitespace-pre-wrap text-sm leading-relaxed">{n.body}</div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
-      </Section>
-
-
-
-      {/* Invoices */}
-      <Section title="Invoices & payments" icon={Receipt} brand={brand}>
-        {payments.length === 0 ? <Empty msg="No payments on file yet." /> : (
-          <div className="space-y-2">
-            {payments.map((p) => (
-              <div key={p.id} className="flex items-center justify-between rounded-md border p-3 text-sm">
-                <div>
-                  <div className="font-medium">£{((p.amount ?? 0) / 100).toFixed(2)} {(p.currency || "GBP").toUpperCase()}</div>
-                  <div className="text-xs text-muted-foreground">{new Date(p.created_at).toLocaleString()}</div>
+            {/* PAPERWORK */}
+            <TabsContent value="paperwork" className="mt-4 space-y-6">
+              <div>
+                <div className="mb-2 flex items-center gap-2 text-sm font-semibold" style={{ color: brand }}>
+                  <ClipboardCheck className="h-4 w-4" />Medical forms
                 </div>
-                <Badge variant={p.status === "succeeded" ? "default" : "secondary"}>{p.status}</Badge>
+                {pendingForms.length === 0 ? (
+                  <Empty msg="No medical forms need your attention right now." />
+                ) : (
+                  <div className="space-y-2">
+                    {pendingForms.map((f) => (
+                      <RowItem
+                        key={f.id}
+                        title={f.medical_form_templates?.name ?? "Medical form"}
+                        meta="Awaiting your completion"
+                        badge="Pending"
+                        badgeOk={false}
+                        href={`/f/${f.token}?returnTo=${encodeURIComponent(`/m/${slug}/account`)}`}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
-            ))}
-          </div>
-        )}
-      </Section>
 
-      <PrivacyContactSection
-        slug={slug}
-        profile={profile!}
-        brand={brand}
-        onErased={async () => {
-          await supabase.auth.signOut();
-          navigate({ to: "/m/$slug", params: { slug } });
-        }}
-      />
+              <div>
+                <div className="mb-2 flex items-center gap-2 text-sm font-semibold" style={{ color: brand }}>
+                  <ShieldCheck className="h-4 w-4" />Consent forms
+                </div>
+                {consents.length === 0 ? <Empty msg="No consent forms yet." /> : (
+                  <div className="space-y-2">
+                    {consents.map((c) => (
+                      <RowItem
+                        key={c.id}
+                        title={c.consent_templates?.name ?? "Consent form"}
+                        meta={c.status === "signed" ? `Signed ${new Date(c.signed_at).toLocaleDateString()}` : "Awaiting your signature"}
+                        badge={c.status === "signed" ? "Signed" : "Pending"}
+                        badgeOk={c.status === "signed"}
+                        href={`/c/${c.token}`}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            </TabsContent>
 
-      <div className="mt-10">
-        <Button variant="outline" onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/m/$slug", params: { slug } }); }}>
-          Sign out
-        </Button>
-      </div>
+            {/* CARE */}
+            <TabsContent value="care" className="mt-4 space-y-6">
+              <div>
+                <div className="mb-2 flex items-center gap-2 text-sm font-semibold" style={{ color: brand }}>
+                  <HeartPulse className="h-4 w-4" />Aftercare
+                </div>
+                {activeAftercare.length === 0 ? (
+                  <Empty msg="Your practitioner will share aftercare here after your appointment. Older guidance is filed under Previous visits." />
+                ) : (
+                  <div className="space-y-3">
+                    {activeAftercare.map((ac) => <AftercareCard key={ac.id} ac={ac} brand={brand} appts={appts} />)}
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <div className="mb-2 flex items-center gap-2 text-sm font-semibold" style={{ color: brand }}>
+                  <StickyNote className="h-4 w-4" />Notes from your practitioner
+                </div>
+                {notes.length === 0 ? <Empty msg="No shared notes yet." /> : (
+                  <div className="space-y-3">
+                    {notes.map((n) => (
+                      <Card key={n.id} className="border-l-4" style={{ borderLeftColor: brand }}>
+                        <CardContent className="p-4">
+                          <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                            <Sparkles className="h-3 w-3" />Shared note · {new Date(n.shared_at || n.created_at).toLocaleDateString()}
+                          </div>
+                          <div className="mt-1 whitespace-pre-wrap text-sm leading-relaxed">{n.body}</div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+
+            {/* ACCOUNT */}
+            <TabsContent value="account" className="mt-4 space-y-6">
+              <div>
+                <div className="mb-2 flex items-center gap-2 text-sm font-semibold" style={{ color: brand }}>
+                  <Receipt className="h-4 w-4" />Invoices & payments
+                </div>
+                {payments.length === 0 ? <Empty msg="No payments on file yet." /> : (
+                  <div className="space-y-2">
+                    {payments.map((p) => (
+                      <div key={p.id} className="flex items-center justify-between rounded-md border p-3 text-sm">
+                        <div>
+                          <div className="font-medium">£{((p.amount ?? 0) / 100).toFixed(2)} {(p.currency || "GBP").toUpperCase()}</div>
+                          <div className="text-xs text-muted-foreground">{new Date(p.created_at).toLocaleString()}</div>
+                        </div>
+                        <Badge variant={p.status === "succeeded" ? "default" : "secondary"}>{p.status}</Badge>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <PrivacyContactSection
+                slug={slug}
+                profile={profile!}
+                brand={brand}
+                onErased={async () => {
+                  await supabase.auth.signOut();
+                  navigate({ to: "/m/$slug", params: { slug } });
+                }}
+              />
+
+              <div className="pt-2">
+                <Button variant="outline" onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/m/$slug", params: { slug } }); }}>
+                  Sign out
+                </Button>
+              </div>
+            </TabsContent>
+          </Tabs>
+        );
+      })()}
+
     </main>
   );
 }
