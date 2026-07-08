@@ -272,6 +272,57 @@ function RewardsSettingsPage() {
           Save changes
         </Button>
       </div>
+
+      <Separator />
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Recent referrals</CardTitle>
+          <CardDescription>
+            Bookings that came in via a patient's share link. Rewards settle
+            automatically once the appointment is completed and paid.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {referralsQ.isLoading ? (
+            <p className="text-sm text-muted-foreground">Loading…</p>
+          ) : (referralsQ.data ?? []).length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              No referrals yet. Share your patient rewards programme and they'll appear here.
+            </p>
+          ) : (
+            <div className="divide-y">
+              {(referralsQ.data ?? []).map((r) => (
+                <div key={r.id} className="flex items-center justify-between gap-3 py-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium">
+                      {r.referred_email ?? "Referred patient"}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Code {r.code} · {new Date(r.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs">
+                    {r.reward_credit_pennies > 0 && (
+                      <span className="rounded bg-primary/10 px-1.5 py-0.5 text-primary">
+                        {fmtGBP(r.reward_credit_pennies)} credit
+                      </span>
+                    )}
+                    {r.reward_points > 0 && (
+                      <span className="rounded bg-primary/10 px-1.5 py-0.5 text-primary">
+                        {r.reward_points} pts
+                      </span>
+                    )}
+                    <Badge variant={r.status === "rewarded" ? "default" : "outline"}>
+                      {r.status}
+                    </Badge>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
