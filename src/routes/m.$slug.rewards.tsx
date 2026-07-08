@@ -320,34 +320,40 @@ function ShareCard({
   slug: string;
   settings: any;
 }) {
-  const shareUrl = code ? `${typeof window !== "undefined" ? window.location.origin : ""}/r/${code}` : "";
+  const shareText = code
+    ? (() => {
+        const friend = describeFriendReward(settings);
+        const perk = friend ? ` They'll get ${friend}.` : "";
+        return `Book with them and use my referral code ${code} at checkout.${perk}`;
+      })()
+    : "";
 
   async function copy() {
-    if (!shareUrl) return;
+    if (!code) return;
     try {
-      await navigator.clipboard.writeText(shareUrl);
-      toast.success("Link copied");
+      await navigator.clipboard.writeText(code);
+      toast.success("Code copied");
     } catch {
       toast.error("Couldn't copy — long-press to select");
     }
   }
 
   async function share() {
-    if (!shareUrl) return;
-    const friend = describeFriendReward(settings);
-    const text = friend
-      ? `Get ${friend.startsWith(fmtGBP(0).slice(0,1)) || friend.match(/^\d/) ? friend : friend} with my referral code:`
-      : "Book with my referral code:";
+    if (!code) return;
     if (typeof navigator !== "undefined" && (navigator as any).share) {
       try {
-        await (navigator as any).share({ title: "Referral", text, url: shareUrl });
+        await (navigator as any).share({ title: "Referral code", text: shareText });
         return;
       } catch {
         // fall through to copy
       }
     }
-    copy();
-    // Keep slug referenced (used implicitly via shareUrl origin routing)
+    try {
+      await navigator.clipboard.writeText(shareText);
+      toast.success("Message copied — paste it to your friend");
+    } catch {
+      toast.error("Couldn't copy");
+    }
     void slug;
   }
 
@@ -361,6 +367,9 @@ function ShareCard({
         <p className="font-serif text-4xl tracking-widest">
           {code ?? <Loader2 className="mx-auto h-6 w-6 animate-spin" />}
         </p>
+        <p className="text-xs text-muted-foreground">
+          Give this code to a friend. They enter it on the booking page — you both get rewarded when they attend.
+        </p>
         {(youLabel || friendLabel) && (
           <div className="flex flex-wrap justify-center gap-2 text-xs">
             {youLabel && <Badge variant="secondary">You: {youLabel}</Badge>}
@@ -369,13 +378,12 @@ function ShareCard({
         )}
         <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
           <Button onClick={share} disabled={!code}>
-            <Share2 className="mr-2 h-4 w-4" /> Share link
+            <Share2 className="mr-2 h-4 w-4" /> Share
           </Button>
           <Button variant="outline" onClick={copy} disabled={!code}>
-            <Copy className="mr-2 h-4 w-4" /> Copy link
+            <Copy className="mr-2 h-4 w-4" /> Copy code
           </Button>
         </div>
-        {code && <p className="text-xs text-muted-foreground break-all">{shareUrl}</p>}
       </CardContent>
     </Card>
   );
