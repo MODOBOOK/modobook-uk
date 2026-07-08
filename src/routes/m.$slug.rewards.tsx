@@ -82,8 +82,25 @@ function RewardsPage() {
   // back to the public overview so the marketing view still renders.
   const s = (my?.settings ?? (pub?.visible ? pub.settings : null)) as any;
   const enabled = !!s?.enabled;
+  const publiclyVisible = pub?.visible === true;
   const tiers = pub?.visible ? pub.tiers : [];
   const clinicName = my?.clinic.name ?? (pub?.visible ? pub.clinic.name : "Clinic");
+
+  // If the clinic hasn't turned rewards on OR hasn't opted to show them
+  // publicly, don't advertise the programme here at all.
+  if (!enabled || !publiclyVisible) {
+    return (
+      <div className="mx-auto max-w-2xl space-y-5 px-4 py-16 text-center">
+        <h1 className="font-serif text-2xl">Rewards</h1>
+        <p className="text-sm text-muted-foreground">
+          {clinicName} isn't running a rewards programme right now.
+        </p>
+        <Link to="/m/$slug" params={{ slug }}>
+          <Button variant="ghost" size="sm">Back to clinic</Button>
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-2xl space-y-5 px-4 py-8">
@@ -96,20 +113,14 @@ function RewardsPage() {
         </h1>
         <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
           {s?.description ||
-            (enabled
-              ? "Share your code with friends. When they complete their first appointment, we'll add your reward automatically."
-              : `${clinicName} hasn't turned on their rewards programme yet — check back soon.`)}
+            "Share your code with friends. When they complete their first appointment, we'll add your reward automatically."}
         </p>
       </div>
 
-      {!enabled ? (
-        <Card>
-          <CardContent className="py-8 text-center text-sm text-muted-foreground">
-            Rewards aren't currently offered by this clinic.
-          </CardContent>
-        </Card>
-      ) : (
-        <>
+      <>
+          {/* How the whole scheme works — plain-English explainer */}
+          <HowItWorksCard settings={s} tiersCount={tiers.length} clinicName={clinicName} />
+
           {/* Public marketing overview — visible to everyone, signed in or not */}
           <RewardsOverviewCard settings={s} />
 
@@ -187,7 +198,6 @@ function RewardsPage() {
             </Card>
           )}
         </>
-      )}
 
       <Separator />
       <div className="text-center">
@@ -198,6 +208,80 @@ function RewardsPage() {
     </div>
   );
 }
+
+function HowItWorksCard({
+  settings,
+  tiersCount,
+  clinicName,
+}: {
+  settings: any;
+  tiersCount: number;
+  clinicName: string;
+}) {
+  const hasReferrals =
+    (settings?.referrer_credit_pennies ?? 0) > 0 ||
+    (settings?.referrer_credit_percent ?? 0) > 0 ||
+    (settings?.referrer_points ?? 0) > 0 ||
+    (settings?.friend_credit_pennies ?? 0) > 0 ||
+    (settings?.friend_credit_percent ?? 0) > 0;
+  const hasEarn = !!settings?.earn_on_spend_enabled && settings?.points_per_pound_earn > 0;
+  const hasRedeem = !!settings?.points_redemption_enabled && settings?.points_per_pound_redeem;
+
+  const steps: { title: string; body: string }[] = [];
+  if (hasReferrals) {
+    steps.push({
+      title: "1. Share your code",
+      body: `Sign in to see your personal referral code. Send it to friends however you like — text, WhatsApp, Instagram. They enter it on the ${clinicName} booking page.`,
+    });
+    steps.push({
+      title: "2. They book and attend",
+      body: "Your friend's welcome discount is applied automatically at checkout. Once they complete and pay for their first appointment, both of your rewards are unlocked.",
+    });
+  }
+  if (hasEarn) {
+    steps.push({
+      title: `${steps.length + 1}. Earn on every visit`,
+      body: `You collect ${settings.points_per_pound_earn} point${settings.points_per_pound_earn === 1 ? "" : "s"} for every £1 you spend on treatments. Points post automatically after your appointment is paid.`,
+    });
+  }
+  if (hasRedeem) {
+    steps.push({
+      title: `${steps.length + 1}. Redeem your points`,
+      body: `${settings.points_per_pound_redeem} points = £1 off. Your balance is applied at checkout — no code needed.${
+        tiersCount > 0 ? " You can also cash points in for the reward tiers listed below." : ""
+      }`,
+    });
+  } else if (tiersCount > 0) {
+    steps.push({
+      title: `${steps.length + 1}. Unlock rewards`,
+      body: "Save up your points and swap them for the reward tiers below when you're ready.",
+    });
+  }
+
+  if (steps.length === 0) return null;
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-base">
+          <Sparkles className="h-4 w-4" /> How the programme works
+        </CardTitle>
+        <CardDescription>
+          Everything happens automatically — no forms, no chasing. Rewards land in your account as soon as they're earned.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-3 text-sm">
+        {steps.map((step) => (
+          <div key={step.title} className="rounded-md border bg-muted/30 p-3">
+            <div className="font-medium">{step.title}</div>
+            <p className="mt-1 text-muted-foreground">{step.body}</p>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  );
+}
+
 
 function RewardsOverviewCard({ settings }: { settings: any }) {
   const you = describeReferrerReward(settings);

@@ -1,5 +1,8 @@
 import { createFileRoute, Link, Outlet, useParams } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { getPractitionerBio } from "@/lib/practitioner-public.functions";
+import { getPublicRewardsOverview } from "@/lib/rewards.functions";
 import { Button } from "@/components/ui/button";
 import { UserCircle2 } from "lucide-react";
 import { resolveDisplayNames } from "@/lib/display-name";
@@ -215,7 +218,7 @@ function ModoLayout() {
             <nav className="flex shrink-0 items-center gap-0.5 text-sm sm:gap-1">
               <TabLink slug={slug} to="/m/$slug" label={theme?.header_button_label || "Book"} exact />
               <TabLink slug={slug} to="/m/$slug/about" label="About" />
-              <TabLink slug={slug} to="/m/$slug/rewards" label="Rewards" />
+              <RewardsTabLink slug={slug} />
               <TabLink slug={slug} to="/m/$slug/reviews" label="Reviews" />
               <Link to="/m/$slug/account" params={{ slug }} aria-label="My account">
                 <Button size="sm" variant="outline" className="ml-1 hidden sm:inline-flex">My account</Button>
@@ -256,4 +259,15 @@ function TabLink({
 
     </Link>
   );
+}
+
+function RewardsTabLink({ slug }: { slug: string }) {
+  const fetchPublic = useServerFn(getPublicRewardsOverview);
+  const q = useQuery({
+    queryKey: ["public-rewards-visible", slug],
+    queryFn: () => fetchPublic({ data: { slug } }),
+    staleTime: 60_000,
+  });
+  if (!q.data || q.data.visible !== true) return null;
+  return <TabLink slug={slug} to="/m/$slug/rewards" label="Rewards" />;
 }
