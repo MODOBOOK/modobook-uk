@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as WhoItsForRouteImport } from './routes/who-its-for'
 import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as RewardsRouteImport } from './routes/rewards'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PrescriberHubRouteImport } from './routes/prescriber-hub'
@@ -134,6 +135,11 @@ const UnsubscribeRoute = UnsubscribeRouteImport.update({
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RewardsRoute = RewardsRouteImport.update({
+  id: '/rewards',
+  path: '/rewards',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -751,6 +757,7 @@ export interface FileRoutesByFullPath {
   '/prescriber-hub': typeof PrescriberHubRoute
   '/privacy': typeof PrivacyRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
+  '/rewards': typeof RewardsRoute
   '/terms': typeof TermsRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/who-its-for': typeof WhoItsForRoute
@@ -863,6 +870,7 @@ export interface FileRoutesByTo {
   '/prescriber-hub': typeof PrescriberHubRoute
   '/privacy': typeof PrivacyRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
+  '/rewards': typeof RewardsRoute
   '/terms': typeof TermsRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/who-its-for': typeof WhoItsForRoute
@@ -971,6 +979,7 @@ export interface FileRoutesById {
   '/prescriber-hub': typeof PrescriberHubRoute
   '/privacy': typeof PrivacyRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
+  '/rewards': typeof RewardsRoute
   '/terms': typeof TermsRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/who-its-for': typeof WhoItsForRoute
@@ -1085,6 +1094,7 @@ export interface FileRouteTypes {
     | '/prescriber-hub'
     | '/privacy'
     | '/reset-password'
+    | '/rewards'
     | '/terms'
     | '/unsubscribe'
     | '/who-its-for'
@@ -1197,6 +1207,7 @@ export interface FileRouteTypes {
     | '/prescriber-hub'
     | '/privacy'
     | '/reset-password'
+    | '/rewards'
     | '/terms'
     | '/unsubscribe'
     | '/who-its-for'
@@ -1304,6 +1315,7 @@ export interface FileRouteTypes {
     | '/prescriber-hub'
     | '/privacy'
     | '/reset-password'
+    | '/rewards'
     | '/terms'
     | '/unsubscribe'
     | '/who-its-for'
@@ -1418,6 +1430,7 @@ export interface RootRouteChildren {
   PrescriberHubRoute: typeof PrescriberHubRoute
   PrivacyRoute: typeof PrivacyRouteWithChildren
   ResetPasswordRoute: typeof ResetPasswordRoute
+  RewardsRoute: typeof RewardsRoute
   TermsRoute: typeof TermsRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
   WhoItsForRoute: typeof WhoItsForRoute
@@ -1467,6 +1480,13 @@ declare module '@tanstack/react-router' {
       path: '/terms'
       fullPath: '/terms'
       preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rewards': {
+      id: '/rewards'
+      path: '/rewards'
+      fullPath: '/rewards'
+      preLoaderRoute: typeof RewardsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reset-password': {
@@ -2509,6 +2529,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrescriberHubRoute: PrescriberHubRoute,
   PrivacyRoute: PrivacyRouteWithChildren,
   ResetPasswordRoute: ResetPasswordRoute,
+  RewardsRoute: RewardsRoute,
   TermsRoute: TermsRoute,
   UnsubscribeRoute: UnsubscribeRoute,
   WhoItsForRoute: WhoItsForRoute,
