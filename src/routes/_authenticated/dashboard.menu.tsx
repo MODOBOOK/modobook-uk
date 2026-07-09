@@ -28,6 +28,7 @@ import {
   Info,
   Mail,
   Megaphone,
+  Gift,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
