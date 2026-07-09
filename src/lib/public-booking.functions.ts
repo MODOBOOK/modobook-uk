@@ -653,7 +653,7 @@ export const requestBooking = createServerFn({ method: "POST" })
       });
     } catch (e) {
       console.error("[requestBooking] checkout failed", e);
-      if (bookingNeedsStripePayment(prof, paymentChoice)) {
+      if (bookingNeedsStripePayment(prof, paymentChoice, data.basePrice)) {
         await supabaseAdmin
           .from("appointments")
           .update({ status: "cancelled", payment_hold_expires_at: null } as never)
