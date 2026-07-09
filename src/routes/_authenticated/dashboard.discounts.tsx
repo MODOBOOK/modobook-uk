@@ -5,6 +5,7 @@ import {
   listDiscountCodes, upsertDiscountCode, deleteDiscountCode, setTreatmentDiscount,
 } from "@/lib/discounts.functions";
 import { getMyTreatments } from "@/lib/treatments.functions";
+import { getMyCategories } from "@/lib/categories.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,8 +15,126 @@ import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Tag, Percent, ArrowLeft } from "lucide-react";
+import { Plus, Pencil, Trash2, Tag, Percent, ArrowLeft, ChevronDown, Check, Search } from "lucide-react";
+
+type Category = { id: string; name: string };
+
+function TreatmentPicker({
+  treatments, categories, value, onChange, placeholder = "All treatments",
+}: {
+  treatments: Treat[];
+  categories: Category[];
+  value: string[];
+  onChange: (ids: string[]) => void;
+  placeholder?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [q, setQ] = useState("");
+
+  const grouped = useMemo(() => {
+    const byCat = new Map<string | null, Treat[]>();
+    for (const t of treatments) {
+      const key = (t as any).category_id ?? null;
+      if (!byCat.has(key)) byCat.set(key, []);
+      byCat.get(key)!.push(t);
+    }
+    const ordered: { cat: Category | null; items: Treat[] }[] = [];
+    for (const c of categories) {
+      if (byCat.has(c.id)) ordered.push({ cat: c, items: byCat.get(c.id)! });
+    }
+    if (byCat.has(null)) ordered.push({ cat: null, items: byCat.get(null)! });
+    return ordered;
+  }, [treatments, categories]);
+
+  const filtered = useMemo(() => {
+    const s = q.trim().toLowerCase();
+    if (!s) return grouped;
+    return grouped
+      .map((g) => ({ ...g, items: g.items.filter((t) => t.name.toLowerCase().includes(s)) }))
+      .filter((g) => g.items.length > 0);
+  }, [grouped, q]);
+
+  const selected = new Set(value);
+  const total = treatments.length;
+  const label =
+    value.length === 0 ? placeholder :
+    value.length === total ? `All ${total} treatments` :
+    `${value.length} selected`;
+
+  function toggle(id: string) {
+    onChange(selected.has(id) ? value.filter((x) => x !== id) : [...value, id]);
+  }
+  function toggleGroup(ids: string[], allOn: boolean) {
+    if (allOn) onChange(value.filter((x) => !ids.includes(x)));
+    else onChange(Array.from(new Set([...value, ...ids])));
+  }
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="outline" role="combobox" className="w-full justify-between font-normal">
+          <span className="truncate">{label}</span>
+          <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[--radix-popover-trigger-width] max-w-[min(92vw,32rem)] p-0" align="start">
+        <div className="flex items-center gap-2 border-b px-2">
+          <Search className="h-4 w-4 opacity-50" />
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Search treatments…"
+            className="h-9 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+          />
+        </div>
+        <div className="flex items-center justify-between border-b px-3 py-1.5 text-xs">
+          <button type="button" className="font-medium underline"
+            onClick={() => onChange(treatments.map((t) => t.id))}>Select all</button>
+          <button type="button" className="font-medium underline"
+            onClick={() => onChange([])}>Clear</button>
+        </div>
+        <div className="max-h-72 overflow-y-auto p-1">
+          {filtered.length === 0 && (
+            <p className="p-3 text-center text-xs text-muted-foreground">No matches</p>
+          )}
+          {filtered.map((g) => {
+            const ids = g.items.map((t) => t.id);
+            const allOn = ids.every((id) => selected.has(id));
+            const someOn = ids.some((id) => selected.has(id));
+            return (
+              <div key={g.cat?.id ?? "uncat"} className="mb-1">
+                <button type="button"
+                  onClick={() => toggleGroup(ids, allOn)}
+                  className="flex w-full items-center justify-between rounded px-2 py-1 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:bg-muted">
+                  <span>{g.cat?.name ?? "Uncategorised"}</span>
+                  <span className="text-[10px] normal-case">
+                    {allOn ? "Unselect all" : someOn ? "Select all" : "Select all"}
+                  </span>
+                </button>
+                {g.items.map((t) => {
+                  const on = selected.has(t.id);
+                  return (
+                    <button key={t.id} type="button"
+                      onClick={() => toggle(t.id)}
+                      className={`flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm hover:bg-muted ${on ? "bg-muted/60" : ""}`}>
+                      <span className={`flex h-4 w-4 items-center justify-center rounded border ${on ? "border-emerald-500 bg-emerald-500 text-white" : "border-muted-foreground/40"}`}>
+                        {on && <Check className="h-3 w-3" />}
+                      </span>
+                      <span className="flex-1 truncate">{t.name}</span>
+                      <span className="text-xs text-muted-foreground">£{Number(t.price).toFixed(2)}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            );
+          })}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
 
 export const Route = createFileRoute("/_authenticated/dashboard/discounts")({
   ssr: false,
@@ -31,6 +150,7 @@ type Code = {
 };
 type Treat = {
   id: string; name: string; price: number;
+  category_id: string | null;
   discount_percent: number | null;
   discount_starts_at: string | null; discount_ends_at: string | null;
   discount_days_of_week: number[] | null;
@@ -41,16 +161,19 @@ const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 function DiscountsPage() {
   const listCodes = useServerFn(listDiscountCodes);
   const listTreats = useServerFn(getMyTreatments);
+  const listCategories = useServerFn(getMyCategories);
   const [codes, setCodes] = useState<Code[]>([]);
   const [treats, setTreats] = useState<Treat[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
 
   async function refresh() {
     setLoading(true);
     try {
-      const [c, t] = await Promise.all([listCodes(), listTreats()]);
+      const [c, t, cats] = await Promise.all([listCodes(), listTreats(), listCategories()]);
       setCodes((c as any) ?? []);
       setTreats((t as any) ?? []);
+      setCategories(((cats as any) ?? []).map((x: any) => ({ id: x.id, name: x.name })));
     } finally { setLoading(false); }
   }
   useEffect(() => { void refresh(); }, []);
@@ -72,7 +195,7 @@ function DiscountsPage() {
         </TabsList>
 
         <TabsContent value="menu" className="mt-4 space-y-4">
-          <BulkMenuDiscount treatments={treats} onSaved={refresh} />
+          <BulkMenuDiscount treatments={treats} categories={categories} onSaved={refresh} />
           <div className="space-y-2">
             <p className="text-sm font-semibold">Per-treatment</p>
             <p className="text-xs text-muted-foreground">Shows a strikethrough original price with the discounted price on your booking page.</p>
@@ -88,10 +211,10 @@ function DiscountsPage() {
 
 
         <TabsContent value="codes" className="mt-4 space-y-3">
-          <CodeEditor treatments={treats} onSaved={refresh} />
+          <CodeEditor treatments={treats} categories={categories} onSaved={refresh} />
           <div className="space-y-2">
             {codes.map((c) => (
-              <CodeRow key={c.id} code={c} treatments={treats} onChanged={refresh} />
+              <CodeRow key={c.id} code={c} treatments={treats} categories={categories} onChanged={refresh} />
             ))}
             {!loading && codes.length === 0 && <p className="text-sm text-muted-foreground">No codes yet.</p>}
           </div>
@@ -186,8 +309,8 @@ function MenuDiscountRow({ treat, onSaved }: { treat: Treat; onSaved: () => void
   );
 }
 
-function CodeEditor({ treatments, onSaved, editing, onClose }: {
-  treatments: Treat[]; onSaved: () => void;
+function CodeEditor({ treatments, categories, onSaved, editing, onClose }: {
+  treatments: Treat[]; categories: Category[]; onSaved: () => void;
   editing?: Code | null; onClose?: () => void;
 }) {
   const save = useServerFn(upsertDiscountCode);
@@ -271,22 +394,8 @@ function CodeEditor({ treatments, onSaved, editing, onClose }: {
           </div>
           <div>
             <Label className="mb-1 block">Treatments</Label>
-            <div className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
-              <span>Leave empty to apply to all.</span>
-              <button type="button" className="font-medium underline"
-                onClick={() => setTIds(tIds.length === treatments.length ? [] : treatments.map((t) => t.id))}>
-                {tIds.length === treatments.length ? "Clear all" : "Select all"}
-              </button>
-            </div>
-            <div className="max-h-40 space-y-1 overflow-y-auto rounded border p-2">
-              {treatments.map((t) => (
-                <label key={t.id} className="flex items-center gap-2 text-sm">
-                  <Checkbox checked={tIds.includes(t.id)}
-                    onCheckedChange={(v) => setTIds((prev) => v ? [...prev, t.id] : prev.filter((x) => x !== t.id))} />
-                  <span>{t.name}</span>
-                </label>
-              ))}
-            </div>
+            <p className="mb-1 text-xs text-muted-foreground">Leave empty to apply to all.</p>
+            <TreatmentPicker treatments={treatments} categories={categories} value={tIds} onChange={setTIds} />
           </div>
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -319,7 +428,7 @@ function CodeEditor({ treatments, onSaved, editing, onClose }: {
   );
 }
 
-function CodeRow({ code, treatments, onChanged }: { code: Code; treatments: Treat[]; onChanged: () => void }) {
+function CodeRow({ code, treatments, categories, onChanged }: { code: Code; treatments: Treat[]; categories: Category[]; onChanged: () => void }) {
   const del = useServerFn(deleteDiscountCode);
   const [editing, setEditing] = useState(false);
   const tNames = useMemo(() => {
@@ -344,13 +453,13 @@ function CodeRow({ code, treatments, onChanged }: { code: Code; treatments: Trea
         }}><Trash2 className="h-4 w-4" /></Button>
       </CardContent>
       {editing && (
-        <CodeEditor treatments={treatments} onSaved={onChanged} editing={code} onClose={() => setEditing(false)} />
+        <CodeEditor treatments={treatments} categories={categories} onSaved={onChanged} editing={code} onClose={() => setEditing(false)} />
       )}
     </Card>
   );
 }
 
-function BulkMenuDiscount({ treatments, onSaved }: { treatments: Treat[]; onSaved: () => void }) {
+function BulkMenuDiscount({ treatments, categories, onSaved }: { treatments: Treat[]; categories: Category[]; onSaved: () => void }) {
   const save = useServerFn(setTreatmentDiscount);
   const [ids, setIds] = useState<string[]>([]);
   const [pct, setPct] = useState<string>("");
@@ -358,7 +467,6 @@ function BulkMenuDiscount({ treatments, onSaved }: { treatments: Treat[]; onSave
   const [end, setEnd] = useState("");
   const [dows, setDows] = useState<number[]>([]);
   const [busy, setBusy] = useState(false);
-  const allSelected = ids.length === treatments.length && treatments.length > 0;
 
   async function apply(activate: boolean) {
     const targets = ids.length ? ids : treatments.map((t) => t.id);
@@ -386,26 +494,13 @@ function BulkMenuDiscount({ treatments, onSaved }: { treatments: Treat[]; onSave
       <CardHeader className="pb-2"><CardTitle className="text-base">Apply offer to multiple treatments</CardTitle></CardHeader>
       <CardContent className="space-y-3">
         <div>
-          <div className="mb-1 flex items-center justify-between">
-            <Label>Treatments</Label>
-            <button type="button" className="text-xs font-medium underline"
-              onClick={() => setIds(allSelected ? [] : treatments.map((t) => t.id))}>
-              {allSelected ? "Clear all" : "Select all"}
-            </button>
-          </div>
-          <div className="max-h-44 space-y-1 overflow-y-auto rounded border p-2">
-            {treatments.length === 0 ? (
-              <p className="px-1 text-xs italic text-muted-foreground">No treatments yet.</p>
-            ) : treatments.map((t) => (
-              <label key={t.id} className="flex items-center gap-2 text-sm">
-                <Checkbox checked={ids.includes(t.id)}
-                  onCheckedChange={(v) => setIds((prev) => v ? [...prev, t.id] : prev.filter((x) => x !== t.id))} />
-                <span className="flex-1">{t.name}</span>
-                <span className="text-xs text-muted-foreground">£{Number(t.price).toFixed(2)}</span>
-              </label>
-            ))}
-          </div>
-          <p className="mt-1 text-xs text-muted-foreground">{ids.length || "All"} selected</p>
+          <Label className="mb-1 block">Treatments</Label>
+          {treatments.length === 0 ? (
+            <p className="px-1 text-xs italic text-muted-foreground">No treatments yet.</p>
+          ) : (
+            <TreatmentPicker treatments={treatments} categories={categories} value={ids} onChange={setIds} placeholder="Select treatments…" />
+          )}
+          <p className="mt-1 text-xs text-muted-foreground">{ids.length ? `${ids.length} selected` : "All treatments"}</p>
         </div>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
           <div><Label className="text-xs">% off</Label><Input type="number" min={1} max={100} value={pct} onChange={(e) => setPct(e.target.value)} placeholder="20" /></div>
