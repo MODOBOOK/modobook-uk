@@ -1040,19 +1040,19 @@ function MultiBookPage() {
                   </CardHeader>
                   <CardContent className="grid gap-4 sm:grid-cols-2">
                     <div className="sm:col-span-2">
-                      <Label htmlFor="name">Full name</Label>
+                      <Label htmlFor="name">Full name <span className="text-destructive">*</span></Label>
                       <Input id="name" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
                     </div>
                     <div>
-                      <Label htmlFor="email">Email</Label>
+                      <Label htmlFor="email">Email <span className="text-destructive">*</span></Label>
                       <Input id="email" type="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
                     </div>
                     <div>
-                      <Label htmlFor="phone">Phone {!reqPhone && <span className="text-xs opacity-50">(optional)</span>}</Label>
+                      <Label htmlFor="phone">Phone {reqPhone ? <span className="text-destructive">*</span> : <span className="text-xs opacity-50">(optional)</span>}</Label>
                       <Input id="phone" required={reqPhone} value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
                     </div>
                     <div>
-                      <Label htmlFor="dob">Date of birth {!reqDob && <span className="text-xs opacity-50">(optional)</span>}</Label>
+                      <Label htmlFor="dob">Date of birth {reqDob ? <span className="text-destructive">*</span> : <span className="text-xs opacity-50">(optional)</span>}</Label>
                       <Input id="dob" type="date" required={reqDob} value={form.dob} onChange={(e) => setForm({ ...form, dob: e.target.value })} />
                     </div>
                     {reqAddress && (
@@ -1061,7 +1061,7 @@ function MultiBookPage() {
                           <Label className="text-sm font-semibold">Address</Label>
                         </div>
                         <div className="sm:col-span-2">
-                          <Label htmlFor="line1">Address line 1</Label>
+                          <Label htmlFor="line1">Address line 1 <span className="text-destructive">*</span></Label>
                           <AddressAutocomplete
                             id="line1"
                             value={form.addressLine1}
@@ -1083,15 +1083,15 @@ function MultiBookPage() {
                           <Input id="line2" value={form.addressLine2} onChange={(e) => setForm({ ...form, addressLine2: e.target.value })} />
                         </div>
                         <div>
-                          <Label htmlFor="city">City</Label>
+                          <Label htmlFor="city">City <span className="text-destructive">*</span></Label>
                           <Input id="city" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
                         </div>
                         <div>
-                          <Label htmlFor="postcode">Postcode</Label>
+                          <Label htmlFor="postcode">Postcode <span className="text-destructive">*</span></Label>
                           <Input id="postcode" value={form.postcode} onChange={(e) => setForm({ ...form, postcode: e.target.value })} />
                         </div>
                         <div className="sm:col-span-2">
-                          <Label htmlFor="country">Country</Label>
+                          <Label htmlFor="country">Country <span className="text-destructive">*</span></Label>
                           <Input id="country" value={form.country} onChange={(e) => setForm({ ...form, country: e.target.value })} />
                         </div>
                       </>
