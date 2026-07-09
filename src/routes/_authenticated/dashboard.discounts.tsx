@@ -5,6 +5,7 @@ import {
   listDiscountCodes, upsertDiscountCode, deleteDiscountCode, setTreatmentDiscount,
 } from "@/lib/discounts.functions";
 import { getMyTreatments } from "@/lib/treatments.functions";
+import { getMyCategories } from "@/lib/categories.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,8 +15,126 @@ import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Tag, Percent, ArrowLeft } from "lucide-react";
+import { Plus, Pencil, Trash2, Tag, Percent, ArrowLeft, ChevronDown, Check, Search } from "lucide-react";
+
+type Category = { id: string; name: string };
+
+function TreatmentPicker({
+  treatments, categories, value, onChange, placeholder = "All treatments",
+}: {
+  treatments: Treat[];
+  categories: Category[];
+  value: string[];
+  onChange: (ids: string[]) => void;
+  placeholder?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [q, setQ] = useState("");
+
+  const grouped = useMemo(() => {
+    const byCat = new Map<string | null, Treat[]>();
+    for (const t of treatments) {
+      const key = (t as any).category_id ?? null;
+      if (!byCat.has(key)) byCat.set(key, []);
+      byCat.get(key)!.push(t);
+    }
+    const ordered: { cat: Category | null; items: Treat[] }[] = [];
+    for (const c of categories) {
+      if (byCat.has(c.id)) ordered.push({ cat: c, items: byCat.get(c.id)! });
+    }
+    if (byCat.has(null)) ordered.push({ cat: null, items: byCat.get(null)! });
+    return ordered;
+  }, [treatments, categories]);
+
+  const filtered = useMemo(() => {
+    const s = q.trim().toLowerCase();
+    if (!s) return grouped;
+    return grouped
+      .map((g) => ({ ...g, items: g.items.filter((t) => t.name.toLowerCase().includes(s)) }))
+      .filter((g) => g.items.length > 0);
+  }, [grouped, q]);
+
+  const selected = new Set(value);
+  const total = treatments.length;
+  const label =
+    value.length === 0 ? placeholder :
+    value.length === total ? `All ${total} treatments` :
+    `${value.length} selected`;
+
+  function toggle(id: string) {
+    onChange(selected.has(id) ? value.filter((x) => x !== id) : [...value, id]);
+  }
+  function toggleGroup(ids: string[], allOn: boolean) {
+    if (allOn) onChange(value.filter((x) => !ids.includes(x)));
+    else onChange(Array.from(new Set([...value, ...ids])));
+  }
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="outline" role="combobox" className="w-full justify-between font-normal">
+          <span className="truncate">{label}</span>
+          <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[--radix-popover-trigger-width] max-w-[min(92vw,32rem)] p-0" align="start">
+        <div className="flex items-center gap-2 border-b px-2">
+          <Search className="h-4 w-4 opacity-50" />
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Search treatments…"
+            className="h-9 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+          />
+        </div>
+        <div className="flex items-center justify-between border-b px-3 py-1.5 text-xs">
+          <button type="button" className="font-medium underline"
+            onClick={() => onChange(treatments.map((t) => t.id))}>Select all</button>
+          <button type="button" className="font-medium underline"
+            onClick={() => onChange([])}>Clear</button>
+        </div>
+        <div className="max-h-72 overflow-y-auto p-1">
+          {filtered.length === 0 && (
+            <p className="p-3 text-center text-xs text-muted-foreground">No matches</p>
+          )}
+          {filtered.map((g) => {
+            const ids = g.items.map((t) => t.id);
+            const allOn = ids.every((id) => selected.has(id));
+            const someOn = ids.some((id) => selected.has(id));
+            return (
+              <div key={g.cat?.id ?? "uncat"} className="mb-1">
+                <button type="button"
+                  onClick={() => toggleGroup(ids, allOn)}
+                  className="flex w-full items-center justify-between rounded px-2 py-1 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:bg-muted">
+                  <span>{g.cat?.name ?? "Uncategorised"}</span>
+                  <span className="text-[10px] normal-case">
+                    {allOn ? "Unselect all" : someOn ? "Select all" : "Select all"}
+                  </span>
+                </button>
+                {g.items.map((t) => {
+                  const on = selected.has(t.id);
+                  return (
+                    <button key={t.id} type="button"
+                      onClick={() => toggle(t.id)}
+                      className={`flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm hover:bg-muted ${on ? "bg-muted/60" : ""}`}>
+                      <span className={`flex h-4 w-4 items-center justify-center rounded border ${on ? "border-emerald-500 bg-emerald-500 text-white" : "border-muted-foreground/40"}`}>
+                        {on && <Check className="h-3 w-3" />}
+                      </span>
+                      <span className="flex-1 truncate">{t.name}</span>
+                      <span className="text-xs text-muted-foreground">£{Number(t.price).toFixed(2)}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            );
+          })}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
 
 export const Route = createFileRoute("/_authenticated/dashboard/discounts")({
   ssr: false,
