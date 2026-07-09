@@ -394,22 +394,8 @@ function CodeEditor({ treatments, categories, onSaved, editing, onClose }: {
           </div>
           <div>
             <Label className="mb-1 block">Treatments</Label>
-            <div className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
-              <span>Leave empty to apply to all.</span>
-              <button type="button" className="font-medium underline"
-                onClick={() => setTIds(tIds.length === treatments.length ? [] : treatments.map((t) => t.id))}>
-                {tIds.length === treatments.length ? "Clear all" : "Select all"}
-              </button>
-            </div>
-            <div className="max-h-40 space-y-1 overflow-y-auto rounded border p-2">
-              {treatments.map((t) => (
-                <label key={t.id} className="flex items-center gap-2 text-sm">
-                  <Checkbox checked={tIds.includes(t.id)}
-                    onCheckedChange={(v) => setTIds((prev) => v ? [...prev, t.id] : prev.filter((x) => x !== t.id))} />
-                  <span>{t.name}</span>
-                </label>
-              ))}
-            </div>
+            <p className="mb-1 text-xs text-muted-foreground">Leave empty to apply to all.</p>
+            <TreatmentPicker treatments={treatments} categories={categories} value={tIds} onChange={setTIds} />
           </div>
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
