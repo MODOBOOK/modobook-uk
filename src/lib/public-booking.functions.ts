@@ -746,6 +746,10 @@ async function maybeCreateBookingCheckout(args: {
 }): Promise<BookingPaymentResult | null> {
   const p = args.profile;
   if (!p) return null;
+  // Free bookings (£0) never require a deposit or checkout, regardless of the
+  // clinic's default deposit policy — the treatment itself has no charge.
+  if (!(args.totalAmount > 0)) return null;
+
   // Patient chose to pay in cash at the appointment — skip Stripe only when
   // this clinic has not made an upfront deposit mandatory. Never trust a stale
   // client-side cash choice to bypass a required deposit/card capture.
