@@ -1012,7 +1012,10 @@ function bookingNeedsStripePayment(
     payment_clearpay_enabled?: boolean | null;
   } | null,
   choice?: PaymentChoice | null,
+  totalAmount?: number,
 ) {
+  // Free bookings (£0) never require a Stripe payment, regardless of choice.
+  if (totalAmount != null && !(totalAmount > 0)) return false;
   if (choice?.mode === "cash") return false;
   if (choice?.mode === "deposit" || choice?.mode === "full") return true;
   if (!profile) return false;
