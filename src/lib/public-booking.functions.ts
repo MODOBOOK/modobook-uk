@@ -571,7 +571,7 @@ export const requestBooking = createServerFn({ method: "POST" })
         .maybeSingle();
       if (dup) {
         const unpaidBooking = dup.payment_status !== "paid";
-        if (unpaidBooking && bookingNeedsStripePayment(prof, paymentChoice)) {
+        if (unpaidBooking && bookingNeedsStripePayment(prof, paymentChoice, data.basePrice)) {
           await supabaseAdmin
             .from("appointments")
             .update({ status: "cancelled", payment_hold_expires_at: null } as never)
