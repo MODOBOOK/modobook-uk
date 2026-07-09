@@ -428,7 +428,7 @@ function CodeEditor({ treatments, categories, onSaved, editing, onClose }: {
   );
 }
 
-function CodeRow({ code, treatments, onChanged }: { code: Code; treatments: Treat[]; onChanged: () => void }) {
+function CodeRow({ code, treatments, categories, onChanged }: { code: Code; treatments: Treat[]; categories: Category[]; onChanged: () => void }) {
   const del = useServerFn(deleteDiscountCode);
   const [editing, setEditing] = useState(false);
   const tNames = useMemo(() => {
@@ -453,13 +453,13 @@ function CodeRow({ code, treatments, onChanged }: { code: Code; treatments: Trea
         }}><Trash2 className="h-4 w-4" /></Button>
       </CardContent>
       {editing && (
-        <CodeEditor treatments={treatments} onSaved={onChanged} editing={code} onClose={() => setEditing(false)} />
+        <CodeEditor treatments={treatments} categories={categories} onSaved={onChanged} editing={code} onClose={() => setEditing(false)} />
       )}
     </Card>
   );
 }
 
-function BulkMenuDiscount({ treatments, onSaved }: { treatments: Treat[]; onSaved: () => void }) {
+function BulkMenuDiscount({ treatments, categories, onSaved }: { treatments: Treat[]; categories: Category[]; onSaved: () => void }) {
   const save = useServerFn(setTreatmentDiscount);
   const [ids, setIds] = useState<string[]>([]);
   const [pct, setPct] = useState<string>("");
@@ -467,7 +467,6 @@ function BulkMenuDiscount({ treatments, onSaved }: { treatments: Treat[]; onSave
   const [end, setEnd] = useState("");
   const [dows, setDows] = useState<number[]>([]);
   const [busy, setBusy] = useState(false);
-  const allSelected = ids.length === treatments.length && treatments.length > 0;
 
   async function apply(activate: boolean) {
     const targets = ids.length ? ids : treatments.map((t) => t.id);
@@ -495,26 +494,13 @@ function BulkMenuDiscount({ treatments, onSaved }: { treatments: Treat[]; onSave
       <CardHeader className="pb-2"><CardTitle className="text-base">Apply offer to multiple treatments</CardTitle></CardHeader>
       <CardContent className="space-y-3">
         <div>
-          <div className="mb-1 flex items-center justify-between">
-            <Label>Treatments</Label>
-            <button type="button" className="text-xs font-medium underline"
-              onClick={() => setIds(allSelected ? [] : treatments.map((t) => t.id))}>
-              {allSelected ? "Clear all" : "Select all"}
-            </button>
-          </div>
-          <div className="max-h-44 space-y-1 overflow-y-auto rounded border p-2">
-            {treatments.length === 0 ? (
-              <p className="px-1 text-xs italic text-muted-foreground">No treatments yet.</p>
-            ) : treatments.map((t) => (
-              <label key={t.id} className="flex items-center gap-2 text-sm">
-                <Checkbox checked={ids.includes(t.id)}
-                  onCheckedChange={(v) => setIds((prev) => v ? [...prev, t.id] : prev.filter((x) => x !== t.id))} />
-                <span className="flex-1">{t.name}</span>
-                <span className="text-xs text-muted-foreground">£{Number(t.price).toFixed(2)}</span>
-              </label>
-            ))}
-          </div>
-          <p className="mt-1 text-xs text-muted-foreground">{ids.length || "All"} selected</p>
+          <Label className="mb-1 block">Treatments</Label>
+          {treatments.length === 0 ? (
+            <p className="px-1 text-xs italic text-muted-foreground">No treatments yet.</p>
+          ) : (
+            <TreatmentPicker treatments={treatments} categories={categories} value={ids} onChange={setIds} placeholder="Select treatments…" />
+          )}
+          <p className="mt-1 text-xs text-muted-foreground">{ids.length ? `${ids.length} selected` : "All treatments"}</p>
         </div>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
           <div><Label className="text-xs">% off</Label><Input type="number" min={1} max={100} value={pct} onChange={(e) => setPct(e.target.value)} placeholder="20" /></div>
