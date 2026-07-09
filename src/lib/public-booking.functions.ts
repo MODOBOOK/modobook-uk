@@ -1129,7 +1129,7 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
           const unpaidBooking = recent
             .filter((r) => existing.some((e) => e.id === (r.id as string)))
             .every((r) => r.payment_status !== "paid");
-          if (unpaidBooking && bookingNeedsStripePayment(prof, paymentChoice)) {
+          if (unpaidBooking && bookingNeedsStripePayment(prof, paymentChoice, data.bookings.reduce((s, b) => s + b.priceCents / 100, 0))) {
             await supabaseAdmin
               .from("appointments")
               .update({ status: "cancelled", payment_hold_expires_at: null } as never)
