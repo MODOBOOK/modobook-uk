@@ -150,6 +150,7 @@ type Code = {
 };
 type Treat = {
   id: string; name: string; price: number;
+  category_id: string | null;
   discount_percent: number | null;
   discount_starts_at: string | null; discount_ends_at: string | null;
   discount_days_of_week: number[] | null;
