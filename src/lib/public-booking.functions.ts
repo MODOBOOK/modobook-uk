@@ -663,7 +663,7 @@ export const requestBooking = createServerFn({ method: "POST" })
         throw new Error("Card payment could not be started. Please try again — your appointment has not been confirmed.");
       }
     }
-    if (!payment && bookingNeedsStripePayment(prof, paymentChoice)) {
+    if (!payment && bookingNeedsStripePayment(prof, paymentChoice, data.basePrice)) {
       await supabaseAdmin
         .from("appointments")
         .update({ status: "cancelled", payment_hold_expires_at: null } as never)
