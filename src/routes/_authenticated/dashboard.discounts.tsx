@@ -309,8 +309,8 @@ function MenuDiscountRow({ treat, onSaved }: { treat: Treat; onSaved: () => void
   );
 }
 
-function CodeEditor({ treatments, onSaved, editing, onClose }: {
-  treatments: Treat[]; onSaved: () => void;
+function CodeEditor({ treatments, categories, onSaved, editing, onClose }: {
+  treatments: Treat[]; categories: Category[]; onSaved: () => void;
   editing?: Code | null; onClose?: () => void;
 }) {
   const save = useServerFn(upsertDiscountCode);
