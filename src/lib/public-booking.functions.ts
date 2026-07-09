@@ -1264,7 +1264,7 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
 
     } catch (e) {
       console.error("[requestMultiBooking] checkout failed", e);
-      if (bookingNeedsStripePayment(prof, paymentChoice) && created.length > 0) {
+      if (bookingNeedsStripePayment(prof, paymentChoice, data.bookings.reduce((s, b) => s + b.priceCents / 100, 0)) && created.length > 0) {
         await supabaseAdmin
           .from("appointments")
           .update({ status: "cancelled", payment_hold_expires_at: null } as never)
