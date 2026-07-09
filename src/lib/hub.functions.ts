@@ -266,10 +266,9 @@ export const listHubData = createServerFn({ method: "GET" })
     let codeMap = new Map<string, { code: string; owner_kind: HubOwnerKind; display_name: string | null }>();
     let nameFallback = new Map<string, string>();
     if (otherIds.length > 0) {
-      const { data: codes } = await supabase
-        .from("hub_codes")
-        .select("user_id, code, owner_kind, display_name")
-        .in("user_id", otherIds);
+      const { data: codes } = await supabase.rpc("get_linked_hub_codes", {
+        p_user_ids: otherIds,
+      });
       for (const c of codes ?? []) {
         codeMap.set(c.user_id, {
           code: c.code,
