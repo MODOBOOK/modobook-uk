@@ -32,9 +32,9 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
 
 // Configuration
 const SITE_NAME = "MODO Book"
-const SENDER_DOMAIN = "notify.modobook.co.uk"
-const ROOT_DOMAIN = "modobook.co.uk"
-const FROM_DOMAIN = "notify.modobook.co.uk"
+const SENDER_DOMAIN = "notify.modobook.uk"
+const ROOT_DOMAIN = "modobook.uk"
+const FROM_DOMAIN = "modobook.uk"
 
 function redactEmail(email: string | null | undefined): string {
   if (!email) return '***'
