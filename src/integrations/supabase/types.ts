@@ -5929,6 +5929,15 @@ export type Database = {
           treatment_name: string
         }[]
       }
+      get_linked_hub_codes: {
+        Args: { p_user_ids: string[] }
+        Returns: {
+          code: string
+          display_name: string
+          owner_kind: Database["public"]["Enums"]["hub_owner_kind"]
+          user_id: string
+        }[]
+      }
       get_medical_form_by_token: {
         Args: { p_token: string }
         Returns: {
