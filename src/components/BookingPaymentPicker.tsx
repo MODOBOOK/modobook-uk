@@ -107,6 +107,11 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
   // the reusable card before the appointment is confirmed.
   useEffect(() => {
     if (!configured) return;
+    // Free bookings (£0) skip payment entirely — clear any stale choice.
+    if (treatmentTotalCents <= 0) {
+      if (value) onChange(null);
+      return;
+    }
     const o = opts as ConfiguredOptions;
     if (!value && o.requireDepositToConfirm && o.depositEnabled && availableMethods.includes("card")) {
       onChange({ mode: "deposit", method: "card" });

@@ -571,7 +571,7 @@ export const requestBooking = createServerFn({ method: "POST" })
         .maybeSingle();
       if (dup) {
         const unpaidBooking = dup.payment_status !== "paid";
-        if (unpaidBooking && bookingNeedsStripePayment(prof, paymentChoice)) {
+        if (unpaidBooking && bookingNeedsStripePayment(prof, paymentChoice, data.basePrice)) {
           await supabaseAdmin
             .from("appointments")
             .update({ status: "cancelled", payment_hold_expires_at: null } as never)
@@ -653,7 +653,7 @@ export const requestBooking = createServerFn({ method: "POST" })
       });
     } catch (e) {
       console.error("[requestBooking] checkout failed", e);
-      if (bookingNeedsStripePayment(prof, paymentChoice)) {
+      if (bookingNeedsStripePayment(prof, paymentChoice, data.basePrice)) {
         await supabaseAdmin
           .from("appointments")
           .update({ status: "cancelled", payment_hold_expires_at: null } as never)
@@ -663,7 +663,7 @@ export const requestBooking = createServerFn({ method: "POST" })
         throw new Error("Card payment could not be started. Please try again — your appointment has not been confirmed.");
       }
     }
-    if (!payment && bookingNeedsStripePayment(prof, paymentChoice)) {
+    if (!payment && bookingNeedsStripePayment(prof, paymentChoice, data.basePrice)) {
       await supabaseAdmin
         .from("appointments")
         .update({ status: "cancelled", payment_hold_expires_at: null } as never)
@@ -746,6 +746,10 @@ async function maybeCreateBookingCheckout(args: {
 }): Promise<BookingPaymentResult | null> {
   const p = args.profile;
   if (!p) return null;
+  // Free bookings (£0) never require a deposit or checkout, regardless of the
+  // clinic's default deposit policy — the treatment itself has no charge.
+  if (!(args.totalAmount > 0)) return null;
+
   // Patient chose to pay in cash at the appointment — skip Stripe only when
   // this clinic has not made an upfront deposit mandatory. Never trust a stale
   // client-side cash choice to bypass a required deposit/card capture.
@@ -1008,7 +1012,10 @@ function bookingNeedsStripePayment(
     payment_clearpay_enabled?: boolean | null;
   } | null,
   choice?: PaymentChoice | null,
+  totalAmount?: number,
 ) {
+  // Free bookings (£0) never require a Stripe payment, regardless of choice.
+  if (totalAmount != null && !(totalAmount > 0)) return false;
   if (choice?.mode === "cash") return false;
   if (choice?.mode === "deposit" || choice?.mode === "full") return true;
   if (!profile) return false;
@@ -1122,7 +1129,7 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
           const unpaidBooking = recent
             .filter((r) => existing.some((e) => e.id === (r.id as string)))
             .every((r) => r.payment_status !== "paid");
-          if (unpaidBooking && bookingNeedsStripePayment(prof, paymentChoice)) {
+          if (unpaidBooking && bookingNeedsStripePayment(prof, paymentChoice, data.bookings.reduce((s, b) => s + b.priceCents / 100, 0))) {
             await supabaseAdmin
               .from("appointments")
               .update({ status: "cancelled", payment_hold_expires_at: null } as never)
@@ -1257,7 +1264,7 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
 
     } catch (e) {
       console.error("[requestMultiBooking] checkout failed", e);
-      if (bookingNeedsStripePayment(prof, paymentChoice) && created.length > 0) {
+      if (bookingNeedsStripePayment(prof, paymentChoice, data.bookings.reduce((s, b) => s + b.priceCents / 100, 0)) && created.length > 0) {
         await supabaseAdmin
           .from("appointments")
           .update({ status: "cancelled", payment_hold_expires_at: null } as never)
@@ -1267,7 +1274,7 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
         throw new Error("Card payment could not be started. Please try again — your appointments have not been confirmed.");
       }
     }
-    if (!payment && bookingNeedsStripePayment(prof, paymentChoice) && created.length > 0) {
+    if (!payment && bookingNeedsStripePayment(prof, paymentChoice, data.bookings.reduce((s, b) => s + b.priceCents / 100, 0)) && created.length > 0) {
       await supabaseAdmin
         .from("appointments")
         .update({ status: "cancelled", payment_hold_expires_at: null } as never)
