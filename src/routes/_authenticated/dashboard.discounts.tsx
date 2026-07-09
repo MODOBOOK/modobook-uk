@@ -161,16 +161,19 @@ const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 function DiscountsPage() {
   const listCodes = useServerFn(listDiscountCodes);
   const listTreats = useServerFn(getMyTreatments);
+  const listCategories = useServerFn(getMyCategories);
   const [codes, setCodes] = useState<Code[]>([]);
   const [treats, setTreats] = useState<Treat[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
 
   async function refresh() {
     setLoading(true);
     try {
-      const [c, t] = await Promise.all([listCodes(), listTreats()]);
+      const [c, t, cats] = await Promise.all([listCodes(), listTreats(), listCategories()]);
       setCodes((c as any) ?? []);
       setTreats((t as any) ?? []);
+      setCategories(((cats as any) ?? []).map((x: any) => ({ id: x.id, name: x.name })));
     } finally { setLoading(false); }
   }
   useEffect(() => { void refresh(); }, []);
@@ -192,7 +195,7 @@ function DiscountsPage() {
         </TabsList>
 
         <TabsContent value="menu" className="mt-4 space-y-4">
-          <BulkMenuDiscount treatments={treats} onSaved={refresh} />
+          <BulkMenuDiscount treatments={treats} categories={categories} onSaved={refresh} />
           <div className="space-y-2">
             <p className="text-sm font-semibold">Per-treatment</p>
             <p className="text-xs text-muted-foreground">Shows a strikethrough original price with the discounted price on your booking page.</p>
@@ -208,10 +211,10 @@ function DiscountsPage() {
 
 
         <TabsContent value="codes" className="mt-4 space-y-3">
-          <CodeEditor treatments={treats} onSaved={refresh} />
+          <CodeEditor treatments={treats} categories={categories} onSaved={refresh} />
           <div className="space-y-2">
             {codes.map((c) => (
-              <CodeRow key={c.id} code={c} treatments={treats} onChanged={refresh} />
+              <CodeRow key={c.id} code={c} treatments={treats} categories={categories} onChanged={refresh} />
             ))}
             {!loading && codes.length === 0 && <p className="text-sm text-muted-foreground">No codes yet.</p>}
           </div>
