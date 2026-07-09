@@ -1274,7 +1274,7 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
         throw new Error("Card payment could not be started. Please try again — your appointments have not been confirmed.");
       }
     }
-    if (!payment && bookingNeedsStripePayment(prof, paymentChoice) && created.length > 0) {
+    if (!payment && bookingNeedsStripePayment(prof, paymentChoice, data.bookings.reduce((s, b) => s + b.priceCents / 100, 0)) && created.length > 0) {
       await supabaseAdmin
         .from("appointments")
         .update({ status: "cancelled", payment_hold_expires_at: null } as never)
