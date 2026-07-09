@@ -96,6 +96,7 @@ const groups: { title: string; items: Item[] }[] = [
       { label: "Consultations", description: "MODO step-by-step records", to: "/dashboard/consultations", icon: ClipboardList, ...T.mocha },
       { label: "Patients", description: "Client list, history & files", to: "/dashboard/patients", icon: Users, ...T.cream },
       { label: "Reviews", description: "Moderate patient reviews", to: "/dashboard/reviews", icon: Star, ...T.ivory },
+      { label: "Referrals & Rewards", description: "Referral bonuses, loyalty points & tiers", to: "/dashboard/rewards", icon: Gift, ...T.espresso },
     ],
   },
   {
