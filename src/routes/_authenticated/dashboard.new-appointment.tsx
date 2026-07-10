@@ -19,7 +19,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { Check, ChevronsUpDown, UserPlus, CalendarIcon, Sparkles, ChevronDown } from "lucide-react";
+import { Check, ChevronsUpDown, UserPlus, CalendarIcon, Sparkles, ChevronDown, Plus, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -53,16 +53,31 @@ type ModelSlot = {
   category: string | null;
 };
 
+type BookingItem = {
+  key: string;
+  treatmentId: string;
+  startTime: string; // HH:MM
+  duration: number;  // minutes
+  price: number;     // £
+  modelSlotId: string | null;
+};
+
+function newKey() {
+  return Math.random().toString(36).slice(2);
+}
+
+function toMin(t: string) { const [h, m] = t.split(":").map(Number); return h * 60 + m; }
+function fromMin(n: number) { return `${String(Math.floor(n / 60)).padStart(2, "0")}:${String(n % 60).padStart(2, "0")}`; }
+
 function NewAppointmentPage() {
   const { profile } = Route.useLoaderData();
   const navigate = useNavigate();
   const [treatments, setTreatments] = useState<Treatment[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
-  const [treatmentId, setTreatmentId] = useState("");
   const [locationId, setLocationId] = useState<string>("");
   const [date, setDate] = useState("");
-  const [startTime, setStartTime] = useState("");
+  const [items, setItems] = useState<BookingItem[]>([]);
   const [slots, setSlots] = useState<string[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [patientName, setPatientName] = useState("");
@@ -81,8 +96,6 @@ function NewAppointmentPage() {
   const createLink = useServerFn(createPaymentLink);
   const fetchModelSlots = useServerFn(listMyModelSlots);
   const [modelSlots, setModelSlots] = useState<ModelSlot[]>([]);
-  const [modelSlotId, setModelSlotId] = useState<string | null>(null);
-  const [modelPriceOverride, setModelPriceOverride] = useState<number | null>(null);
   const [modelExpanded, setModelExpanded] = useState(true);
 
 
@@ -166,11 +179,10 @@ function NewAppointmentPage() {
     });
   }
 
+  // Longest duration across selected items — used to filter available start slots
+  const primaryDuration = items[0]?.duration ?? 30;
 
-  const treatment = treatments.find((t) => t.id === treatmentId);
-  const duration = treatment?.duration ?? 30;
-
-  // Recompute available slots when date/location/treatment changes
+  // Recompute available slots when date/location changes
   useEffect(() => {
     if (!date) { setSlots([]); return; }
     (async () => {
@@ -199,21 +211,15 @@ function NewAppointmentPage() {
           ...(blockedT ?? []).filter((b) => matchLoc(b.location_id)).map((b) => ({ start_time: b.start_time, end_time: b.end_time, location_id: b.location_id })),
         ];
 
-
-        const toMin = (t: string) => {
-          const [h, m] = t.split(":").map(Number); return h * 60 + m;
-        };
-        const fromMin = (n: number) => `${String(Math.floor(n / 60)).padStart(2, "0")}:${String(n % 60).padStart(2, "0")}`;
-
         const candidates = new Set<string>();
         for (const w of windows) {
           const interval = w.slot_interval ?? 30;
           const s = toMin(w.start_time); const e = toMin(w.end_time);
-          for (let x = s; x + duration <= e; x += interval) candidates.add(fromMin(x));
+          for (let x = s; x + primaryDuration <= e; x += interval) candidates.add(fromMin(x));
         }
 
         const free = [...candidates].sort().filter((time) => {
-          const s = toMin(time); const e = s + duration;
+          const s = toMin(time); const e = s + primaryDuration;
           return !busy.some((b) => {
             const bs = toMin(b.start_time); const be = toMin(b.end_time);
             return s < be && e > bs;
@@ -224,51 +230,129 @@ function NewAppointmentPage() {
         setLoadingSlots(false);
       }
     })();
-  }, [date, locationId, duration, profile.id]);
+  }, [date, locationId, primaryDuration, profile.id]);
 
-  function computeEnd(time: string, mins: number): string {
+  function computeEndFromStart(time: string, mins: number): string {
     const [h, m] = time.split(":").map(Number);
     const total = h * 60 + m + mins;
     return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}:00`;
   }
 
+  // Chain start times: given the list, ensure each item starts at end of the previous
+  function chainStarts(list: BookingItem[]): BookingItem[] {
+    if (list.length === 0) return list;
+    const out = [...list];
+    for (let i = 1; i < out.length; i++) {
+      const prev = out[i - 1];
+      if (!prev.startTime) continue;
+      const nextStart = fromMin(toMin(prev.startTime) + (prev.duration || 0));
+      out[i] = { ...out[i], startTime: nextStart };
+    }
+    return out;
+  }
+
+  function addTreatmentRow(treatmentId: string) {
+    const t = treatments.find((x) => x.id === treatmentId);
+    if (!t) return;
+    setItems((prev) => {
+      const nextStart = (() => {
+        if (prev.length === 0) return "";
+        const last = prev[prev.length - 1];
+        if (!last.startTime) return "";
+        return fromMin(toMin(last.startTime) + (last.duration || 0));
+      })();
+      return [
+        ...prev,
+        {
+          key: newKey(),
+          treatmentId,
+          startTime: nextStart,
+          duration: t.duration ?? 30,
+          price: Number(t.price ?? 0),
+          modelSlotId: null,
+        },
+      ];
+    });
+  }
+
+  function updateItem(key: string, patch: Partial<BookingItem>) {
+    setItems((prev) => chainStarts(prev.map((it) => (it.key === key ? { ...it, ...patch } : it))));
+  }
+
+  function removeItem(key: string) {
+    setItems((prev) => chainStarts(prev.filter((it) => it.key !== key)));
+  }
+
+  function applyModelSlot(s: ModelSlot) {
+    const t = treatments.find((x) => x.id === s.treatment_id);
+    if (!t) return;
+    const base = Number(t.price ?? 0);
+    const final = s.price_mode === "fixed" ? Number(s.price_value) : Math.max(0, base * (1 - Number(s.price_value) / 100));
+    setLocationId(s.location_id ?? "");
+    setDate(s.slot_date);
+    setItems([
+      {
+        key: newKey(),
+        treatmentId: t.id,
+        startTime: s.start_time.slice(0, 5),
+        duration: t.duration ?? 30,
+        price: final,
+        modelSlotId: s.id,
+      },
+    ]);
+  }
+
 
   async function submit() {
     if (submitLockRef.current) return;
-    if (!treatment || !date || !startTime || !patientName || !patientEmail) {
-      toast.error("Fill in treatment, date, time, patient name and email");
+    if (items.length === 0 || !date || !patientName || !patientEmail) {
+      toast.error("Add at least one treatment and fill patient name, email and date");
+      return;
+    }
+    if (items.some((it) => !it.treatmentId || !it.startTime)) {
+      toast.error("Each treatment needs a start time");
       return;
     }
     submitLockRef.current = true;
     setSaving(true);
     try {
-      const result = await createAppointmentForPatient({
-        data: {
-          treatmentId,
-          locationId: locationId || null,
-          date,
-          startTime: `${startTime}:00`,
-          endTime: computeEnd(startTime, treatment.duration ?? 30),
-          patientName,
-          patientEmail,
-          patientPhone: patientPhone || undefined,
-          patientDob: patientDob || null,
-          patientAddress: addrLine1 || addrCity || addrPostcode
-            ? { line1: addrLine1, city: addrCity, postcode: addrPostcode }
-            : null,
-          notes: notes || undefined,
-          basePrice: modelPriceOverride ?? Number(treatment.price ?? 0),
-          extraConsentTemplateIds: [...pickedConsentIds],
-          medicalFormTemplateIds: [...pickedMedicalIds],
-          modelSlotId: modelSlotId,
-        },
-      });
-      const manageUrl = result.manageToken
-        ? `${window.location.origin}/m/${profile.slug}/manage/${result.manageToken}`
+      const address = addrLine1 || addrCity || addrPostcode
+        ? { line1: addrLine1, city: addrCity, postcode: addrPostcode }
+        : null;
+
+      const created: { id: string; manageToken: string | null; treatmentName: string }[] = [];
+      for (const it of items) {
+        const t = treatments.find((x) => x.id === it.treatmentId);
+        if (!t) continue;
+        const result = await createAppointmentForPatient({
+          data: {
+            treatmentId: it.treatmentId,
+            locationId: locationId || null,
+            date,
+            startTime: `${it.startTime}:00`,
+            endTime: computeEndFromStart(it.startTime, it.duration),
+            patientName,
+            patientEmail,
+            patientPhone: patientPhone || undefined,
+            patientDob: patientDob || null,
+            patientAddress: address,
+            notes: notes || undefined,
+            basePrice: it.price,
+            extraConsentTemplateIds: [...pickedConsentIds],
+            medicalFormTemplateIds: [...pickedMedicalIds],
+            modelSlotId: it.modelSlotId,
+          },
+        });
+        created.push({ id: result.id, manageToken: result.manageToken, treatmentName: t.name });
+      }
+
+      const primary = created[0];
+      const manageUrl = primary?.manageToken
+        ? `${window.location.origin}/m/${profile.slug}/manage/${primary.manageToken}`
         : null;
 
       let depositUrl: string | null = null;
-      if (sendDeposit) {
+      if (sendDeposit && primary) {
         const amt = Math.round(parseFloat(depositAmount || "0") * 100);
         const hrs = Math.max(1, parseInt(depositHours || "24", 10));
         if (amt >= 100) {
@@ -276,9 +360,9 @@ function NewAppointmentPage() {
             const link = await createLink({
               data: {
                 amountCents: amt,
-                description: `Deposit · ${treatment.name} · ${patientName}`,
+                description: `Deposit · ${created.map((c) => c.treatmentName).join(" + ")} · ${patientName}`,
                 kind: "deposit",
-                appointmentId: result.id,
+                appointmentId: primary.id,
                 recipientEmail: patientEmail,
                 recipientName: patientName,
                 expiresAt: new Date(Date.now() + hrs * 3600 * 1000).toISOString(),
@@ -291,9 +375,9 @@ function NewAppointmentPage() {
         }
       }
 
-      toast.success("Appointment created", {
+      toast.success(`Created ${created.length} appointment${created.length === 1 ? "" : "s"}`, {
         description: depositUrl
-          ? "Deposit link copied to clipboard — paste in email/SMS to the patient."
+          ? "Deposit link copied to clipboard."
           : manageUrl
           ? "Manage link copied to clipboard."
           : "Confirmed.",
@@ -302,7 +386,6 @@ function NewAppointmentPage() {
         await navigator.clipboard.writeText(depositUrl ?? manageUrl ?? "");
       }
       navigate({ to: "/dashboard/bookings" });
-
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed");
     } finally {
@@ -311,12 +394,35 @@ function NewAppointmentPage() {
     }
   }
 
+  // Grouped treatment options for the "Add treatment" dropdown
+  const treatmentGroups = useMemo(() => {
+    const byCat = new Map<string | null, Treatment[]>();
+    for (const t of treatments) {
+      const k = t.category_id ?? null;
+      if (!byCat.has(k)) byCat.set(k, []);
+      byCat.get(k)!.push(t);
+    }
+    const groups: { key: string; name: string; items: Treatment[] }[] = [];
+    for (const c of categories) {
+      const items = byCat.get(c.id);
+      if (items && items.length) groups.push({ key: c.id, name: c.name, items });
+    }
+    const uncategorised = byCat.get(null);
+    if (uncategorised && uncategorised.length) {
+      groups.push({ key: "uncategorised", name: "Uncategorised", items: uncategorised });
+    }
+    return groups;
+  }, [treatments, categories]);
+
+  const totalPrice = items.reduce((sum, it) => sum + (Number.isFinite(it.price) ? it.price : 0), 0);
+  const totalDuration = items.reduce((sum, it) => sum + (it.duration || 0), 0);
+
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Book appointment for a patient</h1>
         <p className="text-sm text-muted-foreground">
-          The patient will receive a confirmation email with consent forms and a link to manage their booking.
+          Add one or more treatments — each with its own time and price. The patient will receive a confirmation email with consent forms and a link to manage their booking.
         </p>
       </div>
 
@@ -347,19 +453,12 @@ function NewAppointmentPage() {
                   const final = s.price_mode === "fixed"
                     ? Number(s.price_value)
                     : Math.max(0, base * (1 - Number(s.price_value) / 100));
-                  const selected = modelSlotId === s.id;
+                  const selected = items.some((it) => it.modelSlotId === s.id);
                   return (
                     <button
                       key={s.id}
                       type="button"
-                      onClick={() => {
-                        setTreatmentId(t.id);
-                        setLocationId(s.location_id ?? "");
-                        setDate(s.slot_date);
-                        setStartTime(s.start_time.slice(0, 5));
-                        setModelSlotId(s.id);
-                        setModelPriceOverride(final);
-                      }}
+                      onClick={() => applyModelSlot(s)}
                       className={`rounded-xl border p-3 text-left transition ${selected ? "border-fuchsia-500 bg-white shadow-sm ring-2 ring-fuchsia-300" : "border-border bg-white hover:border-fuchsia-300"}`}
                     >
                       <p className="text-sm font-semibold">{t.name}</p>
@@ -376,61 +475,19 @@ function NewAppointmentPage() {
                 })}
               </div>
             )}
-            {modelSlotId && (
-              <div className="mt-3 flex items-center justify-between rounded-lg bg-white/70 px-3 py-2 text-xs">
-                <span className="text-muted-foreground">Model slot applied — price will use the discounted rate.</span>
-                <button
-                  type="button"
-                  onClick={() => { setModelSlotId(null); setModelPriceOverride(null); }}
-                  className="font-medium text-fuchsia-700 hover:underline"
-                >
-                  Clear
-                </button>
-              </div>
-            )}
           </div>
         );
       })()}
 
 
       <Card>
-        <CardHeader><CardTitle>Treatment</CardTitle></CardHeader>
-        <CardContent className="space-y-3">
-          <div>
-            <Label>Treatment *</Label>
-            <Select value={treatmentId} onValueChange={(v) => { setTreatmentId(v); setModelSlotId(null); setModelPriceOverride(null); }}>
-              <SelectTrigger><SelectValue placeholder="Select treatment" /></SelectTrigger>
-              <SelectContent className="max-h-[60vh]">
-                {(() => {
-                  const byCat = new Map<string | null, Treatment[]>();
-                  for (const t of treatments) {
-                    const k = t.category_id ?? null;
-                    if (!byCat.has(k)) byCat.set(k, []);
-                    byCat.get(k)!.push(t);
-                  }
-                  const groups: { key: string; name: string; items: Treatment[] }[] = [];
-                  for (const c of categories) {
-                    const items = byCat.get(c.id);
-                    if (items && items.length) groups.push({ key: c.id, name: c.name, items });
-                  }
-                  const uncategorised = byCat.get(null);
-                  if (uncategorised && uncategorised.length) {
-                    groups.push({ key: "uncategorised", name: "Uncategorised", items: uncategorised });
-                  }
-                  return groups.map((g) => (
-                    <SelectGroup key={g.key}>
-                      <SelectLabel>{g.name}</SelectLabel>
-                      {g.items.map((t) => (
-                        <SelectItem key={t.id} value={t.id}>
-                          {t.name} — £{Number(t.price ?? 0).toFixed(2)} · {t.duration}min
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  ));
-                })()}
-              </SelectContent>
-            </Select>
-          </div>
+        <CardHeader>
+          <CardTitle>Treatments</CardTitle>
+          <p className="text-xs text-muted-foreground">
+            Add multiple treatments to a single visit. Time and price for each can be edited.
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-4">
           {locations.length > 0 && (
             <div>
               <Label>Location</Label>
@@ -467,7 +524,7 @@ function NewAppointmentPage() {
                     const mm = String(d.getMonth() + 1).padStart(2, "0");
                     const dd = String(d.getDate()).padStart(2, "0");
                     setDate(`${yyyy}-${mm}-${dd}`);
-                    setStartTime("");
+                    setItems((prev) => prev.map((it, i) => (i === 0 ? { ...it, startTime: "" } : it)));
                   }}
                   disabled={(d) => d < new Date(new Date().setHours(0, 0, 0, 0))}
                   initialFocus
@@ -476,15 +533,15 @@ function NewAppointmentPage() {
               </PopoverContent>
             </Popover>
           </div>
-          {date && (
+
+          {date && items.length > 0 && !items[0].startTime && (
             <div>
-              <Label>Available start times *</Label>
+              <Label>Available start times for first treatment</Label>
               {loadingSlots ? (
                 <p className="text-sm text-muted-foreground">Loading…</p>
               ) : slots.length === 0 ? (
                 <p className="text-sm text-muted-foreground">
-                  No available slots for this date{treatment ? "" : " (pick a treatment to filter by duration)"}.
-                  You can still type a time manually below.
+                  No available slots for this date. You can still type a time manually below.
                 </p>
               ) : (
                 <div className="flex flex-wrap gap-2">
@@ -492,22 +549,107 @@ function NewAppointmentPage() {
                     <Button
                       key={s}
                       type="button"
-                      variant={startTime === s ? "default" : "outline"}
+                      variant="outline"
                       size="sm"
-                      onClick={() => setStartTime(s)}
+                      onClick={() => updateItem(items[0].key, { startTime: s })}
                     >
                       {s}
                     </Button>
                   ))}
                 </div>
               )}
-              <div className="mt-2">
-                <Label className="text-xs text-muted-foreground">Or set manually</Label>
-                <Input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
-              </div>
             </div>
           )}
 
+          {/* Item rows */}
+          <div className="space-y-3">
+            {items.map((it, idx) => {
+              const t = treatments.find((x) => x.id === it.treatmentId);
+              return (
+                <div key={it.key} className="rounded-xl border p-3 space-y-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <div className="text-xs uppercase tracking-wide text-muted-foreground">Treatment {idx + 1}</div>
+                      <div className="font-medium truncate">{t?.name ?? "—"}</div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {it.modelSlotId && (
+                        <span className="rounded-full bg-fuchsia-600/10 px-2 py-0.5 text-[11px] font-medium text-fuchsia-700 dark:text-fuchsia-300">
+                          Model slot
+                        </span>
+                      )}
+                      <Button type="button" variant="ghost" size="icon" onClick={() => removeItem(it.key)} aria-label="Remove treatment">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <Label className="text-xs">Start</Label>
+                      <Input
+                        type="time"
+                        value={it.startTime}
+                        onChange={(e) => updateItem(it.key, { startTime: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Duration (min)</Label>
+                      <Input
+                        type="number"
+                        min="5"
+                        step="5"
+                        value={it.duration}
+                        onChange={(e) => updateItem(it.key, { duration: Math.max(0, parseInt(e.target.value || "0", 10)) })}
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Price (£)</Label>
+                      <Input
+                        type="number"
+                        inputMode="decimal"
+                        step="0.01"
+                        min="0"
+                        value={it.price}
+                        onChange={(e) => updateItem(it.key, { price: Math.max(0, parseFloat(e.target.value || "0")) })}
+                      />
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Add treatment dropdown */}
+          <div>
+            <Label>Add treatment</Label>
+            <Select value="" onValueChange={(v) => { if (v) addTreatmentRow(v); }}>
+              <SelectTrigger><SelectValue placeholder="Select treatment to add" /></SelectTrigger>
+              <SelectContent className="max-h-[60vh]">
+                {treatmentGroups.map((g) => (
+                  <SelectGroup key={g.key}>
+                    <SelectLabel>{g.name}</SelectLabel>
+                    {g.items.map((t) => (
+                      <SelectItem key={t.id} value={t.id}>
+                        <span className="flex items-center gap-2">
+                          <Plus className="h-3 w-3 opacity-60" />
+                          {t.name} — £{Number(t.price ?? 0).toFixed(2)} · {t.duration}min
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {items.length > 0 && (
+            <div className="flex items-center justify-between rounded-lg bg-muted px-3 py-2 text-sm">
+              <span className="text-muted-foreground">
+                {items.length} treatment{items.length === 1 ? "" : "s"} · {totalDuration} min total
+              </span>
+              <span className="font-semibold">£{totalPrice.toFixed(2)}</span>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -648,8 +790,7 @@ function NewAppointmentPage() {
       </Card>
 
       <Button onClick={submit} disabled={saving} size="lg" className="w-full">
-
-        {saving ? "Creating…" : "Create appointment"}
+        {saving ? "Creating…" : items.length > 1 ? `Create ${items.length} appointments` : "Create appointment"}
       </Button>
     </div>
   );
