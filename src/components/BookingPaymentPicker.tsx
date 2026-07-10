@@ -95,12 +95,17 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
     if (mode === "deposit") {
       return o.cardEnabled ? (["card"] as Array<"card" | "klarna" | "clearpay">) : [];
     }
+    // Split payment plans require a reusable saved card for future per-session
+    // charges — Klarna/Clearpay can't fulfil that, so restrict to card only.
+    if (splitInfo) {
+      return o.cardEnabled ? (["card"] as Array<"card" | "klarna" | "clearpay">) : [];
+    }
     const arr: Array<"card" | "klarna" | "clearpay"> = [];
     if (o.cardEnabled) arr.push("card");
     if (o.klarnaEnabled) arr.push("klarna");
     if (o.clearpayEnabled) arr.push("clearpay");
     return arr;
-  }, [configured, opts, value?.mode, availableModes]);
+  }, [configured, opts, value?.mode, availableModes, splitInfo]);
 
   // If the externally controlled value is no longer valid, coerce it. Required
   // deposits are always deposit + card so the server can take payment and save
