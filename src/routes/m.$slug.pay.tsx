@@ -1,5 +1,5 @@
 import { createFileRoute, useSearch, useParams } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { loadStripe, type Stripe } from "@stripe/stripe-js";
 import {
   Elements,
@@ -50,6 +50,7 @@ function PayPage() {
   const [stripe, setStripe] = useState<Stripe | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [confirmed, setConfirmed] = useState(false);
+  const confirmingRef = useRef(false);
 
   const brand = theme?.primary_color || "#111827";
   const accent = theme?.accent_color || brand;
@@ -91,13 +92,14 @@ function PayPage() {
     };
   }, [details]);
 
-  // Release the slot immediately if the patient abandons the page before
-  // confirming payment. sendBeacon survives tab close / navigation and posts
-  // to our public /release endpoint, which cancels the PI on the connected
-  // account and cancels the pending appointments so availability re-opens.
+  // Release the slot if the patient actually leaves before confirming payment.
+  // Do not release on visibility changes: Stripe may temporarily hide/navigate
+  // the page during bank authentication, and cancelling then causes the generic
+  // "processing error" patients were seeing after pressing Pay.
   useEffect(() => {
     if (!details || confirmed) return;
     const release = () => {
+      if (confirmed || confirmingRef.current) return;
       try {
         const payload = JSON.stringify({
           paymentIntentId: details.paymentIntentId,
@@ -117,14 +119,9 @@ function PayPage() {
       }
     };
     const onPageHide = () => release();
-    const onVisibility = () => {
-      if (document.visibilityState === "hidden") release();
-    };
     window.addEventListener("pagehide", onPageHide);
-    document.addEventListener("visibilitychange", onVisibility);
     return () => {
       window.removeEventListener("pagehide", onPageHide);
-      document.removeEventListener("visibilitychange", onVisibility);
     };
   }, [details, confirmed]);
 
@@ -188,7 +185,14 @@ function PayPage() {
                 returnUrl={details.returnUrl}
                 brand={brand}
                 accent={accent}
-                onConfirming={() => setConfirmed(true)}
+                onConfirming={() => {
+                  confirmingRef.current = true;
+                  setConfirmed(true);
+                }}
+                onPaymentError={() => {
+                  confirmingRef.current = false;
+                  setConfirmed(false);
+                }}
               />
             </Elements>
           </div>
@@ -207,11 +211,13 @@ function CardForm({
   brand,
   accent,
   onConfirming,
+  onPaymentError,
 }: {
   returnUrl: string;
   brand: string;
   accent: string;
   onConfirming: () => void;
+  onPaymentError: () => void;
 }) {
   const stripe = useStripe();
   const elements = useElements();
@@ -231,6 +237,7 @@ function CardForm({
       confirmParams: { return_url: returnUrl },
     });
     if (error) {
+      onPaymentError();
       setMessage(error.message ?? "Payment failed. Please try again.");
       setSubmitting(false);
     }
