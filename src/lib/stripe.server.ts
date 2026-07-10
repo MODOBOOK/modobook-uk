@@ -338,10 +338,16 @@ export async function createSaveCardPaymentIntent(params: {
       currency,
       customer: customerId,
       description: params.description,
-      // Card-only. No wallets, no Link — those are hidden by the client-side
-      // Payment Element options as well, but locking method types here means
-      // Stripe rejects wallet confirmation attempts server-side too.
-      payment_method_types: ["card"],
+      // Use automatic_payment_methods (Stripe's recommended shape for the
+      // Payment Element) but block redirect-based methods so only card
+      // remains. The client-side Payment Element additionally hides Apple
+      // Pay, Google Pay and Link. Using payment_method_types: ['card'] on
+      // the newer API version was surfacing "A processing error occurred"
+      // on confirmation.
+      automatic_payment_methods: { enabled: true, allow_redirects: "never" },
+      // Force synchronous capture — the dahlia default of automatic_async
+      // was rejecting some cards during confirmation.
+      capture_method: "automatic",
       // Save the resulting PaymentMethod for later off-session charges when
       // the practitioner has save-card-on-file enabled.
       ...(params.saveForFutureUse ? { setup_future_usage: "off_session" as const } : {}),
@@ -353,6 +359,7 @@ export async function createSaveCardPaymentIntent(params: {
     },
     { stripeAccount: params.accountId },
   );
+
 
   return {
     clientSecret: pi.client_secret,
