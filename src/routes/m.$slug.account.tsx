@@ -114,12 +114,13 @@ function Account() {
       const { error: linkErr } = await supabase.rpc("link_patient_account", { p_slug: slug });
       if (linkErr) throw linkErr;
 
-      // Public profile + rules
-      const { data: prof } = await supabase
-        .from("profiles")
-        .select("id, full_name, clinic_name, brand_color, avatar_url, allow_patient_cancel, allow_patient_reschedule, cancellation_rules, patient_cancel_cutoff_hours, patient_reschedule_cutoff_hours, patient_reschedule_max, late_cancel_mode, email, phone, contact_sms_number, contact_whatsapp_number")
-        .eq("slug", slug)
-        .maybeSingle();
+      // Public profile + rules (via security-definer RPC — profiles has no
+      // anon/authenticated SELECT policy, so a direct select would return null).
+      const { data: profRows } = await supabase.rpc(
+        "get_patient_account_profile_by_slug",
+        { p_slug: slug } as never,
+      );
+      const prof = Array.isArray(profRows) ? profRows[0] : profRows;
       if (!prof) throw new Error("Practitioner not found");
       setProfile(prof as Profile);
 

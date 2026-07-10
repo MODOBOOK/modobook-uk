@@ -5956,6 +5956,27 @@ export type Database = {
           treatment_name: string
         }[]
       }
+      get_patient_account_profile_by_slug: {
+        Args: { p_slug: string }
+        Returns: {
+          allow_patient_cancel: boolean
+          allow_patient_reschedule: boolean
+          avatar_url: string
+          brand_color: string
+          cancellation_rules: Json
+          clinic_name: string
+          contact_sms_number: string
+          contact_whatsapp_number: string
+          email: string
+          full_name: string
+          id: string
+          late_cancel_mode: string
+          patient_cancel_cutoff_hours: number
+          patient_reschedule_cutoff_hours: number
+          patient_reschedule_max: number
+          phone: string
+        }[]
+      }
       get_plan_by_token: { Args: { _token: string }; Returns: Json }
       get_public_profile_by_slug: {
         Args: { p_slug: string }
