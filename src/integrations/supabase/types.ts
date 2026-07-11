@@ -6238,6 +6238,17 @@ export type Database = {
           user_id: string
         }[]
       }
+      resolve_referral_code: {
+        Args: { _code: string }
+        Returns: {
+          clinic_name: string
+          enabled: boolean
+          friend_credit_pennies: number
+          full_name: string
+          headline: string
+          slug: string
+        }[]
+      }
       respond_to_plan_by_token: {
         Args: {
           _accept: boolean
