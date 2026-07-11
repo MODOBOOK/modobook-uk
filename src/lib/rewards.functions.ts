@@ -358,37 +358,22 @@ export const resolveReferralCode = createServerFn({ method: "GET" })
       process.env.SUPABASE_PUBLISHABLE_KEY!,
       { auth: { storage: undefined, persistSession: false, autoRefreshToken: false } },
     );
-    const { data: row, error } = await supabasePublic
-      .from("patient_referral_codes")
-      .select("clinic_profile_id")
-      .eq("code", data.code.toUpperCase())
-      .maybeSingle();
+    const { data: rows, error } = await (supabasePublic as any).rpc("resolve_referral_code", {
+      _code: data.code.toUpperCase(),
+    });
     if (error) throw error;
-    if (!row) return { slug: null, friendCreditPennies: 0, headline: null };
-
-    const [{ data: prof }, { data: settings }] = await Promise.all([
-      supabasePublic
-        .from("profiles")
-        .select("slug, clinic_name, full_name")
-        .eq("user_id", row.clinic_profile_id)
-        .maybeSingle(),
-      supabasePublic
-        .from("clinic_referral_settings")
-        .select("enabled, friend_credit_pennies, headline")
-        .eq("clinic_profile_id", row.clinic_profile_id)
-        .maybeSingle(),
-    ]);
-
-    if (!prof?.slug || !settings?.enabled) {
+    const row = Array.isArray(rows) ? rows[0] : rows;
+    if (!row || !row.slug || !row.enabled) {
       return { slug: null, friendCreditPennies: 0, headline: null };
     }
     return {
-      slug: prof.slug,
-      clinicName: prof.clinic_name ?? prof.full_name ?? "Clinic",
-      friendCreditPennies: settings.friend_credit_pennies ?? 0,
-      headline: settings.headline ?? null,
+      slug: row.slug as string,
+      clinicName: (row.clinic_name ?? row.full_name ?? "Clinic") as string,
+      friendCreditPennies: (row.friend_credit_pennies ?? 0) as number,
+      headline: (row.headline ?? null) as string | null,
     };
   });
+
 
 // -------------------- Public: rewards overview for a clinic's public page --------------------
 
