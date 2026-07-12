@@ -982,6 +982,7 @@ async function maybeCreateBookingCheckout(args: {
       paymentMethodTypes: methodTypes as never,
       saveCardOnFile: false,
       metadata,
+      descriptorName: p.clinic_name,
     });
     if (!session.url) return null;
     return { kind: "hosted", checkoutUrl: session.url };
