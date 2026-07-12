@@ -921,6 +921,7 @@ async function maybeCreateBookingCheckout(args: {
         description: kind === "deposit" ? `Deposit — ${args.description}` : args.description,
         metadata,
         saveForFutureUse: shouldSaveCardOnFile,
+        descriptorName: p.clinic_name,
       });
       if (!intent.clientSecret) return null;
       const returnUrl = `${origin}/m/${p.slug ?? ""}/account?paid=1&pi=${intent.paymentIntentId}`;
