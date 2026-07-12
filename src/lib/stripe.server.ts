@@ -1,5 +1,25 @@
 import Stripe from "stripe";
 
+/**
+ * Normalise a clinic/business name into a Stripe `statement_descriptor_suffix`.
+ * Stripe rules: alphanumeric + spaces, no `< > \ ' " *`, and the suffix combined
+ * with the connected account's prefix must fit within 22 characters. We cap the
+ * suffix at 18 chars to leave headroom for any short prefix Stripe prepends.
+ * Setting this deterministically stops UK banks (Monzo, Revolut, Chase, etc.)
+ * from guessing the merchant and mis-labelling the charge (e.g. as "Facebook").
+ */
+export function buildStatementDescriptorSuffix(name?: string | null): string | undefined {
+  if (!name) return undefined;
+  const cleaned = name
+    .normalize("NFKD")
+    .replace(/[^A-Za-z0-9 ]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 18);
+  // Stripe requires at least one letter in the suffix.
+  return /[A-Za-z]/.test(cleaned) ? cleaned : undefined;
+}
+
 export type StripePlatformSetupErrorCode =
   | "connect_not_enabled"
   | "invalid_secret_mode"
