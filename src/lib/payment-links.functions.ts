@@ -76,6 +76,7 @@ export const createPaymentLink = createServerFn({ method: "POST" })
       currency: data.currency ?? "gbp",
       description: data.description,
       surchargeCents,
+      descriptorName: profile.clinic_name ?? profile.full_name,
       metadata: {
         profile_id: profile.id,
         appointment_id: data.appointmentId ?? "",

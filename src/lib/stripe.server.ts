@@ -1,5 +1,25 @@
 import Stripe from "stripe";
 
+/**
+ * Normalise a clinic/business name into a Stripe `statement_descriptor_suffix`.
+ * Stripe rules: alphanumeric + spaces, no `< > \ ' " *`, and the suffix combined
+ * with the connected account's prefix must fit within 22 characters. We cap the
+ * suffix at 18 chars to leave headroom for any short prefix Stripe prepends.
+ * Setting this deterministically stops UK banks (Monzo, Revolut, Chase, etc.)
+ * from guessing the merchant and mis-labelling the charge (e.g. as "Facebook").
+ */
+export function buildStatementDescriptorSuffix(name?: string | null): string | undefined {
+  if (!name) return undefined;
+  const cleaned = name
+    .normalize("NFKD")
+    .replace(/[^A-Za-z0-9 ]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 18);
+  // Stripe requires at least one letter in the suffix.
+  return /[A-Za-z]/.test(cleaned) ? cleaned : undefined;
+}
+
 export type StripePlatformSetupErrorCode =
   | "connect_not_enabled"
   | "invalid_secret_mode"
@@ -251,12 +271,17 @@ export async function createCheckoutSession(params: {
   // (no-shows, late-cancel fees). Wallets (Apple/Google Pay) are excluded
   // because their tokens are not consistently reusable off-session.
   saveCardOnFile?: boolean;
+  // Clinic/business name used to derive the bank statement descriptor
+  // suffix, so charges show a deterministic label instead of the bank's
+  // best-guess merchant enrichment.
+  descriptorName?: string | null;
 }) {
   const stripe = getStripe();
   // Stripe requires expires_at to be at least 30 minutes ahead — used so
   // abandoned checkouts release the slot hold in a timely manner.
   const minutes = Math.max(30, params.expiresInMinutes ?? 30);
   const expiresAt = Math.floor(Date.now() / 1000) + minutes * 60;
+  const suffix = buildStatementDescriptorSuffix(params.descriptorName);
 
   const create: Stripe.Checkout.SessionCreateParams = {
     mode: "payment",
@@ -269,6 +294,9 @@ export async function createCheckoutSession(params: {
     customer_email: params.customerEmail,
     metadata: params.metadata,
     expires_at: expiresAt,
+    ...(suffix
+      ? { payment_intent_data: { statement_descriptor_suffix: suffix } }
+      : {}),
   };
 
   if (params.saveCardOnFile) {
@@ -278,6 +306,7 @@ export async function createCheckoutSession(params: {
     create.payment_intent_data = {
       setup_future_usage: "off_session",
       metadata: params.metadata,
+      ...(suffix ? { statement_descriptor_suffix: suffix } : {}),
     };
     // Exclude wallets — Apple/Google Pay tokens are not reliably reusable.
     create.payment_method_options = {
@@ -304,9 +333,11 @@ export async function createSaveCardPaymentIntent(params: {
   description: string;
   metadata?: Record<string, string>;
   saveForFutureUse?: boolean;
+  descriptorName?: string | null;
 }) {
   const stripe = getStripe();
   const currency = params.currency ?? "gbp";
+  const suffix = buildStatementDescriptorSuffix(params.descriptorName);
 
   // Reuse an existing Customer on the connected account when the patient has
   // already been captured, so the saved PaymentMethod stays associated with
@@ -356,6 +387,7 @@ export async function createSaveCardPaymentIntent(params: {
         save_card_on_file: params.saveForFutureUse ? "1" : "0",
       },
       receipt_email: params.customerEmail,
+      ...(suffix ? { statement_descriptor_suffix: suffix } : {}),
     },
     { stripeAccount: params.accountId },
   );
@@ -423,6 +455,7 @@ export async function createConnectedPaymentLink(params: {
   description: string;
   metadata?: Record<string, string>;
   surchargeCents?: number;
+  descriptorName?: string | null;
 }) {
   const stripe = getStripe();
   const opts = { stripeAccount: params.accountId } as const;
@@ -454,8 +487,15 @@ export async function createConnectedPaymentLink(params: {
     lineItems.push({ price: feePrice.id, quantity: 1 });
   }
 
+  const suffix = buildStatementDescriptorSuffix(params.descriptorName);
   const link = await stripe.paymentLinks.create(
-    { line_items: lineItems, metadata: params.metadata },
+    {
+      line_items: lineItems,
+      metadata: params.metadata,
+      ...(suffix
+        ? { payment_intent_data: { statement_descriptor: suffix } }
+        : {}),
+    },
     opts,
   );
   return { id: link.id, url: link.url };

@@ -737,6 +737,7 @@ async function maybeCreateBookingCheckout(args: {
     stripe_fee_bnpl_percent?: number | string | null;
     stripe_fee_bnpl_fixed_cents?: number | string | null;
     save_card_on_file?: boolean | null;
+    clinic_name?: string | null;
   } | null;
   appointmentIds: string[];
   totalAmount: number;
@@ -921,6 +922,7 @@ async function maybeCreateBookingCheckout(args: {
         description: kind === "deposit" ? `Deposit — ${args.description}` : args.description,
         metadata,
         saveForFutureUse: shouldSaveCardOnFile,
+        descriptorName: p.clinic_name,
       });
       if (!intent.clientSecret) return null;
       const returnUrl = `${origin}/m/${p.slug ?? ""}/account?paid=1&pi=${intent.paymentIntentId}`;
@@ -980,6 +982,7 @@ async function maybeCreateBookingCheckout(args: {
       paymentMethodTypes: methodTypes as never,
       saveCardOnFile: false,
       metadata,
+      descriptorName: p.clinic_name,
     });
     if (!session.url) return null;
     return { kind: "hosted", checkoutUrl: session.url };

@@ -24,6 +24,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as StaffAcceptTokenRouteImport } from './routes/staff-accept.$token'
 import { Route as RCodeRouteImport } from './routes/r.$code'
 import { Route as PrivacyDpiaRouteImport } from './routes/privacy.dpia'
+import { Route as PrivacyDpaRouteImport } from './routes/privacy.dpa'
 import { Route as PrivacyBreachResponseRouteImport } from './routes/privacy.breach-response'
 import { Route as PlanTokenRouteImport } from './routes/plan.$token'
 import { Route as MSlugRouteImport } from './routes/m.$slug'
@@ -194,6 +195,11 @@ const RCodeRoute = RCodeRouteImport.update({
 const PrivacyDpiaRoute = PrivacyDpiaRouteImport.update({
   id: '/dpia',
   path: '/dpia',
+  getParentRoute: () => PrivacyRoute,
+} as any)
+const PrivacyDpaRoute = PrivacyDpaRouteImport.update({
+  id: '/dpa',
+  path: '/dpa',
   getParentRoute: () => PrivacyRoute,
 } as any)
 const PrivacyBreachResponseRoute = PrivacyBreachResponseRouteImport.update({
@@ -774,6 +780,7 @@ export interface FileRoutesByFullPath {
   '/m/$slug': typeof MSlugRouteWithChildren
   '/plan/$token': typeof PlanTokenRoute
   '/privacy/breach-response': typeof PrivacyBreachResponseRoute
+  '/privacy/dpa': typeof PrivacyDpaRoute
   '/privacy/dpia': typeof PrivacyDpiaRoute
   '/r/$code': typeof RCodeRoute
   '/staff-accept/$token': typeof StaffAcceptTokenRoute
@@ -883,6 +890,7 @@ export interface FileRoutesByTo {
   '/f/$token': typeof FTokenRoute
   '/plan/$token': typeof PlanTokenRoute
   '/privacy/breach-response': typeof PrivacyBreachResponseRoute
+  '/privacy/dpa': typeof PrivacyDpaRoute
   '/privacy/dpia': typeof PrivacyDpiaRoute
   '/r/$code': typeof RCodeRoute
   '/staff-accept/$token': typeof StaffAcceptTokenRoute
@@ -996,6 +1004,7 @@ export interface FileRoutesById {
   '/m/$slug': typeof MSlugRouteWithChildren
   '/plan/$token': typeof PlanTokenRoute
   '/privacy/breach-response': typeof PrivacyBreachResponseRoute
+  '/privacy/dpa': typeof PrivacyDpaRoute
   '/privacy/dpia': typeof PrivacyDpiaRoute
   '/r/$code': typeof RCodeRoute
   '/staff-accept/$token': typeof StaffAcceptTokenRoute
@@ -1111,6 +1120,7 @@ export interface FileRouteTypes {
     | '/m/$slug'
     | '/plan/$token'
     | '/privacy/breach-response'
+    | '/privacy/dpa'
     | '/privacy/dpia'
     | '/r/$code'
     | '/staff-accept/$token'
@@ -1220,6 +1230,7 @@ export interface FileRouteTypes {
     | '/f/$token'
     | '/plan/$token'
     | '/privacy/breach-response'
+    | '/privacy/dpa'
     | '/privacy/dpia'
     | '/r/$code'
     | '/staff-accept/$token'
@@ -1332,6 +1343,7 @@ export interface FileRouteTypes {
     | '/m/$slug'
     | '/plan/$token'
     | '/privacy/breach-response'
+    | '/privacy/dpa'
     | '/privacy/dpia'
     | '/r/$code'
     | '/staff-accept/$token'
@@ -1564,6 +1576,13 @@ declare module '@tanstack/react-router' {
       path: '/dpia'
       fullPath: '/privacy/dpia'
       preLoaderRoute: typeof PrivacyDpiaRouteImport
+      parentRoute: typeof PrivacyRoute
+    }
+    '/privacy/dpa': {
+      id: '/privacy/dpa'
+      path: '/dpa'
+      fullPath: '/privacy/dpa'
+      preLoaderRoute: typeof PrivacyDpaRouteImport
       parentRoute: typeof PrivacyRoute
     }
     '/privacy/breach-response': {
@@ -2481,11 +2500,13 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
 
 interface PrivacyRouteChildren {
   PrivacyBreachResponseRoute: typeof PrivacyBreachResponseRoute
+  PrivacyDpaRoute: typeof PrivacyDpaRoute
   PrivacyDpiaRoute: typeof PrivacyDpiaRoute
 }
 
 const PrivacyRouteChildren: PrivacyRouteChildren = {
   PrivacyBreachResponseRoute: PrivacyBreachResponseRoute,
+  PrivacyDpaRoute: PrivacyDpaRoute,
   PrivacyDpiaRoute: PrivacyDpiaRoute,
 }
 
