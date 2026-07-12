@@ -487,8 +487,15 @@ export async function createConnectedPaymentLink(params: {
     lineItems.push({ price: feePrice.id, quantity: 1 });
   }
 
+  const suffix = buildStatementDescriptorSuffix(params.descriptorName);
   const link = await stripe.paymentLinks.create(
-    { line_items: lineItems, metadata: params.metadata },
+    {
+      line_items: lineItems,
+      metadata: params.metadata,
+      ...(suffix
+        ? { payment_intent_data: { statement_descriptor: suffix } }
+        : {}),
+    },
     opts,
   );
   return { id: link.id, url: link.url };
