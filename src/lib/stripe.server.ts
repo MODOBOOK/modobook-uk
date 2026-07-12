@@ -387,6 +387,7 @@ export async function createSaveCardPaymentIntent(params: {
         save_card_on_file: params.saveForFutureUse ? "1" : "0",
       },
       receipt_email: params.customerEmail,
+      ...(suffix ? { statement_descriptor_suffix: suffix } : {}),
     },
     { stripeAccount: params.accountId },
   );
