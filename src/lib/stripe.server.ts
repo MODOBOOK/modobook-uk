@@ -455,6 +455,7 @@ export async function createConnectedPaymentLink(params: {
   description: string;
   metadata?: Record<string, string>;
   surchargeCents?: number;
+  descriptorName?: string | null;
 }) {
   const stripe = getStripe();
   const opts = { stripeAccount: params.accountId } as const;
