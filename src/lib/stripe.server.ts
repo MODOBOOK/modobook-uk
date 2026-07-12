@@ -306,6 +306,7 @@ export async function createCheckoutSession(params: {
     create.payment_intent_data = {
       setup_future_usage: "off_session",
       metadata: params.metadata,
+      ...(suffix ? { statement_descriptor_suffix: suffix } : {}),
     };
     // Exclude wallets — Apple/Google Pay tokens are not reliably reusable.
     create.payment_method_options = {
