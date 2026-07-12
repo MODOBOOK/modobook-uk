@@ -333,9 +333,11 @@ export async function createSaveCardPaymentIntent(params: {
   description: string;
   metadata?: Record<string, string>;
   saveForFutureUse?: boolean;
+  descriptorName?: string | null;
 }) {
   const stripe = getStripe();
   const currency = params.currency ?? "gbp";
+  const suffix = buildStatementDescriptorSuffix(params.descriptorName);
 
   // Reuse an existing Customer on the connected account when the patient has
   // already been captured, so the saved PaymentMethod stays associated with
