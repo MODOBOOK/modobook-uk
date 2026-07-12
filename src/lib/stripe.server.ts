@@ -271,12 +271,17 @@ export async function createCheckoutSession(params: {
   // (no-shows, late-cancel fees). Wallets (Apple/Google Pay) are excluded
   // because their tokens are not consistently reusable off-session.
   saveCardOnFile?: boolean;
+  // Clinic/business name used to derive the bank statement descriptor
+  // suffix, so charges show a deterministic label instead of the bank's
+  // best-guess merchant enrichment.
+  descriptorName?: string | null;
 }) {
   const stripe = getStripe();
   // Stripe requires expires_at to be at least 30 minutes ahead — used so
   // abandoned checkouts release the slot hold in a timely manner.
   const minutes = Math.max(30, params.expiresInMinutes ?? 30);
   const expiresAt = Math.floor(Date.now() / 1000) + minutes * 60;
+  const suffix = buildStatementDescriptorSuffix(params.descriptorName);
 
   const create: Stripe.Checkout.SessionCreateParams = {
     mode: "payment",
@@ -289,6 +294,9 @@ export async function createCheckoutSession(params: {
     customer_email: params.customerEmail,
     metadata: params.metadata,
     expires_at: expiresAt,
+    ...(suffix
+      ? { payment_intent_data: { statement_descriptor_suffix: suffix } }
+      : {}),
   };
 
   if (params.saveCardOnFile) {
