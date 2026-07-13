@@ -166,7 +166,7 @@ function HubIndex() {
         </DialogContent>
       </Dialog>
 
-      {ctx.role === "prescriber" && status !== "approved" && (
+      {ctx.isPrescriber && status !== "approved" && (
         <Card className="border-amber-300/50 bg-amber-50/40 dark:bg-amber-950/20">
           <CardHeader className="flex flex-row items-start gap-3 space-y-0">
             <AlertTriangle className="mt-1 h-5 w-5 text-amber-600" />
