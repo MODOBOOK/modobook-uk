@@ -145,3 +145,43 @@ export const setTreatmentLocationPricing = createServerFn({ method: "POST" })
     if (error) throw error;
     return row;
   });
+
+export const getLocationPriceList = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { location_id: string }) => input)
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: profile } = await supabase
+      .from("profiles").select("id").eq("user_id", userId).maybeSingle();
+    if (!profile) throw new Error("Profile not found");
+
+    const [{ data: treatments }, { data: pricing }] = await Promise.all([
+      supabase
+        .from("treatments")
+        .select("id, name, price, duration, category_id, active")
+        .eq("profile_id", profile.id)
+        .order("name"),
+      supabase
+        .from("treatment_location_pricing")
+        .select("treatment_id, price_cents, duration_minutes, available")
+        .eq("location_id", data.location_id),
+    ]);
+
+    const byTreatment = new Map(
+      (pricing ?? []).map((p) => [p.treatment_id, p]),
+    );
+    return (treatments ?? []).map((t) => {
+      const p = byTreatment.get(t.id);
+      return {
+        treatment_id: t.id,
+        name: t.name,
+        active: t.active,
+        base_price: Number(t.price ?? 0),
+        base_duration: t.duration ?? null,
+        price_cents: p?.price_cents ?? null,
+        duration_minutes: p?.duration_minutes ?? null,
+        available: p?.available ?? true,
+      };
+    });
+  });
+
