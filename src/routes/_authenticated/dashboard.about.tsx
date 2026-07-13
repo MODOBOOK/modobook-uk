@@ -82,6 +82,7 @@ function AboutEditor() {
         setSpecialties(((p as { specialties?: string[] }).specialties ?? []));
         setQuals(((p as unknown as { qualifications?: Qual[] }).qualifications ?? []));
         setTimeline(((p as unknown as { timeline?: TimelineItem[] }).timeline ?? []));
+        setAvatarUrl((p as { avatar_url?: string | null }).avatar_url ?? null);
       }
       setLoading(false);
     })();
