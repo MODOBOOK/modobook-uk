@@ -16,7 +16,9 @@ export const Route = createFileRoute("/_authenticated/prescriber")({
   ssr: false,
   beforeLoad: async () => {
     const ctx = await getHubContext();
-    if (ctx.role !== "prescriber") {
+    // Any approved prescriber can access this workspace — including dual-role
+    // users who also run a clinic. Non-prescribers bounce back to the Hub.
+    if (!ctx.isPrescriber) {
       throw redirect({ to: "/hub" });
     }
     const profile = await getMyProfile().catch(() => null);
