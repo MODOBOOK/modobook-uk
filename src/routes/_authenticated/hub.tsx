@@ -23,8 +23,11 @@ export const Route = createFileRoute("/_authenticated/hub")({
   component: HubLayout,
 });
 
-// Prescriber-only routes get sent to their dedicated workspace
-const PRESCRIBER_REDIRECTS: Record<string, string> = {
+// Prescriber-ONLY users (no clinic profile) get bounced to their dedicated
+// workspace. Dual-role users (practitioner + approved prescriber) keep full
+// access to both the Hub and the /prescriber workspace and switch via the
+// header links below.
+const PRESCRIBER_ONLY_REDIRECTS: Record<string, string> = {
   "/hub/visits": "/prescriber/visits",
   "/hub/prescribing": "/prescriber",
   "/hub/referrals": "/prescriber",
@@ -48,26 +51,27 @@ function HubLayout() {
   const fetchRefs = useServerFn(listSentReferrals);
 
   const ctxQ = useQuery({ queryKey: ["hub-context"], queryFn: () => fetchCtx() });
-  const role = ctxQ.data?.role ?? null;
-  const isPrescriber = role === "prescriber";
+  const isPractitioner = ctxQ.data?.isPractitioner ?? false;
+  const isPrescriber = ctxQ.data?.isPrescriber ?? false;
+  // Only prescriber-ONLY users (no clinic) get redirected away from practitioner Hub pages.
+  const prescriberOnly = isPrescriber && !isPractitioner;
 
-  // If a prescriber lands on a practitioner-only hub page, bounce them
   useEffect(() => {
-    if (!isPrescriber) return;
-    const target = PRESCRIBER_REDIRECTS[pathname];
+    if (!prescriberOnly) return;
+    const target = PRESCRIBER_ONLY_REDIRECTS[pathname];
     if (target) navigate({ to: target, replace: true });
-  }, [isPrescriber, pathname, navigate]);
+  }, [prescriberOnly, pathname, navigate]);
 
   const visitsQ = useQuery({
     queryKey: ["hub-nav-visits"],
     queryFn: () => fetchVisits(),
-    enabled: !isPrescriber,
+    enabled: !prescriberOnly,
     refetchInterval: 60_000,
   });
   const refsQ = useQuery({
     queryKey: ["hub-nav-sent-refs"],
     queryFn: () => fetchRefs(),
-    enabled: !isPrescriber,
+    enabled: !prescriberOnly,
     refetchInterval: 60_000,
   });
 
