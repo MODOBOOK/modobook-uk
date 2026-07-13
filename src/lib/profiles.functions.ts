@@ -180,6 +180,7 @@ export const updateProfile = createServerFn({ method: "POST" })
       specialties?: string[];
       qualifications?: { label: string; year?: string }[];
       timeline?: { year: string; label: string }[];
+      avatar_url?: string | null;
     }) => input,
   )
 
@@ -243,6 +244,7 @@ export const updateProfile = createServerFn({ method: "POST" })
     if (data.specialties !== undefined) update.specialties = data.specialties;
     if (data.qualifications !== undefined) update.qualifications = data.qualifications as Json;
     if (data.timeline !== undefined) update.timeline = data.timeline as Json;
+    if (data.avatar_url !== undefined) update.avatar_url = data.avatar_url;
 
     const passthroughKeys = [
       "booking_min_notice_hours","booking_max_lead_days","booking_buffer_before_minutes",

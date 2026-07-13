@@ -14,6 +14,8 @@ import {
   Award, Clock, MapPin, HelpCircle, Tag, GraduationCap, History, Save,
 } from "lucide-react";
 import { SaveReminder } from "@/components/SaveReminder";
+import { ImageUploader } from "@/components/ImageUploader";
+import { User } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard/about")({
   ssr: false,
@@ -67,6 +69,7 @@ function AboutEditor() {
   const [specialties, setSpecialties] = useState<string[]>([]);
   const [quals, setQuals] = useState<Qual[]>([]);
   const [timeline, setTimeline] = useState<TimelineItem[]>([]);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -79,6 +82,7 @@ function AboutEditor() {
         setSpecialties(((p as { specialties?: string[] }).specialties ?? []));
         setQuals(((p as unknown as { qualifications?: Qual[] }).qualifications ?? []));
         setTimeline(((p as unknown as { timeline?: TimelineItem[] }).timeline ?? []));
+        setAvatarUrl((p as { avatar_url?: string | null }).avatar_url ?? null);
       }
       setLoading(false);
     })();
@@ -99,6 +103,7 @@ function AboutEditor() {
           specialties,
           qualifications: quals,
           timeline,
+          avatar_url: avatarUrl,
         },
       });
       toast.success("About page saved");
@@ -146,6 +151,26 @@ function AboutEditor() {
           maxLength={120}
         />
       </Bubble>
+
+      {/* PROFILE PHOTO — shown in the round avatar on the About page (replaces the "M" letter). */}
+      <Bubble
+        icon={User}
+        title="Profile photo"
+        subtitle='Shown in the round avatar at the top of your About page. Replaces the "M" fallback.'
+      >
+        {profileId ? (
+          <ImageUploader
+            label="Profile photo"
+            value={avatarUrl}
+            onChange={setAvatarUrl}
+            profileId={profileId}
+            folder="avatars"
+            previewClass="mt-2 h-24 w-24 rounded-full object-cover ring-1 ring-border"
+            cropAspect={1}
+          />
+        ) : null}
+      </Bubble>
+
 
       {/* HERO */}
       <Bubble
