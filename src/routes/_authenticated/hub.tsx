@@ -147,11 +147,20 @@ function HubLayout() {
             <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Prescriber Hub</div>
             <div className="truncate font-serif text-lg lg:text-2xl">{name}</div>
           </div>
-          <Link to="/dashboard" className="lg:hidden">
-            <Button variant="outline" size="sm">
-              <ArrowLeft className="mr-1 h-4 w-4" /> Dashboard
-            </Button>
-          </Link>
+          <div className="flex items-center gap-2">
+            {isPrescriber && (
+              <Link to="/prescriber">
+                <Button variant="outline" size="sm">
+                  <Stethoscope className="mr-1 h-4 w-4" /> Prescriber view
+                </Button>
+              </Link>
+            )}
+            <Link to="/dashboard" className="lg:hidden">
+              <Button variant="outline" size="sm">
+                <ArrowLeft className="mr-1 h-4 w-4" /> Dashboard
+              </Button>
+            </Link>
+          </div>
         </header>
 
         <main className="min-w-0 flex-1 overflow-x-hidden p-4 pb-24 sm:p-5 lg:p-10">
