@@ -231,3 +231,60 @@ export const cancelAppointmentByToken = createServerFn({ method: "POST" })
     }
     return { ok: !!ok };
   });
+
+export const markAppointmentPaymentReceived = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    (input: {
+      appointmentId: string;
+      kind: "deposit" | "full";
+      amountCents: number;
+      method: "cash" | "card_in_person" | "bank_transfer" | "other";
+      reference?: string | null;
+    }) => input,
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: profile } = await supabase
+      .from("profiles").select("id").eq("user_id", userId).maybeSingle();
+    if (!profile) throw new Error("Profile not found");
+
+    const { data: appt, error: aErr } = await supabase
+      .from("appointments")
+      .select("id, total_amount, amount_paid_cents, deposit_required_cents")
+      .eq("id", data.appointmentId)
+      .eq("profile_id", profile.id)
+      .maybeSingle();
+    if (aErr) throw aErr;
+    if (!appt) throw new Error("Appointment not found");
+
+    const prevPaid = Number(appt.amount_paid_cents ?? 0);
+    const patch: Record<string, unknown> = {
+      payment_method: data.method,
+      amount_paid_cents: prevPaid + data.amountCents,
+    };
+    if (data.kind === "deposit") {
+      patch.deposit_paid_at = new Date().toISOString();
+      if (!appt.deposit_required_cents) patch.deposit_required_cents = data.amountCents;
+    } else {
+      patch.payment_status = "paid";
+    }
+
+    const { error: uErr } = await supabase
+      .from("appointments")
+      .update(patch as never)
+      .eq("id", data.appointmentId)
+      .eq("profile_id", profile.id);
+    if (uErr) throw uErr;
+
+    await supabase.from("payments").insert({
+      profile_id: profile.id,
+      appointment_id: data.appointmentId,
+      amount: data.amountCents / 100,
+      status: "succeeded",
+      stripe_payment_intent_id: data.reference || `manual:${data.method}`,
+    } as never);
+
+    return { ok: true };
+  });
+
