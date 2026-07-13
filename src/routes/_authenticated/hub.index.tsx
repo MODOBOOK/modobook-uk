@@ -225,7 +225,7 @@ function HubIndex() {
             ) : (
               <p className="text-sm text-muted-foreground">{blocked ?? "Generating…"}</p>
             )}
-            {ctx.role === "prescriber" && status === "approved" && (
+            {ctx.isPrescriber && status === "approved" && (
               <p className="flex items-start gap-2 text-xs text-muted-foreground">
                 <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 text-emerald-600" />
                 You are verified and visible in the Hub.
