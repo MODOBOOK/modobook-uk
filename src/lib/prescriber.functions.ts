@@ -17,9 +17,14 @@ export const listMyConnectedPrescribers = createServerFn({ method: "GET" })
       l.requester_user_id === userId ? l.recipient_user_id : l.requester_user_id,
     );
     if (otherIds.length === 0) return [];
+    // RLS on `prescriber_profiles` blocks cross-user reads, so use the service
+    // role once the hub_link between the two users is already accepted — same
+    // pattern as `listMyConnectedPractitioners`. Only public-safe fields are
+    // returned to the caller.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const [{ data: codes }, { data: presc }] = await Promise.all([
-      supabase.from("hub_codes").select("user_id, owner_kind, display_name, code").in("user_id", otherIds),
-      supabase.from("prescriber_profiles").select("user_id, full_name, status, regulatory_body").in("user_id", otherIds),
+      supabaseAdmin.from("hub_codes").select("user_id, owner_kind, display_name, code").in("user_id", otherIds),
+      supabaseAdmin.from("prescriber_profiles").select("user_id, full_name, status, regulatory_body").in("user_id", otherIds),
     ]);
     const prescMap = new Map((presc ?? []).map((p) => [p.user_id, p]));
     return (codes ?? [])
