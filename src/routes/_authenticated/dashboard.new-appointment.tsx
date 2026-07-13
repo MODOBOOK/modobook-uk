@@ -323,10 +323,27 @@ function NewAppointmentPage() {
         ? { line1: addrLine1, city: addrCity, postcode: addrPostcode }
         : null;
 
+      const totalPriceCents = Math.round(
+        items.reduce((s, it) => s + (Number.isFinite(it.price) ? it.price : 0), 0) * 100,
+      );
+      const depositCents = Math.round(parseFloat(depositAmount || "0") * 100);
+
       const created: { id: string; manageToken: string | null; treatmentName: string }[] = [];
-      for (const it of items) {
+      for (let i = 0; i < items.length; i++) {
+        const it = items[i];
         const t = treatments.find((x) => x.id === it.treatmentId);
         if (!t) continue;
+        // Attach payment-received record to the first appointment only.
+        const attachPayment =
+          i === 0 && (paidMode === "deposit_paid" || paidMode === "full_paid");
+        const paymentReceived = attachPayment
+          ? {
+              kind: paidMode === "full_paid" ? ("full" as const) : ("deposit" as const),
+              amountCents: paidMode === "full_paid" ? totalPriceCents : depositCents,
+              method: paidMethod,
+              reference: paidReference || null,
+            }
+          : null;
         const result = await createAppointmentForPatient({
           data: {
             treatmentId: it.treatmentId,
@@ -344,6 +361,7 @@ function NewAppointmentPage() {
             extraConsentTemplateIds: [...pickedConsentIds],
             medicalFormTemplateIds: [...pickedMedicalIds],
             modelSlotId: it.modelSlotId,
+            paymentReceived,
           },
         });
         created.push({ id: result.id, manageToken: result.manageToken, treatmentName: t.name });
@@ -355,8 +373,8 @@ function NewAppointmentPage() {
         : null;
 
       let depositUrl: string | null = null;
-      if (sendDeposit && primary) {
-        const amt = Math.round(parseFloat(depositAmount || "0") * 100);
+      if (paidMode === "send_link" && primary) {
+        const amt = depositCents;
         const hrs = Math.max(1, parseInt(depositHours || "24", 10));
         if (amt >= 100) {
           try {
