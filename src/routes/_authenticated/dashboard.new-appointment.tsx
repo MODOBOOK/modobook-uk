@@ -90,9 +90,12 @@ function NewAppointmentPage() {
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
   const submitLockRef = useRef(false);
-  const [sendDeposit, setSendDeposit] = useState(false);
+  type PaidMode = "none" | "deposit_paid" | "full_paid" | "send_link";
+  const [paidMode, setPaidMode] = useState<PaidMode>("none");
   const [depositAmount, setDepositAmount] = useState("");
   const [depositHours, setDepositHours] = useState("24");
+  const [paidMethod, setPaidMethod] = useState<"cash" | "card_in_person" | "bank_transfer" | "other">("cash");
+  const [paidReference, setPaidReference] = useState("");
   const createLink = useServerFn(createPaymentLink);
   const fetchModelSlots = useServerFn(listMyModelSlots);
   const [modelSlots, setModelSlots] = useState<ModelSlot[]>([]);
