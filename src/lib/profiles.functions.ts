@@ -180,6 +180,7 @@ export const updateProfile = createServerFn({ method: "POST" })
       specialties?: string[];
       qualifications?: { label: string; year?: string }[];
       timeline?: { year: string; label: string }[];
+      avatar_url?: string | null;
     }) => input,
   )
 
