@@ -30,6 +30,12 @@ export const createAppointmentForPatient = createServerFn({ method: "POST" })
       extraConsentTemplateIds?: string[];
       medicalFormTemplateIds?: string[];
       modelSlotId?: string | null;
+      paymentReceived?: {
+        kind: "deposit" | "full";
+        amountCents: number;
+        method: "cash" | "card_in_person" | "bank_transfer" | "other";
+        reference?: string | null;
+      } | null;
     }) => input,
   )
   .handler(async ({ data, context }) => {
@@ -60,7 +66,10 @@ export const createAppointmentForPatient = createServerFn({ method: "POST" })
     }
 
     const id = crypto.randomUUID();
-    const { error } = await supabase.from("appointments").insert({
+    const pr = data.paymentReceived ?? null;
+    const nowIso = new Date().toISOString();
+    const totalCents = Math.round(Number(data.basePrice ?? 0) * 100);
+    const insertRow: Record<string, unknown> = {
       id,
       profile_id: profile.id,
       treatment_id: data.treatmentId,
@@ -72,16 +81,37 @@ export const createAppointmentForPatient = createServerFn({ method: "POST" })
       patient_email: data.patientEmail,
       patient_phone: data.patientPhone ?? null,
       patient_dob: data.patientDob ?? null,
-      patient_address: data.patientAddress as Database["public"]["Tables"]["appointments"]["Insert"]["patient_address"],
+      patient_address: data.patientAddress,
       notes: data.notes ?? null,
       status: "confirmed",
-      payment_status: "pending",
+      payment_status: pr?.kind === "full" ? "paid" : "pending",
       base_amount: data.basePrice,
       total_amount: data.basePrice,
       created_by_practitioner: true,
       model_slot_id: data.modelSlotId ?? null,
-    });
+    };
+    if (pr) {
+      insertRow.payment_method = pr.method;
+      if (pr.kind === "deposit") {
+        insertRow.deposit_required_cents = pr.amountCents;
+        insertRow.deposit_paid_at = nowIso;
+        insertRow.amount_paid_cents = pr.amountCents;
+      } else {
+        insertRow.amount_paid_cents = pr.amountCents || totalCents;
+      }
+    }
+    const { error } = await supabase.from("appointments").insert(insertRow as never);
     if (error) throw new Error(error.message);
+
+    if (pr) {
+      await supabase.from("payments").insert({
+        profile_id: profile.id,
+        appointment_id: id,
+        amount: (pr.amountCents || totalCents) / 100,
+        status: "succeeded",
+        stripe_payment_intent_id: pr.reference || `manual:${pr.method}`,
+      } as never);
+    }
 
     // Mark the model slot as booked so it disappears from public listings.
     if (data.modelSlotId) {
@@ -201,3 +231,60 @@ export const cancelAppointmentByToken = createServerFn({ method: "POST" })
     }
     return { ok: !!ok };
   });
+
+export const markAppointmentPaymentReceived = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    (input: {
+      appointmentId: string;
+      kind: "deposit" | "full";
+      amountCents: number;
+      method: "cash" | "card_in_person" | "bank_transfer" | "other";
+      reference?: string | null;
+    }) => input,
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: profile } = await supabase
+      .from("profiles").select("id").eq("user_id", userId).maybeSingle();
+    if (!profile) throw new Error("Profile not found");
+
+    const { data: appt, error: aErr } = await supabase
+      .from("appointments")
+      .select("id, total_amount, amount_paid_cents, deposit_required_cents")
+      .eq("id", data.appointmentId)
+      .eq("profile_id", profile.id)
+      .maybeSingle();
+    if (aErr) throw aErr;
+    if (!appt) throw new Error("Appointment not found");
+
+    const prevPaid = Number(appt.amount_paid_cents ?? 0);
+    const patch: Record<string, unknown> = {
+      payment_method: data.method,
+      amount_paid_cents: prevPaid + data.amountCents,
+    };
+    if (data.kind === "deposit") {
+      patch.deposit_paid_at = new Date().toISOString();
+      if (!appt.deposit_required_cents) patch.deposit_required_cents = data.amountCents;
+    } else {
+      patch.payment_status = "paid";
+    }
+
+    const { error: uErr } = await supabase
+      .from("appointments")
+      .update(patch as never)
+      .eq("id", data.appointmentId)
+      .eq("profile_id", profile.id);
+    if (uErr) throw uErr;
+
+    await supabase.from("payments").insert({
+      profile_id: profile.id,
+      appointment_id: data.appointmentId,
+      amount: data.amountCents / 100,
+      status: "succeeded",
+      stripe_payment_intent_id: data.reference || `manual:${data.method}`,
+    } as never);
+
+    return { ok: true };
+  });
+

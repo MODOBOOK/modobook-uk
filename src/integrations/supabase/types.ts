@@ -2578,6 +2578,7 @@ export type Database = {
           id: string
           image_url: string | null
           is_primary: boolean
+          is_public: boolean
           name: string
           notes: string | null
           phone: string | null
@@ -2596,6 +2597,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_primary?: boolean
+          is_public?: boolean
           name: string
           notes?: string | null
           phone?: string | null
@@ -2614,6 +2616,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_primary?: boolean
+          is_public?: boolean
           name?: string
           notes?: string | null
           phone?: string | null

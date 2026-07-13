@@ -90,9 +90,12 @@ function NewAppointmentPage() {
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
   const submitLockRef = useRef(false);
-  const [sendDeposit, setSendDeposit] = useState(false);
+  type PaidMode = "none" | "deposit_paid" | "full_paid" | "send_link";
+  const [paidMode, setPaidMode] = useState<PaidMode>("none");
   const [depositAmount, setDepositAmount] = useState("");
   const [depositHours, setDepositHours] = useState("24");
+  const [paidMethod, setPaidMethod] = useState<"cash" | "card_in_person" | "bank_transfer" | "other">("cash");
+  const [paidReference, setPaidReference] = useState("");
   const createLink = useServerFn(createPaymentLink);
   const fetchModelSlots = useServerFn(listMyModelSlots);
   const [modelSlots, setModelSlots] = useState<ModelSlot[]>([]);
@@ -320,10 +323,27 @@ function NewAppointmentPage() {
         ? { line1: addrLine1, city: addrCity, postcode: addrPostcode }
         : null;
 
+      const totalPriceCents = Math.round(
+        items.reduce((s, it) => s + (Number.isFinite(it.price) ? it.price : 0), 0) * 100,
+      );
+      const depositCents = Math.round(parseFloat(depositAmount || "0") * 100);
+
       const created: { id: string; manageToken: string | null; treatmentName: string }[] = [];
-      for (const it of items) {
+      for (let i = 0; i < items.length; i++) {
+        const it = items[i];
         const t = treatments.find((x) => x.id === it.treatmentId);
         if (!t) continue;
+        // Attach payment-received record to the first appointment only.
+        const attachPayment =
+          i === 0 && (paidMode === "deposit_paid" || paidMode === "full_paid");
+        const paymentReceived = attachPayment
+          ? {
+              kind: paidMode === "full_paid" ? ("full" as const) : ("deposit" as const),
+              amountCents: paidMode === "full_paid" ? totalPriceCents : depositCents,
+              method: paidMethod,
+              reference: paidReference || null,
+            }
+          : null;
         const result = await createAppointmentForPatient({
           data: {
             treatmentId: it.treatmentId,
@@ -341,6 +361,7 @@ function NewAppointmentPage() {
             extraConsentTemplateIds: [...pickedConsentIds],
             medicalFormTemplateIds: [...pickedMedicalIds],
             modelSlotId: it.modelSlotId,
+            paymentReceived,
           },
         });
         created.push({ id: result.id, manageToken: result.manageToken, treatmentName: t.name });
@@ -352,8 +373,8 @@ function NewAppointmentPage() {
         : null;
 
       let depositUrl: string | null = null;
-      if (sendDeposit && primary) {
-        const amt = Math.round(parseFloat(depositAmount || "0") * 100);
+      if (paidMode === "send_link" && primary) {
+        const amt = depositCents;
         const hrs = Math.max(1, parseInt(depositHours || "24", 10));
         if (amt >= 100) {
           try {
@@ -762,14 +783,78 @@ function NewAppointmentPage() {
 
 
       <Card>
-        <CardHeader><CardTitle>Deposit (optional)</CardTitle></CardHeader>
+        <CardHeader><CardTitle>Payment</CardTitle></CardHeader>
         <CardContent className="space-y-3">
-          <label className="flex items-center gap-2 text-sm">
-            <Checkbox checked={sendDeposit} onCheckedChange={(v) => setSendDeposit(!!v)} />
-            <span>Send a Stripe deposit link — auto-cancel if unpaid in time</span>
-          </label>
-          {sendDeposit && (
-            <div className="grid grid-cols-2 gap-3">
+          <p className="text-xs text-muted-foreground">
+            Record a payment you've already taken (cash / bank transfer / card in person), or send a Stripe deposit link.
+          </p>
+          <div className="grid gap-2">
+            {([
+              { v: "none", label: "No payment recorded" },
+              { v: "deposit_paid", label: "Deposit already paid" },
+              { v: "full_paid", label: "Full amount already paid" },
+              { v: "send_link", label: "Send a Stripe deposit link" },
+            ] as { v: PaidMode; label: string }[]).map((opt) => (
+              <label key={opt.v} className="flex items-center gap-2 text-sm">
+                <input
+                  type="radio"
+                  name="paidMode"
+                  checked={paidMode === opt.v}
+                  onChange={() => setPaidMode(opt.v)}
+                />
+                <span>{opt.label}</span>
+              </label>
+            ))}
+          </div>
+
+          {(paidMode === "deposit_paid" || paidMode === "full_paid") && (
+            <div className="grid grid-cols-2 gap-3 rounded-md border p-3">
+              {paidMode === "deposit_paid" && (
+                <div>
+                  <Label>Amount taken (£)</Label>
+                  <Input
+                    type="number" inputMode="decimal" step="0.01" min="0"
+                    value={depositAmount}
+                    onChange={(e) => setDepositAmount(e.target.value)}
+                    placeholder="25.00"
+                  />
+                </div>
+              )}
+              {paidMode === "full_paid" && (
+                <div>
+                  <Label>Amount taken (£)</Label>
+                  <Input
+                    type="number" inputMode="decimal" step="0.01" min="0"
+                    value={totalPrice.toFixed(2)}
+                    readOnly
+                  />
+                </div>
+              )}
+              <div>
+                <Label>Method</Label>
+                <Select value={paidMethod} onValueChange={(v) => setPaidMethod(v as typeof paidMethod)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="cash">Cash</SelectItem>
+                    <SelectItem value="card_in_person">Card (in person)</SelectItem>
+                    <SelectItem value="bank_transfer">Bank transfer</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="col-span-2">
+                <Label>Reference (optional)</Label>
+                <Input
+                  value={paidReference}
+                  onChange={(e) => setPaidReference(e.target.value)}
+                  placeholder="Receipt no. / transaction ref"
+                />
+              </div>
+            </div>
+          )}
+
+          {paidMode === "send_link" && (
+            <div className="grid grid-cols-2 gap-3 rounded-md border p-3">
               <div>
                 <Label>Deposit (£)</Label>
                 <Input type="number" inputMode="decimal" step="0.01" min="1"
@@ -788,6 +873,7 @@ function NewAppointmentPage() {
           )}
         </CardContent>
       </Card>
+
 
       <Button onClick={submit} disabled={saving} size="lg" className="w-full">
         {saving ? "Creating…" : items.length > 1 ? `Create ${items.length} appointments` : "Create appointment"}

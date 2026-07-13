@@ -1,64 +1,45 @@
-# Referrals & Rewards — build plan
 
-Your answers:
-- Toggleable by practitioner: **credit £**, **points**, **friend discount** — each independent
-- Amounts: practitioner sets their own (schema already supports)
-- Trigger: **after friend's first paid appointment completes**
-- No cap
+Three related additions to the Locations + manual booking flow.
 
-Schema already exists (`clinic_referral_settings`, `patient_referral_codes`, `patient_referrals`, `patient_points_ledger`, `patient_credit_ledger`), so this is entirely UI + server logic.
+## 1. Hidden (private) locations
 
----
+Right now `locations.active` fully hides a location everywhere. You want a middle state: a location that is **hidden from the public booking page** but still usable when you book someone in manually (e.g. message-only bookings, VIP address, prescriber visits).
 
-## 1. Practitioner: Rewards settings page
-New route `/_authenticated/dashboard/rewards` (linked from dashboard sidebar).
-- Master **Enable rewards** toggle
-- Three independent reward toggles + amount fields:
-  - Referrer £ credit (pennies) — with "off" toggle
-  - Referrer points — with "off" toggle
-  - Friend's first-booking discount (pennies) — with "off" toggle
-- Headline & description (shown to patients on their share page)
-- Live preview card of what patients will see
-- Save via `saveReferralSettings` server fn (upsert on `clinic_referral_settings`)
+- Add `locations.is_public` boolean, default `true`.
+- Dashboard → Locations: new toggle **"Show on public booking page"** on each location (on = public, off = private/internal-only). `active` stays as the master on/off.
+- Public booking page (`/m/{slug}` and `/book/{slug}`) filters to `active = true AND is_public = true` — hidden locations disappear from the public picker, map, and treatment→location price display.
+- Internal new-appointment picker, patient hub, admin views: show every `active = true` location regardless of `is_public`, with a small "Private" pill on the hidden ones so you know.
+- Practitioner assignments (`location_practitioners`) still work — a practitioner who only takes bookings by message can be assigned to a private location and stay off the public page entirely.
 
-## 2. Patient: Rewards hub tab
-New tab under `/hub` → `/_authenticated/hub/rewards`.
-- Show clinic's headline/description + reward amounts
-- **Their unique code + share link** (`/r/{code}`) with copy + native share
-  - Auto-generate code on first visit if none exists
-- **Balances** per clinic: credit £ (sum of credit ledger) and points (sum of points ledger)
-- **Referral history**: pending / rewarded / rejected, with dates
-- If clinic has rewards disabled → friendly "not offered yet" state
+## 2. Private price list per location
 
-## 3. Public share landing `/r/$code`
-- Look up code → resolve clinic → redirect to that clinic's booking page (`/m/{slug}`) with `?ref={code}` in URL
-- Store referral code in sessionStorage so it survives the booking wizard
+Per-location pricing already exists in the database (`treatment_location_pricing`: price + duration + available-per-location) and is editable under **Dashboard → Services** on each treatment. What's missing is discoverability from the Locations page.
 
-## 4. Booking flow: apply friend discount
-- When booking page loads with `?ref=`, verify code + friend-discount is enabled
-- Show "You'll get £X off your first booking, courtesy of [referrer's first name]"
-- On successful booking creation: insert `patient_referrals` row (status='pending') linking the referrer, code, referred appointment/client, and snapshotting reward amounts
-- Apply `friend_credit_pennies` as a discount on the appointment total (write into existing payment/discount fields on `appointments`)
+- Locations page: on each location card add a **"Price list"** link that opens a dialog listing every treatment with editable price, duration, and an available-here toggle for that location. Saves through the existing `setTreatmentLocationPricing` server fn — no schema change.
+- Private locations use the same table, so a hidden location can carry an entirely different (private) price list without affecting the public one.
+- Manual bookings already let you type any price per treatment line — that stays.
 
-## 5. Auto-payout trigger
-Postgres trigger on `appointments`: when status transitions into a paid-complete state (existing status enum — I'll match your current "completed_paid" convention), for any pending `patient_referrals` row where `referred_appointment_id = NEW.id`:
-- Insert into `patient_credit_ledger` (+referrer_credit_pennies) and `patient_points_ledger` (+referrer_points)
-- Set `patient_referrals.status='rewarded'` and `rewarded_at=now()`
-- Idempotent: only fires once per referral
+## 3. Mark deposit / payment as already paid on manual bookings
 
-## 6. Redeem credit at checkout
-When a patient books at a clinic where they have credit balance > 0, offer a "Apply £X credit" checkbox that deducts up to the appointment total and writes a negative row to `patient_credit_ledger` on booking confirmation.
+Today the manual booking flow can only *send* a Stripe deposit link. You want to also record that a deposit (or the full amount) has already been taken outside the app — cash, bank transfer, terminal, etc.
 
----
+New section on the New Appointment page, above the Stripe deposit block:
+
+- **"Deposit already paid"** checkbox → amount field + method (cash / card in person / bank transfer / other) + optional reference. On save, sets `appointments.deposit_paid_at = now()`, `deposit_required_cents = amount`, and writes a row in `payments` with the chosen method so it shows in reporting.
+- **"Mark full payment as received"** checkbox → sets `payment_status = 'paid'`, `amount_paid_cents = total`, same method dropdown, same `payments` row.
+- The two are mutually exclusive with the "Send Stripe deposit link" option — picking one hides the others so you can't double-charge.
+
+Same controls also appear on the appointment detail view so you can tick "deposit paid" after the fact if someone pays on arrival.
 
 ## Technical notes
-- All server fns use `requireSupabaseAuth` — RLS on referral tables is already user-scoped
-- Trigger runs as `SECURITY DEFINER` and is idempotent via `WHERE rewarded_at IS NULL`
-- Public code lookup uses the existing `anon SELECT` policy on `patient_referral_codes`
-- No new tables needed
 
-## Suggested build order
-Phase A (this turn): #1 practitioner settings + #2 patient hub + #3 share landing — gets the feature visible end-to-end.
-Phase B (next turn): #4 friend-discount at booking + #5 auto-payout trigger + #6 credit redemption — the money flow.
+- Migration: `ALTER TABLE public.locations ADD COLUMN is_public boolean NOT NULL DEFAULT true;` and update the two public-booking server fns (`practitioner-public.functions.ts`, `public-booking.functions.ts`) to add `.eq("is_public", true)` on the locations queries. No RLS changes needed — reads are already scoped correctly.
+- Locations upsert (`upsertLocation`) gains an `is_public` field.
+- New server fn `markAppointmentPaymentReceived({ appointment_id, kind: 'deposit'|'full', amount_cents, method, reference })` under `appointments.functions.ts`, gated by `requireSupabaseAuth` + owner check, writing to `appointments` + `payments` in a single call.
+- New Appointment page state gets `paidMode: 'none' | 'deposit_paid' | 'full_paid' | 'send_link'` to keep the three options mutually exclusive.
+- No changes to Stripe, webhooks, or the split-payment flow.
 
-Splitting keeps each turn reviewable. Say **"go"** to start Phase A, or tell me to reshuffle.
+## Out of scope for this pass
+
+- Refund/void tooling for manually-marked-paid appointments (can be added later; for now editing/deleting the appointment is the escape hatch).
+- Per-practitioner private price lists (only per-location for now — matches the schema).
