@@ -30,23 +30,85 @@ function ResetPasswordPage() {
   const { slug } = Route.useSearch();
   const [ready, setReady] = useState(false);
   const [recovery, setRecovery] = useState(false);
+  const [linkError, setLinkError] = useState<string | null>(null);
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
 
   useEffect(() => {
-    // Supabase emits PASSWORD_RECOVERY when the recovery link is opened.
-    const hash = typeof window !== "undefined" ? window.location.hash : "";
-    if (hash.includes("type=recovery")) setRecovery(true);
-    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
+    let cancelled = false;
+    const sub = supabase.auth.onAuthStateChange((event) => {
       if (event === "PASSWORD_RECOVERY") setRecovery(true);
-      setReady(true);
     });
-    // Also check current session
-    supabase.auth.getSession().then(() => setReady(true));
-    return () => sub.subscription.unsubscribe();
-  }, []);
+
+    async function bootstrap() {
+      try {
+        const url = new URL(window.location.href);
+        const hash = url.hash.startsWith("#") ? url.hash.slice(1) : url.hash;
+        const hashParams = new URLSearchParams(hash);
+        const search = url.searchParams;
+
+        // 1) Error from Supabase (expired/invalid link)
+        const errCode = search.get("error_code") || hashParams.get("error_code");
+        const errDesc = search.get("error_description") || hashParams.get("error_description");
+        if (errCode || errDesc) {
+          setLinkError(
+            errCode === "otp_expired"
+              ? "This reset link has expired. Request a new one from the sign-in page."
+              : (errDesc?.replace(/\+/g, " ") ?? "This reset link is invalid or has expired."),
+          );
+          return;
+        }
+
+        // 2) PKCE flow: ?code=...
+        const code = search.get("code");
+        if (code) {
+          const { error } = await supabase.auth.exchangeCodeForSession(code);
+          if (error) {
+            setLinkError(error.message);
+            return;
+          }
+          if (!cancelled) setRecovery(true);
+          // Clean the URL
+          window.history.replaceState({}, "", url.pathname + (slug ? `?slug=${encodeURIComponent(slug)}` : ""));
+          return;
+        }
+
+        // 3) token_hash flow: ?token_hash=...&type=recovery
+        const tokenHash = search.get("token_hash") || hashParams.get("token_hash");
+        const type = search.get("type") || hashParams.get("type");
+        if (tokenHash && type === "recovery") {
+          const { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type: "recovery" });
+          if (error) {
+            setLinkError(error.message);
+            return;
+          }
+          if (!cancelled) setRecovery(true);
+          window.history.replaceState({}, "", url.pathname + (slug ? `?slug=${encodeURIComponent(slug)}` : ""));
+          return;
+        }
+
+        // 4) Implicit flow: #access_token=...&type=recovery
+        if (hashParams.get("type") === "recovery") {
+          if (!cancelled) setRecovery(true);
+          return;
+        }
+
+        // 5) Already-recovered session (e.g. detectSessionInUrl already handled it)
+        const { data } = await supabase.auth.getSession();
+        if (data.session) setRecovery(true);
+      } finally {
+        if (!cancelled) setReady(true);
+      }
+    }
+
+    bootstrap();
+    return () => {
+      cancelled = true;
+      sub.data.subscription.unsubscribe();
+    };
+  }, [slug]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
