@@ -152,6 +152,26 @@ function AboutEditor() {
         />
       </Bubble>
 
+      {/* PROFILE PHOTO — shown in the round avatar on the About page (replaces the "M" letter). */}
+      <Bubble
+        icon={User}
+        title="Profile photo"
+        subtitle='Shown in the round avatar at the top of your About page. Replaces the "M" fallback.'
+      >
+        {profileId ? (
+          <ImageUploader
+            label="Profile photo"
+            value={avatarUrl}
+            onChange={setAvatarUrl}
+            profileId={profileId}
+            folder="avatars"
+            previewClass="mt-2 h-24 w-24 rounded-full object-cover ring-1 ring-border"
+            cropAspect={1}
+          />
+        ) : null}
+      </Bubble>
+
+
       {/* HERO */}
       <Bubble
         icon={ImageIcon}
