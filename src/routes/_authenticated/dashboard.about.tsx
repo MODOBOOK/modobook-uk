@@ -14,6 +14,8 @@ import {
   Award, Clock, MapPin, HelpCircle, Tag, GraduationCap, History, Save,
 } from "lucide-react";
 import { SaveReminder } from "@/components/SaveReminder";
+import { ImageUploader } from "@/components/ImageUploader";
+import { User } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard/about")({
   ssr: false,
