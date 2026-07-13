@@ -103,6 +103,7 @@ function AboutEditor() {
           specialties,
           qualifications: quals,
           timeline,
+          avatar_url: avatarUrl,
         },
       });
       toast.success("About page saved");
