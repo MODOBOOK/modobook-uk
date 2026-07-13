@@ -151,9 +151,11 @@ function ResetPasswordPage() {
             <CardDescription>
               {done
                 ? "Your password has been updated."
-                : recovery
-                  ? "Choose a new password for your account."
-                  : "Open the reset link from your email to continue."}
+                : linkError
+                  ? linkError
+                  : recovery
+                    ? "Choose a new password for your account."
+                    : "Open the reset link from your email to continue."}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -163,6 +165,8 @@ function ResetPasswordPage() {
               </div>
             ) : done ? (
               <Button className="w-full" onClick={onContinue}>Continue</Button>
+            ) : linkError ? (
+              <Button className="w-full" onClick={() => navigate({ to: "/auth" })}>Back to sign in</Button>
             ) : recovery ? (
               <form onSubmit={onSubmit} className="space-y-4">
                 <div className="space-y-2">
