@@ -69,6 +69,7 @@ function AboutEditor() {
   const [specialties, setSpecialties] = useState<string[]>([]);
   const [quals, setQuals] = useState<Qual[]>([]);
   const [timeline, setTimeline] = useState<TimelineItem[]>([]);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
