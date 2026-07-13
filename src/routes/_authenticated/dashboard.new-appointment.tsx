@@ -783,14 +783,78 @@ function NewAppointmentPage() {
 
 
       <Card>
-        <CardHeader><CardTitle>Deposit (optional)</CardTitle></CardHeader>
+        <CardHeader><CardTitle>Payment</CardTitle></CardHeader>
         <CardContent className="space-y-3">
-          <label className="flex items-center gap-2 text-sm">
-            <Checkbox checked={sendDeposit} onCheckedChange={(v) => setSendDeposit(!!v)} />
-            <span>Send a Stripe deposit link — auto-cancel if unpaid in time</span>
-          </label>
-          {sendDeposit && (
-            <div className="grid grid-cols-2 gap-3">
+          <p className="text-xs text-muted-foreground">
+            Record a payment you've already taken (cash / bank transfer / card in person), or send a Stripe deposit link.
+          </p>
+          <div className="grid gap-2">
+            {([
+              { v: "none", label: "No payment recorded" },
+              { v: "deposit_paid", label: "Deposit already paid" },
+              { v: "full_paid", label: "Full amount already paid" },
+              { v: "send_link", label: "Send a Stripe deposit link" },
+            ] as { v: PaidMode; label: string }[]).map((opt) => (
+              <label key={opt.v} className="flex items-center gap-2 text-sm">
+                <input
+                  type="radio"
+                  name="paidMode"
+                  checked={paidMode === opt.v}
+                  onChange={() => setPaidMode(opt.v)}
+                />
+                <span>{opt.label}</span>
+              </label>
+            ))}
+          </div>
+
+          {(paidMode === "deposit_paid" || paidMode === "full_paid") && (
+            <div className="grid grid-cols-2 gap-3 rounded-md border p-3">
+              {paidMode === "deposit_paid" && (
+                <div>
+                  <Label>Amount taken (£)</Label>
+                  <Input
+                    type="number" inputMode="decimal" step="0.01" min="0"
+                    value={depositAmount}
+                    onChange={(e) => setDepositAmount(e.target.value)}
+                    placeholder="25.00"
+                  />
+                </div>
+              )}
+              {paidMode === "full_paid" && (
+                <div>
+                  <Label>Amount taken (£)</Label>
+                  <Input
+                    type="number" inputMode="decimal" step="0.01" min="0"
+                    value={totalPrice.toFixed(2)}
+                    readOnly
+                  />
+                </div>
+              )}
+              <div>
+                <Label>Method</Label>
+                <Select value={paidMethod} onValueChange={(v) => setPaidMethod(v as typeof paidMethod)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="cash">Cash</SelectItem>
+                    <SelectItem value="card_in_person">Card (in person)</SelectItem>
+                    <SelectItem value="bank_transfer">Bank transfer</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="col-span-2">
+                <Label>Reference (optional)</Label>
+                <Input
+                  value={paidReference}
+                  onChange={(e) => setPaidReference(e.target.value)}
+                  placeholder="Receipt no. / transaction ref"
+                />
+              </div>
+            </div>
+          )}
+
+          {paidMode === "send_link" && (
+            <div className="grid grid-cols-2 gap-3 rounded-md border p-3">
               <div>
                 <Label>Deposit (£)</Label>
                 <Input type="number" inputMode="decimal" step="0.01" min="1"
@@ -809,6 +873,7 @@ function NewAppointmentPage() {
           )}
         </CardContent>
       </Card>
+
 
       <Button onClick={submit} disabled={saving} size="lg" className="w-full">
         {saving ? "Creating…" : items.length > 1 ? `Create ${items.length} appointments` : "Create appointment"}
