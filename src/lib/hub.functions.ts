@@ -30,14 +30,24 @@ export const getHubContext = createServerFn({ method: "GET" })
       supabase.from("hub_codes").select("code, owner_kind, display_name").eq("user_id", userId).maybeSingle(),
     ]);
 
-    const role: HubOwnerKind | "none" = prescriber
-      ? "prescriber"
-      : profile
-        ? "practitioner"
+    // Dual-role users (a practitioner who has also been approved as a
+    // prescriber) get BOTH surfaces. `role` is kept as an exclusive value for
+    // legacy call sites — the source of truth for gating is `isPractitioner`
+    // and `isPrescriber`. Prescriber-only users see `role === "prescriber"`;
+    // practitioners (with or without prescriber approval) default to their
+    // clinic dashboard as the primary role.
+    const isPractitioner = !!profile;
+    const isPrescriber = !!prescriber;
+    const role: HubOwnerKind | "none" = isPractitioner
+      ? "practitioner"
+      : isPrescriber
+        ? "prescriber"
         : "none";
 
     return {
       role,
+      isPractitioner,
+      isPrescriber,
       profile: profile ?? null,
       prescriber: prescriber ?? null,
       code: code?.code ?? null,
