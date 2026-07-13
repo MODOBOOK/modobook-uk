@@ -28,6 +28,7 @@ export const getPractitionerBio = createServerFn({ method: "GET" })
         .select("id, name, address_line1, address_line2, city, postcode, country, is_primary, display_order, image_url")
         .eq("profile_id", profile.id)
         .eq("active", true)
+        .eq("is_public", true)
         .order("is_primary", { ascending: false })
         .order("display_order", { ascending: true })
         .order("name", { ascending: true }),
