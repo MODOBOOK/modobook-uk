@@ -767,26 +767,35 @@ async function maybeCreateBookingCheckout(args: {
 
   const depositEnabled = !!p.payment_deposit_enabled;
   const depositPer = Math.max(0, Number(p.deposit_amount_cents ?? 0));
+  const depositTypeMode: "fixed" | "percent" = (p.deposit_type === "percent") ? "percent" : "fixed";
+  const depositPct = Math.max(0, Math.min(100, Number(p.deposit_percent ?? 0)));
   const fullEnabled = p.payment_card_full_enabled !== false
     || !!p.payment_klarna_enabled
     || !!p.payment_clearpay_enabled;
 
   // Look up per-treatment deposit overrides for the appointments in this booking.
-  // Treatment-level `deposit_amount` is in GBP (numeric) and overrides the
-  // profile-wide default when set.
+  // Treatment-level `deposit_amount` (in GBP) always wins. Otherwise use the
+  // clinic default: a fixed £ amount, or a % of the treatment price.
   async function computeDepositTotalCents(): Promise<number> {
     if (args.appointmentIds.length === 0) return 0;
     try {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       const { data: rows } = await supabaseAdmin
         .from("appointments")
-        .select("treatments(deposit_amount)")
+        .select("treatments(deposit_amount, price)")
         .in("id", args.appointmentIds);
       let total = 0;
       for (const r of rows ?? []) {
-        const t = (r as { treatments?: { deposit_amount?: number | null } | null }).treatments;
+        const t = (r as { treatments?: { deposit_amount?: number | null; price?: number | null } | null }).treatments;
         const override = t?.deposit_amount != null ? Math.round(Number(t.deposit_amount) * 100) : null;
-        total += override != null && override > 0 ? override : depositPer;
+        if (override != null && override > 0) {
+          total += override;
+        } else if (depositTypeMode === "percent" && depositPct > 0) {
+          const priceCents = Math.round(Number(t?.price ?? 0) * 100);
+          total += Math.round((priceCents * depositPct) / 100);
+        } else {
+          total += depositPer;
+        }
       }
       return total;
     } catch {
