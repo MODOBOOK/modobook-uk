@@ -31,6 +31,7 @@ import {
   Stethoscope,
   Mail,
   Gift,
+  GraduationCap,
 
 
 } from "lucide-react";
