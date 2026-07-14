@@ -1080,7 +1080,8 @@ function BookPage() {
             </div>
           </details>
         </section>
-      )}
+        );
+      })()}
 
       {/* Choose Location + practitioners */}
       {locations.length > 0 && (
