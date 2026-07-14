@@ -5023,6 +5023,245 @@ export type Database = {
         }
         Relationships: []
       }
+      training_bookings: {
+        Row: {
+          amount_paid: number | null
+          appointment_date: string | null
+          appointment_end: string | null
+          appointment_id: string | null
+          appointment_start: string | null
+          course_id: string
+          created_at: string
+          id: string
+          location_id: string | null
+          notes: string | null
+          payment_status: string
+          prereq_confirmed: boolean
+          profile_id: string
+          session_id: string | null
+          status: Database["public"]["Enums"]["training_booking_status"]
+          stripe_payment_intent_id: string | null
+          trainee_email: string
+          trainee_name: string
+          trainee_phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount_paid?: number | null
+          appointment_date?: string | null
+          appointment_end?: string | null
+          appointment_id?: string | null
+          appointment_start?: string | null
+          course_id: string
+          created_at?: string
+          id?: string
+          location_id?: string | null
+          notes?: string | null
+          payment_status?: string
+          prereq_confirmed?: boolean
+          profile_id: string
+          session_id?: string | null
+          status?: Database["public"]["Enums"]["training_booking_status"]
+          stripe_payment_intent_id?: string | null
+          trainee_email: string
+          trainee_name: string
+          trainee_phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount_paid?: number | null
+          appointment_date?: string | null
+          appointment_end?: string | null
+          appointment_id?: string | null
+          appointment_start?: string | null
+          course_id?: string
+          created_at?: string
+          id?: string
+          location_id?: string | null
+          notes?: string | null
+          payment_status?: string
+          prereq_confirmed?: boolean
+          profile_id?: string
+          session_id?: string | null
+          status?: Database["public"]["Enums"]["training_booking_status"]
+          stripe_payment_intent_id?: string | null
+          trainee_email?: string
+          trainee_name?: string
+          trainee_phone?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_bookings_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_bookings_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "training_courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_bookings_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_bookings_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_bookings_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "training_course_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      training_course_sessions: {
+        Row: {
+          course_id: string
+          created_at: string
+          end_time: string
+          id: string
+          location_id: string | null
+          session_date: string
+          sort_order: number
+          start_time: string
+          updated_at: string
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          end_time: string
+          id?: string
+          location_id?: string | null
+          session_date: string
+          sort_order?: number
+          start_time: string
+          updated_at?: string
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          end_time?: string
+          id?: string
+          location_id?: string | null
+          session_date?: string
+          sort_order?: number
+          start_time?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_course_sessions_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "training_courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_course_sessions_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      training_courses: {
+        Row: {
+          active: boolean
+          allow_split_payment: boolean
+          capacity: number | null
+          certificate_template_url: string | null
+          cover_image_url: string | null
+          cpd_hours: number | null
+          created_at: string
+          deposit_amount: number | null
+          description: string | null
+          duration_min: number
+          id: string
+          kit_list: string | null
+          materials_html: string | null
+          mode: Database["public"]["Enums"]["training_mode"]
+          name: string
+          payment_mode: Database["public"]["Enums"]["payment_mode"]
+          prerequisites: string | null
+          price: number
+          profile_id: string
+          require_prereq_confirm: boolean
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          allow_split_payment?: boolean
+          capacity?: number | null
+          certificate_template_url?: string | null
+          cover_image_url?: string | null
+          cpd_hours?: number | null
+          created_at?: string
+          deposit_amount?: number | null
+          description?: string | null
+          duration_min?: number
+          id?: string
+          kit_list?: string | null
+          materials_html?: string | null
+          mode?: Database["public"]["Enums"]["training_mode"]
+          name: string
+          payment_mode?: Database["public"]["Enums"]["payment_mode"]
+          prerequisites?: string | null
+          price?: number
+          profile_id: string
+          require_prereq_confirm?: boolean
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          allow_split_payment?: boolean
+          capacity?: number | null
+          certificate_template_url?: string | null
+          cover_image_url?: string | null
+          cpd_hours?: number | null
+          created_at?: string
+          deposit_amount?: number | null
+          description?: string | null
+          duration_min?: number
+          id?: string
+          kit_list?: string | null
+          materials_html?: string | null
+          mode?: Database["public"]["Enums"]["training_mode"]
+          name?: string
+          payment_mode?: Database["public"]["Enums"]["payment_mode"]
+          prerequisites?: string | null
+          price?: number
+          profile_id?: string
+          require_prereq_confirm?: boolean
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_courses_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       treatment_addons: {
         Row: {
           addon_id: string
@@ -6325,6 +6564,12 @@ export type Database = {
       staff_role: "admin" | "practitioner" | "receptionist" | "viewer"
       staff_scope: "clinic" | "own"
       staff_status: "invited" | "active" | "disabled"
+      training_booking_status:
+        | "pending"
+        | "confirmed"
+        | "cancelled"
+        | "completed"
+      training_mode: "one_to_one" | "group" | "multi_day"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -6468,6 +6713,13 @@ export const Constants = {
       staff_role: ["admin", "practitioner", "receptionist", "viewer"],
       staff_scope: ["clinic", "own"],
       staff_status: ["invited", "active", "disabled"],
+      training_booking_status: [
+        "pending",
+        "confirmed",
+        "cancelled",
+        "completed",
+      ],
+      training_mode: ["one_to_one", "group", "multi_day"],
     },
   },
 } as const
