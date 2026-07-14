@@ -123,22 +123,57 @@ function PoliciesPage() {
         <CardHeader><CardTitle>Deposit</CardTitle></CardHeader>
         <CardContent className="space-y-3">
           <div>
-            <Label>Deposit amount (£)</Label>
-            <Input
-              type="number"
-              min="0"
-              step="1"
-              value={depositPounds}
-              onChange={(e) => setDepositPounds(e.target.value)}
-              placeholder="e.g. 30"
-            />
+            <Label>Deposit type</Label>
+            <div className="mt-1 inline-flex rounded-lg border p-1">
+              <button
+                type="button"
+                onClick={() => setDepositType("fixed")}
+                className={`rounded-md px-3 py-1 text-sm ${depositType === "fixed" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+              >
+                Fixed (£)
+              </button>
+              <button
+                type="button"
+                onClick={() => setDepositType("percent")}
+                className={`rounded-md px-3 py-1 text-sm ${depositType === "percent" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+              >
+                Percent (%)
+              </button>
+            </div>
           </div>
+          {depositType === "fixed" ? (
+            <div>
+              <Label>Deposit amount (£)</Label>
+              <Input
+                type="number"
+                min="0"
+                step="1"
+                value={depositPounds}
+                onChange={(e) => setDepositPounds(e.target.value)}
+                placeholder="e.g. 30"
+              />
+            </div>
+          ) : (
+            <div>
+              <Label>Deposit percent (%)</Label>
+              <Input
+                type="number"
+                min="0"
+                max="100"
+                step="1"
+                value={depositPercent}
+                onChange={(e) => setDepositPercent(e.target.value)}
+                placeholder="e.g. 20"
+              />
+              <p className="mt-1 text-xs text-muted-foreground">Calculated from each treatment's price. A per-treatment fixed deposit still overrides this.</p>
+            </div>
+          )}
           <div>
             <Label>Deposit policy text (optional)</Label>
             <Textarea
               value={depositText}
               onChange={(e) => setDepositText(e.target.value)}
-              placeholder="e.g. £30 deposit taken at time of booking, deductible from final price."
+              placeholder="e.g. 20% deposit taken at time of booking, deductible from final price."
               rows={3}
             />
           </div>
