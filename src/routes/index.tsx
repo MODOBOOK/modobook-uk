@@ -427,9 +427,7 @@ export function SiteHeader() {
           <Link to="/auth">
             <Button variant="ghost">Sign in</Button>
           </Link>
-          <Link to="/auth">
-            <Button>Get started</Button>
-          </Link>
+          <Button disabled className="hidden sm:inline-flex">Coming soon</Button>
         </div>
       </div>
     </header>
