@@ -817,7 +817,7 @@ async function maybeCreateBookingCheckout(args: {
     ? true
     : args.choice
     ? args.choice.mode === "deposit"
-    : depositEnabled && depositPer >= 100;
+    : depositEnabled && (depositPer >= 100 || (depositTypeMode === "percent" && depositPct > 0));
   if (wantsDeposit && depositEnabled) {
     amountCents = await computeDepositTotalCents();
     if (amountCents < 100) return null;
