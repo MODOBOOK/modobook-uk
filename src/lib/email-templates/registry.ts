@@ -8,6 +8,8 @@ import { template as patientMessage } from './patient-message'
 import { template as appointmentReminder } from './appointment-reminder'
 import { template as adminBroadcast } from './admin-broadcast'
 import { template as staffInvite } from './staff-invite'
+import { template as rebookReminder } from './rebook-reminder'
+import { template as topupReminder } from './topup-reminder'
 
 export interface TemplateEntry {
   component: ComponentType<any>
@@ -31,4 +33,6 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'patient-message': patientMessage,
   'admin-broadcast': adminBroadcast,
   'staff-invite': staffInvite,
+  'rebook-reminder': rebookReminder,
+  'topup-reminder': topupReminder,
 }
