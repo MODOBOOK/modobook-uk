@@ -840,9 +840,13 @@ function BookPage() {
                       const rounded = Math.round(avg);
                       return (
                         <>
-                          <div className="flex" style={{ color: accent }}>
+                          <div className="flex">
                             {Array.from({ length: 5 }).map((_, i) => (
-                              <Star key={i} className="h-3 w-3" fill={count === 0 || i < rounded ? "currentColor" : "none"} />
+                              <Star
+                                key={i}
+                                className={`h-3 w-3 ${count === 0 || i < rounded ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground/30"}`}
+                                fill={count === 0 || i < rounded ? "currentColor" : "none"}
+                              />
                             ))}
                           </div>
                           <span className="text-xs opacity-70">{count === 0 ? "New" : `${avg.toFixed(1)}`}</span>
@@ -896,9 +900,13 @@ function BookPage() {
                     const rounded = Math.round(avg);
                     return (
                       <>
-                        <div className="flex" style={{ color: accent }}>
+                        <div className="flex">
                           {Array.from({ length: 5 }).map((_, i) => (
-                            <Star key={i} className="h-3.5 w-3.5" fill={count === 0 || i < rounded ? "currentColor" : "none"} />
+                            <Star
+                              key={i}
+                              className={`h-3.5 w-3.5 ${count === 0 || i < rounded ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground/30"}`}
+                              fill={count === 0 || i < rounded ? "currentColor" : "none"}
+                            />
                           ))}
                         </div>
                         <span className="text-xs opacity-70">
