@@ -59,11 +59,17 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
   const opts = q.data as ConfiguredOptions | { configured: false } | undefined;
   const configured = opts && "configured" in opts && opts.configured;
 
+  const treatmentTotalCents = Math.round(totalAmount * 100);
+
   const effectiveDepositCents = useMemo(() => {
     if (!configured) return 0;
     const o = opts as ConfiguredOptions;
-    return depositOverrideCents != null && depositOverrideCents > 0 ? depositOverrideCents : o.depositCents;
-  }, [configured, opts, depositOverrideCents]);
+    if (depositOverrideCents != null && depositOverrideCents > 0) return depositOverrideCents;
+    if (o.depositType === "percent" && o.depositPercent > 0) {
+      return Math.round((treatmentTotalCents * o.depositPercent) / 100);
+    }
+    return o.depositCents;
+  }, [configured, opts, depositOverrideCents, treatmentTotalCents]);
 
   const treatmentTotalCents = Math.round(totalAmount * 100);
 
