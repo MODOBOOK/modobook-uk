@@ -225,12 +225,51 @@ export const adminCreatePractitioner = createServerFn({ method: "POST" })
     // "Invalid verification code" page. Instead, share the temp credentials
     // directly and let the new user change their password from their account.
     return {
+      mode: "password" as const,
       user_id: userId,
       email,
       temp_password: tempPassword,
       action_link: null as string | null,
     };
   });
+
+export const adminInvitePractitioner = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: {
+    email: string;
+    full_name?: string | null;
+    clinic_name?: string | null;
+  }) => i)
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const email = data.email.trim().toLowerCase();
+    if (!email) throw new Error("Email is required");
+
+    const origin = process.env.PUBLIC_APP_URL || "https://modobook.uk";
+    const { data: invited, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
+      redirectTo: `${origin}/auth`,
+      data: {
+        full_name: data.full_name || null,
+        clinic_name: data.clinic_name || null,
+        invited_by_admin: true,
+      },
+    });
+    if (error) throw error;
+    const userId = invited.user?.id;
+    if (userId) {
+      await supabaseAdmin.from("profiles").upsert(
+        {
+          user_id: userId,
+          full_name: data.full_name || null,
+          clinic_name: data.clinic_name || null,
+          active: true,
+        },
+        { onConflict: "user_id" },
+      );
+    }
+    return { mode: "invite" as const, email };
+  });
+
 
 
 

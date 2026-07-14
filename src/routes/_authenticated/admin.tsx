@@ -11,6 +11,7 @@ import {
   adminSetProfileActive,
   adminDeleteClient,
   adminCreatePractitioner,
+  adminInvitePractitioner,
 } from "@/lib/admin.functions";
 import {
   listSubscriptionPlans,
@@ -268,27 +269,39 @@ function CreatePractitionerCard() {
   const [clinicName, setClinicName] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
-  const [result, setResult] = useState<{ email: string; temp_password: string | null } | null>(null);
+  const [mode, setMode] = useState<"invite" | "password">("invite");
+  const [result, setResult] = useState<{ mode: "invite" | "password"; email: string; temp_password?: string | null } | null>(null);
 
   async function submit() {
     if (!email.trim()) { toast.error("Email is required"); return; }
     setBusy(true);
     try {
-      const r = await adminCreatePractitioner({
-        data: {
-          email: email.trim(),
-          full_name: fullName.trim() || null,
-          clinic_name: clinicName.trim() || null,
-          password: password.trim() || null,
-        },
-      });
-      setResult({ email: r.email, temp_password: r.temp_password });
-
-      toast.success("Account created");
+      if (mode === "invite") {
+        await adminInvitePractitioner({
+          data: {
+            email: email.trim(),
+            full_name: fullName.trim() || null,
+            clinic_name: clinicName.trim() || null,
+          },
+        });
+        setResult({ mode: "invite", email: email.trim() });
+        toast.success("Invite email sent");
+      } else {
+        const r = await adminCreatePractitioner({
+          data: {
+            email: email.trim(),
+            full_name: fullName.trim() || null,
+            clinic_name: clinicName.trim() || null,
+            password: password.trim() || null,
+          },
+        });
+        setResult({ mode: "password", email: r.email, temp_password: r.temp_password });
+        toast.success("Account created");
+      }
       setEmail(""); setFullName(""); setClinicName(""); setPassword("");
       router.invalidate();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Failed to create account");
+      toast.error(e instanceof Error ? e.message : "Failed");
     } finally {
       setBusy(false);
     }
@@ -305,8 +318,18 @@ function CreatePractitionerCard() {
         <CardTitle className="flex items-center gap-2"><UserPlus className="h-4 w-4" /> Create practitioner account</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
+        <div className="flex flex-wrap gap-2">
+          <Button size="sm" variant={mode === "invite" ? "default" : "outline"} onClick={() => setMode("invite")}>
+            Send invite email
+          </Button>
+          <Button size="sm" variant={mode === "password" ? "default" : "outline"} onClick={() => setMode("password")}>
+            Create with temp password
+          </Button>
+        </div>
         <p className="text-sm text-muted-foreground">
-          Onboard a new practitioner directly. Their email is auto-confirmed, so they can sign in immediately with the password below (or one you set). Share the credentials with them via a secure channel — they can change the password from their account settings.
+          {mode === "invite"
+            ? "Sends the practitioner an invite email. They click the link to set their password and finish signing in."
+            : "Creates an auto-confirmed account. Share the temporary password with them via a secure channel — they can change it from account settings."}
         </p>
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="space-y-1">
@@ -321,32 +344,41 @@ function CreatePractitionerCard() {
             <Label>Clinic name</Label>
             <Input value={clinicName} onChange={(e) => setClinicName(e.target.value)} placeholder="Clinic (optional)" />
           </div>
-          <div className="space-y-1">
-            <Label>Password (optional)</Label>
-            <Input type="text" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Leave blank to auto-generate" />
-          </div>
+          {mode === "password" && (
+            <div className="space-y-1">
+              <Label>Password (optional)</Label>
+              <Input type="text" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Leave blank to auto-generate" />
+            </div>
+          )}
         </div>
         <div>
           <Button onClick={submit} disabled={busy}>
-            <UserPlus className="mr-1 h-4 w-4" /> {busy ? "Creating…" : "Create account"}
+            <UserPlus className="mr-1 h-4 w-4" /> {busy ? "Working…" : mode === "invite" ? "Send invite" : "Create account"}
           </Button>
         </div>
 
         {result && (
           <div className="rounded-md border bg-muted/40 p-3 text-sm space-y-2">
             <div><span className="font-medium">Account:</span> {result.email}</div>
-            {result.temp_password && (
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="font-medium">Temporary password:</span>
-                <code className="rounded bg-background px-2 py-0.5 text-xs">{result.temp_password}</code>
-                <Button size="sm" variant="outline" onClick={() => copy(result.temp_password!, "Password")}>Copy</Button>
-              </div>
-            )}
-            <p className="text-xs text-muted-foreground">
-              Send these to the practitioner via a secure channel. They can sign in at <code>/auth</code> and change their password in account settings.
-            </p>
+            {result.mode === "invite" ? (
+              <p className="text-xs text-muted-foreground">
+                Invite email sent. They'll receive a link to set their password and sign in.
+              </p>
+            ) : result.temp_password ? (
+              <>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="font-medium">Temporary password:</span>
+                  <code className="rounded bg-background px-2 py-0.5 text-xs">{result.temp_password}</code>
+                  <Button size="sm" variant="outline" onClick={() => copy(result.temp_password!, "Password")}>Copy</Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Send these to the practitioner via a secure channel. They can sign in at <code>/auth</code> and change their password in account settings.
+                </p>
+              </>
+            ) : null}
           </div>
         )}
+
 
       </CardContent>
     </Card>
