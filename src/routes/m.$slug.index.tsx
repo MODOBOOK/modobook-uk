@@ -957,7 +957,7 @@ function BookPage() {
       </section>
 
       {/* Mobile welcome intro at top */}
-      {isMobile && (introHeading || welcomeHtml) && (
+      {isMobile && (introHeading || introLength > 0) && (
         <section id="welcome-intro-mobile" className="mx-auto mt-4 max-w-3xl px-4">
           <div className="rounded-2xl border bg-card px-5 py-5 shadow-sm" style={{ borderColor: `${brand}1a` }}>
             <WelcomeIntroBlock
