@@ -186,6 +186,9 @@ function AdminPage() {
         </CardContent>
       </Card>
 
+      <CreatePractitionerCard />
+
+
       <Card>
         <CardHeader><CardTitle>Add an admin</CardTitle></CardHeader>
         <CardContent className="space-y-3">
