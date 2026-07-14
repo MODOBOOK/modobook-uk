@@ -279,6 +279,14 @@ function BookPage() {
 
 
   const { slug } = useParams({ from: "/m/$slug/" });
+  const listCoursesFn = useServerFn(listPublicCourses);
+  const trainingQuery = useQuery({
+    queryKey: ["public-training", slug],
+    queryFn: () => listCoursesFn({ data: { slug } }),
+    staleTime: 60_000,
+  });
+  const trainingCourses = (trainingQuery.data?.courses ?? []) as Array<{ id: string; name: string; mode: string; cpd_hours: number | string | null; price: number | string; duration_min: number; description: string | null; cover_image_url: string | null }>;
+  const hasTraining = trainingCourses.length > 0;
   const { primary: displayPrimary } = resolveDisplayNames(profile);
   const brand = theme?.primary_color || profile.brand_color || "#1f2a44";
 
