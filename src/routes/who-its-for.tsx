@@ -112,7 +112,7 @@ function WhoPage() {
                 aesthetics industry — HCPs and non-HCPs — under one safer clinical standard.
               </p>
               <div className="mt-6 flex flex-wrap gap-3">
-                <Button size="lg" disabled>Sign-ups coming soon</Button>
+                <Link to="/auth"><Button size="lg">Start free</Button></Link>
                 <Link to="/prescriber-hub"><Button size="lg" variant="outline">Prescriber Hub</Button></Link>
               </div>
             </div>
