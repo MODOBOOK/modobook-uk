@@ -107,9 +107,7 @@ function LandingPage() {
                 shuts everyone else out.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
-                <Link to="/auth">
-                  <Button size="lg">Start free — set up in minutes</Button>
-                </Link>
+                <Button size="lg" disabled>Sign-ups coming soon</Button>
                 <Link to="/features">
                   <Button size="lg" variant="outline">
                     Explore the platform <ArrowRight className="ml-1 h-4 w-4" />
@@ -117,7 +115,7 @@ function LandingPage() {
                 </Link>
               </div>
               <p className="mt-4 text-sm text-muted-foreground">
-                No card required · 0% booking fees · Your data stays in the UK/EU
+                New practitioner sign-ups are paused · 0% booking fees · Your data stays in the UK/EU
               </p>
             </div>
             <div className="relative">
