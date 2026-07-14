@@ -29,6 +29,7 @@ import {
   ChevronRight,
   ChevronDown,
   ChevronUp,
+  GraduationCap,
 } from "lucide-react";
 
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
