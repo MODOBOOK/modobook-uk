@@ -4459,7 +4459,9 @@ export type Database = {
           created_at: string
           deletion_requested_at: string | null
           deposit_amount_cents: number | null
+          deposit_percent: number
           deposit_policy_text: string | null
+          deposit_type: string
           discount_stack_mode: string
           display_name_mode: string
           email: string | null
@@ -4577,7 +4579,9 @@ export type Database = {
           created_at?: string
           deletion_requested_at?: string | null
           deposit_amount_cents?: number | null
+          deposit_percent?: number
           deposit_policy_text?: string | null
+          deposit_type?: string
           discount_stack_mode?: string
           display_name_mode?: string
           email?: string | null
@@ -4695,7 +4699,9 @@ export type Database = {
           created_at?: string
           deletion_requested_at?: string | null
           deposit_amount_cents?: number | null
+          deposit_percent?: number
           deposit_policy_text?: string | null
+          deposit_type?: string
           discount_stack_mode?: string
           display_name_mode?: string
           email?: string | null

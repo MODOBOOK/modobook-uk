@@ -91,6 +91,8 @@ export const updateProfile = createServerFn({ method: "POST" })
       active?: boolean;
       welcome_intro_html?: string;
       deposit_amount_cents?: number;
+      deposit_type?: "fixed" | "percent";
+      deposit_percent?: number;
       deposit_policy_text?: string;
       cancellation_rules?: { hours_before: number; fee_percent: number }[];
       chooser_enabled?: boolean;
@@ -204,6 +206,8 @@ export const updateProfile = createServerFn({ method: "POST" })
     if (data.active !== undefined) update.active = data.active;
     if (data.welcome_intro_html !== undefined) update.welcome_intro_html = data.welcome_intro_html;
     if (data.deposit_amount_cents !== undefined) update.deposit_amount_cents = data.deposit_amount_cents;
+    if (data.deposit_type !== undefined) update.deposit_type = data.deposit_type;
+    if (data.deposit_percent !== undefined) update.deposit_percent = data.deposit_percent;
     if (data.deposit_policy_text !== undefined) update.deposit_policy_text = data.deposit_policy_text;
     if (data.cancellation_rules !== undefined) update.cancellation_rules = data.cancellation_rules as Json;
     if (data.chooser_enabled !== undefined) update.chooser_enabled = data.chooser_enabled;
