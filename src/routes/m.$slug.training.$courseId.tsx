@@ -24,8 +24,7 @@ export const Route = createFileRoute("/m/$slug/training/$courseId")({
 });
 
 function BookCoursePage() {
-  const { slug, courseId } = useParams({ from: "/m/$slug/training/$courseId" });
-  const navigate = useNavigate();
+  const { slug } = useParams({ from: "/m/$slug/training/$courseId" });
   const data = Route.useLoaderData();
   type Session = { id: string; session_date: string; start_time: string; end_time: string; location_id: string | null };
   type Loc = { id: string; name: string; address_line1: string | null; address_line2: string | null; city: string | null; postcode: string | null; country: string | null };
