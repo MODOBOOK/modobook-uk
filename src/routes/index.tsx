@@ -396,14 +396,17 @@ function LandingPage() {
               Join the platform built by the people doing the job.
             </h2>
             <p className="mx-auto mt-3 max-w-xl text-muted-foreground">
-              New practitioner sign-ups are paused while we finish onboarding our founding clinics. Coming soon.
+              Start free today — set up in minutes and keep 100% of your booking revenue.
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-4">
-              <Button size="lg" disabled>Sign-ups coming soon</Button>
+              <Link to="/auth">
+                <Button size="lg">Start free</Button>
+              </Link>
               <Link to="/features">
                 <Button size="lg" variant="outline">Explore the platform</Button>
               </Link>
             </div>
+
           </div>
         </section>
       </main>
