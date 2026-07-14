@@ -27,6 +27,9 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/dashboard/new-appointment")({
   ssr: false,
+  validateSearch: (search: Record<string, unknown>) => ({
+    clientId: typeof search.clientId === "string" ? search.clientId : undefined,
+  }),
   loader: async () => {
     const profile = await getMyProfile();
     if (!profile) throw new Error("No profile");
@@ -71,6 +74,7 @@ function fromMin(n: number) { return `${String(Math.floor(n / 60)).padStart(2, "
 
 function NewAppointmentPage() {
   const { profile } = Route.useLoaderData();
+  const { clientId: preselectClientId } = Route.useSearch();
   const navigate = useNavigate();
   const [treatments, setTreatments] = useState<Treatment[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -173,6 +177,19 @@ function NewAppointmentPage() {
     }
     setClientPickerOpen(false);
   }
+
+  // Preselect a patient when arriving via ?clientId= from the patient profile.
+  const preselectAppliedRef = useRef(false);
+  useEffect(() => {
+    if (preselectAppliedRef.current || !preselectClientId || clients.length === 0) return;
+    const match = clients.find((c) => c.id === preselectClientId);
+    if (match) {
+      applyClient(match);
+      preselectAppliedRef.current = true;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [preselectClientId, clients]);
+
 
   function toggle(setter: React.Dispatch<React.SetStateAction<Set<string>>>, id: string) {
     setter((prev) => {
@@ -587,13 +604,13 @@ function NewAppointmentPage() {
             {items.map((it, idx) => {
               const t = treatments.find((x) => x.id === it.treatmentId);
               return (
-                <div key={it.key} className="rounded-xl border p-3 space-y-3">
-                  <div className="flex items-center justify-between gap-2">
+                <div key={it.key} className="rounded-2xl border bg-card/50 p-4 space-y-3 shadow-sm">
+                  <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <div className="text-xs uppercase tracking-wide text-muted-foreground">Treatment {idx + 1}</div>
-                      <div className="font-medium truncate">{t?.name ?? "—"}</div>
+                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Treatment {idx + 1}</div>
+                      <div className="font-semibold truncate">{t?.name ?? "—"}</div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 shrink-0">
                       {it.modelSlotId && (
                         <span className="rounded-full bg-fuchsia-600/10 px-2 py-0.5 text-[11px] font-medium text-fuchsia-700 dark:text-fuchsia-300">
                           Model slot
@@ -605,34 +622,43 @@ function NewAppointmentPage() {
                     </div>
                   </div>
                   <div className="grid grid-cols-3 gap-2">
-                    <div>
-                      <Label className="text-xs">Start</Label>
+                    <div className="space-y-1">
+                      <Label className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap">Start</Label>
                       <Input
                         type="time"
+                        className="h-10 tabular-nums"
                         value={it.startTime}
                         onChange={(e) => updateItem(it.key, { startTime: e.target.value })}
                       />
                     </div>
-                    <div>
-                      <Label className="text-xs">Duration (min)</Label>
-                      <Input
-                        type="number"
-                        min="5"
-                        step="5"
-                        value={it.duration}
-                        onChange={(e) => updateItem(it.key, { duration: Math.max(0, parseInt(e.target.value || "0", 10)) })}
-                      />
+                    <div className="space-y-1">
+                      <Label className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap">Duration</Label>
+                      <div className="relative">
+                        <Input
+                          type="number"
+                          min="5"
+                          step="5"
+                          className="h-10 pr-10 tabular-nums"
+                          value={it.duration}
+                          onChange={(e) => updateItem(it.key, { duration: Math.max(0, parseInt(e.target.value || "0", 10)) })}
+                        />
+                        <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs text-muted-foreground">min</span>
+                      </div>
                     </div>
-                    <div>
-                      <Label className="text-xs">Price (£)</Label>
-                      <Input
-                        type="number"
-                        inputMode="decimal"
-                        step="0.01"
-                        min="0"
-                        value={it.price}
-                        onChange={(e) => updateItem(it.key, { price: Math.max(0, parseFloat(e.target.value || "0")) })}
-                      />
+                    <div className="space-y-1">
+                      <Label className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap">Price</Label>
+                      <div className="relative">
+                        <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-xs text-muted-foreground">£</span>
+                        <Input
+                          type="number"
+                          inputMode="decimal"
+                          step="0.01"
+                          min="0"
+                          className="h-10 pl-6 tabular-nums"
+                          value={it.price}
+                          onChange={(e) => updateItem(it.key, { price: Math.max(0, parseFloat(e.target.value || "0")) })}
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
