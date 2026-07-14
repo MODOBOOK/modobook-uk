@@ -307,7 +307,7 @@ function CreatePractitionerCard() {
       </CardHeader>
       <CardContent className="space-y-3">
         <p className="text-sm text-muted-foreground">
-          Sign-ups are paused publicly. Use this to onboard a new practitioner directly. Their email is auto-confirmed; either set a password below or leave blank to auto-generate one and send them a reset link.
+          Onboard a new practitioner directly. Their email is auto-confirmed, so they can sign in immediately with the password below (or one you set). Share the credentials with them via a secure channel — they can change the password from their account settings.
         </p>
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="space-y-1">
@@ -327,10 +327,6 @@ function CreatePractitionerCard() {
             <Input type="text" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Leave blank to auto-generate" />
           </div>
         </div>
-        <label className="flex items-center gap-2 text-sm text-muted-foreground">
-          <input type="checkbox" checked={sendReset} onChange={(e) => setSendReset(e.target.checked)} />
-          Also generate a password reset link so they can set their own
-        </label>
         <div>
           <Button onClick={submit} disabled={busy}>
             <UserPlus className="mr-1 h-4 w-4" /> {busy ? "Creating…" : "Create account"}
@@ -347,15 +343,12 @@ function CreatePractitionerCard() {
                 <Button size="sm" variant="outline" onClick={() => copy(result.temp_password!, "Password")}>Copy</Button>
               </div>
             )}
-            {result.action_link && (
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="font-medium">Reset link:</span>
-                <Button size="sm" variant="outline" onClick={() => copy(result.action_link!, "Reset link")}>Copy link</Button>
-              </div>
-            )}
-            <p className="text-xs text-muted-foreground">Send these to the practitioner via a secure channel.</p>
+            <p className="text-xs text-muted-foreground">
+              Send these to the practitioner via a secure channel. They can sign in at <code>/auth</code> and change their password in account settings.
+            </p>
           </div>
         )}
+
       </CardContent>
     </Card>
   );
