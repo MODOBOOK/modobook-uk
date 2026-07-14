@@ -1,0 +1,405 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import {
+  listMyCourses,
+  createCourse,
+  updateCourse,
+  deleteCourse,
+  getCourseWithSessions,
+  upsertSessions,
+} from "@/lib/training.functions";
+import { getMyLocations } from "@/lib/locations.functions";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import { GraduationCap, Plus, Trash2, ArrowLeft, Users, Calendar as CalendarIcon, Award, Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import type { Database } from "@/integrations/supabase/types";
+
+type Course = Database["public"]["Tables"]["training_courses"]["Row"];
+type Session = Database["public"]["Tables"]["training_course_sessions"]["Row"];
+type Mode = Database["public"]["Enums"]["training_mode"];
+
+export const Route = createFileRoute("/_authenticated/dashboard/training")({
+  component: TrainingPage,
+});
+
+const MODE_LABEL: Record<Mode, string> = {
+  one_to_one: "1:1 training",
+  group: "Group / cohort",
+  multi_day: "Multi-day",
+};
+
+function TrainingPage() {
+  const qc = useQueryClient();
+  const listFn = useServerFn(listMyCourses);
+  const createFn = useServerFn(createCourse);
+  const deleteFn = useServerFn(deleteCourse);
+  const [editingId, setEditingId] = useState<string | null>(null);
+
+  const q = useQuery({
+    queryKey: ["training-courses"],
+    queryFn: () => listFn(),
+  });
+
+  const createMut = useMutation({
+    mutationFn: () => createFn({ data: { name: "New course", mode: "one_to_one" } }),
+    onSuccess: (row) => {
+      qc.invalidateQueries({ queryKey: ["training-courses"] });
+      setEditingId((row as Course).id);
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to create"),
+  });
+
+  const deleteMut = useMutation({
+    mutationFn: (id: string) => deleteFn({ data: { id } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["training-courses"] }),
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
+  });
+
+  if (editingId) {
+    return <CourseEditor id={editingId} onClose={() => setEditingId(null)} />;
+  }
+
+  const courses = (q.data ?? []) as Course[];
+
+  return (
+    <div className="mx-auto max-w-5xl space-y-6 p-4 md:p-6">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="flex items-center gap-2 text-2xl font-bold">
+            <GraduationCap className="h-6 w-6" /> Training
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Create aesthetics training courses trainees can book from your clinic page.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Link to="/dashboard/training/bookings"><Button variant="outline"><Users className="mr-2 h-4 w-4" /> Bookings</Button></Link>
+          <Button onClick={() => createMut.mutate()} disabled={createMut.isPending}>
+            <Plus className="mr-2 h-4 w-4" /> New course
+          </Button>
+        </div>
+      </div>
+
+      {q.isLoading ? (
+        <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin" /></div>
+      ) : courses.length === 0 ? (
+        <Card>
+          <CardContent className="p-12 text-center">
+            <GraduationCap className="mx-auto mb-3 h-10 w-10 text-muted-foreground" />
+            <p className="text-lg font-medium">No courses yet</p>
+            <p className="mt-1 text-sm text-muted-foreground">Add your first course to start taking training bookings.</p>
+            <Button className="mt-4" onClick={() => createMut.mutate()}>
+              <Plus className="mr-2 h-4 w-4" /> New course
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-3">
+          {courses.map((c) => (
+            <Card key={c.id} className="hover:shadow-md transition-shadow">
+              <CardContent className="flex flex-wrap items-center gap-3 p-4">
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-semibold">{c.name}</span>
+                    <Badge variant="outline">{MODE_LABEL[c.mode]}</Badge>
+                    {!c.active && <Badge variant="secondary">Hidden</Badge>}
+                    {c.cpd_hours != null && (
+                      <Badge variant="outline" className="gap-1">
+                        <Award className="h-3 w-3" /> {c.cpd_hours} CPD
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    £{Number(c.price).toFixed(2)} · {c.duration_min} min
+                    {c.capacity ? ` · up to ${c.capacity} trainees` : ""}
+                  </p>
+                </div>
+                <Button size="sm" variant="outline" onClick={() => setEditingId(c.id)}>Edit</Button>
+                <Button
+                  size="sm" variant="ghost"
+                  onClick={() => {
+                    if (confirm(`Delete "${c.name}"? This can't be undone.`)) deleteMut.mutate(c.id);
+                  }}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CourseEditor({ id, onClose }: { id: string; onClose: () => void }) {
+  const qc = useQueryClient();
+  const getFn = useServerFn(getCourseWithSessions);
+  const updateFn = useServerFn(updateCourse);
+  const upsertFn = useServerFn(upsertSessions);
+  const locFn = useServerFn(getMyLocations);
+
+  const q = useQuery({
+    queryKey: ["training-course", id],
+    queryFn: () => getFn({ data: { id } }),
+  });
+  const locQ = useQuery({ queryKey: ["my-locations"], queryFn: () => locFn() });
+
+  const [form, setForm] = useState<Partial<Course> | null>(null);
+  const [sessions, setSessions] = useState<Array<Partial<Session> & { _deleted?: boolean }>>([]);
+  const [saving, setSaving] = useState(false);
+
+  // Initialise once data loads
+  if (form === null && q.data) {
+    setForm(q.data.course as Course);
+    setSessions(q.data.sessions as Session[]);
+  }
+
+  if (q.isLoading || !form) {
+    return <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin" /></div>;
+  }
+
+  const isSchedule = form.mode === "group" || form.mode === "multi_day";
+  const locations = (locQ.data ?? []) as Array<{ id: string; name: string }>;
+
+  async function save() {
+    if (!form?.name?.trim()) { toast.error("Course name is required"); return; }
+    setSaving(true);
+    try {
+      await updateFn({
+        data: {
+          id,
+          name: form.name!,
+          description: form.description ?? null,
+          cover_image_url: form.cover_image_url ?? null,
+          mode: form.mode,
+          duration_min: Number(form.duration_min) || 120,
+          price: Number(form.price) || 0,
+          deposit_amount: form.deposit_amount != null ? Number(form.deposit_amount) : null,
+          payment_mode: form.payment_mode,
+          allow_split_payment: !!form.allow_split_payment,
+          capacity: form.capacity != null ? Number(form.capacity) : null,
+          prerequisites: form.prerequisites ?? null,
+          require_prereq_confirm: !!form.require_prereq_confirm,
+          cpd_hours: form.cpd_hours != null ? Number(form.cpd_hours) : null,
+          certificate_template_url: form.certificate_template_url ?? null,
+          materials_html: form.materials_html ?? null,
+          kit_list: form.kit_list ?? null,
+          active: !!form.active,
+        },
+      });
+      if (isSchedule) {
+        const deleted_ids = sessions.filter((s) => s._deleted && s.id).map((s) => s.id as string);
+        const kept = sessions
+          .filter((s) => !s._deleted && s.session_date && s.start_time && s.end_time)
+          .map((s, idx) => ({
+            id: s.id ?? undefined,
+            session_date: s.session_date as string,
+            start_time: s.start_time as string,
+            end_time: s.end_time as string,
+            location_id: s.location_id ?? null,
+            sort_order: idx,
+          }));
+        await upsertFn({ data: { course_id: id, sessions: kept, deleted_ids } });
+      }
+      toast.success("Course saved");
+      qc.invalidateQueries({ queryKey: ["training-courses"] });
+      qc.invalidateQueries({ queryKey: ["training-course", id] });
+      onClose();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to save");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="mx-auto max-w-3xl space-y-6 p-4 md:p-6">
+      <div className="flex items-center justify-between gap-3">
+        <Button variant="ghost" size="sm" onClick={onClose}>
+          <ArrowLeft className="mr-2 h-4 w-4" /> Back to courses
+        </Button>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 text-sm">
+            <Label htmlFor="active">{form.active ? "Visible" : "Hidden"}</Label>
+            <Switch id="active" checked={!!form.active} onCheckedChange={(v) => setForm({ ...form, active: v })} />
+          </div>
+          <Button onClick={save} disabled={saving}>{saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save"}</Button>
+        </div>
+      </div>
+
+      <Card>
+        <CardHeader><CardTitle>Course details</CardTitle></CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label>Name</Label>
+            <Input value={form.name ?? ""} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="e.g. Foundation Lip Filler Training" />
+          </div>
+          <div>
+            <Label>Short description</Label>
+            <Textarea rows={3} value={form.description ?? ""} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="What trainees will learn, level, etc." />
+          </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div>
+              <Label>Format</Label>
+              <Select value={form.mode} onValueChange={(v) => setForm({ ...form, mode: v as Mode })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="one_to_one">1:1 training</SelectItem>
+                  <SelectItem value="group">Group / cohort</SelectItem>
+                  <SelectItem value="multi_day">Multi-day</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Duration (min)</Label>
+              <Input type="number" value={form.duration_min ?? 120} onChange={(e) => setForm({ ...form, duration_min: Number(e.target.value) })} />
+            </div>
+            {isSchedule && (
+              <div>
+                <Label>Capacity (seats)</Label>
+                <Input type="number" value={form.capacity ?? ""} onChange={(e) => setForm({ ...form, capacity: e.target.value ? Number(e.target.value) : null })} placeholder="e.g. 6" />
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader><CardTitle>Pricing</CardTitle></CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div>
+              <Label>Price (£)</Label>
+              <Input type="number" step="0.01" value={form.price ?? 0} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} />
+            </div>
+            <div>
+              <Label>Payment</Label>
+              <Select value={form.payment_mode ?? "full"} onValueChange={(v) => setForm({ ...form, payment_mode: v as Course["payment_mode"] })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="full">Full upfront</SelectItem>
+                  <SelectItem value="deposit">Deposit only</SelectItem>
+                  <SelectItem value="pay_in_clinic">Pay in person</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Deposit (£)</Label>
+              <Input type="number" step="0.01" value={form.deposit_amount ?? ""} onChange={(e) => setForm({ ...form, deposit_amount: e.target.value ? Number(e.target.value) : null })} />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {isSchedule && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><CalendarIcon className="h-5 w-5" /> Session dates</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {sessions.filter((s) => !s._deleted).length === 0 && (
+              <p className="text-sm text-muted-foreground">Add the dates trainees can book onto.</p>
+            )}
+            {sessions.map((s, idx) => s._deleted ? null : (
+              <div key={s.id ?? `new-${idx}`} className="grid grid-cols-2 gap-2 rounded-md border p-3 sm:grid-cols-5">
+                <div>
+                  <Label className="text-xs">Date</Label>
+                  <Input type="date" value={s.session_date ?? ""} onChange={(e) => {
+                    const next = [...sessions]; next[idx] = { ...s, session_date: e.target.value }; setSessions(next);
+                  }} />
+                </div>
+                <div>
+                  <Label className="text-xs">Start</Label>
+                  <Input type="time" value={(s.start_time ?? "").slice(0, 5)} onChange={(e) => {
+                    const next = [...sessions]; next[idx] = { ...s, start_time: `${e.target.value}:00` }; setSessions(next);
+                  }} />
+                </div>
+                <div>
+                  <Label className="text-xs">End</Label>
+                  <Input type="time" value={(s.end_time ?? "").slice(0, 5)} onChange={(e) => {
+                    const next = [...sessions]; next[idx] = { ...s, end_time: `${e.target.value}:00` }; setSessions(next);
+                  }} />
+                </div>
+                <div className="col-span-2 sm:col-span-1">
+                  <Label className="text-xs">Location</Label>
+                  <Select value={s.location_id ?? "none"} onValueChange={(v) => {
+                    const next = [...sessions]; next[idx] = { ...s, location_id: v === "none" ? null : v }; setSessions(next);
+                  }}>
+                    <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">— None —</SelectItem>
+                      {locations.map((l) => <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-end sm:col-span-5 sm:justify-end">
+                  <Button size="sm" variant="ghost" onClick={() => {
+                    const next = [...sessions]; next[idx] = { ...s, _deleted: true }; setSessions(next);
+                  }}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+            <Button variant="outline" onClick={() => setSessions([...sessions, { session_date: "", start_time: "09:00:00", end_time: "17:00:00", location_id: null }])}>
+              <Plus className="mr-2 h-4 w-4" /> Add date
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      <Card>
+        <CardHeader><CardTitle>Prerequisites &amp; certification</CardTitle></CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label>Prerequisites / eligibility</Label>
+            <Textarea rows={4} value={form.prerequisites ?? ""} onChange={(e) => setForm({ ...form, prerequisites: e.target.value })} placeholder="e.g. Must be a registered medical professional. Level 4 aesthetics qualification required." />
+          </div>
+          <div className="flex items-center justify-between gap-3 rounded-md border p-3">
+            <div>
+              <Label>Trainees must confirm they meet the prerequisites</Label>
+              <p className="text-xs text-muted-foreground">Adds a required checkbox at booking.</p>
+            </div>
+            <Switch checked={!!form.require_prereq_confirm} onCheckedChange={(v) => setForm({ ...form, require_prereq_confirm: v })} />
+          </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <Label>CPD hours</Label>
+              <Input type="number" step="0.5" value={form.cpd_hours ?? ""} onChange={(e) => setForm({ ...form, cpd_hours: e.target.value ? Number(e.target.value) : null })} placeholder="e.g. 8" />
+            </div>
+            <div>
+              <Label>Certificate template URL</Label>
+              <Input value={form.certificate_template_url ?? ""} onChange={(e) => setForm({ ...form, certificate_template_url: e.target.value })} placeholder="https://…" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader><CardTitle>Course materials &amp; kit</CardTitle></CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label>Pre-course materials (HTML)</Label>
+            <Textarea rows={6} value={form.materials_html ?? ""} onChange={(e) => setForm({ ...form, materials_html: e.target.value })} placeholder="Links to pre-reading, PDF URLs, videos etc. Sent after booking." />
+          </div>
+          <div>
+            <Label>Kit / what to bring</Label>
+            <Textarea rows={3} value={form.kit_list ?? ""} onChange={(e) => setForm({ ...form, kit_list: e.target.value })} placeholder="e.g. Notepad, scrubs, own model if available." />
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
