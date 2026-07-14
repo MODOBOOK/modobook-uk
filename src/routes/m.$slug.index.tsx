@@ -1504,7 +1504,7 @@ function BookPage() {
       })()}
       {/* Treatments + Packages */}
 
-      {locationId && (!chooserOn || mode === "know" || mode === "consult" || (mode === "unsure" && concernsConfirmed && pickedConcernIds.length > 0)) ? (
+      {locationId && (hasTraining || !chooserOn || mode === "know" || mode === "consult" || (mode === "unsure" && concernsConfirmed && pickedConcernIds.length > 0)) ? (
         <section className="mx-auto mt-10 max-w-3xl px-4 pb-32">
           {chooserOn && (
             <div className="mb-4 flex items-center justify-between">
