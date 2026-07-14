@@ -225,6 +225,7 @@ export const adminCreatePractitioner = createServerFn({ method: "POST" })
     // "Invalid verification code" page. Instead, share the temp credentials
     // directly and let the new user change their password from their account.
     return {
+      mode: "password" as const,
       user_id: userId,
       email,
       temp_password: tempPassword,
