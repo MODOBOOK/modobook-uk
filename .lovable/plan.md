@@ -1,45 +1,73 @@
+## Training section
 
-Three related additions to the Locations + manual booking flow.
+A new dedicated area for practitioners who offer aesthetics training, separate from treatments but reusing the same availability, payment and reminder plumbing.
 
-## 1. Hidden (private) locations
+### 1. Database
 
-Right now `locations.active` fully hides a location everywhere. You want a middle state: a location that is **hidden from the public booking page** but still usable when you book someone in manually (e.g. message-only bookings, VIP address, prescriber visits).
+Two new tables.
 
-- Add `locations.is_public` boolean, default `true`.
-- Dashboard → Locations: new toggle **"Show on public booking page"** on each location (on = public, off = private/internal-only). `active` stays as the master on/off.
-- Public booking page (`/m/{slug}` and `/book/{slug}`) filters to `active = true AND is_public = true` — hidden locations disappear from the public picker, map, and treatment→location price display.
-- Internal new-appointment picker, patient hub, admin views: show every `active = true` location regardless of `is_public`, with a small "Private" pill on the hidden ones so you know.
-- Practitioner assignments (`location_practitioners`) still work — a practitioner who only takes bookings by message can be assigned to a private location and stay off the public page entirely.
+**`training_courses`** — one row per course a practitioner offers.
+- `profile_id`, `name`, `description`, `cover_image_url`, `active`, `sort_order`
+- `mode`: `one_to_one` | `group` | `multi_day`
+- `duration_min` (for 1:1 slot length)
+- `price`, `deposit_amount`, `payment_mode`, `allow_split_payment`
+- `capacity` (group / multi_day seat count)
+- `prerequisites` (rich text) + `require_prereq_confirm` (checkbox on booking)
+- `cpd_hours`, `certificate_template_url`
+- `materials_html` (pre-course pack sent after booking)
+- `kit_list` (what to bring — shown in confirmation + reminders)
 
-## 2. Private price list per location
+**`training_course_sessions`** — fixed dates for group / multi-day courses.
+- `course_id`, `session_date`, `start_time`, `end_time`, `location_id`, `sort_order`
+- Empty for 1:1 courses (they use the practitioner's normal availability).
 
-Per-location pricing already exists in the database (`treatment_location_pricing`: price + duration + available-per-location) and is editable under **Dashboard → Services** on each treatment. What's missing is discoverability from the Locations page.
+**`training_bookings`** — one row per trainee booking.
+- `course_id`, `profile_id`, `trainee_name`, `trainee_email`, `trainee_phone`
+- `status` (pending / confirmed / cancelled / completed)
+- `payment_status`, `stripe_payment_intent_id`, `amount_paid`
+- For 1:1: `appointment_date`, `appointment_start`, `appointment_end`, `location_id` (also mirrored into `appointments` so it blocks the calendar)
+- For group/multi-day: bookings link to the course's sessions; capacity enforced by count.
 
-- Locations page: on each location card add a **"Price list"** link that opens a dialog listing every treatment with editable price, duration, and an available-here toggle for that location. Saves through the existing `setTreatmentLocationPricing` server fn — no schema change.
-- Private locations use the same table, so a hidden location can carry an entirely different (private) price list without affecting the public one.
-- Manual bookings already let you type any price per treatment line — that stays.
+RLS: practitioners manage their own courses/bookings; anon can read `active = true` courses via the existing public-profile RPC pattern.
 
-## 3. Mark deposit / payment as already paid on manual bookings
+### 2. Dashboard
 
-Today the manual booking flow can only *send* a Stripe deposit link. You want to also record that a deposit (or the full amount) has already been taken outside the app — cash, bank transfer, terminal, etc.
+New nav item **Training** under the existing dashboard.
 
-New section on the New Appointment page, above the Stripe deposit block:
+- `/dashboard/training` — list of courses with create/edit/duplicate/archive.
+- Course editor: mode picker, price/deposit, capacity (when group/multi_day), sessions editor (add dates + start/end + location), prerequisites, CPD hours, certificate template upload, materials rich-text, kit list, cover image.
+- `/dashboard/training/bookings` — list of upcoming and past bookings, per-course filter, quick actions (confirm, cancel, mark complete, resend materials).
 
-- **"Deposit already paid"** checkbox → amount field + method (cash / card in person / bank transfer / other) + optional reference. On save, sets `appointments.deposit_paid_at = now()`, `deposit_required_cents = amount`, and writes a row in `payments` with the chosen method so it shows in reporting.
-- **"Mark full payment as received"** checkbox → sets `payment_status = 'paid'`, `amount_paid_cents = total`, same method dropdown, same `payments` row.
-- The two are mutually exclusive with the "Send Stripe deposit link" option — picking one hides the others so you can't double-charge.
+### 3. Public booking
 
-Same controls also appear on the appointment detail view so you can tick "deposit paid" after the fact if someone pays on arrival.
+- Clinic page `/m/{slug}` gets a **Training** tab next to Treatments, only visible when the profile has at least one active course.
+- Course card shows name, price, duration/dates, CPD hours, prerequisites summary, "Book training".
 
-## Technical notes
+Booking flow (new route `/m/{slug}/training/{courseId}`):
 
-- Migration: `ALTER TABLE public.locations ADD COLUMN is_public boolean NOT NULL DEFAULT true;` and update the two public-booking server fns (`practitioner-public.functions.ts`, `public-booking.functions.ts`) to add `.eq("is_public", true)` on the locations queries. No RLS changes needed — reads are already scoped correctly.
-- Locations upsert (`upsertLocation`) gains an `is_public` field.
-- New server fn `markAppointmentPaymentReceived({ appointment_id, kind: 'deposit'|'full', amount_cents, method, reference })` under `appointments.functions.ts`, gated by `requireSupabaseAuth` + owner check, writing to `appointments` + `payments` in a single call.
-- New Appointment page state gets `paidMode: 'none' | 'deposit_paid' | 'full_paid' | 'send_link'` to keep the three options mutually exclusive.
-- No changes to Stripe, webhooks, or the split-payment flow.
+- **1:1 courses**: reuses the existing treatment booking engine — practitioner availability, calendar, time slots, location, payment. Creates a normal appointment plus a `training_bookings` row.
+- **Group / multi-day**: shows fixed course sessions with seats remaining; trainee picks one, fills details, pays. No calendar picker.
+- Prerequisites step: if `require_prereq_confirm` is on, trainee ticks "I confirm I meet these prerequisites" before payment.
+- Post-booking confirmation email includes materials link + kit list.
 
-## Out of scope for this pass
+### 4. Emails
 
-- Refund/void tooling for manually-marked-paid appointments (can be added later; for now editing/deleting the appointment is the escape hatch).
-- Per-practitioner private price lists (only per-location for now — matches the schema).
+Reuse the branded email pipeline. Two new templates:
+
+- **Training booking confirmation** — course details, date(s), location, kit list, materials link.
+- **Training reminder** — sent 24h before (piggybacks on existing appointment reminder cron for 1:1; new dispatcher for group/multi-day sessions).
+
+### 5. Out of scope for this pass
+
+- Model-required training (integrating model slots for training sessions).
+- Automatic certificate issuance / PDF generation on completion — the template is stored; issuing is a follow-up.
+
+### Technical notes
+
+- New server functions in `src/lib/training.functions.ts` and `src/lib/training-public.functions.ts` (public list + booking).
+- New public server route unnecessary; use existing anon publishable client via slug RPC.
+- 1:1 bookings write into `appointments` so the calendar, reminders, and payments already work.
+- Group/multi-day capacity enforced in the booking server function inside a transaction (`select ... for update` on the session row).
+- Public tab lives in the existing `m.$slug.index.tsx` — new route `m.$slug.training.$courseId.tsx` for the booking flow.
+
+I'll ship steps 1–4 in this pass and leave (5) as follow-ups.
