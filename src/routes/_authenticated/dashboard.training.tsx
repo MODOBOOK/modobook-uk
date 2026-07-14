@@ -10,7 +10,7 @@ import {
   getCourseWithSessions,
   upsertSessions,
 } from "@/lib/training.functions";
-import { getMyLocations } from "@/lib/locations.functions";
+import { listMyLocations } from "@/lib/locations.functions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
