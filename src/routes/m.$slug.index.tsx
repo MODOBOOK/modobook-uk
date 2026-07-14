@@ -1051,15 +1051,25 @@ function BookPage() {
       )}
 
       {/* Booking & cancellation policy */}
-      {(profile.deposit_policy_text || (profile.cancellation_rules && profile.cancellation_rules.length > 0) || (profile.deposit_amount_cents ?? 0) > 0) && (
+      {(() => {
+        const isPercent = (profile.deposit_type ?? "fixed") === "percent";
+        const percent = Number(profile.deposit_percent ?? 0);
+        const cents = Number(profile.deposit_amount_cents ?? 0);
+        const hasDeposit = isPercent ? percent > 0 : cents > 0;
+        if (!hasDeposit && !profile.deposit_policy_text && !(profile.cancellation_rules && profile.cancellation_rules.length > 0)) return null;
+        return (
         <section className="mx-auto mt-4 max-w-3xl px-4">
           <details className="rounded-2xl border bg-card px-5 py-4 text-sm sm:px-7" style={{ borderColor: `${brand}1a` }}>
             <summary className="cursor-pointer font-semibold" style={{ color: brand }}>
               Booking & cancellation policy
             </summary>
             <div className="mt-3 space-y-2 opacity-90">
-              {(profile.deposit_amount_cents ?? 0) > 0 && (
-                <p>A £{((profile.deposit_amount_cents ?? 0) / 100).toFixed(2)} deposit is taken at time of booking.</p>
+              {hasDeposit && (
+                <p>
+                  {isPercent
+                    ? `A ${percent}% deposit is taken at time of booking.`
+                    : `A £${(cents / 100).toFixed(2)} deposit is taken at time of booking.`}
+                </p>
               )}
               {profile.deposit_policy_text && <p>{profile.deposit_policy_text}</p>}
               {profile.cancellation_rules && profile.cancellation_rules.length > 0 && (
