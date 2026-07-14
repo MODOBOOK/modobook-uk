@@ -15,6 +15,8 @@ type ConfiguredOptions = {
   cashEnabled: boolean;
   cashOnlyBalance: boolean;
   depositCents: number;
+  depositType: "fixed" | "percent";
+  depositPercent: number;
   passFees: boolean;
   surcharges: { cardPercent: number; bnplPercent: number; depositPercent: number };
   stripeFee: {
