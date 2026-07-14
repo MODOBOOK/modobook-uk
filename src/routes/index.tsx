@@ -393,12 +393,10 @@ function LandingPage() {
               Join the platform built by the people doing the job.
             </h2>
             <p className="mx-auto mt-3 max-w-xl text-muted-foreground">
-              Set up your clinic page in under 10 minutes. Import patients later. Cancel anytime.
+              New practitioner sign-ups are paused while we finish onboarding our founding clinics. Coming soon.
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-4">
-              <Link to="/auth">
-                <Button size="lg">Create your clinic page</Button>
-              </Link>
+              <Button size="lg" disabled>Sign-ups coming soon</Button>
               <Link to="/features">
                 <Button size="lg" variant="outline">Explore the platform</Button>
               </Link>
