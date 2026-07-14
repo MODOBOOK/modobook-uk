@@ -89,7 +89,7 @@ function FeaturesPage() {
             The booking, consultation, clinical and marketing stack — built only for aesthetics, for HCPs and non-HCPs alike.
           </p>
           <div className="mt-8 flex justify-center gap-3">
-            <Link to="/auth"><Button size="lg">Start free</Button></Link>
+            <Button size="lg" disabled>Sign-ups coming soon</Button>
             <Link to="/prescriber-hub"><Button size="lg" variant="outline">Prescriber Hub</Button></Link>
           </div>
         </section>
