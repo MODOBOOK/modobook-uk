@@ -91,6 +91,8 @@ export const updateProfile = createServerFn({ method: "POST" })
       active?: boolean;
       welcome_intro_html?: string;
       deposit_amount_cents?: number;
+      deposit_type?: "fixed" | "percent";
+      deposit_percent?: number;
       deposit_policy_text?: string;
       cancellation_rules?: { hours_before: number; fee_percent: number }[];
       chooser_enabled?: boolean;
