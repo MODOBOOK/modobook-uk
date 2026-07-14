@@ -230,6 +230,8 @@ function BookPage() {
 
         welcome_intro_html?: string | null;
         deposit_amount_cents?: number | null;
+        deposit_type?: string | null;
+        deposit_percent?: number | null;
         deposit_policy_text?: string | null;
         cancellation_rules?: { hours_before: number; fee_percent: number }[] | null;
         chooser_enabled?: boolean | null;
