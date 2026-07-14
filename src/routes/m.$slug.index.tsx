@@ -1032,7 +1032,7 @@ function BookPage() {
 
 
       {/* Welcome message */}
-      {(introHeading || welcomeHtml) && (
+      {(introHeading || introLength > 0) && (
         <section id="welcome-intro" className="mx-auto mt-8 hidden max-w-3xl scroll-mt-24 px-4 sm:block">
           <div
             className="rounded-2xl border bg-card px-5 py-5 shadow-sm sm:px-7 sm:py-6"
