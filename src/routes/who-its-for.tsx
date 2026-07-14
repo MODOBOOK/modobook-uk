@@ -152,9 +152,9 @@ function WhoPage() {
 
         <section className="border-t bg-muted/30">
           <div className="mx-auto max-w-3xl px-4 py-16 text-center lg:px-8">
-            <h2 className="text-2xl font-semibold sm:text-3xl">Not sure which fits?</h2>
-            <p className="mt-3 text-muted-foreground">Create a free account — switch on what you need, hide what you don't.</p>
-            <Link to="/auth"><Button size="lg" className="mt-6">Get started</Button></Link>
+            <h2 className="text-2xl font-semibold sm:text-3xl">New sign-ups coming soon.</h2>
+            <p className="mt-3 text-muted-foreground">We&rsquo;re pausing new practitioner sign-ups for now — check back shortly.</p>
+            <Button size="lg" className="mt-6" disabled>Coming soon</Button>
           </div>
         </section>
       </main>
