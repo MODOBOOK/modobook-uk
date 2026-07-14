@@ -1672,6 +1672,7 @@ function ServiceDialog({
                 session_count: sessionCount,
                 allow_split_payment: sessionCount > 1 ? allowSplit : false,
                 rebook_reminder_days: rebookDays.trim() ? Number(rebookDays) : null,
+                topup_reminder_days: topupDays.trim() ? Number(topupDays) : null,
                 session_interval_days: sessionCount > 1 && intervalDays.trim() ? Number(intervalDays) * (intervalUnit === "weeks" ? 7 : 1) : null,
                 color,
                 active,
