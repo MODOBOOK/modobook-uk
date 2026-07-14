@@ -69,8 +69,31 @@ function ClinicPage() {
     })();
   }, []);
 
+  // Debounced slug availability check
+  useEffect(() => {
+    const normalized = slug.toLowerCase().replace(/[^a-z0-9-]/g, "-");
+    if (!profileId) return;
+    if (normalized === savedSlug) { setSlugStatus("idle"); return; }
+    if (normalized.length < 3) { setSlugStatus("invalid"); return; }
+    setSlugStatus("checking");
+    const t = setTimeout(async () => {
+      try {
+        const res = await checkSlug({ data: { slug: normalized, excludeOwn: profileId } });
+        setSlugStatus(res.available ? "available" : "taken");
+      } catch {
+        setSlugStatus("idle");
+      }
+    }, 400);
+    return () => clearTimeout(t);
+  }, [slug, profileId, savedSlug]);
+
   async function save() {
     if (!profileId) return;
+    const normalizedSlug = slug.toLowerCase().replace(/[^a-z0-9-]/g, "-");
+    if (normalizedSlug !== savedSlug) {
+      if (normalizedSlug.length < 3) { toast.error("Booking link must be at least 3 characters"); return; }
+      if (slugStatus === "taken") { toast.error("That booking link is taken"); return; }
+    }
     setSaving(true);
     try {
       await update({
