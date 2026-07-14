@@ -64,7 +64,9 @@ function PoliciesPage() {
             intro_expandable: introExpandable,
             show_intro: true,
           },
-          deposit_amount_cents: depositPounds ? Math.round(Number(depositPounds) * 100) : 0,
+          deposit_amount_cents: depositType === "fixed" && depositPounds ? Math.round(Number(depositPounds) * 100) : 0,
+          deposit_type: depositType,
+          deposit_percent: depositType === "percent" && depositPercent ? Math.max(0, Math.min(100, Number(depositPercent))) : 0,
           deposit_policy_text: depositText,
           cancellation_rules: rules
             .filter((r) => Number.isFinite(r.hours_before) && Number.isFinite(r.fee_percent))
