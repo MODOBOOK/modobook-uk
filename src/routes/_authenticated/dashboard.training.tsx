@@ -148,7 +148,7 @@ function CourseEditor({ id, onClose }: { id: string; onClose: () => void }) {
   const getFn = useServerFn(getCourseWithSessions);
   const updateFn = useServerFn(updateCourse);
   const upsertFn = useServerFn(upsertSessions);
-  const locFn = useServerFn(getMyLocations);
+  const locFn = useServerFn(listMyLocations);
 
   const q = useQuery({
     queryKey: ["training-course", id],
