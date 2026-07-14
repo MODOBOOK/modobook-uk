@@ -267,9 +267,8 @@ function CreatePractitionerCard() {
   const [fullName, setFullName] = useState("");
   const [clinicName, setClinicName] = useState("");
   const [password, setPassword] = useState("");
-  const [sendReset, setSendReset] = useState(true);
   const [busy, setBusy] = useState(false);
-  const [result, setResult] = useState<{ email: string; temp_password: string | null; action_link: string | null } | null>(null);
+  const [result, setResult] = useState<{ email: string; temp_password: string | null } | null>(null);
 
   async function submit() {
     if (!email.trim()) { toast.error("Email is required"); return; }
@@ -281,10 +280,10 @@ function CreatePractitionerCard() {
           full_name: fullName.trim() || null,
           clinic_name: clinicName.trim() || null,
           password: password.trim() || null,
-          send_reset: sendReset,
         },
       });
-      setResult({ email: r.email, temp_password: r.temp_password, action_link: r.action_link });
+      setResult({ email: r.email, temp_password: r.temp_password });
+
       toast.success("Account created");
       setEmail(""); setFullName(""); setClinicName(""); setPassword("");
       router.invalidate();
