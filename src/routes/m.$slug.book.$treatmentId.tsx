@@ -637,6 +637,11 @@ function BookTreatmentPage() {
               {sessionCount} sessions{sessionSpacing ? ` · ${sessionSpacing}` : ""}
             </Badge>
           )}
+          {ctx.locations.length === 1 && (
+            <span className="inline-flex items-center gap-1 opacity-70">
+              <MapPin className="h-4 w-4" /> {(ctx.locations[0] as Loc).name}
+            </span>
+          )}
         </CardContent>
       </Card>
 
