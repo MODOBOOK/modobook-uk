@@ -291,7 +291,7 @@ function PatientProfilePage() {
               {showCancelled ? "Hide cancelled" : "Show cancelled"}
             </Button>
             <Button size="sm" variant="secondary" asChild>
-              <Link to="/dashboard/new-appointment"><Plus className="mr-1 h-3.5 w-3.5" />New</Link>
+              <Link to="/dashboard/new-appointment" search={{ clientId: client.id }}><Plus className="mr-1 h-3.5 w-3.5" />New</Link>
             </Button>
           </>
         }
