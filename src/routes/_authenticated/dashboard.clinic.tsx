@@ -20,6 +20,10 @@ function ClinicPage() {
   const router = useRouter();
   const update = useServerFn(updateProfile);
   const fetchProfile = useServerFn(getMyProfile);
+  const checkSlug = useServerFn(checkSlugAvailable);
+
+  const [savedSlug, setSavedSlug] = useState<string>("");
+  const [slugStatus, setSlugStatus] = useState<"idle" | "checking" | "available" | "taken" | "invalid">("idle");
 
   const [profileId, setProfileId] = useState<string>("");
   const [slug, setSlug] = useState<string>("");
