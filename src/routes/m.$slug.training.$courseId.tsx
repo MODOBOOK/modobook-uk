@@ -27,7 +27,17 @@ function BookCoursePage() {
   const { slug, courseId } = useParams({ from: "/m/$slug/training/$courseId" });
   const navigate = useNavigate();
   const data = Route.useLoaderData();
-  const { course, sessions, bookingsBySession, locations } = data;
+  type Session = { id: string; session_date: string; start_time: string; end_time: string; location_id: string | null };
+  type Loc = { id: string; name: string; address_line1: string | null; address_line2: string | null; city: string | null; postcode: string | null; country: string | null };
+  const course = data.course as {
+    id: string; name: string; description: string | null; mode: string;
+    duration_min: number; price: number | string; capacity: number | null;
+    cpd_hours: number | string | null; prerequisites: string | null;
+    require_prereq_confirm: boolean;
+  };
+  const sessions = data.sessions as Session[];
+  const bookingsBySession = data.bookingsBySession as Record<string, number>;
+  const locations = data.locations as Loc[];
   const bookFn = useServerFn(createTrainingBooking);
 
   const isSchedule = course.mode === "group" || course.mode === "multi_day";
