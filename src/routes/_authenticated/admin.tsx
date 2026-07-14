@@ -10,6 +10,7 @@ import {
   adminSendPasswordReset,
   adminSetProfileActive,
   adminDeleteClient,
+  adminCreatePractitioner,
 } from "@/lib/admin.functions";
 import {
   listSubscriptionPlans,
