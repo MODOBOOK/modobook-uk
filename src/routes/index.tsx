@@ -107,7 +107,9 @@ function LandingPage() {
                 shuts everyone else out.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
-                <Button size="lg" disabled>Sign-ups coming soon</Button>
+                <Link to="/auth">
+                  <Button size="lg">Start free — set up in minutes</Button>
+                </Link>
                 <Link to="/features">
                   <Button size="lg" variant="outline">
                     Explore the platform <ArrowRight className="ml-1 h-4 w-4" />
@@ -115,8 +117,9 @@ function LandingPage() {
                 </Link>
               </div>
               <p className="mt-4 text-sm text-muted-foreground">
-                New practitioner sign-ups are paused · 0% booking fees · Your data stays in the UK/EU
+                No card required · 0% booking fees · Your data stays in the UK/EU
               </p>
+
             </div>
             <div className="relative">
               <div className="grid aspect-[4/3] w-full grid-cols-2 grid-rows-2 gap-3 rounded-3xl bg-gradient-to-br from-primary/10 via-muted/40 to-primary/5 p-6 shadow-xl ring-1 ring-black/5 sm:gap-5 sm:p-10">
@@ -393,14 +396,17 @@ function LandingPage() {
               Join the platform built by the people doing the job.
             </h2>
             <p className="mx-auto mt-3 max-w-xl text-muted-foreground">
-              New practitioner sign-ups are paused while we finish onboarding our founding clinics. Coming soon.
+              Start free today — set up in minutes and keep 100% of your booking revenue.
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-4">
-              <Button size="lg" disabled>Sign-ups coming soon</Button>
+              <Link to="/auth">
+                <Button size="lg">Start free</Button>
+              </Link>
               <Link to="/features">
                 <Button size="lg" variant="outline">Explore the platform</Button>
               </Link>
             </div>
+
           </div>
         </section>
       </main>
@@ -427,7 +433,9 @@ export function SiteHeader() {
           <Link to="/auth">
             <Button variant="ghost">Sign in</Button>
           </Link>
-          <Button disabled className="hidden sm:inline-flex">Coming soon</Button>
+          <Link to="/auth" className="hidden sm:inline-flex">
+            <Button>Get started</Button>
+          </Link>
         </div>
       </div>
     </header>

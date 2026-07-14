@@ -4,11 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { Loader2 } from "lucide-react";
 import { BrandMark } from "@/components/BrandMark";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
+import { fetchActiveTerms, recordTermsAcceptance } from "@/lib/platform-terms";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/auth")({
@@ -20,7 +22,7 @@ export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
       { title: "Sign in | MODO" },
-      { name: "description", content: "Sign in to your MODO account." },
+      { name: "description", content: "Sign in or create your MODO account." },
     ],
   }),
   component: AuthPage,
@@ -37,9 +39,9 @@ function AuthPage() {
       : { to: isPrescriberFlow ? "/hub/verification" : "/dashboard" };
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
   const [forgotOpen, setForgotOpen] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
-
 
   async function handleForgot(e: React.FormEvent) {
     e.preventDefault();
@@ -54,7 +56,6 @@ function AuthPage() {
     setForgotOpen(false);
   }
 
-
   async function handleOAuth(provider: "google" | "apple") {
     setLoading(true);
     const redirectUri = `${window.location.origin}/auth`;
@@ -64,9 +65,7 @@ function AuthPage() {
       toast.error(result.error.message || `${provider === "apple" ? "Apple" : "Google"} sign in failed`);
       return;
     }
-    if (result.redirected) {
-      return;
-    }
+    if (result.redirected) return;
     router.navigate(postAuthTo());
   }
 
@@ -75,11 +74,39 @@ function AuthPage() {
     setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
+    if (error) { toast.error(error.message); return; }
     router.navigate(postAuthTo());
+  }
+
+  async function handleSignUp(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/dashboard`,
+          data: { full_name: fullName },
+        },
+      });
+      if (error) throw error;
+      // Record terms acceptance if we have a session
+      if (data.session) {
+        try {
+          const terms = await fetchActiveTerms();
+          if (terms) await recordTermsAcceptance(terms.id, "signup");
+        } catch { /* ignore */ }
+        toast.success("Account created — welcome!");
+        router.navigate(postAuthTo());
+      } else {
+        toast.success("Check your email to confirm your account.");
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Sign up failed");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -91,54 +118,70 @@ function AuthPage() {
 
         <Card>
           <CardHeader className="text-center">
-            <CardTitle>Welcome back</CardTitle>
-            <CardDescription>
-              Sign in to your existing MODO account. New sign-ups are paused — coming soon.
-            </CardDescription>
+            <CardTitle>Welcome to MODO</CardTitle>
+            <CardDescription>Sign in or create your practitioner account.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4 pt-4">
-            <form onSubmit={handleSignIn} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-              </div>
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                Sign in
-              </Button>
-              <button
-                type="button"
-                className="block w-full text-center text-xs text-muted-foreground underline-offset-2 hover:underline"
-                onClick={() => { setForgotOpen((v) => !v); setForgotEmail(email); }}
-              >
-                Forgot password?
-              </button>
-              {forgotOpen && (
-                <div className="rounded-md border bg-muted/40 p-3">
-                  <Label htmlFor="forgot-email" className="text-xs">Send a reset link to</Label>
-                  <div className="mt-1 flex gap-2">
-                    <Input id="forgot-email" type="email" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} placeholder="you@example.com" />
-                    <Button type="button" size="sm" onClick={handleForgot} disabled={loading || !forgotEmail}>Send</Button>
+            <Tabs defaultValue="signin">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="signin">Sign in</TabsTrigger>
+                <TabsTrigger value="signup">Create account</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="signin" className="space-y-4 pt-4">
+                <form onSubmit={handleSignIn} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
                   </div>
-                </div>
-              )}
-            </form>
+                  <div className="space-y-2">
+                    <Label htmlFor="password">Password</Label>
+                    <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+                  </div>
+                  <Button type="submit" className="w-full" disabled={loading}>
+                    {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                    Sign in
+                  </Button>
+                  <button
+                    type="button"
+                    className="block w-full text-center text-xs text-muted-foreground underline-offset-2 hover:underline"
+                    onClick={() => { setForgotOpen((v) => !v); setForgotEmail(email); }}
+                  >
+                    Forgot password?
+                  </button>
+                  {forgotOpen && (
+                    <div className="rounded-md border bg-muted/40 p-3">
+                      <Label htmlFor="forgot-email" className="text-xs">Send a reset link to</Label>
+                      <div className="mt-1 flex gap-2">
+                        <Input id="forgot-email" type="email" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} placeholder="you@example.com" />
+                        <Button type="button" size="sm" onClick={handleForgot} disabled={loading || !forgotEmail}>Send</Button>
+                      </div>
+                    </div>
+                  )}
+                </form>
+              </TabsContent>
+
+              <TabsContent value="signup" className="space-y-4 pt-4">
+                <form onSubmit={handleSignUp} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-name">Full name</Label>
+                    <Input id="signup-name" value={fullName} onChange={(e) => setFullName(e.target.value)} required />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-email">Email</Label>
+                    <Input id="signup-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-password">Password</Label>
+                    <Input id="signup-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
+                  </div>
+                  <Button type="submit" className="w-full" disabled={loading}>
+                    {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                    Create account
+                  </Button>
+                </form>
+              </TabsContent>
+            </Tabs>
 
             <Separator />
 
@@ -151,19 +194,9 @@ function AuthPage() {
               Continue with Apple
             </Button>
 
-            <div className="rounded-md border border-dashed bg-muted/30 p-4 text-center">
-              <p className="text-sm font-medium text-foreground">New sign-ups — coming soon</p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                We&rsquo;re not accepting new practitioner accounts just yet. Check back shortly.
-              </p>
-            </div>
-
             <p className="text-center text-xs text-muted-foreground">
-              By signing in you agree to our{" "}
-              <Link to="/terms" className="underline">
-                Terms &amp; Conditions
-              </Link>
-              .
+              By continuing you agree to our{" "}
+              <Link to="/terms" className="underline">Terms &amp; Conditions</Link>.
             </p>
           </CardContent>
         </Card>
