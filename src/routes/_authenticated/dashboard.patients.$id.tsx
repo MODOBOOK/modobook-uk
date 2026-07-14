@@ -171,7 +171,7 @@ function PatientProfilePage() {
       <div className="sticky top-0 z-10 rounded-xl border bg-card/95 shadow-sm backdrop-blur">
         <div className="flex items-center gap-2 overflow-x-auto px-3 py-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <Button size="sm" variant="default" className="shrink-0" asChild>
-            <Link to="/dashboard/new-appointment"><CalendarPlus className="mr-1.5 h-4 w-4" />Book</Link>
+            <Link to="/dashboard/new-appointment" search={{ clientId: client.id }}><CalendarPlus className="mr-1.5 h-4 w-4" />Book</Link>
           </Button>
           <Button size="sm" variant="outline" className="shrink-0" onClick={() => setEmailOpen(true)} disabled={!client.email}>
             <Mail className="mr-1.5 h-4 w-4" />Email
