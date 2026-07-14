@@ -99,6 +99,7 @@ function ClinicPage() {
       await update({
         data: {
           id: profileId,
+          slug: normalizedSlug,
           clinic_name: clinicName,
           full_name: fullName,
           display_name_mode: displayNameMode,
@@ -116,6 +117,8 @@ function ClinicPage() {
 
       });
 
+      setSavedSlug(normalizedSlug);
+      setSlug(normalizedSlug);
       toast.success("Saved");
       router.invalidate();
     } catch (e) {
