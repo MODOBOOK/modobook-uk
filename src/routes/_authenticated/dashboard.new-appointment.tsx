@@ -27,6 +27,9 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/dashboard/new-appointment")({
   ssr: false,
+  validateSearch: (search: Record<string, unknown>) => ({
+    clientId: typeof search.clientId === "string" ? search.clientId : undefined,
+  }),
   loader: async () => {
     const profile = await getMyProfile();
     if (!profile) throw new Error("No profile");
