@@ -90,6 +90,7 @@ type TreatmentForm = {
   session_count: number;
   allow_split_payment: boolean;
   rebook_reminder_days: number | null;
+  topup_reminder_days: number | null;
   session_interval_days: number | null;
   aftercare_html: string;
   aftercare_delay_hours: number;
@@ -417,6 +418,11 @@ function TreatmentDialog({
       ? String((treatment as { rebook_reminder_days?: number | null }).rebook_reminder_days)
       : "",
   );
+  const [topupDays, setTopupDays] = useState<string>(
+    (treatment as { topup_reminder_days?: number | null } | null)?.topup_reminder_days != null
+      ? String((treatment as { topup_reminder_days?: number | null }).topup_reminder_days)
+      : "",
+  );
   const initialSessionIntervalDays = (treatment as { session_interval_days?: number | null } | null)?.session_interval_days ?? null;
   const [sessionIntervalValue, setSessionIntervalValue] = useState<string>(
     initialSessionIntervalDays != null
@@ -510,6 +516,11 @@ function TreatmentDialog({
     setRebookDays(
       (treatment as { rebook_reminder_days?: number | null } | null)?.rebook_reminder_days != null
         ? String((treatment as { rebook_reminder_days?: number | null }).rebook_reminder_days)
+        : "",
+    );
+    setTopupDays(
+      (treatment as { topup_reminder_days?: number | null } | null)?.topup_reminder_days != null
+        ? String((treatment as { topup_reminder_days?: number | null }).topup_reminder_days)
         : "",
     );
     const interval = (treatment as { session_interval_days?: number | null } | null)?.session_interval_days ?? null;
@@ -733,16 +744,27 @@ function TreatmentDialog({
               />
             </div>
             <div>
-              <Label className="text-xs text-muted-foreground">Rebook reminder — days after appointment</Label>
+              <Label className="text-xs text-muted-foreground">Rebook reminder — days after</Label>
               <Input
                 type="number"
                 min={0}
-                placeholder="e.g. 28"
+                placeholder="e.g. 90"
                 value={rebookDays}
                 onChange={(e) => setRebookDays(e.target.value)}
               />
-              <p className="mt-1 text-[11px] text-muted-foreground">Internal only — not visible to patients.</p>
+              <p className="mt-1 text-[11px] text-muted-foreground">Emails the patient a "time to rebook" reminder this many days after their appointment. Leave blank to use the category default.</p>
             </div>
+          </div>
+          <div>
+            <Label className="text-xs text-muted-foreground">Top-up reminder — days after</Label>
+            <Input
+              type="number"
+              min={0}
+              placeholder="e.g. 30"
+              value={topupDays}
+              onChange={(e) => setTopupDays(e.target.value)}
+            />
+            <p className="mt-1 text-[11px] text-muted-foreground">Optional shorter reminder (e.g. filler top-up) sent before the full rebook. Leave blank to skip or use category default.</p>
           </div>
           <div className={`space-y-1.5 ${sessionCount > 1 ? "" : "opacity-60"}`}>
             <Label className="text-xs text-muted-foreground">How far apart should sessions be?</Label>
@@ -1056,6 +1078,7 @@ function TreatmentDialog({
               session_count: sessionCount,
               allow_split_payment: allowSplit && sessionCount >= 2,
               rebook_reminder_days: rebookDays === "" ? null : Number(rebookDays),
+              topup_reminder_days: topupDays === "" ? null : Number(topupDays),
               session_interval_days: sessionCount > 1 && sessionIntervalValue !== ""
                 ? Number(sessionIntervalValue) * (sessionIntervalUnit === "weeks" ? 7 : 1)
                 : null,

@@ -55,6 +55,7 @@ export const createTreatment = createServerFn({ method: "POST" })
       session_count?: number;
       allow_split_payment?: boolean;
       rebook_reminder_days?: number | null;
+      topup_reminder_days?: number | null;
       session_interval_days?: number | null;
       color?: string | null;
 
@@ -91,6 +92,7 @@ export const createTreatment = createServerFn({ method: "POST" })
         session_count: data.session_count ?? 1,
         allow_split_payment: data.allow_split_payment ?? false,
         rebook_reminder_days: data.rebook_reminder_days ?? null,
+        topup_reminder_days: data.topup_reminder_days ?? null,
         session_interval_days: data.session_interval_days ?? null,
         color: data.color ?? null,
       } as never)
@@ -125,6 +127,7 @@ export const updateTreatment = createServerFn({ method: "POST" })
       session_count?: number;
       allow_split_payment?: boolean;
       rebook_reminder_days?: number | null;
+      topup_reminder_days?: number | null;
       session_interval_days?: number | null;
       color?: string | null;
 
@@ -171,6 +174,7 @@ export const updateTreatment = createServerFn({ method: "POST" })
     if (data.session_count !== undefined) update.session_count = data.session_count;
     if (data.allow_split_payment !== undefined) update.allow_split_payment = data.allow_split_payment;
     if (data.rebook_reminder_days !== undefined) update.rebook_reminder_days = data.rebook_reminder_days;
+    if (data.topup_reminder_days !== undefined) update.topup_reminder_days = data.topup_reminder_days;
     if (data.session_interval_days !== undefined) update.session_interval_days = data.session_interval_days;
 
     if (data.color !== undefined) update.color = data.color;

@@ -462,6 +462,32 @@ export type Database = {
           },
         ]
       }
+      appointment_rebook_reminders_sent: {
+        Row: {
+          appointment_id: string
+          kind: string
+          sent_at: string
+        }
+        Insert: {
+          appointment_id: string
+          kind: string
+          sent_at?: string
+        }
+        Update: {
+          appointment_id?: string
+          kind?: string
+          sent_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_rebook_reminders_sent_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       appointment_reminder_rules: {
         Row: {
           closing: string | null
@@ -5354,8 +5380,10 @@ export type Database = {
           name: string
           parent_id: string | null
           profile_id: string
+          rebook_reminder_days: number | null
           slug: string | null
           sort_order: number
+          topup_reminder_days: number | null
           updated_at: string
         }
         Insert: {
@@ -5368,8 +5396,10 @@ export type Database = {
           name: string
           parent_id?: string | null
           profile_id: string
+          rebook_reminder_days?: number | null
           slug?: string | null
           sort_order?: number
+          topup_reminder_days?: number | null
           updated_at?: string
         }
         Update: {
@@ -5382,8 +5412,10 @@ export type Database = {
           name?: string
           parent_id?: string | null
           profile_id?: string
+          rebook_reminder_days?: number | null
           slug?: string | null
           sort_order?: number
+          topup_reminder_days?: number | null
           updated_at?: string
         }
         Relationships: [
@@ -5858,6 +5890,7 @@ export type Database = {
           session_interval_days: number | null
           sort_order: number
           timing_notes: string | null
+          topup_reminder_days: number | null
           updated_at: string
         }
         Insert: {
@@ -5903,6 +5936,7 @@ export type Database = {
           session_interval_days?: number | null
           sort_order?: number
           timing_notes?: string | null
+          topup_reminder_days?: number | null
           updated_at?: string
         }
         Update: {
@@ -5948,6 +5982,7 @@ export type Database = {
           session_interval_days?: number | null
           sort_order?: number
           timing_notes?: string | null
+          topup_reminder_days?: number | null
           updated_at?: string
         }
         Relationships: [

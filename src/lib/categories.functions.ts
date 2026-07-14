@@ -101,6 +101,8 @@ export const createCategory = createServerFn({ method: "POST" })
       icon?: string;
       sort_order?: number;
       coming_soon_at?: string | null;
+      rebook_reminder_days?: number | null;
+      topup_reminder_days?: number | null;
     }) => input,
   )
   .handler(async ({ data, context }) => {
@@ -121,7 +123,9 @@ export const createCategory = createServerFn({ method: "POST" })
         sort_order: data.sort_order ?? 0,
         slug,
         coming_soon_at: data.coming_soon_at ?? null,
-      })
+        rebook_reminder_days: data.rebook_reminder_days ?? null,
+        topup_reminder_days: data.topup_reminder_days ?? null,
+      } as never)
       .select()
       .single();
     if (error) throw error;
@@ -139,6 +143,8 @@ export const updateCategory = createServerFn({ method: "POST" })
       icon?: string | null;
       sort_order?: number;
       coming_soon_at?: string | null;
+      rebook_reminder_days?: number | null;
+      topup_reminder_days?: number | null;
     }) => input,
   )
   .handler(async ({ data, context }) => {
@@ -150,6 +156,8 @@ export const updateCategory = createServerFn({ method: "POST" })
     if (data.icon !== undefined) update.icon = data.icon;
     if (data.sort_order !== undefined) update.sort_order = data.sort_order;
     if (data.coming_soon_at !== undefined) update.coming_soon_at = data.coming_soon_at;
+    if (data.rebook_reminder_days !== undefined) (update as Record<string, unknown>).rebook_reminder_days = data.rebook_reminder_days;
+    if (data.topup_reminder_days !== undefined) (update as Record<string, unknown>).topup_reminder_days = data.topup_reminder_days;
     const { data: row, error } = await supabase
       .from("treatment_categories")
       .update(update)

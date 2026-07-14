@@ -440,6 +440,7 @@ function ServicesPage() {
               session_count: base.session_count,
               allow_split_payment: base.allow_split_payment,
               rebook_reminder_days: base.rebook_reminder_days,
+              topup_reminder_days: base.topup_reminder_days,
               session_interval_days: base.session_interval_days,
               color: base.color,
               picture_url: base.picture_url,
@@ -1150,6 +1151,7 @@ function ServiceDialog({
     session_count?: number;
     allow_split_payment?: boolean;
     rebook_reminder_days?: number | null;
+    topup_reminder_days?: number | null;
     session_interval_days?: number | null;
     color?: string | null;
     active?: boolean;
@@ -1201,6 +1203,7 @@ function ServiceDialog({
   const [sessionCount, setSessionCount] = useState(1);
   const [allowSplit, setAllowSplit] = useState(false);
   const [rebookDays, setRebookDays] = useState<string>("");
+  const [topupDays, setTopupDays] = useState<string>("");
   const [intervalDays, setIntervalDays] = useState<string>("");
   const [intervalUnit, setIntervalUnit] = useState<"days" | "weeks">("weeks");
   const [color, setColor] = useState<string>(PRESET_COLORS[0]);
@@ -1399,17 +1402,29 @@ function ServiceDialog({
                 <p className="text-[11px] text-muted-foreground">Shown to patients e.g. "3 sessions included".</p>
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="s-rebook">Rebook reminder — how many days after</Label>
+                <Label htmlFor="s-rebook">Rebook reminder — days after</Label>
                 <Input
                   id="s-rebook"
                   type="number"
                   min={0}
-                  placeholder="e.g. 30"
+                  placeholder="e.g. 90"
                   value={rebookDays}
                   onChange={(e) => setRebookDays(e.target.value)}
                 />
-                <p className="text-[11px] text-muted-foreground">Sent to the patient this many days after their appointment. Not shown on the booking page.</p>
+                <p className="text-[11px] text-muted-foreground">"Time to rebook" email sent this many days after their appointment.</p>
               </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="s-topup">Top-up reminder — days after (optional)</Label>
+              <Input
+                id="s-topup"
+                type="number"
+                min={0}
+                placeholder="e.g. 30"
+                value={topupDays}
+                onChange={(e) => setTopupDays(e.target.value)}
+              />
+              <p className="text-[11px] text-muted-foreground">Shorter reminder before a full rebook (e.g. filler top-up). Leave blank to skip.</p>
             </div>
             <div className={`space-y-1.5 ${sessionCount > 1 ? "" : "opacity-60"}`}>
               <Label htmlFor="s-int">How far apart should sessions be?</Label>
@@ -1657,6 +1672,7 @@ function ServiceDialog({
                 session_count: sessionCount,
                 allow_split_payment: sessionCount > 1 ? allowSplit : false,
                 rebook_reminder_days: rebookDays.trim() ? Number(rebookDays) : null,
+                topup_reminder_days: topupDays.trim() ? Number(topupDays) : null,
                 session_interval_days: sessionCount > 1 && intervalDays.trim() ? Number(intervalDays) * (intervalUnit === "weeks" ? 7 : 1) : null,
                 color,
                 active,

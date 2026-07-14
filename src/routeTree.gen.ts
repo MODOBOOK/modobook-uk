@@ -115,6 +115,7 @@ import { Route as ApiPublicStripeOauthCallbackRouteImport } from './routes/api/p
 import { Route as ApiPublicPushDispatchRouteImport } from './routes/api/public/push/dispatch'
 import { Route as ApiPublicMedicalFormTokenRouteImport } from './routes/api.public.medical-form.$token'
 import { Route as ApiPublicHooksReviewEmailsRouteImport } from './routes/api/public/hooks/review-emails'
+import { Route as ApiPublicHooksRebookRemindersRouteImport } from './routes/api/public/hooks/rebook-reminders'
 import { Route as ApiPublicHooksMarketingDispatchRouteImport } from './routes/api/public/hooks/marketing-dispatch'
 import { Route as ApiPublicHooksDailyScheduleDigestRouteImport } from './routes/api/public/hooks/daily-schedule-digest'
 import { Route as ApiPublicHooksAppointmentRemindersRouteImport } from './routes/api/public/hooks/appointment-reminders'
@@ -715,6 +716,12 @@ const ApiPublicHooksReviewEmailsRoute =
     path: '/api/public/hooks/review-emails',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksRebookRemindersRoute =
+  ApiPublicHooksRebookRemindersRouteImport.update({
+    id: '/api/public/hooks/rebook-reminders',
+    path: '/api/public/hooks/rebook-reminders',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksMarketingDispatchRoute =
   ApiPublicHooksMarketingDispatchRouteImport.update({
     id: '/api/public/hooks/marketing-dispatch',
@@ -881,6 +888,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/appointment-reminders': typeof ApiPublicHooksAppointmentRemindersRoute
   '/api/public/hooks/daily-schedule-digest': typeof ApiPublicHooksDailyScheduleDigestRoute
   '/api/public/hooks/marketing-dispatch': typeof ApiPublicHooksMarketingDispatchRoute
+  '/api/public/hooks/rebook-reminders': typeof ApiPublicHooksRebookRemindersRoute
   '/api/public/hooks/review-emails': typeof ApiPublicHooksReviewEmailsRoute
   '/api/public/medical-form/$token': typeof ApiPublicMedicalFormTokenRoute
   '/api/public/push/dispatch': typeof ApiPublicPushDispatchRoute
@@ -993,6 +1001,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/appointment-reminders': typeof ApiPublicHooksAppointmentRemindersRoute
   '/api/public/hooks/daily-schedule-digest': typeof ApiPublicHooksDailyScheduleDigestRoute
   '/api/public/hooks/marketing-dispatch': typeof ApiPublicHooksMarketingDispatchRoute
+  '/api/public/hooks/rebook-reminders': typeof ApiPublicHooksRebookRemindersRoute
   '/api/public/hooks/review-emails': typeof ApiPublicHooksReviewEmailsRoute
   '/api/public/medical-form/$token': typeof ApiPublicMedicalFormTokenRoute
   '/api/public/push/dispatch': typeof ApiPublicPushDispatchRoute
@@ -1113,6 +1122,7 @@ export interface FileRoutesById {
   '/api/public/hooks/appointment-reminders': typeof ApiPublicHooksAppointmentRemindersRoute
   '/api/public/hooks/daily-schedule-digest': typeof ApiPublicHooksDailyScheduleDigestRoute
   '/api/public/hooks/marketing-dispatch': typeof ApiPublicHooksMarketingDispatchRoute
+  '/api/public/hooks/rebook-reminders': typeof ApiPublicHooksRebookRemindersRoute
   '/api/public/hooks/review-emails': typeof ApiPublicHooksReviewEmailsRoute
   '/api/public/medical-form/$token': typeof ApiPublicMedicalFormTokenRoute
   '/api/public/push/dispatch': typeof ApiPublicPushDispatchRoute
@@ -1233,6 +1243,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/appointment-reminders'
     | '/api/public/hooks/daily-schedule-digest'
     | '/api/public/hooks/marketing-dispatch'
+    | '/api/public/hooks/rebook-reminders'
     | '/api/public/hooks/review-emails'
     | '/api/public/medical-form/$token'
     | '/api/public/push/dispatch'
@@ -1345,6 +1356,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/appointment-reminders'
     | '/api/public/hooks/daily-schedule-digest'
     | '/api/public/hooks/marketing-dispatch'
+    | '/api/public/hooks/rebook-reminders'
     | '/api/public/hooks/review-emails'
     | '/api/public/medical-form/$token'
     | '/api/public/push/dispatch'
@@ -1464,6 +1476,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/appointment-reminders'
     | '/api/public/hooks/daily-schedule-digest'
     | '/api/public/hooks/marketing-dispatch'
+    | '/api/public/hooks/rebook-reminders'
     | '/api/public/hooks/review-emails'
     | '/api/public/medical-form/$token'
     | '/api/public/push/dispatch'
@@ -1509,6 +1522,7 @@ export interface RootRouteChildren {
   ApiPublicHooksAppointmentRemindersRoute: typeof ApiPublicHooksAppointmentRemindersRoute
   ApiPublicHooksDailyScheduleDigestRoute: typeof ApiPublicHooksDailyScheduleDigestRoute
   ApiPublicHooksMarketingDispatchRoute: typeof ApiPublicHooksMarketingDispatchRoute
+  ApiPublicHooksRebookRemindersRoute: typeof ApiPublicHooksRebookRemindersRoute
   ApiPublicHooksReviewEmailsRoute: typeof ApiPublicHooksReviewEmailsRoute
   ApiPublicMedicalFormTokenRoute: typeof ApiPublicMedicalFormTokenRoute
   ApiPublicPushDispatchRoute: typeof ApiPublicPushDispatchRoute
@@ -2265,6 +2279,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksReviewEmailsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/rebook-reminders': {
+      id: '/api/public/hooks/rebook-reminders'
+      path: '/api/public/hooks/rebook-reminders'
+      fullPath: '/api/public/hooks/rebook-reminders'
+      preLoaderRoute: typeof ApiPublicHooksRebookRemindersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/marketing-dispatch': {
       id: '/api/public/hooks/marketing-dispatch'
       path: '/api/public/hooks/marketing-dispatch'
@@ -2679,6 +2700,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksDailyScheduleDigestRoute:
     ApiPublicHooksDailyScheduleDigestRoute,
   ApiPublicHooksMarketingDispatchRoute: ApiPublicHooksMarketingDispatchRoute,
+  ApiPublicHooksRebookRemindersRoute: ApiPublicHooksRebookRemindersRoute,
   ApiPublicHooksReviewEmailsRoute: ApiPublicHooksReviewEmailsRoute,
   ApiPublicMedicalFormTokenRoute: ApiPublicMedicalFormTokenRoute,
   ApiPublicPushDispatchRoute: ApiPublicPushDispatchRoute,

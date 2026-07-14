@@ -34,6 +34,8 @@ type Cat = {
   description: string | null;
   icon: string | null;
   sort_order: number;
+  rebook_reminder_days: number | null;
+  topup_reminder_days: number | null;
 };
 
 type TreeNode = Cat & { children: TreeNode[] };
@@ -256,11 +258,19 @@ function CategoryDialog({
     name: string;
     description?: string;
     icon?: string;
+    rebook_reminder_days?: number | null;
+    topup_reminder_days?: number | null;
   }) => Promise<void>;
 }) {
   const [name, setName] = useState(cat?.name ?? "");
   const [description, setDescription] = useState(cat?.description ?? "");
   const [icon, setIcon] = useState(cat?.icon ?? "");
+  const [rebookDays, setRebookDays] = useState<string>(
+    cat?.rebook_reminder_days != null ? String(cat.rebook_reminder_days) : "",
+  );
+  const [topupDays, setTopupDays] = useState<string>(
+    cat?.topup_reminder_days != null ? String(cat.topup_reminder_days) : "",
+  );
   const [saving, setSaving] = useState(false);
 
   // Reset when dialog opens
@@ -269,6 +279,8 @@ function CategoryDialog({
       setName(cat?.name ?? "");
       setDescription(cat?.description ?? "");
       setIcon(cat?.icon ?? "");
+      setRebookDays(cat?.rebook_reminder_days != null ? String(cat.rebook_reminder_days) : "");
+      setTopupDays(cat?.topup_reminder_days != null ? String(cat.topup_reminder_days) : "");
     }
   }, [open, cat]);
 
@@ -315,6 +327,36 @@ function CategoryDialog({
               maxLength={4}
             />
           </div>
+          <div className="rounded-md border p-3 space-y-3">
+            <div>
+              <Label className="m-0 text-sm">Reminders (default for this category)</Label>
+              <p className="text-[11px] text-muted-foreground">Used for treatments in this category that don't set their own value.</p>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="cat-rebook" className="text-xs text-muted-foreground">Rebook reminder — days after</Label>
+                <Input
+                  id="cat-rebook"
+                  type="number"
+                  min={0}
+                  placeholder="e.g. 90"
+                  value={rebookDays}
+                  onChange={(e) => setRebookDays(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="cat-topup" className="text-xs text-muted-foreground">Top-up reminder — days after</Label>
+                <Input
+                  id="cat-topup"
+                  type="number"
+                  min={0}
+                  placeholder="e.g. 30"
+                  value={topupDays}
+                  onChange={(e) => setTopupDays(e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={onClose}>
@@ -328,6 +370,8 @@ function CategoryDialog({
                 name: name.trim(),
                 description: description.trim() || undefined,
                 icon: icon.trim() || undefined,
+                rebook_reminder_days: rebookDays.trim() === "" ? null : Number(rebookDays),
+                topup_reminder_days: topupDays.trim() === "" ? null : Number(topupDays),
               });
               setSaving(false);
             }}
