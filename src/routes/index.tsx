@@ -107,9 +107,7 @@ function LandingPage() {
                 shuts everyone else out.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
-                <Link to="/auth">
-                  <Button size="lg">Start free — set up in minutes</Button>
-                </Link>
+                <Button size="lg" disabled>Sign-ups coming soon</Button>
                 <Link to="/features">
                   <Button size="lg" variant="outline">
                     Explore the platform <ArrowRight className="ml-1 h-4 w-4" />
@@ -117,7 +115,7 @@ function LandingPage() {
                 </Link>
               </div>
               <p className="mt-4 text-sm text-muted-foreground">
-                No card required · 0% booking fees · Your data stays in the UK/EU
+                New practitioner sign-ups are paused · 0% booking fees · Your data stays in the UK/EU
               </p>
             </div>
             <div className="relative">
@@ -395,12 +393,10 @@ function LandingPage() {
               Join the platform built by the people doing the job.
             </h2>
             <p className="mx-auto mt-3 max-w-xl text-muted-foreground">
-              Set up your clinic page in under 10 minutes. Import patients later. Cancel anytime.
+              New practitioner sign-ups are paused while we finish onboarding our founding clinics. Coming soon.
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-4">
-              <Link to="/auth">
-                <Button size="lg">Create your clinic page</Button>
-              </Link>
+              <Button size="lg" disabled>Sign-ups coming soon</Button>
               <Link to="/features">
                 <Button size="lg" variant="outline">Explore the platform</Button>
               </Link>
@@ -431,9 +427,7 @@ export function SiteHeader() {
           <Link to="/auth">
             <Button variant="ghost">Sign in</Button>
           </Link>
-          <Link to="/auth">
-            <Button>Get started</Button>
-          </Link>
+          <Button disabled className="hidden sm:inline-flex">Coming soon</Button>
         </div>
       </div>
     </header>

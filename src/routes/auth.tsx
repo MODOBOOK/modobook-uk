@@ -3,8 +3,6 @@ import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Loader2 } from "lucide-react";
@@ -12,7 +10,6 @@ import { BrandMark } from "@/components/BrandMark";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { toast } from "sonner";
-import { fetchActiveTerms, recordTermsAcceptance } from "@/lib/platform-terms";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
@@ -42,7 +39,6 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [forgotOpen, setForgotOpen] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
-  const [acceptTerms, setAcceptTerms] = useState(false);
 
 
   async function handleForgot(e: React.FormEvent) {
@@ -86,45 +82,6 @@ function AuthPage() {
     router.navigate(postAuthTo());
   }
 
-  async function handleSignUp(e: React.FormEvent) {
-    e.preventDefault();
-    if (!acceptTerms) {
-      toast.error("Please accept the Terms & Conditions to create your account.");
-      return;
-    }
-    setLoading(true);
-    // Snapshot active terms *before* signup so we know which version to record.
-    let activeTermsId: string | null = null;
-    try {
-      const active = await fetchActiveTerms();
-      activeTermsId = active?.id ?? null;
-    } catch {
-      /* non-fatal — gate will re-prompt on first dashboard entry */
-    }
-    const { data, error } = await supabase.auth.signUp({ email, password });
-    if (error) {
-      setLoading(false);
-      toast.error(error.message);
-      return;
-    }
-    // If session was created immediately (email confirmations off), record acceptance now.
-    if (data.session && activeTermsId) {
-      try {
-        await recordTermsAcceptance(activeTermsId, "signup");
-      } catch {
-        /* gate will re-prompt if this failed */
-      }
-    }
-    setLoading(false);
-    if (isPrescriberFlow) {
-      toast.success("Account created. Submit your verification next.");
-      router.navigate({ to: "/hub/verification" });
-    } else {
-      toast.success("Account created. Complete your clinic profile next.");
-      router.navigate({ to: "/onboarding" });
-    }
-  }
-
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted/50 px-4 py-12">
       <div className="w-full max-w-md">
@@ -132,133 +89,84 @@ function AuthPage() {
           <BrandMark size="lg" />
         </div>
 
-        <Tabs defaultValue={isPrescriberFlow ? "signup" : "signin"}>
-          <Card>
-            <CardHeader className="text-center">
-              <CardTitle>{isPrescriberFlow ? "Prescriber sign up" : "Welcome"}</CardTitle>
-              <CardDescription>
-                {isPrescriberFlow
-                  ? "Create an account, then submit your verification (registration body, PIN, photo ID)."
-                  : "Sign in or create a new practitioner account."}
-              </CardDescription>
-            </CardHeader>
-            <TabsList className="mx-6 grid w-[calc(100%-3rem)] grid-cols-2">
-              <TabsTrigger value="signin">Sign in</TabsTrigger>
-              <TabsTrigger value="signup">Sign up</TabsTrigger>
-            </TabsList>
-            <CardContent className="space-y-4 pt-4">
-              <TabsContent value="signin" className="mt-0">
-                <form onSubmit={handleSignIn} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="password">Password</Label>
-                    <Input
-                      id="password"
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                    Sign in
-                  </Button>
-                  <button
-                    type="button"
-                    className="block w-full text-center text-xs text-muted-foreground underline-offset-2 hover:underline"
-                    onClick={() => { setForgotOpen((v) => !v); setForgotEmail(email); }}
-                  >
-                    Forgot password?
-                  </button>
-                  {forgotOpen && (
-                    <div className="rounded-md border bg-muted/40 p-3">
-                      <Label htmlFor="forgot-email" className="text-xs">Send a reset link to</Label>
-                      <div className="mt-1 flex gap-2">
-                        <Input id="forgot-email" type="email" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} placeholder="you@example.com" />
-                        <Button type="button" size="sm" onClick={handleForgot} disabled={loading || !forgotEmail}>Send</Button>
-                      </div>
-                    </div>
-                  )}
-                </form>
-
-              </TabsContent>
-
-              <TabsContent value="signup" className="mt-0">
-                <form onSubmit={handleSignUp} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-email">Email</Label>
-                    <Input
-                      id="signup-email"
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-password">Password</Label>
-                    <Input
-                      id="signup-password"
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                      minLength={6}
-                    />
-                  </div>
-                  <label className="flex items-start gap-2 rounded-md border bg-muted/30 p-3 text-xs text-muted-foreground">
-                    <Checkbox
-                      checked={acceptTerms}
-                      onCheckedChange={(v) => setAcceptTerms(Boolean(v))}
-                      className="mt-0.5"
-                    />
-                    <span>
-                      I agree to the MODO BOOK{" "}
-                      <Link to="/terms" target="_blank" className="underline text-foreground">
-                        Terms &amp; Conditions
-                      </Link>
-                      . I confirm I am the account holder and, where I process patient
-                      data, I am the Data Controller and MODO acts as my Data Processor.
-                    </span>
-                  </label>
-                  <Button type="submit" className="w-full" disabled={loading || !acceptTerms}>
-                    {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                    Create account
-                  </Button>
-                </form>
-              </TabsContent>
-
-              <Separator />
-
-              <Button variant="outline" className="w-full" onClick={() => handleOAuth("google")} disabled={loading}>
-                Continue with Google
+        <Card>
+          <CardHeader className="text-center">
+            <CardTitle>Welcome back</CardTitle>
+            <CardDescription>
+              Sign in to your existing MODO account. New sign-ups are paused — coming soon.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4 pt-4">
+            <form onSubmit={handleSignIn} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                Sign in
               </Button>
+              <button
+                type="button"
+                className="block w-full text-center text-xs text-muted-foreground underline-offset-2 hover:underline"
+                onClick={() => { setForgotOpen((v) => !v); setForgotEmail(email); }}
+              >
+                Forgot password?
+              </button>
+              {forgotOpen && (
+                <div className="rounded-md border bg-muted/40 p-3">
+                  <Label htmlFor="forgot-email" className="text-xs">Send a reset link to</Label>
+                  <div className="mt-1 flex gap-2">
+                    <Input id="forgot-email" type="email" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} placeholder="you@example.com" />
+                    <Button type="button" size="sm" onClick={handleForgot} disabled={loading || !forgotEmail}>Send</Button>
+                  </div>
+                </div>
+              )}
+            </form>
 
-              <Button variant="outline" className="w-full bg-black text-white hover:bg-black/90 hover:text-white" onClick={() => handleOAuth("apple")} disabled={loading}>
-                <svg className="mr-2 h-4 w-4" viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zM256.6 84.5c26.9-31.9 24.5-61 23.7-71.5-23.8 1.4-51.4 16.2-67.1 34.4-17.3 19.5-27.5 43.6-25.3 70.9 25.7 2 49.1-11.2 68.7-33.8z"/></svg>
-                Continue with Apple
-              </Button>
+            <Separator />
 
-              <p className="text-center text-xs text-muted-foreground">
-                By signing in you agree to our{" "}
-                <Link to="/terms" className="underline">
-                  Terms &amp; Conditions
-                </Link>
-                .
+            <Button variant="outline" className="w-full" onClick={() => handleOAuth("google")} disabled={loading}>
+              Continue with Google
+            </Button>
+
+            <Button variant="outline" className="w-full bg-black text-white hover:bg-black/90 hover:text-white" onClick={() => handleOAuth("apple")} disabled={loading}>
+              <svg className="mr-2 h-4 w-4" viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zM256.6 84.5c26.9-31.9 24.5-61 23.7-71.5-23.8 1.4-51.4 16.2-67.1 34.4-17.3 19.5-27.5 43.6-25.3 70.9 25.7 2 49.1-11.2 68.7-33.8z"/></svg>
+              Continue with Apple
+            </Button>
+
+            <div className="rounded-md border border-dashed bg-muted/30 p-4 text-center">
+              <p className="text-sm font-medium text-foreground">New sign-ups — coming soon</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                We&rsquo;re not accepting new practitioner accounts just yet. Check back shortly.
               </p>
-            </CardContent>
-          </Card>
-        </Tabs>
+            </div>
+
+            <p className="text-center text-xs text-muted-foreground">
+              By signing in you agree to our{" "}
+              <Link to="/terms" className="underline">
+                Terms &amp; Conditions
+              </Link>
+              .
+            </p>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
