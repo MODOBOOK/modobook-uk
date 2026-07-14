@@ -485,6 +485,8 @@ export const getPublicPaymentOptions = createServerFn({ method: "GET" })
       cashEnabled: prof.allow_pay_in_clinic !== false,
       cashOnlyBalance,
       depositCents: Math.max(0, Number(prof.deposit_amount_cents ?? 0)),
+      depositType: ((prof as { deposit_type?: string | null }).deposit_type as "fixed" | "percent" | null) === "percent" ? "percent" as const : "fixed" as const,
+      depositPercent: Math.max(0, Math.min(100, Number((prof as { deposit_percent?: number | null }).deposit_percent ?? 0))),
       passFees: !!prof.payment_pass_fees_to_customer,
       surcharges: {
         cardPercent: prof.payment_surcharge_card_enabled ? Number(prof.payment_surcharge_card_percent ?? 0) : 0,
