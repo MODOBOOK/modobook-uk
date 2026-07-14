@@ -71,7 +71,6 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
     return o.depositCents;
   }, [configured, opts, depositOverrideCents, treatmentTotalCents]);
 
-  const treatmentTotalCents = Math.round(totalAmount * 100);
 
   const availableModes = useMemo(() => {
     if (!configured) return [] as Array<"deposit" | "full" | "cash">;
