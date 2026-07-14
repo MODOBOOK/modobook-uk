@@ -440,6 +440,7 @@ function ServicesPage() {
               session_count: base.session_count,
               allow_split_payment: base.allow_split_payment,
               rebook_reminder_days: base.rebook_reminder_days,
+              topup_reminder_days: base.topup_reminder_days,
               session_interval_days: base.session_interval_days,
               color: base.color,
               picture_url: base.picture_url,
@@ -1150,6 +1151,7 @@ function ServiceDialog({
     session_count?: number;
     allow_split_payment?: boolean;
     rebook_reminder_days?: number | null;
+    topup_reminder_days?: number | null;
     session_interval_days?: number | null;
     color?: string | null;
     active?: boolean;
@@ -1201,6 +1203,7 @@ function ServiceDialog({
   const [sessionCount, setSessionCount] = useState(1);
   const [allowSplit, setAllowSplit] = useState(false);
   const [rebookDays, setRebookDays] = useState<string>("");
+  const [topupDays, setTopupDays] = useState<string>("");
   const [intervalDays, setIntervalDays] = useState<string>("");
   const [intervalUnit, setIntervalUnit] = useState<"days" | "weeks">("weeks");
   const [color, setColor] = useState<string>(PRESET_COLORS[0]);
