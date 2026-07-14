@@ -74,6 +74,7 @@ function fromMin(n: number) { return `${String(Math.floor(n / 60)).padStart(2, "
 
 function NewAppointmentPage() {
   const { profile } = Route.useLoaderData();
+  const { clientId: preselectClientId } = Route.useSearch();
   const navigate = useNavigate();
   const [treatments, setTreatments] = useState<Treatment[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
