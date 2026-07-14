@@ -1,6 +1,9 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { getPublicClinic } from "@/lib/public-clinic.functions";
+import { listPublicCourses } from "@/lib/training-public.functions";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -276,6 +279,14 @@ function BookPage() {
 
 
   const { slug } = useParams({ from: "/m/$slug/" });
+  const listCoursesFn = useServerFn(listPublicCourses);
+  const trainingQuery = useQuery({
+    queryKey: ["public-training", slug],
+    queryFn: () => listCoursesFn({ data: { slug } }),
+    staleTime: 60_000,
+  });
+  const trainingCourses = (trainingQuery.data?.courses ?? []) as Array<{ id: string; name: string; mode: string; cpd_hours: number | string | null; price: number | string; duration_min: number; description: string | null; cover_image_url: string | null }>;
+  const hasTraining = trainingCourses.length > 0;
   const { primary: displayPrimary } = resolveDisplayNames(profile);
   const brand = theme?.primary_color || profile.brand_color || "#1f2a44";
 
@@ -1539,13 +1550,19 @@ function BookPage() {
 
             return (
               <Tabs defaultValue="treatments" className="w-full">
-                <TabsList className="grid w-full grid-cols-2 h-auto" style={{ backgroundColor: `${brand}10` }}>
+                <TabsList className={`grid w-full ${hasTraining ? "grid-cols-3" : "grid-cols-2"} h-auto`} style={{ backgroundColor: `${brand}10` }}>
                   <TabsTrigger value="treatments" className="text-sm sm:text-base py-2.5">Treatments</TabsTrigger>
                   <TabsTrigger value="packages" disabled={packages.length === 0} className="text-sm sm:text-base py-2.5">
                     <PackageIcon className="mr-1.5 h-4 w-4" />
                     Packages
                   </TabsTrigger>
+                  {hasTraining && (
+                    <TabsTrigger value="training" className="text-sm sm:text-base py-2.5">
+                      Training
+                    </TabsTrigger>
+                  )}
                 </TabsList>
+
 
                 <TabsContent value="treatments" className="mt-4">
                   <p className="mb-3 text-sm opacity-70">
@@ -1871,8 +1888,37 @@ function BookPage() {
                   })()}
                 </TabsContent>
 
+                {hasTraining && (
+                  <TabsContent value="training" className="mt-4">
+                    <div className="grid gap-3">
+                      {trainingCourses.map((c) => (
+                        <Card key={c.id} className="overflow-hidden">
+                          {c.cover_image_url && (
+                            <img src={c.cover_image_url} alt={c.name} className="h-32 w-full object-cover" />
+                          )}
+                          <CardContent className="space-y-2 p-4">
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <h3 className="font-serif text-lg" style={{ color: brand }}>{c.name}</h3>
+                              <span className="text-sm font-semibold" style={{ color: brand }}>£{Number(c.price).toFixed(2)}</span>
+                            </div>
+                            {c.description && <p className="text-sm opacity-80">{c.description}</p>}
+                            <div className="flex flex-wrap gap-3 text-xs opacity-70">
+                              <span>{c.duration_min} min</span>
+                              <span>{c.mode === "one_to_one" ? "1:1" : c.mode === "group" ? "Group" : "Multi-day"}</span>
+                              {c.cpd_hours != null && <span>{c.cpd_hours} CPD hours</span>}
+                            </div>
+                            <Link to="/m/$slug/training/$courseId" params={{ slug, courseId: c.id }}>
+                              <Button size="sm" style={{ backgroundColor: brand, color: "#fff" }}>Book this course</Button>
+                            </Link>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </TabsContent>
+                )}
 
               </Tabs>
+
             );
           })()}
         </section>

@@ -31,6 +31,7 @@ import {
   Stethoscope,
   Mail,
   Gift,
+  GraduationCap,
 
 
 } from "lucide-react";
@@ -74,6 +75,7 @@ const navItems = [
   { label: "Branding", to: "/dashboard/branding", icon: Palette },
   
   { label: "Services", to: "/dashboard/services", icon: Scissors },
+  { label: "Training", to: "/dashboard/training", icon: GraduationCap },
   { label: "Add-ons", to: "/dashboard/addons", icon: Sparkles },
   { label: "Packages", to: "/dashboard/packages", icon: Package },
   { label: "Discounts", to: "/dashboard/discounts", icon: Percent },
