@@ -1062,6 +1062,7 @@ function TreatmentDialog({
               session_count: sessionCount,
               allow_split_payment: allowSplit && sessionCount >= 2,
               rebook_reminder_days: rebookDays === "" ? null : Number(rebookDays),
+              topup_reminder_days: topupDays === "" ? null : Number(topupDays),
               session_interval_days: sessionCount > 1 && sessionIntervalValue !== ""
                 ? Number(sessionIntervalValue) * (sessionIntervalUnit === "weeks" ? 7 : 1)
                 : null,
