@@ -117,6 +117,7 @@ import { Route as ApiPublicHooksMarketingDispatchRouteImport } from './routes/ap
 import { Route as ApiPublicHooksDailyScheduleDigestRouteImport } from './routes/api/public/hooks/daily-schedule-digest'
 import { Route as ApiPublicHooksAppointmentRemindersRouteImport } from './routes/api/public/hooks/appointment-reminders'
 import { Route as ApiPublicBookingReleaseRouteImport } from './routes/api/public/booking/release'
+import { Route as AuthenticatedDashboardTrainingBookingsRouteImport } from './routes/_authenticated/dashboard.training.bookings'
 import { Route as AuthenticatedDashboardPatientsIdRouteImport } from './routes/_authenticated/dashboard.patients.$id'
 import { Route as AuthenticatedDashboardMarketingTemplatesRouteImport } from './routes/_authenticated/dashboard.marketing.templates'
 import { Route as AuthenticatedDashboardMarketingSegmentsRouteImport } from './routes/_authenticated/dashboard.marketing.segments'
@@ -725,6 +726,12 @@ const ApiPublicBookingReleaseRoute = ApiPublicBookingReleaseRouteImport.update({
   path: '/api/public/booking/release',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedDashboardTrainingBookingsRoute =
+  AuthenticatedDashboardTrainingBookingsRouteImport.update({
+    id: '/bookings',
+    path: '/bookings',
+    getParentRoute: () => AuthenticatedDashboardTrainingRoute,
+  } as any)
 const AuthenticatedDashboardPatientsIdRoute =
   AuthenticatedDashboardPatientsIdRouteImport.update({
     id: '/$id',
@@ -827,7 +834,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/services': typeof AuthenticatedDashboardServicesRoute
   '/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
   '/dashboard/staff': typeof AuthenticatedDashboardStaffRoute
-  '/dashboard/training': typeof AuthenticatedDashboardTrainingRoute
+  '/dashboard/training': typeof AuthenticatedDashboardTrainingRouteWithChildren
   '/dashboard/treatments': typeof AuthenticatedDashboardTreatmentsRoute
   '/hub/connections': typeof AuthenticatedHubConnectionsRoute
   '/hub/prescribing': typeof AuthenticatedHubPrescribingRoute
@@ -856,6 +863,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/marketing/segments': typeof AuthenticatedDashboardMarketingSegmentsRoute
   '/dashboard/marketing/templates': typeof AuthenticatedDashboardMarketingTemplatesRoute
   '/dashboard/patients/$id': typeof AuthenticatedDashboardPatientsIdRoute
+  '/dashboard/training/bookings': typeof AuthenticatedDashboardTrainingBookingsRoute
   '/api/public/booking/release': typeof ApiPublicBookingReleaseRoute
   '/api/public/hooks/appointment-reminders': typeof ApiPublicHooksAppointmentRemindersRoute
   '/api/public/hooks/daily-schedule-digest': typeof ApiPublicHooksDailyScheduleDigestRoute
@@ -936,7 +944,7 @@ export interface FileRoutesByTo {
   '/dashboard/services': typeof AuthenticatedDashboardServicesRoute
   '/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
   '/dashboard/staff': typeof AuthenticatedDashboardStaffRoute
-  '/dashboard/training': typeof AuthenticatedDashboardTrainingRoute
+  '/dashboard/training': typeof AuthenticatedDashboardTrainingRouteWithChildren
   '/dashboard/treatments': typeof AuthenticatedDashboardTreatmentsRoute
   '/hub/connections': typeof AuthenticatedHubConnectionsRoute
   '/hub/prescribing': typeof AuthenticatedHubPrescribingRoute
@@ -965,6 +973,7 @@ export interface FileRoutesByTo {
   '/dashboard/marketing/segments': typeof AuthenticatedDashboardMarketingSegmentsRoute
   '/dashboard/marketing/templates': typeof AuthenticatedDashboardMarketingTemplatesRoute
   '/dashboard/patients/$id': typeof AuthenticatedDashboardPatientsIdRoute
+  '/dashboard/training/bookings': typeof AuthenticatedDashboardTrainingBookingsRoute
   '/api/public/booking/release': typeof ApiPublicBookingReleaseRoute
   '/api/public/hooks/appointment-reminders': typeof ApiPublicHooksAppointmentRemindersRoute
   '/api/public/hooks/daily-schedule-digest': typeof ApiPublicHooksDailyScheduleDigestRoute
@@ -1053,7 +1062,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/services': typeof AuthenticatedDashboardServicesRoute
   '/_authenticated/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
   '/_authenticated/dashboard/staff': typeof AuthenticatedDashboardStaffRoute
-  '/_authenticated/dashboard/training': typeof AuthenticatedDashboardTrainingRoute
+  '/_authenticated/dashboard/training': typeof AuthenticatedDashboardTrainingRouteWithChildren
   '/_authenticated/dashboard/treatments': typeof AuthenticatedDashboardTreatmentsRoute
   '/_authenticated/hub/connections': typeof AuthenticatedHubConnectionsRoute
   '/_authenticated/hub/prescribing': typeof AuthenticatedHubPrescribingRoute
@@ -1082,6 +1091,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/marketing/segments': typeof AuthenticatedDashboardMarketingSegmentsRoute
   '/_authenticated/dashboard/marketing/templates': typeof AuthenticatedDashboardMarketingTemplatesRoute
   '/_authenticated/dashboard/patients/$id': typeof AuthenticatedDashboardPatientsIdRoute
+  '/_authenticated/dashboard/training/bookings': typeof AuthenticatedDashboardTrainingBookingsRoute
   '/api/public/booking/release': typeof ApiPublicBookingReleaseRoute
   '/api/public/hooks/appointment-reminders': typeof ApiPublicHooksAppointmentRemindersRoute
   '/api/public/hooks/daily-schedule-digest': typeof ApiPublicHooksDailyScheduleDigestRoute
@@ -1199,6 +1209,7 @@ export interface FileRouteTypes {
     | '/dashboard/marketing/segments'
     | '/dashboard/marketing/templates'
     | '/dashboard/patients/$id'
+    | '/dashboard/training/bookings'
     | '/api/public/booking/release'
     | '/api/public/hooks/appointment-reminders'
     | '/api/public/hooks/daily-schedule-digest'
@@ -1308,6 +1319,7 @@ export interface FileRouteTypes {
     | '/dashboard/marketing/segments'
     | '/dashboard/marketing/templates'
     | '/dashboard/patients/$id'
+    | '/dashboard/training/bookings'
     | '/api/public/booking/release'
     | '/api/public/hooks/appointment-reminders'
     | '/api/public/hooks/daily-schedule-digest'
@@ -1424,6 +1436,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/marketing/segments'
     | '/_authenticated/dashboard/marketing/templates'
     | '/_authenticated/dashboard/patients/$id'
+    | '/_authenticated/dashboard/training/bookings'
     | '/api/public/booking/release'
     | '/api/public/hooks/appointment-reminders'
     | '/api/public/hooks/daily-schedule-digest'
@@ -2242,6 +2255,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicBookingReleaseRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/dashboard/training/bookings': {
+      id: '/_authenticated/dashboard/training/bookings'
+      path: '/bookings'
+      fullPath: '/dashboard/training/bookings'
+      preLoaderRoute: typeof AuthenticatedDashboardTrainingBookingsRouteImport
+      parentRoute: typeof AuthenticatedDashboardTrainingRoute
+    }
     '/_authenticated/dashboard/patients/$id': {
       id: '/_authenticated/dashboard/patients/$id'
       path: '/$id'
@@ -2343,6 +2363,21 @@ const AuthenticatedDashboardPatientsRouteWithChildren =
     AuthenticatedDashboardPatientsRouteChildren,
   )
 
+interface AuthenticatedDashboardTrainingRouteChildren {
+  AuthenticatedDashboardTrainingBookingsRoute: typeof AuthenticatedDashboardTrainingBookingsRoute
+}
+
+const AuthenticatedDashboardTrainingRouteChildren: AuthenticatedDashboardTrainingRouteChildren =
+  {
+    AuthenticatedDashboardTrainingBookingsRoute:
+      AuthenticatedDashboardTrainingBookingsRoute,
+  }
+
+const AuthenticatedDashboardTrainingRouteWithChildren =
+  AuthenticatedDashboardTrainingRoute._addFileChildren(
+    AuthenticatedDashboardTrainingRouteChildren,
+  )
+
 interface AuthenticatedDashboardRouteChildren {
   AuthenticatedDashboardAboutRoute: typeof AuthenticatedDashboardAboutRoute
   AuthenticatedDashboardAddonsRoute: typeof AuthenticatedDashboardAddonsRoute
@@ -2379,7 +2414,7 @@ interface AuthenticatedDashboardRouteChildren {
   AuthenticatedDashboardServicesRoute: typeof AuthenticatedDashboardServicesRoute
   AuthenticatedDashboardSettingsRoute: typeof AuthenticatedDashboardSettingsRoute
   AuthenticatedDashboardStaffRoute: typeof AuthenticatedDashboardStaffRoute
-  AuthenticatedDashboardTrainingRoute: typeof AuthenticatedDashboardTrainingRoute
+  AuthenticatedDashboardTrainingRoute: typeof AuthenticatedDashboardTrainingRouteWithChildren
   AuthenticatedDashboardTreatmentsRoute: typeof AuthenticatedDashboardTreatmentsRoute
   AuthenticatedDashboardIndexRoute: typeof AuthenticatedDashboardIndexRoute
   AuthenticatedDashboardConsultationsIdRoute: typeof AuthenticatedDashboardConsultationsIdRoute
@@ -2435,7 +2470,8 @@ const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
     AuthenticatedDashboardServicesRoute: AuthenticatedDashboardServicesRoute,
     AuthenticatedDashboardSettingsRoute: AuthenticatedDashboardSettingsRoute,
     AuthenticatedDashboardStaffRoute: AuthenticatedDashboardStaffRoute,
-    AuthenticatedDashboardTrainingRoute: AuthenticatedDashboardTrainingRoute,
+    AuthenticatedDashboardTrainingRoute:
+      AuthenticatedDashboardTrainingRouteWithChildren,
     AuthenticatedDashboardTreatmentsRoute:
       AuthenticatedDashboardTreatmentsRoute,
     AuthenticatedDashboardIndexRoute: AuthenticatedDashboardIndexRoute,
