@@ -180,12 +180,18 @@ function AboutEditor() {
         on={show("show_hero_image", true)}
         onToggle={(v) => set("show_hero_image", v)}
       >
-        <Label className="text-xs text-muted-foreground">Override image URL (optional — defaults to your branding hero)</Label>
-        <Input
-          value={ap.hero_image_url ?? ""}
-          onChange={(e) => set("hero_image_url", e.target.value)}
-          placeholder="https://…"
-        />
+        <Label className="text-xs text-muted-foreground">Upload a banner image (optional — defaults to your branding hero)</Label>
+        {profileId ? (
+          <ImageUploader
+            label=""
+            value={ap.hero_image_url ?? null}
+            onChange={(url) => set("hero_image_url", url ?? "")}
+            profileId={profileId}
+            folder="hero"
+            previewClass="mt-2 h-40 w-full rounded-md bg-muted/30 object-contain"
+            cropAspect={16 / 9}
+          />
+        ) : null}
       </Bubble>
 
       {/* INTRO */}
