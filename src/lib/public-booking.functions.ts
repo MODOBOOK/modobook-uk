@@ -725,6 +725,8 @@ async function maybeCreateBookingCheckout(args: {
     payment_deposit_enabled?: boolean | null;
     require_deposit_to_confirm?: boolean | null;
     deposit_amount_cents?: number | null;
+    deposit_type?: string | null;
+    deposit_percent?: number | string | null;
     payment_card_full_enabled?: boolean | null;
     payment_klarna_enabled?: boolean | null;
     payment_clearpay_enabled?: boolean | null;
