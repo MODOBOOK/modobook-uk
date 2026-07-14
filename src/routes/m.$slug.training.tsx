@@ -29,7 +29,11 @@ const MODE_LABEL: Record<string, string> = {
 function TrainingList() {
   const { slug } = useParams({ from: "/m/$slug/training" });
   const data = Route.useLoaderData();
-  const courses = data.courses;
+  const courses = data.courses as Array<{
+    id: string; name: string; description: string | null; cover_image_url: string | null;
+    mode: string; duration_min: number; price: number | string;
+    capacity: number | null; cpd_hours: number | string | null;
+  }>;
 
   if (!courses.length) {
     return (
