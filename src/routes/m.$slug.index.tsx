@@ -364,7 +364,15 @@ function BookPage() {
   const introLength = (welcomeHtml || "").replace(/<[^>]*>/g, "").trim().length;
   const introExpandable = introFlag ?? introLength > 240;
 
-  const [locationId, setLocationId] = useState<string | null>(null);
+  const [locationId, setLocationId] = useState<string | null>(
+    locations.length === 1 ? locations[0]!.id : null,
+  );
+  // Auto-select when only one location exists (no need for the patient to click)
+  useEffect(() => {
+    if (locations.length === 1 && !locationId) {
+      setLocationId(locations[0]!.id);
+    }
+  }, [locations, locationId]);
   const [directionsOpen, setDirectionsOpen] = useState(false);
   const [careGuideOpen, setCareGuideOpen] = useState(false);
   const [expandedFavId, setExpandedFavId] = useState<string | null>(null);
