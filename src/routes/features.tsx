@@ -119,9 +119,9 @@ function FeaturesPage() {
         <section className="border-t bg-muted/30">
           <div className="mx-auto max-w-3xl px-4 py-16 text-center lg:px-8">
             <CheckCircle2 className="mx-auto mb-3 h-8 w-8 text-primary" />
-            <h2 className="text-2xl font-semibold sm:text-3xl">Ready to set up your clinic page?</h2>
-            <p className="mt-3 text-muted-foreground">10 minutes from sign-up to your first booking link.</p>
-            <Link to="/auth"><Button size="lg" className="mt-6">Get started</Button></Link>
+            <h2 className="text-2xl font-semibold sm:text-3xl">New sign-ups coming soon.</h2>
+            <p className="mt-3 text-muted-foreground">We&rsquo;re not taking new practitioner accounts right now — check back shortly.</p>
+            <Button size="lg" className="mt-6" disabled>Coming soon</Button>
           </div>
         </section>
       </main>
