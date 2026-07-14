@@ -178,6 +178,19 @@ function NewAppointmentPage() {
     setClientPickerOpen(false);
   }
 
+  // Preselect a patient when arriving via ?clientId= from the patient profile.
+  const preselectAppliedRef = useRef(false);
+  useEffect(() => {
+    if (preselectAppliedRef.current || !preselectClientId || clients.length === 0) return;
+    const match = clients.find((c) => c.id === preselectClientId);
+    if (match) {
+      applyClient(match);
+      preselectAppliedRef.current = true;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [preselectClientId, clients]);
+
+
   function toggle(setter: React.Dispatch<React.SetStateAction<Set<string>>>, id: string) {
     setter((prev) => {
       const n = new Set(prev);
