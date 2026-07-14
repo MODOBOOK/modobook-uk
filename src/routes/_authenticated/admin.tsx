@@ -11,6 +11,7 @@ import {
   adminSetProfileActive,
   adminDeleteClient,
   adminCreatePractitioner,
+  adminInvitePractitioner,
 } from "@/lib/admin.functions";
 import {
   listSubscriptionPlans,
