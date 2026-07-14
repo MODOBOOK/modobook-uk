@@ -269,7 +269,8 @@ function CreatePractitionerCard() {
   const [clinicName, setClinicName] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
-  const [result, setResult] = useState<{ email: string; temp_password: string | null } | null>(null);
+  const [mode, setMode] = useState<"invite" | "password">("invite");
+  const [result, setResult] = useState<{ mode: "invite" | "password"; email: string; temp_password?: string | null } | null>(null);
 
   async function submit() {
     if (!email.trim()) { toast.error("Email is required"); return; }
