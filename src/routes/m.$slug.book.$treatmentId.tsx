@@ -641,6 +641,41 @@ function BookTreatmentPage() {
       </Card>
 
 
+
+      {ctx.locations.length === 1 && (() => {
+        const l = ctx.locations[0] as Loc;
+        const addressParts = [l.address_line1, l.address_line2, l.city, l.postcode, l.country]
+          .filter(Boolean)
+          .join(", ");
+        const mapsUrl = addressParts
+          ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${l.name}, ${addressParts}`)}`
+          : null;
+        return (
+          <Card className="mb-6 border-l-4" style={{ borderLeftColor: brand }}>
+            <CardContent className="flex flex-wrap items-start gap-3 py-4 text-sm">
+              <MapPin className="mt-0.5 h-4 w-4 flex-shrink-0" style={{ color: brand }} />
+              <div className="min-w-0 flex-1">
+                <p className="font-semibold" style={headingStyle}>Booking at {l.name}</p>
+                {addressParts && (
+                  <p className="mt-0.5 text-muted-foreground">{addressParts}</p>
+                )}
+                {mapsUrl && (
+                  <a
+                    href={mapsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-1 inline-block text-xs underline underline-offset-2"
+                    style={{ color: brand }}
+                  >
+                    View on Google Maps
+                  </a>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })()}
+
       {ctx.locations.length > 1 && (
         <Card className="mb-6">
           <CardHeader>
@@ -665,6 +700,7 @@ function BookTreatmentPage() {
           </CardContent>
         </Card>
       )}
+
 
       <Card className="mb-6">
         <CardHeader>
