@@ -49,6 +49,7 @@ function ClinicPage() {
       if (p) {
         setProfileId(p.id);
         setSlug(p.slug ?? "");
+        setSavedSlug(p.slug ?? "");
         setClinicName(p.clinic_name ?? "");
         setFullName(p.full_name ?? "");
         setDisplayNameMode(((p as { display_name_mode?: string }).display_name_mode as "clinic" | "practitioner" | "both") ?? "both");
