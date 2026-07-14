@@ -1147,49 +1147,59 @@ function BookPage() {
 
         <section data-section="locations" className="mx-auto mt-8 max-w-3xl px-4">
           <h2 className="mb-4 text-xl font-bold" style={headingStyle}>
-            Choose Location
+            {locations.length > 1 ? "Choose Location" : "Location"}
           </h2>
           <div className={`grid gap-4 ${locations.length > 1 ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"}`}>
             {locations.map((loc) => {
               const selected = loc.id === locationId;
+              const singleLocation = locations.length === 1;
               const photo = loc.image_url || profile.avatar_url;
               const locPracts = locationPractitioners
                 .filter((lp) => lp.location_id === loc.id)
                 .sort((a, b) => a.display_order - b.display_order)
                 .map((lp) => practitioners.find((p) => p.id === lp.practitioner_id))
                 .filter((p): p is NonNullable<typeof p> => !!p);
+              const cardInner = (
+                <>
+                  {photo ? (
+                    <img src={photo} alt={loc.name} className="h-16 w-16 rounded-full object-cover" />
+                  ) : (
+                    <div className="flex h-16 w-16 items-center justify-center rounded-full text-xl font-bold text-white" style={{ backgroundColor: brand }}>
+                      {loc.name.charAt(0)}
+                    </div>
+                  )}
+                  <div className="flex-1">
+                    <div className="text-base font-bold uppercase leading-tight" style={{ color: brand }}>
+                      {loc.name}
+                      {loc.is_primary && !singleLocation && <Star className="ml-1 inline h-3 w-3" fill="currentColor" />}
+                    </div>
+                    {formatAddress(loc) && (
+                      <div className="mt-1 text-xs opacity-70">{formatAddress(loc)}</div>
+                    )}
+                  </div>
+                </>
+              );
               return (
                 <div
                   key={loc.id}
                   className="rounded-2xl border p-4 transition"
                   style={{
-                    borderColor: selected ? brand : `${brand}22`,
-                    boxShadow: selected ? `0 0 0 2px ${brand}` : undefined,
+                    borderColor: singleLocation ? `${brand}22` : selected ? brand : `${brand}22`,
+                    boxShadow: !singleLocation && selected ? `0 0 0 2px ${brand}` : undefined,
                     backgroundColor: menuCardBg,
                   }}
                 >
-                  <button
-                    type="button"
-                    onClick={() => setLocationId(loc.id)}
-                    className="flex w-full items-center gap-3 text-left"
-                  >
-                    {photo ? (
-                      <img src={photo} alt={loc.name} className="h-16 w-16 rounded-full object-cover" />
-                    ) : (
-                      <div className="flex h-16 w-16 items-center justify-center rounded-full text-xl font-bold text-white" style={{ backgroundColor: brand }}>
-                        {loc.name.charAt(0)}
-                      </div>
-                    )}
-                    <div className="flex-1">
-                      <div className="text-base font-bold uppercase leading-tight" style={{ color: brand }}>
-                        {loc.name}
-                        {loc.is_primary && <Star className="ml-1 inline h-3 w-3" fill="currentColor" />}
-                      </div>
-                      {formatAddress(loc) && (
-                        <div className="mt-1 text-xs opacity-70">{formatAddress(loc)}</div>
-                      )}
-                    </div>
-                  </button>
+                  {singleLocation ? (
+                    <div className="flex w-full items-center gap-3 text-left">{cardInner}</div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setLocationId(loc.id)}
+                      className="flex w-full items-center gap-3 text-left"
+                    >
+                      {cardInner}
+                    </button>
+                  )}
 
                   {selected && locPracts.length > 0 && practSelectionMode !== "first_available" && (
                     <div className="mt-3 border-t pt-3" style={{ borderColor: `${brand}1a` }}>
