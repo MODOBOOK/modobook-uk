@@ -1402,17 +1402,29 @@ function ServiceDialog({
                 <p className="text-[11px] text-muted-foreground">Shown to patients e.g. "3 sessions included".</p>
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="s-rebook">Rebook reminder — how many days after</Label>
+                <Label htmlFor="s-rebook">Rebook reminder — days after</Label>
                 <Input
                   id="s-rebook"
                   type="number"
                   min={0}
-                  placeholder="e.g. 30"
+                  placeholder="e.g. 90"
                   value={rebookDays}
                   onChange={(e) => setRebookDays(e.target.value)}
                 />
-                <p className="text-[11px] text-muted-foreground">Sent to the patient this many days after their appointment. Not shown on the booking page.</p>
+                <p className="text-[11px] text-muted-foreground">"Time to rebook" email sent this many days after their appointment.</p>
               </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="s-topup">Top-up reminder — days after (optional)</Label>
+              <Input
+                id="s-topup"
+                type="number"
+                min={0}
+                placeholder="e.g. 30"
+                value={topupDays}
+                onChange={(e) => setTopupDays(e.target.value)}
+              />
+              <p className="text-[11px] text-muted-foreground">Shorter reminder before a full rebook (e.g. filler top-up). Leave blank to skip.</p>
             </div>
             <div className={`space-y-1.5 ${sessionCount > 1 ? "" : "opacity-60"}`}>
               <Label htmlFor="s-int">How far apart should sessions be?</Label>
