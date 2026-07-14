@@ -1249,36 +1249,6 @@ function BookPage() {
       )}
 
 
-      {/* Training courses CTA — visible whenever the practitioner offers training */}
-      {hasTraining && (
-        <section className="mx-auto mt-8 max-w-3xl px-4">
-          <div
-            className="rounded-2xl border p-5 shadow-sm sm:p-6"
-            style={{ borderColor: `${brand}33`, backgroundColor: `${brand}0d` }}
-          >
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h2 className="text-lg font-bold sm:text-xl" style={headingStyle}>
-                  Training courses
-                </h2>
-                <p className="mt-1 text-sm opacity-75">
-                  {trainingCourses.length === 1
-                    ? "A professional training course is available to book."
-                    : `${trainingCourses.length} professional training courses available to book.`}
-                </p>
-              </div>
-              <Link
-                to="/m/$slug/training"
-                params={{ slug }}
-                className="inline-flex shrink-0 items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
-                style={{ backgroundColor: brand }}
-              >
-                View training
-              </Link>
-            </div>
-          </div>
-        </section>
-      )}
 
       {/* Chooser gate */}
 
