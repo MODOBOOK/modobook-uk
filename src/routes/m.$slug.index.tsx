@@ -1888,8 +1888,37 @@ function BookPage() {
                   })()}
                 </TabsContent>
 
+                {hasTraining && (
+                  <TabsContent value="training" className="mt-4">
+                    <div className="grid gap-3">
+                      {trainingCourses.map((c) => (
+                        <Card key={c.id} className="overflow-hidden">
+                          {c.cover_image_url && (
+                            <img src={c.cover_image_url} alt={c.name} className="h-32 w-full object-cover" />
+                          )}
+                          <CardContent className="space-y-2 p-4">
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <h3 className="font-serif text-lg" style={{ color: brand }}>{c.name}</h3>
+                              <span className="text-sm font-semibold" style={{ color: brand }}>£{Number(c.price).toFixed(2)}</span>
+                            </div>
+                            {c.description && <p className="text-sm opacity-80">{c.description}</p>}
+                            <div className="flex flex-wrap gap-3 text-xs opacity-70">
+                              <span>{c.duration_min} min</span>
+                              <span>{c.mode === "one_to_one" ? "1:1" : c.mode === "group" ? "Group" : "Multi-day"}</span>
+                              {c.cpd_hours != null && <span>{c.cpd_hours} CPD hours</span>}
+                            </div>
+                            <Link to="/m/$slug/training/$courseId" params={{ slug, courseId: c.id }}>
+                              <Button size="sm" style={{ backgroundColor: brand, color: "#fff" }}>Book this course</Button>
+                            </Link>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </TabsContent>
+                )}
 
               </Tabs>
+
             );
           })()}
         </section>
