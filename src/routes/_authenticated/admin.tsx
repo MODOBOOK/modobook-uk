@@ -10,6 +10,7 @@ import {
   adminSendPasswordReset,
   adminSetProfileActive,
   adminDeleteClient,
+  adminCreatePractitioner,
 } from "@/lib/admin.functions";
 import {
   listSubscriptionPlans,
@@ -185,6 +186,9 @@ function AdminPage() {
         </CardContent>
       </Card>
 
+      <CreatePractitionerCard />
+
+
       <Card>
         <CardHeader><CardTitle>Add an admin</CardTitle></CardHeader>
         <CardContent className="space-y-3">
@@ -256,6 +260,107 @@ function AdminPage() {
     </div>
   );
 }
+
+function CreatePractitionerCard() {
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [clinicName, setClinicName] = useState("");
+  const [password, setPassword] = useState("");
+  const [sendReset, setSendReset] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState<{ email: string; temp_password: string | null; action_link: string | null } | null>(null);
+
+  async function submit() {
+    if (!email.trim()) { toast.error("Email is required"); return; }
+    setBusy(true);
+    try {
+      const r = await adminCreatePractitioner({
+        data: {
+          email: email.trim(),
+          full_name: fullName.trim() || null,
+          clinic_name: clinicName.trim() || null,
+          password: password.trim() || null,
+          send_reset: sendReset,
+        },
+      });
+      setResult({ email: r.email, temp_password: r.temp_password, action_link: r.action_link });
+      toast.success("Account created");
+      setEmail(""); setFullName(""); setClinicName(""); setPassword("");
+      router.invalidate();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to create account");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function copy(text: string, label: string) {
+    try { await navigator.clipboard.writeText(text); toast.success(`${label} copied`); }
+    catch { toast.info(text); }
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2"><UserPlus className="h-4 w-4" /> Create practitioner account</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <p className="text-sm text-muted-foreground">
+          Sign-ups are paused publicly. Use this to onboard a new practitioner directly. Their email is auto-confirmed; either set a password below or leave blank to auto-generate one and send them a reset link.
+        </p>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="space-y-1">
+            <Label>Email</Label>
+            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="person@example.com" />
+          </div>
+          <div className="space-y-1">
+            <Label>Full name</Label>
+            <Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Jane Doe" />
+          </div>
+          <div className="space-y-1">
+            <Label>Clinic name</Label>
+            <Input value={clinicName} onChange={(e) => setClinicName(e.target.value)} placeholder="Clinic (optional)" />
+          </div>
+          <div className="space-y-1">
+            <Label>Password (optional)</Label>
+            <Input type="text" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Leave blank to auto-generate" />
+          </div>
+        </div>
+        <label className="flex items-center gap-2 text-sm text-muted-foreground">
+          <input type="checkbox" checked={sendReset} onChange={(e) => setSendReset(e.target.checked)} />
+          Also generate a password reset link so they can set their own
+        </label>
+        <div>
+          <Button onClick={submit} disabled={busy}>
+            <UserPlus className="mr-1 h-4 w-4" /> {busy ? "Creating…" : "Create account"}
+          </Button>
+        </div>
+
+        {result && (
+          <div className="rounded-md border bg-muted/40 p-3 text-sm space-y-2">
+            <div><span className="font-medium">Account:</span> {result.email}</div>
+            {result.temp_password && (
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="font-medium">Temporary password:</span>
+                <code className="rounded bg-background px-2 py-0.5 text-xs">{result.temp_password}</code>
+                <Button size="sm" variant="outline" onClick={() => copy(result.temp_password!, "Password")}>Copy</Button>
+              </div>
+            )}
+            {result.action_link && (
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="font-medium">Reset link:</span>
+                <Button size="sm" variant="outline" onClick={() => copy(result.action_link!, "Reset link")}>Copy link</Button>
+              </div>
+            )}
+            <p className="text-xs text-muted-foreground">Send these to the practitioner via a secure channel.</p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 
 function UserSupportCard() {
   const router = useRouter();

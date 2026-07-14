@@ -171,3 +171,74 @@ export const adminDeleteClient = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const adminCreatePractitioner = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: {
+    email: string;
+    full_name?: string | null;
+    clinic_name?: string | null;
+    password?: string | null;
+    send_reset?: boolean;
+  }) => i)
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const email = data.email.trim().toLowerCase();
+    if (!email) throw new Error("Email is required");
+
+    // Generate a temporary password if none given
+    const tempPassword =
+      data.password && data.password.length >= 8
+        ? data.password
+        : `Modo-${Math.random().toString(36).slice(2, 10)}-${Math.random().toString(36).slice(2, 6)}`;
+
+    const { data: created, error: createErr } = await supabaseAdmin.auth.admin.createUser({
+      email,
+      password: tempPassword,
+      email_confirm: true,
+      user_metadata: {
+        full_name: data.full_name || null,
+        clinic_name: data.clinic_name || null,
+        created_by_admin: true,
+      },
+    });
+    if (createErr) throw createErr;
+    const userId = created.user?.id;
+    if (!userId) throw new Error("User creation failed");
+
+    // Ensure a profile exists / update the basic fields if the signup trigger already made one
+    await supabaseAdmin
+      .from("profiles")
+      .upsert(
+        {
+          user_id: userId,
+          full_name: data.full_name || null,
+          clinic_name: data.clinic_name || null,
+          active: true,
+        },
+        { onConflict: "user_id" },
+      );
+
+    // Optionally send them a password reset link so they can set their own password
+    let actionLink: string | null = null;
+    if (data.send_reset !== false) {
+      try {
+        const { data: link } = await supabaseAdmin.auth.admin.generateLink({
+          type: "recovery",
+          email,
+        });
+        actionLink = link?.properties?.action_link ?? null;
+      } catch {
+        /* ignore */
+      }
+    }
+
+    return {
+      user_id: userId,
+      email,
+      temp_password: data.password ? null : tempPassword,
+      action_link: actionLink,
+    };
+  });
+
+
