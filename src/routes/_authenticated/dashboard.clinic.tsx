@@ -1,13 +1,15 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { updateProfile, getMyProfile } from "@/lib/profiles.functions";
+import { updateProfile, getMyProfile, checkSlugAvailable } from "@/lib/profiles.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { toast } from "sonner";
 import { SaveReminder } from "@/components/SaveReminder";
+import { buildBookingUrl, bookingUrlLabel } from "@/lib/booking-url";
+import { Check, X, Loader2, Copy } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard/clinic")({
   ssr: false,
