@@ -30,9 +30,17 @@ function PoliciesPage() {
   const [introHeading, setIntroHeading] = useState<string>(typeof savedAboutPage.intro_heading === "string" ? savedAboutPage.intro_heading : "");
   const [introExpandable, setIntroExpandable] = useState<boolean>(Boolean(savedAboutPage.intro_expandable));
   const [welcome, setWelcome] = useState<string>((profile.welcome_intro_html as string | null) ?? "");
+  const [depositType, setDepositType] = useState<"fixed" | "percent">(
+    ((profile as { deposit_type?: string | null }).deposit_type as "fixed" | "percent" | null) === "percent" ? "percent" : "fixed",
+  );
   const [depositPounds, setDepositPounds] = useState<string>(
     ((profile.deposit_amount_cents as number | null) ?? 0) > 0
       ? String(((profile.deposit_amount_cents as number) ?? 0) / 100)
+      : "",
+  );
+  const [depositPercent, setDepositPercent] = useState<string>(
+    Number((profile as { deposit_percent?: number | null }).deposit_percent ?? 0) > 0
+      ? String((profile as { deposit_percent?: number | null }).deposit_percent)
       : "",
   );
   const [depositText, setDepositText] = useState<string>((profile.deposit_policy_text as string | null) ?? "");
