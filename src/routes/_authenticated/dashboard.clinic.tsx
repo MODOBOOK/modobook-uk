@@ -134,9 +134,55 @@ function ClinicPage() {
     <div className="space-y-6 max-w-3xl">
       <div>
         <h1 className="text-2xl font-bold">Clinic page</h1>
-        <p className="text-muted-foreground">Your public booking page at /m/{slug}.</p>
+        <p className="text-muted-foreground">Your public booking page at {bookingUrlLabel(savedSlug || slug)}.</p>
       </div>
       <SaveReminder />
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Booking link</CardTitle>
+          <CardDescription>Change the name at the end of your booking URL. Existing links using the old name will stop working.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div>
+            <Label>Booking link</Label>
+            <div className="mt-1 flex items-stretch gap-2">
+              <div className="flex flex-1 items-stretch rounded-md border overflow-hidden">
+                <span className="px-3 flex items-center bg-muted text-sm text-muted-foreground select-none">modobook.uk/m/</span>
+                <Input
+                  value={slug}
+                  onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-"))}
+                  placeholder="your-clinic"
+                  className="border-0 rounded-none focus-visible:ring-0"
+                />
+                <span className="px-3 flex items-center">
+                  {slugStatus === "checking" && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+                  {slugStatus === "available" && <Check className="h-4 w-4 text-emerald-600" />}
+                  {(slugStatus === "taken" || slugStatus === "invalid") && <X className="h-4 w-4 text-destructive" />}
+                </span>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  const url = buildBookingUrl(savedSlug || slug);
+                  navigator.clipboard.writeText(url).then(() => toast.success("Copied"));
+                }}
+              >
+                <Copy className="h-4 w-4" />
+              </Button>
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {slugStatus === "taken" && <span className="text-destructive">That name is already taken.</span>}
+              {slugStatus === "invalid" && <span className="text-destructive">Use at least 3 characters — letters, numbers or hyphens.</span>}
+              {slugStatus === "available" && <span className="text-emerald-600">Available. Save to update your link.</span>}
+              {slugStatus === "idle" && <>Full URL: {buildBookingUrl(savedSlug || slug)}</>}
+              {slugStatus === "checking" && <>Checking availability…</>}
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle>Details</CardTitle>
