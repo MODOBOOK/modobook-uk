@@ -29,7 +29,6 @@ import {
   ChevronRight,
   ChevronDown,
   ChevronUp,
-  GraduationCap,
 } from "lucide-react";
 
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -795,47 +794,6 @@ function BookPage() {
 
 
 
-      {/* Training courses CTA — prominent, immediately after hero */}
-      {hasTraining && (
-        <section className="mx-auto mt-6 max-w-5xl px-4">
-          <div
-            className="relative overflow-hidden rounded-2xl border p-5 shadow-md sm:p-7"
-            style={{ borderColor: `${brand}55`, background: `linear-gradient(135deg, ${brand}18 0%, ${brand}08 100%)` }}
-          >
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-start gap-4">
-                <div
-                  className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl shadow-sm"
-                  style={{ backgroundColor: brand, color: "#fff" }}
-                >
-                  <GraduationCap className="h-6 w-6" />
-                </div>
-                <div>
-                  <div className="text-xs font-semibold uppercase tracking-wider opacity-70">
-                    Now offering
-                  </div>
-                  <h2 className="mt-0.5 text-xl font-bold sm:text-2xl" style={headingStyle}>
-                    Professional training courses
-                  </h2>
-                  <p className="mt-1 text-sm opacity-80">
-                    {trainingCourses.length === 1
-                      ? "A course is available to book now."
-                      : `${trainingCourses.length} courses available to book now.`}
-                  </p>
-                </div>
-              </div>
-              <Link
-                to="/m/$slug/training"
-                params={{ slug }}
-                className="inline-flex shrink-0 items-center justify-center rounded-full px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
-                style={{ backgroundColor: brand }}
-              >
-                View training
-              </Link>
-            </div>
-          </div>
-        </section>
-      )}
 
       {/* Welcome card */}
       <section
@@ -1545,7 +1503,7 @@ function BookPage() {
       })()}
       {/* Treatments + Packages */}
 
-      {locationId && (!chooserOn || mode === "know" || mode === "consult" || (mode === "unsure" && concernsConfirmed && pickedConcernIds.length > 0)) ? (
+      {locationId && (hasTraining || !chooserOn || mode === "know" || mode === "consult" || (mode === "unsure" && concernsConfirmed && pickedConcernIds.length > 0)) ? (
         <section className="mx-auto mt-10 max-w-3xl px-4 pb-32">
           {chooserOn && (
             <div className="mb-4 flex items-center justify-between">
