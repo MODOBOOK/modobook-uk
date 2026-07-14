@@ -219,26 +219,18 @@ export const adminCreatePractitioner = createServerFn({ method: "POST" })
         { onConflict: "user_id" },
       );
 
-    // Optionally send them a password reset link so they can set their own password
-    let actionLink: string | null = null;
-    if (data.send_reset !== false) {
-      try {
-        const { data: link } = await supabaseAdmin.auth.admin.generateLink({
-          type: "recovery",
-          email,
-        });
-        actionLink = link?.properties?.action_link ?? null;
-      } catch {
-        /* ignore */
-      }
-    }
-
+    // Note: we intentionally do NOT generate a one-time recovery link here.
+    // Those links are frequently consumed by email link-scanners/previewers
+    // before the recipient clicks them, resulting in a Supabase
+    // "Invalid verification code" page. Instead, share the temp credentials
+    // directly and let the new user change their password from their account.
     return {
       user_id: userId,
       email,
-      temp_password: data.password ? null : tempPassword,
-      action_link: actionLink,
+      temp_password: tempPassword,
+      action_link: null as string | null,
     };
   });
+
 
 
