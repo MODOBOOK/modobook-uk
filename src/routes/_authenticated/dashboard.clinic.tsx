@@ -1,13 +1,15 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { updateProfile, getMyProfile } from "@/lib/profiles.functions";
+import { updateProfile, getMyProfile, checkSlugAvailable } from "@/lib/profiles.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { toast } from "sonner";
 import { SaveReminder } from "@/components/SaveReminder";
+import { buildBookingUrl, bookingUrlLabel } from "@/lib/booking-url";
+import { Check, X, Loader2, Copy } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard/clinic")({
   ssr: false,
@@ -18,6 +20,10 @@ function ClinicPage() {
   const router = useRouter();
   const update = useServerFn(updateProfile);
   const fetchProfile = useServerFn(getMyProfile);
+  const checkSlug = useServerFn(checkSlugAvailable);
+
+  const [savedSlug, setSavedSlug] = useState<string>("");
+  const [slugStatus, setSlugStatus] = useState<"idle" | "checking" | "available" | "taken" | "invalid">("idle");
 
   const [profileId, setProfileId] = useState<string>("");
   const [slug, setSlug] = useState<string>("");
@@ -43,6 +49,7 @@ function ClinicPage() {
       if (p) {
         setProfileId(p.id);
         setSlug(p.slug ?? "");
+        setSavedSlug(p.slug ?? "");
         setClinicName(p.clinic_name ?? "");
         setFullName(p.full_name ?? "");
         setDisplayNameMode(((p as { display_name_mode?: string }).display_name_mode as "clinic" | "practitioner" | "both") ?? "both");
@@ -62,13 +69,37 @@ function ClinicPage() {
     })();
   }, []);
 
+  // Debounced slug availability check
+  useEffect(() => {
+    const normalized = slug.toLowerCase().replace(/[^a-z0-9-]/g, "-");
+    if (!profileId) return;
+    if (normalized === savedSlug) { setSlugStatus("idle"); return; }
+    if (normalized.length < 3) { setSlugStatus("invalid"); return; }
+    setSlugStatus("checking");
+    const t = setTimeout(async () => {
+      try {
+        const res = await checkSlug({ data: { slug: normalized, excludeOwn: profileId } });
+        setSlugStatus(res.available ? "available" : "taken");
+      } catch {
+        setSlugStatus("idle");
+      }
+    }, 400);
+    return () => clearTimeout(t);
+  }, [slug, profileId, savedSlug]);
+
   async function save() {
     if (!profileId) return;
+    const normalizedSlug = slug.toLowerCase().replace(/[^a-z0-9-]/g, "-");
+    if (normalizedSlug !== savedSlug) {
+      if (normalizedSlug.length < 3) { toast.error("Booking link must be at least 3 characters"); return; }
+      if (slugStatus === "taken") { toast.error("That booking link is taken"); return; }
+    }
     setSaving(true);
     try {
       await update({
         data: {
           id: profileId,
+          slug: normalizedSlug,
           clinic_name: clinicName,
           full_name: fullName,
           display_name_mode: displayNameMode,
@@ -86,6 +117,8 @@ function ClinicPage() {
 
       });
 
+      setSavedSlug(normalizedSlug);
+      setSlug(normalizedSlug);
       toast.success("Saved");
       router.invalidate();
     } catch (e) {
@@ -101,9 +134,55 @@ function ClinicPage() {
     <div className="space-y-6 max-w-3xl">
       <div>
         <h1 className="text-2xl font-bold">Clinic page</h1>
-        <p className="text-muted-foreground">Your public booking page at /m/{slug}.</p>
+        <p className="text-muted-foreground">Your public booking page at {bookingUrlLabel(savedSlug || slug)}.</p>
       </div>
       <SaveReminder />
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Booking link</CardTitle>
+          <CardDescription>Change the name at the end of your booking URL. Existing links using the old name will stop working.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div>
+            <Label>Booking link</Label>
+            <div className="mt-1 flex items-stretch gap-2">
+              <div className="flex flex-1 items-stretch rounded-md border overflow-hidden">
+                <span className="px-3 flex items-center bg-muted text-sm text-muted-foreground select-none">modobook.uk/m/</span>
+                <Input
+                  value={slug}
+                  onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-"))}
+                  placeholder="your-clinic"
+                  className="border-0 rounded-none focus-visible:ring-0"
+                />
+                <span className="px-3 flex items-center">
+                  {slugStatus === "checking" && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+                  {slugStatus === "available" && <Check className="h-4 w-4 text-emerald-600" />}
+                  {(slugStatus === "taken" || slugStatus === "invalid") && <X className="h-4 w-4 text-destructive" />}
+                </span>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  const url = buildBookingUrl(savedSlug || slug);
+                  navigator.clipboard.writeText(url).then(() => toast.success("Copied"));
+                }}
+              >
+                <Copy className="h-4 w-4" />
+              </Button>
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {slugStatus === "taken" && <span className="text-destructive">That name is already taken.</span>}
+              {slugStatus === "invalid" && <span className="text-destructive">Use at least 3 characters — letters, numbers or hyphens.</span>}
+              {slugStatus === "available" && <span className="text-emerald-600">Available. Save to update your link.</span>}
+              {slugStatus === "idle" && <>Full URL: {buildBookingUrl(savedSlug || slug)}</>}
+              {slugStatus === "checking" && <>Checking availability…</>}
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle>Details</CardTitle>
