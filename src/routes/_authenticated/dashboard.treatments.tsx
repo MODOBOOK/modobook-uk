@@ -90,6 +90,7 @@ type TreatmentForm = {
   session_count: number;
   allow_split_payment: boolean;
   rebook_reminder_days: number | null;
+  topup_reminder_days: number | null;
   session_interval_days: number | null;
   aftercare_html: string;
   aftercare_delay_hours: number;
@@ -415,6 +416,11 @@ function TreatmentDialog({
   const [rebookDays, setRebookDays] = useState<string>(
     (treatment as { rebook_reminder_days?: number | null } | null)?.rebook_reminder_days != null
       ? String((treatment as { rebook_reminder_days?: number | null }).rebook_reminder_days)
+      : "",
+  );
+  const [topupDays, setTopupDays] = useState<string>(
+    (treatment as { topup_reminder_days?: number | null } | null)?.topup_reminder_days != null
+      ? String((treatment as { topup_reminder_days?: number | null }).topup_reminder_days)
       : "",
   );
   const initialSessionIntervalDays = (treatment as { session_interval_days?: number | null } | null)?.session_interval_days ?? null;
