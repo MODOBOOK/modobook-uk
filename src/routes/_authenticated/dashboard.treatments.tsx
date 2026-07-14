@@ -518,6 +518,11 @@ function TreatmentDialog({
         ? String((treatment as { rebook_reminder_days?: number | null }).rebook_reminder_days)
         : "",
     );
+    setTopupDays(
+      (treatment as { topup_reminder_days?: number | null } | null)?.topup_reminder_days != null
+        ? String((treatment as { topup_reminder_days?: number | null }).topup_reminder_days)
+        : "",
+    );
     const interval = (treatment as { session_interval_days?: number | null } | null)?.session_interval_days ?? null;
     setSessionIntervalValue(interval != null ? String(interval % 7 === 0 ? interval / 7 : interval) : "");
     setSessionIntervalUnit(interval != null && interval % 7 === 0 ? "weeks" : "days");
