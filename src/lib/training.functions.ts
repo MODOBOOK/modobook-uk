@@ -6,6 +6,8 @@ type TrainingMode = Database["public"]["Enums"]["training_mode"];
 type PaymentMode = Database["public"]["Enums"]["payment_mode"];
 type BookingStatus = Database["public"]["Enums"]["training_booking_status"];
 
+export type CourseVisibility = "live" | "hidden" | "preview_link" | "coming_soon";
+
 export type CourseInput = {
   name: string;
   description?: string | null;
@@ -24,6 +26,7 @@ export type CourseInput = {
   materials_html?: string | null;
   kit_list?: string | null;
   active?: boolean;
+  visibility?: CourseVisibility;
 };
 
 async function getProfileId(
