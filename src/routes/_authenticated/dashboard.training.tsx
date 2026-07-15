@@ -9,6 +9,7 @@ import {
   deleteCourse,
   getCourseWithSessions,
   upsertSessions,
+  setCourseLocations,
 } from "@/lib/training.functions";
 import { listMyLocations } from "@/lib/locations.functions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
