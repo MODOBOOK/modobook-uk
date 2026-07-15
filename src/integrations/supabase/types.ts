@@ -5160,6 +5160,39 @@ export type Database = {
           },
         ]
       }
+      training_course_locations: {
+        Row: {
+          course_id: string
+          created_at: string
+          location_id: string
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          location_id: string
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          location_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_course_locations_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "training_courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_course_locations_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       training_course_sessions: {
         Row: {
           course_id: string
@@ -5230,11 +5263,13 @@ export type Database = {
           name: string
           payment_mode: Database["public"]["Enums"]["payment_mode"]
           prerequisites: string | null
+          preview_token: string | null
           price: number
           profile_id: string
           require_prereq_confirm: boolean
           sort_order: number
           updated_at: string
+          visibility: Database["public"]["Enums"]["training_visibility"]
         }
         Insert: {
           active?: boolean
@@ -5254,11 +5289,13 @@ export type Database = {
           name: string
           payment_mode?: Database["public"]["Enums"]["payment_mode"]
           prerequisites?: string | null
+          preview_token?: string | null
           price?: number
           profile_id: string
           require_prereq_confirm?: boolean
           sort_order?: number
           updated_at?: string
+          visibility?: Database["public"]["Enums"]["training_visibility"]
         }
         Update: {
           active?: boolean
@@ -5278,11 +5315,13 @@ export type Database = {
           name?: string
           payment_mode?: Database["public"]["Enums"]["payment_mode"]
           prerequisites?: string | null
+          preview_token?: string | null
           price?: number
           profile_id?: string
           require_prereq_confirm?: boolean
           sort_order?: number
           updated_at?: string
+          visibility?: Database["public"]["Enums"]["training_visibility"]
         }
         Relationships: [
           {
@@ -6611,6 +6650,7 @@ export type Database = {
         | "cancelled"
         | "completed"
       training_mode: "one_to_one" | "group" | "multi_day"
+      training_visibility: "live" | "hidden" | "preview_link" | "coming_soon"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -6761,6 +6801,7 @@ export const Constants = {
         "completed",
       ],
       training_mode: ["one_to_one", "group", "multi_day"],
+      training_visibility: ["live", "hidden", "preview_link", "coming_soon"],
     },
   },
 } as const

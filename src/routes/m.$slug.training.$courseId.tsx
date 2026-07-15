@@ -13,7 +13,9 @@ import { ArrowLeft, Award, Clock, Users, CheckCircle2, Loader2 } from "lucide-re
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/m/$slug/training/$courseId")({
-  loader: ({ params }) => getPublicCourse({ data: { slug: params.slug, courseId: params.courseId } }),
+  validateSearch: (s: Record<string, unknown>) => ({ preview: typeof s.preview === "string" ? s.preview : undefined }),
+  loaderDeps: ({ search }) => ({ preview: search.preview ?? null }),
+  loader: ({ params, deps }) => getPublicCourse({ data: { slug: params.slug, courseId: params.courseId, previewToken: deps.preview } }),
   head: ({ loaderData }) => ({
     meta: [
       { title: `${loaderData?.course.name ?? "Training"} · Book training` },
@@ -38,6 +40,7 @@ function BookCoursePage() {
   const bookingsBySession = data.bookingsBySession as Record<string, number>;
   const locations = data.locations as Loc[];
   const bookFn = useServerFn(createTrainingBooking);
+  const bookable = (data as { bookable?: boolean }).bookable !== false;
 
   const isSchedule = course.mode === "group" || course.mode === "multi_day";
   const [sessionId, setSessionId] = useState<string | null>(sessions[0]?.id ?? null);
@@ -215,11 +218,13 @@ function BookCoursePage() {
         </CardContent>
       </Card>
 
-      <Button className="w-full" size="lg" onClick={submit} disabled={submitting}>
-        {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Send booking request"}
+      <Button className="w-full" size="lg" onClick={submit} disabled={submitting || !bookable}>
+        {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : bookable ? "Send booking request" : "Coming soon"}
       </Button>
       <p className="text-center text-xs text-muted-foreground">
-        The practitioner will confirm and follow up with payment details.
+        {bookable
+          ? "The practitioner will confirm and follow up with payment details."
+          : "This course isn't open for bookings yet — check back soon."}
       </p>
     </div>
   );

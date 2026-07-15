@@ -11,7 +11,7 @@ function getPub() {
 }
 
 export const listPublicCourses = createServerFn({ method: "GET" })
-  .inputValidator((i: { slug: string }) => i)
+  .inputValidator((i: { slug: string; locationId?: string | null }) => i)
   .handler(async ({ data }) => {
     const supabase = getPub();
     const { data: profile, error: pErr } = await supabase
@@ -21,17 +21,38 @@ export const listPublicCourses = createServerFn({ method: "GET" })
 
     const { data: courses, error } = await supabase
       .from("training_courses")
-      .select("id, name, description, cover_image_url, mode, duration_min, price, deposit_amount, payment_mode, capacity, prerequisites, require_prereq_confirm, cpd_hours, kit_list, sort_order")
+      .select("id, name, description, cover_image_url, mode, duration_min, price, deposit_amount, payment_mode, capacity, prerequisites, require_prereq_confirm, cpd_hours, kit_list, sort_order, visibility")
       .eq("profile_id", profile.id)
       .eq("active", true)
+      .in("visibility", ["live", "coming_soon"])
       .order("sort_order", { ascending: true });
     if (error) throw error;
 
-    return { profileId: profile.id as string, courses: courses ?? [] };
+    let list = courses ?? [];
+    // Filter by selected location if provided
+    if (data.locationId && list.length) {
+      const ids = list.map((c) => c.id);
+      const { data: links } = await supabase
+        .from("training_course_locations")
+        .select("course_id, location_id")
+        .in("course_id", ids);
+      const byCourse = new Map<string, string[]>();
+      for (const l of links ?? []) {
+        const arr = byCourse.get(l.course_id) ?? [];
+        arr.push(l.location_id); byCourse.set(l.course_id, arr);
+      }
+      list = list.filter((c) => {
+        const locs = byCourse.get(c.id);
+        // No locations set = available everywhere
+        return !locs || locs.length === 0 || locs.includes(data.locationId!);
+      });
+    }
+
+    return { profileId: profile.id as string, courses: list };
   });
 
 export const getPublicCourse = createServerFn({ method: "GET" })
-  .inputValidator((i: { slug: string; courseId: string }) => i)
+  .inputValidator((i: { slug: string; courseId: string; previewToken?: string | null }) => i)
   .handler(async ({ data }) => {
     const supabase = getPub();
     const { data: profile, error: pErr } = await supabase
@@ -48,6 +69,13 @@ export const getPublicCourse = createServerFn({ method: "GET" })
       .maybeSingle();
     if (error) throw error;
     if (!course) throw new Error("Course not found");
+
+    // Visibility gate
+    if (course.visibility === "hidden") throw new Error("Course not available");
+    if (course.visibility === "preview_link" && course.preview_token !== data.previewToken) {
+      throw new Error("Course not available");
+    }
+    const bookable = course.visibility === "live" || (course.visibility === "preview_link" && course.preview_token === data.previewToken);
 
     const { data: sessions } = await supabase
       .from("training_course_sessions")
@@ -71,15 +99,24 @@ export const getPublicCourse = createServerFn({ method: "GET" })
       }
     }
 
-    const { data: locations } = await supabase
+    // Only the locations this course allows (empty = all)
+    const { data: courseLocLinks } = await supabase
+      .from("training_course_locations")
+      .select("location_id").eq("course_id", course.id);
+    const allowedLocIds = (courseLocLinks ?? []).map((r) => r.location_id);
+
+    let locQuery = supabase
       .from("locations")
       .select("id, name, address_line1, address_line2, city, postcode, country")
       .eq("profile_id", profile.id)
       .eq("active", true);
+    if (allowedLocIds.length) locQuery = locQuery.in("id", allowedLocIds);
+    const { data: locations } = await locQuery;
 
     return {
       profileId: profile.id as string,
       course,
+      bookable,
       sessions: sessions ?? [],
       bookingsBySession,
       locations: locations ?? [],
@@ -106,11 +143,16 @@ export const createTrainingBooking = createServerFn({ method: "POST" })
     // Load course to enforce capacity + profile
     const { data: course, error: cErr } = await supabase
       .from("training_courses")
-      .select("id, profile_id, mode, capacity, active, require_prereq_confirm")
+      .select("id, profile_id, mode, capacity, active, require_prereq_confirm, visibility")
       .eq("id", data.course_id)
       .maybeSingle();
     if (cErr) throw cErr;
     if (!course || !course.active) throw new Error("Course is not available");
+    if (course.visibility === "hidden" || course.visibility === "coming_soon") {
+      throw new Error("This course is not yet open for bookings");
+    }
+    // preview_link courses accept bookings from anyone who reached this page
+    // via the shareable link — the link is the only route to the booking form.
 
     if (course.require_prereq_confirm && !data.prereq_confirmed) {
       throw new Error("Please confirm you meet the prerequisites");
