@@ -218,11 +218,13 @@ function BookCoursePage() {
         </CardContent>
       </Card>
 
-      <Button className="w-full" size="lg" onClick={submit} disabled={submitting}>
-        {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Send booking request"}
+      <Button className="w-full" size="lg" onClick={submit} disabled={submitting || !bookable}>
+        {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : bookable ? "Send booking request" : "Coming soon"}
       </Button>
       <p className="text-center text-xs text-muted-foreground">
-        The practitioner will confirm and follow up with payment details.
+        {bookable
+          ? "The practitioner will confirm and follow up with payment details."
+          : "This course isn't open for bookings yet — check back soon."}
       </p>
     </div>
   );
