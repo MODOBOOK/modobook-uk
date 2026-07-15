@@ -40,6 +40,7 @@ function BookCoursePage() {
   const bookingsBySession = data.bookingsBySession as Record<string, number>;
   const locations = data.locations as Loc[];
   const bookFn = useServerFn(createTrainingBooking);
+  const bookable = (data as { bookable?: boolean }).bookable !== false;
 
   const isSchedule = course.mode === "group" || course.mode === "multi_day";
   const [sessionId, setSessionId] = useState<string | null>(sessions[0]?.id ?? null);
