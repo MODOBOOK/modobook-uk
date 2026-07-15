@@ -143,11 +143,16 @@ export const createTrainingBooking = createServerFn({ method: "POST" })
     // Load course to enforce capacity + profile
     const { data: course, error: cErr } = await supabase
       .from("training_courses")
-      .select("id, profile_id, mode, capacity, active, require_prereq_confirm")
+      .select("id, profile_id, mode, capacity, active, require_prereq_confirm, visibility")
       .eq("id", data.course_id)
       .maybeSingle();
     if (cErr) throw cErr;
     if (!course || !course.active) throw new Error("Course is not available");
+    if (course.visibility === "hidden" || course.visibility === "coming_soon") {
+      throw new Error("This course is not yet open for bookings");
+    }
+    // preview_link courses accept bookings from anyone who reached this page
+    // via the shareable link — the link is the only route to the booking form.
 
     if (course.require_prereq_confirm && !data.prereq_confirmed) {
       throw new Error("Please confirm you meet the prerequisites");
