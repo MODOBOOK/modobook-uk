@@ -67,7 +67,27 @@ export const getCourseWithSessions = createServerFn({ method: "GET" })
       .order("session_date", { ascending: true })
       .order("start_time", { ascending: true });
     if (sErr) throw sErr;
-    return { course, sessions: sessions ?? [] };
+    const { data: locs } = await supabase
+      .from("training_course_locations")
+      .select("location_id").eq("course_id", data.id);
+    const location_ids = (locs ?? []).map((r: { location_id: string }) => r.location_id);
+    return { course, sessions: sessions ?? [], location_ids };
+  });
+
+export const setCourseLocations = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: { course_id: string; location_ids: string[] }) => i)
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+    const { error: delErr } = await supabase
+      .from("training_course_locations").delete().eq("course_id", data.course_id);
+    if (delErr) throw delErr;
+    if (data.location_ids.length) {
+      const rows = data.location_ids.map((id) => ({ course_id: data.course_id, location_id: id }));
+      const { error } = await supabase.from("training_course_locations").insert(rows as never);
+      if (error) throw error;
+    }
+    return { ok: true };
   });
 
 export const createCourse = createServerFn({ method: "POST" })
