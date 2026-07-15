@@ -114,7 +114,17 @@ function TrainingPage() {
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="font-semibold">{c.name}</span>
                     <Badge variant="outline">{MODE_LABEL[c.mode]}</Badge>
-                    {!c.active && <Badge variant="secondary">Hidden</Badge>}
+                    {(() => {
+                      const v = (c as Course & { visibility?: string }).visibility ?? (c.active ? "live" : "hidden");
+                      const map: Record<string, { label: string; cls: string }> = {
+                        live: { label: "Live", cls: "bg-emerald-100 text-emerald-800" },
+                        coming_soon: { label: "Coming soon", cls: "bg-amber-100 text-amber-800" },
+                        preview_link: { label: "Preview link", cls: "bg-blue-100 text-blue-800" },
+                        hidden: { label: "Hidden", cls: "bg-muted text-muted-foreground" },
+                      };
+                      const m = map[v] ?? map.hidden;
+                      return <Badge className={m.cls}>{m.label}</Badge>;
+                    })()}
                     {c.cpd_hours != null && (
                       <Badge variant="outline" className="gap-1">
                         <Award className="h-3 w-3" /> {c.cpd_hours} CPD
