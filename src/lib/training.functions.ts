@@ -60,7 +60,7 @@ export const getCourseWithSessions = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i: { id: string }) => i)
   .handler(async ({ data, context }) => {
-    const { supabase } = context;
+    const { supabase, userId } = context;
     const { data: course, error } = await supabase
       .from("training_courses").select("*").eq("id", data.id).single();
     if (error) throw error;
@@ -74,7 +74,9 @@ export const getCourseWithSessions = createServerFn({ method: "GET" })
       .from("training_course_locations")
       .select("location_id").eq("course_id", data.id);
     const location_ids = (locs ?? []).map((r: { location_id: string }) => r.location_id);
-    return { course, sessions: sessions ?? [], location_ids };
+    const { data: prof } = await supabase
+      .from("profiles").select("slug").eq("user_id", userId).single();
+    return { course, sessions: sessions ?? [], location_ids, slug: prof?.slug ?? null };
   });
 
 export const setCourseLocations = createServerFn({ method: "POST" })
