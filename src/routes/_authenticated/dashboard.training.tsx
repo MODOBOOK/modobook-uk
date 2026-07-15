@@ -149,6 +149,7 @@ function CourseEditor({ id, onClose }: { id: string; onClose: () => void }) {
   const getFn = useServerFn(getCourseWithSessions);
   const updateFn = useServerFn(updateCourse);
   const upsertFn = useServerFn(upsertSessions);
+  const setLocFn = useServerFn(setCourseLocations);
   const locFn = useServerFn(listMyLocations);
 
   const q = useQuery({
@@ -159,20 +160,27 @@ function CourseEditor({ id, onClose }: { id: string; onClose: () => void }) {
 
   const [form, setForm] = useState<Partial<Course> | null>(null);
   const [sessions, setSessions] = useState<Array<Partial<Session> & { _deleted?: boolean }>>([]);
+  const [pickedLocs, setPickedLocs] = useState<string[] | null>(null);
   const [saving, setSaving] = useState(false);
 
   // Initialise once data loads
   if (form === null && q.data) {
     setForm(q.data.course as Course);
     setSessions(q.data.sessions as Session[]);
+    setPickedLocs((q.data.location_ids ?? []) as string[]);
   }
 
-  if (q.isLoading || !form) {
+  if (q.isLoading || !form || pickedLocs === null) {
     return <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin" /></div>;
   }
 
   const isSchedule = form.mode === "group" || form.mode === "multi_day";
   const locations = (locQ.data ?? []) as Array<{ id: string; name: string }>;
+  const visibility = (form as Course & { visibility?: string }).visibility ?? "live";
+  const previewToken = (form as Course & { preview_token?: string | null }).preview_token ?? null;
+  const previewUrl = previewToken
+    ? `${typeof window !== "undefined" ? window.location.origin : ""}/m/${(q.data as { slug?: string })?.slug ?? ""}/training/${id}?preview=${previewToken}`
+    : "";
 
   async function save() {
     if (!form?.name?.trim()) { toast.error("Course name is required"); return; }
@@ -197,9 +205,11 @@ function CourseEditor({ id, onClose }: { id: string; onClose: () => void }) {
           certificate_template_url: form.certificate_template_url ?? null,
           materials_html: form.materials_html ?? null,
           kit_list: form.kit_list ?? null,
-          active: !!form.active,
+          active: visibility !== "hidden",
+          visibility: visibility as "live" | "hidden" | "preview_link" | "coming_soon",
         },
       });
+      await setLocFn({ data: { course_id: id, location_ids: pickedLocs ?? [] } });
       if (isSchedule) {
         const deleted_ids = sessions.filter((s) => s._deleted && s.id).map((s) => s.id as string);
         const kept = sessions
@@ -225,20 +235,78 @@ function CourseEditor({ id, onClose }: { id: string; onClose: () => void }) {
     }
   }
 
+  function toggleLoc(locId: string) {
+    setPickedLocs((prev) => {
+      const arr = prev ?? [];
+      return arr.includes(locId) ? arr.filter((x) => x !== locId) : [...arr, locId];
+    });
+  }
+
   return (
     <div className="mx-auto max-w-3xl space-y-6 p-4 md:p-6">
       <div className="flex items-center justify-between gap-3">
         <Button variant="ghost" size="sm" onClick={onClose}>
           <ArrowLeft className="mr-2 h-4 w-4" /> Back to courses
         </Button>
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-2 text-sm">
-            <Label htmlFor="active">{form.active ? "Visible" : "Hidden"}</Label>
-            <Switch id="active" checked={!!form.active} onCheckedChange={(v) => setForm({ ...form, active: v })} />
-          </div>
-          <Button onClick={save} disabled={saving}>{saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save"}</Button>
-        </div>
+        <Button onClick={save} disabled={saving}>{saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save"}</Button>
       </div>
+
+      <Card>
+        <CardHeader><CardTitle>Visibility</CardTitle></CardHeader>
+        <CardContent className="space-y-3">
+          <Select
+            value={visibility}
+            onValueChange={(v) => setForm({ ...form, ...(({ visibility: v } as unknown) as Partial<Course>) })}
+          >
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="live">Live — bookable on your page</SelectItem>
+              <SelectItem value="coming_soon">Coming soon — shown, not bookable</SelectItem>
+              <SelectItem value="preview_link">Hidden — share via preview link</SelectItem>
+              <SelectItem value="hidden">Hidden — only visible to you</SelectItem>
+            </SelectContent>
+          </Select>
+          {visibility === "preview_link" && previewUrl && (
+            <div className="rounded-md border bg-muted/40 p-3 text-xs">
+              <p className="mb-1 font-medium">Private preview link</p>
+              <div className="flex flex-wrap items-center gap-2">
+                <code className="break-all text-[11px]">{previewUrl}</code>
+                <Button size="sm" variant="outline" onClick={() => { navigator.clipboard.writeText(previewUrl); toast.success("Copied"); }}>Copy</Button>
+              </div>
+              <p className="mt-2 text-muted-foreground">Only people with this link can see and book the course.</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader><CardTitle>Where this course runs</CardTitle></CardHeader>
+        <CardContent className="space-y-2">
+          <p className="text-xs text-muted-foreground">
+            Leave empty to offer this course at all of your locations.
+          </p>
+          {locations.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Add locations first in the Locations section.</p>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {locations.map((l) => {
+                const on = pickedLocs.includes(l.id);
+                return (
+                  <button
+                    key={l.id}
+                    type="button"
+                    onClick={() => toggleLoc(l.id)}
+                    className={`rounded-full border px-3 py-1 text-xs transition ${on ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background hover:bg-muted"}`}
+                  >
+                    {l.name}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
 
       <Card>
         <CardHeader><CardTitle>Course details</CardTitle></CardHeader>
