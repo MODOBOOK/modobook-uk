@@ -282,7 +282,9 @@ function BlockEditor({ blocks, setBlocks, readOnly }: { blocks: Block[]; setBloc
           <div className="flex flex-wrap gap-1">
             <Button size="sm" variant="outline" onClick={() => add({ type: 'heading', text: 'Heading' })}><HeadingIcon className="h-3 w-3 mr-1" />Heading</Button>
             <Button size="sm" variant="outline" onClick={() => add({ type: 'paragraph', text: 'Write your message here…' })}><TypeIcon className="h-3 w-3 mr-1" />Text</Button>
-            <Button size="sm" variant="outline" onClick={() => add({ type: 'button', text: 'Book now', url: 'https://' })}><MousePointerClick className="h-3 w-3 mr-1" />Button</Button>
+            <Button size="sm" variant="outline" onClick={() => add({ type: 'button', text: 'Book now', url: '{{booking_url}}' })}><MousePointerClick className="h-3 w-3 mr-1" />Book now CTA</Button>
+            <Button size="sm" variant="outline" onClick={() => add({ type: 'button', text: 'Learn more', url: 'https://' })}><MousePointerClick className="h-3 w-3 mr-1" />Custom button</Button>
+
             <Button size="sm" variant="outline" onClick={() => add({ type: 'image', src: '' })}><ImageIcon className="h-3 w-3 mr-1" />Image</Button>
             <Button size="sm" variant="outline" onClick={() => add({ type: 'divider' })}><Minus className="h-3 w-3 mr-1" />Divider</Button>
             <Button size="sm" variant="outline" onClick={() => add({ type: 'spacer' })}><Space className="h-3 w-3 mr-1" />Spacer</Button>
