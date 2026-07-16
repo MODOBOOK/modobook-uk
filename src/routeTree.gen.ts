@@ -127,6 +127,7 @@ import { Route as AuthenticatedDashboardTrainingBookingsRouteImport } from './ro
 import { Route as AuthenticatedDashboardPatientsIdRouteImport } from './routes/_authenticated/dashboard.patients.$id'
 import { Route as AuthenticatedDashboardMarketingTemplatesRouteImport } from './routes/_authenticated/dashboard.marketing.templates'
 import { Route as AuthenticatedDashboardMarketingSegmentsRouteImport } from './routes/_authenticated/dashboard.marketing.segments'
+import { Route as AuthenticatedDashboardMarketingAutomationsRouteImport } from './routes/_authenticated/dashboard.marketing.automations'
 import { Route as AuthenticatedDashboardMarketingAnalyticsRouteImport } from './routes/_authenticated/dashboard.marketing.analytics'
 import { Route as AuthenticatedDashboardConsultationsIdRouteImport } from './routes/_authenticated/dashboard.consultations.$id'
 import { Route as AuthenticatedAdminPractitionersIdRouteImport } from './routes/_authenticated/admin.practitioners.$id'
@@ -790,6 +791,12 @@ const AuthenticatedDashboardMarketingSegmentsRoute =
     path: '/segments',
     getParentRoute: () => AuthenticatedDashboardMarketingRoute,
   } as any)
+const AuthenticatedDashboardMarketingAutomationsRoute =
+  AuthenticatedDashboardMarketingAutomationsRouteImport.update({
+    id: '/automations',
+    path: '/automations',
+    getParentRoute: () => AuthenticatedDashboardMarketingRoute,
+  } as any)
 const AuthenticatedDashboardMarketingAnalyticsRoute =
   AuthenticatedDashboardMarketingAnalyticsRouteImport.update({
     id: '/analytics',
@@ -910,6 +917,7 @@ export interface FileRoutesByFullPath {
   '/admin/practitioners/$id': typeof AuthenticatedAdminPractitionersIdRoute
   '/dashboard/consultations/$id': typeof AuthenticatedDashboardConsultationsIdRoute
   '/dashboard/marketing/analytics': typeof AuthenticatedDashboardMarketingAnalyticsRoute
+  '/dashboard/marketing/automations': typeof AuthenticatedDashboardMarketingAutomationsRoute
   '/dashboard/marketing/segments': typeof AuthenticatedDashboardMarketingSegmentsRoute
   '/dashboard/marketing/templates': typeof AuthenticatedDashboardMarketingTemplatesRoute
   '/dashboard/patients/$id': typeof AuthenticatedDashboardPatientsIdRoute
@@ -1027,6 +1035,7 @@ export interface FileRoutesByTo {
   '/admin/practitioners/$id': typeof AuthenticatedAdminPractitionersIdRoute
   '/dashboard/consultations/$id': typeof AuthenticatedDashboardConsultationsIdRoute
   '/dashboard/marketing/analytics': typeof AuthenticatedDashboardMarketingAnalyticsRoute
+  '/dashboard/marketing/automations': typeof AuthenticatedDashboardMarketingAutomationsRoute
   '/dashboard/marketing/segments': typeof AuthenticatedDashboardMarketingSegmentsRoute
   '/dashboard/marketing/templates': typeof AuthenticatedDashboardMarketingTemplatesRoute
   '/dashboard/patients/$id': typeof AuthenticatedDashboardPatientsIdRoute
@@ -1152,6 +1161,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/practitioners/$id': typeof AuthenticatedAdminPractitionersIdRoute
   '/_authenticated/dashboard/consultations/$id': typeof AuthenticatedDashboardConsultationsIdRoute
   '/_authenticated/dashboard/marketing/analytics': typeof AuthenticatedDashboardMarketingAnalyticsRoute
+  '/_authenticated/dashboard/marketing/automations': typeof AuthenticatedDashboardMarketingAutomationsRoute
   '/_authenticated/dashboard/marketing/segments': typeof AuthenticatedDashboardMarketingSegmentsRoute
   '/_authenticated/dashboard/marketing/templates': typeof AuthenticatedDashboardMarketingTemplatesRoute
   '/_authenticated/dashboard/patients/$id': typeof AuthenticatedDashboardPatientsIdRoute
@@ -1277,6 +1287,7 @@ export interface FileRouteTypes {
     | '/admin/practitioners/$id'
     | '/dashboard/consultations/$id'
     | '/dashboard/marketing/analytics'
+    | '/dashboard/marketing/automations'
     | '/dashboard/marketing/segments'
     | '/dashboard/marketing/templates'
     | '/dashboard/patients/$id'
@@ -1394,6 +1405,7 @@ export interface FileRouteTypes {
     | '/admin/practitioners/$id'
     | '/dashboard/consultations/$id'
     | '/dashboard/marketing/analytics'
+    | '/dashboard/marketing/automations'
     | '/dashboard/marketing/segments'
     | '/dashboard/marketing/templates'
     | '/dashboard/patients/$id'
@@ -1518,6 +1530,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/practitioners/$id'
     | '/_authenticated/dashboard/consultations/$id'
     | '/_authenticated/dashboard/marketing/analytics'
+    | '/_authenticated/dashboard/marketing/automations'
     | '/_authenticated/dashboard/marketing/segments'
     | '/_authenticated/dashboard/marketing/templates'
     | '/_authenticated/dashboard/patients/$id'
@@ -2415,6 +2428,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardMarketingSegmentsRouteImport
       parentRoute: typeof AuthenticatedDashboardMarketingRoute
     }
+    '/_authenticated/dashboard/marketing/automations': {
+      id: '/_authenticated/dashboard/marketing/automations'
+      path: '/automations'
+      fullPath: '/dashboard/marketing/automations'
+      preLoaderRoute: typeof AuthenticatedDashboardMarketingAutomationsRouteImport
+      parentRoute: typeof AuthenticatedDashboardMarketingRoute
+    }
     '/_authenticated/dashboard/marketing/analytics': {
       id: '/_authenticated/dashboard/marketing/analytics'
       path: '/analytics'
@@ -2479,6 +2499,7 @@ const AuthenticatedAdminRouteWithChildren =
 
 interface AuthenticatedDashboardMarketingRouteChildren {
   AuthenticatedDashboardMarketingAnalyticsRoute: typeof AuthenticatedDashboardMarketingAnalyticsRoute
+  AuthenticatedDashboardMarketingAutomationsRoute: typeof AuthenticatedDashboardMarketingAutomationsRoute
   AuthenticatedDashboardMarketingSegmentsRoute: typeof AuthenticatedDashboardMarketingSegmentsRoute
   AuthenticatedDashboardMarketingTemplatesRoute: typeof AuthenticatedDashboardMarketingTemplatesRoute
   AuthenticatedDashboardMarketingIndexRoute: typeof AuthenticatedDashboardMarketingIndexRoute
@@ -2489,6 +2510,8 @@ const AuthenticatedDashboardMarketingRouteChildren: AuthenticatedDashboardMarket
   {
     AuthenticatedDashboardMarketingAnalyticsRoute:
       AuthenticatedDashboardMarketingAnalyticsRoute,
+    AuthenticatedDashboardMarketingAutomationsRoute:
+      AuthenticatedDashboardMarketingAutomationsRoute,
     AuthenticatedDashboardMarketingSegmentsRoute:
       AuthenticatedDashboardMarketingSegmentsRoute,
     AuthenticatedDashboardMarketingTemplatesRoute:
