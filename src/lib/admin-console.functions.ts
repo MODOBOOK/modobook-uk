@@ -170,9 +170,9 @@ export const adminEditPractitioner = createServerFn({ method: "POST" })
     if (beforeErr) throw beforeErr;
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: after, error } = await supabaseAdmin
+    const { data: after, error } = await (supabaseAdmin as any)
       .from("profiles")
-      .update(patch)
+      .update(patch as any)
       .eq("id", data.id)
       .select(Object.keys(patch).join(","))
       .single();
