@@ -98,6 +98,7 @@ import { Route as AuthenticatedDashboardAiImportRouteImport } from './routes/_au
 import { Route as AuthenticatedDashboardAftercareRouteImport } from './routes/_authenticated/dashboard.aftercare'
 import { Route as AuthenticatedDashboardAddonsRouteImport } from './routes/_authenticated/dashboard.addons'
 import { Route as AuthenticatedDashboardAboutRouteImport } from './routes/_authenticated/dashboard.about'
+import { Route as AuthenticatedAdminPractitionersRouteImport } from './routes/_authenticated/admin.practitioners'
 import { Route as AuthenticatedAdminEmailsRouteImport } from './routes/_authenticated/admin.emails'
 import { Route as AuthenticatedDashboardPatientsIndexRouteImport } from './routes/_authenticated/dashboard.patients.index'
 import { Route as AuthenticatedDashboardMarketingIndexRouteImport } from './routes/_authenticated/dashboard.marketing.index'
@@ -621,6 +622,12 @@ const AuthenticatedDashboardAboutRoute =
     path: '/about',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
+const AuthenticatedAdminPractitionersRoute =
+  AuthenticatedAdminPractitionersRouteImport.update({
+    id: '/practitioners',
+    path: '/practitioners',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminEmailsRoute =
   AuthenticatedAdminEmailsRouteImport.update({
     id: '/emails',
@@ -818,6 +825,7 @@ export interface FileRoutesByFullPath {
   '/r/$code': typeof RCodeRoute
   '/staff-accept/$token': typeof StaffAcceptTokenRoute
   '/admin/emails': typeof AuthenticatedAdminEmailsRoute
+  '/admin/practitioners': typeof AuthenticatedAdminPractitionersRoute
   '/dashboard/about': typeof AuthenticatedDashboardAboutRoute
   '/dashboard/addons': typeof AuthenticatedDashboardAddonsRoute
   '/dashboard/aftercare': typeof AuthenticatedDashboardAftercareRoute
@@ -933,6 +941,7 @@ export interface FileRoutesByTo {
   '/r/$code': typeof RCodeRoute
   '/staff-accept/$token': typeof StaffAcceptTokenRoute
   '/admin/emails': typeof AuthenticatedAdminEmailsRoute
+  '/admin/practitioners': typeof AuthenticatedAdminPractitionersRoute
   '/dashboard/about': typeof AuthenticatedDashboardAboutRoute
   '/dashboard/addons': typeof AuthenticatedDashboardAddonsRoute
   '/dashboard/aftercare': typeof AuthenticatedDashboardAftercareRoute
@@ -1052,6 +1061,7 @@ export interface FileRoutesById {
   '/r/$code': typeof RCodeRoute
   '/staff-accept/$token': typeof StaffAcceptTokenRoute
   '/_authenticated/admin/emails': typeof AuthenticatedAdminEmailsRoute
+  '/_authenticated/admin/practitioners': typeof AuthenticatedAdminPractitionersRoute
   '/_authenticated/dashboard/about': typeof AuthenticatedDashboardAboutRoute
   '/_authenticated/dashboard/addons': typeof AuthenticatedDashboardAddonsRoute
   '/_authenticated/dashboard/aftercare': typeof AuthenticatedDashboardAftercareRoute
@@ -1173,6 +1183,7 @@ export interface FileRouteTypes {
     | '/r/$code'
     | '/staff-accept/$token'
     | '/admin/emails'
+    | '/admin/practitioners'
     | '/dashboard/about'
     | '/dashboard/addons'
     | '/dashboard/aftercare'
@@ -1288,6 +1299,7 @@ export interface FileRouteTypes {
     | '/r/$code'
     | '/staff-accept/$token'
     | '/admin/emails'
+    | '/admin/practitioners'
     | '/dashboard/about'
     | '/dashboard/addons'
     | '/dashboard/aftercare'
@@ -1406,6 +1418,7 @@ export interface FileRouteTypes {
     | '/r/$code'
     | '/staff-accept/$token'
     | '/_authenticated/admin/emails'
+    | '/_authenticated/admin/practitioners'
     | '/_authenticated/dashboard/about'
     | '/_authenticated/dashboard/addons'
     | '/_authenticated/dashboard/aftercare'
@@ -2160,6 +2173,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardAboutRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
+    '/_authenticated/admin/practitioners': {
+      id: '/_authenticated/admin/practitioners'
+      path: '/practitioners'
+      fullPath: '/admin/practitioners'
+      preLoaderRoute: typeof AuthenticatedAdminPractitionersRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/emails': {
       id: '/_authenticated/admin/emails'
       path: '/emails'
@@ -2368,10 +2388,12 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminEmailsRoute: typeof AuthenticatedAdminEmailsRoute
+  AuthenticatedAdminPractitionersRoute: typeof AuthenticatedAdminPractitionersRoute
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminEmailsRoute: AuthenticatedAdminEmailsRoute,
+  AuthenticatedAdminPractitionersRoute: AuthenticatedAdminPractitionersRoute,
 }
 
 const AuthenticatedAdminRouteWithChildren =
