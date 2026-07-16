@@ -583,3 +583,239 @@ export async function processScheduledCampaigns() {
   }
   return { processed: results.length, results }
 }
+
+// ---------- AUTOMATIONS ----------
+const AutomationConfigSchema = z.object({
+  // treatment_interval
+  treatment_id: z.string().uuid().nullable().optional(),
+  interval_weeks: z.number().int().min(1).max(104).nullable().optional(),
+  // win_back
+  no_visit_days: z.number().int().min(7).max(3650).nullable().optional(),
+  // monthly_newsletter / custom_recurring
+  day_of_month: z.number().int().min(1).max(28).nullable().optional(),
+  // birthday (no config)
+}).strict()
+
+const AutomationSaveSchema = z.object({
+  id: z.string().uuid().optional(),
+  name: z.string().min(1).max(120),
+  type: z.enum(['birthday', 'treatment_interval', 'win_back', 'monthly_newsletter', 'custom_recurring']),
+  enabled: z.boolean().default(true),
+  template_id: z.string().uuid().nullable().optional(),
+  segment_id: z.string().uuid().nullable().optional(),
+  config: AutomationConfigSchema.default({}),
+})
+
+export const listAutomations = createServerFn({ method: 'GET' })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const pid = await getOwnerProfileId(context.supabase, context.userId)
+    const { data, error } = await context.supabase.from('marketing_automations').select('*')
+      .eq('practitioner_id', pid).order('created_at', { ascending: false })
+    if (error) throw new Error(error.message)
+    return data || []
+  })
+
+export const saveAutomation = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((raw: unknown) => AutomationSaveSchema.parse(raw))
+  .handler(async ({ data, context }) => {
+    const pid = await getOwnerProfileId(context.supabase, context.userId)
+    const payload = {
+      practitioner_id: pid,
+      name: data.name, type: data.type, enabled: data.enabled,
+      template_id: data.template_id ?? null,
+      segment_id: data.segment_id ?? null,
+      config: data.config,
+    }
+    if (data.id) {
+      const { data: row, error } = await context.supabase.from('marketing_automations')
+        .update(payload).eq('id', data.id).eq('practitioner_id', pid).select().single()
+      if (error) throw new Error(error.message)
+      return row
+    }
+    const { data: row, error } = await context.supabase.from('marketing_automations').insert(payload).select().single()
+    if (error) throw new Error(error.message)
+    return row
+  })
+
+export const deleteAutomation = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((raw: unknown) => z.object({ id: z.string().uuid() }).parse(raw))
+  .handler(async ({ data, context }) => {
+    const pid = await getOwnerProfileId(context.supabase, context.userId)
+    const { error } = await context.supabase.from('marketing_automations').delete().eq('id', data.id).eq('practitioner_id', pid)
+    if (error) throw new Error(error.message)
+    return { ok: true }
+  })
+
+export const toggleAutomation = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((raw: unknown) => z.object({ id: z.string().uuid(), enabled: z.boolean() }).parse(raw))
+  .handler(async ({ data, context }) => {
+    const pid = await getOwnerProfileId(context.supabase, context.userId)
+    const { data: row, error } = await context.supabase.from('marketing_automations')
+      .update({ enabled: data.enabled }).eq('id', data.id).eq('practitioner_id', pid).select().single()
+    if (error) throw new Error(error.message)
+    return row
+  })
+
+// Resolve automation recipients using rules specific to the automation type.
+// Returns clients that qualify TODAY.
+async function resolveAutomationRecipients(supabase: any, automation: any): Promise<Array<{
+  id: string; email: string; full_name: string; first_name: string; last_treatment?: string; dedup_key: string
+}>> {
+  const pid = automation.practitioner_id as string
+  const today = new Date()
+  const todayStr = today.toISOString().slice(0, 10)
+  const cfg = automation.config || {}
+
+  // Base opted-in clients
+  const { data: baseClients } = await supabase.from('clinic_clients')
+    .select('id, email, full_name, date_of_birth')
+    .eq('profile_id', pid).eq('marketing_opt_in', true).eq('archived', false)
+    .eq('is_blocked', false).not('email', 'is', null)
+  const clients = (baseClients || []) as Array<{ id: string; email: string; full_name: string; date_of_birth: string | null }>
+
+  const mapClient = (c: typeof clients[number], extra: { last_treatment?: string; dedup_key: string }) => ({
+    id: c.id, email: c.email, full_name: c.full_name,
+    first_name: (c.full_name || '').trim().split(/\s+/)[0] || '',
+    ...extra,
+  })
+
+  if (automation.type === 'birthday') {
+    const mm = String(today.getMonth() + 1).padStart(2, '0')
+    const dd = String(today.getDate()).padStart(2, '0')
+    return clients.filter((c) => {
+      if (!c.date_of_birth) return false
+      return c.date_of_birth.slice(5, 10) === `${mm}-${dd}`
+    }).map((c) => mapClient(c, { dedup_key: `birthday-${todayStr.slice(0, 4)}-${c.id}` }))
+  }
+
+  if (automation.type === 'win_back') {
+    const days = cfg.no_visit_days || 180
+    const cutoff = new Date(Date.now() - days * 86400_000).toISOString().slice(0, 10)
+    const ids = clients.map((c) => c.id)
+    if (!ids.length) return []
+    const { data: appts } = await supabase.from('appointments')
+      .select('client_id, appointment_date').eq('practitioner_id', pid).in('client_id', ids)
+    const lastByClient = new Map<string, string>()
+    for (const a of (appts || []) as any[]) {
+      const prev = lastByClient.get(a.client_id)
+      if (!prev || a.appointment_date > prev) lastByClient.set(a.client_id, a.appointment_date)
+    }
+    return clients.filter((c) => {
+      const last = lastByClient.get(c.id)
+      return last && last < cutoff
+    }).map((c) => mapClient(c, { dedup_key: `winback-${todayStr.slice(0, 7)}-${c.id}` }))
+  }
+
+  if (automation.type === 'treatment_interval') {
+    const treatmentId = cfg.treatment_id as string | null
+    const weeks = cfg.interval_weeks || 8
+    if (!treatmentId) return []
+    const targetDate = new Date(Date.now() - weeks * 7 * 86400_000).toISOString().slice(0, 10)
+    const ids = clients.map((c) => c.id)
+    if (!ids.length) return []
+    const { data: appts } = await supabase.from('appointments')
+      .select('client_id, appointment_date, treatment_id, treatments(name)')
+      .eq('practitioner_id', pid).eq('treatment_id', treatmentId).in('client_id', ids)
+      .eq('appointment_date', targetDate)
+    const seen = new Set<string>()
+    const out: any[] = []
+    for (const a of (appts || []) as any[]) {
+      if (seen.has(a.client_id)) continue
+      seen.add(a.client_id)
+      const c = clients.find((x) => x.id === a.client_id)
+      if (!c) continue
+      out.push(mapClient(c, {
+        last_treatment: a.treatments?.name || '',
+        dedup_key: `interval-${automation.id}-${targetDate}-${c.id}`,
+      }))
+    }
+    return out
+  }
+
+  if (automation.type === 'monthly_newsletter' || automation.type === 'custom_recurring') {
+    const targetDay = cfg.day_of_month || 1
+    if (today.getDate() !== targetDay) return []
+    const month = todayStr.slice(0, 7)
+    return clients.map((c) => mapClient(c, { dedup_key: `${automation.type}-${automation.id}-${month}-${c.id}` }))
+  }
+
+  return []
+}
+
+async function dispatchAutomation(automationId: string) {
+  const { supabaseAdmin } = await import('@/integrations/supabase/client.server')
+  const { tryEnqueueAppEmail, getPractitionerBranding } = await import('@/lib/email/send.server')
+  const supabase = supabaseAdmin
+
+  const { data: automation } = await supabase.from('marketing_automations').select('*').eq('id', automationId).maybeSingle()
+  if (!automation || !automation.enabled) return { skipped: 'not_enabled' }
+  if (!automation.template_id) return { skipped: 'no_template' }
+
+  const { data: template } = await supabase.from('marketing_templates').select('*').eq('id', automation.template_id).maybeSingle()
+  if (!template) return { skipped: 'template_missing' }
+
+  const branding = await getPractitionerBranding(automation.practitioner_id)
+  const recipients = await resolveAutomationRecipients(supabase, automation)
+
+  let sent = 0, skipped = 0, failed = 0
+  for (const r of recipients) {
+    // Dedup — insert marker row; if unique conflict, skip.
+    const messageId = `automation-${automation.id}-${r.dedup_key}`
+    const { error: dedupErr } = await supabase.from('marketing_automation_sends').insert({
+      automation_id: automation.id, practitioner_id: automation.practitioner_id,
+      client_id: r.id, dedup_key: r.dedup_key, message_id: messageId, status: 'queued',
+    })
+    if (dedupErr) {
+      if (String(dedupErr.message).includes('duplicate')) { skipped++; continue }
+      failed++; continue
+    }
+
+    const res = await tryEnqueueAppEmail({
+      templateName: 'marketing-broadcast',
+      recipientEmail: r.email,
+      messageId,
+      templateData: {
+        subject: template.subject || automation.name,
+        preheader: template.preheader || undefined,
+        blocks: template.body_json || [],
+        clinicName: branding.clinicName,
+        logoUrl: branding.logoUrl,
+        brandColor: branding.brandColor,
+        firstName: r.first_name,
+        last_treatment: r.last_treatment || '',
+      },
+    })
+
+    if (res.ok) {
+      sent++
+      await supabase.from('marketing_automation_sends').update({ status: 'sent' }).eq('message_id', messageId)
+    } else if (res.skipped === 'suppressed' || res.skipped === 'unsubscribed') {
+      skipped++
+      await supabase.from('marketing_automation_sends').update({ status: 'suppressed' }).eq('message_id', messageId)
+    } else {
+      failed++
+      await supabase.from('marketing_automation_sends')
+        .update({ status: 'failed', error_message: res.error?.slice(0, 500) || null })
+        .eq('message_id', messageId)
+    }
+  }
+
+  await supabase.from('marketing_automations').update({ last_run_at: new Date().toISOString() }).eq('id', automationId)
+  return { automationId, sent, skipped, failed, total: recipients.length }
+}
+
+export async function processAutomations() {
+  const { supabaseAdmin } = await import('@/integrations/supabase/client.server')
+  const { data: due } = await supabaseAdmin.from('marketing_automations').select('id').eq('enabled', true)
+  const results: any[] = []
+  for (const a of (due || []) as any[]) {
+    try { results.push(await dispatchAutomation(a.id)) }
+    catch (e) { results.push({ id: a.id, error: e instanceof Error ? e.message : String(e) }) }
+  }
+  return { processed: results.length, results }
+}
+
