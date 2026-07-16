@@ -306,6 +306,17 @@ function BookPage() {
   const carouselEnabled =
     !!(theme as { hero_carousel_enabled?: boolean } | null)?.hero_carousel_enabled ||
     (layoutKey === "carousel" && carouselUrls.length > 0);
+  // Editorial hero gallery — auto-advancing slideshow when multiple photos
+  const editorialGallery: string[] =
+    carouselUrls.length > 0 ? carouselUrls : heroUrl ? [heroUrl] : [];
+  const [editorialSlide, setEditorialSlide] = useState(0);
+  useEffect(() => {
+    if (editorialGallery.length < 2) return;
+    const id = window.setInterval(() => {
+      setEditorialSlide((i) => (i + 1) % editorialGallery.length);
+    }, 4500);
+    return () => window.clearInterval(id);
+  }, [editorialGallery.length]);
   // Menu styling
   const menuCardBg = theme?.menu_card_bg || "#ffffff";
   const menuCardBorder = theme?.menu_card_border_color || `${brand}1f`;
