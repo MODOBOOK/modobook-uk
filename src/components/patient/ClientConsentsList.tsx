@@ -147,13 +147,23 @@ export function ClientConsentsList({
                   </div>
                 </div>
                 {!signed && (
-                  <Button
-                    size="sm" variant="ghost" className="h-7 px-2"
-                    onClick={() => { navigator.clipboard?.writeText(url); toast.success("Link copied"); }}
-                    title="Copy link"
-                  >
-                    <Copy className="h-3.5 w-3.5" />
-                  </Button>
+                  <>
+                    <Button
+                      size="sm" variant="default" className="h-7 gap-1 px-2"
+                      onClick={() => { window.location.href = `/c/${r.token}`; }}
+                      title="Hand the device to the patient to sign now"
+                    >
+                      <PenLine className="h-3.5 w-3.5" />
+                      <span className="hidden sm:inline">Sign in person</span>
+                    </Button>
+                    <Button
+                      size="sm" variant="ghost" className="h-7 px-2"
+                      onClick={() => { navigator.clipboard?.writeText(url); toast.success("Link copied"); }}
+                      title="Copy link"
+                    >
+                      <Copy className="h-3.5 w-3.5" />
+                    </Button>
+                  </>
                 )}
                 <Button size="sm" variant="outline" className="h-7 px-2" onClick={() => openConsent(r.token)} title="View consent form">
                   <Eye className="h-3.5 w-3.5" />
