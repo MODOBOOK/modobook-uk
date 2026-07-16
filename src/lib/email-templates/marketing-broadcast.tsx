@@ -65,15 +65,18 @@ function renderBlock(
           />
         </Section>
       )
-    case 'button':
-      if (!block.url) return null
+    case 'button': {
+      const href = interpolate(block.url || '', data)
+      if (!href) return null
       return (
         <Section key={idx} style={styles.buttonWrap}>
-          <Button href={block.url} style={brandedButton(brandColor)}>
+          <Button href={href} style={brandedButton(brandColor)}>
             {interpolate(block.text || 'Learn more', data)}
           </Button>
         </Section>
       )
+    }
+
     case 'divider':
       return <Hr key={idx} style={styles.hr} />
     case 'spacer': {
