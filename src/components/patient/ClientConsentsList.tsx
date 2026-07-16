@@ -192,16 +192,23 @@ export function ClientConsentsList({
               </Select>
             </div>
             <div className="text-[11px] text-muted-foreground">
-              {client.email
-                ? <>Will email <span className="font-medium">{client.email}</span> with a signing link.</>
-                : <>No email on file — a signing link will be created that you can copy and share.</>}
+              Hand the device to the patient to sign now, or email them a signing link{client.email ? <> to <span className="font-medium">{client.email}</span></> : <> (no email on file — use in person)</>}.
             </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="flex-col-reverse gap-2 sm:flex-row">
             <Button variant="ghost" onClick={() => setSendOpen(false)} disabled={sending}>Cancel</Button>
-            <Button onClick={doSend} disabled={sending || !templateId}>
-              {sending ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Send className="mr-1.5 h-3.5 w-3.5" />}
-              Send
+            <Button
+              variant="outline"
+              onClick={() => doSend("email")}
+              disabled={sending || !templateId || !client.email}
+              title={!client.email ? "No email on file" : "Email a signing link to the patient"}
+            >
+              <Mail className="mr-1.5 h-3.5 w-3.5" />
+              Email instead
+            </Button>
+            <Button onClick={() => doSend("in_person")} disabled={sending || !templateId}>
+              {sending ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <PenLine className="mr-1.5 h-3.5 w-3.5" />}
+              Sign in person now
             </Button>
           </DialogFooter>
         </DialogContent>
