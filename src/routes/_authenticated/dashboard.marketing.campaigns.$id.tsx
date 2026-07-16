@@ -158,9 +158,22 @@ function CampaignEditor() {
             <Label>Preheader (preview text)</Label>
             <Input value={preheader} onChange={(e) => setPreheader(e.target.value)} placeholder="Shown in inbox preview" disabled={readOnly} />
           </div>
-          <p className="text-xs text-muted-foreground">
-            Use <code>{'{{first_name}}'}</code> or <code>{'{{clinic_name}}'}</code> anywhere in text.
-          </p>
+          <div className="text-xs text-muted-foreground space-y-1">
+            <p>Personalise with merge tags — copy any of these into your text:</p>
+            <div className="flex flex-wrap gap-1">
+              {['{{first_name}}', '{{clinic_name}}', '{{last_treatment}}', '{{booking_url}}'].map((tag) => (
+                <button
+                  key={tag}
+                  type="button"
+                  className="px-2 py-0.5 rounded bg-muted hover:bg-muted/70 font-mono text-[11px]"
+                  onClick={() => { navigator.clipboard?.writeText(tag); toast.success(`Copied ${tag}`) }}
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
+          </div>
+
         </CardContent></Card>
 
         <BlockEditor blocks={blocks} setBlocks={setBlocks} readOnly={readOnly} />
