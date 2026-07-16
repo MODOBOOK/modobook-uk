@@ -270,6 +270,7 @@ function AdminPage() {
 
       <SubscriptionsSection practitioners={practitioners} />
     </div>
+    </AdminShell>
   );
 }
 
