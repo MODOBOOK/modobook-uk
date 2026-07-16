@@ -310,13 +310,36 @@ function BookPage() {
   const editorialGallery: string[] =
     carouselUrls.length > 0 ? carouselUrls : heroUrl ? [heroUrl] : [];
   const [editorialSlide, setEditorialSlide] = useState(0);
+  const [editorialPaused, setEditorialPaused] = useState(false);
   useEffect(() => {
-    if (editorialGallery.length < 2) return;
+    if (editorialGallery.length < 2 || editorialPaused) return;
     const id = window.setInterval(() => {
       setEditorialSlide((i) => (i + 1) % editorialGallery.length);
     }, 4500);
     return () => window.clearInterval(id);
-  }, [editorialGallery.length]);
+  }, [editorialGallery.length, editorialPaused]);
+  const editorialTouchStartX = useRef<number | null>(null);
+  const handleEditorialTouchStart = (e: React.TouchEvent) => {
+    editorialTouchStartX.current = e.touches[0].clientX;
+    setEditorialPaused(true);
+  };
+  const handleEditorialTouchEnd = (e: React.TouchEvent) => {
+    const startX = editorialTouchStartX.current;
+    editorialTouchStartX.current = null;
+    if (startX == null || editorialGallery.length < 2) {
+      setTimeout(() => setEditorialPaused(false), 2500);
+      return;
+    }
+    const dx = e.changedTouches[0].clientX - startX;
+    if (Math.abs(dx) > 40) {
+      setEditorialSlide((i) =>
+        dx < 0
+          ? (i + 1) % editorialGallery.length
+          : (i - 1 + editorialGallery.length) % editorialGallery.length,
+      );
+    }
+    setTimeout(() => setEditorialPaused(false), 2500);
+  };
   // Menu styling
   const menuCardBg = theme?.menu_card_bg || "#ffffff";
   const menuCardBorder = theme?.menu_card_border_color || `${brand}1f`;
