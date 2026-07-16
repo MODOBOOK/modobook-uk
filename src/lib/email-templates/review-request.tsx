@@ -26,6 +26,7 @@ const Email = ({
   logoUrl,
   brandColor,
   introOverride,
+  bodyOverride,
   closingOverride,
 }: Props) => (
   <Html lang="en" dir="ltr">
@@ -42,6 +43,7 @@ const Email = ({
           {practitionerName ? ` with ${practitionerName}` : ''}. We'd love to hear how it went — it only takes a minute.
         </Text>
       )}
+      <BodyOverride text={bodyOverride} />
       <Section style={styles.buttonWrap}>
         <Button href={reviewUrl} style={brandedButton(brandColor)}>Leave a review</Button>
       </Section>
