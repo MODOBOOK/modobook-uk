@@ -1,82 +1,68 @@
-# Platform Admin Console — Phase 1
+## Marketing setup — full plan
 
-Goal: give platform admins real control *outside* the practitioner booking system, so they can never accidentally take a booking or touch patient data. Phase 1 lays the foundation everything else (billing, moderation, feature flags) will sit on.
+The project already has: campaigns dashboard, segments, templates, block-based composer with images/buttons/dividers, send + schedule + test, opt-in on `clinic_clients`, `email_unsubscribe_tokens` table, and a `/unsubscribe` route. What's missing to make it "really good":
 
-## Scope of Phase 1
+### 1. Fix unsubscribe (currently broken in marketing emails)
 
-1. A separate admin surface at `/admin/*` (top-level, gated by `has_role('admin')`), styled distinctly from the practitioner dashboard so it never feels like "the booking app". Later this can be lifted onto an `admin.modobook.uk` subdomain — the routes and RPCs stay identical, only DNS + a root-level guard change.
-2. Admin console shell: sidebar with Practitioners, Subscriptions, Content, Feature flags, Audit log, Broadcasts, Prescriber verifications (the existing page moves here). Distinct header ("Modo Admin"), no booking UI chrome.
-3. **Practitioner directory**: searchable list of every profile — name, clinic, slug, plan, active/suspended, created, last sign-in. Row actions: View as, Reset (see below), Suspend/Reactivate, Open billing (stub in Phase 1).
-4. **View-as (read-only mirror)**: opens `/admin/practitioners/$id/view` which server-side fetches that practitioner's public page + a read-only snapshot of their dashboard config (branding, treatments, hours, locations — **no clients, no appointments, no consultations, no forms, no prescriptions**). Persistent red banner "Viewing as {name} — read only, no patient data". No impersonation of their auth session.
-5. **Reset / edit-for-practitioner (safe subset)**: admins can edit branding/theme, treatment names & prices, locations, hours, public bio, and clear their onboarding flags. Nothing that touches a person's health record.
-6. **Audit log**: every sensitive admin action (view-as open, edit-for, suspend, plan change later, moderation later) writes a row with actor, target profile, action, diff, ip hash, ts. New `/admin/audit` page to browse/filter.
+Marketing broadcast footer links to `/unsubscribe` **without a token**, so patients can't actually unsubscribe from a campaign.
 
-## Patient data — recommendation
+- In `enqueueAppEmail` (send.server.ts), when the template is `marketing-broadcast`, overwrite `templateData.unsubscribeUrl` with `https://modobook.uk/unsubscribe?token=<token>` after the per-email token is resolved.
+- Remove the hardcoded `unsubscribeUrl` passed from campaign dispatch and test-send in `marketing.functions.ts`.
+- Result: every campaign email gets a real one-click unsubscribe link + working `List-Unsubscribe` header. Suppressed/unsubscribed recipients are already auto-skipped on send.
 
-Do **not** expose patient data in the admin console, even read-only. Regulatory + trust cost is huge, and the practitioner is the data controller — Modo shouldn't be casually browsing their patients. Two narrow exceptions we should build later, not now:
-- **Break-glass export**: on a written support request, an admin can trigger a signed, logged export delivered to the practitioner's verified email — admin never sees it in the UI.
-- **Deletion / GDPR erasure**: admin can delete a client record by id on request, logged.
+### 2. Richer composer (matches "Rich text, CTAs, merge tags, test send")
 
-Both go through the audit log with a mandatory reason field. Phase 1 just wires the log; the actions come later.
+Test send already exists. Add:
 
-## Technical section
+- Merge-tag helper in the composer: buttons that insert `{{first_name}}`, `{{clinic_name}}`, `{{last_treatment}}` at cursor for heading/paragraph/button fields.
+- New block type `rich_text` (paragraph with basic inline HTML: **bold**, *italic*, links) rendered safely (whitelist only b/i/strong/em/a). Existing `paragraph` stays.
+- CTA button already supported — surface a "Book now" quick-add that pre-fills the practitioner's booking URL from `profiles.slug`.
+- Preview panel next to the editor shows the current block list rendered in a compact card so you don't have to send a test to see it.
+- Add `{{last_treatment}}` resolution in dispatch (join latest appointment.treatment name per recipient) and pass into `templateData`.
 
-### Routes
-- `src/routes/_admin/route.tsx` — new pathless layout. `beforeLoad` calls `amIAdmin()`; redirects to `/` if not admin. `ssr: false`. Renders `<AdminShell><Outlet /></AdminShell>`.
-- `src/routes/_admin/admin.index.tsx` — dashboard (counts: practitioners, active subs, pending verifications, recent audit events).
-- `src/routes/_admin/admin.practitioners.tsx` — directory.
-- `src/routes/_admin/admin.practitioners.$id.tsx` — profile detail w/ tabs: Overview, View as, Edit, Audit.
-- `src/routes/_admin/admin.practitioners.$id.view.tsx` — read-only mirror.
-- `src/routes/_admin/admin.audit.tsx` — audit log browser.
-- Existing `/admin-prescribers` moves under `/_admin/admin.prescribers.tsx`; old route redirects.
+### 3. Recurring automations (day-one set)
 
-### DB (one migration)
-```sql
-create table public.admin_audit_log (
-  id uuid primary key default gen_random_uuid(),
-  actor_user_id uuid not null references auth.users(id) on delete restrict,
-  target_profile_id uuid references public.profiles(id) on delete set null,
-  action text not null,           -- 'view_as_open' | 'profile_edit' | 'suspend' | ...
-  reason text,
-  diff jsonb,                     -- before/after for edits
-  ip_hash text,
-  user_agent text,
-  created_at timestamptz not null default now()
-);
-grant select, insert on public.admin_audit_log to authenticated;
-grant all on public.admin_audit_log to service_role;
-alter table public.admin_audit_log enable row level security;
-create policy "admins read audit" on public.admin_audit_log for select
-  to authenticated using (public.has_role(auth.uid(), 'admin'));
-create policy "admins insert audit" on public.admin_audit_log for insert
-  to authenticated with check (public.has_role(auth.uid(), 'admin') and actor_user_id = auth.uid());
-create index on public.admin_audit_log (created_at desc);
-create index on public.admin_audit_log (target_profile_id, created_at desc);
-```
-Reuses existing `has_role` + `user_roles` — no role model changes.
+Ship four automation types under `marketing_automations` (new table):
 
-### Server fns (new `src/lib/admin-console.functions.ts`)
-All `.middleware([requireSupabaseAuth])` + inline `assertAdmin`. Each mutating fn writes an `admin_audit_log` row in the same transaction (via RPC helper `admin_log_action`).
-- `adminListPractitioners({ q, status, plan, cursor })` — server-side search/paginated.
-- `adminGetPractitioner({ id })` — profile + branding + counts (no PHI).
-- `adminViewAsSnapshot({ id })` — safe read: profile, clinic_theme, treatments, treatment_categories, locations, availability_rules. Logs `view_as_open`.
-- `adminEditPractitioner({ id, patch, reason })` — allow-listed columns only (clinic_name, slug, bio, theme fields, active). Diff logged.
-- `adminSetActive({ id, active, reason })` — suspend/reactivate. Logged.
-- `adminListAudit({ target_id?, actor_id?, action?, cursor })`.
+- **Birthday** — patients whose `date_of_birth` month/day = today, sent at 9am practitioner-time.
+- **Treatment-interval** — X weeks after last appointment of treatment Y (e.g. 8 weeks after Botox). Multiple rules per practitioner.
+- **Win-back** — no visit in N days.
+- **Monthly newsletter** — recurring on Nth of month, uses a picked template.
 
-### UI
-- `src/components/admin/AdminShell.tsx` — dark sidebar, distinct "Modo Admin" wordmark, current admin's name, sign-out.
-- `src/components/admin/ViewAsBanner.tsx` — sticky red banner with "Exit view-as".
-- Directory uses TanStack Query + a debounced search box; row actions in a dropdown.
-- Edit-for form reuses the branding editor's field components, wrapped in a "Reason for change" required textarea.
+Each automation stores: `name`, `type`, `enabled`, `template_id` (reuses `marketing_templates`), `config_json` (interval, treatment_id, day-of-month etc.), `last_run_at`. Practitioners can also make **custom** ones by picking any template and a schedule.
 
-### Not in Phase 1 (explicitly deferred)
-- Subscription/billing actions (plan change, comp, refund) — Phase 2, needs Stripe surface work.
-- Content moderation (hide reviews, pages, images) — Phase 3.
-- Feature flags & per-account caps — Phase 4, needs a `feature_flags` table.
-- Subdomain split to `admin.modobook.uk` — Phase 5, DNS + hosting.
-- Any patient/appointment/consultation/prescription/form read surface.
+A single `/api/public/hooks/marketing-automations` route runs hourly via pg_cron; for each enabled automation it materialises today's recipient list, dedupes against a new `marketing_automation_sends` log (so nobody gets the same birthday email twice), and enqueues emails through the same `tryEnqueueAppEmail` path with `marketing-broadcast` template + branding.
 
-### Files touched
-- New: migration, `src/lib/admin-console.functions.ts`, 6 new route files, `AdminShell`, `ViewAsBanner`, admin directory/detail/view/edit/audit page components.
-- Edited: `src/routes/_authenticated/admin-prescribers.tsx` → move + redirect stub, root nav (add "Admin" link visible only when `amIAdmin`).
+### 4. Scheduled-send worker
+
+`processScheduledCampaigns()` exists but isn't wired to cron. Add pg_cron job hitting `/api/public/hooks/marketing-dispatch` every 5 minutes (auth via `apikey` header) so `scheduled_for` campaigns actually fire.
+
+### 5. Segment builder polish
+
+Segment page already covers tags/last-visit/treatments/upcoming. Add:
+
+- "Birthday this month" checkbox (dynamic rule).
+- Live count preview (already exists in `previewSegmentCount`) shown on the campaign editor when a segment is picked.
+
+### 6. Compliance & footer
+
+- Every marketing email footer already shows clinic name + unsubscribe. After fix #1, clicking unsubscribe records `suppressed_emails` + marks token used → all future marketing (and app) emails skip that address automatically.
+- Add a small "Marketing consent" note next to the opt-in toggle in patient profile explaining what they're consenting to.
+
+### Technical summary
+
+- Migration: `marketing_automations`, `marketing_automation_sends` tables + RLS + GRANTS.
+- New file: `src/routes/api/public/hooks/marketing-automations.ts` — hourly cron entry.
+- New file: `src/routes/api/public/hooks/marketing-dispatch.ts` — 5-min cron entry for scheduled campaigns.
+- New file: `src/routes/_authenticated/dashboard.marketing.automations.tsx` — CRUD UI.
+- Edit: `src/lib/marketing.functions.ts` — add automation CRUD + `last_treatment` merge; drop hardcoded unsubscribe URLs.
+- Edit: `src/lib/email/send.server.ts` — inject tokenised unsubscribe URL for `marketing-broadcast`.
+- Edit: `src/routes/_authenticated/dashboard.marketing.campaigns.$id.tsx` — merge-tag chips, "Book now" quick-add, live segment count.
+- Edit: `src/lib/email-templates/marketing-broadcast.tsx` — support `rich_text` block with whitelisted inline HTML.
+- pg_cron: two schedules pointing at the two hook routes.
+
+### Out of scope (say so upfront)
+
+- Open/click tracking pixels (would need extra domain plumbing) — noted for later.
+- Drip sequences (multi-step series) — you said one-off + scheduled + recurring; skipping until requested.
+- SMS — email only per your answers.

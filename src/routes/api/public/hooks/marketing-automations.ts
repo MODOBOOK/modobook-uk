@@ -1,7 +1,8 @@
-// Cron route — every 5 min pg_cron POSTs here to fire scheduled campaigns.
+// Cron route — hourly pg_cron POSTs here to fire enabled marketing automations
+// (birthday, treatment-interval, win-back, monthly newsletter, custom recurring).
 import { createFileRoute } from '@tanstack/react-router'
 
-export const Route = createFileRoute('/api/public/hooks/marketing-dispatch')({
+export const Route = createFileRoute('/api/public/hooks/marketing-automations')({
   server: {
     handlers: {
       POST: async ({ request }) => {
@@ -10,11 +11,11 @@ export const Route = createFileRoute('/api/public/hooks/marketing-dispatch')({
         if (!expected || apiKey !== expected) {
           return new Response('Unauthorized', { status: 401 })
         }
-        const { processScheduledCampaigns } = await import('@/lib/marketing.functions')
-        const result = await processScheduledCampaigns()
+        const { processAutomations } = await import('@/lib/marketing.functions')
+        const result = await processAutomations()
         return Response.json(result)
       },
-      GET: async () => Response.json({ ok: true, endpoint: 'marketing-dispatch' }),
+      GET: async () => Response.json({ ok: true, endpoint: 'marketing-automations' }),
     },
   },
 })

@@ -24,7 +24,10 @@ export interface MarketingBroadcastData {
   brandColor?: string | null
   unsubscribeUrl?: string
   firstName?: string
+  last_treatment?: string
+  bookingUrl?: string
 }
+
 
 function interpolate(text: string, data: Record<string, string | undefined>): string {
   return String(text || '').replace(/\{\{\s*(\w+)\s*\}\}/g, (_m, key) => data[key] ?? '')
@@ -62,15 +65,18 @@ function renderBlock(
           />
         </Section>
       )
-    case 'button':
-      if (!block.url) return null
+    case 'button': {
+      const href = interpolate(block.url || '', data)
+      if (!href) return null
       return (
         <Section key={idx} style={styles.buttonWrap}>
-          <Button href={block.url} style={brandedButton(brandColor)}>
+          <Button href={href} style={brandedButton(brandColor)}>
             {interpolate(block.text || 'Learn more', data)}
           </Button>
         </Section>
       )
+    }
+
     case 'divider':
       return <Hr key={idx} style={styles.hr} />
     case 'spacer': {
@@ -92,8 +98,16 @@ export function MarketingBroadcastEmail(data: MarketingBroadcastData) {
     brandColor,
     unsubscribeUrl = 'https://modobook.uk/unsubscribe',
     firstName = '',
+    last_treatment = '',
+    bookingUrl = '',
   } = data
-  const vars = { first_name: firstName, clinic_name: clinicName, unsubscribe_url: unsubscribeUrl }
+  const vars = {
+    first_name: firstName,
+    clinic_name: clinicName,
+    last_treatment,
+    booking_url: bookingUrl,
+    unsubscribe_url: unsubscribeUrl,
+  }
   return (
     <Html>
       <Head />

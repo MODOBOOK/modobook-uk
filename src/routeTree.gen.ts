@@ -119,6 +119,7 @@ import { Route as ApiPublicMedicalFormTokenRouteImport } from './routes/api.publ
 import { Route as ApiPublicHooksReviewEmailsRouteImport } from './routes/api/public/hooks/review-emails'
 import { Route as ApiPublicHooksRebookRemindersRouteImport } from './routes/api/public/hooks/rebook-reminders'
 import { Route as ApiPublicHooksMarketingDispatchRouteImport } from './routes/api/public/hooks/marketing-dispatch'
+import { Route as ApiPublicHooksMarketingAutomationsRouteImport } from './routes/api/public/hooks/marketing-automations'
 import { Route as ApiPublicHooksDailyScheduleDigestRouteImport } from './routes/api/public/hooks/daily-schedule-digest'
 import { Route as ApiPublicHooksAppointmentRemindersRouteImport } from './routes/api/public/hooks/appointment-reminders'
 import { Route as ApiPublicBookingReleaseRouteImport } from './routes/api/public/booking/release'
@@ -126,6 +127,7 @@ import { Route as AuthenticatedDashboardTrainingBookingsRouteImport } from './ro
 import { Route as AuthenticatedDashboardPatientsIdRouteImport } from './routes/_authenticated/dashboard.patients.$id'
 import { Route as AuthenticatedDashboardMarketingTemplatesRouteImport } from './routes/_authenticated/dashboard.marketing.templates'
 import { Route as AuthenticatedDashboardMarketingSegmentsRouteImport } from './routes/_authenticated/dashboard.marketing.segments'
+import { Route as AuthenticatedDashboardMarketingAutomationsRouteImport } from './routes/_authenticated/dashboard.marketing.automations'
 import { Route as AuthenticatedDashboardMarketingAnalyticsRouteImport } from './routes/_authenticated/dashboard.marketing.analytics'
 import { Route as AuthenticatedDashboardConsultationsIdRouteImport } from './routes/_authenticated/dashboard.consultations.$id'
 import { Route as AuthenticatedAdminPractitionersIdRouteImport } from './routes/_authenticated/admin.practitioners.$id'
@@ -742,6 +744,12 @@ const ApiPublicHooksMarketingDispatchRoute =
     path: '/api/public/hooks/marketing-dispatch',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksMarketingAutomationsRoute =
+  ApiPublicHooksMarketingAutomationsRouteImport.update({
+    id: '/api/public/hooks/marketing-automations',
+    path: '/api/public/hooks/marketing-automations',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksDailyScheduleDigestRoute =
   ApiPublicHooksDailyScheduleDigestRouteImport.update({
     id: '/api/public/hooks/daily-schedule-digest',
@@ -781,6 +789,12 @@ const AuthenticatedDashboardMarketingSegmentsRoute =
   AuthenticatedDashboardMarketingSegmentsRouteImport.update({
     id: '/segments',
     path: '/segments',
+    getParentRoute: () => AuthenticatedDashboardMarketingRoute,
+  } as any)
+const AuthenticatedDashboardMarketingAutomationsRoute =
+  AuthenticatedDashboardMarketingAutomationsRouteImport.update({
+    id: '/automations',
+    path: '/automations',
     getParentRoute: () => AuthenticatedDashboardMarketingRoute,
   } as any)
 const AuthenticatedDashboardMarketingAnalyticsRoute =
@@ -903,6 +917,7 @@ export interface FileRoutesByFullPath {
   '/admin/practitioners/$id': typeof AuthenticatedAdminPractitionersIdRoute
   '/dashboard/consultations/$id': typeof AuthenticatedDashboardConsultationsIdRoute
   '/dashboard/marketing/analytics': typeof AuthenticatedDashboardMarketingAnalyticsRoute
+  '/dashboard/marketing/automations': typeof AuthenticatedDashboardMarketingAutomationsRoute
   '/dashboard/marketing/segments': typeof AuthenticatedDashboardMarketingSegmentsRoute
   '/dashboard/marketing/templates': typeof AuthenticatedDashboardMarketingTemplatesRoute
   '/dashboard/patients/$id': typeof AuthenticatedDashboardPatientsIdRoute
@@ -910,6 +925,7 @@ export interface FileRoutesByFullPath {
   '/api/public/booking/release': typeof ApiPublicBookingReleaseRoute
   '/api/public/hooks/appointment-reminders': typeof ApiPublicHooksAppointmentRemindersRoute
   '/api/public/hooks/daily-schedule-digest': typeof ApiPublicHooksDailyScheduleDigestRoute
+  '/api/public/hooks/marketing-automations': typeof ApiPublicHooksMarketingAutomationsRoute
   '/api/public/hooks/marketing-dispatch': typeof ApiPublicHooksMarketingDispatchRoute
   '/api/public/hooks/rebook-reminders': typeof ApiPublicHooksRebookRemindersRoute
   '/api/public/hooks/review-emails': typeof ApiPublicHooksReviewEmailsRoute
@@ -1019,6 +1035,7 @@ export interface FileRoutesByTo {
   '/admin/practitioners/$id': typeof AuthenticatedAdminPractitionersIdRoute
   '/dashboard/consultations/$id': typeof AuthenticatedDashboardConsultationsIdRoute
   '/dashboard/marketing/analytics': typeof AuthenticatedDashboardMarketingAnalyticsRoute
+  '/dashboard/marketing/automations': typeof AuthenticatedDashboardMarketingAutomationsRoute
   '/dashboard/marketing/segments': typeof AuthenticatedDashboardMarketingSegmentsRoute
   '/dashboard/marketing/templates': typeof AuthenticatedDashboardMarketingTemplatesRoute
   '/dashboard/patients/$id': typeof AuthenticatedDashboardPatientsIdRoute
@@ -1026,6 +1043,7 @@ export interface FileRoutesByTo {
   '/api/public/booking/release': typeof ApiPublicBookingReleaseRoute
   '/api/public/hooks/appointment-reminders': typeof ApiPublicHooksAppointmentRemindersRoute
   '/api/public/hooks/daily-schedule-digest': typeof ApiPublicHooksDailyScheduleDigestRoute
+  '/api/public/hooks/marketing-automations': typeof ApiPublicHooksMarketingAutomationsRoute
   '/api/public/hooks/marketing-dispatch': typeof ApiPublicHooksMarketingDispatchRoute
   '/api/public/hooks/rebook-reminders': typeof ApiPublicHooksRebookRemindersRoute
   '/api/public/hooks/review-emails': typeof ApiPublicHooksReviewEmailsRoute
@@ -1143,6 +1161,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/practitioners/$id': typeof AuthenticatedAdminPractitionersIdRoute
   '/_authenticated/dashboard/consultations/$id': typeof AuthenticatedDashboardConsultationsIdRoute
   '/_authenticated/dashboard/marketing/analytics': typeof AuthenticatedDashboardMarketingAnalyticsRoute
+  '/_authenticated/dashboard/marketing/automations': typeof AuthenticatedDashboardMarketingAutomationsRoute
   '/_authenticated/dashboard/marketing/segments': typeof AuthenticatedDashboardMarketingSegmentsRoute
   '/_authenticated/dashboard/marketing/templates': typeof AuthenticatedDashboardMarketingTemplatesRoute
   '/_authenticated/dashboard/patients/$id': typeof AuthenticatedDashboardPatientsIdRoute
@@ -1150,6 +1169,7 @@ export interface FileRoutesById {
   '/api/public/booking/release': typeof ApiPublicBookingReleaseRoute
   '/api/public/hooks/appointment-reminders': typeof ApiPublicHooksAppointmentRemindersRoute
   '/api/public/hooks/daily-schedule-digest': typeof ApiPublicHooksDailyScheduleDigestRoute
+  '/api/public/hooks/marketing-automations': typeof ApiPublicHooksMarketingAutomationsRoute
   '/api/public/hooks/marketing-dispatch': typeof ApiPublicHooksMarketingDispatchRoute
   '/api/public/hooks/rebook-reminders': typeof ApiPublicHooksRebookRemindersRoute
   '/api/public/hooks/review-emails': typeof ApiPublicHooksReviewEmailsRoute
@@ -1267,6 +1287,7 @@ export interface FileRouteTypes {
     | '/admin/practitioners/$id'
     | '/dashboard/consultations/$id'
     | '/dashboard/marketing/analytics'
+    | '/dashboard/marketing/automations'
     | '/dashboard/marketing/segments'
     | '/dashboard/marketing/templates'
     | '/dashboard/patients/$id'
@@ -1274,6 +1295,7 @@ export interface FileRouteTypes {
     | '/api/public/booking/release'
     | '/api/public/hooks/appointment-reminders'
     | '/api/public/hooks/daily-schedule-digest'
+    | '/api/public/hooks/marketing-automations'
     | '/api/public/hooks/marketing-dispatch'
     | '/api/public/hooks/rebook-reminders'
     | '/api/public/hooks/review-emails'
@@ -1383,6 +1405,7 @@ export interface FileRouteTypes {
     | '/admin/practitioners/$id'
     | '/dashboard/consultations/$id'
     | '/dashboard/marketing/analytics'
+    | '/dashboard/marketing/automations'
     | '/dashboard/marketing/segments'
     | '/dashboard/marketing/templates'
     | '/dashboard/patients/$id'
@@ -1390,6 +1413,7 @@ export interface FileRouteTypes {
     | '/api/public/booking/release'
     | '/api/public/hooks/appointment-reminders'
     | '/api/public/hooks/daily-schedule-digest'
+    | '/api/public/hooks/marketing-automations'
     | '/api/public/hooks/marketing-dispatch'
     | '/api/public/hooks/rebook-reminders'
     | '/api/public/hooks/review-emails'
@@ -1506,6 +1530,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/practitioners/$id'
     | '/_authenticated/dashboard/consultations/$id'
     | '/_authenticated/dashboard/marketing/analytics'
+    | '/_authenticated/dashboard/marketing/automations'
     | '/_authenticated/dashboard/marketing/segments'
     | '/_authenticated/dashboard/marketing/templates'
     | '/_authenticated/dashboard/patients/$id'
@@ -1513,6 +1538,7 @@ export interface FileRouteTypes {
     | '/api/public/booking/release'
     | '/api/public/hooks/appointment-reminders'
     | '/api/public/hooks/daily-schedule-digest'
+    | '/api/public/hooks/marketing-automations'
     | '/api/public/hooks/marketing-dispatch'
     | '/api/public/hooks/rebook-reminders'
     | '/api/public/hooks/review-emails'
@@ -1559,6 +1585,7 @@ export interface RootRouteChildren {
   ApiPublicBookingReleaseRoute: typeof ApiPublicBookingReleaseRoute
   ApiPublicHooksAppointmentRemindersRoute: typeof ApiPublicHooksAppointmentRemindersRoute
   ApiPublicHooksDailyScheduleDigestRoute: typeof ApiPublicHooksDailyScheduleDigestRoute
+  ApiPublicHooksMarketingAutomationsRoute: typeof ApiPublicHooksMarketingAutomationsRoute
   ApiPublicHooksMarketingDispatchRoute: typeof ApiPublicHooksMarketingDispatchRoute
   ApiPublicHooksRebookRemindersRoute: typeof ApiPublicHooksRebookRemindersRoute
   ApiPublicHooksReviewEmailsRoute: typeof ApiPublicHooksReviewEmailsRoute
@@ -2345,6 +2372,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksMarketingDispatchRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/marketing-automations': {
+      id: '/api/public/hooks/marketing-automations'
+      path: '/api/public/hooks/marketing-automations'
+      fullPath: '/api/public/hooks/marketing-automations'
+      preLoaderRoute: typeof ApiPublicHooksMarketingAutomationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/daily-schedule-digest': {
       id: '/api/public/hooks/daily-schedule-digest'
       path: '/api/public/hooks/daily-schedule-digest'
@@ -2392,6 +2426,13 @@ declare module '@tanstack/react-router' {
       path: '/segments'
       fullPath: '/dashboard/marketing/segments'
       preLoaderRoute: typeof AuthenticatedDashboardMarketingSegmentsRouteImport
+      parentRoute: typeof AuthenticatedDashboardMarketingRoute
+    }
+    '/_authenticated/dashboard/marketing/automations': {
+      id: '/_authenticated/dashboard/marketing/automations'
+      path: '/automations'
+      fullPath: '/dashboard/marketing/automations'
+      preLoaderRoute: typeof AuthenticatedDashboardMarketingAutomationsRouteImport
       parentRoute: typeof AuthenticatedDashboardMarketingRoute
     }
     '/_authenticated/dashboard/marketing/analytics': {
@@ -2458,6 +2499,7 @@ const AuthenticatedAdminRouteWithChildren =
 
 interface AuthenticatedDashboardMarketingRouteChildren {
   AuthenticatedDashboardMarketingAnalyticsRoute: typeof AuthenticatedDashboardMarketingAnalyticsRoute
+  AuthenticatedDashboardMarketingAutomationsRoute: typeof AuthenticatedDashboardMarketingAutomationsRoute
   AuthenticatedDashboardMarketingSegmentsRoute: typeof AuthenticatedDashboardMarketingSegmentsRoute
   AuthenticatedDashboardMarketingTemplatesRoute: typeof AuthenticatedDashboardMarketingTemplatesRoute
   AuthenticatedDashboardMarketingIndexRoute: typeof AuthenticatedDashboardMarketingIndexRoute
@@ -2468,6 +2510,8 @@ const AuthenticatedDashboardMarketingRouteChildren: AuthenticatedDashboardMarket
   {
     AuthenticatedDashboardMarketingAnalyticsRoute:
       AuthenticatedDashboardMarketingAnalyticsRoute,
+    AuthenticatedDashboardMarketingAutomationsRoute:
+      AuthenticatedDashboardMarketingAutomationsRoute,
     AuthenticatedDashboardMarketingSegmentsRoute:
       AuthenticatedDashboardMarketingSegmentsRoute,
     AuthenticatedDashboardMarketingTemplatesRoute:
@@ -2778,6 +2822,8 @@ const rootRouteChildren: RootRouteChildren = {
     ApiPublicHooksAppointmentRemindersRoute,
   ApiPublicHooksDailyScheduleDigestRoute:
     ApiPublicHooksDailyScheduleDigestRoute,
+  ApiPublicHooksMarketingAutomationsRoute:
+    ApiPublicHooksMarketingAutomationsRoute,
   ApiPublicHooksMarketingDispatchRoute: ApiPublicHooksMarketingDispatchRoute,
   ApiPublicHooksRebookRemindersRoute: ApiPublicHooksRebookRemindersRoute,
   ApiPublicHooksReviewEmailsRoute: ApiPublicHooksReviewEmailsRoute,
@@ -2794,13 +2840,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

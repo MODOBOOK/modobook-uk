@@ -156,9 +156,15 @@ export async function enqueueAppEmail(
     if (stored?.token) unsubscribeToken = stored.token
   }
 
+  // Inject tokenised unsubscribe URL so recipients can actually unsubscribe
+  // from marketing broadcasts (and any template that surfaces a link).
+  const unsubscribeUrlWithToken = `https://modobook.uk/unsubscribe?token=${unsubscribeToken}`
+  baseData.unsubscribeUrl = unsubscribeUrlWithToken
+
   const element = React.createElement(template.component, baseData)
   const html = await render(element)
   const text = await render(element, { plainText: true })
+
 
   const subject =
     typeof template.subject === 'function'

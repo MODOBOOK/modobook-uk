@@ -2713,6 +2713,107 @@ export type Database = {
           },
         ]
       }
+      marketing_automation_sends: {
+        Row: {
+          automation_id: string
+          client_id: string
+          created_at: string
+          dedup_key: string
+          error_message: string | null
+          id: string
+          message_id: string
+          practitioner_id: string
+          status: string
+        }
+        Insert: {
+          automation_id: string
+          client_id: string
+          created_at?: string
+          dedup_key: string
+          error_message?: string | null
+          id?: string
+          message_id: string
+          practitioner_id: string
+          status?: string
+        }
+        Update: {
+          automation_id?: string
+          client_id?: string
+          created_at?: string
+          dedup_key?: string
+          error_message?: string | null
+          id?: string
+          message_id?: string
+          practitioner_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketing_automation_sends_automation_id_fkey"
+            columns: ["automation_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_automations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketing_automations: {
+        Row: {
+          config: Json
+          created_at: string
+          enabled: boolean
+          id: string
+          last_run_at: string | null
+          name: string
+          practitioner_id: string
+          segment_id: string | null
+          template_id: string | null
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          config?: Json
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          last_run_at?: string | null
+          name: string
+          practitioner_id: string
+          segment_id?: string | null
+          template_id?: string | null
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          config?: Json
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          last_run_at?: string | null
+          name?: string
+          practitioner_id?: string
+          segment_id?: string | null
+          template_id?: string | null
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketing_automations_segment_id_fkey"
+            columns: ["segment_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_segments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketing_automations_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       marketing_campaign_recipients: {
         Row: {
           campaign_id: string

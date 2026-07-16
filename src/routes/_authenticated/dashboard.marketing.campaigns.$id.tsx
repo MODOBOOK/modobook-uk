@@ -158,9 +158,22 @@ function CampaignEditor() {
             <Label>Preheader (preview text)</Label>
             <Input value={preheader} onChange={(e) => setPreheader(e.target.value)} placeholder="Shown in inbox preview" disabled={readOnly} />
           </div>
-          <p className="text-xs text-muted-foreground">
-            Use <code>{'{{first_name}}'}</code> or <code>{'{{clinic_name}}'}</code> anywhere in text.
-          </p>
+          <div className="text-xs text-muted-foreground space-y-1">
+            <p>Personalise with merge tags — copy any of these into your text:</p>
+            <div className="flex flex-wrap gap-1">
+              {['{{first_name}}', '{{clinic_name}}', '{{last_treatment}}', '{{booking_url}}'].map((tag) => (
+                <button
+                  key={tag}
+                  type="button"
+                  className="px-2 py-0.5 rounded bg-muted hover:bg-muted/70 font-mono text-[11px]"
+                  onClick={() => { navigator.clipboard?.writeText(tag); toast.success(`Copied ${tag}`) }}
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
+          </div>
+
         </CardContent></Card>
 
         <BlockEditor blocks={blocks} setBlocks={setBlocks} readOnly={readOnly} />
@@ -269,7 +282,9 @@ function BlockEditor({ blocks, setBlocks, readOnly }: { blocks: Block[]; setBloc
           <div className="flex flex-wrap gap-1">
             <Button size="sm" variant="outline" onClick={() => add({ type: 'heading', text: 'Heading' })}><HeadingIcon className="h-3 w-3 mr-1" />Heading</Button>
             <Button size="sm" variant="outline" onClick={() => add({ type: 'paragraph', text: 'Write your message here…' })}><TypeIcon className="h-3 w-3 mr-1" />Text</Button>
-            <Button size="sm" variant="outline" onClick={() => add({ type: 'button', text: 'Book now', url: 'https://' })}><MousePointerClick className="h-3 w-3 mr-1" />Button</Button>
+            <Button size="sm" variant="outline" onClick={() => add({ type: 'button', text: 'Book now', url: '{{booking_url}}' })}><MousePointerClick className="h-3 w-3 mr-1" />Book now CTA</Button>
+            <Button size="sm" variant="outline" onClick={() => add({ type: 'button', text: 'Learn more', url: 'https://' })}><MousePointerClick className="h-3 w-3 mr-1" />Custom button</Button>
+
             <Button size="sm" variant="outline" onClick={() => add({ type: 'image', src: '' })}><ImageIcon className="h-3 w-3 mr-1" />Image</Button>
             <Button size="sm" variant="outline" onClick={() => add({ type: 'divider' })}><Minus className="h-3 w-3 mr-1" />Divider</Button>
             <Button size="sm" variant="outline" onClick={() => add({ type: 'spacer' })}><Space className="h-3 w-3 mr-1" />Spacer</Button>
