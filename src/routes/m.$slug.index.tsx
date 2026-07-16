@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getPublicClinic } from "@/lib/public-clinic.functions";
@@ -310,13 +310,36 @@ function BookPage() {
   const editorialGallery: string[] =
     carouselUrls.length > 0 ? carouselUrls : heroUrl ? [heroUrl] : [];
   const [editorialSlide, setEditorialSlide] = useState(0);
+  const [editorialPaused, setEditorialPaused] = useState(false);
   useEffect(() => {
-    if (editorialGallery.length < 2) return;
+    if (editorialGallery.length < 2 || editorialPaused) return;
     const id = window.setInterval(() => {
       setEditorialSlide((i) => (i + 1) % editorialGallery.length);
     }, 4500);
     return () => window.clearInterval(id);
-  }, [editorialGallery.length]);
+  }, [editorialGallery.length, editorialPaused]);
+  const editorialTouchStartX = useRef<number | null>(null);
+  const handleEditorialTouchStart = (e: React.TouchEvent) => {
+    editorialTouchStartX.current = e.touches[0].clientX;
+    setEditorialPaused(true);
+  };
+  const handleEditorialTouchEnd = (e: React.TouchEvent) => {
+    const startX = editorialTouchStartX.current;
+    editorialTouchStartX.current = null;
+    if (startX == null || editorialGallery.length < 2) {
+      setTimeout(() => setEditorialPaused(false), 2500);
+      return;
+    }
+    const dx = e.changedTouches[0].clientX - startX;
+    if (Math.abs(dx) > 40) {
+      setEditorialSlide((i) =>
+        dx < 0
+          ? (i + 1) % editorialGallery.length
+          : (i - 1 + editorialGallery.length) % editorialGallery.length,
+      );
+    }
+    setTimeout(() => setEditorialPaused(false), 2500);
+  };
   // Menu styling
   const menuCardBg = theme?.menu_card_bg || "#ffffff";
   const menuCardBorder = theme?.menu_card_border_color || `${brand}1f`;
@@ -744,13 +767,17 @@ function BookPage() {
         const reviewAvg = reviewCount ? reviews.reduce((a, r) => a + r.rating, 0) / reviewCount : 0;
         const reviewRounded = Math.round(reviewAvg);
         const nameFont = `${headingFont}, ${bodyFont}, ui-serif, Georgia, serif`;
-        const activeImg = editorialGallery[editorialSlide] ?? editorialGallery[0];
+        const themeAny = theme as (typeof theme & { hero_use_logo?: boolean; hero_text_color?: string | null }) | null;
+        const heroUseLogo = !!(themeAny?.hero_use_logo && themeAny?.logo_url);
+        const heroTextColor = themeAny?.hero_text_color || "#ffffff";
+        const heroMuted = `${heroTextColor}b3`; // ~70%
+        const heroDivider = `${heroTextColor}33`; // ~20%
 
         return (
           <section
             data-modo-section
             className="relative overflow-hidden"
-            style={{ backgroundColor: brand, color: "#ffffff" }}
+            style={{ backgroundColor: brand, color: heroTextColor }}
           >
             {/* Faint radial accent behind the portrait */}
             <div
@@ -759,12 +786,16 @@ function BookPage() {
               style={{ backgroundColor: accent }}
             />
 
-            <div className="relative mx-auto max-w-5xl px-4 pb-8 pt-8 sm:px-6 sm:pb-12 sm:pt-14">
+            <div className="relative mx-auto max-w-5xl px-4 pb-10 pt-8 sm:px-6 sm:pb-14 sm:pt-14">
               {/* Portrait + type block */}
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-12 sm:gap-8">
-                {/* Portrait slideshow */}
+                {/* Portrait slideshow — swipeable + auto-advance */}
                 <div className="sm:col-span-6">
-                  <div className="relative overflow-hidden rounded-2xl bg-white/10 aspect-[3/4]">
+                  <div
+                    className="relative overflow-hidden rounded-2xl bg-white/10 aspect-[3/4] touch-pan-y select-none"
+                    onTouchStart={handleEditorialTouchStart}
+                    onTouchEnd={handleEditorialTouchEnd}
+                  >
                     {editorialGallery.length === 0 ? (
                       <div className="h-full w-full" style={{ background: `linear-gradient(135deg, ${accent}, ${brand})` }} />
                     ) : (
@@ -773,47 +804,67 @@ function BookPage() {
                           key={src + i}
                           src={src}
                           alt={i === 0 ? displayPrimary : ""}
+                          draggable={false}
                           className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-[1200ms] ease-out ${i === editorialSlide ? "opacity-100" : "opacity-0"}`}
                         />
                       ))
                     )}
                     {editorialGallery.length > 1 && (
-                      <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-1.5">
-                        {editorialGallery.map((_, i) => (
-                          <button
-                            key={i}
-                            type="button"
-                            aria-label={`Show photo ${i + 1}`}
-                            onClick={() => setEditorialSlide(i)}
-                            className={`h-1.5 rounded-full transition-all ${i === editorialSlide ? "w-6 bg-white" : "w-1.5 bg-white/50"}`}
-                          />
-                        ))}
-                      </div>
+                      <>
+                        <button
+                          type="button"
+                          aria-label="Previous photo"
+                          onClick={() => setEditorialSlide((i) => (i - 1 + editorialGallery.length) % editorialGallery.length)}
+                          className="absolute left-2 top-1/2 hidden -translate-y-1/2 items-center justify-center rounded-full bg-black/30 p-1.5 text-white backdrop-blur-sm hover:bg-black/50 sm:flex"
+                        >
+                          <ChevronLeft className="h-4 w-4" />
+                        </button>
+                        <button
+                          type="button"
+                          aria-label="Next photo"
+                          onClick={() => setEditorialSlide((i) => (i + 1) % editorialGallery.length)}
+                          className="absolute right-2 top-1/2 hidden -translate-y-1/2 items-center justify-center rounded-full bg-black/30 p-1.5 text-white backdrop-blur-sm hover:bg-black/50 sm:flex"
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                        </button>
+                        <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-1.5">
+                          {editorialGallery.map((_, i) => (
+                            <button
+                              key={i}
+                              type="button"
+                              aria-label={`Show photo ${i + 1}`}
+                              onClick={() => setEditorialSlide(i)}
+                              className={`h-1.5 rounded-full transition-all ${i === editorialSlide ? "w-6 bg-white" : "w-1.5 bg-white/50"}`}
+                            />
+                          ))}
+                        </div>
+                      </>
                     )}
                   </div>
                 </div>
 
                 {/* Typographic block */}
                 <div className="sm:col-span-6 sm:flex sm:flex-col sm:justify-end">
-                  {theme?.logo_url && (theme?.welcome_card_show_logo ?? true) && (
+                  {heroUseLogo ? (
                     <img
-                      src={theme.logo_url}
+                      src={themeAny!.logo_url!}
                       alt={displayPrimary}
-                      className="mb-3 h-8 w-auto object-contain opacity-90 sm:h-10"
-                      style={{ filter: "brightness(0) invert(1)" }}
+                      className="max-h-28 w-auto max-w-full object-contain sm:max-h-40"
                     />
+                  ) : (
+                    <h1
+                      className="font-light leading-[0.92] tracking-tight"
+                      style={{
+                        fontFamily: nameFont,
+                        fontSize: "clamp(2.25rem, 11vw, 5.5rem)",
+                        color: heroTextColor,
+                      }}
+                    >
+                      {displayPrimary}
+                    </h1>
                   )}
-                  <h1
-                    className="font-light leading-[0.92] tracking-tight"
-                    style={{
-                      fontFamily: nameFont,
-                      fontSize: "clamp(2.25rem, 11vw, 5.5rem)",
-                    }}
-                  >
-                    {displayPrimary}
-                  </h1>
                   {profile.tagline && (
-                    <p className="mt-3 max-w-md text-sm leading-relaxed text-white/75 sm:text-base">
+                    <p className="mt-3 max-w-md text-sm leading-relaxed sm:text-base" style={{ color: heroMuted }}>
                       {profile.tagline}
                     </p>
                   )}
@@ -822,18 +873,20 @@ function BookPage() {
                     <Link
                       to="/m/$slug/reviews"
                       params={{ slug }}
-                      className="mt-5 flex items-center gap-2 border-t border-white/20 pt-4 hover:opacity-90"
+                      className="mt-5 flex items-center gap-2 border-t pt-4 hover:opacity-90"
+                      style={{ borderColor: heroDivider }}
                     >
                       <div className="flex">
                         {Array.from({ length: 5 }).map((_, i) => (
                           <Star
                             key={i}
-                            className={`h-3.5 w-3.5 ${reviewCount === 0 || i < reviewRounded ? "fill-yellow-400 text-yellow-400" : "text-white/25"}`}
+                            className={`h-3.5 w-3.5 ${reviewCount === 0 || i < reviewRounded ? "fill-yellow-400 text-yellow-400" : ""}`}
+                            style={reviewCount === 0 || i < reviewRounded ? undefined : { color: heroDivider }}
                             fill={reviewCount === 0 || i < reviewRounded ? "currentColor" : "none"}
                           />
                         ))}
                       </div>
-                      <span className="text-[11px] uppercase tracking-[0.15em] text-white/70">
+                      <span className="text-[11px] uppercase tracking-[0.15em]" style={{ color: heroMuted }}>
                         {reviewCount === 0 ? "New" : `${reviewAvg.toFixed(1)} · ${reviewCount} reviews`}
                       </span>
                     </Link>
@@ -841,146 +894,70 @@ function BookPage() {
                 </div>
               </div>
             </div>
-
-            {/* Slim action toolbar — floats over the bottom edge onto the page */}
-            {(theme?.welcome_card_show_actions ?? true) && (
-              <div className="relative mx-auto -mb-6 max-w-3xl px-4 pb-0 sm:-mb-7 sm:px-6">
-                <div
-                  className="flex items-center justify-around gap-1 rounded-full border px-2 py-2 shadow-lg backdrop-blur-sm"
-                  style={{
-                    borderColor: `${brand}22`,
-                    backgroundColor: cardBgType === "solid" ? cardBg : "#ffffff",
-                    color: brand,
-                  }}
-                >
-                  {(theme?.welcome_card_show_instagram ?? true) && ig ? (
-                    <ToolbarLink href={ig.startsWith("http") ? ig : `https://instagram.com/${ig.replace("@", "")}`} label="Instagram" brand={brand}>
-                      <Instagram className="h-4 w-4" />
-                    </ToolbarLink>
-                  ) : null}
-                  {mappableLocations.length === 1 && firstMapUrl ? (
-                    <ToolbarLink href={firstMapUrl} label="Directions" brand={brand}>
-                      <MapPin className="h-4 w-4" />
-                    </ToolbarLink>
-                  ) : mappableLocations.length > 1 ? (
-                    <ToolbarButton onClick={() => setDirectionsOpen(true)} label="Directions" brand={brand}>
-                      <MapPin className="h-4 w-4" />
-                    </ToolbarButton>
-                  ) : null}
-                  <ToolbarButton onClick={handleShare} label="Share" brand={brand}>
-                    <Share2 className="h-4 w-4" />
-                  </ToolbarButton>
-                  {hasCareGuides && (
-                    <ToolbarButton onClick={() => setCareGuideOpen(true)} label="Pre-treatment" brand={brand}>
-                      <Info className="h-4 w-4" />
-                    </ToolbarButton>
-                  )}
-                </div>
-              </div>
-            )}
           </section>
         );
       })()}
 
-      {/* Welcome card — restored below the editorial hero */}
-      <section
-        className="relative z-10 mx-auto mt-10 px-4 sm:mt-14"
-        style={{ maxWidth: "42rem" }}
-      >
-        <div
-          className="border"
-          style={{
-            backgroundColor: cardBgType === "solid" ? cardBg : undefined,
-            backgroundImage: cardBgType === "gradient" ? `linear-gradient(135deg, ${cardGradientFrom}, ${cardGradientTo})` : undefined,
-            borderColor: cardBorder,
-            borderRadius: cardRadius,
-            borderWidth: cardBorderWidth,
-            padding: cardPadding,
-            boxShadow: cardShadow,
-            opacity: cardOpacity,
-            backdropFilter: cardBlur > 0 ? `blur(${cardBlur}px)` : undefined,
-            margin: "0 auto",
-            maxWidth: "42rem",
-          }}
+      {/* Gradient bridge — merges hero brand colour into the page background */}
+      <div
+        aria-hidden
+        className="h-10 sm:h-14"
+        style={{ background: `linear-gradient(to bottom, ${brand}, ${bgColor})` }}
+      />
+
+
+      {/* Contact strip — icons only, merged under the hero */}
+      {showActions && (
+        <section
+          className="relative z-10 mx-auto -mt-6 px-4 sm:-mt-8"
+          style={{ maxWidth: "42rem" }}
         >
-          {showLogo && logoUrl && (
-            <img src={logoUrl} alt={displayPrimary} className="mb-2 h-8 w-auto object-contain sm:h-10" />
-          )}
-          {showName && (
-            <h2 className="text-lg font-extrabold leading-tight sm:text-xl" style={headingStyle}>
-              {displayPrimary}
-            </h2>
-          )}
-          {showTagline && profile.tagline && (
-            <p className="mt-1 text-sm opacity-70">{profile.tagline}</p>
-          )}
-
-          {showRating && (
-            <Link to="/m/$slug/reviews" params={{ slug }} className="mt-2 flex items-center gap-2 hover:opacity-80">
-              {(() => {
-                const count = reviews.length;
-                const avg = count ? reviews.reduce((a, r) => a + r.rating, 0) / count : 0;
-                const rounded = Math.round(avg);
-                return (
-                  <>
-                    <div className="flex">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <Star
-                          key={i}
-                          className={`h-3.5 w-3.5 ${count === 0 || i < rounded ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground/30"}`}
-                          fill={count === 0 || i < rounded ? "currentColor" : "none"}
-                        />
-                      ))}
-                    </div>
-                    <span className="text-xs opacity-70">
-                      {count === 0 ? "Be the first to review" : `${avg.toFixed(1)} · ${count} review${count === 1 ? "" : "s"}`}
-                    </span>
-                  </>
-                );
-              })()}
-            </Link>
-          )}
-
-          {showActions && (
-            <div className="mt-4 grid grid-cols-4 gap-2 border-t pt-3" style={{ borderColor: `${brand}22` }}>
-              {showInstagram && ig ? (
-                <ActionIcon href={ig.startsWith("http") ? ig : `https://instagram.com/${ig.replace("@", "")}`} label="Instagram" brand={brand}>
-                  <Instagram className="h-5 w-5" />
-                </ActionIcon>
-              ) : (
-                <ActionPlaceholder label="Instagram" brand={brand}>
-                  <Instagram className="h-5 w-5 opacity-30" />
-                </ActionPlaceholder>
-              )}
-              {mappableLocations.length === 1 && firstMapUrl ? (
-                <ActionIcon href={firstMapUrl} label="Directions" brand={brand}>
-                  <MapPin className="h-5 w-5" />
-                </ActionIcon>
-              ) : mappableLocations.length > 1 ? (
-                <ActionButton onClick={() => setDirectionsOpen(true)} label="Directions" brand={brand}>
-                  <MapPin className="h-5 w-5" />
-                </ActionButton>
-              ) : (
-                <ActionPlaceholder label="Directions" brand={brand}>
-                  <MapPin className="h-5 w-5 opacity-30" />
-                </ActionPlaceholder>
-              )}
-              <ActionButton onClick={handleShare} label="Share" brand={brand}>
-                <Share2 className="h-5 w-5" />
+          <div
+            className="grid grid-cols-4 gap-2 rounded-2xl border p-3 shadow-lg"
+            style={{
+              backgroundColor: cardBgType === "solid" ? cardBg : "#ffffff",
+              backgroundImage: cardBgType === "gradient" ? `linear-gradient(135deg, ${cardGradientFrom}, ${cardGradientTo})` : undefined,
+              borderColor: cardBorder,
+              color: brand,
+            }}
+          >
+            {showInstagram && ig ? (
+              <ActionIcon href={ig.startsWith("http") ? ig : `https://instagram.com/${ig.replace("@", "")}`} label="Instagram" brand={brand}>
+                <Instagram className="h-5 w-5" />
+              </ActionIcon>
+            ) : (
+              <ActionPlaceholder label="Instagram" brand={brand}>
+                <Instagram className="h-5 w-5 opacity-30" />
+              </ActionPlaceholder>
+            )}
+            {mappableLocations.length === 1 && firstMapUrl ? (
+              <ActionIcon href={firstMapUrl} label="Directions" brand={brand}>
+                <MapPin className="h-5 w-5" />
+              </ActionIcon>
+            ) : mappableLocations.length > 1 ? (
+              <ActionButton onClick={() => setDirectionsOpen(true)} label="Directions" brand={brand}>
+                <MapPin className="h-5 w-5" />
               </ActionButton>
-              {hasCareGuides ? (
-                <ActionButton onClick={() => setCareGuideOpen(true)} label="Pre-treatment" brand={brand}>
-                  <Info className="h-5 w-5" />
-                </ActionButton>
-              ) : (
-                <ActionPlaceholder label="Pre-treatment" brand={brand}>
-                  <Info className="h-5 w-5 opacity-30" />
-                </ActionPlaceholder>
-              )}
-            </div>
-          )}
-        </div>
-      </section>
+            ) : (
+              <ActionPlaceholder label="Directions" brand={brand}>
+                <MapPin className="h-5 w-5 opacity-30" />
+              </ActionPlaceholder>
+            )}
+            <ActionButton onClick={handleShare} label="Share" brand={brand}>
+              <Share2 className="h-5 w-5" />
+            </ActionButton>
+            {hasCareGuides ? (
+              <ActionButton onClick={() => setCareGuideOpen(true)} label="Pre-treatment" brand={brand}>
+                <Info className="h-5 w-5" />
+              </ActionButton>
+            ) : (
+              <ActionPlaceholder label="Pre-treatment" brand={brand}>
+                <Info className="h-5 w-5 opacity-30" />
+              </ActionPlaceholder>
+            )}
+          </div>
+        </section>
+      )}
 
 
 

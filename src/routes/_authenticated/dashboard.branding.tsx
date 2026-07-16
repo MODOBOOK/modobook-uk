@@ -724,10 +724,24 @@ function BrandingPage() {
           </CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
-          <ColorField label="Primary" value={state.primary_color ?? ""} onChange={(v) => set("primary_color", v)} />
-          <ColorField label="Accent" value={state.accent_color ?? ""} onChange={(v) => set("accent_color", v)} />
-          <ColorField label="Background" value={state.background_color ?? ""} onChange={(v) => set("background_color", v)} />
+          <ColorField label="Hero background" value={state.primary_color ?? ""} onChange={(v) => set("primary_color", v)} />
+          <ColorField label="Hero text" value={state.hero_text_color ?? "#ffffff"} onChange={(v) => set("hero_text_color", v)} />
+          <ColorField label="Page background" value={state.background_color ?? ""} onChange={(v) => set("background_color", v)} />
           <ColorField label="Body text" value={state.text_color ?? ""} onChange={(v) => set("text_color", v)} />
+          <ColorField label="Accent / button" value={state.accent_color ?? ""} onChange={(v) => set("accent_color", v)} />
+          <div className="flex items-end">
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={!!state.hero_use_logo}
+                onChange={(e) => set("hero_use_logo", e.target.checked)}
+              />
+              Show logo instead of clinic name in hero
+            </label>
+          </div>
+          <p className="col-span-full text-xs text-muted-foreground">
+            The page background fades smoothly out of the hero background — pick complementary shades for the cleanest merge.
+          </p>
         </CardContent>
       </Card>
 

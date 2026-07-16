@@ -17,6 +17,8 @@ export type ClinicThemeInput = {
   hero_image_url?: string | null;
   hero_heading?: string | null;
   hero_subheading?: string | null;
+  hero_use_logo?: boolean;
+  hero_text_color?: string | null;
   custom_css?: string | null;
   // Booking menu styling
   menu_card_bg?: string | null;
