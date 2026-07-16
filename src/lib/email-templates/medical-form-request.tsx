@@ -42,8 +42,9 @@ const Email = ({
           It only takes a few minutes.
         </Text>
       )}
+      <BodyOverride text={bodyOverride} />
       {dueBy && (
-        <Section style={{ backgroundColor: '#efe7d8', borderRadius: 12, padding: '12px 16px', margin: '4px 0 18px' }}>
+        <Section style={{ backgroundColor: '#f5f1ea', borderRadius: 12, padding: '12px 16px', margin: '4px 0 18px' }}>
           <Text style={{ ...styles.muted, margin: 0 }}>Please complete by <strong>{dueBy}</strong>.</Text>
         </Section>
       )}
