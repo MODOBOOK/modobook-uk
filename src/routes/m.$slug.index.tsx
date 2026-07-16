@@ -767,13 +767,17 @@ function BookPage() {
         const reviewAvg = reviewCount ? reviews.reduce((a, r) => a + r.rating, 0) / reviewCount : 0;
         const reviewRounded = Math.round(reviewAvg);
         const nameFont = `${headingFont}, ${bodyFont}, ui-serif, Georgia, serif`;
-        const activeImg = editorialGallery[editorialSlide] ?? editorialGallery[0];
+        const themeAny = theme as (typeof theme & { hero_use_logo?: boolean; hero_text_color?: string | null }) | null;
+        const heroUseLogo = !!(themeAny?.hero_use_logo && themeAny?.logo_url);
+        const heroTextColor = themeAny?.hero_text_color || "#ffffff";
+        const heroMuted = `${heroTextColor}b3`; // ~70%
+        const heroDivider = `${heroTextColor}33`; // ~20%
 
         return (
           <section
             data-modo-section
             className="relative overflow-hidden"
-            style={{ backgroundColor: brand, color: "#ffffff" }}
+            style={{ backgroundColor: brand, color: heroTextColor }}
           >
             {/* Faint radial accent behind the portrait */}
             <div
@@ -782,12 +786,16 @@ function BookPage() {
               style={{ backgroundColor: accent }}
             />
 
-            <div className="relative mx-auto max-w-5xl px-4 pb-8 pt-8 sm:px-6 sm:pb-12 sm:pt-14">
+            <div className="relative mx-auto max-w-5xl px-4 pb-10 pt-8 sm:px-6 sm:pb-14 sm:pt-14">
               {/* Portrait + type block */}
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-12 sm:gap-8">
-                {/* Portrait slideshow */}
+                {/* Portrait slideshow — swipeable + auto-advance */}
                 <div className="sm:col-span-6">
-                  <div className="relative overflow-hidden rounded-2xl bg-white/10 aspect-[3/4]">
+                  <div
+                    className="relative overflow-hidden rounded-2xl bg-white/10 aspect-[3/4] touch-pan-y select-none"
+                    onTouchStart={handleEditorialTouchStart}
+                    onTouchEnd={handleEditorialTouchEnd}
+                  >
                     {editorialGallery.length === 0 ? (
                       <div className="h-full w-full" style={{ background: `linear-gradient(135deg, ${accent}, ${brand})` }} />
                     ) : (
@@ -796,47 +804,67 @@ function BookPage() {
                           key={src + i}
                           src={src}
                           alt={i === 0 ? displayPrimary : ""}
+                          draggable={false}
                           className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-[1200ms] ease-out ${i === editorialSlide ? "opacity-100" : "opacity-0"}`}
                         />
                       ))
                     )}
                     {editorialGallery.length > 1 && (
-                      <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-1.5">
-                        {editorialGallery.map((_, i) => (
-                          <button
-                            key={i}
-                            type="button"
-                            aria-label={`Show photo ${i + 1}`}
-                            onClick={() => setEditorialSlide(i)}
-                            className={`h-1.5 rounded-full transition-all ${i === editorialSlide ? "w-6 bg-white" : "w-1.5 bg-white/50"}`}
-                          />
-                        ))}
-                      </div>
+                      <>
+                        <button
+                          type="button"
+                          aria-label="Previous photo"
+                          onClick={() => setEditorialSlide((i) => (i - 1 + editorialGallery.length) % editorialGallery.length)}
+                          className="absolute left-2 top-1/2 hidden -translate-y-1/2 items-center justify-center rounded-full bg-black/30 p-1.5 text-white backdrop-blur-sm hover:bg-black/50 sm:flex"
+                        >
+                          <ChevronLeft className="h-4 w-4" />
+                        </button>
+                        <button
+                          type="button"
+                          aria-label="Next photo"
+                          onClick={() => setEditorialSlide((i) => (i + 1) % editorialGallery.length)}
+                          className="absolute right-2 top-1/2 hidden -translate-y-1/2 items-center justify-center rounded-full bg-black/30 p-1.5 text-white backdrop-blur-sm hover:bg-black/50 sm:flex"
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                        </button>
+                        <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-1.5">
+                          {editorialGallery.map((_, i) => (
+                            <button
+                              key={i}
+                              type="button"
+                              aria-label={`Show photo ${i + 1}`}
+                              onClick={() => setEditorialSlide(i)}
+                              className={`h-1.5 rounded-full transition-all ${i === editorialSlide ? "w-6 bg-white" : "w-1.5 bg-white/50"}`}
+                            />
+                          ))}
+                        </div>
+                      </>
                     )}
                   </div>
                 </div>
 
                 {/* Typographic block */}
                 <div className="sm:col-span-6 sm:flex sm:flex-col sm:justify-end">
-                  {theme?.logo_url && (theme?.welcome_card_show_logo ?? true) && (
+                  {heroUseLogo ? (
                     <img
-                      src={theme.logo_url}
+                      src={themeAny!.logo_url!}
                       alt={displayPrimary}
-                      className="mb-3 h-8 w-auto object-contain opacity-90 sm:h-10"
-                      style={{ filter: "brightness(0) invert(1)" }}
+                      className="max-h-28 w-auto max-w-full object-contain sm:max-h-40"
                     />
+                  ) : (
+                    <h1
+                      className="font-light leading-[0.92] tracking-tight"
+                      style={{
+                        fontFamily: nameFont,
+                        fontSize: "clamp(2.25rem, 11vw, 5.5rem)",
+                        color: heroTextColor,
+                      }}
+                    >
+                      {displayPrimary}
+                    </h1>
                   )}
-                  <h1
-                    className="font-light leading-[0.92] tracking-tight"
-                    style={{
-                      fontFamily: nameFont,
-                      fontSize: "clamp(2.25rem, 11vw, 5.5rem)",
-                    }}
-                  >
-                    {displayPrimary}
-                  </h1>
                   {profile.tagline && (
-                    <p className="mt-3 max-w-md text-sm leading-relaxed text-white/75 sm:text-base">
+                    <p className="mt-3 max-w-md text-sm leading-relaxed sm:text-base" style={{ color: heroMuted }}>
                       {profile.tagline}
                     </p>
                   )}
@@ -845,18 +873,20 @@ function BookPage() {
                     <Link
                       to="/m/$slug/reviews"
                       params={{ slug }}
-                      className="mt-5 flex items-center gap-2 border-t border-white/20 pt-4 hover:opacity-90"
+                      className="mt-5 flex items-center gap-2 border-t pt-4 hover:opacity-90"
+                      style={{ borderColor: heroDivider }}
                     >
                       <div className="flex">
                         {Array.from({ length: 5 }).map((_, i) => (
                           <Star
                             key={i}
-                            className={`h-3.5 w-3.5 ${reviewCount === 0 || i < reviewRounded ? "fill-yellow-400 text-yellow-400" : "text-white/25"}`}
+                            className={`h-3.5 w-3.5 ${reviewCount === 0 || i < reviewRounded ? "fill-yellow-400 text-yellow-400" : ""}`}
+                            style={reviewCount === 0 || i < reviewRounded ? undefined : { color: heroDivider }}
                             fill={reviewCount === 0 || i < reviewRounded ? "currentColor" : "none"}
                           />
                         ))}
                       </div>
-                      <span className="text-[11px] uppercase tracking-[0.15em] text-white/70">
+                      <span className="text-[11px] uppercase tracking-[0.15em]" style={{ color: heroMuted }}>
                         {reviewCount === 0 ? "New" : `${reviewAvg.toFixed(1)} · ${reviewCount} reviews`}
                       </span>
                     </Link>
@@ -864,46 +894,17 @@ function BookPage() {
                 </div>
               </div>
             </div>
-
-            {/* Slim action toolbar — floats over the bottom edge onto the page */}
-            {(theme?.welcome_card_show_actions ?? true) && (
-              <div className="relative mx-auto -mb-6 max-w-3xl px-4 pb-0 sm:-mb-7 sm:px-6">
-                <div
-                  className="flex items-center justify-around gap-1 rounded-full border px-2 py-2 shadow-lg backdrop-blur-sm"
-                  style={{
-                    borderColor: `${brand}22`,
-                    backgroundColor: cardBgType === "solid" ? cardBg : "#ffffff",
-                    color: brand,
-                  }}
-                >
-                  {(theme?.welcome_card_show_instagram ?? true) && ig ? (
-                    <ToolbarLink href={ig.startsWith("http") ? ig : `https://instagram.com/${ig.replace("@", "")}`} label="Instagram" brand={brand}>
-                      <Instagram className="h-4 w-4" />
-                    </ToolbarLink>
-                  ) : null}
-                  {mappableLocations.length === 1 && firstMapUrl ? (
-                    <ToolbarLink href={firstMapUrl} label="Directions" brand={brand}>
-                      <MapPin className="h-4 w-4" />
-                    </ToolbarLink>
-                  ) : mappableLocations.length > 1 ? (
-                    <ToolbarButton onClick={() => setDirectionsOpen(true)} label="Directions" brand={brand}>
-                      <MapPin className="h-4 w-4" />
-                    </ToolbarButton>
-                  ) : null}
-                  <ToolbarButton onClick={handleShare} label="Share" brand={brand}>
-                    <Share2 className="h-4 w-4" />
-                  </ToolbarButton>
-                  {hasCareGuides && (
-                    <ToolbarButton onClick={() => setCareGuideOpen(true)} label="Pre-treatment" brand={brand}>
-                      <Info className="h-4 w-4" />
-                    </ToolbarButton>
-                  )}
-                </div>
-              </div>
-            )}
           </section>
         );
       })()}
+
+      {/* Gradient bridge — merges hero brand colour into the page background */}
+      <div
+        aria-hidden
+        className="h-10 sm:h-14"
+        style={{ background: `linear-gradient(to bottom, ${brand}, ${bgColor})` }}
+      />
+
 
       {/* Welcome card — restored below the editorial hero */}
       <section
