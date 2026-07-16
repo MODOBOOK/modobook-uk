@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ConsentSectionsView, type ConsentSection } from "@/components/ConsentSections";
-import { ShieldCheck, Send, Loader2, CheckCircle2, Clock, Eye, Copy } from "lucide-react";
+import { ShieldCheck, Send, Loader2, CheckCircle2, Clock, Eye, Copy, PenLine, Mail } from "lucide-react";
 import { toast } from "sonner";
 
 export function ClientConsentsList({
