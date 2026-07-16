@@ -116,7 +116,8 @@ function AdminPage() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6 p-4 pb-24">
+    <AdminShell>
+    <div className="mx-auto max-w-5xl space-y-6 pb-24">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">Platform admin</h1>
@@ -125,6 +126,16 @@ function AdminPage() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <Link to="/admin/practitioners">
+            <Button variant="default" size="sm">
+              <Shield className="mr-2 h-4 w-4" /> Manage practitioners
+            </Button>
+          </Link>
+          <Link to="/admin/audit">
+            <Button variant="outline" size="sm">
+              <Shield className="mr-2 h-4 w-4" /> Audit log
+            </Button>
+          </Link>
           <Link to="/admin/emails">
             <Button variant="outline" size="sm">
               <Mail className="mr-2 h-4 w-4" /> Emails & broadcasts

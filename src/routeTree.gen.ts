@@ -100,6 +100,7 @@ import { Route as AuthenticatedDashboardAddonsRouteImport } from './routes/_auth
 import { Route as AuthenticatedDashboardAboutRouteImport } from './routes/_authenticated/dashboard.about'
 import { Route as AuthenticatedAdminPractitionersRouteImport } from './routes/_authenticated/admin.practitioners'
 import { Route as AuthenticatedAdminEmailsRouteImport } from './routes/_authenticated/admin.emails'
+import { Route as AuthenticatedAdminAuditRouteImport } from './routes/_authenticated/admin.audit'
 import { Route as AuthenticatedDashboardPatientsIndexRouteImport } from './routes/_authenticated/dashboard.patients.index'
 import { Route as AuthenticatedDashboardMarketingIndexRouteImport } from './routes/_authenticated/dashboard.marketing.index'
 import { Route as AuthenticatedDashboardConsultationsIndexRouteImport } from './routes/_authenticated/dashboard.consultations.index'
@@ -635,6 +636,11 @@ const AuthenticatedAdminEmailsRoute =
     path: '/emails',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminAuditRoute = AuthenticatedAdminAuditRouteImport.update({
+  id: '/audit',
+  path: '/audit',
+  getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
 const AuthenticatedDashboardPatientsIndexRoute =
   AuthenticatedDashboardPatientsIndexRouteImport.update({
     id: '/',
@@ -831,6 +837,7 @@ export interface FileRoutesByFullPath {
   '/privacy/dpia': typeof PrivacyDpiaRoute
   '/r/$code': typeof RCodeRoute
   '/staff-accept/$token': typeof StaffAcceptTokenRoute
+  '/admin/audit': typeof AuthenticatedAdminAuditRoute
   '/admin/emails': typeof AuthenticatedAdminEmailsRoute
   '/admin/practitioners': typeof AuthenticatedAdminPractitionersRouteWithChildren
   '/dashboard/about': typeof AuthenticatedDashboardAboutRoute
@@ -948,6 +955,7 @@ export interface FileRoutesByTo {
   '/privacy/dpia': typeof PrivacyDpiaRoute
   '/r/$code': typeof RCodeRoute
   '/staff-accept/$token': typeof StaffAcceptTokenRoute
+  '/admin/audit': typeof AuthenticatedAdminAuditRoute
   '/admin/emails': typeof AuthenticatedAdminEmailsRoute
   '/admin/practitioners': typeof AuthenticatedAdminPractitionersRouteWithChildren
   '/dashboard/about': typeof AuthenticatedDashboardAboutRoute
@@ -1069,6 +1077,7 @@ export interface FileRoutesById {
   '/privacy/dpia': typeof PrivacyDpiaRoute
   '/r/$code': typeof RCodeRoute
   '/staff-accept/$token': typeof StaffAcceptTokenRoute
+  '/_authenticated/admin/audit': typeof AuthenticatedAdminAuditRoute
   '/_authenticated/admin/emails': typeof AuthenticatedAdminEmailsRoute
   '/_authenticated/admin/practitioners': typeof AuthenticatedAdminPractitionersRouteWithChildren
   '/_authenticated/dashboard/about': typeof AuthenticatedDashboardAboutRoute
@@ -1192,6 +1201,7 @@ export interface FileRouteTypes {
     | '/privacy/dpia'
     | '/r/$code'
     | '/staff-accept/$token'
+    | '/admin/audit'
     | '/admin/emails'
     | '/admin/practitioners'
     | '/dashboard/about'
@@ -1309,6 +1319,7 @@ export interface FileRouteTypes {
     | '/privacy/dpia'
     | '/r/$code'
     | '/staff-accept/$token'
+    | '/admin/audit'
     | '/admin/emails'
     | '/admin/practitioners'
     | '/dashboard/about'
@@ -1429,6 +1440,7 @@ export interface FileRouteTypes {
     | '/privacy/dpia'
     | '/r/$code'
     | '/staff-accept/$token'
+    | '/_authenticated/admin/audit'
     | '/_authenticated/admin/emails'
     | '/_authenticated/admin/practitioners'
     | '/_authenticated/dashboard/about'
@@ -2200,6 +2212,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminEmailsRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/audit': {
+      id: '/_authenticated/admin/audit'
+      path: '/audit'
+      fullPath: '/admin/audit'
+      preLoaderRoute: typeof AuthenticatedAdminAuditRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/dashboard/patients/': {
       id: '/_authenticated/dashboard/patients/'
       path: '/'
@@ -2422,11 +2441,13 @@ const AuthenticatedAdminPractitionersRouteWithChildren =
   )
 
 interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminAuditRoute: typeof AuthenticatedAdminAuditRoute
   AuthenticatedAdminEmailsRoute: typeof AuthenticatedAdminEmailsRoute
   AuthenticatedAdminPractitionersRoute: typeof AuthenticatedAdminPractitionersRouteWithChildren
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminAuditRoute: AuthenticatedAdminAuditRoute,
   AuthenticatedAdminEmailsRoute: AuthenticatedAdminEmailsRoute,
   AuthenticatedAdminPractitionersRoute:
     AuthenticatedAdminPractitionersRouteWithChildren,
