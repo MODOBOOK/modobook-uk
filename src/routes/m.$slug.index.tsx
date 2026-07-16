@@ -727,144 +727,172 @@ function BookPage() {
         [data-modo-section] + [data-modo-section] { margin-top: var(--section-gap); }
       `}</style>
 
-      {/* Hero image / carousel (layout: {layoutKey}) */}
+      {/* Editorial cover — signature MODO landing block */}
       {(() => {
-        const heroHeight = theme?.hero_height ?? "medium";
-        const heroFitRaw = (theme?.hero_fit ?? "contain") as string;
-        const heroFit = heroFitRaw === "cover" ? "cover" : "contain";
-        const isNatural = heroHeight === "natural" || heroFitRaw === "natural";
-        const heroOverlayOpacity = theme?.hero_overlay_opacity ?? 0.25;
-        const heroOverlayColor = theme?.hero_overlay_color ?? "#000000";
-        const heroAlign = theme?.hero_text_alignment ?? "center";
-        const heroShowText = theme?.hero_show_text ?? true;
-        const heightCls =
-          heroHeight === "short" ? "h-36 sm:h-44"
-          : heroHeight === "tall" ? "h-64 sm:h-[26rem]"
-          : heroHeight === "extra_tall" ? "h-[26rem] sm:h-[36rem]"
-          : heroHeight === "huge" ? "h-[70vh] sm:h-[85vh]"
-          : "h-56 sm:h-[22rem]";
-        const splitHeight = heroHeight === "short" ? "h-36 sm:h-52" : heroHeight === "tall" ? "h-56 sm:h-80" : heroHeight === "extra_tall" ? "h-[26rem] sm:h-[40rem]" : heroHeight === "huge" ? "h-[70vh] sm:h-[85vh]" : "h-44 sm:h-64";
-        const blankHeight = heroHeight === "short" ? "h-32 sm:h-44" : heroHeight === "tall" ? "h-56 sm:h-72" : heroHeight === "extra_tall" ? "h-[26rem] sm:h-[36rem]" : heroHeight === "huge" ? "h-[65vh] sm:h-[80vh]" : "h-44 sm:h-56";
-        const alignCls = heroAlign === "left" ? "text-left items-start" : heroAlign === "right" ? "text-right items-end" : "text-center items-center";
-        const isMagazine = layoutKey === "magazine";
+        const gallery: string[] =
+          carouselUrls.length > 0
+            ? carouselUrls
+            : heroUrl
+              ? [heroUrl]
+              : [];
+        const [img0, img1, img2, img3] = gallery;
         const reviewCount = reviews.length;
         const reviewAvg = reviewCount ? reviews.reduce((a, r) => a + r.rating, 0) / reviewCount : 0;
         const reviewRounded = Math.round(reviewAvg);
+        const primaryLocCity = locations.find((l) => l.is_primary)?.city ?? locations[0]?.city ?? "";
+        const nameFont = `${headingFont}, ${bodyFont}, ui-serif, Georgia, serif`;
+        const meta1 = primaryLocCity || "Aesthetics";
+        const currentYear = new Date().getFullYear();
+
         return (
-          <div className="relative">
-            {carouselEnabled && carouselUrls.length > 0 ? (
-              <HeroCarousel urls={carouselUrls} heightClass={heightCls} fit={heroFit} natural={isNatural} />
-            ) : heroUrl ? (
-              <HeroImage src={heroUrl} heightClass={layoutKey === "split" ? splitHeight : heightCls} fit={heroFit} natural={isNatural} />
-            ) : (
-              <div
-                className={`${blankHeight} w-full`}
-                style={{ background: `linear-gradient(135deg, ${brand}, ${accent})` }}
-              />
-            )}
-            {!isMagazine && heroOverlayOpacity > 0 && (
-              <div
-                className="pointer-events-none absolute inset-0"
-                style={{ backgroundColor: heroOverlayColor, opacity: heroOverlayOpacity }}
-              />
-            )}
-            {isMagazine && (
-              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-black/25 to-transparent" />
-            )}
-            {isMagazine && (
-              <div className="absolute inset-x-0 bottom-0 px-4 pb-5 sm:pb-8">
-                <div className="mx-auto w-full max-w-5xl text-white">
+          <section
+            data-modo-section
+            className="relative overflow-hidden"
+            style={{ backgroundColor: brand, color: "#ffffff" }}
+          >
+            {/* Faint radial accent behind the mosaic */}
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full opacity-30 blur-3xl"
+              style={{ backgroundColor: accent }}
+            />
+
+            <div className="relative mx-auto max-w-5xl px-4 pb-8 pt-6 sm:px-6 sm:pb-12 sm:pt-10">
+              {/* Meta strip */}
+              <div className="flex items-center justify-between text-[10px] font-medium uppercase tracking-[0.3em] text-white/60 sm:text-xs">
+                <span className="truncate">{meta1}</span>
+                <span className="shrink-0">Nº {currentYear}</span>
+              </div>
+
+              {/* Mosaic + type block */}
+              <div className="mt-4 grid grid-cols-1 gap-4 sm:mt-8 sm:grid-cols-12 sm:gap-6">
+                {/* Image mosaic */}
+                <div className="sm:col-span-7">
+                  <div className="grid grid-cols-3 grid-rows-2 gap-2 sm:gap-3">
+                    <div className="col-span-2 row-span-2 overflow-hidden rounded-2xl bg-white/10 aspect-[3/4]">
+                      {img0 ? (
+                        <img src={img0} alt={displayPrimary} className="h-full w-full object-cover" />
+                      ) : (
+                        <div className="h-full w-full" style={{ background: `linear-gradient(135deg, ${accent}, ${brand})` }} />
+                      )}
+                    </div>
+                    <div className="overflow-hidden rounded-2xl bg-white/10 aspect-square">
+                      {img1 ? (
+                        <img src={img1} alt="" className="h-full w-full object-cover" />
+                      ) : (
+                        <div className="grid h-full w-full place-items-center text-[10px] uppercase tracking-[0.25em] text-white/40">Modo</div>
+                      )}
+                    </div>
+                    <div className="overflow-hidden rounded-2xl bg-white/10 aspect-square">
+                      {img2 ? (
+                        <img src={img2} alt="" className="h-full w-full object-cover" />
+                      ) : img3 ? (
+                        <img src={img3} alt="" className="h-full w-full object-cover" />
+                      ) : (
+                        <div className="grid h-full w-full place-items-center text-[10px] uppercase tracking-[0.25em] text-white/40">
+                          {profile.tagline?.split(" ")[0] ?? ""}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Typographic block */}
+                <div className="sm:col-span-5 sm:flex sm:flex-col sm:justify-end">
+                  {theme?.logo_url && (theme?.welcome_card_show_logo ?? true) && (
+                    <img
+                      src={theme.logo_url}
+                      alt={displayPrimary}
+                      className="mb-3 h-8 w-auto object-contain opacity-90 invert brightness-0 contrast-200 sm:h-10"
+                      style={{ filter: "brightness(0) invert(1)" }}
+                    />
+                  )}
                   <h1
-                    className="text-3xl font-extrabold leading-[1.05] tracking-tight sm:text-5xl"
-                    style={{ fontFamily: `${headingFont}, ${bodyFont}, system-ui, sans-serif` }}
+                    className="font-light leading-[0.92] tracking-tight"
+                    style={{
+                      fontFamily: nameFont,
+                      fontSize: "clamp(2.25rem, 11vw, 5.5rem)",
+                    }}
                   >
                     {displayPrimary}
                   </h1>
                   {profile.tagline && (
-                    <p className="mt-1 max-w-xl text-sm opacity-90 sm:text-base">{profile.tagline}</p>
+                    <p className="mt-3 max-w-md text-sm leading-relaxed text-white/75 sm:text-base">
+                      {profile.tagline}
+                    </p>
                   )}
-                  {showRating && (
-                    <Link
-                      to="/m/$slug/reviews"
-                      params={{ slug }}
-                      className="pointer-events-auto mt-2 inline-flex items-center gap-2 hover:opacity-90"
-                    >
-                      <div className="flex">
-                        {Array.from({ length: 5 }).map((_, i) => (
-                          <Star
-                            key={i}
-                            className={`h-4 w-4 ${reviewCount === 0 || i < reviewRounded ? "fill-yellow-400 text-yellow-400" : "text-white/40"}`}
-                            fill={reviewCount === 0 || i < reviewRounded ? "currentColor" : "none"}
-                          />
-                        ))}
-                      </div>
-                      <span className="text-xs opacity-90">
-                        {reviewCount === 0 ? "Be the first to review" : `${reviewAvg.toFixed(1)} · ${reviewCount} review${reviewCount === 1 ? "" : "s"}`}
-                      </span>
-                    </Link>
+
+                  <div className="mt-5 flex items-center justify-between gap-3 border-t border-white/20 pt-4">
+                    {(theme?.welcome_card_show_rating ?? true) ? (
+                      <Link
+                        to="/m/$slug/reviews"
+                        params={{ slug }}
+                        className="flex items-center gap-2 hover:opacity-90"
+                      >
+                        <div className="flex">
+                          {Array.from({ length: 5 }).map((_, i) => (
+                            <Star
+                              key={i}
+                              className={`h-3.5 w-3.5 ${reviewCount === 0 || i < reviewRounded ? "fill-yellow-400 text-yellow-400" : "text-white/25"}`}
+                              fill={reviewCount === 0 || i < reviewRounded ? "currentColor" : "none"}
+                            />
+                          ))}
+                        </div>
+                        <span className="text-[11px] uppercase tracking-[0.15em] text-white/70">
+                          {reviewCount === 0 ? "New" : `${reviewAvg.toFixed(1)} · ${reviewCount} reviews`}
+                        </span>
+                      </Link>
+                    ) : <span />}
+                    <span className="hidden text-[10px] uppercase tracking-[0.3em] text-white/50 sm:inline">
+                      Est. {currentYear}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Slim action toolbar — floats over the bottom edge onto the page */}
+            {(theme?.welcome_card_show_actions ?? true) && (
+              <div className="relative mx-auto -mb-6 max-w-3xl px-4 pb-0 sm:-mb-7 sm:px-6">
+                <div
+                  className="flex items-center justify-around gap-1 rounded-full border px-2 py-2 shadow-lg backdrop-blur-sm"
+                  style={{
+                    borderColor: `${brand}22`,
+                    backgroundColor: cardBgType === "solid" ? cardBg : "#ffffff",
+                    color: brand,
+                  }}
+                >
+                  {(theme?.welcome_card_show_instagram ?? true) && ig ? (
+                    <ToolbarLink href={ig.startsWith("http") ? ig : `https://instagram.com/${ig.replace("@", "")}`} label="Instagram" brand={brand}>
+                      <Instagram className="h-4 w-4" />
+                    </ToolbarLink>
+                  ) : null}
+                  {mappableLocations.length === 1 && firstMapUrl ? (
+                    <ToolbarLink href={firstMapUrl} label="Directions" brand={brand}>
+                      <MapPin className="h-4 w-4" />
+                    </ToolbarLink>
+                  ) : mappableLocations.length > 1 ? (
+                    <ToolbarButton onClick={() => setDirectionsOpen(true)} label="Directions" brand={brand}>
+                      <MapPin className="h-4 w-4" />
+                    </ToolbarButton>
+                  ) : null}
+                  <ToolbarButton onClick={handleShare} label="Share" brand={brand}>
+                    <Share2 className="h-4 w-4" />
+                  </ToolbarButton>
+                  {hasCareGuides && (
+                    <ToolbarButton onClick={() => setCareGuideOpen(true)} label="Pre-treatment" brand={brand}>
+                      <Info className="h-4 w-4" />
+                    </ToolbarButton>
                   )}
                 </div>
               </div>
             )}
-            {!isMagazine && heroShowText && (heroHeading || heroSubheading) && (
-              <div className={`absolute inset-x-0 bottom-0 flex flex-col bg-gradient-to-t from-black/60 to-transparent px-4 py-6 sm:py-10 ${alignCls}`}>
-                <div className={`mx-auto w-full max-w-3xl text-white ${heroAlign === "center" ? "" : ""}`}>
-                  {heroHeading && (
-                    <h2
-                      className="text-2xl font-extrabold leading-tight sm:text-4xl"
-                      style={{ fontFamily: `${headingFont}, ${bodyFont}, system-ui, sans-serif` }}
-                    >
-                      {heroHeading}
-                    </h2>
-                  )}
-                  {heroSubheading && (
-                    <p className="mt-2 max-w-2xl text-sm opacity-90 sm:text-base">{heroSubheading}</p>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
+          </section>
         );
       })()}
 
-      {/* Magazine slim action toolbar */}
-      {layoutKey === "magazine" && showActions && (
-        <section className="mx-auto mt-3 max-w-3xl px-4">
-          <div
-            className="flex items-center justify-around gap-1 rounded-full border px-2 py-1.5 shadow-sm"
-            style={{ borderColor: `${brand}22`, backgroundColor: cardBgType === "solid" ? cardBg : "#ffffff" }}
-          >
-            {showInstagram && ig ? (
-              <ToolbarLink href={ig.startsWith("http") ? ig : `https://instagram.com/${ig.replace("@", "")}`} label="Instagram" brand={brand}>
-                <Instagram className="h-4 w-4" />
-              </ToolbarLink>
-            ) : null}
-            {mappableLocations.length === 1 && firstMapUrl ? (
-              <ToolbarLink href={firstMapUrl} label="Directions" brand={brand}>
-                <MapPin className="h-4 w-4" />
-              </ToolbarLink>
-            ) : mappableLocations.length > 1 ? (
-              <ToolbarButton onClick={() => setDirectionsOpen(true)} label="Directions" brand={brand}>
-                <MapPin className="h-4 w-4" />
-              </ToolbarButton>
-            ) : null}
-            <ToolbarButton onClick={handleShare} label="Share" brand={brand}>
-              <Share2 className="h-4 w-4" />
-            </ToolbarButton>
-            {hasCareGuides && (
-              <ToolbarButton onClick={() => setCareGuideOpen(true)} label="Pre-treatment" brand={brand}>
-                <Info className="h-4 w-4" />
-              </ToolbarButton>
-            )}
-          </div>
-        </section>
-      )}
-
-
-
-
-      {/* Welcome card — hidden in magazine layout since name/rating/actions live on the hero + toolbar */}
-      {layoutKey !== "magazine" && (
+      {/* Legacy welcome card removed — name, rating and actions now live in the editorial cover above */}
+      {false && (
       <section
         className={
           isMobile
