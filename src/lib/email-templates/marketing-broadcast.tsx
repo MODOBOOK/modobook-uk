@@ -24,7 +24,10 @@ export interface MarketingBroadcastData {
   brandColor?: string | null
   unsubscribeUrl?: string
   firstName?: string
+  last_treatment?: string
+  bookingUrl?: string
 }
+
 
 function interpolate(text: string, data: Record<string, string | undefined>): string {
   return String(text || '').replace(/\{\{\s*(\w+)\s*\}\}/g, (_m, key) => data[key] ?? '')
