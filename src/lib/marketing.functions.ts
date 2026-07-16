@@ -12,7 +12,7 @@ const BlockSchema: z.ZodType<Block> = z.union([
   z.object({ type: z.literal('heading'), text: z.string().max(200), level: z.union([z.literal(1), z.literal(2), z.literal(3)]).optional() }),
   z.object({ type: z.literal('paragraph'), text: z.string().max(5000) }),
   z.object({ type: z.literal('image'), src: z.string().url().max(1000), alt: z.string().max(200).optional() }),
-  z.object({ type: z.literal('button'), text: z.string().max(80), url: z.string().url().max(1000) }),
+  z.object({ type: z.literal('button'), text: z.string().max(80), url: z.string().max(1000).refine((v) => /^https?:\/\//.test(v) || v.includes('{{'), 'Must be a URL or merge tag') }),
   z.object({ type: z.literal('divider') }),
   z.object({ type: z.literal('spacer'), size: z.enum(['sm', 'md', 'lg']).optional() }),
 ])
