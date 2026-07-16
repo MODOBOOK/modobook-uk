@@ -1,0 +1,1 @@
+ALTER TABLE public.email_customizations ADD COLUMN IF NOT EXISTS body_override TEXT;
