@@ -516,7 +516,10 @@ export const sendTestEmail = createServerFn({ method: 'POST' })
       throw new Error('Add a subject and some content before previewing')
     }
     const { tryEnqueueAppEmail, getPractitionerBranding } = await import('@/lib/email/send.server')
-    const branding = await getPractitionerBranding((await getOwnerProfileId(context.supabase, context.userId)))
+    const pid = await getOwnerProfileId(context.supabase, context.userId)
+    const branding = await getPractitionerBranding(pid)
+    const { data: prof } = await context.supabase.from('profiles').select('slug').eq('id', pid).maybeSingle()
+    const bookingUrl = (prof as any)?.slug ? `https://modobook.uk/m/${(prof as any).slug}` : 'https://modobook.uk'
     const res = await tryEnqueueAppEmail({
       templateName: 'marketing-broadcast',
       recipientEmail: recipient,
@@ -529,9 +532,11 @@ export const sendTestEmail = createServerFn({ method: 'POST' })
         logoUrl: branding.logoUrl,
         brandColor: branding.brandColor,
         firstName: 'there',
-        unsubscribeUrl: 'https://modobook.uk/unsubscribe',
+        last_treatment: 'your last treatment',
+        bookingUrl,
       },
     })
+
     if (!res.ok && !res.skipped) throw new Error(res.error || 'Failed to send test')
     return { ok: true, sentTo: recipient }
   })
