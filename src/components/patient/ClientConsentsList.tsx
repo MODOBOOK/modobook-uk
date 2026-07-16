@@ -65,23 +65,29 @@ export function ClientConsentsList({
     }
   }
 
-  async function doSend() {
+  async function doSend(mode: "in_person" | "email") {
     if (!templateId) { toast.error("Choose a consent form"); return; }
+    if (mode === "email" && !client.email) { toast.error("No email on file for this patient"); return; }
     setSending(true);
     try {
-      await send({
+      const res = await send({
         data: {
           client_id: client.id,
           template_id: templateId,
           email: client.email ?? undefined,
-          sendEmail: !!client.email,
+          sendEmail: mode === "email",
         },
       });
-      toast.success(client.email ? "Consent form sent" : "Consent form created");
       setSendOpen(false);
       setTemplateId("");
       setBump((x) => x + 1);
       onSent?.();
+      if (mode === "in_person" && res?.token) {
+        // Hand the device to the patient — open the signing screen.
+        window.location.href = `/c/${res.token}`;
+        return;
+      }
+      toast.success(mode === "email" ? "Consent form emailed" : "Consent form created");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to send");
     } finally {
