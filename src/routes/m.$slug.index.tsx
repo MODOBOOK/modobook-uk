@@ -2393,6 +2393,34 @@ function ActionButton({
   );
 }
 
+function ToolbarLink({ href, label, brand, children }: { href: string; label: string; brand: string; children: React.ReactNode }) {
+  return (
+    <a
+      href={href}
+      target={href.startsWith("http") ? "_blank" : undefined}
+      rel="noreferrer"
+      className="flex flex-1 items-center justify-center gap-1.5 rounded-full px-2 py-1.5 text-xs font-medium transition hover:bg-muted"
+      style={{ color: brand }}
+    >
+      {children}
+      <span className="hidden sm:inline">{label}</span>
+    </a>
+  );
+}
+
+function ToolbarButton({ onClick, label, brand, children }: { onClick: () => void; label: string; brand: string; children: React.ReactNode }) {
+  return (
+    <button
+      onClick={onClick}
+      className="flex flex-1 items-center justify-center gap-1.5 rounded-full px-2 py-1.5 text-xs font-medium transition hover:bg-muted"
+      style={{ color: brand }}
+    >
+      {children}
+      <span className="hidden sm:inline">{label}</span>
+    </button>
+  );
+}
+
 type MenuStyleProps = {
   cardBg: string;
   cardBorder: string;
