@@ -1041,6 +1041,7 @@ function BookPage() {
           )}
         </div>
       </section>
+      )}
 
       {/* Mobile welcome intro at top */}
       {isMobile && (introHeading || introLength > 0) && (
