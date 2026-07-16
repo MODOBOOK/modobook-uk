@@ -1,5 +1,5 @@
 // Server functions for the Email templates dashboard: per-practitioner
-// wording overrides + appointment reminder rules.
+// wording overrides + appointment reminder rules + test sends.
 import { createServerFn } from '@tanstack/react-start'
 import { z } from 'zod'
 import { requireSupabaseAuth } from '@/integrations/supabase/auth-middleware'
@@ -23,6 +23,7 @@ export const saveEmailCustomization = createServerFn({ method: 'POST' })
       template_key: z.string().min(1).max(80),
       subject_override: z.string().max(300).nullable().optional(),
       intro_override: z.string().max(4000).nullable().optional(),
+      body_override: z.string().max(8000).nullable().optional(),
       closing_override: z.string().max(4000).nullable().optional(),
     }).parse(input),
   )
@@ -33,6 +34,7 @@ export const saveEmailCustomization = createServerFn({ method: 'POST' })
       template_key: data.template_key,
       subject_override: data.subject_override?.trim() || null,
       intro_override: data.intro_override?.trim() || null,
+      body_override: data.body_override?.trim() || null,
       closing_override: data.closing_override?.trim() || null,
       updated_at: new Date().toISOString(),
     }
@@ -100,4 +102,84 @@ export const deleteReminderRule = createServerFn({ method: 'POST' })
       .eq('profile_id', userId)
     if (error) throw new Error(error.message)
     return { ok: true }
+  })
+
+/** Send a preview of a template to the signed-in practitioner's own email
+ *  address, using sample data so they can see exactly what patients receive. */
+export const sendTestEmail = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({
+      template_key: z.string().min(1).max(80),
+    }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context
+
+    const { data: profile, error: profErr } = await supabase
+      .from('profiles')
+      .select('email, clinic_name, slug')
+      .eq('id', userId)
+      .maybeSingle()
+    if (profErr) throw new Error(profErr.message)
+    if (!profile?.email) throw new Error('No email on your account — add one first.')
+
+    const { tryEnqueueAppEmail, getPractitionerBranding } = await import('@/lib/email/send.server')
+    const branding = await getPractitionerBranding(userId)
+    const clinicName = profile.clinic_name || branding.clinicName
+
+    // Per-template sample data. `profileId` triggers the send helper to merge
+    // in the practitioner's saved subject/intro/body/closing overrides.
+    const samples: Record<string, Record<string, unknown>> = {
+      'booking-confirmation': {
+        patientName: 'Alex',
+        treatmentName: 'Lip filler consultation',
+        practitionerName: 'You',
+        locationName: profile.clinic_name || 'Your studio',
+        dateTime: 'Fri 12 Jul 2026 · 2:30 PM',
+      },
+      'booking-cancellation': {
+        patientName: 'Alex',
+        treatmentName: 'Lip filler consultation',
+        dateTime: 'Fri 12 Jul 2026 · 2:30 PM',
+        cancelledBy: 'clinic',
+      },
+      'appointment-reminder': {
+        patientName: 'Alex',
+        treatmentName: 'Lip filler consultation',
+        dateTime: 'Tomorrow · 2:30 PM',
+        hoursBefore: 24,
+      },
+      'medical-form-request': {
+        patientName: 'Alex',
+        formName: 'Pre-treatment medical form',
+        formUrl: 'https://modobook.uk',
+      },
+      'review-request': {
+        patientName: 'Alex',
+        treatmentName: 'Lip filler consultation',
+        reviewUrl: 'https://modobook.uk',
+      },
+      'patient-message': {
+        patientName: 'Alex',
+        message: 'This is where your message to the patient appears.',
+      },
+    }
+    const sample = samples[data.template_key] || {}
+
+    const res = await tryEnqueueAppEmail({
+      templateName: data.template_key,
+      recipientEmail: profile.email,
+      // Fresh id every test so we don't hit dedup
+      messageId: `test-${data.template_key}-${userId}-${Date.now()}`,
+      templateData: {
+        profileId: userId,
+        clinicName,
+        logoUrl: branding.logoUrl,
+        brandColor: branding.brandColor,
+        ...sample,
+      },
+    })
+    if (!res.ok) throw new Error(res.error || res.skipped || 'Failed to send')
+    return { ok: true, sentTo: profile.email }
   })

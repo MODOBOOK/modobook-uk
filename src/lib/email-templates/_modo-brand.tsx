@@ -1,69 +1,86 @@
-// Shared MODO branding for auth emails. Keep pure inline styles — email clients
-// don't support Tailwind or external CSS.
+// Shared email shell. Clean, minimal layout inspired by premium clinic emails:
+// a coloured header card holding the practitioner's logo (or clinic name
+// wordmark) at the top, then a white content card underneath, on a soft page
+// background. Keeps pure inline styles — email clients don't support Tailwind.
 import * as React from 'react'
 import { Body, Container, Head, Hr, Img, Section, Text } from '@react-email/components'
 import modoLogo from '@/assets/modo-logo.png.asset.json'
 
 const MODO_LOGO_URL = modoLogo.url
 
+/** Fallback palette (used when no practitioner brand colour is supplied). */
 export const brand = {
-  bg: '#ffffff',
-  card: '#f5f1ea',
+  page: '#f4f2ee',
+  card: '#ffffff',
+  headerCard: '#e9dfcc',
   ink: '#2b2620',
-  muted: '#7a7266',
+  muted: '#6b6459',
   accent: '#b8895a',
   accentInk: '#ffffff',
   border: '#e6ded0',
-  soft: '#efe7d8',
+  soft: '#f5f1ea',
+}
+
+/** Pick a readable foreground colour for a given hex background. */
+function readableInk(hex?: string | null): string {
+  if (!hex) return brand.ink
+  const m = /^#?([a-f\d]{6})$/i.exec(hex.trim())
+  if (!m) return brand.ink
+  const int = parseInt(m[1], 16)
+  const r = (int >> 16) & 0xff
+  const g = (int >> 8) & 0xff
+  const b = int & 0xff
+  // Perceived luminance (sRGB) — bright bg → dark ink, dark bg → light ink.
+  const lum = 0.299 * r + 0.587 * g + 0.114 * b
+  return lum > 170 ? '#2b2620' : '#ffffff'
 }
 
 export const styles = {
   main: {
-    backgroundColor: brand.bg,
+    backgroundColor: brand.page,
     fontFamily:
       "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif",
     color: brand.ink,
     margin: 0,
-    padding: '32px 12px',
+    padding: '28px 12px 40px',
   } as const,
   container: {
-    maxWidth: '520px',
+    maxWidth: '560px',
     margin: '0 auto',
+  } as const,
+  headerCard: {
+    borderRadius: '14px',
+    padding: '36px 24px',
+    textAlign: 'center' as const,
+    margin: '0 0 20px',
+  } as const,
+  contentCard: {
     backgroundColor: brand.card,
-    borderRadius: '18px',
-    padding: '40px 36px',
+    borderRadius: '14px',
+    padding: '36px 32px',
     border: `1px solid ${brand.border}`,
   } as const,
   wordmark: {
     fontFamily: "'Georgia', 'Times New Roman', serif",
-    fontSize: '28px',
-    letterSpacing: '0.32em',
-    color: brand.ink,
+    fontSize: '22px',
+    letterSpacing: '0.28em',
     textAlign: 'center' as const,
-    margin: '0 0 4px',
+    margin: 0,
     fontWeight: 400,
-  } as const,
-  tagline: {
-    fontSize: '10px',
-    letterSpacing: '0.35em',
-    textTransform: 'uppercase' as const,
-    color: brand.accent,
-    textAlign: 'center' as const,
-    margin: '0 0 28px',
   } as const,
   h1: {
     fontFamily: "'Georgia', 'Times New Roman', serif",
-    fontSize: '24px',
+    fontSize: '22px',
     fontWeight: 400,
     color: brand.ink,
-    margin: '8px 0 16px',
+    margin: '0 0 18px',
     lineHeight: 1.25,
   } as const,
   text: {
     fontSize: '15px',
     color: brand.ink,
-    lineHeight: 1.6,
-    margin: '0 0 18px',
+    lineHeight: 1.65,
+    margin: '0 0 16px',
   } as const,
   muted: {
     fontSize: '13px',
@@ -76,15 +93,15 @@ export const styles = {
     display: 'inline-block',
     backgroundColor: brand.ink,
     color: brand.accentInk,
-    fontSize: '14px',
+    fontSize: '13px',
     fontWeight: 600,
     letterSpacing: '0.08em',
     textTransform: 'uppercase' as const,
     borderRadius: '999px',
-    padding: '14px 28px',
+    padding: '13px 26px',
     textDecoration: 'none',
   } as const,
-  buttonWrap: { textAlign: 'center' as const, margin: '26px 0 22px' } as const,
+  buttonWrap: { textAlign: 'center' as const, margin: '22px 0 18px' } as const,
   code: {
     display: 'inline-block',
     backgroundColor: brand.soft,
@@ -96,13 +113,13 @@ export const styles = {
     fontSize: '13px',
     wordBreak: 'break-all' as const,
   } as const,
-  hr: { borderColor: brand.border, margin: '28px 0 18px' } as const,
+  hr: { borderColor: brand.border, margin: '24px 0 16px' } as const,
   footer: {
     fontSize: '11px',
     color: brand.muted,
     textAlign: 'center' as const,
     lineHeight: 1.6,
-    margin: 0,
+    margin: '18px 0 0',
   } as const,
 }
 
@@ -116,34 +133,45 @@ export function ModoShell({
   preview: React.ReactNode
   children: React.ReactNode
   siteName?: string
-  /** Practitioner logo URL — replaces the MODO wordmark when provided. */
+  /** Practitioner logo URL — replaces the wordmark when provided. */
   logoUrl?: string | null
-  /** Practitioner brand colour — used as the tagline accent when provided. */
+  /** Practitioner brand colour — used as the header card background. */
   brandColor?: string | null
 }) {
-  const _preview = preview // silence unused warning; Preview is set by caller
+  const _preview = preview
   void _preview
-  // Fallback to the MODO wordmark+monogram brand image when no practitioner
-  // logo is supplied. Emails need an absolute URL — asset paths are relative.
-  const brandLogo = logoUrl || `https://modobook.uk${MODO_LOGO_URL}`
-  const alt = logoUrl ? (siteName || 'Clinic logo') : 'MODO'
+
+  const headerBg = brandColor?.trim() || brand.headerCard
+  const headerInk = readableInk(headerBg)
+  const modoFallback = `https://modobook.uk${MODO_LOGO_URL}`
+
   return (
     <Body style={styles.main}>
       <Container style={styles.container}>
-        <Section style={{ textAlign: 'center', margin: '0 0 24px' }}>
-          <Img
-            src={brandLogo}
-            alt={alt}
-            height="64"
-            style={{ height: '64px', width: 'auto', margin: '0 auto', display: 'inline-block' }}
-          />
+        <Section style={{ ...styles.headerCard, backgroundColor: headerBg }}>
+          {logoUrl ? (
+            <Img
+              src={logoUrl}
+              alt={siteName || 'Clinic logo'}
+              height="72"
+              style={{ height: '72px', width: 'auto', margin: '0 auto', display: 'inline-block' }}
+            />
+          ) : siteName ? (
+            <Text style={{ ...styles.wordmark, color: headerInk }}>{siteName.toUpperCase()}</Text>
+          ) : (
+            <Img
+              src={modoFallback}
+              alt="MODO"
+              height="64"
+              style={{ height: '64px', width: 'auto', margin: '0 auto', display: 'inline-block' }}
+            />
+          )}
         </Section>
-        {children}
-        <Hr style={styles.hr} />
+
+        <Section style={styles.contentCard}>{children}</Section>
+
         <Text style={styles.footer}>
-          You&rsquo;re receiving this email from {siteName || 'MODO'}.
-          <br />
-          If this wasn&rsquo;t you, you can safely ignore it.
+          Sent by {siteName || 'MODO'}.
         </Text>
       </Container>
     </Body>
@@ -153,7 +181,30 @@ export function ModoShell({
 /** Merge the base button style with a practitioner brand colour when set. */
 export function brandedButton(brandColor?: string | null) {
   if (!brandColor) return styles.button
-  return { ...styles.button, backgroundColor: brandColor }
+  return { ...styles.button, backgroundColor: brandColor, color: readableInk(brandColor) }
+}
+
+/** Render a practitioner-authored body override as paragraphs.
+ *  Blank-line-separated blocks become <Text> paragraphs; single line breaks
+ *  become <br />. Returns null when no override is provided. */
+export function BodyOverride({ text }: { text?: string | null }) {
+  const trimmed = (text || '').trim()
+  if (!trimmed) return null
+  const blocks = trimmed.split(/\n{2,}/).map((b) => b.trim()).filter(Boolean)
+  return (
+    <>
+      {blocks.map((block, i) => (
+        <Text key={i} style={styles.text}>
+          {block.split('\n').map((line, j, arr) => (
+            <React.Fragment key={j}>
+              {line}
+              {j < arr.length - 1 ? <br /> : null}
+            </React.Fragment>
+          ))}
+        </Text>
+      ))}
+    </>
+  )
 }
 
 export { Head }

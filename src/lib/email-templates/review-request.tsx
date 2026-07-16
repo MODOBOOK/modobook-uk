@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { Html, Preview, Heading, Text, Button, Section } from '@react-email/components'
-import { ModoShell, Head, styles, brandedButton } from './_modo-brand'
+import { ModoShell, Head, styles, brandedButton, BodyOverride } from './_modo-brand'
 import type { TemplateEntry } from './registry'
 
 interface Props {
@@ -13,6 +13,7 @@ interface Props {
   brandColor?: string | null
   subjectOverride?: string | null
   introOverride?: string | null
+  bodyOverride?: string | null
   closingOverride?: string | null
 }
 
@@ -25,6 +26,7 @@ const Email = ({
   logoUrl,
   brandColor,
   introOverride,
+  bodyOverride,
   closingOverride,
 }: Props) => (
   <Html lang="en" dir="ltr">
@@ -41,6 +43,7 @@ const Email = ({
           {practitionerName ? ` with ${practitionerName}` : ''}. We'd love to hear how it went — it only takes a minute.
         </Text>
       )}
+      <BodyOverride text={bodyOverride} />
       <Section style={styles.buttonWrap}>
         <Button href={reviewUrl} style={brandedButton(brandColor)}>Leave a review</Button>
       </Section>

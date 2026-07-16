@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { Html, Preview, Heading, Text, Button, Section } from '@react-email/components'
-import { ModoShell, Head, styles, brandedButton } from './_modo-brand'
+import { ModoShell, Head, styles, brandedButton, BodyOverride } from './_modo-brand'
 import type { TemplateEntry } from './registry'
 
 interface Props {
@@ -15,6 +15,7 @@ interface Props {
   brandColor?: string | null
   subjectOverride?: string | null
   introOverride?: string | null
+  bodyOverride?: string | null
   closingOverride?: string | null
 }
 
@@ -29,6 +30,7 @@ const Email = ({
   logoUrl,
   brandColor,
   introOverride,
+  bodyOverride,
   closingOverride,
 }: Props) => (
   <Html lang="en" dir="ltr">
@@ -46,8 +48,9 @@ const Email = ({
             : `this confirms your ${treatmentName}${dateTime ? ` on ${dateTime}` : ''} has been cancelled.`}
         </Text>
       )}
-      {reason && (
-        <Section style={{ backgroundColor: '#efe7d8', borderRadius: 12, padding: '14px 16px', margin: '4px 0 18px' }}>
+      <BodyOverride text={bodyOverride} />
+      {reason && !bodyOverride?.trim() && (
+        <Section style={{ backgroundColor: '#f5f1ea', borderRadius: 12, padding: '14px 16px', margin: '4px 0 18px' }}>
           <Text style={{ ...styles.muted, margin: 0 }}><strong>Note from the clinic:</strong> {reason}</Text>
         </Section>
       )}

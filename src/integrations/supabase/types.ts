@@ -2388,6 +2388,7 @@ export type Database = {
       }
       email_customizations: {
         Row: {
+          body_override: string | null
           closing_override: string | null
           intro_override: string | null
           profile_id: string
@@ -2396,6 +2397,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          body_override?: string | null
           closing_override?: string | null
           intro_override?: string | null
           profile_id: string
@@ -2404,6 +2406,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          body_override?: string | null
           closing_override?: string | null
           intro_override?: string | null
           profile_id?: string

@@ -58,7 +58,7 @@ export async function enqueueAppEmail(
       const [{ data: cust }, { data: prof }] = await Promise.all([
         supabase
           .from('email_customizations')
-          .select('subject_override, intro_override, closing_override')
+          .select('subject_override, intro_override, body_override, closing_override')
           .eq('profile_id', profileId)
           .eq('template_key', input.templateName as string)
           .maybeSingle(),
@@ -69,6 +69,12 @@ export async function enqueueAppEmail(
           .maybeSingle(),
       ])
       if (cust) {
+        const c = cust as {
+          subject_override?: string | null
+          intro_override?: string | null
+          body_override?: string | null
+          closing_override?: string | null
+        }
         const { interpolateOverride } = await import('@/lib/email-templates/defaults')
         const vars: Record<string, string | undefined | null> = {
           patient_name: baseData.patientName as string | undefined,
@@ -78,9 +84,10 @@ export async function enqueueAppEmail(
           date_time: baseData.dateTime as string | undefined,
           form_name: baseData.formName as string | undefined,
         }
-        if (cust.subject_override) baseData.subjectOverride = interpolateOverride(cust.subject_override, vars)
-        if (cust.intro_override) baseData.introOverride = interpolateOverride(cust.intro_override, vars)
-        if (cust.closing_override) baseData.closingOverride = interpolateOverride(cust.closing_override, vars)
+        if (c.subject_override) baseData.subjectOverride = interpolateOverride(c.subject_override, vars)
+        if (c.intro_override) baseData.introOverride = interpolateOverride(c.intro_override, vars)
+        if (c.body_override) baseData.bodyOverride = interpolateOverride(c.body_override, vars)
+        if (c.closing_override) baseData.closingOverride = interpolateOverride(c.closing_override, vars)
       }
       const profEmail = (prof as { email?: string | null } | null)?.email?.trim()
       if (!resolvedReplyTo && profEmail) resolvedReplyTo = profEmail

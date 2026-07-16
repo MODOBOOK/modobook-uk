@@ -4,6 +4,7 @@ import { useServerFn } from '@tanstack/react-start'
 import {
   listEmailCustomizations, saveEmailCustomization,
   listReminderRules, saveReminderRule, deleteReminderRule,
+  sendTestEmail,
 } from '@/lib/emails.functions'
 import { EMAIL_DEFAULTS } from '@/lib/email-templates/defaults'
 import { Card, CardContent } from '@/components/ui/card'
@@ -16,7 +17,7 @@ import { Badge } from '@/components/ui/badge'
 import {
   Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog'
-import { Loader2, Mail, Bell, Plus, Trash2, Pencil } from 'lucide-react'
+import { Loader2, Mail, Bell, Plus, Trash2, Pencil, Send } from 'lucide-react'
 import { toast } from 'sonner'
 
 export const Route = createFileRoute('/_authenticated/dashboard/emails')({
@@ -153,7 +154,7 @@ function EmailsPage() {
         <div className="space-y-2">
           {grouped.transactional.map((e) => {
             const c = customsByKey[e.key]
-            const customised = !!(c && (c.subject_override || c.intro_override || c.closing_override))
+            const customised = !!(c && (c.subject_override || c.intro_override || c.body_override || c.closing_override))
             return (
               <Card key={e.key} className="cursor-pointer hover:border-primary/40 transition" onClick={() => setEditing(e)}>
                 <CardContent className="p-4 flex items-center gap-4">
@@ -178,15 +179,17 @@ function EmailsPage() {
           def={editing}
           existing={customsByKey[editing.key]}
           onClose={() => setEditing(null)}
-          onSave={async (payload) => {
+          onSave={async (payload, opts) => {
             try {
               const saved = await saveCust({ data: { template_key: editing.key, ...payload } })
               setCustoms((prev) => {
                 const next = prev.filter((x) => x.template_key !== editing.key)
                 return [...next, saved as any]
               })
-              toast.success('Saved')
-              setEditing(null)
+              if (!opts?.silent) {
+                toast.success('Saved')
+                setEditing(null)
+              }
             } catch (e) { toast.error(e instanceof Error ? e.message : 'Failed') }
           }}
         />
@@ -241,26 +244,59 @@ function EmailEditDialog({
   def: EmailDef
   existing?: any
   onClose: () => void
-  onSave: (payload: { subject_override: string | null; intro_override: string | null; closing_override: string | null }) => void
+  onSave: (
+    payload: {
+      subject_override: string | null
+      intro_override: string | null
+      body_override: string | null
+      closing_override: string | null
+    },
+    opts?: { silent?: boolean },
+  ) => Promise<void> | void
 }) {
-  const defaults = EMAIL_DEFAULTS[def.key] ?? { subject: '', intro: '', closing: '', variables: [] as string[] }
+  const defaults = EMAIL_DEFAULTS[def.key] ?? { subject: '', intro: '', body: '', closing: '', variables: [] as string[] }
   const [subject, setSubject] = useState<string>(existing?.subject_override ?? defaults.subject)
   const [intro, setIntro] = useState<string>(existing?.intro_override ?? defaults.intro)
+  const [body, setBody] = useState<string>(existing?.body_override ?? defaults.body)
   const [closing, setClosing] = useState<string>(existing?.closing_override ?? defaults.closing)
+  const [testing, setTesting] = useState(false)
+  const sendTest = useServerFn(sendTestEmail)
 
   const resetToDefaults = () => {
     setSubject(defaults.subject)
     setIntro(defaults.intro)
+    setBody(defaults.body)
     setClosing(defaults.closing)
+  }
+
+  const payload = () => ({
+    subject_override: subject.trim() || null,
+    intro_override: intro.trim() || null,
+    body_override: body.trim() || null,
+    closing_override: closing.trim() || null,
+  })
+
+  async function handleSendTest() {
+    setTesting(true)
+    try {
+      // Silent save so overrides are persisted before enqueueing test send
+      await onSave(payload(), { silent: true })
+      const r = await sendTest({ data: { template_key: def.key } })
+      toast.success(`Test sent to ${(r as any).sentTo}`)
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Failed to send test')
+    } finally {
+      setTesting(false)
+    }
   }
 
   return (
     <Dialog open onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader><DialogTitle>Edit {def.name}</DialogTitle></DialogHeader>
         <div className="space-y-3">
           <p className="text-xs text-muted-foreground">
-            These fields are pre-filled with the wording the system sends today. Edit whatever you like — keep any bits you want to leave as-is. Booking details, dates, and manage-links are always added automatically.
+            Fields are pre-filled with the default wording. Edit whatever you like — leave the rest as-is. Your logo, brand colour, booking details and manage links are added automatically.
           </p>
           {defaults.variables.length > 0 && (
             <p className="text-xs text-muted-foreground">
@@ -274,22 +310,29 @@ function EmailEditDialog({
           </div>
           <div>
             <Label>Opening line</Label>
-            <Textarea rows={3} value={intro} onChange={(e) => setIntro(e.target.value)} placeholder={defaults.intro} />
+            <Textarea rows={2} value={intro} onChange={(e) => setIntro(e.target.value)} placeholder={defaults.intro} />
+          </div>
+          <div>
+            <Label>Main body</Label>
+            <Textarea rows={5} value={body} onChange={(e) => setBody(e.target.value)} placeholder={defaults.body || 'Leave blank to use the auto-generated appointment details block.'} />
+            <p className="text-xs text-muted-foreground mt-1">When filled in, this replaces the auto details block. Use blank lines to separate paragraphs.</p>
           </div>
           <div>
             <Label>Closing / sign-off</Label>
-            <Textarea rows={3} value={closing} onChange={(e) => setClosing(e.target.value)} placeholder={defaults.closing} />
+            <Textarea rows={2} value={closing} onChange={(e) => setClosing(e.target.value)} placeholder={defaults.closing} />
           </div>
         </div>
-        <DialogFooter className="sm:justify-between">
-          <Button type="button" variant="ghost" size="sm" onClick={resetToDefaults}>Reset to default</Button>
+        <DialogFooter className="sm:justify-between gap-2 flex-wrap">
+          <div className="flex gap-2">
+            <Button type="button" variant="ghost" size="sm" onClick={resetToDefaults}>Reset</Button>
+            <Button type="button" variant="outline" size="sm" onClick={handleSendTest} disabled={testing}>
+              {testing ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <Send className="h-4 w-4 mr-1.5" />}
+              Send test to me
+            </Button>
+          </div>
           <div className="flex gap-2">
             <Button variant="ghost" onClick={onClose}>Cancel</Button>
-            <Button onClick={() => onSave({
-              subject_override: subject.trim() || null,
-              intro_override: intro.trim() || null,
-              closing_override: closing.trim() || null,
-            })}>Save</Button>
+            <Button onClick={() => onSave(payload())}>Save</Button>
           </div>
         </DialogFooter>
       </DialogContent>
