@@ -114,15 +114,23 @@ export const sendTestEmail = createServerFn({ method: 'POST' })
     }).parse(input),
   )
   .handler(async ({ data, context }) => {
-    const { supabase, userId } = context
+    const { supabase, userId, claims } = context
 
-    const { data: profile, error: profErr } = await supabase
+    const { data: profileRow, error: profErr } = await supabase
       .from('profiles')
       .select('email, clinic_name, slug')
       .eq('id', userId)
       .maybeSingle()
     if (profErr) throw new Error(profErr.message)
-    if (!profile?.email) throw new Error('No email on your account — add one first.')
+    // Fall back to the authenticated user's account email (from the JWT)
+    // when the profile row doesn't have one saved.
+    const accountEmail = (claims as { email?: string } | null)?.email ?? null
+    const profile = {
+      email: profileRow?.email || accountEmail,
+      clinic_name: profileRow?.clinic_name ?? null,
+      slug: profileRow?.slug ?? null,
+    }
+    if (!profile.email) throw new Error('No email on your account — add one first.')
 
     const { tryEnqueueAppEmail, getPractitionerBranding } = await import('@/lib/email/send.server')
     const branding = await getPractitionerBranding(userId)
