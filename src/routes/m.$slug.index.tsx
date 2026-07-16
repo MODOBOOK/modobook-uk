@@ -803,7 +803,7 @@ function BookPage() {
                     <img
                       src={theme.logo_url}
                       alt={displayPrimary}
-                      className="mb-3 h-8 w-auto object-contain opacity-90 invert brightness-0 contrast-200 sm:h-10"
+                      className="mb-3 h-8 w-auto object-contain opacity-90 sm:h-10"
                       style={{ filter: "brightness(0) invert(1)" }}
                     />
                   )}
