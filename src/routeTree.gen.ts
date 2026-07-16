@@ -119,6 +119,7 @@ import { Route as ApiPublicMedicalFormTokenRouteImport } from './routes/api.publ
 import { Route as ApiPublicHooksReviewEmailsRouteImport } from './routes/api/public/hooks/review-emails'
 import { Route as ApiPublicHooksRebookRemindersRouteImport } from './routes/api/public/hooks/rebook-reminders'
 import { Route as ApiPublicHooksMarketingDispatchRouteImport } from './routes/api/public/hooks/marketing-dispatch'
+import { Route as ApiPublicHooksMarketingAutomationsRouteImport } from './routes/api/public/hooks/marketing-automations'
 import { Route as ApiPublicHooksDailyScheduleDigestRouteImport } from './routes/api/public/hooks/daily-schedule-digest'
 import { Route as ApiPublicHooksAppointmentRemindersRouteImport } from './routes/api/public/hooks/appointment-reminders'
 import { Route as ApiPublicBookingReleaseRouteImport } from './routes/api/public/booking/release'
@@ -742,6 +743,12 @@ const ApiPublicHooksMarketingDispatchRoute =
     path: '/api/public/hooks/marketing-dispatch',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksMarketingAutomationsRoute =
+  ApiPublicHooksMarketingAutomationsRouteImport.update({
+    id: '/api/public/hooks/marketing-automations',
+    path: '/api/public/hooks/marketing-automations',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksDailyScheduleDigestRoute =
   ApiPublicHooksDailyScheduleDigestRouteImport.update({
     id: '/api/public/hooks/daily-schedule-digest',
@@ -910,6 +917,7 @@ export interface FileRoutesByFullPath {
   '/api/public/booking/release': typeof ApiPublicBookingReleaseRoute
   '/api/public/hooks/appointment-reminders': typeof ApiPublicHooksAppointmentRemindersRoute
   '/api/public/hooks/daily-schedule-digest': typeof ApiPublicHooksDailyScheduleDigestRoute
+  '/api/public/hooks/marketing-automations': typeof ApiPublicHooksMarketingAutomationsRoute
   '/api/public/hooks/marketing-dispatch': typeof ApiPublicHooksMarketingDispatchRoute
   '/api/public/hooks/rebook-reminders': typeof ApiPublicHooksRebookRemindersRoute
   '/api/public/hooks/review-emails': typeof ApiPublicHooksReviewEmailsRoute
@@ -1026,6 +1034,7 @@ export interface FileRoutesByTo {
   '/api/public/booking/release': typeof ApiPublicBookingReleaseRoute
   '/api/public/hooks/appointment-reminders': typeof ApiPublicHooksAppointmentRemindersRoute
   '/api/public/hooks/daily-schedule-digest': typeof ApiPublicHooksDailyScheduleDigestRoute
+  '/api/public/hooks/marketing-automations': typeof ApiPublicHooksMarketingAutomationsRoute
   '/api/public/hooks/marketing-dispatch': typeof ApiPublicHooksMarketingDispatchRoute
   '/api/public/hooks/rebook-reminders': typeof ApiPublicHooksRebookRemindersRoute
   '/api/public/hooks/review-emails': typeof ApiPublicHooksReviewEmailsRoute
@@ -1150,6 +1159,7 @@ export interface FileRoutesById {
   '/api/public/booking/release': typeof ApiPublicBookingReleaseRoute
   '/api/public/hooks/appointment-reminders': typeof ApiPublicHooksAppointmentRemindersRoute
   '/api/public/hooks/daily-schedule-digest': typeof ApiPublicHooksDailyScheduleDigestRoute
+  '/api/public/hooks/marketing-automations': typeof ApiPublicHooksMarketingAutomationsRoute
   '/api/public/hooks/marketing-dispatch': typeof ApiPublicHooksMarketingDispatchRoute
   '/api/public/hooks/rebook-reminders': typeof ApiPublicHooksRebookRemindersRoute
   '/api/public/hooks/review-emails': typeof ApiPublicHooksReviewEmailsRoute
@@ -1274,6 +1284,7 @@ export interface FileRouteTypes {
     | '/api/public/booking/release'
     | '/api/public/hooks/appointment-reminders'
     | '/api/public/hooks/daily-schedule-digest'
+    | '/api/public/hooks/marketing-automations'
     | '/api/public/hooks/marketing-dispatch'
     | '/api/public/hooks/rebook-reminders'
     | '/api/public/hooks/review-emails'
@@ -1390,6 +1401,7 @@ export interface FileRouteTypes {
     | '/api/public/booking/release'
     | '/api/public/hooks/appointment-reminders'
     | '/api/public/hooks/daily-schedule-digest'
+    | '/api/public/hooks/marketing-automations'
     | '/api/public/hooks/marketing-dispatch'
     | '/api/public/hooks/rebook-reminders'
     | '/api/public/hooks/review-emails'
@@ -1513,6 +1525,7 @@ export interface FileRouteTypes {
     | '/api/public/booking/release'
     | '/api/public/hooks/appointment-reminders'
     | '/api/public/hooks/daily-schedule-digest'
+    | '/api/public/hooks/marketing-automations'
     | '/api/public/hooks/marketing-dispatch'
     | '/api/public/hooks/rebook-reminders'
     | '/api/public/hooks/review-emails'
@@ -1559,6 +1572,7 @@ export interface RootRouteChildren {
   ApiPublicBookingReleaseRoute: typeof ApiPublicBookingReleaseRoute
   ApiPublicHooksAppointmentRemindersRoute: typeof ApiPublicHooksAppointmentRemindersRoute
   ApiPublicHooksDailyScheduleDigestRoute: typeof ApiPublicHooksDailyScheduleDigestRoute
+  ApiPublicHooksMarketingAutomationsRoute: typeof ApiPublicHooksMarketingAutomationsRoute
   ApiPublicHooksMarketingDispatchRoute: typeof ApiPublicHooksMarketingDispatchRoute
   ApiPublicHooksRebookRemindersRoute: typeof ApiPublicHooksRebookRemindersRoute
   ApiPublicHooksReviewEmailsRoute: typeof ApiPublicHooksReviewEmailsRoute
@@ -2345,6 +2359,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksMarketingDispatchRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/marketing-automations': {
+      id: '/api/public/hooks/marketing-automations'
+      path: '/api/public/hooks/marketing-automations'
+      fullPath: '/api/public/hooks/marketing-automations'
+      preLoaderRoute: typeof ApiPublicHooksMarketingAutomationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/daily-schedule-digest': {
       id: '/api/public/hooks/daily-schedule-digest'
       path: '/api/public/hooks/daily-schedule-digest'
@@ -2778,6 +2799,8 @@ const rootRouteChildren: RootRouteChildren = {
     ApiPublicHooksAppointmentRemindersRoute,
   ApiPublicHooksDailyScheduleDigestRoute:
     ApiPublicHooksDailyScheduleDigestRoute,
+  ApiPublicHooksMarketingAutomationsRoute:
+    ApiPublicHooksMarketingAutomationsRoute,
   ApiPublicHooksMarketingDispatchRoute: ApiPublicHooksMarketingDispatchRoute,
   ApiPublicHooksRebookRemindersRoute: ApiPublicHooksRebookRemindersRoute,
   ApiPublicHooksReviewEmailsRoute: ApiPublicHooksReviewEmailsRoute,
