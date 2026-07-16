@@ -873,11 +873,9 @@ function BookPage() {
               ? "relative z-10 mx-auto mt-6 px-4"
               : isWide
                 ? "relative z-10 mx-auto -mt-6 px-4 sm:max-w-2xl sm:-mt-12"
-                : layoutKey === "magazine"
-                  ? "relative z-10 mx-auto mt-4 px-4"
-                  : layoutKey === "split"
-                    ? "relative z-10 mx-auto -mt-8 px-4 sm:-mt-12"
-                    : "relative z-10 mx-auto -mt-14 px-4 sm:-mt-20"
+                : layoutKey === "split"
+                  ? "relative z-10 mx-auto -mt-8 px-4 sm:-mt-12"
+                  : "relative z-10 mx-auto -mt-14 px-4 sm:-mt-20"
         }
         style={{ maxWidth: isWide ? "none" : "42rem" }}
       >
