@@ -738,8 +738,7 @@ function BookPage() {
         const heroAlign = theme?.hero_text_alignment ?? "center";
         const heroShowText = theme?.hero_show_text ?? true;
         const heightCls =
-          layoutKey === "magazine" ? "h-28 sm:h-36"
-          : heroHeight === "short" ? "h-36 sm:h-44"
+          heroHeight === "short" ? "h-36 sm:h-44"
           : heroHeight === "tall" ? "h-64 sm:h-[26rem]"
           : heroHeight === "extra_tall" ? "h-[26rem] sm:h-[36rem]"
           : heroHeight === "huge" ? "h-[70vh] sm:h-[85vh]"
@@ -747,15 +746,13 @@ function BookPage() {
         const splitHeight = heroHeight === "short" ? "h-36 sm:h-52" : heroHeight === "tall" ? "h-56 sm:h-80" : heroHeight === "extra_tall" ? "h-[26rem] sm:h-[40rem]" : heroHeight === "huge" ? "h-[70vh] sm:h-[85vh]" : "h-44 sm:h-64";
         const blankHeight = heroHeight === "short" ? "h-32 sm:h-44" : heroHeight === "tall" ? "h-56 sm:h-72" : heroHeight === "extra_tall" ? "h-[26rem] sm:h-[36rem]" : heroHeight === "huge" ? "h-[65vh] sm:h-[80vh]" : "h-44 sm:h-56";
         const alignCls = heroAlign === "left" ? "text-left items-start" : heroAlign === "right" ? "text-right items-end" : "text-center items-center";
+        const isMagazine = layoutKey === "magazine";
+        const reviewCount = reviews.length;
+        const reviewAvg = reviewCount ? reviews.reduce((a, r) => a + r.rating, 0) / reviewCount : 0;
+        const reviewRounded = Math.round(reviewAvg);
         return (
           <div className="relative">
-            {layoutKey === "magazine" ? (
-              heroUrl ? (
-                <HeroImage src={heroUrl} heightClass={heightCls} fit={heroFit} natural={isNatural} />
-              ) : (
-                <div className="h-20 w-full" style={{ background: `linear-gradient(135deg, ${brand}, ${accent})` }} />
-              )
-            ) : carouselEnabled && carouselUrls.length > 0 ? (
+            {carouselEnabled && carouselUrls.length > 0 ? (
               <HeroCarousel urls={carouselUrls} heightClass={heightCls} fit={heroFit} natural={isNatural} />
             ) : heroUrl ? (
               <HeroImage src={heroUrl} heightClass={layoutKey === "split" ? splitHeight : heightCls} fit={heroFit} natural={isNatural} />
@@ -765,13 +762,51 @@ function BookPage() {
                 style={{ background: `linear-gradient(135deg, ${brand}, ${accent})` }}
               />
             )}
-            {layoutKey !== "magazine" && heroOverlayOpacity > 0 && (
+            {!isMagazine && heroOverlayOpacity > 0 && (
               <div
                 className="pointer-events-none absolute inset-0"
                 style={{ backgroundColor: heroOverlayColor, opacity: heroOverlayOpacity }}
               />
             )}
-            {layoutKey !== "magazine" && heroShowText && (heroHeading || heroSubheading) && (
+            {isMagazine && (
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-black/25 to-transparent" />
+            )}
+            {isMagazine && (
+              <div className="absolute inset-x-0 bottom-0 px-4 pb-5 sm:pb-8">
+                <div className="mx-auto w-full max-w-5xl text-white">
+                  <h1
+                    className="text-3xl font-extrabold leading-[1.05] tracking-tight sm:text-5xl"
+                    style={{ fontFamily: `${headingFont}, ${bodyFont}, system-ui, sans-serif` }}
+                  >
+                    {displayPrimary}
+                  </h1>
+                  {profile.tagline && (
+                    <p className="mt-1 max-w-xl text-sm opacity-90 sm:text-base">{profile.tagline}</p>
+                  )}
+                  {showRating && (
+                    <Link
+                      to="/m/$slug/reviews"
+                      params={{ slug }}
+                      className="pointer-events-auto mt-2 inline-flex items-center gap-2 hover:opacity-90"
+                    >
+                      <div className="flex">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <Star
+                            key={i}
+                            className={`h-4 w-4 ${reviewCount === 0 || i < reviewRounded ? "fill-yellow-400 text-yellow-400" : "text-white/40"}`}
+                            fill={reviewCount === 0 || i < reviewRounded ? "currentColor" : "none"}
+                          />
+                        ))}
+                      </div>
+                      <span className="text-xs opacity-90">
+                        {reviewCount === 0 ? "Be the first to review" : `${reviewAvg.toFixed(1)} · ${reviewCount} review${reviewCount === 1 ? "" : "s"}`}
+                      </span>
+                    </Link>
+                  )}
+                </div>
+              </div>
+            )}
+            {!isMagazine && heroShowText && (heroHeading || heroSubheading) && (
               <div className={`absolute inset-x-0 bottom-0 flex flex-col bg-gradient-to-t from-black/60 to-transparent px-4 py-6 sm:py-10 ${alignCls}`}>
                 <div className={`mx-auto w-full max-w-3xl text-white ${heroAlign === "center" ? "" : ""}`}>
                   {heroHeading && (
@@ -792,10 +827,44 @@ function BookPage() {
         );
       })()}
 
+      {/* Magazine slim action toolbar */}
+      {layoutKey === "magazine" && showActions && (
+        <section className="mx-auto mt-3 max-w-3xl px-4">
+          <div
+            className="flex items-center justify-around gap-1 rounded-full border px-2 py-1.5 shadow-sm"
+            style={{ borderColor: `${brand}22`, backgroundColor: cardBgType === "solid" ? cardBg : "#ffffff" }}
+          >
+            {showInstagram && ig ? (
+              <ToolbarLink href={ig.startsWith("http") ? ig : `https://instagram.com/${ig.replace("@", "")}`} label="Instagram" brand={brand}>
+                <Instagram className="h-4 w-4" />
+              </ToolbarLink>
+            ) : null}
+            {mappableLocations.length === 1 && firstMapUrl ? (
+              <ToolbarLink href={firstMapUrl} label="Directions" brand={brand}>
+                <MapPin className="h-4 w-4" />
+              </ToolbarLink>
+            ) : mappableLocations.length > 1 ? (
+              <ToolbarButton onClick={() => setDirectionsOpen(true)} label="Directions" brand={brand}>
+                <MapPin className="h-4 w-4" />
+              </ToolbarButton>
+            ) : null}
+            <ToolbarButton onClick={handleShare} label="Share" brand={brand}>
+              <Share2 className="h-4 w-4" />
+            </ToolbarButton>
+            {hasCareGuides && (
+              <ToolbarButton onClick={() => setCareGuideOpen(true)} label="Pre-treatment" brand={brand}>
+                <Info className="h-4 w-4" />
+              </ToolbarButton>
+            )}
+          </div>
+        </section>
+      )}
 
 
 
-      {/* Welcome card */}
+
+      {/* Welcome card — hidden in magazine layout since name/rating/actions live on the hero + toolbar */}
+      {layoutKey !== "magazine" && (
       <section
         className={
           isMobile
@@ -804,11 +873,9 @@ function BookPage() {
               ? "relative z-10 mx-auto mt-6 px-4"
               : isWide
                 ? "relative z-10 mx-auto -mt-6 px-4 sm:max-w-2xl sm:-mt-12"
-                : layoutKey === "magazine"
-                  ? "relative z-10 mx-auto mt-4 px-4"
-                  : layoutKey === "split"
-                    ? "relative z-10 mx-auto -mt-8 px-4 sm:-mt-12"
-                    : "relative z-10 mx-auto -mt-14 px-4 sm:-mt-20"
+                : layoutKey === "split"
+                  ? "relative z-10 mx-auto -mt-8 px-4 sm:-mt-12"
+                  : "relative z-10 mx-auto -mt-14 px-4 sm:-mt-20"
         }
         style={{ maxWidth: isWide ? "none" : "42rem" }}
       >
@@ -972,6 +1039,7 @@ function BookPage() {
           )}
         </div>
       </section>
+      )}
 
       {/* Mobile welcome intro at top */}
       {isMobile && (introHeading || introLength > 0) && (
@@ -2321,6 +2389,34 @@ function ActionButton({
     >
       {children}
       <span>{label}</span>
+    </button>
+  );
+}
+
+function ToolbarLink({ href, label, brand, children }: { href: string; label: string; brand: string; children: React.ReactNode }) {
+  return (
+    <a
+      href={href}
+      target={href.startsWith("http") ? "_blank" : undefined}
+      rel="noreferrer"
+      className="flex flex-1 items-center justify-center gap-1.5 rounded-full px-2 py-1.5 text-xs font-medium transition hover:bg-muted"
+      style={{ color: brand }}
+    >
+      {children}
+      <span className="hidden sm:inline">{label}</span>
+    </a>
+  );
+}
+
+function ToolbarButton({ onClick, label, brand, children }: { onClick: () => void; label: string; brand: string; children: React.ReactNode }) {
+  return (
+    <button
+      onClick={onClick}
+      className="flex flex-1 items-center justify-center gap-1.5 rounded-full px-2 py-1.5 text-xs font-medium transition hover:bg-muted"
+      style={{ color: brand }}
+    >
+      {children}
+      <span className="hidden sm:inline">{label}</span>
     </button>
   );
 }
