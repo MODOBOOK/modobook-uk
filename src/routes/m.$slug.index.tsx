@@ -863,7 +863,8 @@ function BookPage() {
 
 
 
-      {/* Welcome card */}
+      {/* Welcome card — hidden in magazine layout since name/rating/actions live on the hero + toolbar */}
+      {layoutKey !== "magazine" && (
       <section
         className={
           isMobile
