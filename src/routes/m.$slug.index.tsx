@@ -769,8 +769,23 @@ function BookPage() {
         const nameFont = `${headingFont}, ${bodyFont}, ui-serif, Georgia, serif`;
         const themeAny = theme as (typeof theme & { hero_use_logo?: boolean; hero_text_color?: string | null }) | null;
         const heroUseLogo = !!(themeAny?.hero_use_logo && themeAny?.logo_url);
-        const heroTextColor = themeAny?.hero_text_color || "#ffffff";
-        const heroMuted = `${heroTextColor}b3`; // ~70%
+        // Auto-pick a readable default from the hero background luminance
+        // so a light "brand" doesn't leave white-on-cream text invisible.
+        const readableOn = (hex: string): string => {
+          const m = /^#?([a-f\d]{3}|[a-f\d]{6})$/i.exec(hex.trim());
+          if (!m) return "#ffffff";
+          let h = m[1];
+          if (h.length === 3) h = h.split("").map((c) => c + c).join("");
+          const r = parseInt(h.slice(0, 2), 16);
+          const g = parseInt(h.slice(2, 4), 16);
+          const b = parseInt(h.slice(4, 6), 16);
+          // Perceived luminance
+          const l = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+          return l > 0.6 ? "#1a1a1a" : "#ffffff";
+        };
+        const heroTextColor = themeAny?.hero_text_color || readableOn(brand);
+        const isDarkText = heroTextColor.toLowerCase() !== "#ffffff" && heroTextColor.toLowerCase() !== "#fff";
+        const heroMuted = `${heroTextColor}${isDarkText ? "b3" : "cc"}`; // muted body
         const heroDivider = `${heroTextColor}33`; // ~20%
 
         return (
