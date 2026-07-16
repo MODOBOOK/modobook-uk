@@ -406,15 +406,34 @@ async function dispatchCampaign(campaignId: string, practitionerId: string) {
 
   try {
     const branding = await getPractitionerBranding(practitionerId)
+    // Fetch practitioner slug for booking_url merge tag
+    const { data: prof } = await supabase.from('profiles').select('slug').eq('id', practitionerId).maybeSingle()
+    const bookingUrl = prof?.slug ? `https://modobook.uk/m/${prof.slug}` : 'https://modobook.uk'
+
     // Reuse authenticated resolver logic via admin client (RLS bypassed but scoped by practitioner id)
     const recipients = await resolveSegmentRecipients(supabase, practitionerId, campaign.segment_id)
     const capped = recipients.slice(0, RECIPIENT_LIMIT)
+
+    // Pre-compute last treatment name per client (for {{last_treatment}} merge tag)
+    const lastTreatmentByClient = new Map<string, string>()
+    if (capped.length) {
+      const { data: latestAppts } = await supabase.from('appointments')
+        .select('client_id, appointment_date, treatments(name)')
+        .eq('practitioner_id', practitionerId)
+        .in('client_id', capped.map((c) => c.id))
+        .order('appointment_date', { ascending: false })
+      const seen = new Set<string>()
+      for (const a of (latestAppts || []) as any[]) {
+        if (seen.has(a.client_id)) continue
+        seen.add(a.client_id)
+        if (a.treatments?.name) lastTreatmentByClient.set(a.client_id, a.treatments.name)
+      }
+    }
+
     let sent = 0, failed = 0, suppressed = 0
-    const baseUrl = 'https://modobook.uk'
 
     for (const r of capped) {
       const messageId = `campaign-${campaignId}-${r.id}`
-      // Insert recipient row (unique message_id — skip if duplicate)
       const { error: insErr } = await supabase.from('marketing_campaign_recipients').insert({
         campaign_id: campaignId, practitioner_id: practitionerId,
         client_id: r.id, email: r.email, message_id: messageId, status: 'queued',
@@ -435,7 +454,8 @@ async function dispatchCampaign(campaignId: string, practitionerId: string) {
           logoUrl: branding.logoUrl,
           brandColor: branding.brandColor,
           firstName: r.first_name,
-          unsubscribeUrl: `${baseUrl}/unsubscribe`,
+          last_treatment: lastTreatmentByClient.get(r.id) || '',
+          bookingUrl,
         },
       })
       if (res.ok) { sent++; await supabase.from('marketing_campaign_recipients').update({ status: 'sent' }).eq('message_id', messageId) }
@@ -447,6 +467,7 @@ async function dispatchCampaign(campaignId: string, practitionerId: string) {
         await supabase.from('marketing_campaign_recipients').update({ status: 'failed', error_message: res.error?.slice(0, 500) || null }).eq('message_id', messageId)
       }
     }
+
 
     await supabase.from('marketing_campaigns').update({
       status: 'sent',
