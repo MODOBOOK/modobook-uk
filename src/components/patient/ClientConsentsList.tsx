@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ConsentSectionsView, type ConsentSection } from "@/components/ConsentSections";
-import { ShieldCheck, Send, Loader2, CheckCircle2, Clock, Eye, Copy } from "lucide-react";
+import { ShieldCheck, Send, Loader2, CheckCircle2, Clock, Eye, Copy, PenLine, Mail } from "lucide-react";
 import { toast } from "sonner";
 
 export function ClientConsentsList({
@@ -65,23 +65,29 @@ export function ClientConsentsList({
     }
   }
 
-  async function doSend() {
+  async function doSend(mode: "in_person" | "email") {
     if (!templateId) { toast.error("Choose a consent form"); return; }
+    if (mode === "email" && !client.email) { toast.error("No email on file for this patient"); return; }
     setSending(true);
     try {
-      await send({
+      const res = await send({
         data: {
           client_id: client.id,
           template_id: templateId,
           email: client.email ?? undefined,
-          sendEmail: !!client.email,
+          sendEmail: mode === "email",
         },
       });
-      toast.success(client.email ? "Consent form sent" : "Consent form created");
       setSendOpen(false);
       setTemplateId("");
       setBump((x) => x + 1);
       onSent?.();
+      if (mode === "in_person" && res?.token) {
+        // Hand the device to the patient — open the signing screen.
+        window.location.href = `/c/${res.token}`;
+        return;
+      }
+      toast.success(mode === "email" ? "Consent form emailed" : "Consent form created");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to send");
     } finally {
@@ -141,13 +147,23 @@ export function ClientConsentsList({
                   </div>
                 </div>
                 {!signed && (
-                  <Button
-                    size="sm" variant="ghost" className="h-7 px-2"
-                    onClick={() => { navigator.clipboard?.writeText(url); toast.success("Link copied"); }}
-                    title="Copy link"
-                  >
-                    <Copy className="h-3.5 w-3.5" />
-                  </Button>
+                  <>
+                    <Button
+                      size="sm" variant="default" className="h-7 gap-1 px-2"
+                      onClick={() => { window.location.href = `/c/${r.token}`; }}
+                      title="Hand the device to the patient to sign now"
+                    >
+                      <PenLine className="h-3.5 w-3.5" />
+                      <span className="hidden sm:inline">Sign in person</span>
+                    </Button>
+                    <Button
+                      size="sm" variant="ghost" className="h-7 px-2"
+                      onClick={() => { navigator.clipboard?.writeText(url); toast.success("Link copied"); }}
+                      title="Copy link"
+                    >
+                      <Copy className="h-3.5 w-3.5" />
+                    </Button>
+                  </>
                 )}
                 <Button size="sm" variant="outline" className="h-7 px-2" onClick={() => openConsent(r.token)} title="View consent form">
                   <Eye className="h-3.5 w-3.5" />
@@ -176,16 +192,23 @@ export function ClientConsentsList({
               </Select>
             </div>
             <div className="text-[11px] text-muted-foreground">
-              {client.email
-                ? <>Will email <span className="font-medium">{client.email}</span> with a signing link.</>
-                : <>No email on file — a signing link will be created that you can copy and share.</>}
+              Hand the device to the patient to sign now, or email them a signing link{client.email ? <> to <span className="font-medium">{client.email}</span></> : <> (no email on file — use in person)</>}.
             </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="flex-col-reverse gap-2 sm:flex-row">
             <Button variant="ghost" onClick={() => setSendOpen(false)} disabled={sending}>Cancel</Button>
-            <Button onClick={doSend} disabled={sending || !templateId}>
-              {sending ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Send className="mr-1.5 h-3.5 w-3.5" />}
-              Send
+            <Button
+              variant="outline"
+              onClick={() => doSend("email")}
+              disabled={sending || !templateId || !client.email}
+              title={!client.email ? "No email on file" : "Email a signing link to the patient"}
+            >
+              <Mail className="mr-1.5 h-3.5 w-3.5" />
+              Email instead
+            </Button>
+            <Button onClick={() => doSend("in_person")} disabled={sending || !templateId}>
+              {sending ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <PenLine className="mr-1.5 h-3.5 w-3.5" />}
+              Sign in person now
             </Button>
           </DialogFooter>
         </DialogContent>
