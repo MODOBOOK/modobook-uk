@@ -306,6 +306,17 @@ function BookPage() {
   const carouselEnabled =
     !!(theme as { hero_carousel_enabled?: boolean } | null)?.hero_carousel_enabled ||
     (layoutKey === "carousel" && carouselUrls.length > 0);
+  // Editorial hero gallery — auto-advancing slideshow when multiple photos
+  const editorialGallery: string[] =
+    carouselUrls.length > 0 ? carouselUrls : heroUrl ? [heroUrl] : [];
+  const [editorialSlide, setEditorialSlide] = useState(0);
+  useEffect(() => {
+    if (editorialGallery.length < 2) return;
+    const id = window.setInterval(() => {
+      setEditorialSlide((i) => (i + 1) % editorialGallery.length);
+    }, 4500);
+    return () => window.clearInterval(id);
+  }, [editorialGallery.length]);
   // Menu styling
   const menuCardBg = theme?.menu_card_bg || "#ffffff";
   const menuCardBorder = theme?.menu_card_border_color || `${brand}1f`;
@@ -729,20 +740,11 @@ function BookPage() {
 
       {/* Editorial cover — signature MODO landing block */}
       {(() => {
-        const gallery: string[] =
-          carouselUrls.length > 0
-            ? carouselUrls
-            : heroUrl
-              ? [heroUrl]
-              : [];
-        const [img0, img1, img2, img3] = gallery;
         const reviewCount = reviews.length;
         const reviewAvg = reviewCount ? reviews.reduce((a, r) => a + r.rating, 0) / reviewCount : 0;
         const reviewRounded = Math.round(reviewAvg);
-        const primaryLocCity = locations.find((l) => l.is_primary)?.city ?? locations[0]?.city ?? "";
         const nameFont = `${headingFont}, ${bodyFont}, ui-serif, Georgia, serif`;
-        const meta1 = primaryLocCity || "Aesthetics";
-        const currentYear = new Date().getFullYear();
+        const activeImg = editorialGallery[editorialSlide] ?? editorialGallery[0];
 
         return (
           <section
@@ -750,55 +752,49 @@ function BookPage() {
             className="relative overflow-hidden"
             style={{ backgroundColor: brand, color: "#ffffff" }}
           >
-            {/* Faint radial accent behind the mosaic */}
+            {/* Faint radial accent behind the portrait */}
             <div
               aria-hidden
               className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full opacity-30 blur-3xl"
               style={{ backgroundColor: accent }}
             />
 
-            <div className="relative mx-auto max-w-5xl px-4 pb-8 pt-6 sm:px-6 sm:pb-12 sm:pt-10">
-              {/* Meta strip */}
-              <div className="flex items-center justify-between text-[10px] font-medium uppercase tracking-[0.3em] text-white/60 sm:text-xs">
-                <span className="truncate">{meta1}</span>
-                <span className="shrink-0">Nº {currentYear}</span>
-              </div>
-
-              {/* Mosaic + type block */}
-              <div className="mt-4 grid grid-cols-1 gap-4 sm:mt-8 sm:grid-cols-12 sm:gap-6">
-                {/* Image mosaic */}
-                <div className="sm:col-span-7">
-                  <div className="grid grid-cols-3 grid-rows-2 gap-2 sm:gap-3">
-                    <div className="col-span-2 row-span-2 overflow-hidden rounded-2xl bg-white/10 aspect-[3/4]">
-                      {img0 ? (
-                        <img src={img0} alt={displayPrimary} className="h-full w-full object-cover" />
-                      ) : (
-                        <div className="h-full w-full" style={{ background: `linear-gradient(135deg, ${accent}, ${brand})` }} />
-                      )}
-                    </div>
-                    <div className="overflow-hidden rounded-2xl bg-white/10 aspect-square">
-                      {img1 ? (
-                        <img src={img1} alt="" className="h-full w-full object-cover" />
-                      ) : (
-                        <div className="grid h-full w-full place-items-center text-[10px] uppercase tracking-[0.25em] text-white/40">Modo</div>
-                      )}
-                    </div>
-                    <div className="overflow-hidden rounded-2xl bg-white/10 aspect-square">
-                      {img2 ? (
-                        <img src={img2} alt="" className="h-full w-full object-cover" />
-                      ) : img3 ? (
-                        <img src={img3} alt="" className="h-full w-full object-cover" />
-                      ) : (
-                        <div className="grid h-full w-full place-items-center text-[10px] uppercase tracking-[0.25em] text-white/40">
-                          {profile.tagline?.split(" ")[0] ?? ""}
-                        </div>
-                      )}
-                    </div>
+            <div className="relative mx-auto max-w-5xl px-4 pb-8 pt-8 sm:px-6 sm:pb-12 sm:pt-14">
+              {/* Portrait + type block */}
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-12 sm:gap-8">
+                {/* Portrait slideshow */}
+                <div className="sm:col-span-6">
+                  <div className="relative overflow-hidden rounded-2xl bg-white/10 aspect-[3/4]">
+                    {editorialGallery.length === 0 ? (
+                      <div className="h-full w-full" style={{ background: `linear-gradient(135deg, ${accent}, ${brand})` }} />
+                    ) : (
+                      editorialGallery.map((src, i) => (
+                        <img
+                          key={src + i}
+                          src={src}
+                          alt={i === 0 ? displayPrimary : ""}
+                          className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-[1200ms] ease-out ${i === editorialSlide ? "opacity-100" : "opacity-0"}`}
+                        />
+                      ))
+                    )}
+                    {editorialGallery.length > 1 && (
+                      <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-1.5">
+                        {editorialGallery.map((_, i) => (
+                          <button
+                            key={i}
+                            type="button"
+                            aria-label={`Show photo ${i + 1}`}
+                            onClick={() => setEditorialSlide(i)}
+                            className={`h-1.5 rounded-full transition-all ${i === editorialSlide ? "w-6 bg-white" : "w-1.5 bg-white/50"}`}
+                          />
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
 
                 {/* Typographic block */}
-                <div className="sm:col-span-5 sm:flex sm:flex-col sm:justify-end">
+                <div className="sm:col-span-6 sm:flex sm:flex-col sm:justify-end">
                   {theme?.logo_url && (theme?.welcome_card_show_logo ?? true) && (
                     <img
                       src={theme.logo_url}
@@ -822,31 +818,26 @@ function BookPage() {
                     </p>
                   )}
 
-                  <div className="mt-5 flex items-center justify-between gap-3 border-t border-white/20 pt-4">
-                    {(theme?.welcome_card_show_rating ?? true) ? (
-                      <Link
-                        to="/m/$slug/reviews"
-                        params={{ slug }}
-                        className="flex items-center gap-2 hover:opacity-90"
-                      >
-                        <div className="flex">
-                          {Array.from({ length: 5 }).map((_, i) => (
-                            <Star
-                              key={i}
-                              className={`h-3.5 w-3.5 ${reviewCount === 0 || i < reviewRounded ? "fill-yellow-400 text-yellow-400" : "text-white/25"}`}
-                              fill={reviewCount === 0 || i < reviewRounded ? "currentColor" : "none"}
-                            />
-                          ))}
-                        </div>
-                        <span className="text-[11px] uppercase tracking-[0.15em] text-white/70">
-                          {reviewCount === 0 ? "New" : `${reviewAvg.toFixed(1)} · ${reviewCount} reviews`}
-                        </span>
-                      </Link>
-                    ) : <span />}
-                    <span className="hidden text-[10px] uppercase tracking-[0.3em] text-white/50 sm:inline">
-                      Est. {currentYear}
-                    </span>
-                  </div>
+                  {(theme?.welcome_card_show_rating ?? true) && (
+                    <Link
+                      to="/m/$slug/reviews"
+                      params={{ slug }}
+                      className="mt-5 flex items-center gap-2 border-t border-white/20 pt-4 hover:opacity-90"
+                    >
+                      <div className="flex">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <Star
+                            key={i}
+                            className={`h-3.5 w-3.5 ${reviewCount === 0 || i < reviewRounded ? "fill-yellow-400 text-yellow-400" : "text-white/25"}`}
+                            fill={reviewCount === 0 || i < reviewRounded ? "currentColor" : "none"}
+                          />
+                        ))}
+                      </div>
+                      <span className="text-[11px] uppercase tracking-[0.15em] text-white/70">
+                        {reviewCount === 0 ? "New" : `${reviewAvg.toFixed(1)} · ${reviewCount} reviews`}
+                      </span>
+                    </Link>
+                  )}
                 </div>
               </div>
             </div>
@@ -891,8 +882,107 @@ function BookPage() {
         );
       })()}
 
-      {/* Legacy welcome card removed — name, rating and actions now live in the editorial cover above */}
-      {/* Legacy welcome card removed — replaced by the editorial cover above */}
+      {/* Welcome card — restored below the editorial hero */}
+      <section
+        className="relative z-10 mx-auto mt-10 px-4 sm:mt-14"
+        style={{ maxWidth: "42rem" }}
+      >
+        <div
+          className="border"
+          style={{
+            backgroundColor: cardBgType === "solid" ? cardBg : undefined,
+            backgroundImage: cardBgType === "gradient" ? `linear-gradient(135deg, ${cardGradientFrom}, ${cardGradientTo})` : undefined,
+            borderColor: cardBorder,
+            borderRadius: cardRadius,
+            borderWidth: cardBorderWidth,
+            padding: cardPadding,
+            boxShadow: cardShadow,
+            opacity: cardOpacity,
+            backdropFilter: cardBlur > 0 ? `blur(${cardBlur}px)` : undefined,
+            margin: "0 auto",
+            maxWidth: "42rem",
+          }}
+        >
+          {showLogo && logoUrl && (
+            <img src={logoUrl} alt={displayPrimary} className="mb-2 h-8 w-auto object-contain sm:h-10" />
+          )}
+          {showName && (
+            <h2 className="text-lg font-extrabold leading-tight sm:text-xl" style={headingStyle}>
+              {displayPrimary}
+            </h2>
+          )}
+          {showTagline && profile.tagline && (
+            <p className="mt-1 text-sm opacity-70">{profile.tagline}</p>
+          )}
+
+          {showRating && (
+            <Link to="/m/$slug/reviews" params={{ slug }} className="mt-2 flex items-center gap-2 hover:opacity-80">
+              {(() => {
+                const count = reviews.length;
+                const avg = count ? reviews.reduce((a, r) => a + r.rating, 0) / count : 0;
+                const rounded = Math.round(avg);
+                return (
+                  <>
+                    <div className="flex">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`h-3.5 w-3.5 ${count === 0 || i < rounded ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground/30"}`}
+                          fill={count === 0 || i < rounded ? "currentColor" : "none"}
+                        />
+                      ))}
+                    </div>
+                    <span className="text-xs opacity-70">
+                      {count === 0 ? "Be the first to review" : `${avg.toFixed(1)} · ${count} review${count === 1 ? "" : "s"}`}
+                    </span>
+                  </>
+                );
+              })()}
+            </Link>
+          )}
+
+          {showActions && (
+            <div className="mt-4 grid grid-cols-4 gap-2 border-t pt-3" style={{ borderColor: `${brand}22` }}>
+              {showInstagram && ig ? (
+                <ActionIcon href={ig.startsWith("http") ? ig : `https://instagram.com/${ig.replace("@", "")}`} label="Instagram" brand={brand}>
+                  <Instagram className="h-5 w-5" />
+                </ActionIcon>
+              ) : (
+                <ActionPlaceholder label="Instagram" brand={brand}>
+                  <Instagram className="h-5 w-5 opacity-30" />
+                </ActionPlaceholder>
+              )}
+              {mappableLocations.length === 1 && firstMapUrl ? (
+                <ActionIcon href={firstMapUrl} label="Directions" brand={brand}>
+                  <MapPin className="h-5 w-5" />
+                </ActionIcon>
+              ) : mappableLocations.length > 1 ? (
+                <ActionButton onClick={() => setDirectionsOpen(true)} label="Directions" brand={brand}>
+                  <MapPin className="h-5 w-5" />
+                </ActionButton>
+              ) : (
+                <ActionPlaceholder label="Directions" brand={brand}>
+                  <MapPin className="h-5 w-5 opacity-30" />
+                </ActionPlaceholder>
+              )}
+              <ActionButton onClick={handleShare} label="Share" brand={brand}>
+                <Share2 className="h-5 w-5" />
+              </ActionButton>
+              {hasCareGuides ? (
+                <ActionButton onClick={() => setCareGuideOpen(true)} label="Pre-treatment" brand={brand}>
+                  <Info className="h-5 w-5" />
+                </ActionButton>
+              ) : (
+                <ActionPlaceholder label="Pre-treatment" brand={brand}>
+                  <Info className="h-5 w-5 opacity-30" />
+                </ActionPlaceholder>
+              )}
+            </div>
+          )}
+        </div>
+      </section>
+
+
 
       {/* Mobile welcome intro at top */}
       {isMobile && (introHeading || introLength > 0) && (
