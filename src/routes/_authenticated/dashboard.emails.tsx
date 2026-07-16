@@ -332,7 +332,7 @@ function EmailEditDialog({
           </div>
           <div className="flex gap-2">
             <Button variant="ghost" onClick={onClose}>Cancel</Button>
-            <Button onClick={() => onSaveInline()}>Save</Button>
+            <Button onClick={() => onSave(payload())}>Save</Button>
           </div>
         </DialogFooter>
       </DialogContent>
