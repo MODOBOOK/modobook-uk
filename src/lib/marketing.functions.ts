@@ -28,9 +28,21 @@ const SegmentRulesSchema = z.object({
 }).strict()
 
 // ---------- helpers ----------
-async function assertOwnCampaign(supabase: any, userId: string, id: string) {
+// Resolve the practitioner profile id for the current auth user. Supports both
+// the practitioner (their own profiles row) and active clinic staff (who
+// operate under the owning practitioner's profile id).
+async function getOwnerProfileId(supabase: any, userId: string): Promise<string> {
+  const { data: prof } = await supabase.from('profiles').select('id').eq('user_id', userId).maybeSingle()
+  if (prof?.id) return prof.id as string
+  const { data: staff } = await supabase.from('staff_members')
+    .select('profile_id').eq('user_id', userId).eq('status', 'active').maybeSingle()
+  if (staff?.profile_id) return staff.profile_id as string
+  throw new Error('No practitioner profile found for this account')
+}
+
+async function assertOwnCampaign(supabase: any, practitionerId: string, id: string) {
   const { data, error } = await supabase
-    .from('marketing_campaigns').select('*').eq('id', id).eq('practitioner_id', userId).maybeSingle()
+    .from('marketing_campaigns').select('*').eq('id', id).eq('practitioner_id', practitionerId).maybeSingle()
   if (error) throw new Error(error.message)
   if (!data) throw new Error('Campaign not found')
   return data
