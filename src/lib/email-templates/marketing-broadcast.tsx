@@ -95,8 +95,16 @@ export function MarketingBroadcastEmail(data: MarketingBroadcastData) {
     brandColor,
     unsubscribeUrl = 'https://modobook.uk/unsubscribe',
     firstName = '',
+    last_treatment = '',
+    bookingUrl = '',
   } = data
-  const vars = { first_name: firstName, clinic_name: clinicName, unsubscribe_url: unsubscribeUrl }
+  const vars = {
+    first_name: firstName,
+    clinic_name: clinicName,
+    last_treatment,
+    booking_url: bookingUrl,
+    unsubscribe_url: unsubscribeUrl,
+  }
   return (
     <Html>
       <Head />
