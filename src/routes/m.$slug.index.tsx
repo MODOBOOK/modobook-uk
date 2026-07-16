@@ -906,105 +906,58 @@ function BookPage() {
       />
 
 
-      {/* Welcome card — restored below the editorial hero */}
-      <section
-        className="relative z-10 mx-auto mt-10 px-4 sm:mt-14"
-        style={{ maxWidth: "42rem" }}
-      >
-        <div
-          className="border"
-          style={{
-            backgroundColor: cardBgType === "solid" ? cardBg : undefined,
-            backgroundImage: cardBgType === "gradient" ? `linear-gradient(135deg, ${cardGradientFrom}, ${cardGradientTo})` : undefined,
-            borderColor: cardBorder,
-            borderRadius: cardRadius,
-            borderWidth: cardBorderWidth,
-            padding: cardPadding,
-            boxShadow: cardShadow,
-            opacity: cardOpacity,
-            backdropFilter: cardBlur > 0 ? `blur(${cardBlur}px)` : undefined,
-            margin: "0 auto",
-            maxWidth: "42rem",
-          }}
+      {/* Contact strip — icons only, merged under the hero */}
+      {showActions && (
+        <section
+          className="relative z-10 mx-auto -mt-6 px-4 sm:-mt-8"
+          style={{ maxWidth: "42rem" }}
         >
-          {showLogo && logoUrl && (
-            <img src={logoUrl} alt={displayPrimary} className="mb-2 h-8 w-auto object-contain sm:h-10" />
-          )}
-          {showName && (
-            <h2 className="text-lg font-extrabold leading-tight sm:text-xl" style={headingStyle}>
-              {displayPrimary}
-            </h2>
-          )}
-          {showTagline && profile.tagline && (
-            <p className="mt-1 text-sm opacity-70">{profile.tagline}</p>
-          )}
-
-          {showRating && (
-            <Link to="/m/$slug/reviews" params={{ slug }} className="mt-2 flex items-center gap-2 hover:opacity-80">
-              {(() => {
-                const count = reviews.length;
-                const avg = count ? reviews.reduce((a, r) => a + r.rating, 0) / count : 0;
-                const rounded = Math.round(avg);
-                return (
-                  <>
-                    <div className="flex">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <Star
-                          key={i}
-                          className={`h-3.5 w-3.5 ${count === 0 || i < rounded ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground/30"}`}
-                          fill={count === 0 || i < rounded ? "currentColor" : "none"}
-                        />
-                      ))}
-                    </div>
-                    <span className="text-xs opacity-70">
-                      {count === 0 ? "Be the first to review" : `${avg.toFixed(1)} · ${count} review${count === 1 ? "" : "s"}`}
-                    </span>
-                  </>
-                );
-              })()}
-            </Link>
-          )}
-
-          {showActions && (
-            <div className="mt-4 grid grid-cols-4 gap-2 border-t pt-3" style={{ borderColor: `${brand}22` }}>
-              {showInstagram && ig ? (
-                <ActionIcon href={ig.startsWith("http") ? ig : `https://instagram.com/${ig.replace("@", "")}`} label="Instagram" brand={brand}>
-                  <Instagram className="h-5 w-5" />
-                </ActionIcon>
-              ) : (
-                <ActionPlaceholder label="Instagram" brand={brand}>
-                  <Instagram className="h-5 w-5 opacity-30" />
-                </ActionPlaceholder>
-              )}
-              {mappableLocations.length === 1 && firstMapUrl ? (
-                <ActionIcon href={firstMapUrl} label="Directions" brand={brand}>
-                  <MapPin className="h-5 w-5" />
-                </ActionIcon>
-              ) : mappableLocations.length > 1 ? (
-                <ActionButton onClick={() => setDirectionsOpen(true)} label="Directions" brand={brand}>
-                  <MapPin className="h-5 w-5" />
-                </ActionButton>
-              ) : (
-                <ActionPlaceholder label="Directions" brand={brand}>
-                  <MapPin className="h-5 w-5 opacity-30" />
-                </ActionPlaceholder>
-              )}
-              <ActionButton onClick={handleShare} label="Share" brand={brand}>
-                <Share2 className="h-5 w-5" />
+          <div
+            className="grid grid-cols-4 gap-2 rounded-2xl border p-3 shadow-lg"
+            style={{
+              backgroundColor: cardBgType === "solid" ? cardBg : "#ffffff",
+              backgroundImage: cardBgType === "gradient" ? `linear-gradient(135deg, ${cardGradientFrom}, ${cardGradientTo})` : undefined,
+              borderColor: cardBorder,
+              color: brand,
+            }}
+          >
+            {showInstagram && ig ? (
+              <ActionIcon href={ig.startsWith("http") ? ig : `https://instagram.com/${ig.replace("@", "")}`} label="Instagram" brand={brand}>
+                <Instagram className="h-5 w-5" />
+              </ActionIcon>
+            ) : (
+              <ActionPlaceholder label="Instagram" brand={brand}>
+                <Instagram className="h-5 w-5 opacity-30" />
+              </ActionPlaceholder>
+            )}
+            {mappableLocations.length === 1 && firstMapUrl ? (
+              <ActionIcon href={firstMapUrl} label="Directions" brand={brand}>
+                <MapPin className="h-5 w-5" />
+              </ActionIcon>
+            ) : mappableLocations.length > 1 ? (
+              <ActionButton onClick={() => setDirectionsOpen(true)} label="Directions" brand={brand}>
+                <MapPin className="h-5 w-5" />
               </ActionButton>
-              {hasCareGuides ? (
-                <ActionButton onClick={() => setCareGuideOpen(true)} label="Pre-treatment" brand={brand}>
-                  <Info className="h-5 w-5" />
-                </ActionButton>
-              ) : (
-                <ActionPlaceholder label="Pre-treatment" brand={brand}>
-                  <Info className="h-5 w-5 opacity-30" />
-                </ActionPlaceholder>
-              )}
-            </div>
-          )}
-        </div>
-      </section>
+            ) : (
+              <ActionPlaceholder label="Directions" brand={brand}>
+                <MapPin className="h-5 w-5 opacity-30" />
+              </ActionPlaceholder>
+            )}
+            <ActionButton onClick={handleShare} label="Share" brand={brand}>
+              <Share2 className="h-5 w-5" />
+            </ActionButton>
+            {hasCareGuides ? (
+              <ActionButton onClick={() => setCareGuideOpen(true)} label="Pre-treatment" brand={brand}>
+                <Info className="h-5 w-5" />
+              </ActionButton>
+            ) : (
+              <ActionPlaceholder label="Pre-treatment" brand={brand}>
+                <Info className="h-5 w-5 opacity-30" />
+              </ActionPlaceholder>
+            )}
+          </div>
+        </section>
+      )}
 
 
 
