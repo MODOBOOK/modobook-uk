@@ -269,11 +269,18 @@ function EmailEditDialog({
     setClosing(defaults.closing)
   }
 
+  const payload = () => ({
+    subject_override: subject.trim() || null,
+    intro_override: intro.trim() || null,
+    body_override: body.trim() || null,
+    closing_override: closing.trim() || null,
+  })
+
   async function handleSendTest() {
     setTesting(true)
     try {
-      // Save current edits first so the test reflects what's in the form
-      await onSaveInline()
+      // Silent save so overrides are persisted before enqueueing test send
+      await onSave(payload(), { silent: true })
       const r = await sendTest({ data: { template_key: def.key } })
       toast.success(`Test sent to ${(r as any).sentTo}`)
     } catch (e) {
@@ -281,16 +288,6 @@ function EmailEditDialog({
     } finally {
       setTesting(false)
     }
-  }
-
-  // Inline save without closing the dialog — used before test send.
-  async function onSaveInline() {
-    return onSave({
-      subject_override: subject.trim() || null,
-      intro_override: intro.trim() || null,
-      body_override: body.trim() || null,
-      closing_override: closing.trim() || null,
-    })
   }
 
   return (
