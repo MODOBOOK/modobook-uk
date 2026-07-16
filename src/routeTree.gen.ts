@@ -98,7 +98,9 @@ import { Route as AuthenticatedDashboardAiImportRouteImport } from './routes/_au
 import { Route as AuthenticatedDashboardAftercareRouteImport } from './routes/_authenticated/dashboard.aftercare'
 import { Route as AuthenticatedDashboardAddonsRouteImport } from './routes/_authenticated/dashboard.addons'
 import { Route as AuthenticatedDashboardAboutRouteImport } from './routes/_authenticated/dashboard.about'
+import { Route as AuthenticatedAdminPractitionersRouteImport } from './routes/_authenticated/admin.practitioners'
 import { Route as AuthenticatedAdminEmailsRouteImport } from './routes/_authenticated/admin.emails'
+import { Route as AuthenticatedAdminAuditRouteImport } from './routes/_authenticated/admin.audit'
 import { Route as AuthenticatedDashboardPatientsIndexRouteImport } from './routes/_authenticated/dashboard.patients.index'
 import { Route as AuthenticatedDashboardMarketingIndexRouteImport } from './routes/_authenticated/dashboard.marketing.index'
 import { Route as AuthenticatedDashboardConsultationsIndexRouteImport } from './routes/_authenticated/dashboard.consultations.index'
@@ -126,6 +128,7 @@ import { Route as AuthenticatedDashboardMarketingTemplatesRouteImport } from './
 import { Route as AuthenticatedDashboardMarketingSegmentsRouteImport } from './routes/_authenticated/dashboard.marketing.segments'
 import { Route as AuthenticatedDashboardMarketingAnalyticsRouteImport } from './routes/_authenticated/dashboard.marketing.analytics'
 import { Route as AuthenticatedDashboardConsultationsIdRouteImport } from './routes/_authenticated/dashboard.consultations.$id'
+import { Route as AuthenticatedAdminPractitionersIdRouteImport } from './routes/_authenticated/admin.practitioners.$id'
 import { Route as AuthenticatedDashboardMarketingCampaignsIdRouteImport } from './routes/_authenticated/dashboard.marketing.campaigns.$id'
 
 const WhoItsForRoute = WhoItsForRouteImport.update({
@@ -621,12 +624,23 @@ const AuthenticatedDashboardAboutRoute =
     path: '/about',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
+const AuthenticatedAdminPractitionersRoute =
+  AuthenticatedAdminPractitionersRouteImport.update({
+    id: '/practitioners',
+    path: '/practitioners',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminEmailsRoute =
   AuthenticatedAdminEmailsRouteImport.update({
     id: '/emails',
     path: '/emails',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminAuditRoute = AuthenticatedAdminAuditRouteImport.update({
+  id: '/audit',
+  path: '/audit',
+  getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
 const AuthenticatedDashboardPatientsIndexRoute =
   AuthenticatedDashboardPatientsIndexRouteImport.update({
     id: '/',
@@ -781,6 +795,12 @@ const AuthenticatedDashboardConsultationsIdRoute =
     path: '/consultations/$id',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
+const AuthenticatedAdminPractitionersIdRoute =
+  AuthenticatedAdminPractitionersIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => AuthenticatedAdminPractitionersRoute,
+  } as any)
 const AuthenticatedDashboardMarketingCampaignsIdRoute =
   AuthenticatedDashboardMarketingCampaignsIdRouteImport.update({
     id: '/campaigns/$id',
@@ -817,7 +837,9 @@ export interface FileRoutesByFullPath {
   '/privacy/dpia': typeof PrivacyDpiaRoute
   '/r/$code': typeof RCodeRoute
   '/staff-accept/$token': typeof StaffAcceptTokenRoute
+  '/admin/audit': typeof AuthenticatedAdminAuditRoute
   '/admin/emails': typeof AuthenticatedAdminEmailsRoute
+  '/admin/practitioners': typeof AuthenticatedAdminPractitionersRouteWithChildren
   '/dashboard/about': typeof AuthenticatedDashboardAboutRoute
   '/dashboard/addons': typeof AuthenticatedDashboardAddonsRoute
   '/dashboard/aftercare': typeof AuthenticatedDashboardAftercareRoute
@@ -878,6 +900,7 @@ export interface FileRoutesByFullPath {
   '/hub/': typeof AuthenticatedHubIndexRoute
   '/prescriber/': typeof AuthenticatedPrescriberIndexRoute
   '/m/$slug/': typeof MSlugIndexRoute
+  '/admin/practitioners/$id': typeof AuthenticatedAdminPractitionersIdRoute
   '/dashboard/consultations/$id': typeof AuthenticatedDashboardConsultationsIdRoute
   '/dashboard/marketing/analytics': typeof AuthenticatedDashboardMarketingAnalyticsRoute
   '/dashboard/marketing/segments': typeof AuthenticatedDashboardMarketingSegmentsRoute
@@ -932,7 +955,9 @@ export interface FileRoutesByTo {
   '/privacy/dpia': typeof PrivacyDpiaRoute
   '/r/$code': typeof RCodeRoute
   '/staff-accept/$token': typeof StaffAcceptTokenRoute
+  '/admin/audit': typeof AuthenticatedAdminAuditRoute
   '/admin/emails': typeof AuthenticatedAdminEmailsRoute
+  '/admin/practitioners': typeof AuthenticatedAdminPractitionersRouteWithChildren
   '/dashboard/about': typeof AuthenticatedDashboardAboutRoute
   '/dashboard/addons': typeof AuthenticatedDashboardAddonsRoute
   '/dashboard/aftercare': typeof AuthenticatedDashboardAftercareRoute
@@ -991,6 +1016,7 @@ export interface FileRoutesByTo {
   '/hub': typeof AuthenticatedHubIndexRoute
   '/prescriber': typeof AuthenticatedPrescriberIndexRoute
   '/m/$slug': typeof MSlugIndexRoute
+  '/admin/practitioners/$id': typeof AuthenticatedAdminPractitionersIdRoute
   '/dashboard/consultations/$id': typeof AuthenticatedDashboardConsultationsIdRoute
   '/dashboard/marketing/analytics': typeof AuthenticatedDashboardMarketingAnalyticsRoute
   '/dashboard/marketing/segments': typeof AuthenticatedDashboardMarketingSegmentsRoute
@@ -1051,7 +1077,9 @@ export interface FileRoutesById {
   '/privacy/dpia': typeof PrivacyDpiaRoute
   '/r/$code': typeof RCodeRoute
   '/staff-accept/$token': typeof StaffAcceptTokenRoute
+  '/_authenticated/admin/audit': typeof AuthenticatedAdminAuditRoute
   '/_authenticated/admin/emails': typeof AuthenticatedAdminEmailsRoute
+  '/_authenticated/admin/practitioners': typeof AuthenticatedAdminPractitionersRouteWithChildren
   '/_authenticated/dashboard/about': typeof AuthenticatedDashboardAboutRoute
   '/_authenticated/dashboard/addons': typeof AuthenticatedDashboardAddonsRoute
   '/_authenticated/dashboard/aftercare': typeof AuthenticatedDashboardAftercareRoute
@@ -1112,6 +1140,7 @@ export interface FileRoutesById {
   '/_authenticated/hub/': typeof AuthenticatedHubIndexRoute
   '/_authenticated/prescriber/': typeof AuthenticatedPrescriberIndexRoute
   '/m/$slug/': typeof MSlugIndexRoute
+  '/_authenticated/admin/practitioners/$id': typeof AuthenticatedAdminPractitionersIdRoute
   '/_authenticated/dashboard/consultations/$id': typeof AuthenticatedDashboardConsultationsIdRoute
   '/_authenticated/dashboard/marketing/analytics': typeof AuthenticatedDashboardMarketingAnalyticsRoute
   '/_authenticated/dashboard/marketing/segments': typeof AuthenticatedDashboardMarketingSegmentsRoute
@@ -1172,7 +1201,9 @@ export interface FileRouteTypes {
     | '/privacy/dpia'
     | '/r/$code'
     | '/staff-accept/$token'
+    | '/admin/audit'
     | '/admin/emails'
+    | '/admin/practitioners'
     | '/dashboard/about'
     | '/dashboard/addons'
     | '/dashboard/aftercare'
@@ -1233,6 +1264,7 @@ export interface FileRouteTypes {
     | '/hub/'
     | '/prescriber/'
     | '/m/$slug/'
+    | '/admin/practitioners/$id'
     | '/dashboard/consultations/$id'
     | '/dashboard/marketing/analytics'
     | '/dashboard/marketing/segments'
@@ -1287,7 +1319,9 @@ export interface FileRouteTypes {
     | '/privacy/dpia'
     | '/r/$code'
     | '/staff-accept/$token'
+    | '/admin/audit'
     | '/admin/emails'
+    | '/admin/practitioners'
     | '/dashboard/about'
     | '/dashboard/addons'
     | '/dashboard/aftercare'
@@ -1346,6 +1380,7 @@ export interface FileRouteTypes {
     | '/hub'
     | '/prescriber'
     | '/m/$slug'
+    | '/admin/practitioners/$id'
     | '/dashboard/consultations/$id'
     | '/dashboard/marketing/analytics'
     | '/dashboard/marketing/segments'
@@ -1405,7 +1440,9 @@ export interface FileRouteTypes {
     | '/privacy/dpia'
     | '/r/$code'
     | '/staff-accept/$token'
+    | '/_authenticated/admin/audit'
     | '/_authenticated/admin/emails'
+    | '/_authenticated/admin/practitioners'
     | '/_authenticated/dashboard/about'
     | '/_authenticated/dashboard/addons'
     | '/_authenticated/dashboard/aftercare'
@@ -1466,6 +1503,7 @@ export interface FileRouteTypes {
     | '/_authenticated/hub/'
     | '/_authenticated/prescriber/'
     | '/m/$slug/'
+    | '/_authenticated/admin/practitioners/$id'
     | '/_authenticated/dashboard/consultations/$id'
     | '/_authenticated/dashboard/marketing/analytics'
     | '/_authenticated/dashboard/marketing/segments'
@@ -2160,11 +2198,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardAboutRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
+    '/_authenticated/admin/practitioners': {
+      id: '/_authenticated/admin/practitioners'
+      path: '/practitioners'
+      fullPath: '/admin/practitioners'
+      preLoaderRoute: typeof AuthenticatedAdminPractitionersRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/emails': {
       id: '/_authenticated/admin/emails'
       path: '/emails'
       fullPath: '/admin/emails'
       preLoaderRoute: typeof AuthenticatedAdminEmailsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/audit': {
+      id: '/_authenticated/admin/audit'
+      path: '/audit'
+      fullPath: '/admin/audit'
+      preLoaderRoute: typeof AuthenticatedAdminAuditRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/dashboard/patients/': {
@@ -2356,6 +2408,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardConsultationsIdRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
+    '/_authenticated/admin/practitioners/$id': {
+      id: '/_authenticated/admin/practitioners/$id'
+      path: '/$id'
+      fullPath: '/admin/practitioners/$id'
+      preLoaderRoute: typeof AuthenticatedAdminPractitionersIdRouteImport
+      parentRoute: typeof AuthenticatedAdminPractitionersRoute
+    }
     '/_authenticated/dashboard/marketing/campaigns/$id': {
       id: '/_authenticated/dashboard/marketing/campaigns/$id'
       path: '/campaigns/$id'
@@ -2366,12 +2425,32 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthenticatedAdminPractitionersRouteChildren {
+  AuthenticatedAdminPractitionersIdRoute: typeof AuthenticatedAdminPractitionersIdRoute
+}
+
+const AuthenticatedAdminPractitionersRouteChildren: AuthenticatedAdminPractitionersRouteChildren =
+  {
+    AuthenticatedAdminPractitionersIdRoute:
+      AuthenticatedAdminPractitionersIdRoute,
+  }
+
+const AuthenticatedAdminPractitionersRouteWithChildren =
+  AuthenticatedAdminPractitionersRoute._addFileChildren(
+    AuthenticatedAdminPractitionersRouteChildren,
+  )
+
 interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminAuditRoute: typeof AuthenticatedAdminAuditRoute
   AuthenticatedAdminEmailsRoute: typeof AuthenticatedAdminEmailsRoute
+  AuthenticatedAdminPractitionersRoute: typeof AuthenticatedAdminPractitionersRouteWithChildren
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminAuditRoute: AuthenticatedAdminAuditRoute,
   AuthenticatedAdminEmailsRoute: AuthenticatedAdminEmailsRoute,
+  AuthenticatedAdminPractitionersRoute:
+    AuthenticatedAdminPractitionersRouteWithChildren,
 }
 
 const AuthenticatedAdminRouteWithChildren =
@@ -2715,13 +2794,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

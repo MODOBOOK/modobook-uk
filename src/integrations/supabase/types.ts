@@ -116,6 +116,50 @@ export type Database = {
           },
         ]
       }
+      admin_audit_log: {
+        Row: {
+          action: string
+          actor_user_id: string
+          created_at: string
+          diff: Json | null
+          id: string
+          ip_hash: string | null
+          reason: string | null
+          target_profile_id: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          action: string
+          actor_user_id: string
+          created_at?: string
+          diff?: Json | null
+          id?: string
+          ip_hash?: string | null
+          reason?: string | null
+          target_profile_id?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          action?: string
+          actor_user_id?: string
+          created_at?: string
+          diff?: Json | null
+          id?: string
+          ip_hash?: string | null
+          reason?: string | null
+          target_profile_id?: string | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_audit_log_target_profile_id_fkey"
+            columns: ["target_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       admin_broadcasts: {
         Row: {
           audience: string
