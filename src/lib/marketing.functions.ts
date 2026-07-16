@@ -129,7 +129,7 @@ export const listSegments = createServerFn({ method: 'GET' })
   .handler(async ({ context }) => {
     const { data, error } = await context.supabase
       .from('marketing_segments').select('*')
-      .eq('practitioner_id', context.userId)
+      .eq('practitioner_id', (await getOwnerProfileId(context.supabase, context.userId)))
       .order('created_at', { ascending: false })
     if (error) throw new Error(error.message)
     return data || []
@@ -146,7 +146,7 @@ export const saveSegment = createServerFn({ method: 'POST' })
   }).parse(raw))
   .handler(async ({ data, context }) => {
     const payload = {
-      practitioner_id: context.userId,
+      practitioner_id: (await getOwnerProfileId(context.supabase, context.userId)),
       name: data.name,
       description: data.description ?? null,
       kind: data.kind,
@@ -154,7 +154,7 @@ export const saveSegment = createServerFn({ method: 'POST' })
     }
     if (data.id) {
       const { data: row, error } = await context.supabase.from('marketing_segments')
-        .update(payload).eq('id', data.id).eq('practitioner_id', context.userId).select().single()
+        .update(payload).eq('id', data.id).eq('practitioner_id', (await getOwnerProfileId(context.supabase, context.userId))).select().single()
       if (error) throw new Error(error.message)
       return row
     }
@@ -167,7 +167,7 @@ export const deleteSegment = createServerFn({ method: 'POST' })
   .middleware([requireSupabaseAuth])
   .inputValidator((raw: unknown) => z.object({ id: z.string().uuid() }).parse(raw))
   .handler(async ({ data, context }) => {
-    const { error } = await context.supabase.from('marketing_segments').delete().eq('id', data.id).eq('practitioner_id', context.userId)
+    const { error } = await context.supabase.from('marketing_segments').delete().eq('id', data.id).eq('practitioner_id', (await getOwnerProfileId(context.supabase, context.userId)))
     if (error) throw new Error(error.message)
     return { ok: true }
   })
@@ -186,10 +186,10 @@ export const previewSegmentCount = createServerFn({ method: 'POST' })
       const fakeSegmentId = crypto.randomUUID()
       // Insert temp then delete? Simpler: bypass by inlining via a query shim.
       const rules = data.rules
-      const list = await resolveSegmentRecipientsInline(context.supabase, context.userId, data.kind || 'dynamic', rules)
+      const list = await resolveSegmentRecipientsInline(context.supabase, (await getOwnerProfileId(context.supabase, context.userId)), data.kind || 'dynamic', rules)
       return { count: list.length }
     }
-    const list = await resolveSegmentRecipients(context.supabase, context.userId, data.segmentId || null)
+    const list = await resolveSegmentRecipients(context.supabase, (await getOwnerProfileId(context.supabase, context.userId)), data.segmentId || null)
     return { count: list.length }
   })
 
@@ -241,7 +241,7 @@ export const listTemplates = createServerFn({ method: 'GET' })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { data, error } = await context.supabase.from('marketing_templates').select('*')
-      .eq('practitioner_id', context.userId).order('created_at', { ascending: false })
+      .eq('practitioner_id', (await getOwnerProfileId(context.supabase, context.userId))).order('created_at', { ascending: false })
     if (error) throw new Error(error.message)
     return data || []
   })
@@ -257,14 +257,14 @@ export const saveTemplate = createServerFn({ method: 'POST' })
   }).parse(raw))
   .handler(async ({ data, context }) => {
     const payload = {
-      practitioner_id: context.userId,
+      practitioner_id: (await getOwnerProfileId(context.supabase, context.userId)),
       name: data.name, subject: data.subject,
       preheader: data.preheader ?? null,
       body_json: data.body_json,
     }
     if (data.id) {
       const { data: row, error } = await context.supabase.from('marketing_templates')
-        .update(payload).eq('id', data.id).eq('practitioner_id', context.userId).select().single()
+        .update(payload).eq('id', data.id).eq('practitioner_id', (await getOwnerProfileId(context.supabase, context.userId))).select().single()
       if (error) throw new Error(error.message)
       return row
     }
@@ -277,7 +277,7 @@ export const deleteTemplate = createServerFn({ method: 'POST' })
   .middleware([requireSupabaseAuth])
   .inputValidator((raw: unknown) => z.object({ id: z.string().uuid() }).parse(raw))
   .handler(async ({ data, context }) => {
-    const { error } = await context.supabase.from('marketing_templates').delete().eq('id', data.id).eq('practitioner_id', context.userId)
+    const { error } = await context.supabase.from('marketing_templates').delete().eq('id', data.id).eq('practitioner_id', (await getOwnerProfileId(context.supabase, context.userId)))
     if (error) throw new Error(error.message)
     return { ok: true }
   })
@@ -287,7 +287,7 @@ export const listCampaigns = createServerFn({ method: 'GET' })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { data, error } = await context.supabase.from('marketing_campaigns').select('*')
-      .eq('practitioner_id', context.userId).order('created_at', { ascending: false }).limit(200)
+      .eq('practitioner_id', (await getOwnerProfileId(context.supabase, context.userId))).order('created_at', { ascending: false }).limit(200)
     if (error) throw new Error(error.message)
     return data || []
   })
@@ -295,7 +295,7 @@ export const listCampaigns = createServerFn({ method: 'GET' })
 export const getCampaign = createServerFn({ method: 'POST' })
   .middleware([requireSupabaseAuth])
   .inputValidator((raw: unknown) => z.object({ id: z.string().uuid() }).parse(raw))
-  .handler(async ({ data, context }) => assertOwnCampaign(context.supabase, context.userId, data.id))
+  .handler(async ({ data, context }) => assertOwnCampaign(context.supabase, (await getOwnerProfileId(context.supabase, context.userId)), data.id))
 
 const CampaignSaveSchema = z.object({
   id: z.string().uuid().optional(),
@@ -312,18 +312,18 @@ export const saveCampaignDraft = createServerFn({ method: 'POST' })
   .inputValidator((raw: unknown) => CampaignSaveSchema.parse(raw))
   .handler(async ({ data, context }) => {
     const payload = {
-      practitioner_id: context.userId,
+      practitioner_id: (await getOwnerProfileId(context.supabase, context.userId)),
       name: data.name, subject: data.subject, preheader: data.preheader ?? null,
       body_json: data.body_json, segment_id: data.segment_id ?? null,
       status: 'draft',
     }
     if (data.id) {
-      const existing = await assertOwnCampaign(context.supabase, context.userId, data.id)
+      const existing = await assertOwnCampaign(context.supabase, (await getOwnerProfileId(context.supabase, context.userId)), data.id)
       if (existing.status !== 'draft' && existing.status !== 'scheduled' && existing.status !== 'cancelled') {
         throw new Error('Only draft, scheduled or cancelled campaigns can be edited')
       }
       const { data: row, error } = await context.supabase.from('marketing_campaigns')
-        .update(payload).eq('id', data.id).eq('practitioner_id', context.userId).select().single()
+        .update(payload).eq('id', data.id).eq('practitioner_id', (await getOwnerProfileId(context.supabase, context.userId))).select().single()
       if (error) throw new Error(error.message)
       return row
     }
@@ -336,9 +336,9 @@ export const deleteCampaign = createServerFn({ method: 'POST' })
   .middleware([requireSupabaseAuth])
   .inputValidator((raw: unknown) => z.object({ id: z.string().uuid() }).parse(raw))
   .handler(async ({ data, context }) => {
-    const c = await assertOwnCampaign(context.supabase, context.userId, data.id)
+    const c = await assertOwnCampaign(context.supabase, (await getOwnerProfileId(context.supabase, context.userId)), data.id)
     if (c.status === 'sending') throw new Error('Cannot delete a campaign that is currently sending')
-    const { error } = await context.supabase.from('marketing_campaigns').delete().eq('id', data.id).eq('practitioner_id', context.userId)
+    const { error } = await context.supabase.from('marketing_campaigns').delete().eq('id', data.id).eq('practitioner_id', (await getOwnerProfileId(context.supabase, context.userId)))
     if (error) throw new Error(error.message)
     return { ok: true }
   })
@@ -349,7 +349,7 @@ export const scheduleCampaign = createServerFn({ method: 'POST' })
     id: z.string().uuid(), scheduled_for: z.string().datetime(),
   }).parse(raw))
   .handler(async ({ data, context }) => {
-    const c = await assertOwnCampaign(context.supabase, context.userId, data.id)
+    const c = await assertOwnCampaign(context.supabase, (await getOwnerProfileId(context.supabase, context.userId)), data.id)
     if (c.status !== 'draft' && c.status !== 'scheduled' && c.status !== 'cancelled') {
       throw new Error('Only drafts can be scheduled')
     }
@@ -358,7 +358,7 @@ export const scheduleCampaign = createServerFn({ method: 'POST' })
     }
     const { data: row, error } = await context.supabase.from('marketing_campaigns')
       .update({ status: 'scheduled', scheduled_for: data.scheduled_for })
-      .eq('id', data.id).eq('practitioner_id', context.userId).select().single()
+      .eq('id', data.id).eq('practitioner_id', (await getOwnerProfileId(context.supabase, context.userId))).select().single()
     if (error) throw new Error(error.message)
     return row
   })
@@ -367,11 +367,11 @@ export const cancelScheduledCampaign = createServerFn({ method: 'POST' })
   .middleware([requireSupabaseAuth])
   .inputValidator((raw: unknown) => z.object({ id: z.string().uuid() }).parse(raw))
   .handler(async ({ data, context }) => {
-    const c = await assertOwnCampaign(context.supabase, context.userId, data.id)
+    const c = await assertOwnCampaign(context.supabase, (await getOwnerProfileId(context.supabase, context.userId)), data.id)
     if (c.status !== 'scheduled') throw new Error('Only scheduled campaigns can be cancelled')
     const { data: row, error } = await context.supabase.from('marketing_campaigns')
       .update({ status: 'cancelled', scheduled_for: null })
-      .eq('id', data.id).eq('practitioner_id', context.userId).select().single()
+      .eq('id', data.id).eq('practitioner_id', (await getOwnerProfileId(context.supabase, context.userId))).select().single()
     if (error) throw new Error(error.message)
     return row
   })
@@ -468,15 +468,15 @@ export const sendCampaignNow = createServerFn({ method: 'POST' })
   .middleware([requireSupabaseAuth])
   .inputValidator((raw: unknown) => z.object({ id: z.string().uuid() }).parse(raw))
   .handler(async ({ data, context }) => {
-    const c = await assertOwnCampaign(context.supabase, context.userId, data.id)
+    const c = await assertOwnCampaign(context.supabase, (await getOwnerProfileId(context.supabase, context.userId)), data.id)
     if (c.status !== 'draft' && c.status !== 'scheduled' && c.status !== 'cancelled') {
       throw new Error('Campaign already sent or is currently sending')
     }
     if (!c.subject || !Array.isArray(c.body_json) || c.body_json.length === 0) {
       throw new Error('Add a subject and some content before sending')
     }
-    await checkCooldown(context.supabase, context.userId)
-    return await dispatchCampaign(data.id, context.userId)
+    await checkCooldown(context.supabase, (await getOwnerProfileId(context.supabase, context.userId)))
+    return await dispatchCampaign(data.id, (await getOwnerProfileId(context.supabase, context.userId)))
   })
 
 export const sendTestEmail = createServerFn({ method: 'POST' })
@@ -486,7 +486,7 @@ export const sendTestEmail = createServerFn({ method: 'POST' })
     to: z.string().email().optional().nullable(),
   }).parse(raw))
   .handler(async ({ data, context }) => {
-    const c = await assertOwnCampaign(context.supabase, context.userId, data.id)
+    const c = await assertOwnCampaign(context.supabase, (await getOwnerProfileId(context.supabase, context.userId)), data.id)
     // Default the preview recipient to the practitioner's own email.
     const claimsEmail = (context.claims as any)?.email as string | undefined
     const recipient = (data.to && data.to.trim()) || claimsEmail
@@ -495,7 +495,7 @@ export const sendTestEmail = createServerFn({ method: 'POST' })
       throw new Error('Add a subject and some content before previewing')
     }
     const { tryEnqueueAppEmail, getPractitionerBranding } = await import('@/lib/email/send.server')
-    const branding = await getPractitionerBranding(context.userId)
+    const branding = await getPractitionerBranding((await getOwnerProfileId(context.supabase, context.userId)))
     const res = await tryEnqueueAppEmail({
       templateName: 'marketing-broadcast',
       recipientEmail: recipient,
@@ -519,10 +519,10 @@ export const getCampaignAnalytics = createServerFn({ method: 'POST' })
   .middleware([requireSupabaseAuth])
   .inputValidator((raw: unknown) => z.object({ id: z.string().uuid() }).parse(raw))
   .handler(async ({ data, context }) => {
-    await assertOwnCampaign(context.supabase, context.userId, data.id)
+    await assertOwnCampaign(context.supabase, (await getOwnerProfileId(context.supabase, context.userId)), data.id)
     const { data: recips, error } = await context.supabase.from('marketing_campaign_recipients')
       .select('status, email, error_message, created_at')
-      .eq('campaign_id', data.id).eq('practitioner_id', context.userId)
+      .eq('campaign_id', data.id).eq('practitioner_id', (await getOwnerProfileId(context.supabase, context.userId)))
       .order('created_at', { ascending: false }).limit(2000)
     if (error) throw new Error(error.message)
     const byStatus: Record<string, number> = {}
@@ -537,11 +537,11 @@ export const getMarketingOverview = createServerFn({ method: 'GET' })
     const since = new Date(Date.now() - 30 * 24 * 3600_000).toISOString()
     const [{ data: campaigns }, { count: optedIn }, { count: totalPatients }] = await Promise.all([
       context.supabase.from('marketing_campaigns').select('id, status, sent_count, sent_at')
-        .eq('practitioner_id', context.userId).gte('created_at', since),
+        .eq('practitioner_id', (await getOwnerProfileId(context.supabase, context.userId))).gte('created_at', since),
       context.supabase.from('clinic_clients').select('id', { count: 'exact', head: true })
-        .eq('profile_id', context.userId).eq('marketing_opt_in', true).eq('archived', false),
+        .eq('profile_id', (await getOwnerProfileId(context.supabase, context.userId))).eq('marketing_opt_in', true).eq('archived', false),
       context.supabase.from('clinic_clients').select('id', { count: 'exact', head: true })
-        .eq('profile_id', context.userId).eq('archived', false),
+        .eq('profile_id', (await getOwnerProfileId(context.supabase, context.userId))).eq('archived', false),
     ])
     const totalSent = (campaigns || []).reduce((s: number, c: any) => s + (c.sent_count || 0), 0)
     return {
@@ -565,7 +565,7 @@ export const setClientMarketingOptIn = createServerFn({ method: 'POST' })
       marketing_opt_in_source: data.optIn ? 'practitioner_manual' : null,
     }
     const { error } = await context.supabase.from('clinic_clients')
-      .update(patch).eq('id', data.clientId).eq('profile_id', context.userId)
+      .update(patch).eq('id', data.clientId).eq('profile_id', (await getOwnerProfileId(context.supabase, context.userId)))
     if (error) throw new Error(error.message)
     return { ok: true }
   })
