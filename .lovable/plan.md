@@ -1,73 +1,82 @@
-## Training section
+# Platform Admin Console — Phase 1
 
-A new dedicated area for practitioners who offer aesthetics training, separate from treatments but reusing the same availability, payment and reminder plumbing.
+Goal: give platform admins real control *outside* the practitioner booking system, so they can never accidentally take a booking or touch patient data. Phase 1 lays the foundation everything else (billing, moderation, feature flags) will sit on.
 
-### 1. Database
+## Scope of Phase 1
 
-Two new tables.
+1. A separate admin surface at `/admin/*` (top-level, gated by `has_role('admin')`), styled distinctly from the practitioner dashboard so it never feels like "the booking app". Later this can be lifted onto an `admin.modobook.uk` subdomain — the routes and RPCs stay identical, only DNS + a root-level guard change.
+2. Admin console shell: sidebar with Practitioners, Subscriptions, Content, Feature flags, Audit log, Broadcasts, Prescriber verifications (the existing page moves here). Distinct header ("Modo Admin"), no booking UI chrome.
+3. **Practitioner directory**: searchable list of every profile — name, clinic, slug, plan, active/suspended, created, last sign-in. Row actions: View as, Reset (see below), Suspend/Reactivate, Open billing (stub in Phase 1).
+4. **View-as (read-only mirror)**: opens `/admin/practitioners/$id/view` which server-side fetches that practitioner's public page + a read-only snapshot of their dashboard config (branding, treatments, hours, locations — **no clients, no appointments, no consultations, no forms, no prescriptions**). Persistent red banner "Viewing as {name} — read only, no patient data". No impersonation of their auth session.
+5. **Reset / edit-for-practitioner (safe subset)**: admins can edit branding/theme, treatment names & prices, locations, hours, public bio, and clear their onboarding flags. Nothing that touches a person's health record.
+6. **Audit log**: every sensitive admin action (view-as open, edit-for, suspend, plan change later, moderation later) writes a row with actor, target profile, action, diff, ip hash, ts. New `/admin/audit` page to browse/filter.
 
-**`training_courses`** — one row per course a practitioner offers.
-- `profile_id`, `name`, `description`, `cover_image_url`, `active`, `sort_order`
-- `mode`: `one_to_one` | `group` | `multi_day`
-- `duration_min` (for 1:1 slot length)
-- `price`, `deposit_amount`, `payment_mode`, `allow_split_payment`
-- `capacity` (group / multi_day seat count)
-- `prerequisites` (rich text) + `require_prereq_confirm` (checkbox on booking)
-- `cpd_hours`, `certificate_template_url`
-- `materials_html` (pre-course pack sent after booking)
-- `kit_list` (what to bring — shown in confirmation + reminders)
+## Patient data — recommendation
 
-**`training_course_sessions`** — fixed dates for group / multi-day courses.
-- `course_id`, `session_date`, `start_time`, `end_time`, `location_id`, `sort_order`
-- Empty for 1:1 courses (they use the practitioner's normal availability).
+Do **not** expose patient data in the admin console, even read-only. Regulatory + trust cost is huge, and the practitioner is the data controller — Modo shouldn't be casually browsing their patients. Two narrow exceptions we should build later, not now:
+- **Break-glass export**: on a written support request, an admin can trigger a signed, logged export delivered to the practitioner's verified email — admin never sees it in the UI.
+- **Deletion / GDPR erasure**: admin can delete a client record by id on request, logged.
 
-**`training_bookings`** — one row per trainee booking.
-- `course_id`, `profile_id`, `trainee_name`, `trainee_email`, `trainee_phone`
-- `status` (pending / confirmed / cancelled / completed)
-- `payment_status`, `stripe_payment_intent_id`, `amount_paid`
-- For 1:1: `appointment_date`, `appointment_start`, `appointment_end`, `location_id` (also mirrored into `appointments` so it blocks the calendar)
-- For group/multi-day: bookings link to the course's sessions; capacity enforced by count.
+Both go through the audit log with a mandatory reason field. Phase 1 just wires the log; the actions come later.
 
-RLS: practitioners manage their own courses/bookings; anon can read `active = true` courses via the existing public-profile RPC pattern.
+## Technical section
 
-### 2. Dashboard
+### Routes
+- `src/routes/_admin/route.tsx` — new pathless layout. `beforeLoad` calls `amIAdmin()`; redirects to `/` if not admin. `ssr: false`. Renders `<AdminShell><Outlet /></AdminShell>`.
+- `src/routes/_admin/admin.index.tsx` — dashboard (counts: practitioners, active subs, pending verifications, recent audit events).
+- `src/routes/_admin/admin.practitioners.tsx` — directory.
+- `src/routes/_admin/admin.practitioners.$id.tsx` — profile detail w/ tabs: Overview, View as, Edit, Audit.
+- `src/routes/_admin/admin.practitioners.$id.view.tsx` — read-only mirror.
+- `src/routes/_admin/admin.audit.tsx` — audit log browser.
+- Existing `/admin-prescribers` moves under `/_admin/admin.prescribers.tsx`; old route redirects.
 
-New nav item **Training** under the existing dashboard.
+### DB (one migration)
+```sql
+create table public.admin_audit_log (
+  id uuid primary key default gen_random_uuid(),
+  actor_user_id uuid not null references auth.users(id) on delete restrict,
+  target_profile_id uuid references public.profiles(id) on delete set null,
+  action text not null,           -- 'view_as_open' | 'profile_edit' | 'suspend' | ...
+  reason text,
+  diff jsonb,                     -- before/after for edits
+  ip_hash text,
+  user_agent text,
+  created_at timestamptz not null default now()
+);
+grant select, insert on public.admin_audit_log to authenticated;
+grant all on public.admin_audit_log to service_role;
+alter table public.admin_audit_log enable row level security;
+create policy "admins read audit" on public.admin_audit_log for select
+  to authenticated using (public.has_role(auth.uid(), 'admin'));
+create policy "admins insert audit" on public.admin_audit_log for insert
+  to authenticated with check (public.has_role(auth.uid(), 'admin') and actor_user_id = auth.uid());
+create index on public.admin_audit_log (created_at desc);
+create index on public.admin_audit_log (target_profile_id, created_at desc);
+```
+Reuses existing `has_role` + `user_roles` — no role model changes.
 
-- `/dashboard/training` — list of courses with create/edit/duplicate/archive.
-- Course editor: mode picker, price/deposit, capacity (when group/multi_day), sessions editor (add dates + start/end + location), prerequisites, CPD hours, certificate template upload, materials rich-text, kit list, cover image.
-- `/dashboard/training/bookings` — list of upcoming and past bookings, per-course filter, quick actions (confirm, cancel, mark complete, resend materials).
+### Server fns (new `src/lib/admin-console.functions.ts`)
+All `.middleware([requireSupabaseAuth])` + inline `assertAdmin`. Each mutating fn writes an `admin_audit_log` row in the same transaction (via RPC helper `admin_log_action`).
+- `adminListPractitioners({ q, status, plan, cursor })` — server-side search/paginated.
+- `adminGetPractitioner({ id })` — profile + branding + counts (no PHI).
+- `adminViewAsSnapshot({ id })` — safe read: profile, clinic_theme, treatments, treatment_categories, locations, availability_rules. Logs `view_as_open`.
+- `adminEditPractitioner({ id, patch, reason })` — allow-listed columns only (clinic_name, slug, bio, theme fields, active). Diff logged.
+- `adminSetActive({ id, active, reason })` — suspend/reactivate. Logged.
+- `adminListAudit({ target_id?, actor_id?, action?, cursor })`.
 
-### 3. Public booking
+### UI
+- `src/components/admin/AdminShell.tsx` — dark sidebar, distinct "Modo Admin" wordmark, current admin's name, sign-out.
+- `src/components/admin/ViewAsBanner.tsx` — sticky red banner with "Exit view-as".
+- Directory uses TanStack Query + a debounced search box; row actions in a dropdown.
+- Edit-for form reuses the branding editor's field components, wrapped in a "Reason for change" required textarea.
 
-- Clinic page `/m/{slug}` gets a **Training** tab next to Treatments, only visible when the profile has at least one active course.
-- Course card shows name, price, duration/dates, CPD hours, prerequisites summary, "Book training".
+### Not in Phase 1 (explicitly deferred)
+- Subscription/billing actions (plan change, comp, refund) — Phase 2, needs Stripe surface work.
+- Content moderation (hide reviews, pages, images) — Phase 3.
+- Feature flags & per-account caps — Phase 4, needs a `feature_flags` table.
+- Subdomain split to `admin.modobook.uk` — Phase 5, DNS + hosting.
+- Any patient/appointment/consultation/prescription/form read surface.
 
-Booking flow (new route `/m/{slug}/training/{courseId}`):
-
-- **1:1 courses**: reuses the existing treatment booking engine — practitioner availability, calendar, time slots, location, payment. Creates a normal appointment plus a `training_bookings` row.
-- **Group / multi-day**: shows fixed course sessions with seats remaining; trainee picks one, fills details, pays. No calendar picker.
-- Prerequisites step: if `require_prereq_confirm` is on, trainee ticks "I confirm I meet these prerequisites" before payment.
-- Post-booking confirmation email includes materials link + kit list.
-
-### 4. Emails
-
-Reuse the branded email pipeline. Two new templates:
-
-- **Training booking confirmation** — course details, date(s), location, kit list, materials link.
-- **Training reminder** — sent 24h before (piggybacks on existing appointment reminder cron for 1:1; new dispatcher for group/multi-day sessions).
-
-### 5. Out of scope for this pass
-
-- Model-required training (integrating model slots for training sessions).
-- Automatic certificate issuance / PDF generation on completion — the template is stored; issuing is a follow-up.
-
-### Technical notes
-
-- New server functions in `src/lib/training.functions.ts` and `src/lib/training-public.functions.ts` (public list + booking).
-- New public server route unnecessary; use existing anon publishable client via slug RPC.
-- 1:1 bookings write into `appointments` so the calendar, reminders, and payments already work.
-- Group/multi-day capacity enforced in the booking server function inside a transaction (`select ... for update` on the session row).
-- Public tab lives in the existing `m.$slug.index.tsx` — new route `m.$slug.training.$courseId.tsx` for the booking flow.
-
-I'll ship steps 1–4 in this pass and leave (5) as follow-ups.
+### Files touched
+- New: migration, `src/lib/admin-console.functions.ts`, 6 new route files, `AdminShell`, `ViewAsBanner`, admin directory/detail/view/edit/audit page components.
+- Edited: `src/routes/_authenticated/admin-prescribers.tsx` → move + redirect stub, root nav (add "Admin" link visible only when `amIAdmin`).
