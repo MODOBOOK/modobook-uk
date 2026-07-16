@@ -179,15 +179,17 @@ function EmailsPage() {
           def={editing}
           existing={customsByKey[editing.key]}
           onClose={() => setEditing(null)}
-          onSave={async (payload) => {
+          onSave={async (payload, opts) => {
             try {
               const saved = await saveCust({ data: { template_key: editing.key, ...payload } })
               setCustoms((prev) => {
                 const next = prev.filter((x) => x.template_key !== editing.key)
                 return [...next, saved as any]
               })
-              toast.success('Saved')
-              setEditing(null)
+              if (!opts?.silent) {
+                toast.success('Saved')
+                setEditing(null)
+              }
             } catch (e) { toast.error(e instanceof Error ? e.message : 'Failed') }
           }}
         />
@@ -242,12 +244,15 @@ function EmailEditDialog({
   def: EmailDef
   existing?: any
   onClose: () => void
-  onSave: (payload: {
-    subject_override: string | null
-    intro_override: string | null
-    body_override: string | null
-    closing_override: string | null
-  }) => void
+  onSave: (
+    payload: {
+      subject_override: string | null
+      intro_override: string | null
+      body_override: string | null
+      closing_override: string | null
+    },
+    opts?: { silent?: boolean },
+  ) => Promise<void> | void
 }) {
   const defaults = EMAIL_DEFAULTS[def.key] ?? { subject: '', intro: '', body: '', closing: '', variables: [] as string[] }
   const [subject, setSubject] = useState<string>(existing?.subject_override ?? defaults.subject)
