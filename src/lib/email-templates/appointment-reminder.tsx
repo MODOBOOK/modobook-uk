@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { Html, Preview, Heading, Text, Button, Section } from '@react-email/components'
-import { ModoShell, Head, styles, brandedButton } from './_modo-brand'
+import { ModoShell, Head, styles, brandedButton, BodyOverride } from './_modo-brand'
 import type { TemplateEntry } from './registry'
 
 interface Props {
@@ -17,6 +17,7 @@ interface Props {
   brandColor?: string | null
   subjectOverride?: string | null
   introOverride?: string | null
+  bodyOverride?: string | null
   closingOverride?: string | null
 }
 
@@ -33,6 +34,7 @@ const Email = ({
   logoUrl,
   brandColor,
   introOverride,
+  bodyOverride,
   closingOverride,
 }: Props) => {
   const defaultIntro = `Hi ${patientName}, this is a friendly reminder about your upcoming appointment with ${clinicName}.`
@@ -40,6 +42,7 @@ const Email = ({
     hoursBefore >= 24
       ? 'Please let us know as soon as possible if you need to reschedule.'
       : 'See you soon — please arrive a few minutes early.'
+  const hasBody = !!bodyOverride?.trim()
   return (
     <Html lang="en" dir="ltr">
       <Head />
@@ -47,13 +50,17 @@ const Email = ({
       <ModoShell preview="" siteName={clinicName} logoUrl={logoUrl} brandColor={brandColor}>
         <Heading as="h1" style={styles.h1}>Appointment reminder</Heading>
         <Text style={styles.text}>{introOverride?.trim() || defaultIntro}</Text>
-        <Section style={{ backgroundColor: '#efe7d8', borderRadius: 12, padding: '16px 18px', margin: '8px 0 20px' }}>
-          <Text style={{ ...styles.text, margin: '0 0 6px' }}><strong>{treatmentName}</strong></Text>
-          <Text style={{ ...styles.muted, margin: '0 0 4px' }}>{dateTime}</Text>
-          {practitionerName && <Text style={{ ...styles.muted, margin: '0 0 4px' }}>With {practitionerName}</Text>}
-          {locationName && <Text style={{ ...styles.muted, margin: '0 0 4px' }}>{locationName}</Text>}
-          {locationAddress && <Text style={{ ...styles.muted, margin: 0 }}>{locationAddress}</Text>}
-        </Section>
+        {hasBody ? (
+          <BodyOverride text={bodyOverride} />
+        ) : (
+          <Section style={{ backgroundColor: '#f5f1ea', borderRadius: 12, padding: '16px 18px', margin: '8px 0 20px' }}>
+            <Text style={{ ...styles.text, margin: '0 0 6px' }}><strong>{treatmentName}</strong></Text>
+            <Text style={{ ...styles.muted, margin: '0 0 4px' }}>{dateTime}</Text>
+            {practitionerName && <Text style={{ ...styles.muted, margin: '0 0 4px' }}>With {practitionerName}</Text>}
+            {locationName && <Text style={{ ...styles.muted, margin: '0 0 4px' }}>{locationName}</Text>}
+            {locationAddress && <Text style={{ ...styles.muted, margin: 0 }}>{locationAddress}</Text>}
+          </Section>
+        )}
         {manageUrl && (
           <Section style={styles.buttonWrap}>
             <Button href={manageUrl} style={brandedButton(brandColor)}>Manage booking</Button>

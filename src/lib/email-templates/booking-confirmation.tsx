@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { Html, Preview, Heading, Text, Button, Section } from '@react-email/components'
-import { ModoShell, Head, styles, brandedButton } from './_modo-brand'
+import { ModoShell, Head, styles, brandedButton, BodyOverride } from './_modo-brand'
 import type { TemplateEntry } from './registry'
 
 interface Props {
@@ -16,6 +16,7 @@ interface Props {
   brandColor?: string | null
   subjectOverride?: string | null
   introOverride?: string | null
+  bodyOverride?: string | null
   closingOverride?: string | null
 }
 
@@ -31,30 +32,38 @@ const Email = ({
   logoUrl,
   brandColor,
   introOverride,
+  bodyOverride,
   closingOverride,
-}: Props) => (
-  <Html lang="en" dir="ltr">
-    <Head />
-    <Preview>Your {clinicName} booking is confirmed</Preview>
-    <ModoShell preview="" siteName={clinicName} logoUrl={logoUrl} brandColor={brandColor}>
-      <Heading as="h1" style={styles.h1}>Your booking is confirmed</Heading>
-      <Text style={styles.text}>{introOverride?.trim() || `Hi ${patientName}, thanks for booking with ${clinicName}.`}</Text>
-      <Section style={{ backgroundColor: '#efe7d8', borderRadius: 12, padding: '16px 18px', margin: '8px 0 20px' }}>
-        <Text style={{ ...styles.text, margin: '0 0 6px' }}><strong>{treatmentName}</strong></Text>
-        <Text style={{ ...styles.muted, margin: '0 0 4px' }}>{dateTime}</Text>
-        {practitionerName && <Text style={{ ...styles.muted, margin: '0 0 4px' }}>With {practitionerName}</Text>}
-        {locationName && <Text style={{ ...styles.muted, margin: '0 0 4px' }}>{locationName}</Text>}
-        {locationAddress && <Text style={{ ...styles.muted, margin: 0 }}>{locationAddress}</Text>}
-      </Section>
-      {manageUrl && (
-        <Section style={styles.buttonWrap}>
-          <Button href={manageUrl} style={brandedButton(brandColor)}>Manage booking</Button>
-        </Section>
-      )}
-      <Text style={styles.muted}>{closingOverride?.trim() || 'If anything changes, use the link above to reschedule or cancel.'}</Text>
-    </ModoShell>
-  </Html>
-)
+}: Props) => {
+  const hasBody = !!bodyOverride?.trim()
+  return (
+    <Html lang="en" dir="ltr">
+      <Head />
+      <Preview>Your {clinicName} booking is confirmed</Preview>
+      <ModoShell preview="" siteName={clinicName} logoUrl={logoUrl} brandColor={brandColor}>
+        <Heading as="h1" style={styles.h1}>Your booking is confirmed</Heading>
+        <Text style={styles.text}>{introOverride?.trim() || `Hi ${patientName}, thanks for booking with ${clinicName}.`}</Text>
+        {hasBody ? (
+          <BodyOverride text={bodyOverride} />
+        ) : (
+          <Section style={{ backgroundColor: '#f5f1ea', borderRadius: 12, padding: '16px 18px', margin: '8px 0 20px' }}>
+            <Text style={{ ...styles.text, margin: '0 0 6px' }}><strong>{treatmentName}</strong></Text>
+            <Text style={{ ...styles.muted, margin: '0 0 4px' }}>{dateTime}</Text>
+            {practitionerName && <Text style={{ ...styles.muted, margin: '0 0 4px' }}>With {practitionerName}</Text>}
+            {locationName && <Text style={{ ...styles.muted, margin: '0 0 4px' }}>{locationName}</Text>}
+            {locationAddress && <Text style={{ ...styles.muted, margin: 0 }}>{locationAddress}</Text>}
+          </Section>
+        )}
+        {manageUrl && (
+          <Section style={styles.buttonWrap}>
+            <Button href={manageUrl} style={brandedButton(brandColor)}>Manage booking</Button>
+          </Section>
+        )}
+        <Text style={styles.muted}>{closingOverride?.trim() || 'If anything changes, use the link above to reschedule or cancel.'}</Text>
+      </ModoShell>
+    </Html>
+  )
+}
 
 export const template = {
   component: Email,
