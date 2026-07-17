@@ -7,6 +7,7 @@ type PaymentMode = Database["public"]["Enums"]["payment_mode"];
 type BookingStatus = Database["public"]["Enums"]["training_booking_status"];
 
 export type CourseVisibility = "live" | "hidden" | "preview_link" | "coming_soon";
+export type SchedulingMode = "fixed" | "availability";
 
 export type CourseInput = {
   name: string;
@@ -27,6 +28,7 @@ export type CourseInput = {
   kit_list?: string | null;
   active?: boolean;
   visibility?: CourseVisibility;
+  scheduling_mode?: SchedulingMode;
 };
 
 async function getProfileId(
@@ -122,6 +124,7 @@ export const createCourse = createServerFn({ method: "POST" })
         materials_html: data.materials_html ?? null,
         kit_list: data.kit_list ?? null,
         active: data.active ?? true,
+        scheduling_mode: data.scheduling_mode ?? "fixed",
       } as never)
       .select().single();
     if (error) throw error;

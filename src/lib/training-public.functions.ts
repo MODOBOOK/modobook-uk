@@ -21,7 +21,7 @@ export const listPublicCourses = createServerFn({ method: "GET" })
 
     const { data: courses, error } = await supabase
       .from("training_courses")
-      .select("id, name, description, cover_image_url, mode, duration_min, price, deposit_amount, payment_mode, capacity, prerequisites, require_prereq_confirm, cpd_hours, kit_list, sort_order, visibility")
+      .select("id, name, description, cover_image_url, mode, scheduling_mode, duration_min, price, deposit_amount, payment_mode, capacity, prerequisites, require_prereq_confirm, cpd_hours, kit_list, sort_order, visibility")
       .eq("profile_id", profile.id)
       .eq("active", true)
       .in("visibility", ["live", "coming_soon"])
@@ -29,7 +29,6 @@ export const listPublicCourses = createServerFn({ method: "GET" })
     if (error) throw error;
 
     let list = courses ?? [];
-    // Filter by selected location if provided
     if (data.locationId && list.length) {
       const ids = list.map((c) => c.id);
       const { data: links } = await supabase
@@ -43,7 +42,6 @@ export const listPublicCourses = createServerFn({ method: "GET" })
       }
       list = list.filter((c) => {
         const locs = byCourse.get(c.id);
-        // No locations set = available everywhere
         return !locs || locs.length === 0 || locs.includes(data.locationId!);
       });
     }
@@ -70,7 +68,6 @@ export const getPublicCourse = createServerFn({ method: "GET" })
     if (error) throw error;
     if (!course) throw new Error("Course not found");
 
-    // Visibility gate
     if (course.visibility === "hidden") throw new Error("Course not available");
     if (course.visibility === "preview_link" && course.preview_token !== data.previewToken) {
       throw new Error("Course not available");
@@ -85,9 +82,8 @@ export const getPublicCourse = createServerFn({ method: "GET" })
       .order("session_date", { ascending: true })
       .order("start_time", { ascending: true });
 
-    // Count bookings per session for capacity display
     const sessionIds = (sessions ?? []).map((s) => s.id);
-    let bookingsBySession: Record<string, number> = {};
+    const bookingsBySession: Record<string, number> = {};
     if (sessionIds.length) {
       const { data: bks } = await supabase
         .from("training_bookings")
@@ -99,7 +95,6 @@ export const getPublicCourse = createServerFn({ method: "GET" })
       }
     }
 
-    // Only the locations this course allows (empty = all)
     const { data: courseLocLinks } = await supabase
       .from("training_course_locations")
       .select("location_id").eq("course_id", course.id);
@@ -123,6 +118,78 @@ export const getPublicCourse = createServerFn({ method: "GET" })
     };
   });
 
+/* ---------------- Availability for training ---------------- */
+
+function toMin(t: string) { const [h, m] = t.split(":").map(Number); return h * 60 + m; }
+function fromMin(m: number) {
+  const h = Math.floor(m / 60), mm = m % 60;
+  return `${String(h).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
+}
+
+export const getTrainingAvailability = createServerFn({ method: "GET" })
+  .inputValidator((i: { courseId: string; date: string; locationId?: string | null }) => i)
+  .handler(async ({ data }) => {
+    const supabase = getPub();
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: course } = await supabase
+      .from("training_courses")
+      .select("id, profile_id, duration_min, scheduling_mode")
+      .eq("id", data.courseId)
+      .maybeSingle();
+    if (!course) throw new Error("Course not found");
+    const profileId = course.profile_id;
+    const duration = Number(course.duration_min ?? 120);
+
+    const [y, m, d] = data.date.split("-").map(Number);
+    const dow = new Date(Date.UTC(y, m - 1, d)).getUTCDay();
+
+    const [rulesR, overridesR, blockedR, blockedTimesR, apptsR] = await Promise.all([
+      supabase.from("availability_rules").select("day_of_week,start_time,end_time,slot_interval,location_id").eq("profile_id", profileId).eq("day_of_week", dow),
+      supabase.from("availability_overrides").select("start_time,end_time,slot_interval,location_id").eq("profile_id", profileId).eq("date", data.date),
+      supabase.from("blocked_dates").select("id,location_id").eq("profile_id", profileId).eq("date", data.date),
+      supabase.from("blocked_times").select("start_time,end_time,location_id").eq("profile_id", profileId).eq("date", data.date),
+      supabaseAdmin.from("appointments").select("start_time,end_time,location_id,status").eq("profile_id", profileId).eq("scheduled_date", data.date).neq("status", "cancelled"),
+    ]);
+
+    const isBlocked = (blockedR.data ?? []).some((b) => !b.location_id || !data.locationId || b.location_id === data.locationId);
+    if (isBlocked) return { slots: [] as Array<{ start: string; end: string }>, duration };
+
+    const busy = [
+      ...((apptsR.data ?? []).map((a) => ({ start: toMin(a.start_time), end: toMin(a.end_time), loc: a.location_id }))),
+      ...((blockedTimesR.data ?? []).filter((b) => !b.location_id || !data.locationId || b.location_id === data.locationId).map((b) => ({ start: toMin(b.start_time), end: toMin(b.end_time), loc: b.location_id }))),
+    ];
+
+    const rules: Array<{ start_time: string; end_time: string; slot_interval: number; location_id: string | null }> = [
+      ...((rulesR.data ?? []).filter((r) => !data.locationId || !r.location_id || r.location_id === data.locationId)),
+      ...((overridesR.data ?? []).filter((o) => !data.locationId || !o.location_id || o.location_id === data.locationId)),
+    ];
+
+    const slots: Array<{ start: string; end: string }> = [];
+    for (const r of rules) {
+      const step = r.slot_interval ?? duration;
+      const start = toMin(r.start_time);
+      const end = toMin(r.end_time);
+      for (let t = start; t + duration <= end; t += step) {
+        const slotEnd = t + duration;
+        const overlap = busy.some((b) => (!data.locationId || !b.loc || b.loc === data.locationId) && t < b.end && slotEnd > b.start);
+        if (!overlap) slots.push({ start: fromMin(t), end: fromMin(slotEnd) });
+      }
+    }
+    // dedupe
+    const seen = new Set<string>();
+    const dedup = slots.filter((s) => { if (seen.has(s.start)) return false; seen.add(s.start); return true; })
+      .sort((a, b) => a.start.localeCompare(b.start));
+
+    // apply today-cutoff
+    const now = new Date();
+    const todayIso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+    if (data.date === todayIso) {
+      const cutoff = now.getHours() * 60 + now.getMinutes();
+      return { slots: dedup.filter((s) => toMin(s.start) >= cutoff), duration };
+    }
+    return { slots: dedup, duration };
+  });
+
 export const createTrainingBooking = createServerFn({ method: "POST" })
   .inputValidator((i: {
     course_id: string;
@@ -131,19 +198,22 @@ export const createTrainingBooking = createServerFn({ method: "POST" })
     trainee_email: string;
     trainee_phone?: string;
     prereq_confirmed?: boolean;
-    // For 1:1 request:
+    // For 1:1 request (no scheduling):
     preferred_date?: string;
     preferred_start?: string;
+    // For availability-based booking:
+    appointment_date?: string;
+    appointment_start?: string; // HH:MM
+    appointment_end?: string;   // HH:MM
     location_id?: string | null;
     notes?: string;
   }) => i)
   .handler(async ({ data }) => {
     const supabase = getPub();
 
-    // Load course to enforce capacity + profile
     const { data: course, error: cErr } = await supabase
       .from("training_courses")
-      .select("id, profile_id, mode, capacity, active, require_prereq_confirm, visibility")
+      .select("id, profile_id, mode, scheduling_mode, capacity, active, require_prereq_confirm, visibility, name, duration_min, price")
       .eq("id", data.course_id)
       .maybeSingle();
     if (cErr) throw cErr;
@@ -151,14 +221,11 @@ export const createTrainingBooking = createServerFn({ method: "POST" })
     if (course.visibility === "hidden" || course.visibility === "coming_soon") {
       throw new Error("This course is not yet open for bookings");
     }
-    // preview_link courses accept bookings from anyone who reached this page
-    // via the shareable link — the link is the only route to the booking form.
 
     if (course.require_prereq_confirm && !data.prereq_confirmed) {
       throw new Error("Please confirm you meet the prerequisites");
     }
 
-    // Capacity check for group / multi-day
     if ((course.mode === "group" || course.mode === "multi_day") && data.session_id) {
       const { count } = await supabase
         .from("training_bookings")
@@ -170,6 +237,56 @@ export const createTrainingBooking = createServerFn({ method: "POST" })
       }
     }
 
+    let appointment_id: string | null = null;
+    let appointment_date: string | null = data.preferred_date || null;
+    let appointment_start: string | null = data.preferred_start || null;
+    let appointment_end: string | null = null;
+
+    // Availability mode: create a real appointment blocking the calendar.
+    if (course.scheduling_mode === "availability" && data.appointment_date && data.appointment_start && data.appointment_end) {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      // Conflict check
+      const { data: conflicts } = await supabaseAdmin
+        .from("appointments")
+        .select("id,start_time,end_time,location_id,status")
+        .eq("profile_id", course.profile_id)
+        .eq("scheduled_date", data.appointment_date)
+        .neq("status", "cancelled");
+      const startMin = toMin(data.appointment_start);
+      const endMin = toMin(data.appointment_end);
+      const clash = (conflicts ?? []).some((c) => {
+        if (data.location_id && c.location_id && c.location_id !== data.location_id) return false;
+        const cs = toMin(c.start_time), ce = toMin(c.end_time);
+        return startMin < ce && endMin > cs;
+      });
+      if (clash) throw new Error("Sorry, that slot was just taken. Please pick another time.");
+
+      const { data: apptRow, error: apptErr } = await supabaseAdmin
+        .from("appointments")
+        .insert({
+          profile_id: course.profile_id,
+          patient_name: data.trainee_name.trim(),
+          patient_email: data.trainee_email.trim().toLowerCase(),
+          patient_phone: data.trainee_phone?.trim() || null,
+          scheduled_date: data.appointment_date,
+          start_time: `${data.appointment_start}:00`,
+          end_time: `${data.appointment_end}:00`,
+          location_id: data.location_id ?? null,
+          status: "confirmed",
+          payment_status: "pending",
+          service_name: `Training — ${course.name}`,
+          service_price_cents: Math.round(Number(course.price ?? 0) * 100),
+          notes: data.notes?.trim() || null,
+        } as never)
+        .select("id")
+        .single();
+      if (apptErr) throw apptErr;
+      appointment_id = apptRow.id;
+      appointment_date = data.appointment_date;
+      appointment_start = `${data.appointment_start}:00`;
+      appointment_end = `${data.appointment_end}:00`;
+    }
+
     const insertPayload = {
       course_id: course.id,
       profile_id: course.profile_id,
@@ -178,10 +295,12 @@ export const createTrainingBooking = createServerFn({ method: "POST" })
       trainee_email: data.trainee_email.trim().toLowerCase(),
       trainee_phone: data.trainee_phone?.trim() || null,
       prereq_confirmed: !!data.prereq_confirmed,
-      status: "pending" as const,
+      status: appointment_id ? "confirmed" as const : "pending" as const,
       payment_status: "pending",
-      appointment_date: data.preferred_date || null,
-      appointment_start: data.preferred_start || null,
+      appointment_id,
+      appointment_date,
+      appointment_start,
+      appointment_end,
       location_id: data.location_id ?? null,
       notes: data.notes?.trim() || null,
     };
