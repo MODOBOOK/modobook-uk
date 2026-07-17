@@ -2285,9 +2285,33 @@ function ActionPlaceholder({
   );
 }
 
+function ActionLink({
+  to,
+  params,
+  label,
+  brand,
+  children,
+}: {
+  to: string;
+  params: Record<string, string>;
+  label: string;
+  brand: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <Link
+      to={to}
+      params={params}
+      className="flex flex-col items-center gap-1.5 rounded-xl p-2 text-xs font-medium transition hover:bg-muted"
+      style={{ color: brand }}
+    >
+      {children}
+      <span>{label}</span>
+    </Link>
+  );
+}
 
 function ActionIcon({
-
   href,
   label,
   brand,
