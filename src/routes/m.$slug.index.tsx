@@ -971,6 +971,11 @@ function BookPage() {
                 <Info className="h-5 w-5 opacity-30" />
               </ActionPlaceholder>
             )}
+            {hasTraining && (
+              <ActionLink to="/m/$slug/training" params={{ slug }} label="Training" brand={brand}>
+                <GraduationCap className="h-5 w-5" />
+              </ActionLink>
+            )}
           </div>
         </section>
       )}
