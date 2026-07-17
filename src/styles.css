@@ -167,3 +167,71 @@
   box-shadow: var(--shadow-luxe);
 }
 
+/* ---------------------------------------------------------------
+ * MODO marketing surface — "Noir Editorial"
+ * Scoped so dashboards + per-clinic booking pages keep their theme.
+ * Palette: paper #f5f3ee, taupe #c9b99a, ink #1a1a1a, gold #c9a84c
+ * Typography: Outfit (display) × Figtree (body)
+ * ------------------------------------------------------------- */
+.modo-marketing {
+  --background: oklch(0.968 0.008 85);
+  --foreground: oklch(0.16 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.16 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.16 0 0);
+  --primary: oklch(0.16 0 0);
+  --primary-foreground: oklch(0.968 0.008 85);
+  --secondary: oklch(0.93 0.012 85);
+  --secondary-foreground: oklch(0.16 0 0);
+  --muted: oklch(0.94 0.01 85);
+  --muted-foreground: oklch(0.42 0.008 60);
+  --accent: oklch(0.78 0.105 82);
+  --accent-foreground: oklch(0.16 0 0);
+  --border: oklch(0.88 0.012 80);
+  --input: oklch(0.9 0.012 80);
+  --ring: oklch(0.72 0.12 80);
+
+  --gold: oklch(0.75 0.13 80);
+  --ink: oklch(0.16 0 0);
+  --paper: oklch(0.968 0.008 85);
+  --taupe: oklch(0.79 0.03 80);
+
+  --font-sans: "Figtree", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Outfit", ui-sans-serif, system-ui, sans-serif;
+
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}
+
+.modo-marketing .font-display,
+.modo-marketing h1,
+.modo-marketing h2,
+.modo-marketing h3 {
+  font-family: var(--font-display);
+  letter-spacing: -0.025em;
+}
+
+.modo-marketing .hairline {
+  height: 1px;
+  background-color: color-mix(in oklab, var(--ink) 12%, transparent);
+}
+
+.modo-marketing .eyebrow {
+  font-family: var(--font-sans);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.72rem;
+  color: color-mix(in oklab, var(--ink) 68%, transparent);
+}
+
+.modo-marketing .gold-underline {
+  background-image: linear-gradient(transparent 62%, color-mix(in oklab, var(--gold) 55%, transparent) 62%);
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  padding: 0 0.08em;
+}
+
+
