@@ -85,328 +85,287 @@ function LandingPage() {
   }, [navigate]);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="modo-marketing min-h-screen">
       <SiteHeader />
 
       <main>
-        {/* HERO */}
-        <section className="relative overflow-hidden border-b">
-          <div className="mx-auto grid max-w-7xl gap-10 px-4 py-16 lg:grid-cols-2 lg:items-center lg:px-8 lg:py-24">
+        {/* HERO — editorial, oversized display type */}
+        <section className="relative overflow-hidden">
+          <div className="mx-auto max-w-6xl px-5 pb-14 pt-10 sm:pt-16 lg:px-8 lg:pb-24 lg:pt-24">
+            <div className="flex items-center gap-3 text-[color:var(--ink)]/70">
+              <span className="eyebrow">The aesthetics-only platform</span>
+              <span className="hidden h-px w-10 bg-[color:var(--ink)]/25 sm:inline-block" />
+              <span className="hidden text-xs sm:inline">Est. by Nurse Prescribers · UK</span>
+            </div>
+
+            <h1 className="mt-6 font-display text-[2.6rem] font-light leading-[1.02] tracking-tight sm:text-6xl lg:text-[5.2rem]">
+              Clinical software,
+              <br className="hidden sm:block" />{" "}
+              <span className="italic font-normal">
+                <span className="gold-underline">shaped like a clinic.</span>
+              </span>
+            </h1>
+
+            <p className="mt-6 max-w-xl text-base text-[color:var(--ink)]/70 sm:text-lg">
+              Booking, consultations, consent, photos, prescribing and payments —
+              in one calm, professional platform built only for aesthetics.
+              Designed by two practising UK Nurse Prescribers.
+            </p>
+
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+              <Link to="/auth" className="w-full sm:w-auto">
+                <Button
+                  size="lg"
+                  className="w-full rounded-none bg-[color:var(--ink)] px-8 text-sm font-medium uppercase tracking-[0.14em] text-[color:var(--paper)] hover:bg-[color:var(--ink)]/90 sm:w-auto"
+                >
+                  Start free
+                </Button>
+              </Link>
+              <Link to="/features" className="w-full sm:w-auto">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="w-full rounded-none border-[color:var(--ink)] bg-transparent px-8 text-sm font-medium uppercase tracking-[0.14em] text-[color:var(--ink)] hover:bg-[color:var(--ink)]/5 sm:w-auto"
+                >
+                  Tour the platform <ArrowRight className="ml-1 h-4 w-4" />
+                </Button>
+              </Link>
+              <span className="text-xs text-[color:var(--ink)]/55">
+                No card required · 0% booking fees · UK/EU data
+              </span>
+            </div>
+          </div>
+
+          {/* Editorial mosaic band — icon tiles as a subtle art element */}
+          <div className="relative border-y border-[color:var(--ink)]/10 bg-[color:var(--paper)]">
+            <div className="mx-auto grid max-w-6xl grid-cols-2 divide-x divide-[color:var(--ink)]/10 sm:grid-cols-4">
+              {[
+                { icon: Calendar, label: "Bookings" },
+                { icon: ClipboardList, label: "Consultations" },
+                { icon: FileSignature, label: "Consent" },
+                { icon: CreditCard, label: "Payments" },
+              ].map((t) => (
+                <div key={t.label} className="flex items-center gap-3 px-5 py-5 sm:px-8">
+                  <t.icon className="h-4 w-4 text-[color:var(--gold)]" />
+                  <span className="text-xs font-medium uppercase tracking-[0.18em] text-[color:var(--ink)]/70">
+                    {t.label}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* THE PROBLEM / MANIFESTO */}
+        <section className="mx-auto max-w-6xl px-5 py-16 lg:px-8 lg:py-24">
+          <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
             <div>
-              <div className="mb-6 inline-flex items-center gap-2 rounded-full border bg-muted/40 px-4 py-1.5 text-sm">
-                <Stethoscope className="h-4 w-4 text-primary" />
-                <span>Built by two UK Nurse Prescribers — for every aesthetics practitioner</span>
-              </div>
-              <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
-                The first booking & clinical platform built <em className="not-italic text-primary">only</em> for aesthetics.
-              </h1>
-              <p className="mt-6 max-w-xl text-lg text-muted-foreground">
-                Every aesthetics practitioner deserves an aesthetics-only app — for patient
-                safety, clinical record-keeping and proper collaborative working. Not a
-                hairdressing app with consent forms bolted on. Not a medics-only portal that
-                shuts everyone else out.
+              <div className="eyebrow">§01 · The gap</div>
+              <h2 className="mt-3 font-display text-3xl font-light leading-tight sm:text-4xl">
+                Salon software with consent forms
+                <span className="italic"> bolted on</span>. Medics-only portals that
+                shut everyone else out.
+              </h2>
+            </div>
+            <div className="space-y-4 text-[15px] leading-relaxed text-[color:var(--ink)]/75">
+              <p>
+                Aesthetics doesn't fit either. Patient safety falls between the cracks
+                — real consultations, real screening, real consent, real collaboration
+                between injectors, therapists and their prescribers.
               </p>
-              <div className="mt-8 flex flex-wrap gap-3">
-                <Link to="/auth">
-                  <Button size="lg">Start free — set up in minutes</Button>
-                </Link>
-                <Link to="/features">
-                  <Button size="lg" variant="outline">
-                    Explore the platform <ArrowRight className="ml-1 h-4 w-4" />
+              <p>
+                MODO is one clinical standard for the whole industry. For HCPs and
+                non-HCPs. For solo practitioners and multi-location clinics. Built to
+                the level a patient would expect and a regulator would recognise.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* WHO IT'S FOR — two editorial cards */}
+        <section className="border-y border-[color:var(--ink)]/10 bg-white/60">
+          <div className="mx-auto max-w-6xl px-5 py-16 lg:px-8 lg:py-24">
+            <div className="mb-10 flex items-end justify-between gap-6">
+              <div>
+                <div className="eyebrow">§02 · Who it's for</div>
+                <h2 className="mt-3 font-display text-3xl font-light sm:text-4xl">
+                  One platform, both sides of the room.
+                </h2>
+              </div>
+              <div className="hidden h-px flex-1 self-center bg-[color:var(--ink)]/12 sm:block" />
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <EditorialCard
+                tag="HCPs"
+                icon={Syringe}
+                title="Nurses, Doctors, Dentists, Pharmacists, Paramedics & Midwives"
+                points={[
+                  "Prescriber-grade consultation notes & treatment plans",
+                  "Photo, social and marketing consent split out properly",
+                  "Prescriber Hub — support the non-HCPs you work with",
+                  "Multi-location, multi-practitioner clinics supported",
+                ]}
+              />
+              <EditorialCard
+                tag="Non-HCPs"
+                icon={Sparkles}
+                title="Aesthetics Practitioners, Skin & Other Injectors"
+                points={[
+                  "Full medical screening & consent before every appointment",
+                  "Refer in your prescriber via the Prescriber Hub",
+                  "Photo consent, aftercare and review periods built in",
+                  "Look every bit as professional as a full clinic",
+                ]}
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* FEATURES — clean 3-col editorial grid */}
+        <section className="mx-auto max-w-6xl px-5 py-16 lg:px-8 lg:py-24">
+          <div className="mb-10 max-w-2xl">
+            <div className="eyebrow">§03 · The platform</div>
+            <h2 className="mt-3 font-display text-3xl font-light sm:text-4xl">
+              Everything a clinic runs on —
+              <span className="italic"> in one calm system.</span>
+            </h2>
+            <p className="mt-4 text-[15px] text-[color:var(--ink)]/70">
+              Replace five or six tools with one workflow, designed around how
+              aesthetics actually works.
+            </p>
+          </div>
+
+          <div className="grid gap-px overflow-hidden border border-[color:var(--ink)]/10 bg-[color:var(--ink)]/10 sm:grid-cols-2 lg:grid-cols-3">
+            <EditorialFeature icon={Palette} title="Fully branded page" desc="Your colours, fonts, hero, logo and welcome — looks like your brand, not ours." />
+            <EditorialFeature icon={Link2} title="Your own MODO link" desc="modobook.uk/your-clinic. One link for Instagram, TikTok, web and Google." />
+            <EditorialFeature icon={Calendar} title="Smart availability" desc="Schedules, buffers, daily caps, lead times and model slots." />
+            <EditorialFeature icon={ClipboardList} title="8-step consultation" desc="Screening, assessment, plan, consent, photos, product log, invoice." />
+            <EditorialFeature icon={FileSignature} title="Consent & medical" desc="Build your own or use ours. Auto-sent, auto-signed, auto-filed." />
+            <EditorialFeature icon={Camera} title="Face mapping & photos" desc="Pin-drop product tags with units and before/after imagery." />
+            <EditorialFeature icon={Users} title="Patient records" desc="History, allergies, notes, photos, forms and messages in one place." />
+            <EditorialFeature icon={Layers} title="Packages & courses" desc="Bundles, top-ups, add-ons and split payments — without the spreadsheet." />
+            <EditorialFeature icon={CreditCard} title="Payments your way" desc="Card, deposits, pay-in-clinic, Klarna, Clearpay — fees can be passed on." />
+            <EditorialFeature icon={Bell} title="Reminders that work" desc="Email, SMS and WhatsApp. Cancellation rules enforced automatically." />
+            <EditorialFeature icon={MessageSquare} title="Marketing built-in" desc="Email your list, follow up after treatment, drive rebooks and reviews." />
+            <EditorialFeature icon={ShieldCheck} title="GDPR-ready storage" desc="Encrypted at rest, UK/EU residency, granular photo & marketing consent." />
+          </div>
+
+          <div className="mt-8">
+            <Link to="/features" className="group inline-flex items-center gap-2 text-sm font-medium uppercase tracking-[0.16em] text-[color:var(--ink)]">
+              See every feature
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+            </Link>
+          </div>
+        </section>
+
+        {/* PRESCRIBER HUB — dark editorial band */}
+        <section className="border-y border-[color:var(--ink)]/15 bg-[color:var(--ink)] text-[color:var(--paper)]">
+          <div className="mx-auto grid max-w-6xl gap-10 px-5 py-16 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16 lg:px-8 lg:py-24">
+            <div>
+              <div className="eyebrow !text-[color:var(--gold)]">§04 · Prescriber Hub</div>
+              <h2 className="mt-3 font-display text-3xl font-light leading-tight sm:text-4xl">
+                Prescribers and practitioners,
+                <span className="italic"> on the same record.</span>
+              </h2>
+              <p className="mt-4 max-w-md text-[15px] text-[color:var(--paper)]/70">
+                One safe, traceable place for prescribers and the practitioners
+                they support. Shared patient records and collaborative notes —
+                linked to the booking that started it.
+              </p>
+              <div className="mt-8">
+                <Link to="/prescriber-hub">
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    className="rounded-none border-[color:var(--gold)] bg-transparent px-8 text-sm font-medium uppercase tracking-[0.14em] text-[color:var(--gold)] hover:bg-[color:var(--gold)]/10"
+                  >
+                    Learn about the Hub <ArrowRight className="ml-1 h-4 w-4" />
                   </Button>
                 </Link>
               </div>
-              <p className="mt-4 text-sm text-muted-foreground">
-                No card required · 0% booking fees · Your data stays in the UK/EU
-              </p>
-
-            </div>
-            <div className="relative">
-              <div className="grid aspect-[4/3] w-full grid-cols-2 grid-rows-2 gap-3 rounded-3xl bg-gradient-to-br from-primary/10 via-muted/40 to-primary/5 p-6 shadow-xl ring-1 ring-black/5 sm:gap-5 sm:p-10">
-                <IconTile icon={Calendar} label="Live bookings" />
-                <IconTile icon={ClipboardList} label="Consultations" />
-                <IconTile icon={FileSignature} label="Consent" />
-                <IconTile icon={CreditCard} label="Payments" />
-              </div>
             </div>
 
+            <div className="grid gap-4 sm:grid-cols-3">
+              {[
+                { icon: ClipboardList, title: "Shared record", desc: "Medical form, consultation, photos — with consent." },
+                { icon: Network, title: "Connected teams", desc: "Prescribers support many; practitioners refer to many." },
+                { icon: HandshakeIcon, title: "Collaborative care", desc: "One workflow for HCPs and non-HCPs alike." },
+              ].map((c) => (
+                <div key={c.title} className="border border-[color:var(--paper)]/15 bg-[color:var(--paper)]/[0.03] p-6">
+                  <c.icon className="h-5 w-5 text-[color:var(--gold)]" />
+                  <div className="mt-4 font-display text-lg">{c.title}</div>
+                  <p className="mt-2 text-sm text-[color:var(--paper)]/65">{c.desc}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
 
-        {/* HCP + NON-HCP BAND */}
-        <section className="border-b bg-muted/30">
-          <div className="mx-auto grid max-w-7xl gap-8 px-4 py-16 md:grid-cols-2 lg:px-8">
-            <ForCard
-              icon={Syringe}
-              tag="For HCPs"
-              title="Nurses, Nurse Prescribers, Doctors, Dentists, Pharmacists, Paramedics & Midwives"
-              points={[
-                "Prescriber-grade consultation notes & treatment plans",
-                "Photo & social media consent split out properly",
-                "Prescriber Hub: collaborate with non-HCPs you work with",
-                "Multi-location, multi-practitioner clinics supported",
-              ]}
-            />
-            <ForCard
-              icon={Sparkles}
-              tag="For Non-HCPs"
-              title="Aesthetics Practitioners, Skin Injectors & Other Injectors"
-              points={[
-                "Full medical screening & consent before every appointment",
-                "Refer in your prescriber via the Prescriber Hub",
-                "Photo consent, aftercare and review periods built in",
-                "Look every bit as professional as a clinic",
-              ]}
-            />
-          </div>
-        </section>
-
-        {/* WHY AESTHETICS-ONLY */}
-        <section className="mx-auto max-w-7xl px-4 py-20 lg:px-8">
-          <div className="grid gap-12 lg:grid-cols-[1.1fr_1fr] lg:items-center">
+        {/* FOUNDERS / TRUST */}
+        <section className="mx-auto max-w-6xl px-5 py-16 lg:px-8 lg:py-24">
+          <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16">
             <div>
-              <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-                <ShieldCheck className="h-3.5 w-3.5" /> Patient safety first
-              </div>
-              <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-                Why we built an aesthetics-only app.
+              <div className="eyebrow">§05 · Built by clinicians</div>
+              <h2 className="mt-3 font-display text-3xl font-light leading-tight sm:text-4xl">
+                Designed by two Nurse Prescribers
+                <span className="italic"> who were sick of the workarounds.</span>
               </h2>
-              <p className="mt-4 text-muted-foreground">
-                We kept seeing the same gap. There's a <strong>medics-only</strong> booking
-                app. There's a <strong>salon</strong> booking app. There's nothing built
-                properly for the whole aesthetics industry — and that's exactly where
-                patient safety falls down.
+              <p className="mt-4 text-[15px] text-[color:var(--ink)]/70">
+                MODO was designed end-to-end by two practising UK Nurse Prescribers
+                who understand consultations, prescribing notes, treatment plans,
+                photo consent, model slots, top-ups, review periods and the
+                realities of running an aesthetics clinic.
               </p>
-              <p className="mt-3 text-muted-foreground">
-                MODO is for every aesthetics practitioner — HCPs and non-HCPs — under
-                one standard. Real consultations. Real medical screening. Real consent.
-                Real collaborative working between injectors, therapists and their
-                prescribers.
-              </p>
-              <ul className="mt-6 space-y-3 text-sm">
-                {[
-                  "One clinical standard for the whole industry, not two tiers.",
-                  "Built-in Prescriber Hub for HCPs and non-HCPs to collaborate safely.",
-                  "Granular photo, social media and marketing consent on every patient.",
-                  "Treatment plans, before/after photos and notes linked to every visit.",
-                  "Aftercare and review periods sent automatically, every time.",
-                ].map((line) => (
-                  <li key={line} className="flex gap-2">
-                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                    <span>{line}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="grid aspect-[5/4] w-full grid-cols-2 grid-rows-2 gap-3 rounded-3xl bg-gradient-to-tr from-primary/10 via-muted/40 to-primary/5 p-6 shadow-lg ring-1 ring-black/5 sm:gap-5 sm:p-10">
-              <IconTile icon={ShieldCheck} label="One safer standard" />
-              <IconTile icon={HeartHandshake} label="HCPs + non-HCPs" />
-              <IconTile icon={ClipboardList} label="Real consultations" />
-              <IconTile icon={FileSignature} label="Granular consent" />
-            </div>
-          </div>
-        </section>
-
-        {/* PRESCRIBER HUB */}
-        <section className="border-y bg-gradient-to-br from-primary/5 via-background to-primary/10">
-          <div className="mx-auto max-w-7xl px-4 py-20 lg:px-8">
-            <div className="mx-auto max-w-3xl text-center">
-              <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-                <Network className="h-3.5 w-3.5" /> Coming soon — included on every plan
-              </div>
-              <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-                Introducing the MODO Prescriber Hub.
-              </h2>
-              <p className="mt-3 text-muted-foreground">
-                One safe, traceable place for prescribers and the practitioners they
-                support. Shared patient records and collaborative notes — all linked
-                to the booking that started it.
-              </p>
-            </div>
-            <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              <HubCard icon={ClipboardList} title="Shared patient record" desc="Prescriber sees the medical form, consultation and photos — with consent." />
-              <HubCard icon={Network} title="Connected practitioners" desc="Prescribers can support many practitioners; practitioners can refer to many prescribers." />
-              <HubCard icon={HandshakeIcon} title="Collaborative care" desc="One workflow for HCPs and non-HCPs — accountable, safe, professional." />
-            </div>
-            <div className="mt-10 text-center">
-              <Link to="/prescriber-hub">
-                <Button size="lg" variant="outline">
-                  Learn about the Prescriber Hub <ArrowRight className="ml-1 h-4 w-4" />
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </section>
-
-        {/* FOUNDERS */}
-        <section className="mx-auto max-w-7xl px-4 py-20 lg:px-8">
-          <div className="grid gap-10 lg:grid-cols-2 lg:items-center">
-            <div className="grid aspect-[5/4] w-full grid-cols-2 grid-rows-2 gap-3 rounded-3xl bg-gradient-to-br from-primary/10 via-muted/40 to-primary/5 p-6 shadow-lg ring-1 ring-black/5 sm:gap-5 sm:p-10">
-              <IconTile icon={Stethoscope} label="Clinician-led" />
-              <IconTile icon={HeartHandshake} label="Built together" />
-              <IconTile icon={Sparkles} label="For everyone" />
-              <IconTile icon={Sparkles} label="Aesthetics-only" />
-            </div>
-            <div>
-              <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-                <HeartHandshake className="h-3.5 w-3.5" /> Built by clinicians, for clinicians
-              </div>
-              <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-                Designed by two Nurse Prescribers who were sick of the workarounds.
-              </h2>
-              <p className="mt-4 text-muted-foreground">
-                Every other "booking system" in aesthetics is a hairdressing or spa app with
-                consent forms bolted on — or a medics-only portal that excludes the rest of
-                the industry. MODO was designed end-to-end by two practising UK Nurse
-                Prescribers who understand consultations, prescribing notes, treatment plans,
-                photo consent, model slots, top-ups, review periods and the realities of
-                running an aesthetics clinic.
-              </p>
-              <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                <Compare before="A salon app with consent PDFs" after="Aesthetics-only, end-to-end" />
-                <Compare before="Medics-only portal" after="HCPs + non-HCPs collaborating safely" />
-                <Compare before="Five tools, one spreadsheet" after="One platform, one patient record" />
-                <Compare before="3–7% per booking" after="0% booking commission" />
+              <div className="mt-8 grid gap-3 sm:grid-cols-2">
+                <EditorialCompare before="Salon app with consent PDFs" after="Aesthetics-only, end-to-end" />
+                <EditorialCompare before="Medics-only portal" after="HCPs + non-HCPs, one standard" />
+                <EditorialCompare before="Five tools + a spreadsheet" after="One platform, one record" />
+                <EditorialCompare before="3–7% per booking" after="0% booking commission" />
               </div>
             </div>
-          </div>
-        </section>
 
-        {/* FEATURES GRID */}
-        <section className="border-y bg-muted/30">
-          <div className="mx-auto max-w-7xl px-4 py-20 lg:px-8">
-            <div className="mx-auto max-w-2xl text-center">
-              <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-                Everything your clinic runs on — finally in one place.
-              </h2>
-              <p className="mt-3 text-muted-foreground">
-                Replace 5–6 separate tools with a single system designed around how aesthetics actually works.
-              </p>
-            </div>
-            <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              <Feature icon={Palette} title="Fully branded booking page" desc="Your colours, fonts, hero image, logo and welcome message. Looks like your brand — not ours." />
-              <Feature icon={Link2} title="Your own MODO link" desc="modo.app/your-clinic. One link for Instagram, TikTok, your website and Google." />
-              <Feature icon={Calendar} title="Smart live availability" desc="Weekly schedules, buffers, daily caps, lead times, model slots and ad-hoc rota changes." />
-              <Feature icon={ClipboardList} title="8-step consultation flow" desc="Medical form, concerns, assessment, plan, consent, before/after photos, product log, invoice." />
-              <Feature icon={FileSignature} title="Consent & medical forms" desc="Build your own or use ours. Auto-sent before treatment, auto-signed, auto-filed." />
-              <Feature icon={Camera} title="Face mapping & photos" desc="Plan and record treatments with pin-drop product tags, units and before/after pictures." />
-              <Feature icon={Users} title="Patient records" desc="Full history, allergies, concerns, consultations, photos, forms and comms in one profile." />
-              <Feature icon={Layers} title="Packages & multi-session" desc="Bundles, courses, top-ups, add-ons and split payments — without the spreadsheet." />
-              <Feature
-                icon={CreditCard}
-                title="Payments your way"
-                desc="Card, deposits, pay-in-clinic, Klarna and Clearpay. Buy-now-pay-later fees can be passed to the patient."
-              />
-              <Feature icon={Bell} title="Reminders that work" desc="Confirmations and reminders by email, SMS and WhatsApp. Cancellation rules enforced automatically." />
-              <Feature icon={MessageSquare} title="Marketing built-in" desc="Email your patient list, follow up after treatment, drive reviews and rebooks." />
-              <Feature icon={ShieldCheck} title="GDPR-ready storage" desc="Encrypted at rest, UK/EU data residency, granular photo & marketing consent." />
-            </div>
-            <div className="mt-10 text-center">
-              <Link to="/features">
-                <Button size="lg" variant="outline">
-                  See every feature <ArrowRight className="ml-1 h-4 w-4" />
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </section>
-
-        {/* NUMBERS */}
-        <section className="mx-auto max-w-7xl px-4 py-20 lg:px-8">
-          <div className="mx-auto max-w-2xl text-center">
-            <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-              Why practitioners are switching to MODO
-            </h2>
-            <p className="mt-3 text-muted-foreground">
-              Save hours every week, look more professional and protect yourself clinically — all from one login.
-            </p>
-          </div>
-          <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            <Benefit value="5–8 hrs" label="saved per week on admin, consents and follow-ups" />
-            <Benefit value="0%" label="booking commission. Ever. Your patients are yours." />
-            <Benefit value="1 link" label="for bookings, consultations, consent and payments" />
-            <Benefit value="100%" label="GDPR-ready, encrypted, UK/EU hosted patient data" />
-          </div>
-        </section>
-
-        {/* WHO IT'S FOR */}
-        <section className="border-t bg-muted/30">
-          <div className="mx-auto max-w-7xl px-4 py-20 lg:px-8">
-            <div className="mx-auto max-w-2xl text-center">
-              <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">Built for the way you actually work</h2>
-            </div>
-            <div className="mt-12 grid gap-6 md:grid-cols-3">
-              <WhoCard
-                title="Solo Nurse Prescribers"
-                points={[
-                  "One link, one inbox, one calendar",
-                  "Prescriber-grade consultation notes",
-                  "Photo, consent and aftercare on autopilot",
-                ]}
-              />
-              <WhoCard
-                title="Multi-practitioner clinics"
-                points={[
-                  "Assign practitioners to locations",
-                  "First-available or patient-chooses booking",
-                  "Per-practitioner pricing and rotas",
-                ]}
-              />
-              <WhoCard
-                title="Therapists & non-HCPs"
-                points={[
-                  "Mandatory medical screening + consent",
-                  "Refer in a prescriber via the Hub",
-                  "Look as professional as any clinic",
-                ]}
-              />
-            </div>
-          </div>
-        </section>
-
-        {/* SECURITY */}
-        <section className="border-t">
-          <div className="mx-auto grid max-w-7xl gap-10 px-4 py-16 lg:grid-cols-[1fr_auto] lg:items-center lg:px-8">
-            <div>
-              <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-                <Lock className="h-3.5 w-3.5" /> Built for clinical data
-              </div>
-              <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-                Your patient data, treated like patient data.
-              </h2>
-              <p className="mt-3 max-w-2xl text-muted-foreground">
-                Encrypted at rest and in transit, hosted in the UK/EU, with row-level access controls
-                so only your clinic can see your patients. Granular photo and marketing consent is
-                captured per patient, per use case — patient file, social media, marketing, training.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-3 text-sm">
-              <Badge icon={ShieldCheck} label="GDPR-ready" />
-              <Badge icon={Lock} label="Encrypted storage" />
-              <Badge icon={PoundSterling} label="0% booking fees" />
+            <div className="grid grid-cols-2 gap-3">
+              <StatTile value="5–8h" label="saved per week" />
+              <StatTile value="0%" label="booking fees, ever" />
+              <StatTile value="1 link" label="for your whole clinic" />
+              <StatTile value="UK/EU" label="hosted patient data" />
             </div>
           </div>
         </section>
 
         {/* CTA */}
-        <section className="bg-background">
-          <div className="mx-auto max-w-7xl px-4 py-20 text-center lg:px-8">
-            <Star className="mx-auto mb-4 h-8 w-8 text-primary" />
-            <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-              Join the platform built by the people doing the job.
+        <section className="border-t border-[color:var(--ink)]/10 bg-[color:var(--paper)]">
+          <div className="mx-auto max-w-4xl px-5 py-20 text-center lg:px-8 lg:py-28">
+            <div className="eyebrow">Ready when you are</div>
+            <h2 className="mt-4 font-display text-4xl font-light leading-[1.05] sm:text-5xl lg:text-6xl">
+              Set up your clinic
+              <br />
+              <span className="italic gold-underline">in an afternoon.</span>
             </h2>
-            <p className="mx-auto mt-3 max-w-xl text-muted-foreground">
-              Start free today — set up in minutes and keep 100% of your booking revenue.
+            <p className="mx-auto mt-5 max-w-lg text-[15px] text-[color:var(--ink)]/70">
+              Free to start. Keep 100% of your booking revenue. Your patients
+              stay yours.
             </p>
-            <div className="mt-8 flex flex-wrap justify-center gap-4">
-              <Link to="/auth">
-                <Button size="lg">Start free</Button>
+            <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+              <Link to="/auth" className="w-full sm:w-auto">
+                <Button
+                  size="lg"
+                  className="w-full rounded-none bg-[color:var(--ink)] px-10 text-sm font-medium uppercase tracking-[0.14em] text-[color:var(--paper)] hover:bg-[color:var(--ink)]/90 sm:w-auto"
+                >
+                  Create your clinic
+                </Button>
               </Link>
-              <Link to="/features">
-                <Button size="lg" variant="outline">Explore the platform</Button>
+              <Link to="/who-its-for" className="w-full sm:w-auto">
+                <Button
+                  size="lg"
+                  variant="ghost"
+                  className="w-full rounded-none px-8 text-sm font-medium uppercase tracking-[0.14em] text-[color:var(--ink)] hover:bg-[color:var(--ink)]/5 sm:w-auto"
+                >
+                  Is MODO right for me?
+                </Button>
               </Link>
             </div>
-
           </div>
         </section>
       </main>
@@ -415,6 +374,79 @@ function LandingPage() {
     </div>
   );
 }
+
+/* -------- Editorial building blocks (scoped to landing) -------- */
+
+function EditorialCard({
+  tag,
+  icon: Icon,
+  title,
+  points,
+}: {
+  tag: string;
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  points: string[];
+}) {
+  return (
+    <div className="group relative border border-[color:var(--ink)]/12 bg-white p-6 transition-colors hover:border-[color:var(--ink)]/30 sm:p-8">
+      <div className="flex items-center justify-between">
+        <span className="eyebrow">{tag}</span>
+        <Icon className="h-5 w-5 text-[color:var(--gold)]" />
+      </div>
+      <h3 className="mt-5 font-display text-xl leading-snug sm:text-2xl">{title}</h3>
+      <ul className="mt-6 space-y-3 text-sm text-[color:var(--ink)]/75">
+        {points.map((p) => (
+          <li key={p} className="flex gap-3">
+            <span className="mt-2 h-px w-4 shrink-0 bg-[color:var(--gold)]" />
+            <span>{p}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function EditorialFeature({
+  icon: Icon,
+  title,
+  desc,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  desc: string;
+}) {
+  return (
+    <div className="bg-[color:var(--paper)] p-6 transition-colors hover:bg-white sm:p-7">
+      <Icon className="h-5 w-5 text-[color:var(--gold)]" />
+      <div className="mt-5 font-display text-base font-medium">{title}</div>
+      <p className="mt-2 text-sm leading-relaxed text-[color:var(--ink)]/65">{desc}</p>
+    </div>
+  );
+}
+
+function EditorialCompare({ before, after }: { before: string; after: string }) {
+  return (
+    <div className="border-l border-[color:var(--ink)]/15 pl-4">
+      <div className="text-xs uppercase tracking-[0.14em] text-[color:var(--ink)]/40 line-through">
+        {before}
+      </div>
+      <div className="mt-1 text-sm font-medium text-[color:var(--ink)]">{after}</div>
+    </div>
+  );
+}
+
+function StatTile({ value, label }: { value: string; label: string }) {
+  return (
+    <div className="border border-[color:var(--ink)]/12 bg-white p-5 sm:p-6">
+      <div className="font-display text-3xl font-light sm:text-4xl">{value}</div>
+      <div className="mt-2 text-xs uppercase tracking-[0.14em] text-[color:var(--ink)]/60">
+        {label}
+      </div>
+    </div>
+  );
+}
+
 
 export function SiteHeader() {
   return (
