@@ -184,7 +184,8 @@ function CourseEditor({ id, onClose }: { id: string; onClose: () => void }) {
     return <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin" /></div>;
   }
 
-  const isSchedule = form.mode === "group" || form.mode === "multi_day";
+  const schedulingMode = ((form as Course & { scheduling_mode?: string }).scheduling_mode ?? "fixed") as "fixed" | "availability";
+  const isSchedule = (form.mode === "group" || form.mode === "multi_day") && schedulingMode === "fixed";
   const locations = (locQ.data ?? []) as Array<{ id: string; name: string }>;
   const visibility = (form as Course & { visibility?: string }).visibility ?? "live";
   const previewToken = (form as Course & { preview_token?: string | null }).preview_token ?? null;
@@ -217,6 +218,7 @@ function CourseEditor({ id, onClose }: { id: string; onClose: () => void }) {
           kit_list: form.kit_list ?? null,
           active: visibility !== "hidden",
           visibility: visibility as "live" | "hidden" | "preview_link" | "coming_soon",
+          scheduling_mode: schedulingMode,
         },
       });
       await setLocFn({ data: { course_id: id, location_ids: pickedLocs ?? [] } });
@@ -352,6 +354,27 @@ function CourseEditor({ id, onClose }: { id: string; onClose: () => void }) {
               </div>
             )}
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader><CardTitle className="flex items-center gap-2"><CalendarIcon className="h-5 w-5" /> Scheduling</CardTitle></CardHeader>
+        <CardContent className="space-y-3">
+          <Select
+            value={schedulingMode}
+            onValueChange={(v) => setForm({ ...form, ...(({ scheduling_mode: v } as unknown) as Partial<Course>) })}
+          >
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="fixed">Fixed dates — publish set sessions trainees pick from</SelectItem>
+              <SelectItem value="availability">Availability — trainees pick a slot from your normal calendar</SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">
+            {schedulingMode === "availability"
+              ? "Bookings block your calendar just like a treatment — using the course duration as the slot length."
+              : "Trainees choose from the specific dates you set below."}
+          </p>
         </CardContent>
       </Card>
 

@@ -5421,6 +5421,7 @@ export type Database = {
           price: number
           profile_id: string
           require_prereq_confirm: boolean
+          scheduling_mode: Database["public"]["Enums"]["training_scheduling_mode"]
           sort_order: number
           updated_at: string
           visibility: Database["public"]["Enums"]["training_visibility"]
@@ -5447,6 +5448,7 @@ export type Database = {
           price?: number
           profile_id: string
           require_prereq_confirm?: boolean
+          scheduling_mode?: Database["public"]["Enums"]["training_scheduling_mode"]
           sort_order?: number
           updated_at?: string
           visibility?: Database["public"]["Enums"]["training_visibility"]
@@ -5473,6 +5475,7 @@ export type Database = {
           price?: number
           profile_id?: string
           require_prereq_confirm?: boolean
+          scheduling_mode?: Database["public"]["Enums"]["training_scheduling_mode"]
           sort_order?: number
           updated_at?: string
           visibility?: Database["public"]["Enums"]["training_visibility"]
@@ -6804,6 +6807,7 @@ export type Database = {
         | "cancelled"
         | "completed"
       training_mode: "one_to_one" | "group" | "multi_day"
+      training_scheduling_mode: "fixed" | "availability"
       training_visibility: "live" | "hidden" | "preview_link" | "coming_soon"
     }
     CompositeTypes: {
@@ -6955,6 +6959,7 @@ export const Constants = {
         "completed",
       ],
       training_mode: ["one_to_one", "group", "multi_day"],
+      training_scheduling_mode: ["fixed", "availability"],
       training_visibility: ["live", "hidden", "preview_link", "coming_soon"],
     },
   },

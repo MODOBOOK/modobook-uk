@@ -29,6 +29,7 @@ import {
   ChevronRight,
   ChevronDown,
   ChevronUp,
+  GraduationCap,
 } from "lucide-react";
 
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -969,6 +970,11 @@ function BookPage() {
               <ActionPlaceholder label="Pre-treatment" brand={brand}>
                 <Info className="h-5 w-5 opacity-30" />
               </ActionPlaceholder>
+            )}
+            {hasTraining && (
+              <ActionLink to="/m/$slug/training" params={{ slug }} label="Training" brand={brand}>
+                <GraduationCap className="h-5 w-5" />
+              </ActionLink>
             )}
           </div>
         </section>
@@ -2279,6 +2285,31 @@ function ActionPlaceholder({
   );
 }
 
+function ActionLink({
+  to,
+  params,
+  label,
+  brand,
+  children,
+}: {
+  to: string;
+  params: Record<string, string>;
+  label: string;
+  brand: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <Link
+      to={to}
+      params={params}
+      className="flex flex-col items-center gap-1.5 rounded-xl p-2 text-xs font-medium transition hover:bg-muted"
+      style={{ color: brand }}
+    >
+      {children}
+      <span>{label}</span>
+    </Link>
+  );
+}
 
 function ActionIcon({
   href,
