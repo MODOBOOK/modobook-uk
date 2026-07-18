@@ -10,6 +10,7 @@ import { template as adminBroadcast } from './admin-broadcast'
 import { template as staffInvite } from './staff-invite'
 import { template as rebookReminder } from './rebook-reminder'
 import { template as topupReminder } from './topup-reminder'
+import { template as platformArrears } from './platform-arrears'
 
 export interface TemplateEntry {
   component: ComponentType<any>
