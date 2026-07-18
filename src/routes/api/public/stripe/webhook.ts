@@ -461,6 +461,50 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
               break;
             }
 
+            case "customer.subscription.created":
+            case "customer.subscription.updated":
+            case "customer.subscription.deleted": {
+              const s = event.data.object as Stripe.Subscription;
+              const isPlatform = (s.metadata?.kind === "platform_subscription") ||
+                !connectedAccountId; // platform-level events have no connect account
+              if (!isPlatform) break;
+
+              const customerId = typeof s.customer === "string" ? s.customer : s.customer?.id;
+              if (!customerId) break;
+
+              const patch: Record<string, unknown> = {
+                stripe_subscription_id: s.id,
+                status: s.status,
+                cancel_at_period_end: s.cancel_at_period_end,
+                current_period_end: (s as any).current_period_end
+                  ? new Date((s as any).current_period_end * 1000).toISOString()
+                  : null,
+                trial_end: s.trial_end ? new Date(s.trial_end * 1000).toISOString() : null,
+                stripe_addon_items: s.items?.data?.map((it) => ({
+                  id: it.id, price: it.price?.id, quantity: it.quantity,
+                })) ?? [],
+              };
+              if (event.type === "customer.subscription.deleted") {
+                patch.status = "canceled";
+              }
+              await supabaseAdmin
+                .from("practitioner_subscriptions")
+                .update(patch as never)
+                .eq("stripe_customer_id", customerId);
+              break;
+            }
+
+            case "invoice.payment_failed": {
+              const inv = event.data.object as Stripe.Invoice;
+              const customerId = typeof inv.customer === "string" ? inv.customer : inv.customer?.id;
+              if (!customerId) break;
+              await supabaseAdmin
+                .from("practitioner_subscriptions")
+                .update({ status: "past_due" } as never)
+                .eq("stripe_customer_id", customerId);
+              break;
+            }
+
           }
         } catch (err) {
           console.error("[stripe-webhook] handler error", event.type, err);
