@@ -36,4 +36,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'staff-invite': staffInvite,
   'rebook-reminder': rebookReminder,
   'topup-reminder': topupReminder,
+  'platform-arrears': platformArrears,
 }
