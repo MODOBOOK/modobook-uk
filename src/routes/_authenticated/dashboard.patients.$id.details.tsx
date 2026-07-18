@@ -43,7 +43,7 @@ import { chargeCardOnFile, removeCardOnFile } from "@/lib/card-on-file.functions
 import { TreatmentPlansPanel } from "@/components/TreatmentPlansPanel";
 
 
-export const Route = createFileRoute("/_authenticated/dashboard/patients/$id")({
+export const Route = createFileRoute("/_authenticated/dashboard/patients/$id/details")({
   ssr: false,
   component: PatientProfilePage,
 });
