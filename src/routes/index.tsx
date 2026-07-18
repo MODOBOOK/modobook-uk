@@ -735,7 +735,3 @@ export function IconTile({ icon: Icon, label }: { icon: React.ComponentType<{ cl
   );
 }
 
-// silence unused warnings for icons reserved for future sections
-void GraduationCap;
-void Pill;
-void Microscope;
