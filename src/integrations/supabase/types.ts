@@ -5397,6 +5397,7 @@ export type Database = {
           description: string | null
           id: string
           interval: string
+          is_default: boolean
           kind: string
           name: string
           stripe_price_id: string | null
@@ -5411,6 +5412,7 @@ export type Database = {
           description?: string | null
           id?: string
           interval?: string
+          is_default?: boolean
           kind?: string
           name: string
           stripe_price_id?: string | null
@@ -5425,6 +5427,7 @@ export type Database = {
           description?: string | null
           id?: string
           interval?: string
+          is_default?: boolean
           kind?: string
           name?: string
           stripe_price_id?: string | null

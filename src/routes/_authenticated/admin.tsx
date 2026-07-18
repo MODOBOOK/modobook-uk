@@ -566,6 +566,7 @@ type Plan = {
   id: string; name: string; description: string | null;
   amount_cents: number; currency: string; interval: string;
   stripe_price_id: string | null; active: boolean;
+  is_default?: boolean; kind?: string | null;
 };
 type SubRow = {
   id: string; profile_id: string; plan_id: string | null;
@@ -614,8 +615,9 @@ function SubscriptionsSection({ practitioners }: { practitioners: Practitioner[]
               {plans.map((p) => (
                 <div key={p.id} className="flex flex-wrap items-center gap-3 p-3">
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-medium">{p.name}</span>
+                      {p.is_default && <Badge>Default</Badge>}
                       {!p.active && <Badge variant="secondary">Inactive</Badge>}
                     </div>
                     <div className="text-xs text-muted-foreground">
@@ -623,6 +625,21 @@ function SubscriptionsSection({ practitioners }: { practitioners: Practitioner[]
                       {p.description ? ` · ${p.description}` : ""}
                     </div>
                   </div>
+                  {!p.is_default && p.active && (p.kind === "base" || !p.kind) && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={async () => {
+                        try {
+                          await updateSubscriptionPlan({ data: { id: p.id, is_default: true } });
+                          toast.success("Set as default — new practitioners will start on this plan");
+                          refresh();
+                        } catch (e) { toast.error((e as Error).message); }
+                      }}
+                    >
+                      Set as default
+                    </Button>
+                  )}
                   <Button
                     size="sm"
                     variant="outline"
