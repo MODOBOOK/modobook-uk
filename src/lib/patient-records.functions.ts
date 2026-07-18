@@ -315,17 +315,24 @@ export const generatePatientBrief = createServerFn({ method: "POST" })
       .from("clinic_clients").select("full_name, dob, gender, has_allergies, allergies, notes, safeguarding_flag, safeguarding_note")
       .eq("id", data.clientId).maybeSingle();
 
-    const { data: recentAppts } = await context.supabase
-      .from("appointments").select("appointment_date, treatment_names, status, notes")
-      .eq("profile_id", profileId).eq("client_id", data.clientId)
-      .order("appointment_date", { ascending: false }).limit(10);
+    const orParts = [
+      client?.email ? `patient_email.eq.${client.email}` : null,
+      client?.full_name ? `patient_name.eq.${client.full_name}` : null,
+    ].filter(Boolean).join(",");
+    const { data: recentAppts } = orParts
+      ? await context.supabase
+          .from("appointments").select("scheduled_date, treatment_name_snapshot, status, notes")
+          .or(orParts).eq("profile_id", profileId)
+          .order("scheduled_date", { ascending: false }).limit(10)
+      : { data: [] as any[] };
 
     const { data: meds } = await context.supabase
       .from("client_medications").select("drug, dose, is_current").eq("client_id", data.clientId).limit(20);
 
     const { data: notesRows } = await context.supabase
-      .from("client_notes").select("note, created_at").eq("client_id", data.clientId)
+      .from("client_notes").select("body, created_at").eq("client_id", data.clientId)
       .order("created_at", { ascending: false }).limit(10);
+
 
     const context_summary = {
       client,
