@@ -83,6 +83,7 @@ import { Route as AuthenticatedDashboardMenuRouteImport } from './routes/_authen
 import { Route as AuthenticatedDashboardMedicalFormsRouteImport } from './routes/_authenticated/dashboard.medical-forms'
 import { Route as AuthenticatedDashboardMarketingRouteImport } from './routes/_authenticated/dashboard.marketing'
 import { Route as AuthenticatedDashboardLocationsRouteImport } from './routes/_authenticated/dashboard.locations'
+import { Route as AuthenticatedDashboardInvoicesRouteImport } from './routes/_authenticated/dashboard.invoices'
 import { Route as AuthenticatedDashboardInvitesRouteImport } from './routes/_authenticated/dashboard.invites'
 import { Route as AuthenticatedDashboardFormAllocationRouteImport } from './routes/_authenticated/dashboard.form-allocation'
 import { Route as AuthenticatedDashboardEmailsRouteImport } from './routes/_authenticated/dashboard.emails'
@@ -542,6 +543,12 @@ const AuthenticatedDashboardLocationsRoute =
     path: '/locations',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
+const AuthenticatedDashboardInvoicesRoute =
+  AuthenticatedDashboardInvoicesRouteImport.update({
+    id: '/invoices',
+    path: '/invoices',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
 const AuthenticatedDashboardInvitesRoute =
   AuthenticatedDashboardInvitesRouteImport.update({
     id: '/invites',
@@ -920,6 +927,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/emails': typeof AuthenticatedDashboardEmailsRoute
   '/dashboard/form-allocation': typeof AuthenticatedDashboardFormAllocationRoute
   '/dashboard/invites': typeof AuthenticatedDashboardInvitesRoute
+  '/dashboard/invoices': typeof AuthenticatedDashboardInvoicesRoute
   '/dashboard/locations': typeof AuthenticatedDashboardLocationsRoute
   '/dashboard/marketing': typeof AuthenticatedDashboardMarketingRouteWithChildren
   '/dashboard/medical-forms': typeof AuthenticatedDashboardMedicalFormsRoute
@@ -1047,6 +1055,7 @@ export interface FileRoutesByTo {
   '/dashboard/emails': typeof AuthenticatedDashboardEmailsRoute
   '/dashboard/form-allocation': typeof AuthenticatedDashboardFormAllocationRoute
   '/dashboard/invites': typeof AuthenticatedDashboardInvitesRoute
+  '/dashboard/invoices': typeof AuthenticatedDashboardInvoicesRoute
   '/dashboard/locations': typeof AuthenticatedDashboardLocationsRoute
   '/dashboard/medical-forms': typeof AuthenticatedDashboardMedicalFormsRoute
   '/dashboard/menu': typeof AuthenticatedDashboardMenuRoute
@@ -1177,6 +1186,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/emails': typeof AuthenticatedDashboardEmailsRoute
   '/_authenticated/dashboard/form-allocation': typeof AuthenticatedDashboardFormAllocationRoute
   '/_authenticated/dashboard/invites': typeof AuthenticatedDashboardInvitesRoute
+  '/_authenticated/dashboard/invoices': typeof AuthenticatedDashboardInvoicesRoute
   '/_authenticated/dashboard/locations': typeof AuthenticatedDashboardLocationsRoute
   '/_authenticated/dashboard/marketing': typeof AuthenticatedDashboardMarketingRouteWithChildren
   '/_authenticated/dashboard/medical-forms': typeof AuthenticatedDashboardMedicalFormsRoute
@@ -1310,6 +1320,7 @@ export interface FileRouteTypes {
     | '/dashboard/emails'
     | '/dashboard/form-allocation'
     | '/dashboard/invites'
+    | '/dashboard/invoices'
     | '/dashboard/locations'
     | '/dashboard/marketing'
     | '/dashboard/medical-forms'
@@ -1437,6 +1448,7 @@ export interface FileRouteTypes {
     | '/dashboard/emails'
     | '/dashboard/form-allocation'
     | '/dashboard/invites'
+    | '/dashboard/invoices'
     | '/dashboard/locations'
     | '/dashboard/medical-forms'
     | '/dashboard/menu'
@@ -1566,6 +1578,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/emails'
     | '/_authenticated/dashboard/form-allocation'
     | '/_authenticated/dashboard/invites'
+    | '/_authenticated/dashboard/invoices'
     | '/_authenticated/dashboard/locations'
     | '/_authenticated/dashboard/marketing'
     | '/_authenticated/dashboard/medical-forms'
@@ -2209,6 +2222,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardLocationsRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
+    '/_authenticated/dashboard/invoices': {
+      id: '/_authenticated/dashboard/invoices'
+      path: '/invoices'
+      fullPath: '/dashboard/invoices'
+      preLoaderRoute: typeof AuthenticatedDashboardInvoicesRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
     '/_authenticated/dashboard/invites': {
       id: '/_authenticated/dashboard/invites'
       path: '/invites'
@@ -2743,6 +2763,7 @@ interface AuthenticatedDashboardRouteChildren {
   AuthenticatedDashboardEmailsRoute: typeof AuthenticatedDashboardEmailsRoute
   AuthenticatedDashboardFormAllocationRoute: typeof AuthenticatedDashboardFormAllocationRoute
   AuthenticatedDashboardInvitesRoute: typeof AuthenticatedDashboardInvitesRoute
+  AuthenticatedDashboardInvoicesRoute: typeof AuthenticatedDashboardInvoicesRoute
   AuthenticatedDashboardLocationsRoute: typeof AuthenticatedDashboardLocationsRoute
   AuthenticatedDashboardMarketingRoute: typeof AuthenticatedDashboardMarketingRouteWithChildren
   AuthenticatedDashboardMedicalFormsRoute: typeof AuthenticatedDashboardMedicalFormsRoute
@@ -2793,6 +2814,7 @@ const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
     AuthenticatedDashboardFormAllocationRoute:
       AuthenticatedDashboardFormAllocationRoute,
     AuthenticatedDashboardInvitesRoute: AuthenticatedDashboardInvitesRoute,
+    AuthenticatedDashboardInvoicesRoute: AuthenticatedDashboardInvoicesRoute,
     AuthenticatedDashboardLocationsRoute: AuthenticatedDashboardLocationsRoute,
     AuthenticatedDashboardMarketingRoute:
       AuthenticatedDashboardMarketingRouteWithChildren,

@@ -494,14 +494,98 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
               break;
             }
 
-            case "invoice.payment_failed": {
+            case "invoice.created":
+            case "invoice.finalized":
+            case "invoice.updated":
+            case "invoice.paid":
+            case "invoice.payment_succeeded":
+            case "invoice.payment_failed":
+            case "invoice.voided":
+            case "invoice.marked_uncollectible": {
               const inv = event.data.object as Stripe.Invoice;
+              // Only mirror platform (MODO) subscription invoices — skip
+              // connected-account invoices for practitioners' own patients.
+              if (connectedAccountId) break;
               const customerId = typeof inv.customer === "string" ? inv.customer : inv.customer?.id;
               if (!customerId) break;
-              await supabaseAdmin
+
+              // Locate the practitioner this invoice belongs to.
+              const { data: subRow } = await supabaseAdmin
                 .from("practitioner_subscriptions")
-                .update({ status: "past_due" } as never)
-                .eq("stripe_customer_id", customerId);
+                .select("profile_id")
+                .eq("stripe_customer_id", customerId)
+                .maybeSingle();
+              const profileId = (subRow as { profile_id?: string } | null)?.profile_id;
+              if (!profileId) break;
+
+              const anyInv = inv as unknown as {
+                period_start?: number; period_end?: number; due_date?: number | null;
+                status_transitions?: { paid_at?: number | null };
+                last_finalization_error?: { message?: string } | null;
+                subscription?: string | { id?: string } | null;
+              };
+              const subId =
+                typeof anyInv.subscription === "string" ? anyInv.subscription :
+                (anyInv.subscription && "id" in anyInv.subscription ? anyInv.subscription.id : null) ?? null;
+              const paidAt = anyInv.status_transitions?.paid_at
+                ? new Date(anyInv.status_transitions.paid_at * 1000).toISOString()
+                : null;
+
+              const row = {
+                profile_id: profileId,
+                stripe_invoice_id: inv.id!,
+                stripe_customer_id: customerId,
+                stripe_subscription_id: subId,
+                number: inv.number ?? null,
+                status: inv.status ?? "open",
+                currency: (inv.currency ?? "gbp").toLowerCase(),
+                amount_due_cents: Number(inv.amount_due ?? 0),
+                amount_paid_cents: Number(inv.amount_paid ?? 0),
+                amount_remaining_cents: Number(inv.amount_remaining ?? 0),
+                attempt_count: Number(inv.attempt_count ?? 0),
+                hosted_invoice_url: inv.hosted_invoice_url ?? null,
+                invoice_pdf: inv.invoice_pdf ?? null,
+                period_start: anyInv.period_start ? new Date(anyInv.period_start * 1000).toISOString() : null,
+                period_end: anyInv.period_end ? new Date(anyInv.period_end * 1000).toISOString() : null,
+                due_date: anyInv.due_date ? new Date(anyInv.due_date * 1000).toISOString() : null,
+                paid_at: paidAt,
+                last_payment_error:
+                  event.type === "invoice.payment_failed"
+                    ? (anyInv.last_finalization_error?.message ?? "Payment failed")
+                    : null,
+              };
+
+              await supabaseAdmin
+                .from("platform_invoices")
+                .upsert(row as never, { onConflict: "stripe_invoice_id" });
+
+              if (event.type === "invoice.payment_failed") {
+                await supabaseAdmin
+                  .from("practitioner_subscriptions")
+                  .update({ status: "past_due" } as never)
+                  .eq("stripe_customer_id", customerId);
+                // Fire arrears email (non-blocking).
+                try {
+                  const { sendPlatformArrearsEmail } = await import("@/lib/email/send.server");
+                  await sendPlatformArrearsEmail({
+                    profileId,
+                    stripeInvoiceId: inv.id!,
+                    amountDueCents: Number(inv.amount_due ?? 0),
+                    currency: (inv.currency ?? "gbp").toLowerCase(),
+                    hostedInvoiceUrl: inv.hosted_invoice_url ?? null,
+                    attemptCount: Number(inv.attempt_count ?? 0),
+                  });
+                } catch (e) {
+                  console.error("[stripe-webhook] arrears email failed", e);
+                }
+              } else if (event.type === "invoice.paid" || event.type === "invoice.payment_succeeded") {
+                // Clear past_due when the outstanding invoice is settled.
+                await supabaseAdmin
+                  .from("practitioner_subscriptions")
+                  .update({ status: "active" } as never)
+                  .eq("stripe_customer_id", customerId)
+                  .eq("status", "past_due");
+              }
               break;
             }
 

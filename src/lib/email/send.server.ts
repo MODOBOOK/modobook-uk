@@ -223,6 +223,43 @@ export async function tryEnqueueAppEmail(input: EnqueueAppEmailInput) {
   }
 }
 
+export async function sendPlatformArrearsEmail(input: {
+  profileId: string
+  stripeInvoiceId: string
+  amountDueCents: number
+  currency: string
+  hostedInvoiceUrl: string | null
+  attemptCount: number
+}) {
+  const { supabaseAdmin } = await import('@/integrations/supabase/client.server')
+  const { data: profile } = await supabaseAdmin
+    .from('profiles')
+    .select('email, full_name, clinic_name, brand_color')
+    .eq('id', input.profileId)
+    .maybeSingle()
+  if (!profile?.email) return
+  const symbol = input.currency === 'gbp' ? '£' : input.currency === 'usd' ? '$' : input.currency === 'eur' ? '€' : ''
+  const amountFormatted = `${symbol}${(input.amountDueCents / 100).toFixed(2)}`
+  const origin = process.env.PUBLIC_APP_URL || process.env.APP_URL || 'https://modobook.uk'
+  await tryEnqueueAppEmail({
+    templateName: 'platform-arrears',
+    recipientEmail: profile.email,
+    messageId: `platform-arrears-${input.stripeInvoiceId}-${input.attemptCount}`,
+    templateData: {
+      practitionerName: profile.full_name || profile.clinic_name || 'there',
+      clinicName: profile.clinic_name || 'MODO',
+      amountFormatted,
+      attemptCount: input.attemptCount,
+      hostedInvoiceUrl: input.hostedInvoiceUrl || undefined,
+      billingUrl: `${origin}/dashboard/billing`,
+      logoUrl: null,
+      brandColor: profile.brand_color || null,
+    },
+  })
+}
+
+
+
 export async function sendBookingConfirmationEmails(appointmentIds: string[]) {
   if (appointmentIds.length === 0) return []
 

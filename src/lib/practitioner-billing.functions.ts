@@ -25,16 +25,46 @@ export const getMyBillingStatus = createServerFn({ method: "GET" })
       .eq("user_id", context.userId)
       .maybeSingle();
     if (pErr) throw pErr;
-    if (!profile) return { state: "blocked", hasAccess: false, daysLeft: 0, deadline: null };
+    if (!profile) return { state: "blocked", hasAccess: false, daysLeft: 0, deadline: null, arrearsCents: 0, arrearsInvoiceUrl: null };
     const { data, error } = await context.supabase.rpc("practitioner_billing_status", { _profile_id: profile.id });
     if (error) throw error;
     const row = Array.isArray(data) ? data[0] : data;
+
+    // Sum outstanding platform invoices (open / uncollectible / past_due).
+    const { data: openInvoices } = await context.supabase
+      .from("platform_invoices")
+      .select("amount_remaining_cents, hosted_invoice_url, created_at")
+      .eq("profile_id", profile.id)
+      .in("status", ["open", "uncollectible", "past_due"])
+      .order("created_at", { ascending: false });
+    const arrearsCents = (openInvoices ?? []).reduce(
+      (sum: number, inv: any) => sum + Number(inv.amount_remaining_cents ?? 0),
+      0,
+    );
+    const arrearsInvoiceUrl = (openInvoices ?? [])[0]?.hosted_invoice_url ?? null;
+
     return {
       state: (row?.state ?? "blocked") as "welcome" | "trial" | "grace" | "active" | "comped" | "suspended" | "blocked",
       hasAccess: Boolean(row?.has_access),
       daysLeft: row?.days_left ?? null,
       deadline: row?.deadline ?? null,
+      arrearsCents,
+      arrearsInvoiceUrl,
     };
+  });
+
+export const getMyInvoices = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const profile = await getMyProfileId(context);
+    const { data, error } = await context.supabase
+      .from("platform_invoices")
+      .select("*")
+      .eq("profile_id", profile.id)
+      .order("created_at", { ascending: false })
+      .limit(100);
+    if (error) throw error;
+    return data ?? [];
   });
 
 export const getMyBilling = createServerFn({ method: "GET" })
