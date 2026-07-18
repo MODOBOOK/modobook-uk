@@ -197,11 +197,29 @@ function LandingPage() {
           </div>
         </section>
 
-        {/* THE GAP — dark clinical band */}
-        <section className="my-12 flex items-center justify-center bg-[color:var(--ink)] px-5 py-24 lg:px-8">
-          <div className="max-w-4xl text-center">
-            <h2 className="text-[11px] font-bold uppercase tracking-[0.24em] text-[color:var(--clinical-blue)]">
-              The clinical void
+        {/* PRODUCT SHOWCASE — tablet imagery */}
+        <section className="mx-auto max-w-7xl px-5 pb-8 lg:px-8">
+          <div className="grid gap-6 md:grid-cols-2">
+            <div className="relative overflow-hidden rounded-3xl border border-[color:var(--hairline)] bg-white">
+              <img src={tabletPlatform.url} alt="MODO booking platform on an iPad" className="aspect-[4/5] w-full object-cover md:aspect-[5/6]" />
+            </div>
+            <div className="relative overflow-hidden rounded-3xl border border-[color:var(--hairline)] bg-white">
+              <img src={tabletBooking.url} alt="A patient using the MODO booking page" className="aspect-[4/5] w-full object-cover md:aspect-[5/6]" />
+            </div>
+          </div>
+        </section>
+
+        {/* THE GAP — editorial band with brand board photo */}
+        <section className="relative my-12 overflow-hidden bg-[color:var(--ink)] px-5 py-24 lg:px-8">
+          <img
+            src={brandBoards.url}
+            alt=""
+            aria-hidden="true"
+            className="absolute inset-0 h-full w-full object-cover opacity-20"
+          />
+          <div className="relative mx-auto max-w-4xl text-center">
+            <h2 className="text-[11px] font-bold uppercase tracking-[0.24em] text-[color:var(--accent)]">
+              Not another booking app
             </h2>
             <p className="mt-6 text-3xl font-medium leading-snug text-white md:text-5xl">
               Bridging the gap between aesthetic artistry and medical protocol.
@@ -214,9 +232,9 @@ function LandingPage() {
                 { k: "1 link", v: "Whole clinic" },
                 { k: "UK/EU", v: "Data residency" },
               ].map((s) => (
-                <div key={s.v} className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-left">
+                <div key={s.v} className="rounded-xl border border-white/10 bg-white/[0.04] p-4 text-left backdrop-blur">
                   <div className="text-2xl font-bold tracking-tight text-white">{s.k}</div>
-                  <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-white/50">
+                  <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-white/60">
                     {s.v}
                   </div>
                 </div>
@@ -224,6 +242,7 @@ function LandingPage() {
             </div>
           </div>
         </section>
+
 
         {/* WHO IT'S FOR — two spec-sheet cards */}
         <section className="mx-auto max-w-7xl px-5 py-20 lg:px-8">
