@@ -215,8 +215,8 @@ function BillingPage() {
         <CardHeader>
           <CardTitle>Discount code</CardTitle>
           <CardDescription>
-            {state.discountCode
-              ? <>Applied: <strong>{state.discountCode.code}</strong>{state.discountCode.percent_off ? ` — ${state.discountCode.percent_off}% off` : state.discountCode.amount_off_cents ? ` — ${money(state.discountCode.amount_off_cents)} off` : ""}</>
+            {discountCode
+              ? <>Applied: <strong>{discountCode.code}</strong>{discountCode.percent_off ? ` — ${discountCode.percent_off}% off` : discountCode.amount_off_cents ? ` — ${money(discountCode.amount_off_cents)} off` : ""}</>
               : "Have a promo code? Redeem it here."}
           </CardDescription>
         </CardHeader>
