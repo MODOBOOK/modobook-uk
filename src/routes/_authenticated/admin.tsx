@@ -566,6 +566,7 @@ type Plan = {
   id: string; name: string; description: string | null;
   amount_cents: number; currency: string; interval: string;
   stripe_price_id: string | null; active: boolean;
+  is_default?: boolean; kind?: string | null;
 };
 type SubRow = {
   id: string; profile_id: string; plan_id: string | null;
