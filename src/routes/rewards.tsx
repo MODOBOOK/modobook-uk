@@ -4,26 +4,25 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { SiteHeader, SiteFooter, IconTile } from "./index";
 import tabletBooking from "@/assets/modo-tablet-booking.png.asset.json";
 
-
 import {
-  Gift, Sparkles, Users, Share2, PartyPopper, Coins, Trophy, ArrowRight,
-  CheckCircle2, HelpCircle, Wallet, HeartHandshake,
+  Gift, Sparkles, Users, Share2, Coins, Trophy, ArrowRight,
+  Settings2, BarChart3, Wallet, HeartHandshake, Target, Sliders,
 } from "lucide-react";
 
 export const Route = createFileRoute("/rewards")({
   head: () => ({
     meta: [
-      { title: "Rewards & Referrals | MODO — earn credit when friends book" },
+      { title: "Rewards & Referrals for Practitioners | MODO" },
       {
         name: "description",
         content:
-          "How MODO's built-in referrals and loyalty work. Share your practitioner's code, both of you get rewarded, and rack up points on every paid visit.",
+          "Turn on referrals, loyalty points and reward tiers in your MODO clinic. Grow retention and word-of-mouth with a programme you fully control.",
       },
-      { property: "og:title", content: "Rewards & Referrals | MODO" },
+      { property: "og:title", content: "Rewards & Referrals for Practitioners | MODO" },
       {
         property: "og:description",
         content:
-          "Refer a friend, earn credit at your clinic, and collect loyalty points on every paid appointment — powered by MODO.",
+          "Design your own referral offers, loyalty points and reward tiers — MODO handles the tracking, payouts and reporting for you.",
       },
     ],
   }),
@@ -41,74 +40,124 @@ function RewardsPage() {
           <div className="mx-auto grid max-w-7xl gap-10 px-5 py-14 lg:grid-cols-[1fr_1fr] lg:items-center lg:gap-14 lg:px-8 lg:py-20">
             <div>
               <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[color:var(--accent)]/25 bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">
-                <Gift className="h-3.5 w-3.5" /> Built into every MODO clinic
+                <Gift className="h-3.5 w-3.5" /> Built for practitioners
               </div>
               <h1 className="text-4xl font-bold leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl">
-                Refer friends. Earn rewards. Simple as that.
+                Your own referral & loyalty programme — without the spreadsheets.
               </h1>
               <p className="mt-5 max-w-lg text-base text-[color:var(--ink-soft)] sm:text-lg">
-                Every MODO clinic can run its own referral and loyalty programme. Share a friend's code
-                when you book, or hand out your own — you both benefit when they attend.
+                Turn on rewards in a couple of clicks. You set the offers, the values and the rules —
+                MODO tracks referrals, awards points, redeems credit and shows you what's working.
               </p>
               <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                 <Link to="/auth" className="w-full sm:w-auto">
                   <Button size="lg" className="w-full rounded-full bg-[color:var(--ink)] px-8 text-white hover:bg-[color:var(--ink)]/90 sm:w-auto">
-                    Find your clinic <ArrowRight className="ml-2 h-4 w-4" />
+                    Open my dashboard <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </Link>
                 <a href="#how-it-works" className="w-full sm:w-auto">
                   <Button size="lg" variant="outline" className="w-full rounded-full border-[color:var(--hairline)] bg-white px-8 sm:w-auto">
-                    How it works
+                    See how it works
                   </Button>
                 </a>
               </div>
               <div className="mt-8 flex flex-wrap gap-2">
-                <IconTile icon={Gift} label="Referral rewards" />
-                <IconTile icon={Coins} label="Loyalty credit" />
-                <IconTile icon={Sparkles} label="Points on every visit" />
+                <IconTile icon={Share2} label="Referrals" />
+                <IconTile icon={Coins} label="Loyalty points" />
                 <IconTile icon={Trophy} label="Reward tiers" />
+                <IconTile icon={BarChart3} label="Full analytics" />
               </div>
             </div>
             <div className="overflow-hidden rounded-3xl border border-[color:var(--hairline)]">
-              <img src={tabletBooking.url} alt="MODO booking with rewards" className="aspect-[4/5] w-full object-cover" loading="lazy" />
+              <img src={tabletBooking.url} alt="MODO rewards on a practitioner's dashboard" className="aspect-[4/5] w-full object-cover" loading="lazy" />
             </div>
           </div>
         </section>
 
-        {/* SECTION 1 — New patients */}
-        <section id="new-patients" className="border-b border-[color:var(--hairline)]">
-
+        {/* Why it matters */}
+        <section className="border-b border-[color:var(--hairline)]">
           <div className="mx-auto max-w-6xl px-4 py-16 lg:px-8 lg:py-20">
             <div className="mx-auto max-w-3xl text-center">
               <span className="inline-flex items-center gap-2 rounded-full border bg-muted px-3 py-1 text-xs font-medium">
-                <PartyPopper className="h-3.5 w-3.5" /> New to your clinic
+                <Target className="h-3.5 w-3.5" /> Why practitioners run rewards
               </span>
-              <h2 className="mt-4 font-serif text-3xl sm:text-4xl">Money off your first booking</h2>
+              <h2 className="mt-4 font-serif text-3xl sm:text-4xl">Retention and referrals, on autopilot</h2>
               <p className="mt-3 text-muted-foreground">
-                If a friend already goes to a MODO clinic, ask them for their referral code.
-                Enter it on the booking page and their practitioner's welcome offer applies to you.
+                A returning patient is worth far more than a first-time visitor — and a referred patient books
+                faster, trusts you sooner and stays longer. Rewards give you a repeatable way to grow both.
               </p>
             </div>
 
-            <div className="mx-auto mt-10 grid max-w-4xl gap-4 sm:grid-cols-3">
-              <StepCard
-                n={1}
-                icon={Users}
-                title="Get a friend's code"
-                text="Ask them to share the 6-character code from their MODO account."
+            <div className="mx-auto mt-10 grid max-w-5xl gap-4 sm:grid-cols-3">
+              <StatCard n="3×" label="More likely to rebook" text="Patients enrolled in a loyalty programme return significantly more often than one-off bookers." />
+              <StatCard n="↓ CAC" label="Cheaper than ads" text="Referrals are your lowest-cost, highest-trust channel. Pay only when a real appointment completes." />
+              <StatCard n="100%" label="Yours to control" text="You choose the offer, the value, the rules and whether it shows on your public page." />
+            </div>
+          </div>
+        </section>
+
+        {/* HOW IT WORKS — practitioner side */}
+        <section id="how-it-works" className="border-b bg-muted/20">
+          <div className="mx-auto max-w-6xl px-4 py-16 lg:px-8 lg:py-20">
+            <div className="mx-auto max-w-3xl text-center">
+              <span className="inline-flex items-center gap-2 rounded-full border bg-background px-3 py-1 text-xs font-medium">
+                <Settings2 className="h-3.5 w-3.5" /> Set-up in minutes
+              </span>
+              <h2 className="mt-4 font-serif text-3xl sm:text-4xl">Design the programme, MODO runs it</h2>
+              <p className="mt-3 text-muted-foreground">
+                Everything lives in <strong>Dashboard → Rewards</strong>. Toggle each piece on independently.
+              </p>
+            </div>
+
+            <div className="mx-auto mt-10 grid max-w-5xl gap-4 sm:grid-cols-2">
+              <FeatureCard
+                icon={Share2}
+                title="Referral offers"
+                text="Set the reward for the referrer and the friend independently — £ off, % off, credit or points. Every patient gets their own 6-char code automatically."
               />
-              <StepCard
-                n={2}
+              <FeatureCard
+                icon={Coins}
+                title="Loyalty points"
+                text="Choose points per £ spent, per booking, or per treatment category. Points show in each patient's rewards tab and convert to credit at the rate you set."
+              />
+              <FeatureCard
+                icon={Trophy}
+                title="Reward tiers"
+                text="Publish a catalogue — e.g. 500 pts = a free add-on, 1,000 pts = an upgrade. Patients redeem the moment they hit the threshold."
+              />
+              <FeatureCard
+                icon={Sliders}
+                title="Rules that fit your clinic"
+                text="Stacking with promos, minimum spend, first-appointment-only, category exclusions and expiry — all optional, all controlled by you."
+              />
+              <FeatureCard
                 icon={Wallet}
-                title="Enter it at checkout"
-                text="On the clinic's booking page, paste the code into the 'Referral code' box."
+                title="Automatic payouts"
+                text="Referral rewards post the moment your patient's first paid appointment finishes. No forms, no chasing, no manual credits."
               />
-              <StepCard
-                n={3}
-                icon={CheckCircle2}
-                title="Turn up"
-                text="Your welcome discount is applied. Your friend gets their reward once you attend."
+              <FeatureCard
+                icon={BarChart3}
+                title="Analytics that matter"
+                text="See who's referring, which offers convert, redemption rates and how much revenue the programme is actually generating."
               />
+            </div>
+          </div>
+        </section>
+
+        {/* Setup steps */}
+        <section className="border-b border-[color:var(--hairline)]">
+          <div className="mx-auto max-w-6xl px-4 py-16 lg:px-8 lg:py-20">
+            <div className="mx-auto max-w-3xl text-center">
+              <span className="inline-flex items-center gap-2 rounded-full border bg-muted px-3 py-1 text-xs font-medium">
+                <Sparkles className="h-3.5 w-3.5" /> Get live in 5 minutes
+              </span>
+              <h2 className="mt-4 font-serif text-3xl sm:text-4xl">Three steps to launch</h2>
+            </div>
+
+            <div className="mx-auto mt-10 grid max-w-4xl gap-4 sm:grid-cols-3">
+              <StepCard n={1} icon={Settings2} title="Pick your offers" text="Choose whether to run referrals, loyalty, tiers — or all three. Set the values in £ or points." />
+              <StepCard n={2} icon={Users} title="Publish to your page" text="Toggle the public rewards banner on your MODO booking page so new patients see the incentive." />
+              <StepCard n={3} icon={BarChart3} title="Watch it work" text="Track sign-ups, redemptions and revenue from the Rewards analytics tab. Tweak values anytime." />
             </div>
 
             <div className="mx-auto mt-10 max-w-3xl">
@@ -118,9 +167,9 @@ function RewardsPage() {
                     <HeartHandshake className="h-6 w-6" />
                   </div>
                   <div>
-                    <p className="font-medium">Every practitioner sets their own offer.</p>
+                    <p className="font-medium">Rewards are optional — turn them off any time.</p>
                     <p className="text-sm text-muted-foreground">
-                      Rewards, points and tiers are chosen by the clinic — some offer £-off first bookings, some percentages, some loyalty points. The booking page shows exactly what you'll get.
+                      Pause the programme, change the values or hide it from your public page without affecting past bookings or existing balances.
                     </p>
                   </div>
                 </CardContent>
@@ -129,99 +178,19 @@ function RewardsPage() {
           </div>
         </section>
 
-        {/* SECTION 2 — Existing patients */}
-        <section id="how-it-works" className="border-b bg-muted/20">
-          <div className="mx-auto max-w-6xl px-4 py-16 lg:px-8 lg:py-20">
-            <div className="mx-auto max-w-3xl text-center">
-              <span className="inline-flex items-center gap-2 rounded-full border bg-background px-3 py-1 text-xs font-medium">
-                <Sparkles className="h-3.5 w-3.5" /> Already a patient
-              </span>
-              <h2 className="mt-4 font-serif text-3xl sm:text-4xl">Earn every time you visit — and every time you share</h2>
-              <p className="mt-3 text-muted-foreground">
-                Sign into your patient account on any MODO clinic and you'll find your rewards dashboard:
-                your personal referral code, credit balance, points and available reward tiers.
-              </p>
-            </div>
-
-            <div className="mx-auto mt-10 grid max-w-5xl gap-4 sm:grid-cols-2">
-              <FeatureCard
-                icon={Share2}
-                title="Your referral code"
-                text="A 6-character code, unique to you at each clinic you visit. Share it however you like — text, WhatsApp, social — and both of you get rewarded when they attend."
-              />
-              <FeatureCard
-                icon={Gift}
-                title="Referral rewards"
-                text="When your friend's first paid appointment finishes, your reward posts automatically to your account. No forms, no chasing."
-              />
-              <FeatureCard
-                icon={Coins}
-                title="Loyalty points"
-                text="Optional at each clinic. Where turned on, you earn points on every paid booking — points show in your rewards tab and can convert to credit or tier rewards."
-              />
-              <FeatureCard
-                icon={Trophy}
-                title="Reward tiers"
-                text="Some clinics publish a rewards catalogue — e.g. 500 points = a free add-on. Redeem as soon as you hit the threshold."
-              />
-            </div>
-
-            <div className="mx-auto mt-10 max-w-3xl rounded-xl border bg-background p-6 text-center">
-              <p className="text-sm text-muted-foreground">
-                Find your rewards under <strong>My account → Rewards</strong> on your clinic's MODO page.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* FAQ */}
-        <section className="border-b">
-          <div className="mx-auto max-w-4xl px-4 py-16 lg:px-8 lg:py-20">
-            <div className="mb-8 text-center">
-              <span className="inline-flex items-center gap-2 rounded-full border bg-muted px-3 py-1 text-xs font-medium">
-                <HelpCircle className="h-3.5 w-3.5" /> FAQs
-              </span>
-              <h2 className="mt-4 font-serif text-3xl sm:text-4xl">Common questions</h2>
-            </div>
-
-            <div className="space-y-4">
-              <Faq
-                q="Do all clinics on MODO offer rewards?"
-                a="No — each practitioner chooses whether to run referrals and loyalty. If a clinic has rewards turned on you'll see it on their booking page and in your patient account. If it's off, the referral field simply won't appear."
-              />
-              <Faq
-                q="When do I actually get my reward?"
-                a="Referral rewards pay out after your friend's first paid appointment is completed. Loyalty points post when your booking is paid. Neither is manual — MODO handles it in the background."
-              />
-              <Faq
-                q="Can I use a referral code and a discount code together?"
-                a="A referral code isn't a discount code — it identifies the friend who sent you. Whether it stacks with a promo depends on the clinic's rules; the booking page will show your total either way."
-              />
-              <Faq
-                q="Do points or credit expire?"
-                a="MODO doesn't expire them by default. Individual clinics may set their own rules — check your rewards tab for their programme details."
-              />
-              <Faq
-                q="I'm a practitioner — how do I turn this on?"
-                a="Sign into your MODO dashboard and open Rewards. Toggle the programme on, set your referrer and friend rewards, add loyalty and tiers if you want them, then optionally show it on your public booking page."
-              />
-            </div>
-          </div>
-        </section>
-
         {/* CTA */}
         <section className="bg-gradient-to-b from-background to-primary/10">
           <div className="mx-auto max-w-4xl px-4 py-16 text-center lg:px-8 lg:py-20">
-            <h2 className="font-serif text-3xl sm:text-4xl">Ready to start earning?</h2>
+            <h2 className="font-serif text-3xl sm:text-4xl">Ready to grow the programme?</h2>
             <p className="mx-auto mt-3 max-w-xl text-muted-foreground">
-              Head to your practitioner's MODO page, sign in and grab your code — or, if you run a clinic, turn rewards on from your dashboard.
+              Sign in to your MODO dashboard and open Rewards — you'll be live before your next appointment.
             </p>
             <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
               <Link to="/auth">
-                <Button size="lg">Sign in <ArrowRight className="ml-2 h-4 w-4" /></Button>
+                <Button size="lg">Open my dashboard <ArrowRight className="ml-2 h-4 w-4" /></Button>
               </Link>
-              <Link to="/features">
-                <Button size="lg" variant="outline">Explore MODO features</Button>
+              <Link to="/faq">
+                <Button size="lg" variant="outline">Read the FAQ</Button>
               </Link>
             </div>
           </div>
@@ -272,14 +241,16 @@ function FeatureCard({
   );
 }
 
-function Faq({ q, a }: { q: string; a: string }) {
+function StatCard({ n, label, text }: { n: string; label: string; text: string }) {
   return (
-    <details className="group rounded-lg border bg-background p-4 open:shadow-sm">
-      <summary className="flex cursor-pointer items-center justify-between font-medium">
-        {q}
-        <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-90" />
-      </summary>
-      <p className="mt-3 text-sm text-muted-foreground">{a}</p>
-    </details>
+    <Card>
+      <CardHeader className="pb-2">
+        <div className="font-serif text-4xl text-[color:var(--accent)]">{n}</div>
+        <CardTitle className="pt-1 text-base">{label}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <CardDescription>{text}</CardDescription>
+      </CardContent>
+    </Card>
   );
 }

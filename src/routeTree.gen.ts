@@ -17,6 +17,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PrescriberHubRouteImport } from './routes/prescriber-hub'
 import { Route as FeaturesRouteImport } from './routes/features'
+import { Route as FaqRouteImport } from './routes/faq'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
@@ -171,6 +172,11 @@ const PrescriberHubRoute = PrescriberHubRouteImport.update({
 const FeaturesRoute = FeaturesRouteImport.update({
   id: '/features',
   path: '/features',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FaqRoute = FaqRouteImport.update({
+  id: '/faq',
+  path: '/faq',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -826,6 +832,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/app': typeof AppRoute
   '/auth': typeof AuthRoute
+  '/faq': typeof FaqRoute
   '/features': typeof FeaturesRoute
   '/prescriber-hub': typeof PrescriberHubRoute
   '/privacy': typeof PrivacyRouteWithChildren
@@ -950,6 +957,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/app': typeof AppRoute
   '/auth': typeof AuthRoute
+  '/faq': typeof FaqRoute
   '/features': typeof FeaturesRoute
   '/prescriber-hub': typeof PrescriberHubRoute
   '/privacy': typeof PrivacyRouteWithChildren
@@ -1070,6 +1078,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/app': typeof AppRoute
   '/auth': typeof AuthRoute
+  '/faq': typeof FaqRoute
   '/features': typeof FeaturesRoute
   '/prescriber-hub': typeof PrescriberHubRoute
   '/privacy': typeof PrivacyRouteWithChildren
@@ -1196,6 +1205,7 @@ export interface FileRouteTypes {
     | '/'
     | '/app'
     | '/auth'
+    | '/faq'
     | '/features'
     | '/prescriber-hub'
     | '/privacy'
@@ -1320,6 +1330,7 @@ export interface FileRouteTypes {
     | '/'
     | '/app'
     | '/auth'
+    | '/faq'
     | '/features'
     | '/prescriber-hub'
     | '/privacy'
@@ -1439,6 +1450,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/app'
     | '/auth'
+    | '/faq'
     | '/features'
     | '/prescriber-hub'
     | '/privacy'
@@ -1565,6 +1577,7 @@ export interface RootRouteChildren {
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   AppRoute: typeof AppRoute
   AuthRoute: typeof AuthRoute
+  FaqRoute: typeof FaqRoute
   FeaturesRoute: typeof FeaturesRoute
   PrescriberHubRoute: typeof PrescriberHubRoute
   PrivacyRoute: typeof PrivacyRouteWithChildren
@@ -1656,6 +1669,13 @@ declare module '@tanstack/react-router' {
       path: '/features'
       fullPath: '/features'
       preLoaderRoute: typeof FeaturesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/faq': {
+      id: '/faq'
+      path: '/faq'
+      fullPath: '/faq'
+      preLoaderRoute: typeof FaqRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -2800,6 +2820,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   AppRoute: AppRoute,
   AuthRoute: AuthRoute,
+  FaqRoute: FaqRoute,
   FeaturesRoute: FeaturesRoute,
   PrescriberHubRoute: PrescriberHubRoute,
   PrivacyRoute: PrivacyRouteWithChildren,
@@ -2840,13 +2861,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
