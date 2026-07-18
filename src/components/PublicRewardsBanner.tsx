@@ -74,7 +74,7 @@ export function PublicRewardsBanner({ slug, brand }: { slug: string; brand?: str
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Link to="/rewards">
+              <Link to="/m/$slug/rewards" params={{ slug }}>
                 <button
                   className="inline-flex items-center gap-1 rounded-full border bg-background px-4 py-2 text-sm font-medium shadow-sm transition hover:bg-muted"
                   style={{ borderColor: `${accent}30`, color: accent }}

@@ -363,6 +363,17 @@ function Account() {
           <Link to="/m/$slug" params={{ slug }}>
             <Button size="sm" variant="outline">Back to clinic</Button>
           </Link>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={async () => {
+              await supabase.auth.signOut();
+              toast.success("Signed out");
+              navigate({ to: "/m/$slug", params: { slug } });
+            }}
+          >
+            Sign out
+          </Button>
         </div>
       </header>
 
