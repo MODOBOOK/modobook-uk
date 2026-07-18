@@ -80,6 +80,7 @@ export const Route = createFileRoute("/")({
 
 function LandingPage() {
   const navigate = useNavigate();
+  const [tourView, setTourView] = useState<"patient" | "practitioner">("patient");
 
   // If launched from Home Screen (PWA standalone) and a session is present,
   // send practitioners straight to their dashboard so a force-close feels like
@@ -138,7 +139,7 @@ function LandingPage() {
                     Start free
                   </Button>
                 </Link>
-                <Link to="/features" className="w-full sm:w-auto">
+                <a href="#tour" className="w-full sm:w-auto">
                   <Button
                     size="lg"
                     variant="outline"
@@ -146,7 +147,7 @@ function LandingPage() {
                   >
                     Tour the platform <ArrowRight className="ml-1 h-4 w-4" />
                   </Button>
-                </Link>
+                </a>
               </div>
 
               <p className="mt-5 text-xs text-[color:var(--ink-soft)]">
@@ -199,14 +200,82 @@ function LandingPage() {
           </div>
         </section>
 
-        {/* PRODUCT SHOWCASE — tablet imagery */}
-        <section className="mx-auto max-w-7xl px-5 pb-8 lg:px-8">
-          <div className="grid gap-6 md:grid-cols-2">
-            <div className="relative overflow-hidden rounded-3xl border border-[color:var(--hairline)] bg-white">
-              <img src={tabletPlatform.url} alt="MODO booking platform on an iPad" className="aspect-[4/5] w-full object-cover md:aspect-[5/6]" />
+        {/* TOUR THE PLATFORM — Patient vs Practitioner */}
+        <section id="tour" className="scroll-mt-24 mx-auto max-w-7xl px-5 pb-8 pt-4 lg:px-8">
+          <div className="mb-8 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
+            <div className="max-w-xl">
+              <div className="eyebrow">§ Tour the platform</div>
+              <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
+                See it from <span className="text-[color:var(--ink-soft)]">both sides.</span>
+              </h2>
+              <p className="mt-3 text-sm text-[color:var(--ink-soft)]">
+                Toggle between the patient booking experience and the practitioner
+                control panel — same platform, two purposeful views.
+              </p>
             </div>
+            <div
+              role="tablist"
+              aria-label="Tour view"
+              className="inline-flex items-center rounded-full border border-[color:var(--hairline)] bg-white p-1 shadow-sm"
+            >
+              {(["patient", "practitioner"] as const).map((v) => (
+                <button
+                  key={v}
+                  type="button"
+                  role="tab"
+                  aria-selected={tourView === v}
+                  onClick={() => setTourView(v)}
+                  className={
+                    "rounded-full px-5 py-2 text-xs font-semibold uppercase tracking-[0.14em] transition-colors " +
+                    (tourView === v
+                      ? "bg-[color:var(--ink)] text-white"
+                      : "text-[color:var(--ink-soft)] hover:text-[color:var(--ink)]")
+                  }
+                >
+                  {v === "patient" ? "Patient side" : "Practitioner side"}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid gap-6 md:grid-cols-[1.1fr_0.9fr]">
             <div className="relative overflow-hidden rounded-3xl border border-[color:var(--hairline)] bg-white">
-              <img src={tabletBooking.url} alt="A patient using the MODO booking page" className="aspect-[4/5] w-full object-cover md:aspect-[5/6]" />
+              <img
+                src={tourView === "patient" ? tabletBooking.url : tabletPlatform.url}
+                alt={tourView === "patient" ? "A patient booking on the MODO page" : "A practitioner's MODO dashboard on iPad"}
+                className="aspect-[4/5] w-full object-cover md:aspect-[5/6]"
+              />
+              <div className="absolute left-4 top-4 rounded-full bg-white/90 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--ink)] backdrop-blur">
+                {tourView === "patient" ? "Patient view" : "Practitioner view"}
+              </div>
+            </div>
+
+            <div className="flex flex-col justify-center">
+              {tourView === "patient" ? (
+                <TourPanel
+                  title="Book like it's 2026 — safely."
+                  intro="Patients land on your branded page, pick a treatment or course, complete medical screening, and pay — in minutes, on any device."
+                  steps={[
+                    { icon: Link2, title: "Your MODO link", desc: "One tidy link — modobook.uk/your-clinic — that patients trust." },
+                    { icon: Calendar, title: "Live availability", desc: "Real slots, per location, with buffers and lead-times respected." },
+                    { icon: ClipboardList, title: "Medical & consent", desc: "Screening and consent completed before they arrive — auto-filed." },
+                    { icon: CreditCard, title: "Pay their way", desc: "Card, deposit, pay-in-clinic, Klarna or Clearpay." },
+                    { icon: Bell, title: "Reminders & rebooks", desc: "Email/SMS reminders, aftercare and top-up nudges when due." },
+                  ]}
+                />
+              ) : (
+                <TourPanel
+                  title="Run the clinic — from one screen."
+                  intro="Practitioners get a calm control panel: diary, patient records, consultations, prescribing, marketing and payments — all connected."
+                  steps={[
+                    { icon: Calendar, title: "Smart diary", desc: "Multi-location, staff, buffers, caps and blackout windows." },
+                    { icon: Users, title: "Patient records", desc: "Clinical timeline, photos, allergies, medications and briefs." },
+                    { icon: FileSignature, title: "8-step consultation", desc: "Screening → plan → consent → photos → product log → invoice." },
+                    { icon: Pill, title: "Prescriber Hub", desc: "Refer to a prescriber and share the record — safely, traceably." },
+                    { icon: MessageSquare, title: "Marketing built-in", desc: "Automations for birthdays, win-back, top-ups and newsletters." },
+                  ]}
+                />
+              )}
             </div>
           </div>
         </section>
@@ -506,6 +575,41 @@ function ClinicalFeature({
     </div>
   );
 }
+
+function TourPanel({
+  title,
+  intro,
+  steps,
+}: {
+  title: string;
+  intro: string;
+  steps: { icon: React.ComponentType<{ className?: string }>; title: string; desc: string }[];
+}) {
+  return (
+    <div className="rounded-3xl border border-[color:var(--hairline)] bg-white p-6 sm:p-8">
+      <h3 className="text-2xl font-bold tracking-tight sm:text-3xl">{title}</h3>
+      <p className="mt-3 text-sm text-[color:var(--ink-soft)]">{intro}</p>
+      <ol className="mt-6 space-y-4">
+        {steps.map((s, i) => (
+          <li key={s.title} className="flex gap-4">
+            <div className="flex h-9 w-9 flex-none items-center justify-center rounded-lg bg-[color:var(--clinical-blue-soft)] text-[color:var(--clinical-blue)]">
+              <s.icon className="h-4 w-4" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--ink-soft)]">Step {i + 1}</span>
+              </div>
+              <div className="mt-0.5 text-sm font-semibold text-[color:var(--ink)]">{s.title}</div>
+              <p className="mt-1 text-sm text-[color:var(--ink-soft)]">{s.desc}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+}
+
+
 
 
 
