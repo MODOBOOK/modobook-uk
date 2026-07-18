@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { getClient } from "@/lib/clients.functions";
 import {
-  ArrowLeft, Activity, User, Camera, Pill, FileText, AlertTriangle, Loader2,
+  ArrowLeft, Activity, Camera, Pill, FileText, AlertTriangle, Loader2,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
@@ -12,12 +12,11 @@ export const Route = createFileRoute("/_authenticated/dashboard/patients/$id")({
   component: PatientRecordShell,
 });
 
-const TABS: Array<{ to: any; label: string; icon: any; exact?: boolean }> = [
-  { to: "/dashboard/patients/$id", label: "Timeline", icon: Activity, exact: true },
-  { to: "/dashboard/patients/$id/overview", label: "Overview", icon: User },
+const TABS: Array<{ to: any; label: string; icon: any; exact?: boolean; matchIndex?: boolean }> = [
+  { to: "/dashboard/patients/$id/details", label: "Full record", icon: FileText, matchIndex: true },
+  { to: "/dashboard/patients/$id/timeline", label: "Timeline", icon: Activity },
   { to: "/dashboard/patients/$id/photos", label: "Before / After", icon: Camera },
   { to: "/dashboard/patients/$id/medications", label: "Medications", icon: Pill },
-  { to: "/dashboard/patients/$id/details", label: "Full record", icon: FileText },
 ];
 
 function initials(name: string) {
@@ -73,9 +72,8 @@ function PatientRecordShell() {
         <nav className="lg:sticky lg:top-24 lg:self-start">
           <div className="flex gap-1 overflow-x-auto lg:flex-col lg:overflow-visible">
             {TABS.map(t => {
-              const active = t.exact
-                ? path === `/dashboard/patients/${id}`
-                : path.startsWith(t.to.replace("$id", id));
+              const target = t.to.replace("$id", id);
+              const active = path === target || (t.matchIndex && path === `/dashboard/patients/${id}`);
               const Icon = t.icon;
               const LinkAny = Link as any;
               return (

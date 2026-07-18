@@ -133,8 +133,8 @@ import { Route as AuthenticatedDashboardMarketingAnalyticsRouteImport } from './
 import { Route as AuthenticatedDashboardConsultationsIdRouteImport } from './routes/_authenticated/dashboard.consultations.$id'
 import { Route as AuthenticatedAdminPractitionersIdRouteImport } from './routes/_authenticated/admin.practitioners.$id'
 import { Route as AuthenticatedDashboardPatientsIdIndexRouteImport } from './routes/_authenticated/dashboard.patients.$id.index'
+import { Route as AuthenticatedDashboardPatientsIdTimelineRouteImport } from './routes/_authenticated/dashboard.patients.$id.timeline'
 import { Route as AuthenticatedDashboardPatientsIdPhotosRouteImport } from './routes/_authenticated/dashboard.patients.$id.photos'
-import { Route as AuthenticatedDashboardPatientsIdOverviewRouteImport } from './routes/_authenticated/dashboard.patients.$id.overview'
 import { Route as AuthenticatedDashboardPatientsIdMedicationsRouteImport } from './routes/_authenticated/dashboard.patients.$id.medications'
 import { Route as AuthenticatedDashboardPatientsIdDetailsRouteImport } from './routes/_authenticated/dashboard.patients.$id.details'
 import { Route as AuthenticatedDashboardMarketingCampaignsIdRouteImport } from './routes/_authenticated/dashboard.marketing.campaigns.$id'
@@ -832,16 +832,16 @@ const AuthenticatedDashboardPatientsIdIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedDashboardPatientsIdRoute,
   } as any)
+const AuthenticatedDashboardPatientsIdTimelineRoute =
+  AuthenticatedDashboardPatientsIdTimelineRouteImport.update({
+    id: '/timeline',
+    path: '/timeline',
+    getParentRoute: () => AuthenticatedDashboardPatientsIdRoute,
+  } as any)
 const AuthenticatedDashboardPatientsIdPhotosRoute =
   AuthenticatedDashboardPatientsIdPhotosRouteImport.update({
     id: '/photos',
     path: '/photos',
-    getParentRoute: () => AuthenticatedDashboardPatientsIdRoute,
-  } as any)
-const AuthenticatedDashboardPatientsIdOverviewRoute =
-  AuthenticatedDashboardPatientsIdOverviewRouteImport.update({
-    id: '/overview',
-    path: '/overview',
     getParentRoute: () => AuthenticatedDashboardPatientsIdRoute,
   } as any)
 const AuthenticatedDashboardPatientsIdMedicationsRoute =
@@ -989,8 +989,8 @@ export interface FileRoutesByFullPath {
   '/dashboard/marketing/campaigns/$id': typeof AuthenticatedDashboardMarketingCampaignsIdRoute
   '/dashboard/patients/$id/details': typeof AuthenticatedDashboardPatientsIdDetailsRoute
   '/dashboard/patients/$id/medications': typeof AuthenticatedDashboardPatientsIdMedicationsRoute
-  '/dashboard/patients/$id/overview': typeof AuthenticatedDashboardPatientsIdOverviewRoute
   '/dashboard/patients/$id/photos': typeof AuthenticatedDashboardPatientsIdPhotosRoute
+  '/dashboard/patients/$id/timeline': typeof AuthenticatedDashboardPatientsIdTimelineRoute
   '/dashboard/patients/$id/': typeof AuthenticatedDashboardPatientsIdIndexRoute
 }
 export interface FileRoutesByTo {
@@ -1112,8 +1112,8 @@ export interface FileRoutesByTo {
   '/dashboard/marketing/campaigns/$id': typeof AuthenticatedDashboardMarketingCampaignsIdRoute
   '/dashboard/patients/$id/details': typeof AuthenticatedDashboardPatientsIdDetailsRoute
   '/dashboard/patients/$id/medications': typeof AuthenticatedDashboardPatientsIdMedicationsRoute
-  '/dashboard/patients/$id/overview': typeof AuthenticatedDashboardPatientsIdOverviewRoute
   '/dashboard/patients/$id/photos': typeof AuthenticatedDashboardPatientsIdPhotosRoute
+  '/dashboard/patients/$id/timeline': typeof AuthenticatedDashboardPatientsIdTimelineRoute
   '/dashboard/patients/$id': typeof AuthenticatedDashboardPatientsIdIndexRoute
 }
 export interface FileRoutesById {
@@ -1244,8 +1244,8 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/marketing/campaigns/$id': typeof AuthenticatedDashboardMarketingCampaignsIdRoute
   '/_authenticated/dashboard/patients/$id/details': typeof AuthenticatedDashboardPatientsIdDetailsRoute
   '/_authenticated/dashboard/patients/$id/medications': typeof AuthenticatedDashboardPatientsIdMedicationsRoute
-  '/_authenticated/dashboard/patients/$id/overview': typeof AuthenticatedDashboardPatientsIdOverviewRoute
   '/_authenticated/dashboard/patients/$id/photos': typeof AuthenticatedDashboardPatientsIdPhotosRoute
+  '/_authenticated/dashboard/patients/$id/timeline': typeof AuthenticatedDashboardPatientsIdTimelineRoute
   '/_authenticated/dashboard/patients/$id/': typeof AuthenticatedDashboardPatientsIdIndexRoute
 }
 export interface FileRouteTypes {
@@ -1376,8 +1376,8 @@ export interface FileRouteTypes {
     | '/dashboard/marketing/campaigns/$id'
     | '/dashboard/patients/$id/details'
     | '/dashboard/patients/$id/medications'
-    | '/dashboard/patients/$id/overview'
     | '/dashboard/patients/$id/photos'
+    | '/dashboard/patients/$id/timeline'
     | '/dashboard/patients/$id/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -1499,8 +1499,8 @@ export interface FileRouteTypes {
     | '/dashboard/marketing/campaigns/$id'
     | '/dashboard/patients/$id/details'
     | '/dashboard/patients/$id/medications'
-    | '/dashboard/patients/$id/overview'
     | '/dashboard/patients/$id/photos'
+    | '/dashboard/patients/$id/timeline'
     | '/dashboard/patients/$id'
   id:
     | '__root__'
@@ -1630,8 +1630,8 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/marketing/campaigns/$id'
     | '/_authenticated/dashboard/patients/$id/details'
     | '/_authenticated/dashboard/patients/$id/medications'
-    | '/_authenticated/dashboard/patients/$id/overview'
     | '/_authenticated/dashboard/patients/$id/photos'
+    | '/_authenticated/dashboard/patients/$id/timeline'
     | '/_authenticated/dashboard/patients/$id/'
   fileRoutesById: FileRoutesById
 }
@@ -2546,18 +2546,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardPatientsIdIndexRouteImport
       parentRoute: typeof AuthenticatedDashboardPatientsIdRoute
     }
+    '/_authenticated/dashboard/patients/$id/timeline': {
+      id: '/_authenticated/dashboard/patients/$id/timeline'
+      path: '/timeline'
+      fullPath: '/dashboard/patients/$id/timeline'
+      preLoaderRoute: typeof AuthenticatedDashboardPatientsIdTimelineRouteImport
+      parentRoute: typeof AuthenticatedDashboardPatientsIdRoute
+    }
     '/_authenticated/dashboard/patients/$id/photos': {
       id: '/_authenticated/dashboard/patients/$id/photos'
       path: '/photos'
       fullPath: '/dashboard/patients/$id/photos'
       preLoaderRoute: typeof AuthenticatedDashboardPatientsIdPhotosRouteImport
-      parentRoute: typeof AuthenticatedDashboardPatientsIdRoute
-    }
-    '/_authenticated/dashboard/patients/$id/overview': {
-      id: '/_authenticated/dashboard/patients/$id/overview'
-      path: '/overview'
-      fullPath: '/dashboard/patients/$id/overview'
-      preLoaderRoute: typeof AuthenticatedDashboardPatientsIdOverviewRouteImport
       parentRoute: typeof AuthenticatedDashboardPatientsIdRoute
     }
     '/_authenticated/dashboard/patients/$id/medications': {
@@ -2648,8 +2648,8 @@ const AuthenticatedDashboardMarketingRouteWithChildren =
 interface AuthenticatedDashboardPatientsIdRouteChildren {
   AuthenticatedDashboardPatientsIdDetailsRoute: typeof AuthenticatedDashboardPatientsIdDetailsRoute
   AuthenticatedDashboardPatientsIdMedicationsRoute: typeof AuthenticatedDashboardPatientsIdMedicationsRoute
-  AuthenticatedDashboardPatientsIdOverviewRoute: typeof AuthenticatedDashboardPatientsIdOverviewRoute
   AuthenticatedDashboardPatientsIdPhotosRoute: typeof AuthenticatedDashboardPatientsIdPhotosRoute
+  AuthenticatedDashboardPatientsIdTimelineRoute: typeof AuthenticatedDashboardPatientsIdTimelineRoute
   AuthenticatedDashboardPatientsIdIndexRoute: typeof AuthenticatedDashboardPatientsIdIndexRoute
 }
 
@@ -2659,10 +2659,10 @@ const AuthenticatedDashboardPatientsIdRouteChildren: AuthenticatedDashboardPatie
       AuthenticatedDashboardPatientsIdDetailsRoute,
     AuthenticatedDashboardPatientsIdMedicationsRoute:
       AuthenticatedDashboardPatientsIdMedicationsRoute,
-    AuthenticatedDashboardPatientsIdOverviewRoute:
-      AuthenticatedDashboardPatientsIdOverviewRoute,
     AuthenticatedDashboardPatientsIdPhotosRoute:
       AuthenticatedDashboardPatientsIdPhotosRoute,
+    AuthenticatedDashboardPatientsIdTimelineRoute:
+      AuthenticatedDashboardPatientsIdTimelineRoute,
     AuthenticatedDashboardPatientsIdIndexRoute:
       AuthenticatedDashboardPatientsIdIndexRoute,
   }

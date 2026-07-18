@@ -27,8 +27,9 @@ import {
 import {
   ArrowLeft, Mail, Phone as PhoneIcon, MessageSquare, Edit2, Plus, Trash2, Camera,
   Upload, FileText, AlertTriangle, Download, Loader2, ClipboardList, X, Check,
-  CalendarPlus, CreditCard, FileSignature, Send, ChevronDown, ChevronRight, Info,
+  CalendarPlus, CreditCard, FileSignature, Send, ChevronDown, ChevronRight, Info, CalendarClock,
 } from "lucide-react";
+import { RescheduleAppointmentDialog } from "@/components/RescheduleAppointmentDialog";
 import { toast } from "sonner";
 import { ConcernsCard } from "@/components/patient/ConcernsCard";
 import { CommsTimeline } from "@/components/patient/CommsTimeline";
@@ -299,7 +300,7 @@ function PatientProfilePage() {
         {visibleAppts.length === 0 ? (
           <div className="px-4 py-6 text-center text-sm text-muted-foreground">No appointments.</div>
         ) : visibleAppts.map(a => (
-          <AppointmentRow key={a.id} appt={a} />
+          <AppointmentRow key={a.id} appt={a} onRescheduled={reload} />
         ))}
       </SectionDark>
 
@@ -438,8 +439,9 @@ function Row({ label, value }: { label: string; value?: string | null }) {
   );
 }
 
-function AppointmentRow({ appt }: { appt: any }) {
+function AppointmentRow({ appt, onRescheduled }: { appt: any; onRescheduled?: () => void }) {
   const [open, setOpen] = useState(false);
+  const [resched, setResched] = useState(false);
   const dt = new Date(appt.scheduled_date + "T" + appt.start_time);
   const dateLabel = dt.toLocaleString([], { day: "2-digit", month: "short", year: "numeric", hour: "numeric", minute: "2-digit" });
   const treatment = appt.treatments?.name ?? "Treatment";
@@ -448,6 +450,7 @@ function AppointmentRow({ appt }: { appt: any }) {
   const paid = appt.payment_status === "paid" || appt.status === "paid";
   const location = appt.locations?.name || appt.location_name;
   const practitioner = appt.practitioners?.full_name || appt.practitioner_name;
+  const canReschedule = appt.status !== "cancelled";
   return (
     <div className="border-b last:border-0">
       <button
@@ -494,7 +497,25 @@ function AppointmentRow({ appt }: { appt: any }) {
               <div className="whitespace-pre-wrap break-words">{appt.notes}</div>
             </div>
           )}
+          {canReschedule && (
+            <div className="pt-2">
+              <Button size="sm" variant="outline" onClick={() => setResched(true)}>
+                <CalendarClock className="mr-1.5 h-3.5 w-3.5" />Change date / time
+              </Button>
+            </div>
+          )}
         </div>
+      )}
+      {resched && (
+        <RescheduleAppointmentDialog
+          open={resched}
+          onOpenChange={(v) => setResched(v)}
+          appointmentId={appt.id}
+          initialDate={appt.scheduled_date}
+          initialStart={appt.start_time}
+          initialEnd={appt.end_time}
+          onRescheduled={() => { setResched(false); onRescheduled?.(); }}
+        />
       )}
     </div>
   );
