@@ -21,7 +21,7 @@ export const Route = createFileRoute("/prescriber-hub")({
 
 function HubPage() {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="modo-marketing min-h-screen bg-[color:var(--paper)] text-[color:var(--ink)]">
       <SiteHeader />
       <main>
         <section className="border-b bg-gradient-to-br from-primary/5 via-background to-primary/10">

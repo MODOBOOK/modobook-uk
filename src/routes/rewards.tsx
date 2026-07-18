@@ -29,7 +29,7 @@ export const Route = createFileRoute("/rewards")({
 
 function RewardsPage() {
   return (
-    <div className="flex min-h-screen flex-col bg-background">
+    <div className="modo-marketing flex min-h-screen flex-col bg-[color:var(--paper)] text-[color:var(--ink)]">
       <SiteHeader />
 
       <main className="flex-1">

@@ -4,11 +4,28 @@ import { Button } from "@/components/ui/button";
 import { BrandMark } from "@/components/BrandMark";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import brandBoards from "@/assets/modo-brand-boards.png.asset.json";
+import tabletBooking from "@/assets/modo-tablet-booking.png.asset.json";
+import tabletPlatform from "@/assets/modo-tablet-platform.png.asset.json";
+import consultationPhoto from "@/assets/modo-consultation.png.asset.json";
+import foundersScrubs from "@/assets/modo-founders-scrubs.png.asset.json";
+import foundersSuits from "@/assets/modo-founders-suits.png.asset.json";
+import builtForPhoto from "@/assets/modo-built-for.png.asset.json";
+import appIcon from "@/assets/modo-app-icon.jpg.asset.json";
 
 
 import {
   Calendar,
   Link2,
+
   Palette,
   ShieldCheck,
   CreditCard,
@@ -86,79 +103,77 @@ function LandingPage() {
 
   return (
     <div className="modo-marketing min-h-screen bg-[color:var(--paper)] text-[color:var(--ink)]">
-      {/* Clinical top nav — precision, thin, product-forward */}
-      <nav className="sticky top-0 z-50 w-full border-b border-[color:var(--hairline)] bg-white/80 backdrop-blur-md">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 lg:px-8">
-          <div className="flex items-center gap-8">
-            <Link to="/" className="text-xl font-bold uppercase tracking-tighter">
-              MODO
-            </Link>
-            <div className="hidden gap-6 text-sm font-medium text-[color:var(--ink-soft)] lg:flex">
-              <Link to="/features" className="transition-colors hover:text-[color:var(--clinical-blue)]">Features</Link>
-              <Link to="/prescriber-hub" className="transition-colors hover:text-[color:var(--clinical-blue)]">Prescriber Hub</Link>
-              <Link to="/rewards" className="transition-colors hover:text-[color:var(--clinical-blue)]">Rewards</Link>
-              <Link to="/who-its-for" className="transition-colors hover:text-[color:var(--clinical-blue)]">Who it's for</Link>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <Link to="/auth" className="hidden text-sm font-medium text-[color:var(--ink-soft)] hover:text-[color:var(--ink)] sm:inline">
-              Sign in
-            </Link>
-            <Link to="/auth">
-              <Button className="rounded-full bg-[color:var(--ink)] px-5 text-sm font-medium text-white hover:bg-[color:var(--ink)]/90">
-                Get started
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </nav>
+      <SiteHeader />
 
       <main>
-        {/* HERO — centred, clinical, product-forward */}
-        <header className="relative px-5 pb-16 pt-16 text-center lg:px-8 lg:pt-28">
-          <div className="mx-auto max-w-4xl">
-            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[color:var(--clinical-blue)]/20 bg-[color:var(--clinical-blue-soft)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[color:var(--clinical-blue)]">
-              <span className="pulse-dot" />
-              The clinical standard for aesthetics
+        {/* HERO — editorial split with founders imagery */}
+        <header className="relative overflow-hidden">
+          <div className="mx-auto grid max-w-7xl gap-12 px-5 pt-14 pb-16 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-16 lg:px-8 lg:pt-24 lg:pb-24">
+            <div>
+              <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[color:var(--accent)]/25 bg-[color:var(--clinical-blue-soft)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">
+                <span className="pulse-dot" />
+                Built exclusively for aesthetics
+              </div>
+
+              <h1 className="text-4xl font-bold leading-[1.02] tracking-tight text-[color:var(--ink)] sm:text-6xl lg:text-[4.25rem]">
+                Not another
+                <br />
+                generic booking app.
+              </h1>
+
+              <p className="mt-6 max-w-xl text-base leading-relaxed text-[color:var(--ink-soft)] sm:text-lg">
+                The UK booking, consultation and clinical platform built <em className="not-italic text-[color:var(--ink)]">only</em> for
+                aesthetics. Bookings, medical records, consent, face mapping, payments
+                and a prescriber hub — designed by two practising Nurse Prescribers.
+              </p>
+
+              <div className="mt-9 flex flex-col items-start gap-3 sm:flex-row sm:items-center">
+                <Link to="/auth" className="w-full sm:w-auto">
+                  <Button
+                    size="lg"
+                    className="w-full rounded-full bg-[color:var(--ink)] px-8 text-sm font-medium text-white shadow-sm hover:bg-[color:var(--ink)]/90 sm:w-auto"
+                  >
+                    Start free
+                  </Button>
+                </Link>
+                <Link to="/features" className="w-full sm:w-auto">
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="w-full rounded-full border-[color:var(--hairline)] bg-white px-8 text-sm font-medium text-[color:var(--ink)] hover:bg-[color:var(--muted)] sm:w-auto"
+                  >
+                    Tour the platform <ArrowRight className="ml-1 h-4 w-4" />
+                  </Button>
+                </Link>
+              </div>
+
+              <p className="mt-5 text-xs text-[color:var(--ink-soft)]">
+                No card required · 0% booking fees · UK/EU data residency
+              </p>
             </div>
 
-            <h1 className="text-4xl font-bold leading-[1.03] tracking-tight text-[color:var(--ink)] sm:text-6xl lg:text-[4.5rem]">
-              Aesthetics practice,
-              <br className="hidden sm:block" />{" "}
-              <span className="text-[color:var(--ink-soft)]">elevated to clinical excellence.</span>
-            </h1>
-
-            <p className="mx-auto mt-7 max-w-2xl text-base leading-relaxed text-[color:var(--ink-soft)] sm:text-lg">
-              The UK platform for aesthetics practitioners. Bookings, consultations,
-              consent, photos, prescribing and payments — one calm, medical-grade
-              workflow, designed by two practising Nurse Prescribers.
-            </p>
-
-            <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <Link to="/auth" className="w-full sm:w-auto">
-                <Button
-                  size="lg"
-                  className="w-full rounded-full bg-[color:var(--ink)] px-8 text-sm font-medium text-white shadow-sm hover:bg-[color:var(--ink)]/90 sm:w-auto"
-                >
-                  Start free
-                </Button>
-              </Link>
-              <Link to="/features" className="w-full sm:w-auto">
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="w-full rounded-full border-[color:var(--hairline)] bg-white px-8 text-sm font-medium text-[color:var(--ink)] hover:bg-[color:var(--muted)] sm:w-auto"
-                >
-                  Tour the platform <ArrowRight className="ml-1 h-4 w-4" />
-                </Button>
-              </Link>
+            {/* Founders portrait card */}
+            <div className="relative">
+              <div className="absolute -left-6 -top-6 hidden h-24 w-24 rounded-2xl border border-[color:var(--accent)]/30 bg-[color:var(--clinical-blue-soft)] lg:block" />
+              <div className="relative overflow-hidden rounded-3xl border border-[color:var(--hairline)] bg-white shadow-[0_30px_60px_-20px_rgba(60,40,20,0.25)]">
+                <img
+                  src={foundersSuits.url}
+                  alt="The two Nurse Prescribers behind MODO"
+                  className="aspect-[4/5] w-full object-cover object-top"
+                />
+                <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between rounded-2xl bg-white/95 px-4 py-3 backdrop-blur">
+                  <div>
+                    <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">The founders</div>
+                    <div className="text-sm font-semibold text-[color:var(--ink)]">Nurse Prescribers · UK</div>
+                  </div>
+                  <img src={appIcon.url} alt="MODO app icon" className="h-10 w-10 rounded-xl border border-[color:var(--hairline)]" />
+                </div>
+              </div>
             </div>
-
-            <p className="mt-5 text-xs text-[color:var(--ink-soft)]">
-              No card required · 0% booking fees · UK/EU data residency
-            </p>
           </div>
         </header>
+
+
 
         {/* FEATURE PILLS — four clinical tiles */}
         <section className="mx-auto max-w-7xl px-5 py-12 lg:px-8">
@@ -182,11 +197,29 @@ function LandingPage() {
           </div>
         </section>
 
-        {/* THE GAP — dark clinical band */}
-        <section className="my-12 flex items-center justify-center bg-[color:var(--ink)] px-5 py-24 lg:px-8">
-          <div className="max-w-4xl text-center">
-            <h2 className="text-[11px] font-bold uppercase tracking-[0.24em] text-[color:var(--clinical-blue)]">
-              The clinical void
+        {/* PRODUCT SHOWCASE — tablet imagery */}
+        <section className="mx-auto max-w-7xl px-5 pb-8 lg:px-8">
+          <div className="grid gap-6 md:grid-cols-2">
+            <div className="relative overflow-hidden rounded-3xl border border-[color:var(--hairline)] bg-white">
+              <img src={tabletPlatform.url} alt="MODO booking platform on an iPad" className="aspect-[4/5] w-full object-cover md:aspect-[5/6]" />
+            </div>
+            <div className="relative overflow-hidden rounded-3xl border border-[color:var(--hairline)] bg-white">
+              <img src={tabletBooking.url} alt="A patient using the MODO booking page" className="aspect-[4/5] w-full object-cover md:aspect-[5/6]" />
+            </div>
+          </div>
+        </section>
+
+        {/* THE GAP — editorial band with brand board photo */}
+        <section className="relative my-12 overflow-hidden bg-[color:var(--ink)] px-5 py-24 lg:px-8">
+          <img
+            src={brandBoards.url}
+            alt=""
+            aria-hidden="true"
+            className="absolute inset-0 h-full w-full object-cover opacity-20"
+          />
+          <div className="relative mx-auto max-w-4xl text-center">
+            <h2 className="text-[11px] font-bold uppercase tracking-[0.24em] text-[color:var(--accent)]">
+              Not another booking app
             </h2>
             <p className="mt-6 text-3xl font-medium leading-snug text-white md:text-5xl">
               Bridging the gap between aesthetic artistry and medical protocol.
@@ -199,9 +232,9 @@ function LandingPage() {
                 { k: "1 link", v: "Whole clinic" },
                 { k: "UK/EU", v: "Data residency" },
               ].map((s) => (
-                <div key={s.v} className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-left">
+                <div key={s.v} className="rounded-xl border border-white/10 bg-white/[0.04] p-4 text-left backdrop-blur">
                   <div className="text-2xl font-bold tracking-tight text-white">{s.k}</div>
-                  <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-white/50">
+                  <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-white/60">
                     {s.v}
                   </div>
                 </div>
@@ -209,6 +242,7 @@ function LandingPage() {
             </div>
           </div>
         </section>
+
 
         {/* WHO IT'S FOR — two spec-sheet cards */}
         <section className="mx-auto max-w-7xl px-5 py-20 lg:px-8">
@@ -332,7 +366,45 @@ function LandingPage() {
           </div>
         </section>
 
+        {/* FOUNDERS BAND */}
+        <section className="mx-auto max-w-7xl px-5 py-20 lg:px-8">
+          <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:gap-14">
+            <div className="relative overflow-hidden rounded-3xl border border-[color:var(--hairline)]">
+              <img
+                src={foundersScrubs.url}
+                alt="MODO's Nurse Prescriber founders in clinical scrubs"
+                className="aspect-[4/3] w-full object-cover"
+              />
+            </div>
+            <div>
+              <div className="eyebrow">§ For practitioners, by practitioners</div>
+              <h2 className="mt-4 text-3xl font-bold leading-tight tracking-tight sm:text-4xl">
+                Two Nurse Prescribers.
+                <br />
+                <span className="text-[color:var(--ink-soft)]">One clinical standard.</span>
+              </h2>
+              <p className="mt-5 text-[color:var(--ink-soft)]">
+                MODO is designed by clinicians who still run clinics — every workflow,
+                consent flow and consultation step comes from real practice, not a
+                product manager's whiteboard.
+              </p>
+              <div className="mt-8 flex flex-wrap gap-3">
+                <div className="rounded-full border border-[color:var(--hairline)] bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[color:var(--ink)]">
+                  NMC registered
+                </div>
+                <div className="rounded-full border border-[color:var(--hairline)] bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[color:var(--ink)]">
+                  Independent prescribers
+                </div>
+                <div className="rounded-full border border-[color:var(--hairline)] bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[color:var(--ink)]">
+                  UK-built
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* CTA */}
+
         <section className="bg-white">
           <div className="mx-auto max-w-4xl px-5 py-24 text-center lg:px-8">
             <div className="eyebrow">Ready when you are</div>
@@ -436,25 +508,65 @@ function ClinicalFeature({
 
 
 export function SiteHeader() {
+  const pages = [
+    { to: "/", label: "Home" },
+    { to: "/features", label: "Features" },
+    { to: "/prescriber-hub", label: "Prescriber Hub" },
+    { to: "/rewards", label: "Rewards" },
+    { to: "/who-its-for", label: "Who it's for" },
+    { to: "/auth", label: "Sign in" },
+  ];
   return (
-    <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 lg:px-8">
-        <Link to="/" className="flex items-center">
-          <BrandMark size="md" />
+    <header className="sticky top-0 z-50 w-full border-b border-[color:var(--hairline)] bg-[color:var(--paper)]/85 backdrop-blur-md">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 lg:px-8">
+        <Link to="/" className="flex items-center gap-2.5">
+          <img src={appIcon.url} alt="" className="h-8 w-8 rounded-lg border border-[color:var(--hairline)] bg-white" />
+          <span className="font-serif text-xl tracking-[0.28em] text-[color:var(--ink)]">MODO</span>
         </Link>
-        <nav className="hidden items-center gap-6 text-sm md:flex">
-          <Link to="/features" className="text-muted-foreground hover:text-foreground">Features</Link>
-          <Link to="/prescriber-hub" className="text-muted-foreground hover:text-foreground">Prescriber Hub</Link>
-          <Link to="/rewards" className="text-muted-foreground hover:text-foreground">Rewards</Link>
-          <Link to="/who-its-for" className="text-muted-foreground hover:text-foreground">Who it's for</Link>
-        </nav>
-        <div className="flex items-center gap-3">
-          <Link to="/auth">
-            <Button variant="ghost">Sign in</Button>
-          </Link>
+
+        <div className="flex items-center gap-2">
           <Link to="/auth" className="hidden sm:inline-flex">
-            <Button>Get started</Button>
+            <Button
+              size="sm"
+              className="rounded-full bg-[color:var(--ink)] px-5 text-xs font-medium uppercase tracking-[0.14em] text-[color:var(--paper)] hover:bg-[color:var(--ink)]/90"
+            >
+              Get started
+            </Button>
           </Link>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2 rounded-full border-[color:var(--hairline)] bg-white px-4 text-xs font-medium uppercase tracking-[0.14em] text-[color:var(--ink)] hover:bg-[color:var(--muted)]"
+              >
+                <span className="flex h-3 w-4 flex-col justify-between">
+                  <span className="h-[1.5px] w-full bg-current" />
+                  <span className="h-[1.5px] w-full bg-current" />
+                  <span className="h-[1.5px] w-3/4 bg-current" />
+                </span>
+                Menu
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56 rounded-2xl border-[color:var(--hairline)] bg-white p-2">
+              <DropdownMenuLabel className="px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-[color:var(--accent)]">
+                Explore MODO
+              </DropdownMenuLabel>
+              {pages.map((p) => (
+                <DropdownMenuItem key={p.to} asChild className="rounded-lg">
+                  <Link to={p.to} className="cursor-pointer px-3 py-2 text-sm font-medium text-[color:var(--ink)]">
+                    {p.label}
+                  </Link>
+                </DropdownMenuItem>
+              ))}
+              <DropdownMenuSeparator className="my-1 bg-[color:var(--hairline)]" />
+              <DropdownMenuItem asChild className="rounded-lg">
+                <Link to="/auth" className="cursor-pointer px-3 py-2 text-sm font-semibold text-[color:var(--accent)]">
+                  Create your clinic →
+                </Link>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </header>
@@ -463,12 +575,14 @@ export function SiteHeader() {
 
 export function SiteFooter() {
   return (
-    <footer className="border-t bg-muted/20">
-      <div className="mx-auto grid max-w-7xl gap-8 px-4 py-12 sm:grid-cols-2 lg:grid-cols-4 lg:px-8">
+    <footer className="border-t border-[color:var(--hairline)] bg-[color:var(--paper)]">
+      <div className="mx-auto grid max-w-7xl gap-8 px-5 py-14 sm:grid-cols-2 lg:grid-cols-4 lg:px-8">
         <div>
-          <BrandMark size="sm" />
-
-          <p className="mt-3 text-sm text-muted-foreground">
+          <Link to="/" className="flex items-center gap-2.5">
+            <img src={appIcon.url} alt="" className="h-9 w-9 rounded-lg border border-[color:var(--hairline)] bg-white" />
+            <span className="font-serif text-lg tracking-[0.28em] text-[color:var(--ink)]">MODO</span>
+          </Link>
+          <p className="mt-4 max-w-xs text-sm text-[color:var(--ink-soft)]">
             The aesthetics-only booking & clinical platform. Built by two UK Nurse Prescribers.
           </p>
         </div>
@@ -487,8 +601,8 @@ export function SiteFooter() {
           { label: "Terms & Conditions", to: "/terms" },
         ]} />
       </div>
-      <div className="border-t py-6 text-center text-sm text-muted-foreground">
-        © {new Date().getFullYear()} MODO. Designed by Nurse Prescribers, for aesthetics clinics.
+      <div className="border-t border-[color:var(--hairline)] py-6 text-center text-xs uppercase tracking-[0.2em] text-[color:var(--ink-soft)]">
+        © {new Date().getFullYear()} MODO · For practitioners, by practitioners
       </div>
     </footer>
   );
@@ -497,17 +611,18 @@ export function SiteFooter() {
 function FooterCol({ title, links }: { title: string; links: { label: string; to: string }[] }) {
   return (
     <div className="text-sm">
-      <div className="font-medium text-foreground">{title}</div>
+      <div className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[color:var(--accent)]">{title}</div>
       <ul className="mt-3 space-y-2">
         {links.map((l) => (
           <li key={l.to + l.label}>
-            <Link to={l.to} className="text-muted-foreground hover:text-foreground">{l.label}</Link>
+            <Link to={l.to} className="text-[color:var(--ink-soft)] transition-colors hover:text-[color:var(--ink)]">{l.label}</Link>
           </li>
         ))}
       </ul>
     </div>
   );
 }
+
 
 function Feature({ icon: Icon, title, desc }: { icon: React.ComponentType<{ className?: string }>; title: string; desc: string }) {
   return (
