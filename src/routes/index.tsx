@@ -525,8 +525,7 @@ export function SiteHeader() {
           <img
             src={wordmark.url}
             alt="MODO"
-            className="h-8 w-auto object-contain sm:h-9"
-            style={{ mixBlendMode: "multiply" }}
+            className="h-10 w-auto object-contain sm:h-12"
             draggable={false}
           />
         </Link>
