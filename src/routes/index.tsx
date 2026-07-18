@@ -607,8 +607,331 @@ function TourPanel({
   );
 }
 
+function DemoFrame({
+  chrome,
+  label,
+  children,
+}: {
+  chrome: "browser" | "app";
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="relative overflow-hidden rounded-3xl border border-[color:var(--hairline)] bg-white shadow-[0_30px_60px_-30px_rgba(60,40,20,0.25)]">
+      {/* Chrome */}
+      <div className="flex items-center gap-2 border-b border-[color:var(--hairline)] bg-[color:var(--muted)] px-4 py-3">
+        <div className="flex gap-1.5">
+          <span className="h-2.5 w-2.5 rounded-full bg-[#ff5f57]" />
+          <span className="h-2.5 w-2.5 rounded-full bg-[#febc2e]" />
+          <span className="h-2.5 w-2.5 rounded-full bg-[#28c840]" />
+        </div>
+        <div className="mx-auto rounded-full bg-white px-3 py-1 text-[10px] font-medium text-[color:var(--ink-soft)]">
+          {chrome === "browser" ? "modobook.uk/aurora-clinic" : "app.modobook.uk / dashboard"}
+        </div>
+        <span className="rounded-full bg-[color:var(--clinical-blue-soft)] px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.14em] text-[color:var(--clinical-blue)]">
+          Live demo
+        </span>
+      </div>
+      <div className="absolute left-4 top-14 z-10 rounded-full bg-white/90 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--ink)] backdrop-blur">
+        {label}
+      </div>
+      <div className="min-h-[440px] bg-[color:var(--paper)]">{children}</div>
+    </div>
+  );
+}
 
+function DemoTabs({
+  steps,
+  step,
+  setStep,
+}: {
+  steps: string[];
+  step: number;
+  setStep: (n: number) => void;
+}) {
+  return (
+    <div className="flex items-center justify-between border-t border-[color:var(--hairline)] bg-white px-4 py-3">
+      <div className="flex items-center gap-2">
+        {steps.map((s, i) => (
+          <button
+            key={s}
+            type="button"
+            onClick={() => setStep(i)}
+            className={
+              "flex items-center gap-2 rounded-full px-3 py-1.5 text-[11px] font-semibold transition-colors " +
+              (i === step
+                ? "bg-[color:var(--ink)] text-white"
+                : "text-[color:var(--ink-soft)] hover:bg-[color:var(--muted)]")
+            }
+          >
+            <span className={"flex h-4 w-4 items-center justify-center rounded-full text-[9px] " + (i === step ? "bg-white/20 text-white" : "bg-[color:var(--muted)] text-[color:var(--ink-soft)]")}>{i + 1}</span>
+            {s}
+          </button>
+        ))}
+      </div>
+      <button
+        type="button"
+        onClick={() => setStep((step + 1) % steps.length)}
+        className="rounded-full bg-[color:var(--clinical-blue)] px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-[color:var(--clinical-blue)]/90"
+      >
+        Next →
+      </button>
+    </div>
+  );
+}
 
+function PatientDemo({ step, setStep }: { step: number; setStep: (n: number) => void }) {
+  const treatments = [
+    { name: "Lip filler — 1ml", price: "£220", dur: "45 min" },
+    { name: "Anti-wrinkle — 3 areas", price: "£240", dur: "30 min" },
+    { name: "Skin booster — Profhilo", price: "£280", dur: "45 min" },
+  ];
+  const slots = ["09:30", "10:15", "11:00", "13:30", "14:15", "15:00", "16:45", "17:30"];
+  const [pickedTreatment, setPickedTreatment] = useState(0);
+  const [pickedSlot, setPickedSlot] = useState<number | null>(null);
+
+  return (
+    <DemoFrame chrome="browser" label="Patient view">
+      {/* Branded header */}
+      <div className="relative h-28 bg-gradient-to-br from-[#c9a37a] via-[#b48963] to-[#8c6a4d]">
+        <div className="absolute inset-0 opacity-30" style={{ backgroundImage: "radial-gradient(circle at 20% 30%, rgba(255,255,255,0.4), transparent 40%)" }} />
+        <div className="absolute bottom-3 left-5 text-white">
+          <div className="text-[10px] font-semibold uppercase tracking-[0.24em] opacity-80">Aurora Aesthetics</div>
+          <div className="text-lg font-bold">Book your visit</div>
+        </div>
+      </div>
+
+      <div className="p-5">
+        {step === 0 && (
+          <div>
+            <div className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-[color:var(--ink-soft)]">1. Choose a treatment</div>
+            <div className="space-y-2">
+              {treatments.map((t, i) => (
+                <button
+                  key={t.name}
+                  type="button"
+                  onClick={() => { setPickedTreatment(i); setStep(1); }}
+                  className={
+                    "flex w-full items-center justify-between rounded-xl border p-3 text-left transition-all " +
+                    (pickedTreatment === i
+                      ? "border-[color:var(--clinical-blue)] bg-[color:var(--clinical-blue-soft)]"
+                      : "border-[color:var(--hairline)] bg-white hover:border-[color:var(--ink-soft)]")
+                  }
+                >
+                  <div>
+                    <div className="text-sm font-semibold text-[color:var(--ink)]">{t.name}</div>
+                    <div className="text-[11px] text-[color:var(--ink-soft)]">{t.dur} · Nurse Prescriber</div>
+                  </div>
+                  <div className="text-sm font-bold text-[color:var(--ink)]">{t.price}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {step === 1 && (
+          <div>
+            <div className="mb-1 text-xs font-semibold uppercase tracking-[0.14em] text-[color:var(--ink-soft)]">2. Pick a time</div>
+            <div className="mb-3 text-sm font-semibold text-[color:var(--ink)]">{treatments[pickedTreatment].name}</div>
+            <div className="mb-3 flex items-center gap-2 text-[11px] text-[color:var(--ink-soft)]">
+              <span className="inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
+              Live availability · Thu 24 Sep
+            </div>
+            <div className="grid grid-cols-4 gap-2">
+              {slots.map((s, i) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => { setPickedSlot(i); setStep(2); }}
+                  className={
+                    "rounded-lg border py-2 text-xs font-semibold transition-all " +
+                    (pickedSlot === i
+                      ? "border-[color:var(--clinical-blue)] bg-[color:var(--clinical-blue)] text-white"
+                      : "border-[color:var(--hairline)] bg-white text-[color:var(--ink)] hover:border-[color:var(--ink-soft)]")
+                  }
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {step === 2 && (
+          <div>
+            <div className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-[color:var(--ink-soft)]">3. Medical & consent</div>
+            <div className="space-y-2">
+              {[
+                { label: "Medical screening", status: "Signed", done: true },
+                { label: "Photo consent", status: "Signed", done: true },
+                { label: "Treatment consent", status: "Signed", done: true },
+              ].map((r) => (
+                <div key={r.label} className="flex items-center justify-between rounded-lg border border-[color:var(--hairline)] bg-white p-2.5">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                    <span className="text-xs font-medium text-[color:var(--ink)]">{r.label}</span>
+                  </div>
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-700">{r.status}</span>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 rounded-xl bg-[color:var(--ink)] p-4 text-white">
+              <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/60">You're booked</div>
+              <div className="mt-1 text-sm font-bold">{treatments[pickedTreatment].name}</div>
+              <div className="text-xs text-white/70">Thu 24 Sep · {pickedSlot !== null ? slots[pickedSlot] : "10:15"} · Aurora Clinic</div>
+              <div className="mt-3 flex gap-2">
+                <span className="rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-semibold">Deposit £40 held</span>
+                <span className="rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-semibold">Reminders on</span>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <DemoTabs steps={["Choose", "Time", "Confirm"]} step={step} setStep={setStep} />
+    </DemoFrame>
+  );
+}
+
+function PractitionerDemo({ step, setStep }: { step: number; setStep: (n: number) => void }) {
+  const diary = [
+    { time: "09:30", name: "Emma Clarke", tx: "Lip filler 1ml", status: "Confirmed" },
+    { time: "10:15", name: "Sarah Patel", tx: "Anti-wrinkle x3", status: "Consent signed" },
+    { time: "11:00", name: "Alice Wong", tx: "Profhilo", status: "Deposit paid" },
+    { time: "13:30", name: "Lucy Grant", tx: "Review — 2wk", status: "No-charge" },
+  ];
+
+  return (
+    <DemoFrame chrome="app" label="Practitioner view">
+      <div className="flex min-h-[440px]">
+        {/* Sidebar */}
+        <aside className="w-14 flex-none border-r border-[color:var(--hairline)] bg-white py-4">
+          {[Calendar, Users, ClipboardList, PoundSterling, MessageSquare].map((I, i) => (
+            <div
+              key={i}
+              className={
+                "mx-auto mb-2 flex h-9 w-9 items-center justify-center rounded-lg " +
+                (i === step ? "bg-[color:var(--ink)] text-white" : "text-[color:var(--ink-soft)] hover:bg-[color:var(--muted)]")
+              }
+            >
+              <I className="h-4 w-4" />
+            </div>
+          ))}
+        </aside>
+
+        <div className="flex-1 p-5">
+          {step === 0 && (
+            <div>
+              <div className="mb-3 flex items-center justify-between">
+                <div>
+                  <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--ink-soft)]">Today · Thursday</div>
+                  <div className="text-lg font-bold">4 appointments · £980</div>
+                </div>
+                <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-[10px] font-semibold text-emerald-700">On track</span>
+              </div>
+              <div className="space-y-2">
+                {diary.map((r, i) => (
+                  <button
+                    key={r.time}
+                    type="button"
+                    onClick={() => setStep(1)}
+                    className={
+                      "flex w-full items-center gap-3 rounded-xl border p-2.5 text-left transition-all " +
+                      (i === 1
+                        ? "border-[color:var(--clinical-blue)] bg-[color:var(--clinical-blue-soft)]"
+                        : "border-[color:var(--hairline)] bg-white hover:border-[color:var(--ink-soft)]")
+                    }
+                  >
+                    <div className="w-12 text-xs font-bold text-[color:var(--ink)]">{r.time}</div>
+                    <div className="flex-1">
+                      <div className="text-sm font-semibold text-[color:var(--ink)]">{r.name}</div>
+                      <div className="text-[11px] text-[color:var(--ink-soft)]">{r.tx}</div>
+                    </div>
+                    <span className="rounded-full bg-[color:var(--muted)] px-2 py-0.5 text-[10px] font-semibold text-[color:var(--ink-soft)]">{r.status}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {step === 1 && (
+            <div>
+              <div className="mb-3 flex items-center justify-between">
+                <div>
+                  <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--ink-soft)]">Patient record</div>
+                  <div className="text-lg font-bold">Sarah Patel · 38</div>
+                </div>
+                <span className="rounded-full bg-amber-100 px-2.5 py-1 text-[10px] font-semibold text-amber-800">Allergy: penicillin</span>
+              </div>
+              <div className="mb-3 rounded-xl border border-[color:var(--hairline)] bg-white p-3">
+                <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[color:var(--ink-soft)]">AI brief</div>
+                <p className="mt-1 text-xs text-[color:var(--ink)]">3rd visit. Prefers subtle results. Last botox: 12 wks ago (30u total). Photos on file. Consented for review call.</p>
+              </div>
+              <div className="space-y-1.5">
+                {[
+                  { icon: Syringe, t: "Botox — 30u (glabella, frontalis)", d: "12 wks ago" },
+                  { icon: Camera, t: "Photos · before/after", d: "3 sets" },
+                  { icon: FileSignature, t: "Consent · anti-wrinkle", d: "Today · signed" },
+                  { icon: Pill, t: "Rx — none active", d: "—" },
+                ].map((e, i) => (
+                  <div key={i} className="flex items-center gap-3 rounded-lg border border-[color:var(--hairline)] bg-white p-2">
+                    <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[color:var(--clinical-blue-soft)] text-[color:var(--clinical-blue)]">
+                      <e.icon className="h-3.5 w-3.5" />
+                    </div>
+                    <div className="flex-1 text-xs font-medium text-[color:var(--ink)]">{e.t}</div>
+                    <div className="text-[10px] text-[color:var(--ink-soft)]">{e.d}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {step === 2 && (
+            <div>
+              <div className="mb-3">
+                <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--ink-soft)]">Consultation · 8 steps</div>
+                <div className="text-lg font-bold">In progress · 5 / 8</div>
+                <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-[color:var(--muted)]">
+                  <div className="h-full w-[62%] bg-[color:var(--clinical-blue)]" />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                {[
+                  { t: "Screening", done: true },
+                  { t: "Assessment", done: true },
+                  { t: "Treatment plan", done: true },
+                  { t: "Consent", done: true },
+                  { t: "Photos", done: true },
+                  { t: "Product log", done: false, active: true },
+                  { t: "Aftercare", done: false },
+                  { t: "Invoice", done: false },
+                ].map((s, i) => (
+                  <div
+                    key={i}
+                    className={
+                      "flex items-center gap-2 rounded-lg border p-2 " +
+                      (s.active
+                        ? "border-[color:var(--clinical-blue)] bg-[color:var(--clinical-blue-soft)]"
+                        : "border-[color:var(--hairline)] bg-white")
+                    }
+                  >
+                    <div className={"flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold " + (s.done ? "bg-emerald-500 text-white" : s.active ? "bg-[color:var(--clinical-blue)] text-white" : "bg-[color:var(--muted)] text-[color:var(--ink-soft)]")}>
+                      {s.done ? "✓" : i + 1}
+                    </div>
+                    <span className="text-xs font-semibold text-[color:var(--ink)]">{s.t}</span>
+                    {s.active && <span className="ml-auto text-[10px] font-semibold uppercase tracking-[0.14em] text-[color:var(--clinical-blue)]">Now</span>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <DemoTabs steps={["Diary", "Patient", "Consult"]} step={step} setStep={setStep} />
+    </DemoFrame>
+  );
+}
 
 
 export function SiteHeader() {
