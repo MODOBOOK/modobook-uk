@@ -69,9 +69,7 @@ export const Route = createFileRoute("/")({
 
 function LandingPage() {
   const navigate = useNavigate();
-  const [tourView, setTourView] = useState<"patient" | "practitioner">("patient");
-  const [patientStep, setPatientStep] = useState(0);
-  const [practitionerStep, setPractitionerStep] = useState(0);
+
 
   // If launched from Home Screen (PWA standalone) and a session is present,
   // send practitioners straight to their dashboard so a force-close feels like
@@ -130,15 +128,15 @@ function LandingPage() {
                     Start free
                   </Button>
                 </Link>
-                <a href="#tour" className="w-full sm:w-auto">
+                <Link to="/features" className="w-full sm:w-auto">
                   <Button
                     size="lg"
                     variant="outline"
                     className="w-full rounded-full border-[color:var(--hairline)] bg-white px-8 text-sm font-medium text-[color:var(--ink)] hover:bg-[color:var(--muted)] sm:w-auto"
                   >
-                    Tour the platform <ArrowRight className="ml-1 h-4 w-4" />
+                    See features <ArrowRight className="ml-1 h-4 w-4" />
                   </Button>
-                </a>
+                </Link>
               </div>
 
               <p className="mt-5 text-xs text-[color:var(--ink-soft)]">
