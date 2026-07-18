@@ -138,15 +138,15 @@ function LandingPage() {
                     Start free
                   </Button>
                 </Link>
-                <Link to="/features" className="w-full sm:w-auto">
+                <a href="#tour" className="w-full sm:w-auto">
                   <Button
                     size="lg"
                     variant="outline"
                     className="w-full rounded-full border-[color:var(--hairline)] bg-white px-8 text-sm font-medium text-[color:var(--ink)] hover:bg-[color:var(--muted)] sm:w-auto"
                   >
-                    <a href="#tour" className="inline-flex items-center">Tour the platform <ArrowRight className="ml-1 h-4 w-4" /></a>
+                    Tour the platform <ArrowRight className="ml-1 h-4 w-4" />
                   </Button>
-                </Link>
+                </a>
               </div>
 
               <p className="mt-5 text-xs text-[color:var(--ink-soft)]">
