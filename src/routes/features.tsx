@@ -87,16 +87,31 @@ function FeaturesPage() {
     <div className="modo-marketing min-h-screen bg-[color:var(--paper)] text-[color:var(--ink)]">
       <SiteHeader />
       <main>
-        <section className="mx-auto max-w-5xl px-4 pt-16 pb-10 text-center lg:px-8">
-          <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">Every feature in MODO.</h1>
-          <p className="mx-auto mt-4 max-w-2xl text-lg text-muted-foreground">
+        <section className="mx-auto max-w-5xl px-5 pt-14 pb-8 text-center lg:px-8">
+          <div className="eyebrow">§ The platform</div>
+          <h1 className="mt-4 text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">Every feature in MODO.</h1>
+          <p className="mx-auto mt-4 max-w-2xl text-base text-[color:var(--ink-soft)] sm:text-lg">
             The booking, consultation, clinical and marketing stack — built only for aesthetics, for HCPs and non-HCPs alike.
           </p>
-          <div className="mt-8 flex justify-center gap-3">
-            <Link to="/auth"><Button size="lg">Start free</Button></Link>
-            <Link to="/prescriber-hub"><Button size="lg" variant="outline">Prescriber Hub</Button></Link>
+          <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+            <Link to="/auth"><Button size="lg" className="w-full rounded-full bg-[color:var(--ink)] px-8 text-sm text-white hover:bg-[color:var(--ink)]/90 sm:w-auto">Start free</Button></Link>
+            <Link to="/prescriber-hub"><Button size="lg" variant="outline" className="w-full rounded-full border-[color:var(--hairline)] bg-white px-8 text-sm sm:w-auto">Prescriber Hub</Button></Link>
           </div>
         </section>
+
+        {/* HERO PHOTO STRIP */}
+        <section className="mx-auto max-w-7xl px-5 pb-8 lg:px-8">
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div className="overflow-hidden rounded-3xl border border-[color:var(--hairline)] bg-white sm:col-span-2">
+              <img src={tabletPlatform.url} alt="MODO clinical platform on tablet" className="aspect-[16/10] w-full object-cover" loading="lazy" />
+            </div>
+            <div className="overflow-hidden rounded-3xl border border-[color:var(--hairline)] bg-white">
+              <img src={consultationPhoto.url} alt="Practitioner using MODO on a tablet" className="aspect-[16/10] w-full object-cover sm:aspect-auto sm:h-full" loading="lazy" />
+            </div>
+          </div>
+        </section>
+
+
 
         {groups.map((g) => (
           <section key={g.title} className="mx-auto max-w-7xl px-4 py-12 lg:px-8">
