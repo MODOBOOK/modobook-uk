@@ -25,7 +25,9 @@ import {
   Mail,
   Percent,
   Undo2,
+  CalendarClock,
 } from "lucide-react";
+import { RescheduleAppointmentDialog } from "@/components/RescheduleAppointmentDialog";
 import {
   listMyAppointments,
   updateAppointmentNotes,
