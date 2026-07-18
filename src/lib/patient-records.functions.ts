@@ -46,7 +46,7 @@ export const getPatientTimeline = createServerFn({ method: "GET" })
       `patient_name.eq.${client.full_name}`,
     ].filter(Boolean).join(",");
     const { data: appts } = await context.supabase
-      .from("appointments").select("id, scheduled_date, start_time, status, treatment_name_snapshot, total_amount")
+      .from("appointments").select("id, scheduled_date, start_time, end_time, status, treatment_name_snapshot, total_amount")
       .or(orParts)
       .eq("profile_id", profileId)
       .order("scheduled_date", { ascending: false })
@@ -59,9 +59,17 @@ export const getPatientTimeline = createServerFn({ method: "GET" })
         title: a.treatment_name_snapshot || "Appointment",
         description: a.status,
         occurred_at: isNaN(dt.getTime()) ? new Date().toISOString() : dt.toISOString(),
-        meta: { status: a.status, total_amount: a.total_amount },
+        meta: {
+          status: a.status,
+          total_amount: a.total_amount,
+          appointment_id: a.id,
+          scheduled_date: a.scheduled_date,
+          start_time: a.start_time,
+          end_time: a.end_time,
+        },
       });
     }
+
 
     // Consultations
     const { data: consults } = await context.supabase
