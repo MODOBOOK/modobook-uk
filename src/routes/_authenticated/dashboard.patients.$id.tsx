@@ -12,12 +12,11 @@ export const Route = createFileRoute("/_authenticated/dashboard/patients/$id")({
   component: PatientRecordShell,
 });
 
-const TABS: Array<{ to: any; label: string; icon: any; exact?: boolean }> = [
-  { to: "/dashboard/patients/$id", label: "Timeline", icon: Activity, exact: true },
-  { to: "/dashboard/patients/$id/overview", label: "Overview", icon: User },
+const TABS: Array<{ to: any; label: string; icon: any; exact?: boolean; matchIndex?: boolean }> = [
+  { to: "/dashboard/patients/$id/details", label: "Full record", icon: FileText, matchIndex: true },
+  { to: "/dashboard/patients/$id/timeline", label: "Timeline", icon: Activity },
   { to: "/dashboard/patients/$id/photos", label: "Before / After", icon: Camera },
   { to: "/dashboard/patients/$id/medications", label: "Medications", icon: Pill },
-  { to: "/dashboard/patients/$id/details", label: "Full record", icon: FileText },
 ];
 
 function initials(name: string) {
