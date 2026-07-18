@@ -4132,6 +4132,86 @@ export type Database = {
         }
         Relationships: []
       }
+      platform_invoices: {
+        Row: {
+          amount_due_cents: number
+          amount_paid_cents: number
+          amount_remaining_cents: number
+          attempt_count: number
+          created_at: string
+          currency: string
+          due_date: string | null
+          hosted_invoice_url: string | null
+          id: string
+          invoice_pdf: string | null
+          last_payment_error: string | null
+          number: string | null
+          paid_at: string | null
+          period_end: string | null
+          period_start: string | null
+          profile_id: string
+          status: string
+          stripe_customer_id: string | null
+          stripe_invoice_id: string
+          stripe_subscription_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount_due_cents?: number
+          amount_paid_cents?: number
+          amount_remaining_cents?: number
+          attempt_count?: number
+          created_at?: string
+          currency?: string
+          due_date?: string | null
+          hosted_invoice_url?: string | null
+          id?: string
+          invoice_pdf?: string | null
+          last_payment_error?: string | null
+          number?: string | null
+          paid_at?: string | null
+          period_end?: string | null
+          period_start?: string | null
+          profile_id: string
+          status: string
+          stripe_customer_id?: string | null
+          stripe_invoice_id: string
+          stripe_subscription_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount_due_cents?: number
+          amount_paid_cents?: number
+          amount_remaining_cents?: number
+          attempt_count?: number
+          created_at?: string
+          currency?: string
+          due_date?: string | null
+          hosted_invoice_url?: string | null
+          id?: string
+          invoice_pdf?: string | null
+          last_payment_error?: string | null
+          number?: string | null
+          paid_at?: string | null
+          period_end?: string | null
+          period_start?: string | null
+          profile_id?: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_invoice_id?: string
+          stripe_subscription_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "platform_invoices_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       platform_terms: {
         Row: {
           body_markdown: string
