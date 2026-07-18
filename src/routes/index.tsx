@@ -589,8 +589,7 @@ export function SiteFooter() {
             <img
               src={wordmark.url}
               alt="MODO"
-              className="h-9 w-auto object-contain"
-              style={{ mixBlendMode: "multiply" }}
+              className="h-11 w-auto object-contain"
               draggable={false}
             />
           </Link>
