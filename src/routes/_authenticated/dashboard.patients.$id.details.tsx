@@ -407,13 +407,13 @@ function PatientProfilePage() {
 
 function Section({ title, children, onEdit, actionsRight }: { title: string; children: React.ReactNode; onEdit?: () => void; actionsRight?: React.ReactNode }) {
   return (
-    <div className="overflow-hidden rounded-xl bg-card">
-      <div className="flex items-center justify-between bg-muted px-4 py-2.5">
-        <h2 className="text-sm font-bold uppercase tracking-wider text-primary">{title}</h2>
-        {onEdit && <Button size="sm" variant="outline" className="h-7 rounded-full" onClick={onEdit}><Edit2 className="mr-1 h-3 w-3" />Edit</Button>}
+    <div className="overflow-hidden rounded-xl border bg-card">
+      <div className="flex items-center justify-between gap-2 bg-muted px-3 py-2 sm:px-4 sm:py-2.5">
+        <h2 className="truncate text-xs font-bold uppercase tracking-wider text-primary sm:text-sm">{title}</h2>
+        {onEdit && <Button size="sm" variant="outline" className="h-7 shrink-0 rounded-full" onClick={onEdit}><Edit2 className="mr-1 h-3 w-3" />Edit</Button>}
         {actionsRight}
       </div>
-      <div className="space-y-1 p-4">{children}</div>
+      <div className="space-y-1 p-3 sm:p-4">{children}</div>
     </div>
   );
 }
