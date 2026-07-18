@@ -521,10 +521,16 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-[color:var(--hairline)] bg-[color:var(--paper)]/85 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 lg:px-8">
-        <Link to="/" className="flex items-center gap-2.5">
-          <img src={appIcon.url} alt="" className="h-8 w-8 rounded-lg border border-[color:var(--hairline)] bg-white" />
-          <span className="font-serif text-xl tracking-[0.28em] text-[color:var(--ink)]">MODO</span>
+        <Link to="/" aria-label="MODO home" className="flex items-center">
+          <img
+            src={wordmark.url}
+            alt="MODO"
+            className="h-8 w-auto object-contain sm:h-9"
+            style={{ mixBlendMode: "multiply" }}
+            draggable={false}
+          />
         </Link>
+
 
         <div className="flex items-center gap-2">
           <Link to="/auth" className="hidden sm:inline-flex">
