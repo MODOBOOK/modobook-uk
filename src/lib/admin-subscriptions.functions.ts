@@ -291,7 +291,7 @@ export const createDiscountCode = createServerFn({ method: "POST" })
         stripe_coupon_id: coupon.id,
         stripe_promo_code_id: promo.id,
         active: true,
-      })
+      } as any)
       .select()
       .single();
     if (error) throw error;
