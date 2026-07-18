@@ -103,10 +103,10 @@ function FeaturesPage() {
         <section className="mx-auto max-w-7xl px-5 pb-8 lg:px-8">
           <div className="grid gap-4 sm:grid-cols-3">
             <div className="overflow-hidden rounded-3xl border border-[color:var(--hairline)] bg-white sm:col-span-2">
-              <img src={tabletPlatform.url} alt="MODO clinical platform on tablet" className="aspect-[16/10] w-full object-cover" loading="lazy" />
+              <img src={tabletBooking.url} alt="MODO booking on tablet" className="aspect-[16/10] w-full object-cover object-center" loading="lazy" />
             </div>
             <div className="overflow-hidden rounded-3xl border border-[color:var(--hairline)] bg-white">
-              <img src={consultationPhoto.url} alt="Practitioner using MODO on a tablet" className="aspect-[16/10] w-full object-cover sm:aspect-auto sm:h-full" loading="lazy" />
+              <img src={consultationPhoto.url} alt="Practitioner using MODO on a tablet" className="h-full w-full object-cover object-center aspect-[16/10] sm:aspect-auto sm:min-h-full" loading="lazy" />
             </div>
           </div>
         </section>
