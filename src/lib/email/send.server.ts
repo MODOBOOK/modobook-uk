@@ -252,7 +252,7 @@ export async function sendPlatformArrearsEmail(input: {
       attemptCount: input.attemptCount,
       hostedInvoiceUrl: input.hostedInvoiceUrl || undefined,
       billingUrl: `${origin}/dashboard/billing`,
-      logoUrl: profile.hero_logo_url || null,
+      logoUrl: null,
       brandColor: profile.brand_color || null,
     },
   })
