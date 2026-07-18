@@ -144,7 +144,7 @@ function LandingPage() {
                     variant="outline"
                     className="w-full rounded-full border-[color:var(--hairline)] bg-white px-8 text-sm font-medium text-[color:var(--ink)] hover:bg-[color:var(--muted)] sm:w-auto"
                   >
-                    Tour the platform <ArrowRight className="ml-1 h-4 w-4" />
+                    <a href="#tour" className="inline-flex items-center">Tour the platform <ArrowRight className="ml-1 h-4 w-4" /></a>
                   </Button>
                 </Link>
               </div>
