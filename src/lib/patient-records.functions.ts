@@ -40,39 +40,37 @@ export const getPatientTimeline = createServerFn({ method: "GET" })
 
     const events: TimelineEvent[] = [];
 
-    // Appointments
+    // Appointments (match by email/name — appointments has no client_id fk)
+    const orParts = [
+      client.email ? `patient_email.eq.${client.email}` : null,
+      `patient_name.eq.${client.full_name}`,
+    ].filter(Boolean).join(",");
     const { data: appts } = await context.supabase
-      .from("appointments").select("id, appointment_date, appointment_time, status, treatment_names, patient_email, patient_name, total_price")
-      .or([
-        client.email ? `patient_email.eq.${client.email}` : null,
-        `patient_name.eq.${client.full_name}`,
-      ].filter(Boolean).join(","))
+      .from("appointments").select("id, scheduled_date, start_time, status, treatment_name_snapshot, total_amount")
+      .or(orParts)
       .eq("profile_id", profileId)
-      .order("appointment_date", { ascending: false })
+      .order("scheduled_date", { ascending: false })
       .limit(200);
-    for (const a of appts ?? []) {
-      const dt = new Date(`${a.appointment_date}T${a.appointment_time || "00:00"}`);
+    for (const a of (appts as any[]) ?? []) {
+      const dt = new Date(`${a.scheduled_date}T${a.start_time || "00:00"}`);
       events.push({
         id: `appt:${a.id}`,
         kind: "appointment",
-        title: Array.isArray(a.treatment_names) ? a.treatment_names.join(", ") : (a.treatment_names || "Appointment"),
+        title: a.treatment_name_snapshot || "Appointment",
         description: a.status,
-        occurred_at: dt.toISOString(),
-        meta: { status: a.status, total_price: a.total_price },
+        occurred_at: isNaN(dt.getTime()) ? new Date().toISOString() : dt.toISOString(),
+        meta: { status: a.status, total_amount: a.total_amount },
       });
     }
 
     // Consultations
     const { data: consults } = await context.supabase
-      .from("consultations").select("id, created_at, status, current_step")
-      .or([
-        client.email ? `patient_email.eq.${client.email}` : null,
-        `patient_name.eq.${client.full_name}`,
-      ].filter(Boolean).join(","))
+      .from("consultations").select("id, created_at, status, current_step, patient_email, patient_name")
+      .or(orParts)
       .eq("profile_id", profileId)
       .order("created_at", { ascending: false })
       .limit(50);
-    for (const c of consults ?? []) {
+    for (const c of (consults as any[]) ?? []) {
       events.push({
         id: `consult:${c.id}`,
         kind: "consultation",
@@ -85,28 +83,28 @@ export const getPatientTimeline = createServerFn({ method: "GET" })
 
     // Notes
     const { data: notes } = await context.supabase
-      .from("client_notes").select("id, note, created_at, is_visible_to_patient")
+      .from("client_notes").select("id, body, created_at, visible_to_patient")
       .eq("client_id", data.clientId).order("created_at", { ascending: false }).limit(100);
-    for (const n of notes ?? []) {
+    for (const n of (notes as any[]) ?? []) {
       events.push({
         id: `note:${n.id}`,
         kind: "note",
         title: "Practitioner note",
-        description: n.note,
+        description: n.body,
         occurred_at: n.created_at,
-        meta: { shared: n.is_visible_to_patient },
+        meta: { shared: n.visible_to_patient },
       });
     }
 
     // Consents
     const { data: consents } = await context.supabase
-      .from("appointment_consents").select("id, signed_at, status, template_name, created_at")
+      .from("appointment_consents").select("id, signed_at, status, created_at")
       .eq("client_id", data.clientId).order("created_at", { ascending: false }).limit(100);
-    for (const c of consents ?? []) {
+    for (const c of (consents as any[]) ?? []) {
       events.push({
         id: `consent:${c.id}`,
         kind: "consent",
-        title: c.template_name || "Consent form",
+        title: "Consent form",
         description: c.status,
         occurred_at: c.signed_at || c.created_at,
       });
@@ -114,13 +112,13 @@ export const getPatientTimeline = createServerFn({ method: "GET" })
 
     // Medical forms
     const { data: forms } = await context.supabase
-      .from("appointment_medical_forms").select("id, status, template_name, created_at, submitted_at")
+      .from("appointment_medical_forms").select("id, status, created_at, submitted_at")
       .eq("client_id", data.clientId).order("created_at", { ascending: false }).limit(100);
-    for (const f of forms ?? []) {
+    for (const f of (forms as any[]) ?? []) {
       events.push({
         id: `form:${f.id}`,
         kind: "medical_form",
-        title: f.template_name || "Medical form",
+        title: "Medical form",
         description: f.status,
         occurred_at: f.submitted_at || f.created_at,
       });
@@ -128,28 +126,14 @@ export const getPatientTimeline = createServerFn({ method: "GET" })
 
     // Prescriptions
     const { data: rx } = await context.supabase
-      .from("client_prescriptions").select("id, drug_name, created_at, prescribed_on")
+      .from("client_prescriptions").select("id, product, created_at, prescribed_on")
       .eq("client_id", data.clientId).order("created_at", { ascending: false }).limit(100);
-    for (const r of rx ?? []) {
+    for (const r of (rx as any[]) ?? []) {
       events.push({
         id: `rx:${r.id}`,
         kind: "prescription",
-        title: r.drug_name || "Prescription",
+        title: r.product || "Prescription",
         occurred_at: r.prescribed_on || r.created_at,
-      });
-    }
-
-    // Payments
-    const { data: pays } = await context.supabase
-      .from("payments").select("id, amount, currency, status, created_at, description")
-      .eq("client_id", data.clientId).order("created_at", { ascending: false }).limit(100);
-    for (const p of pays ?? []) {
-      events.push({
-        id: `pay:${p.id}`,
-        kind: "payment",
-        title: p.description || "Payment",
-        description: `${(p.amount / 100).toFixed(2)} ${p.currency?.toUpperCase() || ""} · ${p.status}`,
-        occurred_at: p.created_at,
       });
     }
 
@@ -157,7 +141,7 @@ export const getPatientTimeline = createServerFn({ method: "GET" })
     const { data: comms } = await context.supabase
       .from("client_communications").select("id, channel, subject, body, created_at, direction")
       .eq("client_id", data.clientId).order("created_at", { ascending: false }).limit(100);
-    for (const c of comms ?? []) {
+    for (const c of (comms as any[]) ?? []) {
       events.push({
         id: `comm:${c.id}`,
         kind: "communication",
@@ -169,17 +153,18 @@ export const getPatientTimeline = createServerFn({ method: "GET" })
 
     // Files
     const { data: files } = await context.supabase
-      .from("client_files").select("id, kind, file_name, created_at")
+      .from("client_files").select("id, kind, filename, created_at")
       .eq("client_id", data.clientId).order("created_at", { ascending: false }).limit(100);
-    for (const f of files ?? []) {
+    for (const f of (files as any[]) ?? []) {
       events.push({
         id: `file:${f.id}`,
         kind: "file",
-        title: f.file_name || `${f.kind} uploaded`,
+        title: f.filename || `${f.kind} uploaded`,
         occurred_at: f.created_at,
         meta: { kind: f.kind },
       });
     }
+
 
     // Manual timeline events
     const { data: manual } = await context.supabase
