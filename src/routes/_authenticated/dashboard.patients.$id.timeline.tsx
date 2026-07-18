@@ -14,7 +14,7 @@ import {
 import { RescheduleAppointmentDialog } from "@/components/RescheduleAppointmentDialog";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/_authenticated/dashboard/patients/$id/")({
+export const Route = createFileRoute("/_authenticated/dashboard/patients/$id/timeline")({
   ssr: false,
   component: TimelinePage,
 });
