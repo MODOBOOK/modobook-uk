@@ -525,7 +525,7 @@ function AvatarUpload({ client, onUpload }: { client: any; onUpload: (f: File) =
   const ref = useRef<HTMLInputElement>(null);
   return (
     <button onClick={() => ref.current?.click()} className="group relative">
-      <div className="grid h-32 w-32 place-items-center overflow-hidden rounded-full bg-muted text-2xl font-bold text-muted-foreground">
+      <div className="grid h-20 w-20 place-items-center overflow-hidden rounded-full bg-muted text-xl font-bold text-muted-foreground sm:h-32 sm:w-32 sm:text-2xl">
         {client.avatar_url ? <img src={client.avatar_url} alt="" className="h-full w-full object-cover" /> : initials(client.full_name)}
       </div>
       <div className="absolute inset-x-0 bottom-0 rounded-b-full bg-black/60 py-1 text-[10px] font-bold text-white opacity-0 transition group-hover:opacity-100">
