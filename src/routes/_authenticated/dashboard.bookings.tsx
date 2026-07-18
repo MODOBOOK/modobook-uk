@@ -1089,6 +1089,7 @@ function CheckoutSheet({
   const [discountKind, setDiscountKind] = useState<"percent" | "amount">("percent");
   const [checkoutNotes, setCheckoutNotes] = useState("");
   const [busy, setBusy] = useState(false);
+  const [showReschedule, setShowReschedule] = useState(false);
   const cancelled = a.status === "cancelled";
   const isNoShow = a.status === "no_show";
   const color = a.treatments?.color || "#3b82f6";
