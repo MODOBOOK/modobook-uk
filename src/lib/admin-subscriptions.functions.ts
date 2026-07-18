@@ -79,13 +79,24 @@ export const createSubscriptionPlan = createServerFn({ method: "POST" })
 
 export const updateSubscriptionPlan = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: { id: string; active?: boolean; description?: string | null; name?: string }) => i)
+  .inputValidator((i: { id: string; active?: boolean; description?: string | null; name?: string; is_default?: boolean }) => i)
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const patch: { active?: boolean; description?: string | null; name?: string } = {};
+    const patch: { active?: boolean; description?: string | null; name?: string; is_default?: boolean } = {};
     if (data.active !== undefined) patch.active = data.active;
     if (data.description !== undefined) patch.description = data.description;
     if (data.name !== undefined) patch.name = data.name;
+    if (data.is_default !== undefined) patch.is_default = data.is_default;
+
+    // Enforce single default: clear others first when setting one true
+    if (data.is_default === true) {
+      const { error: clrErr } = await context.supabase
+        .from("subscription_plans")
+        .update({ is_default: false })
+        .neq("id", data.id);
+      if (clrErr) throw clrErr;
+    }
+
     const { error } = await context.supabase
       .from("subscription_plans")
       .update(patch)
