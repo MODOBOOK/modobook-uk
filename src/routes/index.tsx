@@ -80,6 +80,7 @@ export const Route = createFileRoute("/")({
 
 function LandingPage() {
   const navigate = useNavigate();
+  const [tourView, setTourView] = useState<"patient" | "practitioner">("patient");
 
   // If launched from Home Screen (PWA standalone) and a session is present,
   // send practitioners straight to their dashboard so a force-close feels like
