@@ -20,6 +20,8 @@ import foundersScrubs from "@/assets/modo-founders-scrubs.png.asset.json";
 import foundersSuits from "@/assets/modo-founders-suits.png.asset.json";
 import builtForPhoto from "@/assets/modo-built-for.png.asset.json";
 import appIcon from "@/assets/modo-app-icon.jpg.asset.json";
+import wordmark from "@/assets/modo-wordmark.jpeg.asset.json";
+
 
 
 import {
