@@ -4042,6 +4042,63 @@ export type Database = {
         }
         Relationships: []
       }
+      platform_discount_codes: {
+        Row: {
+          active: boolean
+          amount_off_cents: number | null
+          code: string
+          created_at: string
+          currency: string
+          description: string | null
+          duration: string
+          duration_in_months: number | null
+          expires_at: string | null
+          id: string
+          max_redemptions: number | null
+          percent_off: number | null
+          redemptions: number
+          stripe_coupon_id: string | null
+          stripe_promo_code_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          amount_off_cents?: number | null
+          code: string
+          created_at?: string
+          currency?: string
+          description?: string | null
+          duration?: string
+          duration_in_months?: number | null
+          expires_at?: string | null
+          id?: string
+          max_redemptions?: number | null
+          percent_off?: number | null
+          redemptions?: number
+          stripe_coupon_id?: string | null
+          stripe_promo_code_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          amount_off_cents?: number | null
+          code?: string
+          created_at?: string
+          currency?: string
+          description?: string | null
+          duration?: string
+          duration_in_months?: number | null
+          expires_at?: string | null
+          id?: string
+          max_redemptions?: number | null
+          percent_off?: number | null
+          redemptions?: number
+          stripe_coupon_id?: string | null
+          stripe_promo_code_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       platform_email_customizations: {
         Row: {
           closing_override: string | null
@@ -4155,44 +4212,75 @@ export type Database = {
       practitioner_subscriptions: {
         Row: {
           cancel_at_period_end: boolean
+          comped: boolean
           created_at: string
           current_period_end: string | null
+          custom_price_cents: number | null
+          discount_code_id: string | null
+          extra_locations: number
+          extra_practitioners: number
           id: string
           notes: string | null
           plan_id: string | null
           profile_id: string
           status: string
+          stripe_addon_items: Json
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
+          suspended_at: string | null
+          trial_end: string | null
           updated_at: string
         }
         Insert: {
           cancel_at_period_end?: boolean
+          comped?: boolean
           created_at?: string
           current_period_end?: string | null
+          custom_price_cents?: number | null
+          discount_code_id?: string | null
+          extra_locations?: number
+          extra_practitioners?: number
           id?: string
           notes?: string | null
           plan_id?: string | null
           profile_id: string
           status?: string
+          stripe_addon_items?: Json
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
+          suspended_at?: string | null
+          trial_end?: string | null
           updated_at?: string
         }
         Update: {
           cancel_at_period_end?: boolean
+          comped?: boolean
           created_at?: string
           current_period_end?: string | null
+          custom_price_cents?: number | null
+          discount_code_id?: string | null
+          extra_locations?: number
+          extra_practitioners?: number
           id?: string
           notes?: string | null
           plan_id?: string | null
           profile_id?: string
           status?: string
+          stripe_addon_items?: Json
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
+          suspended_at?: string | null
+          trial_end?: string | null
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "practitioner_subscriptions_discount_code_id_fkey"
+            columns: ["discount_code_id"]
+            isOneToOne: false
+            referencedRelation: "platform_discount_codes"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "practitioner_subscriptions_plan_id_fkey"
             columns: ["plan_id"]
@@ -5305,9 +5393,11 @@ export type Database = {
           amount_cents: number
           created_at: string
           currency: string
+          default_trial_days: number
           description: string | null
           id: string
           interval: string
+          kind: string
           name: string
           stripe_price_id: string | null
           updated_at: string
@@ -5317,9 +5407,11 @@ export type Database = {
           amount_cents: number
           created_at?: string
           currency?: string
+          default_trial_days?: number
           description?: string | null
           id?: string
           interval?: string
+          kind?: string
           name: string
           stripe_price_id?: string | null
           updated_at?: string
@@ -5329,9 +5421,11 @@ export type Database = {
           amount_cents?: number
           created_at?: string
           currency?: string
+          default_trial_days?: number
           description?: string | null
           id?: string
           interval?: string
+          kind?: string
           name?: string
           stripe_price_id?: string | null
           updated_at?: string
@@ -6795,6 +6889,19 @@ export type Database = {
         }[]
       }
       list_my_prescriber_visits: { Args: never; Returns: Json }
+      lookup_active_discount_code: {
+        Args: { _code: string }
+        Returns: {
+          amount_off_cents: number
+          code: string
+          currency: string
+          description: string
+          duration: string
+          duration_in_months: number
+          id: string
+          percent_off: number
+        }[]
+      }
       move_to_dlq: {
         Args: {
           dlq_name: string
@@ -6840,6 +6947,10 @@ export type Database = {
           p_slug: string
         }
         Returns: string
+      }
+      practitioner_has_platform_access: {
+        Args: { _profile_id: string }
+        Returns: boolean
       }
       prescriber_get_referral_full: {
         Args: { p_referral_id: string }

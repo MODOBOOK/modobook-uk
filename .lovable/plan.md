@@ -1,87 +1,121 @@
-# Patient Records — Clinical Timeline
+# MODO platform billing
 
-A calm, left-rail patient record built around a single chronological **Clinical Timeline** — every visit, consent, form, med, invoice, plan and photo lands on one spine, but nothing merges into a wall of text: each entry is a typed card the practitioner can expand.
+Bills practitioners for using MODO on your existing Stripe account. Reuses the plans / subscriptions / checkout scaffolding already in place and adds add-ons, a 30-day free trial, discount codes, enforcement, a practitioner-facing billing page, and full admin controls.
 
-## Layout
+## 1. What practitioners see
+
+New page: **Dashboard → Billing**.
+- Trial banner counting down "X days left in your free trial".
+- Current plan card (name, price, next renewal date).
+- Add-ons: **+1 location** and **+1 practitioner** with `+/−` steppers; changes prorate via Stripe.
+- Discount code box — apply a code you've issued.
+- "Manage payment method / invoices" opens Stripe Customer Portal.
+- Cancel / resume subscription buttons.
+
+New practitioners get an automatic `trialing` subscription row on first sign-in (30-day trial, no card required). At day 30 they're prompted to add a card; if they don't, dashboard goes read-only and their public `/m/slug` page shows "Temporarily unavailable" until they pay.
+
+## 2. What admins see (extends the existing Admin → Subscriptions section)
+
+Plan management:
+- Create **base** plans (MODO Standard £X/mo) and **add-on** plans (Extra location £Y, Extra practitioner £Z) — a `kind` field distinguishes them.
+- Activate / deactivate plans.
+
+Per practitioner:
+- Assign / change base plan.
+- Set add-on quantities (locations, practitioners).
+- **Custom price** override (bespoke £/mo for this practitioner only — creates a one-off Stripe price).
+- **Comp** toggle (fully free, keeps access, no Stripe charge).
+- **Apply discount code** to their subscription.
+- **Extend trial** (push `trial_end` forward N days).
+- **Force-suspend** / reactivate immediately (independent of Stripe state).
+- **Refund last invoice** (via Stripe).
+- **Open in Stripe** deep link to the customer/subscription for anything not exposed in-app.
+
+Discount codes:
+- New "Discount codes" card. Create codes with percent-off or amount-off, once / forever / N months, expiry, max redemptions. Creates matching Stripe coupon + promotion code so it works at checkout and via `applyDiscountToSubscription`.
+
+Audit: every admin action here writes to `admin_audit_log`.
+
+## 3. Enforcement
+
+A single `practitioner_has_platform_access(profile_id)` SQL function is the source of truth. It returns true when the practitioner is `comped`, has an active/trialing Stripe subscription, or `trial_end` is still in the future.
+
+- Dashboard root loader calls it; if false, renders a "Subscription required" screen with a Stripe checkout button and Sign out (no other pages accessible).
+- Public booking page (`m.$slug`) checks it via the existing public server fn; if false, shows a neutral "This clinic is temporarily unavailable" message and hides treatments/booking.
+
+## 4. Database changes (one migration)
 
 ```text
-┌───────────── Patient header (sticky) ──────────────────────────┐
-│  Avatar · Name · Age  ·  ⚠ Allergies · Meds · Flags · Next appt │
-├──────────────┬─────────────────────────────────────────────────┤
-│ Left rail    │  Section content                                │
-│              │                                                 │
-│ Overview     │  (AI brief + KPIs + next-due)                   │
-│ Timeline ◉   │  (default view — the spine)                     │
-│ Photos       │  Before/after grid w/ side-by-side compare      │
-│ Consents     │  Signed docs, versioned                         │
-│ Medical forms│  Intake + review dates                          │
-│ Medications  │  Current + history, interactions surfaced       │
-│ Plans        │  Active treatment plans / progress              │
-│ Invoices     │  Payments, credits, packages                    │
-│ Messages     │  Comms log                                      │
-│ Files        │  Uploads                                        │
-└──────────────┴─────────────────────────────────────────────────┘
+subscription_plans
+  + kind text (base | addon_location | addon_practitioner)  default 'base'
+  + default_trial_days int  default 30
+
+practitioner_subscriptions
+  + trial_end timestamptz
+  + custom_price_cents int
+  + extra_locations int  default 0
+  + extra_practitioners int  default 0
+  + discount_code_id uuid  FK platform_discount_codes(id)
+  + comped boolean  default false
+  + suspended_at timestamptz
+  + stripe_addon_items jsonb  (map plan_id -> stripe subscription item id)
+
+platform_discount_codes  (new)
+  id, code (unique), description,
+  percent_off, amount_off_cents,
+  duration (once | forever | repeating), duration_in_months,
+  max_redemptions, redemptions, expires_at, active,
+  stripe_coupon_id, stripe_promo_code_id,
+  created_at, updated_at
+  RLS: admins manage; also SELECT-by-code for authenticated (needed for practitioner code lookup)
+
+function practitioner_has_platform_access(_profile_id uuid) returns boolean
+  SECURITY DEFINER; true when comped, or status in (active, trialing),
+  or trial_end > now(); false when suspended_at is set.
+
+trigger on auth.users insert (practitioner role):
+  auto-create practitioner_subscriptions row with status='trialing',
+  trial_end = now() + 30 days.
 ```
 
-- **Sticky header** always shows allergies, current meds count, safeguarding flag, next appt. Never buried.
-- **Left rail** with counts (e.g. "Consents 4"), active section highlighted, keyboard `g t` / `g p` shortcuts.
-- Nothing merges: each section is its own route, own scroll, own empty state.
+All new tables get GRANTs to `authenticated` and `service_role`.
 
-## Signature features
+## 5. Server functions
 
-1. **AI Patient Brief** (Overview) — one-tap "Prep for next visit". Pulls last visit notes, products/doses, unresolved concerns, allergy conflicts, photos, plan progress. Uses Lovable AI (`google/gemini-3-flash-preview`). Server fn `generatePatientBrief` — regenerated on demand, cached per appointment.
-2. **Before/After timeline** — Photos tab shows chronological strip; tap two = side-by-side compare with date + treatments-between overlay. Area tags (lips, jawline…) filter the strip.
-3. **Patient-facing mirror** — practitioner toggles per-item "Share with patient". Patient app shows a curated view: plan, next-due, aftercare, photos they've approved, invoices, points. Uses existing `patient_accounts`.
+Extend `src/lib/admin-subscriptions.functions.ts`:
+- `createAddonPlan` (kind = addon_location | addon_practitioner)
+- `setPractitionerAddons({ profileId, extraLocations, extraPractitioners })` — updates DB and, if a live Stripe sub exists, upserts subscription items with `proration_behavior: 'create_prorations'`.
+- `setCustomPrice({ profileId, cents })` — creates a one-off Stripe price and swaps the base subscription item.
+- `applyDiscountToSubscription({ profileId, codeId })` — attaches Stripe coupon.
+- `compPractitioner({ profileId, comped })`.
+- `extendTrial({ profileId, days })` — updates DB `trial_end` and, if Stripe sub exists, `trial_end` on Stripe.
+- `forceSuspend({ profileId, suspended })`.
+- `refundLastInvoice({ profileId })`.
+- `openStripeCustomerLink({ profileId })` → returns dashboard deep link.
+- `listPlatformDiscountCodes`, `createPlatformDiscountCode`, `updatePlatformDiscountCode`.
 
-## Timeline entry types (typed cards)
+New `src/lib/practitioner-billing.functions.ts` (auth'd, self-scoped):
+- `getMyBilling()` — subscription + plan + addons + trial_end + access status.
+- `startBillingCheckout({ successUrl, cancelUrl })` — Stripe Checkout with base + addon line items, `subscription_data.trial_end` from DB, allow_promotion_codes true.
+- `openStripePortal({ returnUrl })` — Stripe Billing Portal session.
+- `updateMyAddons({ extraLocations, extraPractitioners })`.
+- `redeemDiscountCode({ code })`.
+- `cancelMySubscription()` / `resumeMySubscription()`.
 
-Appointment · Consent signed · Medical form submitted · Photo added · Note · Medication prescribed · Invoice/payment · Plan created/updated · Message · Manual event. Filter chips at top of Timeline: All / Clinical / Admin / Photos.
+Update the existing Stripe webhook (`src/routes/api/public/stripe/webhook.ts`) to handle `customer.subscription.created/updated/deleted` and `invoice.payment_failed/succeeded` for platform subscriptions — set `status`, `current_period_end`, `trial_end`, `cancel_at_period_end`, and clear `suspended_at` on successful payment.
 
-## Data model (additions)
+## 6. UI
 
-- `patient_timeline_events` — unified view (materialised) over existing tables + a `manual_events` table for practitioner-added entries. Keeps the spine without duplicating source-of-truth data.
-- `clinic_clients.share_with_patient` flags per related record (add `shared_with_patient boolean` to: consents, aftercare, plans, invoices, photos).
-- `patient_ai_briefs` — cached AI brief per (client_id, appointment_id).
-- `client_medications` — structured med list (drug, dose, route, started, stopped, prescriber). Currently only free-text on profile.
-- `clinic_clients.safeguarding_flag`, `clinic_clients.gp_details` (jsonb: surgery, address, phone).
+New file `src/routes/_authenticated/dashboard.billing.tsx` (Billing page above).
+New tile in the dashboard menu linking to it.
+`src/routes/_authenticated/admin.tsx` — extend `SubscriptionsSection`: plan `kind` selector in `NewPlanDialog`, per-practitioner drawer with Custom price / Add-ons / Trial extension / Comp / Suspend / Discount / Refund / Open in Stripe, and a new `DiscountCodesCard`.
+`src/routes/_authenticated/dashboard.tsx` (layout) — call `practitioner_has_platform_access` in loader; if false, render `<SubscriptionRequiredScreen />` instead of children.
+`src/routes/m.$slug.tsx` — hide booking surface when access is false.
 
-All RLS scoped to owning practitioner; grants for `authenticated` + `service_role`.
+## 7. Out of scope for this pass
 
-## Routes
+- Usage-based fees on patient bookings (kept flat + add-ons per your answer).
+- Yearly plans with annual-discount logic (Stripe interval switch already supported at plan level).
+- Team-seat management UI beyond a numeric add-on count.
 
-- `/dashboard/patients` — searchable directory (exists, polish).
-- `/dashboard/patients/$id` → redirects to `/timeline`.
-- `/dashboard/patients/$id/timeline` (default)
-- `/dashboard/patients/$id/overview` (AI brief + KPIs)
-- `/dashboard/patients/$id/photos`
-- `/dashboard/patients/$id/consents`
-- `/dashboard/patients/$id/forms`
-- `/dashboard/patients/$id/medications`
-- `/dashboard/patients/$id/plans`
-- `/dashboard/patients/$id/invoices`
-- `/dashboard/patients/$id/messages`
-- `/dashboard/patients/$id/files`
-
-Under `_authenticated`. Sticky header lives in a `_layout` route with `<Outlet />`.
-
-## Phasing
-
-**Phase 1 (this turn)**
-- Migration: `client_medications`, brief cache, sharing flags, GP/safeguarding fields, `manual_events`.
-- Route shell + sticky header + left rail + Timeline (aggregated read from existing tables).
-- Photos before/after compare.
-- Overview with AI brief server fn.
-
-**Phase 2**
-- Patient-mirror surface in the patient app.
-- Per-item "Share" toggles.
-- Manual event composer, richer filters, export.
-
-## Technical notes
-
-- Timeline: single server fn `getPatientTimeline({clientId, cursor, filters})` merging appointments, consents, forms, invoices, photos, meds, plans, manual events into one sorted, paginated stream. RLS via `requireSupabaseAuth` + owner check.
-- AI brief: `generatePatientBrief` server fn → Lovable AI gateway, structured output (concerns, red_flags, suggested_questions, last_products). Stored in `patient_ai_briefs`.
-- Photos: reuse existing storage bucket; compare view is client-side (two `<img>` + slider). Tags in a small `client_photo_tags` table.
-- Left rail counts hydrated once per patient via a `getPatientCounts` server fn to keep the rail snappy.
-
-Confirm and I'll start with Phase 1.
+Ready to implement — I'll ship this as one migration plus the server functions and UI in follow-up turns.
