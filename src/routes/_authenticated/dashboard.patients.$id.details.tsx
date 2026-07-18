@@ -27,8 +27,9 @@ import {
 import {
   ArrowLeft, Mail, Phone as PhoneIcon, MessageSquare, Edit2, Plus, Trash2, Camera,
   Upload, FileText, AlertTriangle, Download, Loader2, ClipboardList, X, Check,
-  CalendarPlus, CreditCard, FileSignature, Send, ChevronDown, ChevronRight, Info,
+  CalendarPlus, CreditCard, FileSignature, Send, ChevronDown, ChevronRight, Info, CalendarClock,
 } from "lucide-react";
+import { RescheduleAppointmentDialog } from "@/components/RescheduleAppointmentDialog";
 import { toast } from "sonner";
 import { ConcernsCard } from "@/components/patient/ConcernsCard";
 import { CommsTimeline } from "@/components/patient/CommsTimeline";
