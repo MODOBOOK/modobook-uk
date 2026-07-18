@@ -168,7 +168,7 @@ function LandingPage() {
                     <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">The founders</div>
                     <div className="text-sm font-semibold text-[color:var(--ink)]">Nurse Prescribers · UK</div>
                   </div>
-                  <img src={appIcon.url} alt="MODO app icon" className="h-10 w-10 rounded-xl border border-[color:var(--hairline)]" />
+                  <img src={wordmark.url} alt="MODO" className="h-6 w-auto object-contain" />
                 </div>
               </div>
             </div>
