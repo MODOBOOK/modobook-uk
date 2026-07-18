@@ -39,12 +39,14 @@ export const createSubscriptionPlan = createServerFn({ method: "POST" })
   .inputValidator((i: {
     name: string; description?: string;
     amount_cents: number; currency?: string; interval?: "month" | "year";
+    kind?: "base" | "addon_location" | "addon_practitioner";
+    default_trial_days?: number;
   }) => i)
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const currency = (data.currency || "gbp").toLowerCase();
     const interval = data.interval || "month";
-    // Create Stripe product + recurring price
+    const kind = data.kind || "base";
     const { getStripe } = await import("./stripe.server");
     const stripe = getStripe();
     const product = await stripe.products.create({
@@ -65,6 +67,8 @@ export const createSubscriptionPlan = createServerFn({ method: "POST" })
         amount_cents: data.amount_cents,
         currency,
         interval,
+        kind,
+        default_trial_days: data.default_trial_days ?? 30,
         stripe_price_id: price.id,
       })
       .select()
@@ -223,5 +227,174 @@ export const cancelPractitionerSubscription = createServerFn({ method: "POST" })
       .update({ cancel_at_period_end: true })
       .eq("id", sub.id);
     if (uErr) throw uErr;
+    return { ok: true };
+  });
+
+// ---------- Discount codes ----------
+
+export const listDiscountCodes = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context);
+    const { data, error } = await context.supabase
+      .from("platform_discount_codes")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    return data ?? [];
+  });
+
+export const createDiscountCode = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: {
+    code: string; description?: string;
+    percent_off?: number | null; amount_off_cents?: number | null;
+    duration: "once" | "repeating" | "forever";
+    duration_in_months?: number | null;
+    max_redemptions?: number | null;
+    expires_at?: string | null;
+  }) => i)
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { getStripe } = await import("./stripe.server");
+    const stripe = getStripe();
+
+    const coupon = await stripe.coupons.create({
+      name: data.description || data.code,
+      duration: data.duration,
+      duration_in_months: data.duration === "repeating" ? (data.duration_in_months ?? 3) : undefined,
+      percent_off: data.percent_off ?? undefined,
+      amount_off: data.amount_off_cents ?? undefined,
+      currency: data.amount_off_cents ? "gbp" : undefined,
+      max_redemptions: data.max_redemptions ?? undefined,
+      redeem_by: data.expires_at ? Math.floor(new Date(data.expires_at).getTime() / 1000) : undefined,
+    });
+    const promo = await stripe.promotionCodes.create({
+      coupon: coupon.id,
+      code: data.code.toUpperCase(),
+      max_redemptions: data.max_redemptions ?? undefined,
+      expires_at: data.expires_at ? Math.floor(new Date(data.expires_at).getTime() / 1000) : undefined,
+    } as any);
+
+    const { data: row, error } = await context.supabase
+      .from("platform_discount_codes")
+      .insert({
+        code: data.code.toUpperCase(),
+        description: data.description ?? null,
+        percent_off: data.percent_off ?? null,
+        amount_off_cents: data.amount_off_cents ?? null,
+        currency: data.amount_off_cents ? "gbp" : null,
+        duration: data.duration,
+        duration_in_months: data.duration_in_months ?? null,
+        max_redemptions: data.max_redemptions ?? null,
+        expires_at: data.expires_at ?? null,
+        stripe_coupon_id: coupon.id,
+        stripe_promo_code_id: promo.id,
+        active: true,
+      } as any)
+      .select()
+      .single();
+    if (error) throw error;
+    return row;
+  });
+
+export const toggleDiscountCode = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: { id: string; active: boolean }) => i)
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { data: dc, error } = await context.supabase
+      .from("platform_discount_codes")
+      .select("stripe_promo_code_id")
+      .eq("id", data.id)
+      .single();
+    if (error) throw error;
+    if (dc.stripe_promo_code_id) {
+      const { getStripe } = await import("./stripe.server");
+      const stripe = getStripe();
+      await stripe.promotionCodes.update(dc.stripe_promo_code_id, { active: data.active });
+    }
+    await context.supabase
+      .from("platform_discount_codes")
+      .update({ active: data.active })
+      .eq("id", data.id);
+    return { ok: true };
+  });
+
+// ---------- Per-practitioner controls ----------
+
+export const extendTrial = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: { profileId: string; days: number }) => i)
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { data: sub } = await context.supabase
+      .from("practitioner_subscriptions")
+      .select("id, trial_end, stripe_subscription_id")
+      .eq("profile_id", data.profileId)
+      .maybeSingle();
+    const base = sub?.trial_end && new Date(sub.trial_end).getTime() > Date.now()
+      ? new Date(sub.trial_end)
+      : new Date();
+    base.setDate(base.getDate() + data.days);
+    const iso = base.toISOString();
+    if (sub) {
+      await context.supabase.from("practitioner_subscriptions").update({ trial_end: iso }).eq("id", sub.id);
+      if (sub.stripe_subscription_id) {
+        const { getStripe } = await import("./stripe.server");
+        try {
+          await getStripe().subscriptions.update(sub.stripe_subscription_id, { trial_end: Math.floor(base.getTime() / 1000) });
+        } catch (e) { console.error("stripe trial extend", e); }
+      }
+    } else {
+      await context.supabase.from("practitioner_subscriptions").insert({
+        profile_id: data.profileId, trial_end: iso, status: "trialing",
+      });
+    }
+    return { ok: true, trial_end: iso };
+  });
+
+export const setCustomPrice = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: { profileId: string; custom_price_cents: number | null }) => i)
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    await context.supabase
+      .from("practitioner_subscriptions")
+      .update({ custom_price_cents: data.custom_price_cents })
+      .eq("profile_id", data.profileId);
+    return { ok: true };
+  });
+
+export const toggleComped = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: { profileId: string; comped: boolean }) => i)
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { data: existing } = await context.supabase
+      .from("practitioner_subscriptions")
+      .select("id")
+      .eq("profile_id", data.profileId)
+      .maybeSingle();
+    if (existing) {
+      await context.supabase.from("practitioner_subscriptions")
+        .update({ comped: data.comped, status: data.comped ? "active" : "pending" })
+        .eq("id", existing.id);
+    } else {
+      await context.supabase.from("practitioner_subscriptions")
+        .insert({ profile_id: data.profileId, comped: data.comped, status: data.comped ? "active" : "pending" });
+    }
+    return { ok: true };
+  });
+
+export const setSuspended = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: { profileId: string; suspended: boolean }) => i)
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    await context.supabase
+      .from("practitioner_subscriptions")
+      .update({ suspended_at: data.suspended ? new Date().toISOString() : null })
+      .eq("profile_id", data.profileId);
     return { ok: true };
   });

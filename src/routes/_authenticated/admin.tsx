@@ -270,6 +270,7 @@ function AdminPage() {
       <UserSupportCard />
 
       <SubscriptionsSection practitioners={practitioners} />
+      <DiscountCodesSection />
     </div>
     </AdminShell>
   );
@@ -867,6 +868,114 @@ function Stat({ label, value }: { label: string; value: number }) {
       <CardContent className="p-4">
         <div className="text-xs uppercase tracking-wide text-muted-foreground">{label}</div>
         <div className="mt-1 text-2xl font-bold">{value}</div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function DiscountCodesSection() {
+  const [codes, setCodes] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showNew, setShowNew] = useState(false);
+  const [code, setCode] = useState("");
+  const [desc, setDesc] = useState("");
+  const [percent, setPercent] = useState("");
+  const [amount, setAmount] = useState("");
+  const [duration, setDuration] = useState<"once" | "repeating" | "forever">("once");
+  const [months, setMonths] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function reload() {
+    setLoading(true);
+    try {
+      const { listDiscountCodes } = await import("@/lib/admin-subscriptions.functions");
+      setCodes(await listDiscountCodes());
+    } catch (e) { console.error(e); }
+    finally { setLoading(false); }
+  }
+  useEffect(() => { reload(); }, []);
+
+  async function create() {
+    if (!code.trim()) return;
+    setBusy(true);
+    try {
+      const { createDiscountCode } = await import("@/lib/admin-subscriptions.functions");
+      await createDiscountCode({ data: {
+        code: code.trim(),
+        description: desc || undefined,
+        percent_off: percent ? Number(percent) : null,
+        amount_off_cents: amount ? Math.round(Number(amount) * 100) : null,
+        duration,
+        duration_in_months: months ? Number(months) : null,
+      } });
+      toast.success("Code created");
+      setShowNew(false); setCode(""); setDesc(""); setPercent(""); setAmount(""); setMonths("");
+      reload();
+    } catch (e) { toast.error(e instanceof Error ? e.message : "Failed"); }
+    finally { setBusy(false); }
+  }
+
+  async function toggle(id: string, active: boolean) {
+    try {
+      const { toggleDiscountCode } = await import("@/lib/admin-subscriptions.functions");
+      await toggleDiscountCode({ data: { id, active } });
+      reload();
+    } catch (e) { toast.error(e instanceof Error ? e.message : "Failed"); }
+  }
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle>Platform discount codes</CardTitle>
+        <Button size="sm" onClick={() => setShowNew((v) => !v)}>{showNew ? "Cancel" : "New code"}</Button>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {showNew && (
+          <div className="rounded-md border p-3 space-y-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <div><Label>Code</Label><Input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="MODO2026" /></div>
+              <div><Label>Description</Label><Input value={desc} onChange={(e) => setDesc(e.target.value)} /></div>
+              <div><Label>Percent off</Label><Input type="number" value={percent} onChange={(e) => setPercent(e.target.value)} placeholder="20" /></div>
+              <div><Label>Amount off (£)</Label><Input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="10" /></div>
+              <div>
+                <Label>Duration</Label>
+                <Select value={duration} onValueChange={(v) => setDuration(v as any)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="once">Once</SelectItem>
+                    <SelectItem value="repeating">Repeating</SelectItem>
+                    <SelectItem value="forever">Forever</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {duration === "repeating" && (
+                <div><Label>Months</Label><Input type="number" value={months} onChange={(e) => setMonths(e.target.value)} /></div>
+              )}
+            </div>
+            <Button onClick={create} disabled={busy}>Create</Button>
+          </div>
+        )}
+        {loading ? <p className="text-sm text-muted-foreground">Loading…</p> : codes.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No discount codes yet.</p>
+        ) : (
+          <div className="space-y-2">
+            {codes.map((c) => (
+              <div key={c.id} className="flex items-center justify-between rounded-md border px-3 py-2">
+                <div>
+                  <div className="font-mono font-medium">{c.code}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {c.percent_off ? `${c.percent_off}% off` : c.amount_off_cents ? `£${(c.amount_off_cents / 100).toFixed(2)} off` : ""} · {c.duration}
+                    {c.max_redemptions ? ` · ${c.redemptions ?? 0}/${c.max_redemptions}` : c.redemptions ? ` · ${c.redemptions} used` : ""}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant={c.active ? "default" : "outline"}>{c.active ? "Active" : "Disabled"}</Badge>
+                  <Button size="sm" variant="outline" onClick={() => toggle(c.id, !c.active)}>{c.active ? "Disable" : "Enable"}</Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </CardContent>
     </Card>
   );
