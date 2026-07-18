@@ -4,11 +4,28 @@ import { Button } from "@/components/ui/button";
 import { BrandMark } from "@/components/BrandMark";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import brandBoards from "@/assets/modo-brand-boards.png.asset.json";
+import tabletBooking from "@/assets/modo-tablet-booking.png.asset.json";
+import tabletPlatform from "@/assets/modo-tablet-platform.png.asset.json";
+import consultationPhoto from "@/assets/modo-consultation.png.asset.json";
+import foundersScrubs from "@/assets/modo-founders-scrubs.png.asset.json";
+import foundersSuits from "@/assets/modo-founders-suits.png.asset.json";
+import builtForPhoto from "@/assets/modo-built-for.png.asset.json";
+import appIcon from "@/assets/modo-app-icon.jpg.asset.json";
 
 
 import {
   Calendar,
   Link2,
+
   Palette,
   ShieldCheck,
   CreditCard,
