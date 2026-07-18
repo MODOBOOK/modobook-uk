@@ -234,7 +234,7 @@ export async function sendPlatformArrearsEmail(input: {
   const { supabaseAdmin } = await import('@/integrations/supabase/client.server')
   const { data: profile } = await supabaseAdmin
     .from('profiles')
-    .select('email, full_name, clinic_name, brand_color, hero_logo_url')
+    .select('email, full_name, clinic_name, brand_color')
     .eq('id', input.profileId)
     .maybeSingle()
   if (!profile?.email) return
