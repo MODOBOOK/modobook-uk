@@ -2,6 +2,9 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { SiteHeader, SiteFooter, IconTile } from "./index";
+import tabletBooking from "@/assets/modo-tablet-booking.png.asset.json";
+
+
 import {
   Gift, Sparkles, Users, Share2, PartyPopper, Coins, Trophy, ArrowRight,
   CheckCircle2, HelpCircle, Wallet, HeartHandshake,
@@ -34,37 +37,47 @@ function RewardsPage() {
 
       <main className="flex-1">
         {/* Hero */}
-        <section className="relative overflow-hidden border-b bg-gradient-to-b from-primary/10 via-background to-background">
-          <div className="mx-auto max-w-5xl px-4 py-16 text-center lg:px-8 lg:py-24">
-            <div className="mx-auto mb-5 inline-flex items-center gap-2 rounded-full border bg-background/70 px-3 py-1 text-xs font-medium text-muted-foreground backdrop-blur">
-              <Gift className="h-3.5 w-3.5" /> Built into every MODO clinic
+        <section className="relative overflow-hidden border-b border-[color:var(--hairline)] bg-[color:var(--paper)]">
+          <div className="mx-auto grid max-w-7xl gap-10 px-5 py-14 lg:grid-cols-[1fr_1fr] lg:items-center lg:gap-14 lg:px-8 lg:py-20">
+            <div>
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[color:var(--accent)]/25 bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">
+                <Gift className="h-3.5 w-3.5" /> Built into every MODO clinic
+              </div>
+              <h1 className="text-4xl font-bold leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl">
+                Refer friends. Earn rewards. Simple as that.
+              </h1>
+              <p className="mt-5 max-w-lg text-base text-[color:var(--ink-soft)] sm:text-lg">
+                Every MODO clinic can run its own referral and loyalty programme. Share a friend's code
+                when you book, or hand out your own — you both benefit when they attend.
+              </p>
+              <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                <Link to="/auth" className="w-full sm:w-auto">
+                  <Button size="lg" className="w-full rounded-full bg-[color:var(--ink)] px-8 text-white hover:bg-[color:var(--ink)]/90 sm:w-auto">
+                    Find your clinic <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </Link>
+                <a href="#how-it-works" className="w-full sm:w-auto">
+                  <Button size="lg" variant="outline" className="w-full rounded-full border-[color:var(--hairline)] bg-white px-8 sm:w-auto">
+                    How it works
+                  </Button>
+                </a>
+              </div>
+              <div className="mt-8 flex flex-wrap gap-2">
+                <IconTile icon={Gift} label="Referral rewards" />
+                <IconTile icon={Coins} label="Loyalty credit" />
+                <IconTile icon={Sparkles} label="Points on every visit" />
+                <IconTile icon={Trophy} label="Reward tiers" />
+              </div>
             </div>
-            <h1 className="font-serif text-4xl leading-tight sm:text-5xl lg:text-6xl">
-              Refer friends. Earn rewards. Simple as that.
-            </h1>
-            <p className="mx-auto mt-5 max-w-2xl text-base text-muted-foreground sm:text-lg">
-              Every MODO clinic can run its own referral and loyalty programme. Share a friend's code
-              when you book, or hand out your own — you both benefit when they attend.
-            </p>
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-              <Link to="/auth">
-                <Button size="lg">Find your clinic <ArrowRight className="ml-2 h-4 w-4" /></Button>
-              </Link>
-              <a href="#how-it-works">
-                <Button size="lg" variant="outline">How it works</Button>
-              </a>
-            </div>
-            <div className="mx-auto mt-10 flex max-w-2xl flex-wrap justify-center gap-3">
-              <IconTile icon={Gift} label="Referral rewards" />
-              <IconTile icon={Coins} label="Loyalty credit" />
-              <IconTile icon={Sparkles} label="Points on every visit" />
-              <IconTile icon={Trophy} label="Reward tiers" />
+            <div className="overflow-hidden rounded-3xl border border-[color:var(--hairline)]">
+              <img src={tabletBooking.url} alt="MODO booking with rewards" className="aspect-[4/5] w-full object-cover" loading="lazy" />
             </div>
           </div>
         </section>
 
         {/* SECTION 1 — New patients */}
-        <section id="new-patients" className="border-b">
+        <section id="new-patients" className="border-b border-[color:var(--hairline)]">
+
           <div className="mx-auto max-w-6xl px-4 py-16 lg:px-8 lg:py-20">
             <div className="mx-auto max-w-3xl text-center">
               <span className="inline-flex items-center gap-2 rounded-full border bg-muted px-3 py-1 text-xs font-medium">

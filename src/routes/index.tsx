@@ -20,6 +20,8 @@ import foundersScrubs from "@/assets/modo-founders-scrubs.png.asset.json";
 import foundersSuits from "@/assets/modo-founders-suits.png.asset.json";
 import builtForPhoto from "@/assets/modo-built-for.png.asset.json";
 import appIcon from "@/assets/modo-app-icon.jpg.asset.json";
+import wordmark from "@/assets/modo-wordmark.jpeg.asset.json";
+
 
 
 import {
@@ -519,10 +521,16 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-[color:var(--hairline)] bg-[color:var(--paper)]/85 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 lg:px-8">
-        <Link to="/" className="flex items-center gap-2.5">
-          <img src={appIcon.url} alt="" className="h-8 w-8 rounded-lg border border-[color:var(--hairline)] bg-white" />
-          <span className="font-serif text-xl tracking-[0.28em] text-[color:var(--ink)]">MODO</span>
+        <Link to="/" aria-label="MODO home" className="flex items-center">
+          <img
+            src={wordmark.url}
+            alt="MODO"
+            className="h-8 w-auto object-contain sm:h-9"
+            style={{ mixBlendMode: "multiply" }}
+            draggable={false}
+          />
         </Link>
+
 
         <div className="flex items-center gap-2">
           <Link to="/auth" className="hidden sm:inline-flex">
@@ -578,10 +586,16 @@ export function SiteFooter() {
     <footer className="border-t border-[color:var(--hairline)] bg-[color:var(--paper)]">
       <div className="mx-auto grid max-w-7xl gap-8 px-5 py-14 sm:grid-cols-2 lg:grid-cols-4 lg:px-8">
         <div>
-          <Link to="/" className="flex items-center gap-2.5">
-            <img src={appIcon.url} alt="" className="h-9 w-9 rounded-lg border border-[color:var(--hairline)] bg-white" />
-            <span className="font-serif text-lg tracking-[0.28em] text-[color:var(--ink)]">MODO</span>
+          <Link to="/" aria-label="MODO home" className="flex items-center">
+            <img
+              src={wordmark.url}
+              alt="MODO"
+              className="h-9 w-auto object-contain"
+              style={{ mixBlendMode: "multiply" }}
+              draggable={false}
+            />
           </Link>
+
           <p className="mt-4 max-w-xs text-sm text-[color:var(--ink-soft)]">
             The aesthetics-only booking & clinical platform. Built by two UK Nurse Prescribers.
           </p>

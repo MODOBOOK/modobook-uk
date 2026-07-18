@@ -1,7 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { SiteHeader, SiteFooter, IconTile } from "./index";
+import { SiteHeader, SiteFooter } from "./index";
+import foundersSuits from "@/assets/modo-founders-suits.png.asset.json";
+import builtForPhoto from "@/assets/modo-built-for.png.asset.json";
+
 import { Syringe, Sparkles, Stethoscope, Users, MapPin, HeartHandshake, CheckCircle2 } from "lucide-react";
 
 export const Route = createFileRoute("/who-its-for")({
@@ -101,31 +104,30 @@ function WhoPage() {
     <div className="modo-marketing min-h-screen bg-[color:var(--paper)] text-[color:var(--ink)]">
       <SiteHeader />
       <main>
-        <section className="border-b">
-          <div className="mx-auto grid max-w-7xl gap-10 px-4 py-16 lg:grid-cols-2 lg:items-center lg:px-8">
+        <section className="border-b border-[color:var(--hairline)]">
+          <div className="mx-auto grid max-w-7xl gap-10 px-5 py-14 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-14 lg:px-8 lg:py-20">
             <div>
-              <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
+              <div className="eyebrow">§ Who it's for</div>
+              <h1 className="mt-4 text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
                 One platform for every aesthetics practitioner.
               </h1>
-              <p className="mt-4 text-lg text-muted-foreground">
+              <p className="mt-5 max-w-lg text-base text-[color:var(--ink-soft)] sm:text-lg">
                 MODO isn't medics-only. It isn't a salon app. It's built for the whole
                 aesthetics industry — HCPs and non-HCPs — under one safer clinical standard.
               </p>
-              <div className="mt-6 flex flex-wrap gap-3">
-                <Link to="/auth"><Button size="lg">Start free</Button></Link>
-                <Link to="/prescriber-hub"><Button size="lg" variant="outline">Prescriber Hub</Button></Link>
+              <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                <Link to="/auth"><Button size="lg" className="w-full rounded-full bg-[color:var(--ink)] px-8 text-white hover:bg-[color:var(--ink)]/90 sm:w-auto">Start free</Button></Link>
+                <Link to="/prescriber-hub"><Button size="lg" variant="outline" className="w-full rounded-full border-[color:var(--hairline)] bg-white px-8 sm:w-auto">Prescriber Hub</Button></Link>
               </div>
             </div>
-            <div className="grid aspect-[5/4] w-full grid-cols-2 grid-rows-2 gap-3 rounded-3xl bg-gradient-to-br from-primary/10 via-muted/40 to-primary/5 p-6 shadow-lg ring-1 ring-black/5 sm:gap-5 sm:p-10">
-              <IconTile icon={Stethoscope} label="HCPs" />
-              <IconTile icon={Syringe} label="Non-HCPs" />
-              <IconTile icon={MapPin} label="Mobile" />
-              <IconTile icon={Users} label="Clinics" />
+            <div className="overflow-hidden rounded-3xl border border-[color:var(--hairline)]">
+              <img src={foundersSuits.url} alt="MODO founders" className="aspect-[4/5] w-full object-cover object-top" loading="lazy" />
             </div>
           </div>
         </section>
 
-        <section className="mx-auto max-w-7xl px-4 py-16 lg:px-8">
+        <section className="mx-auto max-w-7xl px-5 py-14 lg:px-8">
+
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {personas.map((p) => (
               <Card key={p.title} className="h-full">
@@ -150,13 +152,20 @@ function WhoPage() {
           </div>
         </section>
 
-        <section className="border-t bg-muted/30">
-          <div className="mx-auto max-w-3xl px-4 py-16 text-center lg:px-8">
-            <h2 className="text-2xl font-semibold sm:text-3xl">Ready to join MODO?</h2>
-            <p className="mt-3 text-muted-foreground">Set up your clinic in minutes — free to start.</p>
-            <Link to="/auth"><Button size="lg" className="mt-6">Start free</Button></Link>
+        <section className="mx-auto max-w-7xl px-5 pb-4 lg:px-8">
+          <div className="overflow-hidden rounded-3xl border border-[color:var(--hairline)]">
+            <img src={builtForPhoto.url} alt="Built exclusively for aesthetics" className="aspect-[21/9] w-full object-cover" loading="lazy" />
           </div>
         </section>
+
+        <section className="border-t border-[color:var(--hairline)] bg-white">
+          <div className="mx-auto max-w-3xl px-5 py-16 text-center lg:px-8">
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Ready to join MODO?</h2>
+            <p className="mt-3 text-[color:var(--ink-soft)]">Set up your clinic in minutes — free to start.</p>
+            <Link to="/auth"><Button size="lg" className="mt-6 rounded-full bg-[color:var(--ink)] px-8 text-white hover:bg-[color:var(--ink)]/90">Start free</Button></Link>
+          </div>
+        </section>
+
       </main>
       <SiteFooter />
     </div>
