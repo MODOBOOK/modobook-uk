@@ -2,6 +2,9 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { SiteHeader, SiteFooter } from "./index";
+import foundersScrubs from "@/assets/modo-founders-scrubs.png.asset.json";
+import consultationPhoto from "@/assets/modo-consultation.png.asset.json";
+
 import {
   ClipboardList, Network, ShieldCheck, Users, FileSignature,
   Stethoscope, HeartHandshake, CheckCircle2, Lock,
