@@ -576,6 +576,38 @@ function ClinicalFeature({
   );
 }
 
+function TourPanel({
+  title,
+  intro,
+  steps,
+}: {
+  title: string;
+  intro: string;
+  steps: { icon: React.ComponentType<{ className?: string }>; title: string; desc: string }[];
+}) {
+  return (
+    <div className="rounded-3xl border border-[color:var(--hairline)] bg-white p-6 sm:p-8">
+      <h3 className="text-2xl font-bold tracking-tight sm:text-3xl">{title}</h3>
+      <p className="mt-3 text-sm text-[color:var(--ink-soft)]">{intro}</p>
+      <ol className="mt-6 space-y-4">
+        {steps.map((s, i) => (
+          <li key={s.title} className="flex gap-4">
+            <div className="flex h-9 w-9 flex-none items-center justify-center rounded-lg bg-[color:var(--clinical-blue-soft)] text-[color:var(--clinical-blue)]">
+              <s.icon className="h-4 w-4" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--ink-soft)]">Step {i + 1}</span>
+              </div>
+              <div className="mt-0.5 text-sm font-semibold text-[color:var(--ink)]">{s.title}</div>
+              <p className="mt-1 text-sm text-[color:var(--ink-soft)]">{s.desc}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+
 
 
 export function SiteHeader() {
