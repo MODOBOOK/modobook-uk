@@ -135,14 +135,21 @@ function FeaturesPage() {
           </section>
         ))}
 
-        <section className="border-t bg-muted/30">
-          <div className="mx-auto max-w-3xl px-4 py-16 text-center lg:px-8">
-            <CheckCircle2 className="mx-auto mb-3 h-8 w-8 text-primary" />
-            <h2 className="text-2xl font-semibold sm:text-3xl">Ready to try MODO?</h2>
-            <p className="mt-3 text-muted-foreground">Set up your clinic in minutes — free to start, no card required.</p>
-            <Link to="/auth"><Button size="lg" className="mt-6">Start free</Button></Link>
+        <section className="mx-auto max-w-7xl px-5 pb-10 lg:px-8">
+          <div className="overflow-hidden rounded-3xl border border-[color:var(--hairline)]">
+            <img src={tabletBooking.url} alt="Patient booking flow inside MODO" className="aspect-[21/9] w-full object-cover" loading="lazy" />
           </div>
         </section>
+
+        <section className="border-t border-[color:var(--hairline)] bg-white">
+          <div className="mx-auto max-w-3xl px-5 py-16 text-center lg:px-8">
+            <CheckCircle2 className="mx-auto mb-3 h-8 w-8 text-[color:var(--accent)]" />
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Ready to try MODO?</h2>
+            <p className="mt-3 text-[color:var(--ink-soft)]">Set up your clinic in minutes — free to start, no card required.</p>
+            <Link to="/auth"><Button size="lg" className="mt-6 rounded-full bg-[color:var(--ink)] px-8 text-white hover:bg-[color:var(--ink)]/90">Start free</Button></Link>
+          </div>
+        </section>
+
       </main>
       <SiteFooter />
     </div>
