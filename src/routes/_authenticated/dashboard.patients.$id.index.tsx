@@ -9,8 +9,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import {
   Activity, Calendar, ClipboardList, FileSignature, Pill, StickyNote, CreditCard,
-  MessageSquare, Image as ImageIcon, User, Plus, Loader2, Trash2,
+  MessageSquare, Image as ImageIcon, User, Plus, Loader2, Trash2, CalendarClock,
 } from "lucide-react";
+import { RescheduleAppointmentDialog } from "@/components/RescheduleAppointmentDialog";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/dashboard/patients/$id/")({
@@ -48,6 +49,7 @@ function TimelinePage() {
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [busy, setBusy] = useState(false);
+  const [reschedFor, setReschedFor] = useState<null | { id: string; date: string; start: string; end: string }>(null);
 
   async function reload() {
     setEvents(null);
@@ -153,6 +155,20 @@ function TimelinePage() {
                           <Trash2 className="h-3.5 w-3.5" />
                         </Button>
                       )}
+                      {evt.kind === "appointment" && evt.meta?.status !== "cancelled" && evt.meta?.appointment_id && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setReschedFor({
+                            id: String(evt.meta!.appointment_id),
+                            date: String(evt.meta!.scheduled_date),
+                            start: String(evt.meta!.start_time || ""),
+                            end: String(evt.meta!.end_time || ""),
+                          })}
+                        >
+                          <CalendarClock className="mr-1 h-3.5 w-3.5" /> Reschedule
+                        </Button>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -161,6 +177,19 @@ function TimelinePage() {
           })}
         </ol>
       )}
+
+      {reschedFor && (
+        <RescheduleAppointmentDialog
+          open={!!reschedFor}
+          onOpenChange={(v) => { if (!v) setReschedFor(null); }}
+          appointmentId={reschedFor.id}
+          initialDate={reschedFor.date}
+          initialStart={reschedFor.start}
+          initialEnd={reschedFor.end}
+          onRescheduled={() => { setReschedFor(null); reload(); }}
+        />
+      )}
     </div>
   );
 }
+

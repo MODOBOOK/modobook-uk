@@ -25,7 +25,9 @@ import {
   Mail,
   Percent,
   Undo2,
+  CalendarClock,
 } from "lucide-react";
+import { RescheduleAppointmentDialog } from "@/components/RescheduleAppointmentDialog";
 import {
   listMyAppointments,
   updateAppointmentNotes,
@@ -1087,6 +1089,7 @@ function CheckoutSheet({
   const [discountKind, setDiscountKind] = useState<"percent" | "amount">("percent");
   const [checkoutNotes, setCheckoutNotes] = useState("");
   const [busy, setBusy] = useState(false);
+  const [showReschedule, setShowReschedule] = useState(false);
   const cancelled = a.status === "cancelled";
   const isNoShow = a.status === "no_show";
   const color = a.treatments?.color || "#3b82f6";
@@ -1419,7 +1422,12 @@ function CheckoutSheet({
       </div>
 
 
-      <DialogFooter>
+      <DialogFooter className="flex-wrap gap-2">
+        {!cancelled && (
+          <Button size="sm" variant="outline" disabled={busy} onClick={() => setShowReschedule(true)}>
+            <CalendarClock className="h-3.5 w-3.5 mr-1" /> Reschedule
+          </Button>
+        )}
         {!cancelled && (
           <Button size="sm" variant="ghost" className="text-destructive" disabled={busy} onClick={doCancel}>
             <Trash2 className="h-3.5 w-3.5 mr-1" /> Cancel appointment
@@ -1427,6 +1435,19 @@ function CheckoutSheet({
         )}
         <Button size="sm" variant="ghost" onClick={onClose}><X className="h-3.5 w-3.5 mr-1" /> Close</Button>
       </DialogFooter>
+
+      <RescheduleAppointmentDialog
+        open={showReschedule}
+        onOpenChange={setShowReschedule}
+        appointmentId={a.id}
+        initialDate={a.scheduled_date}
+        initialStart={a.start_time}
+        initialEnd={a.end_time}
+        onRescheduled={({ date, start, end }) => {
+          onPatch({ scheduled_date: date, start_time: start, end_time: end });
+        }}
+      />
     </div>
   );
 }
+
