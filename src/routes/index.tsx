@@ -27,12 +27,8 @@ import wordmark from "@/assets/modo-wordmark.png.asset.json";
 import {
   Calendar,
   Link2,
-
   Palette,
-  ShieldCheck,
   CreditCard,
-  Star,
-  Stethoscope,
   Sparkles,
   Users,
   ClipboardList,
@@ -40,20 +36,13 @@ import {
   Bell,
   MessageSquare,
   FileSignature,
-  PoundSterling,
   Layers,
   CheckCircle2,
-  HeartHandshake,
   Lock,
-  Pill,
-  Microscope,
-  GraduationCap,
   Network,
   Syringe,
   HandshakeIcon,
   ArrowRight,
-  Mail,
-  ExternalLink,
 } from "lucide-react";
 
 // Icon-led visuals — no AI imagery used in hero blocks for now.
