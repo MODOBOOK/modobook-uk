@@ -20,7 +20,7 @@ import foundersScrubs from "@/assets/modo-founders-scrubs.png.asset.json";
 import foundersSuits from "@/assets/modo-founders-suits.png.asset.json";
 import builtForPhoto from "@/assets/modo-built-for.png.asset.json";
 import appIcon from "@/assets/modo-app-icon.jpg.asset.json";
-import wordmark from "@/assets/modo-wordmark.jpeg.asset.json";
+import wordmark from "@/assets/modo-wordmark.png.asset.json";
 
 
 
@@ -525,8 +525,7 @@ export function SiteHeader() {
           <img
             src={wordmark.url}
             alt="MODO"
-            className="h-8 w-auto object-contain sm:h-9"
-            style={{ mixBlendMode: "multiply" }}
+            className="h-10 w-auto object-contain sm:h-12"
             draggable={false}
           />
         </Link>
@@ -590,8 +589,7 @@ export function SiteFooter() {
             <img
               src={wordmark.url}
               alt="MODO"
-              className="h-9 w-auto object-contain"
-              style={{ mixBlendMode: "multiply" }}
+              className="h-11 w-auto object-contain"
               draggable={false}
             />
           </Link>
