@@ -220,15 +220,15 @@ function PatientProfilePage() {
         <CardContent className="flex flex-col items-center gap-3 p-4 text-center sm:flex-row sm:items-center sm:p-6 sm:text-left">
           <div className="shrink-0"><AvatarUpload client={client} onUpload={uploadAvatar} /></div>
           <div className="min-w-0 flex-1 space-y-1">
-            <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
-              <h1 className="break-words text-xl font-bold sm:text-2xl">{client.full_name}</h1>
+            <div className="flex flex-wrap items-center justify-center gap-1.5 sm:justify-start">
+              <h1 className="break-words text-lg font-bold sm:text-2xl">{client.full_name}</h1>
               {client.has_allergies && (
-                <Badge variant="destructive" className="gap-1"><AlertTriangle className="h-3 w-3" />Allergy</Badge>
+                <Badge variant="destructive" className="gap-1 text-[10px]"><AlertTriangle className="h-3 w-3" />Allergy</Badge>
               )}
-              {client.archived && <Badge variant="secondary">Inactive</Badge>}
+              {client.archived && <Badge variant="secondary" className="text-[10px]">Inactive</Badge>}
             </div>
             {client.phone && <div className="break-all text-sm font-semibold">{client.phone}</div>}
-            {client.email && <div className="break-all text-sm text-muted-foreground">{client.email}</div>}
+            {client.email && <div className="break-all text-xs text-muted-foreground sm:text-sm">{client.email}</div>}
             {client.has_allergies && client.allergies && (
               <div className="mt-2 rounded-md border border-red-200 bg-red-50 p-2 text-left text-xs text-red-700">
                 <strong>Allergies:</strong> {client.allergies}
