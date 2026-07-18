@@ -98,7 +98,7 @@ const personas = [
 
 function WhoPage() {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="modo-marketing min-h-screen bg-[color:var(--paper)] text-[color:var(--ink)]">
       <SiteHeader />
       <main>
         <section className="border-b">

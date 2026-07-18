@@ -80,7 +80,7 @@ const groups = [
 
 function FeaturesPage() {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="modo-marketing min-h-screen bg-[color:var(--paper)] text-[color:var(--ink)]">
       <SiteHeader />
       <main>
         <section className="mx-auto max-w-5xl px-4 pt-16 pb-10 text-center lg:px-8">
