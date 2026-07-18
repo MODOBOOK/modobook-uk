@@ -12,13 +12,13 @@ export const Route = createFileRoute("/_authenticated/dashboard/patients/$id")({
   component: PatientRecordShell,
 });
 
-const TABS = [
+const TABS: Array<{ to: any; label: string; icon: any; exact?: boolean }> = [
   { to: "/dashboard/patients/$id", label: "Timeline", icon: Activity, exact: true },
   { to: "/dashboard/patients/$id/overview", label: "Overview", icon: User },
   { to: "/dashboard/patients/$id/photos", label: "Before / After", icon: Camera },
   { to: "/dashboard/patients/$id/medications", label: "Medications", icon: Pill },
   { to: "/dashboard/patients/$id/details", label: "Full record", icon: FileText },
-] as const;
+];
 
 function initials(name: string) {
   return (name || "?").split(/\s+/).filter(Boolean).slice(0, 2).map(s => s[0]?.toUpperCase() ?? "").join("") || "?";

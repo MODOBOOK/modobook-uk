@@ -125,6 +125,7 @@ import { Route as ApiPublicHooksDailyScheduleDigestRouteImport } from './routes/
 import { Route as ApiPublicHooksAppointmentRemindersRouteImport } from './routes/api/public/hooks/appointment-reminders'
 import { Route as ApiPublicBookingReleaseRouteImport } from './routes/api/public/booking/release'
 import { Route as AuthenticatedDashboardTrainingBookingsRouteImport } from './routes/_authenticated/dashboard.training.bookings'
+import { Route as AuthenticatedDashboardPatientsIdRouteImport } from './routes/_authenticated/dashboard.patients.$id'
 import { Route as AuthenticatedDashboardMarketingTemplatesRouteImport } from './routes/_authenticated/dashboard.marketing.templates'
 import { Route as AuthenticatedDashboardMarketingSegmentsRouteImport } from './routes/_authenticated/dashboard.marketing.segments'
 import { Route as AuthenticatedDashboardMarketingAutomationsRouteImport } from './routes/_authenticated/dashboard.marketing.automations'
@@ -779,6 +780,12 @@ const AuthenticatedDashboardTrainingBookingsRoute =
     path: '/bookings',
     getParentRoute: () => AuthenticatedDashboardTrainingRoute,
   } as any)
+const AuthenticatedDashboardPatientsIdRoute =
+  AuthenticatedDashboardPatientsIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => AuthenticatedDashboardPatientsRoute,
+  } as any)
 const AuthenticatedDashboardMarketingTemplatesRoute =
   AuthenticatedDashboardMarketingTemplatesRouteImport.update({
     id: '/templates',
@@ -817,9 +824,9 @@ const AuthenticatedAdminPractitionersIdRoute =
   } as any)
 const AuthenticatedDashboardPatientsIdDetailsRoute =
   AuthenticatedDashboardPatientsIdDetailsRouteImport.update({
-    id: '/$id/details',
-    path: '/$id/details',
-    getParentRoute: () => AuthenticatedDashboardPatientsRoute,
+    id: '/details',
+    path: '/details',
+    getParentRoute: () => AuthenticatedDashboardPatientsIdRoute,
   } as any)
 const AuthenticatedDashboardMarketingCampaignsIdRoute =
   AuthenticatedDashboardMarketingCampaignsIdRouteImport.update({
@@ -927,6 +934,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/marketing/automations': typeof AuthenticatedDashboardMarketingAutomationsRoute
   '/dashboard/marketing/segments': typeof AuthenticatedDashboardMarketingSegmentsRoute
   '/dashboard/marketing/templates': typeof AuthenticatedDashboardMarketingTemplatesRoute
+  '/dashboard/patients/$id': typeof AuthenticatedDashboardPatientsIdRouteWithChildren
   '/dashboard/training/bookings': typeof AuthenticatedDashboardTrainingBookingsRoute
   '/api/public/booking/release': typeof ApiPublicBookingReleaseRoute
   '/api/public/hooks/appointment-reminders': typeof ApiPublicHooksAppointmentRemindersRoute
@@ -1046,6 +1054,7 @@ export interface FileRoutesByTo {
   '/dashboard/marketing/automations': typeof AuthenticatedDashboardMarketingAutomationsRoute
   '/dashboard/marketing/segments': typeof AuthenticatedDashboardMarketingSegmentsRoute
   '/dashboard/marketing/templates': typeof AuthenticatedDashboardMarketingTemplatesRoute
+  '/dashboard/patients/$id': typeof AuthenticatedDashboardPatientsIdRouteWithChildren
   '/dashboard/training/bookings': typeof AuthenticatedDashboardTrainingBookingsRoute
   '/api/public/booking/release': typeof ApiPublicBookingReleaseRoute
   '/api/public/hooks/appointment-reminders': typeof ApiPublicHooksAppointmentRemindersRoute
@@ -1173,6 +1182,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/marketing/automations': typeof AuthenticatedDashboardMarketingAutomationsRoute
   '/_authenticated/dashboard/marketing/segments': typeof AuthenticatedDashboardMarketingSegmentsRoute
   '/_authenticated/dashboard/marketing/templates': typeof AuthenticatedDashboardMarketingTemplatesRoute
+  '/_authenticated/dashboard/patients/$id': typeof AuthenticatedDashboardPatientsIdRouteWithChildren
   '/_authenticated/dashboard/training/bookings': typeof AuthenticatedDashboardTrainingBookingsRoute
   '/api/public/booking/release': typeof ApiPublicBookingReleaseRoute
   '/api/public/hooks/appointment-reminders': typeof ApiPublicHooksAppointmentRemindersRoute
@@ -1300,6 +1310,7 @@ export interface FileRouteTypes {
     | '/dashboard/marketing/automations'
     | '/dashboard/marketing/segments'
     | '/dashboard/marketing/templates'
+    | '/dashboard/patients/$id'
     | '/dashboard/training/bookings'
     | '/api/public/booking/release'
     | '/api/public/hooks/appointment-reminders'
@@ -1419,6 +1430,7 @@ export interface FileRouteTypes {
     | '/dashboard/marketing/automations'
     | '/dashboard/marketing/segments'
     | '/dashboard/marketing/templates'
+    | '/dashboard/patients/$id'
     | '/dashboard/training/bookings'
     | '/api/public/booking/release'
     | '/api/public/hooks/appointment-reminders'
@@ -1545,6 +1557,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/marketing/automations'
     | '/_authenticated/dashboard/marketing/segments'
     | '/_authenticated/dashboard/marketing/templates'
+    | '/_authenticated/dashboard/patients/$id'
     | '/_authenticated/dashboard/training/bookings'
     | '/api/public/booking/release'
     | '/api/public/hooks/appointment-reminders'
@@ -2427,6 +2440,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardTrainingBookingsRouteImport
       parentRoute: typeof AuthenticatedDashboardTrainingRoute
     }
+    '/_authenticated/dashboard/patients/$id': {
+      id: '/_authenticated/dashboard/patients/$id'
+      path: '/$id'
+      fullPath: '/dashboard/patients/$id'
+      preLoaderRoute: typeof AuthenticatedDashboardPatientsIdRouteImport
+      parentRoute: typeof AuthenticatedDashboardPatientsRoute
+    }
     '/_authenticated/dashboard/marketing/templates': {
       id: '/_authenticated/dashboard/marketing/templates'
       path: '/templates'
@@ -2471,10 +2491,10 @@ declare module '@tanstack/react-router' {
     }
     '/_authenticated/dashboard/patients/$id/details': {
       id: '/_authenticated/dashboard/patients/$id/details'
-      path: '/$id/details'
+      path: '/details'
       fullPath: '/dashboard/patients/$id/details'
       preLoaderRoute: typeof AuthenticatedDashboardPatientsIdDetailsRouteImport
-      parentRoute: typeof AuthenticatedDashboardPatientsRoute
+      parentRoute: typeof AuthenticatedDashboardPatientsIdRoute
     }
     '/_authenticated/dashboard/marketing/campaigns/$id': {
       id: '/_authenticated/dashboard/marketing/campaigns/$id'
@@ -2547,17 +2567,32 @@ const AuthenticatedDashboardMarketingRouteWithChildren =
     AuthenticatedDashboardMarketingRouteChildren,
   )
 
-interface AuthenticatedDashboardPatientsRouteChildren {
-  AuthenticatedDashboardPatientsIndexRoute: typeof AuthenticatedDashboardPatientsIndexRoute
+interface AuthenticatedDashboardPatientsIdRouteChildren {
   AuthenticatedDashboardPatientsIdDetailsRoute: typeof AuthenticatedDashboardPatientsIdDetailsRoute
+}
+
+const AuthenticatedDashboardPatientsIdRouteChildren: AuthenticatedDashboardPatientsIdRouteChildren =
+  {
+    AuthenticatedDashboardPatientsIdDetailsRoute:
+      AuthenticatedDashboardPatientsIdDetailsRoute,
+  }
+
+const AuthenticatedDashboardPatientsIdRouteWithChildren =
+  AuthenticatedDashboardPatientsIdRoute._addFileChildren(
+    AuthenticatedDashboardPatientsIdRouteChildren,
+  )
+
+interface AuthenticatedDashboardPatientsRouteChildren {
+  AuthenticatedDashboardPatientsIdRoute: typeof AuthenticatedDashboardPatientsIdRouteWithChildren
+  AuthenticatedDashboardPatientsIndexRoute: typeof AuthenticatedDashboardPatientsIndexRoute
 }
 
 const AuthenticatedDashboardPatientsRouteChildren: AuthenticatedDashboardPatientsRouteChildren =
   {
+    AuthenticatedDashboardPatientsIdRoute:
+      AuthenticatedDashboardPatientsIdRouteWithChildren,
     AuthenticatedDashboardPatientsIndexRoute:
       AuthenticatedDashboardPatientsIndexRoute,
-    AuthenticatedDashboardPatientsIdDetailsRoute:
-      AuthenticatedDashboardPatientsIdDetailsRoute,
   }
 
 const AuthenticatedDashboardPatientsRouteWithChildren =
