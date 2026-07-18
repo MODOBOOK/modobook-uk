@@ -77,8 +77,9 @@ function PatientRecordShell() {
                 ? path === `/dashboard/patients/${id}`
                 : path.startsWith(t.to.replace("$id", id));
               const Icon = t.icon;
+              const LinkAny = Link as any;
               return (
-                <Link
+                <LinkAny
                   key={t.to}
                   to={t.to}
                   params={{ id }}
@@ -91,7 +92,7 @@ function PatientRecordShell() {
                 >
                   <Icon className="h-4 w-4" />
                   {t.label}
-                </Link>
+                </LinkAny>
               );
             })}
           </div>
