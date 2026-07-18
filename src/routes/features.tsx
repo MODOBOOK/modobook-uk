@@ -2,6 +2,10 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { SiteHeader, SiteFooter } from "./index";
+import tabletPlatform from "@/assets/modo-tablet-platform.png.asset.json";
+import tabletBooking from "@/assets/modo-tablet-booking.png.asset.json";
+import consultationPhoto from "@/assets/modo-consultation.png.asset.json";
+
 import {
   Palette, Link2, Calendar, ClipboardList, FileSignature, Camera, Users,
   Layers, CreditCard, Bell, MessageSquare, ShieldCheck, Sparkles, Stethoscope,
