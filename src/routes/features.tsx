@@ -137,7 +137,7 @@ function FeaturesPage() {
 
         <section className="mx-auto max-w-7xl px-5 pb-10 lg:px-8">
           <div className="overflow-hidden rounded-3xl border border-[color:var(--hairline)]">
-            <img src={tabletBooking.url} alt="Patient booking flow inside MODO" className="aspect-[21/9] w-full object-cover" loading="lazy" />
+            <img src={tabletPlatform.url} alt="MODO clinical platform" className="aspect-[21/9] w-full object-cover" style={{ objectPosition: "50% 30%" }} loading="lazy" />
           </div>
         </section>
 
