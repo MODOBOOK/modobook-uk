@@ -103,79 +103,77 @@ function LandingPage() {
 
   return (
     <div className="modo-marketing min-h-screen bg-[color:var(--paper)] text-[color:var(--ink)]">
-      {/* Clinical top nav — precision, thin, product-forward */}
-      <nav className="sticky top-0 z-50 w-full border-b border-[color:var(--hairline)] bg-white/80 backdrop-blur-md">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 lg:px-8">
-          <div className="flex items-center gap-8">
-            <Link to="/" className="text-xl font-bold uppercase tracking-tighter">
-              MODO
-            </Link>
-            <div className="hidden gap-6 text-sm font-medium text-[color:var(--ink-soft)] lg:flex">
-              <Link to="/features" className="transition-colors hover:text-[color:var(--clinical-blue)]">Features</Link>
-              <Link to="/prescriber-hub" className="transition-colors hover:text-[color:var(--clinical-blue)]">Prescriber Hub</Link>
-              <Link to="/rewards" className="transition-colors hover:text-[color:var(--clinical-blue)]">Rewards</Link>
-              <Link to="/who-its-for" className="transition-colors hover:text-[color:var(--clinical-blue)]">Who it's for</Link>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <Link to="/auth" className="hidden text-sm font-medium text-[color:var(--ink-soft)] hover:text-[color:var(--ink)] sm:inline">
-              Sign in
-            </Link>
-            <Link to="/auth">
-              <Button className="rounded-full bg-[color:var(--ink)] px-5 text-sm font-medium text-white hover:bg-[color:var(--ink)]/90">
-                Get started
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </nav>
+      <SiteHeader />
 
       <main>
-        {/* HERO — centred, clinical, product-forward */}
-        <header className="relative px-5 pb-16 pt-16 text-center lg:px-8 lg:pt-28">
-          <div className="mx-auto max-w-4xl">
-            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[color:var(--clinical-blue)]/20 bg-[color:var(--clinical-blue-soft)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[color:var(--clinical-blue)]">
-              <span className="pulse-dot" />
-              The clinical standard for aesthetics
+        {/* HERO — editorial split with founders imagery */}
+        <header className="relative overflow-hidden">
+          <div className="mx-auto grid max-w-7xl gap-12 px-5 pt-14 pb-16 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-16 lg:px-8 lg:pt-24 lg:pb-24">
+            <div>
+              <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[color:var(--accent)]/25 bg-[color:var(--clinical-blue-soft)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">
+                <span className="pulse-dot" />
+                Built exclusively for aesthetics
+              </div>
+
+              <h1 className="text-4xl font-bold leading-[1.02] tracking-tight text-[color:var(--ink)] sm:text-6xl lg:text-[4.25rem]">
+                Not another
+                <br />
+                generic booking app.
+              </h1>
+
+              <p className="mt-6 max-w-xl text-base leading-relaxed text-[color:var(--ink-soft)] sm:text-lg">
+                The UK booking, consultation and clinical platform built <em className="not-italic text-[color:var(--ink)]">only</em> for
+                aesthetics. Bookings, medical records, consent, face mapping, payments
+                and a prescriber hub — designed by two practising Nurse Prescribers.
+              </p>
+
+              <div className="mt-9 flex flex-col items-start gap-3 sm:flex-row sm:items-center">
+                <Link to="/auth" className="w-full sm:w-auto">
+                  <Button
+                    size="lg"
+                    className="w-full rounded-full bg-[color:var(--ink)] px-8 text-sm font-medium text-white shadow-sm hover:bg-[color:var(--ink)]/90 sm:w-auto"
+                  >
+                    Start free
+                  </Button>
+                </Link>
+                <Link to="/features" className="w-full sm:w-auto">
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="w-full rounded-full border-[color:var(--hairline)] bg-white px-8 text-sm font-medium text-[color:var(--ink)] hover:bg-[color:var(--muted)] sm:w-auto"
+                  >
+                    Tour the platform <ArrowRight className="ml-1 h-4 w-4" />
+                  </Button>
+                </Link>
+              </div>
+
+              <p className="mt-5 text-xs text-[color:var(--ink-soft)]">
+                No card required · 0% booking fees · UK/EU data residency
+              </p>
             </div>
 
-            <h1 className="text-4xl font-bold leading-[1.03] tracking-tight text-[color:var(--ink)] sm:text-6xl lg:text-[4.5rem]">
-              Aesthetics practice,
-              <br className="hidden sm:block" />{" "}
-              <span className="text-[color:var(--ink-soft)]">elevated to clinical excellence.</span>
-            </h1>
-
-            <p className="mx-auto mt-7 max-w-2xl text-base leading-relaxed text-[color:var(--ink-soft)] sm:text-lg">
-              The UK platform for aesthetics practitioners. Bookings, consultations,
-              consent, photos, prescribing and payments — one calm, medical-grade
-              workflow, designed by two practising Nurse Prescribers.
-            </p>
-
-            <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <Link to="/auth" className="w-full sm:w-auto">
-                <Button
-                  size="lg"
-                  className="w-full rounded-full bg-[color:var(--ink)] px-8 text-sm font-medium text-white shadow-sm hover:bg-[color:var(--ink)]/90 sm:w-auto"
-                >
-                  Start free
-                </Button>
-              </Link>
-              <Link to="/features" className="w-full sm:w-auto">
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="w-full rounded-full border-[color:var(--hairline)] bg-white px-8 text-sm font-medium text-[color:var(--ink)] hover:bg-[color:var(--muted)] sm:w-auto"
-                >
-                  Tour the platform <ArrowRight className="ml-1 h-4 w-4" />
-                </Button>
-              </Link>
+            {/* Founders portrait card */}
+            <div className="relative">
+              <div className="absolute -left-6 -top-6 hidden h-24 w-24 rounded-2xl border border-[color:var(--accent)]/30 bg-[color:var(--clinical-blue-soft)] lg:block" />
+              <div className="relative overflow-hidden rounded-3xl border border-[color:var(--hairline)] bg-white shadow-[0_30px_60px_-20px_rgba(60,40,20,0.25)]">
+                <img
+                  src={foundersSuits.url}
+                  alt="The two Nurse Prescribers behind MODO"
+                  className="aspect-[4/5] w-full object-cover object-top"
+                />
+                <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between rounded-2xl bg-white/95 px-4 py-3 backdrop-blur">
+                  <div>
+                    <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">The founders</div>
+                    <div className="text-sm font-semibold text-[color:var(--ink)]">Nurse Prescribers · UK</div>
+                  </div>
+                  <img src={appIcon.url} alt="MODO app icon" className="h-10 w-10 rounded-xl border border-[color:var(--hairline)]" />
+                </div>
+              </div>
             </div>
-
-            <p className="mt-5 text-xs text-[color:var(--ink-soft)]">
-              No card required · 0% booking fees · UK/EU data residency
-            </p>
           </div>
         </header>
+
+
 
         {/* FEATURE PILLS — four clinical tiles */}
         <section className="mx-auto max-w-7xl px-5 py-12 lg:px-8">
