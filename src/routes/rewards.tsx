@@ -2,6 +2,9 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { SiteHeader, SiteFooter, IconTile } from "./index";
+import consultationPhoto from "@/assets/modo-consultation.png.asset.json";
+import tabletBooking from "@/assets/modo-tablet-booking.png.asset.json";
+
 import {
   Gift, Sparkles, Users, Share2, PartyPopper, Coins, Trophy, ArrowRight,
   CheckCircle2, HelpCircle, Wallet, HeartHandshake,
