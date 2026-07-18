@@ -1272,6 +1272,65 @@ export type Database = {
           },
         ]
       }
+      client_medications: {
+        Row: {
+          client_id: string
+          created_at: string
+          dose: string | null
+          drug: string
+          frequency: string | null
+          id: string
+          is_current: boolean
+          notes: string | null
+          prescriber: string | null
+          profile_id: string
+          route: string | null
+          started_on: string | null
+          stopped_on: string | null
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          dose?: string | null
+          drug: string
+          frequency?: string | null
+          id?: string
+          is_current?: boolean
+          notes?: string | null
+          prescriber?: string | null
+          profile_id: string
+          route?: string | null
+          started_on?: string | null
+          stopped_on?: string | null
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          dose?: string | null
+          drug?: string
+          frequency?: string | null
+          id?: string
+          is_current?: boolean
+          notes?: string | null
+          prescriber?: string | null
+          profile_id?: string
+          route?: string | null
+          started_on?: string | null
+          stopped_on?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_medications_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clinic_clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_notes: {
         Row: {
           body: string
@@ -1439,6 +1498,7 @@ export type Database = {
           full_name: string
           gender: string | null
           gp_address: string | null
+          gp_details: Json | null
           gp_name: string | null
           group_name: string | null
           has_allergies: boolean
@@ -1456,6 +1516,8 @@ export type Database = {
           postcode: string | null
           preferred_contact: string | null
           profile_id: string
+          safeguarding_flag: boolean
+          safeguarding_note: string | null
           stripe_customer_id: string | null
           stripe_payment_method_id: string | null
           updated_at: string
@@ -1488,6 +1550,7 @@ export type Database = {
           full_name: string
           gender?: string | null
           gp_address?: string | null
+          gp_details?: Json | null
           gp_name?: string | null
           group_name?: string | null
           has_allergies?: boolean
@@ -1505,6 +1568,8 @@ export type Database = {
           postcode?: string | null
           preferred_contact?: string | null
           profile_id: string
+          safeguarding_flag?: boolean
+          safeguarding_note?: string | null
           stripe_customer_id?: string | null
           stripe_payment_method_id?: string | null
           updated_at?: string
@@ -1537,6 +1602,7 @@ export type Database = {
           full_name?: string
           gender?: string | null
           gp_address?: string | null
+          gp_details?: Json | null
           gp_name?: string | null
           group_name?: string | null
           has_allergies?: boolean
@@ -1554,6 +1620,8 @@ export type Database = {
           postcode?: string | null
           preferred_contact?: string | null
           profile_id?: string
+          safeguarding_flag?: boolean
+          safeguarding_note?: string | null
           stripe_customer_id?: string | null
           stripe_payment_method_id?: string | null
           updated_at?: string
@@ -3422,6 +3490,44 @@ export type Database = {
           },
         ]
       }
+      patient_ai_briefs: {
+        Row: {
+          appointment_id: string | null
+          brief: Json
+          client_id: string
+          created_at: string
+          generated_at: string
+          id: string
+          profile_id: string
+        }
+        Insert: {
+          appointment_id?: string | null
+          brief: Json
+          client_id: string
+          created_at?: string
+          generated_at?: string
+          id?: string
+          profile_id: string
+        }
+        Update: {
+          appointment_id?: string | null
+          brief?: Json
+          client_id?: string
+          created_at?: string
+          generated_at?: string
+          id?: string
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_ai_briefs_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clinic_clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       patient_credit_ledger: {
         Row: {
           clinic_profile_id: string
@@ -3668,6 +3774,53 @@ export type Database = {
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patient_timeline_manual_events: {
+        Row: {
+          body: string | null
+          client_id: string
+          created_at: string
+          id: string
+          kind: string
+          occurred_at: string
+          profile_id: string
+          shared_with_patient: boolean
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          body?: string | null
+          client_id: string
+          created_at?: string
+          id?: string
+          kind?: string
+          occurred_at?: string
+          profile_id: string
+          shared_with_patient?: boolean
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string | null
+          client_id?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          occurred_at?: string
+          profile_id?: string
+          shared_with_patient?: boolean
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_timeline_manual_events_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clinic_clients"
             referencedColumns: ["id"]
           },
         ]
