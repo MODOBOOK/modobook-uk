@@ -366,7 +366,45 @@ function LandingPage() {
           </div>
         </section>
 
+        {/* FOUNDERS BAND */}
+        <section className="mx-auto max-w-7xl px-5 py-20 lg:px-8">
+          <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:gap-14">
+            <div className="relative overflow-hidden rounded-3xl border border-[color:var(--hairline)]">
+              <img
+                src={foundersScrubs.url}
+                alt="MODO's Nurse Prescriber founders in clinical scrubs"
+                className="aspect-[4/3] w-full object-cover"
+              />
+            </div>
+            <div>
+              <div className="eyebrow">§ For practitioners, by practitioners</div>
+              <h2 className="mt-4 text-3xl font-bold leading-tight tracking-tight sm:text-4xl">
+                Two Nurse Prescribers.
+                <br />
+                <span className="text-[color:var(--ink-soft)]">One clinical standard.</span>
+              </h2>
+              <p className="mt-5 text-[color:var(--ink-soft)]">
+                MODO is designed by clinicians who still run clinics — every workflow,
+                consent flow and consultation step comes from real practice, not a
+                product manager's whiteboard.
+              </p>
+              <div className="mt-8 flex flex-wrap gap-3">
+                <div className="rounded-full border border-[color:var(--hairline)] bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[color:var(--ink)]">
+                  NMC registered
+                </div>
+                <div className="rounded-full border border-[color:var(--hairline)] bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[color:var(--ink)]">
+                  Independent prescribers
+                </div>
+                <div className="rounded-full border border-[color:var(--hairline)] bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[color:var(--ink)]">
+                  UK-built
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* CTA */}
+
         <section className="bg-white">
           <div className="mx-auto max-w-4xl px-5 py-24 text-center lg:px-8">
             <div className="eyebrow">Ready when you are</div>
