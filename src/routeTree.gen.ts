@@ -135,6 +135,7 @@ import { Route as AuthenticatedAdminPractitionersIdRouteImport } from './routes/
 import { Route as AuthenticatedDashboardPatientsIdIndexRouteImport } from './routes/_authenticated/dashboard.patients.$id.index'
 import { Route as AuthenticatedDashboardPatientsIdPhotosRouteImport } from './routes/_authenticated/dashboard.patients.$id.photos'
 import { Route as AuthenticatedDashboardPatientsIdOverviewRouteImport } from './routes/_authenticated/dashboard.patients.$id.overview'
+import { Route as AuthenticatedDashboardPatientsIdMedicationsRouteImport } from './routes/_authenticated/dashboard.patients.$id.medications'
 import { Route as AuthenticatedDashboardPatientsIdDetailsRouteImport } from './routes/_authenticated/dashboard.patients.$id.details'
 import { Route as AuthenticatedDashboardMarketingCampaignsIdRouteImport } from './routes/_authenticated/dashboard.marketing.campaigns.$id'
 
@@ -843,6 +844,12 @@ const AuthenticatedDashboardPatientsIdOverviewRoute =
     path: '/overview',
     getParentRoute: () => AuthenticatedDashboardPatientsIdRoute,
   } as any)
+const AuthenticatedDashboardPatientsIdMedicationsRoute =
+  AuthenticatedDashboardPatientsIdMedicationsRouteImport.update({
+    id: '/medications',
+    path: '/medications',
+    getParentRoute: () => AuthenticatedDashboardPatientsIdRoute,
+  } as any)
 const AuthenticatedDashboardPatientsIdDetailsRoute =
   AuthenticatedDashboardPatientsIdDetailsRouteImport.update({
     id: '/details',
@@ -981,6 +988,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/patients/': typeof AuthenticatedDashboardPatientsIndexRoute
   '/dashboard/marketing/campaigns/$id': typeof AuthenticatedDashboardMarketingCampaignsIdRoute
   '/dashboard/patients/$id/details': typeof AuthenticatedDashboardPatientsIdDetailsRoute
+  '/dashboard/patients/$id/medications': typeof AuthenticatedDashboardPatientsIdMedicationsRoute
   '/dashboard/patients/$id/overview': typeof AuthenticatedDashboardPatientsIdOverviewRoute
   '/dashboard/patients/$id/photos': typeof AuthenticatedDashboardPatientsIdPhotosRoute
   '/dashboard/patients/$id/': typeof AuthenticatedDashboardPatientsIdIndexRoute
@@ -1103,6 +1111,7 @@ export interface FileRoutesByTo {
   '/dashboard/patients': typeof AuthenticatedDashboardPatientsIndexRoute
   '/dashboard/marketing/campaigns/$id': typeof AuthenticatedDashboardMarketingCampaignsIdRoute
   '/dashboard/patients/$id/details': typeof AuthenticatedDashboardPatientsIdDetailsRoute
+  '/dashboard/patients/$id/medications': typeof AuthenticatedDashboardPatientsIdMedicationsRoute
   '/dashboard/patients/$id/overview': typeof AuthenticatedDashboardPatientsIdOverviewRoute
   '/dashboard/patients/$id/photos': typeof AuthenticatedDashboardPatientsIdPhotosRoute
   '/dashboard/patients/$id': typeof AuthenticatedDashboardPatientsIdIndexRoute
@@ -1234,6 +1243,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/patients/': typeof AuthenticatedDashboardPatientsIndexRoute
   '/_authenticated/dashboard/marketing/campaigns/$id': typeof AuthenticatedDashboardMarketingCampaignsIdRoute
   '/_authenticated/dashboard/patients/$id/details': typeof AuthenticatedDashboardPatientsIdDetailsRoute
+  '/_authenticated/dashboard/patients/$id/medications': typeof AuthenticatedDashboardPatientsIdMedicationsRoute
   '/_authenticated/dashboard/patients/$id/overview': typeof AuthenticatedDashboardPatientsIdOverviewRoute
   '/_authenticated/dashboard/patients/$id/photos': typeof AuthenticatedDashboardPatientsIdPhotosRoute
   '/_authenticated/dashboard/patients/$id/': typeof AuthenticatedDashboardPatientsIdIndexRoute
@@ -1365,6 +1375,7 @@ export interface FileRouteTypes {
     | '/dashboard/patients/'
     | '/dashboard/marketing/campaigns/$id'
     | '/dashboard/patients/$id/details'
+    | '/dashboard/patients/$id/medications'
     | '/dashboard/patients/$id/overview'
     | '/dashboard/patients/$id/photos'
     | '/dashboard/patients/$id/'
@@ -1487,6 +1498,7 @@ export interface FileRouteTypes {
     | '/dashboard/patients'
     | '/dashboard/marketing/campaigns/$id'
     | '/dashboard/patients/$id/details'
+    | '/dashboard/patients/$id/medications'
     | '/dashboard/patients/$id/overview'
     | '/dashboard/patients/$id/photos'
     | '/dashboard/patients/$id'
@@ -1617,6 +1629,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/patients/'
     | '/_authenticated/dashboard/marketing/campaigns/$id'
     | '/_authenticated/dashboard/patients/$id/details'
+    | '/_authenticated/dashboard/patients/$id/medications'
     | '/_authenticated/dashboard/patients/$id/overview'
     | '/_authenticated/dashboard/patients/$id/photos'
     | '/_authenticated/dashboard/patients/$id/'
@@ -2547,6 +2560,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardPatientsIdOverviewRouteImport
       parentRoute: typeof AuthenticatedDashboardPatientsIdRoute
     }
+    '/_authenticated/dashboard/patients/$id/medications': {
+      id: '/_authenticated/dashboard/patients/$id/medications'
+      path: '/medications'
+      fullPath: '/dashboard/patients/$id/medications'
+      preLoaderRoute: typeof AuthenticatedDashboardPatientsIdMedicationsRouteImport
+      parentRoute: typeof AuthenticatedDashboardPatientsIdRoute
+    }
     '/_authenticated/dashboard/patients/$id/details': {
       id: '/_authenticated/dashboard/patients/$id/details'
       path: '/details'
@@ -2627,6 +2647,7 @@ const AuthenticatedDashboardMarketingRouteWithChildren =
 
 interface AuthenticatedDashboardPatientsIdRouteChildren {
   AuthenticatedDashboardPatientsIdDetailsRoute: typeof AuthenticatedDashboardPatientsIdDetailsRoute
+  AuthenticatedDashboardPatientsIdMedicationsRoute: typeof AuthenticatedDashboardPatientsIdMedicationsRoute
   AuthenticatedDashboardPatientsIdOverviewRoute: typeof AuthenticatedDashboardPatientsIdOverviewRoute
   AuthenticatedDashboardPatientsIdPhotosRoute: typeof AuthenticatedDashboardPatientsIdPhotosRoute
   AuthenticatedDashboardPatientsIdIndexRoute: typeof AuthenticatedDashboardPatientsIdIndexRoute
@@ -2636,6 +2657,8 @@ const AuthenticatedDashboardPatientsIdRouteChildren: AuthenticatedDashboardPatie
   {
     AuthenticatedDashboardPatientsIdDetailsRoute:
       AuthenticatedDashboardPatientsIdDetailsRoute,
+    AuthenticatedDashboardPatientsIdMedicationsRoute:
+      AuthenticatedDashboardPatientsIdMedicationsRoute,
     AuthenticatedDashboardPatientsIdOverviewRoute:
       AuthenticatedDashboardPatientsIdOverviewRoute,
     AuthenticatedDashboardPatientsIdPhotosRoute:
