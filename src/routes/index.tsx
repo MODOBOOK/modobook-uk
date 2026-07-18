@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { BrandMark } from "@/components/BrandMark";
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -13,13 +13,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import brandBoards from "@/assets/modo-brand-boards.png.asset.json";
-import tabletBooking from "@/assets/modo-tablet-booking.png.asset.json";
-import tabletPlatform from "@/assets/modo-tablet-platform.png.asset.json";
-import consultationPhoto from "@/assets/modo-consultation.png.asset.json";
 import foundersScrubs from "@/assets/modo-founders-scrubs.png.asset.json";
 import foundersSuits from "@/assets/modo-founders-suits.png.asset.json";
-import builtForPhoto from "@/assets/modo-built-for.png.asset.json";
-import appIcon from "@/assets/modo-app-icon.jpg.asset.json";
 import wordmark from "@/assets/modo-wordmark.png.asset.json";
 
 
@@ -27,12 +22,8 @@ import wordmark from "@/assets/modo-wordmark.png.asset.json";
 import {
   Calendar,
   Link2,
-
   Palette,
-  ShieldCheck,
   CreditCard,
-  Star,
-  Stethoscope,
   Sparkles,
   Users,
   ClipboardList,
@@ -40,20 +31,13 @@ import {
   Bell,
   MessageSquare,
   FileSignature,
-  PoundSterling,
   Layers,
   CheckCircle2,
-  HeartHandshake,
   Lock,
-  Pill,
-  Microscope,
-  GraduationCap,
   Network,
   Syringe,
   HandshakeIcon,
   ArrowRight,
-  Mail,
-  ExternalLink,
 } from "lucide-react";
 
 // Icon-led visuals — no AI imagery used in hero blocks for now.
@@ -80,9 +64,7 @@ export const Route = createFileRoute("/")({
 
 function LandingPage() {
   const navigate = useNavigate();
-  const [tourView, setTourView] = useState<"patient" | "practitioner">("patient");
-  const [patientStep, setPatientStep] = useState(0);
-  const [practitionerStep, setPractitionerStep] = useState(0);
+
 
   // If launched from Home Screen (PWA standalone) and a session is present,
   // send practitioners straight to their dashboard so a force-close feels like
@@ -141,15 +123,15 @@ function LandingPage() {
                     Start free
                   </Button>
                 </Link>
-                <a href="#tour" className="w-full sm:w-auto">
+                <Link to="/features" className="w-full sm:w-auto">
                   <Button
                     size="lg"
                     variant="outline"
                     className="w-full rounded-full border-[color:var(--hairline)] bg-white px-8 text-sm font-medium text-[color:var(--ink)] hover:bg-[color:var(--muted)] sm:w-auto"
                   >
-                    Tour the platform <ArrowRight className="ml-1 h-4 w-4" />
+                    See features <ArrowRight className="ml-1 h-4 w-4" />
                   </Button>
-                </a>
+                </Link>
               </div>
 
               <p className="mt-5 text-xs text-[color:var(--ink-soft)]">
@@ -199,82 +181,6 @@ function LandingPage() {
                 <span className="text-sm font-semibold tracking-tight">{t.label}</span>
               </div>
             ))}
-          </div>
-        </section>
-
-        {/* TOUR THE PLATFORM — Patient vs Practitioner */}
-        <section id="tour" className="scroll-mt-24 mx-auto max-w-7xl px-5 pb-8 pt-4 lg:px-8">
-          <div className="mb-8 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
-            <div className="max-w-xl">
-              <div className="eyebrow">§ Tour the platform</div>
-              <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
-                See it from <span className="text-[color:var(--ink-soft)]">both sides.</span>
-              </h2>
-              <p className="mt-3 text-sm text-[color:var(--ink-soft)]">
-                Toggle between the patient booking experience and the practitioner
-                control panel — same platform, two purposeful views.
-              </p>
-            </div>
-            <div
-              role="tablist"
-              aria-label="Tour view"
-              className="inline-flex items-center rounded-full border border-[color:var(--hairline)] bg-white p-1 shadow-sm"
-            >
-              {(["patient", "practitioner"] as const).map((v) => (
-                <button
-                  key={v}
-                  type="button"
-                  role="tab"
-                  aria-selected={tourView === v}
-                  onClick={() => setTourView(v)}
-                  className={
-                    "rounded-full px-5 py-2 text-xs font-semibold uppercase tracking-[0.14em] transition-colors " +
-                    (tourView === v
-                      ? "bg-[color:var(--ink)] text-white"
-                      : "text-[color:var(--ink-soft)] hover:text-[color:var(--ink)]")
-                  }
-                >
-                  {v === "patient" ? "Patient side" : "Practitioner side"}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="grid gap-6 md:grid-cols-[1.1fr_0.9fr]">
-            {tourView === "patient" ? (
-              <PatientDemo step={patientStep} setStep={setPatientStep} />
-            ) : (
-              <PractitionerDemo step={practitionerStep} setStep={setPractitionerStep} />
-            )}
-
-
-            <div className="flex flex-col justify-center">
-              {tourView === "patient" ? (
-                <TourPanel
-                  title="Book like it's 2026 — safely."
-                  intro="Patients land on your branded page, pick a treatment or course, complete medical screening, and pay — in minutes, on any device."
-                  steps={[
-                    { icon: Link2, title: "Your MODO link", desc: "One tidy link — modobook.uk/your-clinic — that patients trust." },
-                    { icon: Calendar, title: "Live availability", desc: "Real slots, per location, with buffers and lead-times respected." },
-                    { icon: ClipboardList, title: "Medical & consent", desc: "Screening and consent completed before they arrive — auto-filed." },
-                    { icon: CreditCard, title: "Pay their way", desc: "Card, deposit, pay-in-clinic, Klarna or Clearpay." },
-                    { icon: Bell, title: "Reminders & rebooks", desc: "Email/SMS reminders, aftercare and top-up nudges when due." },
-                  ]}
-                />
-              ) : (
-                <TourPanel
-                  title="Run the clinic — from one screen."
-                  intro="Practitioners get a calm control panel: diary, patient records, consultations, prescribing, marketing and payments — all connected."
-                  steps={[
-                    { icon: Calendar, title: "Smart diary", desc: "Multi-location, staff, buffers, caps and blackout windows." },
-                    { icon: Users, title: "Patient records", desc: "Clinical timeline, photos, allergies, medications and briefs." },
-                    { icon: FileSignature, title: "8-step consultation", desc: "Screening → plan → consent → photos → product log → invoice." },
-                    { icon: Pill, title: "Prescriber Hub", desc: "Refer to a prescriber and share the record — safely, traceably." },
-                    { icon: MessageSquare, title: "Marketing built-in", desc: "Automations for birthdays, win-back, top-ups and newsletters." },
-                  ]}
-                />
-              )}
-            </div>
           </div>
         </section>
 
@@ -574,366 +480,6 @@ function ClinicalFeature({
   );
 }
 
-function TourPanel({
-  title,
-  intro,
-  steps,
-}: {
-  title: string;
-  intro: string;
-  steps: { icon: React.ComponentType<{ className?: string }>; title: string; desc: string }[];
-}) {
-  return (
-    <div className="rounded-3xl border border-[color:var(--hairline)] bg-white p-6 sm:p-8">
-      <h3 className="text-2xl font-bold tracking-tight sm:text-3xl">{title}</h3>
-      <p className="mt-3 text-sm text-[color:var(--ink-soft)]">{intro}</p>
-      <ol className="mt-6 space-y-4">
-        {steps.map((s, i) => (
-          <li key={s.title} className="flex gap-4">
-            <div className="flex h-9 w-9 flex-none items-center justify-center rounded-lg bg-[color:var(--clinical-blue-soft)] text-[color:var(--clinical-blue)]">
-              <s.icon className="h-4 w-4" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--ink-soft)]">Step {i + 1}</span>
-              </div>
-              <div className="mt-0.5 text-sm font-semibold text-[color:var(--ink)]">{s.title}</div>
-              <p className="mt-1 text-sm text-[color:var(--ink-soft)]">{s.desc}</p>
-            </div>
-          </li>
-        ))}
-      </ol>
-    </div>
-  );
-}
-
-function DemoFrame({
-  chrome,
-  label,
-  children,
-}: {
-  chrome: "browser" | "app";
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="relative overflow-hidden rounded-3xl border border-[color:var(--hairline)] bg-white shadow-[0_30px_60px_-30px_rgba(60,40,20,0.25)]">
-      {/* Chrome */}
-      <div className="flex items-center gap-2 border-b border-[color:var(--hairline)] bg-[color:var(--muted)] px-4 py-3">
-        <div className="flex gap-1.5">
-          <span className="h-2.5 w-2.5 rounded-full bg-[#ff5f57]" />
-          <span className="h-2.5 w-2.5 rounded-full bg-[#febc2e]" />
-          <span className="h-2.5 w-2.5 rounded-full bg-[#28c840]" />
-        </div>
-        <div className="mx-auto rounded-full bg-white px-3 py-1 text-[10px] font-medium text-[color:var(--ink-soft)]">
-          {chrome === "browser" ? "modobook.uk/aurora-clinic" : "app.modobook.uk / dashboard"}
-        </div>
-        <span className="rounded-full bg-[color:var(--clinical-blue-soft)] px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.14em] text-[color:var(--clinical-blue)]">
-          Live demo
-        </span>
-      </div>
-      <div className="absolute left-4 top-14 z-10 rounded-full bg-white/90 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--ink)] backdrop-blur">
-        {label}
-      </div>
-      <div className="min-h-[440px] bg-[color:var(--paper)]">{children}</div>
-    </div>
-  );
-}
-
-function DemoTabs({
-  steps,
-  step,
-  setStep,
-}: {
-  steps: string[];
-  step: number;
-  setStep: (n: number) => void;
-}) {
-  return (
-    <div className="flex items-center justify-between border-t border-[color:var(--hairline)] bg-white px-4 py-3">
-      <div className="flex items-center gap-2">
-        {steps.map((s, i) => (
-          <button
-            key={s}
-            type="button"
-            onClick={() => setStep(i)}
-            className={
-              "flex items-center gap-2 rounded-full px-3 py-1.5 text-[11px] font-semibold transition-colors " +
-              (i === step
-                ? "bg-[color:var(--ink)] text-white"
-                : "text-[color:var(--ink-soft)] hover:bg-[color:var(--muted)]")
-            }
-          >
-            <span className={"flex h-4 w-4 items-center justify-center rounded-full text-[9px] " + (i === step ? "bg-white/20 text-white" : "bg-[color:var(--muted)] text-[color:var(--ink-soft)]")}>{i + 1}</span>
-            {s}
-          </button>
-        ))}
-      </div>
-      <button
-        type="button"
-        onClick={() => setStep((step + 1) % steps.length)}
-        className="rounded-full bg-[color:var(--clinical-blue)] px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-[color:var(--clinical-blue)]/90"
-      >
-        Next →
-      </button>
-    </div>
-  );
-}
-
-function PatientDemo({ step, setStep }: { step: number; setStep: (n: number) => void }) {
-  const treatments = [
-    { name: "Lip filler — 1ml", price: "£220", dur: "45 min" },
-    { name: "Anti-wrinkle — 3 areas", price: "£240", dur: "30 min" },
-    { name: "Skin booster — Profhilo", price: "£280", dur: "45 min" },
-  ];
-  const slots = ["09:30", "10:15", "11:00", "13:30", "14:15", "15:00", "16:45", "17:30"];
-  const [pickedTreatment, setPickedTreatment] = useState(0);
-  const [pickedSlot, setPickedSlot] = useState<number | null>(null);
-
-  return (
-    <DemoFrame chrome="browser" label="Patient view">
-      {/* Branded header */}
-      <div className="relative h-28 bg-gradient-to-br from-[#c9a37a] via-[#b48963] to-[#8c6a4d]">
-        <div className="absolute inset-0 opacity-30" style={{ backgroundImage: "radial-gradient(circle at 20% 30%, rgba(255,255,255,0.4), transparent 40%)" }} />
-        <div className="absolute bottom-3 left-5 text-white">
-          <div className="text-[10px] font-semibold uppercase tracking-[0.24em] opacity-80">Aurora Aesthetics</div>
-          <div className="text-lg font-bold">Book your visit</div>
-        </div>
-      </div>
-
-      <div className="p-5">
-        {step === 0 && (
-          <div>
-            <div className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-[color:var(--ink-soft)]">1. Choose a treatment</div>
-            <div className="space-y-2">
-              {treatments.map((t, i) => (
-                <button
-                  key={t.name}
-                  type="button"
-                  onClick={() => { setPickedTreatment(i); setStep(1); }}
-                  className={
-                    "flex w-full items-center justify-between rounded-xl border p-3 text-left transition-all " +
-                    (pickedTreatment === i
-                      ? "border-[color:var(--clinical-blue)] bg-[color:var(--clinical-blue-soft)]"
-                      : "border-[color:var(--hairline)] bg-white hover:border-[color:var(--ink-soft)]")
-                  }
-                >
-                  <div>
-                    <div className="text-sm font-semibold text-[color:var(--ink)]">{t.name}</div>
-                    <div className="text-[11px] text-[color:var(--ink-soft)]">{t.dur} · Nurse Prescriber</div>
-                  </div>
-                  <div className="text-sm font-bold text-[color:var(--ink)]">{t.price}</div>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {step === 1 && (
-          <div>
-            <div className="mb-1 text-xs font-semibold uppercase tracking-[0.14em] text-[color:var(--ink-soft)]">2. Pick a time</div>
-            <div className="mb-3 text-sm font-semibold text-[color:var(--ink)]">{treatments[pickedTreatment].name}</div>
-            <div className="mb-3 flex items-center gap-2 text-[11px] text-[color:var(--ink-soft)]">
-              <span className="inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
-              Live availability · Thu 24 Sep
-            </div>
-            <div className="grid grid-cols-4 gap-2">
-              {slots.map((s, i) => (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => { setPickedSlot(i); setStep(2); }}
-                  className={
-                    "rounded-lg border py-2 text-xs font-semibold transition-all " +
-                    (pickedSlot === i
-                      ? "border-[color:var(--clinical-blue)] bg-[color:var(--clinical-blue)] text-white"
-                      : "border-[color:var(--hairline)] bg-white text-[color:var(--ink)] hover:border-[color:var(--ink-soft)]")
-                  }
-                >
-                  {s}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {step === 2 && (
-          <div>
-            <div className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-[color:var(--ink-soft)]">3. Medical & consent</div>
-            <div className="space-y-2">
-              {[
-                { label: "Medical screening", status: "Signed", done: true },
-                { label: "Photo consent", status: "Signed", done: true },
-                { label: "Treatment consent", status: "Signed", done: true },
-              ].map((r) => (
-                <div key={r.label} className="flex items-center justify-between rounded-lg border border-[color:var(--hairline)] bg-white p-2.5">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                    <span className="text-xs font-medium text-[color:var(--ink)]">{r.label}</span>
-                  </div>
-                  <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-700">{r.status}</span>
-                </div>
-              ))}
-            </div>
-            <div className="mt-4 rounded-xl bg-[color:var(--ink)] p-4 text-white">
-              <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/60">You're booked</div>
-              <div className="mt-1 text-sm font-bold">{treatments[pickedTreatment].name}</div>
-              <div className="text-xs text-white/70">Thu 24 Sep · {pickedSlot !== null ? slots[pickedSlot] : "10:15"} · Aurora Clinic</div>
-              <div className="mt-3 flex gap-2">
-                <span className="rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-semibold">Deposit £40 held</span>
-                <span className="rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-semibold">Reminders on</span>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      <DemoTabs steps={["Choose", "Time", "Confirm"]} step={step} setStep={setStep} />
-    </DemoFrame>
-  );
-}
-
-function PractitionerDemo({ step, setStep }: { step: number; setStep: (n: number) => void }) {
-  const diary = [
-    { time: "09:30", name: "Emma Clarke", tx: "Lip filler 1ml", status: "Confirmed" },
-    { time: "10:15", name: "Sarah Patel", tx: "Anti-wrinkle x3", status: "Consent signed" },
-    { time: "11:00", name: "Alice Wong", tx: "Profhilo", status: "Deposit paid" },
-    { time: "13:30", name: "Lucy Grant", tx: "Review — 2wk", status: "No-charge" },
-  ];
-
-  return (
-    <DemoFrame chrome="app" label="Practitioner view">
-      <div className="flex min-h-[440px]">
-        {/* Sidebar */}
-        <aside className="w-14 flex-none border-r border-[color:var(--hairline)] bg-white py-4">
-          {[Calendar, Users, ClipboardList, PoundSterling, MessageSquare].map((I, i) => (
-            <div
-              key={i}
-              className={
-                "mx-auto mb-2 flex h-9 w-9 items-center justify-center rounded-lg " +
-                (i === step ? "bg-[color:var(--ink)] text-white" : "text-[color:var(--ink-soft)] hover:bg-[color:var(--muted)]")
-              }
-            >
-              <I className="h-4 w-4" />
-            </div>
-          ))}
-        </aside>
-
-        <div className="flex-1 p-5">
-          {step === 0 && (
-            <div>
-              <div className="mb-3 flex items-center justify-between">
-                <div>
-                  <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--ink-soft)]">Today · Thursday</div>
-                  <div className="text-lg font-bold">4 appointments · £980</div>
-                </div>
-                <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-[10px] font-semibold text-emerald-700">On track</span>
-              </div>
-              <div className="space-y-2">
-                {diary.map((r, i) => (
-                  <button
-                    key={r.time}
-                    type="button"
-                    onClick={() => setStep(1)}
-                    className={
-                      "flex w-full items-center gap-3 rounded-xl border p-2.5 text-left transition-all " +
-                      (i === 1
-                        ? "border-[color:var(--clinical-blue)] bg-[color:var(--clinical-blue-soft)]"
-                        : "border-[color:var(--hairline)] bg-white hover:border-[color:var(--ink-soft)]")
-                    }
-                  >
-                    <div className="w-12 text-xs font-bold text-[color:var(--ink)]">{r.time}</div>
-                    <div className="flex-1">
-                      <div className="text-sm font-semibold text-[color:var(--ink)]">{r.name}</div>
-                      <div className="text-[11px] text-[color:var(--ink-soft)]">{r.tx}</div>
-                    </div>
-                    <span className="rounded-full bg-[color:var(--muted)] px-2 py-0.5 text-[10px] font-semibold text-[color:var(--ink-soft)]">{r.status}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {step === 1 && (
-            <div>
-              <div className="mb-3 flex items-center justify-between">
-                <div>
-                  <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--ink-soft)]">Patient record</div>
-                  <div className="text-lg font-bold">Sarah Patel · 38</div>
-                </div>
-                <span className="rounded-full bg-amber-100 px-2.5 py-1 text-[10px] font-semibold text-amber-800">Allergy: penicillin</span>
-              </div>
-              <div className="mb-3 rounded-xl border border-[color:var(--hairline)] bg-white p-3">
-                <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[color:var(--ink-soft)]">AI brief</div>
-                <p className="mt-1 text-xs text-[color:var(--ink)]">3rd visit. Prefers subtle results. Last botox: 12 wks ago (30u total). Photos on file. Consented for review call.</p>
-              </div>
-              <div className="space-y-1.5">
-                {[
-                  { icon: Syringe, t: "Botox — 30u (glabella, frontalis)", d: "12 wks ago" },
-                  { icon: Camera, t: "Photos · before/after", d: "3 sets" },
-                  { icon: FileSignature, t: "Consent · anti-wrinkle", d: "Today · signed" },
-                  { icon: Pill, t: "Rx — none active", d: "—" },
-                ].map((e, i) => (
-                  <div key={i} className="flex items-center gap-3 rounded-lg border border-[color:var(--hairline)] bg-white p-2">
-                    <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[color:var(--clinical-blue-soft)] text-[color:var(--clinical-blue)]">
-                      <e.icon className="h-3.5 w-3.5" />
-                    </div>
-                    <div className="flex-1 text-xs font-medium text-[color:var(--ink)]">{e.t}</div>
-                    <div className="text-[10px] text-[color:var(--ink-soft)]">{e.d}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {step === 2 && (
-            <div>
-              <div className="mb-3">
-                <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--ink-soft)]">Consultation · 8 steps</div>
-                <div className="text-lg font-bold">In progress · 5 / 8</div>
-                <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-[color:var(--muted)]">
-                  <div className="h-full w-[62%] bg-[color:var(--clinical-blue)]" />
-                </div>
-              </div>
-              <div className="space-y-1.5">
-                {[
-                  { t: "Screening", done: true },
-                  { t: "Assessment", done: true },
-                  { t: "Treatment plan", done: true },
-                  { t: "Consent", done: true },
-                  { t: "Photos", done: true },
-                  { t: "Product log", done: false, active: true },
-                  { t: "Aftercare", done: false },
-                  { t: "Invoice", done: false },
-                ].map((s, i) => (
-                  <div
-                    key={i}
-                    className={
-                      "flex items-center gap-2 rounded-lg border p-2 " +
-                      (s.active
-                        ? "border-[color:var(--clinical-blue)] bg-[color:var(--clinical-blue-soft)]"
-                        : "border-[color:var(--hairline)] bg-white")
-                    }
-                  >
-                    <div className={"flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold " + (s.done ? "bg-emerald-500 text-white" : s.active ? "bg-[color:var(--clinical-blue)] text-white" : "bg-[color:var(--muted)] text-[color:var(--ink-soft)]")}>
-                      {s.done ? "✓" : i + 1}
-                    </div>
-                    <span className="text-xs font-semibold text-[color:var(--ink)]">{s.t}</span>
-                    {s.active && <span className="ml-auto text-[10px] font-semibold uppercase tracking-[0.14em] text-[color:var(--clinical-blue)]">Now</span>}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      <DemoTabs steps={["Diary", "Patient", "Consult"]} step={step} setStep={setStep} />
-    </DemoFrame>
-  );
-}
-
-
 export function SiteHeader() {
   const pages = [
     { to: "/", label: "Home" },
@@ -1184,7 +730,3 @@ export function IconTile({ icon: Icon, label }: { icon: React.ComponentType<{ cl
   );
 }
 
-// silence unused warnings for icons reserved for future sections
-void GraduationCap;
-void Pill;
-void Microscope;
