@@ -66,14 +66,15 @@ function BillingPage() {
   if (loading) return <p className="text-sm text-muted-foreground">Loading…</p>;
   if (!state) return null;
 
-  const sub = state.subscription;
-  const basePlans = state.plans.filter((p: any) => p.kind === "base" || !p.kind);
-  const locAddon = state.plans.find((p: any) => p.kind === "addon_location");
-  const pracAddon = state.plans.find((p: any) => p.kind === "addon_practitioner");
+  const sub = state.subscription as any;
+  const basePlans = (state.plans as any[]).filter((p: any) => p.kind === "base" || !p.kind);
+  const locAddon = (state.plans as any[]).find((p: any) => p.kind === "addon_location");
+  const pracAddon = (state.plans as any[]).find((p: any) => p.kind === "addon_practitioner");
   const selectedPlan = basePlans.find((p: any) => p.id === selectedPlanId);
+  const discountCode = state.discountCode as any;
 
-  const trialActive = sub?.trial_end && new Date(sub.trial_end) > new Date();
-  const trialDaysLeft = trialActive ? Math.max(0, Math.ceil((new Date(sub.trial_end).getTime() - Date.now()) / 86400000)) : 0;
+  const trialActive = sub?.trial_end && new Date(sub.trial_end as string) > new Date();
+  const trialDaysLeft = trialActive ? Math.max(0, Math.ceil((new Date(sub.trial_end as string).getTime() - Date.now()) / 86400000)) : 0;
 
   const projected =
     (selectedPlan?.amount_cents ?? 0) +
