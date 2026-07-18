@@ -44,29 +44,39 @@ export function PlatformBillingGate({ children }: { children: React.ReactNode })
     );
   }
 
-  // Banners for trial / grace / welcome
-  const showBanner = !dismissed && (status.state === "trial" || status.state === "grace" || status.state === "welcome");
+  const hasArrears = (status.arrearsCents ?? 0) > 0;
+  const arrearsAmount = hasArrears ? `£${((status.arrearsCents ?? 0) / 100).toFixed(2)}` : null;
+
+  // Banners for trial / grace / welcome / arrears
+  const showBanner =
+    !dismissed &&
+    (status.state === "trial" || status.state === "grace" || status.state === "welcome" || hasArrears);
+  const tone = status.state === "grace" || hasArrears ? "danger" : "info";
 
   return (
     <>
       {showBanner && (
         <div className={`mb-4 flex flex-wrap items-center gap-3 rounded-lg border p-3 text-sm ${
-          status.state === "grace" ? "border-destructive/30 bg-destructive/5" : "border-primary/30 bg-primary/5"
+          tone === "danger" ? "border-destructive/30 bg-destructive/5" : "border-primary/30 bg-primary/5"
         }`}>
-          <AlertTriangle className={`h-4 w-4 flex-shrink-0 ${status.state === "grace" ? "text-destructive" : "text-primary"}`} />
+          <AlertTriangle className={`h-4 w-4 flex-shrink-0 ${tone === "danger" ? "text-destructive" : "text-primary"}`} />
           <div className="flex-1 min-w-0">
-            {status.state === "welcome" && (
+            {hasArrears ? (
+              <>Payment failed — <strong>{arrearsAmount}</strong> outstanding on your MODO subscription.{" "}
+                {status.state === "grace" && <>Grace ends in <strong>{status.daysLeft} day{status.daysLeft === 1 ? "" : "s"}</strong>.</>}
+              </>
+            ) : status.state === "welcome" ? (
               <>Welcome to MODO — you have <strong>{status.daysLeft} days</strong> to explore before choosing a plan.</>
-            )}
-            {status.state === "trial" && (
+            ) : status.state === "trial" ? (
               <>Your free trial ends in <strong>{status.daysLeft} day{status.daysLeft === 1 ? "" : "s"}</strong>. Add a payment method to keep access.</>
-            )}
-            {status.state === "grace" && (
+            ) : (
               <>Your subscription needs attention — you have <strong>{status.daysLeft} day{status.daysLeft === 1 ? "" : "s"}</strong> of grace access left before your account is locked.</>
             )}
           </div>
-          <Button asChild size="sm" variant={status.state === "grace" ? "destructive" : "default"}>
-            <Link to="/dashboard/billing">{status.state === "grace" ? "Fix billing" : "Manage plan"}</Link>
+          <Button asChild size="sm" variant={tone === "danger" ? "destructive" : "default"}>
+            <Link to={hasArrears ? "/dashboard/invoices" : "/dashboard/billing"}>
+              {hasArrears ? "View invoices" : status.state === "grace" ? "Fix billing" : "Manage plan"}
+            </Link>
           </Button>
           <button
             onClick={() => setDismissed(true)}
