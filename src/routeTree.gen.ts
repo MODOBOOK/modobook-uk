@@ -132,6 +132,7 @@ import { Route as AuthenticatedDashboardMarketingAutomationsRouteImport } from '
 import { Route as AuthenticatedDashboardMarketingAnalyticsRouteImport } from './routes/_authenticated/dashboard.marketing.analytics'
 import { Route as AuthenticatedDashboardConsultationsIdRouteImport } from './routes/_authenticated/dashboard.consultations.$id'
 import { Route as AuthenticatedAdminPractitionersIdRouteImport } from './routes/_authenticated/admin.practitioners.$id'
+import { Route as AuthenticatedDashboardPatientsIdIndexRouteImport } from './routes/_authenticated/dashboard.patients.$id.index'
 import { Route as AuthenticatedDashboardPatientsIdDetailsRouteImport } from './routes/_authenticated/dashboard.patients.$id.details'
 import { Route as AuthenticatedDashboardMarketingCampaignsIdRouteImport } from './routes/_authenticated/dashboard.marketing.campaigns.$id'
 
@@ -822,6 +823,12 @@ const AuthenticatedAdminPractitionersIdRoute =
     path: '/$id',
     getParentRoute: () => AuthenticatedAdminPractitionersRoute,
   } as any)
+const AuthenticatedDashboardPatientsIdIndexRoute =
+  AuthenticatedDashboardPatientsIdIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedDashboardPatientsIdRoute,
+  } as any)
 const AuthenticatedDashboardPatientsIdDetailsRoute =
   AuthenticatedDashboardPatientsIdDetailsRouteImport.update({
     id: '/details',
@@ -960,6 +967,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/patients/': typeof AuthenticatedDashboardPatientsIndexRoute
   '/dashboard/marketing/campaigns/$id': typeof AuthenticatedDashboardMarketingCampaignsIdRoute
   '/dashboard/patients/$id/details': typeof AuthenticatedDashboardPatientsIdDetailsRoute
+  '/dashboard/patients/$id/': typeof AuthenticatedDashboardPatientsIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -1054,7 +1062,6 @@ export interface FileRoutesByTo {
   '/dashboard/marketing/automations': typeof AuthenticatedDashboardMarketingAutomationsRoute
   '/dashboard/marketing/segments': typeof AuthenticatedDashboardMarketingSegmentsRoute
   '/dashboard/marketing/templates': typeof AuthenticatedDashboardMarketingTemplatesRoute
-  '/dashboard/patients/$id': typeof AuthenticatedDashboardPatientsIdRouteWithChildren
   '/dashboard/training/bookings': typeof AuthenticatedDashboardTrainingBookingsRoute
   '/api/public/booking/release': typeof ApiPublicBookingReleaseRoute
   '/api/public/hooks/appointment-reminders': typeof ApiPublicHooksAppointmentRemindersRoute
@@ -1080,6 +1087,7 @@ export interface FileRoutesByTo {
   '/dashboard/patients': typeof AuthenticatedDashboardPatientsIndexRoute
   '/dashboard/marketing/campaigns/$id': typeof AuthenticatedDashboardMarketingCampaignsIdRoute
   '/dashboard/patients/$id/details': typeof AuthenticatedDashboardPatientsIdDetailsRoute
+  '/dashboard/patients/$id': typeof AuthenticatedDashboardPatientsIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -1208,6 +1216,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/patients/': typeof AuthenticatedDashboardPatientsIndexRoute
   '/_authenticated/dashboard/marketing/campaigns/$id': typeof AuthenticatedDashboardMarketingCampaignsIdRoute
   '/_authenticated/dashboard/patients/$id/details': typeof AuthenticatedDashboardPatientsIdDetailsRoute
+  '/_authenticated/dashboard/patients/$id/': typeof AuthenticatedDashboardPatientsIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -1336,6 +1345,7 @@ export interface FileRouteTypes {
     | '/dashboard/patients/'
     | '/dashboard/marketing/campaigns/$id'
     | '/dashboard/patients/$id/details'
+    | '/dashboard/patients/$id/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -1430,7 +1440,6 @@ export interface FileRouteTypes {
     | '/dashboard/marketing/automations'
     | '/dashboard/marketing/segments'
     | '/dashboard/marketing/templates'
-    | '/dashboard/patients/$id'
     | '/dashboard/training/bookings'
     | '/api/public/booking/release'
     | '/api/public/hooks/appointment-reminders'
@@ -1456,6 +1465,7 @@ export interface FileRouteTypes {
     | '/dashboard/patients'
     | '/dashboard/marketing/campaigns/$id'
     | '/dashboard/patients/$id/details'
+    | '/dashboard/patients/$id'
   id:
     | '__root__'
     | '/'
@@ -1583,6 +1593,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/patients/'
     | '/_authenticated/dashboard/marketing/campaigns/$id'
     | '/_authenticated/dashboard/patients/$id/details'
+    | '/_authenticated/dashboard/patients/$id/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -2489,6 +2500,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminPractitionersIdRouteImport
       parentRoute: typeof AuthenticatedAdminPractitionersRoute
     }
+    '/_authenticated/dashboard/patients/$id/': {
+      id: '/_authenticated/dashboard/patients/$id/'
+      path: '/'
+      fullPath: '/dashboard/patients/$id/'
+      preLoaderRoute: typeof AuthenticatedDashboardPatientsIdIndexRouteImport
+      parentRoute: typeof AuthenticatedDashboardPatientsIdRoute
+    }
     '/_authenticated/dashboard/patients/$id/details': {
       id: '/_authenticated/dashboard/patients/$id/details'
       path: '/details'
@@ -2569,12 +2587,15 @@ const AuthenticatedDashboardMarketingRouteWithChildren =
 
 interface AuthenticatedDashboardPatientsIdRouteChildren {
   AuthenticatedDashboardPatientsIdDetailsRoute: typeof AuthenticatedDashboardPatientsIdDetailsRoute
+  AuthenticatedDashboardPatientsIdIndexRoute: typeof AuthenticatedDashboardPatientsIdIndexRoute
 }
 
 const AuthenticatedDashboardPatientsIdRouteChildren: AuthenticatedDashboardPatientsIdRouteChildren =
   {
     AuthenticatedDashboardPatientsIdDetailsRoute:
       AuthenticatedDashboardPatientsIdDetailsRoute,
+    AuthenticatedDashboardPatientsIdIndexRoute:
+      AuthenticatedDashboardPatientsIdIndexRoute,
   }
 
 const AuthenticatedDashboardPatientsIdRouteWithChildren =
