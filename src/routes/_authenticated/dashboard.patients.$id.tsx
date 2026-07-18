@@ -72,9 +72,8 @@ function PatientRecordShell() {
         <nav className="lg:sticky lg:top-24 lg:self-start">
           <div className="flex gap-1 overflow-x-auto lg:flex-col lg:overflow-visible">
             {TABS.map(t => {
-              const active = t.exact
-                ? path === `/dashboard/patients/${id}`
-                : path.startsWith(t.to.replace("$id", id));
+              const target = t.to.replace("$id", id);
+              const active = path === target || (t.matchIndex && path === `/dashboard/patients/${id}`);
               const Icon = t.icon;
               const LinkAny = Link as any;
               return (
