@@ -169,8 +169,8 @@ function PatientProfilePage() {
       </div>
 
       {/* Quick actions bar — horizontally scrollable on mobile */}
-      <div className="sticky top-0 z-10 rounded-xl border bg-card/95 shadow-sm backdrop-blur">
-        <div className="flex items-center gap-2 overflow-x-auto px-3 py-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="rounded-xl border bg-card shadow-sm lg:sticky lg:top-24 lg:z-10 lg:bg-card/95 lg:backdrop-blur">
+        <div className="flex items-center gap-2 overflow-x-auto px-2 py-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <Button size="sm" variant="default" className="shrink-0" asChild>
             <Link to="/dashboard/new-appointment" search={{ clientId: client.id }}><CalendarPlus className="mr-1.5 h-4 w-4" />Book</Link>
           </Button>
