@@ -49,6 +49,7 @@ function TimelinePage() {
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [busy, setBusy] = useState(false);
+  const [reschedFor, setReschedFor] = useState<null | { id: string; date: string; start: string; end: string }>(null);
 
   async function reload() {
     setEvents(null);
