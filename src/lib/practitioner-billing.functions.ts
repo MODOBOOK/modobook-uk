@@ -112,7 +112,7 @@ export const startBillingCheckout = createServerFn({ method: "POST" })
 
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
-      customer: customerId,
+      customer: customerId ?? undefined,
       line_items,
       allow_promotion_codes: true,
       subscription_data: trialEndSec ? { trial_end: trialEndSec } : undefined,
