@@ -586,10 +586,16 @@ export function SiteFooter() {
     <footer className="border-t border-[color:var(--hairline)] bg-[color:var(--paper)]">
       <div className="mx-auto grid max-w-7xl gap-8 px-5 py-14 sm:grid-cols-2 lg:grid-cols-4 lg:px-8">
         <div>
-          <Link to="/" className="flex items-center gap-2.5">
-            <img src={appIcon.url} alt="" className="h-9 w-9 rounded-lg border border-[color:var(--hairline)] bg-white" />
-            <span className="font-serif text-lg tracking-[0.28em] text-[color:var(--ink)]">MODO</span>
+          <Link to="/" aria-label="MODO home" className="flex items-center">
+            <img
+              src={wordmark.url}
+              alt="MODO"
+              className="h-9 w-auto object-contain"
+              style={{ mixBlendMode: "multiply" }}
+              draggable={false}
+            />
           </Link>
+
           <p className="mt-4 max-w-xs text-sm text-[color:var(--ink-soft)]">
             The aesthetics-only booking & clinical platform. Built by two UK Nurse Prescribers.
           </p>
