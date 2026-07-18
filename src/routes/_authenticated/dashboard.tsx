@@ -44,6 +44,7 @@ import { countPendingReviews } from "@/lib/patient.functions";
 import { getHubNotifications } from "@/lib/hub.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { NotificationsBell } from "@/components/NotificationsBell";
+import { PlatformBillingGate } from "@/components/PlatformBillingGate";
 
 
 
@@ -242,7 +243,9 @@ function DashboardLayout() {
 
 
         <main className="min-w-0 flex-1 overflow-x-hidden p-5 pb-24 lg:p-10 lg:pb-10">
-          <Outlet />
+          <PlatformBillingGate>
+            <Outlet />
+          </PlatformBillingGate>
         </main>
 
 

@@ -16,6 +16,27 @@ async function getMyProfileId(context: { supabase: any; userId: string }) {
   return data as { id: string; email: string | null; clinic_name: string | null; full_name: string | null; created_at: string };
 }
 
+export const getMyBillingStatus = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data: profile, error: pErr } = await context.supabase
+      .from("profiles")
+      .select("id")
+      .eq("user_id", context.userId)
+      .maybeSingle();
+    if (pErr) throw pErr;
+    if (!profile) return { state: "blocked", hasAccess: false, daysLeft: 0, deadline: null };
+    const { data, error } = await context.supabase.rpc("practitioner_billing_status", { _profile_id: profile.id });
+    if (error) throw error;
+    const row = Array.isArray(data) ? data[0] : data;
+    return {
+      state: (row?.state ?? "blocked") as "welcome" | "trial" | "grace" | "active" | "comped" | "suspended" | "blocked",
+      hasAccess: Boolean(row?.has_access),
+      daysLeft: row?.days_left ?? null,
+      deadline: row?.deadline ?? null,
+    };
+  });
+
 export const getMyBilling = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {

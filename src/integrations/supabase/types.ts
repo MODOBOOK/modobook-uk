@@ -6948,6 +6948,15 @@ export type Database = {
         }
         Returns: string
       }
+      practitioner_billing_status: {
+        Args: { _profile_id: string }
+        Returns: {
+          days_left: number
+          deadline: string
+          has_access: boolean
+          state: string
+        }[]
+      }
       practitioner_has_platform_access: {
         Args: { _profile_id: string }
         Returns: boolean
