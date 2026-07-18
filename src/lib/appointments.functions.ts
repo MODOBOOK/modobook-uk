@@ -288,3 +288,69 @@ export const markAppointmentPaymentReceived = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const rescheduleAppointment = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    (input: {
+      appointmentId: string;
+      date: string;
+      startTime: string;
+      endTime: string;
+      notifyPatient?: boolean;
+    }) => input,
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: profile } = await supabase
+      .from("profiles").select("id").eq("user_id", userId).maybeSingle();
+    if (!profile) throw new Error("Profile not found");
+
+    const { data: appt, error: aErr } = await supabase
+      .from("appointments")
+      .select("id, patient_name, patient_email, scheduled_date, start_time, end_time")
+      .eq("id", data.appointmentId)
+      .eq("profile_id", profile.id)
+      .maybeSingle();
+    if (aErr) throw aErr;
+    if (!appt) throw new Error("Appointment not found");
+
+    const startHM = data.startTime.length === 5 ? `${data.startTime}:00` : data.startTime;
+    const endHM = data.endTime.length === 5 ? `${data.endTime}:00` : data.endTime;
+
+    const { error: uErr } = await supabase
+      .from("appointments")
+      .update({
+        scheduled_date: data.date,
+        start_time: startHM,
+        end_time: endHM,
+      } as never)
+      .eq("id", data.appointmentId)
+      .eq("profile_id", profile.id);
+    if (uErr) throw uErr;
+
+    if ((data.notifyPatient ?? true) && appt.patient_email) {
+      try {
+        const { tryEnqueueAppEmail, formatBookingDateTime, getPractitionerBranding } = await import("@/lib/email/send.server");
+        const branding = await getPractitionerBranding(profile.id);
+        await tryEnqueueAppEmail({
+          templateName: "booking-confirmation",
+          recipientEmail: appt.patient_email,
+          messageId: `booking-reschedule-${data.appointmentId}-${data.date}-${startHM}`,
+          templateData: {
+            patientName: (appt.patient_name ?? "").split(" ")[0] || "there",
+            clinicName: branding.clinicName,
+            dateTime: formatBookingDateTime(data.date, startHM),
+            logoUrl: branding.logoUrl,
+            brandColor: branding.brandColor,
+            rescheduled: true,
+          },
+        });
+      } catch (e) {
+        console.error("[rescheduleAppointment] email failed", e);
+      }
+    }
+
+    return { ok: true };
+  });
+
+
