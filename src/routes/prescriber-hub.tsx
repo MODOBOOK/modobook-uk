@@ -38,8 +38,8 @@ function HubPage() {
                 Choose your role to see what you need and where to register.
               </p>
             </div>
-            <div className="overflow-hidden rounded-3xl border border-[color:var(--hairline)]">
-              <img src={foundersScrubs.url} alt="MODO Nurse Prescriber founders" className="aspect-[4/3] w-full object-cover" loading="lazy" />
+            <div className="overflow-hidden rounded-3xl border border-[color:var(--hairline)] bg-white">
+              <img src={foundersScrubs.url} alt="MODO Nurse Prescriber founders" className="aspect-[4/5] w-full object-cover sm:aspect-[4/3]" style={{ objectPosition: "50% 15%" }} loading="lazy" />
             </div>
           </div>
 
