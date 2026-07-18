@@ -270,6 +270,7 @@ function AdminPage() {
       <UserSupportCard />
 
       <SubscriptionsSection practitioners={practitioners} />
+      <DiscountCodesSection />
     </div>
     </AdminShell>
   );
