@@ -9,8 +9,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import {
   Activity, Calendar, ClipboardList, FileSignature, Pill, StickyNote, CreditCard,
-  MessageSquare, Image as ImageIcon, User, Plus, Loader2, Trash2,
+  MessageSquare, Image as ImageIcon, User, Plus, Loader2, Trash2, CalendarClock,
 } from "lucide-react";
+import { RescheduleAppointmentDialog } from "@/components/RescheduleAppointmentDialog";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/dashboard/patients/$id/")({
