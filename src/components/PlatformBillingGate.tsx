@@ -16,7 +16,7 @@ export function PlatformBillingGate({ children }: { children: React.ReactNode })
     let alive = true;
     load()
       .then((s) => alive && setStatus(s as Status))
-      .catch(() => alive && setStatus({ state: "blocked", hasAccess: false, daysLeft: 0, deadline: null } as Status));
+      .catch(() => alive && setStatus({ state: "blocked", hasAccess: false, daysLeft: 0, deadline: null, arrearsCents: 0, arrearsInvoiceUrl: null } as Status));
     return () => { alive = false; };
   }, []);
 
