@@ -300,7 +300,7 @@ function PatientProfilePage() {
         {visibleAppts.length === 0 ? (
           <div className="px-4 py-6 text-center text-sm text-muted-foreground">No appointments.</div>
         ) : visibleAppts.map(a => (
-          <AppointmentRow key={a.id} appt={a} />
+          <AppointmentRow key={a.id} appt={a} onRescheduled={reload} />
         ))}
       </SectionDark>
 
