@@ -169,8 +169,8 @@ function PatientProfilePage() {
       </div>
 
       {/* Quick actions bar — horizontally scrollable on mobile */}
-      <div className="sticky top-0 z-10 rounded-xl border bg-card/95 shadow-sm backdrop-blur">
-        <div className="flex items-center gap-2 overflow-x-auto px-3 py-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="rounded-xl border bg-card shadow-sm lg:sticky lg:top-24 lg:z-10 lg:bg-card/95 lg:backdrop-blur">
+        <div className="flex items-center gap-2 overflow-x-auto px-2 py-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <Button size="sm" variant="default" className="shrink-0" asChild>
             <Link to="/dashboard/new-appointment" search={{ clientId: client.id }}><CalendarPlus className="mr-1.5 h-4 w-4" />Book</Link>
           </Button>
@@ -220,15 +220,15 @@ function PatientProfilePage() {
         <CardContent className="flex flex-col items-center gap-3 p-4 text-center sm:flex-row sm:items-center sm:p-6 sm:text-left">
           <div className="shrink-0"><AvatarUpload client={client} onUpload={uploadAvatar} /></div>
           <div className="min-w-0 flex-1 space-y-1">
-            <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
-              <h1 className="break-words text-xl font-bold sm:text-2xl">{client.full_name}</h1>
+            <div className="flex flex-wrap items-center justify-center gap-1.5 sm:justify-start">
+              <h1 className="break-words text-lg font-bold sm:text-2xl">{client.full_name}</h1>
               {client.has_allergies && (
-                <Badge variant="destructive" className="gap-1"><AlertTriangle className="h-3 w-3" />Allergy</Badge>
+                <Badge variant="destructive" className="gap-1 text-[10px]"><AlertTriangle className="h-3 w-3" />Allergy</Badge>
               )}
-              {client.archived && <Badge variant="secondary">Inactive</Badge>}
+              {client.archived && <Badge variant="secondary" className="text-[10px]">Inactive</Badge>}
             </div>
             {client.phone && <div className="break-all text-sm font-semibold">{client.phone}</div>}
-            {client.email && <div className="break-all text-sm text-muted-foreground">{client.email}</div>}
+            {client.email && <div className="break-all text-xs text-muted-foreground sm:text-sm">{client.email}</div>}
             {client.has_allergies && client.allergies && (
               <div className="mt-2 rounded-md border border-red-200 bg-red-50 p-2 text-left text-xs text-red-700">
                 <strong>Allergies:</strong> {client.allergies}
@@ -407,13 +407,13 @@ function PatientProfilePage() {
 
 function Section({ title, children, onEdit, actionsRight }: { title: string; children: React.ReactNode; onEdit?: () => void; actionsRight?: React.ReactNode }) {
   return (
-    <div className="overflow-hidden rounded-xl bg-card">
-      <div className="flex items-center justify-between bg-muted px-4 py-2.5">
-        <h2 className="text-sm font-bold uppercase tracking-wider text-primary">{title}</h2>
-        {onEdit && <Button size="sm" variant="outline" className="h-7 rounded-full" onClick={onEdit}><Edit2 className="mr-1 h-3 w-3" />Edit</Button>}
+    <div className="overflow-hidden rounded-xl border bg-card">
+      <div className="flex items-center justify-between gap-2 bg-muted px-3 py-2 sm:px-4 sm:py-2.5">
+        <h2 className="truncate text-xs font-bold uppercase tracking-wider text-primary sm:text-sm">{title}</h2>
+        {onEdit && <Button size="sm" variant="outline" className="h-7 shrink-0 rounded-full" onClick={onEdit}><Edit2 className="mr-1 h-3 w-3" />Edit</Button>}
         {actionsRight}
       </div>
-      <div className="space-y-1 p-4">{children}</div>
+      <div className="space-y-1 p-3 sm:p-4">{children}</div>
     </div>
   );
 }
@@ -525,7 +525,7 @@ function AvatarUpload({ client, onUpload }: { client: any; onUpload: (f: File) =
   const ref = useRef<HTMLInputElement>(null);
   return (
     <button onClick={() => ref.current?.click()} className="group relative">
-      <div className="grid h-32 w-32 place-items-center overflow-hidden rounded-full bg-muted text-2xl font-bold text-muted-foreground">
+      <div className="grid h-20 w-20 place-items-center overflow-hidden rounded-full bg-muted text-xl font-bold text-muted-foreground sm:h-32 sm:w-32 sm:text-2xl">
         {client.avatar_url ? <img src={client.avatar_url} alt="" className="h-full w-full object-cover" /> : initials(client.full_name)}
       </div>
       <div className="absolute inset-x-0 bottom-0 rounded-b-full bg-black/60 py-1 text-[10px] font-bold text-white opacity-0 transition group-hover:opacity-100">
