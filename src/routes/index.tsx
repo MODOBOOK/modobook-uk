@@ -241,16 +241,12 @@ function LandingPage() {
           </div>
 
           <div className="grid gap-6 md:grid-cols-[1.1fr_0.9fr]">
-            <div className="relative overflow-hidden rounded-3xl border border-[color:var(--hairline)] bg-white">
-              <img
-                src={tourView === "patient" ? tabletBooking.url : tabletPlatform.url}
-                alt={tourView === "patient" ? "A patient booking on the MODO page" : "A practitioner's MODO dashboard on iPad"}
-                className="aspect-[4/5] w-full object-cover md:aspect-[5/6]"
-              />
-              <div className="absolute left-4 top-4 rounded-full bg-white/90 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--ink)] backdrop-blur">
-                {tourView === "patient" ? "Patient view" : "Practitioner view"}
-              </div>
-            </div>
+            {tourView === "patient" ? (
+              <PatientDemo step={patientStep} setStep={setPatientStep} />
+            ) : (
+              <PractitionerDemo step={practitionerStep} setStep={setPractitionerStep} />
+            )}
+
 
             <div className="flex flex-col justify-center">
               {tourView === "patient" ? (
