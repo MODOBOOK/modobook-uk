@@ -27,19 +27,25 @@ function HubPage() {
     <div className="modo-marketing min-h-screen bg-[color:var(--paper)] text-[color:var(--ink)]">
       <SiteHeader />
       <main>
-        <section className="border-b bg-gradient-to-br from-primary/5 via-background to-primary/10">
-          <div className="mx-auto max-w-5xl px-4 py-16 lg:px-8 lg:py-20">
-            <div className="mx-auto max-w-2xl text-center">
-              <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+        <section className="border-b border-[color:var(--hairline)] bg-[color:var(--paper)]">
+          <div className="mx-auto grid max-w-7xl gap-10 px-5 py-14 lg:grid-cols-[1fr_1fr] lg:items-center lg:gap-16 lg:px-8 lg:py-20">
+            <div>
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[color:var(--accent)]/25 bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">
                 <Network className="h-3.5 w-3.5" /> The Prescriber Hub
               </div>
-              <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">How would you like to join?</h1>
-              <p className="mt-4 text-lg text-muted-foreground">
+              <h1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">How would you like to join?</h1>
+              <p className="mt-5 max-w-lg text-base text-[color:var(--ink-soft)] sm:text-lg">
                 Choose your role to see what you need and where to register.
               </p>
             </div>
+            <div className="overflow-hidden rounded-3xl border border-[color:var(--hairline)]">
+              <img src={foundersScrubs.url} alt="MODO Nurse Prescriber founders" className="aspect-[4/3] w-full object-cover" loading="lazy" />
+            </div>
+          </div>
 
-            <div className="mt-12 grid gap-6 md:grid-cols-2">
+          <div className="mx-auto max-w-7xl px-5 pb-16 lg:px-8">
+            <div className="grid gap-6 md:grid-cols-2">
+
               <Card className="flex flex-col">
                 <CardHeader>
                   <Users className="mb-2 h-8 w-8 text-primary" />
