@@ -312,7 +312,7 @@ export const generatePatientBrief = createServerFn({ method: "POST" })
     await assertOwnClient(context.supabase, data.clientId, profileId);
 
     const { data: client } = await context.supabase
-      .from("clinic_clients").select("full_name, dob, gender, has_allergies, allergies, notes, safeguarding_flag, safeguarding_note")
+      .from("clinic_clients").select("full_name, email, dob, gender, has_allergies, allergies, notes, safeguarding_flag, safeguarding_note")
       .eq("id", data.clientId).maybeSingle();
 
     const orParts = [
