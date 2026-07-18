@@ -470,25 +470,65 @@ function ClinicalFeature({
 
 
 export function SiteHeader() {
+  const pages = [
+    { to: "/", label: "Home" },
+    { to: "/features", label: "Features" },
+    { to: "/prescriber-hub", label: "Prescriber Hub" },
+    { to: "/rewards", label: "Rewards" },
+    { to: "/who-its-for", label: "Who it's for" },
+    { to: "/auth", label: "Sign in" },
+  ];
   return (
-    <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 lg:px-8">
-        <Link to="/" className="flex items-center">
-          <BrandMark size="md" />
+    <header className="sticky top-0 z-50 w-full border-b border-[color:var(--hairline)] bg-[color:var(--paper)]/85 backdrop-blur-md">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 lg:px-8">
+        <Link to="/" className="flex items-center gap-2.5">
+          <img src={appIcon.url} alt="" className="h-8 w-8 rounded-lg border border-[color:var(--hairline)] bg-white" />
+          <span className="font-serif text-xl tracking-[0.28em] text-[color:var(--ink)]">MODO</span>
         </Link>
-        <nav className="hidden items-center gap-6 text-sm md:flex">
-          <Link to="/features" className="text-muted-foreground hover:text-foreground">Features</Link>
-          <Link to="/prescriber-hub" className="text-muted-foreground hover:text-foreground">Prescriber Hub</Link>
-          <Link to="/rewards" className="text-muted-foreground hover:text-foreground">Rewards</Link>
-          <Link to="/who-its-for" className="text-muted-foreground hover:text-foreground">Who it's for</Link>
-        </nav>
-        <div className="flex items-center gap-3">
-          <Link to="/auth">
-            <Button variant="ghost">Sign in</Button>
-          </Link>
+
+        <div className="flex items-center gap-2">
           <Link to="/auth" className="hidden sm:inline-flex">
-            <Button>Get started</Button>
+            <Button
+              size="sm"
+              className="rounded-full bg-[color:var(--ink)] px-5 text-xs font-medium uppercase tracking-[0.14em] text-[color:var(--paper)] hover:bg-[color:var(--ink)]/90"
+            >
+              Get started
+            </Button>
           </Link>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2 rounded-full border-[color:var(--hairline)] bg-white px-4 text-xs font-medium uppercase tracking-[0.14em] text-[color:var(--ink)] hover:bg-[color:var(--muted)]"
+              >
+                <span className="flex h-3 w-4 flex-col justify-between">
+                  <span className="h-[1.5px] w-full bg-current" />
+                  <span className="h-[1.5px] w-full bg-current" />
+                  <span className="h-[1.5px] w-3/4 bg-current" />
+                </span>
+                Menu
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56 rounded-2xl border-[color:var(--hairline)] bg-white p-2">
+              <DropdownMenuLabel className="px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-[color:var(--accent)]">
+                Explore MODO
+              </DropdownMenuLabel>
+              {pages.map((p) => (
+                <DropdownMenuItem key={p.to} asChild className="rounded-lg">
+                  <Link to={p.to} className="cursor-pointer px-3 py-2 text-sm font-medium text-[color:var(--ink)]">
+                    {p.label}
+                  </Link>
+                </DropdownMenuItem>
+              ))}
+              <DropdownMenuSeparator className="my-1 bg-[color:var(--hairline)]" />
+              <DropdownMenuItem asChild className="rounded-lg">
+                <Link to="/auth" className="cursor-pointer px-3 py-2 text-sm font-semibold text-[color:var(--accent)]">
+                  Create your clinic →
+                </Link>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </header>
@@ -497,12 +537,14 @@ export function SiteHeader() {
 
 export function SiteFooter() {
   return (
-    <footer className="border-t bg-muted/20">
-      <div className="mx-auto grid max-w-7xl gap-8 px-4 py-12 sm:grid-cols-2 lg:grid-cols-4 lg:px-8">
+    <footer className="border-t border-[color:var(--hairline)] bg-[color:var(--paper)]">
+      <div className="mx-auto grid max-w-7xl gap-8 px-5 py-14 sm:grid-cols-2 lg:grid-cols-4 lg:px-8">
         <div>
-          <BrandMark size="sm" />
-
-          <p className="mt-3 text-sm text-muted-foreground">
+          <Link to="/" className="flex items-center gap-2.5">
+            <img src={appIcon.url} alt="" className="h-9 w-9 rounded-lg border border-[color:var(--hairline)] bg-white" />
+            <span className="font-serif text-lg tracking-[0.28em] text-[color:var(--ink)]">MODO</span>
+          </Link>
+          <p className="mt-4 max-w-xs text-sm text-[color:var(--ink-soft)]">
             The aesthetics-only booking & clinical platform. Built by two UK Nurse Prescribers.
           </p>
         </div>
@@ -521,8 +563,8 @@ export function SiteFooter() {
           { label: "Terms & Conditions", to: "/terms" },
         ]} />
       </div>
-      <div className="border-t py-6 text-center text-sm text-muted-foreground">
-        © {new Date().getFullYear()} MODO. Designed by Nurse Prescribers, for aesthetics clinics.
+      <div className="border-t border-[color:var(--hairline)] py-6 text-center text-xs uppercase tracking-[0.2em] text-[color:var(--ink-soft)]">
+        © {new Date().getFullYear()} MODO · For practitioners, by practitioners
       </div>
     </footer>
   );
@@ -531,17 +573,18 @@ export function SiteFooter() {
 function FooterCol({ title, links }: { title: string; links: { label: string; to: string }[] }) {
   return (
     <div className="text-sm">
-      <div className="font-medium text-foreground">{title}</div>
+      <div className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[color:var(--accent)]">{title}</div>
       <ul className="mt-3 space-y-2">
         {links.map((l) => (
           <li key={l.to + l.label}>
-            <Link to={l.to} className="text-muted-foreground hover:text-foreground">{l.label}</Link>
+            <Link to={l.to} className="text-[color:var(--ink-soft)] transition-colors hover:text-[color:var(--ink)]">{l.label}</Link>
           </li>
         ))}
       </ul>
     </div>
   );
 }
+
 
 function Feature({ icon: Icon, title, desc }: { icon: React.ComponentType<{ className?: string }>; title: string; desc: string }) {
   return (
