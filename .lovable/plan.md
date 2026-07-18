@@ -1,68 +1,87 @@
-## Marketing setup — full plan
+# Patient Records — Clinical Timeline
 
-The project already has: campaigns dashboard, segments, templates, block-based composer with images/buttons/dividers, send + schedule + test, opt-in on `clinic_clients`, `email_unsubscribe_tokens` table, and a `/unsubscribe` route. What's missing to make it "really good":
+A calm, left-rail patient record built around a single chronological **Clinical Timeline** — every visit, consent, form, med, invoice, plan and photo lands on one spine, but nothing merges into a wall of text: each entry is a typed card the practitioner can expand.
 
-### 1. Fix unsubscribe (currently broken in marketing emails)
+## Layout
 
-Marketing broadcast footer links to `/unsubscribe` **without a token**, so patients can't actually unsubscribe from a campaign.
+```text
+┌───────────── Patient header (sticky) ──────────────────────────┐
+│  Avatar · Name · Age  ·  ⚠ Allergies · Meds · Flags · Next appt │
+├──────────────┬─────────────────────────────────────────────────┤
+│ Left rail    │  Section content                                │
+│              │                                                 │
+│ Overview     │  (AI brief + KPIs + next-due)                   │
+│ Timeline ◉   │  (default view — the spine)                     │
+│ Photos       │  Before/after grid w/ side-by-side compare      │
+│ Consents     │  Signed docs, versioned                         │
+│ Medical forms│  Intake + review dates                          │
+│ Medications  │  Current + history, interactions surfaced       │
+│ Plans        │  Active treatment plans / progress              │
+│ Invoices     │  Payments, credits, packages                    │
+│ Messages     │  Comms log                                      │
+│ Files        │  Uploads                                        │
+└──────────────┴─────────────────────────────────────────────────┘
+```
 
-- In `enqueueAppEmail` (send.server.ts), when the template is `marketing-broadcast`, overwrite `templateData.unsubscribeUrl` with `https://modobook.uk/unsubscribe?token=<token>` after the per-email token is resolved.
-- Remove the hardcoded `unsubscribeUrl` passed from campaign dispatch and test-send in `marketing.functions.ts`.
-- Result: every campaign email gets a real one-click unsubscribe link + working `List-Unsubscribe` header. Suppressed/unsubscribed recipients are already auto-skipped on send.
+- **Sticky header** always shows allergies, current meds count, safeguarding flag, next appt. Never buried.
+- **Left rail** with counts (e.g. "Consents 4"), active section highlighted, keyboard `g t` / `g p` shortcuts.
+- Nothing merges: each section is its own route, own scroll, own empty state.
 
-### 2. Richer composer (matches "Rich text, CTAs, merge tags, test send")
+## Signature features
 
-Test send already exists. Add:
+1. **AI Patient Brief** (Overview) — one-tap "Prep for next visit". Pulls last visit notes, products/doses, unresolved concerns, allergy conflicts, photos, plan progress. Uses Lovable AI (`google/gemini-3-flash-preview`). Server fn `generatePatientBrief` — regenerated on demand, cached per appointment.
+2. **Before/After timeline** — Photos tab shows chronological strip; tap two = side-by-side compare with date + treatments-between overlay. Area tags (lips, jawline…) filter the strip.
+3. **Patient-facing mirror** — practitioner toggles per-item "Share with patient". Patient app shows a curated view: plan, next-due, aftercare, photos they've approved, invoices, points. Uses existing `patient_accounts`.
 
-- Merge-tag helper in the composer: buttons that insert `{{first_name}}`, `{{clinic_name}}`, `{{last_treatment}}` at cursor for heading/paragraph/button fields.
-- New block type `rich_text` (paragraph with basic inline HTML: **bold**, *italic*, links) rendered safely (whitelist only b/i/strong/em/a). Existing `paragraph` stays.
-- CTA button already supported — surface a "Book now" quick-add that pre-fills the practitioner's booking URL from `profiles.slug`.
-- Preview panel next to the editor shows the current block list rendered in a compact card so you don't have to send a test to see it.
-- Add `{{last_treatment}}` resolution in dispatch (join latest appointment.treatment name per recipient) and pass into `templateData`.
+## Timeline entry types (typed cards)
 
-### 3. Recurring automations (day-one set)
+Appointment · Consent signed · Medical form submitted · Photo added · Note · Medication prescribed · Invoice/payment · Plan created/updated · Message · Manual event. Filter chips at top of Timeline: All / Clinical / Admin / Photos.
 
-Ship four automation types under `marketing_automations` (new table):
+## Data model (additions)
 
-- **Birthday** — patients whose `date_of_birth` month/day = today, sent at 9am practitioner-time.
-- **Treatment-interval** — X weeks after last appointment of treatment Y (e.g. 8 weeks after Botox). Multiple rules per practitioner.
-- **Win-back** — no visit in N days.
-- **Monthly newsletter** — recurring on Nth of month, uses a picked template.
+- `patient_timeline_events` — unified view (materialised) over existing tables + a `manual_events` table for practitioner-added entries. Keeps the spine without duplicating source-of-truth data.
+- `clinic_clients.share_with_patient` flags per related record (add `shared_with_patient boolean` to: consents, aftercare, plans, invoices, photos).
+- `patient_ai_briefs` — cached AI brief per (client_id, appointment_id).
+- `client_medications` — structured med list (drug, dose, route, started, stopped, prescriber). Currently only free-text on profile.
+- `clinic_clients.safeguarding_flag`, `clinic_clients.gp_details` (jsonb: surgery, address, phone).
 
-Each automation stores: `name`, `type`, `enabled`, `template_id` (reuses `marketing_templates`), `config_json` (interval, treatment_id, day-of-month etc.), `last_run_at`. Practitioners can also make **custom** ones by picking any template and a schedule.
+All RLS scoped to owning practitioner; grants for `authenticated` + `service_role`.
 
-A single `/api/public/hooks/marketing-automations` route runs hourly via pg_cron; for each enabled automation it materialises today's recipient list, dedupes against a new `marketing_automation_sends` log (so nobody gets the same birthday email twice), and enqueues emails through the same `tryEnqueueAppEmail` path with `marketing-broadcast` template + branding.
+## Routes
 
-### 4. Scheduled-send worker
+- `/dashboard/patients` — searchable directory (exists, polish).
+- `/dashboard/patients/$id` → redirects to `/timeline`.
+- `/dashboard/patients/$id/timeline` (default)
+- `/dashboard/patients/$id/overview` (AI brief + KPIs)
+- `/dashboard/patients/$id/photos`
+- `/dashboard/patients/$id/consents`
+- `/dashboard/patients/$id/forms`
+- `/dashboard/patients/$id/medications`
+- `/dashboard/patients/$id/plans`
+- `/dashboard/patients/$id/invoices`
+- `/dashboard/patients/$id/messages`
+- `/dashboard/patients/$id/files`
 
-`processScheduledCampaigns()` exists but isn't wired to cron. Add pg_cron job hitting `/api/public/hooks/marketing-dispatch` every 5 minutes (auth via `apikey` header) so `scheduled_for` campaigns actually fire.
+Under `_authenticated`. Sticky header lives in a `_layout` route with `<Outlet />`.
 
-### 5. Segment builder polish
+## Phasing
 
-Segment page already covers tags/last-visit/treatments/upcoming. Add:
+**Phase 1 (this turn)**
+- Migration: `client_medications`, brief cache, sharing flags, GP/safeguarding fields, `manual_events`.
+- Route shell + sticky header + left rail + Timeline (aggregated read from existing tables).
+- Photos before/after compare.
+- Overview with AI brief server fn.
 
-- "Birthday this month" checkbox (dynamic rule).
-- Live count preview (already exists in `previewSegmentCount`) shown on the campaign editor when a segment is picked.
+**Phase 2**
+- Patient-mirror surface in the patient app.
+- Per-item "Share" toggles.
+- Manual event composer, richer filters, export.
 
-### 6. Compliance & footer
+## Technical notes
 
-- Every marketing email footer already shows clinic name + unsubscribe. After fix #1, clicking unsubscribe records `suppressed_emails` + marks token used → all future marketing (and app) emails skip that address automatically.
-- Add a small "Marketing consent" note next to the opt-in toggle in patient profile explaining what they're consenting to.
+- Timeline: single server fn `getPatientTimeline({clientId, cursor, filters})` merging appointments, consents, forms, invoices, photos, meds, plans, manual events into one sorted, paginated stream. RLS via `requireSupabaseAuth` + owner check.
+- AI brief: `generatePatientBrief` server fn → Lovable AI gateway, structured output (concerns, red_flags, suggested_questions, last_products). Stored in `patient_ai_briefs`.
+- Photos: reuse existing storage bucket; compare view is client-side (two `<img>` + slider). Tags in a small `client_photo_tags` table.
+- Left rail counts hydrated once per patient via a `getPatientCounts` server fn to keep the rail snappy.
 
-### Technical summary
-
-- Migration: `marketing_automations`, `marketing_automation_sends` tables + RLS + GRANTS.
-- New file: `src/routes/api/public/hooks/marketing-automations.ts` — hourly cron entry.
-- New file: `src/routes/api/public/hooks/marketing-dispatch.ts` — 5-min cron entry for scheduled campaigns.
-- New file: `src/routes/_authenticated/dashboard.marketing.automations.tsx` — CRUD UI.
-- Edit: `src/lib/marketing.functions.ts` — add automation CRUD + `last_treatment` merge; drop hardcoded unsubscribe URLs.
-- Edit: `src/lib/email/send.server.ts` — inject tokenised unsubscribe URL for `marketing-broadcast`.
-- Edit: `src/routes/_authenticated/dashboard.marketing.campaigns.$id.tsx` — merge-tag chips, "Book now" quick-add, live segment count.
-- Edit: `src/lib/email-templates/marketing-broadcast.tsx` — support `rich_text` block with whitelisted inline HTML.
-- pg_cron: two schedules pointing at the two hook routes.
-
-### Out of scope (say so upfront)
-
-- Open/click tracking pixels (would need extra domain plumbing) — noted for later.
-- Drip sequences (multi-step series) — you said one-off + scheduled + recurring; skipping until requested.
-- SMS — email only per your answers.
+Confirm and I'll start with Phase 1.
