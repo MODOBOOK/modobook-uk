@@ -431,19 +431,22 @@ function Account() {
         const careCount = activeAftercare.length + notes.length;
         return (
           <Tabs defaultValue="appointments" className="mt-8">
-            <TabsList className="grid w-full grid-cols-5">
-              <TabsTrigger value="appointments">
-                Visits{upcoming.length > 0 && <span className="ml-1 text-xs opacity-70">({upcoming.length})</span>}
-              </TabsTrigger>
-              <TabsTrigger value="paperwork">
-                Paperwork{paperworkCount > 0 && <span className="ml-1 text-xs opacity-70">({paperworkCount})</span>}
-              </TabsTrigger>
-              <TabsTrigger value="care">
-                Care{careCount > 0 && <span className="ml-1 text-xs opacity-70">({careCount})</span>}
-              </TabsTrigger>
-              <TabsTrigger value="rewards" id="tab-rewards">Rewards</TabsTrigger>
-              <TabsTrigger value="account">Account</TabsTrigger>
-            </TabsList>
+            <div className="-mx-1 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              <TabsList className="inline-flex w-max min-w-full gap-1 px-1">
+                <TabsTrigger value="appointments" className="whitespace-nowrap">
+                  Visits{upcoming.length > 0 && <span className="ml-1 text-xs opacity-70">({upcoming.length})</span>}
+                </TabsTrigger>
+                <TabsTrigger value="paperwork" className="whitespace-nowrap">
+                  Paperwork{paperworkCount > 0 && <span className="ml-1 text-xs opacity-70">({paperworkCount})</span>}
+                </TabsTrigger>
+                <TabsTrigger value="care" className="whitespace-nowrap">
+                  Care{careCount > 0 && <span className="ml-1 text-xs opacity-70">({careCount})</span>}
+                </TabsTrigger>
+                <TabsTrigger value="rewards" id="tab-rewards" className="whitespace-nowrap">Rewards</TabsTrigger>
+                <TabsTrigger value="account" className="whitespace-nowrap">Account</TabsTrigger>
+              </TabsList>
+            </div>
+
 
             {/* VISITS */}
             <TabsContent value="appointments" className="mt-4">
