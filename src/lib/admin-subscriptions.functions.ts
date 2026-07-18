@@ -39,12 +39,14 @@ export const createSubscriptionPlan = createServerFn({ method: "POST" })
   .inputValidator((i: {
     name: string; description?: string;
     amount_cents: number; currency?: string; interval?: "month" | "year";
+    kind?: "base" | "addon_location" | "addon_practitioner";
+    default_trial_days?: number;
   }) => i)
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const currency = (data.currency || "gbp").toLowerCase();
     const interval = data.interval || "month";
-    // Create Stripe product + recurring price
+    const kind = data.kind || "base";
     const { getStripe } = await import("./stripe.server");
     const stripe = getStripe();
     const product = await stripe.products.create({
@@ -65,6 +67,8 @@ export const createSubscriptionPlan = createServerFn({ method: "POST" })
         amount_cents: data.amount_cents,
         currency,
         interval,
+        kind,
+        default_trial_days: data.default_trial_days ?? 30,
         stripe_price_id: price.id,
       })
       .select()
