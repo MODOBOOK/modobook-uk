@@ -19,7 +19,7 @@ import { Separator } from "@/components/ui/separator";
 import {
   Loader2, ChevronLeft, ChevronRight, Check, Camera, X,
   HeartPulse, ListChecks, Stethoscope, ClipboardEdit, FileSignature,
-  Images, Syringe, Receipt, ArrowLeft, Plus, Search,
+  Images, Syringe, Receipt, ArrowLeft, Plus, Search, Download,
 } from "lucide-react";
 import { toast } from "sonner";
 import { ClientFormsList } from "@/components/patient/ClientFormsList";
