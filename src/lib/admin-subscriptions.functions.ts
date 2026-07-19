@@ -108,7 +108,7 @@ export const updateSubscriptionPlan = createServerFn({ method: "POST" })
       if (eErr) throw eErr;
 
       const nextAmount = data.amount_cents ?? existing.amount_cents;
-      const nextInterval = data.interval ?? existing.interval;
+      const nextInterval = (data.interval ?? existing.interval) as "month" | "year";
       const currency = (existing.currency || "gbp").toLowerCase();
 
       const { getStripe } = await import("./stripe.server");
@@ -150,7 +150,7 @@ export const updateSubscriptionPlan = createServerFn({ method: "POST" })
 
     const { error } = await context.supabase
       .from("subscription_plans")
-      .update(patch)
+      .update(patch as never)
       .eq("id", data.id);
     if (error) throw error;
 
