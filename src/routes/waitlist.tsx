@@ -31,7 +31,7 @@ const PERKS = [
   {
     icon: Sparkles,
     title: "Founding-clinic pricing",
-    body: "£19.99/month (usually £29.99) — first month free, no card required.",
+    body: "£29.99/month (usually £39.99) — first month free, no card required.",
   },
   {
     icon: Calendar,
