@@ -194,6 +194,29 @@ export const startBillingCheckout = createServerFn({ method: "POST" })
     return { url: session.url };
   });
 
+export const saveAddonSelection = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: { basePlanId?: string; extraLocations: number; extraPractitioners: number }) => i)
+  .handler(async ({ data, context }) => {
+    const profile = await getMyProfileId(context);
+    const { data: existing } = await context.supabase
+      .from("practitioner_subscriptions")
+      .select("id")
+      .eq("profile_id", profile.id)
+      .maybeSingle();
+    const payload: any = {
+      extra_locations: Math.max(0, data.extraLocations | 0),
+      extra_practitioners: Math.max(0, data.extraPractitioners | 0),
+    };
+    if (data.basePlanId) payload.plan_id = data.basePlanId;
+    if (existing) {
+      await context.supabase.from("practitioner_subscriptions").update(payload).eq("id", existing.id);
+    } else {
+      await context.supabase.from("practitioner_subscriptions").insert({ ...payload, profile_id: profile.id, status: "pending" });
+    }
+    return { ok: true };
+  });
+
 export const openStripePortal = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i: { returnUrl: string }) => i)
