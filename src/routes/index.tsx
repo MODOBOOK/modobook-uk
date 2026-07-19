@@ -141,19 +141,19 @@ function LandingPage() {
               </p>
             </div>
 
-            {/* Founders portrait card */}
+            {/* Branded product showcase */}
             <div className="relative">
               <div className="absolute -left-6 -top-6 hidden h-24 w-24 rounded-2xl border border-[color:var(--accent)]/30 bg-[color:var(--clinical-blue-soft)] lg:block" />
-              <div className="relative overflow-hidden rounded-3xl border border-[color:var(--hairline)] bg-white shadow-[0_30px_60px_-20px_rgba(60,40,20,0.25)]">
+              <div className="relative overflow-hidden rounded-3xl border border-[color:var(--hairline)] bg-[color:var(--muted)] shadow-[0_30px_60px_-20px_rgba(60,40,20,0.25)]">
                 <img
-                  src={foundersSuits.url}
-                  alt="The two Nurse Prescribers behind MODO"
-                  className="aspect-[4/5] w-full object-cover object-top"
+                  src={tabletPlatform.url}
+                  alt="MODO booking and clinical platform"
+                  className="aspect-[4/5] w-full object-cover object-center"
                 />
                 <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between rounded-2xl bg-white/95 px-4 py-3 backdrop-blur">
                   <div>
-                    <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">The founders</div>
-                    <div className="text-sm font-semibold text-[color:var(--ink)]">Nurse Prescribers · UK</div>
+                    <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">The platform</div>
+                    <div className="text-sm font-semibold text-[color:var(--ink)]">Built only for aesthetics</div>
                   </div>
                   <img src={wordmark.url} alt="MODO" className="h-6 w-auto object-contain" />
                 </div>
