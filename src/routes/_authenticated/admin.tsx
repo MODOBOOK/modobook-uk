@@ -12,6 +12,8 @@ import {
   adminDeleteClient,
   adminCreatePractitioner,
   adminInvitePractitioner,
+  adminListWaitlist,
+  adminDeleteWaitlistEntry,
 } from "@/lib/admin.functions";
 import {
   listSubscriptionPlans,
