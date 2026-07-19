@@ -147,6 +147,17 @@ export const startBillingCheckout = createServerFn({ method: "POST" })
       .maybeSingle();
 
     let customerId = existing?.stripe_customer_id as string | null | undefined;
+    // Validate the stored customer still exists in the current Stripe mode.
+    // A stale customer (e.g. created in test while we're now live, or deleted
+    // in Stripe) makes checkout.sessions.create fail silently — recreate it.
+    if (customerId) {
+      try {
+        const c: any = await stripe.customers.retrieve(customerId);
+        if (!c || c.deleted) customerId = null;
+      } catch {
+        customerId = null;
+      }
+    }
     if (!customerId && profile.email) {
       const customer = await stripe.customers.create({
         email: profile.email,
@@ -161,22 +172,30 @@ export const startBillingCheckout = createServerFn({ method: "POST" })
       ? Math.floor(new Date(existing.trial_end).getTime() / 1000)
       : undefined;
 
-    const session = await stripe.checkout.sessions.create({
-      mode: "subscription",
-      customer: customerId ?? undefined,
-      line_items,
-      allow_promotion_codes: true,
-      subscription_data: trialEndSec ? { trial_end: trialEndSec } : undefined,
-      success_url: data.successUrl,
-      cancel_url: data.cancelUrl,
-      metadata: {
-        profile_id: profile.id,
-        plan_id: base.id,
-        kind: "platform_subscription",
-        extra_locations: String(data.extraLocations ?? 0),
-        extra_practitioners: String(data.extraPractitioners ?? 0),
-      },
-    });
+    let session;
+    try {
+      session = await stripe.checkout.sessions.create({
+        mode: "subscription",
+        customer: customerId ?? undefined,
+        line_items,
+        allow_promotion_codes: true,
+        payment_method_types: ["card", "bacs_debit"],
+        subscription_data: trialEndSec ? { trial_end: trialEndSec } : undefined,
+        success_url: data.successUrl,
+        cancel_url: data.cancelUrl,
+        metadata: {
+          profile_id: profile.id,
+          plan_id: base.id,
+          kind: "platform_subscription",
+          extra_locations: String(data.extraLocations ?? 0),
+          extra_practitioners: String(data.extraPractitioners ?? 0),
+        },
+      });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Stripe checkout failed";
+      console.error("[startBillingCheckout] stripe error", msg);
+      throw new Error(`Could not open Stripe checkout: ${msg}`);
+    }
 
     const payload = {
       profile_id: profile.id,
@@ -184,6 +203,7 @@ export const startBillingCheckout = createServerFn({ method: "POST" })
       stripe_customer_id: customerId,
       extra_locations: data.extraLocations ?? 0,
       extra_practitioners: data.extraPractitioners ?? 0,
+      cancel_at_period_end: false,
     };
     if (existing) {
       await context.supabase.from("practitioner_subscriptions").update(payload).eq("id", existing.id);
@@ -191,6 +211,7 @@ export const startBillingCheckout = createServerFn({ method: "POST" })
       await context.supabase.from("practitioner_subscriptions").insert({ ...payload, status: "pending" });
     }
 
+    if (!session.url) throw new Error("Stripe returned no checkout URL. Please try again.");
     return { url: session.url };
   });
 
