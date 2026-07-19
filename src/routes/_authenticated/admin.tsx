@@ -520,7 +520,10 @@ function UserSupportCard() {
                         </div>
                       </div>
                       <Button size="sm" variant="outline" onClick={() => u.email && sendReset(u.email)}>
-                        <KeyRound className="mr-1 h-3 w-3" /> Send password reset
+                        <KeyRound className="mr-1 h-3 w-3" /> Send reset
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => u.email && setPassword(u.email)}>
+                        <KeyRound className="mr-1 h-3 w-3" /> Set password
                       </Button>
                     </div>
                   ))}
