@@ -156,16 +156,16 @@ function PricingPage() {
                   ))}
                 </ul>
                 <div className="mt-7">
-<Link to="/waitlist">
-                    <Button
-                      className={`w-full rounded-full ${
+                  <Link to="/waitlist" className="block">
+                    <span
+                      className={`inline-flex h-11 w-full items-center justify-center rounded-full px-6 text-sm font-medium transition-colors ${
                         t.highlight
                           ? "bg-[color:var(--ink)] text-white hover:bg-[color:var(--ink)]/90"
-                          : "bg-white text-[color:var(--ink)] border border-[color:var(--hairline)] hover:bg-[color:var(--muted)]"
+                          : "border border-[color:var(--hairline)] bg-white text-[color:var(--ink)] hover:bg-[color:var(--muted)]"
                       }`}
                     >
                       {t.cta} <ArrowRight className="ml-1 h-4 w-4" />
-                    </Button>
+                    </span>
                   </Link>
                 </div>
               </div>
