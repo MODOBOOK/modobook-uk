@@ -139,11 +139,42 @@ function PatientProfilePage() {
     await upsert({ data: { id, full_name: client.full_name, archived: !client.archived } });
     reload();
   }
+  const [exportingRecord, setExportingRecord] = useState(false);
   async function exportPatient() {
-    const blob = new Blob([JSON.stringify({ client, appts, consults }, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a"); a.href = url; a.download = `${client.full_name.replace(/\s+/g, "_")}.json`; a.click();
-    URL.revokeObjectURL(url);
+    if (!client) return;
+    setExportingRecord(true);
+    try {
+      const [{ generatePatientRecordPdf }, { listClientNotes }, { getConsultation }, profile] = await Promise.all([
+        import("@/lib/patient-record-pdf"),
+        import("@/lib/clients.functions"),
+        import("@/lib/consultations.functions"),
+        profileFn() as Promise<any>,
+      ]);
+      const [notes, fullConsults] = await Promise.all([
+        (listClientNotes as any)({ data: { client_id: id } }),
+        Promise.all((consults || []).map((c: any) => (getConsultation as any)({ data: { id: c.id } }).catch(() => null))),
+      ]);
+      const doc = await generatePatientRecordPdf({
+        clinic: profile ? {
+          clinic_name: profile.clinic_name,
+          full_name: profile.full_name,
+          logo_url: profile.logo_url ?? profile.hero_url ?? null,
+          brand_color: profile.brand_color,
+          address: profile.address,
+          email: profile.email,
+          phone: profile.phone,
+        } : null,
+        patient: client,
+        notes: (notes as any[]) || [],
+        consultations: (fullConsults as any[]).filter(Boolean),
+        appointments: appts || [],
+        options: { includeDetails: true, includeNotes: true, includeConsultations: true, includeAppointments: true },
+      });
+      const safe = String(client.full_name || "patient").replace(/[^a-z0-9-_ ]/gi, "").trim() || "patient";
+      doc.save(`Patient record - ${safe}.pdf`);
+    } catch (e: any) {
+      toast.error(e?.message ?? "PDF failed");
+    } finally { setExportingRecord(false); }
   }
   async function fullDelete() {
     if (!confirm("Move this patient to the archive? You can restore them later from the Archived tab.")) return;
@@ -359,8 +390,11 @@ function PatientProfilePage() {
         <Button variant="outline" className="flex-1" onClick={archive}>
           {client.archived ? "Reactivate patient" : "Deactivate patient"}
         </Button>
-        <Button variant="outline" className="flex-1" onClick={exportPatient}>
-          <Download className="mr-1.5 h-3.5 w-3.5" />Export
+        <Button variant="outline" className="flex-1" onClick={exportPatient} disabled={exportingRecord}>
+          {exportingRecord
+            ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+            : <Download className="mr-1.5 h-3.5 w-3.5" />}
+          Download record (PDF)
         </Button>
         <Button variant="ghost" className="text-destructive" onClick={fullDelete}>
           <Trash2 className="mr-1.5 h-3.5 w-3.5" />Delete
