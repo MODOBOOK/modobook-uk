@@ -90,6 +90,15 @@ function LandingPage() {
     };
   }, [navigate]);
 
+  // Redirect old hash-based waitlist links (e.g. shared on Instagram) to the
+  // dedicated /waitlist route so the URL resolves cleanly.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (window.location.hash.toLowerCase() === "#waitlist") {
+      navigate({ to: "/waitlist", replace: true });
+    }
+  }, [navigate]);
+
   return (
     <div className="modo-marketing min-h-screen bg-[color:var(--paper)] text-[color:var(--ink)]">
       <SiteHeader />
@@ -494,7 +503,7 @@ function ClinicalFeature({
 
 function WaitlistSection() {
   return (
-    <section id="waitlist" className="scroll-mt-24 border-t border-[color:var(--hairline)] bg-[color:var(--paper)]">
+    <section className="scroll-mt-24 border-t border-[color:var(--hairline)] bg-[color:var(--paper)]">
       <div className="mx-auto grid max-w-6xl gap-10 px-5 py-20 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:gap-16 lg:px-8">
         <div>
           <div className="eyebrow">§ Launch list</div>
