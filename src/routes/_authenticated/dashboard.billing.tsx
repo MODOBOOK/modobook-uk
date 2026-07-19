@@ -34,6 +34,7 @@ function BillingPage() {
   const redeem = useServerFn(redeemDiscountCode);
   const cancel = useServerFn(cancelMySubscription);
   const resume = useServerFn(resumeMySubscription);
+  const saveAddons = useServerFn(saveAddonSelection);
 
   const [state, setState] = useState<Awaited<ReturnType<typeof getMyBilling>> | null>(null);
   const [selectedPlanId, setSelectedPlanId] = useState<string>("");
