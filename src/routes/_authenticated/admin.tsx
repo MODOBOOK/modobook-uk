@@ -8,6 +8,7 @@ import {
   amIAdmin,
   adminLookupByEmail,
   adminSendPasswordReset,
+  adminSetUserPassword,
   adminSetProfileActive,
   adminDeleteClient,
   adminCreatePractitioner,
