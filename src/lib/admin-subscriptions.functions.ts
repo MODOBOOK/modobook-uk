@@ -318,8 +318,8 @@ export const createDiscountCode = createServerFn({ method: "POST" })
   }) => i)
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const { getStripe } = await import("./stripe.server");
-    const stripe = getStripe();
+    const { getStripeStable } = await import("./stripe.server");
+    const stripe = getStripeStable();
 
     // Validate: Stripe rejects coupons with both percent_off and amount_off.
     const hasPercent = data.percent_off != null && data.percent_off > 0;
@@ -331,26 +331,30 @@ export const createDiscountCode = createServerFn({ method: "POST" })
       throw new Error("Enter a percent off or an amount off.");
     }
 
-    // Pin API version to a stable release — the workspace default (dahlia preview)
-    // removed the `coupon` parameter on promotion_codes.create.
-    const reqOpts = { apiVersion: "2024-06-20" as any };
-
-    const coupon = await stripe.coupons.create({
-      name: data.description || data.code,
-      duration: data.duration,
-      duration_in_months: data.duration === "repeating" ? (data.duration_in_months ?? 3) : undefined,
-      percent_off: hasPercent ? data.percent_off! : undefined,
-      amount_off: hasAmount ? data.amount_off_cents! : undefined,
-      currency: hasAmount ? "gbp" : undefined,
-      max_redemptions: data.max_redemptions ?? undefined,
-      redeem_by: data.expires_at ? Math.floor(new Date(data.expires_at).getTime() / 1000) : undefined,
-    }, reqOpts);
-    const promo = await stripe.promotionCodes.create({
-      coupon: coupon.id,
-      code: data.code.toUpperCase(),
-      max_redemptions: data.max_redemptions ?? undefined,
-      expires_at: data.expires_at ? Math.floor(new Date(data.expires_at).getTime() / 1000) : undefined,
-    } as any, reqOpts);
+    let coupon;
+    let promo;
+    try {
+      coupon = await stripe.coupons.create({
+        name: data.description || data.code,
+        duration: data.duration,
+        duration_in_months: data.duration === "repeating" ? (data.duration_in_months ?? 3) : undefined,
+        percent_off: hasPercent ? data.percent_off! : undefined,
+        amount_off: hasAmount ? data.amount_off_cents! : undefined,
+        currency: hasAmount ? "gbp" : undefined,
+        max_redemptions: data.max_redemptions ?? undefined,
+        redeem_by: data.expires_at ? Math.floor(new Date(data.expires_at).getTime() / 1000) : undefined,
+      });
+      promo = await stripe.promotionCodes.create({
+        coupon: coupon.id,
+        code: data.code.toUpperCase(),
+        max_redemptions: data.max_redemptions ?? undefined,
+        expires_at: data.expires_at ? Math.floor(new Date(data.expires_at).getTime() / 1000) : undefined,
+      });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Stripe rejected the discount code";
+      console.error("[createDiscountCode] stripe error", msg);
+      throw new Error(`Stripe rejected the discount code: ${msg}`);
+    }
 
     const { data: row, error } = await context.supabase
       .from("platform_discount_codes")
