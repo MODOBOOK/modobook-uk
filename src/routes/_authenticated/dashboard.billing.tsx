@@ -178,7 +178,7 @@ function BillingPage() {
                 <button
                   key={p.id}
                   type="button"
-                  onClick={() => setSelectedPlanId(p.id)}
+                  onClick={() => bump(setSelectedPlanId, p.id)}
                   className={`rounded-lg border p-4 text-left transition ${selectedPlanId === p.id ? "border-primary bg-primary/5 ring-1 ring-primary" : "hover:bg-muted/50"}`}
                 >
                   <div className="font-semibold">{p.name}</div>
@@ -194,10 +194,16 @@ function BillingPage() {
                   <div className="font-medium text-sm">Extra locations</div>
                   <div className="text-xs text-muted-foreground">{money(locAddon.amount_cents, locAddon.currency)}/{locAddon.interval} each</div>
                   <div className="mt-2 flex items-center gap-2">
-                    <Button size="icon" variant="outline" onClick={() => setExtraLocations(Math.max(0, extraLocations - 1))}><Minus className="h-4 w-4" /></Button>
+                    <Button size="icon" variant="outline" onClick={() => bump(setExtraLocations, Math.max(0, extraLocations - 1))}><Minus className="h-4 w-4" /></Button>
                     <span className="w-8 text-center">{extraLocations}</span>
-                    <Button size="icon" variant="outline" onClick={() => setExtraLocations(extraLocations + 1)}><Plus className="h-4 w-4" /></Button>
+                    <Button size="icon" variant="outline" onClick={() => bump(setExtraLocations, extraLocations + 1)}><Plus className="h-4 w-4" /></Button>
                   </div>
+                  {extraLocations > 0 && (
+                    <p className="mt-2 text-xs text-muted-foreground flex items-center gap-1">
+                      <MapPin className="h-3 w-3" />
+                      <Link to="/dashboard/locations" className="underline underline-offset-2">Add your extra {extraLocations === 1 ? "location" : "locations"}</Link> now — they'll be included when billing starts.
+                    </p>
+                  )}
                 </div>
               )}
               {pracAddon && (
@@ -205,21 +211,27 @@ function BillingPage() {
                   <div className="font-medium text-sm">Extra practitioners</div>
                   <div className="text-xs text-muted-foreground">{money(pracAddon.amount_cents, pracAddon.currency)}/{pracAddon.interval} each</div>
                   <div className="mt-2 flex items-center gap-2">
-                    <Button size="icon" variant="outline" onClick={() => setExtraPractitioners(Math.max(0, extraPractitioners - 1))}><Minus className="h-4 w-4" /></Button>
+                    <Button size="icon" variant="outline" onClick={() => bump(setExtraPractitioners, Math.max(0, extraPractitioners - 1))}><Minus className="h-4 w-4" /></Button>
                     <span className="w-8 text-center">{extraPractitioners}</span>
-                    <Button size="icon" variant="outline" onClick={() => setExtraPractitioners(extraPractitioners + 1)}><Plus className="h-4 w-4" /></Button>
+                    <Button size="icon" variant="outline" onClick={() => bump(setExtraPractitioners, extraPractitioners + 1)}><Plus className="h-4 w-4" /></Button>
                   </div>
+                  {extraPractitioners > 0 && (
+                    <p className="mt-2 text-xs text-muted-foreground flex items-center gap-1">
+                      <Users className="h-3 w-3" />
+                      <Link to="/dashboard/staff" className="underline underline-offset-2">Invite your team {extraPractitioners === 1 ? "member" : "members"}</Link> now — seats are reserved for your trial.
+                    </p>
+                  )}
                 </div>
               )}
             </div>
 
             <div className="rounded-md bg-muted p-3 text-sm">
               Estimated total: <strong>{money(projected)}</strong>/{selectedPlan?.interval ?? "month"}
-              {trialActive && <span className="text-muted-foreground"> — starts after your trial ({trialDaysLeft} days remaining)</span>}
+              {trialActive && <span className="text-muted-foreground"> — your selection is saved and will pre-fill when you set up the direct debit after your {trialDaysLeft}-day trial.</span>}
             </div>
 
             <Button onClick={checkout} disabled={busy || !selectedPlanId} className="w-full sm:w-auto">
-              {sub?.stripe_customer_id ? "Update subscription" : "Start subscription"}
+              {sub?.stripe_customer_id ? "Update subscription" : trialActive ? "Set up direct debit (Stripe)" : "Start subscription"}
             </Button>
           </CardContent>
         </Card>
