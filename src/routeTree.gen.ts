@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WhoItsForRouteImport } from './routes/who-its-for'
+import { Route as WaitlistRouteImport } from './routes/waitlist'
 import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as RewardsRouteImport } from './routes/rewards'
@@ -145,6 +146,11 @@ import { Route as AuthenticatedDashboardMarketingCampaignsIdRouteImport } from '
 const WhoItsForRoute = WhoItsForRouteImport.update({
   id: '/who-its-for',
   path: '/who-its-for',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WaitlistRoute = WaitlistRouteImport.update({
+  id: '/waitlist',
+  path: '/waitlist',
   getParentRoute: () => rootRouteImport,
 } as any)
 const UnsubscribeRoute = UnsubscribeRouteImport.update({
@@ -896,6 +902,7 @@ export interface FileRoutesByFullPath {
   '/rewards': typeof RewardsRoute
   '/terms': typeof TermsRoute
   '/unsubscribe': typeof UnsubscribeRoute
+  '/waitlist': typeof WaitlistRoute
   '/who-its-for': typeof WhoItsForRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/admin-prescribers': typeof AuthenticatedAdminPrescribersRoute
@@ -1029,6 +1036,7 @@ export interface FileRoutesByTo {
   '/rewards': typeof RewardsRoute
   '/terms': typeof TermsRoute
   '/unsubscribe': typeof UnsubscribeRoute
+  '/waitlist': typeof WaitlistRoute
   '/who-its-for': typeof WhoItsForRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/admin-prescribers': typeof AuthenticatedAdminPrescribersRoute
@@ -1157,6 +1165,7 @@ export interface FileRoutesById {
   '/rewards': typeof RewardsRoute
   '/terms': typeof TermsRoute
   '/unsubscribe': typeof UnsubscribeRoute
+  '/waitlist': typeof WaitlistRoute
   '/who-its-for': typeof WhoItsForRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/admin-prescribers': typeof AuthenticatedAdminPrescribersRoute
@@ -1292,6 +1301,7 @@ export interface FileRouteTypes {
     | '/rewards'
     | '/terms'
     | '/unsubscribe'
+    | '/waitlist'
     | '/who-its-for'
     | '/admin'
     | '/admin-prescribers'
@@ -1425,6 +1435,7 @@ export interface FileRouteTypes {
     | '/rewards'
     | '/terms'
     | '/unsubscribe'
+    | '/waitlist'
     | '/who-its-for'
     | '/admin'
     | '/admin-prescribers'
@@ -1552,6 +1563,7 @@ export interface FileRouteTypes {
     | '/rewards'
     | '/terms'
     | '/unsubscribe'
+    | '/waitlist'
     | '/who-its-for'
     | '/_authenticated/admin'
     | '/_authenticated/admin-prescribers'
@@ -1687,6 +1699,7 @@ export interface RootRouteChildren {
   RewardsRoute: typeof RewardsRoute
   TermsRoute: typeof TermsRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
+  WaitlistRoute: typeof WaitlistRoute
   WhoItsForRoute: typeof WhoItsForRoute
   BookSlugRoute: typeof BookSlugRoute
   CTokenRoute: typeof CTokenRoute
@@ -1722,6 +1735,13 @@ declare module '@tanstack/react-router' {
       path: '/who-its-for'
       fullPath: '/who-its-for'
       preLoaderRoute: typeof WhoItsForRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/waitlist': {
+      id: '/waitlist'
+      path: '/waitlist'
+      fullPath: '/waitlist'
+      preLoaderRoute: typeof WaitlistRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/unsubscribe': {
@@ -3018,6 +3038,7 @@ const rootRouteChildren: RootRouteChildren = {
   RewardsRoute: RewardsRoute,
   TermsRoute: TermsRoute,
   UnsubscribeRoute: UnsubscribeRoute,
+  WaitlistRoute: WaitlistRoute,
   WhoItsForRoute: WhoItsForRoute,
   BookSlugRoute: BookSlugRoute,
   CTokenRoute: CTokenRoute,
@@ -3051,3 +3072,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

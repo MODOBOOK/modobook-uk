@@ -45,7 +45,7 @@ function HubPage() {
                 and audited in one place.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
-                <Link to="/" hash="waitlist">
+<Link to="/waitlist">
                   <Button size="lg" className="rounded-full bg-[color:var(--ink)] px-7 text-white hover:bg-[color:var(--ink)]/90">
                     Join the waitlist <ArrowRight className="ml-1 h-4 w-4" />
                   </Button>
@@ -193,7 +193,7 @@ function HubPage() {
             <p className="mt-2 text-sm font-semibold text-[color:var(--accent)]">
               First month free · No card required.
             </p>
-            <Link to="/" hash="waitlist">
+            <Link to="/waitlist">
               <Button size="lg" className="mt-6 rounded-full bg-[color:var(--ink)] px-8 text-white hover:bg-[color:var(--ink)]/90">
                 Join the waitlist <ArrowRight className="ml-1 h-4 w-4" />
               </Button>
