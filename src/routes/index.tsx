@@ -666,10 +666,11 @@ export function SiteHeader() {
               ))}
               <DropdownMenuSeparator className="my-1 bg-[color:var(--hairline)]" />
               <DropdownMenuItem asChild className="rounded-lg">
-                <Link to="/auth" className="cursor-pointer px-3 py-2 text-sm font-semibold text-[color:var(--accent)]">
-                  Create your clinic →
+                <Link to="/" hash="waitlist" className="cursor-pointer px-3 py-2 text-sm font-semibold text-[color:var(--accent)]">
+                  Join the waitlist →
                 </Link>
               </DropdownMenuItem>
+
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
