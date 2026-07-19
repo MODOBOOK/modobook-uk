@@ -14,8 +14,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import brandBoards from "@/assets/modo-brand-boards.png.asset.json";
 import foundersScrubs from "@/assets/modo-founders-scrubs.png.asset.json";
-import foundersSuits from "@/assets/modo-founders-suits.png.asset.json";
+import tabletPlatform from "@/assets/modo-tablet-platform.png.asset.json";
 import wordmark from "@/assets/modo-wordmark.png.asset.json";
+import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
 
 
 
@@ -139,19 +141,19 @@ function LandingPage() {
               </p>
             </div>
 
-            {/* Founders portrait card */}
+            {/* Branded product showcase */}
             <div className="relative">
               <div className="absolute -left-6 -top-6 hidden h-24 w-24 rounded-2xl border border-[color:var(--accent)]/30 bg-[color:var(--clinical-blue-soft)] lg:block" />
-              <div className="relative overflow-hidden rounded-3xl border border-[color:var(--hairline)] bg-white shadow-[0_30px_60px_-20px_rgba(60,40,20,0.25)]">
+              <div className="relative overflow-hidden rounded-3xl border border-[color:var(--hairline)] bg-[color:var(--muted)] shadow-[0_30px_60px_-20px_rgba(60,40,20,0.25)]">
                 <img
-                  src={foundersSuits.url}
-                  alt="The two Nurse Prescribers behind MODO"
-                  className="aspect-[4/5] w-full object-cover object-top"
+                  src={tabletPlatform.url}
+                  alt="MODO booking and clinical platform"
+                  className="aspect-[4/5] w-full object-cover object-center"
                 />
                 <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between rounded-2xl bg-white/95 px-4 py-3 backdrop-blur">
                   <div>
-                    <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">The founders</div>
-                    <div className="text-sm font-semibold text-[color:var(--ink)]">Nurse Prescribers · UK</div>
+                    <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">The platform</div>
+                    <div className="text-sm font-semibold text-[color:var(--ink)]">Built only for aesthetics</div>
                   </div>
                   <img src={wordmark.url} alt="MODO" className="h-6 w-auto object-contain" />
                 </div>
@@ -378,7 +380,12 @@ function LandingPage() {
           </div>
         </section>
 
+
+        {/* WAITLIST */}
+        <WaitlistSection />
+
         {/* CTA */}
+
 
         <section className="bg-white">
           <div className="mx-auto max-w-4xl px-5 py-24 text-center lg:px-8">
@@ -479,6 +486,117 @@ function ClinicalFeature({
     </div>
   );
 }
+
+function WaitlistSection() {
+  const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
+  const [role, setRole] = useState("");
+  const [clinic, setClinic] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [joined, setJoined] = useState(false);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    const trimmed = email.trim().toLowerCase();
+    if (!trimmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+    setSubmitting(true);
+    const { error } = await supabase.from("practitioner_waitlist").insert({
+      email: trimmed,
+      name: name.trim() || null,
+      role: role.trim() || null,
+      clinic_name: clinic.trim() || null,
+      source: "landing",
+    });
+    setSubmitting(false);
+    if (error && !error.message.toLowerCase().includes("duplicate")) {
+      toast.error("Couldn't join the list. Please try again.");
+      return;
+    }
+    setJoined(true);
+    toast.success("You're on the list — we'll be in touch at launch.");
+  }
+
+  return (
+    <section className="border-t border-[color:var(--hairline)] bg-[color:var(--paper)]">
+      <div className="mx-auto grid max-w-6xl gap-10 px-5 py-20 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:gap-16 lg:px-8">
+        <div>
+          <div className="eyebrow">§ Launch list</div>
+          <h2 className="mt-4 text-3xl font-bold leading-tight tracking-tight sm:text-4xl">
+            Be first in when
+            <br />
+            <span className="text-[color:var(--ink-soft)]">MODO goes live.</span>
+          </h2>
+          <p className="mt-5 max-w-md text-[color:var(--ink-soft)]">
+            Practitioners on the list get early access, launch pricing and
+            onboarding support before we open publicly.
+          </p>
+        </div>
+
+        <div className="rounded-3xl border border-[color:var(--hairline)] bg-white p-6 shadow-sm sm:p-8">
+          {joined ? (
+            <div className="py-6 text-center">
+              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[color:var(--clinical-blue-soft)] text-[color:var(--clinical-blue)]">
+                <CheckCircle2 className="h-6 w-6" />
+              </div>
+              <h3 className="text-xl font-semibold">You're on the list</h3>
+              <p className="mt-2 text-sm text-[color:var(--ink-soft)]">
+                We'll email you as soon as MODO opens up.
+              </p>
+            </div>
+          ) : (
+            <form onSubmit={submit} className="space-y-3">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Input
+                  placeholder="Your name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="h-11 rounded-full bg-[color:var(--muted)]/60 px-4"
+                />
+                <Input
+                  placeholder="Role (Nurse, Doctor, Aesthetician…)"
+                  value={role}
+                  onChange={(e) => setRole(e.target.value)}
+                  className="h-11 rounded-full bg-[color:var(--muted)]/60 px-4"
+                />
+              </div>
+              <Input
+                placeholder="Clinic name (optional)"
+                value={clinic}
+                onChange={(e) => setClinic(e.target.value)}
+                className="h-11 rounded-full bg-[color:var(--muted)]/60 px-4"
+              />
+              <Input
+                type="email"
+                required
+                placeholder="Email address"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="h-11 rounded-full bg-[color:var(--muted)]/60 px-4"
+              />
+              <Button
+                type="submit"
+                size="lg"
+                disabled={submitting}
+                className="w-full rounded-full bg-[color:var(--ink)] px-8 text-sm font-medium text-white hover:bg-[color:var(--ink)]/90"
+              >
+                {submitting ? "Adding…" : "Join the launch list"}
+                <ArrowRight className="ml-1 h-4 w-4" />
+              </Button>
+              <p className="text-center text-[11px] text-[color:var(--ink-soft)]">
+                No spam. Unsubscribe any time. UK/EU data residency.
+              </p>
+            </form>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+
 
 export function SiteHeader() {
   const pages = [
