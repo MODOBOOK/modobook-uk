@@ -698,10 +698,12 @@ export function SiteFooter() {
         </div>
         <FooterCol title="Platform" links={[
           { label: "Features", to: "/features" },
+          { label: "Pricing", to: "/pricing" },
           { label: "Prescriber Hub", to: "/prescriber-hub" },
           { label: "Rewards", to: "/rewards" },
           { label: "Who it's for", to: "/who-its-for" },
         ]} />
+
         <FooterCol title="Join us" links={[
           { label: "Join the waitlist", to: "/#waitlist" },
           { label: "Sign in", to: "/auth" },
