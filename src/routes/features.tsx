@@ -94,7 +94,7 @@ function FeaturesPage() {
             The booking, consultation, clinical and marketing stack — built only for aesthetics, for HCPs and non-HCPs alike.
           </p>
           <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-            <Link to="/auth"><Button size="lg" className="w-full rounded-full bg-[color:var(--ink)] px-8 text-sm text-white hover:bg-[color:var(--ink)]/90 sm:w-auto">Start free</Button></Link>
+            <Link to="/" hash="waitlist"><Button size="lg" className="w-full rounded-full bg-[color:var(--ink)] px-8 text-sm text-white hover:bg-[color:var(--ink)]/90 sm:w-auto">Join the waitlist</Button></Link>
             <Link to="/prescriber-hub"><Button size="lg" variant="outline" className="w-full rounded-full border-[color:var(--hairline)] bg-white px-8 text-sm sm:w-auto">Prescriber Hub</Button></Link>
           </div>
         </section>
