@@ -432,7 +432,7 @@ export const redeemDiscountCode = createServerFn({ method: "POST" })
         const stripe = getStripe();
         await stripe.subscriptions.update(sub.stripe_subscription_id, {
           discounts: [{ coupon: full.stripe_coupon_id }],
-        });
+        } as any, { apiVersion: "2024-06-20" as any });
       }
     }
 
