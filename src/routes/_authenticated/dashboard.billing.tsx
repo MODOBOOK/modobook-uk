@@ -3,12 +3,14 @@ import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import {
   getMyBilling,
+  getMyInvoices,
   startBillingCheckout,
   openStripePortal,
   redeemDiscountCode,
   cancelMySubscription,
   resumeMySubscription,
   saveAddonSelection,
+  updateMySubscriptionItems,
 } from "@/lib/practitioner-billing.functions";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,7 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Minus, Plus, MapPin, Users } from "lucide-react";
+import { Minus, Plus, MapPin, Users, FileText, ExternalLink } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard/billing")({
   ssr: false,
