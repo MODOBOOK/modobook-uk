@@ -351,7 +351,7 @@ function LandingPage() {
             <div className="relative overflow-hidden rounded-3xl border border-[color:var(--hairline)]">
               <img
                 src={foundersScrubs.url}
-                alt="MODO's Nurse Prescriber founders in clinical scrubs"
+                alt="MODO's founders in clinical scrubs"
                 className="aspect-[4/3] w-full object-cover"
               />
             </div>
