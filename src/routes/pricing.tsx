@@ -193,13 +193,10 @@ function PricingPage() {
               MODO is rolling out over the next few weeks. Join the waitlist and keep the
               discounted rates above for the life of your account.
             </p>
-            <Link to="/waitlist">
-              <Button
-                size="lg"
-                className="mt-6 rounded-full bg-[color:var(--ink)] px-8 text-white hover:bg-[color:var(--ink)]/90"
-              >
+            <Link to="/waitlist" className="mt-6 inline-block">
+              <span className="inline-flex h-11 items-center justify-center rounded-full bg-[color:var(--ink)] px-8 text-sm font-medium text-white hover:bg-[color:var(--ink)]/90">
                 Join the waitlist <ArrowRight className="ml-1 h-4 w-4" />
-              </Button>
+              </span>
             </Link>
           </div>
         </section>
