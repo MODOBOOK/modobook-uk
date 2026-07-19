@@ -168,6 +168,38 @@ export const adminSendPasswordReset = createServerFn({ method: "POST" })
     return { actionLink: link.properties?.action_link ?? null };
   });
 
+export const adminSetUserPassword = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: { user_id?: string; email?: string; password: string }) => i)
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    if (!data.password || data.password.length < 8) {
+      throw new Error("Password must be at least 8 characters");
+    }
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    let userId = data.user_id;
+    if (!userId) {
+      const email = (data.email || "").trim().toLowerCase();
+      if (!email) throw new Error("Provide a user_id or email");
+      // Find the user by email
+      let page = 1;
+      while (page <= 10 && !userId) {
+        const { data: list, error } = await supabaseAdmin.auth.admin.listUsers({ page, perPage: 200 });
+        if (error) throw error;
+        const found = list.users.find((u) => (u.email ?? "").toLowerCase() === email);
+        if (found) userId = found.id;
+        if (list.users.length < 200) break;
+        page++;
+      }
+      if (!userId) throw new Error("No account with that email");
+    }
+    const { error } = await supabaseAdmin.auth.admin.updateUserById(userId, {
+      password: data.password,
+    });
+    if (error) throw error;
+    return { ok: true, user_id: userId };
+  });
+
 export const adminSetProfileActive = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i: { profile_id: string; active: boolean }) => i)
