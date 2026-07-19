@@ -1358,7 +1358,45 @@ function CheckoutSheet({
                 try {
                   await chargeCard({ data: { clientId: card.clientId, amountCents: Math.round(amt * 100), description: reason.trim() } });
                   toast.success(`Charged £${amt.toFixed(2)} to card on file`);
-                } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
+                } catch (e) {
+                  const msg = (e as Error).message || "Charge failed";
+                  const needsAuth = /authenticat/i.test(msg);
+                  toast.error(msg);
+                  if (needsAuth && confirm("The bank needs the patient to authorise this payment.\n\nSend them a fresh payment link for this amount instead?")) {
+                    try {
+                      const row = await createLink({
+                        data: {
+                          amountCents: Math.round(amt * 100),
+                          description: `${reason.trim()} · ${a.patient_name}`.slice(0, 200),
+                          kind: "checkout",
+                          appointmentId: a.id,
+                          recipientEmail: a.patient_email,
+                          recipientName: a.patient_name,
+                          recipientPhone: a.patient_phone,
+                        },
+                      });
+                      const url = (row as { stripe_url: string | null }).stripe_url;
+                      if (url && navigator.clipboard) await navigator.clipboard.writeText(url);
+                      if (url && a.patient_phone) {
+                        const body = encodeURIComponent(
+                          `Hi ${a.patient_name}, please tap this secure link to complete your £${amt.toFixed(2)} payment (${reason.trim()}):\n\n${url}`,
+                        );
+                        const phone = a.patient_phone.replace(/\s+/g, "");
+                        window.location.href = `sms:${phone}?body=${body}`;
+                        toast.success("Opening SMS with re-auth payment link");
+                      } else if (url && a.patient_email) {
+                        const subject = encodeURIComponent("Please authorise your payment");
+                        const body = encodeURIComponent(
+                          `Hi ${a.patient_name},\n\nPlease tap this secure link to complete your £${amt.toFixed(2)} payment (${reason.trim()}):\n\n${url}\n\nThanks!`,
+                        );
+                        window.open(`mailto:${a.patient_email}?subject=${subject}&body=${body}`);
+                        toast.success("Payment link copied — email opened");
+                      } else {
+                        toast.success("Payment link copied to clipboard");
+                      }
+                    } catch (err) { toast.error((err as Error).message); }
+                  }
+                } finally { setBusy(false); }
               }}
             >
               <Percent className="h-3.5 w-3.5 mr-1" /> Charge card on file · {card.brand ?? "Card"} •••• {card.last4 ?? "••••"}
