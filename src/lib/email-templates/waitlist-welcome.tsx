@@ -1,13 +1,49 @@
 // Waitlist welcome — sent when a practitioner joins the MODO launch list.
-// Warm, editorial tone. Highlights what to expect and key features.
+// Rich, visual email with feature cards, launch badge and warm editorial tone.
 import * as React from 'react'
-import { Heading, Html, Link, Preview, Text } from '@react-email/components'
+import { Column, Heading, Hr, Html, Img, Link, Preview, Row, Section, Text } from '@react-email/components'
 import { Head, ModoShell, styles, brand } from './_modo-brand'
 import type { TemplateEntry } from './registry'
+import modoWordmark from '@/assets/modo-wordmark.png.asset.json'
 
 interface WaitlistWelcomeProps {
   firstName?: string | null
 }
+
+const FEATURES = [
+  {
+    title: 'Branded booking pages',
+    body: 'Your own link, your colours, your logo — clients book treatments in seconds.',
+  },
+  {
+    title: 'Smart rebook & top-up reminders',
+    body: 'Automated emails that bring clients back at exactly the right interval.',
+  },
+  {
+    title: 'AI photo uploads & face mapping',
+    body: 'Upload before/afters, track changes over time and annotate with a tap.',
+  },
+  {
+    title: 'Full clinical records',
+    body: 'Medical forms, consents, treatment notes and history — all in one place.',
+  },
+  {
+    title: 'Prescriber Hub',
+    body: 'Request clinic days, share records safely and get on-site sign-offs.',
+  },
+  {
+    title: 'Training that pays you',
+    body: 'List courses, take deposits and manage attendees on the same calendar.',
+  },
+  {
+    title: 'Marketing that respects clients',
+    body: 'Birthday notes, treatment intervals and newsletters sent from your brand.',
+  },
+  {
+    title: 'Payments & invoices',
+    body: 'Take deposits, sell packages and keep track of what you’re owed.',
+  },
+]
 
 export const WaitlistWelcomeEmail = ({ firstName }: WaitlistWelcomeProps) => {
   const greeting = firstName ? `Hi ${firstName},` : 'Hi there,'
@@ -16,47 +52,84 @@ export const WaitlistWelcomeEmail = ({ firstName }: WaitlistWelcomeProps) => {
       <Head />
       <Preview>You're on the MODO launch list — here's what's coming.</Preview>
       <ModoShell preview={null} siteName="MODO Book">
-        <Heading style={styles.h1}>Welcome to the MODO launch list.</Heading>
+        {/* Hero banner */}
+        <Section
+          style={{
+            backgroundColor: brand.soft,
+            borderRadius: '14px',
+            padding: '28px 24px',
+            textAlign: 'center',
+            marginBottom: '28px',
+          }}
+        >
+          <Img
+            src={`https://modobook.uk${modoWordmark.url}`}
+            alt="MODO Book"
+            height="42"
+            style={{ height: '42px', width: 'auto', margin: '0 auto 16px', display: 'inline-block' }}
+          />
+          <Text
+            style={{
+              ...styles.muted,
+              margin: 0,
+              fontSize: '12px',
+              letterSpacing: '0.18em',
+              textTransform: 'uppercase',
+              fontWeight: 600,
+            }}
+          >
+            Launch list
+          </Text>
+        </Section>
+
+        <Heading style={styles.h1}>You're first in line.</Heading>
         <Text style={styles.text}>{greeting}</Text>
         <Text style={styles.text}>
           Thanks for joining us early. MODO Book is the booking and clinical
-          platform built by aesthetics clinicians, for aesthetics clinicians —
-          and you're now first in line when we open the doors over the next
-          few weeks.
+          platform built by aesthetics clinicians, for every aesthetics
+          practitioner — and you're now first in line when we open the doors
+          over the next few weeks.
         </Text>
 
-        <Text style={{ ...styles.text, fontWeight: 600, marginTop: '24px' }}>
-          What to keep your eyes peeled for:
+        <Text style={{ ...styles.text, fontWeight: 600, marginTop: '28px', marginBottom: '18px' }}>
+          Here's what to keep your eyes peeled for:
         </Text>
 
-        <FeatureRow
-          title="Smart bookings & rebooking reminders"
-          body="Branded booking pages, auto-reminders and rebook/top-up nudges that bring clients back on time — without you lifting a finger."
-        />
-        <FeatureRow
-          title="Full clinical records in one place"
-          body="Medical forms, consents, treatment history, photos and face mapping — all consented, all searchable, all yours."
-        />
-        <FeatureRow
-          title="Prescriber Hub"
-          body="Request clinic days with a prescriber, share the record safely, and get on-site sign-offs without the WhatsApp chaos."
-        />
-        <FeatureRow
-          title="Training that pays you"
-          body="List your courses alongside your treatments, take deposits and manage attendees on the same calendar."
-        />
-        <FeatureRow
-          title="Marketing that respects your clients"
-          body="Birthday notes, treatment intervals and newsletters — sent from your brand, with unsubscribe handled for you."
-        />
+        <FeatureGrid features={FEATURES} />
+
+        {/* Pricing card */}
+        <Section
+          style={{
+            backgroundColor: brand.soft,
+            borderRadius: '14px',
+            padding: '24px',
+            marginTop: '28px',
+            textAlign: 'center',
+          }}
+        >
+          <Text style={{ ...styles.text, margin: 0, fontWeight: 600, fontSize: '16px' }}>
+            Founding pricing
+          </Text>
+          <Text style={{ ...styles.text, margin: '8px 0 0' }}>
+            <span style={{ textDecoration: 'line-through', color: brand.muted }}>£29.99</span>{' '}
+            <span style={{ fontSize: '22px', fontWeight: 600, color: brand.ink }}>£19.99</span>/month
+          </Text>
+          <Text style={{ ...styles.muted, margin: '10px 0 0' }}>
+            Additional team members £9.99 · Additional locations £4.99
+          </Text>
+          <Text
+            style={{
+              ...styles.text,
+              margin: '14px 0 0',
+              fontWeight: 600,
+              color: brand.accent,
+            }}
+          >
+            First month free · No card required
+          </Text>
+        </Section>
 
         <Text style={{ ...styles.text, marginTop: '28px' }}>
-          <strong>Founding pricing:</strong> £19.99/month (from £29.99),
-          additional team members £9.99, additional locations £4.99. The first
-          month is on us — no card required to get started.
-        </Text>
-
-        <Text style={styles.text}>
           We'll email you the moment your account is ready. In the meantime,
           have a look around and see what's coming:
         </Text>
@@ -66,6 +139,8 @@ export const WaitlistWelcomeEmail = ({ firstName }: WaitlistWelcomeProps) => {
             Explore MODO
           </Link>
         </div>
+
+        <Hr style={styles.hr} />
 
         <Text style={styles.muted}>
           Questions or want to tell us what you'd love MODO to solve? Just
@@ -82,18 +157,63 @@ export const WaitlistWelcomeEmail = ({ firstName }: WaitlistWelcomeProps) => {
   )
 }
 
-function FeatureRow({ title, body }: { title: string; body: string }) {
+function FeatureGrid({ features }: { features: typeof FEATURES }) {
+  const rows: (typeof FEATURES)[] = []
+  for (let i = 0; i < features.length; i += 2) {
+    rows.push(features.slice(i, i + 2))
+  }
+
   return (
-    <div
-      style={{
-        borderLeft: `3px solid ${brand.accent}`,
-        padding: '4px 0 4px 14px',
-        margin: '14px 0',
-      }}
-    >
-      <Text style={{ ...styles.text, margin: 0, fontWeight: 600 }}>{title}</Text>
-      <Text style={{ ...styles.muted, margin: '4px 0 0 0' }}>{body}</Text>
-    </div>
+    <>
+      {rows.map((row, rowIndex) => (
+        <Row key={rowIndex} style={{ marginBottom: '14px' }}>
+          {row.map((feature, colIndex) => (
+            <Column
+              key={colIndex}
+              style={{
+                width: '50%',
+                paddingRight: colIndex === 0 ? '8px' : '0',
+                paddingLeft: colIndex === 1 ? '8px' : '0',
+                verticalAlign: 'top',
+              }}
+            >
+              <div
+                style={{
+                  backgroundColor: brand.soft,
+                  borderRadius: '12px',
+                  padding: '18px',
+                  height: '100%',
+                  boxSizing: 'border-box',
+                }}
+              >
+                <div
+                  style={{
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '50%',
+                    backgroundColor: brand.accent,
+                    color: brand.accentInk,
+                    fontSize: '14px',
+                    lineHeight: '28px',
+                    textAlign: 'center',
+                    fontWeight: 700,
+                    marginBottom: '10px',
+                  }}
+                >
+                  {rowIndex * 2 + colIndex + 1}
+                </div>
+                <Text style={{ ...styles.text, margin: 0, fontWeight: 600, fontSize: '14px' }}>
+                  {feature.title}
+                </Text>
+                <Text style={{ ...styles.muted, margin: '6px 0 0', fontSize: '12px' }}>
+                  {feature.body}
+                </Text>
+              </div>
+            </Column>
+          ))}
+        </Row>
+      ))}
+    </>
   )
 }
 
