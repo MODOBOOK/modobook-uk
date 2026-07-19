@@ -107,12 +107,48 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
             case "checkout.session.completed":
             case "checkout.session.async_payment_succeeded": {
               const session = event.data.object as Stripe.Checkout.Session;
+              const metadata = session.metadata ?? {};
+
+              // Platform subscriptions commonly return `no_payment_required`
+              // while the free trial is active. Link them immediately rather
+              // than treating them like an unpaid patient booking.
+              if (session.mode === "subscription" && metadata.kind === "platform_subscription") {
+                const subscriptionId = typeof session.subscription === "string"
+                  ? session.subscription
+                  : session.subscription?.id;
+                const customerId = typeof session.customer === "string"
+                  ? session.customer
+                  : session.customer?.id;
+                if (subscriptionId && customerId) {
+                  const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+                  const patch = {
+                    stripe_customer_id: customerId,
+                    stripe_subscription_id: subscription.id,
+                    status: subscription.status,
+                    cancel_at_period_end: subscription.cancel_at_period_end,
+                    current_period_end: (subscription as any).current_period_end
+                      ? new Date((subscription as any).current_period_end * 1000).toISOString()
+                      : null,
+                    trial_end: subscription.trial_end
+                      ? new Date(subscription.trial_end * 1000).toISOString()
+                      : null,
+                    stripe_addon_items: subscription.items.data.map((item) => ({
+                      id: item.id, price: item.price.id, quantity: item.quantity,
+                    })),
+                  };
+                  await supabaseAdmin
+                    .from("practitioner_subscriptions")
+                    .update(patch as never)
+                    .eq("profile_id", metadata.profile_id);
+                }
+                break;
+              }
+
               if (session.payment_status !== "paid") break;
               const paymentLinkId =
                 typeof session.payment_link === "string"
                   ? session.payment_link
                   : session.payment_link?.id;
-              const metadata = session.metadata ?? {};
               const paymentIntentId =
                 typeof session.payment_intent === "string"
                   ? session.payment_intent
@@ -487,10 +523,12 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
               if (event.type === "customer.subscription.deleted") {
                 patch.status = "canceled";
               }
-              await supabaseAdmin
+              const profileId = s.metadata?.profile_id;
+              const query = supabaseAdmin
                 .from("practitioner_subscriptions")
-                .update(patch as never)
-                .eq("stripe_customer_id", customerId);
+                .update({ ...patch, stripe_customer_id: customerId } as never);
+              if (profileId) await query.eq("profile_id", profileId);
+              else await query.eq("stripe_customer_id", customerId);
               break;
             }
 

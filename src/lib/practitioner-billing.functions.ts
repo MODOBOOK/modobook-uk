@@ -133,6 +133,53 @@ export const getMyBilling = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const profile = await getMyProfileId(context);
 
+    // Webhooks can arrive a few seconds after Stripe redirects back (and older
+    // webhook configurations may not include subscription events). Reconcile
+    // the practitioner's own Stripe customer on every billing-page load so a
+    // successfully created direct debit is shown immediately.
+    const { data: currentSub } = await context.supabase
+      .from("practitioner_subscriptions")
+      .select("id, stripe_customer_id, stripe_subscription_id")
+      .eq("profile_id", profile.id)
+      .maybeSingle();
+    if (currentSub?.stripe_customer_id) {
+      try {
+        const { getStripe } = await import("./stripe.server");
+        const stripe = getStripe();
+        const subscriptions = await stripe.subscriptions.list({
+          customer: currentSub.stripe_customer_id,
+          status: "all",
+          limit: 10,
+        });
+        const live = subscriptions.data.find((s) =>
+          ["active", "trialing", "past_due", "unpaid", "incomplete"].includes(s.status),
+        );
+        if (live) {
+          const patch = {
+            stripe_subscription_id: live.id,
+            status: live.status,
+            cancel_at_period_end: live.cancel_at_period_end,
+            current_period_end: (live as any).current_period_end
+              ? new Date((live as any).current_period_end * 1000).toISOString()
+              : null,
+            trial_end: live.trial_end ? new Date(live.trial_end * 1000).toISOString() : null,
+            stripe_addon_items: live.items.data.map((item) => ({
+              id: item.id,
+              price: item.price.id,
+              quantity: item.quantity,
+            })),
+          };
+          await context.supabase
+            .from("practitioner_subscriptions")
+            .update(patch as any)
+            .eq("id", currentSub.id);
+        }
+      } catch (err) {
+        // Keep the billing page usable during a temporary Stripe failure.
+        console.error("[getMyBilling] Stripe reconciliation failed", err);
+      }
+    }
+
     const [{ data: sub }, { data: plans }, { data: access }, { count: locCount }, { count: pracCount }] = await Promise.all([
       context.supabase
         .from("practitioner_subscriptions")
@@ -251,7 +298,16 @@ export const startBillingCheckout = createServerFn({ method: "POST" })
         // explicitly requesting Bacs makes Stripe reject the whole session
         // until that payment method has completed account activation.
         payment_method_types: ["card"],
-        subscription_data: trialEndSec ? { trial_end: trialEndSec } : undefined,
+        subscription_data: {
+          ...(trialEndSec ? { trial_end: trialEndSec } : {}),
+          metadata: {
+            profile_id: profile.id,
+            plan_id: base.id,
+            kind: "platform_subscription",
+            extra_locations: String(data.extraLocations ?? 0),
+            extra_practitioners: String(data.extraPractitioners ?? 0),
+          },
+        },
         success_url: data.successUrl,
         cancel_url: data.cancelUrl,
         metadata: {
