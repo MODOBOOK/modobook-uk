@@ -76,8 +76,7 @@ function PrivacyPage() {
             <strong>Transactional and authentication emails</strong> — booking
             confirmations, reminders, medical-form and consent links,
             prescription receipts, one-time passcodes and password resets — are
-            sent from <code>notify.modobook.co.uk</code> through Lovable's
-            managed EU email relay. To protect health data in transit and at
+            sent from <code>notify.modobook.co.uk</code> through our managed EU email relay. To protect health data in transit and at
             the provider, our emails contain only appointment metadata (date,
             time, treatment name, clinic) and secure one-time links back into
             MODO; <strong>we do not embed medical history answers, consultation
