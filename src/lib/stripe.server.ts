@@ -134,6 +134,21 @@ export function getStripe(): Stripe {
   });
 }
 
+// A Stripe client pinned to a stable released API version.
+// Use for calls that break on the dahlia preview default (e.g. coupons /
+// promotion_codes, subscription discount updates), which have parameter
+// changes we don't yet handle in the newer preview API shape.
+export function getStripeStable(): Stripe {
+  const key = getStripeSecretKey();
+  if (!key) {
+    throw new StripePlatformSetupError("Stripe sandbox secret key is missing.", "missing_secret");
+  }
+  return new Stripe(key, {
+    apiVersion: "2024-06-20" as any,
+    typescript: true,
+  });
+}
+
 export function getStripeConnectClientId() {
   const id = process.env.STRIPE_CONNECT_CLIENT_ID?.trim();
   if (!id) {
