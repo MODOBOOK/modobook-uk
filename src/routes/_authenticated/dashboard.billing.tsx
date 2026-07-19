@@ -52,10 +52,13 @@ function BillingPage() {
   async function reload() {
     setLoading(true);
     try {
-      const d = await fetchBilling();
+      const [d, inv] = await Promise.all([fetchBilling(), fetchInvoices().catch(() => [])]);
       setState(d);
+      setInvoices(inv as any[]);
       if (!selectedPlanId && d.plans.length > 0) {
-        const base = d.plans.find((p: any) => p.kind === "base");
+        const currentPlanId = (d.subscription as any)?.plan_id;
+        const base = (currentPlanId && d.plans.find((p: any) => p.id === currentPlanId))
+          || d.plans.find((p: any) => p.kind === "base");
         if (base) setSelectedPlanId(base.id);
       }
       if (d.subscription) {
