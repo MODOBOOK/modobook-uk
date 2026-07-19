@@ -156,16 +156,16 @@ function PricingPage() {
                   ))}
                 </ul>
                 <div className="mt-7">
-<Link to="/waitlist">
-                    <Button
-                      className={`w-full rounded-full ${
+                  <Link to="/waitlist" className="block">
+                    <span
+                      className={`inline-flex h-11 w-full items-center justify-center rounded-full px-6 text-sm font-medium transition-colors ${
                         t.highlight
                           ? "bg-[color:var(--ink)] text-white hover:bg-[color:var(--ink)]/90"
-                          : "bg-white text-[color:var(--ink)] border border-[color:var(--hairline)] hover:bg-[color:var(--muted)]"
+                          : "border border-[color:var(--hairline)] bg-white text-[color:var(--ink)] hover:bg-[color:var(--muted)]"
                       }`}
                     >
                       {t.cta} <ArrowRight className="ml-1 h-4 w-4" />
-                    </Button>
+                    </span>
                   </Link>
                 </div>
               </div>
@@ -193,13 +193,10 @@ function PricingPage() {
               MODO is rolling out over the next few weeks. Join the waitlist and keep the
               discounted rates above for the life of your account.
             </p>
-            <Link to="/waitlist">
-              <Button
-                size="lg"
-                className="mt-6 rounded-full bg-[color:var(--ink)] px-8 text-white hover:bg-[color:var(--ink)]/90"
-              >
+            <Link to="/waitlist" className="mt-6 inline-block">
+              <span className="inline-flex h-11 items-center justify-center rounded-full bg-[color:var(--ink)] px-8 text-sm font-medium text-white hover:bg-[color:var(--ink)]/90">
                 Join the waitlist <ArrowRight className="ml-1 h-4 w-4" />
-              </Button>
+              </span>
             </Link>
           </div>
         </section>
