@@ -119,69 +119,46 @@ function AuthPage() {
         <Card>
           <CardHeader className="text-center">
             <CardTitle>Welcome to MODO</CardTitle>
-            <CardDescription>Sign in or create your practitioner account.</CardDescription>
+            <CardDescription>Sign in to your practitioner account.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4 pt-4">
-            <Tabs defaultValue="signin">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="signin">Sign in</TabsTrigger>
-                <TabsTrigger value="signup">Create account</TabsTrigger>
-              </TabsList>
+            <form onSubmit={handleSignIn} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+              </div>
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                Sign in
+              </Button>
+              <button
+                type="button"
+                className="block w-full text-center text-xs text-muted-foreground underline-offset-2 hover:underline"
+                onClick={() => { setForgotOpen((v) => !v); setForgotEmail(email); }}
+              >
+                Forgot password?
+              </button>
+              {forgotOpen && (
+                <div className="rounded-md border bg-muted/40 p-3">
+                  <Label htmlFor="forgot-email" className="text-xs">Send a reset link to</Label>
+                  <div className="mt-1 flex gap-2">
+                    <Input id="forgot-email" type="email" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} placeholder="you@example.com" />
+                    <Button type="button" size="sm" onClick={handleForgot} disabled={loading || !forgotEmail}>Send</Button>
+                  </div>
+                </div>
+              )}
+            </form>
 
-              <TabsContent value="signin" className="space-y-4 pt-4">
-                <form onSubmit={handleSignIn} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="password">Password</Label>
-                    <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-                  </div>
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                    Sign in
-                  </Button>
-                  <button
-                    type="button"
-                    className="block w-full text-center text-xs text-muted-foreground underline-offset-2 hover:underline"
-                    onClick={() => { setForgotOpen((v) => !v); setForgotEmail(email); }}
-                  >
-                    Forgot password?
-                  </button>
-                  {forgotOpen && (
-                    <div className="rounded-md border bg-muted/40 p-3">
-                      <Label htmlFor="forgot-email" className="text-xs">Send a reset link to</Label>
-                      <div className="mt-1 flex gap-2">
-                        <Input id="forgot-email" type="email" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} placeholder="you@example.com" />
-                        <Button type="button" size="sm" onClick={handleForgot} disabled={loading || !forgotEmail}>Send</Button>
-                      </div>
-                    </div>
-                  )}
-                </form>
-              </TabsContent>
-
-              <TabsContent value="signup" className="space-y-4 pt-4">
-                <form onSubmit={handleSignUp} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-name">Full name</Label>
-                    <Input id="signup-name" value={fullName} onChange={(e) => setFullName(e.target.value)} required />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-email">Email</Label>
-                    <Input id="signup-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-password">Password</Label>
-                    <Input id="signup-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
-                  </div>
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                    Create account
-                  </Button>
-                </form>
-              </TabsContent>
-            </Tabs>
+            <div className="rounded-lg border border-dashed bg-muted/40 p-3 text-center text-xs text-muted-foreground">
+              Don't have an account yet? MODO is opening to new clinics soon.{" "}
+              <Link to="/" hash="waitlist" className="font-medium text-foreground underline underline-offset-2">
+                Join the waitlist →
+              </Link>
+            </div>
 
             <Separator />
 
