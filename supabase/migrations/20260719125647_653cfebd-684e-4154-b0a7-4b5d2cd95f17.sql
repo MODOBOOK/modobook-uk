@@ -1,0 +1,1 @@
+DELETE FROM public.practitioner_waitlist WHERE email = 'bynurseryan@outlook.com';
