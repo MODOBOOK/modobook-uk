@@ -12,10 +12,10 @@ import {
 export const Route = createFileRoute("/prescriber-hub")({
   head: () => ({
     meta: [
-      { title: "Prescriber Hub | MODO — collaborative aesthetics care" },
-      { name: "description", content: "How the MODO Prescriber Hub works for prescribers and practitioners — a shared, consent-based patient record with photos, consultation notes, medical history and a clear prescribing workflow." },
+      { title: "Prescriber Hub | MODO — in-person prescriber collaboration" },
+      { name: "description", content: "The MODO Prescriber Hub is built for in-person prescribing — prescribers request days to work at a practitioner's clinic, patients book into those days, and every record, consent and prescription is shared and audited." },
       { property: "og:title", content: "MODO Prescriber Hub" },
-      { property: "og:description", content: "One shared workflow for prescribers and the practitioners they support — photos, consultation notes, consent and a single traceable record." },
+      { property: "og:description", content: "In-person prescriber collaboration — request clinic days, share the patient record, prescribe on-site with a full audit trail." },
     ],
   }),
   component: HubPage,
@@ -31,17 +31,18 @@ function HubPage() {
           <div className="mx-auto grid max-w-7xl gap-10 px-5 py-14 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-16 lg:px-8 lg:py-20">
             <div>
               <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[color:var(--accent)]/25 bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">
-                <Network className="h-3.5 w-3.5" /> The Prescriber Hub
+                <Network className="h-3.5 w-3.5" /> The Prescriber Hub · In-person
               </div>
               <h1 className="text-4xl font-bold leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl">
-                One shared record.
+                Prescribers, on-site.
                 <br />
-                <span className="text-[color:var(--ink-soft)]">Zero WhatsApp threads.</span>
+                <span className="text-[color:var(--ink-soft)]">Not on WhatsApp.</span>
               </h1>
               <p className="mt-6 max-w-xl text-base text-[color:var(--ink-soft)] sm:text-lg">
-                The MODO Prescriber Hub connects practitioners and prescribers around a single
-                patient file — photos, consultation notes, medical history and consent — all in
-                one traceable place.
+                The MODO Prescriber Hub is built for <strong className="text-[color:var(--ink)]">in-person</strong>{" "}
+                prescribing. Prescribers request days to work at a practitioner's clinic, patients
+                book into those days, and every record, consent and prescription is shared, signed
+                and audited in one place.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link to="/" hash="waitlist">
