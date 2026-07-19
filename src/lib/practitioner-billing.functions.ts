@@ -293,6 +293,9 @@ export const updateMySubscriptionItems = createServerFn({ method: "POST" })
       .eq("id", sub.id);
 
     return { ok: true };
+  });
+
+
 
 export const openStripePortal = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
