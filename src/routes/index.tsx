@@ -117,12 +117,12 @@ function LandingPage() {
               </p>
 
               <div className="mt-9 flex flex-col items-start gap-3 sm:flex-row sm:items-center">
-                <Link to="/auth" className="w-full sm:w-auto">
+                <Link to="/" hash="waitlist" className="w-full sm:w-auto">
                   <Button
                     size="lg"
                     className="w-full rounded-full bg-[color:var(--ink)] px-8 text-sm font-medium text-white shadow-sm hover:bg-[color:var(--ink)]/90 sm:w-auto"
                   >
-                    Start free
+                    Join the waitlist
                   </Button>
                 </Link>
                 <Link to="/features" className="w-full sm:w-auto">
@@ -137,7 +137,8 @@ function LandingPage() {
               </div>
 
               <p className="mt-5 text-xs text-[color:var(--ink-soft)]">
-                No card required · 0% booking fees · UK/EU data residency
+                Launching in the next few weeks · Waitlist members get first access &amp; founding-clinic pricing
+
               </p>
             </div>
 
