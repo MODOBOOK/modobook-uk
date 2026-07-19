@@ -172,9 +172,17 @@ export function ClientConsentsList({
           <ShieldCheck className="h-4 w-4 text-primary" />Consent forms
           {rows.length > 0 && <Badge variant="secondary" className="text-[10px]">{rows.length}</Badge>}
         </div>
-        <Button size="sm" variant="outline" onClick={openSend}>
-          <Send className="mr-1.5 h-3.5 w-3.5" />Send consent
-        </Button>
+        <div className="flex items-center gap-1.5">
+          {rows.length > 0 && (
+            <Button size="sm" variant="ghost" onClick={downloadAllConsents} disabled={downloading !== null} title="Download all consents as PDF">
+              {downloading === "__all__" ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Download className="mr-1.5 h-3.5 w-3.5" />}
+              PDF all
+            </Button>
+          )}
+          <Button size="sm" variant="outline" onClick={openSend}>
+            <Send className="mr-1.5 h-3.5 w-3.5" />Send consent
+          </Button>
+        </div>
       </div>
 
       {loading ? (
@@ -222,6 +230,14 @@ export function ClientConsentsList({
                 )}
                 <Button size="sm" variant="outline" className="h-7 px-2" onClick={() => openConsent(r.token)} title="View consent form">
                   <Eye className="h-3.5 w-3.5" />
+                </Button>
+                <Button
+                  size="sm" variant="ghost" className="h-7 px-2"
+                  onClick={() => downloadConsent({ token: r.token, template_name: r.template_name })}
+                  disabled={downloading !== null}
+                  title="Download consent as PDF"
+                >
+                  {downloading === r.token ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
                 </Button>
               </div>
             );
