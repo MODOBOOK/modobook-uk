@@ -86,7 +86,7 @@ function DpiaPage() {
               <tr>
                 <td>Data leaving the EEA</td>
                 <td>Low</td><td>Medium</td>
-                <td>All data at rest in AWS eu-west-3 (Paris). Transactional email routed through Lovable's EU relay. No US sub-processors receive clinical content.</td>
+                <td>All data at rest in AWS eu-west-3 (Paris). Transactional email routed through our managed EU relay. No US sub-processors receive clinical content.</td>
               </tr>
               <tr>
                 <td>Session/credential compromise</td>
@@ -101,7 +101,7 @@ function DpiaPage() {
               <tr>
                 <td>Loss of availability</td>
                 <td>Low</td><td>Medium</td>
-                <td>Managed Postgres with automated daily backups; point-in-time recovery available via Lovable Cloud.</td>
+                <td>Managed Postgres with automated daily backups; point-in-time recovery available on our managed cloud.</td>
               </tr>
               <tr>
                 <td>Failure to honour subject rights</td>

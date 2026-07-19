@@ -493,28 +493,43 @@ function ClinicalFeature({
   );
 }
 
+const WAITLIST_CONSENT_TEXT =
+  "I agree that MODO Book may store my name and email to contact me about the MODO launch, product updates and early-access offers. I can unsubscribe at any time.";
+
 function WaitlistSection() {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [role, setRole] = useState("");
   const [clinic, setClinic] = useState("");
+  const [consent, setConsent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [joined, setJoined] = useState(false);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    const trimmed = email.trim().toLowerCase();
-    if (!trimmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+    const trimmedName = name.trim();
+    const trimmedEmail = email.trim().toLowerCase();
+    if (!trimmedName) {
+      toast.error("Please enter your name");
+      return;
+    }
+    if (!trimmedEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
       toast.error("Please enter a valid email address");
+      return;
+    }
+    if (!consent) {
+      toast.error("Please tick the consent box to join the list");
       return;
     }
     setSubmitting(true);
     const { error } = await supabase.from("practitioner_waitlist").insert({
-      email: trimmed,
-      name: name.trim() || null,
+      email: trimmedEmail,
+      name: trimmedName,
       role: role.trim() || null,
       clinic_name: clinic.trim() || null,
       source: "landing",
+      consent_at: new Date().toISOString(),
+      consent_text: WAITLIST_CONSENT_TEXT,
     });
     setSubmitting(false);
     if (error && !error.message.toLowerCase().includes("duplicate")) {
@@ -554,26 +569,27 @@ function WaitlistSection() {
             </div>
           ) : (
             <form onSubmit={submit} className="space-y-3">
+              <Input
+                required
+                placeholder="Your name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="h-11 rounded-full bg-[color:var(--muted)]/60 px-4"
+              />
               <div className="grid gap-3 sm:grid-cols-2">
-                <Input
-                  placeholder="Your name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="h-11 rounded-full bg-[color:var(--muted)]/60 px-4"
-                />
                 <Input
                   placeholder="Role (Nurse, Doctor, Aesthetician…)"
                   value={role}
                   onChange={(e) => setRole(e.target.value)}
                   className="h-11 rounded-full bg-[color:var(--muted)]/60 px-4"
                 />
+                <Input
+                  placeholder="Clinic name (optional)"
+                  value={clinic}
+                  onChange={(e) => setClinic(e.target.value)}
+                  className="h-11 rounded-full bg-[color:var(--muted)]/60 px-4"
+                />
               </div>
-              <Input
-                placeholder="Clinic name (optional)"
-                value={clinic}
-                onChange={(e) => setClinic(e.target.value)}
-                className="h-11 rounded-full bg-[color:var(--muted)]/60 px-4"
-              />
               <Input
                 type="email"
                 required
@@ -582,6 +598,16 @@ function WaitlistSection() {
                 onChange={(e) => setEmail(e.target.value)}
                 className="h-11 rounded-full bg-[color:var(--muted)]/60 px-4"
               />
+              <label className="flex items-start gap-3 rounded-2xl border border-[color:var(--hairline)] bg-[color:var(--muted)]/40 p-3 text-xs text-[color:var(--ink-soft)]">
+                <input
+                  type="checkbox"
+                  checked={consent}
+                  onChange={(e) => setConsent(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 shrink-0 accent-[color:var(--ink)]"
+                  required
+                />
+                <span>{WAITLIST_CONSENT_TEXT}</span>
+              </label>
               <Button
                 type="submit"
                 size="lg"
@@ -601,6 +627,7 @@ function WaitlistSection() {
     </section>
   );
 }
+
 
 
 
@@ -717,7 +744,13 @@ export function SiteFooter() {
         ]} />
       </div>
       <div className="border-t border-[color:var(--hairline)] py-6 text-center text-xs uppercase tracking-[0.2em] text-[color:var(--ink-soft)]">
-        © {new Date().getFullYear()} MODO · For practitioners, by practitioners
+        <div>© {new Date().getFullYear()} MODO · For practitioners, by practitioners</div>
+        <div className="mt-2 normal-case tracking-normal">
+          Designed by MODO Book ·{" "}
+          <a href="mailto:hello@modobook.uk" className="underline hover:text-[color:var(--ink)]">
+            hello@modobook.uk
+          </a>
+        </div>
       </div>
     </footer>
   );

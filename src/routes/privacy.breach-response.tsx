@@ -106,7 +106,7 @@ function BreachPage() {
             <li>Email send log: every transactional email dispatched.</li>
             <li>Auth event log: sign-in, password change, email change (via Supabase Auth).</li>
             <li>Payment log: Stripe events, refunds, disputes.</li>
-            <li>Backup snapshots: managed by Lovable Cloud, retained for point-in-time recovery.</li>
+            <li>Backup snapshots: managed on our cloud infrastructure, retained for point-in-time recovery.</li>
           </ul>
           <p>
             All evidence is preserved for the duration of any investigation and at least 12 months from breach

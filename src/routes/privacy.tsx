@@ -67,7 +67,7 @@ function PrivacyPage() {
             <strong>All clinical data — including medical history forms,
             consultation notes, consent forms, prescriptions and any
             before/after or treatment photos — is stored at rest inside the
-            European Economic Area</strong>, on Lovable Cloud (Supabase / AWS
+            European Economic Area</strong>, on our managed cloud infrastructure (Supabase / AWS
             <em> eu-west-3, Paris, France</em>). Databases and file storage
             (patient photos, consent PDFs, uploaded documents) never leave that
             EEA region under normal operation.
@@ -76,8 +76,7 @@ function PrivacyPage() {
             <strong>Transactional and authentication emails</strong> — booking
             confirmations, reminders, medical-form and consent links,
             prescription receipts, one-time passcodes and password resets — are
-            sent from <code>notify.modobook.co.uk</code> through Lovable's
-            managed EU email relay. To protect health data in transit and at
+            sent from <code>notify.modobook.co.uk</code> through our managed EU email relay. To protect health data in transit and at
             the provider, our emails contain only appointment metadata (date,
             time, treatment name, clinic) and secure one-time links back into
             MODO; <strong>we do not embed medical history answers, consultation
@@ -138,7 +137,7 @@ function PrivacyPage() {
           <h2>9. Sharing your data</h2>
           <p>
             We share data only with sub-processors necessary to run the service:
-            Lovable Cloud / Supabase (hosting &amp; database), Stripe (payments), and the
+            managed cloud hosting &amp; database (Supabase / AWS EU), Stripe (payments), and the
             SMS/email providers used by your practitioner. We never sell personal data.
           </p>
 

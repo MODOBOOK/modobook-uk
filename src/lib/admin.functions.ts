@@ -40,6 +40,31 @@ export const adminOverview = createServerFn({ method: "GET" })
     };
   });
 
+export const adminListWaitlist = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context);
+    const { data, error } = await context.supabase
+      .from("practitioner_waitlist")
+      .select("id, name, email, role, clinic_name, source, consent_at, consent_text, created_at")
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    return { rows: data ?? [] };
+  });
+
+export const adminDeleteWaitlistEntry = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: { id: string }) => i)
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { error } = await context.supabase
+      .from("practitioner_waitlist")
+      .delete()
+      .eq("id", data.id);
+    if (error) throw error;
+    return { ok: true };
+  });
+
 export const adminGrantByEmail = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i: { email: string }) => i)
