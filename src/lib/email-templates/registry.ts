@@ -11,6 +11,7 @@ import { template as staffInvite } from './staff-invite'
 import { template as rebookReminder } from './rebook-reminder'
 import { template as topupReminder } from './topup-reminder'
 import { template as platformArrears } from './platform-arrears'
+import { template as waitlistWelcome } from './waitlist-welcome'
 
 export interface TemplateEntry {
   component: ComponentType<any>
@@ -37,4 +38,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'rebook-reminder': rebookReminder,
   'topup-reminder': topupReminder,
   'platform-arrears': platformArrears,
+  'waitlist-welcome': waitlistWelcome,
 }
