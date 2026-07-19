@@ -230,6 +230,10 @@ export function ConsultationWizard() {
           ) : (
             <Badge variant="secondary" className="gap-1"><Check className="h-3 w-3" />Saved</Badge>
           )}
+          <Button size="sm" variant="outline" onClick={exportPdf} disabled={exporting} className="gap-1.5">
+            {exporting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
+            <span className="hidden sm:inline">Export PDF</span>
+          </Button>
         </div>
       </div>
 
