@@ -1,21 +1,21 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { SiteHeader, SiteFooter } from "./index";
 import consultationPhoto from "@/assets/modo-consultation.png.asset.json";
 
 import {
   ClipboardList, Network, ShieldCheck, Users, FileSignature,
-  Stethoscope, Sparkles, CheckCircle2, Lock, Camera, ScanFace, Brain, ArrowRight,
+  Stethoscope, Lock, ArrowRight,
 } from "lucide-react";
 
 export const Route = createFileRoute("/prescriber-hub")({
   head: () => ({
     meta: [
       { title: "Prescriber Hub | MODO — collaborative aesthetics care" },
-      { name: "description", content: "How the MODO Prescriber Hub works for prescribers and practitioners — AI photo uploads, face mapping, consultation notes and a shared, consent-based patient record." },
+      { name: "description", content: "How the MODO Prescriber Hub works for prescribers and practitioners — a shared, consent-based patient record with photos, consultation notes, medical history and a clear prescribing workflow." },
       { property: "og:title", content: "MODO Prescriber Hub" },
-      { property: "og:description", content: "One shared workflow for prescribers and the practitioners they support — AI photo uploads, face mapping, consultation notes and a single traceable record." },
+      { property: "og:description", content: "One shared workflow for prescribers and the practitioners they support — photos, consultation notes, consent and a single traceable record." },
     ],
   }),
   component: HubPage,
@@ -36,12 +36,12 @@ function HubPage() {
               <h1 className="text-4xl font-bold leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl">
                 One shared record.
                 <br />
-                <span className="text-[color:var(--ink-soft)]">Powered by AI.</span>
+                <span className="text-[color:var(--ink-soft)]">Zero WhatsApp threads.</span>
               </h1>
               <p className="mt-6 max-w-xl text-base text-[color:var(--ink-soft)] sm:text-lg">
                 The MODO Prescriber Hub connects practitioners and prescribers around a single
-                patient file — photos, AI face mapping, consultation notes, medical history and
-                consent — all in one traceable place.
+                patient file — photos, consultation notes, medical history and consent — all in
+                one traceable place.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link to="/" hash="waitlist">
@@ -66,47 +66,18 @@ function HubPage() {
           </div>
         </section>
 
-        {/* AI FRONT AND CENTRE */}
+        {/* WHAT IT IS */}
         <section className="border-b border-[color:var(--hairline)] bg-white">
           <div className="mx-auto max-w-7xl px-5 py-16 lg:px-8 lg:py-20">
             <div className="mx-auto max-w-2xl text-center">
-              <div className="eyebrow">§ AI-powered clinical workflow</div>
+              <div className="eyebrow">§ Built for collaborative care</div>
               <h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
-                AI does the heavy lifting.
+                A single patient file, shared with the right people.
               </h2>
               <p className="mt-3 text-[color:var(--ink-soft)]">
-                Upload photos, dictate notes, scan faces — MODO's AI structures it all into a
-                clean, prescriber-ready record automatically.
+                Practitioners capture the consultation. Prescribers review, approve and sign off —
+                without the back-and-forth. Everything is versioned, timestamped and consent-gated.
               </p>
-            </div>
-
-            <div className="mt-12 grid gap-6 lg:grid-cols-3">
-              <AiFeature
-                icon={Camera}
-                title="AI photo uploads"
-                desc="Snap or drag in before / during / after photos. MODO auto-tags them to the treatment, timeline and body area — ready for prescriber review."
-              />
-              <AiFeature
-                icon={ScanFace}
-                title="AI face mapping"
-                desc="Automatic muscle, injection-point and area detection from a single photo. Overlay treatment plans and share them straight to the prescriber."
-              />
-              <AiFeature
-                icon={Brain}
-                title="AI consultation notes"
-                desc="Talk through the consultation — MODO transcribes and structures it into indications, contraindications, plan and aftercare, ready to sign off."
-              />
-            </div>
-
-            <div className="mt-10 rounded-2xl border border-[color:var(--hairline)] bg-[color:var(--paper)] p-6 text-sm text-[color:var(--ink-soft)]">
-              <div className="flex items-start gap-3">
-                <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-[color:var(--accent)]" />
-                <p>
-                  <strong className="text-[color:var(--ink)]">The prescriber never has to chase.</strong>{" "}
-                  Photos, face maps and notes land in their queue the moment the practitioner submits — with
-                  full patient history and consent already attached.
-                </p>
-              </div>
             </div>
           </div>
         </section>
@@ -120,13 +91,13 @@ function HubPage() {
                 How it works for practitioners
               </h2>
               <p className="mt-4 text-[color:var(--ink-soft)]">
-                You focus on the client in front of you — MODO handles the paperwork and the
+                You focus on the client in front of you — MODO handles the record-keeping and the
                 prescriber conversation.
               </p>
             </div>
             <div className="grid gap-4">
-              <Step n={1} title="Consultation" desc="Meet the client, take photos, dictate notes. AI structures everything into the record as you go." />
-              <Step n={2} title="Send to prescriber" desc="Link a MODO prescriber to the patient. They receive the full file — photos, face map, notes, history and consent." />
+              <Step n={1} title="Consultation" desc="Meet the client, take photos, capture notes and consent. Everything lands in the patient record as you go." />
+              <Step n={2} title="Send to prescriber" desc="Link a MODO prescriber to the patient. They receive the full file — photos, notes, medical history and consent." />
               <Step n={3} title="Treat & follow up" desc="Once approved, deliver the treatment. Aftercare, top-ups and review dates auto-flow into both records." />
             </div>
           </div>
@@ -137,7 +108,7 @@ function HubPage() {
           <div className="mx-auto max-w-7xl px-5 py-16 lg:px-8 lg:py-20">
             <div className="grid gap-10 lg:grid-cols-2 lg:gap-16">
               <div className="order-2 grid gap-4 lg:order-1">
-                <Step n={1} title="Review the queue" desc="Every patient submitted to you appears in one clean queue — with photos, AI face map, notes and medical history." />
+                <Step n={1} title="Review the queue" desc="Every patient submitted to you appears in one clean queue — with photos, notes and medical history." />
                 <Step n={2} title="Decide & annotate" desc="Approve, request more info, or add clinical notes. Everything is versioned and timestamped." />
                 <Step n={3} title="Stay compliant" desc="Full audit trail per patient — who viewed what, when, and what was prescribed. Ready for any regulator." />
               </div>
@@ -191,21 +162,6 @@ function HubPage() {
         </section>
       </main>
       <SiteFooter />
-    </div>
-  );
-}
-
-function AiFeature({ icon: Icon, title, desc }: { icon: React.ComponentType<{ className?: string }>; title: string; desc: string }) {
-  return (
-    <div className="group relative overflow-hidden rounded-3xl border border-[color:var(--hairline)] bg-[color:var(--paper)] p-7 transition hover:border-[color:var(--accent)]/40 hover:shadow-md">
-      <div className="mb-5 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-[color:var(--accent)]/10 text-[color:var(--accent)]">
-        <Icon className="h-6 w-6" />
-      </div>
-      <h3 className="text-lg font-semibold text-[color:var(--ink)]">{title}</h3>
-      <p className="mt-2 text-sm text-[color:var(--ink-soft)]">{desc}</p>
-      <div className="mt-5 inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[color:var(--accent)]">
-        <Sparkles className="h-3 w-3" /> AI-powered
-      </div>
     </div>
   );
 }
