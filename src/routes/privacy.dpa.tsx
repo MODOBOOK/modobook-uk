@@ -122,11 +122,11 @@ function DpaPage() {
               <tr><th>Sub-processor</th><th>Purpose</th><th>Region</th></tr>
             </thead>
             <tbody>
-              <tr><td>Supabase / Lovable Cloud</td><td>Database, authentication, file storage, edge functions</td><td>EU (Ireland)</td></tr>
+              <tr><td>Supabase (managed cloud)</td><td>Database, authentication, file storage, edge functions</td><td>EU (Ireland)</td></tr>
               <tr><td>Stripe Payments UK, Ltd.</td><td>Payment processing (Connect)</td><td>UK / EEA</td></tr>
               <tr><td>Mailgun (Sinch)</td><td>Transactional email delivery</td><td>EU</td></tr>
               <tr><td>Apple Push Notification service</td><td>iOS push notifications</td><td>US (Standard Contractual Clauses)</td></tr>
-              <tr><td>Lovable AI Gateway (OpenAI-compatible)</td><td>Optional AI features: form / aftercare / consent generation</td><td>EU / US (SCCs)</td></tr>
+              <tr><td>MODO AI Gateway (OpenAI-compatible)</td><td>Optional AI features: form / aftercare / consent generation</td><td>EU / US (SCCs)</td></tr>
               <tr><td>Google Maps Platform</td><td>Address autocomplete on booking pages (optional)</td><td>US (SCCs)</td></tr>
             </tbody>
           </table>
