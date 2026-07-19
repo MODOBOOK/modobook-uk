@@ -421,29 +421,51 @@ export const redeemDiscountCode = createServerFn({ method: "POST" })
 
     const { data: sub } = await context.supabase
       .from("practitioner_subscriptions")
-      .select("id, stripe_subscription_id")
+      .select("id, stripe_subscription_id, stripe_customer_id")
       .eq("profile_id", profile.id)
       .maybeSingle();
     if (!sub) return { ok: false as const, message: "Start a subscription first" };
 
-    // Attach to Stripe subscription if active
+    const { data: full } = await context.supabase
+      .from("platform_discount_codes")
+      .select("stripe_coupon_id, percent_off")
+      .eq("id", code.id)
+      .maybeSingle();
+
+    const isFullyFree = (full?.percent_off ?? code.percent_off ?? 0) >= 100;
+
+    // Attach discount / cancel DD as needed on the live Stripe subscription
     if (sub.stripe_subscription_id) {
-      const { data: full } = await context.supabase
-        .from("platform_discount_codes")
-        .select("stripe_coupon_id")
-        .eq("id", code.id)
-        .maybeSingle();
-      if (full?.stripe_coupon_id) {
-        const { getStripe } = await import("./stripe.server");
-        const stripe = getStripe();
-        await stripe.subscriptions.update(sub.stripe_subscription_id, {
-          discounts: [{ coupon: full.stripe_coupon_id }],
-        } as any, { apiVersion: "2024-06-20" as any });
+      try {
+        const { getStripeStable } = await import("./stripe.server");
+        const stripe = getStripeStable();
+        if (isFullyFree) {
+          // 100% off — cancel the direct debit; no charges will be attempted.
+          await stripe.subscriptions.cancel(sub.stripe_subscription_id, {
+            invoice_now: false,
+            prorate: false,
+          } as any);
+        } else if (full?.stripe_coupon_id) {
+          await stripe.subscriptions.update(sub.stripe_subscription_id, {
+            discounts: [{ coupon: full.stripe_coupon_id }],
+          } as any);
+        }
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "Stripe rejected the discount";
+        console.error("[redeemDiscountCode] stripe error", msg);
+        throw new Error(`Could not apply code: ${msg}`);
       }
     }
 
-    await context.supabase.from("practitioner_subscriptions").update({ discount_code_id: code.id }).eq("id", sub.id);
-    return { ok: true as const, code: code.code };
+    // Persist locally. If 100% off, mark as active/free and clear the Stripe subscription id.
+    const update: Record<string, unknown> = { discount_code_id: code.id };
+    if (isFullyFree) {
+      update.status = "active";
+      update.cancel_at_period_end = false;
+      update.stripe_subscription_id = null;
+    }
+    await context.supabase.from("practitioner_subscriptions").update(update).eq("id", sub.id);
+    return { ok: true as const, code: code.code, fullyFree: isFullyFree };
   });
 
 export const cancelMySubscription = createServerFn({ method: "POST" })
