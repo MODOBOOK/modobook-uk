@@ -137,7 +137,7 @@ function PrivacyPage() {
           <h2>9. Sharing your data</h2>
           <p>
             We share data only with sub-processors necessary to run the service:
-            Lovable Cloud / Supabase (hosting &amp; database), Stripe (payments), and the
+            managed cloud hosting &amp; database (Supabase / AWS EU), Stripe (payments), and the
             SMS/email providers used by your practitioner. We never sell personal data.
           </p>
 
