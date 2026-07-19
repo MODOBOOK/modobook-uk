@@ -101,7 +101,7 @@ function DpiaPage() {
               <tr>
                 <td>Loss of availability</td>
                 <td>Low</td><td>Medium</td>
-                <td>Managed Postgres with automated daily backups; point-in-time recovery available via Lovable Cloud.</td>
+                <td>Managed Postgres with automated daily backups; point-in-time recovery available on our managed cloud.</td>
               </tr>
               <tr>
                 <td>Failure to honour subject rights</td>
