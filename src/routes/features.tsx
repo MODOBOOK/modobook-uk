@@ -19,7 +19,7 @@ export const Route = createFileRoute("/features")({
       { title: "Features | MODO — the aesthetics-only booking & clinical platform" },
       { name: "description", content: "Every feature inside MODO — booking, branding, consultations, consent, face mapping, photos, payments, Klarna, Clearpay, marketing, multi-practitioner clinics and more." },
       { property: "og:title", content: "MODO — Features" },
-      { property: "og:description", content: "The full feature list of MODO, the aesthetics-only booking and clinical platform built by UK Nurse Prescribers." },
+      { property: "og:description", content: "The full feature list of MODO, the UK aesthetics-only booking and clinical platform." },
     ],
   }),
   component: FeaturesPage,
