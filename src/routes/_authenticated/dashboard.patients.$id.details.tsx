@@ -335,7 +335,7 @@ function PatientProfilePage() {
 
 
       {/* Notes */}
-      <NotesSection clientId={id} />
+      <NotesSection clientId={id} patient={client} />
 
       {/* Photos */}
       <FilesSection clientId={id} profileId={profileId} kind="photo" title="Photos" />
