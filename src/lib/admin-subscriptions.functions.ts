@@ -390,8 +390,8 @@ export const toggleDiscountCode = createServerFn({ method: "POST" })
       .single();
     if (error) throw error;
     if (dc.stripe_promo_code_id) {
-      const { getStripe } = await import("./stripe.server");
-      const stripe = getStripe();
+      const { getStripeStable } = await import("./stripe.server");
+      const stripe = getStripeStable();
       await stripe.promotionCodes.update(dc.stripe_promo_code_id, { active: data.active });
     }
     await context.supabase
