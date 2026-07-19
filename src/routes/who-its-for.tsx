@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { SiteHeader, SiteFooter } from "./index";
-import foundersSuits from "@/assets/modo-founders-suits.png.asset.json";
+import foundersSuits from "@/assets/modo-founders-scrubs.png.asset.json";
 import builtForPhoto from "@/assets/modo-built-for.png.asset.json";
 
 import { Syringe, Sparkles, Stethoscope, Users, MapPin, HeartHandshake, CheckCircle2 } from "lucide-react";
