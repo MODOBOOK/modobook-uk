@@ -182,76 +182,125 @@ function BillingPage() {
         )}
       </Card>
 
-      {(!sub || sub.status !== "active" || !sub.stripe_subscription_id) && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Choose a plan</CardTitle>
-            <CardDescription>You can change or cancel any time.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {basePlans.map((p: any) => (
-                <button
-                  key={p.id}
-                  type="button"
-                  onClick={() => bump(setSelectedPlanId, p.id)}
-                  className={`rounded-lg border p-4 text-left transition ${selectedPlanId === p.id ? "border-primary bg-primary/5 ring-1 ring-primary" : "hover:bg-muted/50"}`}
-                >
-                  <div className="font-semibold">{p.name}</div>
-                  {p.description && <div className="text-xs text-muted-foreground mt-1">{p.description}</div>}
-                  <div className="mt-2 text-lg font-bold">{money(p.amount_cents, p.currency)}<span className="text-sm font-normal text-muted-foreground">/{p.interval}</span></div>
-                </button>
-              ))}
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {locAddon && (
-                <div className="rounded-lg border p-3">
-                  <div className="font-medium text-sm">Extra locations</div>
-                  <div className="text-xs text-muted-foreground">{money(locAddon.amount_cents, locAddon.currency)}/{locAddon.interval} each</div>
-                  <div className="mt-2 flex items-center gap-2">
-                    <Button size="icon" variant="outline" onClick={() => bump(setExtraLocations, Math.max(0, extraLocations - 1))}><Minus className="h-4 w-4" /></Button>
-                    <span className="w-8 text-center">{extraLocations}</span>
-                    <Button size="icon" variant="outline" onClick={() => bump(setExtraLocations, extraLocations + 1)}><Plus className="h-4 w-4" /></Button>
-                  </div>
-                  {extraLocations > 0 && (
-                    <p className="mt-2 text-xs text-muted-foreground flex items-center gap-1">
-                      <MapPin className="h-3 w-3" />
-                      <Link to="/dashboard/locations" className="underline underline-offset-2">Add your extra {extraLocations === 1 ? "location" : "locations"}</Link> now — they'll be included when billing starts.
-                    </p>
-                  )}
+      <Card>
+        <CardHeader>
+          <CardTitle>{hasLiveSub ? "Edit your plan" : "Choose a plan"}</CardTitle>
+          <CardDescription>
+            {hasLiveSub
+              ? "Change your plan or add-ons at any time. Updates are added to your existing direct debit on the next invoice — no need to re-enter card details."
+              : "You can change or cancel any time."}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {basePlans.map((p: any) => (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => bump(setSelectedPlanId, p.id)}
+                className={`rounded-lg border p-4 text-left transition ${selectedPlanId === p.id ? "border-primary bg-primary/5 ring-1 ring-primary" : "hover:bg-muted/50"}`}
+              >
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold">{p.name}</span>
+                  {sub?.plan_id === p.id && <Badge variant="secondary" className="text-[10px]">Current</Badge>}
                 </div>
-              )}
-              {pracAddon && (
-                <div className="rounded-lg border p-3">
-                  <div className="font-medium text-sm">Extra practitioners</div>
-                  <div className="text-xs text-muted-foreground">{money(pracAddon.amount_cents, pracAddon.currency)}/{pracAddon.interval} each</div>
-                  <div className="mt-2 flex items-center gap-2">
-                    <Button size="icon" variant="outline" onClick={() => bump(setExtraPractitioners, Math.max(0, extraPractitioners - 1))}><Minus className="h-4 w-4" /></Button>
-                    <span className="w-8 text-center">{extraPractitioners}</span>
-                    <Button size="icon" variant="outline" onClick={() => bump(setExtraPractitioners, extraPractitioners + 1)}><Plus className="h-4 w-4" /></Button>
-                  </div>
-                  {extraPractitioners > 0 && (
-                    <p className="mt-2 text-xs text-muted-foreground flex items-center gap-1">
-                      <Users className="h-3 w-3" />
-                      <Link to="/dashboard/staff" className="underline underline-offset-2">Invite your team {extraPractitioners === 1 ? "member" : "members"}</Link> now — seats are reserved for your trial.
-                    </p>
-                  )}
+                {p.description && <div className="text-xs text-muted-foreground mt-1">{p.description}</div>}
+                <div className="mt-2 text-lg font-bold">{money(p.amount_cents, p.currency)}<span className="text-sm font-normal text-muted-foreground">/{p.interval}</span></div>
+              </button>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {locAddon && (
+              <div className="rounded-lg border p-3">
+                <div className="font-medium text-sm">Extra locations</div>
+                <div className="text-xs text-muted-foreground">{money(locAddon.amount_cents, locAddon.currency)}/{locAddon.interval} each</div>
+                <div className="mt-2 flex items-center gap-2">
+                  <Button size="icon" variant="outline" onClick={() => bump(setExtraLocations, Math.max(0, extraLocations - 1))}><Minus className="h-4 w-4" /></Button>
+                  <span className="w-8 text-center">{extraLocations}</span>
+                  <Button size="icon" variant="outline" onClick={() => bump(setExtraLocations, extraLocations + 1)}><Plus className="h-4 w-4" /></Button>
                 </div>
-              )}
-            </div>
+                {extraLocations > 0 && (
+                  <p className="mt-2 text-xs text-muted-foreground flex items-center gap-1">
+                    <MapPin className="h-3 w-3" />
+                    <Link to="/dashboard/locations" className="underline underline-offset-2">Add your extra {extraLocations === 1 ? "location" : "locations"}</Link>{hasLiveSub ? "." : " now — they'll be included when billing starts."}
+                  </p>
+                )}
+              </div>
+            )}
+            {pracAddon && (
+              <div className="rounded-lg border p-3">
+                <div className="font-medium text-sm">Extra practitioners</div>
+                <div className="text-xs text-muted-foreground">{money(pracAddon.amount_cents, pracAddon.currency)}/{pracAddon.interval} each</div>
+                <div className="mt-2 flex items-center gap-2">
+                  <Button size="icon" variant="outline" onClick={() => bump(setExtraPractitioners, Math.max(0, extraPractitioners - 1))}><Minus className="h-4 w-4" /></Button>
+                  <span className="w-8 text-center">{extraPractitioners}</span>
+                  <Button size="icon" variant="outline" onClick={() => bump(setExtraPractitioners, extraPractitioners + 1)}><Plus className="h-4 w-4" /></Button>
+                </div>
+                {extraPractitioners > 0 && (
+                  <p className="mt-2 text-xs text-muted-foreground flex items-center gap-1">
+                    <Users className="h-3 w-3" />
+                    <Link to="/dashboard/staff" className="underline underline-offset-2">Invite your team {extraPractitioners === 1 ? "member" : "members"}</Link>{hasLiveSub ? "." : " now — seats are reserved for your trial."}
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
 
-            <div className="rounded-md bg-muted p-3 text-sm">
-              Estimated total: <strong>{money(projected)}</strong>/{selectedPlan?.interval ?? "month"}
-              {trialActive && <span className="text-muted-foreground"> — your selection is saved and will pre-fill when you set up the direct debit after your {trialDaysLeft}-day trial.</span>}
-            </div>
+          <div className="rounded-md bg-muted p-3 text-sm">
+            {hasLiveSub ? "New total after change: " : "Estimated total: "}<strong>{money(projected)}</strong>/{selectedPlan?.interval ?? "month"}
+            {hasLiveSub && <span className="text-muted-foreground"> — prorated charges appear on your next direct-debit invoice.</span>}
+            {!hasLiveSub && trialActive && <span className="text-muted-foreground"> — your selection is saved and will pre-fill when you set up the direct debit after your {trialDaysLeft}-day trial.</span>}
+          </div>
 
-            <Button onClick={checkout} disabled={busy || !selectedPlanId} className="w-full sm:w-auto">
-              {sub?.stripe_customer_id ? "Update subscription" : trialActive ? "Set up direct debit (Stripe)" : "Start subscription"}
-            </Button>
-          </CardContent>
-        </Card>
-      )}
+          <Button onClick={checkoutOrUpdate} disabled={busy || !selectedPlanId} className="w-full sm:w-auto">
+            {hasLiveSub ? "Save changes" : trialActive ? "Set up direct debit (Stripe)" : "Start subscription"}
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2"><FileText className="h-4 w-4" /> Invoices</CardTitle>
+          <CardDescription>Every direct-debit charge and any amount currently owed to MODO.</CardDescription>
+        </CardHeader>
+        <CardContent className="p-0">
+          {invoices.length === 0 ? (
+            <p className="p-4 text-sm italic text-muted-foreground">No invoices yet. They'll appear here as soon as your first billing cycle runs.</p>
+          ) : (
+            <div className="divide-y">
+              {invoices.map((inv: any) => {
+                const status = inv.status as string;
+                const badge = status === "paid" ? "default"
+                  : status === "open" || status === "past_due" || status === "uncollectible" ? "destructive"
+                  : "secondary";
+                const label = status === "paid" ? "Paid"
+                  : status === "open" ? "Owed"
+                  : status === "past_due" ? "Past due"
+                  : status === "uncollectible" ? "Failed"
+                  : status;
+                return (
+                  <div key={inv.id} className="flex flex-wrap items-center gap-3 p-3 text-sm">
+                    <div className="min-w-0 flex-1">
+                      <div className="font-medium">{money(inv.amount_due_cents ?? inv.amount_total_cents ?? 0, inv.currency ?? "gbp")}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {inv.number ? `#${inv.number} · ` : ""}{new Date(inv.created_at).toLocaleDateString()}
+                        {inv.amount_remaining_cents > 0 ? ` · Owed: ${money(inv.amount_remaining_cents, inv.currency ?? "gbp")}` : ""}
+                      </div>
+                    </div>
+                    <Badge variant={badge as any}>{label}</Badge>
+                    {inv.hosted_invoice_url && (
+                      <a href={inv.hosted_invoice_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs text-primary underline">
+                        View <ExternalLink className="h-3 w-3" />
+                      </a>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
