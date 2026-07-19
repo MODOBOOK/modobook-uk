@@ -380,7 +380,12 @@ function LandingPage() {
           </div>
         </section>
 
+
+        {/* WAITLIST */}
+        <WaitlistSection />
+
         {/* CTA */}
+
 
         <section className="bg-white">
           <div className="mx-auto max-w-4xl px-5 py-24 text-center lg:px-8">
