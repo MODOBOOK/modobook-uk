@@ -1,0 +1,201 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { CheckCircle2, ArrowRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { SiteHeader, SiteFooter } from "./index";
+
+export const Route = createFileRoute("/pricing")({
+  head: () => ({
+    meta: [
+      { title: "MODO Pricing | Simple monthly pricing for aesthetics clinics" },
+      {
+        name: "description",
+        content:
+          "MODO is £29.99/month — £19.99/month for founding clinics who join the waitlist. Add team members from £9.99 and additional locations from £4.99.",
+      },
+      { property: "og:title", content: "MODO Pricing" },
+      {
+        property: "og:description",
+        content:
+          "Founding-clinic pricing: £19.99/month, +£9.99 per extra team member, +£4.99 per extra location. No booking fees.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
+  component: PricingPage,
+});
+
+type Tier = {
+  name: string;
+  tag: string;
+  now: string;
+  was: string;
+  unit: string;
+  blurb: string;
+  perks: string[];
+  cta: string;
+  highlight?: boolean;
+};
+
+const tiers: Tier[] = [
+  {
+    name: "MODO Clinic",
+    tag: "Core subscription",
+    now: "£19.99",
+    was: "£29.99",
+    unit: "per month",
+    blurb:
+      "Everything you need to run an aesthetics clinic — bookings, medical records, consent, face mapping, payments and the prescriber hub.",
+    perks: [
+      "Unlimited patients & appointments",
+      "0% booking fees — keep 100% of your revenue",
+      "Full clinical records, consent & face mapping",
+      "Marketing automations & email templates",
+      "Prescriber hub included",
+    ],
+    cta: "Join the waitlist",
+    highlight: true,
+  },
+  {
+    name: "Extra team member",
+    tag: "Add-on",
+    now: "£9.99",
+    was: "£14.99",
+    unit: "per member / month",
+    blurb:
+      "Give each practitioner their own calendar, login and clinical record permissions.",
+    perks: [
+      "Individual practitioner calendar",
+      "Personal login & permissions",
+      "Own patient list & notes",
+      "Included in main subscription: 1 practitioner",
+    ],
+    cta: "Join the waitlist",
+  },
+  {
+    name: "Extra location",
+    tag: "Add-on",
+    now: "£4.99",
+    was: "£9.99",
+    unit: "per location / month",
+    blurb:
+      "Run multiple rooms, clinics or venues from one MODO account with their own hours and bookings.",
+    perks: [
+      "Separate opening hours & availability",
+      "Location-specific booking links",
+      "Shared patient records across sites",
+      "Included in main subscription: 1 location",
+    ],
+    cta: "Join the waitlist",
+  },
+];
+
+function PricingPage() {
+  return (
+    <div className="min-h-screen bg-[color:var(--paper)] text-[color:var(--ink)]">
+      <SiteHeader />
+      <main>
+        <section className="mx-auto max-w-5xl px-5 pt-16 pb-8 text-center lg:px-8 lg:pt-24">
+          <div className="eyebrow">§ Pricing</div>
+          <h1 className="mt-4 text-4xl font-bold leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl">
+            Simple pricing.
+            <br />
+            <span className="text-[color:var(--ink-soft)]">Founding-clinic rates.</span>
+          </h1>
+          <p className="mx-auto mt-5 max-w-2xl text-[color:var(--ink-soft)]">
+            One flat subscription for your clinic. Add team members and extra locations only if
+            you need them. Founding clinics who join the waitlist lock in the discounted rates
+            below for life.
+          </p>
+          <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-[color:var(--hairline)] bg-white px-4 py-1.5 text-xs font-medium uppercase tracking-[0.14em] text-[color:var(--ink)]">
+            <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--accent)]" />
+            Launching in the next few weeks
+          </div>
+        </section>
+
+        <section className="mx-auto max-w-6xl px-5 pb-16 lg:px-8">
+          <div className="grid gap-6 lg:grid-cols-3">
+            {tiers.map((t) => (
+              <div
+                key={t.name}
+                className={`flex flex-col rounded-3xl border p-7 ${
+                  t.highlight
+                    ? "border-[color:var(--ink)] bg-white shadow-md"
+                    : "border-[color:var(--hairline)] bg-white/60"
+                }`}
+              >
+                <div className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[color:var(--accent)]">
+                  {t.tag}
+                </div>
+                <h2 className="mt-2 text-xl font-semibold">{t.name}</h2>
+                <div className="mt-5 flex items-end gap-2">
+                  <div className="text-4xl font-bold tracking-tight">{t.now}</div>
+                  <div className="pb-1 text-sm text-[color:var(--ink-soft)] line-through">
+                    {t.was}
+                  </div>
+                </div>
+                <div className="mt-1 text-xs uppercase tracking-[0.14em] text-[color:var(--ink-soft)]">
+                  {t.unit}
+                </div>
+                <p className="mt-4 text-sm text-[color:var(--ink-soft)]">{t.blurb}</p>
+                <ul className="mt-5 space-y-2 text-sm">
+                  {t.perks.map((p) => (
+                    <li key={p} className="flex gap-2">
+                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[color:var(--accent)]" />
+                      <span>{p}</span>
+                    </li>
+                  ))}
+                </ul>
+                <div className="mt-7">
+                  <Link to="/" hash="waitlist">
+                    <Button
+                      className={`w-full rounded-full ${
+                        t.highlight
+                          ? "bg-[color:var(--ink)] text-white hover:bg-[color:var(--ink)]/90"
+                          : "bg-white text-[color:var(--ink)] border border-[color:var(--hairline)] hover:bg-[color:var(--muted)]"
+                      }`}
+                    >
+                      {t.cta} <ArrowRight className="ml-1 h-4 w-4" />
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-10 rounded-2xl border border-[color:var(--hairline)] bg-white/60 p-6 text-sm text-[color:var(--ink-soft)]">
+            <div className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[color:var(--accent)]">
+              What's included
+            </div>
+            <p className="mt-2">
+              All prices are in GBP and exclude VAT where applicable. Founding-clinic pricing is
+              locked in as long as your subscription remains active. Cancel any time. No booking
+              fees are ever charged on top of your subscription — your revenue is yours.
+            </p>
+          </div>
+        </section>
+
+        <section className="border-t border-[color:var(--hairline)] bg-white">
+          <div className="mx-auto max-w-3xl px-5 py-16 text-center lg:px-8">
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+              Lock in founding-clinic pricing
+            </h2>
+            <p className="mt-3 text-[color:var(--ink-soft)]">
+              MODO is rolling out over the next few weeks. Join the waitlist and keep the
+              discounted rates above for the life of your account.
+            </p>
+            <Link to="/" hash="waitlist">
+              <Button
+                size="lg"
+                className="mt-6 rounded-full bg-[color:var(--ink)] px-8 text-white hover:bg-[color:var(--ink)]/90"
+              >
+                Join the waitlist <ArrowRight className="ml-1 h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
+        </section>
+      </main>
+      <SiteFooter />
+    </div>
+  );
+}
