@@ -604,64 +604,100 @@ function SubscriptionsSection({ practitioners }: { practitioners: Practitioner[]
 
   const subByProfile = new Map(subs.map((s) => [s.profile_id, s]));
 
+  const basePlans = plans.filter((p) => (p.kind ?? "base") === "base");
+  const addonPlans = plans.filter((p) => (p.kind ?? "base") !== "base");
+  const [newPlanKind, setNewPlanKind] = useState<"base" | "addon_location" | "addon_practitioner">("base");
+  const [editPlan, setEditPlan] = useState<Plan | null>(null);
+
+  function PlanRow({ p }: { p: Plan }) {
+    return (
+      <div className="flex flex-wrap items-center gap-3 p-3">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="font-medium">{p.name}</span>
+            {p.is_default && <Badge>Default</Badge>}
+            {p.kind === "addon_location" && <Badge variant="outline">Add-on · Location</Badge>}
+            {p.kind === "addon_practitioner" && <Badge variant="outline">Add-on · Practitioner</Badge>}
+            {!p.active && <Badge variant="secondary">Inactive</Badge>}
+          </div>
+          <div className="text-xs text-muted-foreground">
+            {money(p.amount_cents, p.currency)} / {p.interval}
+            {p.description ? ` · ${p.description}` : ""}
+          </div>
+        </div>
+        <Button size="sm" variant="outline" onClick={() => setEditPlan(p)}>Edit</Button>
+        {!p.is_default && p.active && (p.kind === "base" || !p.kind) && (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={async () => {
+              try {
+                await updateSubscriptionPlan({ data: { id: p.id, is_default: true } });
+                toast.success("Set as default — new practitioners will start on this plan");
+                refresh();
+              } catch (e) { toast.error((e as Error).message); }
+            }}
+          >
+            Set as default
+          </Button>
+        )}
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={async () => {
+            try {
+              await updateSubscriptionPlan({ data: { id: p.id, active: !p.active } });
+              refresh();
+            } catch (e) { toast.error((e as Error).message); }
+          }}
+        >
+          {p.active ? "Deactivate" : "Reactivate"}
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <>
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <CardTitle className="flex items-center gap-2"><CreditCard className="h-4 w-4" /> Subscription plans</CardTitle>
-          <Button size="sm" onClick={() => setShowNewPlan(true)}><Plus className="mr-1 h-4 w-4" />New plan</Button>
+          <Button size="sm" onClick={() => { setNewPlanKind("base"); setShowNewPlan(true); }}><Plus className="mr-1 h-4 w-4" />New plan</Button>
         </CardHeader>
         <CardContent className="p-0">
-          {plans.length === 0 ? (
+          {basePlans.length === 0 ? (
             <p className="p-4 text-sm italic text-muted-foreground">No subscription plans yet. Create one to bill practitioners monthly.</p>
           ) : (
             <div className="divide-y">
-              {plans.map((p) => (
-                <div key={p.id} className="flex flex-wrap items-center gap-3 p-3">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-medium">{p.name}</span>
-                      {p.is_default && <Badge>Default</Badge>}
-                      {!p.active && <Badge variant="secondary">Inactive</Badge>}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {money(p.amount_cents, p.currency)} / {p.interval}
-                      {p.description ? ` · ${p.description}` : ""}
-                    </div>
-                  </div>
-                  {!p.is_default && p.active && (p.kind === "base" || !p.kind) && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={async () => {
-                        try {
-                          await updateSubscriptionPlan({ data: { id: p.id, is_default: true } });
-                          toast.success("Set as default — new practitioners will start on this plan");
-                          refresh();
-                        } catch (e) { toast.error((e as Error).message); }
-                      }}
-                    >
-                      Set as default
-                    </Button>
-                  )}
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={async () => {
-                      try {
-                        await updateSubscriptionPlan({ data: { id: p.id, active: !p.active } });
-                        refresh();
-                      } catch (e) { toast.error((e as Error).message); }
-                    }}
-                  >
-                    {p.active ? "Deactivate" : "Reactivate"}
-                  </Button>
-                </div>
-              ))}
+              {basePlans.map((p) => <PlanRow key={p.id} p={p} />)}
             </div>
           )}
         </CardContent>
       </Card>
+
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+          <CardTitle className="flex items-center gap-2"><Plus className="h-4 w-4" /> Add-ons</CardTitle>
+          <div className="flex gap-2">
+            <Button size="sm" variant="outline" onClick={() => { setNewPlanKind("addon_location"); setShowNewPlan(true); }}>
+              <Plus className="mr-1 h-4 w-4" />Location add-on
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => { setNewPlanKind("addon_practitioner"); setShowNewPlan(true); }}>
+              <Plus className="mr-1 h-4 w-4" />Practitioner add-on
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          {addonPlans.length === 0 ? (
+            <p className="p-4 text-sm italic text-muted-foreground">No add-ons yet. Add extra location or team-member charges practitioners can stack on top of their base plan.</p>
+          ) : (
+            <div className="divide-y">
+              {addonPlans.map((p) => <PlanRow key={p.id} p={p} />)}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
 
       <Card>
         <CardHeader><CardTitle>Practitioner subscriptions</CardTitle></CardHeader>
