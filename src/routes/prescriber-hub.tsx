@@ -6,7 +6,7 @@ import consultationPhoto from "@/assets/modo-consultation.png.asset.json";
 
 import {
   ClipboardList, Network, ShieldCheck, Users, FileSignature,
-  Stethoscope, Lock, ArrowRight,
+  Stethoscope, Lock, ArrowRight, CalendarDays, MapPin, UserPlus, CheckCircle2, Handshake,
 } from "lucide-react";
 
 export const Route = createFileRoute("/prescriber-hub")({
