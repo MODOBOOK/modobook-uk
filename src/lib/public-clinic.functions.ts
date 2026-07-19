@@ -147,7 +147,21 @@ export const getPublicClinic = createServerFn({ method: "GET" })
       concernAreas: concernAreas.data ?? [],
       concerns: concerns.data ?? [],
       concernLinks: concernLinks.data ?? [],
-      modelSlots: modelSlots.data ?? [],
+      modelSlots: (() => {
+        const now = new Date();
+        const todayStr = now.toISOString().slice(0, 10);
+        return (modelSlots.data ?? []).filter((s: any) => {
+          if (s.is_flexible) return true;
+          if (!s.slot_date) return true;
+          if (s.slot_date > todayStr) return true;
+          if (s.slot_date < todayStr) return false;
+          // same day — compare end_time (fallback start_time) to now
+          const timeStr = s.end_time || s.start_time;
+          if (!timeStr) return true;
+          const slotEnd = new Date(`${s.slot_date}T${timeStr}`);
+          return slotEnd.getTime() > now.getTime();
+        });
+      })(),
       addonLinks: addonLinks.data ?? [],
       practitioners: practitioners.data ?? [],
       locationPractitioners: locationPractitioners.data ?? [],
