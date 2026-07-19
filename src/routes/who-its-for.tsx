@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { SiteHeader, SiteFooter } from "./index";
-import foundersSuits from "@/assets/modo-founders-suits.png.asset.json";
+import foundersSuits from "@/assets/modo-founders-scrubs.png.asset.json";
 import builtForPhoto from "@/assets/modo-built-for.png.asset.json";
 
 import { Syringe, Sparkles, Stethoscope, Users, MapPin, HeartHandshake, CheckCircle2 } from "lucide-react";
@@ -121,7 +121,7 @@ function WhoPage() {
               </div>
             </div>
             <div className="overflow-hidden rounded-3xl border border-[color:var(--hairline)]">
-              <img src={foundersSuits.url} alt="MODO founders" className="aspect-[4/5] w-full object-cover object-top" loading="lazy" />
+              <img src={foundersSuits.url} alt="MODO founders" className="aspect-[3/4] w-full object-cover object-top" loading="lazy" />
             </div>
           </div>
         </section>
