@@ -119,7 +119,7 @@ function LandingPage() {
               </p>
 
               <div className="mt-9 flex flex-col items-start gap-3 sm:flex-row sm:items-center">
-                <Link to="/" hash="waitlist" className="w-full sm:w-auto">
+<Link to="/waitlist" className="w-full sm:w-auto">
                   <Button
                     size="lg"
                     className="w-full rounded-full bg-[color:var(--ink)] px-8 text-sm font-medium text-white shadow-sm hover:bg-[color:var(--ink)]/90 sm:w-auto"
@@ -405,7 +405,7 @@ function LandingPage() {
               We're rolling MODO out to founding clinics over the next couple of weeks. Join the waitlist and we'll email you the moment your account is ready — founding members keep 100% of booking revenue and lock in launch pricing.
             </p>
             <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
-              <Link to="/" hash="waitlist" className="w-full sm:w-auto">
+              <Link to="/waitlist" className="w-full sm:w-auto">
                 <Button
                   size="lg"
                   className="w-full rounded-full bg-[color:var(--ink)] px-10 text-sm font-medium text-white hover:bg-[color:var(--ink)]/90 sm:w-auto"
@@ -575,7 +575,7 @@ export function SiteHeader() {
 
 
         <div className="flex items-center gap-2">
-          <Link to="/" hash="waitlist" className="hidden sm:inline-flex">
+          <Link to="/waitlist" className="hidden sm:inline-flex">
             <Button
               size="sm"
               className="rounded-full bg-[color:var(--ink)] px-5 text-xs font-medium uppercase tracking-[0.14em] text-[color:var(--paper)] hover:bg-[color:var(--ink)]/90"
@@ -612,7 +612,7 @@ export function SiteHeader() {
               ))}
               <DropdownMenuSeparator className="my-1 bg-[color:var(--hairline)]" />
               <DropdownMenuItem asChild className="rounded-lg">
-                <Link to="/" hash="waitlist" className="cursor-pointer px-3 py-2 text-sm font-semibold text-[color:var(--accent)]">
+                <Link to="/waitlist" className="cursor-pointer px-3 py-2 text-sm font-semibold text-[color:var(--accent)]">
                   Join the waitlist →
                 </Link>
               </DropdownMenuItem>
@@ -652,7 +652,7 @@ export function SiteFooter() {
         ]} />
 
         <FooterCol title="Join us" links={[
-          { label: "Join the waitlist", to: "/#waitlist" },
+          { label: "Join the waitlist", to: "/waitlist" },
           { label: "Sign in", to: "/auth" },
         ]} />
 
