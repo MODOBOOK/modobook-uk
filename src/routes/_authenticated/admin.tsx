@@ -269,6 +269,8 @@ function AdminPage() {
 
       <UserSupportCard />
 
+      <WaitlistCard />
+
       <SubscriptionsSection practitioners={practitioners} />
       <DiscountCodesSection />
     </div>
