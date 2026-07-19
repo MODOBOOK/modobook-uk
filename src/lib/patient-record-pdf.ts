@@ -14,11 +14,13 @@ export type PatientRecordInput = {
   notes: Array<{ id: string; body: string; created_at: string; visible_to_patient?: boolean | null }>;
   consultations: Array<any>;
   appointments?: Array<any>;
+  consents?: Array<any>;
   options: {
     includeDetails: boolean;
     includeNotes: boolean;
     includeConsultations: boolean;
     includeAppointments: boolean;
+    includeConsents?: boolean;
   };
 };
 
@@ -61,7 +63,7 @@ function ageFromDob(dob?: string | null) {
 }
 
 export async function generatePatientRecordPdf(input: PatientRecordInput): Promise<jsPDF> {
-  const { clinic, patient, notes, consultations, appointments = [], options } = input;
+  const { clinic, patient, notes, consultations, appointments = [], consents = [], options } = input;
   const doc = new jsPDF({ unit: "pt", format: "a4" });
   const W = doc.internal.pageSize.getWidth();
   const H = doc.internal.pageSize.getHeight();
