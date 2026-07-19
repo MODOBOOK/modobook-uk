@@ -158,9 +158,10 @@ function LandingPage() {
               <div className="relative overflow-hidden rounded-3xl border border-[color:var(--hairline)] bg-[color:var(--muted)] shadow-[0_30px_60px_-20px_rgba(60,40,20,0.25)]">
                 <img
                   src={tabletPlatform.url}
-                  alt="MODO booking and clinical platform"
-                  className="aspect-[4/5] w-full object-cover object-center"
+                  alt="MODO founders"
+                  className="aspect-[4/5] w-full object-cover object-top"
                 />
+
                 <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between rounded-2xl bg-white/95 px-4 py-3 backdrop-blur">
                   <div>
                     <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">The platform</div>
