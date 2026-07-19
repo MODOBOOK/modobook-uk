@@ -744,7 +744,13 @@ export function SiteFooter() {
         ]} />
       </div>
       <div className="border-t border-[color:var(--hairline)] py-6 text-center text-xs uppercase tracking-[0.2em] text-[color:var(--ink-soft)]">
-        © {new Date().getFullYear()} MODO · For practitioners, by practitioners
+        <div>© {new Date().getFullYear()} MODO · For practitioners, by practitioners</div>
+        <div className="mt-2 normal-case tracking-normal">
+          Designed by MODO Book ·{" "}
+          <a href="mailto:hello@modobook.uk" className="underline hover:text-[color:var(--ink)]">
+            hello@modobook.uk
+          </a>
+        </div>
       </div>
     </footer>
   );
