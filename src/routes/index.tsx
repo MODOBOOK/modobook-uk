@@ -522,7 +522,7 @@ function WaitlistSection() {
   }
 
   return (
-    <section className="border-t border-[color:var(--hairline)] bg-[color:var(--paper)]">
+    <section id="waitlist" className="scroll-mt-24 border-t border-[color:var(--hairline)] bg-[color:var(--paper)]">
       <div className="mx-auto grid max-w-6xl gap-10 px-5 py-20 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:gap-16 lg:px-8">
         <div>
           <div className="eyebrow">§ Launch list</div>
