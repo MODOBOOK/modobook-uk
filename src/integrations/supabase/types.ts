@@ -4377,6 +4377,36 @@ export type Database = {
           },
         ]
       }
+      practitioner_waitlist: {
+        Row: {
+          clinic_name: string | null
+          created_at: string
+          email: string
+          id: string
+          name: string | null
+          role: string | null
+          source: string | null
+        }
+        Insert: {
+          clinic_name?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          name?: string | null
+          role?: string | null
+          source?: string | null
+        }
+        Update: {
+          clinic_name?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string | null
+          role?: string | null
+          source?: string | null
+        }
+        Relationships: []
+      }
       practitioners: {
         Row: {
           active: boolean
