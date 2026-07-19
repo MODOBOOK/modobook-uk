@@ -349,7 +349,7 @@ export const createDiscountCode = createServerFn({ method: "POST" })
         code: data.code.toUpperCase(),
         max_redemptions: data.max_redemptions ?? undefined,
         expires_at: data.expires_at ? Math.floor(new Date(data.expires_at).getTime() / 1000) : undefined,
-      });
+      } as any);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Stripe rejected the discount code";
       console.error("[createDiscountCode] stripe error", msg);
