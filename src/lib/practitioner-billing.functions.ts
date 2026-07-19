@@ -46,14 +46,32 @@ export async function assertSeatAvailable(
   if (current < 1) return; // first seat is always free
 
   if (sub?.comped) return;
-  const trialActive = sub?.trial_end && new Date(sub.trial_end as string).getTime() > Date.now();
-  if (trialActive) return;
 
-  const paid = kind === "location" ? (sub?.extra_locations ?? 0) : (sub?.extra_practitioners ?? 0);
-  const allowed = 1 + paid;
-  if (sub?.stripe_subscription_id && sub?.status === "active" && current < allowed) return;
+  const selectedExtras = Math.max(
+    0,
+    Number(kind === "location" ? sub?.extra_locations ?? 0 : sub?.extra_practitioners ?? 0),
+  );
+  const allowed = 1 + selectedExtras;
+  const trialActive = Boolean(
+    sub?.trial_end && new Date(sub.trial_end as string).getTime() > Date.now(),
+  );
+
+  // During the trial, saved billing selections reserve exactly that many
+  // additional seats. Once billing begins, the same quantities are enforced
+  // against the live MODO Stripe subscription.
+  if (trialActive && current < allowed) return;
+  if (
+    sub?.stripe_subscription_id &&
+    ["active", "trialing"].includes(String(sub?.status)) &&
+    current < allowed
+  ) return;
 
   const noun = kind === "location" ? "location" : "practitioner";
+  if (trialActive) {
+    throw new Error(
+      `You have reached your selected ${noun} limit. Increase the quantity in Plan & billing before adding another ${noun}.`,
+    );
+  }
   throw new Error(
     `Your free trial has ended. Set up your MODO direct debit to add another ${noun} — visit Plan & billing to choose your add-ons and complete Stripe checkout.`,
   );
@@ -222,7 +240,11 @@ export const startBillingCheckout = createServerFn({ method: "POST" })
         customer: customerId ?? undefined,
         line_items,
         allow_promotion_codes: true,
-        payment_method_types: ["card", "bacs_debit"],
+        // This Checkout session is created directly on MODO's Stripe account.
+        // Card is currently enabled there and is saved for recurring billing;
+        // explicitly requesting Bacs makes Stripe reject the whole session
+        // until that payment method has completed account activation.
+        payment_method_types: ["card"],
         subscription_data: trialEndSec ? { trial_end: trialEndSec } : undefined,
         success_url: data.successUrl,
         cancel_url: data.cancelUrl,
