@@ -103,21 +103,29 @@ function BillingPage() {
     extraLocations * (locAddon?.amount_cents ?? 0) +
     extraPractitioners * (pracAddon?.amount_cents ?? 0);
 
-  async function checkout() {
+  const hasLiveSub = !!sub?.stripe_subscription_id && sub?.status !== "canceled";
+
+  async function checkoutOrUpdate() {
     if (!selectedPlanId) return;
     setBusy(true);
     try {
-      const res = await startCheckout({
-        data: {
-          basePlanId: selectedPlanId,
-          extraLocations, extraPractitioners,
-          successUrl: window.location.origin + "/dashboard/billing?ok=1",
-          cancelUrl: window.location.origin + "/dashboard/billing",
-        },
-      });
-      if (res.url) window.location.href = res.url;
+      if (hasLiveSub) {
+        await updateItems({ data: { basePlanId: selectedPlanId, extraLocations, extraPractitioners } });
+        toast.success("Subscription updated — the change will appear on your next direct-debit invoice.");
+        reload();
+      } else {
+        const res = await startCheckout({
+          data: {
+            basePlanId: selectedPlanId,
+            extraLocations, extraPractitioners,
+            successUrl: window.location.origin + "/dashboard/billing?ok=1",
+            cancelUrl: window.location.origin + "/dashboard/billing",
+          },
+        });
+        if (res.url) window.location.href = res.url;
+      }
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Checkout failed");
+      toast.error(e instanceof Error ? e.message : "Failed");
     } finally { setBusy(false); }
   }
 
