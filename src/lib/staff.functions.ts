@@ -48,6 +48,11 @@ export const inviteStaff = createServerFn({ method: "POST" })
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error("Invalid email");
     if (!data.name.trim()) throw new Error("Name is required");
 
+    if (data.role === "practitioner") {
+      const { assertSeatAvailable } = await import("./practitioner-billing.functions");
+      await assertSeatAvailable(context.supabase, profileId, "practitioner");
+    }
+
     const token = randomToken();
     const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
 

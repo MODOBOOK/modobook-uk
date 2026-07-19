@@ -16,6 +16,49 @@ async function getMyProfileId(context: { supabase: any; userId: string }) {
   return data as { id: string; email: string | null; clinic_name: string | null; full_name: string | null; created_at: string };
 }
 
+/**
+ * Seat-limit guard. Every clinic gets 1 free seat of each kind (location /
+ * practitioner). Additional seats need to be either:
+ *  - covered by paid add-ons on an active Stripe subscription, or
+ *  - allowed during the free trial (the practitioner is told these seats
+ *    are reserved and will be included when billing starts), or
+ *  - comped by admin.
+ * Once the trial ends without a direct debit set up, extra seats are blocked
+ * until the practitioner completes checkout.
+ */
+export async function assertSeatAvailable(
+  supabase: any,
+  profileId: string,
+  kind: "location" | "practitioner",
+) {
+  const { data: sub } = await supabase
+    .from("practitioner_subscriptions")
+    .select("status, comped, trial_end, stripe_subscription_id, extra_locations, extra_practitioners")
+    .eq("profile_id", profileId)
+    .maybeSingle();
+
+  const table = kind === "location" ? "locations" : "practitioners";
+  const { count } = await supabase
+    .from(table)
+    .select("id", { count: "exact", head: true })
+    .eq("profile_id", profileId);
+  const current = count ?? 0;
+  if (current < 1) return; // first seat is always free
+
+  if (sub?.comped) return;
+  const trialActive = sub?.trial_end && new Date(sub.trial_end as string).getTime() > Date.now();
+  if (trialActive) return;
+
+  const paid = kind === "location" ? (sub?.extra_locations ?? 0) : (sub?.extra_practitioners ?? 0);
+  const allowed = 1 + paid;
+  if (sub?.stripe_subscription_id && sub?.status === "active" && current < allowed) return;
+
+  const noun = kind === "location" ? "location" : "practitioner";
+  throw new Error(
+    `Your free trial has ended. Set up your MODO direct debit to add another ${noun} — visit Plan & billing to choose your add-ons and complete Stripe checkout.`,
+  );
+}
+
 export const getMyBillingStatus = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
@@ -147,6 +190,17 @@ export const startBillingCheckout = createServerFn({ method: "POST" })
       .maybeSingle();
 
     let customerId = existing?.stripe_customer_id as string | null | undefined;
+    // Validate the stored customer still exists in the current Stripe mode.
+    // A stale customer (e.g. created in test while we're now live, or deleted
+    // in Stripe) makes checkout.sessions.create fail silently — recreate it.
+    if (customerId) {
+      try {
+        const c: any = await stripe.customers.retrieve(customerId);
+        if (!c || c.deleted) customerId = null;
+      } catch {
+        customerId = null;
+      }
+    }
     if (!customerId && profile.email) {
       const customer = await stripe.customers.create({
         email: profile.email,
@@ -161,22 +215,30 @@ export const startBillingCheckout = createServerFn({ method: "POST" })
       ? Math.floor(new Date(existing.trial_end).getTime() / 1000)
       : undefined;
 
-    const session = await stripe.checkout.sessions.create({
-      mode: "subscription",
-      customer: customerId ?? undefined,
-      line_items,
-      allow_promotion_codes: true,
-      subscription_data: trialEndSec ? { trial_end: trialEndSec } : undefined,
-      success_url: data.successUrl,
-      cancel_url: data.cancelUrl,
-      metadata: {
-        profile_id: profile.id,
-        plan_id: base.id,
-        kind: "platform_subscription",
-        extra_locations: String(data.extraLocations ?? 0),
-        extra_practitioners: String(data.extraPractitioners ?? 0),
-      },
-    });
+    let session;
+    try {
+      session = await stripe.checkout.sessions.create({
+        mode: "subscription",
+        customer: customerId ?? undefined,
+        line_items,
+        allow_promotion_codes: true,
+        payment_method_types: ["card", "bacs_debit"],
+        subscription_data: trialEndSec ? { trial_end: trialEndSec } : undefined,
+        success_url: data.successUrl,
+        cancel_url: data.cancelUrl,
+        metadata: {
+          profile_id: profile.id,
+          plan_id: base.id,
+          kind: "platform_subscription",
+          extra_locations: String(data.extraLocations ?? 0),
+          extra_practitioners: String(data.extraPractitioners ?? 0),
+        },
+      });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Stripe checkout failed";
+      console.error("[startBillingCheckout] stripe error", msg);
+      throw new Error(`Could not open Stripe checkout: ${msg}`);
+    }
 
     const payload = {
       profile_id: profile.id,
@@ -184,6 +246,7 @@ export const startBillingCheckout = createServerFn({ method: "POST" })
       stripe_customer_id: customerId,
       extra_locations: data.extraLocations ?? 0,
       extra_practitioners: data.extraPractitioners ?? 0,
+      cancel_at_period_end: false,
     };
     if (existing) {
       await context.supabase.from("practitioner_subscriptions").update(payload).eq("id", existing.id);
@@ -191,6 +254,7 @@ export const startBillingCheckout = createServerFn({ method: "POST" })
       await context.supabase.from("practitioner_subscriptions").insert({ ...payload, status: "pending" });
     }
 
+    if (!session.url) throw new Error("Stripe returned no checkout URL. Please try again.");
     return { url: session.url };
   });
 
