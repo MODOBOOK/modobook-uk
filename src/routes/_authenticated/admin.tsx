@@ -748,8 +748,16 @@ function SubscriptionsSection({ practitioners }: { practitioners: Practitioner[]
 
       {showNewPlan && (
         <NewPlanDialog
+          kind={newPlanKind}
           onClose={() => setShowNewPlan(false)}
           onSaved={() => { setShowNewPlan(false); refresh(); }}
+        />
+      )}
+      {editPlan && (
+        <EditPlanDialog
+          plan={editPlan}
+          onClose={() => setEditPlan(null)}
+          onSaved={() => { setEditPlan(null); refresh(); }}
         />
       )}
       {assignFor && (
