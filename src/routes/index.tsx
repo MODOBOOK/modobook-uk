@@ -47,13 +47,14 @@ import {
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "MODO | The aesthetics-only booking & clinical platform — built by Nurse Prescribers" },
+      { title: "MODO | The aesthetics-only booking & clinical platform" },
       {
         name: "description",
         content:
-          "MODO is the UK booking, consultation and clinical platform built only for aesthetics — for HCPs and non-HCPs alike. Designed by two practising Nurse Prescribers for patient safety and collaborative working.",
+          "MODO is the UK booking, consultation and clinical platform built only for aesthetics — for HCPs and non-HCPs alike, with patient safety and collaborative working at the core.",
       },
-      { property: "og:title", content: "MODO — The aesthetics-only platform, built by Nurse Prescribers" },
+      { property: "og:title", content: "MODO — The aesthetics-only platform" },
+
       {
         property: "og:description",
         content:
