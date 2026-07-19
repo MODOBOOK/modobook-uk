@@ -7,8 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ConsentSectionsView, type ConsentSection } from "@/components/ConsentSections";
-import { ShieldCheck, Send, Loader2, CheckCircle2, Clock, Eye, Copy, PenLine, Mail } from "lucide-react";
+import { ShieldCheck, Send, Loader2, CheckCircle2, Clock, Eye, Copy, PenLine, Mail, Download } from "lucide-react";
 import { toast } from "sonner";
+import { getMyProfile } from "@/lib/profiles.functions";
 
 export function ClientConsentsList({
   client,
@@ -25,6 +26,60 @@ export function ClientConsentsList({
   const listTemplates = useServerFn(listMyConsentTemplates);
   const send = useServerFn(sendConsentToClient);
   const getConsent = useServerFn(getConsentForClient);
+  const fetchProfile = useServerFn(getMyProfile);
+  const [downloading, setDownloading] = useState<string | null>(null);
+
+  async function downloadConsent(row: { token: string; template_name: string }) {
+    setDownloading(row.token);
+    try {
+      const [{ generateConsentPdf }, full, profile] = await Promise.all([
+        import("@/lib/consent-pdf"),
+        getConsent({ data: { client_id: client.id, token: row.token } }) as Promise<any>,
+        fetchProfile() as Promise<any>,
+      ]);
+      const doc = await generateConsentPdf({
+        clinic: profile ? {
+          clinic_name: profile.clinic_name, full_name: profile.full_name,
+          logo_url: profile.logo_url ?? profile.hero_url ?? null,
+          brand_color: profile.brand_color, address: profile.address,
+          email: profile.email, phone: profile.phone,
+        } : null,
+        patient: { full_name: client.full_name, email: client.email, phone: client.phone },
+        consent: full,
+      });
+      const safe = String(client.full_name || "patient").replace(/[^a-z0-9-_ ]/gi, "").trim() || "patient";
+      const tname = String(row.template_name || "consent").replace(/[^a-z0-9-_ ]/gi, "").trim();
+      doc.save(`Consent - ${safe} - ${tname}.pdf`);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Download failed");
+    } finally { setDownloading(null); }
+  }
+
+  async function downloadAllConsents() {
+    setDownloading("__all__");
+    try {
+      const [{ generateConsentPdf }, profile, fullList] = await Promise.all([
+        import("@/lib/consent-pdf"),
+        fetchProfile() as Promise<any>,
+        Promise.all(rows.map((r) => getConsent({ data: { client_id: client.id, token: r.token } }).catch(() => null))),
+      ]);
+      const clinic = profile ? {
+        clinic_name: profile.clinic_name, full_name: profile.full_name,
+        logo_url: profile.logo_url ?? profile.hero_url ?? null,
+        brand_color: profile.brand_color, address: profile.address,
+        email: profile.email, phone: profile.phone,
+      } : null;
+      const inputs = (fullList as any[])
+        .filter(Boolean)
+        .map((full) => ({ clinic, patient: { full_name: client.full_name, email: client.email, phone: client.phone }, consent: full }));
+      if (inputs.length === 0) { toast.error("No consents to download"); return; }
+      const doc = await generateConsentPdf(inputs);
+      const safe = String(client.full_name || "patient").replace(/[^a-z0-9-_ ]/gi, "").trim() || "patient";
+      doc.save(`All consents - ${safe}.pdf`);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Download failed");
+    } finally { setDownloading(null); }
+  }
 
   const [rows, setRows] = useState<any[]>([]);
   const [templates, setTemplates] = useState<any[]>([]);
@@ -117,9 +172,17 @@ export function ClientConsentsList({
           <ShieldCheck className="h-4 w-4 text-primary" />Consent forms
           {rows.length > 0 && <Badge variant="secondary" className="text-[10px]">{rows.length}</Badge>}
         </div>
-        <Button size="sm" variant="outline" onClick={openSend}>
-          <Send className="mr-1.5 h-3.5 w-3.5" />Send consent
-        </Button>
+        <div className="flex items-center gap-1.5">
+          {rows.length > 0 && (
+            <Button size="sm" variant="ghost" onClick={downloadAllConsents} disabled={downloading !== null} title="Download all consents as PDF">
+              {downloading === "__all__" ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Download className="mr-1.5 h-3.5 w-3.5" />}
+              PDF all
+            </Button>
+          )}
+          <Button size="sm" variant="outline" onClick={openSend}>
+            <Send className="mr-1.5 h-3.5 w-3.5" />Send consent
+          </Button>
+        </div>
       </div>
 
       {loading ? (
@@ -167,6 +230,14 @@ export function ClientConsentsList({
                 )}
                 <Button size="sm" variant="outline" className="h-7 px-2" onClick={() => openConsent(r.token)} title="View consent form">
                   <Eye className="h-3.5 w-3.5" />
+                </Button>
+                <Button
+                  size="sm" variant="ghost" className="h-7 px-2"
+                  onClick={() => downloadConsent({ token: r.token, template_name: r.template_name })}
+                  disabled={downloading !== null}
+                  title="Download consent as PDF"
+                >
+                  {downloading === r.token ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
                 </Button>
               </div>
             );

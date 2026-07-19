@@ -144,16 +144,23 @@ function PatientProfilePage() {
     if (!client) return;
     setExportingRecord(true);
     try {
-      const [{ generatePatientRecordPdf }, { listClientNotes }, { getConsultation }, profile] = await Promise.all([
+      const [{ generatePatientRecordPdf }, { listClientNotes }, { getConsultation }, { listConsentsForClient, getConsentForClient }, profile] = await Promise.all([
         import("@/lib/patient-record-pdf"),
         import("@/lib/clients.functions"),
         import("@/lib/consultations.functions"),
+        import("@/lib/treatment-consents.functions"),
         profileFn() as Promise<any>,
       ]);
-      const [notes, fullConsults] = await Promise.all([
+      const [notes, fullConsults, consentList] = await Promise.all([
         (listClientNotes as any)({ data: { client_id: id } }),
         Promise.all((consults || []).map((c: any) => (getConsultation as any)({ data: { id: c.id } }).catch(() => null))),
+        (listConsentsForClient as any)({ data: { client_id: id } }).catch(() => []),
       ]);
+      const fullConsents = await Promise.all(
+        (consentList as any[]).map((r) =>
+          (getConsentForClient as any)({ data: { client_id: id, token: r.token } }).catch(() => r),
+        ),
+      );
       const doc = await generatePatientRecordPdf({
         clinic: profile ? {
           clinic_name: profile.clinic_name,
@@ -168,7 +175,8 @@ function PatientProfilePage() {
         notes: (notes as any[]) || [],
         consultations: (fullConsults as any[]).filter(Boolean),
         appointments: appts || [],
-        options: { includeDetails: true, includeNotes: true, includeConsultations: true, includeAppointments: true },
+        consents: fullConsents as any[],
+        options: { includeDetails: true, includeNotes: true, includeConsultations: true, includeAppointments: true, includeConsents: true },
       });
       const safe = String(client.full_name || "patient").replace(/[^a-z0-9-_ ]/gi, "").trim() || "patient";
       doc.save(`Patient record - ${safe}.pdf`);

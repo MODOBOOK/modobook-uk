@@ -14,11 +14,13 @@ export type PatientRecordInput = {
   notes: Array<{ id: string; body: string; created_at: string; visible_to_patient?: boolean | null }>;
   consultations: Array<any>;
   appointments?: Array<any>;
+  consents?: Array<any>;
   options: {
     includeDetails: boolean;
     includeNotes: boolean;
     includeConsultations: boolean;
     includeAppointments: boolean;
+    includeConsents?: boolean;
   };
 };
 
@@ -61,7 +63,7 @@ function ageFromDob(dob?: string | null) {
 }
 
 export async function generatePatientRecordPdf(input: PatientRecordInput): Promise<jsPDF> {
-  const { clinic, patient, notes, consultations, appointments = [], options } = input;
+  const { clinic, patient, notes, consultations, appointments = [], consents = [], options } = input;
   const doc = new jsPDF({ unit: "pt", format: "a4" });
   const W = doc.internal.pageSize.getWidth();
   const H = doc.internal.pageSize.getHeight();
@@ -285,6 +287,44 @@ export async function generatePatientRecordPdf(input: PatientRecordInput): Promi
       }
 
       y += 10;
+    }
+  }
+
+  // === Consents ===
+  if (options.includeConsents !== false && consents.length > 0) {
+    sectionTitle(`Consent forms (${consents.length})`);
+    for (const c of consents) {
+      ensure(56);
+      const status = (c.status || "pending").toLowerCase();
+      const isSigned = status === "signed";
+      doc.setDrawColor(230).setFillColor(250, 249, 246);
+      const cardTop = y;
+      doc.roundedRect(M, y, CONTENT_W, 52, 6, 6, "FD");
+      doc.setFillColor(br, bg, bb).rect(M, y, 3, 52, "F");
+
+      doc.setFont("helvetica", "bold").setFontSize(11).setTextColor(20);
+      const nameLines = doc.splitTextToSize(String(c.template_name || "Consent form"), CONTENT_W - 140);
+      doc.text(nameLines[0], M + 12, y + 16);
+
+      doc.setFont("helvetica", "bold").setFontSize(8);
+      if (isSigned) doc.setTextColor(16, 122, 82); else doc.setTextColor(180, 130, 20);
+      doc.text(status.toUpperCase(), W - M - 10, y + 16, { align: "right" });
+
+      doc.setFont("helvetica", "normal").setFontSize(9).setTextColor(90);
+      const meta = isSigned
+        ? `Signed ${fmtDateTime(c.signed_at)}${c.signature_name ? ` · ${c.signature_name}` : ""}`
+        : `Sent ${fmtDateTime(c.created_at)} · awaiting signature`;
+      doc.text(meta, M + 12, y + 32);
+
+      // Signature thumbnail
+      if (isSigned && c.signature_data && String(c.signature_data).startsWith("data:image")) {
+        try { doc.addImage(c.signature_data, "PNG", W - M - 120, cardTop + 8, 108, 36, undefined, "FAST"); } catch {}
+      } else if (isSigned && c.signature_name) {
+        doc.setFont("times", "italic").setFontSize(13).setTextColor(40);
+        doc.text(String(c.signature_name), W - M - 12, cardTop + 44, { align: "right" });
+      }
+
+      y += 60;
     }
   }
 
