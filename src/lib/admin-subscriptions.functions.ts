@@ -79,16 +79,67 @@ export const createSubscriptionPlan = createServerFn({ method: "POST" })
 
 export const updateSubscriptionPlan = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: { id: string; active?: boolean; description?: string | null; name?: string; is_default?: boolean }) => i)
+  .inputValidator((i: {
+    id: string;
+    active?: boolean;
+    description?: string | null;
+    name?: string;
+    is_default?: boolean;
+    amount_cents?: number;
+    interval?: "month" | "year";
+  }) => i)
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const patch: { active?: boolean; description?: string | null; name?: string; is_default?: boolean } = {};
+    const patch: Record<string, unknown> = {};
     if (data.active !== undefined) patch.active = data.active;
     if (data.description !== undefined) patch.description = data.description;
     if (data.name !== undefined) patch.name = data.name;
     if (data.is_default !== undefined) patch.is_default = data.is_default;
 
-    // Enforce single default: clear others first when setting one true
+    // Stripe prices are immutable: to change amount/interval we create a new
+    // price on the same product and archive the old one. Existing subscribers
+    // keep their current price until re-checkout; new checkouts use the new one.
+    if (data.amount_cents !== undefined || data.interval !== undefined) {
+      const { data: existing, error: eErr } = await context.supabase
+        .from("subscription_plans")
+        .select("stripe_price_id, amount_cents, interval, currency, name, description")
+        .eq("id", data.id)
+        .single();
+      if (eErr) throw eErr;
+
+      const nextAmount = data.amount_cents ?? existing.amount_cents;
+      const nextInterval = data.interval ?? existing.interval;
+      const currency = (existing.currency || "gbp").toLowerCase();
+
+      const { getStripe } = await import("./stripe.server");
+      const stripe = getStripe();
+
+      let productId: string | null = null;
+      if (existing.stripe_price_id) {
+        try {
+          const oldPrice = await stripe.prices.retrieve(existing.stripe_price_id);
+          productId = typeof oldPrice.product === "string" ? oldPrice.product : oldPrice.product.id;
+          await stripe.prices.update(existing.stripe_price_id, { active: false });
+        } catch (e) { console.error("stripe old price lookup", e); }
+      }
+      if (!productId) {
+        const product = await stripe.products.create({
+          name: data.name || existing.name,
+          description: (data.description ?? existing.description) || undefined,
+        });
+        productId = product.id;
+      }
+      const newPrice = await stripe.prices.create({
+        product: productId,
+        unit_amount: nextAmount,
+        currency,
+        recurring: { interval: nextInterval },
+      });
+      patch.amount_cents = nextAmount;
+      patch.interval = nextInterval;
+      patch.stripe_price_id = newPrice.id;
+    }
+
     if (data.is_default === true) {
       const { error: clrErr } = await context.supabase
         .from("subscription_plans")
