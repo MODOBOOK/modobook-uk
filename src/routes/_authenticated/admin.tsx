@@ -447,6 +447,19 @@ function UserSupportCard() {
     }
   }
 
+  async function setPassword(email: string) {
+    const pw = window.prompt(`Set a new password for ${email}\n\nMin 8 characters. Share it securely — they can change it after signing in.`);
+    if (!pw) return;
+    if (pw.length < 8) { toast.error("Password must be at least 8 characters"); return; }
+    try {
+      await adminSetUserPassword({ data: { email, password: pw } });
+      try { await navigator.clipboard.writeText(pw); toast.success("Password updated & copied to clipboard"); }
+      catch { toast.success("Password updated"); }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed");
+    }
+  }
+
   async function toggleActive(profile_id: string, active: boolean) {
     if (!confirm(active ? "Reactivate this clinic profile?" : "Deactivate this clinic profile? Their public booking link will stop working.")) return;
     try {
