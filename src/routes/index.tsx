@@ -13,8 +13,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import brandBoards from "@/assets/modo-brand-boards.png.asset.json";
-import foundersScrubs from "@/assets/modo-founders-scrubs.png.asset.json";
-import tabletPlatform from "@/assets/modo-tablet-platform.png.asset.json";
+import foundersScrubs from "@/assets/modo-founders-scrubs-faces.png.asset.json";
+import tabletPlatform from "@/assets/modo-founders-suits-faces.png.asset.json";
 import wordmark from "@/assets/modo-wordmark.png.asset.json";
 
 
@@ -158,9 +158,10 @@ function LandingPage() {
               <div className="relative overflow-hidden rounded-3xl border border-[color:var(--hairline)] bg-[color:var(--muted)] shadow-[0_30px_60px_-20px_rgba(60,40,20,0.25)]">
                 <img
                   src={tabletPlatform.url}
-                  alt="MODO booking and clinical platform"
-                  className="aspect-[4/5] w-full object-cover object-center"
+                  alt="MODO founders"
+                  className="aspect-[4/5] w-full object-cover object-top"
                 />
+
                 <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between rounded-2xl bg-white/95 px-4 py-3 backdrop-blur">
                   <div>
                     <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">The platform</div>
@@ -360,9 +361,10 @@ function LandingPage() {
             <div className="relative overflow-hidden rounded-3xl border border-[color:var(--hairline)]">
               <img
                 src={foundersScrubs.url}
-                alt="MODO's founders in clinical scrubs"
-                className="aspect-[4/3] w-full object-cover"
+                alt="MODO's founders"
+                className="aspect-[4/5] w-full object-cover object-top"
               />
+
             </div>
             <div>
               <div className="eyebrow">§ For practitioners, by practitioners</div>
