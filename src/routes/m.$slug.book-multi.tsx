@@ -716,7 +716,7 @@ function MultiBookPage() {
   return (
     <main className="min-h-screen pb-28 lg:pb-10" style={pageStyle}>
       <div className="mx-auto grid max-w-6xl gap-8 px-4 py-8 lg:grid-cols-[minmax(0,1fr)_320px] lg:py-10">
-        <div>
+        <div className="min-w-0">
           <div className="mb-4">
             <Link to="/m/$slug" params={{ slug }} className="text-sm opacity-70 hover:underline">
               ← Back to {ctx.clinicName}
@@ -983,16 +983,16 @@ function MultiBookPage() {
                                     key={opt}
                                     type="button"
                                     onClick={() => setTreatmentPaymentPlan(t.id, opt)}
-                                    className="flex flex-col items-start gap-1 rounded-md border px-3 py-3 text-left transition"
+                                    className="flex w-full min-w-0 flex-col items-start gap-1 rounded-md border px-3 py-3 text-left transition"
                                     style={{
                                       borderColor: selected ? brand : `${brand}33`,
                                       backgroundColor: selected ? `${brand}10` : "transparent",
                                     }}
                                   >
-                                    <span className="text-sm font-semibold" style={{ color: brand }}>
+                                    <span className="w-full break-words text-sm font-semibold" style={{ color: brand }}>
                                       {opt === "full" ? "Pay in full" : `Pay over ${sessions} appointments`}
                                     </span>
-                                    <span className="text-xs opacity-70">
+                                    <span className="w-full break-words text-xs opacity-70">
                                       {opt === "full"
                                         ? `£${fullPrice.toFixed(2)} total`
                                         : `£${perSession.toFixed(2)} per appointment · charged at each visit`}
@@ -1010,12 +1010,12 @@ function MultiBookPage() {
                         <label className="flex cursor-pointer items-start gap-2 text-sm">
                           <input
                             type="checkbox"
-                            className="mt-0.5 h-4 w-4"
+                            className="mt-0.5 h-4 w-4 shrink-0"
                             style={{ accentColor: brand }}
                             checked={splitAgreed}
                             onChange={(e) => setSplitAgreed(e.target.checked)}
                           />
-                          <span>
+                          <span className="min-w-0 flex-1 break-words">
                             I agree to pay the amount at each appointment
                             {(() => {
                               const parts = splitEligibleTreatments
