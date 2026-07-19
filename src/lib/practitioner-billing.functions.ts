@@ -133,7 +133,7 @@ export const getMyBilling = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const profile = await getMyProfileId(context);
 
-    const [{ data: sub }, { data: plans }, { data: access }] = await Promise.all([
+    const [{ data: sub }, { data: plans }, { data: access }, { count: locCount }, { count: pracCount }] = await Promise.all([
       context.supabase
         .from("practitioner_subscriptions")
         .select("*, subscription_plans(id, name, description, amount_cents, currency, interval, kind)")
@@ -146,6 +146,8 @@ export const getMyBilling = createServerFn({ method: "GET" })
         .order("kind", { ascending: true })
         .order("amount_cents", { ascending: true }),
       context.supabase.rpc("practitioner_has_platform_access", { _profile_id: profile.id }),
+      context.supabase.from("locations").select("id", { count: "exact", head: true }).eq("profile_id", profile.id),
+      context.supabase.from("practitioners").select("id", { count: "exact", head: true }).eq("profile_id", profile.id),
     ]);
 
     let discountCode: { id: string; code: string; description: string | null; percent_off: number | null; amount_off_cents: number | null } | null = null;
@@ -165,6 +167,10 @@ export const getMyBilling = createServerFn({ method: "GET" })
       hasAccess: Boolean(access),
       discountCode,
       profileCreatedAt: profile.created_at,
+      usage: {
+        locations: locCount ?? 0,
+        practitioners: pracCount ?? 0,
+      },
     };
   });
 
