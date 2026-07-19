@@ -20,8 +20,8 @@ const FEATURES = [
     body: 'Automated emails that bring clients back at exactly the right interval.',
   },
   {
-    title: 'AI photo uploads & face mapping',
-    body: 'Upload before/afters, track changes over time and annotate with a tap.',
+    title: 'Consultation notes & photo records',
+    body: 'Capture every consultation, upload before/after photos and build treatment plans in one place.',
   },
   {
     title: 'Full clinical records',
@@ -143,10 +143,10 @@ export const WaitlistWelcomeEmail = ({ firstName }: WaitlistWelcomeProps) => {
         <Hr style={styles.hr} />
 
         <Text style={styles.muted}>
-          Questions or want to tell us what you'd love MODO to solve? Just
-          reply to this email — it lands straight with the founders at{' '}
-          <Link href="mailto:hello@modobook.uk" style={styles.link}>
-            hello@modobook.uk
+          Got an idea for MODO, or want to tell us what you'd love it to solve?
+          Just reply to this email — it lands straight with the founders at{' '}
+          <Link href="mailto:info@modobook.co.uk" style={styles.link}>
+            info@modobook.co.uk
           </Link>
           .
         </Text>
