@@ -1001,3 +1001,126 @@ function DiscountCodesSection() {
     </Card>
   );
 }
+
+type WaitlistRow = {
+  id: string;
+  name: string | null;
+  email: string;
+  role: string | null;
+  clinic_name: string | null;
+  source: string | null;
+  consent_at: string | null;
+  consent_text: string | null;
+  created_at: string;
+};
+
+function WaitlistCard() {
+  const [rows, setRows] = useState<WaitlistRow[] | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  async function load() {
+    try {
+      const r = await adminListWaitlist();
+      setRows(r.rows as WaitlistRow[]);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to load waitlist");
+    }
+  }
+
+  useEffect(() => { load(); }, []);
+
+  async function remove(id: string, email: string) {
+    if (!confirm(`Remove ${email} from the waitlist?`)) return;
+    setBusy(true);
+    try {
+      await adminDeleteWaitlistEntry({ data: { id } });
+      toast.success("Removed");
+      await load();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function exportCsv() {
+    if (!rows || rows.length === 0) return;
+    const header = ["Name", "Email", "Role", "Clinic", "Consent given at", "Signed up"];
+    const escape = (v: string | null | undefined) => {
+      const s = (v ?? "").replace(/"/g, '""');
+      return `"${s}"`;
+    };
+    const lines = [header.join(",")].concat(
+      rows.map((r) => [
+        escape(r.name),
+        escape(r.email),
+        escape(r.role),
+        escape(r.clinic_name),
+        escape(r.consent_at ? new Date(r.consent_at).toISOString() : ""),
+        escape(new Date(r.created_at).toISOString()),
+      ].join(","))
+    );
+    const blob = new Blob([lines.join("\n")], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `modo-waitlist-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <CardTitle className="flex items-center gap-2">
+            <Mail className="h-4 w-4" /> Launch waitlist
+            {rows && <Badge variant="secondary">{rows.length}</Badge>}
+          </CardTitle>
+          <Button size="sm" variant="outline" onClick={exportCsv} disabled={!rows || rows.length === 0}>
+            Export CSV
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent className="p-0">
+        {rows === null ? (
+          <p className="p-4 text-sm italic text-muted-foreground">Loading…</p>
+        ) : rows.length === 0 ? (
+          <p className="p-4 text-sm italic text-muted-foreground">No sign-ups yet.</p>
+        ) : (
+          <div className="divide-y">
+            {rows.map((r) => (
+              <div key={r.id} className="flex flex-wrap items-start gap-3 p-3">
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-medium">{r.name || "—"}</span>
+                    <a href={`mailto:${r.email}`} className="text-sm text-primary hover:underline">{r.email}</a>
+                    {r.consent_at ? (
+                      <Badge variant="secondary" className="text-[10px]">Consented</Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-[10px]">No consent</Badge>
+                    )}
+                  </div>
+                  <div className="mt-0.5 truncate text-xs text-muted-foreground">
+                    {[r.role, r.clinic_name].filter(Boolean).join(" · ") || "—"}
+                    {" · joined "}
+                    {new Date(r.created_at).toLocaleDateString()}
+                  </div>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => remove(r.id, r.email)}
+                  disabled={busy}
+                  aria-label="Remove"
+                >
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
