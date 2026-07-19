@@ -1090,18 +1090,23 @@ function WaitlistCard() {
         ) : (
           <div className="divide-y">
             {rows.map((r) => (
-              <div key={r.id} className="flex flex-wrap items-start gap-3 p-3">
-                <div className="min-w-0 flex-1">
+              <div key={r.id} className="flex items-start gap-3 p-3">
+                <div className="min-w-0 flex-1 space-y-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="font-medium">{r.name || "—"}</span>
-                    <a href={`mailto:${r.email}`} className="text-sm text-primary hover:underline">{r.email}</a>
                     {r.consent_at ? (
                       <Badge variant="secondary" className="text-[10px]">Consented</Badge>
                     ) : (
                       <Badge variant="outline" className="text-[10px]">No consent</Badge>
                     )}
                   </div>
-                  <div className="mt-0.5 truncate text-xs text-muted-foreground">
+                  <a
+                    href={`mailto:${r.email}`}
+                    className="block break-all text-sm font-medium text-primary hover:underline"
+                  >
+                    {r.email}
+                  </a>
+                  <div className="text-xs text-muted-foreground">
                     {[r.role, r.clinic_name].filter(Boolean).join(" · ") || "—"}
                     {" · joined "}
                     {new Date(r.created_at).toLocaleDateString()}
