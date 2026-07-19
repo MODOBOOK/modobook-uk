@@ -65,6 +65,18 @@ function BillingPage() {
   }
   useEffect(() => { reload(); }, []);
 
+  // Persist add-on selection during trial so it pre-fills at checkout.
+  const dirtyRef = useRef(false);
+  useEffect(() => {
+    if (loading || !selectedPlanId) return;
+    if (!dirtyRef.current) return;
+    const t = setTimeout(() => {
+      saveAddons({ data: { basePlanId: selectedPlanId, extraLocations, extraPractitioners } }).catch(() => {});
+    }, 600);
+    return () => clearTimeout(t);
+  }, [selectedPlanId, extraLocations, extraPractitioners, loading]);
+  function bump<T>(setter: (v: T) => void, v: T) { dirtyRef.current = true; setter(v); }
+
   if (loading) return <p className="text-sm text-muted-foreground">Loading…</p>;
   if (!state) return null;
 
