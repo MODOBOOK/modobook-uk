@@ -188,9 +188,10 @@ function FaqPage() {
               Our team runs aesthetics clinics ourselves — get in touch and we'll help you get set up.
             </p>
             <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-              <Link to="/auth">
-                <Button size="lg">Get started <ArrowRight className="ml-2 h-4 w-4" /></Button>
+              <Link to="/" hash="waitlist">
+                <Button size="lg">Join the waitlist <ArrowRight className="ml-2 h-4 w-4" /></Button>
               </Link>
+
               <a href="mailto:hello@modobook.uk">
                 <Button size="lg" variant="outline">Email the team</Button>
               </a>

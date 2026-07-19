@@ -117,12 +117,12 @@ function LandingPage() {
               </p>
 
               <div className="mt-9 flex flex-col items-start gap-3 sm:flex-row sm:items-center">
-                <Link to="/auth" className="w-full sm:w-auto">
+                <Link to="/" hash="waitlist" className="w-full sm:w-auto">
                   <Button
                     size="lg"
                     className="w-full rounded-full bg-[color:var(--ink)] px-8 text-sm font-medium text-white shadow-sm hover:bg-[color:var(--ink)]/90 sm:w-auto"
                   >
-                    Start free
+                    Join the waitlist
                   </Button>
                 </Link>
                 <Link to="/features" className="w-full sm:w-auto">
@@ -137,7 +137,8 @@ function LandingPage() {
               </div>
 
               <p className="mt-5 text-xs text-[color:var(--ink-soft)]">
-                No card required · 0% booking fees · UK/EU data residency
+                Launching in the next few weeks · Waitlist members get first access &amp; founding-clinic pricing
+
               </p>
             </div>
 
@@ -389,22 +390,22 @@ function LandingPage() {
 
         <section className="bg-white">
           <div className="mx-auto max-w-4xl px-5 py-24 text-center lg:px-8">
-            <div className="eyebrow">Ready when you are</div>
+            <div className="eyebrow">Launching soon</div>
             <h2 className="mt-4 text-4xl font-bold leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl">
-              Set up your clinic
+              MODO goes live
               <br />
-              <span className="text-[color:var(--ink-soft)]">in an afternoon.</span>
+              <span className="text-[color:var(--ink-soft)]">in the coming weeks.</span>
             </h2>
             <p className="mx-auto mt-5 max-w-lg text-[color:var(--ink-soft)]">
-              Free to start. Keep 100% of your booking revenue. Your patients stay yours.
+              We're rolling MODO out to founding clinics over the next couple of weeks. Join the waitlist and we'll email you the moment your account is ready — founding members keep 100% of booking revenue and lock in launch pricing.
             </p>
             <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
-              <Link to="/auth" className="w-full sm:w-auto">
+              <Link to="/" hash="waitlist" className="w-full sm:w-auto">
                 <Button
                   size="lg"
                   className="w-full rounded-full bg-[color:var(--ink)] px-10 text-sm font-medium text-white hover:bg-[color:var(--ink)]/90 sm:w-auto"
                 >
-                  Create your clinic
+                  Join the waitlist
                 </Button>
               </Link>
               <Link to="/who-its-for" className="w-full sm:w-auto">
@@ -420,6 +421,7 @@ function LandingPage() {
           </div>
         </section>
       </main>
+
 
       <SiteFooter />
     </div>
@@ -520,7 +522,7 @@ function WaitlistSection() {
   }
 
   return (
-    <section className="border-t border-[color:var(--hairline)] bg-[color:var(--paper)]">
+    <section id="waitlist" className="scroll-mt-24 border-t border-[color:var(--hairline)] bg-[color:var(--paper)]">
       <div className="mx-auto grid max-w-6xl gap-10 px-5 py-20 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:gap-16 lg:px-8">
         <div>
           <div className="eyebrow">§ Launch list</div>
@@ -622,14 +624,15 @@ export function SiteHeader() {
 
 
         <div className="flex items-center gap-2">
-          <Link to="/auth" className="hidden sm:inline-flex">
+          <Link to="/" hash="waitlist" className="hidden sm:inline-flex">
             <Button
               size="sm"
               className="rounded-full bg-[color:var(--ink)] px-5 text-xs font-medium uppercase tracking-[0.14em] text-[color:var(--paper)] hover:bg-[color:var(--ink)]/90"
             >
-              Get started
+              Join waitlist
             </Button>
           </Link>
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -694,10 +697,11 @@ export function SiteFooter() {
           { label: "Rewards", to: "/rewards" },
           { label: "Who it's for", to: "/who-its-for" },
         ]} />
-        <FooterCol title="Get started" links={[
-          { label: "Create your clinic page", to: "/auth" },
+        <FooterCol title="Join us" links={[
+          { label: "Join the waitlist", to: "/#waitlist" },
           { label: "Sign in", to: "/auth" },
         ]} />
+
         <FooterCol title="Legal" links={[
           { label: "Privacy Policy", to: "/privacy" },
           { label: "Terms & Conditions", to: "/terms" },
