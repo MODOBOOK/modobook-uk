@@ -61,9 +61,20 @@ function BillingPage() {
           || d.plans.find((p: any) => p.kind === "base");
         if (base) setSelectedPlanId(base.id);
       }
-      if (d.subscription) {
-        setExtraLocations(d.subscription.extra_locations ?? 0);
-        setExtraPractitioners(d.subscription.extra_practitioners ?? 0);
+      // Preset add-on quantities to the greater of what they've saved and
+      // what they've actually created (first seat of each is always free).
+      const usedExtraLocs = Math.max(0, (d.usage?.locations ?? 0) - 1);
+      const usedExtraPracs = Math.max(0, (d.usage?.practitioners ?? 0) - 1);
+      const savedLocs = d.subscription?.extra_locations ?? 0;
+      const savedPracs = d.subscription?.extra_practitioners ?? 0;
+      const nextLocs = Math.max(savedLocs, usedExtraLocs);
+      const nextPracs = Math.max(savedPracs, usedExtraPracs);
+      setExtraLocations(nextLocs);
+      setExtraPractitioners(nextPracs);
+      // If the actual usage is above the saved selection, persist that so
+      // checkout reflects the reserved seats.
+      if (nextLocs !== savedLocs || nextPracs !== savedPracs) {
+        dirtyRef.current = true;
       }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could not load billing");
