@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import brandBoards from "@/assets/modo-brand-boards.png.asset.json";
 import consultationHero from "@/assets/modo-consultation-hero.jpeg.asset.json";
-import tabletPlatform from "@/assets/modo-founders-suits-faces.png.asset.json";
+import tabletPlatform from "@/assets/modo-founders-scrubs.png.asset.json";
 import wordmark from "@/assets/modo-wordmark.png.asset.json";
 
 
