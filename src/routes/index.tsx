@@ -14,8 +14,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import brandBoards from "@/assets/modo-brand-boards.png.asset.json";
 import foundersScrubs from "@/assets/modo-founders-scrubs.png.asset.json";
-import foundersSuits from "@/assets/modo-founders-suits.png.asset.json";
+import tabletPlatform from "@/assets/modo-tablet-platform.png.asset.json";
 import wordmark from "@/assets/modo-wordmark.png.asset.json";
+import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
 
 
 
