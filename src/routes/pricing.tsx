@@ -47,12 +47,15 @@ const tiers: Tier[] = [
     blurb:
       "Everything you need to run an aesthetics clinic — bookings, medical records, consent, face mapping, payments and the prescriber hub.",
     perks: [
+      "First month free — no card required",
       "Unlimited patients & appointments",
       "0% booking fees — keep 100% of your revenue",
       "Full clinical records, consent & face mapping",
+      "AI photo uploads, face mapping & consultation notes",
       "Marketing automations & email templates",
       "Prescriber hub included",
     ],
+
     cta: "Join the waitlist",
     highlight: true,
   },
