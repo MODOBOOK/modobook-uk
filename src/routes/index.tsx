@@ -13,7 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import brandBoards from "@/assets/modo-brand-boards.png.asset.json";
-import foundersScrubs from "@/assets/modo-founders-scrubs-faces.png.asset.json";
+import consultationHero from "@/assets/modo-consultation-hero.jpeg.asset.json";
 import tabletPlatform from "@/assets/modo-founders-suits-faces.png.asset.json";
 import wordmark from "@/assets/modo-wordmark.png.asset.json";
 
@@ -157,8 +157,8 @@ function LandingPage() {
               <div className="absolute -left-6 -top-6 hidden h-24 w-24 rounded-2xl border border-[color:var(--accent)]/30 bg-[color:var(--clinical-blue-soft)] lg:block" />
               <div className="relative overflow-hidden rounded-3xl border border-[color:var(--hairline)] bg-[color:var(--muted)] shadow-[0_30px_60px_-20px_rgba(60,40,20,0.25)]">
                 <img
-                  src={tabletPlatform.url}
-                  alt="MODO founders"
+                  src={consultationHero.url}
+                  alt="A practitioner and patient using MODO on a tablet during consultation"
                   className="aspect-[4/5] w-full object-cover object-top"
                 />
 
@@ -360,7 +360,7 @@ function LandingPage() {
           <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:gap-14">
             <div className="relative overflow-hidden rounded-3xl border border-[color:var(--hairline)]">
               <img
-                src={foundersScrubs.url}
+                src={tabletPlatform.url}
                 alt="MODO's founders"
                 className="aspect-[4/5] w-full object-cover object-top"
               />
