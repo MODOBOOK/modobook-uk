@@ -47,12 +47,15 @@ const tiers: Tier[] = [
     blurb:
       "Everything you need to run an aesthetics clinic — bookings, medical records, consent, face mapping, payments and the prescriber hub.",
     perks: [
+      "First month free — no card required",
       "Unlimited patients & appointments",
       "0% booking fees — keep 100% of your revenue",
       "Full clinical records, consent & face mapping",
+      "AI photo uploads, face mapping & consultation notes",
       "Marketing automations & email templates",
       "Prescriber hub included",
     ],
+
     cta: "Join the waitlist",
     highlight: true,
   },
@@ -107,10 +110,16 @@ function PricingPage() {
             you need them. Founding clinics who join the waitlist lock in the discounted rates
             below for life.
           </p>
-          <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-[color:var(--hairline)] bg-white px-4 py-1.5 text-xs font-medium uppercase tracking-[0.14em] text-[color:var(--ink)]">
-            <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--accent)]" />
-            Launching in the next few weeks
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
+            <div className="inline-flex items-center gap-2 rounded-full border border-[color:var(--accent)] bg-[color:var(--accent)]/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-[color:var(--accent)]">
+              <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--accent)]" />
+              First month free · No card required
+            </div>
+            <div className="inline-flex items-center gap-2 rounded-full border border-[color:var(--hairline)] bg-white px-4 py-1.5 text-xs font-medium uppercase tracking-[0.14em] text-[color:var(--ink)]">
+              Launching in the next few weeks
+            </div>
           </div>
+
         </section>
 
         <section className="mx-auto max-w-6xl px-5 pb-16 lg:px-8">
