@@ -691,7 +691,7 @@ export function SiteFooter() {
           </Link>
 
           <p className="mt-4 max-w-xs text-sm text-[color:var(--ink-soft)]">
-            The aesthetics-only booking & clinical platform. Built by two UK Nurse Prescribers.
+            The aesthetics-only booking & clinical platform. UK-built by clinicians who still run clinics themselves.
           </p>
         </div>
         <FooterCol title="Platform" links={[
