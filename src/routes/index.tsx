@@ -624,14 +624,15 @@ export function SiteHeader() {
 
 
         <div className="flex items-center gap-2">
-          <Link to="/auth" className="hidden sm:inline-flex">
+          <Link to="/" hash="waitlist" className="hidden sm:inline-flex">
             <Button
               size="sm"
               className="rounded-full bg-[color:var(--ink)] px-5 text-xs font-medium uppercase tracking-[0.14em] text-[color:var(--paper)] hover:bg-[color:var(--ink)]/90"
             >
-              Get started
+              Join waitlist
             </Button>
           </Link>
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
