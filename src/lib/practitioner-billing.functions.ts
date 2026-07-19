@@ -16,6 +16,49 @@ async function getMyProfileId(context: { supabase: any; userId: string }) {
   return data as { id: string; email: string | null; clinic_name: string | null; full_name: string | null; created_at: string };
 }
 
+/**
+ * Seat-limit guard. Every clinic gets 1 free seat of each kind (location /
+ * practitioner). Additional seats need to be either:
+ *  - covered by paid add-ons on an active Stripe subscription, or
+ *  - allowed during the free trial (the practitioner is told these seats
+ *    are reserved and will be included when billing starts), or
+ *  - comped by admin.
+ * Once the trial ends without a direct debit set up, extra seats are blocked
+ * until the practitioner completes checkout.
+ */
+export async function assertSeatAvailable(
+  supabase: any,
+  profileId: string,
+  kind: "location" | "practitioner",
+) {
+  const { data: sub } = await supabase
+    .from("practitioner_subscriptions")
+    .select("status, comped, trial_end, stripe_subscription_id, extra_locations, extra_practitioners")
+    .eq("profile_id", profileId)
+    .maybeSingle();
+
+  const table = kind === "location" ? "locations" : "practitioners";
+  const { count } = await supabase
+    .from(table)
+    .select("id", { count: "exact", head: true })
+    .eq("profile_id", profileId);
+  const current = count ?? 0;
+  if (current < 1) return; // first seat is always free
+
+  if (sub?.comped) return;
+  const trialActive = sub?.trial_end && new Date(sub.trial_end as string).getTime() > Date.now();
+  if (trialActive) return;
+
+  const paid = kind === "location" ? (sub?.extra_locations ?? 0) : (sub?.extra_practitioners ?? 0);
+  const allowed = 1 + paid;
+  if (sub?.stripe_subscription_id && sub?.status === "active" && current < allowed) return;
+
+  const noun = kind === "location" ? "location" : "practitioner";
+  throw new Error(
+    `Your free trial has ended. Set up your MODO direct debit to add another ${noun} — visit Plan & billing to choose your add-ons and complete Stripe checkout.`,
+  );
+}
+
 export const getMyBillingStatus = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
