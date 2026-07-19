@@ -144,9 +144,10 @@ function FeaturesPage() {
         <section className="border-t border-[color:var(--hairline)] bg-white">
           <div className="mx-auto max-w-3xl px-5 py-16 text-center lg:px-8">
             <CheckCircle2 className="mx-auto mb-3 h-8 w-8 text-[color:var(--accent)]" />
-            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Ready to try MODO?</h2>
-            <p className="mt-3 text-[color:var(--ink-soft)]">Set up your clinic in minutes — free to start, no card required.</p>
-            <Link to="/auth"><Button size="lg" className="mt-6 rounded-full bg-[color:var(--ink)] px-8 text-white hover:bg-[color:var(--ink)]/90">Start free</Button></Link>
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Want in at launch?</h2>
+            <p className="mt-3 text-[color:var(--ink-soft)]">MODO is rolling out to founding clinics over the next few weeks. Join the waitlist and we'll email you as soon as your account is ready.</p>
+            <Link to="/" hash="waitlist"><Button size="lg" className="mt-6 rounded-full bg-[color:var(--ink)] px-8 text-white hover:bg-[color:var(--ink)]/90">Join the waitlist</Button></Link>
+
           </div>
         </section>
 
