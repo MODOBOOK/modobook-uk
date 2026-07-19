@@ -111,7 +111,18 @@ export const getBookingContext = createServerFn({ method: "GET" })
       rules: rules ?? [],
       theme: theme ?? null,
       brandColor: (profile as { brand_color?: string | null }).brand_color ?? null,
-      modelSlots: modelSlots ?? [],
+      modelSlots: (() => {
+        const now = new Date();
+        const todayStr = now.toISOString().slice(0, 10);
+        return (modelSlots ?? []).filter((s: any) => {
+          if (!s.slot_date) return true;
+          if (s.slot_date > todayStr) return true;
+          if (s.slot_date < todayStr) return false;
+          const timeStr = s.end_time || s.start_time;
+          if (!timeStr) return true;
+          return new Date(`${s.slot_date}T${timeStr}`).getTime() > now.getTime();
+        });
+      })(),
       bookableFrom,
       settings,
       rotaAnchor,
