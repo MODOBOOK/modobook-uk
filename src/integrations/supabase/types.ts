@@ -4380,6 +4380,8 @@ export type Database = {
       practitioner_waitlist: {
         Row: {
           clinic_name: string | null
+          consent_at: string | null
+          consent_text: string | null
           created_at: string
           email: string
           id: string
@@ -4389,6 +4391,8 @@ export type Database = {
         }
         Insert: {
           clinic_name?: string | null
+          consent_at?: string | null
+          consent_text?: string | null
           created_at?: string
           email: string
           id?: string
@@ -4398,6 +4402,8 @@ export type Database = {
         }
         Update: {
           clinic_name?: string | null
+          consent_at?: string | null
+          consent_text?: string | null
           created_at?: string
           email?: string
           id?: string
