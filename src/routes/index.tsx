@@ -18,6 +18,7 @@ import tabletPlatform from "@/assets/modo-tablet-platform.png.asset.json";
 import wordmark from "@/assets/modo-wordmark.png.asset.json";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
+import { joinWaitlist } from "@/lib/waitlist.functions";
 
 
 
@@ -522,22 +523,31 @@ function WaitlistSection() {
       return;
     }
     setSubmitting(true);
-    const { error } = await supabase.from("practitioner_waitlist").insert({
-      email: trimmedEmail,
-      name: trimmedName,
-      role: role.trim() || null,
-      clinic_name: clinic.trim() || null,
-      source: "landing",
-      consent_at: new Date().toISOString(),
-      consent_text: WAITLIST_CONSENT_TEXT,
-    });
-    setSubmitting(false);
-    if (error && !error.message.toLowerCase().includes("duplicate")) {
+    try {
+      const res = await joinWaitlist({
+        data: {
+          name: trimmedName,
+          email: trimmedEmail,
+          role: role.trim() || null,
+          clinic: clinic.trim() || null,
+          consent: true,
+        },
+      });
+      setSubmitting(false);
+      if (!res?.ok) {
+        toast.error("Couldn't join the list. Please try again.");
+        return;
+      }
+      setJoined(true);
+      if (res.alreadyJoined) {
+        toast.success("You're already on the list — we'll be in touch at launch.");
+      } else {
+        toast.success("You're on the list — check your inbox for a welcome email.");
+      }
+    } catch {
+      setSubmitting(false);
       toast.error("Couldn't join the list. Please try again.");
-      return;
     }
-    setJoined(true);
-    toast.success("You're on the list — we'll be in touch at launch.");
   }
 
   return (
