@@ -156,7 +156,7 @@ function PricingPage() {
                   ))}
                 </ul>
                 <div className="mt-7">
-                  <Link to="/" hash="waitlist">
+<Link to="/waitlist">
                     <Button
                       className={`w-full rounded-full ${
                         t.highlight
@@ -193,7 +193,7 @@ function PricingPage() {
               MODO is rolling out over the next few weeks. Join the waitlist and keep the
               discounted rates above for the life of your account.
             </p>
-            <Link to="/" hash="waitlist">
+            <Link to="/waitlist">
               <Button
                 size="lg"
                 className="mt-6 rounded-full bg-[color:var(--ink)] px-8 text-white hover:bg-[color:var(--ink)]/90"
