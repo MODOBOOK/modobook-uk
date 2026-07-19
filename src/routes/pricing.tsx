@@ -10,13 +10,13 @@ export const Route = createFileRoute("/pricing")({
       {
         name: "description",
         content:
-          "MODO is £29.99/month — £19.99/month for founding clinics who join the waitlist. Add team members from £9.99 and additional locations from £4.99.",
+          "MODO is £39.99/month — £29.99/month for founding clinics who join the waitlist. Add team members from £9.99 and additional locations from £4.99.",
       },
       { property: "og:title", content: "MODO Pricing" },
       {
         property: "og:description",
         content:
-          "Founding-clinic pricing: £19.99/month, +£9.99 per extra team member, +£4.99 per extra location. No booking fees.",
+          "Founding-clinic pricing: £29.99/month, +£9.99 per extra team member, +£4.99 per extra location. No booking fees.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -41,8 +41,8 @@ const tiers: Tier[] = [
   {
     name: "MODO Clinic",
     tag: "Core subscription",
-    now: "£19.99",
-    was: "£29.99",
+    now: "£29.99",
+    was: "£39.99",
     unit: "per month",
     blurb:
       "Everything you need to run an aesthetics clinic — bookings, medical records, consent, face mapping, payments and the prescriber hub.",
