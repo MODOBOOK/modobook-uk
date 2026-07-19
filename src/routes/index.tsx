@@ -362,7 +362,7 @@ function LandingPage() {
               <img
                 src={tabletPlatform.url}
                 alt="MODO's founders"
-                className="aspect-[4/5] w-full object-cover object-top"
+                className="aspect-[3/4] w-full object-cover object-top"
               />
 
             </div>
