@@ -390,22 +390,22 @@ function LandingPage() {
 
         <section className="bg-white">
           <div className="mx-auto max-w-4xl px-5 py-24 text-center lg:px-8">
-            <div className="eyebrow">Ready when you are</div>
+            <div className="eyebrow">Launching soon</div>
             <h2 className="mt-4 text-4xl font-bold leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl">
-              Set up your clinic
+              MODO goes live
               <br />
-              <span className="text-[color:var(--ink-soft)]">in an afternoon.</span>
+              <span className="text-[color:var(--ink-soft)]">in the coming weeks.</span>
             </h2>
             <p className="mx-auto mt-5 max-w-lg text-[color:var(--ink-soft)]">
-              Free to start. Keep 100% of your booking revenue. Your patients stay yours.
+              We're rolling MODO out to founding clinics over the next couple of weeks. Join the waitlist and we'll email you the moment your account is ready — founding members keep 100% of booking revenue and lock in launch pricing.
             </p>
             <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
-              <Link to="/auth" className="w-full sm:w-auto">
+              <Link to="/" hash="waitlist" className="w-full sm:w-auto">
                 <Button
                   size="lg"
                   className="w-full rounded-full bg-[color:var(--ink)] px-10 text-sm font-medium text-white hover:bg-[color:var(--ink)]/90 sm:w-auto"
                 >
-                  Create your clinic
+                  Join the waitlist
                 </Button>
               </Link>
               <Link to="/who-its-for" className="w-full sm:w-auto">
@@ -421,6 +421,7 @@ function LandingPage() {
           </div>
         </section>
       </main>
+
 
       <SiteFooter />
     </div>
