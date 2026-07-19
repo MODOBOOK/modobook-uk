@@ -697,10 +697,11 @@ export function SiteFooter() {
           { label: "Rewards", to: "/rewards" },
           { label: "Who it's for", to: "/who-its-for" },
         ]} />
-        <FooterCol title="Get started" links={[
-          { label: "Create your clinic page", to: "/auth" },
+        <FooterCol title="Join us" links={[
+          { label: "Join the waitlist", to: "/#waitlist" },
           { label: "Sign in", to: "/auth" },
         ]} />
+
         <FooterCol title="Legal" links={[
           { label: "Privacy Policy", to: "/privacy" },
           { label: "Terms & Conditions", to: "/terms" },
