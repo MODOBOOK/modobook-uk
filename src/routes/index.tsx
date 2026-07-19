@@ -151,10 +151,24 @@ function LandingPage() {
                 >
                   <Button
                     size="lg"
-                    variant="ghost"
-                    className="w-full rounded-full px-8 text-sm font-medium text-[color:var(--accent)] hover:bg-[color:var(--muted)] sm:w-auto"
+                    variant="outline"
+                    className="w-full rounded-full border-[color:var(--hairline)] bg-white px-6 text-sm font-medium text-[color:var(--ink)] hover:bg-[color:var(--muted)] sm:w-auto"
                   >
-                    View a live clinic <ArrowRight className="ml-1 h-4 w-4" />
+                    Live clinic 1 <ArrowRight className="ml-1 h-4 w-4" />
+                  </Button>
+                </a>
+                <a
+                  href="https://modobook.uk/m/aesthetiqbyjen"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full sm:w-auto"
+                >
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="w-full rounded-full border-[color:var(--hairline)] bg-white px-6 text-sm font-medium text-[color:var(--ink)] hover:bg-[color:var(--muted)] sm:w-auto"
+                  >
+                    Live clinic 2 <ArrowRight className="ml-1 h-4 w-4" />
                   </Button>
                 </a>
               </div>
