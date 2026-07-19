@@ -217,6 +217,86 @@ export const saveAddonSelection = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+/**
+ * Update the existing live Stripe subscription in place: change the base plan
+ * and/or add-on quantities. Uses `proration_behavior: create_prorations` so
+ * the change is added to the next scheduled direct-debit invoice rather than
+ * starting a new payment schedule.
+ */
+export const updateMySubscriptionItems = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: { basePlanId: string; extraLocations: number; extraPractitioners: number }) => i)
+  .handler(async ({ data, context }) => {
+    const profile = await getMyProfileId(context);
+
+    const { data: sub, error: sErr } = await context.supabase
+      .from("practitioner_subscriptions")
+      .select("id, stripe_subscription_id")
+      .eq("profile_id", profile.id)
+      .maybeSingle();
+    if (sErr) throw sErr;
+    if (!sub?.stripe_subscription_id) throw new Error("No active subscription — start one first.");
+
+    const { data: plans, error: pErr } = await context.supabase
+      .from("subscription_plans")
+      .select("id, kind, stripe_price_id, active")
+      .in("kind", ["base", "addon_location", "addon_practitioner"])
+      .eq("active", true);
+    if (pErr) throw pErr;
+
+    const base = (plans ?? []).find((p: any) => p.id === data.basePlanId && p.kind === "base");
+    if (!base?.stripe_price_id) throw new Error("Plan not available");
+    const locAddon = (plans ?? []).find((p: any) => p.kind === "addon_location");
+    const pracAddon = (plans ?? []).find((p: any) => p.kind === "addon_practitioner");
+
+    const { getStripe } = await import("./stripe.server");
+    const stripe = getStripe();
+    const current = await stripe.subscriptions.retrieve(sub.stripe_subscription_id);
+
+    // Build desired items: keep matching (updates quantity), delete others, add new.
+    const wanted: Array<{ price: string; quantity: number }> = [
+      { price: base.stripe_price_id, quantity: 1 },
+    ];
+    if (data.extraLocations > 0 && locAddon?.stripe_price_id)
+      wanted.push({ price: locAddon.stripe_price_id, quantity: data.extraLocations });
+    if (data.extraPractitioners > 0 && pracAddon?.stripe_price_id)
+      wanted.push({ price: pracAddon.stripe_price_id, quantity: data.extraPractitioners });
+
+    const items: Array<{ id?: string; price?: string; quantity?: number; deleted?: boolean }> = [];
+    const usedPriceIds = new Set<string>();
+    for (const existing of current.items.data) {
+      const priceId = existing.price.id;
+      const match = wanted.find((w) => w.price === priceId);
+      if (match) {
+        items.push({ id: existing.id, quantity: match.quantity });
+        usedPriceIds.add(priceId);
+      } else {
+        items.push({ id: existing.id, deleted: true });
+      }
+    }
+    for (const w of wanted) {
+      if (!usedPriceIds.has(w.price)) items.push({ price: w.price, quantity: w.quantity });
+    }
+
+    await stripe.subscriptions.update(sub.stripe_subscription_id, {
+      items,
+      proration_behavior: "create_prorations",
+    });
+
+    await context.supabase
+      .from("practitioner_subscriptions")
+      .update({
+        plan_id: base.id,
+        extra_locations: data.extraLocations,
+        extra_practitioners: data.extraPractitioners,
+      })
+      .eq("id", sub.id);
+
+    return { ok: true };
+  });
+
+
+
 export const openStripePortal = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i: { returnUrl: string }) => i)
