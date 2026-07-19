@@ -122,6 +122,35 @@ export function ConsultationWizard() {
   const get = useServerFn(getConsultation);
   const update = useServerFn(updateConsultation);
   const ensurePatient = useServerFn(ensureConsultationPatient);
+  const fetchProfile = useServerFn(getMyProfile);
+  const [exporting, setExporting] = useState(false);
+
+  async function exportPdf() {
+    setExporting(true);
+    try {
+      const profile: any = await fetchProfile();
+      const doc = await generateConsultationPdf({
+        clinic: profile
+          ? {
+              clinic_name: profile.clinic_name,
+              full_name: profile.full_name,
+              email: profile.email,
+              phone: profile.phone,
+              address: profile.address,
+              logo_url: profile.logo_url ?? profile.hero_url ?? null,
+              brand_color: profile.brand_color,
+            }
+          : null,
+        consultation: c,
+      });
+      const safeName = String(c?.patient_name ?? "consultation").replace(/[^a-z0-9-_ ]/gi, "").trim() || "consultation";
+      doc.save(`Consultation - ${safeName}.pdf`);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Could not generate PDF");
+    } finally {
+      setExporting(false);
+    }
+  }
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
