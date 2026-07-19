@@ -31,14 +31,17 @@ function money(cents: number, currency = "gbp") {
 
 function BillingPage() {
   const fetchBilling = useServerFn(getMyBilling);
+  const fetchInvoices = useServerFn(getMyInvoices);
   const startCheckout = useServerFn(startBillingCheckout);
   const openPortal = useServerFn(openStripePortal);
   const redeem = useServerFn(redeemDiscountCode);
   const cancel = useServerFn(cancelMySubscription);
   const resume = useServerFn(resumeMySubscription);
   const saveAddons = useServerFn(saveAddonSelection);
+  const updateItems = useServerFn(updateMySubscriptionItems);
 
   const [state, setState] = useState<Awaited<ReturnType<typeof getMyBilling>> | null>(null);
+  const [invoices, setInvoices] = useState<any[]>([]);
   const [selectedPlanId, setSelectedPlanId] = useState<string>("");
   const [extraLocations, setExtraLocations] = useState(0);
   const [extraPractitioners, setExtraPractitioners] = useState(0);
