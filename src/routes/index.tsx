@@ -114,7 +114,7 @@ function LandingPage() {
               <p className="mt-6 max-w-xl text-base leading-relaxed text-[color:var(--ink-soft)] sm:text-lg">
                 The UK booking, consultation and clinical platform built <em className="not-italic text-[color:var(--ink)]">only</em> for
                 aesthetics. Bookings, medical records, consent, face mapping, payments
-                and a prescriber hub — designed by two practising Nurse Prescribers.
+                and a prescriber hub — designed by clinicians who still run aesthetics clinics themselves.
               </p>
 
               <div className="mt-9 flex flex-col items-start gap-3 sm:flex-row sm:items-center">
