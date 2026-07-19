@@ -58,6 +58,8 @@ export const upsertPractitioner = createServerFn({ method: "POST" })
       if (error) throw error;
       row = r;
     } else {
+      const { assertSeatAvailable } = await import("./practitioner-billing.functions");
+      await assertSeatAvailable(supabase, profile.id, "practitioner");
       const { data: r, error } = await supabase.from("practitioners")
         .insert(payload).select().single();
       if (error) throw error;
