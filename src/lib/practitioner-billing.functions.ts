@@ -464,7 +464,7 @@ export const redeemDiscountCode = createServerFn({ method: "POST" })
       update.cancel_at_period_end = false;
       update.stripe_subscription_id = null;
     }
-    await context.supabase.from("practitioner_subscriptions").update(update).eq("id", sub.id);
+    await context.supabase.from("practitioner_subscriptions").update(update as any).eq("id", sub.id);
     return { ok: true as const, code: code.code, fullyFree: isFullyFree };
   });
 
