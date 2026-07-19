@@ -2,8 +2,10 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { getConsultation, updateConsultation, ensureConsultationPatient } from "@/lib/consultations.functions";
+import { getMyProfile } from "@/lib/profiles.functions";
 import { TreatmentPlansPanel } from "@/components/TreatmentPlansPanel";
 import { createPaymentLink } from "@/lib/payment-links.functions";
+import { generateConsultationPdf } from "@/lib/consultation-pdf";
 import { supabase } from "@/integrations/supabase/client";
 import { listMyConsentTemplates, getConsentTemplate } from "@/lib/treatment-consents.functions";
 import { Card, CardContent } from "@/components/ui/card";
@@ -17,7 +19,7 @@ import { Separator } from "@/components/ui/separator";
 import {
   Loader2, ChevronLeft, ChevronRight, Check, Camera, X,
   HeartPulse, ListChecks, Stethoscope, ClipboardEdit, FileSignature,
-  Images, Syringe, Receipt, ArrowLeft, Plus, Search,
+  Images, Syringe, Receipt, ArrowLeft, Plus, Search, Download,
 } from "lucide-react";
 import { toast } from "sonner";
 import { ClientFormsList } from "@/components/patient/ClientFormsList";
@@ -120,6 +122,35 @@ export function ConsultationWizard() {
   const get = useServerFn(getConsultation);
   const update = useServerFn(updateConsultation);
   const ensurePatient = useServerFn(ensureConsultationPatient);
+  const fetchProfile = useServerFn(getMyProfile);
+  const [exporting, setExporting] = useState(false);
+
+  async function exportPdf() {
+    setExporting(true);
+    try {
+      const profile: any = await fetchProfile();
+      const doc = await generateConsultationPdf({
+        clinic: profile
+          ? {
+              clinic_name: profile.clinic_name,
+              full_name: profile.full_name,
+              email: profile.email,
+              phone: profile.phone,
+              address: profile.address,
+              logo_url: profile.logo_url ?? profile.hero_url ?? null,
+              brand_color: profile.brand_color,
+            }
+          : null,
+        consultation: c,
+      });
+      const safeName = String(c?.patient_name ?? "consultation").replace(/[^a-z0-9-_ ]/gi, "").trim() || "consultation";
+      doc.save(`Consultation - ${safeName}.pdf`);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Could not generate PDF");
+    } finally {
+      setExporting(false);
+    }
+  }
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -199,6 +230,10 @@ export function ConsultationWizard() {
           ) : (
             <Badge variant="secondary" className="gap-1"><Check className="h-3 w-3" />Saved</Badge>
           )}
+          <Button size="sm" variant="outline" onClick={exportPdf} disabled={exporting} className="gap-1.5">
+            {exporting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
+            <span className="hidden sm:inline">Export PDF</span>
+          </Button>
         </div>
       </div>
 
