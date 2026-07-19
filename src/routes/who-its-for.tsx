@@ -121,7 +121,7 @@ function WhoPage() {
               </div>
             </div>
             <div className="overflow-hidden rounded-3xl border border-[color:var(--hairline)]">
-              <img src={foundersSuits.url} alt="MODO founders" className="aspect-[4/5] w-full object-cover object-top" loading="lazy" />
+              <img src={foundersSuits.url} alt="MODO founders" className="aspect-[3/4] w-full object-cover object-top" loading="lazy" />
             </div>
           </div>
         </section>
