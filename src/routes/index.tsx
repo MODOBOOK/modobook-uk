@@ -610,7 +610,9 @@ export function SiteHeader() {
     { to: "/prescriber-hub", label: "Prescriber Hub" },
     { to: "/rewards", label: "Rewards" },
     { to: "/who-its-for", label: "Who it's for" },
+    { to: "/pricing", label: "Pricing" },
     { to: "/faq", label: "FAQ" },
+
     { to: "/auth", label: "Sign in" },
   ];
   return (
