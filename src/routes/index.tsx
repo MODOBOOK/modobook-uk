@@ -358,26 +358,28 @@ function LandingPage() {
             <div>
               <div className="eyebrow">§ For practitioners, by practitioners</div>
               <h2 className="mt-4 text-3xl font-bold leading-tight tracking-tight sm:text-4xl">
-                Two Nurse Prescribers.
+                Built by clinicians.
                 <br />
-                <span className="text-[color:var(--ink-soft)]">One clinical standard.</span>
+                <span className="text-[color:var(--ink-soft)]">Built for your clinic.</span>
               </h2>
               <p className="mt-5 text-[color:var(--ink-soft)]">
-                MODO is designed by clinicians who still run clinics — every workflow,
-                consent flow and consultation step comes from real practice, not a
-                product manager's whiteboard.
+                MODO is designed by people who still run aesthetics clinics themselves — every
+                workflow, consent flow and consultation step comes from real practice, not a
+                product manager's whiteboard. MODO the platform is a software product; our
+                founders' individual clinical registrations sit with them, not with MODO.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <div className="rounded-full border border-[color:var(--hairline)] bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[color:var(--ink)]">
-                  NMC registered
-                </div>
-                <div className="rounded-full border border-[color:var(--hairline)] bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[color:var(--ink)]">
-                  Independent prescribers
+                  Aesthetics-only
                 </div>
                 <div className="rounded-full border border-[color:var(--hairline)] bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[color:var(--ink)]">
                   UK-built
                 </div>
+                <div className="rounded-full border border-[color:var(--hairline)] bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[color:var(--ink)]">
+                  Founding-clinic pricing
+                </div>
               </div>
+
             </div>
           </div>
         </section>
