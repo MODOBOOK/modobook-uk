@@ -143,6 +143,20 @@ function LandingPage() {
                     See features <ArrowRight className="ml-1 h-4 w-4" />
                   </Button>
                 </Link>
+                <a
+                  href="https://modobook.uk/m/aestheticsbynurseryan"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full sm:w-auto"
+                >
+                  <Button
+                    size="lg"
+                    variant="ghost"
+                    className="w-full rounded-full px-8 text-sm font-medium text-[color:var(--accent)] hover:bg-[color:var(--muted)] sm:w-auto"
+                  >
+                    View a live clinic <ArrowRight className="ml-1 h-4 w-4" />
+                  </Button>
+                </a>
               </div>
 
               <p className="mt-5 text-xs text-[color:var(--ink-soft)]">
