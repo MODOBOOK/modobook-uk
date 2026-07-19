@@ -15,6 +15,7 @@ import { Route as TermsRouteImport } from './routes/terms'
 import { Route as RewardsRouteImport } from './routes/rewards'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PrescriberHubRouteImport } from './routes/prescriber-hub'
 import { Route as FeaturesRouteImport } from './routes/features'
 import { Route as FaqRouteImport } from './routes/faq'
@@ -169,6 +170,11 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PricingRoute = PricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrescriberHubRoute = PrescriberHubRouteImport.update({
@@ -884,6 +890,7 @@ export interface FileRoutesByFullPath {
   '/faq': typeof FaqRoute
   '/features': typeof FeaturesRoute
   '/prescriber-hub': typeof PrescriberHubRoute
+  '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/rewards': typeof RewardsRoute
@@ -1016,6 +1023,7 @@ export interface FileRoutesByTo {
   '/faq': typeof FaqRoute
   '/features': typeof FeaturesRoute
   '/prescriber-hub': typeof PrescriberHubRoute
+  '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/rewards': typeof RewardsRoute
@@ -1143,6 +1151,7 @@ export interface FileRoutesById {
   '/faq': typeof FaqRoute
   '/features': typeof FeaturesRoute
   '/prescriber-hub': typeof PrescriberHubRoute
+  '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/rewards': typeof RewardsRoute
@@ -1277,6 +1286,7 @@ export interface FileRouteTypes {
     | '/faq'
     | '/features'
     | '/prescriber-hub'
+    | '/pricing'
     | '/privacy'
     | '/reset-password'
     | '/rewards'
@@ -1409,6 +1419,7 @@ export interface FileRouteTypes {
     | '/faq'
     | '/features'
     | '/prescriber-hub'
+    | '/pricing'
     | '/privacy'
     | '/reset-password'
     | '/rewards'
@@ -1535,6 +1546,7 @@ export interface FileRouteTypes {
     | '/faq'
     | '/features'
     | '/prescriber-hub'
+    | '/pricing'
     | '/privacy'
     | '/reset-password'
     | '/rewards'
@@ -1669,6 +1681,7 @@ export interface RootRouteChildren {
   FaqRoute: typeof FaqRoute
   FeaturesRoute: typeof FeaturesRoute
   PrescriberHubRoute: typeof PrescriberHubRoute
+  PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRouteWithChildren
   ResetPasswordRoute: typeof ResetPasswordRoute
   RewardsRoute: typeof RewardsRoute
@@ -1744,6 +1757,13 @@ declare module '@tanstack/react-router' {
       path: '/privacy'
       fullPath: '/privacy'
       preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pricing': {
+      id: '/pricing'
+      path: '/pricing'
+      fullPath: '/pricing'
+      preLoaderRoute: typeof PricingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/prescriber-hub': {
@@ -2992,6 +3012,7 @@ const rootRouteChildren: RootRouteChildren = {
   FaqRoute: FaqRoute,
   FeaturesRoute: FeaturesRoute,
   PrescriberHubRoute: PrescriberHubRoute,
+  PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRouteWithChildren,
   ResetPasswordRoute: ResetPasswordRoute,
   RewardsRoute: RewardsRoute,

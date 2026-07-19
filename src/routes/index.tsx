@@ -47,13 +47,14 @@ import {
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "MODO | The aesthetics-only booking & clinical platform — built by Nurse Prescribers" },
+      { title: "MODO | The aesthetics-only booking & clinical platform" },
       {
         name: "description",
         content:
-          "MODO is the UK booking, consultation and clinical platform built only for aesthetics — for HCPs and non-HCPs alike. Designed by two practising Nurse Prescribers for patient safety and collaborative working.",
+          "MODO is the UK booking, consultation and clinical platform built only for aesthetics — for HCPs and non-HCPs alike, with patient safety and collaborative working at the core.",
       },
-      { property: "og:title", content: "MODO — The aesthetics-only platform, built by Nurse Prescribers" },
+      { property: "og:title", content: "MODO — The aesthetics-only platform" },
+
       {
         property: "og:description",
         content:
@@ -113,7 +114,7 @@ function LandingPage() {
               <p className="mt-6 max-w-xl text-base leading-relaxed text-[color:var(--ink-soft)] sm:text-lg">
                 The UK booking, consultation and clinical platform built <em className="not-italic text-[color:var(--ink)]">only</em> for
                 aesthetics. Bookings, medical records, consent, face mapping, payments
-                and a prescriber hub — designed by two practising Nurse Prescribers.
+                and a prescriber hub — designed by clinicians who still run aesthetics clinics themselves.
               </p>
 
               <div className="mt-9 flex flex-col items-start gap-3 sm:flex-row sm:items-center">
@@ -350,33 +351,35 @@ function LandingPage() {
             <div className="relative overflow-hidden rounded-3xl border border-[color:var(--hairline)]">
               <img
                 src={foundersScrubs.url}
-                alt="MODO's Nurse Prescriber founders in clinical scrubs"
+                alt="MODO's founders in clinical scrubs"
                 className="aspect-[4/3] w-full object-cover"
               />
             </div>
             <div>
               <div className="eyebrow">§ For practitioners, by practitioners</div>
               <h2 className="mt-4 text-3xl font-bold leading-tight tracking-tight sm:text-4xl">
-                Two Nurse Prescribers.
+                Built by clinicians.
                 <br />
-                <span className="text-[color:var(--ink-soft)]">One clinical standard.</span>
+                <span className="text-[color:var(--ink-soft)]">Built for your clinic.</span>
               </h2>
               <p className="mt-5 text-[color:var(--ink-soft)]">
-                MODO is designed by clinicians who still run clinics — every workflow,
-                consent flow and consultation step comes from real practice, not a
-                product manager's whiteboard.
+                MODO is designed by people who still run aesthetics clinics themselves — every
+                workflow, consent flow and consultation step comes from real practice, not a
+                product manager's whiteboard. MODO the platform is a software product; our
+                founders' individual clinical registrations sit with them, not with MODO.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <div className="rounded-full border border-[color:var(--hairline)] bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[color:var(--ink)]">
-                  NMC registered
-                </div>
-                <div className="rounded-full border border-[color:var(--hairline)] bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[color:var(--ink)]">
-                  Independent prescribers
+                  Aesthetics-only
                 </div>
                 <div className="rounded-full border border-[color:var(--hairline)] bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[color:var(--ink)]">
                   UK-built
                 </div>
+                <div className="rounded-full border border-[color:var(--hairline)] bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[color:var(--ink)]">
+                  Founding-clinic pricing
+                </div>
               </div>
+
             </div>
           </div>
         </section>
@@ -607,7 +610,9 @@ export function SiteHeader() {
     { to: "/prescriber-hub", label: "Prescriber Hub" },
     { to: "/rewards", label: "Rewards" },
     { to: "/who-its-for", label: "Who it's for" },
+    { to: "/pricing", label: "Pricing" },
     { to: "/faq", label: "FAQ" },
+
     { to: "/auth", label: "Sign in" },
   ];
   return (
@@ -688,15 +693,17 @@ export function SiteFooter() {
           </Link>
 
           <p className="mt-4 max-w-xs text-sm text-[color:var(--ink-soft)]">
-            The aesthetics-only booking & clinical platform. Built by two UK Nurse Prescribers.
+            The aesthetics-only booking & clinical platform. UK-built by clinicians who still run clinics themselves.
           </p>
         </div>
         <FooterCol title="Platform" links={[
           { label: "Features", to: "/features" },
+          { label: "Pricing", to: "/pricing" },
           { label: "Prescriber Hub", to: "/prescriber-hub" },
           { label: "Rewards", to: "/rewards" },
           { label: "Who it's for", to: "/who-its-for" },
         ]} />
+
         <FooterCol title="Join us" links={[
           { label: "Join the waitlist", to: "/#waitlist" },
           { label: "Sign in", to: "/auth" },
