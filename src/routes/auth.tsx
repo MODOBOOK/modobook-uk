@@ -39,7 +39,7 @@ function AuthPage() {
       : { to: isPrescriberFlow ? "/hub/verification" : "/dashboard" };
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [fullName, setFullName] = useState("");
+  
   const [forgotOpen, setForgotOpen] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
 
