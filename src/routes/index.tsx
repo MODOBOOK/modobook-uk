@@ -487,6 +487,117 @@ function ClinicalFeature({
   );
 }
 
+function WaitlistSection() {
+  const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
+  const [role, setRole] = useState("");
+  const [clinic, setClinic] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [joined, setJoined] = useState(false);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    const trimmed = email.trim().toLowerCase();
+    if (!trimmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+    setSubmitting(true);
+    const { error } = await supabase.from("practitioner_waitlist").insert({
+      email: trimmed,
+      name: name.trim() || null,
+      role: role.trim() || null,
+      clinic_name: clinic.trim() || null,
+      source: "landing",
+    });
+    setSubmitting(false);
+    if (error && !error.message.toLowerCase().includes("duplicate")) {
+      toast.error("Couldn't join the list. Please try again.");
+      return;
+    }
+    setJoined(true);
+    toast.success("You're on the list — we'll be in touch at launch.");
+  }
+
+  return (
+    <section className="border-t border-[color:var(--hairline)] bg-[color:var(--paper)]">
+      <div className="mx-auto grid max-w-6xl gap-10 px-5 py-20 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:gap-16 lg:px-8">
+        <div>
+          <div className="eyebrow">§ Launch list</div>
+          <h2 className="mt-4 text-3xl font-bold leading-tight tracking-tight sm:text-4xl">
+            Be first in when
+            <br />
+            <span className="text-[color:var(--ink-soft)]">MODO goes live.</span>
+          </h2>
+          <p className="mt-5 max-w-md text-[color:var(--ink-soft)]">
+            Practitioners on the list get early access, launch pricing and
+            onboarding support before we open publicly.
+          </p>
+        </div>
+
+        <div className="rounded-3xl border border-[color:var(--hairline)] bg-white p-6 shadow-sm sm:p-8">
+          {joined ? (
+            <div className="py-6 text-center">
+              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[color:var(--clinical-blue-soft)] text-[color:var(--clinical-blue)]">
+                <CheckCircle2 className="h-6 w-6" />
+              </div>
+              <h3 className="text-xl font-semibold">You're on the list</h3>
+              <p className="mt-2 text-sm text-[color:var(--ink-soft)]">
+                We'll email you as soon as MODO opens up.
+              </p>
+            </div>
+          ) : (
+            <form onSubmit={submit} className="space-y-3">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Input
+                  placeholder="Your name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="h-11 rounded-full bg-[color:var(--muted)]/60 px-4"
+                />
+                <Input
+                  placeholder="Role (Nurse, Doctor, Aesthetician…)"
+                  value={role}
+                  onChange={(e) => setRole(e.target.value)}
+                  className="h-11 rounded-full bg-[color:var(--muted)]/60 px-4"
+                />
+              </div>
+              <Input
+                placeholder="Clinic name (optional)"
+                value={clinic}
+                onChange={(e) => setClinic(e.target.value)}
+                className="h-11 rounded-full bg-[color:var(--muted)]/60 px-4"
+              />
+              <Input
+                type="email"
+                required
+                placeholder="Email address"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="h-11 rounded-full bg-[color:var(--muted)]/60 px-4"
+              />
+              <Button
+                type="submit"
+                size="lg"
+                disabled={submitting}
+                className="w-full rounded-full bg-[color:var(--ink)] px-8 text-sm font-medium text-white hover:bg-[color:var(--ink)]/90"
+              >
+                {submitting ? "Adding…" : "Join the launch list"}
+                <ArrowRight className="ml-1 h-4 w-4" />
+              </Button>
+              <p className="text-center text-[11px] text-[color:var(--ink-soft)]">
+                No spam. Unsubscribe any time. UK/EU data residency.
+              </p>
+            </form>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+
+
 export function SiteHeader() {
   const pages = [
     { to: "/", label: "Home" },
