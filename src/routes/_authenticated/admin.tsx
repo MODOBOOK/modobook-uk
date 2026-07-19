@@ -772,12 +772,14 @@ function SubscriptionsSection({ practitioners }: { practitioners: Practitioner[]
   );
 }
 
-function NewPlanDialog({ onClose, onSaved }: { onClose: () => void; onSaved: () => void }) {
+function NewPlanDialog({ kind, onClose, onSaved }: { kind: "base" | "addon_location" | "addon_practitioner"; onClose: () => void; onSaved: () => void }) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
   const [interval, setInterval] = useState<"month" | "year">("month");
   const [busy, setBusy] = useState(false);
+
+  const kindLabel = kind === "addon_location" ? "location add-on" : kind === "addon_practitioner" ? "practitioner add-on" : "plan";
 
   async function save() {
     const cents = Math.round(Number(amount) * 100);
@@ -789,9 +791,9 @@ function NewPlanDialog({ onClose, onSaved }: { onClose: () => void; onSaved: () 
     try {
       await createSubscriptionPlan({ data: {
         name: name.trim(), description: description.trim() || undefined,
-        amount_cents: cents, currency: "gbp", interval,
+        amount_cents: cents, currency: "gbp", interval, kind,
       }});
-      toast.success("Plan created");
+      toast.success(`${kindLabel[0].toUpperCase() + kindLabel.slice(1)} created`);
       onSaved();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed");
@@ -801,12 +803,12 @@ function NewPlanDialog({ onClose, onSaved }: { onClose: () => void; onSaved: () 
   return (
     <Dialog open onOpenChange={(v) => !v && onClose()}>
       <DialogContent>
-        <DialogHeader><DialogTitle>New subscription plan</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>New {kindLabel}</DialogTitle></DialogHeader>
         <div className="space-y-3">
-          <div><Label>Name</Label><Input value={name} onChange={(e) => setName(e.target.value)} placeholder="MODO Pro" /></div>
+          <div><Label>Name</Label><Input value={name} onChange={(e) => setName(e.target.value)} placeholder={kind === "addon_location" ? "Extra location" : kind === "addon_practitioner" ? "Extra practitioner" : "MODO Pro"} /></div>
           <div><Label>Description (optional)</Label><Input value={description} onChange={(e) => setDescription(e.target.value)} /></div>
           <div className="grid grid-cols-2 gap-3">
-            <div><Label>Amount (£)</Label><Input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="49.00" /></div>
+            <div><Label>Amount (£)</Label><Input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="4.99" /></div>
             <div>
               <Label>Billing interval</Label>
               <Select value={interval} onValueChange={(v) => setInterval(v as "month" | "year")}>
@@ -818,11 +820,80 @@ function NewPlanDialog({ onClose, onSaved }: { onClose: () => void; onSaved: () 
               </Select>
             </div>
           </div>
-          <p className="text-xs text-muted-foreground">A Stripe product and recurring price will be created automatically.</p>
+          <p className="text-xs text-muted-foreground">
+            A Stripe product and recurring price will be created automatically.
+            {kind !== "base" && " Practitioners can stack multiples of this add-on on top of their base plan."}
+          </p>
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button onClick={save} disabled={busy}>{busy ? "Creating…" : "Create plan"}</Button>
+          <Button onClick={save} disabled={busy}>{busy ? "Creating…" : "Create"}</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function EditPlanDialog({ plan, onClose, onSaved }: { plan: Plan; onClose: () => void; onSaved: () => void }) {
+  const [name, setName] = useState(plan.name);
+  const [description, setDescription] = useState(plan.description ?? "");
+  const [amount, setAmount] = useState((plan.amount_cents / 100).toFixed(2));
+  const [interval, setInterval] = useState<"month" | "year">((plan.interval as "month" | "year") || "month");
+  const [busy, setBusy] = useState(false);
+
+  const priceChanged =
+    Math.round(Number(amount) * 100) !== plan.amount_cents || interval !== plan.interval;
+
+  async function save() {
+    const cents = Math.round(Number(amount) * 100);
+    if (!name.trim() || !Number.isFinite(cents) || cents < 0) {
+      toast.error("Enter a valid name and amount");
+      return;
+    }
+    setBusy(true);
+    try {
+      await updateSubscriptionPlan({ data: {
+        id: plan.id,
+        name: name.trim(),
+        description: description.trim() || null,
+        ...(priceChanged ? { amount_cents: cents, interval } : {}),
+      }});
+      toast.success(priceChanged ? "Plan updated — new Stripe price created" : "Plan updated");
+      onSaved();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed");
+    } finally { setBusy(false); }
+  }
+
+  return (
+    <Dialog open onOpenChange={(v) => !v && onClose()}>
+      <DialogContent>
+        <DialogHeader><DialogTitle>Edit {plan.name}</DialogTitle></DialogHeader>
+        <div className="space-y-3">
+          <div><Label>Name</Label><Input value={name} onChange={(e) => setName(e.target.value)} /></div>
+          <div><Label>Description</Label><Input value={description} onChange={(e) => setDescription(e.target.value)} /></div>
+          <div className="grid grid-cols-2 gap-3">
+            <div><Label>Amount (£)</Label><Input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} /></div>
+            <div>
+              <Label>Interval</Label>
+              <Select value={interval} onValueChange={(v) => setInterval(v as "month" | "year")}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="month">Monthly</SelectItem>
+                  <SelectItem value="year">Yearly</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          {priceChanged && (
+            <p className="rounded-md border border-amber-200 bg-amber-50 p-2 text-xs text-amber-800">
+              Changing price creates a new Stripe price. Existing subscribers keep their current rate until they check out again; new signups use the new rate.
+            </p>
+          )}
+        </div>
+        <DialogFooter>
+          <Button variant="ghost" onClick={onClose}>Cancel</Button>
+          <Button onClick={save} disabled={busy}>{busy ? "Saving…" : "Save"}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
