@@ -494,62 +494,7 @@ function ClinicalFeature({
   );
 }
 
-const WAITLIST_CONSENT_TEXT =
-  "I agree that MODO Book may store my name and email to contact me about the MODO launch, product updates and early-access offers. I can unsubscribe at any time.";
-
 function WaitlistSection() {
-  const [email, setEmail] = useState("");
-  const [name, setName] = useState("");
-  const [role, setRole] = useState("");
-  const [clinic, setClinic] = useState("");
-  const [consent, setConsent] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [joined, setJoined] = useState(false);
-
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
-    const trimmedName = name.trim();
-    const trimmedEmail = email.trim().toLowerCase();
-    if (!trimmedName) {
-      toast.error("Please enter your name");
-      return;
-    }
-    if (!trimmedEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
-      toast.error("Please enter a valid email address");
-      return;
-    }
-    if (!consent) {
-      toast.error("Please tick the consent box to join the list");
-      return;
-    }
-    setSubmitting(true);
-    try {
-      const res = await joinWaitlist({
-        data: {
-          name: trimmedName,
-          email: trimmedEmail,
-          role: role.trim() || null,
-          clinic: clinic.trim() || null,
-          consent: true,
-        },
-      });
-      setSubmitting(false);
-      if (!res?.ok) {
-        toast.error("Couldn't join the list. Please try again.");
-        return;
-      }
-      setJoined(true);
-      if (res.alreadyJoined) {
-        toast.success("You're already on the list — we'll be in touch at launch.");
-      } else {
-        toast.success("You're on the list — check your inbox for a welcome email.");
-      }
-    } catch {
-      setSubmitting(false);
-      toast.error("Couldn't join the list. Please try again.");
-    }
-  }
-
   return (
     <section id="waitlist" className="scroll-mt-24 border-t border-[color:var(--hairline)] bg-[color:var(--paper)]">
       <div className="mx-auto grid max-w-6xl gap-10 px-5 py-20 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:gap-16 lg:px-8">
@@ -567,71 +512,34 @@ function WaitlistSection() {
         </div>
 
         <div className="rounded-3xl border border-[color:var(--hairline)] bg-white p-6 shadow-sm sm:p-8">
-          {joined ? (
-            <div className="py-6 text-center">
-              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[color:var(--clinical-blue-soft)] text-[color:var(--clinical-blue)]">
-                <CheckCircle2 className="h-6 w-6" />
-              </div>
-              <h3 className="text-xl font-semibold">You're on the list</h3>
-              <p className="mt-2 text-sm text-[color:var(--ink-soft)]">
-                We'll email you as soon as MODO opens up.
-              </p>
+          <div className="py-4 text-center sm:py-6">
+            <h3 className="text-xl font-semibold">Join the launch list</h3>
+            <p className="mx-auto mt-2 max-w-sm text-sm text-[color:var(--ink-soft)]">
+              Get founding-clinic pricing, first access and a welcome email as soon as your account is ready.
+            </p>
+            <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+              <Link to="/waitlist" className="w-full sm:w-auto">
+                <Button
+                  size="lg"
+                  className="w-full rounded-full bg-[color:var(--ink)] px-8 text-sm font-medium text-white hover:bg-[color:var(--ink)]/90 sm:w-auto"
+                >
+                  Join the waitlist <ArrowRight className="ml-1 h-4 w-4" />
+                </Button>
+              </Link>
+              <Link to="/pricing" className="w-full sm:w-auto">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="w-full rounded-full border-[color:var(--hairline)] px-8 text-sm font-medium text-[color:var(--ink)] hover:bg-[color:var(--muted)] sm:w-auto"
+                >
+                  View pricing
+                </Button>
+              </Link>
             </div>
-          ) : (
-            <form onSubmit={submit} className="space-y-3">
-              <Input
-                required
-                placeholder="Your name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="h-11 rounded-full bg-[color:var(--muted)]/60 px-4"
-              />
-              <div className="grid gap-3 sm:grid-cols-2">
-                <Input
-                  placeholder="Role (Nurse, Doctor, Aesthetician…)"
-                  value={role}
-                  onChange={(e) => setRole(e.target.value)}
-                  className="h-11 rounded-full bg-[color:var(--muted)]/60 px-4"
-                />
-                <Input
-                  placeholder="Clinic name (optional)"
-                  value={clinic}
-                  onChange={(e) => setClinic(e.target.value)}
-                  className="h-11 rounded-full bg-[color:var(--muted)]/60 px-4"
-                />
-              </div>
-              <Input
-                type="email"
-                required
-                placeholder="Email address"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="h-11 rounded-full bg-[color:var(--muted)]/60 px-4"
-              />
-              <label className="flex items-start gap-3 rounded-2xl border border-[color:var(--hairline)] bg-[color:var(--muted)]/40 p-3 text-xs text-[color:var(--ink-soft)]">
-                <input
-                  type="checkbox"
-                  checked={consent}
-                  onChange={(e) => setConsent(e.target.checked)}
-                  className="mt-0.5 h-4 w-4 shrink-0 accent-[color:var(--ink)]"
-                  required
-                />
-                <span>{WAITLIST_CONSENT_TEXT}</span>
-              </label>
-              <Button
-                type="submit"
-                size="lg"
-                disabled={submitting}
-                className="w-full rounded-full bg-[color:var(--ink)] px-8 text-sm font-medium text-white hover:bg-[color:var(--ink)]/90"
-              >
-                {submitting ? "Adding…" : "Join the launch list"}
-                <ArrowRight className="ml-1 h-4 w-4" />
-              </Button>
-              <p className="text-center text-[11px] text-[color:var(--ink-soft)]">
-                No spam. Unsubscribe any time. UK/EU data residency.
-              </p>
-            </form>
-          )}
+            <p className="mt-4 text-[11px] text-[color:var(--ink-soft)]">
+              No spam. Unsubscribe any time. UK/EU data residency.
+            </p>
+          </div>
         </div>
       </div>
     </section>
