@@ -78,36 +78,6 @@ function AuthPage() {
     router.navigate(postAuthTo());
   }
 
-  async function handleSignUp(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/dashboard`,
-          data: { full_name: fullName },
-        },
-      });
-      if (error) throw error;
-      // Record terms acceptance if we have a session
-      if (data.session) {
-        try {
-          const terms = await fetchActiveTerms();
-          if (terms) await recordTermsAcceptance(terms.id, "signup");
-        } catch { /* ignore */ }
-        toast.success("Account created — welcome!");
-        router.navigate(postAuthTo());
-      } else {
-        toast.success("Check your email to confirm your account.");
-      }
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Sign up failed");
-    } finally {
-      setLoading(false);
-    }
-  }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted/50 px-4 py-12">
