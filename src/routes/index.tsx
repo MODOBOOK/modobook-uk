@@ -18,7 +18,7 @@ import tabletPlatform from "@/assets/modo-tablet-platform.png.asset.json";
 import wordmark from "@/assets/modo-wordmark.png.asset.json";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
-import { joinWaitlist } from "@/lib/waitlist.functions";
+
 
 
 
