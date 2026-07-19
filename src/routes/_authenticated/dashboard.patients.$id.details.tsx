@@ -651,53 +651,274 @@ function CardOnFileSection({ client, onReload }: { client: any; onReload: () => 
   );
 }
 
-function NotesSection({ clientId }: { clientId: string }) {
+function NotesSection({ clientId, patient }: { clientId: string; patient: any }) {
   const list = useServerFn(listClientNotes);
   const up = useServerFn(upsertClientNote);
   const del = useServerFn(deleteClientNote);
   const toggleVis = useServerFn(toggleClientNoteVisibility);
+  const fetchProfile = useServerFn(getMyProfile);
   const [rows, setRows] = useState<any[]>([]);
-  async function reload() { setRows((await list({ data: { client_id: clientId } })) as any[]); }
+  const [q, setQ] = useState("");
+  const [filter, setFilter] = useState<"all" | "shared" | "private">("all");
+  const [sort, setSort] = useState<"new" | "old">("new");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [editing, setEditing] = useState<null | { id?: string; body: string; visible_to_patient: boolean }>(null);
+  const [saving, setSaving] = useState(false);
+  const [exporting, setExporting] = useState(false);
+
+  async function reload() {
+    setRows((await list({ data: { client_id: clientId } })) as any[]);
+  }
   useEffect(() => { reload(); /* eslint-disable-next-line */ }, [clientId]);
 
-  async function addNote() {
-    const body = prompt("New note");
-    if (!body?.trim()) return;
-    const share = confirm("Share this note with the patient in their portal?\n\nOK = visible to patient\nCancel = private (practitioner only)");
-    await up({ data: { client_id: clientId, body: body.trim(), visible_to_patient: share } });
-    reload();
+  const filtered = useMemo(() => {
+    const query = q.trim().toLowerCase();
+    let out = rows.filter((n: any) => {
+      if (filter === "shared" && !n.visible_to_patient) return false;
+      if (filter === "private" && n.visible_to_patient) return false;
+      if (query && !String(n.body ?? "").toLowerCase().includes(query)) return false;
+      return true;
+    });
+    out.sort((a: any, b: any) => {
+      const at = new Date(a.created_at).getTime();
+      const bt = new Date(b.created_at).getTime();
+      return sort === "new" ? bt - at : at - bt;
+    });
+    return out;
+  }, [rows, q, filter, sort]);
+
+  async function saveNote() {
+    if (!editing || !editing.body.trim()) return;
+    setSaving(true);
+    try {
+      await up({ data: {
+        id: editing.id, client_id: clientId,
+        body: editing.body.trim(),
+        visible_to_patient: editing.visible_to_patient,
+      } as any });
+      setEditing(null);
+      reload();
+    } catch (e: any) { toast.error(e?.message ?? "Save failed"); }
+    finally { setSaving(false); }
   }
+
+  function toggleSelect(id: string) {
+    setSelected(prev => {
+      const s = new Set(prev);
+      s.has(id) ? s.delete(id) : s.add(id);
+      return s;
+    });
+  }
+
+  async function exportPdf(scope: "all" | "selected" | "filtered") {
+    const source =
+      scope === "all" ? rows :
+      scope === "selected" ? rows.filter(r => selected.has(r.id)) :
+      filtered;
+    if (source.length === 0) { toast.error("No notes to export"); return; }
+    setExporting(true);
+    try {
+      const [{ generateNotesPdf }, profile] = await Promise.all([
+        import("@/lib/notes-pdf"),
+        fetchProfile() as Promise<any>,
+      ]);
+      const doc = await generateNotesPdf({
+        clinic: profile ? {
+          clinic_name: profile.clinic_name,
+          full_name: profile.full_name,
+          logo_url: profile.logo_url ?? profile.hero_url ?? null,
+          brand_color: profile.brand_color,
+          address: profile.address,
+        } : null,
+        patient: { full_name: patient?.full_name, email: patient?.email, phone: patient?.phone },
+        notes: source,
+        title: scope === "selected" ? "Selected patient notes" : scope === "filtered" ? "Filtered patient notes" : "All patient notes",
+      });
+      const safe = String(patient?.full_name ?? "patient").replace(/[^a-z0-9-_ ]/gi, "").trim() || "patient";
+      doc.save(`Notes - ${safe}.pdf`);
+    } catch (e: any) {
+      toast.error(e?.message ?? "PDF failed");
+    } finally { setExporting(false); }
+  }
+
+  const anySelected = selected.size > 0;
 
   return (
     <SectionDark
-      title="Notes"
-      actions={<Button size="sm" variant="secondary" onClick={addNote}><Plus className="mr-1 h-3.5 w-3.5" />New</Button>}
+      title={`Notes${rows.length ? ` (${rows.length})` : ""}`}
+      actions={
+        <div className="flex flex-wrap items-center gap-1.5">
+          <Button
+            size="sm" variant="ghost"
+            onClick={() => exportPdf(anySelected ? "selected" : "all")}
+            disabled={exporting || rows.length === 0}
+            title={anySelected ? "Download selected as PDF" : "Download all as PDF"}
+          >
+            {exporting ? <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> : <Download className="mr-1 h-3.5 w-3.5" />}
+            {anySelected ? `PDF (${selected.size})` : "PDF"}
+          </Button>
+          <Button size="sm" variant="secondary" onClick={() => setEditing({ body: "", visible_to_patient: false })}>
+            <Plus className="mr-1 h-3.5 w-3.5" />New note
+          </Button>
+        </div>
+      }
     >
-      {rows.length === 0 ? <div className="px-4 py-6 text-center text-xs text-muted-foreground">No notes yet.</div> :
-        rows.map(n => (
-          <div key={n.id} className="flex items-start justify-between gap-2 border-b p-3 last:border-0">
-            <div className="min-w-0 flex-1">
-              <div className="whitespace-pre-wrap text-sm">{n.body}</div>
-              <div className="mt-1 flex items-center gap-2">
-                <div className="text-[10px] text-muted-foreground">{new Date(n.created_at).toLocaleString()}</div>
-                {n.visible_to_patient && <Badge variant="secondary" className="h-4 px-1.5 text-[9px]">Shared with patient</Badge>}
-              </div>
-            </div>
-            <div className="flex items-center gap-1">
-              <label className="flex cursor-pointer items-center gap-1 text-[10px] text-muted-foreground">
-                <Checkbox
-                  checked={!!n.visible_to_patient}
-                  onCheckedChange={async (v) => { await toggleVis({ data: { id: n.id, visible: !!v } }); reload(); }}
-                />
-                Share
-              </label>
-              <Button size="icon" variant="ghost" onClick={() => del({ data: { id: n.id } }).then(reload)}><X className="h-3.5 w-3.5" /></Button>
-            </div>
+      {/* Toolbar */}
+      <div className="flex flex-col gap-2 border-b p-3 sm:flex-row sm:items-center">
+        <div className="relative flex-1">
+          <Input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Search notes…"
+            className="h-9 pl-8 text-sm"
+          />
+          <ClipboardList className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        </div>
+        <div className="flex items-center gap-1">
+          {(["all", "shared", "private"] as const).map((k) => (
+            <button
+              key={k}
+              type="button"
+              onClick={() => setFilter(k)}
+              className={`rounded-full border px-2.5 py-1 text-[11px] capitalize transition ${
+                filter === k ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card text-muted-foreground"
+              }`}
+            >
+              {k}
+            </button>
+          ))}
+          <button
+            type="button"
+            onClick={() => setSort((s) => (s === "new" ? "old" : "new"))}
+            className="rounded-full border border-border bg-card px-2.5 py-1 text-[11px] text-muted-foreground"
+            title="Toggle sort order"
+          >
+            {sort === "new" ? "Newest" : "Oldest"}
+          </button>
+        </div>
+      </div>
+
+      {anySelected && (
+        <div className="flex items-center justify-between border-b bg-muted/40 px-3 py-2 text-xs">
+          <span>{selected.size} selected</span>
+          <div className="flex gap-2">
+            <Button size="sm" variant="ghost" onClick={() => setSelected(new Set())}>Clear</Button>
+            <Button size="sm" variant="outline" onClick={() => exportPdf("selected")} disabled={exporting}>
+              <Download className="mr-1 h-3.5 w-3.5" />Download selected
+            </Button>
           </div>
-        ))}
+        </div>
+      )}
+
+      {filtered.length === 0 ? (
+        <div className="px-4 py-8 text-center text-xs text-muted-foreground">
+          {rows.length === 0 ? "No notes yet. Add your first note above." : "No notes match your filters."}
+        </div>
+      ) : (
+        <ul className="divide-y">
+          {filtered.map((n: any) => {
+            const isSel = selected.has(n.id);
+            return (
+              <li key={n.id} className={`group flex items-start gap-3 p-3 transition ${isSel ? "bg-primary/5" : ""}`}>
+                <Checkbox
+                  checked={isSel}
+                  onCheckedChange={() => toggleSelect(n.id)}
+                  className="mt-1"
+                />
+                <button
+                  type="button"
+                  onClick={() => setEditing({ id: n.id, body: n.body, visible_to_patient: !!n.visible_to_patient })}
+                  className="min-w-0 flex-1 text-left"
+                >
+                  <div className="whitespace-pre-wrap break-words text-sm leading-relaxed">{n.body}</div>
+                  <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[10px] text-muted-foreground">
+                    <span>{new Date(n.created_at).toLocaleString()}</span>
+                    {n.visible_to_patient
+                      ? <Badge variant="secondary" className="h-4 px-1.5 text-[9px]">Shared with patient</Badge>
+                      : <Badge variant="outline" className="h-4 px-1.5 text-[9px]">Private</Badge>}
+                  </div>
+                </button>
+                <div className="flex shrink-0 items-center gap-1">
+                  <Button
+                    size="icon" variant="ghost"
+                    title={n.visible_to_patient ? "Make private" : "Share with patient"}
+                    onClick={async () => {
+                      await toggleVis({ data: { id: n.id, visible: !n.visible_to_patient } });
+                      reload();
+                    }}
+                  >
+                    {n.visible_to_patient ? <Send className="h-3.5 w-3.5 text-primary" /> : <Send className="h-3.5 w-3.5 opacity-50" />}
+                  </Button>
+                  <Button
+                    size="icon" variant="ghost"
+                    onClick={() => setEditing({ id: n.id, body: n.body, visible_to_patient: !!n.visible_to_patient })}
+                    title="Edit"
+                  >
+                    <Edit2 className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button
+                    size="icon" variant="ghost"
+                    onClick={async () => {
+                      if (!confirm("Delete this note?")) return;
+                      await del({ data: { id: n.id } });
+                      setSelected(prev => { const s = new Set(prev); s.delete(n.id); return s; });
+                      reload();
+                    }}
+                    title="Delete"
+                  >
+                    <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                  </Button>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+
+      {/* Editor dialog */}
+      <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{editing?.id ? "Edit note" : "New note"}</DialogTitle>
+          </DialogHeader>
+          {editing && (
+            <div className="space-y-3">
+              <Textarea
+                autoFocus
+                rows={14}
+                value={editing.body}
+                onChange={(e) => setEditing({ ...editing, body: e.target.value })}
+                placeholder="Write your clinical note here…"
+                className="min-h-[240px] resize-y text-sm leading-relaxed"
+              />
+              <label className="flex cursor-pointer items-start gap-2 rounded-md border bg-muted/30 p-3">
+                <Checkbox
+                  checked={editing.visible_to_patient}
+                  onCheckedChange={(v) => setEditing({ ...editing, visible_to_patient: !!v })}
+                  className="mt-0.5"
+                />
+                <span className="text-sm">
+                  <span className="block font-medium">Share with patient</span>
+                  <span className="block text-xs text-muted-foreground">
+                    Shows in their patient portal. Leave unticked for private clinical notes.
+                  </span>
+                </span>
+              </label>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setEditing(null)}>Cancel</Button>
+            <Button onClick={saveNote} disabled={saving || !editing?.body.trim()}>
+              {saving && <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />}
+              {editing?.id ? "Save changes" : "Add note"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </SectionDark>
   );
 }
+
 
 
 function FilesSection({ clientId, profileId, kind, title }: { clientId: string; profileId: string; kind: "photo" | "pdf"; title: string }) {
