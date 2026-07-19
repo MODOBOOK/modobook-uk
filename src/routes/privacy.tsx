@@ -67,7 +67,7 @@ function PrivacyPage() {
             <strong>All clinical data — including medical history forms,
             consultation notes, consent forms, prescriptions and any
             before/after or treatment photos — is stored at rest inside the
-            European Economic Area</strong>, on Lovable Cloud (Supabase / AWS
+            European Economic Area</strong>, on our managed cloud infrastructure (Supabase / AWS
             <em> eu-west-3, Paris, France</em>). Databases and file storage
             (patient photos, consent PDFs, uploaded documents) never leave that
             EEA region under normal operation.
