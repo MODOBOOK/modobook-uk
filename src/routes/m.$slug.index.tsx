@@ -290,6 +290,16 @@ function BookPage() {
   });
   const trainingCourses = (trainingQuery.data?.courses ?? []) as Array<{ id: string; name: string; mode: string; cpd_hours: number | string | null; price: number | string; duration_min: number; description: string | null; cover_image_url: string | null }>;
   const hasTraining = trainingCourses.length > 0;
+
+  const fetchPublicRewards = useServerFn(getPublicRewardsOverview);
+  const rewardsQuery = useQuery({
+    queryKey: ["public-rewards-tab", slug],
+    queryFn: () => fetchPublicRewards({ data: { slug } }),
+    staleTime: 60_000,
+  });
+  const rewardsVisible = rewardsQuery.data?.visible === true;
+  const rewardsData = rewardsVisible ? rewardsQuery.data : null;
+
   const { primary: displayPrimary } = resolveDisplayNames(profile);
   const brand = theme?.primary_color || profile.brand_color || "#1f2a44";
 
