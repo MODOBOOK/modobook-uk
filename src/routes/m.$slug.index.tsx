@@ -30,6 +30,9 @@ import {
   ChevronDown,
   ChevronUp,
   GraduationCap,
+  Gift,
+  Trophy,
+  ArrowRight,
 } from "lucide-react";
 
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
