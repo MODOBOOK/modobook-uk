@@ -111,8 +111,8 @@ export const WaitlistWelcomeEmail = ({ firstName }: WaitlistWelcomeProps) => {
             Founding pricing
           </Text>
           <Text style={{ ...styles.text, margin: '8px 0 0' }}>
-            <span style={{ textDecoration: 'line-through', color: brand.muted }}>£29.99</span>{' '}
-            <span style={{ fontSize: '22px', fontWeight: 600, color: brand.ink }}>£19.99</span>/month
+            <span style={{ textDecoration: 'line-through', color: brand.muted }}>£39.99</span>{' '}
+            <span style={{ fontSize: '22px', fontWeight: 600, color: brand.ink }}>£29.99</span>/month
           </Text>
           <Text style={{ ...styles.muted, margin: '10px 0 0' }}>
             Additional team members £9.99 · Additional locations £4.99
