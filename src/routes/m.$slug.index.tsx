@@ -1988,7 +1988,105 @@ function BookPage() {
                   </TabsContent>
                 )}
 
+                {rewardsVisible && rewardsData && (
+                  <TabsContent value="rewards" className="mt-4">
+                    {(() => {
+                      const s: any = rewardsData.settings ?? {};
+                      const tiers = rewardsData.tiers ?? [];
+                      const fmtGBP = (p: number) =>
+                        new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP", minimumFractionDigits: p % 100 === 0 ? 0 : 2 }).format(p / 100);
+                      const friendBits: string[] = [];
+                      if (s.friend_credit_kind === "percent" && s.friend_credit_percent > 0) friendBits.push(`${s.friend_credit_percent}% off first booking`);
+                      else if (s.friend_credit_pennies > 0) friendBits.push(`${fmtGBP(s.friend_credit_pennies)} off first booking`);
+                      const referBits: string[] = [];
+                      if (s.referrer_credit_kind === "percent" && s.referrer_credit_percent > 0) referBits.push(`${s.referrer_credit_percent}% off for you`);
+                      else if (s.referrer_credit_pennies > 0) referBits.push(`${fmtGBP(s.referrer_credit_pennies)} credit`);
+                      if (s.referrer_points > 0) referBits.push(`${s.referrer_points} pts`);
+                      const earn = s.earn_on_spend_enabled && s.points_per_pound_earn > 0
+                        ? `Earn ${s.points_per_pound_earn} pt${s.points_per_pound_earn === 1 ? "" : "s"} per £1 spent`
+                        : null;
+                      return (
+                        <div className="space-y-4">
+                          <div
+                            className="overflow-hidden rounded-2xl border p-5 shadow-sm sm:p-6"
+                            style={{ background: `linear-gradient(135deg, ${brand}15, ${brand}05)`, borderColor: `${brand}30` }}
+                          >
+                            <div className="flex items-start gap-3">
+                              <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl" style={{ background: `${brand}20`, color: brand }}>
+                                <Gift className="h-5 w-5" />
+                              </div>
+                              <div className="min-w-0">
+                                <div className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: brand }}>
+                                  Rewards & referrals
+                                </div>
+                                <h3 className="mt-0.5 text-lg font-semibold sm:text-xl">
+                                  {s.headline || "Refer a friend, treat yourself"}
+                                </h3>
+                                {s.description && (
+                                  <p className="mt-1 max-w-lg text-sm opacity-80">{s.description}</p>
+                                )}
+                              </div>
+                            </div>
+                            <div className="mt-4 flex flex-wrap gap-2 text-xs">
+                              {friendBits.map((b) => (
+                                <span key={`f-${b}`} className="inline-flex items-center gap-1 rounded-full bg-white/70 px-3 py-1 font-medium">
+                                  <Sparkles className="h-3 w-3" /> Friend: {b}
+                                </span>
+                              ))}
+                              {referBits.map((b) => (
+                                <span key={`r-${b}`} className="inline-flex items-center gap-1 rounded-full bg-white/70 px-3 py-1 font-medium">
+                                  <Gift className="h-3 w-3" /> You: {b}
+                                </span>
+                              ))}
+                              {earn && (
+                                <span className="inline-flex items-center gap-1 rounded-full bg-white/70 px-3 py-1 font-medium">
+                                  <Sparkles className="h-3 w-3" /> {earn}
+                                </span>
+                              )}
+                            </div>
+                            <div className="mt-5">
+                              <Link to="/m/$slug/rewards" params={{ slug }}>
+                                <button
+                                  className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
+                                  style={{ background: brand }}
+                                >
+                                  Sign in to view my rewards <ArrowRight className="h-4 w-4" />
+                                </button>
+                              </Link>
+                            </div>
+                          </div>
+
+                          {tiers.length > 0 && (
+                            <div className="rounded-2xl border bg-white p-5" style={{ borderColor: `${brand}20` }}>
+                              <div className="mb-3 flex items-center gap-2">
+                                <Trophy className="h-4 w-4" style={{ color: brand }} />
+                                <h4 className="text-sm font-semibold uppercase tracking-wider" style={{ color: brand }}>
+                                  Rewards to unlock
+                                </h4>
+                              </div>
+                              <div className="grid gap-2 sm:grid-cols-2">
+                                {tiers.map((t: any) => (
+                                  <div key={t.id} className="rounded-xl border p-3" style={{ borderColor: `${brand}20` }}>
+                                    <div className="flex items-start justify-between gap-3">
+                                      <p className="font-semibold">{t.label}</p>
+                                      <span className="shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold" style={{ background: `${brand}18`, color: brand }}>
+                                        {t.points_cost} pts
+                                      </span>
+                                    </div>
+                                    {t.description && <p className="mt-1 text-xs opacity-70">{t.description}</p>}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
+                  </TabsContent>
+                )}
+
               </Tabs>
+
 
             );
           })()}
