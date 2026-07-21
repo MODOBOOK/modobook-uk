@@ -29,7 +29,7 @@ import {
   Clock,
   ArrowLeft,
 } from "lucide-react";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/prescriber/requests/$id")({
   head: () => ({ meta: [{ title: "Review prescription request | MODO Hub" }] }),
@@ -257,7 +257,7 @@ function DecisionPanel({ id, onDone, decide }: { id: string; onDone: () => void;
   const [busy, setBusy] = useState<null | "approve" | "decline" | "request_info">(null);
   async function run(action: "approve" | "decline" | "request_info") {
     if ((action === "decline" || action === "request_info") && !note.trim()) {
-      toast({ title: "Please add a note", description: "A short reason helps the practitioner.", variant: "destructive" });
+      toast.error("Please add a note", { description: "A short reason helps the practitioner." });
       return;
     }
     setBusy(action);
@@ -265,9 +265,9 @@ function DecisionPanel({ id, onDone, decide }: { id: string; onDone: () => void;
       await decide({ data: { id, action, note: note.trim() || undefined } });
       setNote("");
       onDone();
-      toast({ title: "Saved" });
+      toast("Saved");
     } catch (e) {
-      toast({ title: "Failed", description: (e as Error).message, variant: "destructive" });
+      toast.error("Failed", { description: (e as Error).message });
     } finally {
       setBusy(null);
     }
@@ -333,10 +333,10 @@ function UploadAttachmentBtn({ requestId, onDone, addAtt }: { requestId: string;
       const { error } = await supabase.storage.from("rx-request-media").upload(path, file, { upsert: false });
       if (error) throw error;
       await addAtt({ data: { request_id: requestId, kind, storage_path: path, mime_type: file.type, size_bytes: file.size, caption: file.name } });
-      toast({ title: "Uploaded" });
+      toast("Uploaded");
       onDone();
     } catch (e) {
-      toast({ title: "Upload failed", description: (e as Error).message, variant: "destructive" });
+      toast.error("Upload failed", { description: (e as Error).message });
     } finally {
       setBusy(false);
       if (inputRef.current) inputRef.current.value = "";
@@ -381,7 +381,7 @@ function ChatPanel({
   async function uploadAndSend(file: File | Blob, kind: "image" | "pdf" | "voice", filename: string, duration_ms?: number) {
     const path = `${threadId}/${crypto.randomUUID()}-${filename}`;
     const { error } = await supabase.storage.from("rx-chat-media").upload(path, file, { upsert: false, contentType: file.type || "application/octet-stream" });
-    if (error) { toast({ title: "Upload failed", description: error.message, variant: "destructive" }); return; }
+    if (error) { toast.error("Upload failed", { description: error.message }); return; }
     await onSend({ kind, attachment_path: path, attachment_mime: file.type, attachment_size: (file as File).size ?? undefined, duration_ms });
   }
 
@@ -413,7 +413,7 @@ function ChatPanel({
       rec.start();
       setRecording(true);
     } catch (e) {
-      toast({ title: "Microphone blocked", description: (e as Error).message, variant: "destructive" });
+      toast.error("Microphone blocked", { description: (e as Error).message });
     }
   }
   function stopRecording() {
