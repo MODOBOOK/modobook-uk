@@ -67,19 +67,22 @@ function PackagesPage() {
   const listCategories = useServerFn(getMyPackageCategories);
   const createCat = useServerFn(createPackageCategory);
   const deleteCat = useServerFn(deletePackageCategory);
+  const fetchProfile = useServerFn(getMyProfile);
 
   const [packages, setPackages] = useState<Pkg[]>([]);
   const [treatments, setTreatments] = useState<Treatment[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [profileId, setProfileId] = useState<string>("");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Pkg | null>(null);
   const [form, setForm] = useState(blankForm);
 
   async function refresh() {
-    const [p, t, c] = await Promise.all([list(), listTreatments(), listCategories()]);
+    const [p, t, c, profile] = await Promise.all([list(), listTreatments(), listCategories(), fetchProfile()]);
     setPackages(p as Pkg[]);
     setTreatments((t as Treatment[]) ?? []);
     setCategories((c as Category[]) ?? []);
+    setProfileId((profile as { id?: string } | null)?.id ?? "");
   }
   useEffect(() => { refresh(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
 
