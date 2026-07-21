@@ -38,12 +38,15 @@ const PRESCRIBER_ONLY_REDIRECTS: Record<string, string> = {
 
 const nav = [
   { to: "/hub", label: "Overview", icon: LayoutDashboard, exact: true, key: "overview" as const },
+  { to: "/dashboard/rx-requests", label: "Rx requests", icon: Send, key: "rx-requests" as const, practitionerOnly: true },
+  { to: "/prescriber/requests", label: "Rx requests", icon: Send, key: "prescriber-rx-requests" as const, prescriberOnly: true },
   { to: "/hub/visits", label: "Clinic days", icon: CalendarDays, key: "visits" as const },
   { to: "/hub/referrals", label: "Referrals", icon: Send, key: "referrals" as const },
   { to: "/hub/prescribing", label: "Rules", icon: Pill, key: "prescribing" as const },
   { to: "/prescriber/invoices", label: "Invoices", icon: FileText, key: "invoices" as const, prescriberOnly: true },
   { to: "/hub/connections", label: "Prescribers", icon: Network, key: "connections" as const },
   { to: "/hub/verification", label: "Verification", icon: ShieldCheck, key: "verification" as const },
+
 ];
 
 function HubLayout() {
@@ -103,7 +106,7 @@ function HubLayout() {
           </div>
         </div>
         <nav className="flex-1 space-y-0.5 overflow-y-auto px-3 py-6">
-          {nav.filter((i) => !i.prescriberOnly || isPrescriber).map((item) => {
+          {nav.filter((i) => (!i.prescriberOnly || isPrescriber) && (!i.practitionerOnly || isPractitioner)).map((item) => {
             const active = item.exact ? pathname === item.to : pathname.startsWith(item.to);
             const count = badges[item.key] ?? 0;
             return (
@@ -174,7 +177,7 @@ function HubLayout() {
           "fixed inset-x-0 bottom-0 z-30 grid border-t bg-background/95 backdrop-blur lg:hidden",
           isPrescriber ? "grid-cols-7" : "grid-cols-6",
         )}>
-          {nav.filter((i) => !i.prescriberOnly || isPrescriber).map((tab) => {
+          {nav.filter((i) => (!i.prescriberOnly || isPrescriber) && (!i.practitionerOnly || isPractitioner)).map((tab) => {
             const active = tab.exact ? pathname === tab.to : pathname.startsWith(tab.to);
             const count = badges[tab.key] ?? 0;
             return (
