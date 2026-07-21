@@ -31,7 +31,7 @@ export const ensureDemoSetup = createServerFn({ method: "POST" })
  */
 export const launchDemoSession = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: { role: "practitioner" | "patient" }) => i)
+  .inputValidator((i: { role: "practitioner" | "patient"; origin?: string }) => i)
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -40,14 +40,16 @@ export const launchDemoSession = createServerFn({ method: "POST" })
     await seedDemoClinic(supabaseAdmin);
     const { DEMO_PRACTITIONER_EMAIL, DEMO_PATIENT_EMAIL, DEMO_SLUG } = await import("./demo.server");
     const email = data.role === "practitioner" ? DEMO_PRACTITIONER_EMAIL : DEMO_PATIENT_EMAIL;
-    const redirectTo = data.role === "practitioner" ? "/dashboard" : `/m/${DEMO_SLUG}/account`;
+    const origin = (data.origin || "https://modobook.uk").replace(/\/$/, "");
+    const path = data.role === "practitioner" ? "/dashboard" : `/m/${DEMO_SLUG}/account`;
+    const redirectTo = `${origin}${path}`;
 
     const { data: link, error } = await (supabaseAdmin as any).auth.admin.generateLink({
       type: "magiclink",
       email,
       options: { redirectTo },
     });
-    if (error) throw error;
+    if (error) throw new Error(`Auth: ${error.message}`);
     const url = (link as any)?.properties?.action_link as string | undefined;
     if (!url) throw new Error("Failed to generate demo link");
     return { url, email, role: data.role };
