@@ -632,6 +632,7 @@ export type Database = {
           end_time: string
           has_allergies: boolean
           id: string
+          is_demo: boolean
           location_id: string | null
           manage_token: string | null
           model_slot_id: string | null
@@ -686,6 +687,7 @@ export type Database = {
           end_time: string
           has_allergies?: boolean
           id?: string
+          is_demo?: boolean
           location_id?: string | null
           manage_token?: string | null
           model_slot_id?: string | null
@@ -740,6 +742,7 @@ export type Database = {
           end_time?: string
           has_allergies?: boolean
           id?: string
+          is_demo?: boolean
           location_id?: string | null
           manage_token?: string | null
           model_slot_id?: string | null
@@ -1505,6 +1508,7 @@ export type Database = {
           how_heard: string | null
           id: string
           is_blocked: boolean
+          is_demo: boolean
           marketing_opt_in: boolean
           marketing_opt_in_at: string | null
           marketing_opt_in_source: string | null
@@ -1557,6 +1561,7 @@ export type Database = {
           how_heard?: string | null
           id?: string
           is_blocked?: boolean
+          is_demo?: boolean
           marketing_opt_in?: boolean
           marketing_opt_in_at?: string | null
           marketing_opt_in_source?: string | null
@@ -1609,6 +1614,7 @@ export type Database = {
           how_heard?: string | null
           id?: string
           is_blocked?: boolean
+          is_demo?: boolean
           marketing_opt_in?: boolean
           marketing_opt_in_at?: string | null
           marketing_opt_in_source?: string | null
@@ -5022,6 +5028,7 @@ export type Database = {
           invoice_sort_code: string | null
           invoice_swift: string | null
           invoice_vat_number: string | null
+          is_demo: boolean
           late_cancel_mode: string
           model_slots_position: string
           patient_cancel_cutoff_hours: number | null
@@ -5142,6 +5149,7 @@ export type Database = {
           invoice_sort_code?: string | null
           invoice_swift?: string | null
           invoice_vat_number?: string | null
+          is_demo?: boolean
           late_cancel_mode?: string
           model_slots_position?: string
           patient_cancel_cutoff_hours?: number | null
@@ -5262,6 +5270,7 @@ export type Database = {
           invoice_sort_code?: string | null
           invoice_swift?: string | null
           invoice_vat_number?: string | null
+          is_demo?: boolean
           late_cancel_mode?: string
           model_slots_position?: string
           patient_cancel_cutoff_hours?: number | null
