@@ -16,7 +16,7 @@ export function DemoLaunchCard() {
   async function launchAs(role: "practitioner" | "patient") {
     setBusy(role);
     try {
-      const r = await launch({ data: { role } });
+      const r = await launch({ data: { role, origin: window.location.origin } });
       window.open(r.url, "_blank", "noopener");
       toast.success(`Demo ${role} session opened in a new tab`);
     } catch (e) {
