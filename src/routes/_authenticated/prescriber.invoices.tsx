@@ -295,7 +295,7 @@ function InvoicesCard({
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button size="sm" disabled={practitioners.length === 0}>
+            <Button size="sm">
               <Plus className="mr-1 h-4 w-4" /> New invoice
             </Button>
           </DialogTrigger>
@@ -306,11 +306,6 @@ function InvoicesCard({
         </Dialog>
       </CardHeader>
       <CardContent>
-        {practitioners.length === 0 && (
-          <p className="mb-3 rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
-            Add at least one practitioner above before creating an invoice.
-          </p>
-        )}
         {loading ? (
           <p className="text-sm text-muted-foreground">Loading…</p>
         ) : rows.length === 0 ? (
