@@ -62,27 +62,31 @@ export async function seedDemoClinic(admin: Admin) {
     .eq("user_id", practitionerUserId)
     .maybeSingle();
 
-  let profileId = existingProfile?.id as string | undefined;
+  const profileFields = {
+    is_demo: true,
+    active: true,
+    slug: DEMO_SLUG,
+    clinic_name: DEMO_CLINIC_NAME,
+    hero_url: IMG.hero,
+    bio: "A boutique aesthetics studio pairing clinical rigour with a slow, considered treatment experience.",
+    about:
+      "We're a small, women-led team creating an unhurried environment for consultations, treatments and reviews. Every visit begins with a proper conversation.",
+    brand_color: "#8b7355",
+  } as const;
   if (!profileId) {
     const { data: created, error } = await admin
       .from("profiles")
       .insert({
         user_id: practitionerUserId,
         full_name: DEMO_PRACTITIONER_NAME,
-        clinic_name: DEMO_CLINIC_NAME,
-        slug: DEMO_SLUG,
-        is_demo: true,
-        active: true,
+        ...profileFields,
       })
       .select("id")
       .single();
     if (error) throw error;
     profileId = created!.id as string;
   } else {
-    await admin
-      .from("profiles")
-      .update({ is_demo: true, active: true, slug: DEMO_SLUG, clinic_name: DEMO_CLINIC_NAME })
-      .eq("id", profileId);
+    await admin.from("profiles").update(profileFields).eq("id", profileId);
   }
 
   // Location
