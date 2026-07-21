@@ -4888,6 +4888,214 @@ export type Database = {
         }
         Relationships: []
       }
+      prescription_request_attachments: {
+        Row: {
+          caption: string | null
+          created_at: string
+          id: string
+          kind: string
+          mime_type: string | null
+          request_id: string
+          size_bytes: number | null
+          storage_path: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string
+          id?: string
+          kind: string
+          mime_type?: string | null
+          request_id: string
+          size_bytes?: number | null
+          storage_path: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          mime_type?: string | null
+          request_id?: string
+          size_bytes?: number | null
+          storage_path?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prescription_request_attachments_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "prescription_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      prescription_request_events: {
+        Row: {
+          actor_id: string | null
+          actor_role: string | null
+          created_at: string
+          id: string
+          kind: Database["public"]["Enums"]["rx_event_kind"]
+          meta: Json
+          request_id: string
+          summary: string | null
+        }
+        Insert: {
+          actor_id?: string | null
+          actor_role?: string | null
+          created_at?: string
+          id?: string
+          kind: Database["public"]["Enums"]["rx_event_kind"]
+          meta?: Json
+          request_id: string
+          summary?: string | null
+        }
+        Update: {
+          actor_id?: string | null
+          actor_role?: string | null
+          created_at?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["rx_event_kind"]
+          meta?: Json
+          request_id?: string
+          summary?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prescription_request_events_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "prescription_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      prescription_requests: {
+        Row: {
+          appointment_id: string | null
+          approved_prescription_id: string | null
+          area: string | null
+          batch_number: string | null
+          clinical_notes: string | null
+          consent_id: string | null
+          consultation_id: string | null
+          created_at: string
+          decided_at: string | null
+          decline_reason: string | null
+          dose: string | null
+          expires_at: string | null
+          first_response_at: string | null
+          id: string
+          info_request_note: string | null
+          medical_history: Json
+          patient_id: string | null
+          patient_snapshot: Json
+          practitioner_id: string
+          prescriber_comments: string | null
+          prescriber_id: string
+          product_name: string | null
+          status: Database["public"]["Enums"]["rx_request_status"]
+          treatment_name: string
+          units: string | null
+          updated_at: string
+        }
+        Insert: {
+          appointment_id?: string | null
+          approved_prescription_id?: string | null
+          area?: string | null
+          batch_number?: string | null
+          clinical_notes?: string | null
+          consent_id?: string | null
+          consultation_id?: string | null
+          created_at?: string
+          decided_at?: string | null
+          decline_reason?: string | null
+          dose?: string | null
+          expires_at?: string | null
+          first_response_at?: string | null
+          id?: string
+          info_request_note?: string | null
+          medical_history?: Json
+          patient_id?: string | null
+          patient_snapshot?: Json
+          practitioner_id: string
+          prescriber_comments?: string | null
+          prescriber_id: string
+          product_name?: string | null
+          status?: Database["public"]["Enums"]["rx_request_status"]
+          treatment_name: string
+          units?: string | null
+          updated_at?: string
+        }
+        Update: {
+          appointment_id?: string | null
+          approved_prescription_id?: string | null
+          area?: string | null
+          batch_number?: string | null
+          clinical_notes?: string | null
+          consent_id?: string | null
+          consultation_id?: string | null
+          created_at?: string
+          decided_at?: string | null
+          decline_reason?: string | null
+          dose?: string | null
+          expires_at?: string | null
+          first_response_at?: string | null
+          id?: string
+          info_request_note?: string | null
+          medical_history?: Json
+          patient_id?: string | null
+          patient_snapshot?: Json
+          practitioner_id?: string
+          prescriber_comments?: string | null
+          prescriber_id?: string
+          product_name?: string | null
+          status?: Database["public"]["Enums"]["rx_request_status"]
+          treatment_name?: string
+          units?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prescription_requests_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prescription_requests_approved_prescription_id_fkey"
+            columns: ["approved_prescription_id"]
+            isOneToOne: false
+            referencedRelation: "prescriptions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prescription_requests_consent_id_fkey"
+            columns: ["consent_id"]
+            isOneToOne: false
+            referencedRelation: "appointment_consents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prescription_requests_consultation_id_fkey"
+            columns: ["consultation_id"]
+            isOneToOne: false
+            referencedRelation: "consultations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prescription_requests_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "clinic_clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       prescriptions: {
         Row: {
           appointment_id: string | null
@@ -5543,6 +5751,101 @@ export type Database = {
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rx_chat_messages: {
+        Row: {
+          attachment_mime: string | null
+          attachment_path: string | null
+          attachment_size: number | null
+          body: string | null
+          created_at: string
+          duration_ms: number | null
+          id: string
+          kind: Database["public"]["Enums"]["rx_chat_message_kind"]
+          read_by: Json
+          request_id: string
+          sender_id: string | null
+          thread_id: string
+        }
+        Insert: {
+          attachment_mime?: string | null
+          attachment_path?: string | null
+          attachment_size?: number | null
+          body?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          id?: string
+          kind?: Database["public"]["Enums"]["rx_chat_message_kind"]
+          read_by?: Json
+          request_id: string
+          sender_id?: string | null
+          thread_id: string
+        }
+        Update: {
+          attachment_mime?: string | null
+          attachment_path?: string | null
+          attachment_size?: number | null
+          body?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          id?: string
+          kind?: Database["public"]["Enums"]["rx_chat_message_kind"]
+          read_by?: Json
+          request_id?: string
+          sender_id?: string | null
+          thread_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rx_chat_messages_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "prescription_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rx_chat_messages_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "rx_chat_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rx_chat_threads: {
+        Row: {
+          created_at: string
+          id: string
+          last_message_at: string | null
+          practitioner_id: string
+          prescriber_id: string
+          request_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_message_at?: string | null
+          practitioner_id: string
+          prescriber_id: string
+          request_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_message_at?: string | null
+          practitioner_id?: string
+          prescriber_id?: string
+          request_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rx_chat_threads_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: true
+            referencedRelation: "prescription_requests"
             referencedColumns: ["id"]
           },
         ]
@@ -7306,6 +7609,26 @@ export type Database = {
       payment_mode: "full" | "deposit" | "pay_in_clinic"
       payment_status: "pending" | "paid" | "refunded" | "failed"
       prescriber_status: "pending" | "approved" | "rejected" | "more_info"
+      rx_chat_message_kind: "text" | "image" | "pdf" | "voice" | "system"
+      rx_event_kind:
+        | "created"
+        | "viewed"
+        | "commented"
+        | "approved"
+        | "declined"
+        | "info_requested"
+        | "info_provided"
+        | "message_sent"
+        | "attachment_added"
+        | "prescription_issued"
+        | "withdrawn"
+        | "status_changed"
+      rx_request_status:
+        | "pending"
+        | "awaiting_info"
+        | "approved"
+        | "declined"
+        | "withdrawn"
       staff_role: "admin" | "practitioner" | "receptionist" | "viewer"
       staff_scope: "clinic" | "own"
       staff_status: "invited" | "active" | "disabled"
@@ -7457,6 +7780,28 @@ export const Constants = {
       payment_mode: ["full", "deposit", "pay_in_clinic"],
       payment_status: ["pending", "paid", "refunded", "failed"],
       prescriber_status: ["pending", "approved", "rejected", "more_info"],
+      rx_chat_message_kind: ["text", "image", "pdf", "voice", "system"],
+      rx_event_kind: [
+        "created",
+        "viewed",
+        "commented",
+        "approved",
+        "declined",
+        "info_requested",
+        "info_provided",
+        "message_sent",
+        "attachment_added",
+        "prescription_issued",
+        "withdrawn",
+        "status_changed",
+      ],
+      rx_request_status: [
+        "pending",
+        "awaiting_info",
+        "approved",
+        "declined",
+        "withdrawn",
+      ],
       staff_role: ["admin", "practitioner", "receptionist", "viewer"],
       staff_scope: ["clinic", "own"],
       staff_status: ["invited", "active", "disabled"],
