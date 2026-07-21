@@ -12,7 +12,7 @@ import {
   ShieldCheck,
   Pill,
   Stethoscope,
-  FileText,
+  
 } from "lucide-react";
 import { getHubContext } from "@/lib/hub.functions";
 import { listMyClinicVisits } from "@/lib/clinic-visits.functions";
