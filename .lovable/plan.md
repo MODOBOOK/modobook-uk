@@ -1,65 +1,104 @@
-# Demo Mode for Zoom Calls
+# Prescriber Hub Rebuild
 
-Give admins a one-click "Launch demo" button in the Admin Console that opens two tabs: a fully-populated demo practitioner dashboard and a demo patient hub. Bookings, payments, and emails are all mocked so nothing leaves the system. A nightly cron wipes the demo data back to its seeded baseline.
+Goal: turn the hub into a real clinical workflow so practitioners request Rx through MODO (not WhatsApp), and prescribers review, decide, and chat in one place. Fix the linking so a prescriber can never add another prescriber — only practitioners.
 
-## What gets built
+## 1. Fix the linking model
 
-### 1. Demo accounts (seeded via migration)
-- **Demo practitioner**: `demo-clinic@modo.demo` — profile slug `demo-clinic`, full theme, logo, brand colours, hero images.
-- **Demo patient**: `demo-patient@modo.demo` — linked to the demo clinic with full history.
-- Both flagged with `is_demo = true` on `profiles` / `clinic_clients` so the reset cron can find them.
-- Passwords stored server-side; admins never type them.
+Today the "add practitioner" flow doesn't enforce roles, so a prescriber can add another prescriber. Rework it so:
 
-### 2. Seeded content (mirrors a real live clinic)
-- 6 treatment categories, ~15 treatments with prices, durations, before/after images, add-ons, packages.
-- 2 locations, 3 practitioners with photos/bios, availability rules Mon–Sat.
-- 4 sample patients (incl. the demo patient) with:
-  - Past + upcoming appointments spanning the week
-  - Consultations with photos, face-map annotations, product logs
-  - Signed consents, completed medical forms, notes
-  - Treatment plans, prescriptions, aftercare
-- Rewards enabled with 3 tiers, sample referrals + points ledger.
-- 2 marketing automations (birthday + newsletter), 1 past campaign.
-- 3 training courses (fixed date + availability modes) with 2 bookings.
-- Model slots (mix of dated + flexible).
-- Gallery, testimonials, reviews, FAQ.
+- Prescriber sends an **invite by email** to a practitioner. If that email belongs to a `prescriber` role, the invite is blocked with a clear message.
+- Practitioner receives an in-app notification + email with **Accept / Decline**.
+- Only accepted links appear in either side's directory.
+- Practitioner side also gets a "Find a prescriber" flow (invite by email) that mirrors the same accept/decline handshake.
+- Existing `prescriber_referrals` / `patient_practitioner_links` stay as-is; add a new `prescriber_practitioner_links` table with `status` (pending/active/revoked), `invited_by`, `accepted_at`.
 
-### 3. Mock guards (no real side-effects)
-A shared `isDemoContext()` helper checks whether the current profile is the demo one, and:
-- `sendAppEmail` / auth emails / marketing dispatch: log + return `{ ok: true }`, never call the mail route.
-- Stripe checkout/subscriptions/charge card: return simulated success responses with fake IDs.
-- Push notifications: skipped.
-- SMS: skipped.
-- Cron jobs (reminders, rebook, review requests): skip rows where `profile.is_demo = true`.
+## 2. Prescriber Dashboard (new landing route)
 
-### 4. Admin "Launch demo" button
-New card in the Admin Console → User Support panel:
-- **Launch practitioner view** — server fn mints a one-time login token for the demo practitioner, opens `/dashboard` in a new tab already signed in.
-- **Launch patient view** — same for the demo patient, opens `/m/demo-clinic/account`.
-- **Reset demo now** — manual trigger for the nightly reset (useful mid-demo).
-- Uses `supabaseAdmin.auth.admin.generateLink({ type: 'magiclink' })` under the hood, gated by `has_role(admin)`.
+Replace the current Hub landing with a real dashboard at `/hub` showing cards:
 
-### 5. Nightly reset cron
-- New route: `src/routes/api/public/hooks/demo-reset.ts`.
-- Deletes all `is_demo = true` appointments, consultations, notes, forms, consents, messages, referrals, points ledger entries, campaign sends, training bookings.
-- Re-runs the seed inserts so tomorrow's demos start clean.
-- Scheduled via `pg_cron` at 03:00 UTC.
+- **Outstanding requests** — awaiting review
+- **Awaiting more info** — prescriber asked a question, waiting on practitioner
+- **Expiring soon** — prescriptions expiring in next 30 days
+- **Recently approved** — last 10
+- **Linked practitioners** — count + shortcut to directory
+- **Avg response time** — rolling 30-day average from request → first decision
 
-### 6. Visible "Demo mode" banner
-When signed in as the demo practitioner or viewing the demo public page, a subtle top banner says "Demo environment — bookings and payments are simulated." So admins never mistake it for a real clinic on a Zoom share.
+Each card links into a filtered list view.
 
-## Technical notes
+## 3. One-click Prescription Requests
 
-- New migration: `profiles.is_demo boolean`, `clinic_clients.is_demo boolean`, `appointments.is_demo boolean` (denormalised so cron cleanup is one filter), seeded rows, indexes on `is_demo`.
-- New file `src/lib/demo.server.ts` with `isDemoProfile(profileId)` cache + `assertNotDemoOrMock(action)` helpers used by Stripe/email/push server fns.
-- New file `src/lib/demo.functions.ts` with `launchDemoPractitioner`, `launchDemoPatient`, `resetDemoNow` — all `requireSupabaseAuth` + admin role check, then load `supabaseAdmin` inside the handler.
-- New file `src/lib/demo-seed.server.ts` — pure functions that idempotently seed the demo data; used by both the migration and the reset cron.
-- Admin UI edit: `src/components/admin/AdminShell.tsx` + a new `DemoLaunchCard` in the User Support tab.
-- Public banner: small component rendered in `src/routes/_authenticated.tsx` and `src/routes/m.$slug.tsx` when `profile.is_demo`.
-- Cron scheduled via `supabase--insert` after the route ships.
+New table `prescription_requests` bundling everything a prescriber needs on one screen:
 
-## Out of scope
+- Patient snapshot (name, DOB, allergies)
+- Medical history (from latest `appointment_medical_forms`)
+- Consultation notes (linked `consultations.id`)
+- Treatment requested (name, dose, area, batch if known)
+- Clinical photos (uploaded to a new `rx-request-media` bucket)
+- Consent (linked `appointment_consents.id`)
+- Before/after images (optional)
 
-- Real Stripe test-mode charges (user picked "fully mocked").
-- Real email sends to a demo inbox (user picked "fully mocked").
-- Live-editing seed data through a UI — seed lives in code; changes need a code edit.
+Practitioner side: **"Request prescription"** button on any consultation → wizard that auto-pulls the above → picks a linked prescriber → submits.
+
+Prescriber side: full-screen review page with:
+- **Approve** (creates a `prescriptions` row, marks request `approved`)
+- **Decline** (with reason)
+- **Request more info** (opens chat thread, status → `awaiting_info`)
+- Free-text clinical comments box
+
+## 4. Clinical Decision Timeline
+
+New table `prescription_request_events` — append-only audit log. Every state change, message, upload, view auto-writes an event with `actor_id`, `action`, `meta`, `created_at`.
+
+Rendered as a vertical timeline on the request page for both sides. Exportable to PDF (reuse `patient-record-pdf.ts` styling) for governance.
+
+## 5. Secure Clinical Chat
+
+New tables `rx_chat_threads` (1:1 to a request) + `rx_chat_messages` with:
+
+- Text
+- Image / PDF attachments (stored in `rx-chat-media` bucket, signed URLs, RLS scoped to thread participants)
+- Voice notes (recorded via `MediaRecorder` → uploaded as `audio/webm`)
+- Read receipts (`read_by` jsonb, updated when the other party opens the thread)
+- Realtime via `postgres_changes` subscription on `rx_chat_messages`
+
+Every chat message also writes a matching event to the decision timeline so nothing lives outside the audit log.
+
+## Data model summary
+
+```text
+prescriber_practitioner_links  invites + accept/decline
+prescription_requests          patient, practitioner, prescriber, status, request payload
+prescription_request_events    append-only audit for timeline
+rx_chat_threads                one per request
+rx_chat_messages               text/media/voice + read receipts
+Storage: rx-request-media (private), rx-chat-media (private)
+```
+
+Status enum: `pending → awaiting_info → approved | declined | withdrawn`.
+
+## Routes
+
+- `/hub` — dashboard (prescriber)
+- `/hub/requests` — full list with filters
+- `/hub/requests/$id` — review + timeline + chat (split view)
+- `/hub/directory` — linked practitioners + invite
+- `/dashboard/prescribers` — practitioner side: linked prescribers + invite
+- `/dashboard/consultations/$id` — add "Request prescription" button
+
+## Rollout order
+
+1. Migration: new tables, RLS, GRANTs, storage buckets, link-role guard.
+2. Linking flow (both sides) — unblocks everything else.
+3. Prescription request table + practitioner wizard from a consultation.
+4. Prescriber review page (approve/decline/more info) + timeline auto-events.
+5. Chat threads + realtime + voice notes.
+6. Dashboard cards + avg-response metric.
+7. PDF export of timeline.
+
+## Out of scope for this pass
+
+- Auto-sending scripts to pharmacies (still a separate manual step).
+- Bulk prescriber → many practitioners invite (single-invite only for now).
+- Legacy `prescriber_referrals` migration — new flow runs alongside; we can migrate later once adoption is confirmed.
+
+Approve and I'll start with the migration + linking flow, then move through the list.

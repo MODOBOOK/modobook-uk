@@ -5,7 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
-import { LogOut, Inbox, Network, ShieldCheck, Stethoscope, Building2, CalendarDays, Pill, LayoutDashboard, ClipboardList, MoreHorizontal, FileText } from "lucide-react";
+import { LogOut, Inbox, Network, ShieldCheck, Stethoscope, Building2, CalendarDays, Pill, LayoutDashboard, ClipboardList, MoreHorizontal, FileText, MessageSquareText } from "lucide-react";
 import { getHubContext } from "@/lib/hub.functions";
 import { getMyProfile } from "@/lib/profiles.functions";
 import { listMyReferrals } from "@/lib/prescriber.functions";
@@ -29,6 +29,7 @@ export const Route = createFileRoute("/_authenticated/prescriber")({
 
 const nav = [
   { to: "/prescriber/dashboard", label: "Dashboard", shortLabel: "Home", icon: LayoutDashboard, key: "dashboard" as const },
+  { to: "/prescriber/requests", label: "Requests", shortLabel: "Requests", icon: MessageSquareText, key: "requests" as const },
   { to: "/prescriber", label: "Referrals", shortLabel: "Referrals", icon: Inbox, exact: true, key: "referrals" as const },
   { to: "/prescriber/visits", label: "Clinic visits", shortLabel: "Visits", icon: CalendarDays, key: "visits" as const },
   { to: "/prescriber/library", label: "Prescriptions", shortLabel: "Rx", icon: Pill, key: "library" as const },
@@ -39,7 +40,8 @@ const nav = [
 ];
 
 // Mobile: primary 4 tabs + More sheet for the rest
-const mobilePrimaryKeys = ["referrals", "visits", "library", "connections"] as const;
+const mobilePrimaryKeys = ["requests", "visits", "library", "connections"] as const;
+
 
 
 

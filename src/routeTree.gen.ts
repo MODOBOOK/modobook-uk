@@ -55,6 +55,7 @@ import { Route as MSlugAccountRouteImport } from './routes/m.$slug.account'
 import { Route as MSlugAboutRouteImport } from './routes/m.$slug.about'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as AuthenticatedPrescriberVisitsRouteImport } from './routes/_authenticated/prescriber.visits'
+import { Route as AuthenticatedPrescriberRequestsRouteImport } from './routes/_authenticated/prescriber.requests'
 import { Route as AuthenticatedPrescriberLibraryRouteImport } from './routes/_authenticated/prescriber.library'
 import { Route as AuthenticatedPrescriberInvoicesRouteImport } from './routes/_authenticated/prescriber.invoices'
 import { Route as AuthenticatedPrescriberDirectionsRouteImport } from './routes/_authenticated/prescriber.directions'
@@ -70,6 +71,7 @@ import { Route as AuthenticatedDashboardTrainingRouteImport } from './routes/_au
 import { Route as AuthenticatedDashboardStaffRouteImport } from './routes/_authenticated/dashboard.staff'
 import { Route as AuthenticatedDashboardSettingsRouteImport } from './routes/_authenticated/dashboard.settings'
 import { Route as AuthenticatedDashboardServicesRouteImport } from './routes/_authenticated/dashboard.services'
+import { Route as AuthenticatedDashboardRxRequestsRouteImport } from './routes/_authenticated/dashboard.rx-requests'
 import { Route as AuthenticatedDashboardRewardsRouteImport } from './routes/_authenticated/dashboard.rewards'
 import { Route as AuthenticatedDashboardReviewsRouteImport } from './routes/_authenticated/dashboard.reviews'
 import { Route as AuthenticatedDashboardReferralsRouteImport } from './routes/_authenticated/dashboard.referrals'
@@ -130,7 +132,9 @@ import { Route as ApiPublicHooksDemoResetRouteImport } from './routes/api/public
 import { Route as ApiPublicHooksDailyScheduleDigestRouteImport } from './routes/api/public/hooks/daily-schedule-digest'
 import { Route as ApiPublicHooksAppointmentRemindersRouteImport } from './routes/api/public/hooks/appointment-reminders'
 import { Route as ApiPublicBookingReleaseRouteImport } from './routes/api/public/booking/release'
+import { Route as AuthenticatedPrescriberRequestsIdRouteImport } from './routes/_authenticated/prescriber.requests.$id'
 import { Route as AuthenticatedDashboardTrainingBookingsRouteImport } from './routes/_authenticated/dashboard.training.bookings'
+import { Route as AuthenticatedDashboardRxRequestsNewRouteImport } from './routes/_authenticated/dashboard.rx-requests.new'
 import { Route as AuthenticatedDashboardPatientsIdRouteImport } from './routes/_authenticated/dashboard.patients.$id'
 import { Route as AuthenticatedDashboardMarketingTemplatesRouteImport } from './routes/_authenticated/dashboard.marketing.templates'
 import { Route as AuthenticatedDashboardMarketingSegmentsRouteImport } from './routes/_authenticated/dashboard.marketing.segments'
@@ -378,6 +382,12 @@ const AuthenticatedPrescriberVisitsRoute =
     path: '/visits',
     getParentRoute: () => AuthenticatedPrescriberRoute,
   } as any)
+const AuthenticatedPrescriberRequestsRoute =
+  AuthenticatedPrescriberRequestsRouteImport.update({
+    id: '/requests',
+    path: '/requests',
+    getParentRoute: () => AuthenticatedPrescriberRoute,
+  } as any)
 const AuthenticatedPrescriberLibraryRoute =
   AuthenticatedPrescriberLibraryRouteImport.update({
     id: '/library',
@@ -465,6 +475,12 @@ const AuthenticatedDashboardServicesRoute =
   AuthenticatedDashboardServicesRouteImport.update({
     id: '/services',
     path: '/services',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardRxRequestsRoute =
+  AuthenticatedDashboardRxRequestsRouteImport.update({
+    id: '/rx-requests',
+    path: '/rx-requests',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
 const AuthenticatedDashboardRewardsRoute =
@@ -817,11 +833,23 @@ const ApiPublicBookingReleaseRoute = ApiPublicBookingReleaseRouteImport.update({
   path: '/api/public/booking/release',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedPrescriberRequestsIdRoute =
+  AuthenticatedPrescriberRequestsIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => AuthenticatedPrescriberRequestsRoute,
+  } as any)
 const AuthenticatedDashboardTrainingBookingsRoute =
   AuthenticatedDashboardTrainingBookingsRouteImport.update({
     id: '/bookings',
     path: '/bookings',
     getParentRoute: () => AuthenticatedDashboardTrainingRoute,
+  } as any)
+const AuthenticatedDashboardRxRequestsNewRoute =
+  AuthenticatedDashboardRxRequestsNewRouteImport.update({
+    id: '/new',
+    path: '/new',
+    getParentRoute: () => AuthenticatedDashboardRxRequestsRoute,
   } as any)
 const AuthenticatedDashboardPatientsIdRoute =
   AuthenticatedDashboardPatientsIdRouteImport.update({
@@ -971,6 +999,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/referrals': typeof AuthenticatedDashboardReferralsRoute
   '/dashboard/reviews': typeof AuthenticatedDashboardReviewsRoute
   '/dashboard/rewards': typeof AuthenticatedDashboardRewardsRoute
+  '/dashboard/rx-requests': typeof AuthenticatedDashboardRxRequestsRouteWithChildren
   '/dashboard/services': typeof AuthenticatedDashboardServicesRoute
   '/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
   '/dashboard/staff': typeof AuthenticatedDashboardStaffRoute
@@ -986,6 +1015,7 @@ export interface FileRoutesByFullPath {
   '/prescriber/directions': typeof AuthenticatedPrescriberDirectionsRoute
   '/prescriber/invoices': typeof AuthenticatedPrescriberInvoicesRoute
   '/prescriber/library': typeof AuthenticatedPrescriberLibraryRoute
+  '/prescriber/requests': typeof AuthenticatedPrescriberRequestsRouteWithChildren
   '/prescriber/visits': typeof AuthenticatedPrescriberVisitsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/m/$slug/about': typeof MSlugAboutRoute
@@ -1007,7 +1037,9 @@ export interface FileRoutesByFullPath {
   '/dashboard/marketing/segments': typeof AuthenticatedDashboardMarketingSegmentsRoute
   '/dashboard/marketing/templates': typeof AuthenticatedDashboardMarketingTemplatesRoute
   '/dashboard/patients/$id': typeof AuthenticatedDashboardPatientsIdRouteWithChildren
+  '/dashboard/rx-requests/new': typeof AuthenticatedDashboardRxRequestsNewRoute
   '/dashboard/training/bookings': typeof AuthenticatedDashboardTrainingBookingsRoute
+  '/prescriber/requests/$id': typeof AuthenticatedPrescriberRequestsIdRoute
   '/api/public/booking/release': typeof ApiPublicBookingReleaseRoute
   '/api/public/hooks/appointment-reminders': typeof ApiPublicHooksAppointmentRemindersRoute
   '/api/public/hooks/daily-schedule-digest': typeof ApiPublicHooksDailyScheduleDigestRoute
@@ -1101,6 +1133,7 @@ export interface FileRoutesByTo {
   '/dashboard/referrals': typeof AuthenticatedDashboardReferralsRoute
   '/dashboard/reviews': typeof AuthenticatedDashboardReviewsRoute
   '/dashboard/rewards': typeof AuthenticatedDashboardRewardsRoute
+  '/dashboard/rx-requests': typeof AuthenticatedDashboardRxRequestsRouteWithChildren
   '/dashboard/services': typeof AuthenticatedDashboardServicesRoute
   '/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
   '/dashboard/staff': typeof AuthenticatedDashboardStaffRoute
@@ -1116,6 +1149,7 @@ export interface FileRoutesByTo {
   '/prescriber/directions': typeof AuthenticatedPrescriberDirectionsRoute
   '/prescriber/invoices': typeof AuthenticatedPrescriberInvoicesRoute
   '/prescriber/library': typeof AuthenticatedPrescriberLibraryRoute
+  '/prescriber/requests': typeof AuthenticatedPrescriberRequestsRouteWithChildren
   '/prescriber/visits': typeof AuthenticatedPrescriberVisitsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/m/$slug/about': typeof MSlugAboutRoute
@@ -1136,7 +1170,9 @@ export interface FileRoutesByTo {
   '/dashboard/marketing/automations': typeof AuthenticatedDashboardMarketingAutomationsRoute
   '/dashboard/marketing/segments': typeof AuthenticatedDashboardMarketingSegmentsRoute
   '/dashboard/marketing/templates': typeof AuthenticatedDashboardMarketingTemplatesRoute
+  '/dashboard/rx-requests/new': typeof AuthenticatedDashboardRxRequestsNewRoute
   '/dashboard/training/bookings': typeof AuthenticatedDashboardTrainingBookingsRoute
+  '/prescriber/requests/$id': typeof AuthenticatedPrescriberRequestsIdRoute
   '/api/public/booking/release': typeof ApiPublicBookingReleaseRoute
   '/api/public/hooks/appointment-reminders': typeof ApiPublicHooksAppointmentRemindersRoute
   '/api/public/hooks/daily-schedule-digest': typeof ApiPublicHooksDailyScheduleDigestRoute
@@ -1238,6 +1274,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/referrals': typeof AuthenticatedDashboardReferralsRoute
   '/_authenticated/dashboard/reviews': typeof AuthenticatedDashboardReviewsRoute
   '/_authenticated/dashboard/rewards': typeof AuthenticatedDashboardRewardsRoute
+  '/_authenticated/dashboard/rx-requests': typeof AuthenticatedDashboardRxRequestsRouteWithChildren
   '/_authenticated/dashboard/services': typeof AuthenticatedDashboardServicesRoute
   '/_authenticated/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
   '/_authenticated/dashboard/staff': typeof AuthenticatedDashboardStaffRoute
@@ -1253,6 +1290,7 @@ export interface FileRoutesById {
   '/_authenticated/prescriber/directions': typeof AuthenticatedPrescriberDirectionsRoute
   '/_authenticated/prescriber/invoices': typeof AuthenticatedPrescriberInvoicesRoute
   '/_authenticated/prescriber/library': typeof AuthenticatedPrescriberLibraryRoute
+  '/_authenticated/prescriber/requests': typeof AuthenticatedPrescriberRequestsRouteWithChildren
   '/_authenticated/prescriber/visits': typeof AuthenticatedPrescriberVisitsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/m/$slug/about': typeof MSlugAboutRoute
@@ -1274,7 +1312,9 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/marketing/segments': typeof AuthenticatedDashboardMarketingSegmentsRoute
   '/_authenticated/dashboard/marketing/templates': typeof AuthenticatedDashboardMarketingTemplatesRoute
   '/_authenticated/dashboard/patients/$id': typeof AuthenticatedDashboardPatientsIdRouteWithChildren
+  '/_authenticated/dashboard/rx-requests/new': typeof AuthenticatedDashboardRxRequestsNewRoute
   '/_authenticated/dashboard/training/bookings': typeof AuthenticatedDashboardTrainingBookingsRoute
+  '/_authenticated/prescriber/requests/$id': typeof AuthenticatedPrescriberRequestsIdRoute
   '/api/public/booking/release': typeof ApiPublicBookingReleaseRoute
   '/api/public/hooks/appointment-reminders': typeof ApiPublicHooksAppointmentRemindersRoute
   '/api/public/hooks/daily-schedule-digest': typeof ApiPublicHooksDailyScheduleDigestRoute
@@ -1376,6 +1416,7 @@ export interface FileRouteTypes {
     | '/dashboard/referrals'
     | '/dashboard/reviews'
     | '/dashboard/rewards'
+    | '/dashboard/rx-requests'
     | '/dashboard/services'
     | '/dashboard/settings'
     | '/dashboard/staff'
@@ -1391,6 +1432,7 @@ export interface FileRouteTypes {
     | '/prescriber/directions'
     | '/prescriber/invoices'
     | '/prescriber/library'
+    | '/prescriber/requests'
     | '/prescriber/visits'
     | '/lovable/email/suppression'
     | '/m/$slug/about'
@@ -1412,7 +1454,9 @@ export interface FileRouteTypes {
     | '/dashboard/marketing/segments'
     | '/dashboard/marketing/templates'
     | '/dashboard/patients/$id'
+    | '/dashboard/rx-requests/new'
     | '/dashboard/training/bookings'
+    | '/prescriber/requests/$id'
     | '/api/public/booking/release'
     | '/api/public/hooks/appointment-reminders'
     | '/api/public/hooks/daily-schedule-digest'
@@ -1506,6 +1550,7 @@ export interface FileRouteTypes {
     | '/dashboard/referrals'
     | '/dashboard/reviews'
     | '/dashboard/rewards'
+    | '/dashboard/rx-requests'
     | '/dashboard/services'
     | '/dashboard/settings'
     | '/dashboard/staff'
@@ -1521,6 +1566,7 @@ export interface FileRouteTypes {
     | '/prescriber/directions'
     | '/prescriber/invoices'
     | '/prescriber/library'
+    | '/prescriber/requests'
     | '/prescriber/visits'
     | '/lovable/email/suppression'
     | '/m/$slug/about'
@@ -1541,7 +1587,9 @@ export interface FileRouteTypes {
     | '/dashboard/marketing/automations'
     | '/dashboard/marketing/segments'
     | '/dashboard/marketing/templates'
+    | '/dashboard/rx-requests/new'
     | '/dashboard/training/bookings'
+    | '/prescriber/requests/$id'
     | '/api/public/booking/release'
     | '/api/public/hooks/appointment-reminders'
     | '/api/public/hooks/daily-schedule-digest'
@@ -1642,6 +1690,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/referrals'
     | '/_authenticated/dashboard/reviews'
     | '/_authenticated/dashboard/rewards'
+    | '/_authenticated/dashboard/rx-requests'
     | '/_authenticated/dashboard/services'
     | '/_authenticated/dashboard/settings'
     | '/_authenticated/dashboard/staff'
@@ -1657,6 +1706,7 @@ export interface FileRouteTypes {
     | '/_authenticated/prescriber/directions'
     | '/_authenticated/prescriber/invoices'
     | '/_authenticated/prescriber/library'
+    | '/_authenticated/prescriber/requests'
     | '/_authenticated/prescriber/visits'
     | '/lovable/email/suppression'
     | '/m/$slug/about'
@@ -1678,7 +1728,9 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/marketing/segments'
     | '/_authenticated/dashboard/marketing/templates'
     | '/_authenticated/dashboard/patients/$id'
+    | '/_authenticated/dashboard/rx-requests/new'
     | '/_authenticated/dashboard/training/bookings'
+    | '/_authenticated/prescriber/requests/$id'
     | '/api/public/booking/release'
     | '/api/public/hooks/appointment-reminders'
     | '/api/public/hooks/daily-schedule-digest'
@@ -2078,6 +2130,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPrescriberVisitsRouteImport
       parentRoute: typeof AuthenticatedPrescriberRoute
     }
+    '/_authenticated/prescriber/requests': {
+      id: '/_authenticated/prescriber/requests'
+      path: '/requests'
+      fullPath: '/prescriber/requests'
+      preLoaderRoute: typeof AuthenticatedPrescriberRequestsRouteImport
+      parentRoute: typeof AuthenticatedPrescriberRoute
+    }
     '/_authenticated/prescriber/library': {
       id: '/_authenticated/prescriber/library'
       path: '/library'
@@ -2181,6 +2240,13 @@ declare module '@tanstack/react-router' {
       path: '/services'
       fullPath: '/dashboard/services'
       preLoaderRoute: typeof AuthenticatedDashboardServicesRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/rx-requests': {
+      id: '/_authenticated/dashboard/rx-requests'
+      path: '/rx-requests'
+      fullPath: '/dashboard/rx-requests'
+      preLoaderRoute: typeof AuthenticatedDashboardRxRequestsRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
     '/_authenticated/dashboard/rewards': {
@@ -2603,12 +2669,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicBookingReleaseRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/prescriber/requests/$id': {
+      id: '/_authenticated/prescriber/requests/$id'
+      path: '/$id'
+      fullPath: '/prescriber/requests/$id'
+      preLoaderRoute: typeof AuthenticatedPrescriberRequestsIdRouteImport
+      parentRoute: typeof AuthenticatedPrescriberRequestsRoute
+    }
     '/_authenticated/dashboard/training/bookings': {
       id: '/_authenticated/dashboard/training/bookings'
       path: '/bookings'
       fullPath: '/dashboard/training/bookings'
       preLoaderRoute: typeof AuthenticatedDashboardTrainingBookingsRouteImport
       parentRoute: typeof AuthenticatedDashboardTrainingRoute
+    }
+    '/_authenticated/dashboard/rx-requests/new': {
+      id: '/_authenticated/dashboard/rx-requests/new'
+      path: '/new'
+      fullPath: '/dashboard/rx-requests/new'
+      preLoaderRoute: typeof AuthenticatedDashboardRxRequestsNewRouteImport
+      parentRoute: typeof AuthenticatedDashboardRxRequestsRoute
     }
     '/_authenticated/dashboard/patients/$id': {
       id: '/_authenticated/dashboard/patients/$id'
@@ -2810,6 +2890,21 @@ const AuthenticatedDashboardPatientsRouteWithChildren =
     AuthenticatedDashboardPatientsRouteChildren,
   )
 
+interface AuthenticatedDashboardRxRequestsRouteChildren {
+  AuthenticatedDashboardRxRequestsNewRoute: typeof AuthenticatedDashboardRxRequestsNewRoute
+}
+
+const AuthenticatedDashboardRxRequestsRouteChildren: AuthenticatedDashboardRxRequestsRouteChildren =
+  {
+    AuthenticatedDashboardRxRequestsNewRoute:
+      AuthenticatedDashboardRxRequestsNewRoute,
+  }
+
+const AuthenticatedDashboardRxRequestsRouteWithChildren =
+  AuthenticatedDashboardRxRequestsRoute._addFileChildren(
+    AuthenticatedDashboardRxRequestsRouteChildren,
+  )
+
 interface AuthenticatedDashboardTrainingRouteChildren {
   AuthenticatedDashboardTrainingBookingsRoute: typeof AuthenticatedDashboardTrainingBookingsRoute
 }
@@ -2860,6 +2955,7 @@ interface AuthenticatedDashboardRouteChildren {
   AuthenticatedDashboardReferralsRoute: typeof AuthenticatedDashboardReferralsRoute
   AuthenticatedDashboardReviewsRoute: typeof AuthenticatedDashboardReviewsRoute
   AuthenticatedDashboardRewardsRoute: typeof AuthenticatedDashboardRewardsRoute
+  AuthenticatedDashboardRxRequestsRoute: typeof AuthenticatedDashboardRxRequestsRouteWithChildren
   AuthenticatedDashboardServicesRoute: typeof AuthenticatedDashboardServicesRoute
   AuthenticatedDashboardSettingsRoute: typeof AuthenticatedDashboardSettingsRoute
   AuthenticatedDashboardStaffRoute: typeof AuthenticatedDashboardStaffRoute
@@ -2918,6 +3014,8 @@ const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
     AuthenticatedDashboardReferralsRoute: AuthenticatedDashboardReferralsRoute,
     AuthenticatedDashboardReviewsRoute: AuthenticatedDashboardReviewsRoute,
     AuthenticatedDashboardRewardsRoute: AuthenticatedDashboardRewardsRoute,
+    AuthenticatedDashboardRxRequestsRoute:
+      AuthenticatedDashboardRxRequestsRouteWithChildren,
     AuthenticatedDashboardServicesRoute: AuthenticatedDashboardServicesRoute,
     AuthenticatedDashboardSettingsRoute: AuthenticatedDashboardSettingsRoute,
     AuthenticatedDashboardStaffRoute: AuthenticatedDashboardStaffRoute,
@@ -2958,12 +3056,28 @@ const AuthenticatedHubRouteChildren: AuthenticatedHubRouteChildren = {
 const AuthenticatedHubRouteWithChildren =
   AuthenticatedHubRoute._addFileChildren(AuthenticatedHubRouteChildren)
 
+interface AuthenticatedPrescriberRequestsRouteChildren {
+  AuthenticatedPrescriberRequestsIdRoute: typeof AuthenticatedPrescriberRequestsIdRoute
+}
+
+const AuthenticatedPrescriberRequestsRouteChildren: AuthenticatedPrescriberRequestsRouteChildren =
+  {
+    AuthenticatedPrescriberRequestsIdRoute:
+      AuthenticatedPrescriberRequestsIdRoute,
+  }
+
+const AuthenticatedPrescriberRequestsRouteWithChildren =
+  AuthenticatedPrescriberRequestsRoute._addFileChildren(
+    AuthenticatedPrescriberRequestsRouteChildren,
+  )
+
 interface AuthenticatedPrescriberRouteChildren {
   AuthenticatedPrescriberConnectionsRoute: typeof AuthenticatedPrescriberConnectionsRoute
   AuthenticatedPrescriberDashboardRoute: typeof AuthenticatedPrescriberDashboardRoute
   AuthenticatedPrescriberDirectionsRoute: typeof AuthenticatedPrescriberDirectionsRoute
   AuthenticatedPrescriberInvoicesRoute: typeof AuthenticatedPrescriberInvoicesRoute
   AuthenticatedPrescriberLibraryRoute: typeof AuthenticatedPrescriberLibraryRoute
+  AuthenticatedPrescriberRequestsRoute: typeof AuthenticatedPrescriberRequestsRouteWithChildren
   AuthenticatedPrescriberVisitsRoute: typeof AuthenticatedPrescriberVisitsRoute
   AuthenticatedPrescriberIndexRoute: typeof AuthenticatedPrescriberIndexRoute
 }
@@ -2978,6 +3092,8 @@ const AuthenticatedPrescriberRouteChildren: AuthenticatedPrescriberRouteChildren
       AuthenticatedPrescriberDirectionsRoute,
     AuthenticatedPrescriberInvoicesRoute: AuthenticatedPrescriberInvoicesRoute,
     AuthenticatedPrescriberLibraryRoute: AuthenticatedPrescriberLibraryRoute,
+    AuthenticatedPrescriberRequestsRoute:
+      AuthenticatedPrescriberRequestsRouteWithChildren,
     AuthenticatedPrescriberVisitsRoute: AuthenticatedPrescriberVisitsRoute,
     AuthenticatedPrescriberIndexRoute: AuthenticatedPrescriberIndexRoute,
   }
