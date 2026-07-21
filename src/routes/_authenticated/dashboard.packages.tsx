@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { listMyPackages, createPackage, updatePackage, deletePackage } from "@/lib/packages.functions";
 import { getMyTreatments } from "@/lib/treatments.functions";
 import { getMyPackageCategories, createPackageCategory, deletePackageCategory } from "@/lib/categories.functions";
+import { getMyProfile } from "@/lib/profiles.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,6 +15,7 @@ import { Switch } from "@/components/ui/switch";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Badge } from "@/components/ui/badge";
+import { ImageUploader } from "@/components/ImageUploader";
 import { toast } from "sonner";
 import { Plus, Pencil, Trash2, Package, X, Search, Check } from "lucide-react";
 
@@ -65,19 +67,22 @@ function PackagesPage() {
   const listCategories = useServerFn(getMyPackageCategories);
   const createCat = useServerFn(createPackageCategory);
   const deleteCat = useServerFn(deletePackageCategory);
+  const fetchProfile = useServerFn(getMyProfile);
 
   const [packages, setPackages] = useState<Pkg[]>([]);
   const [treatments, setTreatments] = useState<Treatment[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [profileId, setProfileId] = useState<string>("");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Pkg | null>(null);
   const [form, setForm] = useState(blankForm);
 
   async function refresh() {
-    const [p, t, c] = await Promise.all([list(), listTreatments(), listCategories()]);
+    const [p, t, c, profile] = await Promise.all([list(), listTreatments(), listCategories(), fetchProfile()]);
     setPackages(p as Pkg[]);
     setTreatments((t as Treatment[]) ?? []);
     setCategories((c as Category[]) ?? []);
+    setProfileId((profile as { id?: string } | null)?.id ?? "");
   }
   useEffect(() => { refresh(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
 
@@ -362,10 +367,16 @@ function PackagesPage() {
                   <Input type="number" min={1} value={form.expiry_days} onChange={(e) => setForm({ ...form, expiry_days: e.target.value })} placeholder="optional" />
                 </div>
               </div>
-              <div>
-                <Label>Image URL (optional)</Label>
-                <Input value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} placeholder="https://…" />
-              </div>
+              {profileId && (
+                <ImageUploader
+                  label="Package image (optional)"
+                  value={form.image_url}
+                  onChange={(url) => setForm({ ...form, image_url: url ?? "" })}
+                  profileId={profileId}
+                  folder="packages"
+                  previewClass="mt-2 h-32 w-full object-cover rounded-md"
+                />
+              )}
               <div className="flex items-center justify-between">
                 <Label>Active (visible to patients)</Label>
                 <Switch checked={form.active} onCheckedChange={(v) => setForm({ ...form, active: v })} />
@@ -409,7 +420,12 @@ function PackagesPage() {
             const saving = original > price ? original - price : 0;
             const savingPct = original > 0 && saving > 0 ? Math.round((saving / original) * 100) : 0;
             return (
-              <Card key={p.id}>
+              <Card key={p.id} className="overflow-hidden">
+                {p.image_url && (
+                  <div className="aspect-[16/7] w-full overflow-hidden bg-muted">
+                    <img src={p.image_url} alt={p.name} className="h-full w-full object-cover" loading="lazy" />
+                  </div>
+                )}
                 <CardHeader className="flex flex-row items-start justify-between gap-2 pb-2">
                   <div>
                     <CardTitle className="text-base">{p.name}</CardTitle>
