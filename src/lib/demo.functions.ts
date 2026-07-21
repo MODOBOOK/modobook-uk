@@ -31,13 +31,19 @@ export const ensureDemoSetup = createServerFn({ method: "POST" })
  */
 export const launchDemoSession = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: { role: "practitioner" | "patient"; origin?: string }) => i)
+  .validator((i: { role: "practitioner" | "patient"; origin?: string }) => i)
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { seedDemoClinic } = await import("./demo-seed.server");
     // Ensure accounts exist before minting a link.
-    await seedDemoClinic(supabaseAdmin);
+    try {
+      await seedDemoClinic(supabaseAdmin);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unknown setup error";
+      console.error("Demo clinic seed failed before launch", error);
+      throw new Error(`Demo setup failed: ${message}`);
+    }
     const { DEMO_PRACTITIONER_EMAIL, DEMO_PATIENT_EMAIL, DEMO_SLUG } = await import("./demo.server");
     const email = data.role === "practitioner" ? DEMO_PRACTITIONER_EMAIL : DEMO_PATIENT_EMAIL;
     const origin = (data.origin || "https://modobook.uk").replace(/\/$/, "");

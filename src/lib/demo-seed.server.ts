@@ -121,7 +121,7 @@ export async function seedDemoClinic(admin: Admin) {
         name,
         price,
         duration,
-        payment_mode: "on_the_day",
+        payment_mode: "full",
         active: true,
       })
       .select("id")
