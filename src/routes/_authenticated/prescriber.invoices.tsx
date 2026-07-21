@@ -421,22 +421,23 @@ function InvoicesCard({
         ) : (
           <ul className="divide-y">
             {rows.map((r) => (
-              <li key={r.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
+              <li key={r.id} className="py-3 grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
                 <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium">{r.invoice_number}</span>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-medium truncate">{r.invoice_number}</span>
                     <StatusBadge status={r.status} />
+                    <span className="ml-auto font-medium tabular-nums sm:hidden">{fmtCents(r.subtotal_cents, r.currency)}</span>
                   </div>
-                  <div className="text-xs text-muted-foreground">
+                  <div className="text-xs text-muted-foreground truncate">
                     {r.practitioner?.full_name}
                     {r.practitioner?.clinic_name ? ` • ${r.practitioner.clinic_name}` : ""}
                     {" • "}{new Date(r.created_at).toLocaleDateString()}
                     {r.sent_at ? ` • sent ${new Date(r.sent_at).toLocaleDateString()}` : ""}
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="text-right font-medium tabular-nums">{fmtCents(r.subtotal_cents, r.currency)}</div>
-                  <div className="flex gap-1">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="hidden sm:block text-right font-medium tabular-nums">{fmtCents(r.subtotal_cents, r.currency)}</div>
+                  <div className="flex flex-wrap gap-1">
                     <DownloadPdfButton inv={r} />
                     {r.status !== "paid" && (
                       <Button size="sm" onClick={() => sendNow(r)} disabled={busyId === r.id}>
@@ -446,7 +447,7 @@ function InvoicesCard({
                       </Button>
                     )}
                     <Button size="sm" variant="outline" onClick={() => togglePaid(r)}>
-                      <Check className="mr-1 h-3 w-3" /> {r.status === "paid" ? "Mark unpaid" : "Mark paid"}
+                      <Check className="mr-1 h-3 w-3" /> {r.status === "paid" ? "Unpaid" : "Paid"}
                     </Button>
                     <Button size="sm" variant="ghost" onClick={() => remove(r)}>
                       <Trash2 className="h-4 w-4" />
@@ -455,6 +456,7 @@ function InvoicesCard({
                 </div>
               </li>
             ))}
+
           </ul>
         )}
       </CardContent>
