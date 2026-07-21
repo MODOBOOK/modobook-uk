@@ -62,6 +62,7 @@ export async function seedDemoClinic(admin: Admin) {
     .eq("user_id", practitionerUserId)
     .maybeSingle();
 
+  let profileId = existingProfile?.id as string | undefined;
   const profileFields = {
     is_demo: true,
     active: true,
