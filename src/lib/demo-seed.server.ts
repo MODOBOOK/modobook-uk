@@ -216,5 +216,5 @@ export async function resetDemoClinic(admin: Admin) {
     await admin.from("consultations").delete().eq("profile_id", profile.id);
   }
   const seeded = await seedDemoClinic(admin);
-  return { ok: true, ...seeded };
+  return { ...seeded, ok: true };
 }
