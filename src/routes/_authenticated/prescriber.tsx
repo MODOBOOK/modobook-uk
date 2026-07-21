@@ -33,6 +33,7 @@ const nav = [
   { to: "/prescriber/visits", label: "Clinic visits", shortLabel: "Visits", icon: CalendarDays, key: "visits" as const },
   { to: "/prescriber/library", label: "Prescriptions", shortLabel: "Rx", icon: Pill, key: "library" as const },
   { to: "/prescriber/directions", label: "Directions", shortLabel: "Directions", icon: ClipboardList, key: "directions" as const },
+  { to: "/prescriber/invoices", label: "Invoices", shortLabel: "Invoices", icon: FileText, key: "invoices" as const },
   { to: "/prescriber/connections", label: "Practitioners", shortLabel: "Team", icon: Network, key: "connections" as const },
   { to: "/hub/verification", label: "Verification", shortLabel: "Verify", icon: ShieldCheck, key: "verification" as const },
 ];
