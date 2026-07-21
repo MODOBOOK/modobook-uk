@@ -367,10 +367,16 @@ function PackagesPage() {
                   <Input type="number" min={1} value={form.expiry_days} onChange={(e) => setForm({ ...form, expiry_days: e.target.value })} placeholder="optional" />
                 </div>
               </div>
-              <div>
-                <Label>Image URL (optional)</Label>
-                <Input value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} placeholder="https://…" />
-              </div>
+              {profileId && (
+                <ImageUploader
+                  label="Package image (optional)"
+                  value={form.image_url}
+                  onChange={(url) => setForm({ ...form, image_url: url ?? "" })}
+                  profileId={profileId}
+                  folder="packages"
+                  previewClass="mt-2 h-32 w-full object-cover rounded-md"
+                />
+              )}
               <div className="flex items-center justify-between">
                 <Label>Active (visible to patients)</Label>
                 <Switch checked={form.active} onCheckedChange={(v) => setForm({ ...form, active: v })} />
