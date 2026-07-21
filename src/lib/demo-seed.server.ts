@@ -146,7 +146,6 @@ export async function seedDemoClinic(admin: Admin) {
       .from("clinic_clients")
       .insert({
         profile_id: profileId,
-        patient_user_id: patientUserId,
         full_name: DEMO_PATIENT_NAME,
         email: DEMO_PATIENT_EMAIL,
         phone: "+447700900000",
@@ -163,24 +162,37 @@ export async function seedDemoClinic(admin: Admin) {
   const upcoming = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
   const past = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
 
+  function ymd(d: Date) {
+    return d.toISOString().slice(0, 10);
+  }
+  function hms(d: Date) {
+    return d.toISOString().slice(11, 19);
+  }
+
   async function ensureAppointment(when: Date, treatmentId: string, treatmentName: string, status: string) {
-    const iso = when.toISOString();
+    const date = ymd(when);
+    const start = hms(when);
     const { data: existing } = await admin
       .from("appointments")
       .select("id")
       .eq("profile_id", profileId!)
-      .eq("client_id", clientId!)
-      .eq("start_at", iso)
+      .eq("patient_user_id", patientUserId)
+      .eq("scheduled_date", date)
+      .eq("start_time", start)
       .maybeSingle();
     if (existing?.id) return existing.id;
+    const end = hms(new Date(when.getTime() + 30 * 60 * 1000));
     const { error } = await admin.from("appointments").insert({
       profile_id: profileId!,
-      client_id: clientId!,
+      patient_user_id: patientUserId,
+      patient_name: DEMO_PATIENT_NAME,
+      patient_email: DEMO_PATIENT_EMAIL,
       location_id: locationId!,
       treatment_id: treatmentId,
       treatment_name_snapshot: treatmentName,
-      start_at: iso,
-      end_at: new Date(when.getTime() + 30 * 60 * 1000).toISOString(),
+      scheduled_date: date,
+      start_time: start,
+      end_time: end,
       status,
       is_demo: true,
     });
@@ -199,6 +211,7 @@ export async function seedDemoClinic(admin: Admin) {
     seeded: { treatments: [t1, t2, t3], locationId, clientId },
   };
 }
+
 
 /** Removes transient demo activity and re-seeds baseline. Keeps the
  *  practitioner/patient users and the profile itself. */
