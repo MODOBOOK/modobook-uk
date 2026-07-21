@@ -266,8 +266,10 @@ function InvoicesCard({
 }) {
   const [open, setOpen] = useState(false);
   const del = useServerFn(deletePrescriberInvoice);
-  const send = useServerFn(sendPrescriberInvoice);
+  const ensureLink = useServerFn(ensurePrescriberInvoiceStripeLink);
+  const markSent = useServerFn(markPrescriberInvoiceSent);
   const markPaid = useServerFn(markPrescriberInvoicePaid);
+  const getProfile = useServerFn(getMyProfile);
 
   const [busyId, setBusyId] = useState<string | null>(null);
 
@@ -276,18 +278,80 @@ function InvoicesCard({
     try { await del({ data: { id: r.id } }); toast.success("Deleted"); onChanged(); }
     catch (e) { toast.error((e as Error).message); }
   }
+
   async function sendNow(r: PrescriberInvoice) {
+    if (!r.practitioner?.email) { toast.error("Practitioner has no email"); return; }
     setBusyId(r.id);
-    try { await send({ data: { id: r.id } }); toast.success("Invoice sent"); onChanged(); }
-    catch (e) { toast.error((e as Error).message); }
+    try {
+      // 1) Load prescriber profile (for bank details, logo, brand)
+      const profile: any = await getProfile();
+
+      // 2) Ensure Stripe payment link exists on the invoice
+      const { stripeUrl } = await ensureLink({ data: { id: r.id } });
+
+      // 3) Build branded PDF exactly like the patient invoice
+      const doc = await generateInvoicePdf(profileToInvoiceArgs(profile, r, stripeUrl));
+      const pdfBlob = doc.output("blob");
+
+      // 4) Upload PDF to storage and get a long-lived signed URL
+      const path = `${profile?.id}/prescriber-invoices/${r.id}-${Date.now()}.pdf`;
+      const up = await supabase.storage
+        .from("clinic-assets")
+        .upload(path, pdfBlob, { upsert: true, contentType: "application/pdf" });
+      if (up.error) throw up.error;
+      const TEN_YEARS = 60 * 60 * 24 * 365 * 10;
+      const signed = await supabase.storage.from("clinic-assets").createSignedUrl(path, TEN_YEARS);
+      const pdfUrl = signed.data?.signedUrl ?? null;
+
+      // 5) Send branded email with pay link + PDF link
+      const prescriberName = profile?.clinic_name || profile?.full_name || "Prescriber";
+      const res = await sendAppEmail({
+        templateName: "prescriber-invoice",
+        recipientEmail: r.practitioner.email,
+        idempotencyKey: `prescriber-invoice-${r.id}-${r.subtotal_cents}`,
+        templateData: {
+          siteName: prescriberName,
+          logoUrl: profile?.invoice_show_logo === false ? null : (profile?.avatar_url ?? null),
+          brandColor: profile?.brand_color ?? null,
+          prescriberName,
+          practitionerName: r.practitioner.full_name,
+          clinicName: r.practitioner.clinic_name,
+          invoiceNumber: r.invoice_number,
+          currency: (r.currency ?? "gbp").toUpperCase(),
+          subtotalCents: r.subtotal_cents,
+          items: r.items,
+          notes: r.notes,
+          dueDate: r.due_date,
+          payUrl: stripeUrl,
+          pdfUrl,
+          bank: profile?.invoice_show_bank_details ? {
+            bankName: profile?.invoice_bank_name,
+            accountName: profile?.invoice_account_name,
+            sortCode: profile?.invoice_sort_code,
+            accountNumber: profile?.invoice_account_number,
+            iban: profile?.invoice_iban,
+            swift: profile?.invoice_swift,
+            paymentReference: profile?.invoice_payment_reference || r.invoice_number,
+          } : null,
+        },
+      });
+      if (!res.ok) throw new Error(res.error || "Send failed");
+
+      // 6) Mark as sent
+      await markSent({ data: { id: r.id } });
+      toast.success("Invoice sent");
+      onChanged();
+    } catch (e) { toast.error((e as Error).message); }
     finally { setBusyId(null); }
   }
+
   async function togglePaid(r: PrescriberInvoice) {
     try {
       await markPaid({ data: { id: r.id, paid: r.status !== "paid" } });
       onChanged();
     } catch (e) { toast.error((e as Error).message); }
   }
+
 
   return (
     <Card>
