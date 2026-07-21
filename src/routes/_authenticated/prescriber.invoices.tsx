@@ -23,7 +23,8 @@ import {
   listPrescriberInvoices,
   createPrescriberInvoice,
   deletePrescriberInvoice,
-  sendPrescriberInvoice,
+  ensurePrescriberInvoiceStripeLink,
+  markPrescriberInvoiceSent,
   markPrescriberInvoicePaid,
   type PractitionerClient,
   type InvoiceItem,
@@ -31,6 +32,8 @@ import {
 } from "@/lib/prescriber-invoices.functions";
 import { generateInvoicePdf } from "@/lib/invoice-pdf";
 import { getMyProfile } from "@/lib/profiles.functions";
+import { supabase } from "@/integrations/supabase/client";
+import { sendAppEmail } from "@/lib/email/send";
 
 export const Route = createFileRoute("/_authenticated/prescriber/invoices")({
   ssr: false,
