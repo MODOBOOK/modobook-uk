@@ -547,24 +547,29 @@ function NewInvoiceDialog({
         <div className="space-y-2">
           <Label>Line items</Label>
           {items.map((it, i) => (
-            <div key={i} className="grid grid-cols-12 items-end gap-2">
-              <div className="col-span-6">
+            <div key={i} className="rounded-md border bg-muted/30 p-2 space-y-2 sm:space-y-0 sm:grid sm:grid-cols-12 sm:items-end sm:gap-2 sm:bg-transparent sm:border-0 sm:p-0">
+              <div className="sm:col-span-6">
+                <Label className="text-[11px] text-muted-foreground sm:hidden">Description</Label>
                 <Input placeholder="Description" value={it.description}
                   onChange={(e) => updateItem(i, { description: e.target.value })} />
               </div>
-              <div className="col-span-2">
-                <Input type="number" min="1" step="1" placeholder="Qty" value={it.qty}
-                  onChange={(e) => updateItem(i, { qty: Math.max(1, Number(e.target.value || 1)) })} />
-              </div>
-              <div className="col-span-3">
-                <Input type="number" min="0" step="0.01" placeholder="Unit £"
-                  value={it.unitPriceCents ? (it.unitPriceCents / 100).toFixed(2) : ""}
-                  onChange={(e) => updateItem(i, { unitPriceCents: Math.round(Number(e.target.value || 0) * 100) })} />
-              </div>
-              <div className="col-span-1">
-                <Button type="button" size="sm" variant="ghost" onClick={() => removeLine(i)} disabled={items.length === 1}>
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+              <div className="grid grid-cols-[1fr_1fr_auto] gap-2 sm:contents">
+                <div className="sm:col-span-2">
+                  <Label className="text-[11px] text-muted-foreground sm:hidden">Qty</Label>
+                  <Input type="number" min="1" step="1" placeholder="Qty" value={it.qty}
+                    onChange={(e) => updateItem(i, { qty: Math.max(1, Number(e.target.value || 1)) })} />
+                </div>
+                <div className="sm:col-span-3">
+                  <Label className="text-[11px] text-muted-foreground sm:hidden">Unit £</Label>
+                  <Input type="number" min="0" step="0.01" placeholder="Unit £"
+                    value={it.unitPriceCents ? (it.unitPriceCents / 100).toFixed(2) : ""}
+                    onChange={(e) => updateItem(i, { unitPriceCents: Math.round(Number(e.target.value || 0) * 100) })} />
+                </div>
+                <div className="flex items-end sm:col-span-1">
+                  <Button type="button" size="icon" variant="ghost" onClick={() => removeLine(i)} disabled={items.length === 1} aria-label="Remove line">
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </div>
           ))}
@@ -572,6 +577,7 @@ function NewInvoiceDialog({
             <Plus className="mr-1 h-3 w-3" /> Add line
           </Button>
         </div>
+
 
         <div className="grid grid-cols-2 gap-3">
           <div>
