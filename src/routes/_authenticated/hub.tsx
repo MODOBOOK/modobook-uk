@@ -12,6 +12,7 @@ import {
   ShieldCheck,
   Pill,
   Stethoscope,
+  FileText,
 } from "lucide-react";
 import { getHubContext } from "@/lib/hub.functions";
 import { listMyClinicVisits } from "@/lib/clinic-visits.functions";
@@ -31,6 +32,7 @@ const PRESCRIBER_ONLY_REDIRECTS: Record<string, string> = {
   "/hub/visits": "/prescriber/visits",
   "/hub/prescribing": "/prescriber",
   "/hub/referrals": "/prescriber",
+  "/hub/invoices": "/prescriber/invoices",
   "/hub": "/prescriber",
 };
 
@@ -39,6 +41,7 @@ const nav = [
   { to: "/hub/visits", label: "Clinic days", icon: CalendarDays, key: "visits" as const },
   { to: "/hub/referrals", label: "Referrals", icon: Send, key: "referrals" as const },
   { to: "/hub/prescribing", label: "Rules", icon: Pill, key: "prescribing" as const },
+  { to: "/prescriber/invoices", label: "Invoices", icon: FileText, key: "invoices" as const, prescriberOnly: true },
   { to: "/hub/connections", label: "Prescribers", icon: Network, key: "connections" as const },
   { to: "/hub/verification", label: "Verification", icon: ShieldCheck, key: "verification" as const },
 ];
@@ -100,7 +103,7 @@ function HubLayout() {
           </div>
         </div>
         <nav className="flex-1 space-y-0.5 overflow-y-auto px-3 py-6">
-          {nav.map((item) => {
+          {nav.filter((i) => !i.prescriberOnly || isPrescriber).map((item) => {
             const active = item.exact ? pathname === item.to : pathname.startsWith(item.to);
             const count = badges[item.key] ?? 0;
             return (
@@ -169,9 +172,9 @@ function HubLayout() {
 
         <nav className={cn(
           "fixed inset-x-0 bottom-0 z-30 grid border-t bg-background/95 backdrop-blur lg:hidden",
-          "grid-cols-6",
+          isPrescriber ? "grid-cols-7" : "grid-cols-6",
         )}>
-          {nav.map((tab) => {
+          {nav.filter((i) => !i.prescriberOnly || isPrescriber).map((tab) => {
             const active = tab.exact ? pathname === tab.to : pathname.startsWith(tab.to);
             const count = badges[tab.key] ?? 0;
             return (

@@ -295,7 +295,7 @@ function InvoicesCard({
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button size="sm" disabled={practitioners.length === 0}>
+            <Button size="sm">
               <Plus className="mr-1 h-4 w-4" /> New invoice
             </Button>
           </DialogTrigger>
@@ -306,11 +306,6 @@ function InvoicesCard({
         </Dialog>
       </CardHeader>
       <CardContent>
-        {practitioners.length === 0 && (
-          <p className="mb-3 rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
-            Add at least one practitioner above before creating an invoice.
-          </p>
-        )}
         {loading ? (
           <p className="text-sm text-muted-foreground">Loading…</p>
         ) : rows.length === 0 ? (
@@ -373,12 +368,16 @@ function NewInvoiceDialog({
   practitioners, onCreated,
 }: { practitioners: PractitionerClient[]; onCreated: () => void }) {
   const create = useServerFn(createPrescriberInvoice);
+  const savePractitioner = useServerFn(upsertBillingPractitioner);
   const [busy, setBusy] = useState(false);
-  const [practitionerId, setPractitionerId] = useState<string>("");
+  const NEW_KEY = "__new__";
+  const [practitionerId, setPractitionerId] = useState<string>(practitioners.length === 0 ? NEW_KEY : "");
+  const [quick, setQuick] = useState({ full_name: "", clinic_name: "", email: "" });
   const [items, setItems] = useState<InvoiceItem[]>([{ description: "", qty: 1, unitPriceCents: 0 }]);
   const [notes, setNotes] = useState("");
   const [dueDate, setDueDate] = useState("");
 
+  const isNew = practitionerId === NEW_KEY;
   const selected = practitioners.find((p) => p.id === practitionerId);
 
   function updateItem(idx: number, patch: Partial<InvoiceItem>) {
@@ -396,12 +395,26 @@ function NewInvoiceDialog({
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!practitionerId) { toast.error("Pick a practitioner"); return; }
     setBusy(true);
     try {
+      let pid = practitionerId;
+      if (isNew) {
+        if (!quick.full_name.trim() || !quick.email.trim()) {
+          toast.error("Add practitioner name and email"); setBusy(false); return;
+        }
+        const created = await savePractitioner({
+          data: {
+            full_name: quick.full_name,
+            clinic_name: quick.clinic_name || null,
+            email: quick.email,
+          },
+        });
+        pid = created.id;
+      }
+      if (!pid) { toast.error("Pick a practitioner"); setBusy(false); return; }
       await create({
         data: {
-          practitionerId,
+          practitionerId: pid,
           items: items.filter((it) => it.description.trim().length > 0),
           notes: notes.trim() || null,
           dueDate: dueDate || null,
@@ -410,7 +423,7 @@ function NewInvoiceDialog({
       toast.success("Invoice created");
       onCreated();
       setItems([{ description: "", qty: 1, unitPriceCents: 0 }]);
-      setNotes(""); setDueDate("");
+      setNotes(""); setDueDate(""); setQuick({ full_name: "", clinic_name: "", email: "" });
     } catch (e) { toast.error((e as Error).message); }
     finally { setBusy(false); }
   }
@@ -441,9 +454,28 @@ function NewInvoiceDialog({
                   {p.full_name}{p.clinic_name ? ` — ${p.clinic_name}` : ""}
                 </SelectItem>
               ))}
+              <SelectItem value={NEW_KEY}>+ Add new practitioner…</SelectItem>
             </SelectContent>
           </Select>
+          {isNew && (
+            <div className="mt-3 grid gap-2 rounded-md border bg-muted/40 p-3 sm:grid-cols-3">
+              <div className="sm:col-span-1">
+                <Label className="text-xs">Full name</Label>
+                <Input value={quick.full_name} onChange={(e) => setQuick({ ...quick, full_name: e.target.value })} placeholder="Jane Smith" />
+              </div>
+              <div className="sm:col-span-1">
+                <Label className="text-xs">Clinic (optional)</Label>
+                <Input value={quick.clinic_name} onChange={(e) => setQuick({ ...quick, clinic_name: e.target.value })} placeholder="Clinic name" />
+              </div>
+              <div className="sm:col-span-1">
+                <Label className="text-xs">Email</Label>
+                <Input type="email" value={quick.email} onChange={(e) => setQuick({ ...quick, email: e.target.value })} placeholder="name@email.com" />
+              </div>
+              <p className="text-xs text-muted-foreground sm:col-span-3">Saved to your billing directory so you can reuse them next time.</p>
+            </div>
+          )}
         </div>
+
 
         <div className="space-y-2">
           <Label>Line items</Label>
