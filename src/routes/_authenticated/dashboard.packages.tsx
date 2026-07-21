@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { listMyPackages, createPackage, updatePackage, deletePackage } from "@/lib/packages.functions";
 import { getMyTreatments } from "@/lib/treatments.functions";
 import { getMyPackageCategories, createPackageCategory, deletePackageCategory } from "@/lib/categories.functions";
+import { getMyProfile } from "@/lib/profiles.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,6 +15,7 @@ import { Switch } from "@/components/ui/switch";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Badge } from "@/components/ui/badge";
+import { ImageUploader } from "@/components/ImageUploader";
 import { toast } from "sonner";
 import { Plus, Pencil, Trash2, Package, X, Search, Check } from "lucide-react";
 
