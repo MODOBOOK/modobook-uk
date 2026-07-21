@@ -4,6 +4,15 @@ import { BodyOverride, Head, ModoShell, brand, brandedButton, styles } from './_
 import type { TemplateEntry } from './registry'
 
 interface InvoiceItem { description: string; qty: number; unitPriceCents: number }
+interface BankDetails {
+  bankName?: string | null
+  accountName?: string | null
+  sortCode?: string | null
+  accountNumber?: string | null
+  iban?: string | null
+  swift?: string | null
+  paymentReference?: string | null
+}
 
 interface Props {
   siteName?: string
@@ -20,6 +29,8 @@ interface Props {
   notes?: string | null
   dueDate?: string | null
   payUrl?: string | null
+  pdfUrl?: string | null
+  bank?: BankDetails | null
 }
 
 function fmt(cents: number, currency: string) {
@@ -42,6 +53,8 @@ const Email = ({
   notes,
   dueDate,
   payUrl,
+  pdfUrl,
+  bank,
 }: Props) => (
   <>
     <Head />
@@ -49,7 +62,7 @@ const Email = ({
     <ModoShell preview="" siteName={siteName || prescriberName} logoUrl={logoUrl} brandColor={brandColor}>
       <Heading style={styles.h1}>Invoice from {prescriberName}</Heading>
       <Text style={styles.text}>
-        {`Hi ${practitionerName}${clinicName ? ` (${clinicName})` : ''}, please find your invoice below.`}
+        {`Hi ${practitionerName}${clinicName ? ` (${clinicName})` : ''}, please find your invoice below. Your branded PDF is attached as a link.`}
       </Text>
 
       <BodyOverride text={bodyOverride} />
@@ -102,10 +115,35 @@ const Email = ({
         </table>
       </Section>
 
-      {payUrl && (
+      {(payUrl || pdfUrl) && (
         <Section style={styles.buttonWrap}>
-          <a href={payUrl} style={brandedButton(brandColor)}>Pay now</a>
+          {payUrl && <a href={payUrl} style={brandedButton(brandColor)}>Pay now</a>}
+          {pdfUrl && (
+            <div style={{ marginTop: 10 }}>
+              <a href={pdfUrl} style={{ ...brandedButton(brandColor), background: '#ffffff', color: brand.ink, border: `1px solid ${brand.border}` }}>
+                View / download invoice PDF
+              </a>
+            </div>
+          )}
         </Section>
+      )}
+
+      {bank && (bank.accountNumber || bank.iban) && (
+        <>
+          <Hr style={styles.hr} />
+          <Section>
+            <Text style={{ ...styles.text, margin: 0, fontWeight: 600 }}>Bank transfer details</Text>
+            {bank.bankName && <Text style={{ ...styles.muted, margin: '4px 0 0' }}>Bank: {bank.bankName}</Text>}
+            {bank.accountName && <Text style={{ ...styles.muted, margin: '2px 0 0' }}>Account name: {bank.accountName}</Text>}
+            {bank.sortCode && <Text style={{ ...styles.muted, margin: '2px 0 0' }}>Sort code: {bank.sortCode}</Text>}
+            {bank.accountNumber && <Text style={{ ...styles.muted, margin: '2px 0 0' }}>Account number: {bank.accountNumber}</Text>}
+            {bank.iban && <Text style={{ ...styles.muted, margin: '2px 0 0' }}>IBAN: {bank.iban}</Text>}
+            {bank.swift && <Text style={{ ...styles.muted, margin: '2px 0 0' }}>SWIFT/BIC: {bank.swift}</Text>}
+            {(bank.paymentReference || invoiceNumber) && (
+              <Text style={{ ...styles.muted, margin: '2px 0 0' }}>Reference: {bank.paymentReference || invoiceNumber}</Text>
+            )}
+          </Section>
+        </>
       )}
 
       {notes && (
@@ -140,5 +178,6 @@ export const template = {
     ],
     dueDate: '2026-08-01',
     payUrl: 'https://example.com/pay',
+    pdfUrl: 'https://example.com/invoice.pdf',
   },
 } satisfies TemplateEntry
