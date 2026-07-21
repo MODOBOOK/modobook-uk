@@ -368,12 +368,16 @@ function NewInvoiceDialog({
   practitioners, onCreated,
 }: { practitioners: PractitionerClient[]; onCreated: () => void }) {
   const create = useServerFn(createPrescriberInvoice);
+  const savePractitioner = useServerFn(upsertBillingPractitioner);
   const [busy, setBusy] = useState(false);
-  const [practitionerId, setPractitionerId] = useState<string>("");
+  const NEW_KEY = "__new__";
+  const [practitionerId, setPractitionerId] = useState<string>(practitioners.length === 0 ? NEW_KEY : "");
+  const [quick, setQuick] = useState({ full_name: "", clinic_name: "", email: "" });
   const [items, setItems] = useState<InvoiceItem[]>([{ description: "", qty: 1, unitPriceCents: 0 }]);
   const [notes, setNotes] = useState("");
   const [dueDate, setDueDate] = useState("");
 
+  const isNew = practitionerId === NEW_KEY;
   const selected = practitioners.find((p) => p.id === practitionerId);
 
   function updateItem(idx: number, patch: Partial<InvoiceItem>) {
@@ -391,12 +395,26 @@ function NewInvoiceDialog({
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!practitionerId) { toast.error("Pick a practitioner"); return; }
     setBusy(true);
     try {
+      let pid = practitionerId;
+      if (isNew) {
+        if (!quick.full_name.trim() || !quick.email.trim()) {
+          toast.error("Add practitioner name and email"); setBusy(false); return;
+        }
+        const created = await savePractitioner({
+          data: {
+            full_name: quick.full_name,
+            clinic_name: quick.clinic_name || null,
+            email: quick.email,
+          },
+        });
+        pid = created.id;
+      }
+      if (!pid) { toast.error("Pick a practitioner"); setBusy(false); return; }
       await create({
         data: {
-          practitionerId,
+          practitionerId: pid,
           items: items.filter((it) => it.description.trim().length > 0),
           notes: notes.trim() || null,
           dueDate: dueDate || null,
@@ -405,7 +423,7 @@ function NewInvoiceDialog({
       toast.success("Invoice created");
       onCreated();
       setItems([{ description: "", qty: 1, unitPriceCents: 0 }]);
-      setNotes(""); setDueDate("");
+      setNotes(""); setDueDate(""); setQuick({ full_name: "", clinic_name: "", email: "" });
     } catch (e) { toast.error((e as Error).message); }
     finally { setBusy(false); }
   }
