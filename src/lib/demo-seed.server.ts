@@ -63,16 +63,76 @@ export async function seedDemoClinic(admin: Admin) {
     .maybeSingle();
 
   let profileId = existingProfile?.id as string | undefined;
+  const aboutPage = {
+    show_hero_image: true,
+    hero_image_url: IMG.hero,
+    show_intro: true,
+    intro_heading: "A quieter kind of clinic",
+    intro_body:
+      "MODO Demo Clinic is a small, women-led aesthetics studio. Every visit begins with an unhurried conversation — no upsells, no pressure, just a plan that suits your face and your life.",
+    show_mission: true,
+    mission:
+      "We believe great aesthetics should feel like great skincare — considered, evidence-led and quietly confident. Our approach blends clinical rigour with a slow, spa-like experience.",
+    show_why_choose: true,
+    why_choose: [
+      "Advanced nurse prescribers with 10+ years of clinical experience",
+      "Premium, fully-traceable products only — no grey market",
+      "Written aftercare and a two-week review with every treatment",
+      "Transparent, itemised pricing with no hidden fees",
+    ],
+    show_what_to_expect: true,
+    what_to_expect:
+      "Your first visit is a full 30-minute consultation. We'll go through your medical history, photograph the areas you'd like to treat and map a plan together. You're never treated on the same day as your first consult unless you ask.",
+    show_specialties: true,
+    show_qualifications: true,
+    show_timeline: true,
+    show_locations: true,
+    show_opening_hours: true,
+    opening_hours: [
+      { day: "Monday", hours: "9:00 – 17:00" },
+      { day: "Tuesday", hours: "9:00 – 17:00" },
+      { day: "Wednesday", hours: "9:00 – 19:00" },
+      { day: "Thursday", hours: "9:00 – 19:00" },
+      { day: "Friday", hours: "9:00 – 17:00" },
+      { day: "Saturday", hours: "10:00 – 15:00" },
+      { day: "Sunday", hours: "Closed" },
+    ],
+    show_faqs: true,
+    faqs: [
+      { q: "How soon will I see results?", a: "Anti-wrinkle treatments soften over 3–5 days and settle at two weeks. Filler is immediate but continues to integrate for up to four weeks." },
+      { q: "Is there any downtime?", a: "Most treatments allow you to return to normal activity the same day. We'll give you written aftercare tailored to what you've had." },
+      { q: "Do you offer payment plans?", a: "Yes — courses of three or more sessions can be split across the plan with no interest." },
+    ],
+    show_contact: true,
+    contact_email: DEMO_PRACTITIONER_EMAIL,
+    contact_phone: "+44 20 7946 0000",
+  } as const;
+
   const profileFields = {
     is_demo: true,
     active: true,
     slug: DEMO_SLUG,
     clinic_name: DEMO_CLINIC_NAME,
     hero_url: IMG.hero,
+    tagline: "Considered aesthetics, without the rush.",
     bio: "A boutique aesthetics studio pairing clinical rigour with a slow, considered treatment experience.",
     about:
       "We're a small, women-led team creating an unhurried environment for consultations, treatments and reviews. Every visit begins with a proper conversation.",
     brand_color: "#8b7355",
+    specialties: ["Anti-wrinkle", "Lip filler", "Skin boosters", "Polynucleotides", "Skin health"],
+    qualifications: [
+      { label: "BSc (Hons) Adult Nursing — King's College London", year: "2012" },
+      { label: "Independent Nurse Prescriber (V300)", year: "2017" },
+      { label: "PgCert Non-Surgical Facial Aesthetics", year: "2019" },
+      { label: "JCCP Registered Practitioner", year: "2021" },
+    ],
+    timeline: [
+      { year: "2012", label: "Qualified as a registered nurse, moved into A&E and cardiology." },
+      { year: "2017", label: "Completed independent prescribing and moved full-time into aesthetics." },
+      { year: "2020", label: "Opened the first MODO Demo studio in central London." },
+      { year: "2024", label: "Awarded 'Boutique Clinic of the Year' at the UK Aesthetics Awards." },
+    ],
+    about_page: aboutPage as unknown as any,
   } as const;
   if (!profileId) {
     const { data: created, error } = await admin
