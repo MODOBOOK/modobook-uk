@@ -13,6 +13,14 @@ import {
 
 type Admin = SupabaseClient<any, any, any>;
 
+const IMG = {
+  hero: "/__l5e/assets-v1/c25093d4-96f1-42e9-9659-af599b93813e/demo-hero.jpg",
+  t1: "/__l5e/assets-v1/a955505c-9ebe-411c-abb8-5fc350d497e8/demo-t1.jpg",
+  t2: "/__l5e/assets-v1/93115707-117b-4948-aa28-a1e99ffdd109/demo-t2.jpg",
+  t3: "/__l5e/assets-v1/baf3572c-2869-431f-872a-c4e0f9e2e248/demo-t3.jpg",
+  gallery1: "/__l5e/assets-v1/2fd0e57d-cf1d-4e4c-8f15-0fbf357b3ab7/demo-g1.jpg",
+};
+
 async function findOrCreateAuthUser(
   admin: Admin,
   email: string,
