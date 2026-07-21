@@ -250,7 +250,7 @@ function PractitionerDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md w-[calc(100vw-2rem)]">
         <DialogHeader>
           <DialogTitle>{editing ? "Edit practitioner" : "Add practitioner"}</DialogTitle>
           <DialogDescription>Stored privately — only you can see this directory.</DialogDescription>
@@ -539,7 +539,7 @@ function NewInvoiceDialog({
   }
 
   return (
-    <DialogContent className="max-w-2xl">
+    <DialogContent className="max-w-2xl w-[calc(100vw-2rem)] max-h-[92vh] overflow-y-auto">
       <DialogHeader>
         <DialogTitle>New invoice</DialogTitle>
         <DialogDescription>Add line items — quantity times unit price.</DialogDescription>
