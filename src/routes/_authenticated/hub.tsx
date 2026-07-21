@@ -172,9 +172,9 @@ function HubLayout() {
 
         <nav className={cn(
           "fixed inset-x-0 bottom-0 z-30 grid border-t bg-background/95 backdrop-blur lg:hidden",
-          "grid-cols-6",
+          isPrescriber ? "grid-cols-7" : "grid-cols-6",
         )}>
-          {nav.map((tab) => {
+          {nav.filter((i) => !i.prescriberOnly || isPrescriber).map((tab) => {
             const active = tab.exact ? pathname === tab.to : pathname.startsWith(tab.to);
             const count = badges[tab.key] ?? 0;
             return (
