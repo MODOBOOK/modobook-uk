@@ -32,6 +32,7 @@ const PRESCRIBER_ONLY_REDIRECTS: Record<string, string> = {
   "/hub/visits": "/prescriber/visits",
   "/hub/prescribing": "/prescriber",
   "/hub/referrals": "/prescriber",
+  "/hub/invoices": "/prescriber/invoices",
   "/hub": "/prescriber",
 };
 
@@ -40,6 +41,7 @@ const nav = [
   { to: "/hub/visits", label: "Clinic days", icon: CalendarDays, key: "visits" as const },
   { to: "/hub/referrals", label: "Referrals", icon: Send, key: "referrals" as const },
   { to: "/hub/prescribing", label: "Rules", icon: Pill, key: "prescribing" as const },
+  { to: "/prescriber/invoices", label: "Invoices", icon: FileText, key: "invoices" as const, prescriberOnly: true },
   { to: "/hub/connections", label: "Prescribers", icon: Network, key: "connections" as const },
   { to: "/hub/verification", label: "Verification", icon: ShieldCheck, key: "verification" as const },
 ];
