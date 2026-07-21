@@ -420,7 +420,12 @@ function PackagesPage() {
             const saving = original > price ? original - price : 0;
             const savingPct = original > 0 && saving > 0 ? Math.round((saving / original) * 100) : 0;
             return (
-              <Card key={p.id}>
+              <Card key={p.id} className="overflow-hidden">
+                {p.image_url && (
+                  <div className="aspect-[16/7] w-full overflow-hidden bg-muted">
+                    <img src={p.image_url} alt={p.name} className="h-full w-full object-cover" loading="lazy" />
+                  </div>
+                )}
                 <CardHeader className="flex flex-row items-start justify-between gap-2 pb-2">
                   <div>
                     <CardTitle className="text-base">{p.name}</CardTitle>
