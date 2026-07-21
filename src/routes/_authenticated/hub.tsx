@@ -108,7 +108,7 @@ function HubLayout() {
           </div>
         </div>
         <nav className="flex-1 space-y-0.5 overflow-y-auto px-3 py-6">
-          {nav.filter((i) => (!i.prescriberOnly || isPrescriber) && (!i.practitionerOnly || isPractitioner)).map((item) => {
+          {nav.map((item) => {
             const active = item.exact ? pathname === item.to : pathname.startsWith(item.to);
             const count = badges[item.key] ?? 0;
             return (
