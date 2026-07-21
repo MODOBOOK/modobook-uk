@@ -26,6 +26,7 @@ function StatusBadge({ status }: { status: RxStatus }) {
 }
 
 function MyRxRequests() {
+  const navigate = useNavigate();
   const fetchList = useServerFn(listMyRxRequests);
   const [tab, setTab] = useState<RxStatus | "all">("all");
   const q = useQuery({
@@ -34,15 +35,16 @@ function MyRxRequests() {
   });
   return (
     <div className="p-4 md:p-6 space-y-6 max-w-6xl mx-auto">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">Prescription requests</h1>
           <p className="text-muted-foreground text-sm">Request scripts from your linked prescribers — no WhatsApp.</p>
         </div>
-        <Button asChild>
-          <Link to="/dashboard/rx-requests/new"><Plus className="h-4 w-4 mr-1" /> New request</Link>
+        <Button onClick={() => navigate({ to: "/dashboard/rx-requests/new" })} className="self-start sm:self-auto">
+          <Plus className="h-4 w-4 mr-1" /> New request
         </Button>
       </div>
+
       <Card>
         <CardHeader><CardTitle>Your requests</CardTitle></CardHeader>
         <CardContent>
