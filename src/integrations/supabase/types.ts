@@ -4466,6 +4466,48 @@ export type Database = {
           },
         ]
       }
+      prescriber_billing_practitioners: {
+        Row: {
+          address_lines: string[]
+          clinic_name: string | null
+          created_at: string
+          default_rate_cents: number
+          email: string
+          full_name: string
+          id: string
+          notes: string | null
+          phone: string | null
+          prescriber_user_id: string
+          updated_at: string
+        }
+        Insert: {
+          address_lines?: string[]
+          clinic_name?: string | null
+          created_at?: string
+          default_rate_cents?: number
+          email: string
+          full_name: string
+          id?: string
+          notes?: string | null
+          phone?: string | null
+          prescriber_user_id: string
+          updated_at?: string
+        }
+        Update: {
+          address_lines?: string[]
+          clinic_name?: string | null
+          created_at?: string
+          default_rate_cents?: number
+          email?: string
+          full_name?: string
+          id?: string
+          notes?: string | null
+          phone?: string | null
+          prescriber_user_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       prescriber_clinic_visits: {
         Row: {
           capacity: number
@@ -4528,6 +4570,71 @@ export type Database = {
             columns: ["practitioner_profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      prescriber_invoices: {
+        Row: {
+          created_at: string
+          currency: string
+          due_date: string | null
+          id: string
+          invoice_number: string
+          items: Json
+          notes: string | null
+          paid_at: string | null
+          practitioner_id: string
+          prescriber_user_id: string
+          sent_at: string | null
+          status: string
+          stripe_payment_link_id: string | null
+          stripe_url: string | null
+          subtotal_cents: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          due_date?: string | null
+          id?: string
+          invoice_number: string
+          items?: Json
+          notes?: string | null
+          paid_at?: string | null
+          practitioner_id: string
+          prescriber_user_id: string
+          sent_at?: string | null
+          status?: string
+          stripe_payment_link_id?: string | null
+          stripe_url?: string | null
+          subtotal_cents?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          due_date?: string | null
+          id?: string
+          invoice_number?: string
+          items?: Json
+          notes?: string | null
+          paid_at?: string | null
+          practitioner_id?: string
+          prescriber_user_id?: string
+          sent_at?: string | null
+          status?: string
+          stripe_payment_link_id?: string | null
+          stripe_url?: string | null
+          subtotal_cents?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prescriber_invoices_practitioner_id_fkey"
+            columns: ["practitioner_id"]
+            isOneToOne: false
+            referencedRelation: "prescriber_billing_practitioners"
             referencedColumns: ["id"]
           },
         ]

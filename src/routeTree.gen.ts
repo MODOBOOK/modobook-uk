@@ -56,6 +56,7 @@ import { Route as MSlugAboutRouteImport } from './routes/m.$slug.about'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as AuthenticatedPrescriberVisitsRouteImport } from './routes/_authenticated/prescriber.visits'
 import { Route as AuthenticatedPrescriberLibraryRouteImport } from './routes/_authenticated/prescriber.library'
+import { Route as AuthenticatedPrescriberInvoicesRouteImport } from './routes/_authenticated/prescriber.invoices'
 import { Route as AuthenticatedPrescriberDirectionsRouteImport } from './routes/_authenticated/prescriber.directions'
 import { Route as AuthenticatedPrescriberDashboardRouteImport } from './routes/_authenticated/prescriber.dashboard'
 import { Route as AuthenticatedPrescriberConnectionsRouteImport } from './routes/_authenticated/prescriber.connections'
@@ -381,6 +382,12 @@ const AuthenticatedPrescriberLibraryRoute =
   AuthenticatedPrescriberLibraryRouteImport.update({
     id: '/library',
     path: '/library',
+    getParentRoute: () => AuthenticatedPrescriberRoute,
+  } as any)
+const AuthenticatedPrescriberInvoicesRoute =
+  AuthenticatedPrescriberInvoicesRouteImport.update({
+    id: '/invoices',
+    path: '/invoices',
     getParentRoute: () => AuthenticatedPrescriberRoute,
   } as any)
 const AuthenticatedPrescriberDirectionsRoute =
@@ -977,6 +984,7 @@ export interface FileRoutesByFullPath {
   '/prescriber/connections': typeof AuthenticatedPrescriberConnectionsRoute
   '/prescriber/dashboard': typeof AuthenticatedPrescriberDashboardRoute
   '/prescriber/directions': typeof AuthenticatedPrescriberDirectionsRoute
+  '/prescriber/invoices': typeof AuthenticatedPrescriberInvoicesRoute
   '/prescriber/library': typeof AuthenticatedPrescriberLibraryRoute
   '/prescriber/visits': typeof AuthenticatedPrescriberVisitsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -1106,6 +1114,7 @@ export interface FileRoutesByTo {
   '/prescriber/connections': typeof AuthenticatedPrescriberConnectionsRoute
   '/prescriber/dashboard': typeof AuthenticatedPrescriberDashboardRoute
   '/prescriber/directions': typeof AuthenticatedPrescriberDirectionsRoute
+  '/prescriber/invoices': typeof AuthenticatedPrescriberInvoicesRoute
   '/prescriber/library': typeof AuthenticatedPrescriberLibraryRoute
   '/prescriber/visits': typeof AuthenticatedPrescriberVisitsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -1242,6 +1251,7 @@ export interface FileRoutesById {
   '/_authenticated/prescriber/connections': typeof AuthenticatedPrescriberConnectionsRoute
   '/_authenticated/prescriber/dashboard': typeof AuthenticatedPrescriberDashboardRoute
   '/_authenticated/prescriber/directions': typeof AuthenticatedPrescriberDirectionsRoute
+  '/_authenticated/prescriber/invoices': typeof AuthenticatedPrescriberInvoicesRoute
   '/_authenticated/prescriber/library': typeof AuthenticatedPrescriberLibraryRoute
   '/_authenticated/prescriber/visits': typeof AuthenticatedPrescriberVisitsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -1379,6 +1389,7 @@ export interface FileRouteTypes {
     | '/prescriber/connections'
     | '/prescriber/dashboard'
     | '/prescriber/directions'
+    | '/prescriber/invoices'
     | '/prescriber/library'
     | '/prescriber/visits'
     | '/lovable/email/suppression'
@@ -1508,6 +1519,7 @@ export interface FileRouteTypes {
     | '/prescriber/connections'
     | '/prescriber/dashboard'
     | '/prescriber/directions'
+    | '/prescriber/invoices'
     | '/prescriber/library'
     | '/prescriber/visits'
     | '/lovable/email/suppression'
@@ -1643,6 +1655,7 @@ export interface FileRouteTypes {
     | '/_authenticated/prescriber/connections'
     | '/_authenticated/prescriber/dashboard'
     | '/_authenticated/prescriber/directions'
+    | '/_authenticated/prescriber/invoices'
     | '/_authenticated/prescriber/library'
     | '/_authenticated/prescriber/visits'
     | '/lovable/email/suppression'
@@ -2070,6 +2083,13 @@ declare module '@tanstack/react-router' {
       path: '/library'
       fullPath: '/prescriber/library'
       preLoaderRoute: typeof AuthenticatedPrescriberLibraryRouteImport
+      parentRoute: typeof AuthenticatedPrescriberRoute
+    }
+    '/_authenticated/prescriber/invoices': {
+      id: '/_authenticated/prescriber/invoices'
+      path: '/invoices'
+      fullPath: '/prescriber/invoices'
+      preLoaderRoute: typeof AuthenticatedPrescriberInvoicesRouteImport
       parentRoute: typeof AuthenticatedPrescriberRoute
     }
     '/_authenticated/prescriber/directions': {
@@ -2942,6 +2962,7 @@ interface AuthenticatedPrescriberRouteChildren {
   AuthenticatedPrescriberConnectionsRoute: typeof AuthenticatedPrescriberConnectionsRoute
   AuthenticatedPrescriberDashboardRoute: typeof AuthenticatedPrescriberDashboardRoute
   AuthenticatedPrescriberDirectionsRoute: typeof AuthenticatedPrescriberDirectionsRoute
+  AuthenticatedPrescriberInvoicesRoute: typeof AuthenticatedPrescriberInvoicesRoute
   AuthenticatedPrescriberLibraryRoute: typeof AuthenticatedPrescriberLibraryRoute
   AuthenticatedPrescriberVisitsRoute: typeof AuthenticatedPrescriberVisitsRoute
   AuthenticatedPrescriberIndexRoute: typeof AuthenticatedPrescriberIndexRoute
@@ -2955,6 +2976,7 @@ const AuthenticatedPrescriberRouteChildren: AuthenticatedPrescriberRouteChildren
       AuthenticatedPrescriberDashboardRoute,
     AuthenticatedPrescriberDirectionsRoute:
       AuthenticatedPrescriberDirectionsRoute,
+    AuthenticatedPrescriberInvoicesRoute: AuthenticatedPrescriberInvoicesRoute,
     AuthenticatedPrescriberLibraryRoute: AuthenticatedPrescriberLibraryRoute,
     AuthenticatedPrescriberVisitsRoute: AuthenticatedPrescriberVisitsRoute,
     AuthenticatedPrescriberIndexRoute: AuthenticatedPrescriberIndexRoute,
@@ -3093,13 +3115,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
