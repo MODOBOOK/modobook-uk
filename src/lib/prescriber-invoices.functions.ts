@@ -140,7 +140,7 @@ export const listPrescriberInvoices = createServerFn({ method: "GET" })
       .order("created_at", { ascending: false })
       .limit(200);
     if (error) throw error;
-    return (data ?? []) as PrescriberInvoice[];
+    return (data ?? []) as unknown as PrescriberInvoice[];
   });
 
 export const createPrescriberInvoice = createServerFn({ method: "POST" })
@@ -180,7 +180,7 @@ export const createPrescriberInvoice = createServerFn({ method: "POST" })
       .select("*, practitioner:prescriber_billing_practitioners!practitioner_id(*)")
       .single();
     if (error) throw error;
-    return row as PrescriberInvoice;
+    return row as unknown as PrescriberInvoice;
   });
 
 export const deletePrescriberInvoice = createServerFn({ method: "POST" })
@@ -267,7 +267,7 @@ export const sendPrescriberInvoice = createServerFn({ method: "POST" })
     await enqueueAppEmail({
       templateName: "prescriber-invoice",
       recipientEmail: practitioner.email,
-      idempotencyKey: `prescriber-invoice-send-${inv.id}`,
+      messageId: `prescriber-invoice-send-${inv.id}`,
       templateData: {
         prescriberName,
         practitionerName: practitioner.full_name,
@@ -296,5 +296,5 @@ export const sendPrescriberInvoice = createServerFn({ method: "POST" })
       .select("*, practitioner:prescriber_billing_practitioners!practitioner_id(*)")
       .single();
     if (upErr) throw upErr;
-    return updated as PrescriberInvoice;
+    return updated as unknown as PrescriberInvoice;
   });
