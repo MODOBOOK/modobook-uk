@@ -212,11 +212,10 @@ export const markPrescriberInvoicePaid = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-export const sendPrescriberInvoice = createServerFn({ method: "POST" })
+export const ensurePrescriberInvoiceStripeLink = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { id: string }) => input)
   .handler(async ({ data, context }) => {
-    // Load invoice + practitioner
     const { data: inv, error: invErr } = await context.supabase
       .from("prescriber_invoices")
       .select("*, practitioner:prescriber_billing_practitioners!practitioner_id(*)")
@@ -225,76 +224,55 @@ export const sendPrescriberInvoice = createServerFn({ method: "POST" })
       .single();
     if (invErr || !inv) throw invErr || new Error("Invoice not found");
 
-    // Load prescriber's Stripe + profile info
+    if (inv.stripe_url) return { stripeUrl: inv.stripe_url as string, stripeId: inv.stripe_payment_link_id as string | null };
+
     const { data: profile } = await context.supabase
       .from("profiles")
-      .select(
-        "id, full_name, clinic_name, stripe_connect_account_id",
-      )
+      .select("id, full_name, clinic_name, stripe_connect_account_id")
       .eq("user_id", context.userId)
       .single();
     if (!profile?.stripe_connect_account_id) {
       throw new Error("Connect your Stripe account first (Dashboard → Payments).");
     }
-
     const prescriberName = profile.clinic_name || profile.full_name || "Prescriber";
     const practitioner = inv.practitioner as PractitionerClient;
 
-    let stripeUrl = inv.stripe_url as string | null;
-    let stripeId = inv.stripe_payment_link_id as string | null;
-
-    if (!stripeUrl) {
-      const { createConnectedPaymentLink } = await import("./stripe.server");
-      const link = await createConnectedPaymentLink({
-        accountId: profile.stripe_connect_account_id,
-        amountCents: inv.subtotal_cents,
-        currency: inv.currency ?? "gbp",
-        description: `${inv.invoice_number} — ${prescriberName}`,
-        descriptorName: prescriberName,
-        metadata: {
-          kind: "prescriber_invoice",
-          invoice_id: String(inv.id),
-          invoice_number: String(inv.invoice_number),
-          practitioner_id: String(practitioner.id),
-        },
-      });
-      stripeUrl = link.url;
-      stripeId = link.id;
-    }
-
-    // Enqueue email via internal helper (uses service role, works from server)
-    const { enqueueAppEmail } = await import("./email/send.server");
-    await enqueueAppEmail({
-      templateName: "prescriber-invoice",
-      recipientEmail: practitioner.email,
-      messageId: `prescriber-invoice-send-${inv.id}`,
-      templateData: {
-        prescriberName,
-        practitionerName: practitioner.full_name,
-        clinicName: practitioner.clinic_name,
-        invoiceNumber: inv.invoice_number,
-        currency: (inv.currency ?? "gbp").toUpperCase(),
-        subtotalCents: inv.subtotal_cents,
-        items: inv.items,
-        notes: inv.notes,
-        dueDate: inv.due_date,
-        payUrl: stripeUrl,
-        siteName: prescriberName,
+    const { createConnectedPaymentLink } = await import("./stripe.server");
+    const link = await createConnectedPaymentLink({
+      accountId: profile.stripe_connect_account_id,
+      amountCents: inv.subtotal_cents,
+      currency: inv.currency ?? "gbp",
+      description: `${inv.invoice_number} — ${prescriberName}`,
+      descriptorName: prescriberName,
+      metadata: {
+        kind: "prescriber_invoice",
+        invoice_id: String(inv.id),
+        invoice_number: String(inv.invoice_number),
+        practitioner_id: String(practitioner.id),
       },
     });
 
-    const { data: updated, error: upErr } = await context.supabase
+    await context.supabase
       .from("prescriber_invoices")
-      .update({
-        status: "sent",
-        sent_at: new Date().toISOString(),
-        stripe_payment_link_id: stripeId,
-        stripe_url: stripeUrl,
-      })
+      .update({ stripe_payment_link_id: link.id, stripe_url: link.url })
       .eq("id", inv.id)
+      .eq("prescriber_user_id", context.userId);
+
+    return { stripeUrl: link.url, stripeId: link.id };
+  });
+
+export const markPrescriberInvoiceSent = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { id: string }) => input)
+  .handler(async ({ data, context }) => {
+    const { data: updated, error } = await context.supabase
+      .from("prescriber_invoices")
+      .update({ status: "sent", sent_at: new Date().toISOString() })
+      .eq("id", data.id)
       .eq("prescriber_user_id", context.userId)
       .select("*, practitioner:prescriber_billing_practitioners!practitioner_id(*)")
       .single();
-    if (upErr) throw upErr;
+    if (error) throw error;
     return updated as unknown as PrescriberInvoice;
   });
+
