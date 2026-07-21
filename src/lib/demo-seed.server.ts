@@ -63,16 +63,76 @@ export async function seedDemoClinic(admin: Admin) {
     .maybeSingle();
 
   let profileId = existingProfile?.id as string | undefined;
+  const aboutPage = {
+    show_hero_image: true,
+    hero_image_url: IMG.hero,
+    show_intro: true,
+    intro_heading: "A quieter kind of clinic",
+    intro_body:
+      "MODO Demo Clinic is a small, women-led aesthetics studio. Every visit begins with an unhurried conversation — no upsells, no pressure, just a plan that suits your face and your life.",
+    show_mission: true,
+    mission:
+      "We believe great aesthetics should feel like great skincare — considered, evidence-led and quietly confident. Our approach blends clinical rigour with a slow, spa-like experience.",
+    show_why_choose: true,
+    why_choose: [
+      "Advanced nurse prescribers with 10+ years of clinical experience",
+      "Premium, fully-traceable products only — no grey market",
+      "Written aftercare and a two-week review with every treatment",
+      "Transparent, itemised pricing with no hidden fees",
+    ],
+    show_what_to_expect: true,
+    what_to_expect:
+      "Your first visit is a full 30-minute consultation. We'll go through your medical history, photograph the areas you'd like to treat and map a plan together. You're never treated on the same day as your first consult unless you ask.",
+    show_specialties: true,
+    show_qualifications: true,
+    show_timeline: true,
+    show_locations: true,
+    show_opening_hours: true,
+    opening_hours: [
+      { day: "Monday", hours: "9:00 – 17:00" },
+      { day: "Tuesday", hours: "9:00 – 17:00" },
+      { day: "Wednesday", hours: "9:00 – 19:00" },
+      { day: "Thursday", hours: "9:00 – 19:00" },
+      { day: "Friday", hours: "9:00 – 17:00" },
+      { day: "Saturday", hours: "10:00 – 15:00" },
+      { day: "Sunday", hours: "Closed" },
+    ],
+    show_faqs: true,
+    faqs: [
+      { q: "How soon will I see results?", a: "Anti-wrinkle treatments soften over 3–5 days and settle at two weeks. Filler is immediate but continues to integrate for up to four weeks." },
+      { q: "Is there any downtime?", a: "Most treatments allow you to return to normal activity the same day. We'll give you written aftercare tailored to what you've had." },
+      { q: "Do you offer payment plans?", a: "Yes — courses of three or more sessions can be split across the plan with no interest." },
+    ],
+    show_contact: true,
+    contact_email: DEMO_PRACTITIONER_EMAIL,
+    contact_phone: "+44 20 7946 0000",
+  } as const;
+
   const profileFields = {
     is_demo: true,
     active: true,
     slug: DEMO_SLUG,
     clinic_name: DEMO_CLINIC_NAME,
     hero_url: IMG.hero,
+    tagline: "Considered aesthetics, without the rush.",
     bio: "A boutique aesthetics studio pairing clinical rigour with a slow, considered treatment experience.",
     about:
       "We're a small, women-led team creating an unhurried environment for consultations, treatments and reviews. Every visit begins with a proper conversation.",
     brand_color: "#8b7355",
+    specialties: ["Anti-wrinkle", "Lip filler", "Skin boosters", "Polynucleotides", "Skin health"],
+    qualifications: [
+      { label: "BSc (Hons) Adult Nursing — King's College London", year: "2012" },
+      { label: "Independent Nurse Prescriber (V300)", year: "2017" },
+      { label: "PgCert Non-Surgical Facial Aesthetics", year: "2019" },
+      { label: "JCCP Registered Practitioner", year: "2021" },
+    ],
+    timeline: [
+      { year: "2012", label: "Qualified as a registered nurse, moved into A&E and cardiology." },
+      { year: "2017", label: "Completed independent prescribing and moved full-time into aesthetics." },
+      { year: "2020", label: "Opened the first MODO Demo studio in central London." },
+      { year: "2024", label: "Awarded 'Boutique Clinic of the Year' at the UK Aesthetics Awards." },
+    ],
+    about_page: aboutPage as unknown as any,
   } as const;
   if (!profileId) {
     const { data: created, error } = await admin
@@ -121,6 +181,56 @@ export async function seedDemoClinic(admin: Admin) {
     await admin.from("locations").update({ image_url: IMG.gallery1 }).eq("id", locationId);
   }
 
+  // Categories (treatment + package)
+  async function ensureCategory(
+    name: string,
+    kind: "treatment" | "package",
+    sort_order: number,
+    parent_id: string | null = null,
+    description?: string,
+  ) {
+    const slugBase = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+    const slug = kind === "package" ? `pkg-${slugBase}` : slugBase;
+    const { data: existing } = await admin
+      .from("treatment_categories")
+      .select("id")
+      .eq("profile_id", profileId!)
+      .eq("name", name)
+      .eq("kind", kind)
+      .maybeSingle();
+    if (existing?.id) {
+      await admin
+        .from("treatment_categories")
+        .update({ parent_id, sort_order, description: description ?? null })
+        .eq("id", existing.id);
+      return existing.id as string;
+    }
+    const { data, error } = await admin
+      .from("treatment_categories")
+      .insert({
+        profile_id: profileId!,
+        name,
+        kind,
+        slug,
+        sort_order,
+        parent_id,
+        description: description ?? null,
+      })
+      .select("id")
+      .single();
+    if (error) throw error;
+    return data!.id as string;
+  }
+
+  const catInjectables = await ensureCategory("Injectables", "treatment", 1, null, "Anti-wrinkle and dermal filler treatments.");
+  const catSkin = await ensureCategory("Skin", "treatment", 2, null, "Boosters, polynucleotides and skin health.");
+  const catConsults = await ensureCategory("Consultations", "treatment", 3, null, "Initial and review consultations.");
+  const catAntiWrinkle = await ensureCategory("Anti-wrinkle", "treatment", 1, catInjectables);
+  const catFiller = await ensureCategory("Dermal filler", "treatment", 2, catInjectables);
+  const catBoosters = await ensureCategory("Skin boosters", "treatment", 1, catSkin);
+  const catFacials = await ensureCategory("Facials & peels", "treatment", 2, catSkin);
+  const catPackages = await ensureCategory("Signature packages", "package", 1);
+
   // Treatments
   async function ensureTreatment(
     name: string,
@@ -128,6 +238,7 @@ export async function seedDemoClinic(admin: Admin) {
     duration: number,
     picture_url: string,
     description: string,
+    extra: Record<string, unknown> = {},
   ) {
     const { data: existing } = await admin
       .from("treatments")
@@ -135,8 +246,9 @@ export async function seedDemoClinic(admin: Admin) {
       .eq("profile_id", profileId!)
       .eq("name", name)
       .maybeSingle();
+    const payload = { picture_url, description, ...extra };
     if (existing?.id) {
-      await admin.from("treatments").update({ picture_url, description }).eq("id", existing.id);
+      await admin.from("treatments").update(payload).eq("id", existing.id);
       return existing.id as string;
     }
     const { data, error } = await admin
@@ -148,8 +260,7 @@ export async function seedDemoClinic(admin: Admin) {
         duration,
         payment_mode: "full",
         active: true,
-        picture_url,
-        description,
+        ...payload,
       })
       .select("id")
       .single();
@@ -162,6 +273,7 @@ export async function seedDemoClinic(admin: Admin) {
     30,
     IMG.t1,
     "A relaxed 30-minute conversation to understand what you'd like from treatment, review your medical history and map a plan together.",
+    { category_id: catConsults, is_consultation: true, sort_order: 1 },
   );
   const t2 = await ensureTreatment(
     "Lip filler — 1ml",
@@ -169,6 +281,7 @@ export async function seedDemoClinic(admin: Admin) {
     45,
     IMG.t2,
     "Subtle, natural-looking enhancement using premium hyaluronic acid filler. Includes numbing, treatment and a follow-up review.",
+    { category_id: catFiller, sort_order: 1, rebook_reminder_days: 270 },
   );
   const t3 = await ensureTreatment(
     "Skin booster review",
@@ -176,7 +289,151 @@ export async function seedDemoClinic(admin: Admin) {
     20,
     IMG.t3,
     "A 20-minute review appointment to assess results and plan the next stage of your skin journey.",
+    { category_id: catBoosters, sort_order: 3 },
   );
+  await ensureTreatment(
+    "Anti-wrinkle — 3 areas",
+    27500,
+    30,
+    IMG.t1,
+    "Forehead, frown and crow's feet. Includes a two-week review and any small adjustments.",
+    { category_id: catAntiWrinkle, sort_order: 1, requires_prescriber: true, rebook_reminder_days: 120 },
+  );
+  await ensureTreatment(
+    "Anti-wrinkle — 2 areas",
+    22000,
+    25,
+    IMG.t1,
+    "Choose any two upper-face areas. Includes review.",
+    { category_id: catAntiWrinkle, sort_order: 2, requires_prescriber: true, rebook_reminder_days: 120 },
+  );
+  const t6 = await ensureTreatment(
+    "Profhilo® — course of 2",
+    48000,
+    40,
+    IMG.t3,
+    "Two Profhilo sessions spaced four weeks apart to deeply hydrate and improve skin quality.",
+    {
+      category_id: catBoosters,
+      sort_order: 1,
+      session_count: 2,
+      session_interval_days: 28,
+      allow_split_payment: true,
+      topup_reminder_days: 180,
+    },
+  );
+  await ensureTreatment(
+    "Polynucleotides — course of 3",
+    54000,
+    45,
+    IMG.t3,
+    "Three sessions of regenerative polynucleotide therapy, ideal for under-eye and skin quality.",
+    {
+      category_id: catBoosters,
+      sort_order: 2,
+      session_count: 3,
+      session_interval_days: 21,
+      allow_split_payment: true,
+    },
+  );
+  const t8 = await ensureTreatment(
+    "Signature facial",
+    9500,
+    60,
+    IMG.t2,
+    "A one-hour skin-health facial with cleanse, gentle exfoliation, mask and LED. A lovely reset.",
+    { category_id: catFacials, sort_order: 1 },
+  );
+
+  // Packages
+  async function ensurePackage(
+    name: string,
+    price: number,
+    session_count: number,
+    treatment_ids: string[],
+    description: string,
+    image_url: string,
+  ) {
+    const { data: existing } = await admin
+      .from("packages")
+      .select("id")
+      .eq("profile_id", profileId!)
+      .eq("name", name)
+      .maybeSingle();
+    const payload = {
+      description,
+      image_url,
+      treatment_ids,
+      session_count,
+      price,
+      category_id: catPackages,
+      active: true,
+    };
+    if (existing?.id) {
+      await admin.from("packages").update(payload).eq("id", existing.id);
+      return;
+    }
+    const { error } = await admin
+      .from("packages")
+      .insert({ profile_id: profileId!, name, ...payload });
+    if (error) throw error;
+  }
+  await ensurePackage(
+    "Glow package — 3 facials",
+    24000,
+    3,
+    [t8],
+    "Three signature facials, spaced 4–6 weeks apart. Save £6 vs booking individually.",
+    IMG.t2,
+  );
+  await ensurePackage(
+    "Bridal radiance",
+    72000,
+    4,
+    [t6, t8],
+    "Two Profhilo sessions plus two signature facials — timed for a 12-week glow build up to the day.",
+    IMG.gallery1,
+  );
+
+  // Model slots — reduced-rate model appointments a week or two out
+  const nowForSlots = new Date();
+  const slotDate1 = new Date(nowForSlots.getTime() + 5 * 24 * 60 * 60 * 1000);
+  const slotDate2 = new Date(nowForSlots.getTime() + 9 * 24 * 60 * 60 * 1000);
+  const slotYmd = (d: Date) => d.toISOString().slice(0, 10);
+  async function ensureModelSlot(
+    treatment_id: string,
+    date: string,
+    start: string,
+    end: string,
+    price_value: number,
+  ) {
+    const { data: existing } = await admin
+      .from("model_slots")
+      .select("id")
+      .eq("profile_id", profileId!)
+      .eq("treatment_id", treatment_id)
+      .eq("slot_date", date)
+      .eq("start_time", start)
+      .maybeSingle();
+    if (existing?.id) return;
+    const { error } = await admin.from("model_slots").insert({
+      profile_id: profileId!,
+      location_id: locationId!,
+      treatment_id,
+      slot_date: date,
+      start_time: start,
+      end_time: end,
+      price_mode: "fixed",
+      price_value,
+      is_flexible: false,
+      active: true,
+      notes: "Model appointment — reduced rate in exchange for photography & a short case study.",
+    });
+    if (error) throw error;
+  }
+  await ensureModelSlot(t2, slotYmd(slotDate1), "14:00:00", "14:45:00", 15000);
+  await ensureModelSlot(t6, slotYmd(slotDate2), "10:30:00", "11:10:00", 30000);
+
 
   // Availability — Mon-Fri 09:00-17:00
   const { count: availCount } = await admin
