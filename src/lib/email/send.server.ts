@@ -41,7 +41,18 @@ export async function enqueueAppEmail(
   if (!recipient) return { ok: false, error: 'recipientEmail required' }
   const normalized = recipient.toLowerCase()
 
+  // Demo-mode guard: never send real emails from a demo clinic, and never
+  // send anything to reserved demo email addresses.
+  const dm = await import('@/lib/demo.server')
+  const profileIdForDemo = (input.templateData as any)?.profileId as string | undefined
+  if (dm.isDemoEmail(recipient) || (await dm.isDemoProfile(profileIdForDemo))) {
+    console.log('[demo] Skipping email', input.templateName, 'to', recipient)
+    return { ok: true, skipped: 'demo-mode' }
+  }
+
   const messageId = input.messageId || crypto.randomUUID()
+
+
 
   // Merge practitioner override wording (subject/intro/closing) when a
   // profileId is passed in templateData. Templates that accept the *Override
