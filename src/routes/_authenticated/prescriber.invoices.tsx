@@ -23,7 +23,8 @@ import {
   listPrescriberInvoices,
   createPrescriberInvoice,
   deletePrescriberInvoice,
-  sendPrescriberInvoice,
+  ensurePrescriberInvoiceStripeLink,
+  markPrescriberInvoiceSent,
   markPrescriberInvoicePaid,
   type PractitionerClient,
   type InvoiceItem,
@@ -31,6 +32,8 @@ import {
 } from "@/lib/prescriber-invoices.functions";
 import { generateInvoicePdf } from "@/lib/invoice-pdf";
 import { getMyProfile } from "@/lib/profiles.functions";
+import { supabase } from "@/integrations/supabase/client";
+import { sendAppEmail } from "@/lib/email/send";
 
 export const Route = createFileRoute("/_authenticated/prescriber/invoices")({
   ssr: false,
@@ -43,6 +46,47 @@ function currencyLabel(c: string) {
 function fmtCents(cents: number, currency = "gbp") {
   return `${currencyLabel(currency)}${(Number(cents ?? 0) / 100).toFixed(2)}`;
 }
+
+function profileToInvoiceArgs(profile: any, inv: PrescriberInvoice, paymentLink?: string | null) {
+  const addr = (profile?.address ?? {}) as Record<string, string>;
+  const addrLines = [addr.line1, addr.line2, [addr.city, addr.postcode].filter(Boolean).join(" "), addr.country].filter(Boolean) as string[];
+  const items = (inv.items || []).map((it) => ({
+    description: it.description,
+    qty: it.qty,
+    unitPrice: it.unitPriceCents / 100,
+  }));
+  return {
+    clinic: profile?.clinic_name || profile?.full_name || "Invoice",
+    practitioner: profile?.full_name ?? undefined,
+    clinicAddress: addrLines,
+    clinicEmail: profile?.email ?? null,
+    clinicPhone: profile?.phone ?? null,
+    vatNumber: profile?.invoice_vat_number ?? null,
+    companyNumber: profile?.invoice_company_number ?? null,
+    logoUrl: profile?.invoice_show_logo === false ? null : (profile?.avatar_url ?? null),
+    brandColor: profile?.brand_color ?? null,
+    patientName: inv.practitioner?.full_name,
+    patientEmail: inv.practitioner?.email,
+    date: new Date(inv.created_at).toLocaleDateString("en-GB"),
+    items,
+    amount: inv.subtotal_cents / 100,
+    notes: inv.notes ?? undefined,
+    footerNotes: profile?.invoice_footer_notes ?? null,
+    paymentLink: paymentLink ?? inv.stripe_url ?? undefined,
+    reference: inv.invoice_number,
+    showBank: !!profile?.invoice_show_bank_details,
+    bank: {
+      bankName: profile?.invoice_bank_name,
+      accountName: profile?.invoice_account_name,
+      sortCode: profile?.invoice_sort_code,
+      accountNumber: profile?.invoice_account_number,
+      iban: profile?.invoice_iban,
+      swift: profile?.invoice_swift,
+      paymentReference: profile?.invoice_payment_reference || inv.invoice_number,
+    },
+  };
+}
+
 
 function PrescriberInvoicesPage() {
   const qc = useQueryClient();
@@ -206,7 +250,7 @@ function PractitionerDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md w-[calc(100vw-2rem)]">
         <DialogHeader>
           <DialogTitle>{editing ? "Edit practitioner" : "Add practitioner"}</DialogTitle>
           <DialogDescription>Stored privately — only you can see this directory.</DialogDescription>
@@ -263,8 +307,10 @@ function InvoicesCard({
 }) {
   const [open, setOpen] = useState(false);
   const del = useServerFn(deletePrescriberInvoice);
-  const send = useServerFn(sendPrescriberInvoice);
+  const ensureLink = useServerFn(ensurePrescriberInvoiceStripeLink);
+  const markSent = useServerFn(markPrescriberInvoiceSent);
   const markPaid = useServerFn(markPrescriberInvoicePaid);
+  const getProfile = useServerFn(getMyProfile);
 
   const [busyId, setBusyId] = useState<string | null>(null);
 
@@ -273,18 +319,80 @@ function InvoicesCard({
     try { await del({ data: { id: r.id } }); toast.success("Deleted"); onChanged(); }
     catch (e) { toast.error((e as Error).message); }
   }
+
   async function sendNow(r: PrescriberInvoice) {
+    if (!r.practitioner?.email) { toast.error("Practitioner has no email"); return; }
     setBusyId(r.id);
-    try { await send({ data: { id: r.id } }); toast.success("Invoice sent"); onChanged(); }
-    catch (e) { toast.error((e as Error).message); }
+    try {
+      // 1) Load prescriber profile (for bank details, logo, brand)
+      const profile: any = await getProfile();
+
+      // 2) Ensure Stripe payment link exists on the invoice
+      const { stripeUrl } = await ensureLink({ data: { id: r.id } });
+
+      // 3) Build branded PDF exactly like the patient invoice
+      const doc = await generateInvoicePdf(profileToInvoiceArgs(profile, r, stripeUrl));
+      const pdfBlob = doc.output("blob");
+
+      // 4) Upload PDF to storage and get a long-lived signed URL
+      const path = `${profile?.id}/prescriber-invoices/${r.id}-${Date.now()}.pdf`;
+      const up = await supabase.storage
+        .from("clinic-assets")
+        .upload(path, pdfBlob, { upsert: true, contentType: "application/pdf" });
+      if (up.error) throw up.error;
+      const TEN_YEARS = 60 * 60 * 24 * 365 * 10;
+      const signed = await supabase.storage.from("clinic-assets").createSignedUrl(path, TEN_YEARS);
+      const pdfUrl = signed.data?.signedUrl ?? null;
+
+      // 5) Send branded email with pay link + PDF link
+      const prescriberName = profile?.clinic_name || profile?.full_name || "Prescriber";
+      const res = await sendAppEmail({
+        templateName: "prescriber-invoice",
+        recipientEmail: r.practitioner.email,
+        idempotencyKey: `prescriber-invoice-${r.id}-${r.subtotal_cents}`,
+        templateData: {
+          siteName: prescriberName,
+          logoUrl: profile?.invoice_show_logo === false ? null : (profile?.avatar_url ?? null),
+          brandColor: profile?.brand_color ?? null,
+          prescriberName,
+          practitionerName: r.practitioner.full_name,
+          clinicName: r.practitioner.clinic_name,
+          invoiceNumber: r.invoice_number,
+          currency: (r.currency ?? "gbp").toUpperCase(),
+          subtotalCents: r.subtotal_cents,
+          items: r.items,
+          notes: r.notes,
+          dueDate: r.due_date,
+          payUrl: stripeUrl,
+          pdfUrl,
+          bank: profile?.invoice_show_bank_details ? {
+            bankName: profile?.invoice_bank_name,
+            accountName: profile?.invoice_account_name,
+            sortCode: profile?.invoice_sort_code,
+            accountNumber: profile?.invoice_account_number,
+            iban: profile?.invoice_iban,
+            swift: profile?.invoice_swift,
+            paymentReference: profile?.invoice_payment_reference || r.invoice_number,
+          } : null,
+        },
+      });
+      if (!res.ok) throw new Error(res.error || "Send failed");
+
+      // 6) Mark as sent
+      await markSent({ data: { id: r.id } });
+      toast.success("Invoice sent");
+      onChanged();
+    } catch (e) { toast.error((e as Error).message); }
     finally { setBusyId(null); }
   }
+
   async function togglePaid(r: PrescriberInvoice) {
     try {
       await markPaid({ data: { id: r.id, paid: r.status !== "paid" } });
       onChanged();
     } catch (e) { toast.error((e as Error).message); }
   }
+
 
   return (
     <Card>
@@ -313,22 +421,23 @@ function InvoicesCard({
         ) : (
           <ul className="divide-y">
             {rows.map((r) => (
-              <li key={r.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
+              <li key={r.id} className="py-3 grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
                 <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium">{r.invoice_number}</span>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-medium truncate">{r.invoice_number}</span>
                     <StatusBadge status={r.status} />
+                    <span className="ml-auto font-medium tabular-nums sm:hidden">{fmtCents(r.subtotal_cents, r.currency)}</span>
                   </div>
-                  <div className="text-xs text-muted-foreground">
+                  <div className="text-xs text-muted-foreground truncate">
                     {r.practitioner?.full_name}
                     {r.practitioner?.clinic_name ? ` • ${r.practitioner.clinic_name}` : ""}
                     {" • "}{new Date(r.created_at).toLocaleDateString()}
                     {r.sent_at ? ` • sent ${new Date(r.sent_at).toLocaleDateString()}` : ""}
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="text-right font-medium tabular-nums">{fmtCents(r.subtotal_cents, r.currency)}</div>
-                  <div className="flex gap-1">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="hidden sm:block text-right font-medium tabular-nums">{fmtCents(r.subtotal_cents, r.currency)}</div>
+                  <div className="flex flex-wrap gap-1">
                     <DownloadPdfButton inv={r} />
                     {r.status !== "paid" && (
                       <Button size="sm" onClick={() => sendNow(r)} disabled={busyId === r.id}>
@@ -338,7 +447,7 @@ function InvoicesCard({
                       </Button>
                     )}
                     <Button size="sm" variant="outline" onClick={() => togglePaid(r)}>
-                      <Check className="mr-1 h-3 w-3" /> {r.status === "paid" ? "Mark unpaid" : "Mark paid"}
+                      <Check className="mr-1 h-3 w-3" /> {r.status === "paid" ? "Unpaid" : "Paid"}
                     </Button>
                     <Button size="sm" variant="ghost" onClick={() => remove(r)}>
                       <Trash2 className="h-4 w-4" />
@@ -347,6 +456,7 @@ function InvoicesCard({
                 </div>
               </li>
             ))}
+
           </ul>
         )}
       </CardContent>
@@ -429,7 +539,7 @@ function NewInvoiceDialog({
   }
 
   return (
-    <DialogContent className="max-w-2xl">
+    <DialogContent className="max-w-2xl w-[calc(100vw-2rem)] max-h-[92vh] overflow-y-auto">
       <DialogHeader>
         <DialogTitle>New invoice</DialogTitle>
         <DialogDescription>Add line items — quantity times unit price.</DialogDescription>
@@ -480,24 +590,29 @@ function NewInvoiceDialog({
         <div className="space-y-2">
           <Label>Line items</Label>
           {items.map((it, i) => (
-            <div key={i} className="grid grid-cols-12 items-end gap-2">
-              <div className="col-span-6">
+            <div key={i} className="rounded-md border bg-muted/30 p-2 space-y-2 sm:space-y-0 sm:grid sm:grid-cols-12 sm:items-end sm:gap-2 sm:bg-transparent sm:border-0 sm:p-0">
+              <div className="sm:col-span-6">
+                <Label className="text-[11px] text-muted-foreground sm:hidden">Description</Label>
                 <Input placeholder="Description" value={it.description}
                   onChange={(e) => updateItem(i, { description: e.target.value })} />
               </div>
-              <div className="col-span-2">
-                <Input type="number" min="1" step="1" placeholder="Qty" value={it.qty}
-                  onChange={(e) => updateItem(i, { qty: Math.max(1, Number(e.target.value || 1)) })} />
-              </div>
-              <div className="col-span-3">
-                <Input type="number" min="0" step="0.01" placeholder="Unit £"
-                  value={it.unitPriceCents ? (it.unitPriceCents / 100).toFixed(2) : ""}
-                  onChange={(e) => updateItem(i, { unitPriceCents: Math.round(Number(e.target.value || 0) * 100) })} />
-              </div>
-              <div className="col-span-1">
-                <Button type="button" size="sm" variant="ghost" onClick={() => removeLine(i)} disabled={items.length === 1}>
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+              <div className="grid grid-cols-[1fr_1fr_auto] gap-2 sm:contents">
+                <div className="sm:col-span-2">
+                  <Label className="text-[11px] text-muted-foreground sm:hidden">Qty</Label>
+                  <Input type="number" min="1" step="1" placeholder="Qty" value={it.qty}
+                    onChange={(e) => updateItem(i, { qty: Math.max(1, Number(e.target.value || 1)) })} />
+                </div>
+                <div className="sm:col-span-3">
+                  <Label className="text-[11px] text-muted-foreground sm:hidden">Unit £</Label>
+                  <Input type="number" min="0" step="0.01" placeholder="Unit £"
+                    value={it.unitPriceCents ? (it.unitPriceCents / 100).toFixed(2) : ""}
+                    onChange={(e) => updateItem(i, { unitPriceCents: Math.round(Number(e.target.value || 0) * 100) })} />
+                </div>
+                <div className="flex items-end sm:col-span-1">
+                  <Button type="button" size="icon" variant="ghost" onClick={() => removeLine(i)} disabled={items.length === 1} aria-label="Remove line">
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </div>
           ))}
@@ -505,6 +620,7 @@ function NewInvoiceDialog({
             <Plus className="mr-1 h-3 w-3" /> Add line
           </Button>
         </div>
+
 
         <div className="grid grid-cols-2 gap-3">
           <div>
@@ -541,34 +657,14 @@ function DownloadPdfButton({ inv }: { inv: PrescriberInvoice }) {
   async function download() {
     setBusy(true);
     try {
-      const profile = await getProfile().catch(() => null);
-      const clinic = (profile as any)?.clinic_name || (profile as any)?.full_name || "Prescriber";
-      const items = (inv.items || []).map((it) => ({
-        description: it.description,
-        qty: it.qty,
-        unitPrice: it.unitPriceCents / 100,
-      }));
-      const total = inv.subtotal_cents / 100;
-      const doc = await generateInvoicePdf({
-        clinic,
-        practitioner: (profile as any)?.full_name || undefined,
-        clinicEmail: (profile as any)?.email || null,
-        logoUrl: (profile as any)?.avatar_url || null,
-        brandColor: (profile as any)?.brand_color || null,
-        patientName: inv.practitioner?.full_name,
-        patientEmail: inv.practitioner?.email,
-        date: new Date(inv.created_at).toLocaleDateString(),
-        items,
-        amount: total,
-        reference: inv.invoice_number,
-        paymentLink: inv.stripe_url || undefined,
-        notes: inv.notes || undefined,
-      });
+      const profile: any = await getProfile().catch(() => null);
+      const doc = await generateInvoicePdf(profileToInvoiceArgs(profile, inv, inv.stripe_url));
       doc.save(`${inv.invoice_number}.pdf`);
     } catch (e) {
       toast.error((e as Error).message);
     } finally { setBusy(false); }
   }
+
   return (
     <Button size="sm" variant="outline" onClick={download} disabled={busy}>
       {busy ? <Loader2 className="h-3 w-3 animate-spin" /> : <><Download className="mr-1 h-3 w-3" /> PDF</>}

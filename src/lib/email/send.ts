@@ -7,6 +7,7 @@ export interface SendAppEmailInput {
     | 'medical-form-request'
     | 'review-request'
     | 'patient-message'
+    | 'prescriber-invoice'
   recipientEmail: string
   idempotencyKey?: string
   templateData?: Record<string, unknown>
