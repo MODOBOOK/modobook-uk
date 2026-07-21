@@ -36,17 +36,19 @@ const PRESCRIBER_ONLY_REDIRECTS: Record<string, string> = {
   "/hub": "/prescriber",
 };
 
+// The Hub is the PRACTITIONER-side prescribing surface. Prescriber-only
+// features (Rx approvals, Invoices they issue, Directions, Library) live
+// in the dedicated /prescriber workspace — reached via the "Prescriber
+// view" button in the header. Do not mix them in here or the nav
+// overflows on mobile for dual-role users.
 const nav = [
   { to: "/hub", label: "Overview", icon: LayoutDashboard, exact: true, key: "overview" as const },
-  { to: "/dashboard/rx-requests", label: "Rx requests", icon: Send, key: "rx-requests" as const, practitionerOnly: true },
-  { to: "/prescriber/requests", label: "Rx requests", icon: Send, key: "prescriber-rx-requests" as const, prescriberOnly: true },
+  { to: "/dashboard/rx-requests", label: "Rx requests", icon: Send, key: "rx-requests" as const },
   { to: "/hub/visits", label: "Clinic days", icon: CalendarDays, key: "visits" as const },
   { to: "/hub/referrals", label: "Referrals", icon: Send, key: "referrals" as const },
   { to: "/hub/prescribing", label: "Rules", icon: Pill, key: "prescribing" as const },
-  { to: "/prescriber/invoices", label: "Invoices", icon: FileText, key: "invoices" as const, prescriberOnly: true },
   { to: "/hub/connections", label: "Prescribers", icon: Network, key: "connections" as const },
   { to: "/hub/verification", label: "Verification", icon: ShieldCheck, key: "verification" as const },
-
 ];
 
 function HubLayout() {
