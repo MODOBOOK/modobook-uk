@@ -175,11 +175,11 @@ function HubLayout() {
           <Outlet />
         </main>
 
-        <nav className={cn(
-          "fixed inset-x-0 bottom-0 z-30 grid border-t bg-background/95 backdrop-blur lg:hidden",
-          isPrescriber ? "grid-cols-7" : "grid-cols-6",
-        )}>
-          {nav.filter((i) => (!i.prescriberOnly || isPrescriber) && (!i.practitionerOnly || isPractitioner)).map((tab) => {
+        <nav
+          className="fixed inset-x-0 bottom-0 z-30 grid border-t bg-background/95 backdrop-blur lg:hidden"
+          style={{ gridTemplateColumns: `repeat(${nav.length}, minmax(0, 1fr))` }}
+        >
+          {nav.map((tab) => {
             const active = tab.exact ? pathname === tab.to : pathname.startsWith(tab.to);
             const count = badges[tab.key] ?? 0;
             return (
