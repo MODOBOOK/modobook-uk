@@ -47,6 +47,47 @@ function fmtCents(cents: number, currency = "gbp") {
   return `${currencyLabel(currency)}${(Number(cents ?? 0) / 100).toFixed(2)}`;
 }
 
+function profileToInvoiceArgs(profile: any, inv: PrescriberInvoice, paymentLink?: string | null) {
+  const addr = (profile?.address ?? {}) as Record<string, string>;
+  const addrLines = [addr.line1, addr.line2, [addr.city, addr.postcode].filter(Boolean).join(" "), addr.country].filter(Boolean) as string[];
+  const items = (inv.items || []).map((it) => ({
+    description: it.description,
+    qty: it.qty,
+    unitPrice: it.unitPriceCents / 100,
+  }));
+  return {
+    clinic: profile?.clinic_name || profile?.full_name || "Invoice",
+    practitioner: profile?.full_name ?? undefined,
+    clinicAddress: addrLines,
+    clinicEmail: profile?.email ?? null,
+    clinicPhone: profile?.phone ?? null,
+    vatNumber: profile?.invoice_vat_number ?? null,
+    companyNumber: profile?.invoice_company_number ?? null,
+    logoUrl: profile?.invoice_show_logo === false ? null : (profile?.avatar_url ?? null),
+    brandColor: profile?.brand_color ?? null,
+    patientName: inv.practitioner?.full_name,
+    patientEmail: inv.practitioner?.email,
+    date: new Date(inv.created_at).toLocaleDateString("en-GB"),
+    items,
+    amount: inv.subtotal_cents / 100,
+    notes: inv.notes ?? undefined,
+    footerNotes: profile?.invoice_footer_notes ?? null,
+    paymentLink: paymentLink ?? inv.stripe_url ?? undefined,
+    reference: inv.invoice_number,
+    showBank: !!profile?.invoice_show_bank_details,
+    bank: {
+      bankName: profile?.invoice_bank_name,
+      accountName: profile?.invoice_account_name,
+      sortCode: profile?.invoice_sort_code,
+      accountNumber: profile?.invoice_account_number,
+      iban: profile?.invoice_iban,
+      swift: profile?.invoice_swift,
+      paymentReference: profile?.invoice_payment_reference || inv.invoice_number,
+    },
+  };
+}
+
+
 function PrescriberInvoicesPage() {
   const qc = useQueryClient();
   const listPractitioners = useServerFn(listBillingPractitioners);
