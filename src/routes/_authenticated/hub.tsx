@@ -12,7 +12,7 @@ import {
   ShieldCheck,
   Pill,
   Stethoscope,
-  FileText,
+  
 } from "lucide-react";
 import { getHubContext } from "@/lib/hub.functions";
 import { listMyClinicVisits } from "@/lib/clinic-visits.functions";
@@ -36,17 +36,19 @@ const PRESCRIBER_ONLY_REDIRECTS: Record<string, string> = {
   "/hub": "/prescriber",
 };
 
+// The Hub is the PRACTITIONER-side prescribing surface. Prescriber-only
+// features (Rx approvals, Invoices they issue, Directions, Library) live
+// in the dedicated /prescriber workspace — reached via the "Prescriber
+// view" button in the header. Do not mix them in here or the nav
+// overflows on mobile for dual-role users.
 const nav = [
   { to: "/hub", label: "Overview", icon: LayoutDashboard, exact: true, key: "overview" as const },
-  { to: "/dashboard/rx-requests", label: "Rx requests", icon: Send, key: "rx-requests" as const, practitionerOnly: true },
-  { to: "/prescriber/requests", label: "Rx requests", icon: Send, key: "prescriber-rx-requests" as const, prescriberOnly: true },
+  { to: "/dashboard/rx-requests", label: "Rx requests", icon: Send, key: "rx-requests" as const },
   { to: "/hub/visits", label: "Clinic days", icon: CalendarDays, key: "visits" as const },
   { to: "/hub/referrals", label: "Referrals", icon: Send, key: "referrals" as const },
   { to: "/hub/prescribing", label: "Rules", icon: Pill, key: "prescribing" as const },
-  { to: "/prescriber/invoices", label: "Invoices", icon: FileText, key: "invoices" as const, prescriberOnly: true },
   { to: "/hub/connections", label: "Prescribers", icon: Network, key: "connections" as const },
   { to: "/hub/verification", label: "Verification", icon: ShieldCheck, key: "verification" as const },
-
 ];
 
 function HubLayout() {
@@ -106,7 +108,7 @@ function HubLayout() {
           </div>
         </div>
         <nav className="flex-1 space-y-0.5 overflow-y-auto px-3 py-6">
-          {nav.filter((i) => (!i.prescriberOnly || isPrescriber) && (!i.practitionerOnly || isPractitioner)).map((item) => {
+          {nav.map((item) => {
             const active = item.exact ? pathname === item.to : pathname.startsWith(item.to);
             const count = badges[item.key] ?? 0;
             return (
@@ -173,11 +175,11 @@ function HubLayout() {
           <Outlet />
         </main>
 
-        <nav className={cn(
-          "fixed inset-x-0 bottom-0 z-30 grid border-t bg-background/95 backdrop-blur lg:hidden",
-          isPrescriber ? "grid-cols-7" : "grid-cols-6",
-        )}>
-          {nav.filter((i) => (!i.prescriberOnly || isPrescriber) && (!i.practitionerOnly || isPractitioner)).map((tab) => {
+        <nav
+          className="fixed inset-x-0 bottom-0 z-30 grid border-t bg-background/95 backdrop-blur lg:hidden"
+          style={{ gridTemplateColumns: `repeat(${nav.length}, minmax(0, 1fr))` }}
+        >
+          {nav.map((tab) => {
             const active = tab.exact ? pathname === tab.to : pathname.startsWith(tab.to);
             const count = badges[tab.key] ?? 0;
             return (
