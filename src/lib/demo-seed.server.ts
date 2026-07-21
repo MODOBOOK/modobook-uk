@@ -524,6 +524,73 @@ export async function seedDemoClinic(admin: Admin) {
     await admin.from("clinic_theme").insert(themePayload);
   }
 
+  // Rewards & referrals — enabled + publicly visible on the booking page
+  await admin
+    .from("clinic_referral_settings")
+    .upsert(
+      {
+        clinic_profile_id: practitionerUserId,
+        enabled: true,
+        show_on_public_page: true,
+        referrer_credit_kind: "pennies",
+        referrer_credit_pennies: 1500,
+        referrer_credit_percent: 0,
+        referrer_points: 100,
+        friend_credit_kind: "pennies",
+        friend_credit_pennies: 1000,
+        friend_credit_percent: 0,
+        points_redemption_enabled: true,
+        points_per_pound_redeem: 20,
+        earn_on_spend_enabled: true,
+        points_per_pound_earn: 1,
+        tiers_enabled: true,
+        trigger_event: "completed_paid",
+        max_rewarded_per_year: null,
+        headline: "MODO Rewards",
+        description: "Earn points every time you visit and unlock member-only perks. Refer a friend and you'll both receive credit.",
+      } as never,
+      { onConflict: "clinic_profile_id" },
+    );
+
+  const { count: tierCount } = await admin
+    .from("clinic_reward_tiers")
+    .select("id", { count: "exact", head: true })
+    .eq("clinic_profile_id", practitionerUserId);
+  if (!tierCount) {
+    await admin.from("clinic_reward_tiers").insert([
+      {
+        clinic_profile_id: practitionerUserId,
+        label: "£10 off your next visit",
+        points_cost: 200,
+        reward_kind: "credit_pennies",
+        reward_value: 1000,
+        description: "Redeem 200 points for £10 off any treatment.",
+        enabled: true,
+        sort_order: 1,
+      },
+      {
+        clinic_profile_id: practitionerUserId,
+        label: "Complimentary skin booster add-on",
+        points_cost: 500,
+        reward_kind: "free_addon",
+        reward_value: 0,
+        description: "A little extra glow, on us.",
+        enabled: true,
+        sort_order: 2,
+      },
+      {
+        clinic_profile_id: practitionerUserId,
+        label: "£40 loyalty credit",
+        points_cost: 800,
+        reward_kind: "credit_pennies",
+        reward_value: 4000,
+        description: "Our thank-you for being part of the MODO family.",
+        enabled: true,
+        sort_order: 3,
+      },
+    ] as never);
+  }
+
   // Demo patient clinic-side record
   const { data: existingClient } = await admin
     .from("clinic_clients")
