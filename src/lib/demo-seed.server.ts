@@ -111,22 +111,34 @@ export async function seedDemoClinic(admin: Admin) {
         is_primary: true,
         is_public: true,
         active: true,
+        image_url: IMG.gallery1,
       })
       .select("id")
       .single();
     if (error) throw error;
     locationId = loc!.id as string;
+  } else {
+    await admin.from("locations").update({ image_url: IMG.gallery1 }).eq("id", locationId);
   }
 
   // Treatments
-  async function ensureTreatment(name: string, price: number, duration: number) {
+  async function ensureTreatment(
+    name: string,
+    price: number,
+    duration: number,
+    picture_url: string,
+    description: string,
+  ) {
     const { data: existing } = await admin
       .from("treatments")
       .select("id")
       .eq("profile_id", profileId!)
       .eq("name", name)
       .maybeSingle();
-    if (existing?.id) return existing.id as string;
+    if (existing?.id) {
+      await admin.from("treatments").update({ picture_url, description }).eq("id", existing.id);
+      return existing.id as string;
+    }
     const { data, error } = await admin
       .from("treatments")
       .insert({
@@ -136,15 +148,124 @@ export async function seedDemoClinic(admin: Admin) {
         duration,
         payment_mode: "full",
         active: true,
+        picture_url,
+        description,
       })
       .select("id")
       .single();
     if (error) throw error;
     return data!.id as string;
   }
-  const t1 = await ensureTreatment("Anti-wrinkle consultation", 15000, 30);
-  const t2 = await ensureTreatment("Lip filler — 1ml", 22000, 45);
-  const t3 = await ensureTreatment("Skin booster review", 8500, 20);
+  const t1 = await ensureTreatment(
+    "Anti-wrinkle consultation",
+    15000,
+    30,
+    IMG.t1,
+    "A relaxed 30-minute conversation to understand what you'd like from treatment, review your medical history and map a plan together.",
+  );
+  const t2 = await ensureTreatment(
+    "Lip filler — 1ml",
+    22000,
+    45,
+    IMG.t2,
+    "Subtle, natural-looking enhancement using premium hyaluronic acid filler. Includes numbing, treatment and a follow-up review.",
+  );
+  const t3 = await ensureTreatment(
+    "Skin booster review",
+    8500,
+    20,
+    IMG.t3,
+    "A 20-minute review appointment to assess results and plan the next stage of your skin journey.",
+  );
+
+  // Availability — Mon-Fri 09:00-17:00
+  const { count: availCount } = await admin
+    .from("availability_rules")
+    .select("id", { count: "exact", head: true })
+    .eq("profile_id", profileId);
+  if (!availCount) {
+    await admin.from("availability_rules").insert(
+      [1, 2, 3, 4, 5].map((day_of_week) => ({
+        profile_id: profileId!,
+        location_id: locationId!,
+        day_of_week,
+        start_time: "09:00",
+        end_time: "17:00",
+        slot_interval: 15,
+      })),
+    );
+  }
+
+  // Gallery
+  const { count: galleryCount } = await admin
+    .from("clinic_gallery")
+    .select("id", { count: "exact", head: true })
+    .eq("profile_id", profileId);
+  if (!galleryCount) {
+    await admin.from("clinic_gallery").insert([
+      { profile_id: profileId!, image_url: IMG.gallery1, caption: "The studio", display_order: 1 },
+      { profile_id: profileId!, image_url: IMG.t1, caption: "Consultation space", display_order: 2 },
+      { profile_id: profileId!, image_url: IMG.t3, caption: "Products we love", display_order: 3 },
+    ]);
+  }
+
+  // Testimonials
+  const { count: tCount } = await admin
+    .from("clinic_testimonials")
+    .select("id", { count: "exact", head: true })
+    .eq("profile_id", profileId);
+  if (!tCount) {
+    await admin.from("clinic_testimonials").insert([
+      {
+        profile_id: profileId!,
+        author_name: "Sophie R.",
+        quote: "The most calming clinic I've ever visited. Genuinely felt heard from the moment I sat down.",
+        rating: 5,
+        display_order: 1,
+      },
+      {
+        profile_id: profileId!,
+        author_name: "Amara K.",
+        quote: "Results are beautifully natural and the aftercare is second to none. I won't go anywhere else.",
+        rating: 5,
+        display_order: 2,
+      },
+    ]);
+  }
+
+  // Theme — hero + warm sand palette
+  const themePayload = {
+    profile_id: profileId!,
+    hero_image_url: IMG.hero,
+    hero_carousel_enabled: true,
+    hero_carousel_urls: [IMG.hero, IMG.gallery1, IMG.t2] as unknown as any,
+    hero_heading: DEMO_CLINIC_NAME,
+    hero_subheading: "Considered aesthetics, without the rush.",
+    hero_show_text: true,
+    hero_text_color: "#ffffff",
+    hero_overlay_color: "#1a1a1a",
+    hero_overlay_opacity: 0.35,
+    hero_height: "tall",
+    primary_color: "#8b7355",
+    accent_color: "#c9b99a",
+    background_color: "#faf8f5",
+    text_color: "#2d2d2d",
+    button_color: "#8b7355",
+    button_text_color: "#ffffff",
+    heading_font: "Syne",
+    body_font: "Plus Jakarta Sans",
+    preset_key: "warm-sand",
+  };
+  const { data: existingTheme } = await admin
+    .from("clinic_theme")
+    .select("id")
+    .eq("profile_id", profileId!)
+    .maybeSingle();
+  if (existingTheme?.id) {
+    await admin.from("clinic_theme").update(themePayload).eq("id", existingTheme.id);
+  } else {
+    await admin.from("clinic_theme").insert(themePayload);
+  }
 
   // Demo patient clinic-side record
   const { data: existingClient } = await admin
