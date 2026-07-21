@@ -655,34 +655,14 @@ function DownloadPdfButton({ inv }: { inv: PrescriberInvoice }) {
   async function download() {
     setBusy(true);
     try {
-      const profile = await getProfile().catch(() => null);
-      const clinic = (profile as any)?.clinic_name || (profile as any)?.full_name || "Prescriber";
-      const items = (inv.items || []).map((it) => ({
-        description: it.description,
-        qty: it.qty,
-        unitPrice: it.unitPriceCents / 100,
-      }));
-      const total = inv.subtotal_cents / 100;
-      const doc = await generateInvoicePdf({
-        clinic,
-        practitioner: (profile as any)?.full_name || undefined,
-        clinicEmail: (profile as any)?.email || null,
-        logoUrl: (profile as any)?.avatar_url || null,
-        brandColor: (profile as any)?.brand_color || null,
-        patientName: inv.practitioner?.full_name,
-        patientEmail: inv.practitioner?.email,
-        date: new Date(inv.created_at).toLocaleDateString(),
-        items,
-        amount: total,
-        reference: inv.invoice_number,
-        paymentLink: inv.stripe_url || undefined,
-        notes: inv.notes || undefined,
-      });
+      const profile: any = await getProfile().catch(() => null);
+      const doc = await generateInvoicePdf(profileToInvoiceArgs(profile, inv, inv.stripe_url));
       doc.save(`${inv.invoice_number}.pdf`);
     } catch (e) {
       toast.error((e as Error).message);
     } finally { setBusy(false); }
   }
+
   return (
     <Button size="sm" variant="outline" onClick={download} disabled={busy}>
       {busy ? <Loader2 className="h-3 w-3 animate-spin" /> : <><Download className="mr-1 h-3 w-3" /> PDF</>}
