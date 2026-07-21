@@ -38,12 +38,15 @@ const PRESCRIBER_ONLY_REDIRECTS: Record<string, string> = {
 
 const nav = [
   { to: "/hub", label: "Overview", icon: LayoutDashboard, exact: true, key: "overview" as const },
+  { to: "/dashboard/rx-requests", label: "Rx requests", icon: Send, key: "rx-requests" as const, practitionerOnly: true },
+  { to: "/prescriber/requests", label: "Rx requests", icon: Send, key: "prescriber-rx-requests" as const, prescriberOnly: true },
   { to: "/hub/visits", label: "Clinic days", icon: CalendarDays, key: "visits" as const },
   { to: "/hub/referrals", label: "Referrals", icon: Send, key: "referrals" as const },
   { to: "/hub/prescribing", label: "Rules", icon: Pill, key: "prescribing" as const },
   { to: "/prescriber/invoices", label: "Invoices", icon: FileText, key: "invoices" as const, prescriberOnly: true },
   { to: "/hub/connections", label: "Prescribers", icon: Network, key: "connections" as const },
   { to: "/hub/verification", label: "Verification", icon: ShieldCheck, key: "verification" as const },
+
 ];
 
 function HubLayout() {
