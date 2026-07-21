@@ -454,9 +454,28 @@ function NewInvoiceDialog({
                   {p.full_name}{p.clinic_name ? ` — ${p.clinic_name}` : ""}
                 </SelectItem>
               ))}
+              <SelectItem value={NEW_KEY}>+ Add new practitioner…</SelectItem>
             </SelectContent>
           </Select>
+          {isNew && (
+            <div className="mt-3 grid gap-2 rounded-md border bg-muted/40 p-3 sm:grid-cols-3">
+              <div className="sm:col-span-1">
+                <Label className="text-xs">Full name</Label>
+                <Input value={quick.full_name} onChange={(e) => setQuick({ ...quick, full_name: e.target.value })} placeholder="Jane Smith" />
+              </div>
+              <div className="sm:col-span-1">
+                <Label className="text-xs">Clinic (optional)</Label>
+                <Input value={quick.clinic_name} onChange={(e) => setQuick({ ...quick, clinic_name: e.target.value })} placeholder="Clinic name" />
+              </div>
+              <div className="sm:col-span-1">
+                <Label className="text-xs">Email</Label>
+                <Input type="email" value={quick.email} onChange={(e) => setQuick({ ...quick, email: e.target.value })} placeholder="name@email.com" />
+              </div>
+              <p className="text-xs text-muted-foreground sm:col-span-3">Saved to your billing directory so you can reuse them next time.</p>
+            </div>
+          )}
         </div>
+
 
         <div className="space-y-2">
           <Label>Line items</Label>
