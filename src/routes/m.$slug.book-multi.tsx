@@ -330,6 +330,7 @@ function MultiBookPage() {
   const dayFn = useServerFn(getDayAvailability);
   const monthFn = useServerFn(getMonthAvailability);
   const reqFn = useServerFn(requestMultiBooking);
+  const redeemGc = useServerFn(redeemGiftCardCode);
   
 
   const monthQuery = useQuery({
