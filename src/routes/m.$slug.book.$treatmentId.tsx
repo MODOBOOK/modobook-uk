@@ -497,6 +497,12 @@ function BookTreatmentPage() {
           sessionStorage.removeItem("modo_ref_code");
         }
       } catch { /* non-fatal */ }
+      // Redeem gift card credit against this appointment (idempotent server-side).
+      try {
+        if (discount?.isGiftCard && discount.giftCardPurchaseId && discountOff > 0 && res.id) {
+          await redeemGc({ data: { slug, code: discount.code, amount: discountOff, appointment_id: res.id } });
+        }
+      } catch { /* non-fatal */ }
       const emb = (res as { embeddedPayment?: {
         clientSecret: string;
         paymentIntentId: string;
