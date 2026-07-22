@@ -132,6 +132,7 @@ function GiftCardsPage() {
         open={open}
         onOpenChange={setOpen}
         editing={editing}
+        profileId={(profileQ.data as { id?: string } | null)?.id ?? ""}
         treatments={(treatmentsQ.data as { treatments?: Array<{ id: string; name: string }> })?.treatments ?? []}
         packages={(packagesQ.data as { packages?: Array<{ id: string; name: string }> })?.packages ?? []}
         onSaved={() => { qc.invalidateQueries({ queryKey: ["my-gift-cards"] }); setOpen(false); }}
@@ -145,11 +146,12 @@ function GiftCardsPage() {
 }
 
 function GiftCardDialog({
-  open, onOpenChange, editing, treatments, packages, onSaved,
+  open, onOpenChange, editing, profileId, treatments, packages, onSaved,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   editing: GiftCard | null;
+  profileId: string;
   treatments: Array<{ id: string; name: string }>;
   packages: Array<{ id: string; name: string }>;
   onSaved: () => void;
