@@ -723,7 +723,7 @@ function TreatmentDialog({
               {description.trim() ? "Rewrite with AI" : "Generate with AI"}
             </Button>
           </div>
-          <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
+          <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={10} />
           <p className="mt-1 text-[11px] text-muted-foreground">
             AI uses the treatment name (and any notes you've typed) to draft a short, patient-friendly description.
           </p>

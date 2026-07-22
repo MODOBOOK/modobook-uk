@@ -1076,11 +1076,10 @@ function CategoryDialog({
             <Label htmlFor="c-desc">Description</Label>
             <Textarea
               id="c-desc"
-              rows={3}
+              rows={8}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Write a short description about your services"
-              maxLength={500}
+              placeholder="Write a description about your services"
             />
           </div>
           <div className="space-y-1.5">
@@ -1321,10 +1320,10 @@ function ServiceDialog({
             <Label htmlFor="s-desc">Service description</Label>
             <Textarea
               id="s-desc"
-              rows={3}
+              rows={10}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Write a short description about your service"
+              placeholder="Describe the service in as much detail as you'd like"
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
