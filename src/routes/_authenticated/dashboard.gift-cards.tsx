@@ -242,55 +242,86 @@ function GiftCardDialog({
             </div>
           )}
           {form.kind === "treatment" && (
-            <div>
+            <div className="space-y-2">
               <Label>Treatments (select one or more)</Label>
-              <div className="mt-1 max-h-56 overflow-y-auto rounded-md border p-2">
+              <div className="mt-1 max-h-64 overflow-y-auto rounded-md border p-2">
                 {treatments.length === 0 && <div className="p-2 text-sm text-muted-foreground">No treatments yet.</div>}
                 {treatments.map((t) => {
                   const checked = form.treatment_ids.includes(t.id);
                   return (
-                    <label key={t.id} className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-muted">
+                    <label key={t.id} className="flex cursor-pointer items-start gap-2 rounded px-2 py-2 text-sm hover:bg-muted">
                       <input
                         type="checkbox"
+                        className="mt-1"
                         checked={checked}
-                        onChange={(e) => setForm({
-                          ...form,
-                          treatment_ids: e.target.checked
+                        onChange={(e) => {
+                          const next = e.target.checked
                             ? [...form.treatment_ids, t.id]
-                            : form.treatment_ids.filter((x) => x !== t.id),
-                        })}
+                            : form.treatment_ids.filter((x) => x !== t.id);
+                          setForm((f) => ({
+                            ...f,
+                            treatment_ids: next,
+                            // Autofill name/description on the first pick when blank.
+                            name: !f.name && next.length === 1 && e.target.checked ? t.name : f.name,
+                            description: !f.description && next.length === 1 && e.target.checked ? (t.description ?? "") : f.description,
+                          }));
+                        }}
                       />
-                      <span>{t.name}</span>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-medium">{t.name}</span>
+                          <span className="shrink-0 text-xs text-muted-foreground">£{Number(t.price ?? 0).toFixed(2)}</span>
+                        </div>
+                        {t.description && (
+                          <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{t.description}</p>
+                        )}
+                      </div>
                     </label>
                   );
                 })}
               </div>
+              <PriceOverride form={form} setForm={setForm} mirrored={mirroredTotal} label="treatment" />
             </div>
           )}
           {form.kind === "package" && (
-            <div>
+            <div className="space-y-2">
               <Label>Packages (select one or more)</Label>
-              <div className="mt-1 max-h-56 overflow-y-auto rounded-md border p-2">
+              <div className="mt-1 max-h-64 overflow-y-auto rounded-md border p-2">
                 {packages.length === 0 && <div className="p-2 text-sm text-muted-foreground">No packages yet.</div>}
                 {packages.map((p) => {
                   const checked = form.package_ids.includes(p.id);
                   return (
-                    <label key={p.id} className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-muted">
+                    <label key={p.id} className="flex cursor-pointer items-start gap-2 rounded px-2 py-2 text-sm hover:bg-muted">
                       <input
                         type="checkbox"
+                        className="mt-1"
                         checked={checked}
-                        onChange={(e) => setForm({
-                          ...form,
-                          package_ids: e.target.checked
+                        onChange={(e) => {
+                          const next = e.target.checked
                             ? [...form.package_ids, p.id]
-                            : form.package_ids.filter((x) => x !== p.id),
-                        })}
+                            : form.package_ids.filter((x) => x !== p.id);
+                          setForm((f) => ({
+                            ...f,
+                            package_ids: next,
+                            name: !f.name && next.length === 1 && e.target.checked ? p.name : f.name,
+                            description: !f.description && next.length === 1 && e.target.checked ? (p.description ?? "") : f.description,
+                          }));
+                        }}
                       />
-                      <span>{p.name}</span>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-medium">{p.name}</span>
+                          <span className="shrink-0 text-xs text-muted-foreground">£{Number(p.price ?? 0).toFixed(2)}</span>
+                        </div>
+                        {p.description && (
+                          <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{p.description}</p>
+                        )}
+                      </div>
                     </label>
                   );
                 })}
               </div>
+              <PriceOverride form={form} setForm={setForm} mirrored={mirroredTotal} label="package" />
             </div>
           )}
           <div>
