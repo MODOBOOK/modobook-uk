@@ -31,6 +31,7 @@ import { Clock, MapPin, CheckCircle2, LogIn, UserPlus, UserCheck, ChevronLeft, C
 import { DiscountCodeBox, type AppliedDiscount } from "@/components/DiscountCodeBox";
 import { ReferralCodeInput } from "@/components/ReferralCodeInput";
 import { linkReferralToAppointment } from "@/lib/rewards.functions";
+import { redeemGiftCardCode } from "@/lib/gift-cards.functions";
 import { AddressAutocomplete } from "@/components/AddressAutocomplete";
 
 import { toast } from "sonner";
