@@ -221,7 +221,6 @@ function ModoLayout() {
               <TabLink slug={slug} to="/m/$slug" label={theme?.header_button_label || "Book"} exact />
               <TabLink slug={slug} to="/m/$slug/about" label="About" />
               <TrainingTabLink slug={slug} />
-              <GiftCardsTabLink slug={slug} />
               <RewardsTabLink slug={slug} />
               <TabLink slug={slug} to="/m/$slug/reviews" label="Reviews" />
               <Link to="/m/$slug/account" params={{ slug }} aria-label="My account">
