@@ -246,7 +246,7 @@ function TabLink({
   exact,
 }: {
   slug: string;
-  to: "/m/$slug" | "/m/$slug/rewards" | "/m/$slug/reviews" | "/m/$slug/about";
+  to: "/m/$slug" | "/m/$slug/rewards" | "/m/$slug/reviews" | "/m/$slug/about" | "/m/$slug/training";
   label: string;
   exact?: boolean;
 }) {
