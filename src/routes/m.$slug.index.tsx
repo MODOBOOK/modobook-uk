@@ -296,6 +296,18 @@ function BookPage() {
   const trainingCourses = (trainingQuery.data?.courses ?? []) as Array<{ id: string; name: string; mode: string; cpd_hours: number | string | null; price: number | string; duration_min: number; description: string | null; cover_image_url: string | null }>;
   const hasTraining = trainingCourses.length > 0;
 
+  const fetchGiftCards = useServerFn(listPublicGiftCards);
+  const giftCardsQuery = useQuery({
+    queryKey: ["public-gift-cards-tab", slug],
+    queryFn: () => fetchGiftCards({ data: { slug } }),
+    staleTime: 60_000,
+  });
+  const giftCards = (giftCardsQuery.data?.cards ?? []) as Array<{
+    id: string; name: string; description: string | null; kind: "value" | "treatment" | "package";
+    amount: number | null; image_url: string | null;
+  }>;
+  const hasGiftCards = giftCards.length > 0;
+
   const fetchPublicRewards = useServerFn(getPublicRewardsOverview);
   const rewardsQuery = useQuery({
     queryKey: ["public-rewards-tab", slug],
