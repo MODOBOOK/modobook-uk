@@ -144,6 +144,47 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
                 break;
               }
 
+              // Gift card purchases: activate the code and email it once paid.
+              if (metadata.kind === "gift_card_purchase" && metadata.gift_card_purchase_id) {
+                if (session.payment_status !== "paid") break;
+                try {
+                  const { data: purchase } = await supabaseAdmin
+                    .from("gift_card_purchases")
+                    .select("*, gift_cards(name)")
+                    .eq("id", metadata.gift_card_purchase_id)
+                    .maybeSingle();
+                  const p = purchase as any;
+                  if (p && p.status !== "active") {
+                    await supabaseAdmin
+                      .from("gift_card_purchases")
+                      .update({ status: "active" })
+                      .eq("id", p.id);
+                    const to = p.delivery === "buyer" ? p.buyer_email : p.recipient_email;
+                    if (to) {
+                      const { enqueueAppEmail } = await import("@/lib/email/send.server");
+                      await enqueueAppEmail({
+                        templateName: "gift-card-delivery",
+                        recipientEmail: to,
+                        messageId: `gift-card-${p.id}`,
+                        templateData: {
+                          recipientName: p.recipient_name,
+                          buyerName: p.buyer_name,
+                          code: p.code,
+                          cardName: p.gift_cards?.name ?? "Gift card",
+                          amount: p.kind === "value" ? Number(p.initial_amount) : null,
+                          expiresAt: p.expires_at,
+                          message: p.message,
+                          profileId: p.profile_id,
+                        },
+                      });
+                    }
+                  }
+                } catch (e) {
+                  console.error("[stripe-webhook] gift card activation failed", e);
+                }
+                break;
+              }
+
               if (session.payment_status !== "paid") break;
               const paymentLinkId =
                 typeof session.payment_link === "string"
