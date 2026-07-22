@@ -104,6 +104,7 @@ const issueSchema = z.object({
   buyer_name: z.string().max(120).optional(),
   message: z.string().max(1000).optional(),
   send_now: z.boolean().default(true),
+  custom_amount: z.number().nonnegative().nullable().optional(),
 });
 
 /**
