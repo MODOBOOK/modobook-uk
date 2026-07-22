@@ -1714,6 +1714,8 @@ function FavouritesCard({ treatments }: { treatments: Treat[] }) {
   const profile = useQuery({ queryKey: ["my-profile"], queryFn: () => fetchProfile() });
   const [picking, setPicking] = useState(false);
   const [pickerSearch, setPickerSearch] = useState("");
+  const [titleDraft, setTitleDraft] = useState<string | null>(null);
+
 
   const p = profile.data as
     | {
@@ -1786,12 +1788,19 @@ function FavouritesCard({ treatments }: { treatments: Treat[] }) {
         <div className="space-y-1.5">
           <Label className="text-xs">Custom heading (optional)</Label>
           <Input
-            value={customTitle}
-            onChange={(e) => save({ favourites_custom_title: e.target.value })}
+            value={titleDraft ?? customTitle}
+            onChange={(e) => setTitleDraft(e.target.value)}
+            onBlur={() => {
+              if (titleDraft !== null && titleDraft !== customTitle) {
+                save({ favourites_custom_title: titleDraft.trim() ? titleDraft : null });
+              }
+              setTitleDraft(null);
+            }}
             placeholder={defaultTitle}
             className="h-10"
           />
         </div>
+
 
         {selected.length === 0 ? (
           <p className="rounded-lg border border-dashed bg-muted/40 p-3 text-center text-xs text-muted-foreground">
