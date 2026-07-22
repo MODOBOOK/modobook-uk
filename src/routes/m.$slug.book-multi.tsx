@@ -550,6 +550,14 @@ function MultiBookPage() {
         }
       } catch { /* non-fatal */ }
 
+      // Redeem gift card credit against the first appointment (idempotent).
+      try {
+        const firstId = res.appointments?.[0]?.id;
+        if (discount?.isGiftCard && discount.giftCardPurchaseId && discountTotal > 0 && firstId) {
+          await redeemGc({ data: { slug, code: discount.code, amount: discountTotal, appointment_id: firstId } });
+        }
+      } catch { /* non-fatal */ }
+
 
 
     } catch (e) {
