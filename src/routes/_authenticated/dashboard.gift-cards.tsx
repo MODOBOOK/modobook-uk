@@ -166,8 +166,8 @@ function GiftCardDialog({
   async function submit() {
     if (!form.name.trim()) return toast.error("Name required");
     if (form.kind === "value" && !(Number(form.amount) > 0)) return toast.error("Amount required");
-    if (form.kind === "treatment" && !form.treatment_id) return toast.error("Pick a treatment");
-    if (form.kind === "package" && !form.package_id) return toast.error("Pick a package");
+    if (form.kind === "treatment" && form.treatment_ids.length === 0) return toast.error("Pick at least one treatment");
+    if (form.kind === "package" && form.package_ids.length === 0) return toast.error("Pick at least one package");
     setSaving(true);
     try {
       await save({
@@ -177,8 +177,8 @@ function GiftCardDialog({
           description: form.description || null,
           kind: form.kind,
           amount: form.kind === "value" ? Number(form.amount) : null,
-          treatment_id: form.kind === "treatment" ? form.treatment_id : null,
-          package_id: form.kind === "package" ? form.package_id : null,
+          treatment_ids: form.kind === "treatment" ? form.treatment_ids : [],
+          package_ids: form.kind === "package" ? form.package_ids : [],
           image_url: form.image_url || null,
           expires_months: form.expires_months ? Number(form.expires_months) : null,
           active: form.active,
