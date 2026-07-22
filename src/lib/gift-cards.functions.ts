@@ -199,31 +199,20 @@ export const issueGiftCardManually = createServerFn({ method: "POST" })
 export const listPublicGiftCards = createServerFn({ method: "GET" })
   .inputValidator((d: { slug: string }) => d)
   .handler(async ({ data }) => {
-    const { createClient } = await import("@supabase/supabase-js");
-    const key = process.env.SUPABASE_PUBLISHABLE_KEY!;
-    const sb = createClient(process.env.SUPABASE_URL!, key, {
-      auth: { persistSession: false, autoRefreshToken: false },
-      global: {
-        fetch: (input, init) => {
-          const h = new Headers(init?.headers);
-          if (key.startsWith("sb_") && h.get("Authorization") === `Bearer ${key}`) h.delete("Authorization");
-          h.set("apikey", key);
-          return fetch(input, { ...init, headers: h });
-        },
-      },
-    });
-    const { data: prof } = await sb
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: prof } = await supabaseAdmin
       .from("profiles")
-      .select("id")
+      .select("user_id")
       .eq("slug", data.slug)
       .maybeSingle();
-    if (!prof) return { cards: [] };
-    const { data: cards } = await sb
+    if (!prof?.user_id) return { cards: [] };
+    const { data: cards, error } = await supabaseAdmin
       .from("gift_cards")
       .select("id,name,description,kind,amount,image_url,treatment_id,package_id,treatment_ids,package_ids,expires_months")
-      .eq("profile_id", prof.id)
+      .eq("profile_id", prof.user_id)
       .eq("active", true)
       .order("sort_order");
+    if (error) throw error;
     return { cards: cards ?? [] };
   });
 
@@ -251,7 +240,7 @@ export const purchaseGiftCard = createServerFn({ method: "POST" })
 
     const { data: prof, error: pErr } = await supabaseAdmin
       .from("profiles")
-      .select("id, slug, clinic_name, stripe_connect_account_id")
+      .select("id, user_id, slug, clinic_name, stripe_connect_account_id")
       .eq("slug", data.slug)
       .single();
     if (pErr || !prof) throw new Error("Clinic not found");
@@ -261,7 +250,7 @@ export const purchaseGiftCard = createServerFn({ method: "POST" })
       .from("gift_cards")
       .select("*")
       .eq("id", data.gift_card_id)
-      .eq("profile_id", prof.id)
+      .eq("profile_id", prof.user_id)
       .eq("active", true)
       .single();
     if (cErr || !card) throw new Error("Gift card not available");
@@ -294,7 +283,7 @@ export const purchaseGiftCard = createServerFn({ method: "POST" })
     const { data: purchase, error: insErr } = await supabaseAdmin
       .from("gift_card_purchases")
       .insert({
-        profile_id: prof.id,
+        profile_id: prof.user_id,
         gift_card_id: card.id,
         code,
         kind: card.kind,
@@ -337,7 +326,7 @@ export const purchaseGiftCard = createServerFn({ method: "POST" })
       metadata: {
         kind: "gift_card_purchase",
         gift_card_purchase_id: purchase.id,
-        profile_id: prof.id,
+        profile_id: prof.user_id,
       },
       descriptorName: prof.clinic_name,
     });
@@ -359,12 +348,12 @@ export const previewGiftCardCode = createServerFn({ method: "POST" })
   .inputValidator((d: { slug: string; code: string; total: number; treatment_ids?: string[]; package_ids?: string[] }) => d)
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: prof } = await supabaseAdmin.from("profiles").select("id").eq("slug", data.slug).single();
-    if (!prof) return { error: "Clinic not found" };
+    const { data: prof } = await supabaseAdmin.from("profiles").select("user_id").eq("slug", data.slug).single();
+    if (!prof?.user_id) return { error: "Clinic not found" };
     const { data: p } = await supabaseAdmin
       .from("gift_card_purchases")
       .select("*")
-      .eq("profile_id", prof.id)
+      .eq("profile_id", prof.user_id)
       .eq("code", data.code.trim().toUpperCase())
       .maybeSingle();
     if (!p) return { error: "Code not found" };
@@ -413,14 +402,14 @@ export const redeemGiftCardCode = createServerFn({ method: "POST" })
     if (!data.amount || data.amount <= 0) return { ok: true, redeemed: 0 };
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: prof } = await supabaseAdmin
-      .from("profiles").select("id").eq("slug", data.slug).maybeSingle();
-    if (!prof) throw new Error("Clinic not found");
+      .from("profiles").select("user_id").eq("slug", data.slug).maybeSingle();
+    if (!prof?.user_id) throw new Error("Clinic not found");
 
     const code = data.code.trim().toUpperCase();
     const { data: p } = await supabaseAdmin
       .from("gift_card_purchases")
       .select("id, profile_id, status, remaining_amount, expires_at")
-      .eq("profile_id", prof.id)
+      .eq("profile_id", prof.user_id)
       .eq("code", code)
       .maybeSingle();
     if (!p) throw new Error("Gift card code not found");

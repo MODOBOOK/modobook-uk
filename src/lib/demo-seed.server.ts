@@ -595,11 +595,11 @@ export async function seedDemoClinic(admin: Admin) {
   const { count: giftCount } = await admin
     .from("gift_cards")
     .select("id", { count: "exact", head: true })
-    .eq("profile_id", profileId!);
+    .eq("profile_id", practitionerUserId);
   if (!giftCount) {
     await admin.from("gift_cards").insert([
       {
-        profile_id: profileId!,
+        profile_id: practitionerUserId,
         name: "£50 MODO gift card",
         description: "A thoughtful gift towards any treatment at the clinic.",
         kind: "value",
@@ -610,7 +610,7 @@ export async function seedDemoClinic(admin: Admin) {
         sort_order: 1,
       },
       {
-        profile_id: profileId!,
+        profile_id: practitionerUserId,
         name: "£100 MODO gift card",
         description: "The perfect present — redeemable against any service.",
         kind: "value",
@@ -621,7 +621,7 @@ export async function seedDemoClinic(admin: Admin) {
         sort_order: 2,
       },
       {
-        profile_id: profileId!,
+        profile_id: practitionerUserId,
         name: "Lip filler — 1ml gift",
         description: "A full 1ml lip filler treatment with our lead clinician.",
         kind: "treatment",
