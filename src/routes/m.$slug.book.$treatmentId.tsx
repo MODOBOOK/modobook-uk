@@ -210,7 +210,7 @@ function BookTreatmentPage() {
   const monthFn = useServerFn(getMonthAvailability);
   const reqFn = useServerFn(requestBooking);
   const linkReferral = useServerFn(linkReferralToAppointment);
-  const redeemGc = useServerFn((await import("@/lib/gift-cards.functions")).redeemGiftCardCode);
+  const redeemGc = useServerFn(redeemGiftCardCode);
 
 
   // Add-ons for this treatment
