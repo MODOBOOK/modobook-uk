@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { getPractitionerBio } from "@/lib/practitioner-public.functions";
 import { getPublicRewardsOverview } from "@/lib/rewards.functions";
 import { listPublicCourses } from "@/lib/training-public.functions";
+import { listPublicGiftCards } from "@/lib/gift-cards.functions";
 import { Button } from "@/components/ui/button";
 import { UserCircle2 } from "lucide-react";
 import { resolveDisplayNames } from "@/lib/display-name";
@@ -220,6 +221,7 @@ function ModoLayout() {
               <TabLink slug={slug} to="/m/$slug" label={theme?.header_button_label || "Book"} exact />
               <TabLink slug={slug} to="/m/$slug/about" label="About" />
               <TrainingTabLink slug={slug} />
+              <GiftCardsTabLink slug={slug} />
               <RewardsTabLink slug={slug} />
               <TabLink slug={slug} to="/m/$slug/reviews" label="Reviews" />
               <Link to="/m/$slug/account" params={{ slug }} aria-label="My account">
@@ -246,7 +248,7 @@ function TabLink({
   exact,
 }: {
   slug: string;
-  to: "/m/$slug" | "/m/$slug/rewards" | "/m/$slug/reviews" | "/m/$slug/about" | "/m/$slug/training";
+  to: "/m/$slug" | "/m/$slug/rewards" | "/m/$slug/reviews" | "/m/$slug/about" | "/m/$slug/training" | "/m/$slug/gift-cards";
   label: string;
   exact?: boolean;
 }) {
@@ -284,4 +286,16 @@ function TrainingTabLink({ slug }: { slug: string }) {
   const courses = (q.data?.courses ?? []) as Array<unknown>;
   if (courses.length === 0) return null;
   return <TabLink slug={slug} to="/m/$slug/training" label="Training" />;
+}
+
+function GiftCardsTabLink({ slug }: { slug: string }) {
+  const fetchCards = useServerFn(listPublicGiftCards);
+  const q = useQuery({
+    queryKey: ["public-gift-cards-visible", slug],
+    queryFn: () => fetchCards({ data: { slug } }),
+    staleTime: 60_000,
+  });
+  const cards = (q.data?.cards ?? []) as Array<unknown>;
+  if (cards.length === 0) return null;
+  return <TabLink slug={slug} to="/m/$slug/gift-cards" label="Gift cards" />;
 }
