@@ -241,12 +241,16 @@ function GiftCardDialog({
           </div>
           <div>
             <Label>Cover image</Label>
-            <ImageUploader
-              bucket="clinic-media"
-              value={form.image_url}
-              onChange={(url) => setForm({ ...form, image_url: url ?? "" })}
-              aspect={16 / 9}
-            />
+            {profileId && (
+              <ImageUploader
+                label="Gift card image"
+                value={form.image_url}
+                onChange={(url) => setForm({ ...form, image_url: url ?? "" })}
+                profileId={profileId}
+                folder="gift-cards"
+                cropAspect={16 / 9}
+              />
+            )}
           </div>
           <div>
             <Label>Expires after (months) — leave blank for no expiry</Label>
