@@ -13,6 +13,7 @@ import { template as topupReminder } from './topup-reminder'
 import { template as platformArrears } from './platform-arrears'
 import { template as waitlistWelcome } from './waitlist-welcome'
 import { template as prescriberInvoice } from './prescriber-invoice'
+import { template as giftCardDelivery } from './gift-card-delivery'
 
 export interface TemplateEntry {
   component: ComponentType<any>
@@ -41,4 +42,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'platform-arrears': platformArrears,
   'waitlist-welcome': waitlistWelcome,
   'prescriber-invoice': prescriberInvoice,
+  'gift-card-delivery': giftCardDelivery,
 }

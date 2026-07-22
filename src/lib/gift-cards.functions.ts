@@ -1,0 +1,376 @@
+import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+
+/** Generate a human-readable code like GIFT-XKQ7-9M2P */
+function makeCode() {
+  const alpha = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  const pick = (n: number) =>
+    Array.from({ length: n }, () => alpha[Math.floor(Math.random() * alpha.length)]).join("");
+  return `GIFT-${pick(4)}-${pick(4)}`;
+}
+
+export const listMyGiftCards = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data, error } = await context.supabase
+      .from("gift_cards")
+      .select("*")
+      .eq("profile_id", context.userId)
+      .order("sort_order")
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    return { cards: data ?? [] };
+  });
+
+const upsertSchema = z.object({
+  id: z.string().uuid().optional(),
+  name: z.string().min(1).max(120),
+  description: z.string().max(2000).nullable().optional(),
+  kind: z.enum(["value", "treatment", "package"]),
+  amount: z.number().nonnegative().nullable().optional(),
+  treatment_id: z.string().uuid().nullable().optional(),
+  package_id: z.string().uuid().nullable().optional(),
+  image_url: z.string().nullable().optional(),
+  expires_months: z.number().int().positive().nullable().optional(),
+  active: z.boolean().optional(),
+  sort_order: z.number().int().optional(),
+});
+
+export const upsertGiftCard = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => upsertSchema.parse(d))
+  .handler(async ({ data, context }) => {
+    const row = { ...data, profile_id: context.userId };
+    if (data.id) {
+      const { error } = await context.supabase
+        .from("gift_cards")
+        .update(row)
+        .eq("id", data.id)
+        .eq("profile_id", context.userId);
+      if (error) throw error;
+      return { id: data.id };
+    }
+    const { data: inserted, error } = await context.supabase
+      .from("gift_cards")
+      .insert(row)
+      .select("id")
+      .single();
+    if (error) throw error;
+    return { id: inserted.id };
+  });
+
+export const deleteGiftCard = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string }) => d)
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase
+      .from("gift_cards")
+      .delete()
+      .eq("id", data.id)
+      .eq("profile_id", context.userId);
+    if (error) throw error;
+    return { ok: true };
+  });
+
+export const listMyGiftCardPurchases = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data, error } = await context.supabase
+      .from("gift_card_purchases")
+      .select("*")
+      .eq("profile_id", context.userId)
+      .order("created_at", { ascending: false })
+      .limit(500);
+    if (error) throw error;
+    return { purchases: data ?? [] };
+  });
+
+const issueSchema = z.object({
+  gift_card_id: z.string().uuid(),
+  recipient_name: z.string().min(1).max(120),
+  recipient_email: z.string().email(),
+  buyer_name: z.string().max(120).optional(),
+  message: z.string().max(1000).optional(),
+  send_now: z.boolean().default(true),
+});
+
+/**
+ * Practitioner-side manual issue (e.g. when someone paid in person).
+ * Creates an ACTIVE purchase row with a fresh code and (optionally) emails it.
+ */
+export const issueGiftCardManually = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => issueSchema.parse(d))
+  .handler(async ({ data, context }) => {
+    const { data: card, error: cErr } = await context.supabase
+      .from("gift_cards")
+      .select("*")
+      .eq("id", data.gift_card_id)
+      .eq("profile_id", context.userId)
+      .single();
+    if (cErr || !card) throw new Error("Gift card not found");
+
+    const amount = card.kind === "value" ? Number(card.amount ?? 0) : 0;
+    const expiresAt = card.expires_months
+      ? new Date(Date.now() + card.expires_months * 30 * 24 * 3600 * 1000).toISOString()
+      : null;
+
+    // Attempt unique code (up to 5 retries)
+    let code = makeCode();
+    for (let i = 0; i < 5; i++) {
+      const { data: existing } = await context.supabase
+        .from("gift_card_purchases")
+        .select("id")
+        .eq("code", code)
+        .maybeSingle();
+      if (!existing) break;
+      code = makeCode();
+    }
+
+    const { data: purchase, error } = await context.supabase
+      .from("gift_card_purchases")
+      .insert({
+        profile_id: context.userId,
+        gift_card_id: card.id,
+        code,
+        kind: card.kind,
+        treatment_id: card.treatment_id,
+        package_id: card.package_id,
+        initial_amount: amount,
+        remaining_amount: amount,
+        buyer_name: data.buyer_name ?? null,
+        recipient_name: data.recipient_name,
+        recipient_email: data.recipient_email,
+        message: data.message ?? null,
+        delivery: "recipient",
+        expires_at: expiresAt,
+        status: "active",
+        delivered_at: data.send_now ? new Date().toISOString() : null,
+      })
+      .select("*")
+      .single();
+    if (error) throw error;
+
+    if (data.send_now) {
+      try {
+        const { enqueueAppEmail } = await import("./email/send.server");
+        await enqueueAppEmail({
+          templateName: "gift-card-delivery",
+          recipientEmail: data.recipient_email,
+          messageId: `gift-card-${purchase.id}`,
+          templateData: {
+            recipientName: data.recipient_name,
+            code,
+            cardName: card.name,
+            amount: card.kind === "value" ? amount : null,
+            expiresAt,
+            message: data.message ?? null,
+            buyerName: data.buyer_name ?? null,
+            profileId: context.userId,
+          },
+        });
+      } catch (e) {
+        console.error("[issueGiftCardManually] email failed", e);
+      }
+    }
+
+    return { id: purchase.id, code };
+  });
+
+/**
+ * Public: list active gift cards for a clinic slug.
+ */
+export const listPublicGiftCards = createServerFn({ method: "GET" })
+  .inputValidator((d: { slug: string }) => d)
+  .handler(async ({ data }) => {
+    const { createClient } = await import("@supabase/supabase-js");
+    const key = process.env.SUPABASE_PUBLISHABLE_KEY!;
+    const sb = createClient(process.env.SUPABASE_URL!, key, {
+      auth: { persistSession: false, autoRefreshToken: false },
+      global: {
+        fetch: (input, init) => {
+          const h = new Headers(init?.headers);
+          if (key.startsWith("sb_") && h.get("Authorization") === `Bearer ${key}`) h.delete("Authorization");
+          h.set("apikey", key);
+          return fetch(input, { ...init, headers: h });
+        },
+      },
+    });
+    const { data: prof } = await sb
+      .from("profiles")
+      .select("id")
+      .eq("slug", data.slug)
+      .maybeSingle();
+    if (!prof) return { cards: [] };
+    const { data: cards } = await sb
+      .from("gift_cards")
+      .select("id,name,description,kind,amount,image_url,treatment_id,package_id,expires_months")
+      .eq("profile_id", prof.id)
+      .eq("active", true)
+      .order("sort_order");
+    return { cards: cards ?? [] };
+  });
+
+const purchaseSchema = z.object({
+  slug: z.string(),
+  gift_card_id: z.string().uuid(),
+  buyer_name: z.string().min(1).max(120),
+  buyer_email: z.string().email(),
+  recipient_name: z.string().min(1).max(120),
+  recipient_email: z.string().email(),
+  message: z.string().max(1000).optional(),
+  delivery: z.enum(["buyer", "recipient"]),
+  return_origin: z.string().url(),
+});
+
+/**
+ * Public: buyer purchase. Creates a pending purchase row and a Stripe Checkout
+ * session on the practitioner's connected account. Code is issued on webhook
+ * completion.
+ */
+export const purchaseGiftCard = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => purchaseSchema.parse(d))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: prof, error: pErr } = await supabaseAdmin
+      .from("profiles")
+      .select("id, slug, clinic_name, stripe_connect_account_id")
+      .eq("slug", data.slug)
+      .single();
+    if (pErr || !prof) throw new Error("Clinic not found");
+    if (!prof.stripe_connect_account_id) throw new Error("This clinic isn't accepting online payments yet");
+
+    const { data: card, error: cErr } = await supabaseAdmin
+      .from("gift_cards")
+      .select("*")
+      .eq("id", data.gift_card_id)
+      .eq("profile_id", prof.id)
+      .eq("active", true)
+      .single();
+    if (cErr || !card) throw new Error("Gift card not available");
+
+    // Determine price
+    let amount = card.kind === "value" ? Number(card.amount ?? 0) : 0;
+    if (card.kind === "treatment" && card.treatment_id) {
+      const { data: t } = await supabaseAdmin
+        .from("treatments")
+        .select("price")
+        .eq("id", card.treatment_id)
+        .maybeSingle();
+      amount = Number(t?.price ?? 0);
+    } else if (card.kind === "package" && card.package_id) {
+      const { data: pk } = await supabaseAdmin
+        .from("packages")
+        .select("price")
+        .eq("id", card.package_id)
+        .maybeSingle();
+      amount = Number(pk?.price ?? 0);
+    }
+    if (!amount || amount <= 0) throw new Error("Gift card price is not set");
+
+    const expiresAt = card.expires_months
+      ? new Date(Date.now() + card.expires_months * 30 * 24 * 3600 * 1000).toISOString()
+      : null;
+    const code = makeCode();
+
+    const { data: purchase, error: insErr } = await supabaseAdmin
+      .from("gift_card_purchases")
+      .insert({
+        profile_id: prof.id,
+        gift_card_id: card.id,
+        code,
+        kind: card.kind,
+        treatment_id: card.treatment_id,
+        package_id: card.package_id,
+        initial_amount: amount,
+        remaining_amount: amount,
+        buyer_name: data.buyer_name,
+        buyer_email: data.buyer_email,
+        recipient_name: data.recipient_name,
+        recipient_email: data.recipient_email,
+        message: data.message ?? null,
+        delivery: data.delivery,
+        expires_at: expiresAt,
+        status: "pending",
+      })
+      .select("id")
+      .single();
+    if (insErr) throw insErr;
+
+    const { createCheckoutSession } = await import("./stripe.server");
+    const returnUrl = `${data.return_origin.replace(/\/$/, "")}/m/${data.slug}/gift-cards?purchase=${purchase.id}`;
+    const session = await createCheckoutSession({
+      accountId: prof.stripe_connect_account_id,
+      lineItems: [
+        {
+          quantity: 1,
+          price_data: {
+            currency: "gbp",
+            unit_amount: Math.round(amount * 100),
+            product_data: { name: `Gift card — ${card.name}` },
+          },
+        },
+      ],
+      successUrl: `${returnUrl}&status=paid`,
+      cancelUrl: `${returnUrl}&status=cancelled`,
+      customerEmail: data.buyer_email,
+      metadata: {
+        kind: "gift_card_purchase",
+        gift_card_purchase_id: purchase.id,
+        profile_id: prof.id,
+      },
+      descriptorName: prof.clinic_name,
+    });
+
+    await supabaseAdmin
+      .from("gift_card_purchases")
+      .update({ stripe_session_id: session.id })
+      .eq("id", purchase.id);
+
+    if (!session.url) throw new Error("Could not create checkout session");
+    return { checkoutUrl: session.url };
+  });
+
+/**
+ * Public preview of a code for the booking checkout. Returns applicable
+ * amount for the current cart, or an error string.
+ */
+export const previewGiftCardCode = createServerFn({ method: "POST" })
+  .inputValidator((d: { slug: string; code: string; total: number; treatment_ids?: string[]; package_ids?: string[] }) => d)
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: prof } = await supabaseAdmin.from("profiles").select("id").eq("slug", data.slug).single();
+    if (!prof) return { error: "Clinic not found" };
+    const { data: p } = await supabaseAdmin
+      .from("gift_card_purchases")
+      .select("*")
+      .eq("profile_id", prof.id)
+      .eq("code", data.code.trim().toUpperCase())
+      .maybeSingle();
+    if (!p) return { error: "Code not found" };
+    if (p.status !== "active") return { error: "This code is no longer active" };
+    if (p.expires_at && new Date(p.expires_at).getTime() < Date.now()) return { error: "This code has expired" };
+    if (Number(p.remaining_amount) <= 0) return { error: "This code has been fully used" };
+
+    if (p.kind === "treatment") {
+      if (!p.treatment_id || !data.treatment_ids?.includes(p.treatment_id)) {
+        return { error: "This code doesn't apply to your selection" };
+      }
+    }
+    if (p.kind === "package") {
+      if (!p.package_id || !data.package_ids?.includes(p.package_id)) {
+        return { error: "This code doesn't apply to your selection" };
+      }
+    }
+
+    const applicable = Math.min(Number(p.remaining_amount), data.total);
+    return {
+      id: p.id,
+      code: p.code,
+      kind: p.kind as "value" | "treatment" | "package",
+      remaining: Number(p.remaining_amount),
+      applied: applicable,
+    };
+  });

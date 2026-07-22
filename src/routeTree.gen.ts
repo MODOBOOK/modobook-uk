@@ -49,6 +49,7 @@ import { Route as MSlugTrainingRouteImport } from './routes/m.$slug.training'
 import { Route as MSlugRewardsRouteImport } from './routes/m.$slug.rewards'
 import { Route as MSlugReviewsRouteImport } from './routes/m.$slug.reviews'
 import { Route as MSlugPayRouteImport } from './routes/m.$slug.pay'
+import { Route as MSlugGiftCardsRouteImport } from './routes/m.$slug.gift-cards'
 import { Route as MSlugBookMultiRouteImport } from './routes/m.$slug.book-multi'
 import { Route as MSlugAuthRouteImport } from './routes/m.$slug.auth'
 import { Route as MSlugAccountRouteImport } from './routes/m.$slug.account'
@@ -90,6 +91,7 @@ import { Route as AuthenticatedDashboardMarketingRouteImport } from './routes/_a
 import { Route as AuthenticatedDashboardLocationsRouteImport } from './routes/_authenticated/dashboard.locations'
 import { Route as AuthenticatedDashboardInvoicesRouteImport } from './routes/_authenticated/dashboard.invoices'
 import { Route as AuthenticatedDashboardInvitesRouteImport } from './routes/_authenticated/dashboard.invites'
+import { Route as AuthenticatedDashboardGiftCardsRouteImport } from './routes/_authenticated/dashboard.gift-cards'
 import { Route as AuthenticatedDashboardFormAllocationRouteImport } from './routes/_authenticated/dashboard.form-allocation'
 import { Route as AuthenticatedDashboardEmailsRouteImport } from './routes/_authenticated/dashboard.emails'
 import { Route as AuthenticatedDashboardDiscountsRouteImport } from './routes/_authenticated/dashboard.discounts'
@@ -351,6 +353,11 @@ const MSlugPayRoute = MSlugPayRouteImport.update({
   path: '/pay',
   getParentRoute: () => MSlugRoute,
 } as any)
+const MSlugGiftCardsRoute = MSlugGiftCardsRouteImport.update({
+  id: '/gift-cards',
+  path: '/gift-cards',
+  getParentRoute: () => MSlugRoute,
+} as any)
 const MSlugBookMultiRoute = MSlugBookMultiRouteImport.update({
   id: '/book-multi',
   path: '/book-multi',
@@ -589,6 +596,12 @@ const AuthenticatedDashboardInvitesRoute =
   AuthenticatedDashboardInvitesRouteImport.update({
     id: '/invites',
     path: '/invites',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardGiftCardsRoute =
+  AuthenticatedDashboardGiftCardsRouteImport.update({
+    id: '/gift-cards',
+    path: '/gift-cards',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
 const AuthenticatedDashboardFormAllocationRoute =
@@ -981,6 +994,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/discounts': typeof AuthenticatedDashboardDiscountsRoute
   '/dashboard/emails': typeof AuthenticatedDashboardEmailsRoute
   '/dashboard/form-allocation': typeof AuthenticatedDashboardFormAllocationRoute
+  '/dashboard/gift-cards': typeof AuthenticatedDashboardGiftCardsRoute
   '/dashboard/invites': typeof AuthenticatedDashboardInvitesRoute
   '/dashboard/invoices': typeof AuthenticatedDashboardInvoicesRoute
   '/dashboard/locations': typeof AuthenticatedDashboardLocationsRoute
@@ -1022,6 +1036,7 @@ export interface FileRoutesByFullPath {
   '/m/$slug/account': typeof MSlugAccountRoute
   '/m/$slug/auth': typeof MSlugAuthRoute
   '/m/$slug/book-multi': typeof MSlugBookMultiRoute
+  '/m/$slug/gift-cards': typeof MSlugGiftCardsRoute
   '/m/$slug/pay': typeof MSlugPayRoute
   '/m/$slug/reviews': typeof MSlugReviewsRoute
   '/m/$slug/rewards': typeof MSlugRewardsRoute
@@ -1117,6 +1132,7 @@ export interface FileRoutesByTo {
   '/dashboard/discounts': typeof AuthenticatedDashboardDiscountsRoute
   '/dashboard/emails': typeof AuthenticatedDashboardEmailsRoute
   '/dashboard/form-allocation': typeof AuthenticatedDashboardFormAllocationRoute
+  '/dashboard/gift-cards': typeof AuthenticatedDashboardGiftCardsRoute
   '/dashboard/invites': typeof AuthenticatedDashboardInvitesRoute
   '/dashboard/invoices': typeof AuthenticatedDashboardInvoicesRoute
   '/dashboard/locations': typeof AuthenticatedDashboardLocationsRoute
@@ -1156,6 +1172,7 @@ export interface FileRoutesByTo {
   '/m/$slug/account': typeof MSlugAccountRoute
   '/m/$slug/auth': typeof MSlugAuthRoute
   '/m/$slug/book-multi': typeof MSlugBookMultiRoute
+  '/m/$slug/gift-cards': typeof MSlugGiftCardsRoute
   '/m/$slug/pay': typeof MSlugPayRoute
   '/m/$slug/reviews': typeof MSlugReviewsRoute
   '/m/$slug/rewards': typeof MSlugRewardsRoute
@@ -1256,6 +1273,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/discounts': typeof AuthenticatedDashboardDiscountsRoute
   '/_authenticated/dashboard/emails': typeof AuthenticatedDashboardEmailsRoute
   '/_authenticated/dashboard/form-allocation': typeof AuthenticatedDashboardFormAllocationRoute
+  '/_authenticated/dashboard/gift-cards': typeof AuthenticatedDashboardGiftCardsRoute
   '/_authenticated/dashboard/invites': typeof AuthenticatedDashboardInvitesRoute
   '/_authenticated/dashboard/invoices': typeof AuthenticatedDashboardInvoicesRoute
   '/_authenticated/dashboard/locations': typeof AuthenticatedDashboardLocationsRoute
@@ -1297,6 +1315,7 @@ export interface FileRoutesById {
   '/m/$slug/account': typeof MSlugAccountRoute
   '/m/$slug/auth': typeof MSlugAuthRoute
   '/m/$slug/book-multi': typeof MSlugBookMultiRoute
+  '/m/$slug/gift-cards': typeof MSlugGiftCardsRoute
   '/m/$slug/pay': typeof MSlugPayRoute
   '/m/$slug/reviews': typeof MSlugReviewsRoute
   '/m/$slug/rewards': typeof MSlugRewardsRoute
@@ -1398,6 +1417,7 @@ export interface FileRouteTypes {
     | '/dashboard/discounts'
     | '/dashboard/emails'
     | '/dashboard/form-allocation'
+    | '/dashboard/gift-cards'
     | '/dashboard/invites'
     | '/dashboard/invoices'
     | '/dashboard/locations'
@@ -1439,6 +1459,7 @@ export interface FileRouteTypes {
     | '/m/$slug/account'
     | '/m/$slug/auth'
     | '/m/$slug/book-multi'
+    | '/m/$slug/gift-cards'
     | '/m/$slug/pay'
     | '/m/$slug/reviews'
     | '/m/$slug/rewards'
@@ -1534,6 +1555,7 @@ export interface FileRouteTypes {
     | '/dashboard/discounts'
     | '/dashboard/emails'
     | '/dashboard/form-allocation'
+    | '/dashboard/gift-cards'
     | '/dashboard/invites'
     | '/dashboard/invoices'
     | '/dashboard/locations'
@@ -1573,6 +1595,7 @@ export interface FileRouteTypes {
     | '/m/$slug/account'
     | '/m/$slug/auth'
     | '/m/$slug/book-multi'
+    | '/m/$slug/gift-cards'
     | '/m/$slug/pay'
     | '/m/$slug/reviews'
     | '/m/$slug/rewards'
@@ -1672,6 +1695,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/discounts'
     | '/_authenticated/dashboard/emails'
     | '/_authenticated/dashboard/form-allocation'
+    | '/_authenticated/dashboard/gift-cards'
     | '/_authenticated/dashboard/invites'
     | '/_authenticated/dashboard/invoices'
     | '/_authenticated/dashboard/locations'
@@ -1713,6 +1737,7 @@ export interface FileRouteTypes {
     | '/m/$slug/account'
     | '/m/$slug/auth'
     | '/m/$slug/book-multi'
+    | '/m/$slug/gift-cards'
     | '/m/$slug/pay'
     | '/m/$slug/reviews'
     | '/m/$slug/rewards'
@@ -2088,6 +2113,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MSlugPayRouteImport
       parentRoute: typeof MSlugRoute
     }
+    '/m/$slug/gift-cards': {
+      id: '/m/$slug/gift-cards'
+      path: '/gift-cards'
+      fullPath: '/m/$slug/gift-cards'
+      preLoaderRoute: typeof MSlugGiftCardsRouteImport
+      parentRoute: typeof MSlugRoute
+    }
     '/m/$slug/book-multi': {
       id: '/m/$slug/book-multi'
       path: '/book-multi'
@@ -2373,6 +2405,13 @@ declare module '@tanstack/react-router' {
       path: '/invites'
       fullPath: '/dashboard/invites'
       preLoaderRoute: typeof AuthenticatedDashboardInvitesRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/gift-cards': {
+      id: '/_authenticated/dashboard/gift-cards'
+      path: '/gift-cards'
+      fullPath: '/dashboard/gift-cards'
+      preLoaderRoute: typeof AuthenticatedDashboardGiftCardsRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
     '/_authenticated/dashboard/form-allocation': {
@@ -2937,6 +2976,7 @@ interface AuthenticatedDashboardRouteChildren {
   AuthenticatedDashboardDiscountsRoute: typeof AuthenticatedDashboardDiscountsRoute
   AuthenticatedDashboardEmailsRoute: typeof AuthenticatedDashboardEmailsRoute
   AuthenticatedDashboardFormAllocationRoute: typeof AuthenticatedDashboardFormAllocationRoute
+  AuthenticatedDashboardGiftCardsRoute: typeof AuthenticatedDashboardGiftCardsRoute
   AuthenticatedDashboardInvitesRoute: typeof AuthenticatedDashboardInvitesRoute
   AuthenticatedDashboardInvoicesRoute: typeof AuthenticatedDashboardInvoicesRoute
   AuthenticatedDashboardLocationsRoute: typeof AuthenticatedDashboardLocationsRoute
@@ -2989,6 +3029,7 @@ const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
     AuthenticatedDashboardEmailsRoute: AuthenticatedDashboardEmailsRoute,
     AuthenticatedDashboardFormAllocationRoute:
       AuthenticatedDashboardFormAllocationRoute,
+    AuthenticatedDashboardGiftCardsRoute: AuthenticatedDashboardGiftCardsRoute,
     AuthenticatedDashboardInvitesRoute: AuthenticatedDashboardInvitesRoute,
     AuthenticatedDashboardInvoicesRoute: AuthenticatedDashboardInvoicesRoute,
     AuthenticatedDashboardLocationsRoute: AuthenticatedDashboardLocationsRoute,
@@ -3157,6 +3198,7 @@ interface MSlugRouteChildren {
   MSlugAccountRoute: typeof MSlugAccountRoute
   MSlugAuthRoute: typeof MSlugAuthRoute
   MSlugBookMultiRoute: typeof MSlugBookMultiRoute
+  MSlugGiftCardsRoute: typeof MSlugGiftCardsRoute
   MSlugPayRoute: typeof MSlugPayRoute
   MSlugReviewsRoute: typeof MSlugReviewsRoute
   MSlugRewardsRoute: typeof MSlugRewardsRoute
@@ -3171,6 +3213,7 @@ const MSlugRouteChildren: MSlugRouteChildren = {
   MSlugAccountRoute: MSlugAccountRoute,
   MSlugAuthRoute: MSlugAuthRoute,
   MSlugBookMultiRoute: MSlugBookMultiRoute,
+  MSlugGiftCardsRoute: MSlugGiftCardsRoute,
   MSlugPayRoute: MSlugPayRoute,
   MSlugReviewsRoute: MSlugReviewsRoute,
   MSlugRewardsRoute: MSlugRewardsRoute,

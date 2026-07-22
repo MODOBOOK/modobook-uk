@@ -2626,6 +2626,190 @@ export type Database = {
         }
         Relationships: []
       }
+      gift_card_purchases: {
+        Row: {
+          buyer_email: string | null
+          buyer_name: string | null
+          code: string
+          created_at: string
+          delivered_at: string | null
+          delivery: string
+          expires_at: string | null
+          gift_card_id: string | null
+          id: string
+          initial_amount: number
+          kind: string
+          message: string | null
+          package_id: string | null
+          profile_id: string
+          recipient_email: string | null
+          recipient_name: string | null
+          remaining_amount: number
+          status: string
+          stripe_payment_intent_id: string | null
+          stripe_session_id: string | null
+          treatment_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          buyer_email?: string | null
+          buyer_name?: string | null
+          code: string
+          created_at?: string
+          delivered_at?: string | null
+          delivery?: string
+          expires_at?: string | null
+          gift_card_id?: string | null
+          id?: string
+          initial_amount: number
+          kind: string
+          message?: string | null
+          package_id?: string | null
+          profile_id: string
+          recipient_email?: string | null
+          recipient_name?: string | null
+          remaining_amount: number
+          status?: string
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
+          treatment_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          buyer_email?: string | null
+          buyer_name?: string | null
+          code?: string
+          created_at?: string
+          delivered_at?: string | null
+          delivery?: string
+          expires_at?: string | null
+          gift_card_id?: string | null
+          id?: string
+          initial_amount?: number
+          kind?: string
+          message?: string | null
+          package_id?: string | null
+          profile_id?: string
+          recipient_email?: string | null
+          recipient_name?: string | null
+          remaining_amount?: number
+          status?: string
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
+          treatment_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gift_card_purchases_gift_card_id_fkey"
+            columns: ["gift_card_id"]
+            isOneToOne: false
+            referencedRelation: "gift_cards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gift_card_redemptions: {
+        Row: {
+          amount: number
+          appointment_id: string | null
+          created_at: string
+          id: string
+          profile_id: string
+          purchase_id: string
+        }
+        Insert: {
+          amount: number
+          appointment_id?: string | null
+          created_at?: string
+          id?: string
+          profile_id: string
+          purchase_id: string
+        }
+        Update: {
+          amount?: number
+          appointment_id?: string | null
+          created_at?: string
+          id?: string
+          profile_id?: string
+          purchase_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gift_card_redemptions_purchase_id_fkey"
+            columns: ["purchase_id"]
+            isOneToOne: false
+            referencedRelation: "gift_card_purchases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gift_cards: {
+        Row: {
+          active: boolean
+          amount: number | null
+          created_at: string
+          description: string | null
+          expires_months: number | null
+          id: string
+          image_url: string | null
+          kind: string
+          name: string
+          package_id: string | null
+          profile_id: string
+          sort_order: number
+          treatment_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          amount?: number | null
+          created_at?: string
+          description?: string | null
+          expires_months?: number | null
+          id?: string
+          image_url?: string | null
+          kind: string
+          name: string
+          package_id?: string | null
+          profile_id: string
+          sort_order?: number
+          treatment_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          amount?: number | null
+          created_at?: string
+          description?: string | null
+          expires_months?: number | null
+          id?: string
+          image_url?: string | null
+          kind?: string
+          name?: string
+          package_id?: string | null
+          profile_id?: string
+          sort_order?: number
+          treatment_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gift_cards_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "packages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gift_cards_treatment_id_fkey"
+            columns: ["treatment_id"]
+            isOneToOne: false
+            referencedRelation: "treatments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hub_codes: {
         Row: {
           code: string
