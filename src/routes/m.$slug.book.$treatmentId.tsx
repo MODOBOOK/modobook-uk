@@ -1026,6 +1026,7 @@ function BookTreatmentPage() {
               <DiscountCodeBox
                 slug={slug}
                 treatmentIds={[treatment.id]}
+                total={price}
                 brand={brand}
                 value={discount}
                 onChange={setDiscount}
