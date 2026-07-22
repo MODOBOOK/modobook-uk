@@ -148,6 +148,8 @@ export const issueGiftCardManually = createServerFn({ method: "POST" })
         kind: card.kind,
         treatment_id: card.treatment_id,
         package_id: card.package_id,
+        treatment_ids: card.treatment_ids ?? [],
+        package_ids: card.package_ids ?? [],
         initial_amount: amount,
         remaining_amount: amount,
         buyer_name: data.buyer_name ?? null,
