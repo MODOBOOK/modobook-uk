@@ -273,3 +273,15 @@ function RewardsTabLink({ slug }: { slug: string }) {
   if (!q.data || q.data.visible !== true) return null;
   return <TabLink slug={slug} to="/m/$slug/rewards" label="Rewards" />;
 }
+
+function TrainingTabLink({ slug }: { slug: string }) {
+  const fetchCourses = useServerFn(listPublicCourses);
+  const q = useQuery({
+    queryKey: ["public-training-visible", slug],
+    queryFn: () => fetchCourses({ data: { slug } }),
+    staleTime: 60_000,
+  });
+  const courses = (q.data?.courses ?? []) as Array<unknown>;
+  if (courses.length === 0) return null;
+  return <TabLink slug={slug} to="/m/$slug/training" label="Training" />;
+}
