@@ -31,6 +31,8 @@ const upsertSchema = z.object({
   amount: z.number().nonnegative().nullable().optional(),
   treatment_id: z.string().uuid().nullable().optional(),
   package_id: z.string().uuid().nullable().optional(),
+  treatment_ids: z.array(z.string().uuid()).optional(),
+  package_ids: z.array(z.string().uuid()).optional(),
   image_url: z.string().nullable().optional(),
   expires_months: z.number().int().positive().nullable().optional(),
   active: z.boolean().optional(),
