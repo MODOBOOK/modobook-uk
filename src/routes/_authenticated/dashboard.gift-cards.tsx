@@ -44,6 +44,8 @@ type GiftCard = {
   amount: number | null;
   treatment_id: string | null;
   package_id: string | null;
+  treatment_ids: string[] | null;
+  package_ids: string[] | null;
   image_url: string | null;
   expires_months: number | null;
   active: boolean;
