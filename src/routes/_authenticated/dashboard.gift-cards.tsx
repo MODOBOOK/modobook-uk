@@ -135,8 +135,8 @@ function GiftCardsPage() {
         onOpenChange={setOpen}
         editing={editing}
         profileId={(profileQ.data as { id?: string } | null)?.id ?? ""}
-        treatments={((treatmentsQ.data as Array<{ id: string; name: string }> | { treatments?: Array<{ id: string; name: string }> } | undefined) as any)?.treatments ?? (treatmentsQ.data as Array<{ id: string; name: string }> | undefined) ?? []}
-        packages={((packagesQ.data as Array<{ id: string; name: string }> | { packages?: Array<{ id: string; name: string }> } | undefined) as any)?.packages ?? (packagesQ.data as Array<{ id: string; name: string }> | undefined) ?? []}
+        treatments={((treatmentsQ.data as any)?.treatments ?? (treatmentsQ.data as any) ?? []) as Array<{ id: string; name: string; price?: number | null; description?: string | null }>}
+        packages={((packagesQ.data as any)?.packages ?? (packagesQ.data as any) ?? []) as Array<{ id: string; name: string; price?: number | null; description?: string | null }>}
         onSaved={() => { qc.invalidateQueries({ queryKey: ["my-gift-cards"] }); setOpen(false); }}
       />
 
