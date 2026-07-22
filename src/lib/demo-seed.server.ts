@@ -591,6 +591,50 @@ export async function seedDemoClinic(admin: Admin) {
     ] as never);
   }
 
+  // Gift cards — value + treatment + package options
+  const { count: giftCount } = await admin
+    .from("gift_cards")
+    .select("id", { count: "exact", head: true })
+    .eq("profile_id", profileId!);
+  if (!giftCount) {
+    await admin.from("gift_cards").insert([
+      {
+        profile_id: profileId!,
+        name: "£50 MODO gift card",
+        description: "A thoughtful gift towards any treatment at the clinic.",
+        kind: "value",
+        amount: 50,
+        image_url: IMG.gallery1,
+        expires_months: 12,
+        active: true,
+        sort_order: 1,
+      },
+      {
+        profile_id: profileId!,
+        name: "£100 MODO gift card",
+        description: "The perfect present — redeemable against any service.",
+        kind: "value",
+        amount: 100,
+        image_url: IMG.t1,
+        expires_months: 12,
+        active: true,
+        sort_order: 2,
+      },
+      {
+        profile_id: profileId!,
+        name: "Lip filler — 1ml gift",
+        description: "A full 1ml lip filler treatment with our lead clinician.",
+        kind: "treatment",
+        treatment_id: t2,
+        image_url: IMG.t2,
+        expires_months: 12,
+        active: true,
+        sort_order: 3,
+      },
+    ] as never);
+  }
+
+
   // Demo patient clinic-side record
   const { data: existingClient } = await admin
     .from("clinic_clients")
