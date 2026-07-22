@@ -263,12 +263,13 @@ export const purchaseGiftCard = createServerFn({ method: "POST" })
       ? card.package_ids
       : (card.package_id ? [card.package_id] : []);
 
-    let amount = card.kind === "value" ? Number(card.amount ?? 0) : 0;
-    if (card.kind === "treatment" && tIds.length) {
+    // Price: honour a saved override amount, otherwise mirror the treatment/package price.
+    let amount = card.kind === "value" ? Number(card.amount ?? 0) : Number(card.amount ?? 0);
+    if (card.kind === "treatment" && !(amount > 0) && tIds.length) {
       const { data: rows } = await supabaseAdmin
         .from("treatments").select("price").in("id", tIds);
       amount = (rows ?? []).reduce((s, r) => s + Number(r.price ?? 0), 0);
-    } else if (card.kind === "package" && pIds.length) {
+    } else if (card.kind === "package" && !(amount > 0) && pIds.length) {
       const { data: rows } = await supabaseAdmin
         .from("packages").select("price").in("id", pIds);
       amount = (rows ?? []).reduce((s, r) => s + Number(r.price ?? 0), 0);
