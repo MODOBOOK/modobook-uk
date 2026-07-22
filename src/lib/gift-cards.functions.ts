@@ -262,22 +262,23 @@ export const purchaseGiftCard = createServerFn({ method: "POST" })
       .single();
     if (cErr || !card) throw new Error("Gift card not available");
 
-    // Determine price
+    // Determine price (sum across all selected treatments/packages)
+    const tIds: string[] = (card.treatment_ids && card.treatment_ids.length > 0)
+      ? card.treatment_ids
+      : (card.treatment_id ? [card.treatment_id] : []);
+    const pIds: string[] = (card.package_ids && card.package_ids.length > 0)
+      ? card.package_ids
+      : (card.package_id ? [card.package_id] : []);
+
     let amount = card.kind === "value" ? Number(card.amount ?? 0) : 0;
-    if (card.kind === "treatment" && card.treatment_id) {
-      const { data: t } = await supabaseAdmin
-        .from("treatments")
-        .select("price")
-        .eq("id", card.treatment_id)
-        .maybeSingle();
-      amount = Number(t?.price ?? 0);
-    } else if (card.kind === "package" && card.package_id) {
-      const { data: pk } = await supabaseAdmin
-        .from("packages")
-        .select("price")
-        .eq("id", card.package_id)
-        .maybeSingle();
-      amount = Number(pk?.price ?? 0);
+    if (card.kind === "treatment" && tIds.length) {
+      const { data: rows } = await supabaseAdmin
+        .from("treatments").select("price").in("id", tIds);
+      amount = (rows ?? []).reduce((s, r) => s + Number(r.price ?? 0), 0);
+    } else if (card.kind === "package" && pIds.length) {
+      const { data: rows } = await supabaseAdmin
+        .from("packages").select("price").in("id", pIds);
+      amount = (rows ?? []).reduce((s, r) => s + Number(r.price ?? 0), 0);
     }
     if (!amount || amount <= 0) throw new Error("Gift card price is not set");
 
@@ -293,8 +294,10 @@ export const purchaseGiftCard = createServerFn({ method: "POST" })
         gift_card_id: card.id,
         code,
         kind: card.kind,
-        treatment_id: card.treatment_id,
-        package_id: card.package_id,
+        treatment_id: tIds[0] ?? null,
+        package_id: pIds[0] ?? null,
+        treatment_ids: tIds,
+        package_ids: pIds,
         initial_amount: amount,
         remaining_amount: amount,
         buyer_name: data.buyer_name,
