@@ -507,3 +507,49 @@ function defaultForm(c: GiftCard | null) {
     active: c?.active ?? true,
   };
 }
+
+type FormShape = ReturnType<typeof defaultForm>;
+
+function PriceOverride({
+  form,
+  setForm,
+  mirrored,
+  label,
+}: {
+  form: FormShape;
+  setForm: React.Dispatch<React.SetStateAction<FormShape>>;
+  mirrored: number;
+  label: "treatment" | "package";
+}) {
+  const overridden = form.amount.trim() !== "";
+  const effective = overridden ? Number(form.amount) : mirrored;
+  return (
+    <div className="rounded-md border bg-muted/30 p-3">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <div className="text-sm font-medium">Price</div>
+          <div className="text-xs text-muted-foreground">
+            Mirrors the {label}{form.kind === "treatment" ? "s" : ""} price (£{mirrored.toFixed(2)}). Enter a value to override.
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">£</span>
+          <Input
+            type="number"
+            min="0"
+            step="0.01"
+            value={form.amount}
+            placeholder={mirrored.toFixed(2)}
+            onChange={(e) => setForm((f) => ({ ...f, amount: e.target.value }))}
+            className="w-28"
+          />
+        </div>
+      </div>
+      {overridden && (
+        <div className="mt-2 text-xs text-muted-foreground">
+          Buyers will pay <span className="font-medium text-foreground">£{Number(effective || 0).toFixed(2)}</span>{effective !== mirrored && ` instead of £${mirrored.toFixed(2)}`}.
+        </div>
+      )}
+    </div>
+  );
+}
