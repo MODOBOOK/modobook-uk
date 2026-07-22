@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getPublicClinic } from "@/lib/public-clinic.functions";
 import { listPublicCourses } from "@/lib/training-public.functions";
+import { listPublicGiftCards } from "@/lib/gift-cards.functions";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -294,6 +295,18 @@ function BookPage() {
   });
   const trainingCourses = (trainingQuery.data?.courses ?? []) as Array<{ id: string; name: string; mode: string; cpd_hours: number | string | null; price: number | string; duration_min: number; description: string | null; cover_image_url: string | null }>;
   const hasTraining = trainingCourses.length > 0;
+
+  const fetchGiftCards = useServerFn(listPublicGiftCards);
+  const giftCardsQuery = useQuery({
+    queryKey: ["public-gift-cards-tab", slug],
+    queryFn: () => fetchGiftCards({ data: { slug } }),
+    staleTime: 60_000,
+  });
+  const giftCards = (giftCardsQuery.data?.cards ?? []) as Array<{
+    id: string; name: string; description: string | null; kind: "value" | "treatment" | "package";
+    amount: number | null; image_url: string | null;
+  }>;
+  const hasGiftCards = giftCards.length > 0;
 
   const fetchPublicRewards = useServerFn(getPublicRewardsOverview);
   const rewardsQuery = useQuery({
@@ -1614,12 +1627,18 @@ function BookPage() {
 
             return (
               <Tabs defaultValue="treatments" className="w-full">
-                <TabsList className={`grid w-full h-auto grid-cols-${2 + (hasTraining ? 1 : 0) + (rewardsVisible ? 1 : 0)}`} style={{ backgroundColor: `${brand}10` }}>
+                <TabsList className={`grid w-full h-auto grid-cols-${2 + (hasGiftCards ? 1 : 0) + (hasTraining ? 1 : 0) + (rewardsVisible ? 1 : 0)}`} style={{ backgroundColor: `${brand}10` }}>
                   <TabsTrigger value="treatments" className="text-sm sm:text-base py-2.5">Treatments</TabsTrigger>
                   <TabsTrigger value="packages" disabled={packages.length === 0} className="text-sm sm:text-base py-2.5">
                     <PackageIcon className="mr-1.5 h-4 w-4" />
                     Packages
                   </TabsTrigger>
+                  {hasGiftCards && (
+                    <TabsTrigger value="gift-cards" className="text-sm sm:text-base py-2.5">
+                      <Gift className="mr-1.5 h-4 w-4" />
+                      Gift cards
+                    </TabsTrigger>
+                  )}
                   {hasTraining && (
                     <TabsTrigger value="training" className="text-sm sm:text-base py-2.5">
                       Training
@@ -1958,6 +1977,52 @@ function BookPage() {
                     );
                   })()}
                 </TabsContent>
+
+                {hasGiftCards && (
+                  <TabsContent value="gift-cards" className="mt-4">
+                    <p className="mb-3 text-sm opacity-70">
+                      Give the gift of self-care. Redeemable against treatments at checkout using the code sent to the recipient.
+                    </p>
+                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                      {giftCards.map((c) => (
+                        <Card key={c.id} className="overflow-hidden">
+                          {c.image_url ? (
+                            <img src={c.image_url} alt={c.name} className="h-40 w-full object-cover" />
+                          ) : (
+                            <div
+                              className="flex h-40 w-full items-center justify-center"
+                              style={{ background: `linear-gradient(135deg, ${brand}22, ${accent}11)` }}
+                            >
+                              <Gift className="h-10 w-10 opacity-70" style={{ color: brand }} />
+                            </div>
+                          )}
+                          <CardContent className="space-y-2 p-4">
+                            <div className="flex items-start justify-between gap-2">
+                              <h3 className="font-semibold">{c.name}</h3>
+                              {c.kind === "value" && c.amount != null && (
+                                <span className="shrink-0 rounded-full bg-black/5 px-2 py-0.5 text-sm font-semibold">
+                                  £{Number(c.amount).toFixed(2)}
+                                </span>
+                              )}
+                            </div>
+                            {c.description && (
+                              <p className="text-sm opacity-70 line-clamp-3">{c.description}</p>
+                            )}
+                            <Link
+                              to="/m/$slug/gift-cards"
+                              params={{ slug }}
+                              className="mt-2 inline-flex w-full items-center justify-center rounded-md px-3 py-2 text-sm font-medium text-white"
+                              style={{ backgroundColor: brand }}
+                            >
+                              Buy this gift card
+                            </Link>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </TabsContent>
+                )}
+
 
                 {hasTraining && (
                   <TabsContent value="training" className="mt-4">
