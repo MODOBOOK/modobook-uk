@@ -1714,6 +1714,8 @@ function FavouritesCard({ treatments }: { treatments: Treat[] }) {
   const profile = useQuery({ queryKey: ["my-profile"], queryFn: () => fetchProfile() });
   const [picking, setPicking] = useState(false);
   const [pickerSearch, setPickerSearch] = useState("");
+  const [titleDraft, setTitleDraft] = useState<string | null>(null);
+
 
   const p = profile.data as
     | {
