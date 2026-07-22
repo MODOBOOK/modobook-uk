@@ -311,14 +311,30 @@ function GiftCardDialog({
 
 function IssueDialog({ card, onClose, onIssued }: { card: GiftCard; onClose: () => void; onIssued: () => void }) {
   const issue = useServerFn(issueGiftCardManually);
-  const [form, setForm] = useState({ recipient_name: "", recipient_email: "", buyer_name: "", message: "", send_now: true });
+  const [form, setForm] = useState({
+    recipient_name: "",
+    recipient_email: "",
+    buyer_name: "",
+    message: "",
+    send_now: true,
+    custom_amount: card.kind === "value" ? String(card.amount ?? "") : "",
+  });
   const [busy, setBusy] = useState(false);
 
   async function submit() {
     if (!form.recipient_name || !form.recipient_email) return toast.error("Recipient name and email required");
     setBusy(true);
     try {
-      const res = await issue({ data: { gift_card_id: card.id, ...form } });
+      const custom = form.custom_amount.trim() === "" ? null : Number(form.custom_amount);
+      const res = await issue({ data: {
+        gift_card_id: card.id,
+        recipient_name: form.recipient_name,
+        recipient_email: form.recipient_email,
+        buyer_name: form.buyer_name || undefined,
+        message: form.message || undefined,
+        send_now: form.send_now,
+        custom_amount: card.kind === "value" ? custom : null,
+      } });
       toast.success(`Issued · code ${res.code}`);
       onIssued();
     } catch (e) {
@@ -330,13 +346,35 @@ function IssueDialog({ card, onClose, onIssued }: { card: GiftCard; onClose: () 
 
   return (
     <Dialog open onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader><DialogTitle>Issue "{card.name}"</DialogTitle></DialogHeader>
+      <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Send "{card.name}"</DialogTitle>
+          <p className="text-xs text-muted-foreground">Issue for free, comp, or as a gift. The recipient receives a branded email with the code and your personal message.</p>
+        </DialogHeader>
         <div className="space-y-3">
-          <div><Label>Recipient name</Label><Input value={form.recipient_name} onChange={(e) => setForm({ ...form, recipient_name: e.target.value })} /></div>
-          <div><Label>Recipient email</Label><Input type="email" value={form.recipient_email} onChange={(e) => setForm({ ...form, recipient_email: e.target.value })} /></div>
-          <div><Label>From (optional)</Label><Input value={form.buyer_name} onChange={(e) => setForm({ ...form, buyer_name: e.target.value })} /></div>
-          <div><Label>Personal message (optional)</Label><Textarea rows={3} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} /></div>
+          <div className="grid grid-cols-2 gap-3">
+            <div><Label>Recipient name</Label><Input value={form.recipient_name} onChange={(e) => setForm({ ...form, recipient_name: e.target.value })} /></div>
+            <div><Label>Recipient email</Label><Input type="email" value={form.recipient_email} onChange={(e) => setForm({ ...form, recipient_email: e.target.value })} /></div>
+          </div>
+          <div><Label>From (optional)</Label><Input value={form.buyer_name} onChange={(e) => setForm({ ...form, buyer_name: e.target.value })} placeholder="e.g. Nurse Ryan / The Clinic Team" /></div>
+          {card.kind === "value" && (
+            <div>
+              <Label>Amount to load (£)</Label>
+              <Input
+                type="number"
+                min="0"
+                step="0.01"
+                value={form.custom_amount}
+                onChange={(e) => setForm({ ...form, custom_amount: e.target.value })}
+                placeholder="0 for a free/comp card"
+              />
+              <p className="mt-1 text-[11px] text-muted-foreground">Leave the default or override. Zero-value cards are useful as VIP or apology tokens paired with a message.</p>
+            </div>
+          )}
+          <div>
+            <Label>Personal message (optional)</Label>
+            <Textarea rows={3} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} placeholder="Thank you for being such a loyal client…" />
+          </div>
           <div className="flex items-center justify-between rounded-md border px-3 py-2">
             <div className="text-sm">Email the code to the recipient now</div>
             <Switch checked={form.send_now} onCheckedChange={(v) => setForm({ ...form, send_now: v })} />
@@ -344,7 +382,7 @@ function IssueDialog({ card, onClose, onIssued }: { card: GiftCard; onClose: () 
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button onClick={submit} disabled={busy}>{busy ? "Issuing…" : "Issue gift card"}</Button>
+          <Button onClick={submit} disabled={busy}>{busy ? "Sending…" : "Send gift card"}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
