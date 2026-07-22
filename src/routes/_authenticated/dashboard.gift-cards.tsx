@@ -9,8 +9,9 @@ import {
   listMyGiftCardPurchases,
   issueGiftCardManually,
 } from "@/lib/gift-cards.functions";
-import { listTreatments } from "@/lib/treatments.functions";
-import { listPackages } from "@/lib/packages.functions";
+import { getMyTreatments } from "@/lib/treatments.functions";
+import { listMyPackages } from "@/lib/packages.functions";
+import { getMyProfile } from "@/lib/profiles.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
