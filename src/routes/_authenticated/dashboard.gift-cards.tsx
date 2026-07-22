@@ -364,13 +364,19 @@ function PurchasesTable({ rows }: { rows: Array<Record<string, unknown>> }) {
 }
 
 function defaultForm(c: GiftCard | null) {
+  const tIds = c?.treatment_ids && c.treatment_ids.length > 0
+    ? c.treatment_ids
+    : (c?.treatment_id ? [c.treatment_id] : []);
+  const pIds = c?.package_ids && c.package_ids.length > 0
+    ? c.package_ids
+    : (c?.package_id ? [c.package_id] : []);
   return {
     name: c?.name ?? "",
     description: c?.description ?? "",
     kind: (c?.kind ?? "value") as GiftCard["kind"],
     amount: c?.amount != null ? String(c.amount) : "",
-    treatment_id: c?.treatment_id ?? null as string | null,
-    package_id: c?.package_id ?? null as string | null,
+    treatment_ids: tIds,
+    package_ids: pIds,
     image_url: c?.image_url ?? "",
     expires_months: c?.expires_months != null ? String(c.expires_months) : "12",
     active: c?.active ?? true,
