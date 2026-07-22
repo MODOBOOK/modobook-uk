@@ -104,6 +104,7 @@ const issueSchema = z.object({
   buyer_name: z.string().max(120).optional(),
   message: z.string().max(1000).optional(),
   send_now: z.boolean().default(true),
+  custom_amount: z.number().nonnegative().nullable().optional(),
 });
 
 /**
@@ -122,7 +123,8 @@ export const issueGiftCardManually = createServerFn({ method: "POST" })
       .single();
     if (cErr || !card) throw new Error("Gift card not found");
 
-    const amount = card.kind === "value" ? Number(card.amount ?? 0) : 0;
+    const baseAmount = card.kind === "value" ? Number(card.amount ?? 0) : 0;
+    const amount = data.custom_amount != null ? Number(data.custom_amount) : baseAmount;
     const expiresAt = card.expires_months
       ? new Date(Date.now() + card.expires_months * 30 * 24 * 3600 * 1000).toISOString()
       : null;
