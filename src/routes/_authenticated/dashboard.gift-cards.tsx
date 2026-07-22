@@ -53,14 +53,16 @@ function GiftCardsPage() {
   const qc = useQueryClient();
   const listCards = useServerFn(listMyGiftCards);
   const listPurchases = useServerFn(listMyGiftCardPurchases);
-  const listT = useServerFn(listTreatments);
-  const listP = useServerFn(listPackages);
+  const listT = useServerFn(getMyTreatments);
+  const listP = useServerFn(listMyPackages);
+  const fetchProfile = useServerFn(getMyProfile);
   const del = useServerFn(deleteGiftCard);
 
   const cardsQ = useQuery({ queryKey: ["my-gift-cards"], queryFn: () => listCards() });
   const purchasesQ = useQuery({ queryKey: ["my-gift-card-purchases"], queryFn: () => listPurchases() });
   const treatmentsQ = useQuery({ queryKey: ["treatments-for-gift"], queryFn: () => listT() });
   const packagesQ = useQuery({ queryKey: ["packages-for-gift"], queryFn: () => listP() });
+  const profileQ = useQuery({ queryKey: ["profile-for-gift"], queryFn: () => fetchProfile() });
 
   const [editing, setEditing] = useState<GiftCard | null>(null);
   const [open, setOpen] = useState(false);
