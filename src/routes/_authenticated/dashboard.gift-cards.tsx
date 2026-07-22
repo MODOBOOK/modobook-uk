@@ -221,20 +221,54 @@ function GiftCardDialog({
           )}
           {form.kind === "treatment" && (
             <div>
-              <Label>Treatment</Label>
-              <Select value={form.treatment_id ?? ""} onValueChange={(v) => setForm({ ...form, treatment_id: v })}>
-                <SelectTrigger><SelectValue placeholder="Select treatment" /></SelectTrigger>
-                <SelectContent>{treatments.map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}</SelectContent>
-              </Select>
+              <Label>Treatments (select one or more)</Label>
+              <div className="mt-1 max-h-56 overflow-y-auto rounded-md border p-2">
+                {treatments.length === 0 && <div className="p-2 text-sm text-muted-foreground">No treatments yet.</div>}
+                {treatments.map((t) => {
+                  const checked = form.treatment_ids.includes(t.id);
+                  return (
+                    <label key={t.id} className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-muted">
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={(e) => setForm({
+                          ...form,
+                          treatment_ids: e.target.checked
+                            ? [...form.treatment_ids, t.id]
+                            : form.treatment_ids.filter((x) => x !== t.id),
+                        })}
+                      />
+                      <span>{t.name}</span>
+                    </label>
+                  );
+                })}
+              </div>
             </div>
           )}
           {form.kind === "package" && (
             <div>
-              <Label>Package</Label>
-              <Select value={form.package_id ?? ""} onValueChange={(v) => setForm({ ...form, package_id: v })}>
-                <SelectTrigger><SelectValue placeholder="Select package" /></SelectTrigger>
-                <SelectContent>{packages.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
-              </Select>
+              <Label>Packages (select one or more)</Label>
+              <div className="mt-1 max-h-56 overflow-y-auto rounded-md border p-2">
+                {packages.length === 0 && <div className="p-2 text-sm text-muted-foreground">No packages yet.</div>}
+                {packages.map((p) => {
+                  const checked = form.package_ids.includes(p.id);
+                  return (
+                    <label key={p.id} className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-muted">
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={(e) => setForm({
+                          ...form,
+                          package_ids: e.target.checked
+                            ? [...form.package_ids, p.id]
+                            : form.package_ids.filter((x) => x !== p.id),
+                        })}
+                      />
+                      <span>{p.name}</span>
+                    </label>
+                  );
+                })}
+              </div>
             </div>
           )}
           <div>
