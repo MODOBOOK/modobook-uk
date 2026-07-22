@@ -154,14 +154,27 @@ function GiftCardDialog({
   onOpenChange: (v: boolean) => void;
   editing: GiftCard | null;
   profileId: string;
-  treatments: Array<{ id: string; name: string }>;
-  packages: Array<{ id: string; name: string }>;
+  treatments: Array<{ id: string; name: string; price?: number | null; description?: string | null }>;
+  packages: Array<{ id: string; name: string; price?: number | null; description?: string | null }>;
   onSaved: () => void;
 }) {
   const save = useServerFn(upsertGiftCard);
   const [form, setForm] = useState(() => defaultForm(editing));
   useEffect(() => { setForm(defaultForm(editing)); }, [editing]);
   const [saving, setSaving] = useState(false);
+
+  // Sum of the selected treatments/packages, used as the default (mirrored) price.
+  const selectedTreatmentsTotal = form.treatment_ids.reduce((s, id) => {
+    const t = treatments.find((x) => x.id === id);
+    return s + Number(t?.price ?? 0);
+  }, 0);
+  const selectedPackagesTotal = form.package_ids.reduce((s, id) => {
+    const p = packages.find((x) => x.id === id);
+    return s + Number(p?.price ?? 0);
+  }, 0);
+  const mirroredTotal =
+    form.kind === "treatment" ? selectedTreatmentsTotal :
+    form.kind === "package" ? selectedPackagesTotal : 0;
 
   async function submit() {
     if (!form.name.trim()) return toast.error("Name required");
@@ -170,13 +183,21 @@ function GiftCardDialog({
     if (form.kind === "package" && form.package_ids.length === 0) return toast.error("Pick at least one package");
     setSaving(true);
     try {
+      // For value cards the amount comes from the amount field. For treatment/package
+      // cards we save the price override (blank = mirror the treatment/package price).
+      const savedAmount =
+        form.kind === "value"
+          ? Number(form.amount)
+          : form.amount.trim() === ""
+            ? null
+            : Number(form.amount);
       await save({
         data: {
           id: editing?.id,
           name: form.name.trim(),
           description: form.description || null,
           kind: form.kind,
-          amount: form.kind === "value" ? Number(form.amount) : null,
+          amount: savedAmount,
           treatment_ids: form.kind === "treatment" ? form.treatment_ids : [],
           package_ids: form.kind === "package" ? form.package_ids : [],
           image_url: form.image_url || null,
@@ -192,6 +213,7 @@ function GiftCardDialog({
       setSaving(false);
     }
   }
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
