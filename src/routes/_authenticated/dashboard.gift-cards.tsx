@@ -44,6 +44,8 @@ type GiftCard = {
   amount: number | null;
   treatment_id: string | null;
   package_id: string | null;
+  treatment_ids: string[] | null;
+  package_ids: string[] | null;
   image_url: string | null;
   expires_months: number | null;
   active: boolean;
@@ -133,8 +135,8 @@ function GiftCardsPage() {
         onOpenChange={setOpen}
         editing={editing}
         profileId={(profileQ.data as { id?: string } | null)?.id ?? ""}
-        treatments={(treatmentsQ.data as { treatments?: Array<{ id: string; name: string }> })?.treatments ?? []}
-        packages={(packagesQ.data as { packages?: Array<{ id: string; name: string }> })?.packages ?? []}
+        treatments={((treatmentsQ.data as Array<{ id: string; name: string }> | { treatments?: Array<{ id: string; name: string }> } | undefined) as any)?.treatments ?? (treatmentsQ.data as Array<{ id: string; name: string }> | undefined) ?? []}
+        packages={((packagesQ.data as Array<{ id: string; name: string }> | { packages?: Array<{ id: string; name: string }> } | undefined) as any)?.packages ?? (packagesQ.data as Array<{ id: string; name: string }> | undefined) ?? []}
         onSaved={() => { qc.invalidateQueries({ queryKey: ["my-gift-cards"] }); setOpen(false); }}
       />
 
@@ -164,8 +166,8 @@ function GiftCardDialog({
   async function submit() {
     if (!form.name.trim()) return toast.error("Name required");
     if (form.kind === "value" && !(Number(form.amount) > 0)) return toast.error("Amount required");
-    if (form.kind === "treatment" && !form.treatment_id) return toast.error("Pick a treatment");
-    if (form.kind === "package" && !form.package_id) return toast.error("Pick a package");
+    if (form.kind === "treatment" && form.treatment_ids.length === 0) return toast.error("Pick at least one treatment");
+    if (form.kind === "package" && form.package_ids.length === 0) return toast.error("Pick at least one package");
     setSaving(true);
     try {
       await save({
@@ -175,8 +177,8 @@ function GiftCardDialog({
           description: form.description || null,
           kind: form.kind,
           amount: form.kind === "value" ? Number(form.amount) : null,
-          treatment_id: form.kind === "treatment" ? form.treatment_id : null,
-          package_id: form.kind === "package" ? form.package_id : null,
+          treatment_ids: form.kind === "treatment" ? form.treatment_ids : [],
+          package_ids: form.kind === "package" ? form.package_ids : [],
           image_url: form.image_url || null,
           expires_months: form.expires_months ? Number(form.expires_months) : null,
           active: form.active,
@@ -219,20 +221,54 @@ function GiftCardDialog({
           )}
           {form.kind === "treatment" && (
             <div>
-              <Label>Treatment</Label>
-              <Select value={form.treatment_id ?? ""} onValueChange={(v) => setForm({ ...form, treatment_id: v })}>
-                <SelectTrigger><SelectValue placeholder="Select treatment" /></SelectTrigger>
-                <SelectContent>{treatments.map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}</SelectContent>
-              </Select>
+              <Label>Treatments (select one or more)</Label>
+              <div className="mt-1 max-h-56 overflow-y-auto rounded-md border p-2">
+                {treatments.length === 0 && <div className="p-2 text-sm text-muted-foreground">No treatments yet.</div>}
+                {treatments.map((t) => {
+                  const checked = form.treatment_ids.includes(t.id);
+                  return (
+                    <label key={t.id} className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-muted">
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={(e) => setForm({
+                          ...form,
+                          treatment_ids: e.target.checked
+                            ? [...form.treatment_ids, t.id]
+                            : form.treatment_ids.filter((x) => x !== t.id),
+                        })}
+                      />
+                      <span>{t.name}</span>
+                    </label>
+                  );
+                })}
+              </div>
             </div>
           )}
           {form.kind === "package" && (
             <div>
-              <Label>Package</Label>
-              <Select value={form.package_id ?? ""} onValueChange={(v) => setForm({ ...form, package_id: v })}>
-                <SelectTrigger><SelectValue placeholder="Select package" /></SelectTrigger>
-                <SelectContent>{packages.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
-              </Select>
+              <Label>Packages (select one or more)</Label>
+              <div className="mt-1 max-h-56 overflow-y-auto rounded-md border p-2">
+                {packages.length === 0 && <div className="p-2 text-sm text-muted-foreground">No packages yet.</div>}
+                {packages.map((p) => {
+                  const checked = form.package_ids.includes(p.id);
+                  return (
+                    <label key={p.id} className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-muted">
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={(e) => setForm({
+                          ...form,
+                          package_ids: e.target.checked
+                            ? [...form.package_ids, p.id]
+                            : form.package_ids.filter((x) => x !== p.id),
+                        })}
+                      />
+                      <span>{p.name}</span>
+                    </label>
+                  );
+                })}
+              </div>
             </div>
           )}
           <div>
@@ -362,13 +398,19 @@ function PurchasesTable({ rows }: { rows: Array<Record<string, unknown>> }) {
 }
 
 function defaultForm(c: GiftCard | null) {
+  const tIds = c?.treatment_ids && c.treatment_ids.length > 0
+    ? c.treatment_ids
+    : (c?.treatment_id ? [c.treatment_id] : []);
+  const pIds = c?.package_ids && c.package_ids.length > 0
+    ? c.package_ids
+    : (c?.package_id ? [c.package_id] : []);
   return {
     name: c?.name ?? "",
     description: c?.description ?? "",
     kind: (c?.kind ?? "value") as GiftCard["kind"],
     amount: c?.amount != null ? String(c.amount) : "",
-    treatment_id: c?.treatment_id ?? null as string | null,
-    package_id: c?.package_id ?? null as string | null,
+    treatment_ids: tIds,
+    package_ids: pIds,
     image_url: c?.image_url ?? "",
     expires_months: c?.expires_months != null ? String(c.expires_months) : "12",
     active: c?.active ?? true,

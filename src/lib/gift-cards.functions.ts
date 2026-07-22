@@ -31,6 +31,8 @@ const upsertSchema = z.object({
   amount: z.number().nonnegative().nullable().optional(),
   treatment_id: z.string().uuid().nullable().optional(),
   package_id: z.string().uuid().nullable().optional(),
+  treatment_ids: z.array(z.string().uuid()).optional(),
+  package_ids: z.array(z.string().uuid()).optional(),
   image_url: z.string().nullable().optional(),
   expires_months: z.number().int().positive().nullable().optional(),
   active: z.boolean().optional(),
@@ -41,7 +43,16 @@ export const upsertGiftCard = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => upsertSchema.parse(d))
   .handler(async ({ data, context }) => {
-    const row = { ...data, profile_id: context.userId };
+    const tIds = data.treatment_ids ?? (data.treatment_id ? [data.treatment_id] : []);
+    const pIds = data.package_ids ?? (data.package_id ? [data.package_id] : []);
+    const row = {
+      ...data,
+      treatment_ids: tIds,
+      package_ids: pIds,
+      treatment_id: tIds[0] ?? null,
+      package_id: pIds[0] ?? null,
+      profile_id: context.userId,
+    };
     if (data.id) {
       const { error } = await context.supabase
         .from("gift_cards")
@@ -137,6 +148,8 @@ export const issueGiftCardManually = createServerFn({ method: "POST" })
         kind: card.kind,
         treatment_id: card.treatment_id,
         package_id: card.package_id,
+        treatment_ids: card.treatment_ids ?? [],
+        package_ids: card.package_ids ?? [],
         initial_amount: amount,
         remaining_amount: amount,
         buyer_name: data.buyer_name ?? null,
@@ -205,7 +218,7 @@ export const listPublicGiftCards = createServerFn({ method: "GET" })
     if (!prof) return { cards: [] };
     const { data: cards } = await sb
       .from("gift_cards")
-      .select("id,name,description,kind,amount,image_url,treatment_id,package_id,expires_months")
+      .select("id,name,description,kind,amount,image_url,treatment_id,package_id,treatment_ids,package_ids,expires_months")
       .eq("profile_id", prof.id)
       .eq("active", true)
       .order("sort_order");
@@ -251,22 +264,23 @@ export const purchaseGiftCard = createServerFn({ method: "POST" })
       .single();
     if (cErr || !card) throw new Error("Gift card not available");
 
-    // Determine price
+    // Determine price (sum across all selected treatments/packages)
+    const tIds: string[] = (card.treatment_ids && card.treatment_ids.length > 0)
+      ? card.treatment_ids
+      : (card.treatment_id ? [card.treatment_id] : []);
+    const pIds: string[] = (card.package_ids && card.package_ids.length > 0)
+      ? card.package_ids
+      : (card.package_id ? [card.package_id] : []);
+
     let amount = card.kind === "value" ? Number(card.amount ?? 0) : 0;
-    if (card.kind === "treatment" && card.treatment_id) {
-      const { data: t } = await supabaseAdmin
-        .from("treatments")
-        .select("price")
-        .eq("id", card.treatment_id)
-        .maybeSingle();
-      amount = Number(t?.price ?? 0);
-    } else if (card.kind === "package" && card.package_id) {
-      const { data: pk } = await supabaseAdmin
-        .from("packages")
-        .select("price")
-        .eq("id", card.package_id)
-        .maybeSingle();
-      amount = Number(pk?.price ?? 0);
+    if (card.kind === "treatment" && tIds.length) {
+      const { data: rows } = await supabaseAdmin
+        .from("treatments").select("price").in("id", tIds);
+      amount = (rows ?? []).reduce((s, r) => s + Number(r.price ?? 0), 0);
+    } else if (card.kind === "package" && pIds.length) {
+      const { data: rows } = await supabaseAdmin
+        .from("packages").select("price").in("id", pIds);
+      amount = (rows ?? []).reduce((s, r) => s + Number(r.price ?? 0), 0);
     }
     if (!amount || amount <= 0) throw new Error("Gift card price is not set");
 
@@ -282,8 +296,10 @@ export const purchaseGiftCard = createServerFn({ method: "POST" })
         gift_card_id: card.id,
         code,
         kind: card.kind,
-        treatment_id: card.treatment_id,
-        package_id: card.package_id,
+        treatment_id: tIds[0] ?? null,
+        package_id: pIds[0] ?? null,
+        treatment_ids: tIds,
+        package_ids: pIds,
         initial_amount: amount,
         remaining_amount: amount,
         buyer_name: data.buyer_name,
@@ -355,14 +371,18 @@ export const previewGiftCardCode = createServerFn({ method: "POST" })
     if (Number(p.remaining_amount) <= 0) return { error: "This code has been fully used" };
 
     if (p.kind === "treatment") {
-      if (!p.treatment_id || !data.treatment_ids?.includes(p.treatment_id)) {
-        return { error: "This code doesn't apply to your selection" };
-      }
+      const allowed: string[] = (p.treatment_ids && p.treatment_ids.length > 0)
+        ? p.treatment_ids
+        : (p.treatment_id ? [p.treatment_id] : []);
+      const match = allowed.some((id) => data.treatment_ids?.includes(id));
+      if (!match) return { error: "This code doesn't apply to your selection" };
     }
     if (p.kind === "package") {
-      if (!p.package_id || !data.package_ids?.includes(p.package_id)) {
-        return { error: "This code doesn't apply to your selection" };
-      }
+      const allowed: string[] = (p.package_ids && p.package_ids.length > 0)
+        ? p.package_ids
+        : (p.package_id ? [p.package_id] : []);
+      const match = allowed.some((id) => data.package_ids?.includes(id));
+      if (!match) return { error: "This code doesn't apply to your selection" };
     }
 
     const applicable = Math.min(Number(p.remaining_amount), data.total);

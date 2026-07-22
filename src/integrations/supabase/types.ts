@@ -2641,6 +2641,7 @@ export type Database = {
           kind: string
           message: string | null
           package_id: string | null
+          package_ids: string[]
           profile_id: string
           recipient_email: string | null
           recipient_name: string | null
@@ -2649,6 +2650,7 @@ export type Database = {
           stripe_payment_intent_id: string | null
           stripe_session_id: string | null
           treatment_id: string | null
+          treatment_ids: string[]
           updated_at: string
         }
         Insert: {
@@ -2665,6 +2667,7 @@ export type Database = {
           kind: string
           message?: string | null
           package_id?: string | null
+          package_ids?: string[]
           profile_id: string
           recipient_email?: string | null
           recipient_name?: string | null
@@ -2673,6 +2676,7 @@ export type Database = {
           stripe_payment_intent_id?: string | null
           stripe_session_id?: string | null
           treatment_id?: string | null
+          treatment_ids?: string[]
           updated_at?: string
         }
         Update: {
@@ -2689,6 +2693,7 @@ export type Database = {
           kind?: string
           message?: string | null
           package_id?: string | null
+          package_ids?: string[]
           profile_id?: string
           recipient_email?: string | null
           recipient_name?: string | null
@@ -2697,6 +2702,7 @@ export type Database = {
           stripe_payment_intent_id?: string | null
           stripe_session_id?: string | null
           treatment_id?: string | null
+          treatment_ids?: string[]
           updated_at?: string
         }
         Relationships: [
@@ -2756,9 +2762,11 @@ export type Database = {
           kind: string
           name: string
           package_id: string | null
+          package_ids: string[]
           profile_id: string
           sort_order: number
           treatment_id: string | null
+          treatment_ids: string[]
           updated_at: string
         }
         Insert: {
@@ -2772,9 +2780,11 @@ export type Database = {
           kind: string
           name: string
           package_id?: string | null
+          package_ids?: string[]
           profile_id: string
           sort_order?: number
           treatment_id?: string | null
+          treatment_ids?: string[]
           updated_at?: string
         }
         Update: {
@@ -2788,9 +2798,11 @@ export type Database = {
           kind?: string
           name?: string
           package_id?: string | null
+          package_ids?: string[]
           profile_id?: string
           sort_order?: number
           treatment_id?: string | null
+          treatment_ids?: string[]
           updated_at?: string
         }
         Relationships: [
