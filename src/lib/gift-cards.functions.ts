@@ -369,14 +369,18 @@ export const previewGiftCardCode = createServerFn({ method: "POST" })
     if (Number(p.remaining_amount) <= 0) return { error: "This code has been fully used" };
 
     if (p.kind === "treatment") {
-      if (!p.treatment_id || !data.treatment_ids?.includes(p.treatment_id)) {
-        return { error: "This code doesn't apply to your selection" };
-      }
+      const allowed: string[] = (p.treatment_ids && p.treatment_ids.length > 0)
+        ? p.treatment_ids
+        : (p.treatment_id ? [p.treatment_id] : []);
+      const match = allowed.some((id) => data.treatment_ids?.includes(id));
+      if (!match) return { error: "This code doesn't apply to your selection" };
     }
     if (p.kind === "package") {
-      if (!p.package_id || !data.package_ids?.includes(p.package_id)) {
-        return { error: "This code doesn't apply to your selection" };
-      }
+      const allowed: string[] = (p.package_ids && p.package_ids.length > 0)
+        ? p.package_ids
+        : (p.package_id ? [p.package_id] : []);
+      const match = allowed.some((id) => data.package_ids?.includes(id));
+      if (!match) return { error: "This code doesn't apply to your selection" };
     }
 
     const applicable = Math.min(Number(p.remaining_amount), data.total);
