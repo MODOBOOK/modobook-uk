@@ -218,7 +218,7 @@ export const listPublicGiftCards = createServerFn({ method: "GET" })
     if (!prof) return { cards: [] };
     const { data: cards } = await sb
       .from("gift_cards")
-      .select("id,name,description,kind,amount,image_url,treatment_id,package_id,expires_months")
+      .select("id,name,description,kind,amount,image_url,treatment_id,package_id,treatment_ids,package_ids,expires_months")
       .eq("profile_id", prof.id)
       .eq("active", true)
       .order("sort_order");
