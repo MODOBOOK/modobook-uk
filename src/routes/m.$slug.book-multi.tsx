@@ -1146,6 +1146,8 @@ function MultiBookPage() {
                       <DiscountCodeBox
                         slug={slug}
                         treatmentIds={treatments.map((t) => t.id)}
+                        packageIds={selectedPackages.map((p) => p.id)}
+                        total={totalPrice}
                         brand={brand}
                         value={discount}
                         onChange={setDiscount}
