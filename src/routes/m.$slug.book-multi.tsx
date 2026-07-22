@@ -31,6 +31,7 @@ import { Clock, MapPin, CheckCircle2, LogIn, UserPlus, UserCheck, ChevronLeft, C
 import { DiscountCodeBox, type AppliedDiscount } from "@/components/DiscountCodeBox";
 import { ReferralCodeInput } from "@/components/ReferralCodeInput";
 import { linkReferralToAppointment } from "@/lib/rewards.functions";
+import { redeemGiftCardCode } from "@/lib/gift-cards.functions";
 import { AddressAutocomplete } from "@/components/AddressAutocomplete";
 
 import { toast } from "sonner";
@@ -329,6 +330,7 @@ function MultiBookPage() {
   const dayFn = useServerFn(getDayAvailability);
   const monthFn = useServerFn(getMonthAvailability);
   const reqFn = useServerFn(requestMultiBooking);
+  const redeemGc = useServerFn(redeemGiftCardCode);
   
 
   const monthQuery = useQuery({
@@ -545,6 +547,14 @@ function MultiBookPage() {
             try { await linkReferralToAppointment({ data: { appointmentId: a.id, code: refCode } }); } catch { /* ignore */ }
           }
           sessionStorage.removeItem("modo_ref_code");
+        }
+      } catch { /* non-fatal */ }
+
+      // Redeem gift card credit against the first appointment (idempotent).
+      try {
+        const firstId = res.appointments?.[0]?.id;
+        if (discount?.isGiftCard && discount.giftCardPurchaseId && discountTotal > 0 && firstId) {
+          await redeemGc({ data: { slug, code: discount.code, amount: discountTotal, appointment_id: firstId } });
         }
       } catch { /* non-fatal */ }
 
@@ -1146,6 +1156,8 @@ function MultiBookPage() {
                       <DiscountCodeBox
                         slug={slug}
                         treatmentIds={treatments.map((t) => t.id)}
+                        packageIds={selectedPackages.map((p) => p.id)}
+                        total={totalPrice}
                         brand={brand}
                         value={discount}
                         onChange={setDiscount}

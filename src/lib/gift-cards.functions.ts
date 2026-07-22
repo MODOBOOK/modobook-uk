@@ -396,3 +396,70 @@ export const previewGiftCardCode = createServerFn({ method: "POST" })
       applied: applicable,
     };
   });
+
+/**
+ * Public: redeem an amount against a gift card code after a booking is placed.
+ * Decrements remaining_amount and logs a redemption row. Idempotent on
+ * (purchase_id, appointment_id) via a dedupe check.
+ */
+export const redeemGiftCardCode = createServerFn({ method: "POST" })
+  .inputValidator((d: {
+    slug: string;
+    code: string;
+    amount: number;
+    appointment_id?: string | null;
+  }) => d)
+  .handler(async ({ data }) => {
+    if (!data.amount || data.amount <= 0) return { ok: true, redeemed: 0 };
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: prof } = await supabaseAdmin
+      .from("profiles").select("id").eq("slug", data.slug).maybeSingle();
+    if (!prof) throw new Error("Clinic not found");
+
+    const code = data.code.trim().toUpperCase();
+    const { data: p } = await supabaseAdmin
+      .from("gift_card_purchases")
+      .select("id, profile_id, status, remaining_amount, expires_at")
+      .eq("profile_id", prof.id)
+      .eq("code", code)
+      .maybeSingle();
+    if (!p) throw new Error("Gift card code not found");
+    if (p.status !== "active") throw new Error("Gift card is not active");
+    if (p.expires_at && new Date(p.expires_at).getTime() < Date.now()) {
+      throw new Error("Gift card has expired");
+    }
+    const remaining = Number(p.remaining_amount);
+    if (remaining <= 0) throw new Error("Gift card has no remaining balance");
+
+    // Idempotency: skip if already logged against this appointment.
+    if (data.appointment_id) {
+      const { data: existing } = await supabaseAdmin
+        .from("gift_card_redemptions")
+        .select("id")
+        .eq("purchase_id", p.id)
+        .eq("appointment_id", data.appointment_id)
+        .maybeSingle();
+      if (existing) return { ok: true, redeemed: 0 };
+    }
+
+    const redeem = Math.min(remaining, Number(data.amount));
+    const newRemaining = Number((remaining - redeem).toFixed(2));
+
+    const { error: upErr } = await supabaseAdmin
+      .from("gift_card_purchases")
+      .update({
+        remaining_amount: newRemaining,
+        status: newRemaining <= 0 ? "redeemed" : "active",
+      })
+      .eq("id", p.id);
+    if (upErr) throw upErr;
+
+    await supabaseAdmin.from("gift_card_redemptions").insert({
+      purchase_id: p.id,
+      profile_id: p.profile_id,
+      appointment_id: data.appointment_id ?? null,
+      amount: redeem,
+    });
+
+    return { ok: true, redeemed: redeem };
+  });

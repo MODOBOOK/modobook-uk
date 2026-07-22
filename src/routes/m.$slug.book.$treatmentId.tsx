@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getBookingContext, getDayAvailability, getMonthAvailability, requestBooking, type PaymentChoice } from "@/lib/public-booking.functions";
+import { redeemGiftCardCode } from "@/lib/gift-cards.functions";
 import { ruleAppliesOnDate } from "@/lib/rota";
 
 import { BookingPaymentPicker } from "@/components/BookingPaymentPicker";
@@ -209,6 +210,8 @@ function BookTreatmentPage() {
   const monthFn = useServerFn(getMonthAvailability);
   const reqFn = useServerFn(requestBooking);
   const linkReferral = useServerFn(linkReferralToAppointment);
+  const redeemGc = useServerFn(redeemGiftCardCode);
+
 
   // Add-ons for this treatment
   const addonsQuery = useQuery({
@@ -492,6 +495,12 @@ function BookTreatmentPage() {
         if (refCode && res.id) {
           await linkReferral({ data: { appointmentId: res.id, code: refCode } });
           sessionStorage.removeItem("modo_ref_code");
+        }
+      } catch { /* non-fatal */ }
+      // Redeem gift card credit against this appointment (idempotent server-side).
+      try {
+        if (discount?.isGiftCard && discount.giftCardPurchaseId && discountOff > 0 && res.id) {
+          await redeemGc({ data: { slug, code: discount.code, amount: discountOff, appointment_id: res.id } });
         }
       } catch { /* non-fatal */ }
       const emb = (res as { embeddedPayment?: {
@@ -1023,6 +1032,7 @@ function BookTreatmentPage() {
               <DiscountCodeBox
                 slug={slug}
                 treatmentIds={[treatment.id]}
+                total={price}
                 brand={brand}
                 value={discount}
                 onChange={setDiscount}
