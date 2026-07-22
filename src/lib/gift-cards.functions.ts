@@ -154,11 +154,11 @@ export const issueGiftCardManually = createServerFn({ method: "POST" })
 
     if (data.send_now) {
       try {
-        const { sendTransactionalEmail } = await import("./email/send.server");
-        await sendTransactionalEmail({
+        const { enqueueAppEmail } = await import("./email/send.server");
+        await enqueueAppEmail({
           templateName: "gift-card-delivery",
           recipientEmail: data.recipient_email,
-          idempotencyKey: `gift-card-${purchase.id}`,
+          messageId: `gift-card-${purchase.id}`,
           templateData: {
             recipientName: data.recipient_name,
             code,
@@ -167,6 +167,7 @@ export const issueGiftCardManually = createServerFn({ method: "POST" })
             expiresAt,
             message: data.message ?? null,
             buyerName: data.buyer_name ?? null,
+            profileId: context.userId,
           },
         });
       } catch (e) {
