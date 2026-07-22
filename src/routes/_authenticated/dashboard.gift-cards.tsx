@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
@@ -160,7 +160,7 @@ function GiftCardDialog({
 }) {
   const save = useServerFn(upsertGiftCard);
   const [form, setForm] = useState(() => defaultForm(editing));
-  useMemo(() => setForm(defaultForm(editing)), [editing]);
+  useEffect(() => { setForm(defaultForm(editing)); }, [editing]);
   const [saving, setSaving] = useState(false);
 
   async function submit() {
