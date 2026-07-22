@@ -43,7 +43,16 @@ export const upsertGiftCard = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => upsertSchema.parse(d))
   .handler(async ({ data, context }) => {
-    const row = { ...data, profile_id: context.userId };
+    const tIds = data.treatment_ids ?? (data.treatment_id ? [data.treatment_id] : []);
+    const pIds = data.package_ids ?? (data.package_id ? [data.package_id] : []);
+    const row = {
+      ...data,
+      treatment_ids: tIds,
+      package_ids: pIds,
+      treatment_id: tIds[0] ?? null,
+      package_id: pIds[0] ?? null,
+      profile_id: context.userId,
+    };
     if (data.id) {
       const { error } = await context.supabase
         .from("gift_cards")
