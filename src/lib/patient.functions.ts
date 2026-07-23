@@ -222,6 +222,42 @@ export const submitPatientReview = createServerFn({ method: "POST" })
     return { review };
   });
 
+/** Public review submission — no account required. Lands pending moderation. */
+export const submitPublicReview = createServerFn({ method: "POST" })
+  .inputValidator(
+    (input: { profileSlug: string; rating: number; title?: string; body: string; reviewerName: string; reviewerEmail?: string }) => input,
+  )
+  .handler(async ({ data }) => {
+    const rating = Math.round(Number(data.rating));
+    if (!Number.isFinite(rating) || rating < 1 || rating > 5) throw new Error("Rating must be 1–5");
+    const body = (data.body ?? "").trim();
+    const name = (data.reviewerName ?? "").trim();
+    if (!body) throw new Error("Please write a review");
+    if (body.length > 2000) throw new Error("Review is too long");
+    if (!name) throw new Error("Please enter your name");
+    if (name.length > 100) throw new Error("Name is too long");
+
+    const anon = publicClient();
+    const { data: prof, error: pErr } = await anon
+      .rpc("get_public_profile_by_slug", { p_slug: data.profileSlug.toLowerCase() })
+      .maybeSingle();
+    if (pErr) throw pErr;
+    if (!prof) throw new Error("Practitioner not found");
+
+    const { error } = await anon.from("patient_reviews").insert({
+      profile_id: prof.id,
+      patient_id: null,
+      rating,
+      title: data.title?.trim() || null,
+      body,
+      approved: false,
+      reviewer_name: name,
+      reviewer_email: data.reviewerEmail?.trim() || null,
+    });
+    if (error) throw error;
+    return { ok: true };
+  });
+
 /** Practitioner moderation list */
 export const listMyReviews = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
