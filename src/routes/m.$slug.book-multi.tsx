@@ -1407,6 +1407,15 @@ function MultiBookPage() {
                   });
                   dueToday += addonsExtraPrice;
                   if (totalPrice > 0) dueToday = Math.max(0, dueToday - (dueToday / totalPrice) * discountTotal);
+                  const missingDetail =
+                    !slot ? "Please pick a time slot above"
+                    : !form.name ? "Please enter your name above"
+                    : !form.email ? "Please enter your email above"
+                    : (reqPhone && !form.phone) ? "Please enter your phone number above"
+                    : (reqDob && !form.dob) ? "Please enter your date of birth above"
+                    : (termsRequired && !agreedToTerms) ? "Please agree to the terms above"
+                    : (totalAfterDiscount > 0 && !paymentChoice) ? "Please choose how you'd like to pay above"
+                    : null;
                   const btnLabel = submitting
                     ? "Booking…"
                     : inPersonItems.length > 0
@@ -1415,13 +1424,17 @@ function MultiBookPage() {
                         ? "Please pick a clinic visit day above"
                         : !allClinicVisitsConsented || !allConsented
                           ? "Please give prescriber consent above"
-                          : anySplit && !splitAgreed
-                            ? "Tick the payment-plan agreement to continue"
-                            : isDeposit
-                              ? `Book & pay deposit today`
-                              : anySplit
-                                ? `Book & pay £${dueToday.toFixed(2)} today (rest at each appointment)`
-                                : `Confirm ${treatments.length} booking${treatments.length === 1 ? "" : "s"} · £${totalAfterDiscount.toFixed(2)}`;
+                          : prescriberBlocks
+                            ? "Please complete prescriber consent above"
+                            : anySplit && !splitAgreed
+                              ? "Tick the payment-plan agreement to continue"
+                              : missingDetail
+                                ? missingDetail
+                                : isDeposit
+                                  ? `Book & pay deposit today`
+                                  : anySplit
+                                    ? `Book & pay £${dueToday.toFixed(2)} today (rest at each appointment)`
+                                    : `Confirm ${treatments.length} booking${treatments.length === 1 ? "" : "s"} · £${totalAfterDiscount.toFixed(2)}`;
                   return (
                     <Button
                       className="mt-4 w-full"
