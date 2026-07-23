@@ -3926,9 +3926,11 @@ export type Database = {
           body: string
           created_at: string
           id: string
-          patient_id: string
+          patient_id: string | null
           profile_id: string
           rating: number
+          reviewer_email: string | null
+          reviewer_name: string | null
           title: string | null
           updated_at: string
         }
@@ -3938,9 +3940,11 @@ export type Database = {
           body: string
           created_at?: string
           id?: string
-          patient_id: string
+          patient_id?: string | null
           profile_id: string
           rating: number
+          reviewer_email?: string | null
+          reviewer_name?: string | null
           title?: string | null
           updated_at?: string
         }
@@ -3950,9 +3954,11 @@ export type Database = {
           body?: string
           created_at?: string
           id?: string
-          patient_id?: string
+          patient_id?: string | null
           profile_id?: string
           rating?: number
+          reviewer_email?: string | null
+          reviewer_name?: string | null
           title?: string | null
           updated_at?: string
         }
