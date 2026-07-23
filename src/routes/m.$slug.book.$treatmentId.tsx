@@ -1060,7 +1060,18 @@ function BookTreatmentPage() {
       />
 
 
-      <Button
+      {(() => {
+        const missingRequirement =
+          !slot ? "Please pick a time slot above"
+          : !form.name ? "Please enter your name above"
+          : !form.email ? "Please enter your email above"
+          : (reqPhone && !form.phone) ? "Please enter your phone number above"
+          : (reqDob && !form.dob) ? "Please enter your date of birth above"
+          : (splitAllowed && paymentPlan === "split" && !splitAgreed) ? "Tick the payment-plan agreement to continue"
+          : (totalAfterDiscount > 0 && !paymentChoice) ? "Please choose how you'd like to pay above"
+          : null;
+
+        return <Button
 
         className="w-full"
         size="lg"
@@ -1075,14 +1086,15 @@ function BookTreatmentPage() {
       >
         {submitting
           ? "Booking…"
+          : missingRequirement
+            ? missingRequirement
           : splitAllowed && paymentPlan === "split"
-            ? !splitAgreed
-              ? "Tick the payment-plan agreement to continue"
-              : `Book & pay £${dueTodayAmount.toFixed(2)} today (${sessionCount} × £${(totalAfterDiscount / sessionCount).toFixed(2)})`
+            ? `Book & pay £${dueTodayAmount.toFixed(2)} today (${sessionCount} × £${(totalAfterDiscount / sessionCount).toFixed(2)})`
             : showPrices && totalAfterDiscount > 0
               ? `Book & pay £${totalAfterDiscount.toFixed(2)}`
               : "Confirm booking"}
-      </Button>
+        </Button>;
+      })()}
       </>
       )}
       </div>
