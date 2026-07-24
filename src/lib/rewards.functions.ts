@@ -415,8 +415,10 @@ export const getPublicRewardsOverview = createServerFn({ method: "GET" })
         .order("points_cost", { ascending: true }),
     ]);
 
-    const showPublic = !!(settings as any)?.show_on_public_page && !!settings?.enabled;
-    if (!showPublic) return { visible: false as const };
+    // Show the Rewards tab/page whenever the programme is enabled. The
+    // `show_on_public_page` flag is treated as legacy — activation alone is
+    // enough to surface it in the patient navigation.
+    if (!settings?.enabled) return { visible: false as const };
 
     return {
       visible: true as const,
