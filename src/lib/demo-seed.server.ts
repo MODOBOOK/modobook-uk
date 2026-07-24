@@ -19,6 +19,7 @@ const IMG = {
   t2: "/__l5e/assets-v1/93115707-117b-4948-aa28-a1e99ffdd109/demo-t2.jpg",
   t3: "/__l5e/assets-v1/baf3572c-2869-431f-872a-c4e0f9e2e248/demo-t3.jpg",
   gallery1: "/__l5e/assets-v1/2fd0e57d-cf1d-4e4c-8f15-0fbf357b3ab7/demo-g1.jpg",
+  logo: "/__l5e/assets-v1/a087508a-6366-4786-99f0-eea05a33c8a3/demo-clinic-logo.png",
 };
 
 async function findOrCreateAuthUser(
@@ -493,6 +494,8 @@ export async function seedDemoClinic(admin: Admin) {
   // Theme — hero + warm sand palette
   const themePayload = {
     profile_id: profileId!,
+    logo_url: IMG.logo,
+    header_logo_size: "medium",
     hero_image_url: IMG.hero,
     hero_carousel_enabled: true,
     hero_carousel_urls: [IMG.hero, IMG.gallery1, IMG.t2] as unknown as any,
@@ -703,6 +706,38 @@ export async function seedDemoClinic(admin: Admin) {
   }
   await ensureAppointment(past, t1, "Anti-wrinkle consultation", "completed");
   await ensureAppointment(upcoming, t2, "Lip filler — 1ml", "confirmed");
+
+  // Reward points — seed the demo patient with a 1000-point balance so the
+  // Rewards tab and referral-code redemption flow have something to show.
+  {
+    const { data: existingSeed } = await admin
+      .from("patient_points_ledger")
+      .select("id")
+      .eq("patient_user_id", patientUserId)
+      .eq("clinic_profile_id", practitionerUserId)
+      .eq("reason", "demo_seed")
+      .maybeSingle();
+    if (!existingSeed?.id) {
+      // Zero out any prior balance so we always land on exactly 1000.
+      const { data: prior } = await admin
+        .from("patient_points_ledger")
+        .select("delta")
+        .eq("patient_user_id", patientUserId)
+        .eq("clinic_profile_id", practitionerUserId);
+      const currentBalance = (prior ?? []).reduce((s, r: any) => s + Number(r.delta ?? 0), 0);
+      const delta = 1000 - currentBalance;
+      if (delta !== 0) {
+        await admin.from("patient_points_ledger").insert({
+          patient_user_id: patientUserId,
+          clinic_profile_id: practitionerUserId,
+          delta,
+          reason: "demo_seed",
+          note: "Demo starter balance",
+        });
+      }
+    }
+  }
+
 
   return {
     ok: true,
