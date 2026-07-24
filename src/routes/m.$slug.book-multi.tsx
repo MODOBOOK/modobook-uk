@@ -331,6 +331,7 @@ function MultiBookPage() {
   const monthFn = useServerFn(getMonthAvailability);
   const reqFn = useServerFn(requestMultiBooking);
   const redeemGc = useServerFn(redeemGiftCardCode);
+  const consumePts = useServerFn(consumePointsRedemption);
   
 
   const monthQuery = useQuery({
