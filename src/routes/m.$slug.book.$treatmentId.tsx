@@ -11,7 +11,7 @@ import { BookingProgress, type BookingStep } from "@/components/BookingProgress"
 
 import { listAddonsForBooking, type PublicAddon } from "@/lib/addons.functions";
 import { ensurePatient, getMyPatient, updateMyPatient } from "@/lib/patient.functions";
-import { linkReferralToAppointment } from "@/lib/rewards.functions";
+import { linkReferralToAppointment, consumePointsRedemption } from "@/lib/rewards.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -211,6 +211,8 @@ function BookTreatmentPage() {
   const reqFn = useServerFn(requestBooking);
   const linkReferral = useServerFn(linkReferralToAppointment);
   const redeemGc = useServerFn(redeemGiftCardCode);
+  const consumePts = useServerFn(consumePointsRedemption);
+
 
 
   // Add-ons for this treatment
@@ -503,6 +505,13 @@ function BookTreatmentPage() {
           await redeemGc({ data: { slug, code: discount.code, amount: discountOff, appointment_id: res.id } });
         }
       } catch { /* non-fatal */ }
+      // Deduct redeemed loyalty points (idempotent per appointment).
+      try {
+        if (discount?.isPointsRedemption && discount.pointsToUse && discount.pointsToUse > 0 && res.id) {
+          await consumePts({ data: { slug, code: discount.code, appointmentId: res.id, pointsToUse: discount.pointsToUse } });
+        }
+      } catch { /* non-fatal */ }
+
       const emb = (res as { embeddedPayment?: {
         clientSecret: string;
         paymentIntentId: string;

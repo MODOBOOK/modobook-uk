@@ -2,10 +2,11 @@ import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { validateDiscountCode } from "@/lib/discounts.functions";
 import { previewGiftCardCode } from "@/lib/gift-cards.functions";
+import { previewPointsRedemption } from "@/lib/rewards.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tag, X, CheckCircle2, Gift } from "lucide-react";
+import { Tag, X, CheckCircle2, Gift, Sparkles } from "lucide-react";
 
 export type AppliedDiscount = {
   id: string;
@@ -16,7 +17,11 @@ export type AppliedDiscount = {
   /** When set, this is a gift card and should be redeemed after booking. */
   giftCardPurchaseId?: string;
   isGiftCard?: boolean;
+  /** When set, this is a points redemption; consume after booking. */
+  isPointsRedemption?: boolean;
+  pointsToUse?: number;
 };
+
 
 export function DiscountCodeBox({
   slug,
@@ -38,6 +43,7 @@ export function DiscountCodeBox({
 }) {
   const validate = useServerFn(validateDiscountCode);
   const previewGc = useServerFn(previewGiftCardCode);
+  const previewPoints = useServerFn(previewPointsRedemption);
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -76,22 +82,48 @@ export function DiscountCodeBox({
       })) as
         | { id: string; code: string; kind: "value" | "treatment" | "package"; remaining: number; applied: number }
         | { error: string };
-      if ("error" in gc) {
-        setError(res ? "This code doesn't apply to your selected treatments." : gc.error);
+      if (!("error" in gc)) {
+        onChange({
+          id: gc.id,
+          code: gc.code,
+          kind: "fixed",
+          amount: Number(gc.applied),
+          // Apply against every treatment in the cart so downstream math treats
+          // the gift card credit as a flat amount off the total.
+          applies_to_treatment_ids: treatmentIds,
+          giftCardPurchaseId: gc.id,
+          isGiftCard: true,
+        });
+        setCode("");
         return;
       }
-      onChange({
-        id: gc.id,
-        code: gc.code,
-        kind: "fixed",
-        amount: Number(gc.applied),
-        // Apply against every treatment in the cart so downstream math treats
-        // the gift card credit as a flat amount off the total.
-        applies_to_treatment_ids: treatmentIds,
-        giftCardPurchaseId: gc.id,
-        isGiftCard: true,
-      });
-      setCode("");
+
+      // 3) Fall back to the signed-in patient's own referral code — redeem
+      //    their loyalty points balance against this booking.
+      try {
+        const pts = await previewPoints({
+          data: {
+            slug,
+            code: raw,
+            totalPennies: Math.max(0, Math.round(Number(total ?? 0) * 100)),
+          },
+        });
+        if (pts?.ok) {
+          onChange({
+            id: `points-${pts.code}`,
+            code: pts.code,
+            kind: "fixed",
+            amount: pts.pennies / 100,
+            applies_to_treatment_ids: treatmentIds,
+            isPointsRedemption: true,
+            pointsToUse: pts.pointsToUse,
+          });
+          setCode("");
+          return;
+        }
+      } catch { /* fall through to error */ }
+
+      setError(res ? "This code doesn't apply to your selected treatments." : gc.error);
     } catch (e) {
       setError((e as Error).message || "Could not validate code");
     } finally {
@@ -99,19 +131,24 @@ export function DiscountCodeBox({
     }
   }
 
+
   if (value) {
     const isGift = value.isGiftCard;
+    const isPts = value.isPointsRedemption;
     return (
       <div className="flex items-center justify-between gap-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2.5">
         <div className="flex min-w-0 items-center gap-2 text-sm text-emerald-800">
-          {isGift ? <Gift className="h-4 w-4 shrink-0" /> : <CheckCircle2 className="h-4 w-4 shrink-0" />}
+          {isPts ? <Sparkles className="h-4 w-4 shrink-0" /> : isGift ? <Gift className="h-4 w-4 shrink-0" /> : <CheckCircle2 className="h-4 w-4 shrink-0" />}
           <span className="truncate">
             <span className="font-semibold">{value.code}</span>{" "}
-            {isGift
+            {isPts
+              ? `points redeemed · £${value.amount.toFixed(2)} off${value.pointsToUse ? ` (${value.pointsToUse} pts)` : ""}`
+              : isGift
               ? `gift card · £${value.amount.toFixed(2)} credit`
               : `applied · ${value.kind === "percent" ? `${value.amount}% off` : `£${value.amount.toFixed(2)} off`}`}
           </span>
         </div>
+
         <button
           type="button"
           onClick={() => onChange(null)}

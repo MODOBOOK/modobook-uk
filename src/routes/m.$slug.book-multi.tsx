@@ -30,7 +30,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Clock, MapPin, CheckCircle2, LogIn, UserPlus, UserCheck, ChevronLeft, ChevronRight, CalendarDays } from "lucide-react";
 import { DiscountCodeBox, type AppliedDiscount } from "@/components/DiscountCodeBox";
 import { ReferralCodeInput } from "@/components/ReferralCodeInput";
-import { linkReferralToAppointment } from "@/lib/rewards.functions";
+import { linkReferralToAppointment, consumePointsRedemption } from "@/lib/rewards.functions";
 import { redeemGiftCardCode } from "@/lib/gift-cards.functions";
 import { AddressAutocomplete } from "@/components/AddressAutocomplete";
 
@@ -331,6 +331,7 @@ function MultiBookPage() {
   const monthFn = useServerFn(getMonthAvailability);
   const reqFn = useServerFn(requestMultiBooking);
   const redeemGc = useServerFn(redeemGiftCardCode);
+  const consumePts = useServerFn(consumePointsRedemption);
   
 
   const monthQuery = useQuery({
@@ -557,6 +558,15 @@ function MultiBookPage() {
           await redeemGc({ data: { slug, code: discount.code, amount: discountTotal, appointment_id: firstId } });
         }
       } catch { /* non-fatal */ }
+
+      // Deduct redeemed loyalty points against the first appointment.
+      try {
+        const firstId = res.appointments?.[0]?.id;
+        if (discount?.isPointsRedemption && discount.pointsToUse && discount.pointsToUse > 0 && firstId) {
+          await consumePts({ data: { slug, code: discount.code, appointmentId: firstId, pointsToUse: discount.pointsToUse } });
+        }
+      } catch { /* non-fatal */ }
+
 
 
 
