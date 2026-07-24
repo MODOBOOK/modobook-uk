@@ -381,15 +381,15 @@ export async function seedDemoClinic(admin: Admin) {
   }
   await ensurePackage(
     "Glow package — 3 facials",
-    24000,
+    240,
     3,
     [t8],
-    "Three signature facials, spaced 4–6 weeks apart. Save £6 vs booking individually.",
+    "Three signature facials, spaced 4–6 weeks apart. Save £45 vs booking individually.",
     IMG.t2,
   );
   await ensurePackage(
     "Bridal radiance",
-    72000,
+    720,
     4,
     [t6, t8],
     "Two Profhilo sessions plus two signature facials — timed for a 12-week glow build up to the day.",
