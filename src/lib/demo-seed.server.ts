@@ -19,6 +19,7 @@ const IMG = {
   t2: "/__l5e/assets-v1/93115707-117b-4948-aa28-a1e99ffdd109/demo-t2.jpg",
   t3: "/__l5e/assets-v1/baf3572c-2869-431f-872a-c4e0f9e2e248/demo-t3.jpg",
   gallery1: "/__l5e/assets-v1/2fd0e57d-cf1d-4e4c-8f15-0fbf357b3ab7/demo-g1.jpg",
+  logo: "/__l5e/assets-v1/a087508a-6366-4786-99f0-eea05a33c8a3/demo-clinic-logo.png",
 };
 
 async function findOrCreateAuthUser(
