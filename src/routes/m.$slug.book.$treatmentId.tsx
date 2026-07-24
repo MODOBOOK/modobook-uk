@@ -211,6 +211,8 @@ function BookTreatmentPage() {
   const reqFn = useServerFn(requestBooking);
   const linkReferral = useServerFn(linkReferralToAppointment);
   const redeemGc = useServerFn(redeemGiftCardCode);
+  const consumePts = useServerFn(consumePointsRedemption);
+
 
 
   // Add-ons for this treatment
