@@ -43,6 +43,7 @@ export function DiscountCodeBox({
 }) {
   const validate = useServerFn(validateDiscountCode);
   const previewGc = useServerFn(previewGiftCardCode);
+  const previewPoints = useServerFn(previewPointsRedemption);
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -81,28 +82,55 @@ export function DiscountCodeBox({
       })) as
         | { id: string; code: string; kind: "value" | "treatment" | "package"; remaining: number; applied: number }
         | { error: string };
-      if ("error" in gc) {
-        setError(res ? "This code doesn't apply to your selected treatments." : gc.error);
+      if (!("error" in gc)) {
+        onChange({
+          id: gc.id,
+          code: gc.code,
+          kind: "fixed",
+          amount: Number(gc.applied),
+          // Apply against every treatment in the cart so downstream math treats
+          // the gift card credit as a flat amount off the total.
+          applies_to_treatment_ids: treatmentIds,
+          giftCardPurchaseId: gc.id,
+          isGiftCard: true,
+        });
+        setCode("");
         return;
       }
-      onChange({
-        id: gc.id,
-        code: gc.code,
-        kind: "fixed",
-        amount: Number(gc.applied),
-        // Apply against every treatment in the cart so downstream math treats
-        // the gift card credit as a flat amount off the total.
-        applies_to_treatment_ids: treatmentIds,
-        giftCardPurchaseId: gc.id,
-        isGiftCard: true,
-      });
-      setCode("");
+
+      // 3) Fall back to the signed-in patient's own referral code — redeem
+      //    their loyalty points balance against this booking.
+      try {
+        const pts = await previewPoints({
+          data: {
+            slug,
+            code: raw,
+            totalPennies: Math.max(0, Math.round(Number(total ?? 0) * 100)),
+          },
+        });
+        if (pts?.ok) {
+          onChange({
+            id: `points-${pts.code}`,
+            code: pts.code,
+            kind: "fixed",
+            amount: pts.pennies / 100,
+            applies_to_treatment_ids: treatmentIds,
+            isPointsRedemption: true,
+            pointsToUse: pts.pointsToUse,
+          });
+          setCode("");
+          return;
+        }
+      } catch { /* fall through to error */ }
+
+      setError(res ? "This code doesn't apply to your selected treatments." : gc.error);
     } catch (e) {
       setError((e as Error).message || "Could not validate code");
     } finally {
       setBusy(false);
     }
   }
+
 
   if (value) {
     const isGift = value.isGiftCard;
