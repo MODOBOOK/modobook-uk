@@ -270,7 +270,7 @@ export async function seedDemoClinic(admin: Admin) {
   }
   const t1 = await ensureTreatment(
     "Anti-wrinkle consultation",
-    15000,
+    25,
     30,
     IMG.t1,
     "A relaxed 30-minute conversation to understand what you'd like from treatment, review your medical history and map a plan together.",
@@ -278,7 +278,7 @@ export async function seedDemoClinic(admin: Admin) {
   );
   const t2 = await ensureTreatment(
     "Lip filler — 1ml",
-    22000,
+    220,
     45,
     IMG.t2,
     "Subtle, natural-looking enhancement using premium hyaluronic acid filler. Includes numbing, treatment and a follow-up review.",
@@ -286,7 +286,7 @@ export async function seedDemoClinic(admin: Admin) {
   );
   const t3 = await ensureTreatment(
     "Skin booster review",
-    8500,
+    85,
     20,
     IMG.t3,
     "A 20-minute review appointment to assess results and plan the next stage of your skin journey.",
@@ -294,7 +294,7 @@ export async function seedDemoClinic(admin: Admin) {
   );
   await ensureTreatment(
     "Anti-wrinkle — 3 areas",
-    27500,
+    275,
     30,
     IMG.t1,
     "Forehead, frown and crow's feet. Includes a two-week review and any small adjustments.",
@@ -302,7 +302,7 @@ export async function seedDemoClinic(admin: Admin) {
   );
   await ensureTreatment(
     "Anti-wrinkle — 2 areas",
-    22000,
+    220,
     25,
     IMG.t1,
     "Choose any two upper-face areas. Includes review.",
@@ -310,7 +310,7 @@ export async function seedDemoClinic(admin: Admin) {
   );
   const t6 = await ensureTreatment(
     "Profhilo® — course of 2",
-    48000,
+    480,
     40,
     IMG.t3,
     "Two Profhilo sessions spaced four weeks apart to deeply hydrate and improve skin quality.",
@@ -325,7 +325,7 @@ export async function seedDemoClinic(admin: Admin) {
   );
   await ensureTreatment(
     "Polynucleotides — course of 3",
-    54000,
+    540,
     45,
     IMG.t3,
     "Three sessions of regenerative polynucleotide therapy, ideal for under-eye and skin quality.",
@@ -339,7 +339,7 @@ export async function seedDemoClinic(admin: Admin) {
   );
   const t8 = await ensureTreatment(
     "Signature facial",
-    9500,
+    95,
     60,
     IMG.t2,
     "A one-hour skin-health facial with cleanse, gentle exfoliation, mask and LED. A lovely reset.",
