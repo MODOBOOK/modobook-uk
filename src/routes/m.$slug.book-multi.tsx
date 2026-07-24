@@ -559,6 +559,15 @@ function MultiBookPage() {
         }
       } catch { /* non-fatal */ }
 
+      // Deduct redeemed loyalty points against the first appointment.
+      try {
+        const firstId = res.appointments?.[0]?.id;
+        if (discount?.isPointsRedemption && discount.pointsToUse && discount.pointsToUse > 0 && firstId) {
+          await consumePts({ data: { slug, code: discount.code, appointmentId: firstId, pointsToUse: discount.pointsToUse } });
+        }
+      } catch { /* non-fatal */ }
+
+
 
 
     } catch (e) {
