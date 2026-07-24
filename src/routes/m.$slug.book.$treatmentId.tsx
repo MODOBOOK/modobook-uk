@@ -505,6 +505,13 @@ function BookTreatmentPage() {
           await redeemGc({ data: { slug, code: discount.code, amount: discountOff, appointment_id: res.id } });
         }
       } catch { /* non-fatal */ }
+      // Deduct redeemed loyalty points (idempotent per appointment).
+      try {
+        if (discount?.isPointsRedemption && discount.pointsToUse && discount.pointsToUse > 0 && res.id) {
+          await consumePts({ data: { slug, code: discount.code, appointmentId: res.id, pointsToUse: discount.pointsToUse } });
+        }
+      } catch { /* non-fatal */ }
+
       const emb = (res as { embeddedPayment?: {
         clientSecret: string;
         paymentIntentId: string;
