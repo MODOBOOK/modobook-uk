@@ -707,6 +707,38 @@ export async function seedDemoClinic(admin: Admin) {
   await ensureAppointment(past, t1, "Anti-wrinkle consultation", "completed");
   await ensureAppointment(upcoming, t2, "Lip filler — 1ml", "confirmed");
 
+  // Reward points — seed the demo patient with a 1000-point balance so the
+  // Rewards tab and referral-code redemption flow have something to show.
+  {
+    const { data: existingSeed } = await admin
+      .from("patient_points_ledger")
+      .select("id")
+      .eq("patient_user_id", patientUserId)
+      .eq("clinic_profile_id", practitionerUserId)
+      .eq("reason", "demo_seed")
+      .maybeSingle();
+    if (!existingSeed?.id) {
+      // Zero out any prior balance so we always land on exactly 1000.
+      const { data: prior } = await admin
+        .from("patient_points_ledger")
+        .select("delta")
+        .eq("patient_user_id", patientUserId)
+        .eq("clinic_profile_id", practitionerUserId);
+      const currentBalance = (prior ?? []).reduce((s, r: any) => s + Number(r.delta ?? 0), 0);
+      const delta = 1000 - currentBalance;
+      if (delta !== 0) {
+        await admin.from("patient_points_ledger").insert({
+          patient_user_id: patientUserId,
+          clinic_profile_id: practitionerUserId,
+          delta,
+          reason: "demo_seed",
+          note: "Demo starter balance",
+        });
+      }
+    }
+  }
+
+
   return {
     ok: true,
     profileId,
