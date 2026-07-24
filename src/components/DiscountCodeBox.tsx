@@ -134,17 +134,21 @@ export function DiscountCodeBox({
 
   if (value) {
     const isGift = value.isGiftCard;
+    const isPts = value.isPointsRedemption;
     return (
       <div className="flex items-center justify-between gap-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2.5">
         <div className="flex min-w-0 items-center gap-2 text-sm text-emerald-800">
-          {isGift ? <Gift className="h-4 w-4 shrink-0" /> : <CheckCircle2 className="h-4 w-4 shrink-0" />}
+          {isPts ? <Sparkles className="h-4 w-4 shrink-0" /> : isGift ? <Gift className="h-4 w-4 shrink-0" /> : <CheckCircle2 className="h-4 w-4 shrink-0" />}
           <span className="truncate">
             <span className="font-semibold">{value.code}</span>{" "}
-            {isGift
+            {isPts
+              ? `points redeemed · £${value.amount.toFixed(2)} off${value.pointsToUse ? ` (${value.pointsToUse} pts)` : ""}`
+              : isGift
               ? `gift card · £${value.amount.toFixed(2)} credit`
               : `applied · ${value.kind === "percent" ? `${value.amount}% off` : `£${value.amount.toFixed(2)} off`}`}
           </span>
         </div>
+
         <button
           type="button"
           onClick={() => onChange(null)}
