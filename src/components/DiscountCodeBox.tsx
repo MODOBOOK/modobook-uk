@@ -2,10 +2,11 @@ import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { validateDiscountCode } from "@/lib/discounts.functions";
 import { previewGiftCardCode } from "@/lib/gift-cards.functions";
+import { previewPointsRedemption } from "@/lib/rewards.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tag, X, CheckCircle2, Gift } from "lucide-react";
+import { Tag, X, CheckCircle2, Gift, Sparkles } from "lucide-react";
 
 export type AppliedDiscount = {
   id: string;
@@ -16,7 +17,11 @@ export type AppliedDiscount = {
   /** When set, this is a gift card and should be redeemed after booking. */
   giftCardPurchaseId?: string;
   isGiftCard?: boolean;
+  /** When set, this is a points redemption; consume after booking. */
+  isPointsRedemption?: boolean;
+  pointsToUse?: number;
 };
+
 
 export function DiscountCodeBox({
   slug,
