@@ -11,7 +11,7 @@ import { BookingProgress, type BookingStep } from "@/components/BookingProgress"
 
 import { listAddonsForBooking, type PublicAddon } from "@/lib/addons.functions";
 import { ensurePatient, getMyPatient, updateMyPatient } from "@/lib/patient.functions";
-import { linkReferralToAppointment } from "@/lib/rewards.functions";
+import { linkReferralToAppointment, consumePointsRedemption } from "@/lib/rewards.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
