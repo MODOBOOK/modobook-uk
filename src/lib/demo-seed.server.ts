@@ -674,24 +674,41 @@ export async function seedDemoClinic(admin: Admin) {
     return d.toISOString().slice(11, 19);
   }
 
-  async function ensureAppointment(when: Date, treatmentId: string, treatmentName: string, status: string) {
+  async function ensureAppointment(
+    when: Date,
+    treatmentId: string,
+    treatmentName: string,
+    status: string,
+    totalAmount: number,
+    patientName: string = DEMO_PATIENT_NAME,
+    patientEmail: string = DEMO_PATIENT_EMAIL,
+    linkPatientUser: boolean = true,
+  ) {
     const date = ymd(when);
     const start = hms(when);
     const { data: existing } = await admin
       .from("appointments")
-      .select("id")
+      .select("id, total_amount")
       .eq("profile_id", profileId!)
-      .eq("patient_user_id", patientUserId)
       .eq("scheduled_date", date)
       .eq("start_time", start)
+      .eq("patient_email", patientEmail)
       .maybeSingle();
-    if (existing?.id) return existing.id;
+    if (existing?.id) {
+      if (existing.total_amount == null || Number(existing.total_amount) === 0) {
+        await admin
+          .from("appointments")
+          .update({ total_amount: totalAmount, base_amount: totalAmount, payment_status: status === "completed" ? "paid" : "pending" })
+          .eq("id", existing.id);
+      }
+      return existing.id;
+    }
     const end = hms(new Date(when.getTime() + 30 * 60 * 1000));
     const { error } = await admin.from("appointments").insert({
       profile_id: profileId!,
-      patient_user_id: patientUserId,
-      patient_name: DEMO_PATIENT_NAME,
-      patient_email: DEMO_PATIENT_EMAIL,
+      patient_user_id: linkPatientUser ? patientUserId : null,
+      patient_name: patientName,
+      patient_email: patientEmail,
       location_id: locationId!,
       treatment_id: treatmentId,
       treatment_name_snapshot: treatmentName,
@@ -699,13 +716,52 @@ export async function seedDemoClinic(admin: Admin) {
       start_time: start,
       end_time: end,
       status,
+      base_amount: totalAmount,
+      total_amount: totalAmount,
+      payment_status: status === "completed" ? "paid" : "pending",
       is_demo: true,
     });
     if (error) throw error;
     return null;
   }
-  await ensureAppointment(past, t1, "Anti-wrinkle consultation", "completed");
-  await ensureAppointment(upcoming, t2, "Lip filler — 1ml", "confirmed");
+  await ensureAppointment(past, t1, "Anti-wrinkle consultation", "completed", 25);
+  await ensureAppointment(upcoming, t2, "Lip filler — 1ml", "confirmed", 220);
+
+  // Historical revenue — spread completed appointments across the current
+  // month so the Sales dashboard has realistic figures to display.
+  const historyPatients: Array<{ name: string; email: string }> = [
+    { name: "Ava Thompson", email: "ava.thompson+demo@modobook.uk" },
+    { name: "Chloe Baxter", email: "chloe.baxter+demo@modobook.uk" },
+    { name: "Isla Ferguson", email: "isla.ferguson+demo@modobook.uk" },
+    { name: "Sophie Nair", email: "sophie.nair+demo@modobook.uk" },
+    { name: "Grace Lin", email: "grace.lin+demo@modobook.uk" },
+    { name: "Ruby Ahmed", email: "ruby.ahmed+demo@modobook.uk" },
+    { name: "Ella Doyle", email: "ella.doyle+demo@modobook.uk" },
+    { name: "Nina Park", email: "nina.park+demo@modobook.uk" },
+  ];
+  const historyMenu: Array<{ id: string; name: string; price: number }> = [
+    { id: t2, name: "Lip filler — 1ml", price: 220 },
+    { id: t8, name: "Signature facial", price: 95 },
+    { id: t6, name: "Profhilo® — course of 2", price: 480 },
+    { id: t3, name: "Skin booster review", price: 85 },
+    { id: t1, name: "Anti-wrinkle consultation", price: 25 },
+  ];
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const todayDay = now.getDate();
+  // Two per week for the past ~4 weeks up to yesterday, at varied times.
+  const dayOffsets = [1, 3, 5, 7, 10, 12, 14, 17, 20, 23, 26, 28];
+  let idx = 0;
+  for (const offset of dayOffsets) {
+    const d = new Date(now.getFullYear(), now.getMonth(), Math.max(1, todayDay - offset), 10 + ((idx * 2) % 7), (idx % 2) * 30, 0);
+    if (d < startOfMonth || d >= now) {
+      idx++;
+      continue;
+    }
+    const item = historyMenu[idx % historyMenu.length];
+    const patient = historyPatients[idx % historyPatients.length];
+    await ensureAppointment(d, item.id, item.name, "completed", item.price, patient.name, patient.email, false);
+    idx++;
+  }
 
   // Reward points — seed the demo patient with a 1000-point balance so the
   // Rewards tab and referral-code redemption flow have something to show.
