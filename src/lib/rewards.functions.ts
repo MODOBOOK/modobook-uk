@@ -341,6 +341,144 @@ export const getMyRewardsForClinic = createServerFn({ method: "POST" })
     };
   });
 
+// -------------------- Patient: redeem points via own code at booking --------------------
+
+const PointsPreviewSchema = z.object({
+  slug: z.string().trim().min(1).max(120),
+  code: z.string().trim().min(3).max(32),
+  totalPennies: z.number().int().min(0).max(10_000_000),
+});
+
+/**
+ * Signed-in patient enters their own referral code at checkout to redeem
+ * their points balance as £ off. Returns the pennies discount plus the
+ * points that would be spent — the caller applies them like a fixed
+ * discount and calls consumePointsRedemption after the appointment is
+ * created.
+ */
+export const previewPointsRedemption = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: z.infer<typeof PointsPreviewSchema>) => PointsPreviewSchema.parse(data))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const code = data.code.toUpperCase();
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("user_id")
+      .eq("slug", data.slug)
+      .maybeSingle();
+    if (!profile) return { ok: false as const, reason: "clinic_not_found" };
+    const clinicProfileId = profile.user_id as string;
+
+    const { data: codeRow } = await supabase
+      .from("patient_referral_codes")
+      .select("patient_user_id, clinic_profile_id")
+      .eq("code", code)
+      .maybeSingle();
+    if (!codeRow) return { ok: false as const, reason: "unknown_code" };
+    if (codeRow.clinic_profile_id !== clinicProfileId)
+      return { ok: false as const, reason: "wrong_clinic" };
+    if (codeRow.patient_user_id !== userId)
+      return { ok: false as const, reason: "not_your_code" };
+
+    const { data: settings } = await supabase
+      .from("clinic_referral_settings")
+      .select("enabled, points_redemption_enabled, points_per_pound_redeem")
+      .eq("clinic_profile_id", clinicProfileId)
+      .maybeSingle();
+    if (!settings?.enabled) return { ok: false as const, reason: "program_off" };
+    if (!settings.points_redemption_enabled)
+      return { ok: false as const, reason: "redemption_off" };
+    const ppp = Number(settings.points_per_pound_redeem ?? 0);
+    if (!ppp || ppp <= 0) return { ok: false as const, reason: "redemption_off" };
+
+    const { data: pointsRows } = await supabase
+      .from("patient_points_ledger")
+      .select("delta")
+      .eq("patient_user_id", userId)
+      .eq("clinic_profile_id", clinicProfileId);
+    const balance = (pointsRows ?? []).reduce((s, r) => s + (r.delta ?? 0), 0);
+    if (balance <= 0) return { ok: false as const, reason: "no_points" };
+
+    // Cap the redemption to the current cart total.
+    const maxPoundsFromPoints = Math.floor(balance / ppp);
+    const maxPenniesFromPoints = maxPoundsFromPoints * 100;
+    const pennies = Math.max(0, Math.min(maxPenniesFromPoints, data.totalPennies));
+    if (pennies <= 0) return { ok: false as const, reason: "no_points" };
+    const pointsToUse = Math.ceil(pennies / 100) * ppp;
+
+    return {
+      ok: true as const,
+      code,
+      pennies,
+      pointsToUse,
+      pointsBalance: balance,
+      pointsPerPound: ppp,
+    };
+  });
+
+const PointsConsumeSchema = z.object({
+  slug: z.string().trim().min(1).max(120),
+  code: z.string().trim().min(3).max(32),
+  appointmentId: z.string().uuid(),
+  pointsToUse: z.number().int().min(1).max(10_000_000),
+});
+
+/**
+ * Deducts the redeemed points from the patient's ledger after the
+ * appointment row exists. Idempotent per appointment.
+ */
+export const consumePointsRedemption = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: z.infer<typeof PointsConsumeSchema>) => PointsConsumeSchema.parse(data))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("user_id")
+      .eq("slug", data.slug)
+      .maybeSingle();
+    if (!profile) return { ok: false, reason: "clinic_not_found" as const };
+    const clinicProfileId = profile.user_id as string;
+
+    const { data: codeRow } = await supabase
+      .from("patient_referral_codes")
+      .select("patient_user_id, clinic_profile_id")
+      .eq("code", data.code.toUpperCase())
+      .maybeSingle();
+    if (!codeRow || codeRow.patient_user_id !== userId || codeRow.clinic_profile_id !== clinicProfileId) {
+      return { ok: false, reason: "not_your_code" as const };
+    }
+
+    // Idempotency: skip if we've already recorded a redeem for this appointment.
+    const { data: existing } = await supabase
+      .from("patient_points_ledger")
+      .select("id")
+      .eq("patient_user_id", userId)
+      .eq("clinic_profile_id", clinicProfileId)
+      .eq("ref_type", "appointment")
+      .eq("ref_id", data.appointmentId)
+      .eq("reason", "redeem")
+      .maybeSingle();
+    if (existing) return { ok: true, deduped: true };
+
+    const { error } = await supabase.from("patient_points_ledger").insert({
+      patient_user_id: userId,
+      clinic_profile_id: clinicProfileId,
+      delta: -Math.abs(data.pointsToUse),
+      reason: "redeem",
+      ref_type: "appointment",
+      ref_id: data.appointmentId,
+      note: `Redeemed with code ${data.code.toUpperCase()}`,
+    });
+    if (error) throw error;
+    return { ok: true };
+  });
+
+
+
 // -------------------- Public: resolve a share code --------------------
 
 /**
