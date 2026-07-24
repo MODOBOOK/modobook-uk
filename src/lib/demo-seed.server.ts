@@ -494,6 +494,8 @@ export async function seedDemoClinic(admin: Admin) {
   // Theme — hero + warm sand palette
   const themePayload = {
     profile_id: profileId!,
+    logo_url: IMG.logo,
+    header_logo_size: "medium",
     hero_image_url: IMG.hero,
     hero_carousel_enabled: true,
     hero_carousel_urls: [IMG.hero, IMG.gallery1, IMG.t2] as unknown as any,
