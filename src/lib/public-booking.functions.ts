@@ -381,7 +381,13 @@ export const getDayAvailability = createServerFn({ method: "GET" })
       .filter((b) => !b.location_id || !data.locationId || b.location_id === data.locationId)
       .map((b) => ({ start_time: b.start_time, end_time: b.end_time, location_id: b.location_id, status: "blocked" }));
 
-    return { isBlocked, busy: [...paddedAppts, ...blockedBusy], overrides: overrides ?? [] };
+    // Overrides with a location only apply at that location; null = every location.
+    const scopedOverrides = (overrides ?? []).filter(
+      (o) => !o.location_id || !data.locationId || o.location_id === data.locationId,
+    );
+
+    return { isBlocked, busy: [...paddedAppts, ...blockedBusy], overrides: scopedOverrides };
+
   });
 
 
