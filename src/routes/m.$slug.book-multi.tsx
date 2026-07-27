@@ -289,7 +289,10 @@ function MultiBookPage() {
 
   
   const termsHtml = (ctx as { termsHtml?: string | null }).termsHtml ?? null;
-  const termsRequired = Boolean((ctx as { termsRequired?: boolean }).termsRequired);
+  // Only enforce the tick when the practitioner actually has terms text to show —
+  // otherwise there is no checkbox on the page and checkout would be blocked forever.
+  const termsRequired =
+    Boolean((ctx as { termsRequired?: boolean }).termsRequired) && Boolean(termsHtml && termsHtml.trim());
   const [authChoice, setAuthChoice] = useState<"pending" | "guest" | "signed-in">("pending");
   const [patientUserId, setPatientUserId] = useState<string | null>(null);
   const ensure = useServerFn(ensurePatient);
