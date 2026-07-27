@@ -143,7 +143,8 @@ function AvailabilityPage() {
     start: "09:00",
     end: "17:00",
     interval: "30",
-    location_id: "none",
+    location_ids: [] as string[],
+
     practitioner_id: "none",
     weeks: [true, false, false, false] as boolean[], // A,B,C,D
   });
