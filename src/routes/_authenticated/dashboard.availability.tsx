@@ -300,14 +300,17 @@ function AvailabilityPage() {
   }
 
   async function submitTimeOff() {
-    const locId = blLoc === "none" ? null : blLoc;
+    // Empty selection = close every location; otherwise one row per chosen location.
+    const targets: (string | null)[] = blLocs.length ? blLocs : [null];
     const reason = blReason || undefined;
     setSavingBl(true);
     try {
       if (blMode === "time") {
         if (!blTimeDate) { toast.error("Pick a date"); return; }
         if (blTimeStart >= blTimeEnd) { toast.error("End time must be after start"); return; }
-        await addBlT({ data: { date: fmtISO(blTimeDate), start_time: blTimeStart, end_time: blTimeEnd, reason, location_id: locId } });
+        for (const locId of targets) {
+          await addBlT({ data: { date: fmtISO(blTimeDate), start_time: blTimeStart, end_time: blTimeEnd, reason, location_id: locId } });
+        }
         toast.success("Time block added");
       } else {
         let dates: string[] = [];
@@ -316,11 +319,15 @@ function AvailabilityPage() {
         else if (blMode === "weeks") dates = Array.from(new Set(blWeekDates.flatMap(weekOf)));
         dates = Array.from(new Set(dates));
         if (dates.length === 0) { toast.error("Pick at least one date"); return; }
-        const existing = new Set(blocked.filter((b) => (b.location_id ?? null) === (locId ?? null)).map((b) => b.date));
-        const toAdd = dates.filter((d) => !existing.has(d));
-        if (toAdd.length === 0) { toast.info("Those dates are already closed"); return; }
-        await Promise.all(toAdd.map((date) => addBl({ data: { date, reason, location_id: locId } })));
-        toast.success(`${toAdd.length} ${toAdd.length === 1 ? "day" : "days"} closed`);
+        let added = 0;
+        for (const locId of targets) {
+          const existing = new Set(blocked.filter((b) => (b.location_id ?? null) === (locId ?? null)).map((b) => b.date));
+          const toAdd = dates.filter((d) => !existing.has(d));
+          await Promise.all(toAdd.map((date) => addBl({ data: { date, reason, location_id: locId } })));
+          added += toAdd.length;
+        }
+        if (added === 0) { toast.info("Those dates are already closed"); return; }
+        toast.success(`${added} ${added === 1 ? "closure" : "closures"} added`);
       }
       setBlReason("");
       setBlDays([]); setBlRange({}); setBlWeekDates([]);
@@ -328,6 +335,7 @@ function AvailabilityPage() {
     } catch (err: any) { toast.error(err?.message ?? "Failed"); }
     finally { setSavingBl(false); }
   }
+
   async function removeBlock(id: string) {
     try { await delBl({ data: { id } }); await refresh(); } catch (err: any) { toast.error(err?.message ?? "Failed"); }
   }
