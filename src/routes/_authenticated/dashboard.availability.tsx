@@ -43,6 +43,51 @@ export const Route = createFileRoute("/_authenticated/dashboard/availability")({
 const DAYS_SHORT = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const DOW_ORDER = [1, 2, 3, 4, 5, 6, 0]; // Mon..Sun mapped to JS DOW
 
+/** Pick one, several, or all locations. Empty selection = applies to every location. */
+function LocationPicker({
+  locations,
+  value,
+  onChange,
+  allLabel = "All locations",
+}: {
+  locations: { id: string; name: string }[];
+  value: string[];
+  onChange: (v: string[]) => void;
+  allLabel?: string;
+}) {
+  if (locations.length === 0) return null;
+  const toggle = (id: string) =>
+    onChange(value.includes(id) ? value.filter((x) => x !== id) : [...value, id]);
+  return (
+    <div className="flex flex-wrap gap-2">
+      <button
+        type="button"
+        onClick={() => onChange([])}
+        className={cn(
+          "rounded-full border px-3 py-1 text-xs",
+          value.length === 0 ? "bg-primary text-primary-foreground border-primary" : "bg-background",
+        )}
+      >
+        {allLabel}
+      </button>
+      {locations.map((l) => (
+        <button
+          key={l.id}
+          type="button"
+          onClick={() => toggle(l.id)}
+          className={cn(
+            "rounded-full border px-3 py-1 text-xs",
+            value.includes(l.id) ? "bg-primary text-primary-foreground border-primary" : "bg-background",
+          )}
+        >
+          {l.name}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+
 type Rule = {
   id: string;
   day_of_week: number;
