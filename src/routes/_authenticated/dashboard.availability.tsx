@@ -713,16 +713,19 @@ function AvailabilityPage() {
                 <Input type="time" value={form.end} onChange={(e) => setForm({ ...form, end: e.target.value })} />
               </div>
             </div>
-            <div>
-              <Label>Location</Label>
-              <Select value={form.location_id} onValueChange={(v) => setForm({ ...form, location_id: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Any location</SelectItem>
-                  {locations.map((l) => <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
+            {locations.length > 0 && (
+              <div>
+                <Label>Locations</Label>
+                <p className="mb-1 text-xs text-muted-foreground">Pick one or several — this shift only opens at the locations you select.</p>
+                <LocationPicker
+                  locations={locations}
+                  value={form.location_ids}
+                  onChange={(v) => setForm({ ...form, location_ids: v })}
+                  allLabel="Every location"
+                />
+              </div>
+            )}
+
             {practitioners.length > 0 && (
               <div>
                 <Label>Practitioner</Label>
