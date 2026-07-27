@@ -206,7 +206,7 @@ function AvailabilityPage() {
     const weeks = Array.from({ length: 4 }, (_, i) => i === weekIdx);
     setForm({
       day_of_week: day, start: "09:00", end: "17:00", interval: "30",
-      location_id: "none", practitioner_id: "none", weeks,
+      location_ids: [], practitioner_id: "none", weeks,
     });
     setDlgOpen(true);
   }
@@ -219,7 +219,7 @@ function AvailabilityPage() {
       start: r.start_time.slice(0, 5),
       end: r.end_time.slice(0, 5),
       interval: String(r.slot_interval),
-      location_id: r.location_id ?? "none",
+      location_ids: r.location_id ? [r.location_id] : [],
       practitioner_id: r.practitioner_id ?? "none",
       weeks,
     });
@@ -231,25 +231,32 @@ function AvailabilityPage() {
     let mask = 0;
     for (let i = 0; i < cycleLength; i++) if (form.weeks[i]) mask |= (1 << i);
     if (mask === 0) { toast.error("Pick at least one week"); return; }
+    // Empty selection = every location (single row with location_id null).
+    const targets: (string | null)[] = form.location_ids.length ? form.location_ids : [null];
     try {
-      await upsert({
-        data: {
-          id: editing?.id,
-          day_of_week: form.day_of_week,
-          start_time: form.start,
-          end_time: form.end,
-          slot_interval: Number(form.interval),
-          location_id: form.location_id === "none" ? null : form.location_id,
-          practitioner_id: form.practitioner_id === "none" ? null : form.practitioner_id,
-          cycle_length: cycleLength,
-          weeks_mask: mask,
-        },
-      });
+      for (let i = 0; i < targets.length; i++) {
+        await upsert({
+          data: {
+            // Only the first target reuses the row being edited; extra
+            // locations become their own shift rows.
+            id: i === 0 ? editing?.id : undefined,
+            day_of_week: form.day_of_week,
+            start_time: form.start,
+            end_time: form.end,
+            slot_interval: Number(form.interval),
+            location_id: targets[i],
+            practitioner_id: form.practitioner_id === "none" ? null : form.practitioner_id,
+            cycle_length: cycleLength,
+            weeks_mask: mask,
+          },
+        });
+      }
       toast.success(editing ? "Shift updated" : "Shift added");
       setDlgOpen(false);
       await refresh();
     } catch (err: any) { toast.error(err?.message ?? "Failed"); }
   }
+
 
   async function removeRule(id: string) {
     try { await del({ data: { id } }); await refresh(); }
