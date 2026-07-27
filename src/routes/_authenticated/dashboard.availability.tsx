@@ -502,16 +502,18 @@ function AvailabilityPage() {
                 <div><Label>Start</Label><Input type="time" value={ovStart} onChange={(e) => setOvStart(e.target.value)} /></div>
                 <div><Label>End</Label><Input type="time" value={ovEnd} onChange={(e) => setOvEnd(e.target.value)} /></div>
                 <div><Label>Slot (min)</Label><Input type="number" min={5} step={5} value={ovInterval} onChange={(e) => setOvInterval(e.target.value)} /></div>
-                <div>
-                  <Label>Location</Label>
-                  <Select value={ovLoc} onValueChange={setOvLoc}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">Any location</SelectItem>
-                      {locations.map((l) => <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
+                {locations.length > 0 && (
+                  <div className="md:col-span-2">
+                    <Label>Locations</Label>
+                    <LocationPicker
+                      locations={locations}
+                      value={ovLocs}
+                      onChange={setOvLocs}
+                      allLabel="Every location"
+                    />
+                  </div>
+                )}
+
                 <Button type="submit"><Plus className="h-4 w-4 mr-1" />Add</Button>
               </form>
               {overrides.length === 0 ? (
