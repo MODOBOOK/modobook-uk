@@ -154,11 +154,12 @@ function AvailabilityPage() {
   const [ovStart, setOvStart] = useState("09:00");
   const [ovEnd, setOvEnd] = useState("13:00");
   const [ovInterval, setOvInterval] = useState("30");
-  const [ovLoc, setOvLoc] = useState<string>("none");
+  const [ovLocs, setOvLocs] = useState<string[]>([]);
 
   
   const [blReason, setBlReason] = useState("");
-  const [blLoc, setBlLoc] = useState<string>("none");
+  const [blLocs, setBlLocs] = useState<string[]>([]);
+
   const [blMode, setBlMode] = useState<"days" | "range" | "weeks" | "time">("days");
   const [blDays, setBlDays] = useState<Date[]>([]);
   const [blRange, setBlRange] = useState<{ from?: Date; to?: Date }>({});
