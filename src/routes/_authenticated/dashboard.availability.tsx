@@ -43,6 +43,51 @@ export const Route = createFileRoute("/_authenticated/dashboard/availability")({
 const DAYS_SHORT = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const DOW_ORDER = [1, 2, 3, 4, 5, 6, 0]; // Mon..Sun mapped to JS DOW
 
+/** Pick one, several, or all locations. Empty selection = applies to every location. */
+function LocationPicker({
+  locations,
+  value,
+  onChange,
+  allLabel = "All locations",
+}: {
+  locations: { id: string; name: string }[];
+  value: string[];
+  onChange: (v: string[]) => void;
+  allLabel?: string;
+}) {
+  if (locations.length === 0) return null;
+  const toggle = (id: string) =>
+    onChange(value.includes(id) ? value.filter((x) => x !== id) : [...value, id]);
+  return (
+    <div className="flex flex-wrap gap-2">
+      <button
+        type="button"
+        onClick={() => onChange([])}
+        className={cn(
+          "rounded-full border px-3 py-1 text-xs",
+          value.length === 0 ? "bg-primary text-primary-foreground border-primary" : "bg-background",
+        )}
+      >
+        {allLabel}
+      </button>
+      {locations.map((l) => (
+        <button
+          key={l.id}
+          type="button"
+          onClick={() => toggle(l.id)}
+          className={cn(
+            "rounded-full border px-3 py-1 text-xs",
+            value.includes(l.id) ? "bg-primary text-primary-foreground border-primary" : "bg-background",
+          )}
+        >
+          {l.name}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+
 type Rule = {
   id: string;
   day_of_week: number;
@@ -98,7 +143,8 @@ function AvailabilityPage() {
     start: "09:00",
     end: "17:00",
     interval: "30",
-    location_id: "none",
+    location_ids: [] as string[],
+
     practitioner_id: "none",
     weeks: [true, false, false, false] as boolean[], // A,B,C,D
   });
@@ -108,11 +154,12 @@ function AvailabilityPage() {
   const [ovStart, setOvStart] = useState("09:00");
   const [ovEnd, setOvEnd] = useState("13:00");
   const [ovInterval, setOvInterval] = useState("30");
-  const [ovLoc, setOvLoc] = useState<string>("none");
+  const [ovLocs, setOvLocs] = useState<string[]>([]);
 
   
   const [blReason, setBlReason] = useState("");
-  const [blLoc, setBlLoc] = useState<string>("none");
+  const [blLocs, setBlLocs] = useState<string[]>([]);
+
   const [blMode, setBlMode] = useState<"days" | "range" | "weeks" | "time">("days");
   const [blDays, setBlDays] = useState<Date[]>([]);
   const [blRange, setBlRange] = useState<{ from?: Date; to?: Date }>({});
@@ -160,7 +207,7 @@ function AvailabilityPage() {
     const weeks = Array.from({ length: 4 }, (_, i) => i === weekIdx);
     setForm({
       day_of_week: day, start: "09:00", end: "17:00", interval: "30",
-      location_id: "none", practitioner_id: "none", weeks,
+      location_ids: [], practitioner_id: "none", weeks,
     });
     setDlgOpen(true);
   }
@@ -173,7 +220,7 @@ function AvailabilityPage() {
       start: r.start_time.slice(0, 5),
       end: r.end_time.slice(0, 5),
       interval: String(r.slot_interval),
-      location_id: r.location_id ?? "none",
+      location_ids: r.location_id ? [r.location_id] : [],
       practitioner_id: r.practitioner_id ?? "none",
       weeks,
     });
@@ -185,25 +232,32 @@ function AvailabilityPage() {
     let mask = 0;
     for (let i = 0; i < cycleLength; i++) if (form.weeks[i]) mask |= (1 << i);
     if (mask === 0) { toast.error("Pick at least one week"); return; }
+    // Empty selection = every location (single row with location_id null).
+    const targets: (string | null)[] = form.location_ids.length ? form.location_ids : [null];
     try {
-      await upsert({
-        data: {
-          id: editing?.id,
-          day_of_week: form.day_of_week,
-          start_time: form.start,
-          end_time: form.end,
-          slot_interval: Number(form.interval),
-          location_id: form.location_id === "none" ? null : form.location_id,
-          practitioner_id: form.practitioner_id === "none" ? null : form.practitioner_id,
-          cycle_length: cycleLength,
-          weeks_mask: mask,
-        },
-      });
+      for (let i = 0; i < targets.length; i++) {
+        await upsert({
+          data: {
+            // Only the first target reuses the row being edited; extra
+            // locations become their own shift rows.
+            id: i === 0 ? editing?.id : undefined,
+            day_of_week: form.day_of_week,
+            start_time: form.start,
+            end_time: form.end,
+            slot_interval: Number(form.interval),
+            location_id: targets[i],
+            practitioner_id: form.practitioner_id === "none" ? null : form.practitioner_id,
+            cycle_length: cycleLength,
+            weeks_mask: mask,
+          },
+        });
+      }
       toast.success(editing ? "Shift updated" : "Shift added");
       setDlgOpen(false);
       await refresh();
     } catch (err: any) { toast.error(err?.message ?? "Failed"); }
   }
+
 
   async function removeRule(id: string) {
     try { await del({ data: { id } }); await refresh(); }
@@ -213,12 +267,16 @@ function AvailabilityPage() {
   async function addOverride(e: React.FormEvent) {
     e.preventDefault();
     if (ovStart >= ovEnd) { toast.error("End time must be after start"); return; }
+    const targets: (string | null)[] = ovLocs.length ? ovLocs : [null];
     try {
-      await addOv({ data: { date: ovDate, start_time: ovStart, end_time: ovEnd, slot_interval: Number(ovInterval), location_id: ovLoc === "none" ? null : ovLoc } });
+      for (const loc of targets) {
+        await addOv({ data: { date: ovDate, start_time: ovStart, end_time: ovEnd, slot_interval: Number(ovInterval), location_id: loc } });
+      }
       toast.success("One-off slot added");
       await refresh();
     } catch (err: any) { toast.error(err?.message ?? "Failed"); }
   }
+
   async function removeOverride(id: string) {
     try { await delOv({ data: { id } }); await refresh(); } catch (err: any) { toast.error(err?.message ?? "Failed"); }
   }
@@ -242,14 +300,17 @@ function AvailabilityPage() {
   }
 
   async function submitTimeOff() {
-    const locId = blLoc === "none" ? null : blLoc;
+    // Empty selection = close every location; otherwise one row per chosen location.
+    const targets: (string | null)[] = blLocs.length ? blLocs : [null];
     const reason = blReason || undefined;
     setSavingBl(true);
     try {
       if (blMode === "time") {
         if (!blTimeDate) { toast.error("Pick a date"); return; }
         if (blTimeStart >= blTimeEnd) { toast.error("End time must be after start"); return; }
-        await addBlT({ data: { date: fmtISO(blTimeDate), start_time: blTimeStart, end_time: blTimeEnd, reason, location_id: locId } });
+        for (const locId of targets) {
+          await addBlT({ data: { date: fmtISO(blTimeDate), start_time: blTimeStart, end_time: blTimeEnd, reason, location_id: locId } });
+        }
         toast.success("Time block added");
       } else {
         let dates: string[] = [];
@@ -258,11 +319,15 @@ function AvailabilityPage() {
         else if (blMode === "weeks") dates = Array.from(new Set(blWeekDates.flatMap(weekOf)));
         dates = Array.from(new Set(dates));
         if (dates.length === 0) { toast.error("Pick at least one date"); return; }
-        const existing = new Set(blocked.filter((b) => (b.location_id ?? null) === (locId ?? null)).map((b) => b.date));
-        const toAdd = dates.filter((d) => !existing.has(d));
-        if (toAdd.length === 0) { toast.info("Those dates are already closed"); return; }
-        await Promise.all(toAdd.map((date) => addBl({ data: { date, reason, location_id: locId } })));
-        toast.success(`${toAdd.length} ${toAdd.length === 1 ? "day" : "days"} closed`);
+        let added = 0;
+        for (const locId of targets) {
+          const existing = new Set(blocked.filter((b) => (b.location_id ?? null) === (locId ?? null)).map((b) => b.date));
+          const toAdd = dates.filter((d) => !existing.has(d));
+          await Promise.all(toAdd.map((date) => addBl({ data: { date, reason, location_id: locId } })));
+          added += toAdd.length;
+        }
+        if (added === 0) { toast.info("Those dates are already closed"); return; }
+        toast.success(`${added} ${added === 1 ? "closure" : "closures"} added`);
       }
       setBlReason("");
       setBlDays([]); setBlRange({}); setBlWeekDates([]);
@@ -270,6 +335,7 @@ function AvailabilityPage() {
     } catch (err: any) { toast.error(err?.message ?? "Failed"); }
     finally { setSavingBl(false); }
   }
+
   async function removeBlock(id: string) {
     try { await delBl({ data: { id } }); await refresh(); } catch (err: any) { toast.error(err?.message ?? "Failed"); }
   }
@@ -436,16 +502,18 @@ function AvailabilityPage() {
                 <div><Label>Start</Label><Input type="time" value={ovStart} onChange={(e) => setOvStart(e.target.value)} /></div>
                 <div><Label>End</Label><Input type="time" value={ovEnd} onChange={(e) => setOvEnd(e.target.value)} /></div>
                 <div><Label>Slot (min)</Label><Input type="number" min={5} step={5} value={ovInterval} onChange={(e) => setOvInterval(e.target.value)} /></div>
-                <div>
-                  <Label>Location</Label>
-                  <Select value={ovLoc} onValueChange={setOvLoc}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">Any location</SelectItem>
-                      {locations.map((l) => <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
+                {locations.length > 0 && (
+                  <div className="md:col-span-2">
+                    <Label>Locations</Label>
+                    <LocationPicker
+                      locations={locations}
+                      value={ovLocs}
+                      onChange={setOvLocs}
+                      allLabel="Every location"
+                    />
+                  </div>
+                )}
+
                 <Button type="submit"><Plus className="h-4 w-4 mr-1" />Add</Button>
               </form>
               {overrides.length === 0 ? (
@@ -568,16 +636,18 @@ function AvailabilityPage() {
                   <Label>Reason (optional)</Label>
                   <Input value={blReason} onChange={(e) => setBlReason(e.target.value)} placeholder="Holiday, training…" />
                 </div>
-                <div>
-                  <Label>Location</Label>
-                  <Select value={blLoc} onValueChange={setBlLoc}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">All locations</SelectItem>
-                      {locations.map((l) => <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
+                {locations.length > 0 && (
+                  <div>
+                    <Label>Locations</Label>
+                    <LocationPicker
+                      locations={locations}
+                      value={blLocs}
+                      onChange={setBlLocs}
+                      allLabel="All locations"
+                    />
+                  </div>
+                )}
+
               </div>
               <div className="flex justify-end">
                 <Button onClick={submitTimeOff} disabled={savingBl} variant="destructive">
@@ -660,16 +730,19 @@ function AvailabilityPage() {
                 <Input type="time" value={form.end} onChange={(e) => setForm({ ...form, end: e.target.value })} />
               </div>
             </div>
-            <div>
-              <Label>Location</Label>
-              <Select value={form.location_id} onValueChange={(v) => setForm({ ...form, location_id: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Any location</SelectItem>
-                  {locations.map((l) => <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
+            {locations.length > 0 && (
+              <div>
+                <Label>Locations</Label>
+                <p className="mb-1 text-xs text-muted-foreground">Pick one or several — this shift only opens at the locations you select.</p>
+                <LocationPicker
+                  locations={locations}
+                  value={form.location_ids}
+                  onChange={(v) => setForm({ ...form, location_ids: v })}
+                  allLabel="Every location"
+                />
+              </div>
+            )}
+
             {practitioners.length > 0 && (
               <div>
                 <Label>Practitioner</Label>
