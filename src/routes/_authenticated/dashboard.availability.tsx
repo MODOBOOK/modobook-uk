@@ -266,12 +266,16 @@ function AvailabilityPage() {
   async function addOverride(e: React.FormEvent) {
     e.preventDefault();
     if (ovStart >= ovEnd) { toast.error("End time must be after start"); return; }
+    const targets: (string | null)[] = ovLocs.length ? ovLocs : [null];
     try {
-      await addOv({ data: { date: ovDate, start_time: ovStart, end_time: ovEnd, slot_interval: Number(ovInterval), location_id: ovLoc === "none" ? null : ovLoc } });
+      for (const loc of targets) {
+        await addOv({ data: { date: ovDate, start_time: ovStart, end_time: ovEnd, slot_interval: Number(ovInterval), location_id: loc } });
+      }
       toast.success("One-off slot added");
       await refresh();
     } catch (err: any) { toast.error(err?.message ?? "Failed"); }
   }
+
   async function removeOverride(id: string) {
     try { await delOv({ data: { id } }); await refresh(); } catch (err: any) { toast.error(err?.message ?? "Failed"); }
   }
