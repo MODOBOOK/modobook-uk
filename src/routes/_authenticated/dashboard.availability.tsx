@@ -636,16 +636,18 @@ function AvailabilityPage() {
                   <Label>Reason (optional)</Label>
                   <Input value={blReason} onChange={(e) => setBlReason(e.target.value)} placeholder="Holiday, training…" />
                 </div>
-                <div>
-                  <Label>Location</Label>
-                  <Select value={blLoc} onValueChange={setBlLoc}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">All locations</SelectItem>
-                      {locations.map((l) => <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
+                {locations.length > 0 && (
+                  <div>
+                    <Label>Locations</Label>
+                    <LocationPicker
+                      locations={locations}
+                      value={blLocs}
+                      onChange={setBlLocs}
+                      allLabel="All locations"
+                    />
+                  </div>
+                )}
+
               </div>
               <div className="flex justify-end">
                 <Button onClick={submitTimeOff} disabled={savingBl} variant="destructive">
