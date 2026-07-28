@@ -39,9 +39,8 @@ export async function saveCardOnFileFromPaymentIntent(params: {
         typeof charge === "string"
           ? await params.stripe.charges.retrieve(charge, {}, { stripeAccount: params.accountId })
           : charge;
-      const generated = chargeObj?.payment_method_details?.card?.__typename as unknown;
-      void generated;
       if (chargeObj?.payment_method) {
+
         pm = await params.stripe.paymentMethods.retrieve(
           chargeObj.payment_method as string,
           {},
