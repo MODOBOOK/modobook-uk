@@ -1614,7 +1614,7 @@ function BookPage() {
 
             return (
               <Tabs defaultValue="treatments" className="w-full">
-                <TabsList className={`grid w-full h-auto grid-cols-${1 + (packages.length > 0 ? 1 : 0) + (hasGiftCards ? 1 : 0) + (hasTraining ? 1 : 0)}`} style={{ backgroundColor: `${brand}10` }}>
+                <TabsList className="grid w-full h-auto" style={{ backgroundColor: `${brand}10`, gridTemplateColumns: `repeat(${1 + (packages.length > 0 ? 1 : 0) + (hasGiftCards ? 1 : 0) + (hasTraining ? 1 : 0)}, minmax(0, 1fr))` }}>
                   <TabsTrigger value="treatments" className="text-sm sm:text-base py-2.5">Treatments</TabsTrigger>
                   {packages.length > 0 && (
                     <TabsTrigger value="packages" className="text-sm sm:text-base py-2.5">
