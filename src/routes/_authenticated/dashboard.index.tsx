@@ -21,6 +21,8 @@ import { listMyAppointments } from "@/lib/availability.functions";
 import { getStripePayouts } from "@/lib/stripe.functions";
 import { buildBookingUrl } from "@/lib/booking-url";
 import { resolveDisplayNames } from "@/lib/display-name";
+import { SetupChecklistCard } from "@/components/SetupChecklistCard";
+
 import { toast } from "sonner";
 
 
