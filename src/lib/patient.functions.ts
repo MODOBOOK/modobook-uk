@@ -38,17 +38,27 @@ export const ensurePatient = createServerFn({ method: "POST" })
       patient = created;
     }
 
-    // Merge any prior practitioner-created bookings that used this email address.
-    // Uses the admin client because appointments RLS scopes updates to the owning
-    // practitioner — a patient can't otherwise stamp themselves onto legacy rows.
-    const mergedProfileIds = new Set<string>();
-    if (email) {
-      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    // Records are scoped per clinic: only ever link/merge for the clinic the
+    // patient is actually signing up with. Having history at clinic A must
+    // never surface that patient inside clinic B's portal.
+    let linkProfileId: string | null = null;
+    if (data.linkSlug) {
+      const anon = publicClient();
+      const { data: prof } = await anon
+        .rpc("get_public_profile_by_slug", { p_slug: data.linkSlug.toLowerCase() })
+        .maybeSingle();
+      linkProfileId = prof?.id ?? null;
+    }
 
-      // 1. Backfill patient_user_id on any prior appointments booked under this email.
+    if (linkProfileId && email) {
+      // Backfill patient_user_id on prior bookings this clinic made under this
+      // email (walk-ins / manually added clients). Admin client because
+      // appointments RLS scopes updates to the owning practitioner.
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       const { data: appts } = await supabaseAdmin
         .from("appointments")
-        .select("id, profile_id")
+        .select("id")
+        .eq("profile_id", linkProfileId)
         .ilike("patient_email", email)
         .is("patient_user_id", null);
       if (appts && appts.length > 0) {
@@ -56,36 +66,18 @@ export const ensurePatient = createServerFn({ method: "POST" })
           .from("appointments")
           .update({ patient_user_id: userId })
           .in("id", appts.map((a) => a.id));
-        for (const a of appts) if (a.profile_id) mergedProfileIds.add(a.profile_id);
       }
-
-      // 2. Collect practitioners who already know this patient via clinic_clients.
-      const { data: cc } = await supabaseAdmin
-        .from("clinic_clients")
-        .select("profile_id")
-        .ilike("email", email);
-      for (const r of cc ?? []) if (r.profile_id) mergedProfileIds.add(r.profile_id);
     }
 
-    if (data.linkSlug) {
-      const anon = publicClient();
-      const { data: prof } = await anon
-        .rpc("get_public_profile_by_slug", { p_slug: data.linkSlug.toLowerCase() })
-        .maybeSingle();
-      if (prof) mergedProfileIds.add(prof.id);
-    }
-
-    // Insert practitioner links for every clinic that already has records for this
-    // patient. Duplicates are ignored via upsert on the (patient_id, profile_id) key.
-    if (mergedProfileIds.size > 0) {
-      const rows = Array.from(mergedProfileIds).map((profile_id) => ({
-        patient_id: patient.id,
-        profile_id,
-      }));
+    if (linkProfileId) {
       await supabase
         .from("patient_practitioner_links")
-        .upsert(rows, { onConflict: "patient_id,profile_id", ignoreDuplicates: true });
+        .upsert(
+          [{ patient_id: patient.id, profile_id: linkProfileId }],
+          { onConflict: "patient_id,profile_id", ignoreDuplicates: true },
+        );
     }
+
 
     return { patient };
   });
