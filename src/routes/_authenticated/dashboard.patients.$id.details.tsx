@@ -11,6 +11,7 @@ import { listMyAppointments } from "@/lib/availability.functions";
 import { listConsultationsForPatient, createConsultation } from "@/lib/consultations.functions";
 import { getMyProfile } from "@/lib/profiles.functions";
 import { supabase } from "@/integrations/supabase/client";
+import { NoteTemplatePicker, appendTemplate } from "@/components/NoteTemplatePicker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
