@@ -7,6 +7,7 @@ import { TreatmentPlansPanel } from "@/components/TreatmentPlansPanel";
 import { createPaymentLink } from "@/lib/payment-links.functions";
 import { generateConsultationPdf } from "@/lib/consultation-pdf";
 import { supabase } from "@/integrations/supabase/client";
+import { NoteTemplatePicker, appendTemplate } from "@/components/NoteTemplatePicker";
 import { listMyConsentTemplates, getConsentTemplate } from "@/lib/treatment-consents.functions";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
