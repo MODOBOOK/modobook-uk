@@ -260,27 +260,32 @@ function Account() {
     if (typeof window === "undefined") return;
     const url = new URL(window.location.href);
     const sessionId = url.searchParams.get("session_id");
+    const piId = url.searchParams.get("pi");
     const paid = url.searchParams.get("paid");
-    if (!sessionId || paid !== "1") return;
+    if ((!sessionId && !piId) || paid !== "1") return;
     let cancelled = false;
     (async () => {
       try {
         const mod = await import("@/lib/stripe-confirm.functions");
-        const res = await mod.confirmCheckoutSession({ data: { sessionId, slug } });
+        const res = sessionId
+          ? await mod.confirmCheckoutSession({ data: { sessionId, slug } })
+          : await mod.confirmBookingPaymentIntent({ data: { paymentIntentId: piId!, slug } });
         if (cancelled) return;
         if ((res as { ok?: boolean }).ok) {
           toast.success("Payment confirmed");
           loadAll();
           url.searchParams.delete("session_id");
+          url.searchParams.delete("pi");
           url.searchParams.delete("paid");
           window.history.replaceState({}, "", url.pathname + (url.search ? url.search : ""));
         }
       } catch (e) {
-        console.error("[confirmCheckoutSession] failed", e);
+        console.error("[confirm payment] failed", e);
       }
     })();
     return () => { cancelled = true; };
   }, [slug]);
+
 
   if (loading) {
     return <div className="flex min-h-[40vh] items-center justify-center"><Loader2 className="h-6 w-6 animate-spin" /></div>;
