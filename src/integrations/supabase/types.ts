@@ -7520,6 +7520,16 @@ export type Database = {
           whatsapp_reminders_enabled: boolean
         }[]
       }
+      get_public_rewards_by_slug: {
+        Args: { p_slug: string }
+        Returns: {
+          clinic_name: string
+          clinic_profile_id: string
+          settings: Json
+          slug: string
+          tiers: Json
+        }[]
+      }
       get_public_treatment_booking_counts: {
         Args: { p_profile_id: string }
         Returns: {
