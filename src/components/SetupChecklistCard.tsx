@@ -96,19 +96,6 @@ export function SetupChecklistCard() {
               </Link>
             ))}
 
-            {complete && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full"
-                onClick={() => {
-                  localStorage.setItem(DISMISS_KEY, "1");
-                  setDismissed(true);
-                }}
-              >
-                Hide this
-              </Button>
-            )}
           </div>
         )}
       </CardContent>
