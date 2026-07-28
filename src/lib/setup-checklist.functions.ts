@@ -20,30 +20,30 @@ export const getSetupChecklist = createServerFn({ method: "GET" })
     const { supabase, userId } = context;
     const { data: profile } = await supabase
       .from("profiles")
-      .select("id, clinic_name, logo_url, avatar_url, brand_color, phone, welcome_intro_html, about_page")
+      .select("id, clinic_name, avatar_url, phone, welcome_intro_html, about_page, stripe_connect_account_id")
       .eq("user_id", userId)
       .maybeSingle();
 
     if (!profile) return { steps: [] as SetupStep[], done: 0, total: 0 };
 
-    const count = async (table: string, extra?: (q: any) => any) => {
-      let q = supabase
-        .from(table as never)
+    const count = async (table: "locations" | "treatments" | "availability_rules" | "medical_form_templates") => {
+      const { count: c } = await supabase
+        .from(table)
         .select("id", { count: "exact", head: true })
         .eq("profile_id", profile.id);
-      if (extra) q = extra(q);
-      const { count: c } = await q;
       return c ?? 0;
     };
 
-    const [locations, treatments, rules, forms] = await Promise.all([
+    const [locations, treatments, rules, forms, theme] = await Promise.all([
       count("locations"),
       count("treatments"),
       count("availability_rules"),
-      count("medical_forms").catch(() => 0),
+      count("medical_form_templates"),
+      supabase.from("clinic_theme").select("logo_url").eq("profile_id", profile.id).maybeSingle(),
     ]);
 
     const about = (profile.about_page ?? {}) as Record<string, unknown>;
+
 
     const steps: SetupStep[] = [
       {
