@@ -25,7 +25,8 @@ export function SetupChecklistCard() {
 
   if (!data || data.total === 0) return null;
   const complete = data.done === data.total;
-  if (complete && dismissed) return null;
+  // Once every step is done the clinic is set up — the card disappears for good.
+  if (complete) return null;
 
   const pct = Math.round((data.done / data.total) * 100);
 
