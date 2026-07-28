@@ -146,7 +146,9 @@ function DashboardIndex() {
         </CardContent>
       </Card>
 
-      {/* Stats */}
+      <SetupChecklistCard />
+
+
       <Card className="border-border/60">
         <CardContent className="grid grid-cols-3 divide-x divide-border/60 p-0">
           <Stat label="Today" value={String(todayBookings)} />
