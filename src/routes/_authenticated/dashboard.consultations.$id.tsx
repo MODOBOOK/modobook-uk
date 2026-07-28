@@ -427,9 +427,17 @@ function Step3({ profileId, consultationId, assessment, photos, onChangeAssess, 
     <div className="space-y-4">
       <Header n={3} title="Assessment" subtitle="Clinical notes and before photos." />
       <div className="space-y-1.5">
-        <Label>Clinical assessment</Label>
+        <div className="flex items-center justify-between gap-2">
+          <Label>Clinical assessment</Label>
+          <NoteTemplatePicker
+            scope="assessment"
+            variant="ghost"
+            onInsert={(text) => onChangeAssess({ ...assessment, notes: appendTemplate(assessment?.notes ?? "", text) })}
+          />
+        </div>
         <Textarea rows={5} value={assessment?.notes ?? ""} onChange={(e) => onChangeAssess({ ...assessment, notes: e.target.value })} placeholder="Skin condition, muscle tone, asymmetries…" />
       </div>
+
 
       <PhotoGrid label="Before photos" photos={photos ?? []} onChange={onChangePhotos} profileId={profileId} consultationId={consultationId} />
     </div>
