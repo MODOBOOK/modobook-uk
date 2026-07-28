@@ -53,7 +53,6 @@ import { formatPrice, BADGE_LABEL, badgeClasses, type TreatmentBadge } from "@/l
 
 
 import { describeCancellationRules } from "@/lib/policy";
-import { getPublicRewardsOverview } from "@/lib/rewards.functions";
 
 
 type Treatment = Database["public"]["Tables"]["treatments"]["Row"];
@@ -306,15 +305,6 @@ function BookPage() {
     amount: number | null; image_url: string | null;
   }>;
   const hasGiftCards = giftCards.length > 0;
-
-  const fetchPublicRewards = useServerFn(getPublicRewardsOverview);
-  const rewardsQuery = useQuery({
-    queryKey: ["public-rewards-tab", slug],
-    queryFn: () => fetchPublicRewards({ data: { slug } }),
-    staleTime: 60_000,
-  });
-  const rewardsVisible = rewardsQuery.data?.visible === true;
-  const rewardsData = rewardsVisible ? rewardsQuery.data : null;
 
   const { primary: displayPrimary } = resolveDisplayNames(profile);
   const brand = theme?.primary_color || profile.brand_color || "#1f2a44";
