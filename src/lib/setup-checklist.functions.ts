@@ -100,17 +100,11 @@ export const getSetupChecklist = createServerFn({ method: "GET" })
         label: "Take payments",
         description: "Connect Stripe for deposits and payments",
         to: "/dashboard/payments",
-        done: false,
+        done: Boolean(profile.stripe_connect_account_id),
       },
     ];
 
-    const { data: connect } = await supabase
-      .from("profiles")
-      .select("stripe_connect_account_id")
-      .eq("id", profile.id)
-      .maybeSingle();
-    const pay = steps.find((s) => s.key === "payments");
-    if (pay) pay.done = Boolean(connect?.stripe_connect_account_id);
+
 
     return {
       steps,
