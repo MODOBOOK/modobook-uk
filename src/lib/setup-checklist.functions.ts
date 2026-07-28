@@ -58,7 +58,7 @@ export const getSetupChecklist = createServerFn({ method: "GET" })
         label: "Add your branding",
         description: "Logo, colours and fonts",
         to: "/dashboard/branding",
-        done: Boolean(profile.logo_url || profile.avatar_url),
+        done: Boolean(theme.data?.logo_url || profile.avatar_url),
       },
       {
         key: "locations",
