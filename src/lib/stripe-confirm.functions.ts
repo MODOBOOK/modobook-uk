@@ -108,6 +108,19 @@ export const confirmCheckoutSession = createServerFn({ method: "POST" })
       }
     }
 
+    if (metadata.save_card_on_file === "1" && paymentIntentId) {
+      const { saveCardOnFileFromPaymentIntent } = await import("./card-on-file.server");
+      await saveCardOnFileFromPaymentIntent({
+        stripe,
+        accountId,
+        paymentIntentId,
+        patientEmail: metadata.patient_email ?? session.customer_details?.email ?? null,
+        patientName: session.customer_details?.name ?? null,
+        appointmentId: confirmedAppointmentIds[0] ?? null,
+        profileId: (profile as { id?: string } | null)?.id ?? null,
+      });
+    }
+
     if (confirmedAppointmentIds.length > 0) {
       try {
         const { sendBookingConfirmationEmails } = await import("@/lib/email/send.server");
@@ -118,6 +131,7 @@ export const confirmCheckoutSession = createServerFn({ method: "POST" })
     }
 
     return { ok: true as const, updated };
+
   });
 
 /**
