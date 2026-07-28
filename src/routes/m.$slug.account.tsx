@@ -81,7 +81,10 @@ function Account() {
   const [claimEmail, setClaimEmail] = useState("");
   const [claiming, setClaiming] = useState(false);
   const [myClient, setMyClient] = useState<any>(null);
+  const [needsRegistration, setNeedsRegistration] = useState(false);
+  const [registering, setRegistering] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+
 
   async function claimBookings() {
     if (!claimEmail.trim()) return;
@@ -101,6 +104,20 @@ function Account() {
     }
   }
 
+  async function registerWithClinic() {
+    setRegistering(true);
+    try {
+      const { error } = await supabase.rpc("link_patient_account", { p_slug: slug });
+      if (error) throw error;
+      setNeedsRegistration(false);
+      await loadAll();
+    } catch (e: any) {
+      toast.error(e.message ?? "Couldn't create your account with this clinic");
+    } finally {
+      setRegistering(false);
+    }
+  }
+
   async function loadAll() {
     setLoading(true);
     try {
@@ -109,10 +126,6 @@ function Account() {
         navigate({ to: "/m/$slug/auth", params: { slug }, search: { redirect: `/m/${slug}/account` } });
         return;
       }
-
-      // Link account to THIS practitioner (idempotent)
-      const { error: linkErr } = await supabase.rpc("link_patient_account", { p_slug: slug });
-      if (linkErr) throw linkErr;
 
       // Public profile + rules (via security-definer RPC — profiles has no
       // anon/authenticated SELECT policy, so a direct select would return null).
@@ -123,6 +136,31 @@ function Account() {
       const prof = Array.isArray(profRows) ? profRows[0] : profRows;
       if (!prof) throw new Error("Practitioner not found");
       setProfile(prof as Profile);
+
+      // Each clinic is a separate patient record. Never auto-create one just
+      // because the visitor happens to be signed in from another clinic's
+      // portal — only link when they already have history here, otherwise ask
+      // them to explicitly register with THIS clinic.
+      const { data: existingLink } = await supabase.rpc("current_patient_client_id", { _profile_id: prof.id });
+      if (!existingLink) {
+        const sessionEmail = (sess.session.user.email ?? "").toLowerCase();
+        const { data: priorAppts } = await supabase
+          .from("appointments")
+          .select("id")
+          .eq("profile_id", prof.id)
+          .or(`patient_user_id.eq.${sess.session.user.id}${sessionEmail ? `,patient_email.ilike.${sessionEmail}` : ""}`)
+          .limit(1);
+        if (priorAppts && priorAppts.length > 0) {
+          const { error: linkErr } = await supabase.rpc("link_patient_account", { p_slug: slug });
+          if (linkErr) throw linkErr;
+        } else {
+          setNeedsRegistration(true);
+          setLoading(false);
+          return;
+        }
+      }
+      setNeedsRegistration(false);
+
 
       // Linked clinic_client (RLS-scoped to me). Read via the security-definer
       // RPC to bypass any RLS/timing race right after link_patient_account.
@@ -290,6 +328,40 @@ function Account() {
   if (loading) {
     return <div className="flex min-h-[40vh] items-center justify-center"><Loader2 className="h-6 w-6 animate-spin" /></div>;
   }
+
+  if (needsRegistration) {
+    const clinicLabel = profile?.clinic_name || profile?.full_name || "this clinic";
+    return (
+      <main className="mx-auto max-w-md px-4 py-12">
+        <Card>
+          <CardHeader>
+            <CardTitle>Register with {clinicLabel}</CardTitle>
+            <CardDescription>
+              Your records are held separately by each clinic. You don't have an account
+              with {clinicLabel} yet — nothing from your other clinics is shared here.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <Button className="w-full" onClick={registerWithClinic} disabled={registering}>
+              {registering && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Create my account with {clinicLabel}
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={async () => {
+                await supabase.auth.signOut();
+                navigate({ to: "/m/$slug/auth", params: { slug }, search: { tab: "signup" } });
+              }}
+            >
+              Use a different email
+            </Button>
+          </CardContent>
+        </Card>
+      </main>
+    );
+  }
+
 
   const brand = profile?.brand_color || "#1f2937";
   const today = new Date().toISOString().slice(0, 10);
