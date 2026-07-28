@@ -547,3 +547,87 @@ export const getPublicRewardsOverview = createServerFn({ method: "GET" })
   });
 
 
+
+// -------------------- Practitioner: manage a patient's points balance --------------------
+
+const ClientIdSchema = z.object({ clientId: z.string().uuid() });
+
+/**
+ * Resolves the linked patient account user id for one of the clinic's
+ * client records, plus the current points balance and recent ledger.
+ */
+export const getClientPoints = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: z.infer<typeof ClientIdSchema>) => ClientIdSchema.parse(data))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+
+    const { data: account } = await supabase
+      .from("patient_accounts")
+      .select("user_id")
+      .eq("client_id", data.clientId)
+      .maybeSingle();
+
+    const { data: settings } = await supabase
+      .from("clinic_referral_settings")
+      .select("enabled, points_redemption_enabled, points_per_pound_redeem, points_per_pound_earn, earn_on_spend_enabled")
+      .eq("clinic_profile_id", userId)
+      .maybeSingle();
+
+    if (!account?.user_id) {
+      return { linked: false as const, balance: 0, entries: [], settings: settings ?? null };
+    }
+
+    const { data: rows } = await supabase
+      .from("patient_points_ledger")
+      .select("id, delta, reason, note, created_at")
+      .eq("patient_user_id", account.user_id)
+      .eq("clinic_profile_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(25);
+
+    const { data: allRows } = await supabase
+      .from("patient_points_ledger")
+      .select("delta")
+      .eq("patient_user_id", account.user_id)
+      .eq("clinic_profile_id", userId);
+
+    return {
+      linked: true as const,
+      balance: (allRows ?? []).reduce((s, r) => s + (r.delta ?? 0), 0),
+      entries: rows ?? [],
+      settings: settings ?? null,
+    };
+  });
+
+const AdjustPointsSchema = z.object({
+  clientId: z.string().uuid(),
+  delta: z.number().int().min(-1_000_000).max(1_000_000),
+  note: z.string().trim().max(200).optional(),
+});
+
+/** Manually add or remove loyalty points for one of the clinic's patients. */
+export const adjustClientPoints = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: z.infer<typeof AdjustPointsSchema>) => AdjustPointsSchema.parse(data))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    if (data.delta === 0) return { ok: false as const, reason: "zero" };
+
+    const { data: account } = await supabase
+      .from("patient_accounts")
+      .select("user_id")
+      .eq("client_id", data.clientId)
+      .maybeSingle();
+    if (!account?.user_id) return { ok: false as const, reason: "not_linked" };
+
+    const { error } = await supabase.from("patient_points_ledger").insert({
+      patient_user_id: account.user_id,
+      clinic_profile_id: userId,
+      delta: data.delta,
+      reason: "manual",
+      note: data.note || (data.delta > 0 ? "Added by clinic" : "Removed by clinic"),
+    });
+    if (error) throw error;
+    return { ok: true as const };
+  });
