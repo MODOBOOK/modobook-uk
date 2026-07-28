@@ -76,35 +76,80 @@ function RewardsPage() {
     );
   }
 
+  const earnRate = s.earn_on_spend_enabled && s.points_per_pound_earn > 0 ? Number(s.points_per_pound_earn) : 0;
+  const redeemRate = s.points_redemption_enabled && s.points_per_pound_redeem ? Number(s.points_per_pound_redeem) : 0;
+  const friend = describeFriendReward(s);
+  const you = describeReferrerReward(s);
+
+  const ways: { icon: typeof Gift; title: string; body: string }[] = [];
+  if (earnRate > 0) {
+    ways.push({
+      icon: Sparkles,
+      title: "Earn every time you book",
+      body: `Collect ${earnRate} point${earnRate === 1 ? "" : "s"} for every £1 you spend. Points are added automatically once your appointment is paid — nothing to claim.`,
+    });
+  }
+  if (friend || you) {
+    ways.push({
+      icon: Gift,
+      title: "Earn for referring a friend",
+      body: `${friend ? `Your friend gets ${friend}. ` : ""}${you ? `You get ${you} once they've had their first paid appointment.` : "You're rewarded once they've had their first paid appointment."}`,
+    });
+  }
+  if (redeemRate > 0) {
+    ways.push({
+      icon: Trophy,
+      title: "Spend your points on treatments",
+      body: `${redeemRate} points = £1 off. At checkout, enter your own code in the "Promo or gift card code" box and we'll take the maximum off your total.`,
+    });
+  }
+
   return (
-    <div className="mx-auto max-w-2xl space-y-5 px-4 py-8">
+    <div className="mx-auto max-w-2xl space-y-5 px-4 py-10">
       <div className="text-center">
         <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary">
           <Gift className="h-7 w-7" />
         </div>
-        <h1 className="font-serif text-2xl">
-          {s?.headline || "Refer a friend, treat yourself"}
-        </h1>
+        <h1 className="font-serif text-2xl">{s.headline || "Earn points every visit"}</h1>
         <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-          {s?.description ||
-            "Share your code with friends. When they complete their first appointment, we'll add your reward automatically."}
+          {s.description ||
+            `Every booking with ${clinicName} earns you points${redeemRate ? " you can put straight towards your next treatment" : ""}. Refer a friend and you'll earn even more.`}
         </p>
       </div>
 
-      <HowItWorksCard settings={s} tiersCount={tiers.length} clinicName={clinicName} />
-      <RewardsOverviewCard settings={s} />
+      <div className="space-y-3">
+        {ways.map((w) => (
+          <Card key={w.title}>
+            <CardContent className="flex gap-3 p-4">
+              <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                <w.icon className="h-4 w-4" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-sm font-medium">{w.title}</div>
+                <p className="mt-1 text-sm text-muted-foreground">{w.body}</p>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
       {tiers.length > 0 && <TiersCard tiers={tiers} settings={s} />}
-      <FaqCard settings={s} />
 
       <Card className="border-primary/40 bg-gradient-to-br from-primary/10 to-primary/5">
         <CardContent className="space-y-3 p-6 text-center">
-          <p className="font-serif text-lg">Have a code?</p>
+          <p className="font-serif text-lg">Your points live in your account</p>
           <p className="text-sm text-muted-foreground">
-            Enter your personal referral code — or a friend's — in the “Promo or gift card code” box when you book. Points redeem at checkout automatically.
+            Sign in to see your balance and your personal code — then apply it at checkout to take
+            your points off the price.
           </p>
-          <Link to="/m/$slug" params={{ slug }}>
-            <Button>Book now</Button>
-          </Link>
+          <div className="flex flex-wrap justify-center gap-2">
+            <Link to="/m/$slug/account" params={{ slug }}>
+              <Button variant="outline">View my points</Button>
+            </Link>
+            <Link to="/m/$slug" params={{ slug }}>
+              <Button>Book now</Button>
+            </Link>
+          </div>
         </CardContent>
       </Card>
 
@@ -115,125 +160,6 @@ function RewardsPage() {
         </Link>
       </div>
     </div>
-  );
-}
-
-function HowItWorksCard({
-  settings,
-  tiersCount,
-  clinicName,
-}: {
-  settings: any;
-  tiersCount: number;
-  clinicName: string;
-}) {
-  const hasReferrals =
-    (settings?.referrer_credit_pennies ?? 0) > 0 ||
-    (settings?.referrer_credit_percent ?? 0) > 0 ||
-    (settings?.referrer_points ?? 0) > 0 ||
-    (settings?.friend_credit_pennies ?? 0) > 0 ||
-    (settings?.friend_credit_percent ?? 0) > 0;
-  const hasEarn = !!settings?.earn_on_spend_enabled && settings?.points_per_pound_earn > 0;
-  const hasRedeem = !!settings?.points_redemption_enabled && settings?.points_per_pound_redeem;
-
-  const steps: { title: string; body: string }[] = [];
-  if (hasReferrals) {
-    steps.push({
-      title: "1. Share your code",
-      body: `Sign in to see your personal referral code. Send it to friends however you like — text, WhatsApp, Instagram. They enter it on the ${clinicName} booking page.`,
-    });
-    steps.push({
-      title: "2. They book and attend",
-      body: "Your friend's welcome discount is applied automatically at checkout. Once they complete and pay for their first appointment, both of your rewards are unlocked.",
-    });
-  }
-  if (hasEarn) {
-    steps.push({
-      title: `${steps.length + 1}. Earn on every visit`,
-      body: `You collect ${settings.points_per_pound_earn} point${settings.points_per_pound_earn === 1 ? "" : "s"} for every £1 you spend on treatments. Points post automatically after your appointment is paid.`,
-    });
-  }
-  if (hasRedeem) {
-    steps.push({
-      title: `${steps.length + 1}. Redeem your points`,
-      body: `${settings.points_per_pound_redeem} points = £1 off. When you book, enter your personal referral code in the promo/gift card box at checkout and your points balance is applied automatically — no separate voucher needed.${
-        tiersCount > 0 ? " You can also cash points in for the reward tiers listed below." : ""
-      }`,
-    });
-  } else if (tiersCount > 0) {
-    steps.push({
-      title: `${steps.length + 1}. Unlock rewards`,
-      body: "Save up your points and swap them for the reward tiers below when you're ready.",
-    });
-  }
-
-  if (steps.length === 0) return null;
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-base">
-          <Sparkles className="h-4 w-4" /> How the programme works
-        </CardTitle>
-        <CardDescription>
-          Everything happens automatically — no forms, no chasing. Rewards land in your account as soon as they're earned.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-3 text-sm">
-        {steps.map((step) => (
-          <div key={step.title} className="rounded-md border bg-muted/30 p-3">
-            <div className="font-medium">{step.title}</div>
-            <p className="mt-1 text-muted-foreground">{step.body}</p>
-          </div>
-        ))}
-      </CardContent>
-    </Card>
-  );
-}
-
-
-function RewardsOverviewCard({ settings }: { settings: any }) {
-  const you = describeReferrerReward(settings);
-  const friend = describeFriendReward(settings);
-  const earn = settings?.earn_on_spend_enabled && settings.points_per_pound_earn > 0
-    ? `Earn ${settings.points_per_pound_earn} point${settings.points_per_pound_earn === 1 ? "" : "s"} per £1 spent on treatments.`
-    : null;
-  const redeem = settings?.points_redemption_enabled && settings.points_per_pound_redeem
-    ? `Redeem ${settings.points_per_pound_redeem} points for £1 off — apply at checkout with your own code.`
-    : null;
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-base">
-          <Sparkles className="h-4 w-4" /> How it works
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3 text-sm">
-        {friend && (
-          <div className="rounded-md border bg-muted/30 p-3">
-            <div className="font-medium">For your friend</div>
-            <p className="text-muted-foreground">{friend}</p>
-          </div>
-        )}
-        {you && (
-          <div className="rounded-md border bg-muted/30 p-3">
-            <div className="font-medium">For you</div>
-            <p className="text-muted-foreground">{you}, when they complete their first paid appointment.</p>
-          </div>
-        )}
-        {(earn || redeem) && (
-          <div className="rounded-md border bg-muted/30 p-3">
-            <div className="font-medium">Loyalty points</div>
-            {earn && <p className="text-muted-foreground">{earn}</p>}
-            {redeem && <p className="text-muted-foreground">{redeem}</p>}
-          </div>
-        )}
-        {!you && !friend && !earn && !redeem && (
-          <p className="text-muted-foreground">Ask your practitioner about their rewards programme.</p>
-        )}
-      </CardContent>
-    </Card>
   );
 }
 
@@ -268,38 +194,3 @@ function TiersCard({ tiers, settings }: { tiers: RewardTier[]; settings: any }) 
   );
 }
 
-function FaqCard({ settings }: { settings: any }) {
-  const items: { q: string; a: string }[] = [];
-  const friend = describeFriendReward(settings);
-  const you = describeReferrerReward(settings);
-  if (friend) items.push({ q: "How does referring a friend work?", a: `Share your personal link with a friend. When they book and complete their first paid appointment using it, they get ${friend} and you earn ${you || "your reward"}.` });
-  if (settings?.earn_on_spend_enabled && settings.points_per_pound_earn > 0) {
-    items.push({ q: "How do I earn points?", a: `You earn ${settings.points_per_pound_earn} point${settings.points_per_pound_earn === 1 ? "" : "s"} for every £1 spent on treatments${settings.referrer_points > 0 ? `, plus ${settings.referrer_points} points each time a friend you referred completes their first appointment.` : "."}` });
-  } else if (settings?.referrer_points > 0) {
-    items.push({ q: "How do I earn points?", a: `You earn ${settings.referrer_points} points each time a friend you referred completes their first paid appointment.` });
-  }
-  if (settings?.points_redemption_enabled && settings.points_per_pound_redeem) {
-    items.push({ q: "How do I redeem my points?", a: `${settings.points_per_pound_redeem} points = £1 off. When you book, enter your own personal referral code in the promo/gift card code box — we'll apply the maximum available balance to your total automatically.` });
-  }
-  items.push({ q: "When do rewards pay out?", a: "Automatically after the qualifying appointment is completed and paid. You'll see them in your account here." });
-  items.push({ q: "Do rewards expire?", a: "Contact your practitioner directly for anything specific to your account — they can help with expiry, balance queries, or manual adjustments." });
-
-  if (items.length === 0) return null;
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-base">
-          <HelpCircle className="h-4 w-4" /> Common questions
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3 text-sm">
-        {items.map((it, i) => (
-          <div key={i}>
-            <div className="font-medium">{it.q}</div>
-            <p className="mt-0.5 text-muted-foreground">{it.a}</p>
-          </div>
-        ))}
-      </CardContent>
-    </Card>
-  );
-}
