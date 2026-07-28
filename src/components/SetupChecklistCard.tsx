@@ -3,20 +3,15 @@ import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Button } from "@/components/ui/button";
 import { Check, ChevronDown, ChevronRight, Sparkles } from "lucide-react";
 import { getSetupChecklist, type SetupStep } from "@/lib/setup-checklist.functions";
-
-const DISMISS_KEY = "modo.setup-checklist.dismissed";
 
 export function SetupChecklistCard() {
   const fetchChecklist = useServerFn(getSetupChecklist);
   const [data, setData] = useState<{ steps: SetupStep[]; done: number; total: number } | null>(null);
   const [open, setOpen] = useState(true);
-  const [dismissed, setDismissed] = useState(true);
 
   useEffect(() => {
-    setDismissed(localStorage.getItem(DISMISS_KEY) === "1");
     fetchChecklist()
       .then((d) => setData(d as { steps: SetupStep[]; done: number; total: number }))
       .catch(() => {});
@@ -25,7 +20,8 @@ export function SetupChecklistCard() {
 
   if (!data || data.total === 0) return null;
   const complete = data.done === data.total;
-  if (complete && dismissed) return null;
+  // Once every step is done the clinic is set up — the card disappears for good.
+  if (complete) return null;
 
   const pct = Math.round((data.done / data.total) * 100);
 
@@ -95,19 +91,6 @@ export function SetupChecklistCard() {
               </Link>
             ))}
 
-            {complete && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full"
-                onClick={() => {
-                  localStorage.setItem(DISMISS_KEY, "1");
-                  setDismissed(true);
-                }}
-              >
-                Hide this
-              </Button>
-            )}
           </div>
         )}
       </CardContent>
