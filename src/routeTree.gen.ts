@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as WhoItsForRouteImport } from './routes/who-its-for'
 import { Route as WaitlistRouteImport } from './routes/waitlist'
 import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
+import { Route as TlaCompetitionRouteImport } from './routes/tla-competition'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as RewardsRouteImport } from './routes/rewards'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
@@ -164,6 +165,11 @@ const WaitlistRoute = WaitlistRouteImport.update({
 const UnsubscribeRoute = UnsubscribeRouteImport.update({
   id: '/unsubscribe',
   path: '/unsubscribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TlaCompetitionRoute = TlaCompetitionRouteImport.update({
+  id: '/tla-competition',
+  path: '/tla-competition',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TermsRoute = TermsRouteImport.update({
@@ -955,6 +961,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/rewards': typeof RewardsRoute
   '/terms': typeof TermsRoute
+  '/tla-competition': typeof TlaCompetitionRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/waitlist': typeof WaitlistRoute
   '/who-its-for': typeof WhoItsForRoute
@@ -1097,6 +1104,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/rewards': typeof RewardsRoute
   '/terms': typeof TermsRoute
+  '/tla-competition': typeof TlaCompetitionRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/waitlist': typeof WaitlistRoute
   '/who-its-for': typeof WhoItsForRoute
@@ -1234,6 +1242,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/rewards': typeof RewardsRoute
   '/terms': typeof TermsRoute
+  '/tla-competition': typeof TlaCompetitionRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/waitlist': typeof WaitlistRoute
   '/who-its-for': typeof WhoItsForRoute
@@ -1378,6 +1387,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/rewards'
     | '/terms'
+    | '/tla-competition'
     | '/unsubscribe'
     | '/waitlist'
     | '/who-its-for'
@@ -1520,6 +1530,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/rewards'
     | '/terms'
+    | '/tla-competition'
     | '/unsubscribe'
     | '/waitlist'
     | '/who-its-for'
@@ -1656,6 +1667,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/rewards'
     | '/terms'
+    | '/tla-competition'
     | '/unsubscribe'
     | '/waitlist'
     | '/who-its-for'
@@ -1800,6 +1812,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   RewardsRoute: typeof RewardsRoute
   TermsRoute: typeof TermsRoute
+  TlaCompetitionRoute: typeof TlaCompetitionRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
   WaitlistRoute: typeof WaitlistRoute
   WhoItsForRoute: typeof WhoItsForRoute
@@ -1852,6 +1865,13 @@ declare module '@tanstack/react-router' {
       path: '/unsubscribe'
       fullPath: '/unsubscribe'
       preLoaderRoute: typeof UnsubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tla-competition': {
+      id: '/tla-competition'
+      path: '/tla-competition'
+      fullPath: '/tla-competition'
+      preLoaderRoute: typeof TlaCompetitionRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/terms': {
@@ -3238,6 +3258,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   RewardsRoute: RewardsRoute,
   TermsRoute: TermsRoute,
+  TlaCompetitionRoute: TlaCompetitionRoute,
   UnsubscribeRoute: UnsubscribeRoute,
   WaitlistRoute: WaitlistRoute,
   WhoItsForRoute: WhoItsForRoute,
