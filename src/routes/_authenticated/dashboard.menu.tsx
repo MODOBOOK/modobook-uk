@@ -199,10 +199,8 @@ function MenuPage() {
               </Link>
             ))}
           </div>
-          )}
         </section>
-        );
-      })}
+      ))}
 
 
       {admin && (
