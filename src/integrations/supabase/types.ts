@@ -2095,6 +2095,54 @@ export type Database = {
           },
         ]
       }
+      competition_entries: {
+        Row: {
+          campaign: string
+          clinic_name: string
+          consent_at: string
+          consent_text: string
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          instagram: string | null
+          marketing_opt_in: boolean
+          notes: string | null
+          phone: string | null
+          status: string
+        }
+        Insert: {
+          campaign?: string
+          clinic_name: string
+          consent_at?: string
+          consent_text: string
+          created_at?: string
+          email: string
+          full_name: string
+          id?: string
+          instagram?: string | null
+          marketing_opt_in?: boolean
+          notes?: string | null
+          phone?: string | null
+          status?: string
+        }
+        Update: {
+          campaign?: string
+          clinic_name?: string
+          consent_at?: string
+          consent_text?: string
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          instagram?: string | null
+          marketing_opt_in?: boolean
+          notes?: string | null
+          phone?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       concern_areas: {
         Row: {
           created_at: string

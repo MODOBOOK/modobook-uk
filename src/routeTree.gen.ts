@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as WhoItsForRouteImport } from './routes/who-its-for'
 import { Route as WaitlistRouteImport } from './routes/waitlist'
 import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
+import { Route as TlaCompetitionRouteImport } from './routes/tla-competition'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as RewardsRouteImport } from './routes/rewards'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
@@ -110,6 +111,7 @@ import { Route as AuthenticatedDashboardAddonsRouteImport } from './routes/_auth
 import { Route as AuthenticatedDashboardAboutRouteImport } from './routes/_authenticated/dashboard.about'
 import { Route as AuthenticatedAdminPractitionersRouteImport } from './routes/_authenticated/admin.practitioners'
 import { Route as AuthenticatedAdminEmailsRouteImport } from './routes/_authenticated/admin.emails'
+import { Route as AuthenticatedAdminCompetitionRouteImport } from './routes/_authenticated/admin.competition'
 import { Route as AuthenticatedAdminAuditRouteImport } from './routes/_authenticated/admin.audit'
 import { Route as AuthenticatedDashboardPatientsIndexRouteImport } from './routes/_authenticated/dashboard.patients.index'
 import { Route as AuthenticatedDashboardMarketingIndexRouteImport } from './routes/_authenticated/dashboard.marketing.index'
@@ -164,6 +166,11 @@ const WaitlistRoute = WaitlistRouteImport.update({
 const UnsubscribeRoute = UnsubscribeRouteImport.update({
   id: '/unsubscribe',
   path: '/unsubscribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TlaCompetitionRoute = TlaCompetitionRouteImport.update({
+  id: '/tla-competition',
+  path: '/tla-competition',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TermsRoute = TermsRouteImport.update({
@@ -712,6 +719,12 @@ const AuthenticatedAdminEmailsRoute =
     path: '/emails',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminCompetitionRoute =
+  AuthenticatedAdminCompetitionRouteImport.update({
+    id: '/competition',
+    path: '/competition',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminAuditRoute = AuthenticatedAdminAuditRouteImport.update({
   id: '/audit',
   path: '/audit',
@@ -955,6 +968,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/rewards': typeof RewardsRoute
   '/terms': typeof TermsRoute
+  '/tla-competition': typeof TlaCompetitionRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/waitlist': typeof WaitlistRoute
   '/who-its-for': typeof WhoItsForRoute
@@ -976,6 +990,7 @@ export interface FileRoutesByFullPath {
   '/r/$code': typeof RCodeRoute
   '/staff-accept/$token': typeof StaffAcceptTokenRoute
   '/admin/audit': typeof AuthenticatedAdminAuditRoute
+  '/admin/competition': typeof AuthenticatedAdminCompetitionRoute
   '/admin/emails': typeof AuthenticatedAdminEmailsRoute
   '/admin/practitioners': typeof AuthenticatedAdminPractitionersRouteWithChildren
   '/dashboard/about': typeof AuthenticatedDashboardAboutRoute
@@ -1097,6 +1112,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/rewards': typeof RewardsRoute
   '/terms': typeof TermsRoute
+  '/tla-competition': typeof TlaCompetitionRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/waitlist': typeof WaitlistRoute
   '/who-its-for': typeof WhoItsForRoute
@@ -1114,6 +1130,7 @@ export interface FileRoutesByTo {
   '/r/$code': typeof RCodeRoute
   '/staff-accept/$token': typeof StaffAcceptTokenRoute
   '/admin/audit': typeof AuthenticatedAdminAuditRoute
+  '/admin/competition': typeof AuthenticatedAdminCompetitionRoute
   '/admin/emails': typeof AuthenticatedAdminEmailsRoute
   '/admin/practitioners': typeof AuthenticatedAdminPractitionersRouteWithChildren
   '/dashboard/about': typeof AuthenticatedDashboardAboutRoute
@@ -1234,6 +1251,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/rewards': typeof RewardsRoute
   '/terms': typeof TermsRoute
+  '/tla-competition': typeof TlaCompetitionRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/waitlist': typeof WaitlistRoute
   '/who-its-for': typeof WhoItsForRoute
@@ -1255,6 +1273,7 @@ export interface FileRoutesById {
   '/r/$code': typeof RCodeRoute
   '/staff-accept/$token': typeof StaffAcceptTokenRoute
   '/_authenticated/admin/audit': typeof AuthenticatedAdminAuditRoute
+  '/_authenticated/admin/competition': typeof AuthenticatedAdminCompetitionRoute
   '/_authenticated/admin/emails': typeof AuthenticatedAdminEmailsRoute
   '/_authenticated/admin/practitioners': typeof AuthenticatedAdminPractitionersRouteWithChildren
   '/_authenticated/dashboard/about': typeof AuthenticatedDashboardAboutRoute
@@ -1378,6 +1397,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/rewards'
     | '/terms'
+    | '/tla-competition'
     | '/unsubscribe'
     | '/waitlist'
     | '/who-its-for'
@@ -1399,6 +1419,7 @@ export interface FileRouteTypes {
     | '/r/$code'
     | '/staff-accept/$token'
     | '/admin/audit'
+    | '/admin/competition'
     | '/admin/emails'
     | '/admin/practitioners'
     | '/dashboard/about'
@@ -1520,6 +1541,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/rewards'
     | '/terms'
+    | '/tla-competition'
     | '/unsubscribe'
     | '/waitlist'
     | '/who-its-for'
@@ -1537,6 +1559,7 @@ export interface FileRouteTypes {
     | '/r/$code'
     | '/staff-accept/$token'
     | '/admin/audit'
+    | '/admin/competition'
     | '/admin/emails'
     | '/admin/practitioners'
     | '/dashboard/about'
@@ -1656,6 +1679,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/rewards'
     | '/terms'
+    | '/tla-competition'
     | '/unsubscribe'
     | '/waitlist'
     | '/who-its-for'
@@ -1677,6 +1701,7 @@ export interface FileRouteTypes {
     | '/r/$code'
     | '/staff-accept/$token'
     | '/_authenticated/admin/audit'
+    | '/_authenticated/admin/competition'
     | '/_authenticated/admin/emails'
     | '/_authenticated/admin/practitioners'
     | '/_authenticated/dashboard/about'
@@ -1800,6 +1825,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   RewardsRoute: typeof RewardsRoute
   TermsRoute: typeof TermsRoute
+  TlaCompetitionRoute: typeof TlaCompetitionRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
   WaitlistRoute: typeof WaitlistRoute
   WhoItsForRoute: typeof WhoItsForRoute
@@ -1852,6 +1878,13 @@ declare module '@tanstack/react-router' {
       path: '/unsubscribe'
       fullPath: '/unsubscribe'
       preLoaderRoute: typeof UnsubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tla-competition': {
+      id: '/tla-competition'
+      path: '/tla-competition'
+      fullPath: '/tla-competition'
+      preLoaderRoute: typeof TlaCompetitionRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/terms': {
@@ -2540,6 +2573,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminEmailsRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/competition': {
+      id: '/_authenticated/admin/competition'
+      path: '/competition'
+      fullPath: '/admin/competition'
+      preLoaderRoute: typeof AuthenticatedAdminCompetitionRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/audit': {
       id: '/_authenticated/admin/audit'
       path: '/audit'
@@ -2840,12 +2880,14 @@ const AuthenticatedAdminPractitionersRouteWithChildren =
 
 interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminAuditRoute: typeof AuthenticatedAdminAuditRoute
+  AuthenticatedAdminCompetitionRoute: typeof AuthenticatedAdminCompetitionRoute
   AuthenticatedAdminEmailsRoute: typeof AuthenticatedAdminEmailsRoute
   AuthenticatedAdminPractitionersRoute: typeof AuthenticatedAdminPractitionersRouteWithChildren
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminAuditRoute: AuthenticatedAdminAuditRoute,
+  AuthenticatedAdminCompetitionRoute: AuthenticatedAdminCompetitionRoute,
   AuthenticatedAdminEmailsRoute: AuthenticatedAdminEmailsRoute,
   AuthenticatedAdminPractitionersRoute:
     AuthenticatedAdminPractitionersRouteWithChildren,
@@ -3238,6 +3280,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   RewardsRoute: RewardsRoute,
   TermsRoute: TermsRoute,
+  TlaCompetitionRoute: TlaCompetitionRoute,
   UnsubscribeRoute: UnsubscribeRoute,
   WaitlistRoute: WaitlistRoute,
   WhoItsForRoute: WhoItsForRoute,
