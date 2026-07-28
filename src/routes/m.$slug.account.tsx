@@ -101,6 +101,20 @@ function Account() {
     }
   }
 
+  async function registerWithClinic() {
+    setRegistering(true);
+    try {
+      const { error } = await supabase.rpc("link_patient_account", { p_slug: slug });
+      if (error) throw error;
+      setNeedsRegistration(false);
+      await loadAll();
+    } catch (e: any) {
+      toast.error(e.message ?? "Couldn't create your account with this clinic");
+    } finally {
+      setRegistering(false);
+    }
+  }
+
   async function loadAll() {
     setLoading(true);
     try {
@@ -109,10 +123,6 @@ function Account() {
         navigate({ to: "/m/$slug/auth", params: { slug }, search: { redirect: `/m/${slug}/account` } });
         return;
       }
-
-      // Link account to THIS practitioner (idempotent)
-      const { error: linkErr } = await supabase.rpc("link_patient_account", { p_slug: slug });
-      if (linkErr) throw linkErr;
 
       // Public profile + rules (via security-definer RPC — profiles has no
       // anon/authenticated SELECT policy, so a direct select would return null).
@@ -123,6 +133,31 @@ function Account() {
       const prof = Array.isArray(profRows) ? profRows[0] : profRows;
       if (!prof) throw new Error("Practitioner not found");
       setProfile(prof as Profile);
+
+      // Each clinic is a separate patient record. Never auto-create one just
+      // because the visitor happens to be signed in from another clinic's
+      // portal — only link when they already have history here, otherwise ask
+      // them to explicitly register with THIS clinic.
+      const { data: existingLink } = await supabase.rpc("current_patient_client_id", { _profile_id: prof.id });
+      if (!existingLink) {
+        const sessionEmail = (sess.session.user.email ?? "").toLowerCase();
+        const { data: priorAppts } = await supabase
+          .from("appointments")
+          .select("id")
+          .eq("profile_id", prof.id)
+          .or(`patient_user_id.eq.${sess.session.user.id}${sessionEmail ? `,patient_email.ilike.${sessionEmail}` : ""}`)
+          .limit(1);
+        if (priorAppts && priorAppts.length > 0) {
+          const { error: linkErr } = await supabase.rpc("link_patient_account", { p_slug: slug });
+          if (linkErr) throw linkErr;
+        } else {
+          setNeedsRegistration(true);
+          setLoading(false);
+          return;
+        }
+      }
+      setNeedsRegistration(false);
+
 
       // Linked clinic_client (RLS-scoped to me). Read via the security-definer
       // RPC to bypass any RLS/timing race right after link_patient_account.
