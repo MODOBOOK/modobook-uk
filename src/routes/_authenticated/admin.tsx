@@ -152,6 +152,11 @@ function AdminPage() {
               <Shield className="mr-2 h-4 w-4" /> Prescriber verifications
             </Button>
           </Link>
+          <Link to="/admin/competition">
+            <Button variant="outline" size="sm">
+              <Shield className="mr-2 h-4 w-4" /> TLAs competition
+            </Button>
+          </Link>
         </div>
       </div>
 
