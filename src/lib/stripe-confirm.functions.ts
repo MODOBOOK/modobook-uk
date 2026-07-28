@@ -155,21 +155,34 @@ export const confirmBookingPaymentIntent = createServerFn({ method: "POST" })
     const accountId = prof?.stripe_connect_account_id;
     if (!accountId) return { ok: false, reason: "no_connected_account" as const };
 
-    const isLive = paymentIntentId.startsWith("pi_") && !paymentIntentId.includes("_test_");
-    const key =
-      (isLive ? process.env.STRIPE_LIVE_API_KEY : process.env.STRIPE_TEST_API_KEY) ||
-      process.env.STRIPE_SECRET_KEY ||
-      process.env.STRIPE_PLATFORM_SECRET_KEY;
-    if (!key) return { ok: false, reason: "no_key" as const };
-
     const Stripe = (await import("stripe")).default;
-    const stripe = new Stripe(key, { apiVersion: "2026-06-24.dahlia", typescript: true });
+    // PaymentIntent IDs do not identify whether they belong to live or test
+    // mode. Try the configured live key first, then test, instead of guessing
+    // from the `pi_` value (the previous heuristic always classified every PI
+    // as live and could not reconcile test-mode payments).
+    const candidateKeys = [
+      process.env.STRIPE_LIVE_API_KEY,
+      process.env.STRIPE_TEST_API_KEY,
+      process.env.STRIPE_SECRET_KEY,
+      process.env.STRIPE_PLATFORM_SECRET_KEY,
+    ].filter((key, index, keys): key is string => Boolean(key) && keys.indexOf(key) === index);
+    if (candidateKeys.length === 0) return { ok: false, reason: "no_key" as const };
 
-    let pi;
-    try {
-      pi = await stripe.paymentIntents.retrieve(paymentIntentId, {}, { stripeAccount: accountId });
-    } catch (e) {
-      console.error("[confirmBookingPaymentIntent] retrieve failed", e);
+    let stripe: InstanceType<typeof Stripe> | null = null;
+    let pi: Awaited<ReturnType<InstanceType<typeof Stripe>["paymentIntents"]["retrieve"]>> | null = null;
+    let lastRetrieveError: unknown;
+    for (const key of candidateKeys) {
+      const candidate = new Stripe(key, { apiVersion: "2026-06-24.dahlia", typescript: true });
+      try {
+        pi = await candidate.paymentIntents.retrieve(paymentIntentId, {}, { stripeAccount: accountId });
+        stripe = candidate;
+        break;
+      } catch (error) {
+        lastRetrieveError = error;
+      }
+    }
+    if (!stripe || !pi) {
+      console.error("[confirmBookingPaymentIntent] retrieve failed", lastRetrieveError);
       return { ok: false, reason: "retrieve_failed" as const };
     }
     if (pi.status !== "succeeded") return { ok: false, reason: "not_paid" as const, status: pi.status };

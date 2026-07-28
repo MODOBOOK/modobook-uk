@@ -65,7 +65,18 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
         if (!signature) return new Response("Missing signature", { status: 400 });
 
         const rawBody = await request.text();
-        const isLiveEvent = rawBody.includes('"livemode":true');
+        // Stripe's JSON formatting is not stable (it may emit either
+        // `"livemode":true` or `"livemode": true`). Parse the envelope
+        // instead of doing an exact substring match; the old check caused
+        // live PaymentIntents to be retrieved with the test key, so card-on-
+        // file persistence failed even though the payment itself succeeded.
+        let isLiveEvent = false;
+        try {
+          const envelope = JSON.parse(rawBody) as { livemode?: boolean };
+          isLiveEvent = envelope.livemode === true;
+        } catch {
+          return new Response("Invalid webhook payload", { status: 400 });
+        }
         const key = isLiveEvent
           ? process.env.STRIPE_LIVE_API_KEY ||
             process.env.STRIPE_SECRET_KEY ||
