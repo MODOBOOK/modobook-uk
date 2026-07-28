@@ -1,0 +1,11 @@
+DROP POLICY IF EXISTS "Public can read enabled rewards on opt-in" ON public.clinic_referral_settings;
+CREATE POLICY "Public can read enabled rewards" ON public.clinic_referral_settings FOR SELECT TO anon, authenticated USING (enabled = true);
+DROP POLICY IF EXISTS "Public can read reward tiers on opt-in" ON public.clinic_reward_tiers;
+CREATE POLICY "Public can read enabled reward tiers" ON public.clinic_reward_tiers FOR SELECT TO anon, authenticated USING (enabled = true AND EXISTS (SELECT 1 FROM public.clinic_referral_settings s WHERE s.clinic_profile_id = clinic_reward_tiers.clinic_profile_id AND s.enabled = true));
+GRANT SELECT ON public.clinic_referral_settings TO anon;
+GRANT SELECT ON public.clinic_reward_tiers TO anon;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.clinic_referral_settings TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.clinic_reward_tiers TO authenticated;
+GRANT ALL ON public.clinic_referral_settings TO service_role;
+GRANT ALL ON public.clinic_reward_tiers TO service_role;
+UPDATE public.clinic_referral_settings SET show_on_public_page = true WHERE enabled = true;
