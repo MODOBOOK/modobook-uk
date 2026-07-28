@@ -529,43 +529,21 @@ export const getPublicRewardsOverview = createServerFn({ method: "GET" })
       { auth: { storage: undefined, persistSession: false, autoRefreshToken: false } },
     );
 
-    const { data: prof } = await supabasePublic
-      .from("profiles")
-      .select("id, user_id, slug, full_name, clinic_name")
-      .eq("slug", data.slug)
-      .maybeSingle();
-    if (!prof) return { visible: false as const };
-
-    const clinicProfileId = prof.user_id as string;
-
-    const [{ data: settings }, { data: tiers }] = await Promise.all([
-      supabasePublic
-        .from("clinic_referral_settings")
-        .select("*")
-        .eq("clinic_profile_id", clinicProfileId)
-        .maybeSingle(),
-      (supabasePublic as any)
-        .from("clinic_reward_tiers")
-        .select("*")
-        .eq("clinic_profile_id", clinicProfileId)
-        .eq("enabled", true)
-        .order("sort_order", { ascending: true })
-        .order("points_cost", { ascending: true }),
-    ]);
-
-    // Show the Rewards tab/page whenever the programme is enabled. The
-    // `show_on_public_page` flag is treated as legacy — activation alone is
-    // enough to surface it in the patient navigation.
-    if (!settings?.enabled) return { visible: false as const };
+    const { data: rows } = await (supabasePublic as any).rpc("get_public_rewards_by_slug", {
+      p_slug: data.slug,
+    });
+    const row = Array.isArray(rows) ? rows[0] : rows;
+    if (!row || !row.settings) return { visible: false as const };
 
     return {
       visible: true as const,
       clinic: {
-        slug: prof.slug,
-        name: prof.clinic_name ?? prof.full_name ?? "Clinic",
+        slug: row.slug as string,
+        name: (row.clinic_name ?? "Clinic") as string,
       },
-      settings,
-      tiers: (tiers ?? []) as RewardTier[],
+      settings: row.settings,
+      tiers: ((row.tiers ?? []) as RewardTier[]),
     };
   });
+
 
