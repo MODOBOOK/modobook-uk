@@ -133,8 +133,6 @@ function MenuPage() {
   const { profile } = Route.useRouteContext() as { profile: { slug: string; clinic_name?: string | null } };
   const { admin } = Route.useLoaderData();
   const [query, setQuery] = useState("");
-  const searching = query.trim().length > 0;
-  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({ "Your business": true });
 
 
   const filtered = useMemo(() => {
