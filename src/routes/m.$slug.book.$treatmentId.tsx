@@ -611,9 +611,8 @@ function BookTreatmentPage() {
         </Link>
       </div>
 
-      <div className="-mx-4 sm:mx-0">
-        <PublicRewardsBanner slug={slug} brand={brand} />
-      </div>
+
+
 
       {(() => {
         const detailsDone = Boolean(

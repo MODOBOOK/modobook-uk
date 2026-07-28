@@ -79,9 +79,8 @@ function ClinicPage() {
           </div>
         )}
 
-        <div className="mb-10">
-          <PublicRewardsBanner slug={profile.slug || slug} brand={brandColor} />
-        </div>
+
+
 
         <div className="mb-10 grid gap-8 lg:grid-cols-3">
           <div className="lg:col-span-2">
