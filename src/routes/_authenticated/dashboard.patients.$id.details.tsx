@@ -37,6 +37,8 @@ import { EmailComposerDialog } from "@/components/patient/EmailComposerDialog";
 import { SendFormDialog } from "@/components/patient/SendFormDialog";
 import { ClientFormsList } from "@/components/patient/ClientFormsList";
 import { ConsultationDocCard } from "@/components/patient/ConsultationDocCard";
+import { LoyaltyPointsCard } from "@/components/patient/LoyaltyPointsCard";
+
 
 import { logCommunication, sendPatientEmail } from "@/lib/patient-hub.functions";
 import { createPaymentLink } from "@/lib/payment-links.functions";
