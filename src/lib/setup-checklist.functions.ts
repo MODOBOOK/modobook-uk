@@ -1,0 +1,120 @@
+import { createServerFn } from "@tanstack/react-start";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+
+export type SetupStep = {
+  key: string;
+  label: string;
+  description: string;
+  to: string;
+  done: boolean;
+};
+
+/**
+ * Progress checklist shown on the dashboard home. Purely derived from
+ * existing data — nothing is stored, so it self-heals as the practitioner
+ * fills things in (or removes them).
+ */
+export const getSetupChecklist = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("id, clinic_name, logo_url, avatar_url, brand_color, phone, welcome_intro_html, about_page")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (!profile) return { steps: [] as SetupStep[], done: 0, total: 0 };
+
+    const count = async (table: string, extra?: (q: any) => any) => {
+      let q = supabase
+        .from(table as never)
+        .select("id", { count: "exact", head: true })
+        .eq("profile_id", profile.id);
+      if (extra) q = extra(q);
+      const { count: c } = await q;
+      return c ?? 0;
+    };
+
+    const [locations, treatments, rules, forms] = await Promise.all([
+      count("locations"),
+      count("treatments"),
+      count("availability_rules"),
+      count("medical_forms").catch(() => 0),
+    ]);
+
+    const about = (profile.about_page ?? {}) as Record<string, unknown>;
+
+    const steps: SetupStep[] = [
+      {
+        key: "clinic",
+        label: "Business details",
+        description: "Clinic name, contact details and socials",
+        to: "/dashboard/clinic",
+        done: Boolean(profile.clinic_name && profile.phone),
+      },
+      {
+        key: "branding",
+        label: "Add your branding",
+        description: "Logo, colours and fonts",
+        to: "/dashboard/branding",
+        done: Boolean(profile.logo_url || profile.avatar_url),
+      },
+      {
+        key: "locations",
+        label: "Add a location",
+        description: "Where patients will see you",
+        to: "/dashboard/locations",
+        done: locations > 0,
+      },
+      {
+        key: "treatments",
+        label: "Add your treatments",
+        description: "Services, pricing and durations",
+        to: "/dashboard/services",
+        done: treatments > 0,
+      },
+      {
+        key: "availability",
+        label: "Set your availability",
+        description: "Opening times patients can book",
+        to: "/dashboard/availability",
+        done: rules > 0,
+      },
+      {
+        key: "forms",
+        label: "Medical & consent forms",
+        description: "Sent automatically when patients book",
+        to: "/dashboard/form-allocation",
+        done: forms > 0,
+      },
+      {
+        key: "about",
+        label: "Welcome message",
+        description: "Your intro on the booking page",
+        to: "/dashboard/policies",
+        done: Boolean(profile.welcome_intro_html || about.intro_heading),
+      },
+      {
+        key: "payments",
+        label: "Take payments",
+        description: "Connect Stripe for deposits and payments",
+        to: "/dashboard/payments",
+        done: false,
+      },
+    ];
+
+    const { data: connect } = await supabase
+      .from("profiles")
+      .select("stripe_connect_account_id")
+      .eq("id", profile.id)
+      .maybeSingle();
+    const pay = steps.find((s) => s.key === "payments");
+    if (pay) pay.done = Boolean(connect?.stripe_connect_account_id);
+
+    return {
+      steps,
+      done: steps.filter((s) => s.done).length,
+      total: steps.length,
+    };
+  });
