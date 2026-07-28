@@ -72,6 +72,25 @@ function ModelSlotsPage() {
   const tById = new Map(treats.map((t) => [t.id, t]));
   const lById = new Map(locs.map((l) => [l.id, l]));
 
+  const existingCategories = Array.from(
+    new Set(slots.map((s) => (s.category ?? "").trim()).filter(Boolean)),
+  ).sort((a, b) => a.localeCompare(b));
+
+  const groupedSlots: { category: string; items: Slot[] }[] = (() => {
+    const map = new Map<string, Slot[]>();
+    for (const s of slots) {
+      const key = (s.category && s.category.trim()) || "Uncategorised";
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(s);
+    }
+    return Array.from(map.entries())
+      .sort((a, b) =>
+        a[0] === "Uncategorised" ? 1 : b[0] === "Uncategorised" ? -1 : a[0].localeCompare(b[0]),
+      )
+      .map(([category, items]) => ({ category, items }));
+  })();
+
+
   return (
     <div className="mx-auto max-w-5xl space-y-6 p-4 pb-24 sm:p-6">
       <div className="flex items-center gap-2">
@@ -102,51 +121,56 @@ function ModelSlotsPage() {
       </Card>
 
 
-      <div className="space-y-2">
-        {slots.map((s) => {
-          const t = tById.get(s.treatment_id);
-          const finalPrice = s.price_mode === "fixed"
-            ? Number(s.price_value)
-            : Math.max(0, Number(t?.price ?? 0) * (1 - Number(s.price_value) / 100));
-          return (
-            <Card key={s.id}>
-              <CardContent className="flex flex-wrap items-center gap-3 p-3">
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold">{t?.name ?? "(deleted)"}</p>
-                  <p className="text-xs text-muted-foreground">
-                    <Calendar className="-mt-0.5 mr-1 inline h-3 w-3" />
-                    {s.is_flexible ? (
-                      <span className="font-medium text-fuchsia-700">Any date &amp; time — patient picks</span>
-                    ) : (
-                      <>
-                        {new Date((s.slot_date ?? "") + "T00:00:00").toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" })}{" "}
-                        · {(s.start_time ?? "").slice(0, 5)}–{(s.end_time ?? "").slice(0, 5)}
-                      </>
-                    )}
-                    {s.location_id && lById.get(s.location_id) ? ` · ${lById.get(s.location_id)!.name}` : ""}
-                  </p>
-
-                  {s.category && (
-                    <p className="mt-0.5 inline-block rounded-full bg-fuchsia-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-fuchsia-700">{s.category}</p>
-                  )}
-                  <p className="text-xs">
-                    {t && <span className="line-through text-muted-foreground">£{Number(t.price).toFixed(2)}</span>}{" "}
-                    <span className="font-semibold text-emerald-600">£{finalPrice.toFixed(2)}</span>{" "}
-                    <span className="text-muted-foreground">({s.price_mode === "percent" ? `${s.price_value}% off` : "model price"})</span>
-                  </p>
-                  {s.booked_appointment_id && <p className="text-xs font-medium text-amber-600">Booked</p>}
-                  {!s.active && <p className="text-xs uppercase text-muted-foreground">Inactive</p>}
-                </div>
-                <Button size="sm" variant="outline" onClick={() => setEditing(s)}><Pencil className="mr-1.5 h-3.5 w-3.5" />Edit</Button>
-                <Button size="sm" variant="ghost" onClick={async () => {
-                  if (!confirm("Delete this slot?")) return;
-                  try { await del({ data: { id: s.id } }); toast.success("Deleted"); refresh(); }
-                  catch (e) { toast.error((e as Error).message); }
-                }}><Trash2 className="h-4 w-4" /></Button>
-              </CardContent>
-            </Card>
-          );
-        })}
+      <div className="space-y-6">
+        {groupedSlots.map((group) => (
+          <div key={group.category} className="space-y-2">
+            <div className="flex items-center gap-2">
+              <h2 className="text-sm font-bold uppercase tracking-wide text-fuchsia-700">{group.category}</h2>
+              <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">{group.items.length}</span>
+              <div className="h-px flex-1 bg-border" />
+            </div>
+            {group.items.map((s) => {
+              const t = tById.get(s.treatment_id);
+              const finalPrice = s.price_mode === "fixed"
+                ? Number(s.price_value)
+                : Math.max(0, Number(t?.price ?? 0) * (1 - Number(s.price_value) / 100));
+              return (
+                <Card key={s.id}>
+                  <CardContent className="flex flex-wrap items-center gap-3 p-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold">{t?.name ?? "(deleted)"}</p>
+                      <p className="text-xs text-muted-foreground">
+                        <Calendar className="-mt-0.5 mr-1 inline h-3 w-3" />
+                        {s.is_flexible ? (
+                          <span className="font-medium text-fuchsia-700">Any date &amp; time — patient picks</span>
+                        ) : (
+                          <>
+                            {new Date((s.slot_date ?? "") + "T00:00:00").toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" })}{" "}
+                            · {(s.start_time ?? "").slice(0, 5)}–{(s.end_time ?? "").slice(0, 5)}
+                          </>
+                        )}
+                        {s.location_id && lById.get(s.location_id) ? ` · ${lById.get(s.location_id)!.name}` : ""}
+                      </p>
+                      <p className="text-xs">
+                        {t && <span className="line-through text-muted-foreground">£{Number(t.price).toFixed(2)}</span>}{" "}
+                        <span className="font-semibold text-emerald-600">£{finalPrice.toFixed(2)}</span>{" "}
+                        <span className="text-muted-foreground">({s.price_mode === "percent" ? `${s.price_value}% off` : "model price"})</span>
+                      </p>
+                      {s.booked_appointment_id && <p className="text-xs font-medium text-amber-600">Booked</p>}
+                      {!s.active && <p className="text-xs uppercase text-muted-foreground">Inactive</p>}
+                    </div>
+                    <Button size="sm" variant="outline" onClick={() => setEditing(s)}><Pencil className="mr-1.5 h-3.5 w-3.5" />Edit</Button>
+                    <Button size="sm" variant="ghost" onClick={async () => {
+                      if (!confirm("Delete this slot?")) return;
+                      try { await del({ data: { id: s.id } }); toast.success("Deleted"); refresh(); }
+                      catch (e) { toast.error((e as Error).message); }
+                    }}><Trash2 className="h-4 w-4" /></Button>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        ))}
         {slots.length === 0 && <p className="text-sm text-muted-foreground">No model slots yet.</p>}
       </div>
 
@@ -155,17 +179,20 @@ function ModelSlotsPage() {
           existing={editing === "new" ? null : editing}
           treatments={treats}
           locations={locs}
+          existingCategories={existingCategories}
           onClose={() => setEditing(null)}
           onSaved={() => { setEditing(null); refresh(); }}
         />
       )}
+
     </div>
   );
 }
 
-function SlotEditor({ existing, treatments, locations, onClose, onSaved }: {
+function SlotEditor({ existing, treatments, locations, existingCategories, onClose, onSaved }: {
   existing: Slot | null;
   treatments: Treat[]; locations: Loc[];
+  existingCategories: string[];
   onClose: () => void; onSaved: () => void;
 }) {
   const save = useServerFn(upsertModelSlot);
@@ -393,9 +420,28 @@ function SlotEditor({ existing, treatments, locations, onClose, onSaved }: {
           </div>
           <div>
             <Label>Category (optional)</Label>
+            {existingCategories.length > 0 && (
+              <div className="mb-2 flex flex-wrap gap-1.5">
+                {existingCategories.map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => setCategory(category.trim() === c ? "" : c)}
+                    className={`rounded-full border px-2.5 py-1 text-xs font-medium transition ${
+                      category.trim() === c
+                        ? "border-fuchsia-600 bg-fuchsia-600 text-white"
+                        : "border-border bg-background text-muted-foreground hover:bg-muted"
+                    }`}
+                  >
+                    {c}
+                  </button>
+                ))}
+              </div>
+            )}
             <Input value={category} onChange={(e) => setCategory(e.target.value)} placeholder="e.g. Lip filler, Botox, Skin" />
-            <p className="mt-1 text-xs text-muted-foreground">Slots with the same category are grouped together on your booking page.</p>
+            <p className="mt-1 text-xs text-muted-foreground">Pick an existing category or type a new one. Slots with the same category are grouped together on your booking page.</p>
           </div>
+
           <div>
             <Label>Notes (optional)</Label>
             <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Photos required, etc." />
