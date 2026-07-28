@@ -53,7 +53,6 @@ import { formatPrice, BADGE_LABEL, badgeClasses, type TreatmentBadge } from "@/l
 
 
 import { describeCancellationRules } from "@/lib/policy";
-import { PublicRewardsBanner } from "@/components/PublicRewardsBanner";
 import { getPublicRewardsOverview } from "@/lib/rewards.functions";
 
 

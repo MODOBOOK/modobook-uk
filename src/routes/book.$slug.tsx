@@ -6,7 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import { MapPin, Clock, Phone, Calendar, Star, Loader2 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import { SafeHtml } from "@/components/SafeHtml";
-import { PublicRewardsBanner } from "@/components/PublicRewardsBanner";
 
 export const Route = createFileRoute("/book/$slug")({
   loader: async ({ params }) => {
