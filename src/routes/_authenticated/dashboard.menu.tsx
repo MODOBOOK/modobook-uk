@@ -18,7 +18,7 @@ import {
   Star,
   HelpCircle,
   ChevronRight,
-  ChevronDown,
+  
 
   ShieldCheck,
   LogOut,
