@@ -1497,8 +1497,34 @@ function BookPage() {
                           {isExpanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
                         </button>
                       )}
-                      <div className="mt-auto flex items-center justify-between border-t pt-2 text-xs" style={{ borderColor: `${brand}1f` }}>
-                        <span className="opacity-70">{durationFor(t)} min</span>
+                      <div className="mt-auto flex items-center justify-between gap-2 border-t pt-2 text-xs" style={{ borderColor: `${brand}1f` }}>
+                        <div className="flex flex-col leading-tight">
+                          {(() => {
+                            const price = priceFor(t);
+                            const pmode = ((t as any).price_mode ?? "fixed") as "fixed" | "from" | "poa" | "free";
+                            const pct = (t as any).discount_percent as number | null;
+                            const startsAt = (t as any).discount_starts_at as string | null;
+                            const endsAt = (t as any).discount_ends_at as string | null;
+                            const dows = (t as any).discount_days_of_week as number[] | null;
+                            const now = new Date();
+                            const inWindow = (!startsAt || new Date(startsAt) <= now)
+                              && (!endsAt || new Date(endsAt) >= now)
+                              && (!dows || dows.length === 0 || dows.includes(now.getDay()));
+                            const allowDiscount = pmode !== "poa" && pmode !== "free";
+                            const hasDisc = allowDiscount && pct != null && pct > 0 && inWindow && price > 0;
+                            const discounted = hasDisc ? price * (1 - pct / 100) : price;
+                            return (
+                              <>
+                                {hasDisc && ((t as any).discount_show_was_now !== false) && (
+                                  <span className="text-[10px] font-normal text-muted-foreground line-through">{formatPrice(price, pmode)}</span>
+                                )}
+                                <span className="text-sm font-bold" style={{ color: menuNameColor }}>{formatPrice(discounted, pmode)}</span>
+                              </>
+                            );
+                          })()}
+                          <span className="opacity-70">{durationFor(t)} min</span>
+                        </div>
+
                         {capFor(t)?.full ? (
                           <span className="rounded-full px-4 py-2 text-xs font-semibold text-white shadow-sm opacity-60" style={{ backgroundColor: "#6b7280" }}>
                             Fully booked
