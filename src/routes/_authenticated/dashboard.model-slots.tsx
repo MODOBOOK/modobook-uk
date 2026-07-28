@@ -189,9 +189,10 @@ function ModelSlotsPage() {
   );
 }
 
-function SlotEditor({ existing, treatments, locations, onClose, onSaved }: {
+function SlotEditor({ existing, treatments, locations, existingCategories, onClose, onSaved }: {
   existing: Slot | null;
   treatments: Treat[]; locations: Loc[];
+  existingCategories: string[];
   onClose: () => void; onSaved: () => void;
 }) {
   const save = useServerFn(upsertModelSlot);
