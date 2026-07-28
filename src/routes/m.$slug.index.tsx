@@ -1614,12 +1614,14 @@ function BookPage() {
 
             return (
               <Tabs defaultValue="treatments" className="w-full">
-                <TabsList className={`grid w-full h-auto grid-cols-${2 + (hasGiftCards ? 1 : 0) + (hasTraining ? 1 : 0)}`} style={{ backgroundColor: `${brand}10` }}>
+                <TabsList className={`grid w-full h-auto grid-cols-${1 + (packages.length > 0 ? 1 : 0) + (hasGiftCards ? 1 : 0) + (hasTraining ? 1 : 0)}`} style={{ backgroundColor: `${brand}10` }}>
                   <TabsTrigger value="treatments" className="text-sm sm:text-base py-2.5">Treatments</TabsTrigger>
-                  <TabsTrigger value="packages" disabled={packages.length === 0} className="text-sm sm:text-base py-2.5">
-                    <PackageIcon className="mr-1.5 h-4 w-4" />
-                    Packages
-                  </TabsTrigger>
+                  {packages.length > 0 && (
+                    <TabsTrigger value="packages" className="text-sm sm:text-base py-2.5">
+                      <PackageIcon className="mr-1.5 h-4 w-4" />
+                      Packages
+                    </TabsTrigger>
+                  )}
                   {hasGiftCards && (
                     <TabsTrigger value="gift-cards" className="text-sm sm:text-base py-2.5">
                       <Gift className="mr-1.5 h-4 w-4" />
