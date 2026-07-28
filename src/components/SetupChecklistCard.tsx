@@ -3,20 +3,15 @@ import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Button } from "@/components/ui/button";
 import { Check, ChevronDown, ChevronRight, Sparkles } from "lucide-react";
 import { getSetupChecklist, type SetupStep } from "@/lib/setup-checklist.functions";
-
-const DISMISS_KEY = "modo.setup-checklist.dismissed";
 
 export function SetupChecklistCard() {
   const fetchChecklist = useServerFn(getSetupChecklist);
   const [data, setData] = useState<{ steps: SetupStep[]; done: number; total: number } | null>(null);
   const [open, setOpen] = useState(true);
-  const [dismissed, setDismissed] = useState(true);
 
   useEffect(() => {
-    setDismissed(localStorage.getItem(DISMISS_KEY) === "1");
     fetchChecklist()
       .then((d) => setData(d as { steps: SetupStep[]; done: number; total: number }))
       .catch(() => {});
