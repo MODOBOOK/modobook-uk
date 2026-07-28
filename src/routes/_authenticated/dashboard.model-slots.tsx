@@ -420,9 +420,28 @@ function SlotEditor({ existing, treatments, locations, existingCategories, onClo
           </div>
           <div>
             <Label>Category (optional)</Label>
+            {existingCategories.length > 0 && (
+              <div className="mb-2 flex flex-wrap gap-1.5">
+                {existingCategories.map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => setCategory(category.trim() === c ? "" : c)}
+                    className={`rounded-full border px-2.5 py-1 text-xs font-medium transition ${
+                      category.trim() === c
+                        ? "border-fuchsia-600 bg-fuchsia-600 text-white"
+                        : "border-border bg-background text-muted-foreground hover:bg-muted"
+                    }`}
+                  >
+                    {c}
+                  </button>
+                ))}
+              </div>
+            )}
             <Input value={category} onChange={(e) => setCategory(e.target.value)} placeholder="e.g. Lip filler, Botox, Skin" />
-            <p className="mt-1 text-xs text-muted-foreground">Slots with the same category are grouped together on your booking page.</p>
+            <p className="mt-1 text-xs text-muted-foreground">Pick an existing category or type a new one. Slots with the same category are grouped together on your booking page.</p>
           </div>
+
           <div>
             <Label>Notes (optional)</Label>
             <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Photos required, etc." />
