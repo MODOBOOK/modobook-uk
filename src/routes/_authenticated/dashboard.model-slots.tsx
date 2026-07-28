@@ -72,6 +72,25 @@ function ModelSlotsPage() {
   const tById = new Map(treats.map((t) => [t.id, t]));
   const lById = new Map(locs.map((l) => [l.id, l]));
 
+  const existingCategories = Array.from(
+    new Set(slots.map((s) => (s.category ?? "").trim()).filter(Boolean)),
+  ).sort((a, b) => a.localeCompare(b));
+
+  const groupedSlots: { category: string; items: Slot[] }[] = (() => {
+    const map = new Map<string, Slot[]>();
+    for (const s of slots) {
+      const key = (s.category && s.category.trim()) || "Uncategorised";
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(s);
+    }
+    return Array.from(map.entries())
+      .sort((a, b) =>
+        a[0] === "Uncategorised" ? 1 : b[0] === "Uncategorised" ? -1 : a[0].localeCompare(b[0]),
+      )
+      .map(([category, items]) => ({ category, items }));
+  })();
+
+
   return (
     <div className="mx-auto max-w-5xl space-y-6 p-4 pb-24 sm:p-6">
       <div className="flex items-center gap-2">
