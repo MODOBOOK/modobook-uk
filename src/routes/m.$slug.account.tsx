@@ -329,6 +329,40 @@ function Account() {
     return <div className="flex min-h-[40vh] items-center justify-center"><Loader2 className="h-6 w-6 animate-spin" /></div>;
   }
 
+  if (needsRegistration) {
+    const clinicLabel = profile?.clinic_name || profile?.full_name || "this clinic";
+    return (
+      <main className="mx-auto max-w-md px-4 py-12">
+        <Card>
+          <CardHeader>
+            <CardTitle>Register with {clinicLabel}</CardTitle>
+            <CardDescription>
+              Your records are held separately by each clinic. You don't have an account
+              with {clinicLabel} yet — nothing from your other clinics is shared here.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <Button className="w-full" onClick={registerWithClinic} disabled={registering}>
+              {registering && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Create my account with {clinicLabel}
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={async () => {
+                await supabase.auth.signOut();
+                navigate({ to: "/m/$slug/auth", params: { slug }, search: { tab: "signup" } });
+              }}
+            >
+              Use a different email
+            </Button>
+          </CardContent>
+        </Card>
+      </main>
+    );
+  }
+
+
   const brand = profile?.brand_color || "#1f2937";
   const today = new Date().toISOString().slice(0, 10);
   const upcoming = appts.filter((a) => a.scheduled_date >= today && a.status !== "cancelled");
