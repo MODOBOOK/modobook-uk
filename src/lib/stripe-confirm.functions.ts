@@ -119,3 +119,110 @@ export const confirmCheckoutSession = createServerFn({ method: "POST" })
 
     return { ok: true as const, updated };
   });
+
+/**
+ * Reconcile an embedded Payment Element payment (our own card flow, which has
+ * no Checkout Session) and capture the card on file when the practitioner has
+ * save-card-on-file enabled. Webhook-independent fallback; idempotent.
+ */
+export const confirmBookingPaymentIntent = createServerFn({ method: "POST" })
+  .inputValidator((i: { paymentIntentId: string; slug: string }) => i)
+  .handler(async ({ data }) => {
+    const { paymentIntentId, slug } = data;
+    if (!paymentIntentId || !slug) return { ok: false, reason: "missing_input" as const };
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: profile } = await supabaseAdmin
+      .from("profiles")
+      .select("id, stripe_connect_account_id")
+      .eq("slug", slug)
+      .maybeSingle();
+    const prof = profile as { id?: string; stripe_connect_account_id?: string | null } | null;
+    const accountId = prof?.stripe_connect_account_id;
+    if (!accountId) return { ok: false, reason: "no_connected_account" as const };
+
+    const isLive = paymentIntentId.startsWith("pi_") && !paymentIntentId.includes("_test_");
+    const key =
+      (isLive ? process.env.STRIPE_LIVE_API_KEY : process.env.STRIPE_TEST_API_KEY) ||
+      process.env.STRIPE_SECRET_KEY ||
+      process.env.STRIPE_PLATFORM_SECRET_KEY;
+    if (!key) return { ok: false, reason: "no_key" as const };
+
+    const Stripe = (await import("stripe")).default;
+    const stripe = new Stripe(key, { apiVersion: "2026-06-24.dahlia", typescript: true });
+
+    let pi;
+    try {
+      pi = await stripe.paymentIntents.retrieve(paymentIntentId, {}, { stripeAccount: accountId });
+    } catch (e) {
+      console.error("[confirmBookingPaymentIntent] retrieve failed", e);
+      return { ok: false, reason: "retrieve_failed" as const };
+    }
+    if (pi.status !== "succeeded") return { ok: false, reason: "not_paid" as const, status: pi.status };
+
+    const metadata = pi.metadata ?? {};
+    const ids = String(metadata.appointment_ids ?? "")
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+    const surchargeCents = Number(metadata.surcharge_cents ?? 0) || 0;
+    const totalCents = Number(pi.amount_received ?? pi.amount ?? 0) || 0;
+    const treatmentPaidCents = Math.max(0, totalCents - surchargeCents);
+    const perAppt = ids.length > 0 ? Math.round(treatmentPaidCents / ids.length) : 0;
+    const kind = metadata.kind || "deposit";
+
+    const confirmedAppointmentIds: string[] = [];
+    for (const apptId of ids) {
+      const { data: cur } = await supabaseAdmin
+        .from("appointments")
+        .select("amount_paid_cents, payment_status")
+        .eq("id", apptId)
+        .maybeSingle();
+      const already = cur as { amount_paid_cents?: number; payment_status?: string } | null;
+      const patch: Record<string, unknown> = {
+        status: "confirmed",
+        payment_hold_expires_at: null,
+        payment_status: "paid",
+        stripe_payment_intent_id: pi.id,
+      };
+      if (kind === "deposit") patch.deposit_paid_at = new Date().toISOString();
+      else {
+        patch.payment_method = "stripe_link";
+        patch.checkout_completed_at = new Date().toISOString();
+      }
+      if (already?.payment_status !== "paid") {
+        patch.amount_paid_cents = Number(already?.amount_paid_cents ?? 0) + perAppt;
+      }
+      const { error } = await supabaseAdmin
+        .from("appointments")
+        .update(patch as never)
+        .eq("id", apptId);
+      if (!error) confirmedAppointmentIds.push(apptId);
+    }
+
+    let cardSaved = false;
+    if (metadata.save_card_on_file === "1") {
+      const { saveCardOnFileFromPaymentIntent } = await import("./card-on-file.server");
+      const res = await saveCardOnFileFromPaymentIntent({
+        stripe,
+        accountId,
+        paymentIntentId: pi.id,
+        patientEmail: metadata.patient_email ?? null,
+        appointmentId: confirmedAppointmentIds[0] ?? null,
+        profileId: prof?.id ?? null,
+      });
+      cardSaved = res.ok;
+    }
+
+    if (confirmedAppointmentIds.length > 0) {
+      try {
+        const { sendBookingConfirmationEmails } = await import("@/lib/email/send.server");
+        await sendBookingConfirmationEmails(confirmedAppointmentIds);
+      } catch (e) {
+        console.error("[confirmBookingPaymentIntent] confirmation email failed", e);
+      }
+    }
+
+    return { ok: true as const, updated: confirmedAppointmentIds.length, cardSaved };
+  });
