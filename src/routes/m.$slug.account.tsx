@@ -374,7 +374,7 @@ function Account() {
             onClick={async () => {
               await supabase.auth.signOut();
               toast.success("Signed out");
-              navigate({ to: "/m/$slug", params: { slug } });
+              navigate({ to: "/m/$slug/auth", params: { slug }, replace: true });
             }}
           >
             Sign out
