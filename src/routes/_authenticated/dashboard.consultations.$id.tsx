@@ -731,9 +731,17 @@ function Step7({ log, onChange }: any) {
       <Separator />
 
       <div className="space-y-1.5">
-        <Label>Aftercare advice given</Label>
+        <div className="flex items-center justify-between gap-2">
+          <Label>Aftercare advice given</Label>
+          <NoteTemplatePicker
+            scope="aftercare"
+            variant="ghost"
+            onInsert={(text) => onChange({ ...log, aftercare: appendTemplate(log?.aftercare ?? "", text) })}
+          />
+        </div>
         <Textarea rows={4} value={log?.aftercare ?? ""} onChange={(e) => onChange({ ...log, aftercare: e.target.value })} />
       </div>
+
     </div>
   );
 }
