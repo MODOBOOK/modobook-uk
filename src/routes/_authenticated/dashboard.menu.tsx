@@ -18,6 +18,8 @@ import {
   Star,
   HelpCircle,
   ChevronRight,
+  ChevronDown,
+
   ShieldCheck,
   LogOut,
   ExternalLink,
@@ -131,6 +133,9 @@ function MenuPage() {
   const { profile } = Route.useRouteContext() as { profile: { slug: string; clinic_name?: string | null } };
   const { admin } = Route.useLoaderData();
   const [query, setQuery] = useState("");
+  const searching = query.trim().length > 0;
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({ "Your business": true });
+
 
   const filtered = useMemo(() => {
     if (!query.trim()) return groups;
@@ -171,9 +176,22 @@ function MenuPage() {
         </CardContent>
       </Card>
 
-      {filtered.map((g) => (
+      {filtered.map((g) => {
+        const expanded = searching || openGroups[g.title] === true;
+        return (
         <section key={g.title} className="space-y-3">
-          <h2 className="px-2 text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">{g.title}</h2>
+          <button
+            type="button"
+            onClick={() => setOpenGroups((s) => ({ ...s, [g.title]: !expanded }))}
+            className="grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-2xl border border-muted-foreground/10 bg-card px-4 py-3 text-left shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition active:scale-[0.99]"
+          >
+            <span className="min-w-0">
+              <span className="block truncate text-sm font-bold uppercase tracking-[0.12em]">{g.title}</span>
+              <span className="mt-0.5 block text-xs text-muted-foreground">{g.items.length} options</span>
+            </span>
+            <ChevronDown className={`h-5 w-5 shrink-0 text-muted-foreground transition ${expanded ? "rotate-180" : ""}`} />
+          </button>
+          {expanded && (
           <div className="space-y-3">
             {g.items.map((item) => (
               <Link
@@ -194,8 +212,11 @@ function MenuPage() {
               </Link>
             ))}
           </div>
+          )}
         </section>
-      ))}
+        );
+      })}
+
 
       {admin && (
         <section className="space-y-3">

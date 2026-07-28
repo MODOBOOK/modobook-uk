@@ -21,6 +21,8 @@ import { listMyAppointments } from "@/lib/availability.functions";
 import { getStripePayouts } from "@/lib/stripe.functions";
 import { buildBookingUrl } from "@/lib/booking-url";
 import { resolveDisplayNames } from "@/lib/display-name";
+import { SetupChecklistCard } from "@/components/SetupChecklistCard";
+
 import { toast } from "sonner";
 
 
@@ -146,7 +148,9 @@ function DashboardIndex() {
         </CardContent>
       </Card>
 
-      {/* Stats */}
+      <SetupChecklistCard />
+
+
       <Card className="border-border/60">
         <CardContent className="grid grid-cols-3 divide-x divide-border/60 p-0">
           <Stat label="Today" value={String(todayBookings)} />
