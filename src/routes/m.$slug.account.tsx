@@ -81,7 +81,10 @@ function Account() {
   const [claimEmail, setClaimEmail] = useState("");
   const [claiming, setClaiming] = useState(false);
   const [myClient, setMyClient] = useState<any>(null);
+  const [needsRegistration, setNeedsRegistration] = useState(false);
+  const [registering, setRegistering] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+
 
   async function claimBookings() {
     if (!claimEmail.trim()) return;
