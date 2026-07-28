@@ -7,6 +7,7 @@ import { TreatmentPlansPanel } from "@/components/TreatmentPlansPanel";
 import { createPaymentLink } from "@/lib/payment-links.functions";
 import { generateConsultationPdf } from "@/lib/consultation-pdf";
 import { supabase } from "@/integrations/supabase/client";
+import { NoteTemplatePicker, appendTemplate } from "@/components/NoteTemplatePicker";
 import { listMyConsentTemplates, getConsentTemplate } from "@/lib/treatment-consents.functions";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -426,9 +427,17 @@ function Step3({ profileId, consultationId, assessment, photos, onChangeAssess, 
     <div className="space-y-4">
       <Header n={3} title="Assessment" subtitle="Clinical notes and before photos." />
       <div className="space-y-1.5">
-        <Label>Clinical assessment</Label>
+        <div className="flex items-center justify-between gap-2">
+          <Label>Clinical assessment</Label>
+          <NoteTemplatePicker
+            scope="assessment"
+            variant="ghost"
+            onInsert={(text) => onChangeAssess({ ...assessment, notes: appendTemplate(assessment?.notes ?? "", text) })}
+          />
+        </div>
         <Textarea rows={5} value={assessment?.notes ?? ""} onChange={(e) => onChangeAssess({ ...assessment, notes: e.target.value })} placeholder="Skin condition, muscle tone, asymmetries…" />
       </div>
+
 
       <PhotoGrid label="Before photos" photos={photos ?? []} onChange={onChangePhotos} profileId={profileId} consultationId={consultationId} />
     </div>
@@ -440,9 +449,17 @@ function Step4({ plan, onChange }: any) {
     <div className="space-y-4">
       <Header n={4} title="Treatment plan" subtitle="What you recommend." />
       <div className="space-y-1.5">
-        <Label>Recommended treatments & plan</Label>
+        <div className="flex items-center justify-between gap-2">
+          <Label>Recommended treatments & plan</Label>
+          <NoteTemplatePicker
+            scope="plan"
+            variant="ghost"
+            onInsert={(text) => onChange({ ...plan, text: appendTemplate(plan?.text ?? "", text) })}
+          />
+        </div>
         <Textarea rows={8} value={plan?.text ?? ""} onChange={(e) => onChange({ ...plan, text: e.target.value })} placeholder="e.g. Botox – 3 areas (forehead, glabella, crow's feet) – 50 units total. Review in 2 weeks." />
       </div>
+
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-1.5">
           <Label>Estimated price (£)</Label>
@@ -714,9 +731,17 @@ function Step7({ log, onChange }: any) {
       <Separator />
 
       <div className="space-y-1.5">
-        <Label>Aftercare advice given</Label>
+        <div className="flex items-center justify-between gap-2">
+          <Label>Aftercare advice given</Label>
+          <NoteTemplatePicker
+            scope="aftercare"
+            variant="ghost"
+            onInsert={(text) => onChange({ ...log, aftercare: appendTemplate(log?.aftercare ?? "", text) })}
+          />
+        </div>
         <Textarea rows={4} value={log?.aftercare ?? ""} onChange={(e) => onChange({ ...log, aftercare: e.target.value })} />
       </div>
+
     </div>
   );
 }

@@ -11,6 +11,7 @@ import { listMyAppointments } from "@/lib/availability.functions";
 import { listConsultationsForPatient, createConsultation } from "@/lib/consultations.functions";
 import { getMyProfile } from "@/lib/profiles.functions";
 import { supabase } from "@/integrations/supabase/client";
+import { NoteTemplatePicker, appendTemplate } from "@/components/NoteTemplatePicker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -931,6 +932,13 @@ function NotesSection({ clientId, patient }: { clientId: string; patient: any })
           </DialogHeader>
           {editing && (
             <div className="space-y-3">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-xs text-muted-foreground">Start from a treatment template or write freehand.</span>
+                <NoteTemplatePicker
+                  scope="note"
+                  onInsert={(text) => setEditing((e) => (e ? { ...e, body: appendTemplate(e.body, text) } : e))}
+                />
+              </div>
               <Textarea
                 autoFocus
                 rows={14}
