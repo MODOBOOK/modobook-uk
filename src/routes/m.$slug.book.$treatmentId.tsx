@@ -21,7 +21,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import { Clock, MapPin, CheckCircle2, LogIn, UserPlus, UserCheck } from "lucide-react";
-import { PublicRewardsBanner } from "@/components/PublicRewardsBanner";
 import { DiscountCodeBox, type AppliedDiscount } from "@/components/DiscountCodeBox";
 import { ReferralCodeInput } from "@/components/ReferralCodeInput";
 import { AddressAutocomplete } from "@/components/AddressAutocomplete";
@@ -611,9 +610,8 @@ function BookTreatmentPage() {
         </Link>
       </div>
 
-      <div className="-mx-4 sm:mx-0">
-        <PublicRewardsBanner slug={slug} brand={brand} />
-      </div>
+
+
 
       {(() => {
         const detailsDone = Boolean(
