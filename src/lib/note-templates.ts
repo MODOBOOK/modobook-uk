@@ -1,5 +1,6 @@
 // Prepopulated clinical note templates for UK aesthetics practice.
-// Inserted into the editor as plain text so the practitioner can edit freely.
+// Deliberately short, complete prose — no blanks to fill in.
+// Inserted as plain text so the practitioner can edit freely.
 
 export type NoteTemplate = {
   id: string;
@@ -10,162 +11,116 @@ export type NoteTemplate = {
   body: string;
 };
 
-const CONSENT_LINE = "Risks, benefits and alternatives discussed. Patient consented and had opportunity to ask questions.";
+const CONSENT = "Risks, benefits and alternatives discussed; written consent taken and questions answered.";
 
 export const NOTE_TEMPLATES: NoteTemplate[] = [
+  // ── Consultation & review (most used first) ──────────────────
+  {
+    id: "consultation",
+    label: "New patient consultation",
+    category: "Consultation & review",
+    scope: ["note", "assessment"],
+    body: `Face-to-face consultation. Concerns, goals and expectations discussed and felt to be realistic. Medical history, medications and allergies reviewed with no contraindications identified; not pregnant or breastfeeding. Facial assessment and photographs taken with consent. Treatment options, risks, benefits, alternatives and costs explained with written information provided. ${CONSENT}`,
+  },
+  {
+    id: "review",
+    label: "Two week review",
+    category: "Consultation & review",
+    scope: ["note", "assessment"],
+    body: `Review following recent treatment. Patient reports a good result and is satisfied. Any swelling and bruising has settled as expected. On examination the result is symmetrical and settling well with no complications. Comparison photographs taken with consent. No further action needed today and routine maintenance discussed.`,
+  },
+  {
+    id: "complication",
+    label: "Complication / adverse event",
+    category: "Consultation & review",
+    scope: ["note"],
+    body: `Patient reviewed following a reported adverse event after treatment. History, onset and symptoms recorded, and the area examined including skin colour, capillary refill, swelling and signs of infection. Working diagnosis and management plan discussed and treatment given in line with clinic protocol. Warning signs, emergency contact details and written information provided, with escalation arranged if symptoms worsen. Follow-up review booked and incident logged with the insurer notified as required.`,
+  },
+  {
+    id: "declined",
+    label: "Treatment declined / not suitable",
+    category: "Consultation & review",
+    scope: ["note"],
+    body: `Treatment not carried out today. Following assessment, the patient was not suitable for the requested treatment and the reasons were explained clearly. Alternatives and appropriate advice were offered and written information provided. Patient understood the rationale and agreed the plan; rebooking or onward referral arranged where appropriate.`,
+  },
+
   // ── Injectables ───────────────────────────────────────────────
   {
     id: "toxin-upper-face",
     label: "Botulinum toxin — upper face",
     category: "Injectables",
     scope: ["note", "plan"],
-    body: `Treatment: Botulinum toxin type A — upper face
-Product / batch: [product], batch [ ], expiry [ ]
-Areas & dosing: frontalis [ ]u · glabella [ ]u · lateral orbicularis oculi [ ]u — total [ ]u
-Dilution: [ ]ml 0.9% sodium chloride
-Technique: intramuscular, [ ]G/[ ]mm needle, standard injection points
-Pre-treatment: skin cleansed, no active infection, no contraindications reported
-${CONSENT_LINE}
-Immediate outcome: no adverse events, mild erythema/wheals expected
-Aftercare given: verbal + written. Avoid rubbing area, no exercise/heat/alcohol 24h, stay upright 4h.
-Review: 2 weeks for top-up assessment. Next treatment due approx [ ] months.`,
+    body: `Botulinum toxin type A to the upper face. Product, batch and expiry recorded, reconstituted and stored per manufacturer guidance. Skin cleansed, no active infection and no contraindications reported. Standard intramuscular injection points used with dosing appropriate to muscle bulk. ${CONSENT} Onset over 3–14 days explained. No immediate adverse events; mild erythema expected. Verbal and written aftercare given. Two week review offered.`,
   },
   {
     id: "toxin-lower-face",
     label: "Botulinum toxin — lower face / advanced",
     category: "Injectables",
     scope: ["note", "plan"],
-    body: `Treatment: Botulinum toxin type A — [masseter / DAO / mentalis / platysma / nefertiti / gummy smile]
-Product / batch: [product], batch [ ], expiry [ ]
-Areas & dosing: [ ] — total [ ]u
-Technique: [intramuscular / superficial], [ ]G/[ ]mm needle
-Discussion: onset 3–14 days, asymmetry and heaviness risk explained, results last approx 3–4 months.
-${CONSENT_LINE}
-Immediate outcome: no adverse events
-Aftercare given: verbal + written
-Review: 2 weeks.`,
+    body: `Advanced botulinum toxin treatment to the lower face. Product, batch and expiry recorded. Anatomy assessed and injection points placed to avoid unwanted spread. ${CONSENT} Risks of asymmetry, heaviness and temporary weakness explained, with results lasting approximately three to four months. No immediate adverse events. Verbal and written aftercare given and two week review offered.`,
   },
   {
     id: "hyperhidrosis",
     label: "Botulinum toxin — hyperhidrosis",
     category: "Injectables",
     scope: ["note", "plan"],
-    body: `Treatment: Botulinum toxin type A for axillary hyperhidrosis
-Product / batch: [product], batch [ ], expiry [ ]
-Assessment: [Minor's starch iodine test performed / clinical assessment only]
-Dosing: right axilla [ ]u · left axilla [ ]u — total [ ]u, intradermal grid ~1–2cm spacing
-${CONSENT_LINE}
-Aftercare: avoid antiperspirant 24h, no heat/exercise 24h.
-Review: 4 weeks. Expected duration 4–6 months.`,
+    body: `Botulinum toxin type A for excessive sweating. Product, batch and expiry recorded. Area cleansed and treated with an intradermal grid at standard spacing. ${CONSENT} Expected duration of four to six months explained. Tolerated well with no adverse events. Aftercare advised to avoid antiperspirant, heat and exercise for 24 hours. Review at four weeks.`,
   },
   {
     id: "filler-lips",
     label: "Dermal filler — lips",
     category: "Injectables",
     scope: ["note", "plan"],
-    body: `Treatment: HA dermal filler — lips
-Product / batch: [product], [ ]ml used, batch [ ], expiry [ ]
-Goal: [hydration / definition / volume / asymmetry correction]
-Technique: [needle / cannula], [ ]G, [linear threading / bolus / tenting], submucosal
-Anaesthetic: topical [ ] / product contains lidocaine
-Vascular safety: aspiration performed where appropriate, slow low-pressure injection, hyaluronidase available on site.
-${CONSENT_LINE} Risk of vascular occlusion, swelling, bruising, lumps and asymmetry specifically discussed.
-Immediate outcome: symmetrical result, capillary refill normal, no blanching or pain out of proportion.
-Aftercare given: verbal + written. Warning signs of occlusion explained; patient knows to contact clinic immediately.
-Review: 2–4 weeks.`,
+    body: `Hyaluronic acid dermal filler to the lips. Product, volume, batch and expiry recorded. Topical anaesthetic applied and skin cleansed. Slow, low-pressure injection used with careful attention to vascular anatomy; hyaluronidase available on site. ${CONSENT} Risks of vascular occlusion, swelling, bruising, lumps and asymmetry specifically discussed. Immediate result symmetrical with normal capillary refill and no blanching or disproportionate pain. Verbal and written aftercare given, including warning signs of occlusion and instruction to contact the clinic immediately. Review in two to four weeks.`,
   },
   {
     id: "filler-midface",
     label: "Dermal filler — cheeks / midface",
     category: "Injectables",
     scope: ["note", "plan"],
-    body: `Treatment: HA dermal filler — [cheeks / tear trough / temples / nasolabial]
-Product / batch: [product], [ ]ml total ([ ]ml right, [ ]ml left), batch [ ], expiry [ ]
-Technique: [cannula [ ]G via lateral entry point / needle], depth [supraperiosteal / deep fat compartment]
-Vascular safety: aspiration where appropriate, retrograde slow injection, hyaluronidase on site.
-${CONSENT_LINE} Vascular occlusion and visual compromise risk discussed.
-Immediate outcome: no blanching, normal capillary refill, symmetrical
-Aftercare given: verbal + written
-Review: 2–4 weeks.`,
+    body: `Hyaluronic acid dermal filler to the midface. Product, volume, batch and expiry recorded. Skin cleansed and product placed slowly in the appropriate plane with attention to vascular anatomy; hyaluronidase available on site. ${CONSENT} Risk of vascular occlusion and visual compromise discussed. Immediate result symmetrical with no blanching and normal capillary refill. Verbal and written aftercare given. Review in two to four weeks.`,
   },
   {
     id: "filler-jaw-chin",
     label: "Dermal filler — jawline / chin",
     category: "Injectables",
     scope: ["note", "plan"],
-    body: `Treatment: HA dermal filler — [jawline / chin]
-Product / batch: [product], [ ]ml total, batch [ ], expiry [ ]
-Technique: [needle bolus supraperiosteal / cannula subcutaneous], entry points marked and cleansed
-Vascular safety: facial artery anatomy considered, aspiration where appropriate, slow injection.
-${CONSENT_LINE}
-Immediate outcome: symmetrical, no adverse events
-Aftercare given: verbal + written
-Review: 2–4 weeks.`,
+    body: `Hyaluronic acid dermal filler to the jawline and chin. Product, volume, batch and expiry recorded. Entry points marked and cleansed, product placed slowly with attention to facial artery anatomy and hyaluronidase available on site. ${CONSENT} Immediate result symmetrical with no adverse events. Verbal and written aftercare given. Review in two to four weeks.`,
   },
   {
     id: "dissolving",
     label: "Hyaluronidase — filler dissolving",
     category: "Injectables",
     scope: ["note", "plan"],
-    body: `Treatment: Hyaluronidase — dissolving of HA filler
-Indication: [overfilled / migration / nodule / patient request / vascular concern]
-Allergy check: no history of bee/wasp venom allergy. Patch test [performed / declined by patient — documented] at [ ].
-Product: hyaluronidase [ ]iu reconstituted in [ ]ml 0.9% sodium chloride
-Areas & volume injected: [ ]
-${CONSENT_LINE} Risk of anaphylaxis, loss of native HA, and need for repeat sessions discussed. Anaphylaxis kit available on site.
-Immediate outcome: no adverse reaction, patient observed [ ] minutes post-treatment
-Review: 2 weeks before considering repeat session.`,
+    body: `Hyaluronidase used to dissolve hyaluronic acid filler. Indication discussed and documented. No history of bee or wasp venom allergy; allergy testing discussed and the patient's decision recorded. Product reconstituted and injected into the treated area. ${CONSENT} Risks of anaphylaxis, loss of native hyaluronic acid and the possible need for repeat sessions explained; anaphylaxis kit available on site. Patient observed after treatment with no adverse reaction. Review in two weeks before considering a further session.`,
   },
   {
     id: "profhilo-boosters",
     label: "Profhilo / skin booster",
     category: "Injectables",
     scope: ["note", "plan"],
-    body: `Treatment: [Profhilo / Seventy Hyal / Sunekos / other skin booster]
-Product / batch: [product] [ ]ml, batch [ ], expiry [ ]
-Technique: [BAP 5-point per side / micro-bolus / mesotherapy], [ ]G needle
-${CONSENT_LINE} Explained results build over the course, small blebs settle in 24h.
-Immediate outcome: expected blebs present, no adverse events
-Aftercare given: verbal + written. No make-up 12h, no heat/exercise 24h.
-Plan: session [ ] of [ ]. Next session in 4 weeks.`,
+    body: `Injectable skin booster treatment. Product, batch and expiry recorded. Skin cleansed and product placed at standard points in the appropriate plane. ${CONSENT} Explained that results build over the course and small blebs settle within 24 hours. No adverse events. Verbal and written aftercare given, avoiding make-up for 12 hours and heat or exercise for 24 hours. Next session planned in four weeks.`,
   },
   {
     id: "polynucleotides",
     label: "Polynucleotides",
     category: "Injectables",
     scope: ["note", "plan"],
-    body: `Treatment: Polynucleotides — [under eye / face / neck / scalp]
-Product / batch: [product] [ ]ml, batch [ ], expiry [ ]
-Technique: [needle micro-bolus / cannula], depth [intradermal / subdermal]
-${CONSENT_LINE} Fish-derived origin and allergy status discussed — no seafood allergy reported.
-Immediate outcome: no adverse events, mild swelling expected
-Plan: session [ ] of 3, 3–4 weeks apart.`,
+    body: `Polynucleotide treatment. Product, batch and expiry recorded. Fish-derived origin explained and no seafood allergy reported. Skin cleansed and product placed in the appropriate plane. ${CONSENT} Mild swelling expected and no adverse events at the time of treatment. Course of three sessions three to four weeks apart planned.`,
   },
   {
     id: "fat-dissolving",
     label: "Fat dissolving injection",
     category: "Injectables",
     scope: ["note", "plan"],
-    body: `Treatment: Deoxycholic acid fat dissolving — [submental / jowls / body area]
-Product / batch: [product], [ ]ml, batch [ ], expiry [ ]
-Technique: subcutaneous grid, [ ]cm spacing, [ ]ml per point
-${CONSENT_LINE} Significant swelling for 3–7 days, tenderness and possible nodules discussed.
-Immediate outcome: no adverse events
-Aftercare given: verbal + written
-Plan: session [ ] of [ ], repeat in 6 weeks.`,
+    body: `Fat dissolving injection to the treated area. Product, batch and expiry recorded. Skin cleansed and product placed subcutaneously using a standard grid. ${CONSENT} Significant swelling for three to seven days, tenderness and possible nodules explained. No adverse events. Verbal and written aftercare given and a repeat session planned in around six weeks.`,
   },
   {
     id: "vitamin-injection",
     label: "Vitamin B12 / injectable wellness",
     category: "Injectables",
     scope: ["note", "plan"],
-    body: `Treatment: [Vitamin B12 hydroxocobalamin / other]
-Dose / batch: [ ]mg, batch [ ], expiry [ ]
-Route/site: intramuscular, [left/right] deltoid, [ ]G needle, aspiration negative
-Screening: no contraindications, no known allergy, [pregnancy status confirmed]
-${CONSENT_LINE}
-Immediate outcome: tolerated well, no adverse events
-Plan: repeat every [ ] weeks.`,
+    body: `Intramuscular injectable wellness treatment. Product, dose, batch and expiry recorded. Screening completed with no contraindications or known allergies. Skin cleansed, injection given into the deltoid with negative aspiration. ${CONSENT} Tolerated well with no adverse events. Repeat interval discussed.`,
   },
 
   // ── Skin ─────────────────────────────────────────────────────
@@ -174,139 +129,44 @@ Plan: repeat every [ ] weeks.`,
     label: "Microneedling",
     category: "Skin",
     scope: ["note", "plan"],
-    body: `Treatment: Microneedling — [device], [ ]mm depth
-Areas: [full face / neck / décolletage / scarring]
-Prep: skin cleansed and degreased, topical anaesthetic [ ] applied for [ ] minutes
-Serum used: [ ] (batch [ ])
-Passes: [ ] in [ ] directions, endpoint pin-point erythema
-${CONSENT_LINE}
-Immediate outcome: expected erythema, no pinpoint bleeding beyond normal, no adverse events
-Aftercare: no make-up 24h, SPF50 daily, no active ingredients 5 days, no heat/exercise 48h.
-Plan: session [ ] of [ ], 4 weeks apart.`,
+    body: `Microneedling treatment. Skin cleansed and degreased and topical anaesthetic applied. Device settings selected for the area and passes performed to an endpoint of pin-point erythema. ${CONSENT} Expected erythema afterwards with no adverse events. Aftercare advised: no make-up for 24 hours, daily SPF50, no active skincare for five days and no heat or exercise for 48 hours. Further session planned in four weeks.`,
   },
   {
     id: "peel",
     label: "Chemical peel",
     category: "Skin",
     scope: ["note", "plan"],
-    body: `Treatment: Chemical peel — [product / acid and %]
-Indication: [acne / pigmentation / texture / dullness]
-Fitzpatrick type: [ ] · Pre-conditioning: [ ] weeks of [ ]
-Prep: double cleanse, degrease with [ ]
-Layers / dwell time: [ ] layers, [ ] minutes, neutralised with [ ]
-Endpoint: [level 1 erythema / frosting level [ ]]
-${CONSENT_LINE} PIH risk, peeling timeline and strict SPF discussed.
-Aftercare: SPF50, no picking, no actives 7 days, no heat/exercise 48h.
-Plan: session [ ] of [ ], [ ] weeks apart.`,
+    body: `Chemical peel treatment. Skin type assessed and any pre-conditioning confirmed. Skin double cleansed and degreased, peel applied and timed to the expected endpoint, then neutralised and soothed. ${CONSENT} Risk of post-inflammatory hyperpigmentation, the peeling timeline and the need for strict sun protection discussed. No adverse events. Aftercare advised: daily SPF50, no picking, no active skincare for seven days and no heat or exercise for 48 hours. Further session planned as part of the course.`,
   },
   {
     id: "prp",
     label: "PRP / PRF",
     category: "Skin",
     scope: ["note", "plan"],
-    body: `Treatment: [PRP / PRF] — [face / under eye / scalp]
-Draw: [ ]ml venous blood, [left/right] antecubital fossa, aseptic technique
-Processing: [kit], spun [ ] rpm for [ ] mins, [ ]ml plasma obtained
-Delivery: [injection / microneedling], depth [ ]
-${CONSENT_LINE}
-Immediate outcome: no adverse events, venepuncture site clean and dressed
-Plan: session [ ] of 3, 4 weeks apart.`,
+    body: `Platelet-rich plasma treatment. Venous blood drawn using aseptic technique and processed per the kit instructions. Plasma delivered to the treatment area by injection or microneedling. ${CONSENT} Venepuncture site clean and dressed with no adverse events. Course of three sessions four weeks apart planned.`,
   },
   {
     id: "laser-ipl",
     label: "Laser / IPL",
     category: "Skin",
     scope: ["note", "plan"],
-    body: `Treatment: [device] — [hair removal / vascular / pigment / resurfacing]
-Areas: [ ] · Fitzpatrick type: [ ]
-Patch test: performed [date], no adverse reaction
-Settings: fluence [ ] J/cm² · pulse width [ ]ms · spot size [ ]mm · cooling [ ]
-Endpoint: [perifollicular oedema / vessel clearance / mild erythema]
-Eye protection worn by patient and practitioner.
-${CONSENT_LINE}
-Immediate outcome: no blistering or burns, no adverse events
-Aftercare: SPF50, no heat/sun/exercise 48h, no exfoliation 7 days.
-Plan: session [ ] of [ ], [ ] weeks apart.`,
+    body: `Laser or IPL treatment. Skin type assessed and a satisfactory patch test confirmed with no adverse reaction. Device settings selected for skin type and indication, with eye protection worn by patient and practitioner throughout. Expected clinical endpoint achieved. ${CONSENT} No blistering or burns and no adverse events. Aftercare advised: daily SPF50, no heat, sun or exercise for 48 hours and no exfoliation for seven days. Further session planned as part of the course.`,
   },
 
-  // ── Consultation & review ────────────────────────────────────
-  {
-    id: "consultation",
-    label: "New patient consultation",
-    category: "Consultation",
-    scope: ["note", "assessment"],
-    body: `Consultation type: new patient, face-to-face
-Presenting concerns: [in patient's own words]
-Expectations & motivation: [ ] — realistic / requires managing
-Medical history: reviewed, form completed [date]. Significant: [none / [ ]]
-Medications & allergies: [none known / [ ]]
-Previous aesthetic treatments: [product, area, date, practitioner]
-Pregnancy / breastfeeding: [n/a / confirmed not]
-Examination: skin type Fitzpatrick [ ], [asymmetry / volume loss / dynamic lines / laxity] noted
-Photographs: taken with consent [yes/no]
-Discussion: options, risks, benefits, alternatives and costs discussed. Written information provided.
-Outcome: [proceeding today / cooling-off period, review booked / not suitable — reason [ ]]`,
-  },
-  {
-    id: "review",
-    label: "2 week review / follow-up",
-    category: "Consultation",
-    scope: ["note", "assessment"],
-    body: `Review following [treatment] on [date].
-Patient reports: [satisfied / concerns: [ ]]
-Downtime experienced: [bruising / swelling / none] — resolved [yes/no]
-Examination: [symmetrical, settled well / residual [ ]]
-Action: [no further action / top-up [ ]u given / massage advised / plan adjusted]
-Photographs: comparison taken with consent [yes/no]
-Next appointment: [ ]`,
-  },
-  {
-    id: "complication",
-    label: "Complication / adverse event",
-    category: "Consultation",
-    scope: ["note"],
-    body: `Adverse event review.
-Treatment involved: [product, area, volume/units] performed on [date]
-Onset: [ ] · Symptoms reported: [ ]
-Examination findings: [blanching / dusky discolouration / capillary refill [ ]s / swelling / nodule / infection signs / ptosis]
-Working diagnosis: [ ]
-Management: [hyaluronidase [ ]iu given / antibiotics advised / warm compress + massage / aspirin per protocol / observation]
-Escalation: [none required / GP / A&E / medical director / prescriber contacted at [time]]
-Patient advised: warning signs, emergency contact details given, written information provided.
-Follow-up: reviewed [date/time], contact within 24 hours arranged.
-Incident logged and insurer notified: [yes/no]`,
-  },
-  {
-    id: "declined",
-    label: "Treatment declined / not suitable",
-    category: "Consultation",
-    scope: ["note"],
-    body: `Treatment not carried out today.
-Reason: [medical contraindication / unrealistic expectations / active infection / recent treatment elsewhere / patient decision / BDD screening concern]
-Discussion: rationale explained, alternatives offered [ ].
-Advice given: [ ]
-Outcome: [rebooked for [ ] / referred to GP / no further action]`,
-  },
+  // ── Admin ────────────────────────────────────────────────────
   {
     id: "dna",
     label: "Did not attend (DNA)",
     category: "Admin",
     scope: ["note"],
-    body: `Patient did not attend appointment on [date] at [time].
-Contact attempted: [call / text / email] at [time]. Response: [none / [ ]]
-Deposit / fee: [retained per policy / waived]
-Outcome: [rebooked [ ] / removed from list / policy reminder sent]`,
+    body: `Patient did not attend their booked appointment and did not make contact. Contact attempted by phone and message with no response at the time of writing. Deposit and cancellation policy applied as per clinic terms. Patient invited to rebook.`,
   },
   {
     id: "phone-note",
     label: "Phone / message contact",
     category: "Admin",
     scope: ["note"],
-    body: `Contact by [phone / text / email] on [date] at [time].
-Patient reports: [ ]
-Advice given: [ ]
-Action: [reassurance / reviewed in clinic [date] / escalated to prescriber]
-Duration of call: [ ] minutes.`,
+    body: `Contacted by the patient by phone or message. Concerns discussed, reassurance and appropriate advice given, and warning signs explained with instruction to contact the clinic if symptoms change. Review in clinic offered and escalation to a prescriber arranged if needed.`,
   },
 
   // ── Aftercare ────────────────────────────────────────────────
@@ -315,27 +175,14 @@ Duration of call: [ ] minutes.`,
     label: "Aftercare — injectables",
     category: "Aftercare",
     scope: ["aftercare"],
-    body: `Keep the area clean and avoid touching or massaging unless advised.
-No make-up for 12 hours.
-Avoid strenuous exercise, saunas, steam rooms and sunbeds for 24–48 hours.
-Avoid alcohol for 24 hours.
-Stay upright for 4 hours after toxin and avoid lying face down.
-Mild swelling, redness and bruising are normal and settle within a few days.
-Arnica or a cool compress can help with bruising.
-Contact the clinic immediately if you experience severe or increasing pain, blanching (white patches), dusky/blue discolouration, vision changes or signs of infection.`,
+    body: `Keep the area clean and avoid touching or massaging it unless advised. No make-up for 12 hours. Avoid strenuous exercise, saunas, steam rooms and sunbeds for 24–48 hours, and avoid alcohol for 24 hours. After toxin, stay upright for four hours and avoid lying face down. Mild swelling, redness and bruising are normal and settle within a few days; a cool compress can help. Contact the clinic immediately if you have severe or increasing pain, white or dusky discolouration, vision changes or signs of infection.`,
   },
   {
     id: "aftercare-skin",
     label: "Aftercare — skin treatments",
     category: "Aftercare",
     scope: ["aftercare"],
-    body: `Cleanse gently with lukewarm water only for the first 24 hours.
-No make-up for 24 hours.
-Use SPF50 daily for at least two weeks — this is essential to avoid pigmentation.
-Pause retinoids, acids, vitamin C and exfoliants for 5–7 days.
-Avoid heat, exercise, saunas and swimming for 48 hours.
-Do not pick or peel flaking skin.
-Redness, tightness and light flaking are normal. Contact the clinic if you notice blistering, spreading redness or signs of infection.`,
+    body: `Cleanse gently with lukewarm water only for the first 24 hours and avoid make-up for 24 hours. Use SPF50 every day for at least two weeks to avoid pigmentation. Pause retinoids, acids, vitamin C and exfoliants for five to seven days. Avoid heat, exercise, saunas and swimming for 48 hours and do not pick or peel flaking skin. Redness, tightness and light flaking are normal — contact the clinic if you notice blistering, spreading redness or signs of infection.`,
   },
 ];
 

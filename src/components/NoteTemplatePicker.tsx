@@ -64,8 +64,7 @@ export function NoteTemplatePicker({
           <DialogHeader>
             <DialogTitle>Note templates</DialogTitle>
             <DialogDescription>
-              Pick a starting point — it drops straight into the note and stays fully editable.
-              Square brackets mark the bits to fill in.
+              Pick one — it drops straight into the note, fully written and still editable.
             </DialogDescription>
           </DialogHeader>
 
@@ -80,35 +79,38 @@ export function NoteTemplatePicker({
             />
           </div>
 
-          <div className="-mx-1 max-h-[55vh] space-y-4 overflow-y-auto px-1 pb-1">
+          <div className="-mx-1 max-h-[55vh] overflow-y-auto px-1 pb-1">
             {grouped.length === 0 && (
               <p className="py-8 text-center text-xs text-muted-foreground">No templates match “{q}”.</p>
             )}
             {grouped.map(([category, items]) => (
-              <div key={category} className="space-y-1.5">
-                <div className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+              <div key={category} className="mb-2 last:mb-0">
+                <div className="sticky top-0 z-10 bg-background py-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
                   {category}
                 </div>
-                {items.map((t) => (
-                  <button
-                    key={t.id}
-                    type="button"
-                    onClick={() => {
-                      onInsert(t.body);
-                      setOpen(false);
-                      setQ("");
-                    }}
-                    className="w-full rounded-lg border bg-card p-3 text-left transition hover:border-primary hover:bg-primary/5"
-                  >
-                    <div className="text-sm font-medium">{t.label}</div>
-                    <div className="mt-0.5 line-clamp-2 whitespace-pre-wrap text-[11px] leading-snug text-muted-foreground">
-                      {t.body}
-                    </div>
-                  </button>
-                ))}
+                <div className="divide-y rounded-lg border">
+                  {items.map((t) => (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() => {
+                        onInsert(t.body);
+                        setOpen(false);
+                        setQ("");
+                      }}
+                      className="w-full bg-card px-3 py-2 text-left transition hover:bg-primary/5"
+                    >
+                      <div className="text-sm font-medium leading-tight">{t.label}</div>
+                      <div className="line-clamp-1 text-[11px] leading-snug text-muted-foreground">
+                        {t.body}
+                      </div>
+                    </button>
+                  ))}
+                </div>
               </div>
             ))}
           </div>
+
         </DialogContent>
       </Dialog>
     </>
