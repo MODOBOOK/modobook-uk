@@ -449,9 +449,17 @@ function Step4({ plan, onChange }: any) {
     <div className="space-y-4">
       <Header n={4} title="Treatment plan" subtitle="What you recommend." />
       <div className="space-y-1.5">
-        <Label>Recommended treatments & plan</Label>
+        <div className="flex items-center justify-between gap-2">
+          <Label>Recommended treatments & plan</Label>
+          <NoteTemplatePicker
+            scope="plan"
+            variant="ghost"
+            onInsert={(text) => onChange({ ...plan, text: appendTemplate(plan?.text ?? "", text) })}
+          />
+        </div>
         <Textarea rows={8} value={plan?.text ?? ""} onChange={(e) => onChange({ ...plan, text: e.target.value })} placeholder="e.g. Botox – 3 areas (forehead, glabella, crow's feet) – 50 units total. Review in 2 weeks." />
       </div>
+
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-1.5">
           <Label>Estimated price (£)</Label>
