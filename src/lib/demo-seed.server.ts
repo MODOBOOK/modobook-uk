@@ -662,16 +662,21 @@ export async function seedDemoClinic(admin: Admin) {
     clientId = data!.id as string;
   }
 
-  // Appointments — a past one and an upcoming one
+  // Appointments — a past one and an upcoming one.
+  // NOTE: times must be deterministic (fixed clock times, local date parts) or
+  // every seed run creates a fresh "duplicate" booking at the current time.
   const now = new Date();
-  const upcoming = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
-  const past = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+  const upcoming = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 3, 10, 0, 0);
+  const past = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 14, 14, 0, 0);
 
+  function pad(n: number) {
+    return String(n).padStart(2, "0");
+  }
   function ymd(d: Date) {
-    return d.toISOString().slice(0, 10);
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
   }
   function hms(d: Date) {
-    return d.toISOString().slice(11, 19);
+    return `${pad(d.getHours())}:${pad(d.getMinutes())}:00`;
   }
 
   async function ensureAppointment(
@@ -686,22 +691,30 @@ export async function seedDemoClinic(admin: Admin) {
   ) {
     const date = ymd(when);
     const start = hms(when);
-    const { data: existing } = await admin
+    // Dedupe per patient per day — one seeded booking per patient per date,
+    // regardless of the time it was originally created at.
+    const { data: existingSame } = await admin
       .from("appointments")
-      .select("id, total_amount")
+      .select("id, total_amount, start_time")
       .eq("profile_id", profileId!)
       .eq("scheduled_date", date)
-      .eq("start_time", start)
       .eq("patient_email", patientEmail)
-      .maybeSingle();
-    if (existing?.id) {
-      if (existing.total_amount == null || Number(existing.total_amount) === 0) {
-        await admin
-          .from("appointments")
-          .update({ total_amount: totalAmount, base_amount: totalAmount, payment_status: status === "completed" ? "paid" : "pending" })
-          .eq("id", existing.id);
+      .eq("is_demo", true)
+      .order("start_time", { ascending: true });
+    if (existingSame && existingSame.length > 0) {
+      const keep = existingSame[0];
+      const extras = existingSame.slice(1).map((r: any) => r.id);
+      if (extras.length > 0) {
+        await admin.from("appointments").delete().in("id", extras);
       }
-      return existing.id;
+      const patch: Record<string, unknown> = { start_time: start };
+      if (keep.total_amount == null || Number(keep.total_amount) === 0) {
+        patch.total_amount = totalAmount;
+        patch.base_amount = totalAmount;
+        patch.payment_status = status === "completed" ? "paid" : "pending";
+      }
+      await admin.from("appointments").update(patch).eq("id", keep.id);
+      return keep.id;
     }
     const end = hms(new Date(when.getTime() + 30 * 60 * 1000));
     const { error } = await admin.from("appointments").insert({
@@ -726,6 +739,7 @@ export async function seedDemoClinic(admin: Admin) {
   }
   await ensureAppointment(past, t1, "Anti-wrinkle consultation", "completed", 25);
   await ensureAppointment(upcoming, t2, "Lip filler — 1ml", "confirmed", 220);
+
 
   // Historical revenue — spread completed appointments across the current
   // month so the Sales dashboard has realistic figures to display.
