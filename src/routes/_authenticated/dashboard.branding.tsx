@@ -80,7 +80,24 @@ const FONTS = [
 ];
 
 
+function mixHex(hex: string, target: string, amount: number) {
+  const norm = (h: string) => {
+    const c = h.replace("#", "");
+    const full = c.length === 3 ? c.split("").map((x) => x + x).join("") : c;
+    return /^[0-9a-f]{6}$/i.test(full) ? full : null;
+  };
+  const a = norm(hex), b = norm(target);
+  if (!a || !b) return hex;
+  const out = [0, 2, 4].map((i) => {
+    const av = parseInt(a.slice(i, i + 2), 16);
+    const bv = parseInt(b.slice(i, i + 2), 16);
+    return Math.round(av + (bv - av) * amount).toString(16).padStart(2, "0");
+  });
+  return `#${out.join("")}`;
+}
+
 function ColorField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+
   return (
     <div className="space-y-1.5">
       <Label>{label}</Label>
@@ -136,6 +153,29 @@ function BrandingPage() {
   function set<K extends keyof ClinicThemeInput>(key: K, value: ClinicThemeInput[K]) {
     setState((s) => ({ ...s, [key]: value }));
   }
+
+  // Six master colours. Changing one cascades to every matching surface so the
+  // whole booking system stays consistent. Existing saved themes are untouched
+  // until the practitioner actually edits a colour here.
+  const LINKED_COLORS: Record<string, (keyof ClinicThemeInput)[]> = {
+    primary_color: ["primary_color", "header_bg_color", "footer_bg_color", "menu_category_bg"],
+    hero_text_color: ["hero_text_color", "header_text_color", "footer_text_color", "menu_category_text"],
+    background_color: ["background_color"],
+    text_color: ["text_color", "menu_treatment_name_color"],
+    accent_color: ["accent_color", "menu_price_color"],
+    menu_card_bg: ["menu_card_bg", "menu_card_border_color"],
+  };
+
+  function setColor(key: keyof ClinicThemeInput, value: string) {
+    const keys = LINKED_COLORS[key as string] ?? [key];
+    setState((s) => {
+      const next = { ...s } as ClinicThemeInput;
+      for (const k of keys) (next as Record<string, unknown>)[k as string] = value;
+      if (key === "menu_card_bg") (next as Record<string, unknown>).menu_card_border_color = mixHex(value, "#000000", 0.1);
+      return next;
+    });
+  }
+
 
   function applyPreset(preset: ThemePreset) {
     setState((s) => ({
@@ -712,26 +752,24 @@ function BrandingPage() {
       <details className="group rounded-xl border bg-card">
         <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4 text-sm font-medium">
           <span className="flex items-center gap-2">
-            <Palette className="h-4 w-4" /> Fine-tune individual colours
+            <Palette className="h-4 w-4" /> Fine-tune your colours
           </span>
           <span className="text-xs font-normal text-muted-foreground">Optional — palettes above set these for you</span>
         </summary>
         <div className="space-y-4 border-t p-4">
           <div className="grid gap-4 sm:grid-cols-2">
-            <ColorField label="Hero background" value={state.primary_color ?? ""} onChange={(v) => set("primary_color", v)} />
-            <ColorField label="Hero text" value={state.hero_text_color ?? "#ffffff"} onChange={(v) => set("hero_text_color", v)} />
-            <ColorField label="Page background" value={state.background_color ?? ""} onChange={(v) => set("background_color", v)} />
-            <ColorField label="Body text" value={state.text_color ?? ""} onChange={(v) => set("text_color", v)} />
-            <ColorField label="Accent / button" value={state.accent_color ?? ""} onChange={(v) => set("accent_color", v)} />
-            <ColorField label="Header background" value={state.header_bg_color ?? ""} onChange={(v) => set("header_bg_color", v)} />
-            <ColorField label="Header text" value={state.header_text_color ?? ""} onChange={(v) => set("header_text_color", v)} />
-            <ColorField label="Footer background" value={state.footer_bg_color ?? ""} onChange={(v) => set("footer_bg_color", v)} />
-            <ColorField label="Footer text" value={state.footer_text_color ?? ""} onChange={(v) => set("footer_text_color", v)} />
+            <ColorField label="Brand colour (hero, header & footer)" value={state.primary_color ?? ""} onChange={(v) => setColor("primary_color", v)} />
+            <ColorField label="Brand text (on brand colour)" value={state.hero_text_color ?? "#ffffff"} onChange={(v) => setColor("hero_text_color", v)} />
+            <ColorField label="Page background" value={state.background_color ?? ""} onChange={(v) => setColor("background_color", v)} />
+            <ColorField label="Body text" value={state.text_color ?? ""} onChange={(v) => setColor("text_color", v)} />
+            <ColorField label="Accent / buttons & prices" value={state.accent_color ?? ""} onChange={(v) => setColor("accent_color", v)} />
+            <ColorField label="Card background" value={state.menu_card_bg ?? "#ffffff"} onChange={(v) => setColor("menu_card_bg", v)} />
           </div>
           <p className="text-xs text-muted-foreground">
-            The page background fades smoothly out of the hero background — pick complementary shades for the cleanest merge.
+            These six colours flow through every page — hero, header, footer, treatment menu and buttons all follow them automatically.
           </p>
         </div>
+
       </details>
 
       <Card>
@@ -817,15 +855,10 @@ function BrandingPage() {
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Booking menu styling</CardTitle>
-          <p className="text-xs text-muted-foreground">Controls how categories and treatments look on your customer-facing booking page.</p>
+          <p className="text-xs text-muted-foreground">Colours follow your six brand colours above — these control sizing and emphasis only.</p>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
-          <ColorField label="Category header background" value={state.menu_category_bg ?? "#111827"} onChange={(v) => set("menu_category_bg", v)} />
-          <ColorField label="Category header text" value={state.menu_category_text ?? "#ffffff"} onChange={(v) => set("menu_category_text", v)} />
-          <ColorField label="Treatment card background" value={state.menu_card_bg ?? "#ffffff"} onChange={(v) => set("menu_card_bg", v)} />
-          <ColorField label="Treatment card border" value={state.menu_card_border_color ?? "#e5e7eb"} onChange={(v) => set("menu_card_border_color", v)} />
-          <ColorField label="Treatment name color" value={state.menu_treatment_name_color ?? state.primary_color ?? "#0f172a"} onChange={(v) => set("menu_treatment_name_color", v)} />
-          <ColorField label="Price color" value={state.menu_price_color ?? state.primary_color ?? "#0f172a"} onChange={(v) => set("menu_price_color", v)} />
+
           <div className="space-y-1.5">
             <Label>Treatment card size</Label>
             <select className="h-10 w-full rounded-md border bg-background px-3 text-sm" value={state.menu_treatment_size ?? "sm"} onChange={(e) => set("menu_treatment_size", e.target.value)}>
