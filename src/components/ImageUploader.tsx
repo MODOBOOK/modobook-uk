@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Crop, Upload, X } from "lucide-react";
 import { ImageCropDialog } from "@/components/ImageCropDialog";
+import { useDemoGuard } from "@/hooks/use-demo-mode";
 
 const TEN_YEARS = 60 * 60 * 24 * 365 * 10;
 const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
@@ -62,8 +63,10 @@ export function ImageUploader({
   const [uploading, setUploading] = useState(false);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [cropOpen, setCropOpen] = useState(false);
+  const demo = useDemoGuard();
 
   async function uploadFile(file: File) {
+    if (demo.blocked()) return;
     if (!profileId) {
       toast.error("Profile not ready yet");
       return;
@@ -95,6 +98,7 @@ export function ImageUploader({
   }
 
   function pickFile(f: File) {
+    if (demo.blocked()) return;
     setPendingFile(f);
     setCropOpen(true);
   }
