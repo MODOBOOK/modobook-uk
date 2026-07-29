@@ -39,7 +39,7 @@ export const listMyClinicVisits = createServerFn({ method: "GET" })
     const { data, error } = await supabase
       .from("prescriber_clinic_visits")
       .select(
-        "id, prescriber_user_id, prescriber_label, location_id, visit_date, start_time, end_time, capacity, notes, status, confirmed_by_prescriber, created_at",
+        "id, prescriber_user_id, prescriber_label, location_id, visit_date, start_time, end_time, capacity, notes, status, confirmed_by_prescriber, created_at, price, recurrence_group",
       )
       .eq("practitioner_profile_id", profile.id)
       .gte("visit_date", new Date(Date.now() - 86400000).toISOString().slice(0, 10))
