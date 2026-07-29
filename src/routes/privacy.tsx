@@ -127,11 +127,13 @@ function PrivacyPage() {
             <li>Request <strong>portability</strong> of data you provided in a machine-readable format.</li>
             <li>Object to or restrict processing, including marketing.</li>
             <li>Withdraw consent at any time (this does not affect processing already carried out).</li>
-            <li>Complain to the Information Commissioner's Office (<a href="https://ico.org.uk" target="_blank" rel="noreferrer">ico.org.uk</a>, 0303 123 1113).</li>
+            <li>Complain to the Information Commissioner's Office (<a href="https://ico.org.uk/make-a-complaint/" target="_blank" rel="noreferrer">ico.org.uk/make-a-complaint</a>, 0303 123 1113), quoting our registration reference <strong>C1994747</strong>.</li>
           </ul>
           <p>
             To exercise any of these rights, email <a href="mailto:info@modobook.co.uk">info@modobook.co.uk</a>.
-            We respond within one calendar month.
+            We respond within one calendar month. Full details of how to raise a request or a
+            complaint, and how to escalate to the ICO, are in our{" "}
+            <Link to="/privacy/complaints">Complaints &amp; Subject Access procedure</Link>.
           </p>
 
           <h2>7. Cookies</h2>
@@ -139,13 +141,14 @@ function PrivacyPage() {
             We use only <strong>strictly necessary</strong> cookies to keep you signed in and remember
             layout preferences. We do not use advertising or cross-site tracking cookies.
             Optional analytics (if ever enabled) will be gated by the on-screen consent banner.
+            A full list is in our <Link to="/privacy/cookies">Cookie Policy</Link>.
           </p>
 
           <h2>8. Security</h2>
           <ul>
             <li>Encryption in transit (TLS 1.2+) and at rest (AES-256).</li>
             <li>Row-Level Security so practitioners can only see their own patients.</li>
-            <li>Role-based access control; passwords hashed via Supabase Auth (bcrypt).</li>
+            <li>Role-based access control; passwords are securely hashed and checked against known-breach databases.</li>
             <li>Automatic daily backups.</li>
             <li>Signed URLs and short-lived tokens for consent, medical-form and cancellation links.</li>
           </ul>
@@ -153,13 +156,26 @@ function PrivacyPage() {
           <h2>9. Sharing your data</h2>
           <p>
             We share data only with sub-processors necessary to run the service:
-            managed cloud hosting &amp; database (Supabase / AWS EU), Stripe (payments), and the
+            managed EU cloud hosting &amp; database (AWS, Paris region), Stripe (payments), and the
             SMS/email providers used by your practitioner. We never sell personal data.
           </p>
 
-          <h2>10. Data Protection Officer &amp; Controller contact</h2>
+          <h2>10. Complaints &amp; regulator</h2>
           <p>
-            <strong>Controller:</strong> MODO Ltd, Scotland, United Kingdom.<br />
+            If you are unhappy with how we handle your data, email{" "}
+            <a href="mailto:info@modobook.co.uk">info@modobook.co.uk</a> and we will acknowledge
+            within 5 working days and respond within one calendar month. You can also complain
+            directly to the ICO at any time — you do not have to come to us first:
+          </p>
+          <ul>
+            <li><a href="https://ico.org.uk/make-a-complaint/" target="_blank" rel="noreferrer">ico.org.uk/make-a-complaint</a> · 0303 123 1113</li>
+            <li>Information Commissioner's Office, Wycliffe House, Water Lane, Wilmslow, Cheshire SK9 5AF</li>
+            <li>Our registration reference: <strong>C1994747</strong></li>
+          </ul>
+
+          <h2>11. Controller contact</h2>
+          <p>
+            <strong>Controller:</strong> MODO BOOKING PLATFORM, Scotland, United Kingdom (ICO reg. C1994747).<br />
             <strong>Data Protection contact:</strong> <a href="mailto:info@modobook.co.uk">info@modobook.co.uk</a>
             <br />
             For clinical data held about you as a patient, the practitioner who
@@ -167,7 +183,7 @@ function PrivacyPage() {
             and we will route your request.
           </p>
 
-          <h2>11. Changes to this notice</h2>
+          <h2>12. Changes to this notice</h2>
           <p>
             We update this notice when the platform or the law changes. The current
             version is always available at <Link to="/privacy">/privacy</Link>.
@@ -176,12 +192,23 @@ function PrivacyPage() {
 
         <div className="mt-10 border-t pt-6 text-sm text-muted-foreground">
           See also:{" "}
+          <Link to="/privacy/cookies" className="underline">Cookie Policy</Link>
+          {" · "}
+          <Link to="/privacy/retention" className="underline">Data Retention Schedule</Link>
+          {" · "}
+          <Link to="/privacy/complaints" className="underline">Complaints &amp; Subject Access</Link>
+          {" · "}
+          <Link to="/privacy/acceptable-use" className="underline">Acceptable Use &amp; Practitioner Duties</Link>
+          {" · "}
+          <Link to="/privacy/dpa" className="underline">Data Processing Agreement</Link>
+          {" · "}
           <Link to="/privacy/dpia" className="underline">Data Protection Impact Assessment</Link>
           {" · "}
           <Link to="/privacy/breach-response" className="underline">Breach Response Procedure</Link>
           {" · "}
           <Link to="/terms" className="underline">Terms &amp; Conditions</Link>.
         </div>
+
 
       </main>
     </div>
