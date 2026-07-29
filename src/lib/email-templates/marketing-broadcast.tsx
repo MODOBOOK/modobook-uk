@@ -48,12 +48,30 @@ function renderBlock(
         </Heading>
       )
     }
-    case 'paragraph':
+    case 'paragraph': {
+      // Preserve the author's formatting: blank lines start a new paragraph,
+      // single newlines become line breaks.
+      const body = interpolate(block.text, data)
+      const paras = String(body || '')
+        .split(/\n{2,}/)
+        .map((p) => p.trim())
+        .filter(Boolean)
+      if (paras.length === 0) return null
       return (
-        <Text key={idx} style={styles.text}>
-          {interpolate(block.text, data)}
-        </Text>
+        <React.Fragment key={idx}>
+          {paras.map((p, i) => (
+            <Text key={i} style={styles.text}>
+              {p.split('\n').map((line, j, arr) => (
+                <React.Fragment key={j}>
+                  {line}
+                  {j < arr.length - 1 && <br />}
+                </React.Fragment>
+              ))}
+            </Text>
+          ))}
+        </React.Fragment>
       )
+    }
     case 'image':
       if (!block.src) return null
       return (
