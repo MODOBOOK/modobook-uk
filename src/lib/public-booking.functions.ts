@@ -990,6 +990,7 @@ async function maybeCreateBookingCheckout(args: {
         metadata,
         saveForFutureUse: shouldSaveCardOnFile,
         descriptorName: p.clinic_name,
+        idempotencyKey,
       });
       if (!intent.clientSecret) return null;
       const returnUrl = `${origin}/m/${p.slug ?? ""}/account?paid=1&pi=${intent.paymentIntentId}`;
@@ -1050,6 +1051,7 @@ async function maybeCreateBookingCheckout(args: {
       saveCardOnFile: false,
       metadata,
       descriptorName: p.clinic_name,
+      idempotencyKey,
     });
     if (!session.url) return null;
     return { kind: "hosted", checkoutUrl: session.url };
@@ -1061,6 +1063,27 @@ async function maybeCreateBookingCheckout(args: {
 
 
 
+
+/**
+ * Stable identity for a booking attempt: same clinic, patient, slot and
+ * treatments => same key, regardless of the appointment row ids generated on
+ * this particular submission.
+ */
+function bookingDedupeKey(input: {
+  profileId: string;
+  patientEmail: string;
+  date: string;
+  startTime: string;
+  treatmentIds: string[];
+}) {
+  return [
+    input.profileId,
+    input.patientEmail.trim().toLowerCase(),
+    input.date,
+    input.startTime,
+    [...input.treatmentIds].sort().join("+"),
+  ].join("|");
+}
 
 function addMinutesToTime(time: string, mins: number) {
   const [h, m] = time.split(":").map(Number);
