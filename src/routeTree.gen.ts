@@ -32,6 +32,7 @@ import { Route as PrivacyRetentionRouteImport } from './routes/privacy.retention
 import { Route as PrivacyDpiaRouteImport } from './routes/privacy.dpia'
 import { Route as PrivacyDpaRouteImport } from './routes/privacy.dpa'
 import { Route as PrivacyCookiesRouteImport } from './routes/privacy.cookies'
+import { Route as PrivacyComplaintsRouteImport } from './routes/privacy.complaints'
 import { Route as PrivacyBreachResponseRouteImport } from './routes/privacy.breach-response'
 import { Route as PlanTokenRouteImport } from './routes/plan.$token'
 import { Route as MSlugRouteImport } from './routes/m.$slug'
@@ -267,6 +268,11 @@ const PrivacyDpaRoute = PrivacyDpaRouteImport.update({
 const PrivacyCookiesRoute = PrivacyCookiesRouteImport.update({
   id: '/cookies',
   path: '/cookies',
+  getParentRoute: () => PrivacyRoute,
+} as any)
+const PrivacyComplaintsRoute = PrivacyComplaintsRouteImport.update({
+  id: '/complaints',
+  path: '/complaints',
   getParentRoute: () => PrivacyRoute,
 } as any)
 const PrivacyBreachResponseRoute = PrivacyBreachResponseRouteImport.update({
@@ -997,6 +1003,7 @@ export interface FileRoutesByFullPath {
   '/m/$slug': typeof MSlugRouteWithChildren
   '/plan/$token': typeof PlanTokenRoute
   '/privacy/breach-response': typeof PrivacyBreachResponseRoute
+  '/privacy/complaints': typeof PrivacyComplaintsRoute
   '/privacy/cookies': typeof PrivacyCookiesRoute
   '/privacy/dpa': typeof PrivacyDpaRoute
   '/privacy/dpia': typeof PrivacyDpiaRoute
@@ -1139,6 +1146,7 @@ export interface FileRoutesByTo {
   '/f/$token': typeof FTokenRoute
   '/plan/$token': typeof PlanTokenRoute
   '/privacy/breach-response': typeof PrivacyBreachResponseRoute
+  '/privacy/complaints': typeof PrivacyComplaintsRoute
   '/privacy/cookies': typeof PrivacyCookiesRoute
   '/privacy/dpa': typeof PrivacyDpaRoute
   '/privacy/dpia': typeof PrivacyDpiaRoute
@@ -1284,6 +1292,7 @@ export interface FileRoutesById {
   '/m/$slug': typeof MSlugRouteWithChildren
   '/plan/$token': typeof PlanTokenRoute
   '/privacy/breach-response': typeof PrivacyBreachResponseRoute
+  '/privacy/complaints': typeof PrivacyComplaintsRoute
   '/privacy/cookies': typeof PrivacyCookiesRoute
   '/privacy/dpa': typeof PrivacyDpaRoute
   '/privacy/dpia': typeof PrivacyDpiaRoute
@@ -1432,6 +1441,7 @@ export interface FileRouteTypes {
     | '/m/$slug'
     | '/plan/$token'
     | '/privacy/breach-response'
+    | '/privacy/complaints'
     | '/privacy/cookies'
     | '/privacy/dpa'
     | '/privacy/dpia'
@@ -1574,6 +1584,7 @@ export interface FileRouteTypes {
     | '/f/$token'
     | '/plan/$token'
     | '/privacy/breach-response'
+    | '/privacy/complaints'
     | '/privacy/cookies'
     | '/privacy/dpa'
     | '/privacy/dpia'
@@ -1718,6 +1729,7 @@ export interface FileRouteTypes {
     | '/m/$slug'
     | '/plan/$token'
     | '/privacy/breach-response'
+    | '/privacy/complaints'
     | '/privacy/cookies'
     | '/privacy/dpa'
     | '/privacy/dpia'
@@ -2042,6 +2054,13 @@ declare module '@tanstack/react-router' {
       path: '/cookies'
       fullPath: '/privacy/cookies'
       preLoaderRoute: typeof PrivacyCookiesRouteImport
+      parentRoute: typeof PrivacyRoute
+    }
+    '/privacy/complaints': {
+      id: '/privacy/complaints'
+      path: '/complaints'
+      fullPath: '/privacy/complaints'
+      preLoaderRoute: typeof PrivacyComplaintsRouteImport
       parentRoute: typeof PrivacyRoute
     }
     '/privacy/breach-response': {
@@ -3246,6 +3265,7 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
 
 interface PrivacyRouteChildren {
   PrivacyBreachResponseRoute: typeof PrivacyBreachResponseRoute
+  PrivacyComplaintsRoute: typeof PrivacyComplaintsRoute
   PrivacyCookiesRoute: typeof PrivacyCookiesRoute
   PrivacyDpaRoute: typeof PrivacyDpaRoute
   PrivacyDpiaRoute: typeof PrivacyDpiaRoute
@@ -3254,6 +3274,7 @@ interface PrivacyRouteChildren {
 
 const PrivacyRouteChildren: PrivacyRouteChildren = {
   PrivacyBreachResponseRoute: PrivacyBreachResponseRoute,
+  PrivacyComplaintsRoute: PrivacyComplaintsRoute,
   PrivacyCookiesRoute: PrivacyCookiesRoute,
   PrivacyDpaRoute: PrivacyDpaRoute,
   PrivacyDpiaRoute: PrivacyDpiaRoute,
