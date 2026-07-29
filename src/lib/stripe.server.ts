@@ -561,3 +561,67 @@ export async function listConnectPayouts(accountId: string, limit = 10) {
 
 
 
+
+/**
+ * Void any still-payable Stripe objects created for the given appointments.
+ *
+ * When a patient re-submits a booking (back button, second tab, refreshed
+ * payment page) we cancel the earlier appointment rows — but the Checkout
+ * Session / PaymentIntent Stripe already issued for them stays payable, so a
+ * patient can complete BOTH and be charged twice. Expiring the old session and
+ * cancelling the old intent closes that window.
+ */
+export async function voidOpenBookingPayments(params: {
+  accountId: string;
+  appointmentIds: string[];
+}) {
+  if (!params.accountId || params.appointmentIds.length === 0) return;
+  const stripe = getStripe();
+  const wanted = new Set(params.appointmentIds);
+  const matches = (metadata: Stripe.Metadata | null | undefined) =>
+    String(metadata?.appointment_ids ?? "")
+      .split(",")
+      .map((s) => s.trim())
+      .some((id) => id && wanted.has(id));
+
+  try {
+    const sessions = await stripe.checkout.sessions.list(
+      { status: "open", limit: 50 },
+      { stripeAccount: params.accountId },
+    );
+    for (const s of sessions.data) {
+      if (!matches(s.metadata)) continue;
+      try {
+        await stripe.checkout.sessions.expire(s.id, {}, { stripeAccount: params.accountId });
+      } catch (e) {
+        console.error("[voidOpenBookingPayments] expire session failed", s.id, e);
+      }
+    }
+  } catch (e) {
+    console.error("[voidOpenBookingPayments] list sessions failed", e);
+  }
+
+  try {
+    const intents = await stripe.paymentIntents.list(
+      { limit: 50 },
+      { stripeAccount: params.accountId },
+    );
+    const cancellable = new Set([
+      "requires_payment_method",
+      "requires_confirmation",
+      "requires_action",
+      "requires_capture",
+    ]);
+    for (const pi of intents.data) {
+      if (!cancellable.has(pi.status)) continue;
+      if (!matches(pi.metadata)) continue;
+      try {
+        await stripe.paymentIntents.cancel(pi.id, {}, { stripeAccount: params.accountId });
+      } catch (e) {
+        console.error("[voidOpenBookingPayments] cancel intent failed", pi.id, e);
+      }
+    }
+  } catch (e) {
+    console.error("[voidOpenBookingPayments] list intents failed", e);
+  }
+}
