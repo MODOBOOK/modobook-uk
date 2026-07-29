@@ -93,22 +93,22 @@ export function NoteTemplatePicker({
                     <button
                       key={t.id}
                       type="button"
+                      title={t.body.replace(/\s+/g, " ").trim()}
                       onClick={() => {
                         onInsert(t.body);
                         setOpen(false);
                         setQ("");
                       }}
-                      className="block w-full bg-card px-3 py-1.5 text-left transition hover:bg-primary/5"
+                      style={{ height: 34 }}
+                      className="flex w-full items-center overflow-hidden bg-card px-3 text-left leading-none transition hover:bg-primary/5"
                     >
-                      <div className="truncate whitespace-nowrap text-sm font-medium leading-tight">
+                      <span className="block max-w-full truncate whitespace-nowrap text-sm font-medium">
                         {t.label}
-                      </div>
-                      <div className="truncate whitespace-nowrap text-[11px] leading-snug text-muted-foreground">
-                        {t.body.replace(/\s+/g, " ").trim()}
-                      </div>
+                      </span>
                     </button>
                   ))}
                 </div>
+
               </div>
             ))}
           </div>
