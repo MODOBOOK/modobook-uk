@@ -598,11 +598,25 @@ export const requestBooking = createServerFn({ method: "POST" })
             .update({ status: "cancelled", payment_hold_expires_at: null } as never)
             .eq("id", dup.id as string)
             .neq("payment_status", "paid");
+          // Kill the Stripe session/intent already issued for the superseded
+          // appointment so the patient cannot complete both and pay twice.
+          if (prof?.stripe_connect_account_id) {
+            try {
+              const { voidOpenBookingPayments } = await import("./stripe.server");
+              await voidOpenBookingPayments({
+                accountId: prof.stripe_connect_account_id,
+                appointmentIds: [dup.id as string],
+              });
+            } catch (e) {
+              console.error("[requestBooking] voiding superseded payment failed", e);
+            }
+          }
         } else {
           return { id: dup.id as string, consents: [], medicalForms: [], checkoutUrl: null, embeddedPayment: null };
         }
       }
     }
+
 
     const id = crypto.randomUUID();
     const { error } = await sb.from("appointments").insert({
