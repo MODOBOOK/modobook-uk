@@ -34,6 +34,7 @@ import { Route as PrivacyDpaRouteImport } from './routes/privacy.dpa'
 import { Route as PrivacyCookiesRouteImport } from './routes/privacy.cookies'
 import { Route as PrivacyComplaintsRouteImport } from './routes/privacy.complaints'
 import { Route as PrivacyBreachResponseRouteImport } from './routes/privacy.breach-response'
+import { Route as PrivacyAcceptableUseRouteImport } from './routes/privacy.acceptable-use'
 import { Route as PlanTokenRouteImport } from './routes/plan.$token'
 import { Route as MSlugRouteImport } from './routes/m.$slug'
 import { Route as FTokenRouteImport } from './routes/f.$token'
@@ -278,6 +279,11 @@ const PrivacyComplaintsRoute = PrivacyComplaintsRouteImport.update({
 const PrivacyBreachResponseRoute = PrivacyBreachResponseRouteImport.update({
   id: '/breach-response',
   path: '/breach-response',
+  getParentRoute: () => PrivacyRoute,
+} as any)
+const PrivacyAcceptableUseRoute = PrivacyAcceptableUseRouteImport.update({
+  id: '/acceptable-use',
+  path: '/acceptable-use',
   getParentRoute: () => PrivacyRoute,
 } as any)
 const PlanTokenRoute = PlanTokenRouteImport.update({
@@ -1002,6 +1008,7 @@ export interface FileRoutesByFullPath {
   '/f/$token': typeof FTokenRoute
   '/m/$slug': typeof MSlugRouteWithChildren
   '/plan/$token': typeof PlanTokenRoute
+  '/privacy/acceptable-use': typeof PrivacyAcceptableUseRoute
   '/privacy/breach-response': typeof PrivacyBreachResponseRoute
   '/privacy/complaints': typeof PrivacyComplaintsRoute
   '/privacy/cookies': typeof PrivacyCookiesRoute
@@ -1145,6 +1152,7 @@ export interface FileRoutesByTo {
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/f/$token': typeof FTokenRoute
   '/plan/$token': typeof PlanTokenRoute
+  '/privacy/acceptable-use': typeof PrivacyAcceptableUseRoute
   '/privacy/breach-response': typeof PrivacyBreachResponseRoute
   '/privacy/complaints': typeof PrivacyComplaintsRoute
   '/privacy/cookies': typeof PrivacyCookiesRoute
@@ -1291,6 +1299,7 @@ export interface FileRoutesById {
   '/f/$token': typeof FTokenRoute
   '/m/$slug': typeof MSlugRouteWithChildren
   '/plan/$token': typeof PlanTokenRoute
+  '/privacy/acceptable-use': typeof PrivacyAcceptableUseRoute
   '/privacy/breach-response': typeof PrivacyBreachResponseRoute
   '/privacy/complaints': typeof PrivacyComplaintsRoute
   '/privacy/cookies': typeof PrivacyCookiesRoute
@@ -1440,6 +1449,7 @@ export interface FileRouteTypes {
     | '/f/$token'
     | '/m/$slug'
     | '/plan/$token'
+    | '/privacy/acceptable-use'
     | '/privacy/breach-response'
     | '/privacy/complaints'
     | '/privacy/cookies'
@@ -1583,6 +1593,7 @@ export interface FileRouteTypes {
     | '/email/unsubscribe'
     | '/f/$token'
     | '/plan/$token'
+    | '/privacy/acceptable-use'
     | '/privacy/breach-response'
     | '/privacy/complaints'
     | '/privacy/cookies'
@@ -1728,6 +1739,7 @@ export interface FileRouteTypes {
     | '/f/$token'
     | '/m/$slug'
     | '/plan/$token'
+    | '/privacy/acceptable-use'
     | '/privacy/breach-response'
     | '/privacy/complaints'
     | '/privacy/cookies'
@@ -2068,6 +2080,13 @@ declare module '@tanstack/react-router' {
       path: '/breach-response'
       fullPath: '/privacy/breach-response'
       preLoaderRoute: typeof PrivacyBreachResponseRouteImport
+      parentRoute: typeof PrivacyRoute
+    }
+    '/privacy/acceptable-use': {
+      id: '/privacy/acceptable-use'
+      path: '/acceptable-use'
+      fullPath: '/privacy/acceptable-use'
+      preLoaderRoute: typeof PrivacyAcceptableUseRouteImport
       parentRoute: typeof PrivacyRoute
     }
     '/plan/$token': {
@@ -3264,6 +3283,7 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
 )
 
 interface PrivacyRouteChildren {
+  PrivacyAcceptableUseRoute: typeof PrivacyAcceptableUseRoute
   PrivacyBreachResponseRoute: typeof PrivacyBreachResponseRoute
   PrivacyComplaintsRoute: typeof PrivacyComplaintsRoute
   PrivacyCookiesRoute: typeof PrivacyCookiesRoute
@@ -3273,6 +3293,7 @@ interface PrivacyRouteChildren {
 }
 
 const PrivacyRouteChildren: PrivacyRouteChildren = {
+  PrivacyAcceptableUseRoute: PrivacyAcceptableUseRoute,
   PrivacyBreachResponseRoute: PrivacyBreachResponseRoute,
   PrivacyComplaintsRoute: PrivacyComplaintsRoute,
   PrivacyCookiesRoute: PrivacyCookiesRoute,

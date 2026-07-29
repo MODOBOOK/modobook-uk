@@ -29,20 +29,36 @@ function PrivacyPage() {
       <main className="mx-auto max-w-3xl px-4 py-10">
         <h1 className="font-serif text-4xl tracking-tight">Privacy Policy</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Effective 2 July 2026 · Governed by the laws of Scotland (UK GDPR & Data Protection Act 2018)
+          Effective 2 July 2026 · Governed by the laws of Scotland (UK GDPR &amp; Data Protection Act 2018)
         </p>
+        <div className="mt-4 rounded-lg border bg-muted/40 px-4 py-3 text-sm">
+          <strong>MODO BOOKING PLATFORM</strong> is registered with the UK Information
+          Commissioner's Office as a data controller — registration reference{" "}
+          <strong>C1994747</strong>. You can verify this on the{" "}
+          <a
+            href="https://ico.org.uk/ESDWebPages/Search"
+            target="_blank"
+            rel="noreferrer"
+            className="text-primary underline"
+          >
+            ICO public register
+          </a>
+          , and you have the right to complain to the ICO at any time about how we handle your data.
+        </div>
 
         <div className="prose prose-neutral mt-8 max-w-none prose-h2:font-serif prose-h2:tracking-tight prose-a:text-primary">
           <h2>1. Who we are</h2>
           <p>
             MODO ("we", "us", "the platform") is an aesthetics booking and clinical records
-            platform operated by MODO Ltd (Scotland). This notice explains how we process
+            platform operated by MODO BOOKING PLATFORM (Scotland), ICO registration
+            <strong> C1994747</strong>. This notice explains how we process
             personal data for two groups of people:
           </p>
           <ul>
             <li><strong>Practitioners</strong> — clinicians and clinic staff who use MODO as a Data Controller for their patients.</li>
             <li><strong>Patients</strong> — individuals who book appointments through a practitioner's MODO booking page. For patient clinical data, the practitioner is the Data Controller and MODO acts as their Data Processor.</li>
           </ul>
+
 
           <h2>2. Data we collect</h2>
           <ul>
