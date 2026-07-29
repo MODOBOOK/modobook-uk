@@ -426,17 +426,21 @@ export const reserveExtraSeat = createServerFn({ method: "POST" })
       throw new Error("Your free trial has ended. Set up your MODO direct debit in Plan & billing to add seats.");
     }
 
-    const field = data.kind === "location" ? "extra_locations" : "extra_practitioners";
-    const next = Math.max(0, Number((existing as any)?.[field] ?? 0)) + 1;
+    const isLoc = data.kind === "location";
+    const currentVal = Number(
+      (isLoc ? existing?.extra_locations : existing?.extra_practitioners) ?? 0,
+    );
+    const next = Math.max(0, currentVal) + 1;
+    const patch = isLoc ? { extra_locations: next } : { extra_practitioners: next };
     if (existing) {
       await context.supabase
         .from("practitioner_subscriptions")
-        .update({ [field]: next })
+        .update(patch)
         .eq("id", existing.id);
     } else {
       await context.supabase
         .from("practitioner_subscriptions")
-        .insert({ profile_id: profile.id, status: "pending", [field]: next });
+        .insert({ profile_id: profile.id, status: "pending", ...patch });
     }
     return { ok: true, reserved: next };
   });
