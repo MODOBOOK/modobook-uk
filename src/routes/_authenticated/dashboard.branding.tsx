@@ -160,10 +160,13 @@ function BrandingPage() {
       welcome_card_show_rating: preset.welcome_card_show_rating,
       welcome_card_show_actions: preset.welcome_card_show_actions,
       welcome_card_show_contact: preset.welcome_card_show_contact,
-      welcome_card_show_sms: preset.welcome_card_show_sms,
-      welcome_card_show_whatsapp: preset.welcome_card_show_whatsapp,
-      welcome_card_show_instagram: preset.welcome_card_show_instagram,
-      welcome_card_show_facebook: preset.welcome_card_show_facebook,
+      // Contact channels are always on — they're shown automatically for
+      // whichever details the clinic has filled in.
+      welcome_card_show_sms: true,
+      welcome_card_show_whatsapp: true,
+      welcome_card_show_instagram: true,
+      welcome_card_show_facebook: true,
+
       welcome_card_size: preset.welcome_card_size,
       welcome_card_mobile_size: preset.welcome_card_mobile_size,
       welcome_card_position: preset.welcome_card_position,
