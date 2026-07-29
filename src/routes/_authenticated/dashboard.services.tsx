@@ -321,6 +321,9 @@ function ServicesPage() {
 
       <FavouritesCard treatments={(treats.data ?? []) as Treat[]} />
 
+      <PrescribingClinicCard />
+
+
       {cats.isLoading || treats.isLoading ? (
 
         <p className="text-sm text-muted-foreground">Loading…</p>
