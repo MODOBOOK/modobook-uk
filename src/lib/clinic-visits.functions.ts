@@ -90,7 +90,7 @@ export const listMyClinicVisits = createServerFn({ method: "GET" })
     }));
   });
 
-// ---- Practitioner: create or update a visit ----
+// ---- Practitioner: create or update a visit (with optional price + repeat) ----
 export const upsertClinicVisit = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i: z.infer<typeof UpsertSchema>) => UpsertSchema.parse(i))
@@ -102,6 +102,77 @@ export const upsertClinicVisit = createServerFn({ method: "POST" })
       .eq("user_id", userId)
       .maybeSingle();
     if (!profile) throw new Error("No profile");
+
+    // Ensure a bookable "Prescribing clinic" treatment exists so the clinic days
+    // show up as a normal category on the booking page, with a price attached.
+    const ensureTreatment = async (price: number | null) => {
+      if (price == null) return null;
+      let categoryId: string | null = null;
+      const { data: cat } = await supabase
+        .from("treatment_categories")
+        .select("id")
+        .eq("profile_id", profile.id)
+        .eq("name", "Prescribing clinic")
+        .maybeSingle();
+      if (cat) categoryId = cat.id;
+      else {
+        const { data: newCat } = await supabase
+          .from("treatment_categories")
+          .insert({ profile_id: profile.id, name: "Prescribing clinic", kind: "treatment" } as never)
+          .select("id")
+          .single();
+        categoryId = newCat?.id ?? null;
+      }
+
+      const { data: existing } = await supabase
+        .from("treatments")
+        .select("id")
+        .eq("profile_id", profile.id)
+        .eq("name", "Prescribing clinic")
+        .maybeSingle();
+
+      const mins = (() => {
+        const [sh, sm] = data.start_time.split(":").map(Number);
+        const [eh, em] = data.end_time.split(":").map(Number);
+        const d = eh * 60 + em - (sh * 60 + sm);
+        return d > 0 && d <= 120 ? d : 30;
+      })();
+
+      if (existing) {
+        await supabase
+          .from("treatments")
+          .update({
+            price,
+            active: true,
+            category_id: categoryId,
+            requires_prescriber: true,
+            prescriber_routing: "clinic_visit",
+          } as never)
+          .eq("id", existing.id);
+        return existing.id as string;
+      }
+      const { data: created, error: tErr } = await supabase
+        .from("treatments")
+        .insert({
+          profile_id: profile.id,
+          name: "Prescribing clinic",
+          description:
+            "Appointment with our prescriber during a prescribing clinic day. Choose your clinic date at checkout.",
+          duration: mins,
+          price,
+          category_id: categoryId,
+          requires_prescriber: true,
+          prescriber_routing: "clinic_visit",
+          prescriber_user_id: data.prescriber_user_id ?? null,
+        } as never)
+        .select("id")
+        .single();
+      if (tErr) throw tErr;
+      return created.id as string;
+    };
+
+    const price = data.price ?? null;
+    const treatmentId = await ensureTreatment(price);
 
     if (data.id) {
       const { error } = await supabase
@@ -115,32 +186,54 @@ export const upsertClinicVisit = createServerFn({ method: "POST" })
           end_time: data.end_time,
           capacity: data.capacity,
           notes: data.notes ?? null,
+          price,
+          treatment_id: treatmentId,
         } as never)
         .eq("id", data.id)
         .eq("practitioner_profile_id", profile.id);
       if (error) throw error;
-      return { id: data.id };
+      return { id: data.id, created: 1 };
     }
-    const { data: row, error } = await supabase
+
+    // Build the list of dates (single date, or a repeating series)
+    const dates: string[] = [data.visit_date];
+    const step = data.repeat_every_days ?? 0;
+    if (step > 0 && data.repeat_until) {
+      const until = new Date(`${data.repeat_until}T00:00:00Z`).getTime();
+      let cursor = new Date(`${data.visit_date}T00:00:00Z`).getTime();
+      while (dates.length < 60) {
+        cursor += step * 86400000;
+        if (cursor > until) break;
+        dates.push(new Date(cursor).toISOString().slice(0, 10));
+      }
+    }
+
+    const groupId = dates.length > 1 ? crypto.randomUUID() : null;
+    const rows = dates.map((d) => ({
+      practitioner_profile_id: profile.id,
+      prescriber_user_id: data.prescriber_user_id ?? null,
+      prescriber_label: data.prescriber_label?.trim() || null,
+      location_id: data.location_id ?? null,
+      confirmed_by_prescriber: data.prescriber_user_id ? false : true,
+      visit_date: d,
+      start_time: data.start_time,
+      end_time: data.end_time,
+      capacity: data.capacity,
+      notes: data.notes ?? null,
+      price,
+      treatment_id: treatmentId,
+      recurrence_group: groupId,
+      created_by: "practitioner",
+    }));
+
+    const { data: inserted, error } = await supabase
       .from("prescriber_clinic_visits")
-      .insert({
-        practitioner_profile_id: profile.id,
-        prescriber_user_id: data.prescriber_user_id ?? null,
-        prescriber_label: data.prescriber_label?.trim() || null,
-        location_id: data.location_id ?? null,
-        confirmed_by_prescriber: data.prescriber_user_id ? false : true,
-        visit_date: data.visit_date,
-        start_time: data.start_time,
-        end_time: data.end_time,
-        capacity: data.capacity,
-        notes: data.notes ?? null,
-        created_by: "practitioner",
-      } as never)
-      .select("id")
-      .single();
+      .insert(rows as never)
+      .select("id");
     if (error) throw error;
-    return { id: row.id };
+    return { id: inserted?.[0]?.id as string, created: inserted?.length ?? 0 };
   });
+
 
 // ---- Practitioner: cancel/delete a visit ----
 export const cancelClinicVisit = createServerFn({ method: "POST" })
