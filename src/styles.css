@@ -155,6 +155,22 @@
     font-weight: 400;
     letter-spacing: -0.015em;
   }
+
+  /* Keep card/box content inside its box on narrow screens.
+     Zero-specificity :where() so Tailwind utilities always win. */
+  [data-slot="card"] :where(div, p, span, h1, h2, h3, h4, h5, label, dl, dd, dt, li) {
+    min-width: 0;
+  }
+
+  [data-slot="card"] :where(p, span, h1, h2, h3, h4, h5, dd, dt, li, td, th, code) {
+    overflow-wrap: anywhere;
+  }
+
+  /* Rows that pair text with buttons/badges wrap instead of clipping. */
+  [data-slot="card"] :where(.flex.justify-between, .flex.items-center.justify-between) {
+    flex-wrap: wrap;
+  }
+
 }
 
 @utility font-serif {
