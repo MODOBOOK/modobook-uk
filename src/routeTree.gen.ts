@@ -28,6 +28,7 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as StaffAcceptTokenRouteImport } from './routes/staff-accept.$token'
 import { Route as RCodeRouteImport } from './routes/r.$code'
+import { Route as PrivacyRetentionRouteImport } from './routes/privacy.retention'
 import { Route as PrivacyDpiaRouteImport } from './routes/privacy.dpia'
 import { Route as PrivacyDpaRouteImport } from './routes/privacy.dpa'
 import { Route as PrivacyCookiesRouteImport } from './routes/privacy.cookies'
@@ -247,6 +248,11 @@ const RCodeRoute = RCodeRouteImport.update({
   id: '/r/$code',
   path: '/r/$code',
   getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRetentionRoute = PrivacyRetentionRouteImport.update({
+  id: '/retention',
+  path: '/retention',
+  getParentRoute: () => PrivacyRoute,
 } as any)
 const PrivacyDpiaRoute = PrivacyDpiaRouteImport.update({
   id: '/dpia',
@@ -994,6 +1000,7 @@ export interface FileRoutesByFullPath {
   '/privacy/cookies': typeof PrivacyCookiesRoute
   '/privacy/dpa': typeof PrivacyDpaRoute
   '/privacy/dpia': typeof PrivacyDpiaRoute
+  '/privacy/retention': typeof PrivacyRetentionRoute
   '/r/$code': typeof RCodeRoute
   '/staff-accept/$token': typeof StaffAcceptTokenRoute
   '/admin/audit': typeof AuthenticatedAdminAuditRoute
@@ -1135,6 +1142,7 @@ export interface FileRoutesByTo {
   '/privacy/cookies': typeof PrivacyCookiesRoute
   '/privacy/dpa': typeof PrivacyDpaRoute
   '/privacy/dpia': typeof PrivacyDpiaRoute
+  '/privacy/retention': typeof PrivacyRetentionRoute
   '/r/$code': typeof RCodeRoute
   '/staff-accept/$token': typeof StaffAcceptTokenRoute
   '/admin/audit': typeof AuthenticatedAdminAuditRoute
@@ -1279,6 +1287,7 @@ export interface FileRoutesById {
   '/privacy/cookies': typeof PrivacyCookiesRoute
   '/privacy/dpa': typeof PrivacyDpaRoute
   '/privacy/dpia': typeof PrivacyDpiaRoute
+  '/privacy/retention': typeof PrivacyRetentionRoute
   '/r/$code': typeof RCodeRoute
   '/staff-accept/$token': typeof StaffAcceptTokenRoute
   '/_authenticated/admin/audit': typeof AuthenticatedAdminAuditRoute
@@ -1426,6 +1435,7 @@ export interface FileRouteTypes {
     | '/privacy/cookies'
     | '/privacy/dpa'
     | '/privacy/dpia'
+    | '/privacy/retention'
     | '/r/$code'
     | '/staff-accept/$token'
     | '/admin/audit'
@@ -1567,6 +1577,7 @@ export interface FileRouteTypes {
     | '/privacy/cookies'
     | '/privacy/dpa'
     | '/privacy/dpia'
+    | '/privacy/retention'
     | '/r/$code'
     | '/staff-accept/$token'
     | '/admin/audit'
@@ -1710,6 +1721,7 @@ export interface FileRouteTypes {
     | '/privacy/cookies'
     | '/privacy/dpa'
     | '/privacy/dpia'
+    | '/privacy/retention'
     | '/r/$code'
     | '/staff-accept/$token'
     | '/_authenticated/admin/audit'
@@ -2003,6 +2015,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/r/$code'
       preLoaderRoute: typeof RCodeRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/privacy/retention': {
+      id: '/privacy/retention'
+      path: '/retention'
+      fullPath: '/privacy/retention'
+      preLoaderRoute: typeof PrivacyRetentionRouteImport
+      parentRoute: typeof PrivacyRoute
     }
     '/privacy/dpia': {
       id: '/privacy/dpia'
@@ -3230,6 +3249,7 @@ interface PrivacyRouteChildren {
   PrivacyCookiesRoute: typeof PrivacyCookiesRoute
   PrivacyDpaRoute: typeof PrivacyDpaRoute
   PrivacyDpiaRoute: typeof PrivacyDpiaRoute
+  PrivacyRetentionRoute: typeof PrivacyRetentionRoute
 }
 
 const PrivacyRouteChildren: PrivacyRouteChildren = {
@@ -3237,6 +3257,7 @@ const PrivacyRouteChildren: PrivacyRouteChildren = {
   PrivacyCookiesRoute: PrivacyCookiesRoute,
   PrivacyDpaRoute: PrivacyDpaRoute,
   PrivacyDpiaRoute: PrivacyDpiaRoute,
+  PrivacyRetentionRoute: PrivacyRetentionRoute,
 }
 
 const PrivacyRouteWithChildren =
@@ -3337,13 +3358,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
