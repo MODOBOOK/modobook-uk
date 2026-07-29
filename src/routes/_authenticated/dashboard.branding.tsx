@@ -576,25 +576,7 @@ function BrandingPage() {
             ))}
           </div>
 
-          {state.welcome_card_show_contact && (
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              {[
-                { key: "welcome_card_show_sms", label: "Text / SMS" },
-                { key: "welcome_card_show_whatsapp", label: "WhatsApp" },
-                { key: "welcome_card_show_instagram", label: "Instagram" },
-                { key: "welcome_card_show_facebook", label: "Facebook" },
-              ].map((item) => (
-                <label key={item.key} className="flex items-center gap-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={!!(state[item.key as keyof ClinicThemeInput] as boolean)}
-                    onChange={(e) => set(item.key as keyof ClinicThemeInput, e.target.checked as ClinicThemeInput[keyof ClinicThemeInput])}
-                  />
-                  {item.label}
-                </label>
-              ))}
-            </div>
-          )}
+
 
           <div className="space-y-2">
             <Label>Quick card presets</Label>
