@@ -134,15 +134,16 @@ function LandingPage() {
                     Join the waitlist
                   </Button>
                 </Link>
-                <Link to="/features" className="w-full sm:w-auto">
+                <Link to="/demo" className="w-full sm:w-auto">
                   <Button
                     size="lg"
                     variant="outline"
                     className="w-full rounded-full border-[color:var(--hairline)] bg-white px-8 text-sm font-medium text-[color:var(--ink)] hover:bg-[color:var(--muted)] sm:w-auto"
                   >
-                    See features <ArrowRight className="ml-1 h-4 w-4" />
+                    Try the demo <ArrowRight className="ml-1 h-4 w-4" />
                   </Button>
                 </Link>
+
                 <a
                   href="https://modobook.uk/m/aestheticsbynurseryan"
                   target="_blank"
