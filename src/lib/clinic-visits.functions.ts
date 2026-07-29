@@ -477,7 +477,7 @@ export const listPublicClinicVisits = createServerFn({ method: "GET" })
     const today = new Date().toISOString().slice(0, 10);
     let q = supabaseAdmin
       .from("prescriber_clinic_visits")
-      .select("id, prescriber_user_id, prescriber_label, location_id, visit_date, start_time, end_time, capacity, notes, status")
+      .select("id, prescriber_user_id, prescriber_label, location_id, visit_date, start_time, end_time, capacity, notes, status, price, treatment_id")
       .eq("practitioner_profile_id", profileId)
       .gte("visit_date", today)
       .in("status", ["scheduled", "confirmed", "approved"])
@@ -525,5 +525,7 @@ export const listPublicClinicVisits = createServerFn({ method: "GET" })
         "Independent prescriber",
       location_name: r.location_id ? lmap.get(r.location_id) ?? null : null,
       remaining: Math.max(0, r.capacity - (booked.get(r.id) ?? 0)),
+      price: (r as { price?: number | null }).price ?? null,
+      treatment_id: (r as { treatment_id?: string | null }).treatment_id ?? null,
     }));
   });
