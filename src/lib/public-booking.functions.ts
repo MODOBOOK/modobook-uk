@@ -685,6 +685,13 @@ export const requestBooking = createServerFn({ method: "POST" })
         patientEmail: data.patientEmail,
         description: `Booking with ${prof?.clinic_name ?? "clinic"}`,
         choice: paymentChoice,
+        dedupeKey: bookingDedupeKey({
+          profileId: data.profileId,
+          patientEmail: data.patientEmail,
+          date: data.date,
+          startTime: data.startTime,
+          treatmentIds: [data.treatmentId],
+        }),
       });
     } catch (e) {
       console.error("[requestBooking] checkout failed", e);
