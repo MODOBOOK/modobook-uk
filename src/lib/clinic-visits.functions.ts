@@ -14,7 +14,16 @@ const UpsertSchema = z.object({
   end_time: TimeStr,
   capacity: z.number().int().min(1).max(200),
   notes: z.string().max(1000).nullable().optional(),
+  price: z.number().min(0).max(100000).nullable().optional(),
+  /** 0 = no repeat; otherwise repeat every N days (7 = weekly, 14 = fortnightly, 28 = 4-weekly) */
+  repeat_every_days: z.number().int().min(0).max(365).nullable().optional(),
+  repeat_until: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .nullable()
+    .optional(),
 });
+
 
 // ---- Practitioner: list my upcoming visits with booking counts ----
 export const listMyClinicVisits = createServerFn({ method: "GET" })
@@ -30,7 +39,7 @@ export const listMyClinicVisits = createServerFn({ method: "GET" })
     const { data, error } = await supabase
       .from("prescriber_clinic_visits")
       .select(
-        "id, prescriber_user_id, prescriber_label, location_id, visit_date, start_time, end_time, capacity, notes, status, confirmed_by_prescriber, created_at",
+        "id, prescriber_user_id, prescriber_label, location_id, visit_date, start_time, end_time, capacity, notes, status, confirmed_by_prescriber, created_at, price, recurrence_group",
       )
       .eq("practitioner_profile_id", profile.id)
       .gte("visit_date", new Date(Date.now() - 86400000).toISOString().slice(0, 10))
@@ -81,7 +90,7 @@ export const listMyClinicVisits = createServerFn({ method: "GET" })
     }));
   });
 
-// ---- Practitioner: create or update a visit ----
+// ---- Practitioner: create or update a visit (with optional price + repeat) ----
 export const upsertClinicVisit = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i: z.infer<typeof UpsertSchema>) => UpsertSchema.parse(i))
@@ -93,6 +102,77 @@ export const upsertClinicVisit = createServerFn({ method: "POST" })
       .eq("user_id", userId)
       .maybeSingle();
     if (!profile) throw new Error("No profile");
+
+    // Ensure a bookable "Prescribing clinic" treatment exists so the clinic days
+    // show up as a normal category on the booking page, with a price attached.
+    const ensureTreatment = async (price: number | null) => {
+      if (price == null) return null;
+      let categoryId: string | null = null;
+      const { data: cat } = await supabase
+        .from("treatment_categories")
+        .select("id")
+        .eq("profile_id", profile.id)
+        .eq("name", "Prescribing clinic")
+        .maybeSingle();
+      if (cat) categoryId = cat.id;
+      else {
+        const { data: newCat } = await supabase
+          .from("treatment_categories")
+          .insert({ profile_id: profile.id, name: "Prescribing clinic", kind: "treatment" } as never)
+          .select("id")
+          .single();
+        categoryId = newCat?.id ?? null;
+      }
+
+      const { data: existing } = await supabase
+        .from("treatments")
+        .select("id")
+        .eq("profile_id", profile.id)
+        .eq("name", "Prescribing clinic")
+        .maybeSingle();
+
+      const mins = (() => {
+        const [sh, sm] = data.start_time.split(":").map(Number);
+        const [eh, em] = data.end_time.split(":").map(Number);
+        const d = eh * 60 + em - (sh * 60 + sm);
+        return d > 0 && d <= 120 ? d : 30;
+      })();
+
+      if (existing) {
+        await supabase
+          .from("treatments")
+          .update({
+            price,
+            active: true,
+            category_id: categoryId,
+            requires_prescriber: true,
+            prescriber_routing: "clinic_visit",
+          } as never)
+          .eq("id", existing.id);
+        return existing.id as string;
+      }
+      const { data: created, error: tErr } = await supabase
+        .from("treatments")
+        .insert({
+          profile_id: profile.id,
+          name: "Prescribing clinic",
+          description:
+            "Appointment with our prescriber during a prescribing clinic day. Choose your clinic date at checkout.",
+          duration: mins,
+          price,
+          category_id: categoryId,
+          requires_prescriber: true,
+          prescriber_routing: "clinic_visit",
+          prescriber_user_id: data.prescriber_user_id ?? null,
+        } as never)
+        .select("id")
+        .single();
+      if (tErr) throw tErr;
+      return created.id as string;
+    };
+
+    const price = data.price ?? null;
+    const treatmentId = await ensureTreatment(price);
 
     if (data.id) {
       const { error } = await supabase
@@ -106,37 +186,59 @@ export const upsertClinicVisit = createServerFn({ method: "POST" })
           end_time: data.end_time,
           capacity: data.capacity,
           notes: data.notes ?? null,
+          price,
+          treatment_id: treatmentId,
         } as never)
         .eq("id", data.id)
         .eq("practitioner_profile_id", profile.id);
       if (error) throw error;
-      return { id: data.id };
+      return { id: data.id, created: 1 };
     }
-    const { data: row, error } = await supabase
+
+    // Build the list of dates (single date, or a repeating series)
+    const dates: string[] = [data.visit_date];
+    const step = data.repeat_every_days ?? 0;
+    if (step > 0 && data.repeat_until) {
+      const until = new Date(`${data.repeat_until}T00:00:00Z`).getTime();
+      let cursor = new Date(`${data.visit_date}T00:00:00Z`).getTime();
+      while (dates.length < 60) {
+        cursor += step * 86400000;
+        if (cursor > until) break;
+        dates.push(new Date(cursor).toISOString().slice(0, 10));
+      }
+    }
+
+    const groupId = dates.length > 1 ? crypto.randomUUID() : null;
+    const rows = dates.map((d) => ({
+      practitioner_profile_id: profile.id,
+      prescriber_user_id: data.prescriber_user_id ?? null,
+      prescriber_label: data.prescriber_label?.trim() || null,
+      location_id: data.location_id ?? null,
+      confirmed_by_prescriber: data.prescriber_user_id ? false : true,
+      visit_date: d,
+      start_time: data.start_time,
+      end_time: data.end_time,
+      capacity: data.capacity,
+      notes: data.notes ?? null,
+      price,
+      treatment_id: treatmentId,
+      recurrence_group: groupId,
+      created_by: "practitioner",
+    }));
+
+    const { data: inserted, error } = await supabase
       .from("prescriber_clinic_visits")
-      .insert({
-        practitioner_profile_id: profile.id,
-        prescriber_user_id: data.prescriber_user_id ?? null,
-        prescriber_label: data.prescriber_label?.trim() || null,
-        location_id: data.location_id ?? null,
-        confirmed_by_prescriber: data.prescriber_user_id ? false : true,
-        visit_date: data.visit_date,
-        start_time: data.start_time,
-        end_time: data.end_time,
-        capacity: data.capacity,
-        notes: data.notes ?? null,
-        created_by: "practitioner",
-      } as never)
-      .select("id")
-      .single();
+      .insert(rows as never)
+      .select("id");
     if (error) throw error;
-    return { id: row.id };
+    return { id: inserted?.[0]?.id as string, created: inserted?.length ?? 0 };
   });
+
 
 // ---- Practitioner: cancel/delete a visit ----
 export const cancelClinicVisit = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: { id: string }) => i)
+  .inputValidator((i: { id: string; whole_series?: boolean }) => i)
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { data: profile } = await supabase
@@ -145,12 +247,26 @@ export const cancelClinicVisit = createServerFn({ method: "POST" })
       .eq("user_id", userId)
       .maybeSingle();
     if (!profile) throw new Error("No profile");
-    const { error } = await supabase
+    let query = supabase
       .from("prescriber_clinic_visits")
       .update({ status: "cancelled" } as never)
-      .eq("id", data.id)
       .eq("practitioner_profile_id", profile.id);
+    if (data.whole_series) {
+      const { data: row } = await supabase
+        .from("prescriber_clinic_visits")
+        .select("recurrence_group")
+        .eq("id", data.id)
+        .maybeSingle();
+      const group = (row as { recurrence_group?: string | null } | null)?.recurrence_group;
+      query = group
+        ? query.eq("recurrence_group", group).gte("visit_date", new Date().toISOString().slice(0, 10))
+        : query.eq("id", data.id);
+    } else {
+      query = query.eq("id", data.id);
+    }
+    const { error } = await query;
     if (error) throw error;
+
     return { ok: true };
   });
 
@@ -361,7 +477,7 @@ export const listPublicClinicVisits = createServerFn({ method: "GET" })
     const today = new Date().toISOString().slice(0, 10);
     let q = supabaseAdmin
       .from("prescriber_clinic_visits")
-      .select("id, prescriber_user_id, prescriber_label, location_id, visit_date, start_time, end_time, capacity, notes, status")
+      .select("id, prescriber_user_id, prescriber_label, location_id, visit_date, start_time, end_time, capacity, notes, status, price, treatment_id")
       .eq("practitioner_profile_id", profileId)
       .gte("visit_date", today)
       .in("status", ["scheduled", "confirmed", "approved"])
@@ -409,5 +525,7 @@ export const listPublicClinicVisits = createServerFn({ method: "GET" })
         "Independent prescriber",
       location_name: r.location_id ? lmap.get(r.location_id) ?? null : null,
       remaining: Math.max(0, r.capacity - (booked.get(r.id) ?? 0)),
+      price: (r as { price?: number | null }).price ?? null,
+      treatment_id: (r as { treatment_id?: string | null }).treatment_id ?? null,
     }));
   });

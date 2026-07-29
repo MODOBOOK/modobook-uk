@@ -316,7 +316,12 @@ function BookPage() {
     staleTime: 60_000,
   });
   const clinicVisits = clinicVisitsQuery.data ?? [];
-  const hasClinicVisits = clinicVisits.length > 0;
+  // When clinic days are priced they are bookable as a normal "Prescribing clinic"
+  // treatment category, so the standalone tab is not needed.
+  const clinicVisitsAreBookable = clinicVisits.some(
+    (v) => (v as { treatment_id?: string | null }).treatment_id,
+  );
+  const hasClinicVisits = clinicVisits.length > 0 && !clinicVisitsAreBookable;
 
 
 

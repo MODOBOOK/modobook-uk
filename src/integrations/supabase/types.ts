@@ -4771,8 +4771,11 @@ export type Database = {
           practitioner_profile_id: string
           prescriber_label: string | null
           prescriber_user_id: string | null
+          price: number | null
+          recurrence_group: string | null
           start_time: string
           status: string
+          treatment_id: string | null
           updated_at: string
           visit_date: string
         }
@@ -4788,8 +4791,11 @@ export type Database = {
           practitioner_profile_id: string
           prescriber_label?: string | null
           prescriber_user_id?: string | null
+          price?: number | null
+          recurrence_group?: string | null
           start_time: string
           status?: string
+          treatment_id?: string | null
           updated_at?: string
           visit_date: string
         }
@@ -4805,8 +4811,11 @@ export type Database = {
           practitioner_profile_id?: string
           prescriber_label?: string | null
           prescriber_user_id?: string | null
+          price?: number | null
+          recurrence_group?: string | null
           start_time?: string
           status?: string
+          treatment_id?: string | null
           updated_at?: string
           visit_date?: string
         }
@@ -4823,6 +4832,13 @@ export type Database = {
             columns: ["practitioner_profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prescriber_clinic_visits_treatment_id_fkey"
+            columns: ["treatment_id"]
+            isOneToOne: false
+            referencedRelation: "treatments"
             referencedColumns: ["id"]
           },
         ]

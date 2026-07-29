@@ -109,6 +109,9 @@ export function PrescribingClinicCard() {
                     </p>
                     <p className="text-xs text-muted-foreground">
                       {v.prescriber_name}
+                      {(v as { price?: number | null }).price != null && (
+                        <> · £{Number((v as { price?: number | null }).price).toFixed(2)}</>
+                      )}
                       {v.location_name ? ` · ` : ""}
                       {v.location_name && (
                         <>
@@ -129,8 +132,12 @@ export function PrescribingClinicCard() {
                       size="sm"
                       variant="ghost"
                       onClick={async () => {
+                        const series = (v as { recurrence_group?: string | null }).recurrence_group;
                         if (!confirm("Cancel this prescribing clinic date?")) return;
-                        await cancel({ data: { id: v.id } });
+                        const whole =
+                          !!series &&
+                          confirm("This date repeats. Cancel the whole repeating series? (Cancel = this date only)");
+                        await cancel({ data: { id: v.id, whole_series: whole } });
                         toast.success("Date cancelled");
                         visits.refetch();
                       }}
@@ -196,6 +203,9 @@ function VisitDialog({
     end_time: string;
     capacity: number;
     notes: string | null;
+    price: number | null;
+    repeat_every_days: number;
+    repeat_until: string | null;
   }) => Promise<void>;
 }) {
   const [prescriberId, setPrescriberId] = useState<string>(
@@ -210,6 +220,13 @@ function VisitDialog({
   const [end, setEnd] = useState((visit?.end_time ?? "16:00").slice(0, 5));
   const [capacity, setCapacity] = useState(String(visit?.capacity ?? 8));
   const [notes, setNotes] = useState(visit?.notes ?? "");
+  const [price, setPrice] = useState(
+    (visit as { price?: number | null } | null)?.price != null
+      ? String((visit as { price?: number | null }).price)
+      : "",
+  );
+  const [repeat, setRepeat] = useState("0");
+  const [repeatUntil, setRepeatUntil] = useState("");
   const [saving, setSaving] = useState(false);
 
   return (
@@ -293,6 +310,52 @@ function VisitDialog({
           </div>
 
           <div className="space-y-1.5">
+            <Label>Price (£)</Label>
+            <Input
+              type="number"
+              min={0}
+              step="0.01"
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+              placeholder="e.g. 25.00"
+            />
+            <p className="text-xs text-muted-foreground">
+              Setting a price creates a bookable “Prescribing clinic” treatment in its own category
+              on your booking page. Patients pick their clinic day at checkout.
+            </p>
+          </div>
+
+          {!visit && (
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1.5">
+                <Label>Repeat</Label>
+                <Select value={repeat} onValueChange={setRepeat}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">Does not repeat</SelectItem>
+                    <SelectItem value="7">Every week</SelectItem>
+                    <SelectItem value="14">Every 2 weeks</SelectItem>
+                    <SelectItem value="21">Every 3 weeks</SelectItem>
+                    <SelectItem value="28">Every 4 weeks</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Repeat until</Label>
+                <Input
+                  type="date"
+                  value={repeatUntil}
+                  disabled={repeat === "0"}
+                  onChange={(e) => setRepeatUntil(e.target.value)}
+                />
+              </div>
+            </div>
+          )}
+
+
+          <div className="space-y-1.5">
             <Label>Notes (shown to patients)</Label>
             <Textarea
               rows={2}
@@ -320,6 +383,9 @@ function VisitDialog({
                 end_time: end,
                 capacity: Math.max(1, Number(capacity) || 1),
                 notes: notes.trim() || null,
+                price: price.trim() === "" ? null : Math.max(0, Number(price) || 0),
+                repeat_every_days: Number(repeat) || 0,
+                repeat_until: Number(repeat) > 0 && repeatUntil ? repeatUntil : null,
               });
               setSaving(false);
             }}
