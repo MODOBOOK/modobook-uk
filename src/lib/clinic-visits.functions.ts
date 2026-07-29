@@ -39,7 +39,9 @@ export const listMyClinicVisits = createServerFn({ method: "GET" })
     const rows = data ?? [];
     if (rows.length === 0) return [];
     const visitIds = rows.map((r) => r.id);
-    const prescIds = Array.from(new Set(rows.map((r) => r.prescriber_user_id)));
+    const prescIds = Array.from(
+      new Set(rows.map((r) => r.prescriber_user_id).filter(Boolean) as string[]),
+    );
     const locIds = Array.from(new Set(rows.map((r) => r.location_id).filter(Boolean) as string[]));
     const [{ data: presc }, { data: codes }, { data: locs }, { data: refs }] = await Promise.all([
       supabase.from("prescriber_profiles").select("user_id, full_name, regulatory_body").in("user_id", prescIds),
