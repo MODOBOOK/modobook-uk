@@ -171,6 +171,13 @@ function PatientAuth() {
         </TabsContent>
 
         <TabsContent value="signup" className="space-y-3 pt-4">
+          {slug === "demo-clinic" ? (
+            <div className="rounded-md border bg-muted/40 p-4 text-sm text-muted-foreground">
+              This is the MODO demo clinic — new patient accounts can&rsquo;t be created here.
+              Use the demo patient login from{" "}
+              <a href="/demo" className="underline underline-offset-2">modobook.uk/demo</a>.
+            </div>
+          ) : (
           <form onSubmit={signUp} className="space-y-3">
             <div><Label>Full name</Label><Input value={name} onChange={(e) => setName(e.target.value)} required /></div>
             <div><Label>Email</Label><Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required /></div>
@@ -178,6 +185,7 @@ function PatientAuth() {
             <div><Label>Password</Label><Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} /></div>
             <Button type="submit" className="w-full" disabled={loading}>{loading ? "Creating…" : "Create account"}</Button>
           </form>
+          )}
         </TabsContent>
       </Tabs>
     </main>
