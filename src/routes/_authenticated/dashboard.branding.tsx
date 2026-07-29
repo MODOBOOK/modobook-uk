@@ -117,7 +117,14 @@ function BrandingPage() {
           ...DEFAULTS,
           ...(t as Record<string, unknown> as ClinicThemeInput),
           hero_carousel_urls: parseUrls((t as Record<string, unknown>).hero_carousel_urls),
+          // Individual contact channels are no longer toggled by hand — they
+          // appear automatically for whichever details are filled in.
+          welcome_card_show_sms: true,
+          welcome_card_show_whatsapp: true,
+          welcome_card_show_instagram: true,
+          welcome_card_show_facebook: true,
         };
+
         setState(merged);
       }
       if (p) setProfileId(p.id);
@@ -160,10 +167,13 @@ function BrandingPage() {
       welcome_card_show_rating: preset.welcome_card_show_rating,
       welcome_card_show_actions: preset.welcome_card_show_actions,
       welcome_card_show_contact: preset.welcome_card_show_contact,
-      welcome_card_show_sms: preset.welcome_card_show_sms,
-      welcome_card_show_whatsapp: preset.welcome_card_show_whatsapp,
-      welcome_card_show_instagram: preset.welcome_card_show_instagram,
-      welcome_card_show_facebook: preset.welcome_card_show_facebook,
+      // Contact channels are always on — they're shown automatically for
+      // whichever details the clinic has filled in.
+      welcome_card_show_sms: true,
+      welcome_card_show_whatsapp: true,
+      welcome_card_show_instagram: true,
+      welcome_card_show_facebook: true,
+
       welcome_card_size: preset.welcome_card_size,
       welcome_card_mobile_size: preset.welcome_card_mobile_size,
       welcome_card_position: preset.welcome_card_position,
@@ -576,25 +586,7 @@ function BrandingPage() {
             ))}
           </div>
 
-          {state.welcome_card_show_contact && (
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              {[
-                { key: "welcome_card_show_sms", label: "Text / SMS" },
-                { key: "welcome_card_show_whatsapp", label: "WhatsApp" },
-                { key: "welcome_card_show_instagram", label: "Instagram" },
-                { key: "welcome_card_show_facebook", label: "Facebook" },
-              ].map((item) => (
-                <label key={item.key} className="flex items-center gap-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={!!(state[item.key as keyof ClinicThemeInput] as boolean)}
-                    onChange={(e) => set(item.key as keyof ClinicThemeInput, e.target.checked as ClinicThemeInput[keyof ClinicThemeInput])}
-                  />
-                  {item.label}
-                </label>
-              ))}
-            </div>
-          )}
+
 
           <div className="space-y-2">
             <Label>Quick card presets</Label>
@@ -717,43 +709,45 @@ function BrandingPage() {
       </Card>
 
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Palette className="h-4 w-4" /> Core colors
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-2">
-          <ColorField label="Hero background" value={state.primary_color ?? ""} onChange={(v) => set("primary_color", v)} />
-          <ColorField label="Hero text" value={state.hero_text_color ?? "#ffffff"} onChange={(v) => set("hero_text_color", v)} />
-          <ColorField label="Page background" value={state.background_color ?? ""} onChange={(v) => set("background_color", v)} />
-          <ColorField label="Body text" value={state.text_color ?? ""} onChange={(v) => set("text_color", v)} />
-          <ColorField label="Accent / button" value={state.accent_color ?? ""} onChange={(v) => set("accent_color", v)} />
-          <div className="flex items-end">
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={!!state.hero_use_logo}
-                onChange={(e) => set("hero_use_logo", e.target.checked)}
-              />
-              Show logo instead of clinic name in hero
-            </label>
+      <details className="group rounded-xl border bg-card">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4 text-sm font-medium">
+          <span className="flex items-center gap-2">
+            <Palette className="h-4 w-4" /> Fine-tune individual colours
+          </span>
+          <span className="text-xs font-normal text-muted-foreground">Optional — palettes above set these for you</span>
+        </summary>
+        <div className="space-y-4 border-t p-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <ColorField label="Hero background" value={state.primary_color ?? ""} onChange={(v) => set("primary_color", v)} />
+            <ColorField label="Hero text" value={state.hero_text_color ?? "#ffffff"} onChange={(v) => set("hero_text_color", v)} />
+            <ColorField label="Page background" value={state.background_color ?? ""} onChange={(v) => set("background_color", v)} />
+            <ColorField label="Body text" value={state.text_color ?? ""} onChange={(v) => set("text_color", v)} />
+            <ColorField label="Accent / button" value={state.accent_color ?? ""} onChange={(v) => set("accent_color", v)} />
+            <ColorField label="Header background" value={state.header_bg_color ?? ""} onChange={(v) => set("header_bg_color", v)} />
+            <ColorField label="Header text" value={state.header_text_color ?? ""} onChange={(v) => set("header_text_color", v)} />
+            <ColorField label="Footer background" value={state.footer_bg_color ?? ""} onChange={(v) => set("footer_bg_color", v)} />
+            <ColorField label="Footer text" value={state.footer_text_color ?? ""} onChange={(v) => set("footer_text_color", v)} />
           </div>
-          <p className="col-span-full text-xs text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             The page background fades smoothly out of the hero background — pick complementary shades for the cleanest merge.
           </p>
+        </div>
+      </details>
+
+      <Card>
+        <CardHeader><CardTitle className="text-base">Hero display</CardTitle></CardHeader>
+        <CardContent>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={!!state.hero_use_logo}
+              onChange={(e) => set("hero_use_logo", e.target.checked)}
+            />
+            Show logo instead of clinic name in hero
+          </label>
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader><CardTitle className="text-base">Header & footer</CardTitle></CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-2">
-          <ColorField label="Header background" value={state.header_bg_color ?? ""} onChange={(v) => set("header_bg_color", v)} />
-          <ColorField label="Header text" value={state.header_text_color ?? ""} onChange={(v) => set("header_text_color", v)} />
-          <ColorField label="Footer background" value={state.footer_bg_color ?? ""} onChange={(v) => set("footer_bg_color", v)} />
-          <ColorField label="Footer text" value={state.footer_text_color ?? ""} onChange={(v) => set("footer_text_color", v)} />
-        </CardContent>
-      </Card>
 
       <Card>
         <CardHeader><CardTitle className="text-base">Typography</CardTitle></CardHeader>
