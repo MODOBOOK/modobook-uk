@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import {
@@ -6,6 +6,7 @@ import {
   upsertPractitioner,
   deletePractitioner,
 } from "@/lib/practitioners.functions";
+import { getSeatSummary, reserveExtraSeat } from "@/lib/practitioner-billing.functions";
 import { listMyLocations } from "@/lib/locations.functions";
 import { getMyProfile, updateProfile } from "@/lib/profiles.functions";
 import { ImageUploader } from "@/components/ImageUploader";
