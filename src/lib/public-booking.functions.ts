@@ -1230,6 +1230,19 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
               .update({ status: "cancelled", payment_hold_expires_at: null } as never)
               .in("id", existing.map((e) => e.id))
               .neq("payment_status", "paid");
+            // Void the Stripe session/intent already issued for the superseded
+            // appointments so only the new one can be paid.
+            if (prof?.stripe_connect_account_id) {
+              try {
+                const { voidOpenBookingPayments } = await import("./stripe.server");
+                await voidOpenBookingPayments({
+                  accountId: prof.stripe_connect_account_id,
+                  appointmentIds: existing.map((e) => e.id),
+                });
+              } catch (e) {
+                console.error("[requestMultiBooking] voiding superseded payment failed", e);
+              }
+            }
           } else {
             return { appointments: existing, consents: [], medicalForms: [], packagePurchases: [], checkoutUrl: null, embeddedPayment: null };
           }
@@ -1355,6 +1368,13 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
         patientEmail: data.patientEmail,
         description: `Booking with ${prof?.clinic_name ?? "clinic"}`,
         choice: paymentChoice,
+        dedupeKey: bookingDedupeKey({
+          profileId: data.profileId,
+          patientEmail: data.patientEmail,
+          date: data.date,
+          startTime: data.startTime,
+          treatmentIds: data.bookings.map((b) => b.treatmentId),
+        }),
       });
 
     } catch (e) {
