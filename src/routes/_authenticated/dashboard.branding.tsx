@@ -717,43 +717,45 @@ function BrandingPage() {
       </Card>
 
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Palette className="h-4 w-4" /> Core colors
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-2">
-          <ColorField label="Hero background" value={state.primary_color ?? ""} onChange={(v) => set("primary_color", v)} />
-          <ColorField label="Hero text" value={state.hero_text_color ?? "#ffffff"} onChange={(v) => set("hero_text_color", v)} />
-          <ColorField label="Page background" value={state.background_color ?? ""} onChange={(v) => set("background_color", v)} />
-          <ColorField label="Body text" value={state.text_color ?? ""} onChange={(v) => set("text_color", v)} />
-          <ColorField label="Accent / button" value={state.accent_color ?? ""} onChange={(v) => set("accent_color", v)} />
-          <div className="flex items-end">
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={!!state.hero_use_logo}
-                onChange={(e) => set("hero_use_logo", e.target.checked)}
-              />
-              Show logo instead of clinic name in hero
-            </label>
+      <details className="group rounded-xl border bg-card">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4 text-sm font-medium">
+          <span className="flex items-center gap-2">
+            <Palette className="h-4 w-4" /> Fine-tune individual colours
+          </span>
+          <span className="text-xs font-normal text-muted-foreground">Optional — palettes above set these for you</span>
+        </summary>
+        <div className="space-y-4 border-t p-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <ColorField label="Hero background" value={state.primary_color ?? ""} onChange={(v) => set("primary_color", v)} />
+            <ColorField label="Hero text" value={state.hero_text_color ?? "#ffffff"} onChange={(v) => set("hero_text_color", v)} />
+            <ColorField label="Page background" value={state.background_color ?? ""} onChange={(v) => set("background_color", v)} />
+            <ColorField label="Body text" value={state.text_color ?? ""} onChange={(v) => set("text_color", v)} />
+            <ColorField label="Accent / button" value={state.accent_color ?? ""} onChange={(v) => set("accent_color", v)} />
+            <ColorField label="Header background" value={state.header_bg_color ?? ""} onChange={(v) => set("header_bg_color", v)} />
+            <ColorField label="Header text" value={state.header_text_color ?? ""} onChange={(v) => set("header_text_color", v)} />
+            <ColorField label="Footer background" value={state.footer_bg_color ?? ""} onChange={(v) => set("footer_bg_color", v)} />
+            <ColorField label="Footer text" value={state.footer_text_color ?? ""} onChange={(v) => set("footer_text_color", v)} />
           </div>
-          <p className="col-span-full text-xs text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             The page background fades smoothly out of the hero background — pick complementary shades for the cleanest merge.
           </p>
+        </div>
+      </details>
+
+      <Card>
+        <CardHeader><CardTitle className="text-base">Hero display</CardTitle></CardHeader>
+        <CardContent>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={!!state.hero_use_logo}
+              onChange={(e) => set("hero_use_logo", e.target.checked)}
+            />
+            Show logo instead of clinic name in hero
+          </label>
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader><CardTitle className="text-base">Header & footer</CardTitle></CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-2">
-          <ColorField label="Header background" value={state.header_bg_color ?? ""} onChange={(v) => set("header_bg_color", v)} />
-          <ColorField label="Header text" value={state.header_text_color ?? ""} onChange={(v) => set("header_text_color", v)} />
-          <ColorField label="Footer background" value={state.footer_bg_color ?? ""} onChange={(v) => set("footer_bg_color", v)} />
-          <ColorField label="Footer text" value={state.footer_text_color ?? ""} onChange={(v) => set("footer_text_color", v)} />
-        </CardContent>
-      </Card>
 
       <Card>
         <CardHeader><CardTitle className="text-base">Typography</CardTitle></CardHeader>
