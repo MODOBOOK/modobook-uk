@@ -79,21 +79,12 @@ export function PrescribingClinicCard() {
             size="sm"
             className="shrink-0"
             onClick={() => setEditing("new")}
-            disabled={presList.length === 0}
-            title={presList.length === 0 ? "Connect an approved prescriber first" : ""}
           >
             <Plus className="mr-1.5 h-4 w-4" /> Add date
           </Button>
         </div>
 
-        {presList.length === 0 ? (
-          <p className="rounded-md border border-dashed p-3 text-sm text-muted-foreground">
-            Connect with an approved prescriber first —{" "}
-            <Link to="/hub/connections" className="font-medium underline">
-              Connections
-            </Link>
-          </p>
-        ) : list.length === 0 ? (
+        {list.length === 0 ? (
           <p className="rounded-md border border-dashed p-3 text-sm text-muted-foreground">
             No prescribing clinic dates yet.
           </p>
@@ -197,7 +188,8 @@ function VisitDialog({
   onClose: () => void;
   onSave: (payload: {
     id?: string | null;
-    prescriber_user_id: string;
+    prescriber_user_id: string | null;
+    prescriber_label: string | null;
     location_id: string | null;
     visit_date: string;
     start_time: string;
@@ -206,8 +198,11 @@ function VisitDialog({
     notes: string | null;
   }) => Promise<void>;
 }) {
-  const [prescriberId, setPrescriberId] = useState(
-    visit?.prescriber_user_id ?? prescribers[0]?.user_id ?? "",
+  const [prescriberId, setPrescriberId] = useState<string>(
+    visit?.prescriber_user_id ?? "none",
+  );
+  const [prescriberLabel, setPrescriberLabel] = useState(
+    (visit as { prescriber_label?: string | null } | null)?.prescriber_label ?? "",
   );
   const [locationId, setLocationId] = useState<string>(visit?.location_id ?? "none");
   const [date, setDate] = useState(visit?.visit_date ?? "");
@@ -231,6 +226,7 @@ function VisitDialog({
                 <SelectValue placeholder="Choose prescriber" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="none">No linked prescriber</SelectItem>
                 {prescribers.map((p) => (
                   <SelectItem key={p.user_id} value={p.user_id}>
                     {p.name}
@@ -238,6 +234,18 @@ function VisitDialog({
                 ))}
               </SelectContent>
             </Select>
+            {prescriberId === "none" && (
+              <>
+                <Input
+                  value={prescriberLabel}
+                  onChange={(e) => setPrescriberLabel(e.target.value)}
+                  placeholder="Prescriber name (optional, shown to patients)"
+                />
+                <p className="text-xs text-muted-foreground">
+                  This date is set by you — no prescriber account needed or confirmation required.
+                </p>
+              </>
+            )}
           </div>
 
           {locations.length > 0 && (
@@ -299,12 +307,13 @@ function VisitDialog({
             Cancel
           </Button>
           <Button
-            disabled={saving || !prescriberId || !date}
+            disabled={saving || !date}
             onClick={async () => {
               setSaving(true);
               await onSave({
                 id: visit?.id ?? null,
-                prescriber_user_id: prescriberId,
+                prescriber_user_id: prescriberId === "none" ? null : prescriberId,
+                prescriber_label: prescriberLabel.trim() || null,
                 location_id: locationId === "none" ? null : locationId,
                 visit_date: date,
                 start_time: start,

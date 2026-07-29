@@ -4769,7 +4769,8 @@ export type Database = {
           location_id: string | null
           notes: string | null
           practitioner_profile_id: string
-          prescriber_user_id: string
+          prescriber_label: string | null
+          prescriber_user_id: string | null
           start_time: string
           status: string
           updated_at: string
@@ -4785,7 +4786,8 @@ export type Database = {
           location_id?: string | null
           notes?: string | null
           practitioner_profile_id: string
-          prescriber_user_id: string
+          prescriber_label?: string | null
+          prescriber_user_id?: string | null
           start_time: string
           status?: string
           updated_at?: string
@@ -4801,7 +4803,8 @@ export type Database = {
           location_id?: string | null
           notes?: string | null
           practitioner_profile_id?: string
-          prescriber_user_id?: string
+          prescriber_label?: string | null
+          prescriber_user_id?: string | null
           start_time?: string
           status?: string
           updated_at?: string

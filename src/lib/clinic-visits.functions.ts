@@ -6,7 +6,8 @@ const TimeStr = z.string().regex(/^\d{2}:\d{2}(:\d{2})?$/);
 
 const UpsertSchema = z.object({
   id: z.string().uuid().nullable().optional(),
-  prescriber_user_id: z.string().uuid(),
+  prescriber_user_id: z.string().uuid().nullable().optional(),
+  prescriber_label: z.string().max(120).nullable().optional(),
   location_id: z.string().uuid().nullable().optional(),
   visit_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   start_time: TimeStr,
@@ -29,7 +30,7 @@ export const listMyClinicVisits = createServerFn({ method: "GET" })
     const { data, error } = await supabase
       .from("prescriber_clinic_visits")
       .select(
-        "id, prescriber_user_id, location_id, visit_date, start_time, end_time, capacity, notes, status, confirmed_by_prescriber, created_at",
+        "id, prescriber_user_id, prescriber_label, location_id, visit_date, start_time, end_time, capacity, notes, status, confirmed_by_prescriber, created_at",
       )
       .eq("practitioner_profile_id", profile.id)
       .gte("visit_date", new Date(Date.now() - 86400000).toISOString().slice(0, 10))
@@ -39,7 +40,9 @@ export const listMyClinicVisits = createServerFn({ method: "GET" })
     const rows = data ?? [];
     if (rows.length === 0) return [];
     const visitIds = rows.map((r) => r.id);
-    const prescIds = Array.from(new Set(rows.map((r) => r.prescriber_user_id)));
+    const prescIds = Array.from(
+      new Set(rows.map((r) => r.prescriber_user_id).filter(Boolean) as string[]),
+    );
     const locIds = Array.from(new Set(rows.map((r) => r.location_id).filter(Boolean) as string[]));
     const [{ data: presc }, { data: codes }, { data: locs }, { data: refs }] = await Promise.all([
       supabase.from("prescriber_profiles").select("user_id, full_name, regulatory_body").in("user_id", prescIds),
@@ -64,11 +67,15 @@ export const listMyClinicVisits = createServerFn({ method: "GET" })
     }
     return rows.map((r) => ({
       ...r,
-      prescriber_name:
-        pmap.get(r.prescriber_user_id)?.full_name ??
-        cmap.get(r.prescriber_user_id)?.display_name ??
-        "Prescriber",
-      prescriber_regulatory_body: pmap.get(r.prescriber_user_id)?.regulatory_body ?? null,
+      prescriber_name: r.prescriber_user_id
+        ? pmap.get(r.prescriber_user_id)?.full_name ??
+          cmap.get(r.prescriber_user_id)?.display_name ??
+          r.prescriber_label ??
+          "Prescriber"
+        : r.prescriber_label ?? "Prescriber",
+      prescriber_regulatory_body: r.prescriber_user_id
+        ? pmap.get(r.prescriber_user_id)?.regulatory_body ?? null
+        : null,
       location_name: r.location_id ? lmap.get(r.location_id)?.name ?? null : null,
       bookings: bookingsByVisit.get(r.id) ?? [],
     }));
@@ -91,7 +98,8 @@ export const upsertClinicVisit = createServerFn({ method: "POST" })
       const { error } = await supabase
         .from("prescriber_clinic_visits")
         .update({
-          prescriber_user_id: data.prescriber_user_id,
+          prescriber_user_id: data.prescriber_user_id ?? null,
+          prescriber_label: data.prescriber_label?.trim() || null,
           location_id: data.location_id ?? null,
           visit_date: data.visit_date,
           start_time: data.start_time,
@@ -108,8 +116,10 @@ export const upsertClinicVisit = createServerFn({ method: "POST" })
       .from("prescriber_clinic_visits")
       .insert({
         practitioner_profile_id: profile.id,
-        prescriber_user_id: data.prescriber_user_id,
+        prescriber_user_id: data.prescriber_user_id ?? null,
+        prescriber_label: data.prescriber_label?.trim() || null,
         location_id: data.location_id ?? null,
+        confirmed_by_prescriber: data.prescriber_user_id ? false : true,
         visit_date: data.visit_date,
         start_time: data.start_time,
         end_time: data.end_time,
@@ -351,7 +361,7 @@ export const listPublicClinicVisits = createServerFn({ method: "GET" })
     const today = new Date().toISOString().slice(0, 10);
     let q = supabaseAdmin
       .from("prescriber_clinic_visits")
-      .select("id, prescriber_user_id, location_id, visit_date, start_time, end_time, capacity, notes, status")
+      .select("id, prescriber_user_id, prescriber_label, location_id, visit_date, start_time, end_time, capacity, notes, status")
       .eq("practitioner_profile_id", profileId)
       .gte("visit_date", today)
       .in("status", ["scheduled", "confirmed", "approved"])
@@ -365,7 +375,9 @@ export const listPublicClinicVisits = createServerFn({ method: "GET" })
     if (list.length === 0) return [];
 
     const visitIds = list.map((r) => r.id);
-    const prescIds = Array.from(new Set(list.map((r) => r.prescriber_user_id)));
+    const prescIds = Array.from(
+      new Set(list.map((r) => r.prescriber_user_id).filter(Boolean) as string[]),
+    );
     const locIds = Array.from(new Set(list.map((r) => r.location_id).filter(Boolean) as string[]));
     const [{ data: presc }, { data: locs }, { data: refs }] = await Promise.all([
       supabaseAdmin.from("prescriber_profiles").select("user_id, full_name").in("user_id", prescIds),
@@ -391,7 +403,10 @@ export const listPublicClinicVisits = createServerFn({ method: "GET" })
       start_time: r.start_time,
       end_time: r.end_time,
       notes: r.notes,
-      prescriber_name: pmap.get(r.prescriber_user_id) ?? "Independent prescriber",
+      prescriber_name:
+        (r.prescriber_user_id ? pmap.get(r.prescriber_user_id) : null) ??
+        r.prescriber_label ??
+        "Independent prescriber",
       location_name: r.location_id ? lmap.get(r.location_id) ?? null : null,
       remaining: Math.max(0, r.capacity - (booked.get(r.id) ?? 0)),
     }));
