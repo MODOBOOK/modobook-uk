@@ -1283,7 +1283,7 @@ function PrescriptionsSection({ clientId, client, profileId }: { clientId: strin
             <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground pt-2">Prescriber</div>
             <div className="grid grid-cols-2 gap-2">
               <F label="Full name *"><Input value={form.prescriber_name} onChange={e => setForm({ ...form, prescriber_name: e.target.value })} /></F>
-              <F label="Registration no. * (GMC/GPhC/NMC)"><Input value={form.prescriber_reg_number} onChange={e => setForm({ ...form, prescriber_reg_number: e.target.value })} /></F>
+              <F label="Registration no. *" hint="GMC/GPhC/NMC"><Input value={form.prescriber_reg_number} onChange={e => setForm({ ...form, prescriber_reg_number: e.target.value })} /></F>
             </div>
             <F label="Prescriber address *"><Textarea rows={2} value={form.prescriber_address} onChange={e => setForm({ ...form, prescriber_address: e.target.value })} /></F>
 
