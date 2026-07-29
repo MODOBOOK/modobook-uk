@@ -34,7 +34,7 @@ export function CookieConsent() {
           MODO uses <strong>strictly necessary</strong> cookies to keep you signed in
           and remember your layout preferences. We don't use advertising or
           cross-site tracking cookies. See our{" "}
-          <Link to="/privacy" className="underline">Privacy Policy</Link>.
+          <Link to="/privacy" className="underline">Privacy Policy</Link> and <Link to="/privacy/cookies" className="underline">Cookie Policy</Link>.
         </div>
         <button
           onClick={accept}
