@@ -290,6 +290,10 @@ export async function createCheckoutSession(params: {
   // suffix, so charges show a deterministic label instead of the bank's
   // best-guess merchant enrichment.
   descriptorName?: string | null;
+  // Stripe idempotency key. Two identical booking submissions (double click,
+  // retried request) then resolve to the SAME Checkout Session instead of two
+  // payable sessions, which is how patients ended up paying twice.
+  idempotencyKey?: string;
 }) {
   const stripe = getStripe();
   // Stripe requires expires_at to be at least 30 minutes ahead — used so
