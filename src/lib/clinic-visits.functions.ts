@@ -238,7 +238,7 @@ export const upsertClinicVisit = createServerFn({ method: "POST" })
 // ---- Practitioner: cancel/delete a visit ----
 export const cancelClinicVisit = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: { id: string }) => i)
+  .inputValidator((i: { id: string; whole_series?: boolean }) => i)
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { data: profile } = await supabase
@@ -247,12 +247,26 @@ export const cancelClinicVisit = createServerFn({ method: "POST" })
       .eq("user_id", userId)
       .maybeSingle();
     if (!profile) throw new Error("No profile");
-    const { error } = await supabase
+    let query = supabase
       .from("prescriber_clinic_visits")
       .update({ status: "cancelled" } as never)
-      .eq("id", data.id)
       .eq("practitioner_profile_id", profile.id);
+    if (data.whole_series) {
+      const { data: row } = await supabase
+        .from("prescriber_clinic_visits")
+        .select("recurrence_group")
+        .eq("id", data.id)
+        .maybeSingle();
+      const group = (row as { recurrence_group?: string | null } | null)?.recurrence_group;
+      query = group
+        ? query.eq("recurrence_group", group).gte("visit_date", new Date().toISOString().slice(0, 10))
+        : query.eq("id", data.id);
+    } else {
+      query = query.eq("id", data.id);
+    }
+    const { error } = await query;
     if (error) throw error;
+
     return { ok: true };
   });
 
