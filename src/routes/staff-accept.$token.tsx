@@ -48,7 +48,7 @@ function AcceptInvitePage() {
     try {
       await accept({ data: { token } });
       toast.success("Invite accepted!");
-      navigate({ to: "/dashboard/invites" });
+      navigate({ to: "/dashboard" });
     } catch (e: any) { toast.error(e?.message ?? "Failed"); }
     finally { setWorking(false); }
   }
@@ -77,7 +77,7 @@ function AcceptInvitePage() {
       if (signInErr) throw signInErr;
       await accept({ data: { token } });
       toast.success(`Welcome to ${state.clinicName}!`);
-      navigate({ to: "/dashboard/invites" });
+      navigate({ to: "/dashboard" });
     } catch (e: any) { toast.error(e?.message ?? "Failed"); }
     finally { setWorking(false); }
   }
