@@ -21,6 +21,7 @@ import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PrescriberHubRouteImport } from './routes/prescriber-hub'
 import { Route as FeaturesRouteImport } from './routes/features'
 import { Route as FaqRouteImport } from './routes/faq'
+import { Route as DemoRouteImport } from './routes/demo'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
@@ -211,6 +212,11 @@ const FeaturesRoute = FeaturesRouteImport.update({
 const FaqRoute = FaqRouteImport.update({
   id: '/faq',
   path: '/faq',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DemoRoute = DemoRouteImport.update({
+  id: '/demo',
+  path: '/demo',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -960,6 +966,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/app': typeof AppRoute
   '/auth': typeof AuthRoute
+  '/demo': typeof DemoRoute
   '/faq': typeof FaqRoute
   '/features': typeof FeaturesRoute
   '/prescriber-hub': typeof PrescriberHubRoute
@@ -1104,6 +1111,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/app': typeof AppRoute
   '/auth': typeof AuthRoute
+  '/demo': typeof DemoRoute
   '/faq': typeof FaqRoute
   '/features': typeof FeaturesRoute
   '/prescriber-hub': typeof PrescriberHubRoute
@@ -1243,6 +1251,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/app': typeof AppRoute
   '/auth': typeof AuthRoute
+  '/demo': typeof DemoRoute
   '/faq': typeof FaqRoute
   '/features': typeof FeaturesRoute
   '/prescriber-hub': typeof PrescriberHubRoute
@@ -1389,6 +1398,7 @@ export interface FileRouteTypes {
     | '/'
     | '/app'
     | '/auth'
+    | '/demo'
     | '/faq'
     | '/features'
     | '/prescriber-hub'
@@ -1533,6 +1543,7 @@ export interface FileRouteTypes {
     | '/'
     | '/app'
     | '/auth'
+    | '/demo'
     | '/faq'
     | '/features'
     | '/prescriber-hub'
@@ -1671,6 +1682,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/app'
     | '/auth'
+    | '/demo'
     | '/faq'
     | '/features'
     | '/prescriber-hub'
@@ -1817,6 +1829,7 @@ export interface RootRouteChildren {
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   AppRoute: typeof AppRoute
   AuthRoute: typeof AuthRoute
+  DemoRoute: typeof DemoRoute
   FaqRoute: typeof FaqRoute
   FeaturesRoute: typeof FeaturesRoute
   PrescriberHubRoute: typeof PrescriberHubRoute
@@ -1941,6 +1954,13 @@ declare module '@tanstack/react-router' {
       path: '/faq'
       fullPath: '/faq'
       preLoaderRoute: typeof FaqRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/demo': {
+      id: '/demo'
+      path: '/demo'
+      fullPath: '/demo'
+      preLoaderRoute: typeof DemoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -3272,6 +3292,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   AppRoute: AppRoute,
   AuthRoute: AuthRoute,
+  DemoRoute: DemoRoute,
   FaqRoute: FaqRoute,
   FeaturesRoute: FeaturesRoute,
   PrescriberHubRoute: PrescriberHubRoute,
