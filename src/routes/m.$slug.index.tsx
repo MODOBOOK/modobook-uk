@@ -5,6 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { getPublicClinic } from "@/lib/public-clinic.functions";
 import { listPublicCourses } from "@/lib/training-public.functions";
 import { listPublicGiftCards } from "@/lib/gift-cards.functions";
+import { listPublicClinicVisits } from "@/lib/clinic-visits.functions";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -33,6 +34,8 @@ import {
   GraduationCap,
   Gift,
   Trophy,
+  Stethoscope,
+  CalendarDays,
   ArrowRight,
 } from "lucide-react";
 
@@ -305,6 +308,17 @@ function BookPage() {
     amount: number | null; image_url: string | null;
   }>;
   const hasGiftCards = giftCards.length > 0;
+
+  const fetchClinicVisits = useServerFn(listPublicClinicVisits);
+  const clinicVisitsQuery = useQuery({
+    queryKey: ["public-clinic-visits", slug],
+    queryFn: () => fetchClinicVisits({ data: { slug } }),
+    staleTime: 60_000,
+  });
+  const clinicVisits = clinicVisitsQuery.data ?? [];
+  const hasClinicVisits = clinicVisits.length > 0;
+
+
 
   const { primary: displayPrimary } = resolveDisplayNames(profile);
   const brand = theme?.primary_color || profile.brand_color || "#1f2a44";
@@ -1640,7 +1654,7 @@ function BookPage() {
 
             return (
               <Tabs defaultValue="treatments" className="w-full">
-                <TabsList className="grid w-full h-auto" style={{ backgroundColor: `${brand}10`, gridTemplateColumns: `repeat(${1 + (packages.length > 0 ? 1 : 0) + (hasGiftCards ? 1 : 0) + (hasTraining ? 1 : 0)}, minmax(0, 1fr))` }}>
+                <TabsList className="grid w-full h-auto" style={{ backgroundColor: `${brand}10`, gridTemplateColumns: `repeat(${1 + (packages.length > 0 ? 1 : 0) + (hasGiftCards ? 1 : 0) + (hasTraining ? 1 : 0) + (hasClinicVisits ? 1 : 0)}, minmax(0, 1fr))` }}>
                   <TabsTrigger value="treatments" className="text-sm sm:text-base py-2.5">Treatments</TabsTrigger>
                   {packages.length > 0 && (
                     <TabsTrigger value="packages" className="text-sm sm:text-base py-2.5">
@@ -1654,12 +1668,19 @@ function BookPage() {
                       Gift cards
                     </TabsTrigger>
                   )}
+                  {hasClinicVisits && (
+                    <TabsTrigger value="prescribing" className="text-sm sm:text-base py-2.5">
+                      <Stethoscope className="mr-1.5 h-4 w-4" />
+                      Prescribing clinic
+                    </TabsTrigger>
+                  )}
                   {hasTraining && (
                     <TabsTrigger value="training" className="text-sm sm:text-base py-2.5">
                       Training
                     </TabsTrigger>
                   )}
                 </TabsList>
+
 
 
 
@@ -2028,6 +2049,46 @@ function BookPage() {
                           </CardContent>
                         </Card>
                       ))}
+                    </div>
+                  </TabsContent>
+                )}
+
+                {hasClinicVisits && (
+                  <TabsContent value="prescribing" className="mt-4">
+                    <p className="mb-3 text-sm opacity-70">
+                      Our prescriber is in clinic on these dates. Choose your treatment from the
+                      Treatments tab and select one of these clinic days at checkout.
+                    </p>
+                    <div className="grid gap-3">
+                      {clinicVisits.map((v) => {
+                        const d = new Date(`${v.visit_date}T00:00:00`);
+                        const dateLabel = d.toLocaleDateString("en-GB", {
+                          weekday: "short", day: "numeric", month: "long",
+                        });
+                        return (
+                          <Card key={v.id} className="overflow-hidden">
+                            <CardContent className="space-y-2 p-4">
+                              <div className="flex flex-wrap items-center justify-between gap-2">
+                                <h3 className="font-serif text-lg" style={{ color: brand }}>
+                                  <CalendarDays className="mr-1.5 inline h-4 w-4" />
+                                  {dateLabel}
+                                </h3>
+                                <span className="text-sm font-semibold" style={{ color: brand }}>
+                                  {v.start_time.slice(0, 5)}–{v.end_time.slice(0, 5)}
+                                </span>
+                              </div>
+                              <div className="flex flex-wrap gap-3 text-xs opacity-70">
+                                <span>Prescriber: {v.prescriber_name}</span>
+                                {v.location_name && <span>{v.location_name}</span>}
+                                <span>
+                                  {v.remaining > 0 ? `${v.remaining} space${v.remaining === 1 ? "" : "s"} left` : "Fully booked"}
+                                </span>
+                              </div>
+                              {v.notes && <p className="text-sm opacity-80">{v.notes}</p>}
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
                     </div>
                   </TabsContent>
                 )}

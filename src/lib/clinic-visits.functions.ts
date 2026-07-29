@@ -336,3 +336,63 @@ export const declineClinicVisitRequest = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+
+// ---- Public (booking page): upcoming prescribing clinic days for a clinic ----
+export const listPublicClinicVisits = createServerFn({ method: "GET" })
+  .inputValidator((i: { slug: string; locationId?: string | null }) => i)
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: profile } = await supabaseAdmin
+      .rpc("get_public_profile_by_slug", { p_slug: data.slug.toLowerCase() })
+      .single();
+    const profileId = (profile as { id?: string } | null)?.id;
+    if (!profileId) return [];
+
+    const today = new Date().toISOString().slice(0, 10);
+    let q = supabaseAdmin
+      .from("prescriber_clinic_visits")
+      .select("id, prescriber_user_id, location_id, visit_date, start_time, end_time, capacity, notes, status")
+      .eq("practitioner_profile_id", profileId)
+      .gte("visit_date", today)
+      .in("status", ["scheduled", "confirmed", "approved"])
+      .order("visit_date", { ascending: true })
+      .order("start_time", { ascending: true })
+      .limit(30);
+    if (data.locationId) q = q.or(`location_id.eq.${data.locationId},location_id.is.null`);
+    const { data: rows, error } = await q;
+    if (error) throw error;
+    const list = rows ?? [];
+    if (list.length === 0) return [];
+
+    const visitIds = list.map((r) => r.id);
+    const prescIds = Array.from(new Set(list.map((r) => r.prescriber_user_id)));
+    const locIds = Array.from(new Set(list.map((r) => r.location_id).filter(Boolean) as string[]));
+    const [{ data: presc }, { data: locs }, { data: refs }] = await Promise.all([
+      supabaseAdmin.from("prescriber_profiles").select("user_id, full_name").in("user_id", prescIds),
+      locIds.length
+        ? supabaseAdmin.from("locations").select("id, name").in("id", locIds)
+        : Promise.resolve({ data: [] as { id: string; name: string }[] }),
+      supabaseAdmin
+        .from("prescriber_referrals")
+        .select("id, clinic_visit_id, status")
+        .in("clinic_visit_id", visitIds),
+    ]);
+    const pmap = new Map((presc ?? []).map((p) => [p.user_id, p.full_name]));
+    const lmap = new Map((locs ?? []).map((l) => [l.id, l.name]));
+    const booked = new Map<string, number>();
+    for (const r of refs ?? []) {
+      if (!r.clinic_visit_id || r.status === "cancelled" || r.status === "declined") continue;
+      booked.set(r.clinic_visit_id, (booked.get(r.clinic_visit_id) ?? 0) + 1);
+    }
+
+    return list.map((r) => ({
+      id: r.id,
+      visit_date: r.visit_date,
+      start_time: r.start_time,
+      end_time: r.end_time,
+      notes: r.notes,
+      prescriber_name: pmap.get(r.prescriber_user_id) ?? "Independent prescriber",
+      location_name: r.location_id ? lmap.get(r.location_id) ?? null : null,
+      remaining: Math.max(0, r.capacity - (booked.get(r.id) ?? 0)),
+    }));
+  });
