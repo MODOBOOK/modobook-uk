@@ -117,7 +117,14 @@ function BrandingPage() {
           ...DEFAULTS,
           ...(t as Record<string, unknown> as ClinicThemeInput),
           hero_carousel_urls: parseUrls((t as Record<string, unknown>).hero_carousel_urls),
+          // Individual contact channels are no longer toggled by hand — they
+          // appear automatically for whichever details are filled in.
+          welcome_card_show_sms: true,
+          welcome_card_show_whatsapp: true,
+          welcome_card_show_instagram: true,
+          welcome_card_show_facebook: true,
         };
+
         setState(merged);
       }
       if (p) setProfileId(p.id);
