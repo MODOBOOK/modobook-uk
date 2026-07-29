@@ -366,6 +366,86 @@ export const saveAddonSelection = createServerFn({ method: "POST" })
   });
 
 /**
+ * Seat summary for the Practitioners / Locations pages so the UI can explain
+ * exactly why an add is blocked and offer the right next step.
+ */
+export const getSeatSummary = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const profile = await getMyProfileId(context);
+    const [{ data: sub }, { count: locCount }, { count: pracCount }] = await Promise.all([
+      context.supabase
+        .from("practitioner_subscriptions")
+        .select("status, comped, trial_end, stripe_subscription_id, extra_locations, extra_practitioners")
+        .eq("profile_id", profile.id)
+        .maybeSingle(),
+      context.supabase.from("locations").select("id", { count: "exact", head: true }).eq("profile_id", profile.id),
+      context.supabase.from("practitioners").select("id", { count: "exact", head: true }).eq("profile_id", profile.id),
+    ]);
+    const trialActive = Boolean(sub?.trial_end && new Date(sub.trial_end as string).getTime() > Date.now());
+    const liveSub = Boolean(sub?.stripe_subscription_id && ["active", "trialing"].includes(String(sub?.status)));
+    return {
+      comped: Boolean(sub?.comped),
+      trialActive,
+      liveSub,
+      practitioners: {
+        used: pracCount ?? 0,
+        allowed: 1 + Math.max(0, Number(sub?.extra_practitioners ?? 0)),
+      },
+      locations: {
+        used: locCount ?? 0,
+        allowed: 1 + Math.max(0, Number(sub?.extra_locations ?? 0)),
+      },
+    };
+  });
+
+/**
+ * During the free trial a practitioner can reserve an extra seat instantly —
+ * it is recorded on their subscription and billed when checkout completes.
+ * Once a live Stripe subscription exists, quantities must go through
+ * `updateMySubscriptionItems` on the billing page instead.
+ */
+export const reserveExtraSeat = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: { kind: "location" | "practitioner" }) => i)
+  .handler(async ({ data, context }) => {
+    const profile = await getMyProfileId(context);
+    const { data: existing } = await context.supabase
+      .from("practitioner_subscriptions")
+      .select("id, status, trial_end, stripe_subscription_id, extra_locations, extra_practitioners")
+      .eq("profile_id", profile.id)
+      .maybeSingle();
+
+    const trialActive = Boolean(
+      existing?.trial_end && new Date(existing.trial_end as string).getTime() > Date.now(),
+    );
+    if (existing?.stripe_subscription_id && ["active", "trialing"].includes(String(existing.status))) {
+      throw new Error("You have a live subscription — change your add-on quantities in Plan & billing.");
+    }
+    if (!trialActive) {
+      throw new Error("Your free trial has ended. Set up your MODO direct debit in Plan & billing to add seats.");
+    }
+
+    const isLoc = data.kind === "location";
+    const currentVal = Number(
+      (isLoc ? existing?.extra_locations : existing?.extra_practitioners) ?? 0,
+    );
+    const next = Math.max(0, currentVal) + 1;
+    const patch = isLoc ? { extra_locations: next } : { extra_practitioners: next };
+    if (existing) {
+      await context.supabase
+        .from("practitioner_subscriptions")
+        .update(patch)
+        .eq("id", existing.id);
+    } else {
+      await context.supabase
+        .from("practitioner_subscriptions")
+        .insert({ profile_id: profile.id, status: "pending", ...patch });
+    }
+    return { ok: true, reserved: next };
+  });
+
+/**
  * Update the existing live Stripe subscription in place: change the base plan
  * and/or add-on quantities. Uses `proration_behavior: create_prorations` so
  * the change is added to the next scheduled direct-debit invoice rather than

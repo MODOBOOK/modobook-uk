@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import {
@@ -6,6 +6,7 @@ import {
   upsertPractitioner,
   deletePractitioner,
 } from "@/lib/practitioners.functions";
+import { getSeatSummary, reserveExtraSeat } from "@/lib/practitioner-billing.functions";
 import { listMyLocations } from "@/lib/locations.functions";
 import { getMyProfile, updateProfile } from "@/lib/profiles.functions";
 import { ImageUploader } from "@/components/ImageUploader";
@@ -47,6 +48,8 @@ function PractitionersPage() {
   const save = useServerFn(upsertPractitioner);
   const remove = useServerFn(deletePractitioner);
   const saveProfile = useServerFn(updateProfile);
+  const fetchSeats = useServerFn(getSeatSummary);
+  const reserveSeat = useServerFn(reserveExtraSeat);
 
   const [practitioners, setPractitioners] = useState<Pract[]>([]);
   const [links, setLinks] = useState<{ location_id: string; practitioner_id: string }[]>([]);
@@ -57,14 +60,22 @@ function PractitionersPage() {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<Draft>(emptyDraft());
   const [saving, setSaving] = useState(false);
+  const [seats, setSeats] = useState<Awaited<ReturnType<typeof getSeatSummary>> | null>(null);
+  const [reserving, setReserving] = useState(false);
 
   async function refresh() {
     setLoading(true);
     try {
-      const [list, locs, profile] = await Promise.all([fetchList(), fetchLocs(), fetchProfile()]);
+      const [list, locs, profile, seatInfo] = await Promise.all([
+        fetchList(),
+        fetchLocs(),
+        fetchProfile(),
+        fetchSeats().catch(() => null),
+      ]);
       setPractitioners(list.practitioners);
       setLinks(list.links);
       setLocations(locs);
+      setSeats(seatInfo);
       if (profile && "id" in profile) {
         setProfileId((profile as { id: string }).id);
         const m = (profile as { practitioner_selection_mode?: string }).practitioner_selection_mode;
@@ -76,6 +87,26 @@ function PractitionersPage() {
   }
 
   useEffect(() => { refresh(); }, []);
+
+  const seatsUsed = seats?.practitioners.used ?? practitioners.length;
+  const seatsAllowed = seats?.practitioners.allowed ?? 1;
+  const seatsFull = Boolean(seats && !seats.comped && seatsUsed >= seatsAllowed);
+  const canReserve = Boolean(seats && !seats.comped && seats.trialActive && !seats.liveSub);
+
+  async function handleReserveSeat() {
+    setReserving(true);
+    try {
+      await reserveSeat({ data: { kind: "practitioner" } });
+      toast.success("Seat added — it'll be included when your billing starts.");
+      await refresh();
+      openNew();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not add a seat");
+    } finally {
+      setReserving(false);
+    }
+  }
+
 
   function openNew() {
     setDraft(emptyDraft());
@@ -130,15 +161,41 @@ function PractitionersPage() {
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold">Practitioners</h1>
           <p className="text-sm text-muted-foreground">
             Add the team members who work at your clinic and assign them to locations. They appear under each location on your booking page.
           </p>
         </div>
-        <Button onClick={openNew}><Plus className="mr-2 h-4 w-4" /> Add practitioner</Button>
+        <Button onClick={seatsFull && canReserve ? handleReserveSeat : openNew} disabled={reserving || (seatsFull && !canReserve)}>
+          <Plus className="mr-2 h-4 w-4" />
+          {seatsFull && canReserve ? (reserving ? "Adding seat…" : "Add a seat & practitioner") : "Add practitioner"}
+        </Button>
       </div>
+
+      {seats && !seats.comped && (
+        <Card className={seatsFull ? "border-amber-500/50 bg-amber-500/5" : undefined}>
+          <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4">
+            <div className="text-sm">
+              <p className="font-medium">
+                {seatsUsed} of {seatsAllowed} practitioner {seatsAllowed === 1 ? "seat" : "seats"} used
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {seatsFull
+                  ? canReserve
+                    ? "Your plan includes one practitioner. Add another seat now — it's reserved during your free trial and billed when your direct debit starts."
+                    : "You've used all the practitioner seats on your plan. Increase the practitioner add-on in Plan & billing to add more."
+                  : "You can add another practitioner right now."}
+              </p>
+            </div>
+            <Button asChild variant="outline" size="sm">
+              <Link to="/dashboard/billing">Plan &amp; billing</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
 
       <Card>
         <CardHeader className="pb-3">
