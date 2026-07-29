@@ -29,7 +29,7 @@ function DpiaPage() {
       <main className="mx-auto max-w-3xl px-4 py-10">
         <h1 className="font-serif text-4xl tracking-tight">Data Protection Impact Assessment</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Version 1.0 · Effective 2 July 2026 · Owner: MODO Ltd (Data Controller for platform data; Data Processor
+          Version 1.0 · Effective 2 July 2026 · Owner: MODO BOOKING PLATFORM (ICO reg. C1994747) (Data Controller for platform data; Data Processor
           for clinic-hosted patient data) · Contact: <a className="text-primary" href="mailto:info@modobook.co.uk">info@modobook.co.uk</a>
         </p>
 

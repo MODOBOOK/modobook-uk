@@ -37,7 +37,7 @@ function DpaPage() {
           <p>
             This Data Processing Addendum ("DPA") forms part of the MODO Platform Terms &amp;
             Conditions accepted by the clinic ("<strong>Controller</strong>") and applies whenever
-            MODO Ltd ("<strong>MODO</strong>", "<strong>Processor</strong>") processes personal data
+            MODO BOOKING PLATFORM (ICO reg. C1994747) ("<strong>MODO</strong>", "<strong>Processor</strong>") processes personal data
             on behalf of the Controller. It reflects the requirements of the UK GDPR and the Data
             Protection Act 2018.
           </p>
