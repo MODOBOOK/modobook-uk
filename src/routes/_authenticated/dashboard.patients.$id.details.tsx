@@ -32,6 +32,7 @@ import {
 } from "lucide-react";
 import { RescheduleAppointmentDialog } from "@/components/RescheduleAppointmentDialog";
 import { toast } from "sonner";
+import { useDemoGuard } from "@/hooks/use-demo-mode";
 import { ConcernsCard } from "@/components/patient/ConcernsCard";
 import { CommsTimeline } from "@/components/patient/CommsTimeline";
 import { EmailComposerDialog } from "@/components/patient/EmailComposerDialog";
@@ -125,6 +126,7 @@ function PatientProfilePage() {
   useEffect(() => { reload(); /* eslint-disable-next-line */ }, [id]);
 
   async function uploadAvatar(file: File) {
+    if (demo.blocked()) return;
     if (!profileId) return;
     const ext = file.name.split(".").pop()?.toLowerCase() || "png";
     const path = `${profileId}/clients/${id}/avatar-${Date.now()}.${ext}`;
@@ -991,6 +993,7 @@ function FilesSection({ clientId, profileId, kind, title }: { clientId: string; 
   useEffect(() => { reload(); /* eslint-disable-next-line */ }, [clientId]);
 
   async function onFile(file: File) {
+    if (demo.blocked()) return;
     if (!profileId) return;
     setBusy(true);
     try {

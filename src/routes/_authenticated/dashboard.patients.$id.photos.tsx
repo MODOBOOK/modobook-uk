@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Upload, Trash2, Loader2, Camera } from "lucide-react";
 import { toast } from "sonner";
+import { useDemoGuard } from "@/hooks/use-demo-mode";
 
 export const Route = createFileRoute("/_authenticated/dashboard/patients/$id/photos")({
   ssr: false,
@@ -36,6 +37,7 @@ function PhotosPage() {
   useEffect(() => { reload().catch(() => {}); /* eslint-disable-next-line */ }, [id]);
 
   async function upload(fileList: FileList | null) {
+    if (demo.blocked()) return;
     if (!fileList || !profileId) return;
     setBusy(true);
     try {
