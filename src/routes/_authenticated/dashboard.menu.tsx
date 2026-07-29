@@ -72,8 +72,8 @@ const groups: { title: string; items: Item[] }[] = [
       { label: "Welcome & policies", description: "Intro heading, welcome message, deposits, cancellation, T&Cs", to: "/dashboard/policies", icon: Shield, ...T.mocha },
       { label: "Locations", description: "Manage your clinic addresses", to: "/dashboard/locations", icon: MapPin, ...T.cream },
       { label: "Practitioners", description: "Team members, titles, photos & locations", to: "/dashboard/practitioners", icon: Users, ...T.taupe },
-      { label: "Staff", description: "Invite team members & manage their access", to: "/dashboard/staff", icon: ShieldCheck, ...T.espresso },
-      { label: "Invited clinics", description: "Clinics that have added you as a team member", to: "/dashboard/invites", icon: Users, ...T.cream },
+      { label: "Staff", description: "Invite team members & control what they can see", to: "/dashboard/staff", icon: ShieldCheck, ...T.espresso },
+
     ],
   },
   {
