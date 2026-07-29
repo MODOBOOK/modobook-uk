@@ -7620,6 +7620,7 @@ export type Database = {
       is_clinic_member: { Args: { _profile_id: string }; Returns: boolean }
       is_clinic_owner: { Args: { _profile_id: string }; Returns: boolean }
       is_clinic_staff: { Args: { _profile_id: string }; Returns: boolean }
+      is_demo_user: { Args: never; Returns: boolean }
       is_linked_to_practitioner_profile: {
         Args: { _profile_id: string }
         Returns: boolean

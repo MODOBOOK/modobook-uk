@@ -23,6 +23,7 @@ import {
   Images, Syringe, Receipt, ArrowLeft, Plus, Search, Download,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useDemoGuard } from "@/hooks/use-demo-mode";
 import { ClientFormsList } from "@/components/patient/ClientFormsList";
 import { ProductEntryCard, type LogProduct } from "@/components/consultation/ProductEntryCard";
 import { FaceMapAnnotator } from "@/components/consultation/FaceMapAnnotator";
@@ -1111,7 +1112,9 @@ function PhotoGrid({ label, photos, onChange, profileId, consultationId }: {
 
   const displaySrc = useCallback((p: string) => (isInlinePhoto(p) ? p : (urlMap[p] ?? "")), [urlMap]);
 
+  const demo = useDemoGuard();
   async function onFiles(files: FileList | null) {
+    if (demo.blocked()) return;
     if (!files?.length) return;
     if (!profileId || !consultationId) { toast.error("Consultation not ready"); return; }
     const arr = Array.from(files);

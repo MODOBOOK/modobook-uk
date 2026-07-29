@@ -24,6 +24,7 @@ import {
   Calendar, ClipboardList, Pencil, Trash2, ChevronRight, X,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useDemoGuard } from "@/hooks/use-demo-mode";
 
 export const Route = createFileRoute("/_authenticated/dashboard/patients/")({
   ssr: false,
@@ -163,7 +164,9 @@ function PatientsPage() {
     return Array.from(m.entries());
   }, [allEntries]);
 
+  const demo = useDemoGuard();
   function openAdd() {
+    if (demo.blocked("Adding new patients is disabled in the demo account — please use the sample patients already set up.")) return;
     setForm({ ...EMPTY_FORM });
     setEditing(null);
     setOpen(true);
@@ -254,7 +257,14 @@ function PatientsPage() {
       </header>
 
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-        <ActionPill icon={Upload} label="Import Patients" onClick={() => setImportOpen(true)} />
+        <ActionPill
+          icon={Upload}
+          label="Import Patients"
+          onClick={() => {
+            if (demo.blocked("Importing patients is disabled in the demo account.")) return;
+            setImportOpen(true);
+          }}
+        />
         <ActionPill icon={Plus} label="Add Patient" onClick={openAdd} primary />
         <ActionPill icon={Users} label="Create Group" onClick={() => setGroupOpen(true)} />
         <ActionPill icon={Combine} label="Merge Duplicates" onClick={() => setMergeOpen(true)} />
