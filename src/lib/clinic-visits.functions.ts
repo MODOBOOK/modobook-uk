@@ -14,7 +14,16 @@ const UpsertSchema = z.object({
   end_time: TimeStr,
   capacity: z.number().int().min(1).max(200),
   notes: z.string().max(1000).nullable().optional(),
+  price: z.number().min(0).max(100000).nullable().optional(),
+  /** 0 = no repeat; otherwise repeat every N days (7 = weekly, 14 = fortnightly, 28 = 4-weekly) */
+  repeat_every_days: z.number().int().min(0).max(365).nullable().optional(),
+  repeat_until: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .nullable()
+    .optional(),
 });
+
 
 // ---- Practitioner: list my upcoming visits with booking counts ----
 export const listMyClinicVisits = createServerFn({ method: "GET" })
