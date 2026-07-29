@@ -513,16 +513,17 @@ function BrandingPage() {
               </div>
             ))}
           </div>
-          <div className="flex items-center gap-3">
-            <div className="flex gap-1.5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="flex min-w-0 flex-wrap gap-1.5">
               {customColors.map((c, i) => (
-                <span key={i} className="h-8 w-8 rounded-full border border-black/10 shadow-sm" style={{ background: c }} />
+                <span key={i} className="h-8 w-8 shrink-0 rounded-full border border-black/10 shadow-sm" style={{ background: c }} />
               ))}
             </div>
-            <Button type="button" onClick={applyCustomPalette} className="ml-auto">
+            <Button type="button" onClick={applyCustomPalette} className="w-full sm:ml-auto sm:w-auto">
               Apply custom palette
             </Button>
           </div>
+
           <p className="text-[11px] text-muted-foreground">
             Tip: keep slot 1 very light and slot 4 very dark for the best contrast and readability.
           </p>
