@@ -290,6 +290,10 @@ export async function createCheckoutSession(params: {
   // suffix, so charges show a deterministic label instead of the bank's
   // best-guess merchant enrichment.
   descriptorName?: string | null;
+  // Stripe idempotency key. Two identical booking submissions (double click,
+  // retried request) then resolve to the SAME Checkout Session instead of two
+  // payable sessions, which is how patients ended up paying twice.
+  idempotencyKey?: string;
 }) {
   const stripe = getStripe();
   // Stripe requires expires_at to be at least 30 minutes ahead — used so
@@ -329,7 +333,10 @@ export async function createCheckoutSession(params: {
     };
   }
 
-  return stripe.checkout.sessions.create(create, { stripeAccount: params.accountId });
+  return stripe.checkout.sessions.create(create, {
+    stripeAccount: params.accountId,
+    ...(params.idempotencyKey ? { idempotencyKey: params.idempotencyKey } : {}),
+  });
 }
 
 // Create a PaymentIntent for the save-card-on-file flow.
@@ -349,6 +356,9 @@ export async function createSaveCardPaymentIntent(params: {
   metadata?: Record<string, string>;
   saveForFutureUse?: boolean;
   descriptorName?: string | null;
+  // Same duplicate-charge protection as Checkout: an identical retry returns
+  // the existing PaymentIntent rather than creating a second payable one.
+  idempotencyKey?: string;
 }) {
   const stripe = getStripe();
   const currency = params.currency ?? "gbp";
@@ -404,7 +414,10 @@ export async function createSaveCardPaymentIntent(params: {
       receipt_email: params.customerEmail,
       ...(suffix ? { statement_descriptor_suffix: suffix } : {}),
     },
-    { stripeAccount: params.accountId },
+    {
+      stripeAccount: params.accountId,
+      ...(params.idempotencyKey ? { idempotencyKey: params.idempotencyKey } : {}),
+    },
   );
 
 
@@ -548,3 +561,67 @@ export async function listConnectPayouts(accountId: string, limit = 10) {
 
 
 
+
+/**
+ * Void any still-payable Stripe objects created for the given appointments.
+ *
+ * When a patient re-submits a booking (back button, second tab, refreshed
+ * payment page) we cancel the earlier appointment rows — but the Checkout
+ * Session / PaymentIntent Stripe already issued for them stays payable, so a
+ * patient can complete BOTH and be charged twice. Expiring the old session and
+ * cancelling the old intent closes that window.
+ */
+export async function voidOpenBookingPayments(params: {
+  accountId: string;
+  appointmentIds: string[];
+}) {
+  if (!params.accountId || params.appointmentIds.length === 0) return;
+  const stripe = getStripe();
+  const wanted = new Set(params.appointmentIds);
+  const matches = (metadata: Stripe.Metadata | null | undefined) =>
+    String(metadata?.appointment_ids ?? "")
+      .split(",")
+      .map((s) => s.trim())
+      .some((id) => id && wanted.has(id));
+
+  try {
+    const sessions = await stripe.checkout.sessions.list(
+      { status: "open", limit: 50 },
+      { stripeAccount: params.accountId },
+    );
+    for (const s of sessions.data) {
+      if (!matches(s.metadata)) continue;
+      try {
+        await stripe.checkout.sessions.expire(s.id, {}, { stripeAccount: params.accountId });
+      } catch (e) {
+        console.error("[voidOpenBookingPayments] expire session failed", s.id, e);
+      }
+    }
+  } catch (e) {
+    console.error("[voidOpenBookingPayments] list sessions failed", e);
+  }
+
+  try {
+    const intents = await stripe.paymentIntents.list(
+      { limit: 50 },
+      { stripeAccount: params.accountId },
+    );
+    const cancellable = new Set([
+      "requires_payment_method",
+      "requires_confirmation",
+      "requires_action",
+      "requires_capture",
+    ]);
+    for (const pi of intents.data) {
+      if (!cancellable.has(pi.status)) continue;
+      if (!matches(pi.metadata)) continue;
+      try {
+        await stripe.paymentIntents.cancel(pi.id, {}, { stripeAccount: params.accountId });
+      } catch (e) {
+        console.error("[voidOpenBookingPayments] cancel intent failed", pi.id, e);
+      }
+    }
+  } catch (e) {
+    console.error("[voidOpenBookingPayments] list intents failed", e);
+  }
+}

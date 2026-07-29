@@ -598,11 +598,25 @@ export const requestBooking = createServerFn({ method: "POST" })
             .update({ status: "cancelled", payment_hold_expires_at: null } as never)
             .eq("id", dup.id as string)
             .neq("payment_status", "paid");
+          // Kill the Stripe session/intent already issued for the superseded
+          // appointment so the patient cannot complete both and pay twice.
+          if (prof?.stripe_connect_account_id) {
+            try {
+              const { voidOpenBookingPayments } = await import("./stripe.server");
+              await voidOpenBookingPayments({
+                accountId: prof.stripe_connect_account_id,
+                appointmentIds: [dup.id as string],
+              });
+            } catch (e) {
+              console.error("[requestBooking] voiding superseded payment failed", e);
+            }
+          }
         } else {
           return { id: dup.id as string, consents: [], medicalForms: [], checkoutUrl: null, embeddedPayment: null };
         }
       }
     }
+
 
     const id = crypto.randomUUID();
     const { error } = await sb.from("appointments").insert({
@@ -671,6 +685,13 @@ export const requestBooking = createServerFn({ method: "POST" })
         patientEmail: data.patientEmail,
         description: `Booking with ${prof?.clinic_name ?? "clinic"}`,
         choice: paymentChoice,
+        dedupeKey: bookingDedupeKey({
+          profileId: data.profileId,
+          patientEmail: data.patientEmail,
+          date: data.date,
+          startTime: data.startTime,
+          treatmentIds: [data.treatmentId],
+        }),
       });
     } catch (e) {
       console.error("[requestBooking] checkout failed", e);
@@ -767,6 +788,11 @@ async function maybeCreateBookingCheckout(args: {
   patientEmail: string;
   description: string;
   choice?: PaymentChoice | null;
+  // Stable identity of the booking attempt (clinic + patient + slot + treatments),
+  // independent of the freshly generated appointment ids. Combined with the
+  // amount and payment method it becomes the Stripe idempotency key, so two
+  // concurrent submissions of the same booking share ONE payable session.
+  dedupeKey?: string;
 }): Promise<BookingPaymentResult | null> {
   const p = args.profile;
   if (!p) return null;
@@ -922,6 +948,15 @@ async function maybeCreateBookingCheckout(args: {
     patient_email: args.patientEmail,
   };
 
+  // Idempotency key for Stripe: same booking + same amount + same rail inside
+  // the same short window => Stripe returns the FIRST object instead of a
+  // second payable one. This is what prevents a double click / double tab /
+  // retried request from producing two chargeable payments.
+  const idempotencyKey = args.dedupeKey
+    ? `modo:${args.dedupeKey}:${kind}:${amountCents + surchargeCents}:${[...methodTypes].sort().join("-")}:${Math.floor(Date.now() / (10 * 60 * 1000))}`
+    : undefined;
+
+
   // Save-card-on-file: skip Stripe's hosted checkout entirely (it re-adds
   // Apple Pay + Link even when payment_method_types is ['card']) and drive an
   // embedded Payment Element on our own page. Wallets and Link are hidden
@@ -955,6 +990,7 @@ async function maybeCreateBookingCheckout(args: {
         metadata,
         saveForFutureUse: shouldSaveCardOnFile,
         descriptorName: p.clinic_name,
+        idempotencyKey,
       });
       if (!intent.clientSecret) return null;
       const returnUrl = `${origin}/m/${p.slug ?? ""}/account?paid=1&pi=${intent.paymentIntentId}`;
@@ -1015,6 +1051,7 @@ async function maybeCreateBookingCheckout(args: {
       saveCardOnFile: false,
       metadata,
       descriptorName: p.clinic_name,
+      idempotencyKey,
     });
     if (!session.url) return null;
     return { kind: "hosted", checkoutUrl: session.url };
@@ -1026,6 +1063,27 @@ async function maybeCreateBookingCheckout(args: {
 
 
 
+
+/**
+ * Stable identity for a booking attempt: same clinic, patient, slot and
+ * treatments => same key, regardless of the appointment row ids generated on
+ * this particular submission.
+ */
+function bookingDedupeKey(input: {
+  profileId: string;
+  patientEmail: string;
+  date: string;
+  startTime: string;
+  treatmentIds: string[];
+}) {
+  return [
+    input.profileId,
+    input.patientEmail.trim().toLowerCase(),
+    input.date,
+    input.startTime,
+    [...input.treatmentIds].sort().join("+"),
+  ].join("|");
+}
 
 function addMinutesToTime(time: string, mins: number) {
   const [h, m] = time.split(":").map(Number);
@@ -1172,6 +1230,19 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
               .update({ status: "cancelled", payment_hold_expires_at: null } as never)
               .in("id", existing.map((e) => e.id))
               .neq("payment_status", "paid");
+            // Void the Stripe session/intent already issued for the superseded
+            // appointments so only the new one can be paid.
+            if (prof?.stripe_connect_account_id) {
+              try {
+                const { voidOpenBookingPayments } = await import("./stripe.server");
+                await voidOpenBookingPayments({
+                  accountId: prof.stripe_connect_account_id,
+                  appointmentIds: existing.map((e) => e.id),
+                });
+              } catch (e) {
+                console.error("[requestMultiBooking] voiding superseded payment failed", e);
+              }
+            }
           } else {
             return { appointments: existing, consents: [], medicalForms: [], packagePurchases: [], checkoutUrl: null, embeddedPayment: null };
           }
@@ -1297,6 +1368,13 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
         patientEmail: data.patientEmail,
         description: `Booking with ${prof?.clinic_name ?? "clinic"}`,
         choice: paymentChoice,
+        dedupeKey: bookingDedupeKey({
+          profileId: data.profileId,
+          patientEmail: data.patientEmail,
+          date: data.date,
+          startTime: data.startTime,
+          treatmentIds: data.bookings.map((b) => b.treatmentId),
+        }),
       });
 
     } catch (e) {
