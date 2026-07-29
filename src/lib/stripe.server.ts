@@ -333,7 +333,10 @@ export async function createCheckoutSession(params: {
     };
   }
 
-  return stripe.checkout.sessions.create(create, { stripeAccount: params.accountId });
+  return stripe.checkout.sessions.create(create, {
+    stripeAccount: params.accountId,
+    ...(params.idempotencyKey ? { idempotencyKey: params.idempotencyKey } : {}),
+  });
 }
 
 // Create a PaymentIntent for the save-card-on-file flow.
