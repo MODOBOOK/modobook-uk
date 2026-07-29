@@ -705,8 +705,8 @@ export function SiteFooter() {
         <div>© {new Date().getFullYear()} MODO · For practitioners, by practitioners</div>
         <div className="mt-2 normal-case tracking-normal">
           Designed by MODO Book ·{" "}
-          <a href="mailto:hello@modobook.uk" className="underline hover:text-[color:var(--ink)]">
-            hello@modobook.uk
+          <a href="mailto:info@modobook.co.uk" className="underline hover:text-[color:var(--ink)]">
+            info@modobook.co.uk
           </a>
         </div>
       </div>

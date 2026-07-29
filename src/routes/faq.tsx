@@ -192,7 +192,7 @@ function FaqPage() {
                 <Button size="lg">Join the waitlist <ArrowRight className="ml-2 h-4 w-4" /></Button>
               </Link>
 
-              <a href="mailto:hello@modobook.uk">
+              <a href="mailto:info@modobook.co.uk">
                 <Button size="lg" variant="outline">Email the team</Button>
               </a>
             </div>
