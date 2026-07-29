@@ -161,15 +161,41 @@ function PractitionersPage() {
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold">Practitioners</h1>
           <p className="text-sm text-muted-foreground">
             Add the team members who work at your clinic and assign them to locations. They appear under each location on your booking page.
           </p>
         </div>
-        <Button onClick={openNew}><Plus className="mr-2 h-4 w-4" /> Add practitioner</Button>
+        <Button onClick={seatsFull && canReserve ? handleReserveSeat : openNew} disabled={reserving || (seatsFull && !canReserve)}>
+          <Plus className="mr-2 h-4 w-4" />
+          {seatsFull && canReserve ? (reserving ? "Adding seat…" : "Add a seat & practitioner") : "Add practitioner"}
+        </Button>
       </div>
+
+      {seats && !seats.comped && (
+        <Card className={seatsFull ? "border-amber-500/50 bg-amber-500/5" : undefined}>
+          <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4">
+            <div className="text-sm">
+              <p className="font-medium">
+                {seatsUsed} of {seatsAllowed} practitioner {seatsAllowed === 1 ? "seat" : "seats"} used
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {seatsFull
+                  ? canReserve
+                    ? "Your plan includes one practitioner. Add another seat now — it's reserved during your free trial and billed when your direct debit starts."
+                    : "You've used all the practitioner seats on your plan. Increase the practitioner add-on in Plan & billing to add more."
+                  : "You can add another practitioner right now."}
+              </p>
+            </div>
+            <Button asChild variant="outline" size="sm">
+              <Link to="/dashboard/billing">Plan &amp; billing</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
 
       <Card>
         <CardHeader className="pb-3">
