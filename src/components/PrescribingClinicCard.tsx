@@ -109,6 +109,9 @@ export function PrescribingClinicCard() {
                     </p>
                     <p className="text-xs text-muted-foreground">
                       {v.prescriber_name}
+                      {(v as { price?: number | null }).price != null && (
+                        <> · £{Number((v as { price?: number | null }).price).toFixed(2)}</>
+                      )}
                       {v.location_name ? ` · ` : ""}
                       {v.location_name && (
                         <>
@@ -129,8 +132,12 @@ export function PrescribingClinicCard() {
                       size="sm"
                       variant="ghost"
                       onClick={async () => {
+                        const series = (v as { recurrence_group?: string | null }).recurrence_group;
                         if (!confirm("Cancel this prescribing clinic date?")) return;
-                        await cancel({ data: { id: v.id } });
+                        const whole =
+                          !!series &&
+                          confirm("This date repeats. Cancel the whole repeating series? (Cancel = this date only)");
+                        await cancel({ data: { id: v.id, whole_series: whole } });
                         toast.success("Date cancelled");
                         visits.refetch();
                       }}
@@ -196,6 +203,9 @@ function VisitDialog({
     end_time: string;
     capacity: number;
     notes: string | null;
+    price: number | null;
+    repeat_every_days: number;
+    repeat_until: string | null;
   }) => Promise<void>;
 }) {
   const [prescriberId, setPrescriberId] = useState<string>(
@@ -210,6 +220,13 @@ function VisitDialog({
   const [end, setEnd] = useState((visit?.end_time ?? "16:00").slice(0, 5));
   const [capacity, setCapacity] = useState(String(visit?.capacity ?? 8));
   const [notes, setNotes] = useState(visit?.notes ?? "");
+  const [price, setPrice] = useState(
+    (visit as { price?: number | null } | null)?.price != null
+      ? String((visit as { price?: number | null }).price)
+      : "",
+  );
+  const [repeat, setRepeat] = useState("0");
+  const [repeatUntil, setRepeatUntil] = useState("");
   const [saving, setSaving] = useState(false);
 
   return (
@@ -320,6 +337,9 @@ function VisitDialog({
                 end_time: end,
                 capacity: Math.max(1, Number(capacity) || 1),
                 notes: notes.trim() || null,
+                price: price.trim() === "" ? null : Math.max(0, Number(price) || 0),
+                repeat_every_days: Number(repeat) || 0,
+                repeat_until: Number(repeat) > 0 && repeatUntil ? repeatUntil : null,
               });
               setSaving(false);
             }}
