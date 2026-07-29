@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Trash2, Plus, Mail, RefreshCw, ShieldCheck, Stethoscope, UserRound, Eye, AlertTriangle } from "lucide-react";
+import { useDemoGuard } from "@/hooks/use-demo-mode";
 import { listStaff, inviteStaff, updateStaff, revokeStaff, resendStaffInvite, type StaffRole, type StaffScope, type StaffStatus } from "@/lib/staff.functions";
 import { listPractitioners } from "@/lib/availability.functions";
 
@@ -36,6 +37,7 @@ const ROLES: { value: StaffRole; label: string; desc: string; icon: any }[] = [
 
 function StaffPage() {
   const list = useServerFn(listStaff);
+  const demo = useDemoGuard();
   const invite = useServerFn(inviteStaff);
   const update = useServerFn(updateStaff);
   const revoke = useServerFn(revokeStaff);
@@ -62,6 +64,7 @@ function StaffPage() {
   useEffect(() => { refresh(); }, []);
 
   function openInvite() {
+    if (demo.blocked("Inviting staff is disabled in the demo account.")) return;
     setEditing(null);
     setForm({ name: "", email: "", role: "practitioner", data_scope: "clinic", practitioner_id: "none" });
     setDlgOpen(true);
@@ -75,6 +78,7 @@ function StaffPage() {
     setDlgOpen(true);
   }
   async function save() {
+    if (!editing && demo.blocked("Inviting staff is disabled in the demo account.")) return;
     setSaving(true);
     try {
       if (editing) {
@@ -107,6 +111,7 @@ function StaffPage() {
     catch (e: any) { toast.error(e?.message ?? "Failed"); }
   }
   async function resendInvite(id: string) {
+    if (demo.blocked("Inviting staff is disabled in the demo account.")) return;
     try { await resend({ data: { id } }); toast.success("Invite re-sent"); await refresh(); }
     catch (e: any) { toast.error(e?.message ?? "Failed"); }
   }
