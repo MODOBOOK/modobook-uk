@@ -98,11 +98,13 @@ export function NoteTemplatePicker({
                         setOpen(false);
                         setQ("");
                       }}
-                      className="w-full bg-card px-3 py-2 text-left transition hover:bg-primary/5"
+                      className="block w-full bg-card px-3 py-1.5 text-left transition hover:bg-primary/5"
                     >
-                      <div className="text-sm font-medium leading-tight">{t.label}</div>
-                      <div className="line-clamp-1 text-[11px] leading-snug text-muted-foreground">
-                        {t.body}
+                      <div className="truncate whitespace-nowrap text-sm font-medium leading-tight">
+                        {t.label}
+                      </div>
+                      <div className="truncate whitespace-nowrap text-[11px] leading-snug text-muted-foreground">
+                        {t.body.replace(/\s+/g, " ").trim()}
                       </div>
                     </button>
                   ))}
