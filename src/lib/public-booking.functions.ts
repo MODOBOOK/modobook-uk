@@ -948,6 +948,15 @@ async function maybeCreateBookingCheckout(args: {
     patient_email: args.patientEmail,
   };
 
+  // Idempotency key for Stripe: same booking + same amount + same rail inside
+  // the same short window => Stripe returns the FIRST object instead of a
+  // second payable one. This is what prevents a double click / double tab /
+  // retried request from producing two chargeable payments.
+  const idempotencyKey = args.dedupeKey
+    ? `modo:${args.dedupeKey}:${kind}:${amountCents + surchargeCents}:${[...methodTypes].sort().join("-")}:${Math.floor(Date.now() / (10 * 60 * 1000))}`
+    : undefined;
+
+
   // Save-card-on-file: skip Stripe's hosted checkout entirely (it re-adds
   // Apple Pay + Link even when payment_method_types is ['card']) and drive an
   // embedded Payment Element on our own page. Wallets and Link are hidden
