@@ -595,6 +595,8 @@ export function SiteHeader() {
     { to: "/who-its-for", label: "Who it's for" },
     { to: "/pricing", label: "Pricing" },
     { to: "/faq", label: "FAQ" },
+    { to: "/demo", label: "Try the demo" },
+
 
     { to: "/auth", label: "Sign in" },
   ];
