@@ -80,7 +80,24 @@ const FONTS = [
 ];
 
 
+function mixHex(hex: string, target: string, amount: number) {
+  const norm = (h: string) => {
+    const c = h.replace("#", "");
+    const full = c.length === 3 ? c.split("").map((x) => x + x).join("") : c;
+    return /^[0-9a-f]{6}$/i.test(full) ? full : null;
+  };
+  const a = norm(hex), b = norm(target);
+  if (!a || !b) return hex;
+  const out = [0, 2, 4].map((i) => {
+    const av = parseInt(a.slice(i, i + 2), 16);
+    const bv = parseInt(b.slice(i, i + 2), 16);
+    return Math.round(av + (bv - av) * amount).toString(16).padStart(2, "0");
+  });
+  return `#${out.join("")}`;
+}
+
 function ColorField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+
   return (
     <div className="space-y-1.5">
       <Label>{label}</Label>
