@@ -66,11 +66,15 @@ export const listMyClinicVisits = createServerFn({ method: "GET" })
     }
     return rows.map((r) => ({
       ...r,
-      prescriber_name:
-        pmap.get(r.prescriber_user_id)?.full_name ??
-        cmap.get(r.prescriber_user_id)?.display_name ??
-        "Prescriber",
-      prescriber_regulatory_body: pmap.get(r.prescriber_user_id)?.regulatory_body ?? null,
+      prescriber_name: r.prescriber_user_id
+        ? pmap.get(r.prescriber_user_id)?.full_name ??
+          cmap.get(r.prescriber_user_id)?.display_name ??
+          r.prescriber_label ??
+          "Prescriber"
+        : r.prescriber_label ?? "Prescriber",
+      prescriber_regulatory_body: r.prescriber_user_id
+        ? pmap.get(r.prescriber_user_id)?.regulatory_body ?? null
+        : null,
       location_name: r.location_id ? lmap.get(r.location_id)?.name ?? null : null,
       bookings: bookingsByVisit.get(r.id) ?? [],
     }));
