@@ -1,0 +1,324 @@
+import { useState } from "react";
+import { Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
+import {
+  listMyClinicVisits,
+  upsertClinicVisit,
+  cancelClinicVisit,
+} from "@/lib/clinic-visits.functions";
+import { listMyConnectedPrescribers } from "@/lib/prescriber.functions";
+import { listMyLocations } from "@/lib/locations.functions";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { CalendarDays, MapPin, Plus, Stethoscope, Users, X } from "lucide-react";
+
+type Visit = Awaited<ReturnType<typeof listMyClinicVisits>>[number];
+
+function fmtDate(d: string) {
+  return new Date(`${d}T00:00:00`).toLocaleDateString("en-GB", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+  });
+}
+
+export function PrescribingClinicCard() {
+  const fetchVisits = useServerFn(listMyClinicVisits);
+  const fetchPrescribers = useServerFn(listMyConnectedPrescribers);
+  const fetchLocations = useServerFn(listMyLocations);
+  const save = useServerFn(upsertClinicVisit);
+  const cancel = useServerFn(cancelClinicVisit);
+
+  const visits = useQuery({ queryKey: ["services-clinic-visits"], queryFn: () => fetchVisits() });
+  const prescribers = useQuery({
+    queryKey: ["services-prescribers"],
+    queryFn: () => fetchPrescribers(),
+  });
+  const locations = useQuery({ queryKey: ["services-locations"], queryFn: () => fetchLocations() });
+
+  const [editing, setEditing] = useState<Visit | "new" | null>(null);
+
+  const list = (visits.data ?? []).filter((v) => v.status !== "cancelled");
+  const presList = prescribers.data ?? [];
+  const locList = (locations.data ?? []) as { id: string; name: string }[];
+
+  return (
+    <Card>
+      <CardContent className="space-y-3 p-4">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h2 className="flex items-center gap-2 font-semibold">
+              <Stethoscope className="h-4 w-4" /> Prescribing clinic
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Dates and times your prescriber is in clinic. These show as their own category on your
+              booking page.
+            </p>
+          </div>
+          <Button
+            size="sm"
+            className="shrink-0"
+            onClick={() => setEditing("new")}
+            disabled={presList.length === 0}
+            title={presList.length === 0 ? "Connect an approved prescriber first" : ""}
+          >
+            <Plus className="mr-1.5 h-4 w-4" /> Add date
+          </Button>
+        </div>
+
+        {presList.length === 0 ? (
+          <p className="rounded-md border border-dashed p-3 text-sm text-muted-foreground">
+            Connect with an approved prescriber first —{" "}
+            <Link to="/hub/connections" className="font-medium underline">
+              Connections
+            </Link>
+          </p>
+        ) : list.length === 0 ? (
+          <p className="rounded-md border border-dashed p-3 text-sm text-muted-foreground">
+            No prescribing clinic dates yet.
+          </p>
+        ) : (
+          <div className="space-y-2">
+            {list.map((v) => {
+              const booked = v.bookings.filter((b) => b.status !== "declined").length;
+              return (
+                <div
+                  key={v.id}
+                  className="flex flex-wrap items-start justify-between gap-2 rounded-md border p-3"
+                >
+                  <div className="min-w-0">
+                    <p className="flex flex-wrap items-center gap-2 text-sm font-medium">
+                      <CalendarDays className="h-4 w-4 opacity-60" />
+                      {fmtDate(v.visit_date)} · {v.start_time.slice(0, 5)}–{v.end_time.slice(0, 5)}
+                      {v.status === "pending_approval" && (
+                        <Badge variant="outline" className="border-amber-400 text-amber-700">
+                          Needs approval
+                        </Badge>
+                      )}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {v.prescriber_name}
+                      {v.location_name ? ` · ` : ""}
+                      {v.location_name && (
+                        <>
+                          <MapPin className="inline h-3 w-3" /> {v.location_name}
+                        </>
+                      )}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <Users className="h-3.5 w-3.5" />
+                      {booked}/{v.capacity}
+                    </span>
+                    <Button size="sm" variant="ghost" onClick={() => setEditing(v)}>
+                      Edit
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={async () => {
+                        if (!confirm("Cancel this prescribing clinic date?")) return;
+                        await cancel({ data: { id: v.id } });
+                        toast.success("Date cancelled");
+                        visits.refetch();
+                      }}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        <p className="text-xs text-muted-foreground">
+          Manage bookings and prescriber confirmations in{" "}
+          <Link to="/hub/visits" className="underline">
+            Prescriber clinic days
+          </Link>
+          .
+        </p>
+      </CardContent>
+
+      {editing !== null && (
+        <VisitDialog
+          visit={editing === "new" ? null : editing}
+          prescribers={presList}
+          locations={locList}
+          onClose={() => setEditing(null)}
+          onSave={async (payload) => {
+            try {
+              await save({ data: payload });
+              toast.success("Prescribing clinic date saved");
+              setEditing(null);
+              visits.refetch();
+            } catch (e) {
+              toast.error((e as Error).message);
+            }
+          }}
+        />
+      )}
+    </Card>
+  );
+}
+
+function VisitDialog({
+  visit,
+  prescribers,
+  locations,
+  onClose,
+  onSave,
+}: {
+  visit: Visit | null;
+  prescribers: { user_id: string; name: string }[];
+  locations: { id: string; name: string }[];
+  onClose: () => void;
+  onSave: (payload: {
+    id?: string | null;
+    prescriber_user_id: string;
+    location_id: string | null;
+    visit_date: string;
+    start_time: string;
+    end_time: string;
+    capacity: number;
+    notes: string | null;
+  }) => Promise<void>;
+}) {
+  const [prescriberId, setPrescriberId] = useState(
+    visit?.prescriber_user_id ?? prescribers[0]?.user_id ?? "",
+  );
+  const [locationId, setLocationId] = useState<string>(visit?.location_id ?? "none");
+  const [date, setDate] = useState(visit?.visit_date ?? "");
+  const [start, setStart] = useState((visit?.start_time ?? "10:00").slice(0, 5));
+  const [end, setEnd] = useState((visit?.end_time ?? "16:00").slice(0, 5));
+  const [capacity, setCapacity] = useState(String(visit?.capacity ?? 8));
+  const [notes, setNotes] = useState(visit?.notes ?? "");
+  const [saving, setSaving] = useState(false);
+
+  return (
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>{visit ? "Edit" : "Add"} prescribing clinic date</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div className="space-y-1.5">
+            <Label>Prescriber</Label>
+            <Select value={prescriberId} onValueChange={setPrescriberId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Choose prescriber" />
+              </SelectTrigger>
+              <SelectContent>
+                {prescribers.map((p) => (
+                  <SelectItem key={p.user_id} value={p.user_id}>
+                    {p.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {locations.length > 0 && (
+            <div className="space-y-1.5">
+              <Label>Location</Label>
+              <Select value={locationId} onValueChange={setLocationId}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">All locations</SelectItem>
+                  {locations.map((l) => (
+                    <SelectItem key={l.id} value={l.id}>
+                      {l.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          <div className="space-y-1.5">
+            <Label>Date</Label>
+            <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+          </div>
+
+          <div className="grid grid-cols-3 gap-2">
+            <div className="space-y-1.5">
+              <Label>Start</Label>
+              <Input type="time" value={start} onChange={(e) => setStart(e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>End</Label>
+              <Input type="time" value={end} onChange={(e) => setEnd(e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Spaces</Label>
+              <Input
+                type="number"
+                min={1}
+                value={capacity}
+                onChange={(e) => setCapacity(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label>Notes (shown to patients)</Label>
+            <Textarea
+              rows={2}
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="e.g. Prescriber on site for POM treatments"
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="ghost" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button
+            disabled={saving || !prescriberId || !date}
+            onClick={async () => {
+              setSaving(true);
+              await onSave({
+                id: visit?.id ?? null,
+                prescriber_user_id: prescriberId,
+                location_id: locationId === "none" ? null : locationId,
+                visit_date: date,
+                start_time: start,
+                end_time: end,
+                capacity: Math.max(1, Number(capacity) || 1),
+                notes: notes.trim() || null,
+              });
+              setSaving(false);
+            }}
+          >
+            Save
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
