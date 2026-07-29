@@ -36,6 +36,7 @@ function PhotosPage() {
   }
   useEffect(() => { reload().catch(() => {}); /* eslint-disable-next-line */ }, [id]);
 
+  const demo = useDemoGuard();
   async function upload(fileList: FileList | null) {
     if (demo.blocked()) return;
     if (!fileList || !profileId) return;

@@ -125,6 +125,7 @@ function PatientProfilePage() {
 
   useEffect(() => { reload(); /* eslint-disable-next-line */ }, [id]);
 
+  const demo = useDemoGuard();
   async function uploadAvatar(file: File) {
     if (demo.blocked()) return;
     if (!profileId) return;
@@ -992,6 +993,7 @@ function FilesSection({ clientId, profileId, kind, title }: { clientId: string; 
   }
   useEffect(() => { reload(); /* eslint-disable-next-line */ }, [clientId]);
 
+  const demo = useDemoGuard();
   async function onFile(file: File) {
     if (demo.blocked()) return;
     if (!profileId) return;

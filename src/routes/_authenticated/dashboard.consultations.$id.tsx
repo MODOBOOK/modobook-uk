@@ -1112,6 +1112,7 @@ function PhotoGrid({ label, photos, onChange, profileId, consultationId }: {
 
   const displaySrc = useCallback((p: string) => (isInlinePhoto(p) ? p : (urlMap[p] ?? "")), [urlMap]);
 
+  const demo = useDemoGuard();
   async function onFiles(files: FileList | null) {
     if (demo.blocked()) return;
     if (!files?.length) return;
