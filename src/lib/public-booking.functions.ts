@@ -788,6 +788,11 @@ async function maybeCreateBookingCheckout(args: {
   patientEmail: string;
   description: string;
   choice?: PaymentChoice | null;
+  // Stable identity of the booking attempt (clinic + patient + slot + treatments),
+  // independent of the freshly generated appointment ids. Combined with the
+  // amount and payment method it becomes the Stripe idempotency key, so two
+  // concurrent submissions of the same booking share ONE payable session.
+  dedupeKey?: string;
 }): Promise<BookingPaymentResult | null> {
   const p = args.profile;
   if (!p) return null;
