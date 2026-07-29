@@ -414,7 +414,10 @@ export async function createSaveCardPaymentIntent(params: {
       receipt_email: params.customerEmail,
       ...(suffix ? { statement_descriptor_suffix: suffix } : {}),
     },
-    { stripeAccount: params.accountId },
+    {
+      stripeAccount: params.accountId,
+      ...(params.idempotencyKey ? { idempotencyKey: params.idempotencyKey } : {}),
+    },
   );
 
 
