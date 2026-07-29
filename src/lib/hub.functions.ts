@@ -188,6 +188,10 @@ export const sendLinkRequest = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const normalised = data.code.replace(/-/g, "").trim();
     if (!normalised) throw new Error("Enter a code");
+    {
+      const { assertNotDemoUser } = await import("./demo-guard.server");
+      await assertNotDemoUser(userId);
+    }
 
     const { data: target, error: resolveErr } = await supabase.rpc("resolve_hub_code", {
       p_code: normalised,

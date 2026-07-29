@@ -48,6 +48,15 @@ export const ensurePatient = createServerFn({ method: "POST" })
         .rpc("get_public_profile_by_slug", { p_slug: data.linkSlug.toLowerCase() })
         .maybeSingle();
       linkProfileId = prof?.id ?? null;
+      if (linkProfileId) {
+        const { isDemoProfileId } = await import("./demo-guard.server");
+        const demoEmail = (email ?? "").toLowerCase().endsWith("@modo.demo");
+        if (!demoEmail && (await isDemoProfileId(linkProfileId))) {
+          throw new Error(
+            "The MODO demo clinic doesn't accept new patient accounts — use the demo patient login at modobook.uk/demo.",
+          );
+        }
+      }
     }
 
     if (linkProfileId && email) {

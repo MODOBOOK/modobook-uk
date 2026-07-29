@@ -48,6 +48,10 @@ export const inviteStaff = createServerFn({ method: "POST" })
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error("Invalid email");
     if (!data.name.trim()) throw new Error("Name is required");
 
+    // Demo clinic must never be able to hand out real MODO logins.
+    const { assertNotDemoProfile } = await import("./demo-guard.server");
+    await assertNotDemoProfile(profileId);
+
     if (data.role === "practitioner") {
       const { assertSeatAvailable } = await import("./practitioner-billing.functions");
       await assertSeatAvailable(context.supabase, profileId, "practitioner");
@@ -143,6 +147,10 @@ export const resendStaffInvite = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const profileId = await getProfileId(context.supabase, context.userId);
     if (!profileId) throw new Error("Profile not found");
+    {
+      const { assertNotDemoProfile } = await import("./demo-guard.server");
+      await assertNotDemoProfile(profileId);
+    }
     const token = randomToken();
     const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
     const { data: row, error } = await context.supabase
@@ -184,6 +192,12 @@ export const getStaffInvite = createServerFn({ method: "GET" })
       .eq("invite_token", data.token)
       .maybeSingle();
     if (!row) return { ok: false as const, reason: "not_found" as const };
+    {
+      const { isDemoProfileId } = await import("./demo-guard.server");
+      if (await isDemoProfileId(row.profile_id as string)) {
+        return { ok: false as const, reason: "not_found" as const };
+      }
+    }
     if (row.status !== "invited") return { ok: false as const, reason: "used" as const };
     if (row.invite_expires_at && new Date(row.invite_expires_at) < new Date()) {
       return { ok: false as const, reason: "expired" as const };
@@ -205,10 +219,14 @@ export const acceptStaffInvite = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: row } = await supabaseAdmin
       .from("staff_members")
-      .select("id, invited_email, invite_expires_at, status")
+      .select("id, invited_email, invite_expires_at, status, profile_id")
       .eq("invite_token", data.token)
       .maybeSingle();
     if (!row) throw new Error("Invite not found");
+    {
+      const { assertNotDemoProfile } = await import("./demo-guard.server");
+      await assertNotDemoProfile((row as any).profile_id, "This invite is no longer valid.");
+    }
     if (row.status !== "invited") throw new Error("Invite already used");
     if (row.invite_expires_at && new Date(row.invite_expires_at) < new Date()) {
       throw new Error("Invite expired");
