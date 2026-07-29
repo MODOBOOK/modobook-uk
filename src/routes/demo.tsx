@@ -45,7 +45,7 @@ function DemoPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[color:var(--paper)]">
+    <div className="modo-marketing min-h-screen bg-[color:var(--paper)] text-[color:var(--ink)]">
       <SiteHeader />
 
       <main>
