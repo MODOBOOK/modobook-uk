@@ -356,6 +356,9 @@ export async function createSaveCardPaymentIntent(params: {
   metadata?: Record<string, string>;
   saveForFutureUse?: boolean;
   descriptorName?: string | null;
+  // Same duplicate-charge protection as Checkout: an identical retry returns
+  // the existing PaymentIntent rather than creating a second payable one.
+  idempotencyKey?: string;
 }) {
   const stripe = getStripe();
   const currency = params.currency ?? "gbp";
