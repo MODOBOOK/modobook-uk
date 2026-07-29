@@ -137,6 +137,29 @@ function BrandingPage() {
     setState((s) => ({ ...s, [key]: value }));
   }
 
+  // Six master colours. Changing one cascades to every matching surface so the
+  // whole booking system stays consistent. Existing saved themes are untouched
+  // until the practitioner actually edits a colour here.
+  const LINKED_COLORS: Record<string, (keyof ClinicThemeInput)[]> = {
+    primary_color: ["primary_color", "header_bg_color", "footer_bg_color", "menu_category_bg"],
+    hero_text_color: ["hero_text_color", "header_text_color", "footer_text_color", "menu_category_text"],
+    background_color: ["background_color"],
+    text_color: ["text_color", "menu_treatment_name_color"],
+    accent_color: ["accent_color", "menu_price_color"],
+    menu_card_bg: ["menu_card_bg", "menu_card_border_color"],
+  };
+
+  function setColor(key: keyof ClinicThemeInput, value: string) {
+    const keys = LINKED_COLORS[key as string] ?? [key];
+    setState((s) => {
+      const next = { ...s } as ClinicThemeInput;
+      for (const k of keys) (next as Record<string, unknown>)[k as string] = value;
+      if (key === "menu_card_bg") (next as Record<string, unknown>).menu_card_border_color = mixHex(value, "#000000", 0.1);
+      return next;
+    });
+  }
+
+
   function applyPreset(preset: ThemePreset) {
     setState((s) => ({
       ...s,
