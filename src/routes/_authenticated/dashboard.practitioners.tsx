@@ -48,6 +48,8 @@ function PractitionersPage() {
   const save = useServerFn(upsertPractitioner);
   const remove = useServerFn(deletePractitioner);
   const saveProfile = useServerFn(updateProfile);
+  const fetchSeats = useServerFn(getSeatSummary);
+  const reserveSeat = useServerFn(reserveExtraSeat);
 
   const [practitioners, setPractitioners] = useState<Pract[]>([]);
   const [links, setLinks] = useState<{ location_id: string; practitioner_id: string }[]>([]);
@@ -58,14 +60,22 @@ function PractitionersPage() {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<Draft>(emptyDraft());
   const [saving, setSaving] = useState(false);
+  const [seats, setSeats] = useState<Awaited<ReturnType<typeof getSeatSummary>> | null>(null);
+  const [reserving, setReserving] = useState(false);
 
   async function refresh() {
     setLoading(true);
     try {
-      const [list, locs, profile] = await Promise.all([fetchList(), fetchLocs(), fetchProfile()]);
+      const [list, locs, profile, seatInfo] = await Promise.all([
+        fetchList(),
+        fetchLocs(),
+        fetchProfile(),
+        fetchSeats().catch(() => null),
+      ]);
       setPractitioners(list.practitioners);
       setLinks(list.links);
       setLocations(locs);
+      setSeats(seatInfo);
       if (profile && "id" in profile) {
         setProfileId((profile as { id: string }).id);
         const m = (profile as { practitioner_selection_mode?: string }).practitioner_selection_mode;
@@ -77,6 +87,26 @@ function PractitionersPage() {
   }
 
   useEffect(() => { refresh(); }, []);
+
+  const seatsUsed = seats?.practitioners.used ?? practitioners.length;
+  const seatsAllowed = seats?.practitioners.allowed ?? 1;
+  const seatsFull = Boolean(seats && !seats.comped && seatsUsed >= seatsAllowed);
+  const canReserve = Boolean(seats && !seats.comped && seats.trialActive && !seats.liveSub);
+
+  async function handleReserveSeat() {
+    setReserving(true);
+    try {
+      await reserveSeat({ data: { kind: "practitioner" } });
+      toast.success("Seat added — it'll be included when your billing starts.");
+      await refresh();
+      openNew();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not add a seat");
+    } finally {
+      setReserving(false);
+    }
+  }
+
 
   function openNew() {
     setDraft(emptyDraft());
