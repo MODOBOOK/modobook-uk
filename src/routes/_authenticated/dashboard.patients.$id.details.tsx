@@ -1408,8 +1408,14 @@ function EditDialog({ client, which, onClose, onSaved }: { client: any; which: "
   );
 }
 
-function F({ label, children }: { label: string; children: React.ReactNode }) {
-  return <div className="space-y-1.5"><Label className="text-xs">{label}</Label>{children}</div>;
+function F({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-1.5">
+      <Label className="text-xs">{label}</Label>
+      {children}
+      {hint ? <p className="text-[10px] text-muted-foreground">{hint}</p> : null}
+    </div>
+  );
 }
 
 /* ---------- Payment link dialog ---------- */
