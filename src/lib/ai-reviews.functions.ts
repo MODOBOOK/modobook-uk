@@ -61,9 +61,9 @@ async function callGateway(content: GatewayContent[]): Promise<ExtractedReview[]
   } catch {
     throw new Error("AI returned malformed output. Try a clearer source.");
   }
-  const out = (parsed.reviews ?? []).slice(0, 30).filter((r) => r?.quote?.trim() && r?.author_name?.trim());
+  const out = (parsed.reviews ?? []).slice(0, 30).filter((r) => r?.quote?.trim());
   for (const r of out) {
-    r.author_name = r.author_name.trim();
+    r.author_name = (r.author_name ?? "").trim() || "Anonymous";
     r.quote = r.quote.trim();
     if (r.rating != null) {
       const n = Math.round(Number(r.rating));
@@ -120,10 +120,10 @@ export const commitReviews = createServerFn({ method: "POST" })
     if (pErr) throw pErr;
 
     const rows = data.reviews
-      .filter((r) => r.author_name?.trim() && r.quote?.trim())
+      .filter((r) => r.quote?.trim())
       .map((r) => ({
         profile_id: profile.id,
-        author_name: r.author_name.trim(),
+        author_name: (r.author_name ?? "").trim() || "Anonymous",
         quote: r.quote.trim(),
         rating: r.rating ?? null,
         display_order: 0,
