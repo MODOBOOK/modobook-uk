@@ -310,6 +310,52 @@ function VisitDialog({
           </div>
 
           <div className="space-y-1.5">
+            <Label>Price (£)</Label>
+            <Input
+              type="number"
+              min={0}
+              step="0.01"
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+              placeholder="e.g. 25.00"
+            />
+            <p className="text-xs text-muted-foreground">
+              Setting a price creates a bookable “Prescribing clinic” treatment in its own category
+              on your booking page. Patients pick their clinic day at checkout.
+            </p>
+          </div>
+
+          {!visit && (
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1.5">
+                <Label>Repeat</Label>
+                <Select value={repeat} onValueChange={setRepeat}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">Does not repeat</SelectItem>
+                    <SelectItem value="7">Every week</SelectItem>
+                    <SelectItem value="14">Every 2 weeks</SelectItem>
+                    <SelectItem value="21">Every 3 weeks</SelectItem>
+                    <SelectItem value="28">Every 4 weeks</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Repeat until</Label>
+                <Input
+                  type="date"
+                  value={repeatUntil}
+                  disabled={repeat === "0"}
+                  onChange={(e) => setRepeatUntil(e.target.value)}
+                />
+              </div>
+            </div>
+          )}
+
+
+          <div className="space-y-1.5">
             <Label>Notes (shown to patients)</Label>
             <Textarea
               rows={2}
