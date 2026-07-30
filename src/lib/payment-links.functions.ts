@@ -16,30 +16,67 @@ async function getProfile(supabase: any, userId: string) {
 // link, mirroring the same rules used in the public checkout flow so a link
 // sent from the app charges the patient exactly what the practitioner has
 // configured.
-function computeCardSurchargeCents(
-  subtotalCents: number,
-  p: {
-    payment_pass_fees_to_customer?: boolean | null;
-    payment_surcharge_card_enabled?: boolean | null;
-    payment_surcharge_card_percent?: number | null;
-    stripe_fee_pass_to_patient?: boolean | null;
-    stripe_fee_card_percent?: number | null;
-    stripe_fee_card_fixed_cents?: number | null;
-  },
-) {
+export const DEFAULT_CARD_FEE_PERCENT = 1.5;
+export const DEFAULT_CARD_FEE_FIXED_CENTS = 20;
+
+type FeeProfile = {
+  payment_pass_fees_to_customer?: boolean | null;
+  payment_surcharge_card_enabled?: boolean | null;
+  payment_surcharge_card_percent?: number | null;
+  stripe_fee_pass_to_patient?: boolean | null;
+  stripe_fee_card_percent?: number | null;
+  stripe_fee_card_fixed_cents?: number | null;
+};
+
+// When the practitioner explicitly ticks "add fees" on a link we always add a
+// fee, even if the automatic pass-through settings are switched off — falling
+// back to standard card processing rates so the toggle is never a no-op.
+function computeCardSurchargeCents(subtotalCents: number, p: FeeProfile, force = false) {
   let surcharge = 0;
+  let configured = false;
+
   if (p.payment_pass_fees_to_customer && p.payment_surcharge_card_enabled) {
     const pct = Number(p.payment_surcharge_card_percent ?? 0);
-    if (pct > 0) surcharge += (subtotalCents * pct) / 100;
+    if (pct > 0) {
+      surcharge += (subtotalCents * pct) / 100;
+      configured = true;
+    }
   }
   if (p.stripe_fee_pass_to_patient) {
     const pct = Number(p.stripe_fee_card_percent ?? 0);
     const fixed = Number(p.stripe_fee_card_fixed_cents ?? 0);
-    if (pct > 0) surcharge += (subtotalCents * pct) / 100;
-    if (fixed > 0) surcharge += fixed;
+    if (pct > 0) {
+      surcharge += (subtotalCents * pct) / 100;
+      configured = true;
+    }
+    if (fixed > 0) {
+      surcharge += fixed;
+      configured = true;
+    }
   }
+
+  if (!configured && force) {
+    // Fall back to the practitioner's saved rates if present, else defaults.
+    const pct = Number(p.stripe_fee_card_percent ?? 0) || Number(p.payment_surcharge_card_percent ?? 0) || DEFAULT_CARD_FEE_PERCENT;
+    const fixed = Number(p.stripe_fee_card_fixed_cents ?? DEFAULT_CARD_FEE_FIXED_CENTS);
+    surcharge = (subtotalCents * pct) / 100 + fixed;
+  }
+
   return Math.round(surcharge);
 }
+
+// Preview the fee that would be added to a link of a given amount, so the
+// dashboard can show the exact figure before the link is created.
+export const previewLinkFee = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { amountCents: number }) => input)
+  .handler(async ({ data, context }) => {
+    const profile = await getProfile(context.supabase, context.userId);
+    const subtotal = Math.max(0, Math.round(Number(data.amountCents) || 0));
+    if (!profile || subtotal <= 0) return { subtotal_cents: subtotal, surcharge_cents: 0, total_cents: subtotal };
+    const surcharge = computeCardSurchargeCents(subtotal, profile, true);
+    return { subtotal_cents: subtotal, surcharge_cents: surcharge, total_cents: subtotal + surcharge };
+  });
 
 export const createPaymentLink = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -68,7 +105,7 @@ export const createPaymentLink = createServerFn({ method: "POST" })
     }
     const subtotalCents = Math.round(data.amountCents);
     const includeFees = data.includeFees ?? true;
-    const surchargeCents = includeFees ? computeCardSurchargeCents(subtotalCents, profile) : 0;
+    const surchargeCents = includeFees ? computeCardSurchargeCents(subtotalCents, profile, true) : 0;
     const totalCents = subtotalCents + surchargeCents;
 
     const { createConnectedPaymentLink } = await import("./stripe.server");
