@@ -1103,6 +1103,7 @@ function CheckoutSheet({
   const [discountKind, setDiscountKind] = useState<"percent" | "amount">("percent");
   const [checkoutNotes, setCheckoutNotes] = useState("");
   const [busy, setBusy] = useState(false);
+  const [addFeesToLink, setAddFeesToLink] = useState(true);
   const [showReschedule, setShowReschedule] = useState(false);
   const cancelled = a.status === "cancelled";
   const isNoShow = a.status === "no_show";
@@ -1339,6 +1340,14 @@ function CheckoutSheet({
             <span>£{Math.max(0, total - Number(a.amount_paid_cents ?? 0) / 100).toFixed(2)}</span>
           </div>
         </div>
+
+        <label className="flex items-start gap-2 rounded-md border p-2.5">
+          <Checkbox checked={addFeesToLink} onCheckedChange={(v) => setAddFeesToLink(v === true)} className="mt-0.5" />
+          <span className="text-xs">
+            <span className="block font-medium">Add platform &amp; processing fees to the Stripe link</span>
+            <span className="text-muted-foreground">Uses the card surcharges set in Settings — shown as a separate line to the patient.</span>
+          </span>
+        </label>
 
         <div className="grid grid-cols-2 gap-2">
           <Button disabled={busy} className="bg-slate-900 text-white hover:bg-slate-800" onClick={sendStripeLink}>
