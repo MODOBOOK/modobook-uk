@@ -1443,6 +1443,8 @@ function PaymentLinkDialog({
       setAmount("");
       setDescription(clinicName ? `Payment for ${clinicName}` : "Payment");
       setUrl(null);
+      setIncludeFees(true);
+      setFeeCents(0);
     }
   }, [open, clinicName]);
 
@@ -1468,9 +1470,11 @@ function PaymentLinkDialog({
           recipientEmail: client.email || undefined,
           recipientName: client.full_name || undefined,
           recipientPhone: client.phone || undefined,
+          includeFees,
         },
       });
       setUrl(r?.stripe_url ?? null);
+      setFeeCents(Number(r?.surcharge_cents ?? 0));
       if (r?.stripe_url) {
         try { await navigator.clipboard.writeText(r.stripe_url); } catch { /* ignore */ }
         toast.success("Payment link created and copied");
@@ -1525,10 +1529,21 @@ function PaymentLinkDialog({
               <Label htmlFor="pl-desc">Description</Label>
               <Input id="pl-desc" value={description} onChange={e => setDescription(e.target.value)} />
             </div>
-            <p className="text-xs text-muted-foreground">Creates a Stripe payment link on your connected account. Any card surcharges you've configured will be added automatically.</p>
+            <label className="flex items-start gap-2 rounded-md border p-2.5">
+              <Checkbox checked={includeFees} onCheckedChange={(v) => setIncludeFees(v === true)} className="mt-0.5" />
+              <span className="text-xs">
+                <span className="font-medium block">Add platform &amp; processing fees</span>
+                <span className="text-muted-foreground">Adds the card surcharges you've configured in Settings on top of the amount above. Untick to absorb the fees yourself.</span>
+              </span>
+            </label>
           </div>
         ) : (
           <div className="space-y-3">
+            {feeCents > 0 && (
+              <p className="text-xs text-muted-foreground">
+                Includes £{(feeCents / 100).toFixed(2)} platform &amp; processing fees — patient pays £{(Number(amount || 0) + feeCents / 100).toFixed(2)}.
+              </p>
+            )}
             <div className="rounded-md border bg-muted/50 p-2 text-xs break-all">{url}</div>
             <div className="flex flex-wrap gap-2">
               <Button size="sm" variant="outline" onClick={async () => { try { await navigator.clipboard.writeText(url); toast.success("Copied"); } catch { /* */ } }}>Copy link</Button>
