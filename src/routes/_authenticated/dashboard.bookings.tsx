@@ -1109,6 +1109,8 @@ function CheckoutSheet({
   const [checkoutNotes, setCheckoutNotes] = useState("");
   const [busy, setBusy] = useState(false);
   const [addFeesToLink, setAddFeesToLink] = useState(true);
+  const outstandingCents = Math.max(0, Math.round(total * 100) - Number(a.amount_paid_cents ?? 0));
+  const appointmentFee = useLinkFee(outstandingCents, addFeesToLink);
   const [showReschedule, setShowReschedule] = useState(false);
   const cancelled = a.status === "cancelled";
   const isNoShow = a.status === "no_show";
