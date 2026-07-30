@@ -1437,6 +1437,8 @@ function PaymentLinkDialog({
   const [description, setDescription] = useState("");
   const [busy, setBusy] = useState(false);
   const [url, setUrl] = useState<string | null>(null);
+  const [includeFees, setIncludeFees] = useState(true);
+  const [feeCents, setFeeCents] = useState(0);
 
   useEffect(() => {
     if (open) {
