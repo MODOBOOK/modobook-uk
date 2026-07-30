@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useLinkFee } from "@/lib/use-link-fee";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import {
   ChevronLeft,
@@ -769,6 +770,7 @@ function PaymentLinkDialog({ open, onOpenChange }: { open: boolean; onOpenChange
   const [url, setUrl] = useState<string | null>(null);
   const [includeFees, setIncludeFees] = useState(true);
   const [feeCents, setFeeCents] = useState(0);
+  const previewFee = useLinkFee(Math.round(parseFloat(amount || "0") * 100), includeFees);
 
   async function submit() {
     setBusy(true);
@@ -821,7 +823,11 @@ function PaymentLinkDialog({ open, onOpenChange }: { open: boolean; onOpenChange
               <Checkbox checked={includeFees} onCheckedChange={(v) => setIncludeFees(v === true)} className="mt-0.5" />
               <span className="text-xs">
                 <span className="block font-medium">Add platform &amp; processing fees</span>
-                <span className="text-muted-foreground">Adds your configured card surcharges on top. Untick to absorb them yourself.</span>
+                <span className="text-muted-foreground">
+                  {includeFees && previewFee > 0
+                    ? `Adds £${(previewFee / 100).toFixed(2)} — patient pays £${(parseFloat(amount || "0") + previewFee / 100).toFixed(2)}.`
+                    : "Adds your card processing surcharge on top. Untick to absorb it yourself."}
+                </span>
               </span>
             </label>
             <DialogFooter>
@@ -1116,6 +1122,8 @@ function CheckoutSheet({
     return discountKind === "percent" ? (subtotal * n) / 100 : n;
   })();
   const total = Math.max(0, subtotal - discountValue);
+  const outstandingCents = Math.max(0, Math.round(total * 100) - Number(a.amount_paid_cents ?? 0));
+  const appointmentFee = useLinkFee(outstandingCents, addFeesToLink);
 
   async function saveNotes() {
     setBusy(true);
@@ -1345,7 +1353,11 @@ function CheckoutSheet({
           <Checkbox checked={addFeesToLink} onCheckedChange={(v) => setAddFeesToLink(v === true)} className="mt-0.5" />
           <span className="text-xs">
             <span className="block font-medium">Add platform &amp; processing fees to the Stripe link</span>
-            <span className="text-muted-foreground">Uses the card surcharges set in Settings — shown as a separate line to the patient.</span>
+            <span className="text-muted-foreground">
+            {addFeesToLink && appointmentFee > 0
+              ? `Adds £${(appointmentFee / 100).toFixed(2)} — patient pays £${(total + appointmentFee / 100).toFixed(2)}.`
+              : "Shown as a separate line to the patient on the Stripe page."}
+          </span>
           </span>
         </label>
 

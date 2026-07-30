@@ -43,6 +43,7 @@ import { LoyaltyPointsCard } from "@/components/patient/LoyaltyPointsCard";
 
 
 import { logCommunication, sendPatientEmail } from "@/lib/patient-hub.functions";
+import { useLinkFee } from "@/lib/use-link-fee";
 import { createPaymentLink } from "@/lib/payment-links.functions";
 import { chargeCardOnFile, removeCardOnFile } from "@/lib/card-on-file.functions";
 import { TreatmentPlansPanel } from "@/components/TreatmentPlansPanel";
@@ -1439,6 +1440,7 @@ function PaymentLinkDialog({
   const [url, setUrl] = useState<string | null>(null);
   const [includeFees, setIncludeFees] = useState(true);
   const [feeCents, setFeeCents] = useState(0);
+  const previewFee = useLinkFee(Math.round(Number(amount || 0) * 100), includeFees);
 
   useEffect(() => {
     if (open) {
@@ -1535,7 +1537,11 @@ function PaymentLinkDialog({
               <Checkbox checked={includeFees} onCheckedChange={(v) => setIncludeFees(v === true)} className="mt-0.5" />
               <span className="text-xs">
                 <span className="font-medium block">Add platform &amp; processing fees</span>
-                <span className="text-muted-foreground">Adds the card surcharges you've configured in Settings on top of the amount above. Untick to absorb the fees yourself.</span>
+                <span className="text-muted-foreground">
+                  {includeFees && previewFee > 0
+                    ? `Adds £${(previewFee / 100).toFixed(2)} — patient pays £${(Number(amount || 0) + previewFee / 100).toFixed(2)}.`
+                    : "Adds your card processing surcharge on top. Untick to absorb it yourself."}
+                </span>
               </span>
             </label>
           </div>
