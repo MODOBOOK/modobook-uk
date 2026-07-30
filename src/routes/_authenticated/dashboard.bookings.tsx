@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useLinkFee } from "@/lib/use-link-fee";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import {
   ChevronLeft,
@@ -1109,8 +1110,6 @@ function CheckoutSheet({
   const [checkoutNotes, setCheckoutNotes] = useState("");
   const [busy, setBusy] = useState(false);
   const [addFeesToLink, setAddFeesToLink] = useState(true);
-  const outstandingCents = Math.max(0, Math.round(total * 100) - Number(a.amount_paid_cents ?? 0));
-  const appointmentFee = useLinkFee(outstandingCents, addFeesToLink);
   const [showReschedule, setShowReschedule] = useState(false);
   const cancelled = a.status === "cancelled";
   const isNoShow = a.status === "no_show";
@@ -1123,6 +1122,8 @@ function CheckoutSheet({
     return discountKind === "percent" ? (subtotal * n) / 100 : n;
   })();
   const total = Math.max(0, subtotal - discountValue);
+  const outstandingCents = Math.max(0, Math.round(total * 100) - Number(a.amount_paid_cents ?? 0));
+  const appointmentFee = useLinkFee(outstandingCents, addFeesToLink);
 
   async function saveNotes() {
     setBusy(true);
