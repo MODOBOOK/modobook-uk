@@ -755,6 +755,8 @@ function Step8({ invoice, email, patientName, consultationId, onChange, onComple
   const [generating, setGenerating] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [emailing, setEmailing] = useState(false);
+  const includeFees = invoice?.include_fees !== false;
+  const feeCents = Number(invoice?.fee_cents ?? 0);
   const items: InvLine[] = Array.isArray(invoice?.items) && invoice.items.length > 0
     ? invoice.items
     : [{ description: invoice?.notes ?? "", qty: 1, unitPrice: Number(invoice?.amount ?? 0) }];
@@ -797,6 +799,8 @@ function Step8({ invoice, email, patientName, consultationId, onChange, onComple
       notes: invoice?.notes,
       footerNotes: profile?.invoice_footer_notes ?? null,
       paymentLink: invoice?.payment_link,
+      feeCents: invoice?.payment_link ? feeCents : 0,
+      feeLabel: "Card & processing fee",
       reference: consultationId?.slice(0, 8).toUpperCase(),
       showBank: !!profile?.invoice_show_bank_details,
       bank: {
@@ -825,9 +829,10 @@ function Step8({ invoice, email, patientName, consultationId, onChange, onComple
           kind: "checkout",
           recipientEmail: sendEmail || null,
           recipientName: patientName || null,
+          includeFees,
         },
       });
-      onChange({ ...invoice, items, amount: amountNum, payment_link: row.stripe_url, payment_link_id: row.id, status: "sent", sent_at: new Date().toISOString() });
+      onChange({ ...invoice, items, amount: amountNum, payment_link: row.stripe_url, payment_link_id: row.id, fee_cents: Number(row.surcharge_cents ?? 0), include_fees: includeFees, status: "sent", sent_at: new Date().toISOString() });
       toast.success("Stripe payment link created");
     } catch (e: any) {
       toast.error(e?.message ?? "Could not create payment link");
@@ -864,6 +869,7 @@ function Step8({ invoice, email, patientName, consultationId, onChange, onComple
       // Auto-create a Stripe payment link if we don't already have one.
       let paymentLink: string | null = invoice?.payment_link ?? null;
       let paymentLinkId: string | null = invoice?.payment_link_id ?? null;
+      let linkFeeCents = feeCents;
       if (!paymentLink) {
         try {
           const row: any = await createLink({
@@ -873,10 +879,12 @@ function Step8({ invoice, email, patientName, consultationId, onChange, onComple
               kind: "checkout",
               recipientEmail: sendEmail || null,
               recipientName: patientName || null,
+              includeFees,
             },
           });
           paymentLink = row.stripe_url;
           paymentLinkId = row.id;
+          linkFeeCents = Number(row.surcharge_cents ?? 0);
         } catch (e: any) {
           toast.error(e?.message ?? "Could not create Stripe payment link");
           setEmailing(false);
@@ -888,7 +896,7 @@ function Step8({ invoice, email, patientName, consultationId, onChange, onComple
       // and upload to storage so we can link it in the email.
       const { generateInvoicePdf } = await import("@/lib/invoice-pdf");
       const pdfArgs = profileToInvoiceArgs(profile);
-      const doc = await generateInvoicePdf({ ...pdfArgs, paymentLink: paymentLink ?? undefined });
+      const doc = await generateInvoicePdf({ ...pdfArgs, paymentLink: paymentLink ?? undefined, feeCents: linkFeeCents });
       const pdfBlob = doc.output("blob");
       const { data: { user } } = await supabase.auth.getUser();
       const pdfPath = `${profile!.id}/invoices/${consultationId}-${Date.now()}.pdf`;
@@ -983,10 +991,23 @@ function Step8({ invoice, email, patientName, consultationId, onChange, onComple
         <Input type="email" value={invoice?.email ?? email ?? ""} onChange={(e) => onChange({ ...invoice, email: e.target.value })} />
       </div>
 
+      <label className="flex items-start gap-2 rounded-md border p-3">
+        <Checkbox checked={includeFees} onCheckedChange={(v) => onChange({ ...invoice, include_fees: v === true })} className="mt-0.5" />
+        <span className="text-xs">
+          <span className="block font-medium">Add platform &amp; processing fees to the Stripe link</span>
+          <span className="text-muted-foreground">Uses the card surcharges set in Settings. The fee is shown as its own line on the invoice PDF.</span>
+        </span>
+      </label>
+
       {invoice?.payment_link ? (
         <div className="rounded-md border bg-emerald-50 p-3 text-sm dark:bg-emerald-950/30">
           <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-400">Stripe payment link</div>
           <a href={invoice.payment_link} target="_blank" rel="noreferrer" className="break-all text-emerald-700 underline dark:text-emerald-300">{invoice.payment_link}</a>
+          {feeCents > 0 && (
+            <div className="mt-1 text-xs text-emerald-800 dark:text-emerald-300">
+              Includes £{(feeCents / 100).toFixed(2)} fees — patient pays £{(amountNum + feeCents / 100).toFixed(2)}
+            </div>
+          )}
           <div className="mt-2 flex flex-wrap gap-2">
             <Button size="sm" variant="outline" onClick={() => { navigator.clipboard.writeText(invoice.payment_link); toast.success("Link copied"); }}>Copy link</Button>
             <Button size="sm" variant="ghost" onClick={() => onChange({ ...invoice, payment_link: null, payment_link_id: null })}>Remove</Button>

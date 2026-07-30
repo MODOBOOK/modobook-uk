@@ -38,6 +38,9 @@ export type InvoiceData = {
   reference?: string;
   bank?: InvoiceBank | null;
   showBank?: boolean;
+  /** Platform/processing fees added when paying by the Stripe link (in pence) */
+  feeCents?: number | null;
+  feeLabel?: string | null;
 };
 
 function hexToRgb(hex?: string | null): [number, number, number] {
@@ -172,13 +175,23 @@ export async function generateInvoicePdf(d: InvoiceData): Promise<jsPDF> {
   doc.text(`£${subtotal.toFixed(2)}`, valueX, y, { align: "right" });
   y += 18;
 
+  const feeAmount = Math.max(0, Number(d.feeCents ?? 0)) / 100;
+  if (feeAmount > 0) {
+    doc.setTextColor(110);
+    doc.text(d.feeLabel || "Card & processing fee", labelX, y, { align: "right" });
+    doc.setTextColor(30);
+    doc.text(`£${feeAmount.toFixed(2)}`, valueX, y, { align: "right" });
+    y += 18;
+  }
+  const grandTotal = subtotal + feeAmount;
+
   // Total
   doc.setFillColor(br, bg, bb);
   doc.rect(W - M - 220, y - 14, 220, 28, "F");
   doc.setFont("helvetica", "bold").setFontSize(11).setTextColor(255, 255, 255);
   doc.text("TOTAL DUE", W - M - 210, y + 4);
   doc.setFontSize(14);
-  doc.text(`£${subtotal.toFixed(2)}`, W - M - 10, y + 4, { align: "right" });
+  doc.text(`£${grandTotal.toFixed(2)}`, W - M - 10, y + 4, { align: "right" });
   doc.setFont("helvetica", "normal").setTextColor(30);
   y += 36;
 
@@ -195,7 +208,13 @@ export async function generateInvoicePdf(d: InvoiceData): Promise<jsPDF> {
     doc.setFont("helvetica", "bold").setFontSize(13).setTextColor(255, 255, 255);
     doc.text("PRESS HERE TO PAY NOW", btnX + btnW / 2, btnY + btnH / 2 + 4, { align: "center" });
     doc.setFont("helvetica", "normal").setFontSize(9).setTextColor(120);
-    doc.text("Secure payment powered by Stripe", btnX, btnY + btnH + 14);
+    doc.text(
+      feeAmount > 0
+        ? `Secure payment powered by Stripe — includes £${feeAmount.toFixed(2)} ${(d.feeLabel || "card & processing fee").toLowerCase()}`
+        : "Secure payment powered by Stripe",
+      btnX,
+      btnY + btnH + 14,
+    );
     doc.setTextColor(60);
     y = btnY + btnH + 30;
   }

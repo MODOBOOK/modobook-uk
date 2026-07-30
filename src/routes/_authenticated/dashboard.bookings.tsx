@@ -767,6 +767,8 @@ function PaymentLinkDialog({ open, onOpenChange }: { open: boolean; onOpenChange
   const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
   const [url, setUrl] = useState<string | null>(null);
+  const [includeFees, setIncludeFees] = useState(true);
+  const [feeCents, setFeeCents] = useState(0);
 
   async function submit() {
     setBusy(true);
@@ -779,10 +781,12 @@ function PaymentLinkDialog({ open, onOpenChange }: { open: boolean; onOpenChange
           description: desc || "Payment",
           kind: "adhoc",
           recipientEmail: email || null,
+          includeFees,
         },
       });
       const u = (row as { stripe_url: string | null }).stripe_url;
       setUrl(u);
+      setFeeCents(Number((row as { surcharge_cents?: number }).surcharge_cents ?? 0));
       if (u && navigator.clipboard) await navigator.clipboard.writeText(u);
       toast.success("Stripe payment link created — copied to clipboard");
     } catch (e) {
@@ -791,7 +795,7 @@ function PaymentLinkDialog({ open, onOpenChange }: { open: boolean; onOpenChange
   }
 
   function close() {
-    setAmount(""); setDesc(""); setEmail(""); setUrl(null);
+    setAmount(""); setDesc(""); setEmail(""); setUrl(null); setIncludeFees(true); setFeeCents(0);
     onOpenChange(false);
   }
 
@@ -813,6 +817,13 @@ function PaymentLinkDialog({ open, onOpenChange }: { open: boolean; onOpenChange
               <Label>Send to (optional email)</Label>
               <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="patient@example.com" />
             </div>
+            <label className="flex items-start gap-2 rounded-md border p-2.5">
+              <Checkbox checked={includeFees} onCheckedChange={(v) => setIncludeFees(v === true)} className="mt-0.5" />
+              <span className="text-xs">
+                <span className="block font-medium">Add platform &amp; processing fees</span>
+                <span className="text-muted-foreground">Adds your configured card surcharges on top. Untick to absorb them yourself.</span>
+              </span>
+            </label>
             <DialogFooter>
               <Button variant="ghost" onClick={close}>Cancel</Button>
               <Button onClick={submit} disabled={busy}>{busy ? "Creating…" : "Create link"}</Button>
@@ -821,6 +832,9 @@ function PaymentLinkDialog({ open, onOpenChange }: { open: boolean; onOpenChange
         ) : (
           <div className="space-y-3">
             <p className="text-sm">Payment link is ready. Already copied to your clipboard.</p>
+            {feeCents > 0 && (
+              <p className="text-xs text-muted-foreground">Includes £{(feeCents / 100).toFixed(2)} platform &amp; processing fees.</p>
+            )}
             <Input readOnly value={url} className="text-xs" />
             <div className="flex gap-2">
               <Button variant="outline" className="flex-1" onClick={() => { navigator.clipboard.writeText(url); toast.success("Copied"); }}>
@@ -1089,6 +1103,7 @@ function CheckoutSheet({
   const [discountKind, setDiscountKind] = useState<"percent" | "amount">("percent");
   const [checkoutNotes, setCheckoutNotes] = useState("");
   const [busy, setBusy] = useState(false);
+  const [addFeesToLink, setAddFeesToLink] = useState(true);
   const [showReschedule, setShowReschedule] = useState(false);
   const cancelled = a.status === "cancelled";
   const isNoShow = a.status === "no_show";
@@ -1156,6 +1171,7 @@ function CheckoutSheet({
           recipientEmail: a.patient_email,
           recipientName: a.patient_name,
           recipientPhone: a.patient_phone,
+          includeFees: addFeesToLink,
         },
       });
       const url = (row as { stripe_url: string | null }).stripe_url;
@@ -1324,6 +1340,14 @@ function CheckoutSheet({
             <span>£{Math.max(0, total - Number(a.amount_paid_cents ?? 0) / 100).toFixed(2)}</span>
           </div>
         </div>
+
+        <label className="flex items-start gap-2 rounded-md border p-2.5">
+          <Checkbox checked={addFeesToLink} onCheckedChange={(v) => setAddFeesToLink(v === true)} className="mt-0.5" />
+          <span className="text-xs">
+            <span className="block font-medium">Add platform &amp; processing fees to the Stripe link</span>
+            <span className="text-muted-foreground">Uses the card surcharges set in Settings — shown as a separate line to the patient.</span>
+          </span>
+        </label>
 
         <div className="grid grid-cols-2 gap-2">
           <Button disabled={busy} className="bg-slate-900 text-white hover:bg-slate-800" onClick={sendStripeLink}>
