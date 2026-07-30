@@ -54,6 +54,7 @@ export const createPaymentLink = createServerFn({ method: "POST" })
       recipientPhone?: string | null;
       expiresAt?: string | null;
       currency?: string;
+      includeFees?: boolean;
     }) => input,
   )
   .handler(async ({ data, context }) => {
@@ -66,7 +67,8 @@ export const createPaymentLink = createServerFn({ method: "POST" })
       throw new Error("Minimum amount is £1.00");
     }
     const subtotalCents = Math.round(data.amountCents);
-    const surchargeCents = computeCardSurchargeCents(subtotalCents, profile);
+    const includeFees = data.includeFees ?? true;
+    const surchargeCents = includeFees ? computeCardSurchargeCents(subtotalCents, profile) : 0;
     const totalCents = subtotalCents + surchargeCents;
 
     const { createConnectedPaymentLink } = await import("./stripe.server");
