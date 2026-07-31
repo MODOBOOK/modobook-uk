@@ -1,0 +1,2 @@
+ALTER TABLE public.treatments DROP CONSTRAINT IF EXISTS treatments_prescriber_routing_check;
+ALTER TABLE public.treatments ADD CONSTRAINT treatments_prescriber_routing_check CHECK (prescriber_routing = ANY (ARRAY['same_address'::text, 'in_person_consult'::text, 'clinic_visit'::text]));
