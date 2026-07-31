@@ -195,15 +195,23 @@ function DashboardIndex() {
             <p className="text-[10px] font-medium uppercase tracking-[0.25em] text-muted-foreground">Analytics</p>
             <h2 className="mt-1 font-serif text-2xl sm:text-3xl">This month at a glance</h2>
           </div>
+          <Link
+            to="/dashboard/analytics"
+            className="text-xs font-medium uppercase tracking-[0.2em] text-foreground underline-offset-4 hover:underline"
+          >
+            View more
+          </Link>
         </div>
-        <Card className="border-border/60">
-          <CardContent className="grid grid-cols-2 gap-px overflow-hidden rounded-xl bg-border/60 p-0 sm:grid-cols-4">
-            <Stat label="Bookings this month" value={String(monthBookings)} />
-            <Stat label="Sales today" value={`£${salesToday.toFixed(0)}`} />
-            <Stat label="Sales (7d)" value={`£${salesWeek.toFixed(0)}`} />
-            <Stat label="Sales this month" value={`£${salesMonth.toFixed(0)}`} />
-          </CardContent>
-        </Card>
+        <Link to="/dashboard/analytics" className="block">
+          <Card className="border-border/60 transition hover:border-accent hover:shadow-luxe">
+            <CardContent className="grid grid-cols-2 gap-px overflow-hidden rounded-xl bg-border/60 p-0 sm:grid-cols-4">
+              <Stat label="Bookings this month" value={String(monthBookings)} />
+              <Stat label="Sales today" value={`£${salesToday.toFixed(0)}`} />
+              <Stat label="Sales (7d)" value={`£${salesWeek.toFixed(0)}`} />
+              <Stat label="Sales this month" value={`£${salesMonth.toFixed(0)}`} />
+            </CardContent>
+          </Card>
+        </Link>
       </section>
 
       {/* AI onboarding banner — hidden once the practitioner has used it */}
