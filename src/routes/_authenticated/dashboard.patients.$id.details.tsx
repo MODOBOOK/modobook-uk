@@ -891,12 +891,16 @@ function NotesSection({ clientId, patient }: { clientId: string; patient: any })
                 />
                 <button
                   type="button"
-                  onClick={() => setEditing({ id: n.id, body: n.body, visible_to_patient: !!n.visible_to_patient })}
+                  onClick={() => { setEditing({ id: n.id, body: n.body, visible_to_patient: !!n.visible_to_patient, face_map: n.face_map ?? null }); setShowMap(!!n.face_map); }}
                   className="min-w-0 flex-1 text-left"
                 >
                   <div className="whitespace-pre-wrap break-words text-sm leading-relaxed">{n.body}</div>
+                  {n.face_map && (
+                    <FaceMapView value={n.face_map} className="mt-2 max-w-[180px]" />
+                  )}
                   <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[10px] text-muted-foreground">
                     <span>{new Date(n.created_at).toLocaleString()}</span>
+                    {n.face_map && <Badge variant="outline" className="h-4 px-1.5 text-[9px]">Diagram</Badge>}
                     {n.visible_to_patient
                       ? <Badge variant="secondary" className="h-4 px-1.5 text-[9px]">Shared with patient</Badge>
                       : <Badge variant="outline" className="h-4 px-1.5 text-[9px]">Private</Badge>}
