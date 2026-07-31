@@ -743,13 +743,18 @@ function NotesSection({ clientId, patient }: { clientId: string; patient: any })
     return out;
   }, [rows, q, filter, sort]);
 
+  const mapHasMarks =
+    !!editing?.face_map &&
+    ((editing.face_map.pins?.length ?? 0) > 0 || (editing.face_map.strokes?.length ?? 0) > 0);
+  const canSave = !!editing && (!!editing.body.trim() || mapHasMarks);
+
   async function saveNote() {
-    if (!editing || !editing.body.trim()) return;
+    if (!editing || !canSave) return;
     setSaving(true);
     try {
       await up({ data: {
         id: editing.id, client_id: clientId,
-        body: editing.body.trim(),
+        body: editing.body.trim() || "Treatment diagram",
         visible_to_patient: editing.visible_to_patient,
         face_map: editing.face_map ?? null,
       } as any });
