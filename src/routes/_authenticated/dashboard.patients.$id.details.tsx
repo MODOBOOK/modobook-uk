@@ -813,7 +813,13 @@ function NotesSection({ clientId, patient }: { clientId: string; patient: any })
             {exporting ? <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> : <Download className="mr-1 h-3.5 w-3.5" />}
             {anySelected ? `PDF (${selected.size})` : "PDF"}
           </Button>
-          <Button size="sm" variant="secondary" onClick={() => setEditing({ body: "", visible_to_patient: false })}>
+          <Button
+            size="sm" variant="outline"
+            onClick={() => { setEditing({ body: "", visible_to_patient: false, face_map: { pins: [], strokes: [], bg: "realistic" } }); setShowMap(true); }}
+          >
+            <Syringe className="mr-1 h-3.5 w-3.5" />Treatment diagram
+          </Button>
+          <Button size="sm" variant="secondary" onClick={() => { setEditing({ body: "", visible_to_patient: false }); setShowMap(false); }}>
             <Plus className="mr-1 h-3.5 w-3.5" />New note
           </Button>
         </div>
