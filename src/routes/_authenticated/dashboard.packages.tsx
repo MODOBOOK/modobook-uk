@@ -285,26 +285,53 @@ function PackagesPage() {
                       selectedIds={form.treatment_ids}
                       onToggle={toggleTreatment}
                     />
-                    {form.treatment_ids.length > 0 && (
-                      <div className="mt-2 flex flex-wrap gap-1.5">
-                        {form.treatment_ids.map((id) => {
+                    {selectedGrouped.length > 0 && (
+                      <div className="mt-2 space-y-1.5">
+                        {selectedGrouped.map(({ id, qty }) => {
                           const t = treatments.find((x) => x.id === id);
                           if (!t) return null;
+                          const line = Number(t.price ?? 0) * qty;
                           return (
-                            <Badge key={id} variant="secondary" className="gap-1 pr-1">
-                              <span>{t.name}</span>
-                              {t.price != null && <span className="text-muted-foreground">· £{Number(t.price).toFixed(2)}</span>}
+                            <div key={id} className="flex items-center gap-2 rounded-md border bg-background p-2">
+                              <div className="min-w-0 flex-1">
+                                <div className="truncate text-sm font-medium">{t.name}</div>
+                                {t.price != null && (
+                                  <div className="text-xs text-muted-foreground">
+                                    £{Number(t.price).toFixed(2)} each · £{line.toFixed(2)}
+                                  </div>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Button type="button" variant="outline" size="icon" className="h-7 w-7" onClick={() => setQty(id, qty - 1)} aria-label={`Fewer sessions of ${t.name}`}>
+                                  <Minus className="h-3 w-3" />
+                                </Button>
+                                <Input
+                                  type="number"
+                                  min={1}
+                                  max={50}
+                                  value={qty}
+                                  onFocus={(e) => e.target.select()}
+                                  onChange={(e) => setQty(id, Number(e.target.value))}
+                                  className="h-7 w-14 text-center"
+                                />
+                                <Button type="button" variant="outline" size="icon" className="h-7 w-7" onClick={() => setQty(id, qty + 1)} aria-label={`More sessions of ${t.name}`}>
+                                  <Plus className="h-3 w-3" />
+                                </Button>
+                              </div>
                               <button
                                 type="button"
                                 onClick={() => toggleTreatment(id)}
-                                className="ml-0.5 rounded p-0.5 hover:bg-background/60"
+                                className="rounded p-1 text-muted-foreground hover:bg-muted"
                                 aria-label={`Remove ${t.name}`}
                               >
-                                <X className="h-3 w-3" />
+                                <X className="h-3.5 w-3.5" />
                               </button>
-                            </Badge>
+                            </div>
                           );
                         })}
+                        <p className="text-xs text-muted-foreground">
+                          Set how many sessions of each treatment this package includes.
+                        </p>
                       </div>
                     )}
                   </>
@@ -313,13 +340,20 @@ function PackagesPage() {
 
               <div>
                 <Label>Total sessions</Label>
-                <Input
-                  type="number"
-                  min={1}
-                  value={form.session_count}
-                  onFocus={(e) => e.target.select()}
-                  onChange={(e) => setForm({ ...form, session_count: Number(e.target.value) })}
-                />
+                {form.treatment_ids.length > 0 ? (
+                  <div className="mt-1 rounded-md border bg-muted/30 px-3 py-2 text-sm">
+                    {totalSessions} session{totalSessions === 1 ? "" : "s"}
+                    <span className="ml-1 text-xs text-muted-foreground">(from the quantities above)</span>
+                  </div>
+                ) : (
+                  <Input
+                    type="number"
+                    min={1}
+                    value={form.session_count}
+                    onFocus={(e) => e.target.select()}
+                    onChange={(e) => setForm({ ...form, session_count: Number(e.target.value) })}
+                  />
+                )}
               </div>
 
               <div className="rounded-lg border bg-muted/30 p-3">
@@ -327,10 +361,11 @@ function PackagesPage() {
                   <Label className="text-sm font-semibold">Package pricing</Label>
                   {originalTotal > 0 && (
                     <span className="text-xs text-muted-foreground">
-                      Sessions × treatments = <span className="font-medium">£{originalTotal.toFixed(2)}</span>
+                      Sessions total = <span className="font-medium">£{originalTotal.toFixed(2)}</span>
                     </span>
                   )}
                 </div>
+
                 <div className="mb-3 inline-flex rounded-md border bg-background p-0.5 text-xs">
                   <button
                     type="button"
