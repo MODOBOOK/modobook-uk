@@ -37,6 +37,7 @@ type Pkg = {
   image_url: string | null;
   active: boolean;
   category_id: string | null;
+  allow_split_payment?: boolean | null;
 };
 type Treatment = { id: string; name: string; price: number | null };
 type Category = { id: string; name: string; parent_id: string | null };
@@ -56,6 +57,7 @@ const blankForm = {
   image_url: "",
   active: true,
   category_id: "" as string,
+  allow_split_payment: false,
 };
 
 function PackagesPage() {
@@ -106,6 +108,7 @@ function PackagesPage() {
       image_url: p.image_url ?? "",
       active: p.active,
       category_id: p.category_id ?? "",
+      allow_split_payment: Boolean(p.allow_split_payment),
     });
     setOpen(true);
   }
@@ -188,6 +191,7 @@ function PackagesPage() {
       image_url: form.image_url.trim() || null,
       active: form.active,
       category_id: form.category_id || null,
+      allow_split_payment: form.allow_split_payment && totalSessions > 1,
     };
 
     try {
