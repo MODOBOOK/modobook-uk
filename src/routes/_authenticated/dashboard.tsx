@@ -33,6 +33,7 @@ import {
   Gift,
   GraduationCap,
   ExternalLink,
+  TrendingUp,
 
 
 } from "lucide-react";
