@@ -95,7 +95,7 @@ function MultiBookPage() {
   const search = Route.useSearch();
   const ids = (search.ids ?? "").split(",").filter(Boolean);
   const packageIds = (search.pkgs ?? "").split(",").filter(Boolean);
-  const selectedPackages = ((ctx as { selectedPackages?: Array<{ id: string; name: string; price: number; session_count: number; firstTreatmentId: string | null }> }).selectedPackages ?? [])
+  const selectedPackages = ((ctx as { selectedPackages?: Array<{ id: string; name: string; price: number; session_count: number; allow_split_payment?: boolean; firstTreatmentId: string | null }> }).selectedPackages ?? [])
     .filter((p) => packageIds.includes(p.id));
   const redirectPath = `/m/${slug}/book-multi?ids=${encodeURIComponent(ids.join(","))}${packageIds.length ? `&pkgs=${encodeURIComponent(packageIds.join(","))}` : ""}`;
 
@@ -221,6 +221,11 @@ function MultiBookPage() {
       }),
     [treatments],
   );
+  const splitEligiblePackages = selectedPackages.filter(
+    (p) => Boolean(p.allow_split_payment) && Math.max(1, Number(p.session_count ?? 1)) > 1,
+  );
+  const [packagePaymentPlans, setPackagePaymentPlans] = useState<Record<string, "full" | "split">>({});
+  const selectedPackagePlan = (id: string) => packagePaymentPlans[id] ?? "full";
   const [paymentPlans, setPaymentPlans] = useState<Record<string, "full" | "split">>({});
   const [paymentChoice, setPaymentChoice] = useState<PaymentChoice | null>(null);
   const [step, setStep] = useState<"selection" | "datetime" | "details">("selection");
@@ -492,6 +497,14 @@ function MultiBookPage() {
                 lines.push(`${t.name}: pay over ${sessions} appointments (£${(priceFor(t) / sessions).toFixed(2)} per appointment)`);
               } else {
                 lines.push(`${t.name}: pay in full for ${sessions} sessions`);
+              }
+            }
+            for (const p of splitEligiblePackages) {
+              const sessions = Math.max(1, Number(p.session_count ?? 1));
+              if (selectedPackagePlan(p.id) === "split") {
+                lines.push(`${p.name} (package): pay per session — £${(p.price / sessions).toFixed(2)} × ${sessions} sessions`);
+              } else {
+                lines.push(`${p.name} (package): paid in full (£${p.price.toFixed(2)})`);
               }
             }
             return lines.length ? lines.join("\n") : undefined;
@@ -766,7 +779,14 @@ function MultiBookPage() {
                           <div className="text-xs opacity-70">{p.session_count} session{p.session_count === 1 ? "" : "s"} · first session booked below, remaining tracked in your account</div>
                         </div>
                         {showPrices && (
-                          <div className="font-semibold whitespace-nowrap" style={{ color: brand }}>£{p.price.toFixed(2)}</div>
+                          <div className="text-right">
+                            <div className="font-semibold whitespace-nowrap" style={{ color: brand }}>£{p.price.toFixed(2)}</div>
+                            {Boolean(p.allow_split_payment) && Math.max(1, Number(p.session_count ?? 1)) > 1 && (
+                              <div className="text-[11px] opacity-70">
+                                or £{(p.price / Math.max(1, Number(p.session_count ?? 1))).toFixed(2)} per session
+                              </div>
+                            )}
+                          </div>
                         )}
                       </div>
                     ))}
