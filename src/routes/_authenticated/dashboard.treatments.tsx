@@ -311,6 +311,7 @@ function TreatmentsPage() {
 
 
         </Dialog>
+        </div>
       </div>
 
 
