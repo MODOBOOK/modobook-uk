@@ -443,6 +443,28 @@ function PackagesPage() {
                   </div>
                 )}
               </div>
+
+              {totalSessions > 1 && (
+                <div className="rounded-lg border p-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <Label>Allow split payment</Label>
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        Patient pays per session instead of all up front —{" "}
+                        <span className="font-medium">
+                          £{(effectivePrice / totalSessions).toFixed(2)}
+                        </span>{" "}
+                        × {totalSessions} sessions.
+                      </p>
+                    </div>
+                    <Switch
+                      checked={form.allow_split_payment}
+                      onCheckedChange={(v) => setForm({ ...form, allow_split_payment: v })}
+                    />
+                  </div>
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label>Per-session duration (min)</Label>
