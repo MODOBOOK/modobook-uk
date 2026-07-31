@@ -320,9 +320,47 @@ function BlockEditor({ blocks, setBlocks, readOnly }: { blocks: Block[]; setBloc
               </div>
             )}
             {b.type === 'image' && (
-              <div className="grid grid-cols-2 gap-2">
-                <Input value={b.src} onChange={(e) => update(i, { src: e.target.value })} placeholder="https://…image.jpg" disabled={readOnly} />
-                <Input value={b.alt || ''} onChange={(e) => update(i, { alt: e.target.value })} placeholder="Alt text" disabled={readOnly} />
+              <div className="space-y-2">
+                {profileId ? (
+                  <ImageUploader
+                    label="Image"
+                    value={b.src}
+                    onChange={(url) => update(i, { src: url || '' } as any)}
+                    profileId={profileId}
+                    folder="marketing"
+                    previewClass="mt-2 max-h-40 rounded object-contain"
+                  />
+                ) : (
+                  <p className="text-xs text-muted-foreground">Loading uploader…</p>
+                )}
+                <Input value={b.alt || ''} onChange={(e) => update(i, { alt: e.target.value })} placeholder="Alt text (for accessibility)" disabled={readOnly} />
+              </div>
+            )}
+            {b.type === 'html' && (
+              <div className="space-y-2">
+                <Textarea
+                  value={b.html}
+                  onChange={(e) => update(i, { html: e.target.value } as any)}
+                  rows={10}
+                  spellCheck={false}
+                  className="font-mono text-xs"
+                  placeholder="<table>…paste your email HTML here…</table>"
+                  disabled={readOnly}
+                />
+                <label className="flex items-start gap-2 rounded-md border p-2.5 text-sm">
+                  <Checkbox
+                    checked={!!b.full}
+                    onCheckedChange={(v) => update(i, { full: !!v } as any)}
+                    disabled={readOnly}
+                    className="mt-0.5"
+                  />
+                  <span>
+                    <span className="block font-medium">Send as a full email</span>
+                    <span className="block text-xs text-muted-foreground">
+                      Your code becomes the entire email — no MODO header, logo or styling. Only the unsubscribe line is added (legally required). Merge tags like {'{{first_name}}'} still work.
+                    </span>
+                  </span>
+                </label>
               </div>
             )}
             {b.type === 'divider' && <p className="text-xs text-muted-foreground">— horizontal line —</p>}
