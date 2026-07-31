@@ -190,20 +190,20 @@ function DashboardLayout() {
 
 
       <div className="flex min-w-0 flex-1 flex-col">
-        {/* Mobile header — sticky, slim, back + brand + actions */}
+        {/* Mobile header — sticky, compact, back + brand + actions */}
         <header
-          className="sticky top-0 z-30 flex items-center justify-between gap-1 border-b bg-background/90 px-2 backdrop-blur supports-[backdrop-filter]:bg-background/70 lg:hidden"
-          style={{ paddingTop: "env(safe-area-inset-top)", minHeight: 56 }}
+          className="sticky top-0 z-30 flex items-center justify-between gap-0.5 border-b bg-background/90 px-2 backdrop-blur supports-[backdrop-filter]:bg-background/70 lg:hidden"
+          style={{ paddingTop: "env(safe-area-inset-top)", minHeight: 44 }}
         >
           <BackButton />
           <div className="flex min-w-0 flex-1 items-center gap-2 px-1">
-            <span className="truncate text-[15px] font-semibold">{displayName || "My Clinic"}</span>
+            <span className="truncate text-sm font-semibold">{displayName || "My Clinic"}</span>
           </div>
           <NotificationsBell />
-          <Link to="/hub" className="relative inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-foreground active:bg-muted" aria-label="Prescriber Hub">
-            <Stethoscope className="h-[18px] w-[18px]" />
+          <Link to="/hub" className="relative inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-foreground active:bg-muted" aria-label="Prescriber Hub">
+            <Stethoscope className="h-4 w-4" />
             {hubCounts.total > 0 && (
-              <span className="absolute right-0.5 top-0.5 inline-flex min-w-[1.1rem] items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold leading-none text-destructive-foreground">
+              <span className="absolute right-0 top-0 inline-flex min-w-[1rem] items-center justify-center rounded-full bg-destructive px-1 text-[9px] font-semibold leading-none text-destructive-foreground">
                 {hubCounts.total > 99 ? "99+" : hubCounts.total}
               </span>
             )}
@@ -213,9 +213,9 @@ function DashboardLayout() {
             target="_blank"
             rel="noreferrer"
             aria-label="Preview booking page"
-            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-foreground active:bg-muted"
+            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-foreground active:bg-muted"
           >
-            <ExternalLink className="h-[18px] w-[18px]" />
+            <ExternalLink className="h-4 w-4" />
           </a>
         </header>
 
