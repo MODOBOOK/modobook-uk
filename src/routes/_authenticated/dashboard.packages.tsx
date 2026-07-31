@@ -121,7 +121,10 @@ function PackagesPage() {
     return out;
   }, [form.treatment_ids]);
 
-  const totalSessions = form.treatment_ids.length || Number(form.session_count) || 1;
+  // Sessions are always set manually by the practitioner — never derived
+  // from the selected treatments.
+  const totalSessions = Math.max(1, Number(form.session_count) || 1);
+  const suggestedSessions = form.treatment_ids.length;
 
   const originalTotal = useMemo(() => {
     if (form.treatment_ids.length === 0) return 0;
