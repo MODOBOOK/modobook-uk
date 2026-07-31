@@ -27,7 +27,7 @@ export const getDashboardAnalytics = createServerFn({ method: "GET" })
     const { data: appointments, error: apptErr } = await supabase
       .from("appointments")
       .select(
-        "id, patient_name, patient_email, patient_user_id, scheduled_date, start_time, end_time, status, payment_status, total_amount, amount_paid_cents, amount_refunded_cents, checkout_discount_cents, treatments(name, color, category_id), treatment_categories!treatments_category_id_fkey(name)",
+        "id, patient_name, patient_email, patient_user_id, scheduled_date, start_time, end_time, status, payment_status, total_amount, amount_paid_cents, amount_refunded_cents, checkout_discount_cents, treatments(name, color, category_id)",
       )
       .eq("profile_id", profileId)
       .order("scheduled_date", { ascending: true })
