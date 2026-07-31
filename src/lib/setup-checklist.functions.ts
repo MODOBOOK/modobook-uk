@@ -104,6 +104,17 @@ export const getSetupChecklist = createServerFn({ method: "GET" })
         to: "/dashboard/payments",
         done: Boolean(profile.stripe_connect_account_id),
       },
+      {
+        key: "payment_settings",
+        label: "Payment settings",
+        description: "Choose deposits, pay now or pay in clinic, and your policy",
+        to: "/dashboard/policies",
+        done: Boolean(
+          (profile.deposit_amount_cents ?? 0) > 0 ||
+            Number(profile.deposit_percent ?? 0) > 0 ||
+            profile.deposit_policy_text,
+        ),
+      },
     ];
 
 
