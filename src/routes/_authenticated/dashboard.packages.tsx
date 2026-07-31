@@ -110,12 +110,26 @@ function PackagesPage() {
     setOpen(true);
   }
 
+  // treatment_ids may repeat — a repeat means "N sessions of that treatment"
+  const selectedGrouped = useMemo(() => {
+    const out: { id: string; qty: number }[] = [];
+    for (const id of form.treatment_ids) {
+      const found = out.find((x) => x.id === id);
+      if (found) found.qty += 1;
+      else out.push({ id, qty: 1 });
+    }
+    return out;
+  }, [form.treatment_ids]);
+
+  const totalSessions = form.treatment_ids.length || Number(form.session_count) || 1;
+
   const originalTotal = useMemo(() => {
+    if (form.treatment_ids.length === 0) return 0;
     return form.treatment_ids.reduce((sum, id) => {
       const t = treatments.find((x) => x.id === id);
       return sum + Number(t?.price ?? 0);
-    }, 0) * (Number(form.session_count) || 1);
-  }, [form.treatment_ids, form.session_count, treatments]);
+    }, 0);
+  }, [form.treatment_ids, treatments]);
 
   const effectivePrice = useMemo(() => {
     if (form.priceMode === "percent") {
@@ -137,6 +151,26 @@ function PackagesPage() {
     }));
   }
 
+  function setQty(id: string, qty: number) {
+    const n = Math.max(0, Math.min(50, Math.round(qty) || 0));
+    setForm((f) => {
+      const others = f.treatment_ids.filter((x) => x !== id);
+      if (n === 0) return { ...f, treatment_ids: others };
+      // keep original ordering by rebuilding from the grouped order
+      const order: string[] = [];
+      for (const x of f.treatment_ids) if (!order.includes(x)) order.push(x);
+      if (!order.includes(id)) order.push(id);
+      const counts = new Map<string, number>();
+      for (const x of f.treatment_ids) counts.set(x, (counts.get(x) ?? 0) + 1);
+      counts.set(id, n);
+      const next: string[] = [];
+      for (const oid of order) {
+        for (let i = 0; i < (counts.get(oid) ?? 0); i++) next.push(oid);
+      }
+      return { ...f, treatment_ids: next };
+    });
+  }
+
   async function save() {
     if (!form.name.trim()) { toast.error("Name required"); return; }
     const payload = {
@@ -144,7 +178,7 @@ function PackagesPage() {
       description: form.description.trim() || null,
       treatment_id: form.treatment_ids[0] ?? null,
       treatment_ids: form.treatment_ids,
-      session_count: Number(form.session_count) || 1,
+      session_count: totalSessions,
       price: effectivePrice,
       duration_minutes: form.duration_minutes ? Number(form.duration_minutes) : null,
       expiry_days: form.expiry_days ? Number(form.expiry_days) : null,
@@ -152,6 +186,7 @@ function PackagesPage() {
       active: form.active,
       category_id: form.category_id || null,
     };
+
     try {
       if (editing) await update({ data: { id: editing.id, ...payload } });
       else await create({ data: payload });
