@@ -27,6 +27,7 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { Plus, Trash2, Pencil, FileText, X, Tag, PlusCircle, Sparkles, Loader2 } from "lucide-react";
 import { SearchableMultiPicker } from "@/components/ui/searchable-multi-picker";
+import { BulkRebookRemindersDialog } from "@/components/BulkRebookRemindersDialog";
 import { generateTreatmentDescription } from "@/lib/ai-treatment-description.functions";
 
 
@@ -283,6 +284,18 @@ function TreatmentsPage() {
           <h1 className="text-2xl font-bold">Treatments</h1>
           <p className="text-muted-foreground">Define what patients can book. Assign to categories or sub-categories.</p>
         </div>
+        <div className="flex items-center gap-2">
+        <BulkRebookRemindersDialog
+          treatments={items.map((t) => ({
+            id: t.id,
+            name: t.name,
+            category_id: t.category_id,
+            rebook_reminder_days: (t as { rebook_reminder_days?: number | null }).rebook_reminder_days ?? null,
+            topup_reminder_days: (t as { topup_reminder_days?: number | null }).topup_reminder_days ?? null,
+          }))}
+          categoryLabel={(id) => (id ? categoryById.get(id)?.label ?? "Unknown" : "Uncategorised")}
+          onSaved={load}
+        />
         <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) setEditing(null); }}>
           <DialogTrigger asChild>
             <Button onClick={() => setEditing(null)}>
@@ -299,6 +312,7 @@ function TreatmentsPage() {
 
 
         </Dialog>
+        </div>
       </div>
 
 
