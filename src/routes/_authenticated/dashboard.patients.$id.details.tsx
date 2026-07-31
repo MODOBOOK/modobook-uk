@@ -715,7 +715,8 @@ function NotesSection({ clientId, patient }: { clientId: string; patient: any })
   const [filter, setFilter] = useState<"all" | "shared" | "private">("all");
   const [sort, setSort] = useState<"new" | "old">("new");
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [editing, setEditing] = useState<null | { id?: string; body: string; visible_to_patient: boolean }>(null);
+  const [editing, setEditing] = useState<null | { id?: string; body: string; visible_to_patient: boolean; face_map?: any }>(null);
+  const [showMap, setShowMap] = useState(false);
   const [saving, setSaving] = useState(false);
   const [exporting, setExporting] = useState(false);
 
