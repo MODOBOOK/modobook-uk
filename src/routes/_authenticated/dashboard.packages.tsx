@@ -343,21 +343,30 @@ function PackagesPage() {
 
               <div>
                 <Label>Total sessions</Label>
-                {form.treatment_ids.length > 0 ? (
-                  <div className="mt-1 rounded-md border bg-muted/30 px-3 py-2 text-sm">
-                    {totalSessions} session{totalSessions === 1 ? "" : "s"}
-                    <span className="ml-1 text-xs text-muted-foreground">(from the quantities above)</span>
-                  </div>
-                ) : (
-                  <Input
-                    type="number"
-                    min={1}
-                    value={form.session_count}
-                    onFocus={(e) => e.target.select()}
-                    onChange={(e) => setForm({ ...form, session_count: Number(e.target.value) })}
-                  />
-                )}
+                <Input
+                  type="number"
+                  min={1}
+                  value={form.session_count}
+                  onFocus={(e) => e.target.select()}
+                  onChange={(e) => setForm({ ...form, session_count: Number(e.target.value) })}
+                />
+                <p className="mt-1 text-xs text-muted-foreground">
+                  You decide how many sessions this package includes.
+                  {suggestedSessions > 0 && suggestedSessions !== totalSessions && (
+                    <>
+                      {" "}
+                      <button
+                        type="button"
+                        className="underline"
+                        onClick={() => setForm({ ...form, session_count: suggestedSessions })}
+                      >
+                        Use {suggestedSessions} from the treatments above
+                      </button>
+                    </>
+                  )}
+                </p>
               </div>
+
 
               <div className="rounded-lg border bg-muted/30 p-3">
                 <div className="mb-2 flex items-center justify-between">
