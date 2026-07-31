@@ -14,6 +14,7 @@ export type Block =
   | { type: 'button'; text: string; url: string }
   | { type: 'divider' }
   | { type: 'spacer'; size?: 'sm' | 'md' | 'lg' }
+  | { type: 'html'; html: string; full?: boolean }
 
 export interface MarketingBroadcastData {
   subject?: string
@@ -101,6 +102,11 @@ function renderBlock(
       const h = block.size === 'lg' ? '32px' : block.size === 'sm' ? '8px' : '18px'
       return <div key={idx} style={{ height: h }} />
     }
+    case 'html': {
+      const html = interpolate(block.html || '', data)
+      if (!html.trim()) return null
+      return <div key={idx} dangerouslySetInnerHTML={{ __html: html }} />
+    }
     default:
       return null
   }
@@ -126,6 +132,34 @@ export function MarketingBroadcastEmail(data: MarketingBroadcastData) {
     booking_url: bookingUrl,
     unsubscribe_url: unsubscribeUrl,
   }
+  // "Full email" mode: a single embedded-code block replaces the MODO shell.
+  const fullBlock = blocks.find((b) => b.type === 'html' && b.full) as
+    | { type: 'html'; html: string; full?: boolean }
+    | undefined
+  if (fullBlock) {
+    const raw = interpolate(fullBlock.html || '', vars)
+    // Keep only the body contents so the output stays a single valid document.
+    const bodyMatch = raw.match(/<body[^>]*>([\s\S]*?)<\/body>/i)
+    const inner = (bodyMatch ? bodyMatch[1] : raw)
+      .replace(/<\/?html[^>]*>/gi, '')
+      .replace(/<head[\s\S]*?<\/head>/gi, '')
+    return (
+      <Html>
+        <Head />
+        <Preview>{preheader || subject}</Preview>
+        <Section style={{ margin: 0, padding: 0, backgroundColor: '#ffffff' }}>
+          <div dangerouslySetInnerHTML={{ __html: inner }} />
+          <Text style={{ ...styles.footer, textAlign: 'center', marginTop: 20 }}>
+            You&rsquo;re receiving this because you opted in to marketing emails from {clinicName}.{' '}
+            <Link href={unsubscribeUrl} style={{ color: brand.muted, textDecoration: 'underline' }}>
+              Unsubscribe
+            </Link>
+          </Text>
+        </Section>
+      </Html>
+    )
+  }
+
   return (
     <Html>
       <Head />
