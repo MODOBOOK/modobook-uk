@@ -445,6 +445,7 @@ function BookPage() {
   const [directionsOpen, setDirectionsOpen] = useState(false);
   const [careGuideOpen, setCareGuideOpen] = useState(false);
   const [expandedFavId, setExpandedFavId] = useState<string | null>(null);
+  const [expandedPkgIds, setExpandedPkgIds] = useState<Set<string>>(new Set());
   const [modelSlotsOpen, setModelSlotsOpen] = useState(false);
 
   const preItems = (pretreatment ?? []).length > 0
@@ -1907,7 +1908,30 @@ function BookPage() {
                           <CardContent className="p-4">
                             <div className="font-semibold" style={{ color: brand }}>{p.name}</div>
                             {pkg.description && (
-                              <p className="mt-1 line-clamp-3 text-sm opacity-70">{pkg.description}</p>
+                              <div className="mt-1">
+                                <p className={`text-sm opacity-70 ${expandedPkgIds.has(p.id) ? "" : "line-clamp-3"}`}>
+                                  {pkg.description}
+                                </p>
+                                {pkg.description.length > 120 && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setExpandedPkgIds((prev) => {
+                                        const next = new Set(prev);
+                                        if (next.has(p.id)) next.delete(p.id);
+                                        else next.add(p.id);
+                                        return next;
+                                      });
+                                    }}
+                                    className="mt-1 flex items-center gap-1 text-xs font-semibold"
+                                    style={{ color: brand }}
+                                    aria-label={expandedPkgIds.has(p.id) ? "Show less" : "Read more"}
+                                  >
+                                    {expandedPkgIds.has(p.id) ? "Show less" : "Read more"}
+                                    {expandedPkgIds.has(p.id) ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                                  </button>
+                                )}
+                              </div>
                             )}
                             <p className="mt-2 text-xs opacity-60">
                               {p.session_count} session{p.session_count === 1 ? "" : "s"}
