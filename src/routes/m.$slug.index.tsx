@@ -445,6 +445,7 @@ function BookPage() {
   const [directionsOpen, setDirectionsOpen] = useState(false);
   const [careGuideOpen, setCareGuideOpen] = useState(false);
   const [expandedFavId, setExpandedFavId] = useState<string | null>(null);
+  const [expandedPkgIds, setExpandedPkgIds] = useState<Set<string>>(new Set());
   const [modelSlotsOpen, setModelSlotsOpen] = useState(false);
 
   const preItems = (pretreatment ?? []).length > 0
