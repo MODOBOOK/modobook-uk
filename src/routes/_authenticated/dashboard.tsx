@@ -32,6 +32,7 @@ import {
   Mail,
   Gift,
   GraduationCap,
+  ExternalLink,
 
 
 } from "lucide-react";
