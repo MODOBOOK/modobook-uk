@@ -1913,19 +1913,20 @@ function BookPage() {
                               {p.session_count} session{p.session_count === 1 ? "" : "s"}
                               {pkg.duration_minutes ? ` · ${pkg.duration_minutes} min each` : ""}
                             </p>
-                            {includedTreatments.length > 0 && (
+                            {includedGrouped.length > 0 && (
                               <div className="mt-3 rounded-lg border p-2.5" style={{ borderColor: `${brand}26`, background: `${brand}0a` }}>
                                 <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide opacity-70">Includes</div>
                                 <ul className="space-y-0.5 text-sm">
-                                  {includedTreatments.map((t) => (
+                                  {includedGrouped.map(({ t, qty }) => (
                                     <li key={t.id} className="flex items-start gap-1.5">
                                       <span style={{ color: brand }}>•</span>
-                                      <span>{t.name}</span>
+                                      <span>{qty > 1 ? `${qty} × ${t.name}` : t.name}</span>
                                     </li>
                                   ))}
                                 </ul>
                               </div>
                             )}
+
                             {saving > 0 && (
                               <div className="mt-3 flex flex-wrap items-center gap-2">
                                 <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-800">
