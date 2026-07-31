@@ -20,7 +20,9 @@ export const getSetupChecklist = createServerFn({ method: "GET" })
     const { supabase, userId } = context;
     const { data: profile } = await supabase
       .from("profiles")
-      .select("id, clinic_name, avatar_url, phone, welcome_intro_html, about_page, stripe_connect_account_id")
+      .select(
+        "id, clinic_name, avatar_url, phone, welcome_intro_html, about_page, stripe_connect_account_id, deposit_amount_cents, deposit_percent, deposit_policy_text",
+      )
       .eq("user_id", userId)
       .maybeSingle();
 
@@ -101,6 +103,17 @@ export const getSetupChecklist = createServerFn({ method: "GET" })
         description: "Connect Stripe for deposits and payments",
         to: "/dashboard/payments",
         done: Boolean(profile.stripe_connect_account_id),
+      },
+      {
+        key: "payment_settings",
+        label: "Payment settings",
+        description: "Choose deposits, pay now or pay in clinic, and your policy",
+        to: "/dashboard/policies",
+        done: Boolean(
+          (profile.deposit_amount_cents ?? 0) > 0 ||
+            Number(profile.deposit_percent ?? 0) > 0 ||
+            profile.deposit_policy_text,
+        ),
       },
     ];
 
