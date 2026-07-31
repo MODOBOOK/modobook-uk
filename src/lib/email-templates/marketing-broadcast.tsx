@@ -102,6 +102,11 @@ function renderBlock(
       const h = block.size === 'lg' ? '32px' : block.size === 'sm' ? '8px' : '18px'
       return <div key={idx} style={{ height: h }} />
     }
+    case 'html': {
+      const html = interpolate(block.html || '', data)
+      if (!html.trim()) return null
+      return <div key={idx} dangerouslySetInnerHTML={{ __html: html }} />
+    }
     default:
       return null
   }
