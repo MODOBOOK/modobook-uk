@@ -265,6 +265,9 @@ function CampaignEditor() {
 }
 
 function BlockEditor({ blocks, setBlocks, readOnly }: { blocks: Block[]; setBlocks: (b: Block[]) => void; readOnly: boolean }) {
+  const profileFn = useServerFn(getMyProfile)
+  const [profileId, setProfileId] = useState<string>('')
+  useEffect(() => { profileFn({} as any).then((p: any) => setProfileId(p?.id || '')).catch(() => {}) }, [])
   function add(b: Block) { setBlocks([...blocks, b]) }
   function update(i: number, patch: Partial<Block>) {
     const next = blocks.slice(); (next[i] as any) = { ...next[i], ...patch }; setBlocks(next)
