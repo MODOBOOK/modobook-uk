@@ -14,6 +14,7 @@ export type Block =
   | { type: 'button'; text: string; url: string }
   | { type: 'divider' }
   | { type: 'spacer'; size?: 'sm' | 'md' | 'lg' }
+  | { type: 'html'; html: string; full?: boolean }
 
 export interface MarketingBroadcastData {
   subject?: string
