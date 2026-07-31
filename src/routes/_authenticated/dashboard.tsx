@@ -33,6 +33,7 @@ import {
   Gift,
   GraduationCap,
   ExternalLink,
+  TrendingUp,
 
 
 } from "lucide-react";
@@ -70,6 +71,7 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 
 const navItems = [
   { label: "Dashboard", to: "/dashboard", icon: LayoutDashboard },
+  { label: "Analytics", to: "/dashboard/analytics", icon: TrendingUp },
   { label: "Import with AI", to: "/dashboard/ai-import", icon: Sparkles },
   { label: "Clinic page", to: "/dashboard/clinic", icon: Store },
   { label: "Welcome & policies", to: "/dashboard/policies", icon: Shield },
