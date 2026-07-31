@@ -996,7 +996,7 @@ function MultiBookPage() {
                     <UserCheck className="h-4 w-4" /> Signed in — saved to your account.
                   </div>
                 )}
-                {splitEligibleTreatments.length > 0 && (
+                {(splitEligibleTreatments.length > 0 || splitEligiblePackages.length > 0) && (
                   <Card className="mb-6">
                     <CardHeader>
                       <CardTitle className="text-base" style={headingStyle}>Payment plan</CardTitle>
@@ -1045,8 +1045,48 @@ function MultiBookPage() {
                           </div>
                         );
                       })}
+                      {splitEligiblePackages.map((p) => {
+                        const sessions = Math.max(1, Number(p.session_count ?? 1));
+                        const plan = selectedPackagePlan(p.id);
+                        const perSession = p.price / sessions;
+                        return (
+                          <div key={p.id} className="space-y-2 rounded-md border p-3" style={{ borderColor: `${brand}33` }}>
+                            <div>
+                              <div className="text-sm font-semibold" style={{ color: brand }}>{p.name}</div>
+                              <div className="text-xs opacity-70">Package · {sessions} sessions</div>
+                            </div>
+                            <div className="grid gap-2 sm:grid-cols-2">
+                              {(["full", "split"] as const).map((opt) => {
+                                const selected = plan === opt;
+                                return (
+                                  <button
+                                    key={opt}
+                                    type="button"
+                                    onClick={() => setPackagePaymentPlans((prev) => ({ ...prev, [p.id]: opt }))}
+                                    className="flex w-full min-w-0 flex-col items-start gap-1 rounded-md border px-3 py-3 text-left transition"
+                                    style={{
+                                      borderColor: selected ? brand : `${brand}33`,
+                                      backgroundColor: selected ? `${brand}10` : "transparent",
+                                    }}
+                                  >
+                                    <span className="w-full break-words text-sm font-semibold" style={{ color: brand }}>
+                                      {opt === "full" ? "Pay in full" : `Pay over ${sessions} sessions`}
+                                    </span>
+                                    <span className="w-full break-words text-xs opacity-70">
+                                      {opt === "full"
+                                        ? `£${p.price.toFixed(2)} total`
+                                        : `£${perSession.toFixed(2)} per session · charged at each visit`}
+                                    </span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      })}
                     </CardContent>
-                    {splitEligibleTreatments.some((t) => selectedPaymentPlan(t) === "split") && (
+                    {(splitEligibleTreatments.some((t) => selectedPaymentPlan(t) === "split")
+                      || splitEligiblePackages.some((p) => selectedPackagePlan(p.id) === "split")) && (
                       <div className="border-t px-6 py-4" style={{ borderColor: `${brand}22`, backgroundColor: `${brand}08` }}>
                         <label className="flex cursor-pointer items-start gap-2 text-sm">
                           <input
