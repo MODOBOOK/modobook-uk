@@ -189,25 +189,35 @@ function DashboardLayout() {
 
 
       <div className="flex min-w-0 flex-1 flex-col">
-        {/* Mobile header — slim, back + brand + preview */}
-        <header className="flex h-14 items-center justify-between gap-2 border-b px-3 lg:hidden">
+        {/* Mobile header — sticky, slim, back + brand + actions */}
+        <header
+          className="sticky top-0 z-30 flex items-center justify-between gap-1 border-b bg-background/90 px-2 backdrop-blur supports-[backdrop-filter]:bg-background/70 lg:hidden"
+          style={{ paddingTop: "env(safe-area-inset-top)", minHeight: 56 }}
+        >
           <BackButton />
-          <div className="flex min-w-0 flex-1 items-center justify-center">
-            <span className="truncate text-sm font-semibold">{displayName || "My Clinic"}</span>
+          <div className="flex min-w-0 flex-1 items-center gap-2 px-1">
+            <span className="truncate text-[15px] font-semibold">{displayName || "My Clinic"}</span>
           </div>
           <NotificationsBell />
-          <Link to="/hub" className="relative inline-flex h-9 w-9 items-center justify-center rounded-full border border-border/70 bg-background text-foreground hover:bg-muted" aria-label="Prescriber Hub">
-            <Stethoscope className="h-4 w-4" />
+          <Link to="/hub" className="relative inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-foreground active:bg-muted" aria-label="Prescriber Hub">
+            <Stethoscope className="h-[18px] w-[18px]" />
             {hubCounts.total > 0 && (
-              <span className="absolute -right-1 -top-1 inline-flex min-w-[1.1rem] items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold leading-none text-destructive-foreground">
+              <span className="absolute right-0.5 top-0.5 inline-flex min-w-[1.1rem] items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold leading-none text-destructive-foreground">
                 {hubCounts.total > 99 ? "99+" : hubCounts.total}
               </span>
             )}
           </Link>
-          <Button variant="outline" size="sm" asChild>
-            <a href={`/m/${profile.slug}`} target="_blank" rel="noreferrer">Preview</a>
-          </Button>
+          <a
+            href={`/m/${profile.slug}`}
+            target="_blank"
+            rel="noreferrer"
+            aria-label="Preview booking page"
+            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-foreground active:bg-muted"
+          >
+            <ExternalLink className="h-[18px] w-[18px]" />
+          </a>
         </header>
+
 
 
 
