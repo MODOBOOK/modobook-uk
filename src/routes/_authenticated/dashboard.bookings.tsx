@@ -76,6 +76,7 @@ type Appt = {
   total_amount: number | null;
   amount_paid_cents: number | null;
   amount_refunded_cents: number | null;
+  checkout_discount_cents?: number | null;
   stripe_payment_intent_id: string | null;
 
 
@@ -1153,16 +1154,26 @@ function CheckoutSheet({
   async function markPaidWith(method: "card_present" | "cash" | "bank_transfer") {
     setBusy(true);
     try {
+      const discountCents = Math.round(discountValue * 100);
       await checkout({
         data: {
           appointmentId: a.id,
           method,
-          discountCents: Math.round(discountValue * 100),
+          discountCents,
           notes: checkoutNotes || null,
           markPaid: true,
         },
       });
-      onPatch({ payment_status: "paid" });
+      // Mirror the server's settlement locally so the outstanding badge clears
+      // without needing a refetch.
+      const totalCents = Math.round(Number(a.total_amount ?? 0) * 100);
+      const already = Number(a.amount_paid_cents ?? 0);
+      const settled = already + Math.max(0, totalCents - already - discountCents);
+      onPatch({
+        payment_status: "paid",
+        amount_paid_cents: settled,
+        checkout_discount_cents: discountCents || null,
+      });
       toast.success("Marked as paid");
     } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
   }
@@ -1238,7 +1249,12 @@ function CheckoutSheet({
       {(() => {
         const totalDue = Number(a.total_amount ?? 0);
         const paid = Number(a.amount_paid_cents ?? 0) / 100;
-        const outstanding = Math.max(0, totalDue - paid);
+        const discounted = Number(a.checkout_discount_cents ?? 0) / 100;
+        // A settled booking never shows outstanding, and any checkout discount
+        // reduces what's still due.
+        const outstanding = a.payment_status === "paid"
+          ? 0
+          : Math.max(0, totalDue - paid - discounted);
         return (
           <div className="flex flex-wrap gap-2">
             <Badge variant={cancelled ? "destructive" : "outline"}>{a.status}</Badge>
@@ -1345,7 +1361,7 @@ function CheckoutSheet({
           )}
           <div className="flex justify-between font-bold">
             <span>Outstanding</span>
-            <span>£{Math.max(0, total - Number(a.amount_paid_cents ?? 0) / 100).toFixed(2)}</span>
+            <span>£{(a.payment_status === "paid" ? 0 : Math.max(0, total - Number(a.amount_paid_cents ?? 0) / 100)).toFixed(2)}</span>
           </div>
         </div>
 
