@@ -919,7 +919,7 @@ function NotesSection({ clientId, patient }: { clientId: string; patient: any })
                   </Button>
                   <Button
                     size="icon" variant="ghost"
-                    onClick={() => setEditing({ id: n.id, body: n.body, visible_to_patient: !!n.visible_to_patient })}
+                    onClick={() => { setEditing({ id: n.id, body: n.body, visible_to_patient: !!n.visible_to_patient, face_map: n.face_map ?? null }); setShowMap(!!n.face_map); }}
                     title="Edit"
                   >
                     <Edit2 className="h-3.5 w-3.5" />
