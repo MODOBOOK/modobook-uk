@@ -17,9 +17,10 @@ Return ONLY raw JSON of this exact shape:
 
 Rules:
 - Only include reviews literally present in the source. Never invent or pad.
-- "author_name" = first name (or first name + initial) of the reviewer. If only a username or full name is visible, take the first word. If completely anonymous, use "Anonymous".
-- "quote" = the review text only, verbatim, trimmed. Strip emojis only if they break sentences. No quotation marks around it.
+- "author_name" = first name (or first name + initial) of the reviewer. If only a username or full name is visible, take the first word. If completely anonymous or no name is shown, use "Anonymous".
+- "quote" = the review text only, verbatim, trimmed. Strip emojis only if they break sentences. No quotation marks around it. If the review is a star rating with NO written text, return an empty string "" for quote — still include it.
 - "rating" = whole number 1-5 when visible (stars filled, "5/5", "★★★★★"). Omit if unclear.
+- IMPORTANT: include every review entry, even ones with no name, no text, or both — never drop an entry just because a field is missing.
 - Skip replies from the business / clinic owner — only patient-written reviews.
 - Hard cap: 30 reviews.
 - If nothing review-like is present, return { "reviews": [] }.`;
