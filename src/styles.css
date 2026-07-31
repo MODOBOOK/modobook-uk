@@ -287,3 +287,36 @@
 }
 
 
+
+/* ---- Mobile polish (touch devices / small screens) ---- */
+@media (max-width: 1023px) {
+  /* Stop iOS auto-zoom when focusing form fields */
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea {
+    font-size: 16px;
+  }
+
+  /* Comfortable tap targets for icon-only buttons */
+  button, [role="button"], a[role="button"] {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Wide tables scroll instead of breaking the layout */
+  table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Dialogs/sheets shouldn't run under the home indicator */
+  [data-radix-dialog-content],
+  [data-radix-popper-content-wrapper] {
+    max-width: 100vw;
+  }
+}
+
+html, body {
+  overscroll-behavior-y: none;
+}
