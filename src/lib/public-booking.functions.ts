@@ -263,7 +263,9 @@ export const getMultiBookingContext = createServerFn({ method: "GET" })
         price: Number(p.price ?? 0),
         session_count: Number(p.session_count ?? 1),
         expiry_days: (p.expiry_days as number | null) ?? null,
+        allow_split_payment: Boolean(p.allow_split_payment),
         firstTreatmentId,
+
       };
     });
 

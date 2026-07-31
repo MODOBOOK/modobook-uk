@@ -13,6 +13,7 @@ type PackageInput = {
   image_url: string | null;
   active: boolean;
   category_id: string | null;
+  allow_split_payment?: boolean;
 };
 
 export const listMyPackages = createServerFn({ method: "GET" })
@@ -50,6 +51,7 @@ export const createPackage = createServerFn({ method: "POST" })
       image_url: data.image_url,
       active: data.active,
       category_id: data.category_id,
+      allow_split_payment: data.allow_split_payment ?? false,
     });
     if (error) throw new Error(error.message);
     return { ok: true };
@@ -72,6 +74,7 @@ export const updatePackage = createServerFn({ method: "POST" })
       image_url: data.image_url,
       active: data.active,
       category_id: data.category_id,
+      allow_split_payment: data.allow_split_payment ?? false,
     }).eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };

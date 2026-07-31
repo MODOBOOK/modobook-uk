@@ -1937,6 +1937,12 @@ function BookPage() {
                               {p.session_count} session{p.session_count === 1 ? "" : "s"}
                               {pkg.duration_minutes ? ` · ${pkg.duration_minutes} min each` : ""}
                             </p>
+                            {(p as { allow_split_payment?: boolean | null }).allow_split_payment && (p.session_count || 1) > 1 && (
+                              <p className="mt-1 text-xs font-medium" style={{ color: brand }}>
+                                Split payment available — £{(price / (p.session_count || 1)).toFixed(2)} per session
+                              </p>
+                            )}
+
                             {includedGrouped.length > 0 && (
                               <div className="mt-3 rounded-lg border p-2.5" style={{ borderColor: `${brand}26`, background: `${brand}0a` }}>
                                 <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide opacity-70">Includes</div>

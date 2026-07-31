@@ -3622,6 +3622,7 @@ export type Database = {
       packages: {
         Row: {
           active: boolean | null
+          allow_split_payment: boolean
           category_id: string | null
           created_at: string
           description: string | null
@@ -3639,6 +3640,7 @@ export type Database = {
         }
         Insert: {
           active?: boolean | null
+          allow_split_payment?: boolean
           category_id?: string | null
           created_at?: string
           description?: string | null
@@ -3656,6 +3658,7 @@ export type Database = {
         }
         Update: {
           active?: boolean | null
+          allow_split_payment?: boolean
           category_id?: string | null
           created_at?: string
           description?: string | null
