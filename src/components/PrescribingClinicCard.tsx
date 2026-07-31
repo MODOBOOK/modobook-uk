@@ -226,6 +226,7 @@ function VisitDialog({
       ? String((visit as { price?: number | null }).price)
       : "",
   );
+  const [paymentMode, setPaymentMode] = useState<"full" | "pay_in_clinic">("full");
   const [repeat, setRepeat] = useState("0");
   const [repeatUntil, setRepeatUntil] = useState("");
   const [saving, setSaving] = useState(false);
