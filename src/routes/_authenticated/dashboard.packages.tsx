@@ -17,7 +17,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Badge } from "@/components/ui/badge";
 import { ImageUploader } from "@/components/ImageUploader";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Package, X, Search, Check } from "lucide-react";
+import { Plus, Minus, Pencil, Trash2, Package, X, Search, Check } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard/packages")({
   ssr: false,
