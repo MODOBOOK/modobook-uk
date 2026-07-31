@@ -204,6 +204,7 @@ function VisitDialog({
     capacity: number;
     notes: string | null;
     price: number | null;
+    payment_mode: "full" | "pay_in_clinic";
     repeat_every_days: number;
     repeat_until: string | null;
   }) => Promise<void>;
