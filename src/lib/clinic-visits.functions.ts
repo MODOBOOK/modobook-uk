@@ -149,6 +149,7 @@ export const upsertClinicVisit = createServerFn({ method: "POST" })
             category_id: categoryId,
             requires_prescriber: true,
             prescriber_routing: "clinic_visit",
+            payment_mode: data.payment_mode ?? "full",
           } as never)
           .eq("id", existing.id);
         return existing.id as string;
@@ -163,6 +164,7 @@ export const upsertClinicVisit = createServerFn({ method: "POST" })
           duration: mins,
           price,
           category_id: categoryId,
+          payment_mode: data.payment_mode ?? "full",
           requires_prescriber: true,
           prescriber_routing: "clinic_visit",
           prescriber_user_id: data.prescriber_user_id ?? null,
