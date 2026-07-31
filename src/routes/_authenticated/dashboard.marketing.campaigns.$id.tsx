@@ -294,6 +294,7 @@ function BlockEditor({ blocks, setBlocks, readOnly }: { blocks: Block[]; setBloc
             <Button size="sm" variant="outline" onClick={() => add({ type: 'image', src: '' })}><ImageIcon className="h-3 w-3 mr-1" />Image</Button>
             <Button size="sm" variant="outline" onClick={() => add({ type: 'divider' })}><Minus className="h-3 w-3 mr-1" />Divider</Button>
             <Button size="sm" variant="outline" onClick={() => add({ type: 'spacer' })}><Space className="h-3 w-3 mr-1" />Spacer</Button>
+            <Button size="sm" variant="outline" onClick={() => add({ type: 'html', html: '', full: false })}><Code className="h-3 w-3 mr-1" />Embed code</Button>
           </div>
         )}
       </div>
