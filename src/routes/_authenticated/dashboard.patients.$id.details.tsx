@@ -28,8 +28,10 @@ import {
 import {
   ArrowLeft, Mail, Phone as PhoneIcon, MessageSquare, Edit2, Plus, Trash2, Camera,
   Upload, FileText, AlertTriangle, Download, Loader2, ClipboardList, X, Check,
-  CalendarPlus, CreditCard, FileSignature, Send, ChevronDown, ChevronRight, Info, CalendarClock,
+  CalendarPlus, CreditCard, FileSignature, Send, ChevronDown, ChevronRight, Info, CalendarClock, Syringe,
 } from "lucide-react";
+import { FaceMapAnnotator } from "@/components/consultation/FaceMapAnnotator";
+import { FaceMapView } from "@/components/consultation/FaceMapView";
 import { RescheduleAppointmentDialog } from "@/components/RescheduleAppointmentDialog";
 import { toast } from "sonner";
 import { useDemoGuard } from "@/hooks/use-demo-mode";
@@ -715,7 +717,8 @@ function NotesSection({ clientId, patient }: { clientId: string; patient: any })
   const [filter, setFilter] = useState<"all" | "shared" | "private">("all");
   const [sort, setSort] = useState<"new" | "old">("new");
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [editing, setEditing] = useState<null | { id?: string; body: string; visible_to_patient: boolean }>(null);
+  const [editing, setEditing] = useState<null | { id?: string; body: string; visible_to_patient: boolean; face_map?: any }>(null);
+  const [showMap, setShowMap] = useState(false);
   const [saving, setSaving] = useState(false);
   const [exporting, setExporting] = useState(false);
 
@@ -740,16 +743,23 @@ function NotesSection({ clientId, patient }: { clientId: string; patient: any })
     return out;
   }, [rows, q, filter, sort]);
 
+  const mapHasMarks =
+    !!editing?.face_map &&
+    ((editing.face_map.pins?.length ?? 0) > 0 || (editing.face_map.strokes?.length ?? 0) > 0);
+  const canSave = !!editing && (!!editing.body.trim() || mapHasMarks);
+
   async function saveNote() {
-    if (!editing || !editing.body.trim()) return;
+    if (!editing || !canSave) return;
     setSaving(true);
     try {
       await up({ data: {
         id: editing.id, client_id: clientId,
-        body: editing.body.trim(),
+        body: editing.body.trim() || "Treatment diagram",
         visible_to_patient: editing.visible_to_patient,
+        face_map: editing.face_map ?? null,
       } as any });
       setEditing(null);
+      setShowMap(false);
       reload();
     } catch (e: any) { toast.error(e?.message ?? "Save failed"); }
     finally { setSaving(false); }
@@ -810,7 +820,13 @@ function NotesSection({ clientId, patient }: { clientId: string; patient: any })
             {exporting ? <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> : <Download className="mr-1 h-3.5 w-3.5" />}
             {anySelected ? `PDF (${selected.size})` : "PDF"}
           </Button>
-          <Button size="sm" variant="secondary" onClick={() => setEditing({ body: "", visible_to_patient: false })}>
+          <Button
+            size="sm" variant="outline"
+            onClick={() => { setEditing({ body: "", visible_to_patient: false, face_map: { pins: [], strokes: [], bg: "realistic" } }); setShowMap(true); }}
+          >
+            <Syringe className="mr-1 h-3.5 w-3.5" />Treatment diagram
+          </Button>
+          <Button size="sm" variant="secondary" onClick={() => { setEditing({ body: "", visible_to_patient: false }); setShowMap(false); }}>
             <Plus className="mr-1 h-3.5 w-3.5" />New note
           </Button>
         </div>
@@ -880,12 +896,16 @@ function NotesSection({ clientId, patient }: { clientId: string; patient: any })
                 />
                 <button
                   type="button"
-                  onClick={() => setEditing({ id: n.id, body: n.body, visible_to_patient: !!n.visible_to_patient })}
+                  onClick={() => { setEditing({ id: n.id, body: n.body, visible_to_patient: !!n.visible_to_patient, face_map: n.face_map ?? null }); setShowMap(!!n.face_map); }}
                   className="min-w-0 flex-1 text-left"
                 >
                   <div className="whitespace-pre-wrap break-words text-sm leading-relaxed">{n.body}</div>
+                  {n.face_map && (
+                    <FaceMapView value={n.face_map} className="mt-2 max-w-[180px]" />
+                  )}
                   <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[10px] text-muted-foreground">
                     <span>{new Date(n.created_at).toLocaleString()}</span>
+                    {n.face_map && <Badge variant="outline" className="h-4 px-1.5 text-[9px]">Diagram</Badge>}
                     {n.visible_to_patient
                       ? <Badge variant="secondary" className="h-4 px-1.5 text-[9px]">Shared with patient</Badge>
                       : <Badge variant="outline" className="h-4 px-1.5 text-[9px]">Private</Badge>}
@@ -904,7 +924,7 @@ function NotesSection({ clientId, patient }: { clientId: string; patient: any })
                   </Button>
                   <Button
                     size="icon" variant="ghost"
-                    onClick={() => setEditing({ id: n.id, body: n.body, visible_to_patient: !!n.visible_to_patient })}
+                    onClick={() => { setEditing({ id: n.id, body: n.body, visible_to_patient: !!n.visible_to_patient, face_map: n.face_map ?? null }); setShowMap(!!n.face_map); }}
                     title="Edit"
                   >
                     <Edit2 className="h-3.5 w-3.5" />
@@ -929,27 +949,59 @@ function NotesSection({ clientId, patient }: { clientId: string; patient: any })
       )}
 
       {/* Editor dialog */}
-      <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
-        <DialogContent className="sm:max-w-2xl">
+      <Dialog open={!!editing} onOpenChange={(o) => { if (!o) { setEditing(null); setShowMap(false); } }}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>{editing?.id ? "Edit note" : "New note"}</DialogTitle>
           </DialogHeader>
           {editing && (
             <div className="space-y-3">
-              <div className="flex items-center justify-between gap-2">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="text-xs text-muted-foreground">Start from a treatment template or write freehand.</span>
-                <NoteTemplatePicker
-                  scope="note"
-                  onInsert={(text) => setEditing((e) => (e ? { ...e, body: appendTemplate(e.body, text) } : e))}
-                />
+                <div className="flex items-center gap-1.5">
+                  <Button
+                    size="sm"
+                    variant={showMap ? "default" : "outline"}
+                    className="h-8 gap-1 px-2 text-xs"
+                    onClick={() => {
+                      setShowMap((s) => {
+                        const next = !s;
+                        if (next && !editing.face_map) {
+                          setEditing((e) => (e ? { ...e, face_map: { pins: [], strokes: [], bg: "realistic" } } : e));
+                        }
+                        return next;
+                      });
+                    }}
+                  >
+                    <Syringe className="h-3.5 w-3.5" />
+                    {showMap ? "Hide diagram" : "Treatment diagram"}
+                  </Button>
+                  <NoteTemplatePicker
+                    scope="note"
+                    onInsert={(text) => setEditing((e) => (e ? { ...e, body: appendTemplate(e.body, text) } : e))}
+                  />
+                </div>
               </div>
+
+              {showMap && (
+                <div className="rounded-lg border bg-muted/20 p-3">
+                  <FaceMapAnnotator
+                    title="Treatment diagram"
+                    value={editing.face_map}
+                    onChange={(v) => setEditing((e) => (e ? { ...e, face_map: v } : e))}
+                  />
+                  <p className="mt-2 text-[11px] text-muted-foreground">
+                    Quick-select a treatment and amount, then tap the face to drop each point. Saved with this note.
+                  </p>
+                </div>
+              )}
+
               <Textarea
-                autoFocus
-                rows={14}
+                rows={showMap ? 6 : 14}
                 value={editing.body}
                 onChange={(e) => setEditing({ ...editing, body: e.target.value })}
                 placeholder="Write your clinical note here…"
-                className="min-h-[240px] resize-y text-sm leading-relaxed"
+                className={`resize-y text-sm leading-relaxed ${showMap ? "min-h-[120px]" : "min-h-[240px]"}`}
               />
               <label className="flex cursor-pointer items-start gap-2 rounded-md border bg-muted/30 p-3">
                 <Checkbox
@@ -967,8 +1019,8 @@ function NotesSection({ clientId, patient }: { clientId: string; patient: any })
             </div>
           )}
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setEditing(null)}>Cancel</Button>
-            <Button onClick={saveNote} disabled={saving || !editing?.body.trim()}>
+            <Button variant="ghost" onClick={() => { setEditing(null); setShowMap(false); }}>Cancel</Button>
+            <Button onClick={saveNote} disabled={saving || !canSave}>
               {saving && <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />}
               {editing?.id ? "Save changes" : "Add note"}
             </Button>
