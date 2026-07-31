@@ -204,6 +204,7 @@ function VisitDialog({
     capacity: number;
     notes: string | null;
     price: number | null;
+    payment_mode: "full" | "pay_in_clinic";
     repeat_every_days: number;
     repeat_until: string | null;
   }) => Promise<void>;
@@ -225,13 +226,14 @@ function VisitDialog({
       ? String((visit as { price?: number | null }).price)
       : "",
   );
+  const [paymentMode, setPaymentMode] = useState<"full" | "pay_in_clinic">("full");
   const [repeat, setRepeat] = useState("0");
   const [repeatUntil, setRepeatUntil] = useState("");
   const [saving, setSaving] = useState(false);
 
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{visit ? "Edit" : "Add"} prescribing clinic date</DialogTitle>
         </DialogHeader>
@@ -289,18 +291,19 @@ function VisitDialog({
             <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
           </div>
 
-          <div className="grid grid-cols-3 gap-2">
-            <div className="space-y-1.5">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <div className="space-y-1.5 min-w-0">
               <Label>Start</Label>
-              <Input type="time" value={start} onChange={(e) => setStart(e.target.value)} />
+              <Input className="w-full" type="time" value={start} onChange={(e) => setStart(e.target.value)} />
             </div>
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 min-w-0">
               <Label>End</Label>
-              <Input type="time" value={end} onChange={(e) => setEnd(e.target.value)} />
+              <Input className="w-full" type="time" value={end} onChange={(e) => setEnd(e.target.value)} />
             </div>
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 min-w-0 col-span-2 sm:col-span-1">
               <Label>Spaces</Label>
               <Input
+                className="w-full"
                 type="number"
                 min={1}
                 value={capacity}
@@ -324,6 +327,20 @@ function VisitDialog({
               on your booking page. Patients pick their clinic day at checkout.
             </p>
           </div>
+
+          <div className="space-y-1.5">
+            <Label>Payment</Label>
+            <Select value={paymentMode} onValueChange={(v) => setPaymentMode(v as "full" | "pay_in_clinic")}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="full">Pay in full at booking</SelectItem>
+                <SelectItem value="pay_in_clinic">Pay on the day (in clinic)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
 
           {!visit && (
             <div className="grid grid-cols-2 gap-2">
@@ -384,6 +401,7 @@ function VisitDialog({
                 capacity: Math.max(1, Number(capacity) || 1),
                 notes: notes.trim() || null,
                 price: price.trim() === "" ? null : Math.max(0, Number(price) || 0),
+                payment_mode: paymentMode,
                 repeat_every_days: Number(repeat) || 0,
                 repeat_until: Number(repeat) > 0 && repeatUntil ? repeatUntil : null,
               });

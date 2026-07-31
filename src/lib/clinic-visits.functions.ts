@@ -15,6 +15,8 @@ const UpsertSchema = z.object({
   capacity: z.number().int().min(1).max(200),
   notes: z.string().max(1000).nullable().optional(),
   price: z.number().min(0).max(100000).nullable().optional(),
+  /** How patients pay for a prescribing clinic slot */
+  payment_mode: z.enum(["full", "deposit", "pay_in_clinic"]).nullable().optional(),
   /** 0 = no repeat; otherwise repeat every N days (7 = weekly, 14 = fortnightly, 28 = 4-weekly) */
   repeat_every_days: z.number().int().min(0).max(365).nullable().optional(),
   repeat_until: z
@@ -147,6 +149,7 @@ export const upsertClinicVisit = createServerFn({ method: "POST" })
             category_id: categoryId,
             requires_prescriber: true,
             prescriber_routing: "clinic_visit",
+            payment_mode: data.payment_mode ?? "full",
           } as never)
           .eq("id", existing.id);
         return existing.id as string;
@@ -161,6 +164,7 @@ export const upsertClinicVisit = createServerFn({ method: "POST" })
           duration: mins,
           price,
           category_id: categoryId,
+          payment_mode: data.payment_mode ?? "full",
           requires_prescriber: true,
           prescriber_routing: "clinic_visit",
           prescriber_user_id: data.prescriber_user_id ?? null,
