@@ -257,7 +257,10 @@ function DashboardLayout() {
         </header>
 
 
-        <main className="min-w-0 flex-1 overflow-x-hidden p-5 pb-24 lg:p-10 lg:pb-10">
+        <main
+          className="min-w-0 flex-1 overflow-x-hidden p-4 pb-28 sm:p-5 lg:p-10 lg:pb-10"
+          style={{ paddingBottom: "calc(6.5rem + env(safe-area-inset-bottom))" }}
+        >
           <PlatformBillingGate>
             <Outlet />
           </PlatformBillingGate>
@@ -265,7 +268,10 @@ function DashboardLayout() {
 
 
         {/* Mobile bottom tab bar */}
-        <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t bg-background/95 backdrop-blur lg:hidden">
+        <nav
+          className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-4 border-t bg-background/95 backdrop-blur lg:hidden"
+          style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+        >
           {mobileTabs.map((tab) => {
             const active = tab.exact ? pathname === tab.to : pathname.startsWith(tab.to);
             return (
@@ -273,16 +279,24 @@ function DashboardLayout() {
                 key={tab.to}
                 to={tab.to}
                 className={cn(
-                  "flex flex-col items-center justify-center gap-1 py-2.5 text-[11px] font-medium transition",
+                  "flex min-h-[56px] flex-col items-center justify-center gap-1 text-[11px] font-medium transition active:scale-[0.97]",
                   active ? "text-primary" : "text-muted-foreground",
                 )}
               >
-                <tab.icon className={cn("h-5 w-5", active && "stroke-[2.5]")} />
+                <span
+                  className={cn(
+                    "flex h-7 w-12 items-center justify-center rounded-full transition-colors",
+                    active && "bg-primary/12",
+                  )}
+                >
+                  <tab.icon className={cn("h-5 w-5", active && "stroke-[2.5]")} />
+                </span>
                 {tab.label}
               </Link>
             );
           })}
         </nav>
+
       </div>
     </div>
   );
