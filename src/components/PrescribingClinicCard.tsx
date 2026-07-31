@@ -291,18 +291,19 @@ function VisitDialog({
             <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
           </div>
 
-          <div className="grid grid-cols-3 gap-2">
-            <div className="space-y-1.5">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <div className="space-y-1.5 min-w-0">
               <Label>Start</Label>
-              <Input type="time" value={start} onChange={(e) => setStart(e.target.value)} />
+              <Input className="w-full" type="time" value={start} onChange={(e) => setStart(e.target.value)} />
             </div>
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 min-w-0">
               <Label>End</Label>
-              <Input type="time" value={end} onChange={(e) => setEnd(e.target.value)} />
+              <Input className="w-full" type="time" value={end} onChange={(e) => setEnd(e.target.value)} />
             </div>
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 min-w-0 col-span-2 sm:col-span-1">
               <Label>Spaces</Label>
               <Input
+                className="w-full"
                 type="number"
                 min={1}
                 value={capacity}
@@ -326,6 +327,20 @@ function VisitDialog({
               on your booking page. Patients pick their clinic day at checkout.
             </p>
           </div>
+
+          <div className="space-y-1.5">
+            <Label>Payment</Label>
+            <Select value={paymentMode} onValueChange={(v) => setPaymentMode(v as "full" | "pay_in_clinic")}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="full">Pay in full at booking</SelectItem>
+                <SelectItem value="pay_in_clinic">Pay on the day (in clinic)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
 
           {!visit && (
             <div className="grid grid-cols-2 gap-2">
