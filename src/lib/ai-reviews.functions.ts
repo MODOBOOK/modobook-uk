@@ -62,10 +62,12 @@ async function callGateway(content: GatewayContent[]): Promise<ExtractedReview[]
   } catch {
     throw new Error("AI returned malformed output. Try a clearer source.");
   }
-  const out = (parsed.reviews ?? []).slice(0, 30).filter((r) => r?.quote?.trim());
+  const out = (parsed.reviews ?? [])
+    .slice(0, 30)
+    .filter((r) => r && (r.quote?.trim() || r.rating != null || r.author_name?.trim()));
   for (const r of out) {
     r.author_name = (r.author_name ?? "").trim() || "Anonymous";
-    r.quote = r.quote.trim();
+    r.quote = (r.quote ?? "").trim();
     if (r.rating != null) {
       const n = Math.round(Number(r.rating));
       r.rating = Number.isFinite(n) && n >= 1 && n <= 5 ? n : null;
