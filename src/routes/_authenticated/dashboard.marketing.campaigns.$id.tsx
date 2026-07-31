@@ -21,7 +21,7 @@ import {
 import {
   Loader2, Save, Send, Calendar as CalIcon, Trash2, Plus, ArrowUp, ArrowDown,
   Type as TypeIcon, Image as ImageIcon, MousePointerClick, Minus, Space, Heading as HeadingIcon,
-  Eye,
+  Eye, Code,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { getMyProfile } from '@/lib/profiles.functions'
