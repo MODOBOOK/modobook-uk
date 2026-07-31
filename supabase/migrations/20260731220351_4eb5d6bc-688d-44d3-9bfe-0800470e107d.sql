@@ -1,0 +1,1 @@
+ALTER TABLE public.packages ADD COLUMN IF NOT EXISTS allow_split_payment boolean NOT NULL DEFAULT false;
