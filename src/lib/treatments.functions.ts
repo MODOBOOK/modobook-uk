@@ -259,3 +259,31 @@ export const reorderTreatments = createServerFn({ method: "POST" })
   });
 
 
+
+export const bulkSetRebookReminders = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    (input: {
+      ids: string[];
+      rebook_reminder_days?: number | null;
+      topup_reminder_days?: number | null;
+    }) => input,
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+    if (data.ids.length === 0) return { success: true, updated: 0 };
+    const { data: profile, error: pErr } = await supabase
+      .from("profiles").select("id").eq("user_id", context.userId).single();
+    if (pErr) throw pErr;
+    const update: Record<string, unknown> = {};
+    if (data.rebook_reminder_days !== undefined) update.rebook_reminder_days = data.rebook_reminder_days;
+    if (data.topup_reminder_days !== undefined) update.topup_reminder_days = data.topup_reminder_days;
+    if (Object.keys(update).length === 0) return { success: true, updated: 0 };
+    const { error } = await supabase
+      .from("treatments")
+      .update(update as never)
+      .in("id", data.ids)
+      .eq("profile_id", profile.id);
+    if (error) throw error;
+    return { success: true, updated: data.ids.length };
+  });
