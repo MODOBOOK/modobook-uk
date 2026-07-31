@@ -1361,7 +1361,7 @@ function CheckoutSheet({
           )}
           <div className="flex justify-between font-bold">
             <span>Outstanding</span>
-            <span>£{Math.max(0, total - Number(a.amount_paid_cents ?? 0) / 100).toFixed(2)}</span>
+            <span>£{(a.payment_status === "paid" ? 0 : Math.max(0, total - Number(a.amount_paid_cents ?? 0) / 100)).toFixed(2)}</span>
           </div>
         </div>
 
