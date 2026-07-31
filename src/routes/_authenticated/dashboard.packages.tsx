@@ -17,7 +17,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Badge } from "@/components/ui/badge";
 import { ImageUploader } from "@/components/ImageUploader";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Package, X, Search, Check } from "lucide-react";
+import { Plus, Minus, Pencil, Trash2, Package, X, Search, Check } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard/packages")({
   ssr: false,
@@ -110,12 +110,26 @@ function PackagesPage() {
     setOpen(true);
   }
 
+  // treatment_ids may repeat — a repeat means "N sessions of that treatment"
+  const selectedGrouped = useMemo(() => {
+    const out: { id: string; qty: number }[] = [];
+    for (const id of form.treatment_ids) {
+      const found = out.find((x) => x.id === id);
+      if (found) found.qty += 1;
+      else out.push({ id, qty: 1 });
+    }
+    return out;
+  }, [form.treatment_ids]);
+
+  const totalSessions = form.treatment_ids.length || Number(form.session_count) || 1;
+
   const originalTotal = useMemo(() => {
+    if (form.treatment_ids.length === 0) return 0;
     return form.treatment_ids.reduce((sum, id) => {
       const t = treatments.find((x) => x.id === id);
       return sum + Number(t?.price ?? 0);
-    }, 0) * (Number(form.session_count) || 1);
-  }, [form.treatment_ids, form.session_count, treatments]);
+    }, 0);
+  }, [form.treatment_ids, treatments]);
 
   const effectivePrice = useMemo(() => {
     if (form.priceMode === "percent") {
@@ -137,6 +151,26 @@ function PackagesPage() {
     }));
   }
 
+  function setQty(id: string, qty: number) {
+    const n = Math.max(0, Math.min(50, Math.round(qty) || 0));
+    setForm((f) => {
+      const others = f.treatment_ids.filter((x) => x !== id);
+      if (n === 0) return { ...f, treatment_ids: others };
+      // keep original ordering by rebuilding from the grouped order
+      const order: string[] = [];
+      for (const x of f.treatment_ids) if (!order.includes(x)) order.push(x);
+      if (!order.includes(id)) order.push(id);
+      const counts = new Map<string, number>();
+      for (const x of f.treatment_ids) counts.set(x, (counts.get(x) ?? 0) + 1);
+      counts.set(id, n);
+      const next: string[] = [];
+      for (const oid of order) {
+        for (let i = 0; i < (counts.get(oid) ?? 0); i++) next.push(oid);
+      }
+      return { ...f, treatment_ids: next };
+    });
+  }
+
   async function save() {
     if (!form.name.trim()) { toast.error("Name required"); return; }
     const payload = {
@@ -144,7 +178,7 @@ function PackagesPage() {
       description: form.description.trim() || null,
       treatment_id: form.treatment_ids[0] ?? null,
       treatment_ids: form.treatment_ids,
-      session_count: Number(form.session_count) || 1,
+      session_count: totalSessions,
       price: effectivePrice,
       duration_minutes: form.duration_minutes ? Number(form.duration_minutes) : null,
       expiry_days: form.expiry_days ? Number(form.expiry_days) : null,
@@ -152,6 +186,7 @@ function PackagesPage() {
       active: form.active,
       category_id: form.category_id || null,
     };
+
     try {
       if (editing) await update({ data: { id: editing.id, ...payload } });
       else await create({ data: payload });
@@ -250,26 +285,53 @@ function PackagesPage() {
                       selectedIds={form.treatment_ids}
                       onToggle={toggleTreatment}
                     />
-                    {form.treatment_ids.length > 0 && (
-                      <div className="mt-2 flex flex-wrap gap-1.5">
-                        {form.treatment_ids.map((id) => {
+                    {selectedGrouped.length > 0 && (
+                      <div className="mt-2 space-y-1.5">
+                        {selectedGrouped.map(({ id, qty }) => {
                           const t = treatments.find((x) => x.id === id);
                           if (!t) return null;
+                          const line = Number(t.price ?? 0) * qty;
                           return (
-                            <Badge key={id} variant="secondary" className="gap-1 pr-1">
-                              <span>{t.name}</span>
-                              {t.price != null && <span className="text-muted-foreground">· £{Number(t.price).toFixed(2)}</span>}
+                            <div key={id} className="flex items-center gap-2 rounded-md border bg-background p-2">
+                              <div className="min-w-0 flex-1">
+                                <div className="truncate text-sm font-medium">{t.name}</div>
+                                {t.price != null && (
+                                  <div className="text-xs text-muted-foreground">
+                                    £{Number(t.price).toFixed(2)} each · £{line.toFixed(2)}
+                                  </div>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Button type="button" variant="outline" size="icon" className="h-7 w-7" onClick={() => setQty(id, qty - 1)} aria-label={`Fewer sessions of ${t.name}`}>
+                                  <Minus className="h-3 w-3" />
+                                </Button>
+                                <Input
+                                  type="number"
+                                  min={1}
+                                  max={50}
+                                  value={qty}
+                                  onFocus={(e) => e.target.select()}
+                                  onChange={(e) => setQty(id, Number(e.target.value))}
+                                  className="h-7 w-14 text-center"
+                                />
+                                <Button type="button" variant="outline" size="icon" className="h-7 w-7" onClick={() => setQty(id, qty + 1)} aria-label={`More sessions of ${t.name}`}>
+                                  <Plus className="h-3 w-3" />
+                                </Button>
+                              </div>
                               <button
                                 type="button"
                                 onClick={() => toggleTreatment(id)}
-                                className="ml-0.5 rounded p-0.5 hover:bg-background/60"
+                                className="rounded p-1 text-muted-foreground hover:bg-muted"
                                 aria-label={`Remove ${t.name}`}
                               >
-                                <X className="h-3 w-3" />
+                                <X className="h-3.5 w-3.5" />
                               </button>
-                            </Badge>
+                            </div>
                           );
                         })}
+                        <p className="text-xs text-muted-foreground">
+                          Set how many sessions of each treatment this package includes.
+                        </p>
                       </div>
                     )}
                   </>
@@ -278,13 +340,20 @@ function PackagesPage() {
 
               <div>
                 <Label>Total sessions</Label>
-                <Input
-                  type="number"
-                  min={1}
-                  value={form.session_count}
-                  onFocus={(e) => e.target.select()}
-                  onChange={(e) => setForm({ ...form, session_count: Number(e.target.value) })}
-                />
+                {form.treatment_ids.length > 0 ? (
+                  <div className="mt-1 rounded-md border bg-muted/30 px-3 py-2 text-sm">
+                    {totalSessions} session{totalSessions === 1 ? "" : "s"}
+                    <span className="ml-1 text-xs text-muted-foreground">(from the quantities above)</span>
+                  </div>
+                ) : (
+                  <Input
+                    type="number"
+                    min={1}
+                    value={form.session_count}
+                    onFocus={(e) => e.target.select()}
+                    onChange={(e) => setForm({ ...form, session_count: Number(e.target.value) })}
+                  />
+                )}
               </div>
 
               <div className="rounded-lg border bg-muted/30 p-3">
@@ -292,10 +361,11 @@ function PackagesPage() {
                   <Label className="text-sm font-semibold">Package pricing</Label>
                   {originalTotal > 0 && (
                     <span className="text-xs text-muted-foreground">
-                      Sessions × treatments = <span className="font-medium">£{originalTotal.toFixed(2)}</span>
+                      Sessions total = <span className="font-medium">£{originalTotal.toFixed(2)}</span>
                     </span>
                   )}
                 </div>
+
                 <div className="mb-3 inline-flex rounded-md border bg-background p-0.5 text-xs">
                   <button
                     type="button"

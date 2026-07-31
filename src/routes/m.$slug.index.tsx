@@ -1883,7 +1883,17 @@ function BookPage() {
                       const includedTreatments = ids
                         .map((tid) => treatments.find((t) => t.id === tid))
                         .filter((t): t is Treatment => Boolean(t));
-                      const originalTotal = includedTreatments.reduce((s, t) => s + Number(t.price ?? 0), 0) * (p.session_count || 1);
+                      // ids may repeat to express "3 × treatment"; group them
+                      const includedGrouped = includedTreatments.reduce<{ t: Treatment; qty: number }[]>((acc, t) => {
+                        const found = acc.find((x) => x.t.id === t.id);
+                        if (found) found.qty += 1;
+                        else acc.push({ t, qty: 1 });
+                        return acc;
+                      }, []);
+                      const hasQuantities = includedTreatments.length > includedGrouped.length;
+                      const originalTotal = includedTreatments.reduce((s, t) => s + Number(t.price ?? 0), 0)
+                        * (hasQuantities ? 1 : (p.session_count || 1));
+
                       const price = Number(p.price ?? 0);
                       const saving = originalTotal > price ? originalTotal - price : 0;
                       const savingPct = originalTotal > 0 && saving > 0 ? Math.round((saving / originalTotal) * 100) : 0;
@@ -1903,19 +1913,20 @@ function BookPage() {
                               {p.session_count} session{p.session_count === 1 ? "" : "s"}
                               {pkg.duration_minutes ? ` · ${pkg.duration_minutes} min each` : ""}
                             </p>
-                            {includedTreatments.length > 0 && (
+                            {includedGrouped.length > 0 && (
                               <div className="mt-3 rounded-lg border p-2.5" style={{ borderColor: `${brand}26`, background: `${brand}0a` }}>
                                 <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide opacity-70">Includes</div>
                                 <ul className="space-y-0.5 text-sm">
-                                  {includedTreatments.map((t) => (
+                                  {includedGrouped.map(({ t, qty }) => (
                                     <li key={t.id} className="flex items-start gap-1.5">
                                       <span style={{ color: brand }}>•</span>
-                                      <span>{t.name}</span>
+                                      <span>{qty > 1 ? `${qty} × ${t.name}` : t.name}</span>
                                     </li>
                                   ))}
                                 </ul>
                               </div>
                             )}
+
                             {saving > 0 && (
                               <div className="mt-3 flex flex-wrap items-center gap-2">
                                 <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-800">
