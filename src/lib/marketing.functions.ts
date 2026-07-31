@@ -15,6 +15,7 @@ const BlockSchema: z.ZodType<Block> = z.union([
   z.object({ type: z.literal('button'), text: z.string().max(80), url: z.string().max(1000).refine((v) => /^https?:\/\//.test(v) || v.includes('{{'), 'Must be a URL or merge tag') }),
   z.object({ type: z.literal('divider') }),
   z.object({ type: z.literal('spacer'), size: z.enum(['sm', 'md', 'lg']).optional() }),
+  z.object({ type: z.literal('html'), html: z.string().max(200000), full: z.boolean().optional() }),
 ])
 
 const SegmentRulesSchema = z.object({
