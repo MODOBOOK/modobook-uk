@@ -749,8 +749,10 @@ function NotesSection({ clientId, patient }: { clientId: string; patient: any })
         id: editing.id, client_id: clientId,
         body: editing.body.trim(),
         visible_to_patient: editing.visible_to_patient,
+        face_map: editing.face_map ?? null,
       } as any });
       setEditing(null);
+      setShowMap(false);
       reload();
     } catch (e: any) { toast.error(e?.message ?? "Save failed"); }
     finally { setSaving(false); }
