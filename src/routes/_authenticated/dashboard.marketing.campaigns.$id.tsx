@@ -24,6 +24,9 @@ import {
   Eye,
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { getMyProfile } from '@/lib/profiles.functions'
+import { ImageUploader } from '@/components/ImageUploader'
+import { Checkbox } from '@/components/ui/checkbox'
 import type { Block } from '@/lib/email-templates/marketing-broadcast'
 
 export const Route = createFileRoute('/_authenticated/dashboard/marketing/campaigns/$id')({
