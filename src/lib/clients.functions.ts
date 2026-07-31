@@ -153,20 +153,22 @@ export const listClientNotes = createServerFn({ method: "GET" })
 
 export const upsertClientNote = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { id?: string; client_id: string; body: string; visible_to_patient?: boolean }) => d)
+  .inputValidator((d: { id?: string; client_id: string; body: string; visible_to_patient?: boolean; face_map?: any }) => d)
   .handler(async ({ data, context }) => {
     const pid = await getProfileId(context.supabase, context.userId);
     if (!pid) throw new Error("No profile");
     const visible = data.visible_to_patient ?? false;
+    const faceMap = data.face_map ?? null;
+    const hasMarks = !!faceMap && ((faceMap.pins?.length ?? 0) > 0 || (faceMap.strokes?.length ?? 0) > 0);
     if (data.id) {
       const { error } = await context.supabase.from("client_notes")
-        .update({ body: data.body, visible_to_patient: visible, shared_at: visible ? new Date().toISOString() : null })
+        .update({ body: data.body, visible_to_patient: visible, shared_at: visible ? new Date().toISOString() : null, face_map: hasMarks ? faceMap : null })
         .eq("id", data.id);
       if (error) throw error;
       return { ok: true };
     }
     const { error } = await context.supabase.from("client_notes")
-      .insert({ profile_id: pid, client_id: data.client_id, body: data.body, visible_to_patient: visible, shared_at: visible ? new Date().toISOString() : null });
+      .insert({ profile_id: pid, client_id: data.client_id, body: data.body, visible_to_patient: visible, shared_at: visible ? new Date().toISOString() : null, face_map: hasMarks ? faceMap : null });
     if (error) throw error;
     return { ok: true };
   });
