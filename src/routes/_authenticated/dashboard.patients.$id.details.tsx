@@ -28,8 +28,10 @@ import {
 import {
   ArrowLeft, Mail, Phone as PhoneIcon, MessageSquare, Edit2, Plus, Trash2, Camera,
   Upload, FileText, AlertTriangle, Download, Loader2, ClipboardList, X, Check,
-  CalendarPlus, CreditCard, FileSignature, Send, ChevronDown, ChevronRight, Info, CalendarClock,
+  CalendarPlus, CreditCard, FileSignature, Send, ChevronDown, ChevronRight, Info, CalendarClock, Syringe,
 } from "lucide-react";
+import { FaceMapAnnotator } from "@/components/consultation/FaceMapAnnotator";
+import { FaceMapView } from "@/components/consultation/FaceMapView";
 import { RescheduleAppointmentDialog } from "@/components/RescheduleAppointmentDialog";
 import { toast } from "sonner";
 import { useDemoGuard } from "@/hooks/use-demo-mode";
