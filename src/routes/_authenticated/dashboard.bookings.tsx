@@ -1154,16 +1154,26 @@ function CheckoutSheet({
   async function markPaidWith(method: "card_present" | "cash" | "bank_transfer") {
     setBusy(true);
     try {
+      const discountCents = Math.round(discountValue * 100);
       await checkout({
         data: {
           appointmentId: a.id,
           method,
-          discountCents: Math.round(discountValue * 100),
+          discountCents,
           notes: checkoutNotes || null,
           markPaid: true,
         },
       });
-      onPatch({ payment_status: "paid" });
+      // Mirror the server's settlement locally so the outstanding badge clears
+      // without needing a refetch.
+      const totalCents = Math.round(Number(a.total_amount ?? 0) * 100);
+      const already = Number(a.amount_paid_cents ?? 0);
+      const settled = already + Math.max(0, totalCents - already - discountCents);
+      onPatch({
+        payment_status: "paid",
+        amount_paid_cents: settled,
+        checkout_discount_cents: discountCents || null,
+      });
       toast.success("Marked as paid");
     } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
   }
