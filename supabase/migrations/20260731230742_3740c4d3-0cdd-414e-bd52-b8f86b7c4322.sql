@@ -1,0 +1,1 @@
+ALTER TABLE public.client_notes ADD COLUMN IF NOT EXISTS face_map jsonb;

@@ -1339,6 +1339,7 @@ export type Database = {
           body: string
           client_id: string
           created_at: string
+          face_map: Json | null
           id: string
           profile_id: string
           shared_at: string | null
@@ -1349,6 +1350,7 @@ export type Database = {
           body: string
           client_id: string
           created_at?: string
+          face_map?: Json | null
           id?: string
           profile_id: string
           shared_at?: string | null
@@ -1359,6 +1361,7 @@ export type Database = {
           body?: string
           client_id?: string
           created_at?: string
+          face_map?: Json | null
           id?: string
           profile_id?: string
           shared_at?: string | null
