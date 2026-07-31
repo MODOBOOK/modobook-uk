@@ -401,6 +401,7 @@ function VisitDialog({
                 capacity: Math.max(1, Number(capacity) || 1),
                 notes: notes.trim() || null,
                 price: price.trim() === "" ? null : Math.max(0, Number(price) || 0),
+                payment_mode: paymentMode,
                 repeat_every_days: Number(repeat) || 0,
                 repeat_until: Number(repeat) > 0 && repeatUntil ? repeatUntil : null,
               });
