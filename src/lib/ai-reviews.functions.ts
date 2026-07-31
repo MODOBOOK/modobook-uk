@@ -17,9 +17,10 @@ Return ONLY raw JSON of this exact shape:
 
 Rules:
 - Only include reviews literally present in the source. Never invent or pad.
-- "author_name" = first name (or first name + initial) of the reviewer. If only a username or full name is visible, take the first word. If completely anonymous, use "Anonymous".
-- "quote" = the review text only, verbatim, trimmed. Strip emojis only if they break sentences. No quotation marks around it.
+- "author_name" = first name (or first name + initial) of the reviewer. If only a username or full name is visible, take the first word. If completely anonymous or no name is shown, use "Anonymous".
+- "quote" = the review text only, verbatim, trimmed. Strip emojis only if they break sentences. No quotation marks around it. If the review is a star rating with NO written text, return an empty string "" for quote — still include it.
 - "rating" = whole number 1-5 when visible (stars filled, "5/5", "★★★★★"). Omit if unclear.
+- IMPORTANT: include every review entry, even ones with no name, no text, or both — never drop an entry just because a field is missing.
 - Skip replies from the business / clinic owner — only patient-written reviews.
 - Hard cap: 30 reviews.
 - If nothing review-like is present, return { "reviews": [] }.`;
@@ -61,10 +62,12 @@ async function callGateway(content: GatewayContent[]): Promise<ExtractedReview[]
   } catch {
     throw new Error("AI returned malformed output. Try a clearer source.");
   }
-  const out = (parsed.reviews ?? []).slice(0, 30).filter((r) => r?.quote?.trim());
+  const out = (parsed.reviews ?? [])
+    .slice(0, 30)
+    .filter((r) => r && (r.quote?.trim() || r.rating != null || r.author_name?.trim()));
   for (const r of out) {
     r.author_name = (r.author_name ?? "").trim() || "Anonymous";
-    r.quote = r.quote.trim();
+    r.quote = (r.quote ?? "").trim();
     if (r.rating != null) {
       const n = Math.round(Number(r.rating));
       r.rating = Number.isFinite(n) && n >= 1 && n <= 5 ? n : null;
@@ -120,11 +123,11 @@ export const commitReviews = createServerFn({ method: "POST" })
     if (pErr) throw pErr;
 
     const rows = data.reviews
-      .filter((r) => r.quote?.trim())
+      .filter((r) => (r.quote ?? "").trim() || r.rating != null)
       .map((r) => ({
         profile_id: profile.id,
         author_name: (r.author_name ?? "").trim() || "Anonymous",
-        quote: r.quote.trim(),
+        quote: (r.quote ?? "").trim(),
         rating: r.rating ?? null,
         display_order: 0,
       }));

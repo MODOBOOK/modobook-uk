@@ -187,7 +187,9 @@ function ReviewMod() {
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       {t.rating != null && <Stars value={t.rating} />}
-                      <p className="mt-1 text-sm italic text-foreground/90">“{t.quote}”</p>
+                      {t.quote?.trim()
+                        ? <p className="mt-1 text-sm italic text-foreground/90">“{t.quote}”</p>
+                        : <p className="mt-1 text-sm text-muted-foreground">Rating only — no written review</p>}
                       <p className="mt-1 text-xs text-muted-foreground">— {t.author_name}</p>
                     </div>
                     <div className="flex shrink-0 gap-1">
@@ -374,7 +376,7 @@ function ReviewMod() {
                 <Button
                   disabled={aiBusy}
                   onClick={async () => {
-                    const keep = aiDraft.filter((r) => r._include && r.author_name.trim() && r.quote.trim());
+                    const keep = aiDraft.filter((r) => r._include && ((r.quote ?? "").trim() || r.rating != null));
                     if (!keep.length) { toast.error("Tick at least one review to import"); return; }
                     setAiBusy(true);
                     try {

@@ -120,7 +120,7 @@ function Reviews() {
           <Card key={t.id}>
             <CardContent className="space-y-2 py-4">
               {t.rating && <Stars value={t.rating} />}
-              <p className="text-sm italic text-foreground/90">"{t.quote}"</p>
+              {t.quote?.trim() && <p className="text-sm italic text-foreground/90">"{t.quote}"</p>}
               <p className="text-xs text-muted-foreground">— {t.author_name}</p>
             </CardContent>
           </Card>
