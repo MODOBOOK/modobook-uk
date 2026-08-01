@@ -77,7 +77,7 @@ export const WaitlistOpenEmail = ({ firstName }: WaitlistOpenProps) => {
           </Text>
         </Section>
 
-        <Heading style={styles.h1}>MODO is officially open.</Heading>
+        <Heading style={{ ...styles.h1, fontStyle: 'italic' }}>MODO is officially open.</Heading>
         <Text style={styles.text}>{greeting}</Text>
         <Text style={styles.text}>
           The wait is over. MODO Book is now live and ready for your clinic. You
@@ -103,7 +103,7 @@ export const WaitlistOpenEmail = ({ firstName }: WaitlistOpenProps) => {
 
         <FeatureGrid features={FEATURES} />
 
-        {/* App / Home Screen */}
+        {/* Notifications */}
         <Section
           style={{
             backgroundColor: brand.soft,
@@ -113,32 +113,21 @@ export const WaitlistOpenEmail = ({ firstName }: WaitlistOpenProps) => {
           }}
         >
           <Text style={{ ...styles.text, margin: 0, fontWeight: 600, fontSize: '16px' }}>
-            Add MODO to your Home Screen
+            Turn on notifications straight to your phone
           </Text>
           <Text style={{ ...styles.muted, margin: '10px 0 0' }}>
-            MODO works like an app on your phone or tablet — no download needed.
+            Get new bookings, cancellations and reminders the moment they happen —
+            no need to keep checking your diary.
           </Text>
 
-          <Text style={{ ...styles.text, marginTop: '16px', marginBottom: '6px', fontWeight: 600 }}>
-            iPhone / iPad
-          </Text>
-          <ol style={{ ...styles.text, margin: 0, paddingLeft: '18px' }}>
-            <li>Open <strong>modobook.uk</strong> in Safari.</li>
-            <li>Tap the <strong>Share</strong> button (the square with an arrow).</li>
-            <li>Scroll down and tap <strong>Add to Home Screen</strong>.</li>
-            <li>Tap <strong>Add</strong> — the MODO icon will appear on your home screen.</li>
-          </ol>
-
-          <Text style={{ ...styles.text, marginTop: '16px', marginBottom: '6px', fontWeight: 600 }}>
-            Android
-          </Text>
-          <ol style={{ ...styles.text, margin: 0, paddingLeft: '18px' }}>
-            <li>Open <strong>modobook.uk</strong> in Chrome.</li>
-            <li>Tap the <strong>⋮ menu</strong> in the top right.</li>
-            <li>Tap <strong>Add to Home screen</strong> or <strong>Install app</strong>.</li>
-            <li>Tap <strong>Add</strong> — MODO will sit alongside your other apps.</li>
+          <ol style={{ ...styles.text, margin: '16px 0 0', paddingLeft: '18px' }}>
+            <li>Open <strong>modobook.uk</strong> and sign in to your clinic account.</li>
+            <li>Go to <strong>Dashboard → Settings</strong>.</li>
+            <li>Tap <strong>Enable notifications</strong>.</li>
+            <li>Choose <strong>Allow</strong> when your phone asks — that's it.</li>
           </ol>
         </Section>
+
 
         {/* WhatsApp support */}
         <Section
