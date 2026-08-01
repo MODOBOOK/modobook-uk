@@ -42,7 +42,7 @@ export function CommsTimeline({ clientId, refreshKey = 0 }: { clientId: string; 
           <span className="ml-auto text-xs text-muted-foreground">{items.length}</span>
         </div>
         {items.length === 0 ? (
-          <p className="text-xs text-muted-foreground">Nothing sent yet. Use the quick actions above to email, message or send a payment link.</p>
+          <p className="text-xs text-muted-foreground">Nothing sent yet. Automatic emails (confirmations, reminders, forms, consents and review requests) will appear here once sent.</p>
         ) : (
           <ol className="relative space-y-3 border-l pl-5">
             {items.map(it => {
@@ -54,7 +54,10 @@ export function CommsTimeline({ clientId, refreshKey = 0 }: { clientId: string; 
                   </span>
                   <div className="flex items-center gap-2">
                     <Badge variant="outline" className="text-[10px] uppercase">{CHANNEL_LABEL[it.channel] ?? it.channel}</Badge>
-                    <span className="text-xs text-muted-foreground">{new Date(it.created_at).toLocaleString([], { day: "2-digit", month: "short", hour: "numeric", minute: "2-digit" })}</span>
+                    <span className="text-xs text-muted-foreground">{new Date(it.created_at).toLocaleString([], { day: "2-digit", month: "short", year: "2-digit", hour: "numeric", minute: "2-digit" })}</span>
+                    {it.source === "system" && it.status && it.status !== "sent" && (
+                      <Badge variant={["dlq", "failed", "bounced"].includes(it.status) ? "destructive" : "secondary"} className="text-[10px] uppercase">{it.status === "dlq" ? "failed" : it.status}</Badge>
+                    )}
                   </div>
                   {it.subject && <div className="mt-0.5 text-sm font-medium">{it.subject}</div>}
                   {it.body && <div className="mt-0.5 line-clamp-3 whitespace-pre-wrap text-xs text-muted-foreground">{it.body}</div>}
