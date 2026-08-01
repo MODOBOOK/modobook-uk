@@ -116,11 +116,11 @@ function AuthPage() {
 
         <Card>
           <CardHeader className="text-center">
-            <CardTitle>Welcome to MODO</CardTitle>
+            <CardTitle>Create your MODO account</CardTitle>
             <CardDescription>
               {mode === "signin"
                 ? "Sign in to your practitioner account."
-                : "Create your account — available to clinics on the MODO waitlist."}
+                : "Available to clinics on the MODO waitlist. Already registered? Sign in instead."}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4 pt-4">
