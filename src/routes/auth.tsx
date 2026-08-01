@@ -125,7 +125,7 @@ function AuthPage() {
           </CardHeader>
           <CardContent className="space-y-4 pt-4">
             <div className="grid grid-cols-2 gap-1 rounded-lg bg-muted p-1">
-              {(["signin", "signup"] as const).map((m) => (
+              {(["signup", "signin"] as const).map((m) => (
                 <button
                   key={m}
                   type="button"
