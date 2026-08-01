@@ -571,7 +571,10 @@ function BroadcastDialog({
 
 function WaitlistLaunchCard({ onOpen }: { onOpen: () => void }) {
   const countWaitlistFn = useServerFn(countWaitlist)
+  const sendTest = useServerFn(sendWaitlistOpenTest)
   const [count, setCount] = useState<number | null>(null)
+  const [testEmail, setTestEmail] = useState('')
+  const [testing, setTesting] = useState(false)
 
   useEffect(() => {
     countWaitlistFn().then((r: any) => setCount(r.count)).catch(() => {})
@@ -579,7 +582,7 @@ function WaitlistLaunchCard({ onOpen }: { onOpen: () => void }) {
 
   return (
     <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
-      <CardContent className="p-5">
+      <CardContent className="p-5 space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center gap-4">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-1">
@@ -597,10 +600,39 @@ function WaitlistLaunchCard({ onOpen }: { onOpen: () => void }) {
             <Rocket className="mr-2 h-4 w-4" /> Send launch email
           </Button>
         </div>
+
+        <div className="flex flex-col sm:flex-row gap-2 sm:items-end border-t pt-4">
+          <div className="flex-1">
+            <Label className="text-xs">Send a test copy to</Label>
+            <Input
+              type="email"
+              value={testEmail}
+              onChange={(e) => setTestEmail(e.target.value)}
+              placeholder="you@modobook.co.uk"
+            />
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            disabled={!testEmail.trim() || testing}
+            onClick={async () => {
+              setTesting(true)
+              try {
+                await sendTest({ data: { recipient_email: testEmail.trim() } })
+                toast.success(`Test email sent to ${testEmail.trim()}`)
+              } catch (e) {
+                toast.error(e instanceof Error ? e.message : 'Failed to send test')
+              } finally { setTesting(false) }
+            }}
+          >
+            {testing ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Send test'}
+          </Button>
+        </div>
       </CardContent>
     </Card>
   )
 }
+
 
 function WaitlistLaunchDialog({
   onClose,
