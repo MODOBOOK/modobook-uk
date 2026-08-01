@@ -207,22 +207,6 @@ function FeatureGrid({ features }: { features: typeof FEATURES }) {
                   boxSizing: 'border-box',
                 }}
               >
-                <div
-                  style={{
-                    width: '28px',
-                    height: '28px',
-                    borderRadius: '50%',
-                    backgroundColor: brand.accent,
-                    color: brand.accentInk,
-                    fontSize: '14px',
-                    lineHeight: '28px',
-                    textAlign: 'center',
-                    fontWeight: 700,
-                    marginBottom: '10px',
-                  }}
-                >
-                  {rowIndex * 2 + colIndex + 1}
-                </div>
                 <Text style={{ ...styles.text, margin: 0, fontWeight: 600, fontSize: '14px' }}>
                   {feature.title}
                 </Text>
