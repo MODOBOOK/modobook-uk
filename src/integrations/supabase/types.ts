@@ -173,6 +173,7 @@ export type Database = {
           recipient_email: string | null
           sent_by: string | null
           subject: string
+          template_key: string | null
         }
         Insert: {
           audience: string
@@ -186,6 +187,7 @@ export type Database = {
           recipient_email?: string | null
           sent_by?: string | null
           subject: string
+          template_key?: string | null
         }
         Update: {
           audience?: string
@@ -199,6 +201,7 @@ export type Database = {
           recipient_email?: string | null
           sent_by?: string | null
           subject?: string
+          template_key?: string | null
         }
         Relationships: []
       }

@@ -33,7 +33,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Shield, Trash2, UserPlus, ExternalLink, CreditCard, Plus, Link as LinkIcon, Search, KeyRound, Power, Mail } from "lucide-react";
+import { Shield, Trash2, UserPlus, ExternalLink, CreditCard, Plus, Link as LinkIcon, Search, KeyRound, Power, Mail, Rocket } from "lucide-react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { DemoLaunchCard } from "@/components/admin/DemoLaunchCard";
 
@@ -145,6 +145,11 @@ function AdminPage() {
           <Link to="/admin/emails">
             <Button variant="outline" size="sm">
               <Mail className="mr-2 h-4 w-4" /> Emails & broadcasts
+            </Button>
+          </Link>
+          <Link to="/admin/emails">
+            <Button variant="default" size="sm">
+              <Rocket className="mr-2 h-4 w-4" /> Launch waitlist
             </Button>
           </Link>
           <Link to="/admin-prescribers">
