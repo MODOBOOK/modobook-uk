@@ -843,7 +843,7 @@ function ReviewsImportCard() {
                 <Button
                   disabled={busy}
                   onClick={async () => {
-                    const keep = draft.filter((r) => r._include && r.author_name.trim() && r.quote.trim());
+                    const keep = draft.filter((r) => r._include);
                     if (!keep.length) { toast.error("Tick at least one review to import"); return; }
                     setBusy(true);
                     try {
