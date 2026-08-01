@@ -203,6 +203,7 @@ function AdminEmailsPage() {
         />
       )}
     </div>
+    </AdminShell>
   )
 }
 
