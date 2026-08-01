@@ -2,6 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, type CSSProperties } from "react";
 import { getMyTheme } from "@/lib/theme.functions";
+import { buildThemeVars } from "@/lib/theme-vars";
+
 
 /**
  * Pulls the practitioner's clinic_theme (colours/fonts chosen in Branding)
