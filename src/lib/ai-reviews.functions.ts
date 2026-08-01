@@ -121,7 +121,6 @@ export const commitReviews = createServerFn({ method: "POST" })
     if (pErr) throw pErr;
 
     const rows = data.reviews
-      .filter((r) => (r.quote ?? "").trim() || r.rating != null)
       .map((r) => ({
         profile_id: profile.id,
         author_name: (r.author_name ?? "").trim() || "Anonymous",
