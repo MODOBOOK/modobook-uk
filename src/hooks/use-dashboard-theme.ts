@@ -2,6 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, type CSSProperties } from "react";
 import { getMyTheme } from "@/lib/theme.functions";
+import { buildThemeVars } from "@/lib/theme-vars";
+
 
 /**
  * Pulls the practitioner's clinic_theme (colours/fonts chosen in Branding)
@@ -22,7 +24,7 @@ export function useDashboardThemeStyle(): CSSProperties {
 
   const vars = useMemo<Record<string, string>>(() => {
     if (!theme) return {};
-    return buildVars(theme as Record<string, unknown>);
+    return buildThemeVars(theme as Record<string, unknown>);
   }, [theme]);
 
   const serialized = JSON.stringify(vars);
@@ -40,58 +42,4 @@ export function useDashboardThemeStyle(): CSSProperties {
   }, [serialized]);
 
   return vars as CSSProperties;
-}
-
-function buildVars(theme: Record<string, unknown>): Record<string, string> {
-  const v: Record<string, string> = {};
-  const get = (k: string) => {
-    const val = theme[k];
-    return typeof val === "string" && val.trim() ? val : null;
-  };
-  const set = (k: string, val: string | null) => {
-    if (val) v[k] = val;
-  };
-
-  const bg = get("background_color");
-  const text = get("text_color");
-  const primary = get("primary_color");
-  const accent = get("accent_color");
-  const cardBg = get("menu_card_bg") ?? bg;
-  const cardBorder = get("menu_card_border_color") ?? accent;
-  const headerBg = get("header_bg_color") ?? "#ffffff";
-  const headerText = get("header_text_color") ?? text;
-  const headingFont = get("heading_font");
-  const bodyFont = get("body_font");
-
-  set("--background", bg);
-  set("--foreground", text);
-  set("--card", cardBg);
-  set("--card-foreground", text);
-  set("--popover", cardBg);
-  set("--popover-foreground", text);
-  set("--primary", primary);
-  set("--primary-foreground", headerBg);
-  set("--secondary", cardBg);
-  set("--secondary-foreground", text);
-  set("--muted", cardBg);
-  set("--muted-foreground", text);
-  set("--accent", accent);
-  set("--accent-foreground", headerBg);
-  set("--border", cardBorder);
-  set("--input", cardBorder);
-  set("--ring", accent);
-
-  set("--sidebar", headerBg);
-  set("--sidebar-foreground", headerText);
-  set("--sidebar-primary", primary);
-  set("--sidebar-primary-foreground", headerBg);
-  set("--sidebar-accent", cardBg);
-  set("--sidebar-accent-foreground", text);
-  set("--sidebar-border", cardBorder);
-  set("--sidebar-ring", accent);
-
-  if (headingFont) v["--font-serif"] = `"${headingFont}", Georgia, serif`;
-  if (bodyFont) v["--font-sans"] = `"${bodyFont}", system-ui, sans-serif`;
-
-  return v;
 }
