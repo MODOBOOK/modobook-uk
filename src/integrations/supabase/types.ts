@@ -163,6 +163,7 @@ export type Database = {
       admin_broadcasts: {
         Row: {
           audience: string
+          blocks: Json | null
           created_at: string
           cta_text: string | null
           cta_url: string | null
@@ -175,6 +176,7 @@ export type Database = {
         }
         Insert: {
           audience: string
+          blocks?: Json | null
           created_at?: string
           cta_text?: string | null
           cta_url?: string | null
@@ -187,6 +189,7 @@ export type Database = {
         }
         Update: {
           audience?: string
+          blocks?: Json | null
           created_at?: string
           cta_text?: string | null
           cta_url?: string | null
