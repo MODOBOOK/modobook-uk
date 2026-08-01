@@ -51,6 +51,7 @@ import { Route as MSlugIndexRouteImport } from './routes/m.$slug.index'
 import { Route as AuthenticatedPrescriberIndexRouteImport } from './routes/_authenticated/prescriber.index'
 import { Route as AuthenticatedHubIndexRouteImport } from './routes/_authenticated/hub.index'
 import { Route as AuthenticatedDashboardIndexRouteImport } from './routes/_authenticated/dashboard.index'
+import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as MSlugTrainingRouteImport } from './routes/m.$slug.training'
 import { Route as MSlugRewardsRouteImport } from './routes/m.$slug.rewards'
 import { Route as MSlugReviewsRouteImport } from './routes/m.$slug.reviews'
@@ -121,6 +122,7 @@ import { Route as AuthenticatedAdminAuditRouteImport } from './routes/_authentic
 import { Route as AuthenticatedDashboardPatientsIndexRouteImport } from './routes/_authenticated/dashboard.patients.index'
 import { Route as AuthenticatedDashboardMarketingIndexRouteImport } from './routes/_authenticated/dashboard.marketing.index'
 import { Route as AuthenticatedDashboardConsultationsIndexRouteImport } from './routes/_authenticated/dashboard.consultations.index'
+import { Route as AuthenticatedAdminPractitionersIndexRouteImport } from './routes/_authenticated/admin.practitioners.index'
 import { Route as MSlugTrainingCourseIdRouteImport } from './routes/m.$slug.training.$courseId'
 import { Route as MSlugManageTokenRouteImport } from './routes/m.$slug.manage.$token'
 import { Route as MSlugBookTreatmentIdRouteImport } from './routes/m.$slug.book.$treatmentId'
@@ -370,6 +372,11 @@ const AuthenticatedDashboardIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
+const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
 const MSlugTrainingRoute = MSlugTrainingRouteImport.update({
   id: '/training',
   path: '/training',
@@ -778,6 +785,12 @@ const AuthenticatedDashboardConsultationsIndexRoute =
     path: '/consultations/',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
+const AuthenticatedAdminPractitionersIndexRoute =
+  AuthenticatedAdminPractitionersIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedAdminPractitionersRoute,
+  } as any)
 const MSlugTrainingCourseIdRoute = MSlugTrainingCourseIdRouteImport.update({
   id: '/$courseId',
   path: '/$courseId',
@@ -1091,6 +1104,7 @@ export interface FileRoutesByFullPath {
   '/m/$slug/reviews': typeof MSlugReviewsRoute
   '/m/$slug/rewards': typeof MSlugRewardsRoute
   '/m/$slug/training': typeof MSlugTrainingRouteWithChildren
+  '/admin/': typeof AuthenticatedAdminIndexRoute
   '/dashboard/': typeof AuthenticatedDashboardIndexRoute
   '/hub/': typeof AuthenticatedHubIndexRoute
   '/prescriber/': typeof AuthenticatedPrescriberIndexRoute
@@ -1125,6 +1139,7 @@ export interface FileRoutesByFullPath {
   '/m/$slug/book/$treatmentId': typeof MSlugBookTreatmentIdRoute
   '/m/$slug/manage/$token': typeof MSlugManageTokenRoute
   '/m/$slug/training/$courseId': typeof MSlugTrainingCourseIdRoute
+  '/admin/practitioners/': typeof AuthenticatedAdminPractitionersIndexRoute
   '/dashboard/consultations/': typeof AuthenticatedDashboardConsultationsIndexRoute
   '/dashboard/marketing/': typeof AuthenticatedDashboardMarketingIndexRoute
   '/dashboard/patients/': typeof AuthenticatedDashboardPatientsIndexRoute
@@ -1152,7 +1167,6 @@ export interface FileRoutesByTo {
   '/unsubscribe': typeof UnsubscribeRoute
   '/waitlist': typeof WaitlistRoute
   '/who-its-for': typeof WhoItsForRoute
-  '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/admin-prescribers': typeof AuthenticatedAdminPrescribersRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/book/$slug': typeof BookSlugRoute
@@ -1172,7 +1186,6 @@ export interface FileRoutesByTo {
   '/admin/audit': typeof AuthenticatedAdminAuditRoute
   '/admin/competition': typeof AuthenticatedAdminCompetitionRoute
   '/admin/emails': typeof AuthenticatedAdminEmailsRoute
-  '/admin/practitioners': typeof AuthenticatedAdminPractitionersRouteWithChildren
   '/dashboard/about': typeof AuthenticatedDashboardAboutRoute
   '/dashboard/addons': typeof AuthenticatedDashboardAddonsRoute
   '/dashboard/aftercare': typeof AuthenticatedDashboardAftercareRoute
@@ -1234,6 +1247,7 @@ export interface FileRoutesByTo {
   '/m/$slug/reviews': typeof MSlugReviewsRoute
   '/m/$slug/rewards': typeof MSlugRewardsRoute
   '/m/$slug/training': typeof MSlugTrainingRouteWithChildren
+  '/admin': typeof AuthenticatedAdminIndexRoute
   '/dashboard': typeof AuthenticatedDashboardIndexRoute
   '/hub': typeof AuthenticatedHubIndexRoute
   '/prescriber': typeof AuthenticatedPrescriberIndexRoute
@@ -1267,6 +1281,7 @@ export interface FileRoutesByTo {
   '/m/$slug/book/$treatmentId': typeof MSlugBookTreatmentIdRoute
   '/m/$slug/manage/$token': typeof MSlugManageTokenRoute
   '/m/$slug/training/$courseId': typeof MSlugTrainingCourseIdRoute
+  '/admin/practitioners': typeof AuthenticatedAdminPractitionersIndexRoute
   '/dashboard/consultations': typeof AuthenticatedDashboardConsultationsIndexRoute
   '/dashboard/marketing': typeof AuthenticatedDashboardMarketingIndexRoute
   '/dashboard/patients': typeof AuthenticatedDashboardPatientsIndexRoute
@@ -1384,6 +1399,7 @@ export interface FileRoutesById {
   '/m/$slug/reviews': typeof MSlugReviewsRoute
   '/m/$slug/rewards': typeof MSlugRewardsRoute
   '/m/$slug/training': typeof MSlugTrainingRouteWithChildren
+  '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/dashboard/': typeof AuthenticatedDashboardIndexRoute
   '/_authenticated/hub/': typeof AuthenticatedHubIndexRoute
   '/_authenticated/prescriber/': typeof AuthenticatedPrescriberIndexRoute
@@ -1418,6 +1434,7 @@ export interface FileRoutesById {
   '/m/$slug/book/$treatmentId': typeof MSlugBookTreatmentIdRoute
   '/m/$slug/manage/$token': typeof MSlugManageTokenRoute
   '/m/$slug/training/$courseId': typeof MSlugTrainingCourseIdRoute
+  '/_authenticated/admin/practitioners/': typeof AuthenticatedAdminPractitionersIndexRoute
   '/_authenticated/dashboard/consultations/': typeof AuthenticatedDashboardConsultationsIndexRoute
   '/_authenticated/dashboard/marketing/': typeof AuthenticatedDashboardMarketingIndexRoute
   '/_authenticated/dashboard/patients/': typeof AuthenticatedDashboardPatientsIndexRoute
@@ -1535,6 +1552,7 @@ export interface FileRouteTypes {
     | '/m/$slug/reviews'
     | '/m/$slug/rewards'
     | '/m/$slug/training'
+    | '/admin/'
     | '/dashboard/'
     | '/hub/'
     | '/prescriber/'
@@ -1569,6 +1587,7 @@ export interface FileRouteTypes {
     | '/m/$slug/book/$treatmentId'
     | '/m/$slug/manage/$token'
     | '/m/$slug/training/$courseId'
+    | '/admin/practitioners/'
     | '/dashboard/consultations/'
     | '/dashboard/marketing/'
     | '/dashboard/patients/'
@@ -1596,7 +1615,6 @@ export interface FileRouteTypes {
     | '/unsubscribe'
     | '/waitlist'
     | '/who-its-for'
-    | '/admin'
     | '/admin-prescribers'
     | '/onboarding'
     | '/book/$slug'
@@ -1616,7 +1634,6 @@ export interface FileRouteTypes {
     | '/admin/audit'
     | '/admin/competition'
     | '/admin/emails'
-    | '/admin/practitioners'
     | '/dashboard/about'
     | '/dashboard/addons'
     | '/dashboard/aftercare'
@@ -1678,6 +1695,7 @@ export interface FileRouteTypes {
     | '/m/$slug/reviews'
     | '/m/$slug/rewards'
     | '/m/$slug/training'
+    | '/admin'
     | '/dashboard'
     | '/hub'
     | '/prescriber'
@@ -1711,6 +1729,7 @@ export interface FileRouteTypes {
     | '/m/$slug/book/$treatmentId'
     | '/m/$slug/manage/$token'
     | '/m/$slug/training/$courseId'
+    | '/admin/practitioners'
     | '/dashboard/consultations'
     | '/dashboard/marketing'
     | '/dashboard/patients'
@@ -1827,6 +1846,7 @@ export interface FileRouteTypes {
     | '/m/$slug/reviews'
     | '/m/$slug/rewards'
     | '/m/$slug/training'
+    | '/_authenticated/admin/'
     | '/_authenticated/dashboard/'
     | '/_authenticated/hub/'
     | '/_authenticated/prescriber/'
@@ -1861,6 +1881,7 @@ export interface FileRouteTypes {
     | '/m/$slug/book/$treatmentId'
     | '/m/$slug/manage/$token'
     | '/m/$slug/training/$courseId'
+    | '/_authenticated/admin/practitioners/'
     | '/_authenticated/dashboard/consultations/'
     | '/_authenticated/dashboard/marketing/'
     | '/_authenticated/dashboard/patients/'
@@ -2213,6 +2234,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/dashboard/'
       preLoaderRoute: typeof AuthenticatedDashboardIndexRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/admin/': {
+      id: '/_authenticated/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
     }
     '/m/$slug/training': {
       id: '/m/$slug/training'
@@ -2704,6 +2732,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardConsultationsIndexRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
+    '/_authenticated/admin/practitioners/': {
+      id: '/_authenticated/admin/practitioners/'
+      path: '/'
+      fullPath: '/admin/practitioners/'
+      preLoaderRoute: typeof AuthenticatedAdminPractitionersIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminPractitionersRoute
+    }
     '/m/$slug/training/$courseId': {
       id: '/m/$slug/training/$courseId'
       path: '/$courseId'
@@ -2961,12 +2996,15 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedAdminPractitionersRouteChildren {
   AuthenticatedAdminPractitionersIdRoute: typeof AuthenticatedAdminPractitionersIdRoute
+  AuthenticatedAdminPractitionersIndexRoute: typeof AuthenticatedAdminPractitionersIndexRoute
 }
 
 const AuthenticatedAdminPractitionersRouteChildren: AuthenticatedAdminPractitionersRouteChildren =
   {
     AuthenticatedAdminPractitionersIdRoute:
       AuthenticatedAdminPractitionersIdRoute,
+    AuthenticatedAdminPractitionersIndexRoute:
+      AuthenticatedAdminPractitionersIndexRoute,
   }
 
 const AuthenticatedAdminPractitionersRouteWithChildren =
@@ -2979,6 +3017,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminCompetitionRoute: typeof AuthenticatedAdminCompetitionRoute
   AuthenticatedAdminEmailsRoute: typeof AuthenticatedAdminEmailsRoute
   AuthenticatedAdminPractitionersRoute: typeof AuthenticatedAdminPractitionersRouteWithChildren
+  AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
@@ -2987,6 +3026,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminEmailsRoute: AuthenticatedAdminEmailsRoute,
   AuthenticatedAdminPractitionersRoute:
     AuthenticatedAdminPractitionersRouteWithChildren,
+  AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
 }
 
 const AuthenticatedAdminRouteWithChildren =
