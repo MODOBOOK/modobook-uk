@@ -75,7 +75,7 @@ export const WaitlistOpenEmail = ({ firstName }: WaitlistOpenProps) => {
 
         <FeatureGrid features={FEATURES} />
 
-        {/* Notifications */}
+        {/* Notifications / add-to-home-screen */}
         <Section
           style={{
             backgroundColor: brand.soft,
@@ -85,15 +85,20 @@ export const WaitlistOpenEmail = ({ firstName }: WaitlistOpenProps) => {
           }}
         >
           <Text style={{ ...styles.text, margin: 0, fontWeight: 600, fontSize: '16px' }}>
-            Turn on notifications straight to your phone
+            Get MODO on your phone
           </Text>
           <Text style={{ ...styles.muted, margin: '10px 0 0' }}>
-            Get new bookings, cancellations and reminders the moment they happen —
-            no need to keep checking your diary.
+            Save modobook.uk to your home screen so it opens like an app, then turn
+            on notifications to get bookings, cancellations and reminders the moment
+            they happen — no need to keep checking your diary.
           </Text>
 
           <ol style={{ ...styles.text, margin: '16px 0 0', paddingLeft: '18px' }}>
             <li>Open <strong>modobook.uk</strong> and sign in to your clinic account.</li>
+            <li>
+              Save it to your home screen: iPhone users tap <strong>Share → Add to Home Screen</strong>;{' '}
+              Android users tap <strong>Menu → Add to Home Screen</strong>.
+            </li>
             <li>Go to <strong>Dashboard → Settings</strong>.</li>
             <li>Tap <strong>Enable notifications</strong>.</li>
             <li>Choose <strong>Allow</strong> when your phone asks — that's it.</li>
