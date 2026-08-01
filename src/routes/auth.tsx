@@ -38,9 +38,36 @@ function AuthPage() {
       : { to: isPrescriberFlow ? "/hub/verification" : "/dashboard" };
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  
+
+  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [signupName, setSignupName] = useState("");
+
   const [forgotOpen, setForgotOpen] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
+
+  const createAccount = useServerFn(signUpFromWaitlist);
+
+  async function handleSignUp(e: React.FormEvent) {
+    e.preventDefault();
+    if (password.length < 8) { toast.error("Password must be at least 8 characters."); return; }
+    setLoading(true);
+    try {
+      const res = await createAccount({ data: { email, password, name: signupName || null } });
+      if (!res.ok) {
+        setLoading(false);
+        toast.error(res.error);
+        return;
+      }
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      setLoading(false);
+      if (error) { toast.error(error.message); return; }
+      toast.success("Welcome to MODO");
+      router.navigate(postAuthTo());
+    } catch (err) {
+      setLoading(false);
+      toast.error("Could not create your account. Please try again.");
+    }
+  }
 
   async function handleForgot(e: React.FormEvent) {
     e.preventDefault();
