@@ -18,8 +18,6 @@ import {
   Star,
   HelpCircle,
   ChevronRight,
-  
-
   ShieldCheck,
   LogOut,
   ExternalLink,
@@ -32,6 +30,7 @@ import {
   Megaphone,
   Gift,
   GraduationCap,
+  MessageCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -218,6 +217,24 @@ function MenuPage() {
           </Link>
         </section>
       )}
+
+      <a
+        href="https://wa.me/447385790119"
+        target="_blank"
+        rel="noreferrer"
+        className="block rounded-2xl border border-primary/20 bg-primary/5 p-4 shadow-sm transition active:scale-[0.99]"
+      >
+        <div className="flex items-center gap-4">
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#25D366] text-white ring-1 ring-black/5">
+            <MessageCircle className="h-6 w-6" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-base font-semibold leading-tight">WhatsApp support</p>
+            <p className="mt-0.5 truncate text-xs text-muted-foreground">Message the MODO team — +44 7385 790119</p>
+          </div>
+          <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
+        </div>
+      </a>
 
       <Button
         variant="outline"
