@@ -41,7 +41,7 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [mode, setMode] = useState<"signin" | "signup">("signup");
   const [signupName, setSignupName] = useState("");
 
   const [forgotOpen, setForgotOpen] = useState(false);
