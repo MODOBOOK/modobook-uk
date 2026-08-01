@@ -8,6 +8,8 @@ import { listPublicGiftCards } from "@/lib/gift-cards.functions";
 import { Button } from "@/components/ui/button";
 import { UserCircle2 } from "lucide-react";
 import { resolveDisplayNames } from "@/lib/display-name";
+import { buildThemeVars } from "@/lib/theme-vars";
+import { useEffect, useMemo } from "react";
 
 import { Loader2 } from "lucide-react";
 
@@ -136,11 +138,32 @@ function ModoLayout() {
   const headingFont = theme?.heading_font || "inherit";
   const bodyFont = theme?.body_font || "inherit";
 
+  // Map the practitioner's palette onto the shadcn semantic tokens so every
+  // card, button, input and dialog in the patient portal is branded.
+  const themeVars = useMemo(
+    () => buildThemeVars(theme as Record<string, unknown> | null | undefined),
+    [theme],
+  );
+  const serializedVars = JSON.stringify(themeVars);
+  useEffect(() => {
+    const root = document.documentElement;
+    const applied: string[] = [];
+    for (const [key, val] of Object.entries(themeVars)) {
+      root.style.setProperty(key, val);
+      applied.push(key);
+    }
+    return () => {
+      for (const key of applied) root.style.removeProperty(key);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [serializedVars]);
+
   return (
     <div
       className="min-h-screen"
       style={
         {
+          ...themeVars,
           backgroundColor: bgColor,
           color: textColor,
           fontFamily: bodyFont,
