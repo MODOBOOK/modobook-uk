@@ -35,6 +35,20 @@ function readableInk(hex?: string | null): string {
   return lum > 170 ? '#2b2620' : '#ffffff'
 }
 
+/** Lighten a hex colour towards white by `amount` (0–1). Used so a logo sits
+ *  on a soft tint of the clinic's brand colour instead of a dark block. */
+function tint(hex?: string | null, amount = 0.88): string | null {
+  if (!hex) return null
+  const m = /^#?([a-f\d]{6})$/i.exec(hex.trim())
+  if (!m) return null
+  const int = parseInt(m[1], 16)
+  const mix = (c: number) => Math.round(c + (255 - c) * amount)
+  const r = mix((int >> 16) & 0xff)
+  const g = mix((int >> 8) & 0xff)
+  const b = mix(int & 0xff)
+  return `#${[r, g, b].map((v) => v.toString(16).padStart(2, '0')).join('')}`
+}
+
 export const styles = {
   main: {
     backgroundColor: brand.page,
@@ -141,7 +155,10 @@ export function ModoShell({
   const _preview = preview
   void _preview
 
-  const headerBg = brandColor?.trim() || brand.headerCard
+  // With a logo, use a light tint of the brand colour so the logo stays legible.
+  const headerBg = logoUrl
+    ? tint(brandColor) || brand.headerCard
+    : brandColor?.trim() || brand.headerCard
   const headerInk = readableInk(headerBg)
   const modoFallback = `https://modobook.uk${MODO_LOGO_URL}`
 
