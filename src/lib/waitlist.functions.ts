@@ -61,3 +61,69 @@ export const joinWaitlist = createServerFn({ method: 'POST' })
 
     return { ok: true as const, alreadyJoined: !!existing }
   })
+
+// --- Waitlist-gated account creation -------------------------------------
+// Only emails present on the practitioner waitlist may create a MODO account.
+
+const eligibilitySchema = z.object({
+  email: z.string().trim().toLowerCase().email().max(255),
+})
+
+export const checkWaitlistEligibility = createServerFn({ method: 'POST' })
+  .inputValidator((input: unknown) => eligibilitySchema.parse(input))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import('@/integrations/supabase/client.server')
+    const { data: row } = await supabaseAdmin
+      .from('practitioner_waitlist')
+      .select('id,name,clinic_name')
+      .eq('email', data.email)
+      .maybeSingle()
+    return { eligible: !!row, name: row?.name ?? null, clinic: row?.clinic_name ?? null }
+  })
+
+const signUpSchema = z.object({
+  email: z.string().trim().toLowerCase().email().max(255),
+  password: z.string().min(8).max(128),
+  name: z.string().trim().max(120).optional().nullable(),
+})
+
+export const signUpFromWaitlist = createServerFn({ method: 'POST' })
+  .inputValidator((input: unknown) => signUpSchema.parse(input))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import('@/integrations/supabase/client.server')
+
+    const { data: row } = await supabaseAdmin
+      .from('practitioner_waitlist')
+      .select('id,name,clinic_name')
+      .eq('email', data.email)
+      .maybeSingle()
+
+    if (!row) {
+      return {
+        ok: false as const,
+        code: 'not_on_waitlist' as const,
+        error: "That email isn't on the MODO waitlist yet. Join the waitlist and we'll open your account.",
+      }
+    }
+
+    const { error } = await supabaseAdmin.auth.admin.createUser({
+      email: data.email,
+      password: data.password,
+      email_confirm: true,
+      user_metadata: {
+        full_name: data.name?.trim() || row.name || null,
+        clinic_name: row.clinic_name || null,
+        source: 'waitlist',
+      },
+    })
+
+    if (error) {
+      const msg = String(error.message || '')
+      if (/already been registered|already exists/i.test(msg)) {
+        return { ok: false as const, code: 'exists' as const, error: 'An account already exists for this email — sign in instead.' }
+      }
+      return { ok: false as const, code: 'failed' as const, error: msg || 'Could not create your account' }
+    }
+
+    return { ok: true as const }
+  })

@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import { signUpFromWaitlist } from "@/lib/waitlist.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -38,9 +40,36 @@ function AuthPage() {
       : { to: isPrescriberFlow ? "/hub/verification" : "/dashboard" };
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  
+
+  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [signupName, setSignupName] = useState("");
+
   const [forgotOpen, setForgotOpen] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
+
+  const createAccount = useServerFn(signUpFromWaitlist);
+
+  async function handleSignUp(e: React.FormEvent) {
+    e.preventDefault();
+    if (password.length < 8) { toast.error("Password must be at least 8 characters."); return; }
+    setLoading(true);
+    try {
+      const res = await createAccount({ data: { email, password, name: signupName || null } });
+      if (!res.ok) {
+        setLoading(false);
+        toast.error(res.error);
+        return;
+      }
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      setLoading(false);
+      if (error) { toast.error(error.message); return; }
+      toast.success("Welcome to MODO");
+      router.navigate(postAuthTo());
+    } catch (err) {
+      setLoading(false);
+      toast.error("Could not create your account. Please try again.");
+    }
+  }
 
   async function handleForgot(e: React.FormEvent) {
     e.preventDefault();
@@ -88,9 +117,29 @@ function AuthPage() {
         <Card>
           <CardHeader className="text-center">
             <CardTitle>Welcome to MODO</CardTitle>
-            <CardDescription>Sign in to your practitioner account.</CardDescription>
+            <CardDescription>
+              {mode === "signin"
+                ? "Sign in to your practitioner account."
+                : "Create your account — available to clinics on the MODO waitlist."}
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4 pt-4">
+            <div className="grid grid-cols-2 gap-1 rounded-lg bg-muted p-1">
+              {(["signin", "signup"] as const).map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => setMode(m)}
+                  className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                    mode === m ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
+                  }`}
+                >
+                  {m === "signin" ? "Sign in" : "Create account"}
+                </button>
+              ))}
+            </div>
+
+            {mode === "signin" ? (
             <form onSubmit={handleSignIn} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
@@ -121,13 +170,35 @@ function AuthPage() {
                 </div>
               )}
             </form>
+            ) : (
+            <form onSubmit={handleSignUp} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="signup-name">Full name</Label>
+                <Input id="signup-name" value={signupName} onChange={(e) => setSignupName(e.target.value)} placeholder="Jane Smith" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="signup-email">Waitlist email</Label>
+                <Input id="signup-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="you@clinic.co.uk" />
+                <p className="text-xs text-muted-foreground">Use the same email you joined the waitlist with.</p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="signup-password">Password</Label>
+                <Input id="signup-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} placeholder="At least 8 characters" />
+              </div>
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                Create my account
+              </Button>
+            </form>
+            )}
 
             <div className="rounded-lg border border-dashed bg-muted/40 p-3 text-center text-xs text-muted-foreground">
-              Don't have an account yet? MODO is opening to new clinics soon.{" "}
+              Not on the waitlist yet? MODO is opening to new clinics in stages.{" "}
               <Link to="/waitlist" className="font-medium text-foreground underline underline-offset-2">
                 Join the waitlist →
               </Link>
             </div>
+
 
             <Separator />
 
