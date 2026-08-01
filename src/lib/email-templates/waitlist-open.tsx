@@ -48,7 +48,7 @@ export const WaitlistOpenEmail = ({ firstName }: WaitlistOpenProps) => {
     <Html lang="en" dir="ltr">
       <Head />
       <Preview>MODO Book is now open — create your clinic account today.</Preview>
-      <ModoShell preview={null} siteName="MODO Book">
+      <ModoShell preview={null} logoUrl={MODO_LOGO_FULL_URL} siteName="MODO Book">
         <Heading style={{ ...styles.h1, fontStyle: 'italic' }}>MODO is officially open.</Heading>
         <Text style={styles.text}>{greeting}</Text>
         <Text style={styles.text}>
