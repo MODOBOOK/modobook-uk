@@ -2,8 +2,11 @@
 // practitioners can create their account and start taking bookings.
 import * as React from 'react'
 import { Heading, Hr, Html, Link, Preview, Section, Text } from '@react-email/components'
+import modoLogo from '@/assets/modo-logo.png.asset.json'
 import { Head, ModoShell, styles, brand, brandedButton } from './_modo-brand'
 import type { TemplateEntry } from './registry'
+
+const MODO_LOGO_FULL_URL = `https://modobook.uk${modoLogo.url}`
 
 interface WaitlistOpenProps {
   firstName?: string | null
@@ -45,7 +48,7 @@ export const WaitlistOpenEmail = ({ firstName }: WaitlistOpenProps) => {
     <Html lang="en" dir="ltr">
       <Head />
       <Preview>MODO Book is now open — create your clinic account today.</Preview>
-      <ModoShell preview={null} siteName="MODO Book">
+      <ModoShell preview={null} logoUrl={MODO_LOGO_FULL_URL} siteName="MODO Book">
         <Heading style={{ ...styles.h1, fontStyle: 'italic' }}>MODO is officially open.</Heading>
         <Text style={styles.text}>{greeting}</Text>
         <Text style={styles.text}>
