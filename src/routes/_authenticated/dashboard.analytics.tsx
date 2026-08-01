@@ -313,20 +313,25 @@ function AnalyticsPage() {
                 ) : (
                   <div className="space-y-3">
                     {treatmentBreakdown.map((t) => (
-                      <div key={t.name} className="flex items-center gap-3">
+                      <div key={t.name} className="flex items-start gap-3">
                         <div
-                          className="size-3 shrink-0 rounded-full"
+                          className="mt-1.5 size-3 shrink-0 rounded-full"
                           style={{ background: t.color }}
                         />
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-medium">{t.name}</p>
+                          <p className="break-words text-sm font-medium leading-snug">{t.name}</p>
+                          <div className="mt-1 flex items-center gap-2 sm:hidden">
+                            <Badge variant="secondary" className="h-5 px-1.5 text-[11px]">{t.bookings}</Badge>
+                            <span className="text-xs font-medium tabular-nums text-muted-foreground">{formatCurrency(t.revenue)}</span>
+                          </div>
                         </div>
-                        <Badge variant="secondary" className="shrink-0">
+                        <Badge variant="secondary" className="hidden shrink-0 sm:inline-flex">
                           {t.bookings}
                         </Badge>
-                        <p className="shrink-0 whitespace-nowrap text-right text-sm font-medium tabular-nums">{formatCurrency(t.revenue)}</p>
+                        <p className="hidden shrink-0 whitespace-nowrap text-right text-sm font-medium tabular-nums sm:block">{formatCurrency(t.revenue)}</p>
                       </div>
                     ))}
+
                   </div>
                 )}
               </CardContent>
