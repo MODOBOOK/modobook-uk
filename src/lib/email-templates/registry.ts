@@ -12,6 +12,7 @@ import { template as rebookReminder } from './rebook-reminder'
 import { template as topupReminder } from './topup-reminder'
 import { template as platformArrears } from './platform-arrears'
 import { template as waitlistWelcome } from './waitlist-welcome'
+import { template as waitlistOpen } from './waitlist-open'
 import { template as prescriberInvoice } from './prescriber-invoice'
 import { template as giftCardDelivery } from './gift-card-delivery'
 
@@ -41,6 +42,7 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'topup-reminder': topupReminder,
   'platform-arrears': platformArrears,
   'waitlist-welcome': waitlistWelcome,
+  'waitlist-open': waitlistOpen,
   'prescriber-invoice': prescriberInvoice,
   'gift-card-delivery': giftCardDelivery,
 }

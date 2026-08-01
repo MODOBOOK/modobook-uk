@@ -1,0 +1,261 @@
+// Waitlist "we're open" email — sent when MODO launches and waitlisted
+// practitioners can create their account and start taking bookings.
+import * as React from 'react'
+import { Column, Heading, Hr, Html, Img, Link, Preview, Row, Section, Text } from '@react-email/components'
+import { Head, ModoShell, styles, brand, brandedButton } from './_modo-brand'
+import type { TemplateEntry } from './registry'
+import modoWordmark from '@/assets/modo-wordmark.png.asset.json'
+
+interface WaitlistOpenProps {
+  firstName?: string | null
+}
+
+const FEATURES = [
+  {
+    title: 'Branded booking pages',
+    body: 'Your own link, your colours, your logo — clients book treatments in seconds.',
+  },
+  {
+    title: 'Smart rebook & top-up reminders',
+    body: 'Automated emails that bring clients back at exactly the right interval.',
+  },
+  {
+    title: 'Consultation notes & photo records',
+    body: 'Capture every consultation, upload before/after photos and build treatment plans in one place.',
+  },
+  {
+    title: 'Full clinical records',
+    body: 'Medical forms, consents, treatment notes and history — all in one place.',
+  },
+  {
+    title: 'Prescriber Hub',
+    body: 'Request clinic days, share records safely and get on-site sign-offs.',
+  },
+  {
+    title: 'Training that pays you',
+    body: 'List courses, take deposits and manage attendees on the same calendar.',
+  },
+]
+
+const WHATSAPP_NUMBER = '+44 7385 790119'
+const WHATSAPP_LINK = `https://wa.me/${WHATSAPP_NUMBER.replace(/\D/g, '')}`
+
+export const WaitlistOpenEmail = ({ firstName }: WaitlistOpenProps) => {
+  const greeting = firstName ? `Hi ${firstName},` : 'Hi there,'
+  return (
+    <Html lang="en" dir="ltr">
+      <Head />
+      <Preview>MODO Book is now open — create your clinic account today.</Preview>
+      <ModoShell preview={null} siteName="MODO Book">
+        {/* Hero banner */}
+        <Section
+          style={{
+            backgroundColor: brand.soft,
+            borderRadius: '14px',
+            padding: '28px 24px',
+            textAlign: 'center',
+            marginBottom: '28px',
+          }}
+        >
+          <Img
+            src={`https://modobook.uk${modoWordmark.url}`}
+            alt="MODO Book"
+            height="42"
+            style={{ height: '42px', width: 'auto', margin: '0 auto 16px', display: 'inline-block' }}
+          />
+          <Text
+            style={{
+              ...styles.muted,
+              margin: 0,
+              fontSize: '12px',
+              letterSpacing: '0.18em',
+              textTransform: 'uppercase',
+              fontWeight: 600,
+            }}
+          >
+            Now open
+          </Text>
+        </Section>
+
+        <Heading style={styles.h1}>MODO is officially open.</Heading>
+        <Text style={styles.text}>{greeting}</Text>
+        <Text style={styles.text}>
+          The wait is over. MODO Book is now live and ready for your clinic. You
+          can create your account, set up your branded booking page, and start
+          taking appointments today.
+        </Text>
+
+        <div style={styles.buttonWrap}>
+          <Link style={styles.button} href="https://modobook.uk/auth">
+            Create your clinic account
+          </Link>
+        </div>
+
+        <Text style={{ ...styles.text, marginTop: '24px' }}>
+          As one of our founding clinics, you'll lock in your first month free
+          and our founding price of{' '}
+          <strong>£29.99/month</strong> — no card required to get started.
+        </Text>
+
+        <Text style={{ ...styles.text, fontWeight: 600, marginTop: '28px', marginBottom: '18px' }}>
+          What's included from day one:
+        </Text>
+
+        <FeatureGrid features={FEATURES} />
+
+        {/* App / Home Screen */}
+        <Section
+          style={{
+            backgroundColor: brand.soft,
+            borderRadius: '14px',
+            padding: '24px',
+            marginTop: '28px',
+          }}
+        >
+          <Text style={{ ...styles.text, margin: 0, fontWeight: 600, fontSize: '16px' }}>
+            Add MODO to your Home Screen
+          </Text>
+          <Text style={{ ...styles.muted, margin: '10px 0 0' }}>
+            MODO works like an app on your phone or tablet — no download needed.
+          </Text>
+
+          <Text style={{ ...styles.text, marginTop: '16px', marginBottom: '6px', fontWeight: 600 }}>
+            iPhone / iPad
+          </Text>
+          <ol style={{ ...styles.text, margin: 0, paddingLeft: '18px' }}>
+            <li>Open <strong>modobook.uk</strong> in Safari.</li>
+            <li>Tap the <strong>Share</strong> button (the square with an arrow).</li>
+            <li>Scroll down and tap <strong>Add to Home Screen</strong>.</li>
+            <li>Tap <strong>Add</strong> — the MODO icon will appear on your home screen.</li>
+          </ol>
+
+          <Text style={{ ...styles.text, marginTop: '16px', marginBottom: '6px', fontWeight: 600 }}>
+            Android
+          </Text>
+          <ol style={{ ...styles.text, margin: 0, paddingLeft: '18px' }}>
+            <li>Open <strong>modobook.uk</strong> in Chrome.</li>
+            <li>Tap the <strong>⋮ menu</strong> in the top right.</li>
+            <li>Tap <strong>Add to Home screen</strong> or <strong>Install app</strong>.</li>
+            <li>Tap <strong>Add</strong> — MODO will sit alongside your other apps.</li>
+          </ol>
+        </Section>
+
+        {/* WhatsApp support */}
+        <Section
+          style={{
+            backgroundColor: brand.ink,
+            borderRadius: '14px',
+            padding: '24px',
+            marginTop: '20px',
+            textAlign: 'center',
+          }}
+        >
+          <Text style={{ ...styles.text, margin: 0, color: '#ffffff', fontWeight: 600, fontSize: '16px' }}>
+            Need help getting set up?
+          </Text>
+          <Text style={{ ...styles.muted, margin: '10px 0 0', color: 'rgba(255,255,255,0.75)' }}>
+            Message us on WhatsApp and we'll walk you through your first booking.
+          </Text>
+          <div style={{ ...styles.buttonWrap, marginBottom: 0 }}>
+            <Link
+              style={{
+                ...brandedButton(brand.accent),
+                display: 'inline-block',
+              }}
+              href={WHATSAPP_LINK}
+            >
+              Chat on WhatsApp
+            </Link>
+          </div>
+          <Text style={{ ...styles.muted, margin: '12px 0 0', color: 'rgba(255,255,255,0.6)', fontSize: '12px' }}>
+            {WHATSAPP_NUMBER}
+          </Text>
+        </Section>
+
+        <Hr style={styles.hr} />
+
+        <Text style={styles.muted}>
+          Got questions before you start? Just reply to this email or message us
+          on WhatsApp — it lands straight with the founders at{' '}
+          <Link href="mailto:info@modobook.co.uk" style={styles.link}>
+            info@modobook.co.uk
+          </Link>
+          .
+        </Text>
+
+        <Text style={styles.muted}>— The MODO Book team</Text>
+      </ModoShell>
+    </Html>
+  )
+}
+
+function FeatureGrid({ features }: { features: typeof FEATURES }) {
+  const rows: (typeof FEATURES)[] = []
+  for (let i = 0; i < features.length; i += 2) {
+    rows.push(features.slice(i, i + 2))
+  }
+
+  return (
+    <>
+      {rows.map((row, rowIndex) => (
+        <Row key={rowIndex} style={{ marginBottom: '14px' }}>
+          {row.map((feature, colIndex) => (
+            <Column
+              key={colIndex}
+              style={{
+                width: '50%',
+                paddingRight: colIndex === 0 ? '8px' : '0',
+                paddingLeft: colIndex === 1 ? '8px' : '0',
+                verticalAlign: 'top',
+              }}
+            >
+              <div
+                style={{
+                  backgroundColor: brand.soft,
+                  borderRadius: '12px',
+                  padding: '18px',
+                  height: '100%',
+                  boxSizing: 'border-box',
+                }}
+              >
+                <div
+                  style={{
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '50%',
+                    backgroundColor: brand.accent,
+                    color: brand.accentInk,
+                    fontSize: '14px',
+                    lineHeight: '28px',
+                    textAlign: 'center',
+                    fontWeight: 700,
+                    marginBottom: '10px',
+                  }}
+                >
+                  {rowIndex * 2 + colIndex + 1}
+                </div>
+                <Text style={{ ...styles.text, margin: 0, fontWeight: 600, fontSize: '14px' }}>
+                  {feature.title}
+                </Text>
+                <Text style={{ ...styles.muted, margin: '6px 0 0', fontSize: '12px' }}>
+                  {feature.body}
+                </Text>
+              </div>
+            </Column>
+          ))}
+        </Row>
+      ))}
+    </>
+  )
+}
+
+export const template: TemplateEntry = {
+  component: WaitlistOpenEmail,
+  subject: 'MODO Book is now open — create your clinic account 🎉',
+  displayName: 'Waitlist open announcement',
+  previewData: {
+    firstName: 'Alex',
+  },
+}
+
+export default WaitlistOpenEmail
