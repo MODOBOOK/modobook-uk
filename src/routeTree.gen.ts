@@ -115,6 +115,7 @@ import { Route as AuthenticatedDashboardAiImportRouteImport } from './routes/_au
 import { Route as AuthenticatedDashboardAftercareRouteImport } from './routes/_authenticated/dashboard.aftercare'
 import { Route as AuthenticatedDashboardAddonsRouteImport } from './routes/_authenticated/dashboard.addons'
 import { Route as AuthenticatedDashboardAboutRouteImport } from './routes/_authenticated/dashboard.about'
+import { Route as AuthenticatedAdminPractitionersRouteImport } from './routes/_authenticated/admin.practitioners'
 import { Route as AuthenticatedAdminEmailsRouteImport } from './routes/_authenticated/admin.emails'
 import { Route as AuthenticatedAdminCompetitionRouteImport } from './routes/_authenticated/admin.competition'
 import { Route as AuthenticatedAdminAuditRouteImport } from './routes/_authenticated/admin.audit'
@@ -743,6 +744,12 @@ const AuthenticatedDashboardAboutRoute =
     path: '/about',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
+const AuthenticatedAdminPractitionersRoute =
+  AuthenticatedAdminPractitionersRouteImport.update({
+    id: '/practitioners',
+    path: '/practitioners',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminEmailsRoute =
   AuthenticatedAdminEmailsRouteImport.update({
     id: '/emails',
@@ -780,9 +787,9 @@ const AuthenticatedDashboardConsultationsIndexRoute =
   } as any)
 const AuthenticatedAdminPractitionersIndexRoute =
   AuthenticatedAdminPractitionersIndexRouteImport.update({
-    id: '/practitioners/',
-    path: '/practitioners/',
-    getParentRoute: () => AuthenticatedAdminRoute,
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedAdminPractitionersRoute,
   } as any)
 const MSlugTrainingCourseIdRoute = MSlugTrainingCourseIdRouteImport.update({
   id: '/$courseId',
@@ -951,9 +958,9 @@ const AuthenticatedDashboardConsultationsIdRoute =
   } as any)
 const AuthenticatedAdminPractitionersIdRoute =
   AuthenticatedAdminPractitionersIdRouteImport.update({
-    id: '/practitioners/$id',
-    path: '/practitioners/$id',
-    getParentRoute: () => AuthenticatedAdminRoute,
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => AuthenticatedAdminPractitionersRoute,
   } as any)
 const AuthenticatedDashboardPatientsIdIndexRoute =
   AuthenticatedDashboardPatientsIdIndexRouteImport.update({
@@ -1033,6 +1040,7 @@ export interface FileRoutesByFullPath {
   '/admin/audit': typeof AuthenticatedAdminAuditRoute
   '/admin/competition': typeof AuthenticatedAdminCompetitionRoute
   '/admin/emails': typeof AuthenticatedAdminEmailsRoute
+  '/admin/practitioners': typeof AuthenticatedAdminPractitionersRouteWithChildren
   '/dashboard/about': typeof AuthenticatedDashboardAboutRoute
   '/dashboard/addons': typeof AuthenticatedDashboardAddonsRoute
   '/dashboard/aftercare': typeof AuthenticatedDashboardAftercareRoute
@@ -1327,6 +1335,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/audit': typeof AuthenticatedAdminAuditRoute
   '/_authenticated/admin/competition': typeof AuthenticatedAdminCompetitionRoute
   '/_authenticated/admin/emails': typeof AuthenticatedAdminEmailsRoute
+  '/_authenticated/admin/practitioners': typeof AuthenticatedAdminPractitionersRouteWithChildren
   '/_authenticated/dashboard/about': typeof AuthenticatedDashboardAboutRoute
   '/_authenticated/dashboard/addons': typeof AuthenticatedDashboardAddonsRoute
   '/_authenticated/dashboard/aftercare': typeof AuthenticatedDashboardAftercareRoute
@@ -1479,6 +1488,7 @@ export interface FileRouteTypes {
     | '/admin/audit'
     | '/admin/competition'
     | '/admin/emails'
+    | '/admin/practitioners'
     | '/dashboard/about'
     | '/dashboard/addons'
     | '/dashboard/aftercare'
@@ -1772,6 +1782,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/audit'
     | '/_authenticated/admin/competition'
     | '/_authenticated/admin/emails'
+    | '/_authenticated/admin/practitioners'
     | '/_authenticated/dashboard/about'
     | '/_authenticated/dashboard/addons'
     | '/_authenticated/dashboard/aftercare'
@@ -2672,6 +2683,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardAboutRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
+    '/_authenticated/admin/practitioners': {
+      id: '/_authenticated/admin/practitioners'
+      path: '/practitioners'
+      fullPath: '/admin/practitioners'
+      preLoaderRoute: typeof AuthenticatedAdminPractitionersRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/emails': {
       id: '/_authenticated/admin/emails'
       path: '/emails'
@@ -2716,10 +2734,10 @@ declare module '@tanstack/react-router' {
     }
     '/_authenticated/admin/practitioners/': {
       id: '/_authenticated/admin/practitioners/'
-      path: '/practitioners'
+      path: '/'
       fullPath: '/admin/practitioners/'
       preLoaderRoute: typeof AuthenticatedAdminPractitionersIndexRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
+      parentRoute: typeof AuthenticatedAdminPractitionersRoute
     }
     '/m/$slug/training/$courseId': {
       id: '/m/$slug/training/$courseId'
@@ -2926,10 +2944,10 @@ declare module '@tanstack/react-router' {
     }
     '/_authenticated/admin/practitioners/$id': {
       id: '/_authenticated/admin/practitioners/$id'
-      path: '/practitioners/$id'
+      path: '/$id'
       fullPath: '/admin/practitioners/$id'
       preLoaderRoute: typeof AuthenticatedAdminPractitionersIdRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
+      parentRoute: typeof AuthenticatedAdminPractitionersRoute
     }
     '/_authenticated/dashboard/patients/$id/': {
       id: '/_authenticated/dashboard/patients/$id/'
@@ -2976,24 +2994,39 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthenticatedAdminPractitionersRouteChildren {
+  AuthenticatedAdminPractitionersIdRoute: typeof AuthenticatedAdminPractitionersIdRoute
+  AuthenticatedAdminPractitionersIndexRoute: typeof AuthenticatedAdminPractitionersIndexRoute
+}
+
+const AuthenticatedAdminPractitionersRouteChildren: AuthenticatedAdminPractitionersRouteChildren =
+  {
+    AuthenticatedAdminPractitionersIdRoute:
+      AuthenticatedAdminPractitionersIdRoute,
+    AuthenticatedAdminPractitionersIndexRoute:
+      AuthenticatedAdminPractitionersIndexRoute,
+  }
+
+const AuthenticatedAdminPractitionersRouteWithChildren =
+  AuthenticatedAdminPractitionersRoute._addFileChildren(
+    AuthenticatedAdminPractitionersRouteChildren,
+  )
+
 interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminAuditRoute: typeof AuthenticatedAdminAuditRoute
   AuthenticatedAdminCompetitionRoute: typeof AuthenticatedAdminCompetitionRoute
   AuthenticatedAdminEmailsRoute: typeof AuthenticatedAdminEmailsRoute
+  AuthenticatedAdminPractitionersRoute: typeof AuthenticatedAdminPractitionersRouteWithChildren
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
-  AuthenticatedAdminPractitionersIdRoute: typeof AuthenticatedAdminPractitionersIdRoute
-  AuthenticatedAdminPractitionersIndexRoute: typeof AuthenticatedAdminPractitionersIndexRoute
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminAuditRoute: AuthenticatedAdminAuditRoute,
   AuthenticatedAdminCompetitionRoute: AuthenticatedAdminCompetitionRoute,
   AuthenticatedAdminEmailsRoute: AuthenticatedAdminEmailsRoute,
+  AuthenticatedAdminPractitionersRoute:
+    AuthenticatedAdminPractitionersRouteWithChildren,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
-  AuthenticatedAdminPractitionersIdRoute:
-    AuthenticatedAdminPractitionersIdRoute,
-  AuthenticatedAdminPractitionersIndexRoute:
-    AuthenticatedAdminPractitionersIndexRoute,
 }
 
 const AuthenticatedAdminRouteWithChildren =
@@ -3429,3 +3462,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
