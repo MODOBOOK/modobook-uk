@@ -2,8 +2,11 @@
 // practitioners can create their account and start taking bookings.
 import * as React from 'react'
 import { Heading, Hr, Html, Link, Preview, Section, Text } from '@react-email/components'
+import modoLogo from '@/assets/modo-logo.png.asset.json'
 import { Head, ModoShell, styles, brand, brandedButton } from './_modo-brand'
 import type { TemplateEntry } from './registry'
+
+const MODO_LOGO_FULL_URL = `https://modobook.uk${modoLogo.url}`
 
 interface WaitlistOpenProps {
   firstName?: string | null
