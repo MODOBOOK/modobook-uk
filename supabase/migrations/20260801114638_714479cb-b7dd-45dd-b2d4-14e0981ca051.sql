@@ -1,0 +1,1 @@
+ALTER TABLE public.admin_broadcasts ADD COLUMN IF NOT EXISTS template_key TEXT DEFAULT 'admin-broadcast';

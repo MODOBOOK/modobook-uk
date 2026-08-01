@@ -10,6 +10,9 @@ import {
   previewAdminBroadcast,
   sendAdminBroadcastTest,
   countWaitlist,
+  previewWaitlistOpenEmail,
+  sendWaitlistOpenTest,
+  sendWaitlistOpenEmail,
 } from '@/lib/admin-emails.functions'
 import type { AdminBlock as Block } from '@/lib/email-templates/admin-broadcast'
 import { EMAIL_DEFAULTS } from '@/lib/email-templates/defaults'
@@ -21,7 +24,7 @@ import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { Loader2, Mail, Send, ArrowLeft, Shield, Plus, Trash2, ChevronUp, ChevronDown, Eye, Image as ImageIcon, Link as LinkIcon, Code } from 'lucide-react'
+import { Loader2, Mail, Send, ArrowLeft, Shield, Plus, Trash2, ChevronUp, ChevronDown, Eye, Image as ImageIcon, Link as LinkIcon, Code, Rocket, PartyPopper } from 'lucide-react'
 import { AdminShell } from '@/components/admin/AdminShell'
 import { toast } from 'sonner'
 
@@ -64,6 +67,8 @@ function AdminEmailsPage() {
   const [editing, setEditing] = useState<AuthEmailDef | null>(null)
   const [composing, setComposing] = useState(false)
 
+  const [waitlistLaunchOpen, setWaitlistLaunchOpen] = useState(false)
+
   useEffect(() => {
     Promise.all([listCust(), listBroadcasts()])
       .then(([c, b]) => { setCustoms(c as any[]); setBroadcasts(b as any[]) })
@@ -97,6 +102,19 @@ function AdminEmailsPage() {
         </Link>
       </div>
 
+      <WaitlistLaunchCard onOpen={() => setWaitlistLaunchOpen(true)} />
+
+      {waitlistLaunchOpen && (
+        <WaitlistLaunchDialog
+          onClose={() => setWaitlistLaunchOpen(false)}
+          onSent={async () => {
+            setWaitlistLaunchOpen(false)
+            const b = await listBroadcasts()
+            setBroadcasts(b as any[])
+          }}
+        />
+      )}
+
       {/* Broadcast section */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
@@ -119,13 +137,14 @@ function AdminEmailsPage() {
                 <div key={b.id} className="p-3">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="font-medium truncate">{b.subject}</span>
-                    <Badge variant="outline">
-                      {b.audience === 'all_practitioners'
-                        ? `${b.recipient_count} practitioner${b.recipient_count === 1 ? '' : 's'}`
-                        : b.audience === 'waitlist'
-                          ? `Waitlist · ${b.recipient_count}`
-                          : b.recipient_email}
-
+                    <Badge variant={b.template_key === 'waitlist-open' ? 'default' : 'outline'}>
+                      {b.template_key === 'waitlist-open'
+                        ? `Launch · ${b.recipient_count}`
+                        : b.audience === 'all_practitioners'
+                          ? `${b.recipient_count} practitioner${b.recipient_count === 1 ? '' : 's'}`
+                          : b.audience === 'waitlist'
+                            ? `Waitlist · ${b.recipient_count}`
+                            : b.recipient_email}
                     </Badge>
                   </div>
                   <p className="text-xs text-muted-foreground mt-0.5">
@@ -549,3 +568,153 @@ function BroadcastDialog({
     </Dialog>
   )
 }
+
+function WaitlistLaunchCard({ onOpen }: { onOpen: () => void }) {
+  const countWaitlistFn = useServerFn(countWaitlist)
+  const [count, setCount] = useState<number | null>(null)
+
+  useEffect(() => {
+    countWaitlistFn().then((r: any) => setCount(r.count)).catch(() => {})
+  }, [])
+
+  return (
+    <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+      <CardContent className="p-5">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-1">
+              <PartyPopper className="h-5 w-5 text-primary" />
+              <h2 className="text-lg font-semibold">Launch waitlist</h2>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Send the official "MODO is open" email to everyone on the practitioner waitlist.
+              {count !== null ? (
+                <span className="ml-1 font-medium text-foreground">({count} people)</span>
+              ) : null}
+            </p>
+          </div>
+          <Button onClick={onOpen} className="shrink-0">
+            <Rocket className="mr-2 h-4 w-4" /> Send launch email
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+function WaitlistLaunchDialog({
+  onClose,
+  onSent,
+}: {
+  onClose: () => void
+  onSent: () => Promise<void>
+}) {
+  const preview = useServerFn(previewWaitlistOpenEmail)
+  const sendTest = useServerFn(sendWaitlistOpenTest)
+  const sendAll = useServerFn(sendWaitlistOpenEmail)
+  const countWaitlistFn = useServerFn(countWaitlist)
+
+  const [html, setHtml] = useState<string | null>(null)
+  const [previewing, setPreviewing] = useState(false)
+  const [testEmail, setTestEmail] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [count, setCount] = useState<number | null>(null)
+
+  useEffect(() => {
+    setPreviewing(true)
+    preview({ data: { firstName: 'Alex' } })
+      .then((r: any) => setHtml(r.html))
+      .catch((e) => toast.error(e instanceof Error ? e.message : 'Preview failed'))
+      .finally(() => setPreviewing(false))
+    countWaitlistFn().then((r: any) => setCount(r.count)).catch(() => {})
+  }, [])
+
+  return (
+    <Dialog open onOpenChange={(v) => !v && !busy && onClose()}>
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Rocket className="h-5 w-5 text-primary" /> Send waitlist launch email
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            This sends the dedicated waitlist-open email (features, Home Screen install steps and WhatsApp support) to
+            {count !== null ? ` ${count} people` : ' everyone on the waitlist'}.
+          </p>
+
+          <div className="rounded-lg border bg-muted/30 p-3">
+            <p className="text-sm font-medium mb-2 flex items-center gap-2">
+              <Eye className="h-4 w-4" /> Preview
+            </p>
+            {previewing ? (
+              <div className="h-64 flex items-center justify-center">
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              </div>
+            ) : html ? (
+              <iframe
+                title="Waitlist email preview"
+                srcDoc={html}
+                className="w-full h-96 rounded-md border bg-white"
+                sandbox="allow-same-origin"
+              />
+            ) : (
+              <p className="text-sm text-muted-foreground">Could not load preview.</p>
+            )}
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-2">
+            <div className="flex-1">
+              <Label className="text-xs">Send a test copy to</Label>
+              <Input
+                type="email"
+                value={testEmail}
+                onChange={(e) => setTestEmail(e.target.value)}
+                placeholder="you@modobook.co.uk"
+              />
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              className="mt-auto"
+              disabled={!testEmail.trim() || busy}
+              onClick={async () => {
+                setBusy(true)
+                try {
+                  await sendTest({ data: { recipient_email: testEmail.trim() } })
+                  toast.success('Test email queued')
+                } catch (e) {
+                  toast.error(e instanceof Error ? e.message : 'Failed')
+                } finally { setBusy(false) }
+              }}
+            >
+              Send test
+            </Button>
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="ghost" onClick={onClose} disabled={busy}>Cancel</Button>
+          <Button
+            disabled={busy}
+            onClick={async () => {
+              if (!confirm(`Send the launch email to ${count !== null ? count : 'everyone on'} the waitlist?`)) return
+              setBusy(true)
+              try {
+                const res = await sendAll()
+                toast.success(`Queued ${res.sent} email${res.sent === 1 ? '' : 's'}${res.failed ? ` (${res.failed} failed)` : ''}`)
+                await onSent()
+              } catch (e) {
+                toast.error(e instanceof Error ? e.message : 'Failed')
+              } finally { setBusy(false) }
+            }}
+          >
+            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Send to waitlist'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+

@@ -12,6 +12,23 @@ async function assertAdmin(context: { supabase: any; userId: string }) {
   if (!data) throw new Error('Forbidden')
 }
 
+async function loadWaitlistRecipients(context: { supabase: any }) {
+  const { supabaseAdmin } = await import('@/integrations/supabase/client.server')
+  const { data: rows, error } = await supabaseAdmin
+    .from('practitioner_waitlist')
+    .select('email, name')
+  if (error) throw error
+  const seen = new Set<string>()
+  const out: Array<{ email: string; firstName?: string | null }> = []
+  for (const r of (rows as any[]) ?? []) {
+    const email = String(r.email || '').trim().toLowerCase()
+    if (!email || seen.has(email)) continue
+    seen.add(email)
+    out.push({ email, firstName: (r.name || '').split(' ')[0] || null })
+  }
+  return out
+}
+
 export const listPlatformEmailCustomizations = createServerFn({ method: 'GET' })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
@@ -245,4 +262,85 @@ export const countWaitlist = createServerFn({ method: 'GET' })
     if (error) throw error
     return { count: count ?? 0 }
   })
+
+/** Render the dedicated waitlist-open email to HTML so admins can preview it. */
+export const previewWaitlistOpenEmail = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { firstName?: string | null }) => input)
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context)
+    const React = await import('react')
+    const { render } = await import('react-email')
+    const { WaitlistOpenEmail } = await import('@/lib/email-templates/waitlist-open')
+    const html = await render(
+      React.createElement(WaitlistOpenEmail, { firstName: data.firstName ?? 'Alex' }) as any,
+    )
+    return { html }
+  })
+
+/** Send a test copy of the waitlist-open email to a single address. */
+export const sendWaitlistOpenTest = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { recipient_email: string }) => input)
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context)
+    const email = (data.recipient_email || '').trim().toLowerCase()
+    if (!email) throw new Error('Test recipient email is required')
+    const { enqueueAppEmail } = await import('@/lib/email/send.server')
+    const res = await enqueueAppEmail({
+      templateName: 'waitlist-open',
+      recipientEmail: email,
+      messageId: `waitlist-open-test-${crypto.randomUUID()}`,
+      templateData: { firstName: null },
+    })
+    if (!res.ok && !res.skipped) throw new Error(res.error || 'Could not send test email')
+    return { ok: true }
+  })
+
+/** Send the dedicated waitlist-open email to everyone on the waitlist. */
+export const sendWaitlistOpenEmail = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context)
+
+    const recipients = await loadWaitlistRecipients(context)
+    if (recipients.length === 0) throw new Error('No one on the waitlist to send to')
+
+    const { enqueueAppEmail } = await import('@/lib/email/send.server')
+
+    // Log the broadcast so we can show it in the admin history.
+    const { data: log, error: logErr } = await context.supabase
+      .from('admin_broadcasts')
+      .insert({
+        sent_by: context.userId,
+        audience: 'waitlist',
+        recipient_email: null,
+        subject: 'MODO Book is now open — create your clinic account 🎉',
+        message: 'Dedicated waitlist launch email.',
+        cta_text: null,
+        cta_url: null,
+        blocks: null,
+        recipient_count: recipients.length,
+        template_key: 'waitlist-open',
+      })
+      .select()
+      .single()
+    if (logErr) throw logErr
+
+    let sent = 0
+    let failed = 0
+    for (const r of recipients) {
+      const res = await enqueueAppEmail({
+        templateName: 'waitlist-open',
+        recipientEmail: r.email,
+        messageId: `waitlist-open-${log.id}-${r.email}`,
+        templateData: { firstName: r.firstName || null },
+      })
+      if (res.ok) sent++
+      else failed++
+    }
+
+    return { id: log.id, sent, failed, total: recipients.length }
+  })
+
 
