@@ -10,15 +10,15 @@ const MODO_LOGO_URL = modoLogo.url
 
 /** Fallback palette (used when no practitioner brand colour is supplied). */
 export const brand = {
-  page: '#f4f2ee',
+  page: '#faf7f2',
   card: '#ffffff',
-  headerCard: '#e9dfcc',
-  ink: '#2b2620',
-  muted: '#6b6459',
-  accent: '#b8895a',
-  accentInk: '#ffffff',
-  border: '#e6ded0',
-  soft: '#f5f1ea',
+  headerCard: '#f0ebe3',
+  ink: '#3a3530',
+  muted: '#7a7268',
+  accent: '#8b7355',
+  accentInk: '#faf7f2',
+  border: '#ece6db',
+  soft: '#f4efe7',
 }
 
 /** Pick a readable foreground colour for a given hex background. */
