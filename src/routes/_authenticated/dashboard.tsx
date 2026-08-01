@@ -107,6 +107,7 @@ const navItems = [
   { label: "Plan & billing", to: "/dashboard/billing", icon: CreditCard },
   { label: "Invoices", to: "/dashboard/invoices", icon: CreditCard },
   { label: "Booking settings", to: "/dashboard/settings", icon: Settings },
+  { label: "Help", to: "/dashboard/help", icon: HelpCircle },
   { label: "Prescriber Hub", to: "/hub", icon: Stethoscope },
   { label: "Prescription requests", to: "/dashboard/rx-requests", icon: ClipboardList },
   { label: "Prescriber referrals", to: "/dashboard/referrals", icon: ClipboardList },
