@@ -46,6 +46,7 @@ import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authentic
 import { Route as AuthenticatedHubRouteImport } from './routes/_authenticated/hub'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAdminPrescribersRouteImport } from './routes/_authenticated/admin-prescribers'
+import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as MSlugIndexRouteImport } from './routes/m.$slug.index'
 import { Route as AuthenticatedPrescriberIndexRouteImport } from './routes/_authenticated/prescriber.index'
 import { Route as AuthenticatedHubIndexRouteImport } from './routes/_authenticated/hub.index'
@@ -343,6 +344,11 @@ const AuthenticatedAdminPrescribersRoute =
     path: '/admin-prescribers',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const MSlugIndexRoute = MSlugIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -366,9 +372,9 @@ const AuthenticatedDashboardIndexRoute =
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
 const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
-  id: '/admin/',
-  path: '/admin/',
-  getParentRoute: () => AuthenticatedRoute,
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
 const MSlugTrainingRoute = MSlugTrainingRouteImport.update({
   id: '/training',
@@ -739,20 +745,20 @@ const AuthenticatedDashboardAboutRoute =
   } as any)
 const AuthenticatedAdminEmailsRoute =
   AuthenticatedAdminEmailsRouteImport.update({
-    id: '/admin/emails',
-    path: '/admin/emails',
-    getParentRoute: () => AuthenticatedRoute,
+    id: '/emails',
+    path: '/emails',
+    getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
 const AuthenticatedAdminCompetitionRoute =
   AuthenticatedAdminCompetitionRouteImport.update({
-    id: '/admin/competition',
-    path: '/admin/competition',
-    getParentRoute: () => AuthenticatedRoute,
+    id: '/competition',
+    path: '/competition',
+    getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
 const AuthenticatedAdminAuditRoute = AuthenticatedAdminAuditRouteImport.update({
-  id: '/admin/audit',
-  path: '/admin/audit',
-  getParentRoute: () => AuthenticatedRoute,
+  id: '/audit',
+  path: '/audit',
+  getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
 const AuthenticatedDashboardPatientsIndexRoute =
   AuthenticatedDashboardPatientsIndexRouteImport.update({
@@ -774,9 +780,9 @@ const AuthenticatedDashboardConsultationsIndexRoute =
   } as any)
 const AuthenticatedAdminPractitionersIndexRoute =
   AuthenticatedAdminPractitionersIndexRouteImport.update({
-    id: '/admin/practitioners/',
-    path: '/admin/practitioners/',
-    getParentRoute: () => AuthenticatedRoute,
+    id: '/practitioners/',
+    path: '/practitioners/',
+    getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
 const MSlugTrainingCourseIdRoute = MSlugTrainingCourseIdRouteImport.update({
   id: '/$courseId',
@@ -945,9 +951,9 @@ const AuthenticatedDashboardConsultationsIdRoute =
   } as any)
 const AuthenticatedAdminPractitionersIdRoute =
   AuthenticatedAdminPractitionersIdRouteImport.update({
-    id: '/admin/practitioners/$id',
-    path: '/admin/practitioners/$id',
-    getParentRoute: () => AuthenticatedRoute,
+    id: '/practitioners/$id',
+    path: '/practitioners/$id',
+    getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
 const AuthenticatedDashboardPatientsIdIndexRoute =
   AuthenticatedDashboardPatientsIdIndexRouteImport.update({
@@ -1003,6 +1009,7 @@ export interface FileRoutesByFullPath {
   '/unsubscribe': typeof UnsubscribeRoute
   '/waitlist': typeof WaitlistRoute
   '/who-its-for': typeof WhoItsForRoute
+  '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/admin-prescribers': typeof AuthenticatedAdminPrescribersRoute
   '/dashboard': typeof AuthenticatedDashboardRouteWithChildren
   '/hub': typeof AuthenticatedHubRouteWithChildren
@@ -1296,6 +1303,7 @@ export interface FileRoutesById {
   '/unsubscribe': typeof UnsubscribeRoute
   '/waitlist': typeof WaitlistRoute
   '/who-its-for': typeof WhoItsForRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/admin-prescribers': typeof AuthenticatedAdminPrescribersRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRouteWithChildren
   '/_authenticated/hub': typeof AuthenticatedHubRouteWithChildren
@@ -1447,6 +1455,7 @@ export interface FileRouteTypes {
     | '/unsubscribe'
     | '/waitlist'
     | '/who-its-for'
+    | '/admin'
     | '/admin-prescribers'
     | '/dashboard'
     | '/hub'
@@ -1739,6 +1748,7 @@ export interface FileRouteTypes {
     | '/unsubscribe'
     | '/waitlist'
     | '/who-its-for'
+    | '/_authenticated/admin'
     | '/_authenticated/admin-prescribers'
     | '/_authenticated/dashboard'
     | '/_authenticated/hub'
@@ -2179,6 +2189,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminPrescribersRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/m/$slug/': {
       id: '/m/$slug/'
       path: '/'
@@ -2209,10 +2226,10 @@ declare module '@tanstack/react-router' {
     }
     '/_authenticated/admin/': {
       id: '/_authenticated/admin/'
-      path: '/admin'
+      path: '/'
       fullPath: '/admin/'
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedAdminRoute
     }
     '/m/$slug/training': {
       id: '/m/$slug/training'
@@ -2657,24 +2674,24 @@ declare module '@tanstack/react-router' {
     }
     '/_authenticated/admin/emails': {
       id: '/_authenticated/admin/emails'
-      path: '/admin/emails'
+      path: '/emails'
       fullPath: '/admin/emails'
       preLoaderRoute: typeof AuthenticatedAdminEmailsRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/admin/competition': {
       id: '/_authenticated/admin/competition'
-      path: '/admin/competition'
+      path: '/competition'
       fullPath: '/admin/competition'
       preLoaderRoute: typeof AuthenticatedAdminCompetitionRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/admin/audit': {
       id: '/_authenticated/admin/audit'
-      path: '/admin/audit'
+      path: '/audit'
       fullPath: '/admin/audit'
       preLoaderRoute: typeof AuthenticatedAdminAuditRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/dashboard/patients/': {
       id: '/_authenticated/dashboard/patients/'
@@ -2699,10 +2716,10 @@ declare module '@tanstack/react-router' {
     }
     '/_authenticated/admin/practitioners/': {
       id: '/_authenticated/admin/practitioners/'
-      path: '/admin/practitioners'
+      path: '/practitioners'
       fullPath: '/admin/practitioners/'
       preLoaderRoute: typeof AuthenticatedAdminPractitionersIndexRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedAdminRoute
     }
     '/m/$slug/training/$courseId': {
       id: '/m/$slug/training/$courseId'
@@ -2909,10 +2926,10 @@ declare module '@tanstack/react-router' {
     }
     '/_authenticated/admin/practitioners/$id': {
       id: '/_authenticated/admin/practitioners/$id'
-      path: '/admin/practitioners/$id'
+      path: '/practitioners/$id'
       fullPath: '/admin/practitioners/$id'
       preLoaderRoute: typeof AuthenticatedAdminPractitionersIdRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/dashboard/patients/$id/': {
       id: '/_authenticated/dashboard/patients/$id/'
@@ -2958,6 +2975,29 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminAuditRoute: typeof AuthenticatedAdminAuditRoute
+  AuthenticatedAdminCompetitionRoute: typeof AuthenticatedAdminCompetitionRoute
+  AuthenticatedAdminEmailsRoute: typeof AuthenticatedAdminEmailsRoute
+  AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
+  AuthenticatedAdminPractitionersIdRoute: typeof AuthenticatedAdminPractitionersIdRoute
+  AuthenticatedAdminPractitionersIndexRoute: typeof AuthenticatedAdminPractitionersIndexRoute
+}
+
+const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminAuditRoute: AuthenticatedAdminAuditRoute,
+  AuthenticatedAdminCompetitionRoute: AuthenticatedAdminCompetitionRoute,
+  AuthenticatedAdminEmailsRoute: AuthenticatedAdminEmailsRoute,
+  AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
+  AuthenticatedAdminPractitionersIdRoute:
+    AuthenticatedAdminPractitionersIdRoute,
+  AuthenticatedAdminPractitionersIndexRoute:
+    AuthenticatedAdminPractitionersIndexRoute,
+}
+
+const AuthenticatedAdminRouteWithChildren =
+  AuthenticatedAdminRoute._addFileChildren(AuthenticatedAdminRouteChildren)
 
 interface AuthenticatedDashboardMarketingRouteChildren {
   AuthenticatedDashboardMarketingAnalyticsRoute: typeof AuthenticatedDashboardMarketingAnalyticsRoute
@@ -3250,33 +3290,21 @@ const AuthenticatedPrescriberRouteWithChildren =
   )
 
 interface AuthenticatedRouteChildren {
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
   AuthenticatedAdminPrescribersRoute: typeof AuthenticatedAdminPrescribersRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRouteWithChildren
   AuthenticatedHubRoute: typeof AuthenticatedHubRouteWithChildren
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedPrescriberRoute: typeof AuthenticatedPrescriberRouteWithChildren
-  AuthenticatedAdminAuditRoute: typeof AuthenticatedAdminAuditRoute
-  AuthenticatedAdminCompetitionRoute: typeof AuthenticatedAdminCompetitionRoute
-  AuthenticatedAdminEmailsRoute: typeof AuthenticatedAdminEmailsRoute
-  AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
-  AuthenticatedAdminPractitionersIdRoute: typeof AuthenticatedAdminPractitionersIdRoute
-  AuthenticatedAdminPractitionersIndexRoute: typeof AuthenticatedAdminPractitionersIndexRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
   AuthenticatedAdminPrescribersRoute: AuthenticatedAdminPrescribersRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRouteWithChildren,
   AuthenticatedHubRoute: AuthenticatedHubRouteWithChildren,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedPrescriberRoute: AuthenticatedPrescriberRouteWithChildren,
-  AuthenticatedAdminAuditRoute: AuthenticatedAdminAuditRoute,
-  AuthenticatedAdminCompetitionRoute: AuthenticatedAdminCompetitionRoute,
-  AuthenticatedAdminEmailsRoute: AuthenticatedAdminEmailsRoute,
-  AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
-  AuthenticatedAdminPractitionersIdRoute:
-    AuthenticatedAdminPractitionersIdRoute,
-  AuthenticatedAdminPractitionersIndexRoute:
-    AuthenticatedAdminPractitionersIndexRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
