@@ -813,6 +813,7 @@ function NotesSection({ clientId, patient }: { clientId: string; patient: any })
         <div className="flex flex-wrap items-center gap-1.5">
           <Button
             size="sm" variant="ghost"
+            className="text-primary-foreground hover:bg-primary-foreground/15 hover:text-primary-foreground"
             onClick={() => exportPdf(anySelected ? "selected" : "all")}
             disabled={exporting || rows.length === 0}
             title={anySelected ? "Download selected as PDF" : "Download all as PDF"}
@@ -822,6 +823,7 @@ function NotesSection({ clientId, patient }: { clientId: string; patient: any })
           </Button>
           <Button
             size="sm" variant="outline"
+            className="border-primary-foreground/40 bg-primary-foreground/10 text-primary-foreground hover:bg-primary-foreground/20 hover:text-primary-foreground"
             onClick={() => { setEditing({ body: "", visible_to_patient: false, face_map: { pins: [], strokes: [], bg: "realistic" } }); setShowMap(true); }}
           >
             <Syringe className="mr-1 h-3.5 w-3.5" />Treatment diagram
