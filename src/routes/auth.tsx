@@ -22,8 +22,8 @@ export const Route = createFileRoute("/auth")({
   }),
   head: () => ({
     meta: [
-      { title: "Sign in | MODO" },
-      { name: "description", content: "Sign in or create your MODO account." },
+      { title: "Create your account | MODO" },
+      { name: "description", content: "Create your MODO practitioner account. Waitlist access only." },
     ],
   }),
   component: AuthPage,
