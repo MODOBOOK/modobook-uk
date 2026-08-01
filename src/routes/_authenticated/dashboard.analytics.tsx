@@ -39,6 +39,17 @@ type Appt = Awaited<ReturnType<typeof getDashboardAnalytics>>["appointments"][nu
 
 type Range = "7d" | "30d" | "month" | "year" | "all";
 
+const CHART_COLORS = [
+  "#c98a4b",
+  "#5b8a72",
+  "#8a6fb0",
+  "#4a90b8",
+  "#d4646a",
+  "#b0913f",
+  "#6c7a89",
+  "#9c6f4b",
+];
+
 function formatCurrency(n: number) {
   return `£${n.toFixed(2)}`;
 }
@@ -155,7 +166,8 @@ function AnalyticsPage() {
     }
     const treatmentBreakdown = Array.from(treatmentMap.values())
       .sort((a, b) => b.revenue - a.revenue)
-      .slice(0, 8);
+      .slice(0, 8)
+      .map((t, i) => ({ ...t, color: t.color || CHART_COLORS[i % CHART_COLORS.length] }));
 
     // Status breakdown
     const statusMap = new Map<string, number>();
@@ -164,17 +176,17 @@ function AnalyticsPage() {
       statusMap.set(label, (statusMap.get(label) ?? 0) + 1);
     }
     const statusColors: Record<string, string> = {
-      "Completed / Booked": "hsl(var(--primary))",
-      Cancelled: "hsl(var(--destructive))",
-      "No-show": "hsl(var(--muted-foreground))",
+      "Completed / Booked": "#5b8a72",
+      Cancelled: "#d4646a",
+      "No-show": "#c98a4b",
     };
-    const statusBreakdown = Array.from(statusMap.entries()).map(([name, value]) => ({ name, value, color: statusColors[name] ?? "hsl(var(--accent))" }));
+    const statusBreakdown = Array.from(statusMap.entries()).map(([name, value]) => ({ name, value, color: statusColors[name] ?? "#6c7a89" }));
 
     return { filtered, totals, chartData, treatmentBreakdown, statusBreakdown };
   }, [data, range]);
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6">
+    <div className="mx-auto w-full max-w-6xl space-y-6 overflow-x-hidden">
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
@@ -188,8 +200,8 @@ function AnalyticsPage() {
             <h1 className="font-serif text-2xl sm:text-3xl">Analytics</h1>
           </div>
         </div>
-        <Tabs value={range} onValueChange={(v) => setRange(v as Range)}>
-          <TabsList className="rounded-full bg-muted/60">
+        <Tabs value={range} className="-mx-1 w-full overflow-x-auto sm:mx-0 sm:w-auto" onValueChange={(v) => setRange(v as Range)}>
+          <TabsList className="w-max rounded-full bg-muted/60">
             <TabsTrigger value="7d" className="rounded-full text-xs">7 days</TabsTrigger>
             <TabsTrigger value="30d" className="rounded-full text-xs">30 days</TabsTrigger>
             <TabsTrigger value="month" className="rounded-full text-xs">This month</TabsTrigger>
@@ -221,27 +233,27 @@ function AnalyticsPage() {
               <CardHeader className="pb-2">
                 <CardTitle className="font-serif text-lg">Revenue trend</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="px-2 sm:px-6">
                 <div className="h-64 w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={chartData}>
                       <defs>
                         <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-                          <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                          <stop offset="5%" stopColor="#c98a4b" stopOpacity={0.45} />
+                          <stop offset="95%" stopColor="#c98a4b" stopOpacity={0} />
                         </linearGradient>
                       </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis dataKey="label" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e3ded5" />
+                      <XAxis dataKey="label" tick={{ fontSize: 11 }} stroke="#8a8378" />
                       <YAxis
                         tick={{ fontSize: 11 }}
-                        stroke="hsl(var(--muted-foreground))"
+                        stroke="#8a8378"
                         tickFormatter={(v) => `£${v}`}
                       />
                       <Tooltip
                         contentStyle={{
-                          background: "hsl(var(--card))",
-                          border: "1px solid hsl(var(--border))",
+                          background: "var(--card)",
+                          border: "1px solid var(--border)",
                           borderRadius: "0.75rem",
                         }}
                         formatter={(v: number) => [formatCurrency(v), "Revenue"]}
@@ -249,7 +261,7 @@ function AnalyticsPage() {
                       <Area
                         type="monotone"
                         dataKey="revenue"
-                        stroke="hsl(var(--primary))"
+                        stroke="#c98a4b"
                         fill="url(#revenueGradient)"
                         strokeWidth={2}
                       />
@@ -263,21 +275,25 @@ function AnalyticsPage() {
               <CardHeader className="pb-2">
                 <CardTitle className="font-serif text-lg">Bookings trend</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="px-2 sm:px-6">
                 <div className="h-64 w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={chartData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis dataKey="label" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
-                      <YAxis tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" allowDecimals={false} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e3ded5" />
+                      <XAxis dataKey="label" tick={{ fontSize: 11 }} stroke="#8a8378" />
+                      <YAxis tick={{ fontSize: 11 }} stroke="#8a8378" allowDecimals={false} />
                       <Tooltip
                         contentStyle={{
-                          background: "hsl(var(--card))",
-                          border: "1px solid hsl(var(--border))",
+                          background: "var(--card)",
+                          border: "1px solid var(--border)",
                           borderRadius: "0.75rem",
                         }}
                       />
-                      <Bar dataKey="bookings" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="bookings" radius={[4, 4, 0, 0]}>
+                        {chartData.map((_, i) => (
+                          <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                        ))}
+                      </Bar>
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -300,7 +316,7 @@ function AnalyticsPage() {
                       <div key={t.name} className="flex items-center gap-3">
                         <div
                           className="size-3 shrink-0 rounded-full"
-                          style={{ background: t.color ?? "hsl(var(--primary))" }}
+                          style={{ background: t.color }}
                         />
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-sm font-medium">{t.name}</p>
@@ -308,7 +324,7 @@ function AnalyticsPage() {
                         <Badge variant="secondary" className="shrink-0">
                           {t.bookings}
                         </Badge>
-                        <p className="w-20 shrink-0 text-right text-sm font-medium">{formatCurrency(t.revenue)}</p>
+                        <p className="shrink-0 whitespace-nowrap text-right text-sm font-medium tabular-nums">{formatCurrency(t.revenue)}</p>
                       </div>
                     ))}
                   </div>
@@ -341,8 +357,8 @@ function AnalyticsPage() {
                         </Pie>
                         <Tooltip
                           contentStyle={{
-                            background: "hsl(var(--card))",
-                            border: "1px solid hsl(var(--border))",
+                            background: "var(--card)",
+                            border: "1px solid var(--border)",
                             borderRadius: "0.75rem",
                           }}
                         />
