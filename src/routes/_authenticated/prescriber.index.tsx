@@ -62,9 +62,9 @@ function PrescriberHome() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h2 className="font-serif text-2xl">Referrals</h2>
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 sm:flex sm:flex-wrap sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <h2 className="truncate font-serif text-2xl">Referrals</h2>
           <p className="text-sm text-muted-foreground">
             Patients booked by connected practitioners appear here for your sign-off.
           </p>
@@ -73,12 +73,12 @@ function PrescriberHome() {
       </div>
 
       <Tabs defaultValue="pending">
-        <TabsList>
-          <TabsTrigger value="pending">
+        <TabsList className="h-auto flex-wrap">
+          <TabsTrigger value="pending" className="flex-1">
             Pending {pending.length > 0 && <span className="ml-1 rounded bg-primary/10 px-1.5 text-xs text-primary">{pending.length}</span>}
           </TabsTrigger>
-          <TabsTrigger value="active">Active</TabsTrigger>
-          <TabsTrigger value="history">History</TabsTrigger>
+          <TabsTrigger value="active" className="flex-1">Active</TabsTrigger>
+          <TabsTrigger value="history" className="flex-1">History</TabsTrigger>
         </TabsList>
         <TabsContent value="pending" className="space-y-3">
           {pending.length === 0 ? <Empty>No pending referrals.</Empty> : pending.map((r) => <RefCard key={r.id} r={r} onAct={act} />)}
@@ -104,9 +104,9 @@ function RefCard({ r, onAct }: { r: Ref; onAct: (id: string, action: "accept" | 
   return (
     <Card>
       <CardContent className="space-y-3 p-4">
-        <div className="flex items-start justify-between gap-3">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
           <div className="min-w-0">
-            <p className="font-semibold">
+            <p className="truncate font-semibold">
               {r.patient_display}
               <span className="ml-2 text-xs font-normal text-muted-foreground">· {r.treatment_name}</span>
             </p>
@@ -115,17 +115,19 @@ function RefCard({ r, onAct }: { r: Ref; onAct: (id: string, action: "accept" | 
               <span className="font-medium text-foreground">
                 {r.practitioner_name ? `${r.practitioner_name} · ` : ""}{r.clinic_name}
               </span>
-              {r.location_name ? ` · ${r.location_name}` : ""}
-              {r.appointment ? ` · ${r.appointment.scheduled_date} at ${r.appointment.start_time.slice(0,5)}` : ""}
-              {r.routing === "in_person_consult" && <span className="ml-2">· In-person consult</span>}
-              {r.routing === "clinic_visit" && <span className="ml-2">· Clinic visit</span>}
-              {r.is_walk_in && <span className="ml-2">· Walk-in</span>}
+            </p>
+            <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
+              {r.location_name ? <span>· {r.location_name}</span> : null}
+              {r.appointment ? <span>· {r.appointment.scheduled_date} at {r.appointment.start_time.slice(0,5)}</span> : null}
+              {r.routing === "in_person_consult" && <span>· In-person consult</span>}
+              {r.routing === "clinic_visit" && <span>· Clinic visit</span>}
+              {r.is_walk_in && <span>· Walk-in</span>}
             </p>
             {r.is_walk_in && r.walk_in_note && (
               <p className="mt-2 rounded border bg-muted/40 p-2 text-xs whitespace-pre-wrap">{r.walk_in_note}</p>
             )}
           </div>
-          <div className="flex flex-col items-end gap-1">
+          <div className="flex shrink-0 flex-col items-end gap-1">
             <StatusBadge status={r.status} />
             {r.is_walk_in && r.awaiting_practitioner_close && <Badge variant="outline" className="text-[10px]">With practitioner</Badge>}
           </div>
@@ -134,7 +136,7 @@ function RefCard({ r, onAct }: { r: Ref; onAct: (id: string, action: "accept" | 
           <SendWalkInButton id={r.id} />
         )}
         {r.status === "pending" && (
-          <div className="flex justify-end gap-2">
+          <div className="flex flex-wrap justify-end gap-2">
             <Button variant="outline" size="sm" onClick={() => onAct(r.id, "decline")}>
               <XCircle className="mr-1 h-4 w-4" /> Decline
             </Button>
@@ -145,9 +147,9 @@ function RefCard({ r, onAct }: { r: Ref; onAct: (id: string, action: "accept" | 
         )}
         {canExpand && (
           <>
-            <Button variant="ghost" size="sm" className="w-full justify-between" onClick={() => setExpanded((x) => !x)}>
-              <span className="inline-flex items-center gap-2"><User className="h-4 w-4" /> Full record &amp; medical forms</span>
-              {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            <Button variant="ghost" size="sm" className="h-auto w-full justify-between py-2" onClick={() => setExpanded((x) => !x)}>
+              <span className="inline-flex items-center gap-2"><User className="h-4 w-4 shrink-0" /> Full record &amp; medical forms</span>
+              {expanded ? <ChevronUp className="h-4 w-4 shrink-0" /> : <ChevronDown className="h-4 w-4 shrink-0" />}
             </Button>
             {expanded && <FullRecord id={r.id} onComplete={() => onAct(r.id, "complete")} status={r.status} />}
           </>
@@ -198,11 +200,21 @@ function FullRecord({ id, onComplete, status }: { id: string; onComplete: () => 
       )}
       {status === "accepted" ? (
         <Tabs defaultValue="records" className="pt-1">
-          <TabsList>
-            <TabsTrigger value="records"><FileText className="mr-1 h-3.5 w-3.5" /> Medical &amp; consent</TabsTrigger>
-            <TabsTrigger value="prescribe"><Pill className="mr-1 h-3.5 w-3.5" /> Prescription</TabsTrigger>
-            <TabsTrigger value="careplan"><ClipboardList className="mr-1 h-3.5 w-3.5" /> Care plan</TabsTrigger>
-            <TabsTrigger value="complete">Complete</TabsTrigger>
+          <TabsList className="h-auto w-full flex-wrap">
+            <TabsTrigger value="records" className="flex-1 gap-1 px-2 text-xs sm:px-3 sm:text-sm">
+              <FileText className="h-3.5 w-3.5 shrink-0" />
+              <span className="hidden sm:inline">Medical &amp; consent</span>
+              <span className="sm:hidden">Records</span>
+            </TabsTrigger>
+            <TabsTrigger value="prescribe" className="flex-1 gap-1 px-2 text-xs sm:px-3 sm:text-sm">
+              <Pill className="h-3.5 w-3.5 shrink-0" />
+              <span>Rx</span>
+            </TabsTrigger>
+            <TabsTrigger value="careplan" className="flex-1 gap-1 px-2 text-xs sm:px-3 sm:text-sm">
+              <ClipboardList className="h-3.5 w-3.5 shrink-0" />
+              <span>Care</span>
+            </TabsTrigger>
+            <TabsTrigger value="complete" className="flex-1 px-2 text-xs sm:px-3 sm:text-sm">Complete</TabsTrigger>
           </TabsList>
           <TabsContent value="records" className="space-y-4 pt-3">
             <RecordsSection forms={forms} consents={consents} referralId={id} practitionerProfileId={ref.practitioner_profile_id ?? null} onChanged={() => q.refetch()} />
@@ -272,7 +284,7 @@ function RecordsSection({
   return (
     <div className="space-y-4">
       <section>
-        <div className="mb-2 flex items-center justify-between gap-2">
+        <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Medical forms ({forms.length})
           </p>
@@ -286,19 +298,19 @@ function RecordsSection({
           ) : null}
         </div>
         {forms.length === 0 ? (
-          <p className="rounded-md border border-dashed bg-background p-3 text-muted-foreground">Use Select forms to choose the medical forms for this walk-in. They will load here in full once selected.</p>
+          <p className="rounded-md border border-dashed bg-background p-3 text-sm text-muted-foreground">Use Select forms to choose the medical forms for this walk-in. They will load here in full once selected.</p>
         ) : (
           <Accordion type="multiple" className="rounded border bg-background">
             {forms.map((f) => (
               <AccordionItem key={f.id} value={f.id} className="border-b last:border-b-0">
                 <AccordionTrigger className="px-3 py-2 text-left hover:no-underline">
-                  <span className="flex flex-1 items-center gap-2 pr-2 text-sm font-medium">
+                  <span className="flex min-w-0 flex-1 items-center gap-2 pr-2 text-sm font-medium">
                     <FileText className="h-4 w-4 shrink-0" />
                     <span className="truncate">{f.template_name}</span>
-                    <span className="ml-auto text-xs font-normal text-muted-foreground">
-                      {f.status}
-                      {f.submitted_at ? ` · ${new Date(f.submitted_at).toLocaleDateString()}` : ""}
-                    </span>
+                  </span>
+                  <span className="ml-2 shrink-0 text-xs font-normal text-muted-foreground">
+                    {f.status}
+                    {f.submitted_at ? ` · ${new Date(f.submitted_at).toLocaleDateString()}` : ""}
                   </span>
                 </AccordionTrigger>
                 <AccordionContent className="px-3 pb-3">
@@ -310,7 +322,7 @@ function RecordsSection({
         )}
       </section>
       <section>
-        <div className="mb-2 flex items-center justify-between gap-2">
+        <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Consent forms ({consents.length})
           </p>
@@ -324,19 +336,19 @@ function RecordsSection({
           ) : null}
         </div>
         {consents.length === 0 ? (
-          <p className="rounded-md border border-dashed bg-background p-3 text-muted-foreground">Use Select consents to choose consent forms for this walk-in. They will load here once selected.</p>
+          <p className="rounded-md border border-dashed bg-background p-3 text-sm text-muted-foreground">Use Select consents to choose consent forms for this walk-in. They will load here once selected.</p>
         ) : (
           <Accordion type="multiple" className="rounded border bg-background">
             {consents.map((c) => (
               <AccordionItem key={c.id} value={c.id} className="border-b last:border-b-0">
                 <AccordionTrigger className="px-3 py-2 text-left hover:no-underline">
-                  <span className="flex flex-1 items-center gap-2 pr-2 text-sm font-medium">
+                  <span className="flex min-w-0 flex-1 items-center gap-2 pr-2 text-sm font-medium">
                     <FileText className="h-4 w-4 shrink-0" />
                     <span className="truncate">{c.template_name}</span>
-                    <span className="ml-auto text-xs font-normal text-muted-foreground">
-                      {c.status}
-                      {c.signed_at ? ` · ${new Date(c.signed_at).toLocaleDateString()}` : ""}
-                    </span>
+                  </span>
+                  <span className="ml-2 shrink-0 text-xs font-normal text-muted-foreground">
+                    {c.status}
+                    {c.signed_at ? ` · ${new Date(c.signed_at).toLocaleDateString()}` : ""}
                   </span>
                 </AccordionTrigger>
                 <AccordionContent className="space-y-3 px-3 pb-3">
@@ -350,7 +362,7 @@ function RecordsSection({
                   ) : (
                     <p className="text-xs text-muted-foreground">No consent body on file.</p>
                   )}
-                  <div className="flex flex-wrap items-center gap-3 border-t pt-2 text-xs">
+                  <div className="grid grid-cols-1 gap-2 border-t pt-2 text-xs sm:grid-cols-2">
                     <div>
                       <span className="text-muted-foreground">Signed by: </span>
                       <span className="font-medium">{c.signature_name || "—"}</span>
@@ -366,7 +378,7 @@ function RecordsSection({
                         href={c.signed_url}
                         target="_blank"
                         rel="noreferrer"
-                        className="ml-auto text-primary underline"
+                        className="text-primary underline"
                       >
                         Download PDF
                       </a>
@@ -376,7 +388,7 @@ function RecordsSection({
                         href={`/c/${c.token}`}
                         target="_blank"
                         rel="noreferrer"
-                        className="ml-auto text-primary underline"
+                        className="text-primary underline"
                       >
                         Open signing link
                       </a>
@@ -1082,6 +1094,7 @@ function SendWalkInButton({ id }: { id: string }) {
         size="sm"
         variant="outline"
         disabled={busy || sent}
+        className="h-auto w-full justify-center py-2 sm:w-auto"
         onClick={async () => {
           try {
             setBusy(true);
@@ -1091,7 +1104,11 @@ function SendWalkInButton({ id }: { id: string }) {
           } catch (e) { toast.error((e as Error).message); }
           finally { setBusy(false); }
         }}
-      ><Send className="mr-1 h-4 w-4" /> {sent ? "Sent to practitioner" : "Send to practitioner to close"}</Button>
+      >
+        <Send className="mr-1 h-4 w-4 shrink-0" />
+        <span className="hidden sm:inline">{sent ? "Sent to practitioner" : "Send to practitioner to close"}</span>
+        <span className="sm:hidden">{sent ? "Sent" : "Send to practitioner"}</span>
+      </Button>
     </div>
   );
 }
