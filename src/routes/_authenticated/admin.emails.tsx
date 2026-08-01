@@ -22,6 +22,7 @@ import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Loader2, Mail, Send, ArrowLeft, Shield, Plus, Trash2, ChevronUp, ChevronDown, Eye, Image as ImageIcon, Link as LinkIcon, Code } from 'lucide-react'
+import { AdminShell } from '@/components/admin/AdminShell'
 import { toast } from 'sonner'
 
 export const Route = createFileRoute('/_authenticated/admin/emails')({
