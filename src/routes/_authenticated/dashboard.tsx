@@ -181,7 +181,22 @@ function DashboardLayout() {
             return <NavLink key={item.to} to={item.to} icon={item.icon} label={item.label} badge={badge} />;
           })}
         </nav>
-        <div className="border-t border-border/60 p-4">
+        <div className="border-t border-border/60 p-4 space-y-2">
+          <Button
+            variant="ghost"
+            className="w-full justify-start text-muted-foreground hover:text-foreground"
+            asChild
+          >
+            <a
+              href="https://wa.me/447385790119"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Chat with MODO support on WhatsApp"
+            >
+              <MessageCircle className="mr-2 h-4 w-4" />
+              WhatsApp support
+            </a>
+          </Button>
           <Button variant="ghost" className="w-full justify-start text-muted-foreground hover:text-foreground" onClick={signOut}>
             <LogOut className="mr-2 h-4 w-4" />
             Sign out
