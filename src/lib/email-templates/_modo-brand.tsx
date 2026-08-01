@@ -155,7 +155,10 @@ export function ModoShell({
   const _preview = preview
   void _preview
 
-  const headerBg = brandColor?.trim() || brand.headerCard
+  // With a logo, use a light tint of the brand colour so the logo stays legible.
+  const headerBg = logoUrl
+    ? tint(brandColor) || brand.headerCard
+    : brandColor?.trim() || brand.headerCard
   const headerInk = readableInk(headerBg)
   const modoFallback = `https://modobook.uk${MODO_LOGO_URL}`
 
