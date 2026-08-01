@@ -42,6 +42,7 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'topup-reminder': topupReminder,
   'platform-arrears': platformArrears,
   'waitlist-welcome': waitlistWelcome,
+  'waitlist-open': waitlistOpen,
   'prescriber-invoice': prescriberInvoice,
   'gift-card-delivery': giftCardDelivery,
 }
