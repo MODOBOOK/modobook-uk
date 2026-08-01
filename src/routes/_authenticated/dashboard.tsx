@@ -194,7 +194,7 @@ function DashboardLayout() {
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Mobile header — sticky, compact, back + brand + actions */}
         <header
-          className="sticky top-0 z-30 flex items-center justify-between gap-0.5 border-b bg-background/90 px-2 backdrop-blur supports-[backdrop-filter]:bg-background/70 lg:hidden"
+          className="sticky top-0 z-40 flex items-center justify-between gap-0.5 border-b bg-background px-2 lg:hidden"
           style={{ paddingTop: "env(safe-area-inset-top)", minHeight: 44 }}
         >
           <BackButton />
@@ -225,7 +225,7 @@ function DashboardLayout() {
 
 
         {/* Desktop / iPad header */}
-        <header className="hidden h-20 items-center justify-between border-b border-border/60 px-6 lg:flex lg:px-10">
+        <header className="sticky top-0 z-40 hidden h-20 items-center justify-between border-b border-border/60 bg-background px-6 lg:flex lg:px-10">
           <div className="flex items-center gap-3">
             <BackButton />
             <div>
