@@ -376,7 +376,7 @@ function ReviewMod() {
                 <Button
                   disabled={aiBusy}
                   onClick={async () => {
-                    const keep = aiDraft.filter((r) => r._include && ((r.quote ?? "").trim() || r.rating != null));
+                    const keep = aiDraft.filter((r) => r._include);
                     if (!keep.length) { toast.error("Tick at least one review to import"); return; }
                     setAiBusy(true);
                     try {
