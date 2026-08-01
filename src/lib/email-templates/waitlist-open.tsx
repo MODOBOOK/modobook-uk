@@ -1,10 +1,9 @@
 // Waitlist "we're open" email — sent when MODO launches and waitlisted
 // practitioners can create their account and start taking bookings.
 import * as React from 'react'
-import { Column, Heading, Hr, Html, Img, Link, Preview, Row, Section, Text } from '@react-email/components'
+import { Heading, Hr, Html, Link, Preview, Section, Text } from '@react-email/components'
 import { Head, ModoShell, styles, brand, brandedButton } from './_modo-brand'
 import type { TemplateEntry } from './registry'
-import modoWordmark from '@/assets/modo-wordmark.png.asset.json'
 
 interface WaitlistOpenProps {
   firstName?: string | null
