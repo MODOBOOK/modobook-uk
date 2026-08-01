@@ -64,43 +64,127 @@ export const listAdminBroadcasts = createServerFn({ method: 'GET' })
     return data ?? []
   })
 
-export const sendAdminBroadcast = createServerFn({ method: 'POST' })
+type BroadcastInput = {
+  audience: 'all_practitioners' | 'user' | 'waitlist'
+  recipient_email?: string | null
+  subject: string
+  message: string
+  cta_text?: string | null
+  cta_url?: string | null
+  blocks?: any[] | null
+}
+
+async function loadRecipients(
+  context: { supabase: any },
+  data: BroadcastInput,
+): Promise<Array<{ email: string; firstName?: string | null }>> {
+  if (data.audience === 'user') {
+    const email = (data.recipient_email || '').trim().toLowerCase()
+    if (!email) throw new Error('Recipient email is required')
+    return [{ email }]
+  }
+
+  if (data.audience === 'waitlist') {
+    const { supabaseAdmin } = await import('@/integrations/supabase/client.server')
+    const { data: rows, error } = await supabaseAdmin
+      .from('practitioner_waitlist')
+      .select('email, name')
+    if (error) throw error
+    const seen = new Set<string>()
+    const out: Array<{ email: string; firstName?: string | null }> = []
+    for (const r of (rows as any[]) ?? []) {
+      const email = String(r.email || '').trim().toLowerCase()
+      if (!email || seen.has(email)) continue
+      seen.add(email)
+      out.push({ email, firstName: (r.name || '').split(' ')[0] || null })
+    }
+    return out
+  }
+
+  const { data: rows, error } = await context.supabase.rpc('admin_list_practitioners')
+  if (error) throw error
+  return ((rows as any[]) ?? [])
+    .filter((p) => p.active && p.email)
+    .map((p) => ({
+      email: p.email as string,
+      firstName: (p.full_name || '').split(' ')[0] || null,
+    }))
+}
+
+/** Render the broadcast to HTML so admins can preview it before sending. */
+export const previewAdminBroadcast = createServerFn({ method: 'POST' })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: {
-    audience: 'all_practitioners' | 'user'
-    recipient_email?: string | null
     subject: string
     message: string
     cta_text?: string | null
     cta_url?: string | null
+    blocks?: any[] | null
+    firstName?: string | null
   }) => input)
   .handler(async ({ data, context }) => {
     await assertAdmin(context)
+    const React = await import('react')
+    const { render } = await import('react-email')
+    const { AdminBroadcastEmail } = await import('@/lib/email-templates/admin-broadcast')
+    const html = await render(
+      React.createElement(AdminBroadcastEmail, {
+        subject: data.subject || 'A message from MODO Book',
+        message: data.message || '',
+        blocks: (data.blocks as any[]) || [],
+        ctaText: data.cta_text || null,
+        ctaUrl: data.cta_url || null,
+        firstName: data.firstName ?? 'Alex',
+      }) as any,
+    )
+    return { html }
+  })
 
-    if (!data.subject.trim() || !data.message.trim()) {
-      throw new Error('Subject and message are required')
+/** Send a one-off test copy of the broadcast to a single address. */
+export const sendAdminBroadcastTest = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: {
+    recipient_email: string
+    subject: string
+    message: string
+    cta_text?: string | null
+    cta_url?: string | null
+    blocks?: any[] | null
+  }) => input)
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context)
+    const email = (data.recipient_email || '').trim().toLowerCase()
+    if (!email) throw new Error('Test recipient email is required')
+    const { enqueueAppEmail } = await import('@/lib/email/send.server')
+    const res = await enqueueAppEmail({
+      templateName: 'admin-broadcast',
+      recipientEmail: email,
+      messageId: `admin-broadcast-test-${crypto.randomUUID()}`,
+      templateData: {
+        subject: `[TEST] ${data.subject.trim()}`,
+        message: data.message.trim(),
+        blocks: data.blocks || [],
+        ctaText: data.cta_text?.trim() || null,
+        ctaUrl: data.cta_url?.trim() || null,
+        firstName: null,
+      },
+    })
+    if (!res.ok && !res.skipped) throw new Error(res.error || 'Could not send test email')
+    return { ok: true }
+  })
+
+export const sendAdminBroadcast = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: BroadcastInput) => input)
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context)
+
+    const hasBlocks = Array.isArray(data.blocks) && data.blocks.length > 0
+    if (!data.subject.trim() || (!data.message.trim() && !hasBlocks)) {
+      throw new Error('Subject and message (or content blocks) are required')
     }
 
-    // Load recipients
-    let recipients: Array<{ email: string; firstName?: string | null }> = []
-
-    if (data.audience === 'user') {
-      const email = (data.recipient_email || '').trim().toLowerCase()
-      if (!email) throw new Error('Recipient email is required')
-      recipients = [{ email }]
-    } else {
-      // All active practitioners with an email address.
-      // Use the admin lookup RPC pattern already used by admin.functions.ts.
-      const { data: rows, error } = await context.supabase
-        .rpc('admin_list_practitioners')
-      if (error) throw error
-      recipients = ((rows as any[]) ?? [])
-        .filter((p) => p.active && p.email)
-        .map((p) => ({
-          email: p.email as string,
-          firstName: (p.full_name || '').split(' ')[0] || null,
-        }))
-    }
+    const recipients = await loadRecipients(context, data)
 
     if (recipients.length === 0) {
       throw new Error('No recipients to send to')
@@ -117,6 +201,7 @@ export const sendAdminBroadcast = createServerFn({ method: 'POST' })
         message: data.message.trim(),
         cta_text: data.cta_text?.trim() || null,
         cta_url: data.cta_url?.trim() || null,
+        blocks: hasBlocks ? data.blocks : null,
         recipient_count: recipients.length,
       })
       .select()
@@ -135,6 +220,7 @@ export const sendAdminBroadcast = createServerFn({ method: 'POST' })
         templateData: {
           subject: data.subject.trim(),
           message: data.message.trim(),
+          blocks: hasBlocks ? data.blocks : [],
           ctaText: data.cta_text?.trim() || null,
           ctaUrl: data.cta_url?.trim() || null,
           firstName: r.firstName || null,
@@ -146,3 +232,17 @@ export const sendAdminBroadcast = createServerFn({ method: 'POST' })
 
     return { id: log.id, sent, failed, total: recipients.length }
   })
+
+/** How many people are on the launch waitlist (for the audience picker). */
+export const countWaitlist = createServerFn({ method: 'GET' })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context)
+    const { supabaseAdmin } = await import('@/integrations/supabase/client.server')
+    const { count, error } = await supabaseAdmin
+      .from('practitioner_waitlist')
+      .select('id', { count: 'exact', head: true })
+    if (error) throw error
+    return { count: count ?? 0 }
+  })
+

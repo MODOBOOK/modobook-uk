@@ -7,7 +7,11 @@ import {
   savePlatformEmailCustomization,
   sendAdminBroadcast,
   listAdminBroadcasts,
+  previewAdminBroadcast,
+  sendAdminBroadcastTest,
+  countWaitlist,
 } from '@/lib/admin-emails.functions'
+import type { AdminBlock as Block } from '@/lib/email-templates/admin-broadcast'
 import { EMAIL_DEFAULTS } from '@/lib/email-templates/defaults'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -17,7 +21,7 @@ import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { Loader2, Mail, Send, ArrowLeft, Shield } from 'lucide-react'
+import { Loader2, Mail, Send, ArrowLeft, Shield, Plus, Trash2, ChevronUp, ChevronDown, Eye, Image as ImageIcon, Link as LinkIcon, Code } from 'lucide-react'
 import { toast } from 'sonner'
 
 export const Route = createFileRoute('/_authenticated/admin/emails')({
@@ -112,7 +116,10 @@ function AdminEmailsPage() {
                     <Badge variant="outline">
                       {b.audience === 'all_practitioners'
                         ? `${b.recipient_count} practitioner${b.recipient_count === 1 ? '' : 's'}`
-                        : b.recipient_email}
+                        : b.audience === 'waitlist'
+                          ? `Waitlist · ${b.recipient_count}`
+                          : b.recipient_email}
+
                     </Badge>
                   </div>
                   <p className="text-xs text-muted-foreground mt-0.5">
@@ -255,30 +262,77 @@ function BroadcastDialog({
 }: {
   onClose: () => void
   onSend: (payload: {
-    audience: 'all_practitioners' | 'user'
+    audience: 'all_practitioners' | 'user' | 'waitlist'
     recipient_email?: string | null
     subject: string
     message: string
     cta_text?: string | null
     cta_url?: string | null
+    blocks?: Block[] | null
   }) => Promise<void> | void
 }) {
-  const [audience, setAudience] = useState<'all_practitioners' | 'user'>('all_practitioners')
+  const preview = useServerFn(previewAdminBroadcast)
+  const sendTest = useServerFn(sendAdminBroadcastTest)
+  const waitlistCount = useServerFn(countWaitlist)
+
+  const [audience, setAudience] = useState<'all_practitioners' | 'user' | 'waitlist'>('all_practitioners')
   const [email, setEmail] = useState('')
   const [subject, setSubject] = useState('')
   const [message, setMessage] = useState('')
   const [ctaText, setCtaText] = useState('')
   const [ctaUrl, setCtaUrl] = useState('')
+  const [blocks, setBlocks] = useState<Block[]>([])
   const [busy, setBusy] = useState(false)
+  const [waitlist, setWaitlist] = useState<number | null>(null)
+
+  // Preview state
+  const [previewHtml, setPreviewHtml] = useState<string | null>(null)
+  const [previewing, setPreviewing] = useState(false)
+  const [testEmail, setTestEmail] = useState('')
+
+  useEffect(() => {
+    waitlistCount().then((r: any) => setWaitlist(r.count)).catch(() => {})
+  }, [])
+
+  const payload = () => ({
+    subject: subject.trim(),
+    message: message.trim(),
+    cta_text: ctaText.trim() || null,
+    cta_url: ctaUrl.trim() || null,
+    blocks: blocks.length ? blocks : null,
+  })
 
   const disabled =
-    !subject.trim() || !message.trim() ||
+    !subject.trim() || (!message.trim() && blocks.length === 0) ||
     (audience === 'user' && !email.trim()) ||
     Boolean((ctaText.trim() && !ctaUrl.trim()) || (!ctaText.trim() && ctaUrl.trim()))
 
+  const addBlock = (b: Block) => setBlocks((p) => [...p, b])
+  const updateBlock = (i: number, patch: Partial<Block>) =>
+    setBlocks((p) => p.map((b, idx) => (idx === i ? ({ ...b, ...patch } as Block) : b)))
+  const removeBlock = (i: number) => setBlocks((p) => p.filter((_, idx) => idx !== i))
+  const moveBlock = (i: number, dir: -1 | 1) =>
+    setBlocks((p) => {
+      const next = [...p]
+      const j = i + dir
+      if (j < 0 || j >= next.length) return p
+      ;[next[i], next[j]] = [next[j], next[i]]
+      return next
+    })
+
+  const runPreview = async () => {
+    setPreviewing(true)
+    try {
+      const res = await preview({ data: { ...payload(), firstName: 'Alex' } })
+      setPreviewHtml((res as any).html)
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Preview failed')
+    } finally { setPreviewing(false) }
+  }
+
   return (
     <Dialog open onOpenChange={(v) => !v && !busy && onClose()}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader><DialogTitle>Send a message</DialogTitle></DialogHeader>
         <div className="space-y-4">
           <div>
@@ -289,8 +343,14 @@ function BroadcastDialog({
                 <Label htmlFor="aud-all" className="font-normal cursor-pointer">All active practitioners</Label>
               </div>
               <div className="flex items-center gap-2">
+                <RadioGroupItem value="waitlist" id="aud-wait" />
+                <Label htmlFor="aud-wait" className="font-normal cursor-pointer">
+                  Launch waitlist{waitlist !== null ? ` (${waitlist})` : ''}
+                </Label>
+              </div>
+              <div className="flex items-center gap-2">
                 <RadioGroupItem value="user" id="aud-one" />
-                <Label htmlFor="aud-one" className="font-normal cursor-pointer">A specific user (by email)</Label>
+                <Label htmlFor="aud-one" className="font-normal cursor-pointer">A specific person (by email)</Label>
               </div>
             </RadioGroup>
           </div>
@@ -304,23 +364,156 @@ function BroadcastDialog({
 
           <div>
             <Label>Subject</Label>
-            <Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="A quick update from Modo Book" />
+            <Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="A quick update from MODO Book" />
           </div>
 
           <div>
             <Label>Message</Label>
-            <Textarea rows={7} value={message} onChange={(e) => setMessage(e.target.value)} placeholder={"Hi there,\n\nWe just shipped a new feature we think you'll love..."} />
-            <p className="text-xs text-muted-foreground mt-1">Blank lines start a new paragraph.</p>
+            <Textarea rows={6} value={message} onChange={(e) => setMessage(e.target.value)} placeholder={"Hi there,\n\nWe just shipped a new feature we think you'll love..."} />
+            <p className="text-xs text-muted-foreground mt-1">
+              Blank lines start a new paragraph. Use <code>{'{{first_name}}'}</code> to personalise.
+            </p>
+          </div>
+
+          {/* Content blocks */}
+          <div className="rounded-lg border p-3 space-y-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-sm font-medium mr-auto">Content blocks</p>
+              <Button type="button" size="sm" variant="outline" onClick={() => addBlock({ type: 'heading', text: '', level: 2 })}>
+                <Plus className="mr-1 h-3 w-3" /> Heading
+              </Button>
+              <Button type="button" size="sm" variant="outline" onClick={() => addBlock({ type: 'paragraph', text: '' })}>
+                <Plus className="mr-1 h-3 w-3" /> Text
+              </Button>
+              <Button type="button" size="sm" variant="outline" onClick={() => addBlock({ type: 'image', src: '', alt: '', url: '' })}>
+                <ImageIcon className="mr-1 h-3 w-3" /> Image
+              </Button>
+              <Button type="button" size="sm" variant="outline" onClick={() => addBlock({ type: 'button', text: '', url: '' })}>
+                <LinkIcon className="mr-1 h-3 w-3" /> Button
+              </Button>
+              <Button type="button" size="sm" variant="outline" onClick={() => addBlock({ type: 'divider' })}>
+                <Plus className="mr-1 h-3 w-3" /> Divider
+              </Button>
+              <Button type="button" size="sm" variant="outline" onClick={() => addBlock({ type: 'html', html: '', full: false })}>
+                <Code className="mr-1 h-3 w-3" /> Code
+              </Button>
+            </div>
+
+            {blocks.length === 0 ? (
+              <p className="text-xs italic text-muted-foreground">
+                Optional — add images, buttons or embedded code beneath your message.
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {blocks.map((b, i) => (
+                  <div key={i} className="rounded-md border bg-muted/30 p-3 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{b.type}</span>
+                      <div className="ml-auto flex gap-1">
+                        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => moveBlock(i, -1)}>
+                          <ChevronUp className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => moveBlock(i, 1)}>
+                          <ChevronDown className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => removeBlock(i)}>
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+
+                    {b.type === 'heading' && (
+                      <Input value={b.text} onChange={(e) => updateBlock(i, { text: e.target.value } as any)} placeholder="Heading text" />
+                    )}
+                    {b.type === 'paragraph' && (
+                      <Textarea rows={4} value={b.text} onChange={(e) => updateBlock(i, { text: e.target.value } as any)} placeholder="Paragraph text" />
+                    )}
+                    {b.type === 'image' && (
+                      <div className="space-y-2">
+                        <Input value={b.src} onChange={(e) => updateBlock(i, { src: e.target.value } as any)} placeholder="Image URL (https://…)" />
+                        <div className="grid grid-cols-2 gap-2">
+                          <Input value={b.alt || ''} onChange={(e) => updateBlock(i, { alt: e.target.value } as any)} placeholder="Alt text" />
+                          <Input value={b.url || ''} onChange={(e) => updateBlock(i, { url: e.target.value } as any)} placeholder="Link when clicked (optional)" />
+                        </div>
+                      </div>
+                    )}
+                    {b.type === 'button' && (
+                      <div className="grid grid-cols-2 gap-2">
+                        <Input value={b.text} onChange={(e) => updateBlock(i, { text: e.target.value } as any)} placeholder="Button text" />
+                        <Input value={b.url} onChange={(e) => updateBlock(i, { url: e.target.value } as any)} placeholder="https://modobook.uk/…" />
+                      </div>
+                    )}
+                    {b.type === 'html' && (
+                      <div className="space-y-2">
+                        <Textarea
+                          rows={6}
+                          className="font-mono text-xs"
+                          value={b.html}
+                          onChange={(e) => updateBlock(i, { html: e.target.value } as any)}
+                          placeholder="<table>…your HTML…</table>"
+                        />
+                        <label className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <input
+                            type="checkbox"
+                            checked={!!b.full}
+                            onChange={(e) => updateBlock(i, { full: e.target.checked } as any)}
+                          />
+                          Use as the full email (replaces the MODO layout)
+                        </label>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label>Button text (optional)</Label>
+              <Label>Footer button text (optional)</Label>
               <Input value={ctaText} onChange={(e) => setCtaText(e.target.value)} placeholder="See what's new" />
             </div>
             <div>
-              <Label>Button URL</Label>
+              <Label>Footer button URL</Label>
               <Input value={ctaUrl} onChange={(e) => setCtaUrl(e.target.value)} placeholder="https://modobook.uk/…" />
+            </div>
+          </div>
+
+          {/* Preview + test send */}
+          <div className="rounded-lg border p-3 space-y-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-sm font-medium mr-auto">Preview</p>
+              <Button type="button" size="sm" variant="outline" onClick={runPreview} disabled={previewing || !subject.trim()}>
+                {previewing ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Eye className="mr-1 h-3.5 w-3.5" /> Show preview</>}
+              </Button>
+            </div>
+            {previewHtml && (
+              <iframe
+                title="Email preview"
+                srcDoc={previewHtml}
+                className="h-[420px] w-full rounded-md border bg-white"
+              />
+            )}
+            <div className="flex flex-wrap items-end gap-2">
+              <div className="flex-1 min-w-[200px]">
+                <Label className="text-xs">Send a test copy to</Label>
+                <Input type="email" value={testEmail} onChange={(e) => setTestEmail(e.target.value)} placeholder="you@modobook.co.uk" />
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={!testEmail.trim() || !subject.trim() || busy}
+                onClick={async () => {
+                  setBusy(true)
+                  try {
+                    await sendTest({ data: { recipient_email: testEmail.trim(), ...payload() } })
+                    toast.success('Test email queued')
+                  } catch (e) { toast.error(e instanceof Error ? e.message : 'Failed') }
+                  finally { setBusy(false) }
+                }}
+              >
+                Send test
+              </Button>
             </div>
           </div>
         </div>
@@ -329,16 +522,15 @@ function BroadcastDialog({
           <Button
             disabled={busy || disabled}
             onClick={async () => {
-              if (audience === 'all_practitioners' && !confirm('Send this message to every active practitioner?')) return
+              const label = audience === 'all_practitioners' ? 'every active practitioner'
+                : audience === 'waitlist' ? `everyone on the launch waitlist${waitlist !== null ? ` (${waitlist})` : ''}` : null
+              if (label && !confirm(`Send this message to ${label}?`)) return
               setBusy(true)
               try {
                 await onSend({
                   audience,
                   recipient_email: audience === 'user' ? email.trim() : null,
-                  subject: subject.trim(),
-                  message: message.trim(),
-                  cta_text: ctaText.trim() || null,
-                  cta_url: ctaUrl.trim() || null,
+                  ...payload(),
                 })
               } finally { setBusy(false) }
             }}
