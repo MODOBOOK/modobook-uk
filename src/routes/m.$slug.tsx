@@ -247,11 +247,31 @@ function ModoLayout() {
               <RewardsTabLink slug={slug} />
               <TabLink slug={slug} to="/m/$slug/reviews" label="Reviews" />
               <Link to="/m/$slug/account" params={{ slug }} aria-label="My account">
-                <Button size="sm" variant="outline" className="ml-1 hidden sm:inline-flex">My account</Button>
-                <Button size="icon" variant="outline" className="ml-1 h-8 w-8 sm:hidden">
+                {/* Styled from the header's own text colour (currentColor) so the
+                    account control stays visible on any practitioner palette. */}
+                <span
+                  className="ml-1 hidden h-9 items-center gap-1.5 rounded-md border px-3 text-sm font-medium transition-colors hover:bg-[color-mix(in_srgb,currentColor_12%,transparent)] sm:inline-flex"
+                  style={{
+                    color: headerText,
+                    borderColor: "color-mix(in srgb, currentColor 35%, transparent)",
+                    backgroundColor: "transparent",
+                  }}
+                >
                   <UserCircle2 className="h-4 w-4" />
-                </Button>
+                  My account
+                </span>
+                <span
+                  className="ml-1 inline-flex h-8 w-8 items-center justify-center rounded-md border transition-colors hover:bg-[color-mix(in_srgb,currentColor_12%,transparent)] sm:hidden"
+                  style={{
+                    color: headerText,
+                    borderColor: "color-mix(in srgb, currentColor 35%, transparent)",
+                    backgroundColor: "transparent",
+                  }}
+                >
+                  <UserCircle2 className="h-4 w-4" />
+                </span>
               </Link>
+
             </nav>
           </div>
         </header>
@@ -279,7 +299,7 @@ function TabLink({
       to={to}
       params={{ slug }}
       activeOptions={{ exact: !!exact }}
-      className="rounded-md px-2 py-1.5 text-xs opacity-70 hover:opacity-100 sm:px-3 sm:text-sm [&.active]:bg-black/5 [&.active]:opacity-100"
+      className="rounded-md px-2 py-1.5 text-xs opacity-70 hover:opacity-100 sm:px-3 sm:text-sm [&.active]:bg-[color-mix(in_srgb,currentColor_12%,transparent)] [&.active]:opacity-100"
     >
       {label}
 
