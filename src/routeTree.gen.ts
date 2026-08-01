@@ -97,6 +97,7 @@ import { Route as AuthenticatedDashboardMedicalFormsRouteImport } from './routes
 import { Route as AuthenticatedDashboardMarketingRouteImport } from './routes/_authenticated/dashboard.marketing'
 import { Route as AuthenticatedDashboardLocationsRouteImport } from './routes/_authenticated/dashboard.locations'
 import { Route as AuthenticatedDashboardInvoicesRouteImport } from './routes/_authenticated/dashboard.invoices'
+import { Route as AuthenticatedDashboardHelpRouteImport } from './routes/_authenticated/dashboard.help'
 import { Route as AuthenticatedDashboardGiftCardsRouteImport } from './routes/_authenticated/dashboard.gift-cards'
 import { Route as AuthenticatedDashboardFormAllocationRouteImport } from './routes/_authenticated/dashboard.form-allocation'
 import { Route as AuthenticatedDashboardEmailsRouteImport } from './routes/_authenticated/dashboard.emails'
@@ -636,6 +637,12 @@ const AuthenticatedDashboardInvoicesRoute =
     path: '/invoices',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
+const AuthenticatedDashboardHelpRoute =
+  AuthenticatedDashboardHelpRouteImport.update({
+    id: '/help',
+    path: '/help',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
 const AuthenticatedDashboardGiftCardsRoute =
   AuthenticatedDashboardGiftCardsRouteImport.update({
     id: '/gift-cards',
@@ -1059,6 +1066,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/emails': typeof AuthenticatedDashboardEmailsRoute
   '/dashboard/form-allocation': typeof AuthenticatedDashboardFormAllocationRoute
   '/dashboard/gift-cards': typeof AuthenticatedDashboardGiftCardsRoute
+  '/dashboard/help': typeof AuthenticatedDashboardHelpRoute
   '/dashboard/invoices': typeof AuthenticatedDashboardInvoicesRoute
   '/dashboard/locations': typeof AuthenticatedDashboardLocationsRoute
   '/dashboard/marketing': typeof AuthenticatedDashboardMarketingRouteWithChildren
@@ -1204,6 +1212,7 @@ export interface FileRoutesByTo {
   '/dashboard/emails': typeof AuthenticatedDashboardEmailsRoute
   '/dashboard/form-allocation': typeof AuthenticatedDashboardFormAllocationRoute
   '/dashboard/gift-cards': typeof AuthenticatedDashboardGiftCardsRoute
+  '/dashboard/help': typeof AuthenticatedDashboardHelpRoute
   '/dashboard/invoices': typeof AuthenticatedDashboardInvoicesRoute
   '/dashboard/locations': typeof AuthenticatedDashboardLocationsRoute
   '/dashboard/medical-forms': typeof AuthenticatedDashboardMedicalFormsRoute
@@ -1354,6 +1363,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/emails': typeof AuthenticatedDashboardEmailsRoute
   '/_authenticated/dashboard/form-allocation': typeof AuthenticatedDashboardFormAllocationRoute
   '/_authenticated/dashboard/gift-cards': typeof AuthenticatedDashboardGiftCardsRoute
+  '/_authenticated/dashboard/help': typeof AuthenticatedDashboardHelpRoute
   '/_authenticated/dashboard/invoices': typeof AuthenticatedDashboardInvoicesRoute
   '/_authenticated/dashboard/locations': typeof AuthenticatedDashboardLocationsRoute
   '/_authenticated/dashboard/marketing': typeof AuthenticatedDashboardMarketingRouteWithChildren
@@ -1507,6 +1517,7 @@ export interface FileRouteTypes {
     | '/dashboard/emails'
     | '/dashboard/form-allocation'
     | '/dashboard/gift-cards'
+    | '/dashboard/help'
     | '/dashboard/invoices'
     | '/dashboard/locations'
     | '/dashboard/marketing'
@@ -1652,6 +1663,7 @@ export interface FileRouteTypes {
     | '/dashboard/emails'
     | '/dashboard/form-allocation'
     | '/dashboard/gift-cards'
+    | '/dashboard/help'
     | '/dashboard/invoices'
     | '/dashboard/locations'
     | '/dashboard/medical-forms'
@@ -1801,6 +1813,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/emails'
     | '/_authenticated/dashboard/form-allocation'
     | '/_authenticated/dashboard/gift-cards'
+    | '/_authenticated/dashboard/help'
     | '/_authenticated/dashboard/invoices'
     | '/_authenticated/dashboard/locations'
     | '/_authenticated/dashboard/marketing'
@@ -2557,6 +2570,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardInvoicesRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
+    '/_authenticated/dashboard/help': {
+      id: '/_authenticated/dashboard/help'
+      path: '/help'
+      fullPath: '/dashboard/help'
+      preLoaderRoute: typeof AuthenticatedDashboardHelpRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
     '/_authenticated/dashboard/gift-cards': {
       id: '/_authenticated/dashboard/gift-cards'
       path: '/gift-cards'
@@ -3156,6 +3176,7 @@ interface AuthenticatedDashboardRouteChildren {
   AuthenticatedDashboardEmailsRoute: typeof AuthenticatedDashboardEmailsRoute
   AuthenticatedDashboardFormAllocationRoute: typeof AuthenticatedDashboardFormAllocationRoute
   AuthenticatedDashboardGiftCardsRoute: typeof AuthenticatedDashboardGiftCardsRoute
+  AuthenticatedDashboardHelpRoute: typeof AuthenticatedDashboardHelpRoute
   AuthenticatedDashboardInvoicesRoute: typeof AuthenticatedDashboardInvoicesRoute
   AuthenticatedDashboardLocationsRoute: typeof AuthenticatedDashboardLocationsRoute
   AuthenticatedDashboardMarketingRoute: typeof AuthenticatedDashboardMarketingRouteWithChildren
@@ -3209,6 +3230,7 @@ const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
     AuthenticatedDashboardFormAllocationRoute:
       AuthenticatedDashboardFormAllocationRoute,
     AuthenticatedDashboardGiftCardsRoute: AuthenticatedDashboardGiftCardsRoute,
+    AuthenticatedDashboardHelpRoute: AuthenticatedDashboardHelpRoute,
     AuthenticatedDashboardInvoicesRoute: AuthenticatedDashboardInvoicesRoute,
     AuthenticatedDashboardLocationsRoute: AuthenticatedDashboardLocationsRoute,
     AuthenticatedDashboardMarketingRoute:
@@ -3462,13 +3484,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
