@@ -116,7 +116,10 @@ function AdminEmailsPage() {
                     <Badge variant="outline">
                       {b.audience === 'all_practitioners'
                         ? `${b.recipient_count} practitioner${b.recipient_count === 1 ? '' : 's'}`
-                        : b.recipient_email}
+                        : b.audience === 'waitlist'
+                          ? `Waitlist · ${b.recipient_count}`
+                          : b.recipient_email}
+
                     </Badge>
                   </div>
                   <p className="text-xs text-muted-foreground mt-0.5">
