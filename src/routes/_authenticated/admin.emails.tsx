@@ -73,10 +73,15 @@ function AdminEmailsPage() {
   const customsByKey: Record<string, any> = {}
   for (const c of customs) customsByKey[c.template_key] = c
 
-  if (loading) return <div className="p-8 text-center"><Loader2 className="h-5 w-5 animate-spin mx-auto" /></div>
+  if (loading) return (
+    <AdminShell>
+      <div className="p-8 text-center"><Loader2 className="h-5 w-5 animate-spin mx-auto" /></div>
+    </AdminShell>
+  )
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 p-4 pb-24">
+    <AdminShell>
+    <div className="mx-auto max-w-3xl space-y-6 pb-24">
       <div className="flex items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">Platform emails</h1>
