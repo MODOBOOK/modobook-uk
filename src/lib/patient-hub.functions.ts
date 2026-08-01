@@ -72,12 +72,40 @@ export const deleteConcern = createServerFn({ method: "POST" })
 
 // ============ COMMUNICATIONS LOG ============
 
+const TEMPLATE_LABELS: Record<string, string> = {
+  "booking-confirmation": "Booking confirmation",
+  "booking-cancellation": "Booking cancelled",
+  "booking-reschedule": "Appointment rescheduled",
+  "appointment-reminder": "Appointment reminder",
+  "rebook-reminder": "Rebook reminder",
+  "topup-reminder": "Top-up reminder",
+  "review-request": "Review request",
+  "medical-form-request": "Medical form request",
+  "consent-request": "Consent form request",
+  "patient-message": "Message from clinic",
+  "gift-card-delivery": "Gift card",
+  "marketing-broadcast": "Marketing email",
+  "admin-broadcast": "Broadcast email",
+  "aftercare": "Aftercare",
+  "payment-link": "Payment link",
+};
+
 export const listCommunications = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { clientId: string }) => input)
   .handler(async ({ data, context }) => {
     const pid = await getProfileId(context.supabase, context.userId);
     if (!pid) return [];
+
+    // Verify the client belongs to this clinic before reading system email logs
+    const { data: client } = await context.supabase
+      .from("clinic_clients")
+      .select("id, email")
+      .eq("profile_id", pid)
+      .eq("id", data.clientId)
+      .maybeSingle();
+    if (!client) return [];
+
     const { data: rows, error } = await context.supabase
       .from("client_communications")
       .select("*")
@@ -86,8 +114,52 @@ export const listCommunications = createServerFn({ method: "GET" })
       .order("created_at", { ascending: false })
       .limit(200);
     if (error) throw error;
-    return rows ?? [];
+
+    const manual = (rows ?? []).map((r: any) => ({ ...r, source: "manual" }));
+
+    let system: any[] = [];
+    if (client.email) {
+      try {
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        const { data: logs } = await supabaseAdmin
+          .from("email_send_log")
+          .select("id, message_id, template_name, status, error_message, created_at")
+          .ilike("recipient_email", client.email)
+          .order("created_at", { ascending: false })
+          .limit(300);
+
+        // Deduplicate by message_id keeping the latest row
+        const seen = new Set<string>();
+        system = (logs ?? [])
+          .filter((l: any) => {
+            const key = l.message_id ?? l.id;
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+          })
+          .map((l: any) => ({
+            id: `email:${l.id}`,
+            source: "system",
+            channel: "email",
+            direction: "outbound",
+            status: l.status,
+            subject: TEMPLATE_LABELS[l.template_name] ?? l.template_name,
+            body: l.status === "dlq" || l.status === "failed" || l.status === "bounced"
+              ? (l.error_message ?? "Delivery failed")
+              : null,
+            template_name: l.template_name,
+            created_at: l.created_at,
+          }));
+      } catch {
+        system = [];
+      }
+    }
+
+    return [...manual, ...system].sort(
+      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+    );
   });
+
 
 export const logCommunication = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
