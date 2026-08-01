@@ -225,7 +225,7 @@ function DashboardLayout() {
 
 
         {/* Desktop / iPad header */}
-        <header className="hidden h-20 items-center justify-between border-b border-border/60 px-6 lg:flex lg:px-10">
+        <header className="sticky top-0 z-40 hidden h-20 items-center justify-between border-b border-border/60 bg-background px-6 lg:flex lg:px-10">
           <div className="flex items-center gap-3">
             <BackButton />
             <div>
