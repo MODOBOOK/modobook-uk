@@ -20,9 +20,9 @@ Rules:
 - "author_name" = first name (or first name + initial) of the reviewer. If only a username or full name is visible, take the first word. If completely anonymous or no name is shown, use "Anonymous".
 - "quote" = the review text only, verbatim, trimmed. Strip emojis only if they break sentences. No quotation marks around it. If the review is a star rating with NO written text, return an empty string "" for quote — still include it.
 - "rating" = whole number 1-5 when visible (stars filled, "5/5", "★★★★★"). Omit if unclear.
-- IMPORTANT: include every review entry, even ones with no name, no text, or both — never drop an entry just because a field is missing.
+- IMPORTANT: include EVERY review entry, even ones with no name, no text, no rating, or all three — never drop an entry just because a field is missing. The count you return must match the number of review entries visible in the source.
 - Skip replies from the business / clinic owner — only patient-written reviews.
-- Hard cap: 30 reviews.
+- Hard cap: 200 reviews.
 - If nothing review-like is present, return { "reviews": [] }.`;
 
 type GatewayContent =
@@ -62,9 +62,7 @@ async function callGateway(content: GatewayContent[]): Promise<ExtractedReview[]
   } catch {
     throw new Error("AI returned malformed output. Try a clearer source.");
   }
-  const out = (parsed.reviews ?? [])
-    .slice(0, 30)
-    .filter((r) => r && (r.quote?.trim() || r.rating != null || r.author_name?.trim()));
+  const out = (parsed.reviews ?? []).slice(0, 200).filter((r) => Boolean(r));
   for (const r of out) {
     r.author_name = (r.author_name ?? "").trim() || "Anonymous";
     r.quote = (r.quote ?? "").trim();
