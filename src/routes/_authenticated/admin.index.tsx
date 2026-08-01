@@ -40,7 +40,7 @@ import { DemoLaunchCard } from "@/components/admin/DemoLaunchCard";
 
 
 
-export const Route = createFileRoute("/_authenticated/admin")({
+export const Route = createFileRoute("/_authenticated/admin/")({
   ssr: false,
   loader: async () => {
     const me = await amIAdmin();

@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Search, ExternalLink, ArrowRight, Shield } from "lucide-react";
 
-export const Route = createFileRoute("/_authenticated/admin/practitioners")({
+export const Route = createFileRoute("/_authenticated/admin/practitioners/")({
   ssr: false,
   loader: async () => {
     const me = await amIAdmin();
