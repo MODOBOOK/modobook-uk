@@ -22,8 +22,8 @@ export const Route = createFileRoute("/auth")({
   }),
   head: () => ({
     meta: [
-      { title: "Sign in | MODO" },
-      { name: "description", content: "Sign in or create your MODO account." },
+      { title: "Create your account | MODO" },
+      { name: "description", content: "Create your MODO practitioner account. Waitlist access only." },
     ],
   }),
   component: AuthPage,
@@ -41,7 +41,7 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [mode, setMode] = useState<"signin" | "signup">("signup");
   const [signupName, setSignupName] = useState("");
 
   const [forgotOpen, setForgotOpen] = useState(false);
@@ -116,16 +116,16 @@ function AuthPage() {
 
         <Card>
           <CardHeader className="text-center">
-            <CardTitle>Welcome to MODO</CardTitle>
+            <CardTitle>Create your MODO account</CardTitle>
             <CardDescription>
               {mode === "signin"
                 ? "Sign in to your practitioner account."
-                : "Create your account — available to clinics on the MODO waitlist."}
+                : "Available to clinics on the MODO waitlist. Already registered? Sign in instead."}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4 pt-4">
             <div className="grid grid-cols-2 gap-1 rounded-lg bg-muted p-1">
-              {(["signin", "signup"] as const).map((m) => (
+              {(["signup", "signin"] as const).map((m) => (
                 <button
                   key={m}
                   type="button"
@@ -139,7 +139,27 @@ function AuthPage() {
               ))}
             </div>
 
-            {mode === "signin" ? (
+            {mode === "signup" ? (
+            <form onSubmit={handleSignUp} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="signup-name">Full name</Label>
+                <Input id="signup-name" value={signupName} onChange={(e) => setSignupName(e.target.value)} placeholder="Jane Smith" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="signup-email">Waitlist email</Label>
+                <Input id="signup-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="you@clinic.co.uk" />
+                <p className="text-xs text-muted-foreground">Use the same email you joined the waitlist with.</p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="signup-password">Password</Label>
+                <Input id="signup-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} placeholder="At least 8 characters" />
+              </div>
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                Create my account
+              </Button>
+            </form>
+            ) : (
             <form onSubmit={handleSignIn} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
@@ -169,26 +189,6 @@ function AuthPage() {
                   </div>
                 </div>
               )}
-            </form>
-            ) : (
-            <form onSubmit={handleSignUp} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="signup-name">Full name</Label>
-                <Input id="signup-name" value={signupName} onChange={(e) => setSignupName(e.target.value)} placeholder="Jane Smith" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="signup-email">Waitlist email</Label>
-                <Input id="signup-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="you@clinic.co.uk" />
-                <p className="text-xs text-muted-foreground">Use the same email you joined the waitlist with.</p>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="signup-password">Password</Label>
-                <Input id="signup-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} placeholder="At least 8 characters" />
-              </div>
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                Create my account
-              </Button>
             </form>
             )}
 
