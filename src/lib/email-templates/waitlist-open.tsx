@@ -47,36 +47,6 @@ export const WaitlistOpenEmail = ({ firstName }: WaitlistOpenProps) => {
       <Head />
       <Preview>MODO Book is now open — create your clinic account today.</Preview>
       <ModoShell preview={null} siteName="MODO Book">
-        {/* Hero banner */}
-        <Section
-          style={{
-            backgroundColor: brand.soft,
-            borderRadius: '14px',
-            padding: '28px 24px',
-            textAlign: 'center',
-            marginBottom: '28px',
-          }}
-        >
-          <Img
-            src={`https://modobook.uk${modoWordmark.url}`}
-            alt="MODO Book"
-            height="42"
-            style={{ height: '42px', width: 'auto', margin: '0 auto 16px', display: 'inline-block' }}
-          />
-          <Text
-            style={{
-              ...styles.muted,
-              margin: 0,
-              fontSize: '12px',
-              letterSpacing: '0.18em',
-              textTransform: 'uppercase',
-              fontWeight: 600,
-            }}
-          >
-            Now open
-          </Text>
-        </Section>
-
         <Heading style={{ ...styles.h1, fontStyle: 'italic' }}>MODO is officially open.</Heading>
         <Text style={styles.text}>{greeting}</Text>
         <Text style={styles.text}>
@@ -179,44 +149,25 @@ export const WaitlistOpenEmail = ({ firstName }: WaitlistOpenProps) => {
 }
 
 function FeatureGrid({ features }: { features: typeof FEATURES }) {
-  const rows: (typeof FEATURES)[] = []
-  for (let i = 0; i < features.length; i += 2) {
-    rows.push(features.slice(i, i + 2))
-  }
-
   return (
     <>
-      {rows.map((row, rowIndex) => (
-        <Row key={rowIndex} style={{ marginBottom: '14px' }}>
-          {row.map((feature, colIndex) => (
-            <Column
-              key={colIndex}
-              style={{
-                width: '50%',
-                paddingRight: colIndex === 0 ? '8px' : '0',
-                paddingLeft: colIndex === 1 ? '8px' : '0',
-                verticalAlign: 'top',
-              }}
-            >
-              <div
-                style={{
-                  backgroundColor: brand.soft,
-                  borderRadius: '12px',
-                  padding: '18px',
-                  height: '100%',
-                  boxSizing: 'border-box',
-                }}
-              >
-                <Text style={{ ...styles.text, margin: 0, fontWeight: 600, fontSize: '14px' }}>
-                  {feature.title}
-                </Text>
-                <Text style={{ ...styles.muted, margin: '6px 0 0', fontSize: '12px' }}>
-                  {feature.body}
-                </Text>
-              </div>
-            </Column>
-          ))}
-        </Row>
+      {features.map((feature) => (
+        <div
+          key={feature.title}
+          style={{
+            backgroundColor: brand.soft,
+            borderRadius: '12px',
+            padding: '18px',
+            marginBottom: '12px',
+          }}
+        >
+          <Text style={{ ...styles.text, margin: 0, fontWeight: 600, fontSize: '14px' }}>
+            {feature.title}
+          </Text>
+          <Text style={{ ...styles.muted, margin: '6px 0 0', fontSize: '12px' }}>
+            {feature.body}
+          </Text>
+        </div>
       ))}
     </>
   )
