@@ -18,8 +18,6 @@ import {
   Star,
   HelpCircle,
   ChevronRight,
-  
-
   ShieldCheck,
   LogOut,
   ExternalLink,
@@ -32,6 +30,7 @@ import {
   Megaphone,
   Gift,
   GraduationCap,
+  MessageCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
