@@ -17,6 +17,7 @@ export const listMyGiftCards = createServerFn({ method: "GET" })
       .from("gift_cards")
       .select("*")
       .eq("profile_id", context.userId)
+      .order("amount", { ascending: true, nullsFirst: false })
       .order("sort_order")
       .order("created_at", { ascending: false });
     if (error) throw error;
