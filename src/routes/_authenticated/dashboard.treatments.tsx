@@ -1142,6 +1142,7 @@ function TreatmentDialog({
               prescriber_routing: prescriberRouting,
               prescriber_note: prescriberNote.trim() ? prescriberNote.trim() : null,
               booking_cap: bookingCap.trim() === "" ? null : Math.max(0, Math.floor(Number(bookingCap))),
+              color: color || null,
             })
 
 
