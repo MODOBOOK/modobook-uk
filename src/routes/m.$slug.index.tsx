@@ -2241,7 +2241,16 @@ function BookPage() {
         className="mt-16 w-full px-4 py-6 text-center text-xs"
         style={{ backgroundColor: footerBg, color: footerText }}
       >
-        © {new Date().getFullYear()} {displayPrimary} · Powered by MODO
+        © {new Date().getFullYear()} {displayPrimary} ·{" "}
+        <a
+          href="https://modobook.uk"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline underline-offset-2"
+          style={{ color: footerText }}
+        >
+          Powered by modobook.uk
+        </a>
       </footer>
 
       {/* Add-on prompt */}
