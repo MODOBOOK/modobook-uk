@@ -62,6 +62,7 @@ type Treatment = {
   prescriber_routing?: "same_address" | "clinic_visit" | "in_person_consult" | null;
   prescriber_note?: string | null;
   booking_cap?: number | null;
+  color?: string | null;
 };
 
 
@@ -106,6 +107,7 @@ type TreatmentForm = {
   prescriber_routing: "same_address" | "clinic_visit" | "in_person_consult";
   prescriber_note: string | null;
   booking_cap: number | null;
+  color: string | null;
 };
 
 
@@ -485,6 +487,9 @@ function TreatmentDialog({
       ? String((treatment as { booking_cap?: number | null }).booking_cap)
       : "",
   );
+  const [color, setColor] = useState<string>(treatment?.color ?? "#3b82f6");
+
+
 
   const fetchPrescribers = useServerFn(listMyConnectedPrescribers);
   const [prescribers, setPrescribers] = useState<{ user_id: string; name: string; regulatory_body: string | null }[]>([]);
@@ -546,6 +551,7 @@ function TreatmentDialog({
     setAutoSendAftercare((treatment as { auto_send_aftercare?: boolean } | null)?.auto_send_aftercare ?? true);
     setPriceMode((((treatment as { price_mode?: string } | null)?.price_mode as "fixed" | "from" | "poa" | "free") ?? "fixed") || "fixed");
     setBadge((((treatment as { badge?: string | null } | null)?.badge as "recommended" | "popular" | "new" | "bestseller" | null) ?? "none") || "none");
+    setColor(treatment?.color ?? "#3b82f6");
     setDepositOverride(
       (treatment as { deposit_amount?: number | null } | null)?.deposit_amount != null
         ? String((treatment as { deposit_amount?: number | null }).deposit_amount)
@@ -702,6 +708,33 @@ function TreatmentDialog({
             <p className="mt-1 text-[11px] text-muted-foreground">Shows a small label next to the service.</p>
           </div>
         </div>
+
+        <div>
+          <Label>Calendar colour</Label>
+          <div className="mt-1.5 flex flex-wrap items-center gap-2">
+            {["#3b82f6", "#8b5cf6", "#ec4899", "#ef4444", "#f97316", "#eab308", "#10b981", "#14b8a6", "#0ea5e9", "#64748b"].map((c) => (
+              <button
+                key={c}
+                type="button"
+                aria-label={`Use colour ${c}`}
+                onClick={() => setColor(c)}
+                className={`h-7 w-7 rounded-full border-2 transition ${color.toLowerCase() === c ? "border-foreground scale-110" : "border-transparent"}`}
+                style={{ backgroundColor: c }}
+              />
+            ))}
+            <input
+              type="color"
+              value={color}
+              onChange={(e) => setColor(e.target.value)}
+              className="h-8 w-10 cursor-pointer rounded border bg-transparent p-0.5"
+              aria-label="Custom colour"
+            />
+          </div>
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            Appointments for this service show in this colour on your calendar.
+          </p>
+        </div>
+
 
         <div>
           <Label>Booking cap (total spots)</Label>
@@ -1109,6 +1142,7 @@ function TreatmentDialog({
               prescriber_routing: prescriberRouting,
               prescriber_note: prescriberNote.trim() ? prescriberNote.trim() : null,
               booking_cap: bookingCap.trim() === "" ? null : Math.max(0, Math.floor(Number(bookingCap))),
+              color: color || null,
             })
 
 
