@@ -710,6 +710,33 @@ function TreatmentDialog({
         </div>
 
         <div>
+          <Label>Calendar colour</Label>
+          <div className="mt-1.5 flex flex-wrap items-center gap-2">
+            {["#3b82f6", "#8b5cf6", "#ec4899", "#ef4444", "#f97316", "#eab308", "#10b981", "#14b8a6", "#0ea5e9", "#64748b"].map((c) => (
+              <button
+                key={c}
+                type="button"
+                aria-label={`Use colour ${c}`}
+                onClick={() => setColor(c)}
+                className={`h-7 w-7 rounded-full border-2 transition ${color.toLowerCase() === c ? "border-foreground scale-110" : "border-transparent"}`}
+                style={{ backgroundColor: c }}
+              />
+            ))}
+            <input
+              type="color"
+              value={color}
+              onChange={(e) => setColor(e.target.value)}
+              className="h-8 w-10 cursor-pointer rounded border bg-transparent p-0.5"
+              aria-label="Custom colour"
+            />
+          </div>
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            Appointments for this service show in this colour on your calendar.
+          </p>
+        </div>
+
+
+        <div>
           <Label>Booking cap (total spots)</Label>
           <Input
             type="number"
