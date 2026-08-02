@@ -14,9 +14,17 @@ const schema = z.object({
   consent: z.boolean(),
 })
 
+// The launch waitlist is now closed — MODO has opened to the clinics on the
+// list. New signups are refused; existing waitlist emails can still create an
+// account at /auth.
+export const WAITLIST_OPEN = false
+
 export const joinWaitlist = createServerFn({ method: 'POST' })
   .inputValidator((input: unknown) => schema.parse(input))
   .handler(async ({ data }) => {
+    if (!WAITLIST_OPEN) {
+      return { ok: false as const, closed: true as const, error: 'The MODO waitlist is closed.' }
+    }
     if (!data.consent) {
       return { ok: false as const, error: 'Consent is required' }
     }
