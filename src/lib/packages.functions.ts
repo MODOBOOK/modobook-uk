@@ -55,12 +55,13 @@ export const createPackage = createServerFn({ method: "POST" })
     const { data: profile } = await supabase
       .from("profiles").select("id").eq("user_id", userId).single();
     if (!profile) throw new Error("No profile");
+    const clean = await sanitizeTreatments(supabase, profile.id, data.treatment_ids);
     const { error } = await supabase.from("packages").insert({
       profile_id: profile.id,
       name: data.name,
       description: data.description,
-      treatment_id: data.treatment_id,
-      treatment_ids: data.treatment_ids,
+      treatment_id: clean.treatment_id,
+      treatment_ids: clean.treatment_ids,
       session_count: data.session_count,
       price: data.price,
       duration_minutes: data.duration_minutes,
@@ -78,12 +79,16 @@ export const updatePackage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: PackageInput & { id: string }) => d)
   .handler(async ({ data, context }) => {
-    const { supabase } = context;
+    const { supabase, userId } = context;
+    const { data: profile } = await supabase
+      .from("profiles").select("id").eq("user_id", userId).single();
+    if (!profile) throw new Error("No profile");
+    const clean = await sanitizeTreatments(supabase, profile.id, data.treatment_ids);
     const { error } = await supabase.from("packages").update({
       name: data.name,
       description: data.description,
-      treatment_id: data.treatment_id,
-      treatment_ids: data.treatment_ids,
+      treatment_id: clean.treatment_id,
+      treatment_ids: clean.treatment_ids,
       session_count: data.session_count,
       price: data.price,
       duration_minutes: data.duration_minutes,
