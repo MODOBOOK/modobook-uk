@@ -376,7 +376,7 @@ export const getSeatSummary = createServerFn({ method: "GET" })
     const [{ data: sub }, { count: locCount }, { count: pracCount }] = await Promise.all([
       context.supabase
         .from("practitioner_subscriptions")
-        .select("status, comped, trial_end, stripe_subscription_id, extra_locations, extra_practitioners")
+        .select("status, comped, trial_end, stripe_subscription_id, extra_locations, extra_practitioners, free_locations, free_practitioners")
         .eq("profile_id", profile.id)
         .maybeSingle(),
       context.supabase.from("locations").select("id", { count: "exact", head: true }).eq("profile_id", profile.id),
