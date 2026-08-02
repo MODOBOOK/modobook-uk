@@ -487,6 +487,9 @@ function TreatmentDialog({
       ? String((treatment as { booking_cap?: number | null }).booking_cap)
       : "",
   );
+  const [color, setColor] = useState<string>(treatment?.color ?? "#3b82f6");
+
+
 
   const fetchPrescribers = useServerFn(listMyConnectedPrescribers);
   const [prescribers, setPrescribers] = useState<{ user_id: string; name: string; regulatory_body: string | null }[]>([]);
