@@ -42,6 +42,7 @@ export const listMyPackages = createServerFn({ method: "GET" })
     if (!profile) return [];
     const { data, error } = await supabase
       .from("packages").select("*").eq("profile_id", profile.id)
+      .order("sort_order", { ascending: true })
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
     return data ?? [];
@@ -108,5 +109,24 @@ export const deletePackage = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { error } = await context.supabase.from("packages").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const reorderPackages = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { ids: string[] }) => d)
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: profile } = await supabase
+      .from("profiles").select("id").eq("user_id", userId).single();
+    if (!profile) throw new Error("No profile");
+    for (let i = 0; i < data.ids.length; i++) {
+      const { error } = await supabase
+        .from("packages")
+        .update({ sort_order: i })
+        .eq("id", data.ids[i])
+        .eq("profile_id", profile.id);
+      if (error) throw new Error(error.message);
+    }
     return { ok: true };
   });
