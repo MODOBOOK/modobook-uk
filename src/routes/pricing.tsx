@@ -10,7 +10,7 @@ export const Route = createFileRoute("/pricing")({
       {
         name: "description",
         content:
-          "MODO is £39.99/month — £29.99/month for founding clinics who join the waitlist. Add team members from £9.99 and additional locations from £4.99.",
+          "MODO is £39.99/month — £29.99/month for founding clinics on our launch list. Add team members from £9.99 and additional locations from £4.99.",
       },
       { property: "og:title", content: "MODO Pricing" },
       {
@@ -107,7 +107,7 @@ function PricingPage() {
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-[color:var(--ink-soft)]">
             One flat subscription for your clinic. Add team members and extra locations only if
-            you need them. Founding clinics who join the waitlist lock in the discounted rates
+            you need them. Founding clinics on our launch list lock in the discounted rates
             below for life.
           </p>
           <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
