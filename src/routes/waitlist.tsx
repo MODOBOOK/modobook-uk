@@ -7,20 +7,20 @@ import { ArrowRight, Sparkles, Calendar, Users, CreditCard, FileSignature } from
 export const Route = createFileRoute("/waitlist")({
   head: () => ({
     meta: [
-      { title: "Join the MODO waitlist · Early access for aesthetics practitioners" },
+      { title: "MODO launch list closed · MODO Book is now open" },
       {
         name: "description",
         content:
-          "Join the MODO Book launch list for early access, founding-clinic pricing and onboarding support. Built by aesthetics clinicians for every aesthetics practitioner.",
+          "The MODO Book launch list is closed — MODO is now open to founding clinics. If you joined the list, create your account and start taking bookings today.",
       },
       {
         property: "og:title",
-        content: "Join the MODO waitlist · Early access for aesthetics practitioners",
+        content: "MODO launch list closed · MODO Book is now open",
       },
       {
         property: "og:description",
         content:
-          "Join the MODO Book launch list for early access, founding-clinic pricing and onboarding support.",
+          "The MODO Book launch list is closed. Founding clinics on the list can create their account now.",
       },
     ],
   }),
@@ -67,19 +67,18 @@ function WaitlistPage() {
             <div>
               <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[color:var(--accent)]/25 bg-[color:var(--clinical-blue-soft)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">
                 <span className="pulse-dot" />
-                Launching soon
+                Launch list closed
               </div>
 
               <h1 className="text-4xl font-bold leading-[1.05] tracking-tight text-[color:var(--ink)] sm:text-5xl lg:text-6xl">
-                Be first in when
+                MODO is open
                 <br />
-                <span className="text-[color:var(--ink-soft)]">MODO goes live.</span>
+                <span className="text-[color:var(--ink-soft)]">for founding clinics.</span>
               </h1>
 
               <p className="mt-6 max-w-md text-base leading-relaxed text-[color:var(--ink-soft)] sm:text-lg">
-                MODO Book is the booking and clinical platform built by aesthetics clinicians, for
-                every aesthetics practitioner. Join the launch list for early access and
-                founding-clinic pricing.
+                Our launch list is now closed. If you joined it, you can create your MODO
+                account today and start taking bookings straight away.
               </p>
 
               <div className="mt-8 hidden lg:block">
@@ -94,9 +93,9 @@ function WaitlistPage() {
             {/* Right form */}
             <div className="rounded-3xl border border-[color:var(--hairline)] bg-white p-6 shadow-sm sm:p-8 lg:p-10">
               <div className="mb-6">
-                <h2 className="text-2xl font-semibold tracking-tight">Join the launch list</h2>
+                <h2 className="text-2xl font-semibold tracking-tight">Already on the list?</h2>
                 <p className="mt-1 text-sm text-[color:var(--ink-soft)]">
-                  We'll email you the moment your account is ready.
+                  Create your clinic account with the email you signed up with.
                 </p>
               </div>
               <WaitlistForm />

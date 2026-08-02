@@ -15,6 +15,9 @@ interface WaitlistFormProps {
   onSuccess?: () => void;
 }
 
+/** The launch waitlist is closed — the form renders a closed notice instead. */
+export const WAITLIST_CLOSED = true;
+
 export function WaitlistForm({ compact, onSuccess }: WaitlistFormProps) {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
@@ -23,6 +26,9 @@ export function WaitlistForm({ compact, onSuccess }: WaitlistFormProps) {
   const [consent, setConsent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [joined, setJoined] = useState(false);
+
+  void compact;
+
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -69,7 +75,33 @@ export function WaitlistForm({ compact, onSuccess }: WaitlistFormProps) {
     }
   }
 
+  if (WAITLIST_CLOSED) {
+    return (
+      <div className="py-8 text-center">
+        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[color:var(--clinical-blue-soft)] text-[color:var(--clinical-blue)]">
+          <CheckCircle2 className="h-7 w-7" />
+        </div>
+        <h3 className="text-xl font-semibold text-[color:var(--ink)]">The launch list is closed</h3>
+        <p className="mx-auto mt-2 max-w-sm text-sm text-[color:var(--ink-soft)]">
+          MODO is now open to the clinics who joined the launch list. If you're already on it,
+          you can create your account and get started today.
+        </p>
+        <a
+          href="/auth"
+          className="mt-6 inline-flex h-11 items-center justify-center rounded-full bg-[color:var(--ink)] px-8 text-sm font-medium text-white hover:bg-[color:var(--ink)]/90"
+        >
+          Create your account
+          <ArrowRight className="ml-1 h-4 w-4" />
+        </a>
+        <p className="mt-4 text-[11px] text-[color:var(--ink-soft)]">
+          Not on the list? Email info@modobook.co.uk and we'll let you know when we reopen.
+        </p>
+      </div>
+    );
+  }
+
   if (joined) {
+
     return (
       <div className="py-8 text-center">
         <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[color:var(--clinical-blue-soft)] text-[color:var(--clinical-blue)]">

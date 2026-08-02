@@ -123,9 +123,9 @@ function DemoPage() {
               </span>
             </p>
             <div className="mt-5 flex flex-wrap gap-3">
-              <Link to="/waitlist">
+              <Link to="/auth">
                 <Button className="rounded-full bg-[color:var(--ink)] px-6 text-sm font-medium text-white hover:bg-[color:var(--ink)]/90">
-                  Join the waitlist
+                  Create your account
                 </Button>
               </Link>
               <Link to="/pricing">

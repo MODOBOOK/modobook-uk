@@ -126,12 +126,12 @@ function LandingPage() {
               </p>
 
               <div className="mt-9 flex flex-col items-start gap-3 sm:flex-row sm:items-center">
-<Link to="/waitlist" className="w-full sm:w-auto">
+<Link to="/auth" className="w-full sm:w-auto">
                   <Button
                     size="lg"
                     className="w-full rounded-full bg-[color:var(--ink)] px-8 text-sm font-medium text-white shadow-sm hover:bg-[color:var(--ink)]/90 sm:w-auto"
                   >
-                    Join the waitlist
+                    Create your account
                   </Button>
                 </Link>
                 <Link to="/demo" className="w-full sm:w-auto">
@@ -176,7 +176,7 @@ function LandingPage() {
 
               <p className="mt-5 text-xs text-[color:var(--ink-soft)]">
                 <span className="font-semibold text-[color:var(--accent)]">First month free · No card required.</span>{" "}
-                Launching in the next few weeks · Waitlist members get first access &amp; founding-clinic pricing
+                Now open to founding clinics · Launch-list members lock in founding-clinic pricing
               </p>
 
             </div>
@@ -435,20 +435,20 @@ function LandingPage() {
           <div className="mx-auto max-w-4xl px-5 py-24 text-center lg:px-8">
             <div className="eyebrow">Launching soon</div>
             <h2 className="mt-4 text-4xl font-bold leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl">
-              MODO goes live
+              MODO is live
               <br />
-              <span className="text-[color:var(--ink-soft)]">in the coming weeks.</span>
+              <span className="text-[color:var(--ink-soft)]">for founding clinics.</span>
             </h2>
             <p className="mx-auto mt-5 max-w-lg text-[color:var(--ink-soft)]">
-              We're rolling MODO out to founding clinics over the next couple of weeks. Join the waitlist and we'll email you the moment your account is ready — founding members keep 100% of booking revenue and lock in launch pricing.
+              Our launch list is closed and MODO is open to founding clinics. Create your account with the email you signed up with — founding members keep 100% of booking revenue and lock in launch pricing.
             </p>
             <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
-              <Link to="/waitlist" className="w-full sm:w-auto">
+              <Link to="/auth" className="w-full sm:w-auto">
                 <Button
                   size="lg"
                   className="w-full rounded-full bg-[color:var(--ink)] px-10 text-sm font-medium text-white hover:bg-[color:var(--ink)]/90 sm:w-auto"
                 >
-                  Join the waitlist
+                  Create your account
                 </Button>
               </Link>
               <Link to="/who-its-for" className="w-full sm:w-auto">
@@ -537,31 +537,31 @@ function WaitlistSection() {
     <section className="scroll-mt-24 border-t border-[color:var(--hairline)] bg-[color:var(--paper)]">
       <div className="mx-auto grid max-w-6xl gap-10 px-5 py-20 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:gap-16 lg:px-8">
         <div>
-          <div className="eyebrow">§ Launch list</div>
+          <div className="eyebrow">§ Now open</div>
           <h2 className="mt-4 text-3xl font-bold leading-tight tracking-tight sm:text-4xl">
-            Be first in when
+            MODO is open
             <br />
-            <span className="text-[color:var(--ink-soft)]">MODO goes live.</span>
+            <span className="text-[color:var(--ink-soft)]">for founding clinics.</span>
           </h2>
           <p className="mt-5 max-w-md text-[color:var(--ink-soft)]">
-            Practitioners on the list get early access, launch pricing and
-            onboarding support before we open publicly.
+            Our launch list is now closed. If you joined it, create your account
+            and start taking bookings today.
           </p>
         </div>
 
         <div className="rounded-3xl border border-[color:var(--hairline)] bg-white p-6 shadow-sm sm:p-8">
           <div className="py-4 text-center sm:py-6">
-            <h3 className="text-xl font-semibold">Join the launch list</h3>
+            <h3 className="text-xl font-semibold">Create your account</h3>
             <p className="mx-auto mt-2 max-w-sm text-sm text-[color:var(--ink-soft)]">
-              Get founding-clinic pricing, first access and a welcome email as soon as your account is ready.
+              Founding-clinic pricing, first month free and onboarding support — set up your clinic in minutes.
             </p>
             <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-              <Link to="/waitlist" className="w-full sm:w-auto">
+              <Link to="/auth" className="w-full sm:w-auto">
                 <Button
                   size="lg"
                   className="w-full rounded-full bg-[color:var(--ink)] px-8 text-sm font-medium text-white hover:bg-[color:var(--ink)]/90 sm:w-auto"
                 >
-                  Join the waitlist <ArrowRight className="ml-1 h-4 w-4" />
+                  Create your account <ArrowRight className="ml-1 h-4 w-4" />
                 </Button>
               </Link>
               <Link to="/pricing" className="w-full sm:w-auto">
@@ -575,7 +575,7 @@ function WaitlistSection() {
               </Link>
             </div>
             <p className="mt-4 text-[11px] text-[color:var(--ink-soft)]">
-              No spam. Unsubscribe any time. UK/EU data residency.
+              Launch-list clinics only. UK/EU data residency.
             </p>
           </div>
         </div>
@@ -615,12 +615,12 @@ export function SiteHeader() {
 
 
         <div className="flex items-center gap-2">
-          <Link to="/waitlist" className="hidden sm:inline-flex">
+          <Link to="/auth" className="hidden sm:inline-flex">
             <Button
               size="sm"
               className="rounded-full bg-[color:var(--ink)] px-5 text-xs font-medium uppercase tracking-[0.14em] text-[color:var(--paper)] hover:bg-[color:var(--ink)]/90"
             >
-              Join waitlist
+              Create account
             </Button>
           </Link>
 
@@ -652,8 +652,8 @@ export function SiteHeader() {
               ))}
               <DropdownMenuSeparator className="my-1 bg-[color:var(--hairline)]" />
               <DropdownMenuItem asChild className="rounded-lg">
-                <Link to="/waitlist" className="cursor-pointer px-3 py-2 text-sm font-semibold text-[color:var(--accent)]">
-                  Join the waitlist →
+                <Link to="/auth" className="cursor-pointer px-3 py-2 text-sm font-semibold text-[color:var(--accent)]">
+                  Create your account →
                 </Link>
               </DropdownMenuItem>
 
@@ -692,7 +692,7 @@ export function SiteFooter() {
         ]} />
 
         <FooterCol title="Join us" links={[
-          { label: "Join the waitlist", to: "/waitlist" },
+          { label: "Create your account", to: "/auth" },
           { label: "Sign in", to: "/auth" },
         ]} />
 

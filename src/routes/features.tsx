@@ -94,7 +94,7 @@ function FeaturesPage() {
             The booking, consultation, clinical and marketing stack — built only for aesthetics, for HCPs and non-HCPs alike.
           </p>
           <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-            <Link to="/waitlist"><Button size="lg" className="w-full rounded-full bg-[color:var(--ink)] px-8 text-sm text-white hover:bg-[color:var(--ink)]/90 sm:w-auto">Join the waitlist</Button></Link>
+            <Link to="/auth"><Button size="lg" className="w-full rounded-full bg-[color:var(--ink)] px-8 text-sm text-white hover:bg-[color:var(--ink)]/90 sm:w-auto">Create your account</Button></Link>
             <Link to="/prescriber-hub"><Button size="lg" variant="outline" className="w-full rounded-full border-[color:var(--hairline)] bg-white px-8 text-sm sm:w-auto">Prescriber Hub</Button></Link>
           </div>
         </section>
@@ -145,8 +145,8 @@ function FeaturesPage() {
           <div className="mx-auto max-w-3xl px-5 py-16 text-center lg:px-8">
             <CheckCircle2 className="mx-auto mb-3 h-8 w-8 text-[color:var(--accent)]" />
             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Want in at launch?</h2>
-            <p className="mt-3 text-[color:var(--ink-soft)]">MODO is rolling out to founding clinics over the next few weeks. Join the waitlist and we'll email you as soon as your account is ready.</p>
-            <Link to="/waitlist"><Button size="lg" className="mt-6 rounded-full bg-[color:var(--ink)] px-8 text-white hover:bg-[color:var(--ink)]/90">Join the waitlist</Button></Link>
+            <p className="mt-3 text-[color:var(--ink-soft)]">MODO is rolling out to founding clinics over the next few weeks. Create your account and we'll email you as soon as your account is ready.</p>
+            <Link to="/auth"><Button size="lg" className="mt-6 rounded-full bg-[color:var(--ink)] px-8 text-white hover:bg-[color:var(--ink)]/90">Create your account</Button></Link>
 
           </div>
         </section>

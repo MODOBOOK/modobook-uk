@@ -45,9 +45,9 @@ function HubPage() {
                 and audited in one place.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
-<Link to="/waitlist">
+<Link to="/auth">
                   <Button size="lg" className="rounded-full bg-[color:var(--ink)] px-7 text-white hover:bg-[color:var(--ink)]/90">
-                    Join the waitlist <ArrowRight className="ml-1 h-4 w-4" />
+                    Create your account <ArrowRight className="ml-1 h-4 w-4" />
                   </Button>
                 </Link>
                 <Link to="/features">
@@ -187,15 +187,15 @@ function HubPage() {
           <div className="mx-auto max-w-3xl px-5 py-16 text-center lg:px-8">
             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Ready to join the Hub?</h2>
             <p className="mt-3 text-[color:var(--ink-soft)]">
-              MODO is rolling out to founding clinics over the next few weeks. Join the waitlist and
+              MODO is open to founding clinics on our launch list. Create your account and
               we'll be in touch as soon as your account is ready.
             </p>
             <p className="mt-2 text-sm font-semibold text-[color:var(--accent)]">
               First month free · No card required.
             </p>
-            <Link to="/waitlist">
+            <Link to="/auth">
               <Button size="lg" className="mt-6 rounded-full bg-[color:var(--ink)] px-8 text-white hover:bg-[color:var(--ink)]/90">
-                Join the waitlist <ArrowRight className="ml-1 h-4 w-4" />
+                Create your account <ArrowRight className="ml-1 h-4 w-4" />
               </Button>
             </Link>
           </div>

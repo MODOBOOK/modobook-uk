@@ -188,8 +188,8 @@ function FaqPage() {
               Our team runs aesthetics clinics ourselves — get in touch and we'll help you get set up.
             </p>
             <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-              <Link to="/waitlist">
-                <Button size="lg">Join the waitlist <ArrowRight className="ml-2 h-4 w-4" /></Button>
+              <Link to="/auth">
+                <Button size="lg">Create your account <ArrowRight className="ml-2 h-4 w-4" /></Button>
               </Link>
 
               <a href="mailto:info@modobook.co.uk">
