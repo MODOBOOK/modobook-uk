@@ -17,14 +17,14 @@ async function getMyProfileId(context: { supabase: any; userId: string }) {
 }
 
 /**
- * Seat-limit guard. Every clinic gets 1 free seat of each kind (location /
- * practitioner). Additional seats need to be either:
- *  - covered by paid add-ons on an active Stripe subscription, or
- *  - allowed during the free trial (the practitioner is told these seats
- *    are reserved and will be included when billing starts), or
- *  - comped by admin.
- * Once the trial ends without a direct debit set up, extra seats are blocked
- * until the practitioner completes checkout.
+ * Seat handling. Every clinic gets 1 free seat of each kind (location /
+ * practitioner). Extra seats are never blocked — adding one automatically
+ * increases the paid add-on quantity:
+ *  - with a live Stripe subscription, the add-on quantity is raised in place
+ *    (prorated onto the next direct-debit invoice),
+ *  - during the trial / before checkout, the seat is reserved on the
+ *    subscription record so it pre-fills and bills at checkout,
+ *  - comped or admin-granted free seats are used up first, at no charge.
  */
 export async function assertSeatAvailable(
   supabase: any,
@@ -33,7 +33,7 @@ export async function assertSeatAvailable(
 ) {
   const { data: sub } = await supabase
     .from("practitioner_subscriptions")
-    .select("status, comped, trial_end, stripe_subscription_id, extra_locations, extra_practitioners, free_locations, free_practitioners")
+    .select("id, status, comped, trial_end, stripe_subscription_id, plan_id, extra_locations, extra_practitioners, free_locations, free_practitioners")
     .eq("profile_id", profileId)
     .maybeSingle();
 
@@ -44,43 +44,55 @@ export async function assertSeatAvailable(
     .eq("profile_id", profileId);
   const current = count ?? 0;
   if (current < 1) return; // first seat is always free
-
   if (sub?.comped) return;
 
-  const selectedExtras = Math.max(
-    0,
-    Number(kind === "location" ? sub?.extra_locations ?? 0 : sub?.extra_practitioners ?? 0),
-  );
-  const freeExtras = Math.max(
-    0,
-    Number(kind === "location" ? sub?.free_locations ?? 0 : sub?.free_practitioners ?? 0),
-  );
-  const allowed = 1 + selectedExtras + freeExtras;
-  if (current < 1 + freeExtras) return; // comped seats are always available
-  const trialActive = Boolean(
-    sub?.trial_end && new Date(sub.trial_end as string).getTime() > Date.now(),
-  );
+  const isLoc = kind === "location";
+  const freeExtras = Math.max(0, Number((isLoc ? sub?.free_locations : sub?.free_practitioners) ?? 0));
+  if (current < 1 + freeExtras) return; // admin-granted comped seats
 
-  // During the trial, saved billing selections reserve exactly that many
-  // additional seats. Once billing begins, the same quantities are enforced
-  // against the live MODO Stripe subscription.
-  if (trialActive && current < allowed) return;
-  if (
-    sub?.stripe_subscription_id &&
-    ["active", "trialing"].includes(String(sub?.status)) &&
-    current < allowed
-  ) return;
+  // Seats needed beyond the free allowance once this new one is created.
+  const neededPaid = current + 1 - 1 - freeExtras;
+  const selected = Math.max(0, Number((isLoc ? sub?.extra_locations : sub?.extra_practitioners) ?? 0));
+  if (neededPaid <= selected) return; // already paying for this seat
 
-  const noun = kind === "location" ? "location" : "practitioner";
-  if (trialActive) {
-    throw new Error(
-      `You have reached your selected ${noun} limit. Increase the quantity in Plan & billing before adding another ${noun}.`,
-    );
+  const patch = isLoc ? { extra_locations: neededPaid } : { extra_practitioners: neededPaid };
+
+  if (sub?.id) {
+    await supabase.from("practitioner_subscriptions").update(patch).eq("id", sub.id);
+  } else {
+    await supabase
+      .from("practitioner_subscriptions")
+      .insert({ profile_id: profileId, status: "pending", ...patch });
   }
-  throw new Error(
-    `Your free trial has ended. Set up your MODO direct debit to add another ${noun} — visit Plan & billing to choose your add-ons and complete Stripe checkout.`,
-  );
+
+  // If they're already on direct debit, push the new quantity to Stripe so the
+  // charge is added automatically (prorated onto the next invoice).
+  if (sub?.stripe_subscription_id && ["active", "trialing", "past_due"].includes(String(sub?.status))) {
+    try {
+      const { data: addon } = await supabase
+        .from("subscription_plans")
+        .select("stripe_price_id")
+        .eq("kind", isLoc ? "addon_location" : "addon_practitioner")
+        .eq("active", true)
+        .maybeSingle();
+      if (addon?.stripe_price_id) {
+        const { getStripe } = await import("./stripe.server");
+        const stripe = getStripe();
+        const live = await stripe.subscriptions.retrieve(sub.stripe_subscription_id);
+        const item = live.items.data.find((i: any) => i.price.id === addon.stripe_price_id);
+        await stripe.subscriptions.update(sub.stripe_subscription_id, {
+          items: item
+            ? [{ id: item.id, quantity: neededPaid }]
+            : [{ price: addon.stripe_price_id, quantity: neededPaid }],
+          proration_behavior: "create_prorations",
+        });
+      }
+    } catch (e) {
+      console.error("[billing] failed to sync extra seat to Stripe", e);
+    }
+  }
 }
+
 
 export const getMyBillingStatus = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
