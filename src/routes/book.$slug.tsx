@@ -63,11 +63,15 @@ function ClinicPage() {
               <p className="text-xs text-muted-foreground">{profile.tagline}</p>
             </div>
           </div>
-          <Link to="/">
+          <a
+            href="https://modobook.uk"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             <Button variant="ghost" size="sm">
-              Powered by MODO
+              Powered by modobook.uk
             </Button>
-          </Link>
+          </a>
         </div>
       </header>
 
