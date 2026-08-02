@@ -16,7 +16,24 @@ type PackageInput = {
   allow_split_payment?: boolean;
 };
 
+/** Drop treatment ids that no longer exist (e.g. deleted treatments still
+ *  referenced by an older package) so we never violate the FK on save. */
+async function sanitizeTreatments(
+  supabase: any,
+  profileId: string,
+  ids: string[],
+): Promise<{ treatment_ids: string[]; treatment_id: string | null }> {
+  const unique = Array.from(new Set((ids ?? []).filter(Boolean)));
+  if (unique.length === 0) return { treatment_ids: [], treatment_id: null };
+  const { data } = await supabase
+    .from("treatments").select("id").eq("profile_id", profileId).in("id", unique);
+  const valid = new Set((data ?? []).map((r: { id: string }) => r.id));
+  const kept = (ids ?? []).filter((id) => valid.has(id));
+  return { treatment_ids: kept, treatment_id: kept[0] ?? null };
+}
+
 export const listMyPackages = createServerFn({ method: "GET" })
+
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
