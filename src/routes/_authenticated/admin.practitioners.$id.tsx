@@ -194,6 +194,10 @@ function Overview({ data, onChanged }: { data: any; onChanged: () => void }) {
         </CardContent>
       </Card>
 
+      <SeatAllowanceCard profileId={p.id} />
+
+
+
       <Card className="md:col-span-2 border-amber-300 bg-amber-50/50">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
