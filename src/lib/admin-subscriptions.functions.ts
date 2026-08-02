@@ -479,22 +479,33 @@ export const setSuspended = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-// ---------- Free (comped) extra seats ----------
+// ---------- Comped accounts, discounts & free extra seats ----------
 
-/** Read a clinic's current seat usage + free allowance. */
+/** Read a clinic's billing settings, seat usage + free allowance. */
 export const adminGetSeatAllowance = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i: { profileId: string }) => i)
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const { data: sub } = await context.supabase
-      .from("practitioner_subscriptions")
-      .select("free_locations, free_practitioners, extra_locations, extra_practitioners, comped, status, trial_end")
-      .eq("profile_id", data.profileId)
-      .maybeSingle();
-    const [locs, pracs] = await Promise.all([
-      context.supabase.from("locations").select("id", { count: "exact", head: true }).eq("profile_id", data.profileId),
-      context.supabase.from("practitioners").select("id", { count: "exact", head: true }).eq("profile_id", data.profileId),
+    // Admin console reads across clinics, so use the privileged client
+    // (RLS on profiles/locations/practitioners scopes to the owner only).
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const db = supabaseAdmin as any;
+    const [{ data: sub }, locs, pracs, { data: codes }] = await Promise.all([
+      db
+        .from("practitioner_subscriptions")
+        .select(
+          "free_locations, free_practitioners, extra_locations, extra_practitioners, comped, status, trial_end, custom_price_cents, discount_code_id, stripe_subscription_id",
+        )
+        .eq("profile_id", data.profileId)
+        .maybeSingle(),
+      db.from("locations").select("id", { count: "exact", head: true }).eq("profile_id", data.profileId),
+      db.from("practitioners").select("id", { count: "exact", head: true }).eq("profile_id", data.profileId),
+      db
+        .from("platform_discount_codes")
+        .select("id, code, percent_off, amount_off_cents, active")
+        .eq("active", true)
+        .order("code"),
     ]);
     return {
       free_locations: Number(sub?.free_locations ?? 0),
@@ -503,10 +514,40 @@ export const adminGetSeatAllowance = createServerFn({ method: "POST" })
       extra_practitioners: Number(sub?.extra_practitioners ?? 0),
       comped: Boolean(sub?.comped),
       status: (sub?.status as string) ?? null,
+      trial_end: (sub?.trial_end as string) ?? null,
+      custom_price_cents: sub?.custom_price_cents ?? null,
+      discount_code_id: (sub?.discount_code_id as string) ?? null,
+      has_stripe_subscription: Boolean(sub?.stripe_subscription_id),
       location_count: locs.count ?? 0,
       practitioner_count: pracs.count ?? 0,
+      discount_codes: (codes ?? []) as Array<{
+        id: string;
+        code: string;
+        percent_off: number | null;
+        amount_off_cents: number | null;
+      }>,
     };
   });
+
+async function upsertSubscriptionPatch(profileId: string, patch: Record<string, unknown>) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const db = supabaseAdmin as any;
+  const { data: existing } = await db
+    .from("practitioner_subscriptions")
+    .select("id, stripe_subscription_id")
+    .eq("profile_id", profileId)
+    .maybeSingle();
+  if (existing) {
+    const { error } = await db.from("practitioner_subscriptions").update(patch).eq("id", existing.id);
+    if (error) throw error;
+  } else {
+    const { error } = await db
+      .from("practitioner_subscriptions")
+      .insert({ profile_id: profileId, status: "pending", ...patch });
+    if (error) throw error;
+  }
+  return existing as { id: string; stripe_subscription_id: string | null } | null;
+}
 
 /** Grant / adjust complimentary extra locations and practitioners. */
 export const adminSetSeatAllowance = createServerFn({ method: "POST" })
@@ -519,23 +560,79 @@ export const adminSetSeatAllowance = createServerFn({ method: "POST" })
     if (data.freeLocations !== undefined) patch.free_locations = clamp(data.freeLocations);
     if (data.freePractitioners !== undefined) patch.free_practitioners = clamp(data.freePractitioners);
     if (!Object.keys(patch).length) return { ok: true };
-
-    const { data: existing } = await context.supabase
-      .from("practitioner_subscriptions")
-      .select("id")
-      .eq("profile_id", data.profileId)
-      .maybeSingle();
-    if (existing) {
-      const { error } = await context.supabase
-        .from("practitioner_subscriptions")
-        .update(patch as never)
-        .eq("id", existing.id);
-      if (error) throw error;
-    } else {
-      const { error } = await context.supabase
-        .from("practitioner_subscriptions")
-        .insert({ profile_id: data.profileId, status: "pending", ...patch } as never);
-      if (error) throw error;
-    }
+    await upsertSubscriptionPatch(data.profileId, patch);
     return { ok: true, ...patch };
+  });
+
+/**
+ * Free subscriptions & discounts.
+ *  - `comped: true` makes the account permanently free (never billed, never
+ *    blocked). Any live Stripe subscription is cancelled immediately.
+ *  - `discountCodeId` attaches an existing platform discount code; when a live
+ *    Stripe subscription exists the coupon is applied to it straight away,
+ *    otherwise it pre-fills at checkout.
+ *  - `trialDays` extends the free trial by N days from today.
+ */
+export const adminSetBilling = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    (i: {
+      profileId: string;
+      comped?: boolean;
+      discountCodeId?: string | null;
+      trialDays?: number | null;
+      customPriceCents?: number | null;
+    }) => i,
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const db = supabaseAdmin as any;
+
+    const patch: Record<string, unknown> = {};
+    if (data.comped !== undefined) patch.comped = Boolean(data.comped);
+    if (data.discountCodeId !== undefined) patch.discount_code_id = data.discountCodeId || null;
+    if (data.customPriceCents !== undefined)
+      patch.custom_price_cents =
+        data.customPriceCents === null ? null : Math.max(0, Math.floor(data.customPriceCents));
+    if (data.trialDays != null && data.trialDays > 0) {
+      const end = new Date();
+      end.setDate(end.getDate() + Math.floor(data.trialDays));
+      patch.trial_end = end.toISOString();
+      patch.status = "trialing";
+    }
+    if (!Object.keys(patch).length) return { ok: true };
+
+    const existing = await upsertSubscriptionPatch(data.profileId, patch);
+
+    // Sync with Stripe where a live subscription exists.
+    if (existing?.stripe_subscription_id) {
+      try {
+        const { getStripe } = await import("./stripe.server");
+        const stripe = getStripe();
+        if (data.comped === true) {
+          await stripe.subscriptions.cancel(existing.stripe_subscription_id);
+          await db
+            .from("practitioner_subscriptions")
+            .update({ status: "canceled", stripe_subscription_id: null })
+            .eq("id", existing.id);
+        } else if (data.discountCodeId) {
+          const { data: code } = await db
+            .from("platform_discount_codes")
+            .select("stripe_coupon_id")
+            .eq("id", data.discountCodeId)
+            .maybeSingle();
+          if (code?.stripe_coupon_id) {
+            await stripe.subscriptions.update(existing.stripe_subscription_id, {
+              coupon: code.stripe_coupon_id,
+            } as any);
+          }
+        } else if (data.discountCodeId === null) {
+          await stripe.subscriptions.deleteDiscount(existing.stripe_subscription_id);
+        }
+      } catch (e) {
+        console.error("[adminSetBilling] Stripe sync failed", e);
+      }
+    }
+    return { ok: true };
   });

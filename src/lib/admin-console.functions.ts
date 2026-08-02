@@ -81,7 +81,11 @@ export const adminGetPractitioner = createServerFn({ method: "POST" })
   .inputValidator((i: { id: string }) => i)
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const { data: profile, error } = await context.supabase
+    // Cross-clinic admin read: RLS on these tables scopes to the owner, so the
+    // console needs the privileged client (caller already verified as admin).
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const db = supabaseAdmin as any;
+    const { data: profile, error } = await db
       .from("profiles")
       .select(ALLOWED_PROFILE_COLUMNS.join(","))
       .eq("id", data.id)
@@ -90,16 +94,16 @@ export const adminGetPractitioner = createServerFn({ method: "POST" })
     if (!profile) throw new Error("Not found");
 
     const [tx, locs, theme] = await Promise.all([
-      context.supabase
+      db
         .from("treatments")
         .select("id, name, duration_minutes, price_cents, active, category_id")
         .eq("profile_id", data.id)
         .order("name"),
-      context.supabase
+      db
         .from("locations")
         .select("id, name, address, active")
         .eq("profile_id", data.id),
-      context.supabase.from("clinic_theme").select("*").eq("profile_id", data.id).maybeSingle(),
+      db.from("clinic_theme").select("*").eq("profile_id", data.id).maybeSingle(),
     ]);
 
     return {
@@ -117,7 +121,8 @@ export const adminOpenViewAs = createServerFn({ method: "POST" })
   .inputValidator((i: { id: string; reason?: string }) => i)
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const { data: p, error } = await context.supabase
+    const { supabaseAdmin: adminDb } = await import("@/integrations/supabase/client.server");
+    const { data: p, error } = await (adminDb as any)
       .from("profiles")
       .select("id, slug, clinic_name, full_name")
       .eq("id", data.id)
@@ -162,7 +167,8 @@ export const adminEditPractitioner = createServerFn({ method: "POST" })
     }
     if (Object.keys(patch).length === 0) throw new Error("Nothing to update");
 
-    const { data: before, error: beforeErr } = await context.supabase
+    const { supabaseAdmin: readDb } = await import("@/integrations/supabase/client.server");
+    const { data: before, error: beforeErr } = await (readDb as any)
       .from("profiles")
       .select(Object.keys(patch).join(","))
       .eq("id", data.id)

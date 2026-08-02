@@ -13,6 +13,7 @@ import {
 import {
   adminGetSeatAllowance,
   adminSetSeatAllowance,
+  adminSetBilling,
 } from "@/lib/admin-subscriptions.functions";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -461,13 +462,16 @@ export function AuditRow({ row }: { row: any }) {
 function SeatAllowanceCard({ profileId }: { profileId: string }) {
   const getSeats = useServerFn(adminGetSeatAllowance);
   const setSeats = useServerFn(adminSetSeatAllowance);
-  const { data, refetch, isLoading } = useQuery({
+  const setBilling = useServerFn(adminSetBilling);
+  const { data, refetch, isLoading, error } = useQuery({
     queryKey: ["admin", "seats", profileId],
     queryFn: () => getSeats({ data: { profileId } }),
+    retry: false,
   });
   const [loc, setLoc] = useState<string>("");
   const [prac, setPrac] = useState<string>("");
   const [busy, setBusy] = useState(false);
+  const [trialDays, setTrialDays] = useState("30");
 
   const freeLoc = loc === "" ? String(data?.free_locations ?? 0) : loc;
   const freePrac = prac === "" ? String(data?.free_practitioners ?? 0) : prac;
@@ -492,55 +496,150 @@ function SeatAllowanceCard({ profileId }: { profileId: string }) {
     }
   }
 
+  async function applyBilling(patch: Record<string, unknown>, msg: string) {
+    setBusy(true);
+    try {
+      await setBilling({ data: { profileId, ...patch } as never });
+      toast.success(msg);
+      refetch();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <Card className="md:col-span-2">
       <CardHeader>
-        <CardTitle className="text-base">Complimentary extra seats</CardTitle>
+        <CardTitle className="text-base">Billing, free accounts &amp; seats</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-3 text-sm">
-        <p className="text-muted-foreground">
-          Every clinic includes 1 location and 1 practitioner. Anything set here is granted
-          free of charge on top of that — they will not be billed for these seats.
-        </p>
+      <CardContent className="space-y-5 text-sm">
         {isLoading ? (
           <p className="text-muted-foreground">Loading…</p>
+        ) : error ? (
+          <p className="text-destructive">
+            Couldn&apos;t load billing: {error instanceof Error ? error.message : "unknown error"}
+          </p>
         ) : (
           <>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div>
-                <Label className="text-xs">Free extra locations</Label>
-                <Input
-                  type="number"
-                  min={0}
-                  value={freeLoc}
-                  onChange={(e) => setLoc(e.target.value)}
-                />
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Using {data?.location_count ?? 0} · allowance{" "}
-                  {1 + (data?.free_locations ?? 0) + (data?.extra_locations ?? 0)}
-                </p>
-              </div>
-              <div>
-                <Label className="text-xs">Free extra practitioners</Label>
-                <Input
-                  type="number"
-                  min={0}
-                  value={freePrac}
-                  onChange={(e) => setPrac(e.target.value)}
-                />
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Using {data?.practitioner_count ?? 0} · allowance{" "}
-                  {1 + (data?.free_practitioners ?? 0) + (data?.extra_practitioners ?? 0)}
-                </p>
+            {/* Free account */}
+            <div className="rounded-md border p-3">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p className="font-medium">Free subscription</p>
+                  <p className="text-xs text-muted-foreground">
+                    Nothing is ever charged and access is never blocked. Cancels any live direct debit.
+                  </p>
+                </div>
+                {data?.comped ? (
+                  <div className="flex items-center gap-2">
+                    <Badge>Free account</Badge>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={busy}
+                      onClick={() => applyBilling({ comped: false }, "Free account removed")}
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    size="sm"
+                    disabled={busy}
+                    onClick={() => applyBilling({ comped: true }, "Account is now free")}
+                  >
+                    Make this account free
+                  </Button>
+                )}
               </div>
             </div>
-            <div className="flex items-center gap-3">
+
+            {/* Discount */}
+            <div className="rounded-md border p-3 space-y-2">
+              <p className="font-medium">Discount code</p>
+              <p className="text-xs text-muted-foreground">
+                Applies to their platform subscription — instantly if they&apos;re already on direct debit,
+                otherwise at checkout. Create codes on the Admin home page.
+              </p>
+              <div className="flex flex-wrap items-center gap-2">
+                <select
+                  className="h-9 rounded-md border bg-background px-2 text-sm"
+                  value={data?.discount_code_id ?? ""}
+                  disabled={busy}
+                  onChange={(e) =>
+                    applyBilling(
+                      { discountCodeId: e.target.value || null },
+                      e.target.value ? "Discount applied" : "Discount removed",
+                    )
+                  }
+                >
+                  <option value="">No discount</option>
+                  {(data?.discount_codes ?? []).map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.code}
+                      {c.percent_off ? ` — ${c.percent_off}% off` : ""}
+                      {c.amount_off_cents ? ` — £${(c.amount_off_cents / 100).toFixed(2)} off` : ""}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Trial */}
+            <div className="rounded-md border p-3 space-y-2">
+              <p className="font-medium">Extend free trial</p>
+              <p className="text-xs text-muted-foreground">
+                Current trial ends{" "}
+                {data?.trial_end ? new Date(data.trial_end).toLocaleDateString() : "—"}.
+              </p>
+              <div className="flex flex-wrap items-center gap-2">
+                <Input
+                  type="number"
+                  min={1}
+                  className="w-24"
+                  value={trialDays}
+                  onChange={(e) => setTrialDays(e.target.value)}
+                />
+                <span className="text-xs text-muted-foreground">days from today</span>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={busy}
+                  onClick={() => applyBilling({ trialDays: Number(trialDays) || 30 }, "Trial extended")}
+                >
+                  Extend
+                </Button>
+              </div>
+            </div>
+
+            {/* Seats */}
+            <div className="rounded-md border p-3 space-y-3">
+              <p className="font-medium">Complimentary extra seats</p>
+              <p className="text-xs text-muted-foreground">
+                Every clinic includes 1 location and 1 practitioner. Anything set here is granted free
+                of charge on top of that.
+              </p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <Label className="text-xs">Free extra locations</Label>
+                  <Input type="number" min={0} value={freeLoc} onChange={(e) => setLoc(e.target.value)} />
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Using {data?.location_count ?? 0} · free allowance {1 + (data?.free_locations ?? 0)}
+                  </p>
+                </div>
+                <div>
+                  <Label className="text-xs">Free extra practitioners</Label>
+                  <Input type="number" min={0} value={freePrac} onChange={(e) => setPrac(e.target.value)} />
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Using {data?.practitioner_count ?? 0} · free allowance {1 + (data?.free_practitioners ?? 0)}
+                  </p>
+                </div>
+              </div>
               <Button size="sm" disabled={busy} onClick={save}>
                 {busy ? "Saving…" : "Save free seats"}
               </Button>
-              {data?.comped && (
-                <Badge variant="secondary">Whole account comped</Badge>
-              )}
             </div>
           </>
         )}
