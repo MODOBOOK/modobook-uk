@@ -193,11 +193,16 @@ function AuthPage() {
             )}
 
             <div className="rounded-lg border border-dashed bg-muted/40 p-3 text-center text-xs text-muted-foreground">
-              Not on the waitlist yet? MODO is opening to new clinics in stages.{" "}
-              <Link to="/waitlist" className="font-medium text-foreground underline underline-offset-2">
-                Join the waitlist →
-              </Link>
+              Our launch list is closed and accounts are limited to clinics on it. Not on the
+              list?{" "}
+              <a
+                href="mailto:info@modobook.co.uk"
+                className="font-medium text-foreground underline underline-offset-2"
+              >
+                Email us →
+              </a>
             </div>
+
 
 
             <Separator />
