@@ -176,7 +176,7 @@ function LandingPage() {
 
               <p className="mt-5 text-xs text-[color:var(--ink-soft)]">
                 <span className="font-semibold text-[color:var(--accent)]">First month free · No card required.</span>{" "}
-                Now open to founding clinics · Launch-list members get &amp; founding-clinic pricing
+                Now open to founding clinics · Launch-list members lock in founding-clinic pricing
               </p>
 
             </div>
