@@ -10,6 +10,10 @@ import {
   adminSetActive,
   adminListAudit,
 } from "@/lib/admin-console.functions";
+import {
+  adminGetSeatAllowance,
+  adminSetSeatAllowance,
+} from "@/lib/admin-subscriptions.functions";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
