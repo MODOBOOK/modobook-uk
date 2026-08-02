@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { listMyPackages, createPackage, updatePackage, deletePackage } from "@/lib/packages.functions";
+import { listMyPackages, createPackage, updatePackage, deletePackage, reorderPackages } from "@/lib/packages.functions";
 import { getMyTreatments } from "@/lib/treatments.functions";
 import { getMyPackageCategories, createPackageCategory, deletePackageCategory } from "@/lib/categories.functions";
 import { getMyProfile } from "@/lib/profiles.functions";
@@ -17,7 +17,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Badge } from "@/components/ui/badge";
 import { ImageUploader } from "@/components/ImageUploader";
 import { toast } from "sonner";
-import { Plus, Minus, Pencil, Trash2, Package, X, Search, Check } from "lucide-react";
+import { Plus, Minus, Pencil, Trash2, Package, X, Search, Check, ArrowUp, ArrowDown } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard/packages")({
   ssr: false,
@@ -65,6 +65,7 @@ function PackagesPage() {
   const create = useServerFn(createPackage);
   const update = useServerFn(updatePackage);
   const remove = useServerFn(deletePackage);
+  const reorder = useServerFn(reorderPackages);
   const listTreatments = useServerFn(getMyTreatments);
   const listCategories = useServerFn(getMyPackageCategories);
   const createCat = useServerFn(createPackageCategory);
@@ -87,6 +88,20 @@ function PackagesPage() {
     setProfileId((profile as { id?: string } | null)?.id ?? "");
   }
   useEffect(() => { refresh(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
+
+  async function move(index: number, dir: -1 | 1) {
+    const target = index + dir;
+    if (target < 0 || target >= packages.length) return;
+    const next = [...packages];
+    [next[index], next[target]] = [next[target], next[index]];
+    setPackages(next);
+    try {
+      await reorder({ data: { ids: next.map((p) => p.id) } });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to reorder");
+      refresh();
+    }
+  }
 
   function openCreate() {
     setEditing(null);
@@ -520,7 +535,7 @@ function PackagesPage() {
         </CardContent></Card>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2">
-          {packages.map((p) => {
+          {packages.map((p, index) => {
             const ids = p.treatment_ids ?? (p.treatment_id ? [p.treatment_id] : []);
             const names = ids.map((id) => treatments.find((tt) => tt.id === id)?.name).filter(Boolean) as string[];
             const original = ids.reduce((sum, id) => sum + Number(treatments.find((tt) => tt.id === id)?.price ?? 0), 0) * (p.session_count || 1);
@@ -542,6 +557,8 @@ function PackagesPage() {
                     </p>
                   </div>
                   <div className="flex gap-1">
+                    <Button size="icon" variant="ghost" title="Move up" disabled={index === 0} onClick={() => move(index, -1)}><ArrowUp className="h-4 w-4" /></Button>
+                    <Button size="icon" variant="ghost" title="Move down" disabled={index === packages.length - 1} onClick={() => move(index, 1)}><ArrowDown className="h-4 w-4" /></Button>
                     <Button size="icon" variant="ghost" onClick={() => openEdit(p)}><Pencil className="h-4 w-4" /></Button>
                     <Button size="icon" variant="ghost" onClick={() => onDelete(p.id)}><Trash2 className="h-4 w-4" /></Button>
                   </div>
