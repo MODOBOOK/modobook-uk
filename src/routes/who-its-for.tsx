@@ -116,7 +116,7 @@ function WhoPage() {
                 aesthetics industry — HCPs and non-HCPs — under one safer clinical standard.
               </p>
               <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-                <Link to="/waitlist"><Button size="lg" className="w-full rounded-full bg-[color:var(--ink)] px-8 text-white hover:bg-[color:var(--ink)]/90 sm:w-auto">Join the waitlist</Button></Link>
+                <Link to="/auth"><Button size="lg" className="w-full rounded-full bg-[color:var(--ink)] px-8 text-white hover:bg-[color:var(--ink)]/90 sm:w-auto">Create your account</Button></Link>
                 <Link to="/prescriber-hub"><Button size="lg" variant="outline" className="w-full rounded-full border-[color:var(--hairline)] bg-white px-8 sm:w-auto">Prescriber Hub</Button></Link>
               </div>
             </div>
@@ -161,8 +161,8 @@ function WhoPage() {
         <section className="border-t border-[color:var(--hairline)] bg-white">
           <div className="mx-auto max-w-3xl px-5 py-16 text-center lg:px-8">
             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Ready to join MODO?</h2>
-            <p className="mt-3 text-[color:var(--ink-soft)]">We're opening up to founding clinics over the next few weeks. Join the waitlist and we'll be in touch as soon as your account is ready.</p>
-            <Link to="/waitlist"><Button size="lg" className="mt-6 rounded-full bg-[color:var(--ink)] px-8 text-white hover:bg-[color:var(--ink)]/90">Join the waitlist</Button></Link>
+            <p className="mt-3 text-[color:var(--ink-soft)]">We're opening up to founding clinics over the next few weeks. Create your account and we'll be in touch as soon as your account is ready.</p>
+            <Link to="/auth"><Button size="lg" className="mt-6 rounded-full bg-[color:var(--ink)] px-8 text-white hover:bg-[color:var(--ink)]/90">Create your account</Button></Link>
 
           </div>
         </section>

@@ -56,7 +56,7 @@ const tiers: Tier[] = [
       "Prescriber hub included",
     ],
 
-    cta: "Join the waitlist",
+    cta: "Create your account",
     highlight: true,
   },
   {
@@ -73,7 +73,7 @@ const tiers: Tier[] = [
       "Own patient list & notes",
       "Included in main subscription: 1 practitioner",
     ],
-    cta: "Join the waitlist",
+    cta: "Create your account",
   },
   {
     name: "Extra location",
@@ -89,7 +89,7 @@ const tiers: Tier[] = [
       "Shared patient records across sites",
       "Included in main subscription: 1 location",
     ],
-    cta: "Join the waitlist",
+    cta: "Create your account",
   },
 ];
 
@@ -156,7 +156,7 @@ function PricingPage() {
                   ))}
                 </ul>
                 <div className="mt-7">
-                  <Link to="/waitlist" className="block">
+                  <Link to="/auth" className="block">
                     <span
                       className={`inline-flex h-11 w-full items-center justify-center rounded-full px-6 text-sm font-medium transition-colors ${
                         t.highlight
@@ -190,12 +190,12 @@ function PricingPage() {
               Lock in founding-clinic pricing
             </h2>
             <p className="mt-3 text-[color:var(--ink-soft)]">
-              MODO is rolling out over the next few weeks. Join the waitlist and keep the
+              MODO is rolling out over the next few weeks. Create your account and keep the
               discounted rates above for the life of your account.
             </p>
-            <Link to="/waitlist" className="mt-6 inline-block">
+            <Link to="/auth" className="mt-6 inline-block">
               <span className="inline-flex h-11 items-center justify-center rounded-full bg-[color:var(--ink)] px-8 text-sm font-medium text-white hover:bg-[color:var(--ink)]/90">
-                Join the waitlist <ArrowRight className="ml-1 h-4 w-4" />
+                Create your account <ArrowRight className="ml-1 h-4 w-4" />
               </span>
             </Link>
           </div>
