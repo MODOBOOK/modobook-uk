@@ -17,6 +17,7 @@ export const listMyGiftCards = createServerFn({ method: "GET" })
       .from("gift_cards")
       .select("*")
       .eq("profile_id", context.userId)
+      .order("amount", { ascending: true, nullsFirst: false })
       .order("sort_order")
       .order("created_at", { ascending: false });
     if (error) throw error;
@@ -211,7 +212,9 @@ export const listPublicGiftCards = createServerFn({ method: "GET" })
       .select("id,name,description,kind,amount,image_url,treatment_id,package_id,treatment_ids,package_ids,expires_months")
       .eq("profile_id", prof.user_id)
       .eq("active", true)
-      .order("sort_order");
+      .order("amount", { ascending: true, nullsFirst: false })
+      .order("sort_order")
+      .order("created_at", { ascending: false });
     if (error) throw error;
     return { cards: cards ?? [] };
   });
