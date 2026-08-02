@@ -478,3 +478,64 @@ export const setSuspended = createServerFn({ method: "POST" })
       .eq("profile_id", data.profileId);
     return { ok: true };
   });
+
+// ---------- Free (comped) extra seats ----------
+
+/** Read a clinic's current seat usage + free allowance. */
+export const adminGetSeatAllowance = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: { profileId: string }) => i)
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { data: sub } = await context.supabase
+      .from("practitioner_subscriptions")
+      .select("free_locations, free_practitioners, extra_locations, extra_practitioners, comped, status, trial_end")
+      .eq("profile_id", data.profileId)
+      .maybeSingle();
+    const [locs, pracs] = await Promise.all([
+      context.supabase.from("locations").select("id", { count: "exact", head: true }).eq("profile_id", data.profileId),
+      context.supabase.from("practitioners").select("id", { count: "exact", head: true }).eq("profile_id", data.profileId),
+    ]);
+    return {
+      free_locations: Number(sub?.free_locations ?? 0),
+      free_practitioners: Number(sub?.free_practitioners ?? 0),
+      extra_locations: Number(sub?.extra_locations ?? 0),
+      extra_practitioners: Number(sub?.extra_practitioners ?? 0),
+      comped: Boolean(sub?.comped),
+      status: (sub?.status as string) ?? null,
+      location_count: locs.count ?? 0,
+      practitioner_count: pracs.count ?? 0,
+    };
+  });
+
+/** Grant / adjust complimentary extra locations and practitioners. */
+export const adminSetSeatAllowance = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: { profileId: string; freeLocations?: number; freePractitioners?: number }) => i)
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const clamp = (n: unknown) => Math.max(0, Math.min(50, Math.floor(Number(n) || 0)));
+    const patch: Record<string, number> = {};
+    if (data.freeLocations !== undefined) patch.free_locations = clamp(data.freeLocations);
+    if (data.freePractitioners !== undefined) patch.free_practitioners = clamp(data.freePractitioners);
+    if (!Object.keys(patch).length) return { ok: true };
+
+    const { data: existing } = await context.supabase
+      .from("practitioner_subscriptions")
+      .select("id")
+      .eq("profile_id", data.profileId)
+      .maybeSingle();
+    if (existing) {
+      const { error } = await context.supabase
+        .from("practitioner_subscriptions")
+        .update(patch as never)
+        .eq("id", existing.id);
+      if (error) throw error;
+    } else {
+      const { error } = await context.supabase
+        .from("practitioner_subscriptions")
+        .insert({ profile_id: data.profileId, status: "pending", ...patch } as never);
+      if (error) throw error;
+    }
+    return { ok: true, ...patch };
+  });
