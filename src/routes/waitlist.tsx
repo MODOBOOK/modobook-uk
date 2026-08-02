@@ -7,20 +7,20 @@ import { ArrowRight, Sparkles, Calendar, Users, CreditCard, FileSignature } from
 export const Route = createFileRoute("/waitlist")({
   head: () => ({
     meta: [
-      { title: "Join the MODO waitlist · Early access for aesthetics practitioners" },
+      { title: "MODO launch list closed · MODO Book is now open" },
       {
         name: "description",
         content:
-          "Join the MODO Book launch list for early access, founding-clinic pricing and onboarding support. Built by aesthetics clinicians for every aesthetics practitioner.",
+          "The MODO Book launch list is closed — MODO is now open to founding clinics. If you joined the list, create your account and start taking bookings today.",
       },
       {
         property: "og:title",
-        content: "Join the MODO waitlist · Early access for aesthetics practitioners",
+        content: "MODO launch list closed · MODO Book is now open",
       },
       {
         property: "og:description",
         content:
-          "Join the MODO Book launch list for early access, founding-clinic pricing and onboarding support.",
+          "The MODO Book launch list is closed. Founding clinics on the list can create their account now.",
       },
     ],
   }),
