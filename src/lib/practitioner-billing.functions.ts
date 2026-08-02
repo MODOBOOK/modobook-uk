@@ -390,11 +390,17 @@ export const getSeatSummary = createServerFn({ method: "GET" })
       liveSub,
       practitioners: {
         used: pracCount ?? 0,
-        allowed: 1 + Math.max(0, Number(sub?.extra_practitioners ?? 0)),
+        allowed:
+          1 +
+          Math.max(0, Number(sub?.extra_practitioners ?? 0)) +
+          Math.max(0, Number(sub?.free_practitioners ?? 0)),
       },
       locations: {
         used: locCount ?? 0,
-        allowed: 1 + Math.max(0, Number(sub?.extra_locations ?? 0)),
+        allowed:
+          1 +
+          Math.max(0, Number(sub?.extra_locations ?? 0)) +
+          Math.max(0, Number(sub?.free_locations ?? 0)),
       },
     };
   });
