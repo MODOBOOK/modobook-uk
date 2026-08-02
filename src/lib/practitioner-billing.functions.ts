@@ -51,7 +51,12 @@ export async function assertSeatAvailable(
     0,
     Number(kind === "location" ? sub?.extra_locations ?? 0 : sub?.extra_practitioners ?? 0),
   );
-  const allowed = 1 + selectedExtras;
+  const freeExtras = Math.max(
+    0,
+    Number(kind === "location" ? sub?.free_locations ?? 0 : sub?.free_practitioners ?? 0),
+  );
+  const allowed = 1 + selectedExtras + freeExtras;
+  if (current < 1 + freeExtras) return; // comped seats are always available
   const trialActive = Boolean(
     sub?.trial_end && new Date(sub.trial_end as string).getTime() > Date.now(),
   );
