@@ -15,6 +15,9 @@ interface WaitlistFormProps {
   onSuccess?: () => void;
 }
 
+/** The launch waitlist is closed — the form renders a closed notice instead. */
+export const WAITLIST_CLOSED = true;
+
 export function WaitlistForm({ compact, onSuccess }: WaitlistFormProps) {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
@@ -23,6 +26,9 @@ export function WaitlistForm({ compact, onSuccess }: WaitlistFormProps) {
   const [consent, setConsent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [joined, setJoined] = useState(false);
+
+  void compact;
+
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
