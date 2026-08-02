@@ -435,12 +435,12 @@ function LandingPage() {
           <div className="mx-auto max-w-4xl px-5 py-24 text-center lg:px-8">
             <div className="eyebrow">Launching soon</div>
             <h2 className="mt-4 text-4xl font-bold leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl">
-              MODO goes live
+              MODO is live
               <br />
-              <span className="text-[color:var(--ink-soft)]">in the coming weeks.</span>
+              <span className="text-[color:var(--ink-soft)]">for founding clinics.</span>
             </h2>
             <p className="mx-auto mt-5 max-w-lg text-[color:var(--ink-soft)]">
-              We're rolling MODO out to founding clinics over the next couple of weeks. Create your account and we'll email you the moment your account is ready — founding members keep 100% of booking revenue and lock in launch pricing.
+              Our launch list is closed and MODO is open to founding clinics. Create your account with the email you signed up with — founding members keep 100% of booking revenue and lock in launch pricing.
             </p>
             <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
               <Link to="/auth" className="w-full sm:w-auto">
@@ -553,7 +553,7 @@ function WaitlistSection() {
           <div className="py-4 text-center sm:py-6">
             <h3 className="text-xl font-semibold">Create your account</h3>
             <p className="mx-auto mt-2 max-w-sm text-sm text-[color:var(--ink-soft)]">
-              Get founding-clinic pricing, first access and a welcome email as soon as your account is ready.
+              Founding-clinic pricing, first month free and onboarding support — set up your clinic in minutes.
             </p>
             <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
               <Link to="/auth" className="w-full sm:w-auto">
@@ -575,7 +575,7 @@ function WaitlistSection() {
               </Link>
             </div>
             <p className="mt-4 text-[11px] text-[color:var(--ink-soft)]">
-              No spam. Unsubscribe any time. UK/EU data residency.
+              Launch-list clinics only. UK/EU data residency.
             </p>
           </div>
         </div>
