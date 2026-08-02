@@ -3643,6 +3643,7 @@ export type Database = {
           price: number
           profile_id: string
           session_count: number
+          sort_order: number
           treatment_id: string | null
           treatment_ids: string[]
           updated_at: string
@@ -3661,6 +3662,7 @@ export type Database = {
           price: number
           profile_id: string
           session_count: number
+          sort_order?: number
           treatment_id?: string | null
           treatment_ids?: string[]
           updated_at?: string
@@ -3679,6 +3681,7 @@ export type Database = {
           price?: number
           profile_id?: string
           session_count?: number
+          sort_order?: number
           treatment_id?: string | null
           treatment_ids?: string[]
           updated_at?: string
