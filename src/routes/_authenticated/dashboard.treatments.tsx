@@ -551,6 +551,7 @@ function TreatmentDialog({
     setAutoSendAftercare((treatment as { auto_send_aftercare?: boolean } | null)?.auto_send_aftercare ?? true);
     setPriceMode((((treatment as { price_mode?: string } | null)?.price_mode as "fixed" | "from" | "poa" | "free") ?? "fixed") || "fixed");
     setBadge((((treatment as { badge?: string | null } | null)?.badge as "recommended" | "popular" | "new" | "bestseller" | null) ?? "none") || "none");
+    setColor(treatment?.color ?? "#3b82f6");
     setDepositOverride(
       (treatment as { deposit_amount?: number | null } | null)?.deposit_amount != null
         ? String((treatment as { deposit_amount?: number | null }).deposit_amount)
