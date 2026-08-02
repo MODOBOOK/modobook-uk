@@ -4567,6 +4567,8 @@ export type Database = {
           discount_code_id: string | null
           extra_locations: number
           extra_practitioners: number
+          free_locations: number
+          free_practitioners: number
           id: string
           notes: string | null
           plan_id: string | null
@@ -4588,6 +4590,8 @@ export type Database = {
           discount_code_id?: string | null
           extra_locations?: number
           extra_practitioners?: number
+          free_locations?: number
+          free_practitioners?: number
           id?: string
           notes?: string | null
           plan_id?: string | null
@@ -4609,6 +4613,8 @@ export type Database = {
           discount_code_id?: string | null
           extra_locations?: number
           extra_practitioners?: number
+          free_locations?: number
+          free_practitioners?: number
           id?: string
           notes?: string | null
           plan_id?: string | null

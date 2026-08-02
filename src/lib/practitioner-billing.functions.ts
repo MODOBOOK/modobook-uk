@@ -33,7 +33,7 @@ export async function assertSeatAvailable(
 ) {
   const { data: sub } = await supabase
     .from("practitioner_subscriptions")
-    .select("status, comped, trial_end, stripe_subscription_id, extra_locations, extra_practitioners")
+    .select("status, comped, trial_end, stripe_subscription_id, extra_locations, extra_practitioners, free_locations, free_practitioners")
     .eq("profile_id", profileId)
     .maybeSingle();
 
@@ -51,7 +51,12 @@ export async function assertSeatAvailable(
     0,
     Number(kind === "location" ? sub?.extra_locations ?? 0 : sub?.extra_practitioners ?? 0),
   );
-  const allowed = 1 + selectedExtras;
+  const freeExtras = Math.max(
+    0,
+    Number(kind === "location" ? sub?.free_locations ?? 0 : sub?.free_practitioners ?? 0),
+  );
+  const allowed = 1 + selectedExtras + freeExtras;
+  if (current < 1 + freeExtras) return; // comped seats are always available
   const trialActive = Boolean(
     sub?.trial_end && new Date(sub.trial_end as string).getTime() > Date.now(),
   );
@@ -376,7 +381,7 @@ export const getSeatSummary = createServerFn({ method: "GET" })
     const [{ data: sub }, { count: locCount }, { count: pracCount }] = await Promise.all([
       context.supabase
         .from("practitioner_subscriptions")
-        .select("status, comped, trial_end, stripe_subscription_id, extra_locations, extra_practitioners")
+        .select("status, comped, trial_end, stripe_subscription_id, extra_locations, extra_practitioners, free_locations, free_practitioners")
         .eq("profile_id", profile.id)
         .maybeSingle(),
       context.supabase.from("locations").select("id", { count: "exact", head: true }).eq("profile_id", profile.id),
@@ -390,11 +395,17 @@ export const getSeatSummary = createServerFn({ method: "GET" })
       liveSub,
       practitioners: {
         used: pracCount ?? 0,
-        allowed: 1 + Math.max(0, Number(sub?.extra_practitioners ?? 0)),
+        allowed:
+          1 +
+          Math.max(0, Number(sub?.extra_practitioners ?? 0)) +
+          Math.max(0, Number(sub?.free_practitioners ?? 0)),
       },
       locations: {
         used: locCount ?? 0,
-        allowed: 1 + Math.max(0, Number(sub?.extra_locations ?? 0)),
+        allowed:
+          1 +
+          Math.max(0, Number(sub?.extra_locations ?? 0)) +
+          Math.max(0, Number(sub?.free_locations ?? 0)),
       },
     };
   });
