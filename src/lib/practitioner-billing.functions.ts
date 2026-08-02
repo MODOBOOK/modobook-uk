@@ -33,7 +33,7 @@ export async function assertSeatAvailable(
 ) {
   const { data: sub } = await supabase
     .from("practitioner_subscriptions")
-    .select("status, comped, trial_end, stripe_subscription_id, extra_locations, extra_practitioners")
+    .select("status, comped, trial_end, stripe_subscription_id, extra_locations, extra_practitioners, free_locations, free_practitioners")
     .eq("profile_id", profileId)
     .maybeSingle();
 
