@@ -537,15 +537,15 @@ function WaitlistSection() {
     <section className="scroll-mt-24 border-t border-[color:var(--hairline)] bg-[color:var(--paper)]">
       <div className="mx-auto grid max-w-6xl gap-10 px-5 py-20 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:gap-16 lg:px-8">
         <div>
-          <div className="eyebrow">§ Launch list</div>
+          <div className="eyebrow">§ Now open</div>
           <h2 className="mt-4 text-3xl font-bold leading-tight tracking-tight sm:text-4xl">
-            Be first in when
+            MODO is open
             <br />
-            <span className="text-[color:var(--ink-soft)]">MODO goes live.</span>
+            <span className="text-[color:var(--ink-soft)]">for founding clinics.</span>
           </h2>
           <p className="mt-5 max-w-md text-[color:var(--ink-soft)]">
-            Practitioners on the list get early access, launch pricing and
-            onboarding support before we open publicly.
+            Our launch list is now closed. If you joined it, create your account
+            and start taking bookings today.
           </p>
         </div>
 
