@@ -457,3 +457,94 @@ export function AuditRow({ row }: { row: any }) {
     </div>
   );
 }
+
+function SeatAllowanceCard({ profileId }: { profileId: string }) {
+  const getSeats = useServerFn(adminGetSeatAllowance);
+  const setSeats = useServerFn(adminSetSeatAllowance);
+  const { data, refetch, isLoading } = useQuery({
+    queryKey: ["admin", "seats", profileId],
+    queryFn: () => getSeats({ data: { profileId } }),
+  });
+  const [loc, setLoc] = useState<string>("");
+  const [prac, setPrac] = useState<string>("");
+  const [busy, setBusy] = useState(false);
+
+  const freeLoc = loc === "" ? String(data?.free_locations ?? 0) : loc;
+  const freePrac = prac === "" ? String(data?.free_practitioners ?? 0) : prac;
+
+  async function save() {
+    setBusy(true);
+    try {
+      await setSeats({
+        data: {
+          profileId,
+          freeLocations: Number(freeLoc) || 0,
+          freePractitioners: Number(freePrac) || 0,
+        },
+      });
+      toast.success("Free seats updated");
+      setLoc(""); setPrac("");
+      refetch();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Card className="md:col-span-2">
+      <CardHeader>
+        <CardTitle className="text-base">Complimentary extra seats</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3 text-sm">
+        <p className="text-muted-foreground">
+          Every clinic includes 1 location and 1 practitioner. Anything set here is granted
+          free of charge on top of that — they will not be billed for these seats.
+        </p>
+        {isLoading ? (
+          <p className="text-muted-foreground">Loading…</p>
+        ) : (
+          <>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <Label className="text-xs">Free extra locations</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  value={freeLoc}
+                  onChange={(e) => setLoc(e.target.value)}
+                />
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Using {data?.location_count ?? 0} · allowance{" "}
+                  {1 + (data?.free_locations ?? 0) + (data?.extra_locations ?? 0)}
+                </p>
+              </div>
+              <div>
+                <Label className="text-xs">Free extra practitioners</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  value={freePrac}
+                  onChange={(e) => setPrac(e.target.value)}
+                />
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Using {data?.practitioner_count ?? 0} · allowance{" "}
+                  {1 + (data?.free_practitioners ?? 0) + (data?.extra_practitioners ?? 0)}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <Button size="sm" disabled={busy} onClick={save}>
+                {busy ? "Saving…" : "Save free seats"}
+              </Button>
+              {data?.comped && (
+                <Badge variant="secondary">Whole account comped</Badge>
+              )}
+            </div>
+          </>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
