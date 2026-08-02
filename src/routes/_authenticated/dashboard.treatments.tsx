@@ -107,6 +107,7 @@ type TreatmentForm = {
   prescriber_routing: "same_address" | "clinic_visit" | "in_person_consult";
   prescriber_note: string | null;
   booking_cap: number | null;
+  color: string | null;
 };
 
 
