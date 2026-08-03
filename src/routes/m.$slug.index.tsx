@@ -1892,8 +1892,11 @@ function BookPage() {
                         return acc;
                       }, []);
                       const hasQuantities = includedTreatments.length > includedGrouped.length;
-                      const originalTotal = includedTreatments.reduce((s, t) => s + Number(t.price ?? 0), 0)
+                      const autoTotal = includedTreatments.reduce((s, t) => s + Number(t.price ?? 0), 0)
                         * (hasQuantities ? 1 : (p.session_count || 1));
+                      // Practitioner-set usual price wins; 0 hides the savings badge.
+                      const compareAt = (p as { compare_at_price?: number | null }).compare_at_price;
+                      const originalTotal = compareAt == null ? autoTotal : Number(compareAt);
 
                       const price = Number(p.price ?? 0);
                       const saving = originalTotal > price ? originalTotal - price : 0;
