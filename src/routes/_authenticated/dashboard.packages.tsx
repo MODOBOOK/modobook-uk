@@ -32,6 +32,7 @@ type Pkg = {
   treatment_ids: string[] | null;
   session_count: number;
   price: number;
+  compare_at_price?: number | null;
   duration_minutes: number | null;
   expiry_days: number | null;
   image_url: string | null;
@@ -50,6 +51,7 @@ const blankForm = {
   treatment_ids: [] as string[],
   session_count: 1,
   price: 0,
+  compare_at_price: "" as string,
   priceMode: "custom" as PriceMode,
   discountPercent: 0,
   duration_minutes: "" as string,
@@ -116,6 +118,7 @@ function PackagesPage() {
       treatment_ids: p.treatment_ids ?? (p.treatment_id ? [p.treatment_id] : []),
       session_count: p.session_count,
       price: Number(p.price),
+      compare_at_price: p.compare_at_price == null ? "" : String(Number(p.compare_at_price)),
       priceMode: "custom",
       discountPercent: 0,
       duration_minutes: p.duration_minutes ? String(p.duration_minutes) : "",
@@ -160,8 +163,13 @@ function PackagesPage() {
     return Number(form.price) || 0;
   }, [form.priceMode, form.discountPercent, form.price, originalTotal]);
 
-  const savings = Math.max(0, originalTotal - effectivePrice);
-  const savingsPct = originalTotal > 0 ? Math.round((savings / originalTotal) * 100) : 0;
+  // The "usual price" the savings badge compares against. Blank = auto
+  // (sum of the treatments in the package), 0 = hide savings entirely.
+  const compareAt = form.compare_at_price.trim() === ""
+    ? originalTotal
+    : Math.max(0, Number(form.compare_at_price) || 0);
+  const savings = Math.max(0, compareAt - effectivePrice);
+  const savingsPct = compareAt > 0 ? Math.round((savings / compareAt) * 100) : 0;
 
   function toggleTreatment(id: string) {
     setForm((f) => ({
@@ -201,6 +209,7 @@ function PackagesPage() {
       treatment_ids: form.treatment_ids,
       session_count: totalSessions,
       price: effectivePrice,
+      compare_at_price: form.compare_at_price.trim() === "" ? null : Math.max(0, Number(form.compare_at_price) || 0),
       duration_minutes: form.duration_minutes ? Number(form.duration_minutes) : null,
       expiry_days: form.expiry_days ? Number(form.expiry_days) : null,
       image_url: form.image_url.trim() || null,
@@ -440,16 +449,34 @@ function PackagesPage() {
                     />
                   </div>
                 )}
-                {originalTotal > 0 && (
+                <div className="mt-3">
+                  <Label>Usual price shown to patients (£)</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    value={form.compare_at_price}
+                    onFocus={(e) => e.target.select()}
+                    onChange={(e) => setForm({ ...form, compare_at_price: e.target.value })}
+                    placeholder={originalTotal > 0 ? `Auto — £${originalTotal.toFixed(2)}` : "Leave blank for auto"}
+                  />
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Leave blank to work it out automatically from the treatments included.
+                    Enter your own figure when the package already contains bundled prices,
+                    or enter <span className="font-medium">0</span> to hide the savings badge.
+                  </p>
+                </div>
+
+                {compareAt > 0 && (
                   <div className="mt-3 flex items-baseline justify-between rounded-md bg-background p-2.5">
                     <div className="text-xs text-muted-foreground">
                       {savings > 0 ? (
                         <>
-                          Was <span className="line-through">£{originalTotal.toFixed(2)}</span> — save{" "}
+                          Was <span className="line-through">£{compareAt.toFixed(2)}</span> — save{" "}
                           <span className="font-medium text-emerald-600">£{savings.toFixed(2)} ({savingsPct}%)</span>
                         </>
-                      ) : effectivePrice > originalTotal ? (
-                        <span className="text-amber-600">Priced above sum of treatments</span>
+                      ) : effectivePrice > compareAt ? (
+                        <span className="text-amber-600">Priced above the usual price</span>
                       ) : (
                         "No discount applied"
                       )}
@@ -538,7 +565,8 @@ function PackagesPage() {
           {packages.map((p, index) => {
             const ids = p.treatment_ids ?? (p.treatment_id ? [p.treatment_id] : []);
             const names = ids.map((id) => treatments.find((tt) => tt.id === id)?.name).filter(Boolean) as string[];
-            const original = ids.reduce((sum, id) => sum + Number(treatments.find((tt) => tt.id === id)?.price ?? 0), 0) * (p.session_count || 1);
+            const autoOriginal = ids.reduce((sum, id) => sum + Number(treatments.find((tt) => tt.id === id)?.price ?? 0), 0) * (p.session_count || 1);
+            const original = p.compare_at_price == null ? autoOriginal : Number(p.compare_at_price);
             const price = Number(p.price);
             const saving = original > price ? original - price : 0;
             const savingPct = original > 0 && saving > 0 ? Math.round((saving / original) * 100) : 0;

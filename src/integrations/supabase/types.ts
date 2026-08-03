@@ -3633,6 +3633,7 @@ export type Database = {
           active: boolean | null
           allow_split_payment: boolean
           category_id: string | null
+          compare_at_price: number | null
           created_at: string
           description: string | null
           duration_minutes: number | null
@@ -3652,6 +3653,7 @@ export type Database = {
           active?: boolean | null
           allow_split_payment?: boolean
           category_id?: string | null
+          compare_at_price?: number | null
           created_at?: string
           description?: string | null
           duration_minutes?: number | null
@@ -3671,6 +3673,7 @@ export type Database = {
           active?: boolean | null
           allow_split_payment?: boolean
           category_id?: string | null
+          compare_at_price?: number | null
           created_at?: string
           description?: string | null
           duration_minutes?: number | null
