@@ -8,6 +8,7 @@ type PackageInput = {
   treatment_ids: string[];
   session_count: number;
   price: number;
+  compare_at_price: number | null;
   duration_minutes: number | null;
   expiry_days: number | null;
   image_url: string | null;
@@ -65,6 +66,7 @@ export const createPackage = createServerFn({ method: "POST" })
       treatment_ids: clean.treatment_ids,
       session_count: data.session_count,
       price: data.price,
+      compare_at_price: data.compare_at_price ?? null,
       duration_minutes: data.duration_minutes,
       expiry_days: data.expiry_days,
       image_url: data.image_url,
@@ -92,6 +94,7 @@ export const updatePackage = createServerFn({ method: "POST" })
       treatment_ids: clean.treatment_ids,
       session_count: data.session_count,
       price: data.price,
+      compare_at_price: data.compare_at_price ?? null,
       duration_minutes: data.duration_minutes,
       expiry_days: data.expiry_days,
       image_url: data.image_url,
