@@ -565,7 +565,10 @@ function PackagesPage() {
           {packages.map((p, index) => {
             const ids = p.treatment_ids ?? (p.treatment_id ? [p.treatment_id] : []);
             const names = ids.map((id) => treatments.find((tt) => tt.id === id)?.name).filter(Boolean) as string[];
-            const autoOriginal = ids.reduce((sum, id) => sum + Number(treatments.find((tt) => tt.id === id)?.price ?? 0), 0) * (p.session_count || 1);
+            // Each selected treatment (including repeats) is counted once —
+            // never multiplied by session_count, which would triple a package
+            // whose treatments already represent the full course.
+            const autoOriginal = ids.reduce((sum, id) => sum + Number(treatments.find((tt) => tt.id === id)?.price ?? 0), 0);
             const original = p.compare_at_price == null ? autoOriginal : Number(p.compare_at_price);
             const price = Number(p.price);
             const saving = original > price ? original - price : 0;

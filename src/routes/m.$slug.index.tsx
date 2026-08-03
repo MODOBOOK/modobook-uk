@@ -1891,9 +1891,10 @@ function BookPage() {
                         else acc.push({ t, qty: 1 });
                         return acc;
                       }, []);
-                      const hasQuantities = includedTreatments.length > includedGrouped.length;
-                      const autoTotal = includedTreatments.reduce((s, t) => s + Number(t.price ?? 0), 0)
-                        * (hasQuantities ? 1 : (p.session_count || 1));
+                      // Count each included treatment once. Repeats are already
+                      // listed individually, so multiplying by session_count here
+                      // would inflate the "usual price".
+                      const autoTotal = includedTreatments.reduce((s, t) => s + Number(t.price ?? 0), 0);
                       // Practitioner-set usual price wins; 0 hides the savings badge.
                       const compareAt = (p as { compare_at_price?: number | null }).compare_at_price;
                       const originalTotal = compareAt == null ? autoTotal : Number(compareAt);
