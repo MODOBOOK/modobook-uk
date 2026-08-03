@@ -54,7 +54,7 @@ export const getPractitionerReviews = createServerFn({ method: "GET" })
 
     const { data: patientReviews } = await supabase
       .from("patient_reviews")
-      .select("id, rating, title, body, created_at")
+      .select("id, rating, title, body, created_at, reviewer_name")
       .eq("profile_id", profile.id)
       .eq("approved", true)
       .order("created_at", { ascending: false });
