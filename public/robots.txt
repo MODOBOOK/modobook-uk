@@ -1,0 +1,17 @@
+User-agent: *
+Allow: /
+
+Disallow: /dashboard
+Disallow: /app
+Disallow: /auth
+Disallow: /reset-password
+Disallow: /api/
+Disallow: /lovable/
+Disallow: /c/
+Disallow: /f/
+Disallow: /r/
+Disallow: /plan/
+Disallow: /staff-accept/
+Disallow: /unsubscribe
+
+Sitemap: https://modobook.uk/sitemap.xml
