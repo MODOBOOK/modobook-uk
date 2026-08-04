@@ -212,7 +212,13 @@ function CampaignEditor() {
 
         </CardContent></Card>
 
-        <BlockEditor blocks={blocks} setBlocks={setBlocks} readOnly={readOnly} />
+        <BlockEditor
+          blocks={blocks}
+          setBlocks={setBlocks}
+          readOnly={readOnly}
+          onAi={(mode) => { setAiMode(mode); setAiOpen(true) }}
+        />
+
 
         {analytics && (
           <Card><CardContent className="p-4">
