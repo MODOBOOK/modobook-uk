@@ -212,7 +212,13 @@ function CampaignEditor() {
 
         </CardContent></Card>
 
-        <BlockEditor blocks={blocks} setBlocks={setBlocks} readOnly={readOnly} />
+        <BlockEditor
+          blocks={blocks}
+          setBlocks={setBlocks}
+          readOnly={readOnly}
+          onAi={(mode) => { setAiMode(mode); setAiOpen(true) }}
+        />
+
 
         {analytics && (
           <Card><CardContent className="p-4">
@@ -362,7 +368,7 @@ function CampaignEditor() {
   )
 }
 
-function BlockEditor({ blocks, setBlocks, readOnly }: { blocks: Block[]; setBlocks: (b: Block[]) => void; readOnly: boolean }) {
+function BlockEditor({ blocks, setBlocks, readOnly, onAi }: { blocks: Block[]; setBlocks: (b: Block[]) => void; readOnly: boolean; onAi: (mode: 'content' | 'html') => void }) {
   const profileFn = useServerFn(getMyProfile)
   const [profileId, setProfileId] = useState<string>('')
   useEffect(() => { profileFn({} as any).then((p: any) => setProfileId(p?.id || '')).catch(() => {}) }, [])
@@ -377,10 +383,27 @@ function BlockEditor({ blocks, setBlocks, readOnly }: { blocks: Block[]; setBloc
   }
   return (
     <Card><CardContent className="p-4 space-y-3">
+      {!readOnly && (
+        <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 space-y-2">
+          <div>
+            <p className="text-sm font-medium flex items-center gap-2"><Sparkles className="h-4 w-4 text-primary" />Write this email with AI</p>
+            <p className="text-xs text-muted-foreground">Everything is generated in your clinic&rsquo;s logo, colours and fonts.</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button size="sm" onClick={() => onAi('content')}>
+              <TypeIcon className="h-3.5 w-3.5 mr-1.5" />Branded content
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => onAi('html')}>
+              <Code className="h-3.5 w-3.5 mr-1.5" />Email code (HTML)
+            </Button>
+          </div>
+        </div>
+      )}
       <div className="flex items-center justify-between">
         <h3 className="font-medium">Content</h3>
         {!readOnly && (
           <div className="flex flex-wrap gap-1">
+
             <Button size="sm" variant="outline" onClick={() => add({ type: 'heading', text: 'Heading' })}><HeadingIcon className="h-3 w-3 mr-1" />Heading</Button>
             <Button size="sm" variant="outline" onClick={() => add({ type: 'paragraph', text: 'Write your message here…' })}><TypeIcon className="h-3 w-3 mr-1" />Text</Button>
             <Button size="sm" variant="outline" onClick={() => add({ type: 'button', text: 'Book now', url: '{{booking_url}}' })}><MousePointerClick className="h-3 w-3 mr-1" />Book now CTA</Button>

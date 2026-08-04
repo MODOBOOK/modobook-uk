@@ -30,13 +30,16 @@ Return ONLY a JSON object, no markdown fences, with exactly these keys:
 {"subject": string, "preheader": string, "html": string}
 
 Rules for "html":
-- A complete email body built from tables, with all styling inline. No <style> tags, no external CSS, no JavaScript, no forms.
-- Max width 600px, centred, white content area, generous padding, readable 15-16px body text.
-- Use the brand colour and fonts supplied by the user for accents, headings and the button.
-- Use merge tags {{first_name}}, {{clinic_name}}, {{last_treatment}}, {{booking_url}} where natural.
-- Include the clinic logo image at the top when a logo URL is supplied.
-- Do not include an unsubscribe link; it is appended automatically.
-- Output the body markup only (no <html>, <head> or <body> tags).`
+- Build it from nested <table role="presentation"> elements with ALL styling inline. No <style> tags, no external CSS, no JavaScript, no forms, no web fonts.
+- Output the body markup only: start with a <table> and do not emit <!DOCTYPE>, <html>, <head> or <body>.
+- Max width 600px, centred on a soft neutral page background, white content area, generous padding, readable 15-16px body text, 1.6 line height.
+- BRANDING IS MANDATORY. Use the exact brand colour supplied for the button background, headings and any rules or accents. Use the accent colour for secondary detail. Set font-family on every text element to the supplied heading font (headings) and body font (paragraphs), each with a safe fallback stack.
+- When a logo URL is supplied, put that exact image at the top, centred, max-width 160px. When none is supplied, show the clinic name as a centred wordmark in the heading font and brand colour.
+- Finish with a footer line in small muted text containing the clinic name.
+- Use merge tags {{first_name}}, {{clinic_name}}, {{last_treatment}}, {{booking_url}} where natural, and use {{booking_url}} as the button link unless a real URL is supplied.
+- Warm, professional UK English. No emojis. Never invent prices, medical claims or guarantees that were not supplied.
+- Do not include an unsubscribe link; it is appended automatically.`
+
 
 function stripFences(s: string) {
   return s.trim().replace(/^```[a-z]*\s*/i, '').replace(/\s*```$/, '').trim()
@@ -91,14 +94,14 @@ export const generateMarketingEmail = createServerFn({ method: 'POST' })
     // Pull the clinic's own branding so generated emails match their look.
     const { data: prof } = await context.supabase
       .from('profiles')
-      .select('id, clinic_name, full_name')
+      .select('id, clinic_name, full_name, slug')
       .eq('user_id', context.userId)
       .maybeSingle()
     let theme: any = null
     if (prof?.id) {
       const { data: t } = await context.supabase
         .from('clinic_theme')
-        .select('primary_color, logo_url')
+        .select('primary_color, accent_color, logo_url, heading_font, body_font')
         .eq('profile_id', prof.id)
         .maybeSingle()
       theme = t
@@ -107,8 +110,12 @@ export const generateMarketingEmail = createServerFn({ method: 'POST' })
     const clinicName = prof?.clinic_name || prof?.full_name || 'the clinic'
     const brandLines = [
       `Clinic name: ${clinicName}`,
-      theme?.primary_color ? `Brand colour: ${theme.primary_color}` : '',
-      theme?.logo_url ? `Logo URL: ${theme.logo_url}` : '',
+      `Brand colour: ${theme?.primary_color || '#B07D4F'}`,
+      `Accent colour: ${theme?.accent_color || theme?.primary_color || '#8A6A4B'}`,
+      `Heading font: ${theme?.heading_font || 'Syne'}`,
+      `Body font: ${theme?.body_font || 'Plus Jakarta Sans'}`,
+      theme?.logo_url ? `Logo URL: ${theme.logo_url}` : 'Logo URL: none supplied',
+      prof?.slug ? `Booking page: https://modobook.uk/m/${prof.slug}` : '',
       data.tone ? `Tone: ${data.tone}` : '',
     ].filter(Boolean).join('\n')
 
@@ -117,11 +124,29 @@ export const generateMarketingEmail = createServerFn({ method: 'POST' })
       `${brandLines}\n\nBrief: ${data.prompt}`,
     )
 
+    // Some models still wrap the markup in a full document — unwrap it so the
+    // block editor and the send pipeline receive body markup only.
+    let html = (out.html || '').trim()
+    if (html) {
+      html = html.replace(/<!DOCTYPE[^>]*>/gi, '')
+      const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i)
+      if (bodyMatch) html = bodyMatch[1]
+      html = html.replace(/<\/?(html|head|body)[^>]*>/gi, '')
+      html = html.replace(/<style[\s\S]*?<\/style>/gi, '')
+      html = html.replace(/<script[\s\S]*?<\/script>/gi, '')
+      html = html.trim()
+    }
+
+    if (data.mode === 'html' && !html) {
+      throw new Error('AI did not return any email code. Try again with a bit more detail.')
+    }
+
     return {
       mode: data.mode,
       subject: (out.subject || '').slice(0, 200),
       preheader: (out.preheader || '').slice(0, 200),
       body: (out.body || '').slice(0, 20000),
-      html: (out.html || '').slice(0, 190000),
+      html: html.slice(0, 190000),
     }
   })
+
