@@ -30,13 +30,16 @@ Return ONLY a JSON object, no markdown fences, with exactly these keys:
 {"subject": string, "preheader": string, "html": string}
 
 Rules for "html":
-- A complete email body built from tables, with all styling inline. No <style> tags, no external CSS, no JavaScript, no forms.
-- Max width 600px, centred, white content area, generous padding, readable 15-16px body text.
-- Use the brand colour and fonts supplied by the user for accents, headings and the button.
-- Use merge tags {{first_name}}, {{clinic_name}}, {{last_treatment}}, {{booking_url}} where natural.
-- Include the clinic logo image at the top when a logo URL is supplied.
-- Do not include an unsubscribe link; it is appended automatically.
-- Output the body markup only (no <html>, <head> or <body> tags).`
+- Build it from nested <table role="presentation"> elements with ALL styling inline. No <style> tags, no external CSS, no JavaScript, no forms, no web fonts.
+- Output the body markup only: start with a <table> and do not emit <!DOCTYPE>, <html>, <head> or <body>.
+- Max width 600px, centred on a soft neutral page background, white content area, generous padding, readable 15-16px body text, 1.6 line height.
+- BRANDING IS MANDATORY. Use the exact brand colour supplied for the button background, headings and any rules or accents. Use the accent colour for secondary detail. Set font-family on every text element to the supplied heading font (headings) and body font (paragraphs), each with a safe fallback stack.
+- When a logo URL is supplied, put that exact image at the top, centred, max-width 160px. When none is supplied, show the clinic name as a centred wordmark in the heading font and brand colour.
+- Finish with a footer line in small muted text containing the clinic name.
+- Use merge tags {{first_name}}, {{clinic_name}}, {{last_treatment}}, {{booking_url}} where natural, and use {{booking_url}} as the button link unless a real URL is supplied.
+- Warm, professional UK English. No emojis. Never invent prices, medical claims or guarantees that were not supplied.
+- Do not include an unsubscribe link; it is appended automatically.`
+
 
 function stripFences(s: string) {
   return s.trim().replace(/^```[a-z]*\s*/i, '').replace(/\s*```$/, '').trim()
