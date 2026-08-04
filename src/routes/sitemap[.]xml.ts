@@ -38,7 +38,7 @@ async function fetchClinicSlugs(): Promise<string[]> {
 
   try {
     const res = await fetch(
-      `${url}/rest/v1/profiles?select=slug&public_page_enabled=eq.true&slug=not.is.null&limit=5000`,
+      `${url}/rest/v1/profiles?select=slug&slug=not.is.null&limit=5000`,
       { headers: { apikey: key, Accept: "application/json" } },
     );
     if (!res.ok) return [];
