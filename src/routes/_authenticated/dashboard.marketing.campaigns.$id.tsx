@@ -21,8 +21,10 @@ import {
 import {
   Loader2, Save, Send, Calendar as CalIcon, Trash2, Plus, ArrowUp, ArrowDown,
   Type as TypeIcon, Image as ImageIcon, MousePointerClick, Minus, Space, Heading as HeadingIcon,
-  Eye, Code,
+  Eye, Code, Sparkles, LayoutTemplate,
 } from 'lucide-react'
+import { MARKETING_PRESETS, parsePresetBody } from '@/lib/marketing-presets'
+import { generateMarketingEmail } from '@/lib/ai-marketing.functions'
 import { toast } from 'sonner'
 import { getMyProfile } from '@/lib/profiles.functions'
 import { ImageUploader } from '@/components/ImageUploader'
@@ -59,6 +61,11 @@ function CampaignEditor() {
   const [scheduleTime, setScheduleTime] = useState('')
   const [testEmail, setTestEmail] = useState('')
   const [analytics, setAnalytics] = useState<any>(null)
+  const generateAi = useServerFn(generateMarketingEmail)
+  const [aiOpen, setAiOpen] = useState(false)
+  const [aiPrompt, setAiPrompt] = useState('')
+  const [aiTone, setAiTone] = useState('')
+  const [aiBusy, setAiBusy] = useState(false)
 
   useEffect(() => {
     let alive = true
@@ -142,6 +149,27 @@ function CampaignEditor() {
     toast.success(`Applied template: ${t.name}`)
   }
 
+  function applyPreset(p: typeof MARKETING_PRESETS[number]) {
+    setSubject(p.subject); setPreheader(p.preheader)
+    setBlocks(parsePresetBody(p.body) as Block[])
+    toast.success(`Applied layout: ${p.name}`)
+  }
+
+  async function doGenerate() {
+    if (!aiPrompt.trim()) { toast.error('Tell the AI what the email is about'); return }
+    setAiBusy(true)
+    try {
+      const r = await generateAi({ data: { prompt: aiPrompt, mode: 'content', tone: aiTone } }) as any
+      setSubject(r.subject || '')
+      setPreheader(r.preheader || '')
+      setBlocks(parsePresetBody(r.body || '') as Block[])
+      setAiOpen(false)
+      toast.success('Draft generated — edit anything you like')
+    } catch (e) { toast.error(e instanceof Error ? e.message : 'Generation failed') }
+    finally { setAiBusy(false) }
+  }
+
+
   if (loading) return <div className="text-center py-16"><Loader2 className="h-6 w-6 animate-spin mx-auto" /></div>
 
   return (
@@ -209,17 +237,69 @@ function CampaignEditor() {
           </p>
         </CardContent></Card>
 
-        {templates.length > 0 && !readOnly && (
-          <Card><CardContent className="p-4 space-y-2">
-            <h3 className="font-medium">Start from a template</h3>
-            <Select onValueChange={applyTemplate}>
-              <SelectTrigger><SelectValue placeholder="Choose template…" /></SelectTrigger>
-              <SelectContent>
-                {templates.map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
+        {!readOnly && (
+          <Card><CardContent className="p-4 space-y-3">
+            <div>
+              <h3 className="font-medium flex items-center gap-2"><LayoutTemplate className="h-4 w-4" /> Branded layouts</h3>
+              <p className="text-xs text-muted-foreground">Ready-made starters in your clinic&rsquo;s logo, colours and fonts.</p>
+            </div>
+            <div className="grid gap-2">
+              {MARKETING_PRESETS.map((p) => (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => applyPreset(p)}
+                  className="text-left rounded-md border border-border p-2.5 hover:border-primary transition-colors"
+                >
+                  <p className="text-sm font-medium">{p.name}</p>
+                  <p className="text-xs text-muted-foreground leading-snug">{p.description}</p>
+                </button>
+              ))}
+            </div>
+            <Button variant="outline" className="w-full" onClick={() => setAiOpen(true)}>
+              <Sparkles className="h-4 w-4 mr-2" />Write it with AI
+            </Button>
+            {templates.length > 0 && (
+              <div className="pt-2 border-t space-y-2">
+                <Label className="text-xs">Your saved templates</Label>
+                <Select onValueChange={applyTemplate}>
+                  <SelectTrigger><SelectValue placeholder="Choose template…" /></SelectTrigger>
+                  <SelectContent>
+                    {templates.map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </CardContent></Card>
         )}
+
+        <Dialog open={aiOpen} onOpenChange={setAiOpen}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader><DialogTitle>Generate this email with AI</DialogTitle></DialogHeader>
+            <div className="space-y-3">
+              <div>
+                <Label>What&rsquo;s the email about?</Label>
+                <Textarea rows={4} value={aiPrompt} onChange={(e) => setAiPrompt(e.target.value)}
+                  placeholder="e.g. A November offer on skin boosters — £50 off a course of three." />
+              </div>
+              <div>
+                <Label>Tone (optional)</Label>
+                <Input value={aiTone} onChange={(e) => setAiTone(e.target.value)} placeholder="Warm and calm / upbeat / clinical" />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                The content is placed into your branded email — logo, colours and buttons stay on-brand.
+              </p>
+            </div>
+            <DialogFooter>
+              <Button variant="ghost" onClick={() => setAiOpen(false)}>Cancel</Button>
+              <Button onClick={doGenerate} disabled={aiBusy}>
+                {aiBusy ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
+                Generate
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
 
         <Card><CardContent className="p-4 space-y-3">
           <h3 className="font-medium">Send</h3>
