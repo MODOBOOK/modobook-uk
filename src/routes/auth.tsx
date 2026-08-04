@@ -193,8 +193,8 @@ function AuthPage() {
             )}
 
             <div className="rounded-lg border border-dashed bg-muted/40 p-3 text-center text-xs text-muted-foreground">
-              Our launch list is closed and accounts are limited to clinics on it. Not on the
-              list?{" "}
+              MODO is now open to every aesthetics practitioner. Your first month is free
+              and we don&rsquo;t ask for card details to start. Questions?{" "}
               <a
                 href="mailto:info@modobook.co.uk"
                 className="font-medium text-foreground underline underline-offset-2"
