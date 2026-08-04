@@ -1,10 +1,15 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { WaitlistForm } from "@/components/WaitlistForm";
 import { SiteHeader, SiteFooter } from "./index";
 import wordmark from "@/assets/modo-wordmark.png.asset.json";
 import { ArrowRight, Sparkles, Calendar, Users, CreditCard, FileSignature } from "lucide-react";
 
 export const Route = createFileRoute("/waitlist")({
+  // MODO is open to everyone now — there's no list to join, so send people
+  // straight to account creation.
+  beforeLoad: () => {
+    throw redirect({ to: "/auth" });
+  },
   head: () => ({
     meta: [
       { title: "MODO launch list closed · MODO Book is now open" },
