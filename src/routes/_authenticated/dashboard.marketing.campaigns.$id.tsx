@@ -144,6 +144,27 @@ function CampaignEditor() {
     toast.success(`Applied template: ${t.name}`)
   }
 
+  function applyPreset(p: typeof MARKETING_PRESETS[number]) {
+    setSubject(p.subject); setPreheader(p.preheader)
+    setBlocks(parsePresetBody(p.body) as Block[])
+    toast.success(`Applied layout: ${p.name}`)
+  }
+
+  async function doGenerate() {
+    if (!aiPrompt.trim()) { toast.error('Tell the AI what the email is about'); return }
+    setAiBusy(true)
+    try {
+      const r = await generateAi({ data: { prompt: aiPrompt, mode: 'content', tone: aiTone } }) as any
+      setSubject(r.subject || '')
+      setPreheader(r.preheader || '')
+      setBlocks(parsePresetBody(r.body || '') as Block[])
+      setAiOpen(false)
+      toast.success('Draft generated — edit anything you like')
+    } catch (e) { toast.error(e instanceof Error ? e.message : 'Generation failed') }
+    finally { setAiBusy(false) }
+  }
+
+
   if (loading) return <div className="text-center py-16"><Loader2 className="h-6 w-6 animate-spin mx-auto" /></div>
 
   return (
