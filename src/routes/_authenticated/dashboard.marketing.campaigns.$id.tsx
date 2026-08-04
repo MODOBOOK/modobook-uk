@@ -61,6 +61,11 @@ function CampaignEditor() {
   const [scheduleTime, setScheduleTime] = useState('')
   const [testEmail, setTestEmail] = useState('')
   const [analytics, setAnalytics] = useState<any>(null)
+  const generateAi = useServerFn(generateMarketingEmail)
+  const [aiOpen, setAiOpen] = useState(false)
+  const [aiPrompt, setAiPrompt] = useState('')
+  const [aiTone, setAiTone] = useState('')
+  const [aiBusy, setAiBusy] = useState(false)
 
   useEffect(() => {
     let alive = true
