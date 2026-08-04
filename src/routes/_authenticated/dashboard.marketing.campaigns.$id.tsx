@@ -368,7 +368,7 @@ function CampaignEditor() {
   )
 }
 
-function BlockEditor({ blocks, setBlocks, readOnly }: { blocks: Block[]; setBlocks: (b: Block[]) => void; readOnly: boolean }) {
+function BlockEditor({ blocks, setBlocks, readOnly, onAi }: { blocks: Block[]; setBlocks: (b: Block[]) => void; readOnly: boolean; onAi: (mode: 'content' | 'html') => void }) {
   const profileFn = useServerFn(getMyProfile)
   const [profileId, setProfileId] = useState<string>('')
   useEffect(() => { profileFn({} as any).then((p: any) => setProfileId(p?.id || '')).catch(() => {}) }, [])
