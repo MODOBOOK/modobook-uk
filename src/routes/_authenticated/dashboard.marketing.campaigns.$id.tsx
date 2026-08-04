@@ -291,8 +291,18 @@ function CampaignEditor() {
                 <Label>Tone (optional)</Label>
                 <Input value={aiTone} onChange={(e) => setAiTone(e.target.value)} placeholder="Warm and calm / upbeat / clinical" />
               </div>
+              <div className="flex gap-2">
+                <Button type="button" size="sm" variant={aiMode === 'content' ? 'default' : 'outline'} onClick={() => setAiMode('content')}>
+                  Branded content
+                </Button>
+                <Button type="button" size="sm" variant={aiMode === 'html' ? 'default' : 'outline'} onClick={() => setAiMode('html')}>
+                  <Code className="h-4 w-4 mr-2" />Email code (HTML)
+                </Button>
+              </div>
               <p className="text-xs text-muted-foreground">
-                The content is placed into your branded email — logo, colours and buttons stay on-brand.
+                {aiMode === 'content'
+                  ? 'The content is placed into your branded email — logo, colours and buttons stay on-brand.'
+                  : 'AI writes ready-to-send HTML using your brand colour and logo. It lands in an editable code block.'}
               </p>
             </div>
             <DialogFooter>
