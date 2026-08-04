@@ -7,14 +7,34 @@ import { useState } from "react";
 export const Route = createFileRoute("/faq")({
   head: () => ({
     meta: [
-      { title: "FAQ | MODO — answers for practitioners & patients" },
+      { title: "MODO FAQ | Answers for Practitioners & Patients" },
       {
         name: "description",
         content:
-          "Answers to the most common questions about MODO — booking, payments, rewards, training, data & security, and how to get set up as a practitioner.",
+          "Common questions about MODO — booking, payments, rewards, training, data security and getting set up as an aesthetics practitioner.",
       },
       { property: "og:title", content: "FAQ | MODO" },
       { property: "og:description", content: "Everything you need to know about running your clinic — or booking with one — on MODO." },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://modobook.uk/faq" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+    links: [{ rel: "canonical", href: "https://modobook.uk/faq" }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: groups.flatMap((g) =>
+            g.items.map((it) => ({
+              "@type": "Question",
+              name: it.q,
+              acceptedAnswer: { "@type": "Answer", text: it.a },
+            })),
+          ),
+        }),
+      },
     ],
   }),
   component: FaqPage,
