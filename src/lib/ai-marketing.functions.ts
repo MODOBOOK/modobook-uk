@@ -94,14 +94,14 @@ export const generateMarketingEmail = createServerFn({ method: 'POST' })
     // Pull the clinic's own branding so generated emails match their look.
     const { data: prof } = await context.supabase
       .from('profiles')
-      .select('id, clinic_name, full_name')
+      .select('id, clinic_name, full_name, slug')
       .eq('user_id', context.userId)
       .maybeSingle()
     let theme: any = null
     if (prof?.id) {
       const { data: t } = await context.supabase
         .from('clinic_theme')
-        .select('primary_color, logo_url')
+        .select('primary_color, accent_color, logo_url, heading_font, body_font')
         .eq('profile_id', prof.id)
         .maybeSingle()
       theme = t
@@ -110,8 +110,12 @@ export const generateMarketingEmail = createServerFn({ method: 'POST' })
     const clinicName = prof?.clinic_name || prof?.full_name || 'the clinic'
     const brandLines = [
       `Clinic name: ${clinicName}`,
-      theme?.primary_color ? `Brand colour: ${theme.primary_color}` : '',
-      theme?.logo_url ? `Logo URL: ${theme.logo_url}` : '',
+      `Brand colour: ${theme?.primary_color || '#B07D4F'}`,
+      `Accent colour: ${theme?.accent_color || theme?.primary_color || '#8A6A4B'}`,
+      `Heading font: ${theme?.heading_font || 'Syne'}`,
+      `Body font: ${theme?.body_font || 'Plus Jakarta Sans'}`,
+      theme?.logo_url ? `Logo URL: ${theme.logo_url}` : 'Logo URL: none supplied',
+      prof?.slug ? `Booking page: https://modobook.uk/m/${prof.slug}` : '',
       data.tone ? `Tone: ${data.tone}` : '',
     ].filter(Boolean).join('\n')
 
@@ -120,11 +124,29 @@ export const generateMarketingEmail = createServerFn({ method: 'POST' })
       `${brandLines}\n\nBrief: ${data.prompt}`,
     )
 
+    // Some models still wrap the markup in a full document — unwrap it so the
+    // block editor and the send pipeline receive body markup only.
+    let html = (out.html || '').trim()
+    if (html) {
+      html = html.replace(/<!DOCTYPE[^>]*>/gi, '')
+      const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i)
+      if (bodyMatch) html = bodyMatch[1]
+      html = html.replace(/<\/?(html|head|body)[^>]*>/gi, '')
+      html = html.replace(/<style[\s\S]*?<\/style>/gi, '')
+      html = html.replace(/<script[\s\S]*?<\/script>/gi, '')
+      html = html.trim()
+    }
+
+    if (data.mode === 'html' && !html) {
+      throw new Error('AI did not return any email code. Try again with a bit more detail.')
+    }
+
     return {
       mode: data.mode,
       subject: (out.subject || '').slice(0, 200),
       preheader: (out.preheader || '').slice(0, 200),
       body: (out.body || '').slice(0, 20000),
-      html: (out.html || '').slice(0, 190000),
+      html: html.slice(0, 190000),
     }
   })
+
