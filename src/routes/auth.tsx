@@ -146,9 +146,9 @@ function AuthPage() {
                 <Input id="signup-name" value={signupName} onChange={(e) => setSignupName(e.target.value)} placeholder="Jane Smith" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="signup-email">Waitlist email</Label>
+                <Label htmlFor="signup-email">Work email</Label>
                 <Input id="signup-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="you@clinic.co.uk" />
-                <p className="text-xs text-muted-foreground">Use the same email you joined the waitlist with.</p>
+                <p className="text-xs text-muted-foreground">Your first month is free — no card details needed.</p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="signup-password">Password</Label>
