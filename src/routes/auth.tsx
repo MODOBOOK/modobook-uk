@@ -120,7 +120,7 @@ function AuthPage() {
             <CardDescription>
               {mode === "signin"
                 ? "Sign in to your practitioner account."
-                : "Available to clinics on the MODO waitlist. Already registered? Sign in instead."}
+                : "Open to all aesthetics practitioners — first month free, no card details required."}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4 pt-4">
