@@ -115,8 +115,26 @@ export const Route = createFileRoute("/m/$slug")({
 
       return links.length ? links : undefined;
     })(),
-
-
+    scripts: (() => {
+      if (!loaderData?.profile) return undefined;
+      const name = resolveDisplayNames(loaderData.profile).primary;
+      const image = loaderData.theme?.hero_image_url ?? loaderData.profile.hero_url ?? undefined;
+      return [
+        {
+          type: "application/ld+json",
+          children: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "HealthAndBeautyBusiness",
+            name,
+            url: `https://modobook.uk/m/${loaderData.slug}`,
+            description: loaderData.profile.tagline ?? undefined,
+            image: image ?? undefined,
+            logo: loaderData.theme?.logo_url ?? loaderData.profile.avatar_url ?? undefined,
+            areaServed: "GB",
+          }),
+        },
+      ];
+    })(),
   }),
   component: ModoLayout,
 });
