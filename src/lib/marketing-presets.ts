@@ -136,3 +136,17 @@ You can see live availability and book online at any time.
 Any questions at all, just reply — we read every message.`,
   },
 ]
+
+/** Convert the simple block-text syntax into marketing-broadcast blocks. */
+export function parsePresetBody(text: string): Array<Record<string, unknown>> {
+  return String(text || '')
+    .split(/\n{2,}/)
+    .map((raw) => raw.trim())
+    .filter(Boolean)
+    .map((chunk) => {
+      if (chunk.startsWith('# ')) return { type: 'heading', text: chunk.slice(2).trim() }
+      const btn = chunk.match(/^\[BUTTON\]\((\S+)\)\s+(.+)$/)
+      if (btn) return { type: 'button', url: btn[1], text: btn[2] }
+      return { type: 'paragraph', text: chunk }
+    })
+}
