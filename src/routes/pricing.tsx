@@ -19,8 +19,10 @@ export const Route = createFileRoute("/pricing")({
           "Founding-clinic pricing: £29.99/month, +£9.99 per extra team member, +£4.99 per extra location. No booking fees.",
       },
       { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://modobook.uk/pricing" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
+    links: [{ rel: "canonical", href: "https://modobook.uk/pricing" }],
   }),
   component: PricingPage,
 });

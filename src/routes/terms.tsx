@@ -10,7 +10,13 @@ export const Route = createFileRoute("/terms")({
     meta: [
       { title: "Terms & Conditions | MODO BOOK" },
       { name: "description", content: "MODO BOOK platform terms and conditions for practitioners." },
+      { property: "og:title", content: "Terms & Conditions | MODO BOOK" },
+      { property: "og:description", content: "MODO BOOK platform terms and conditions for practitioners." },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://modobook.uk/terms" },
+      { name: "twitter:card", content: "summary" },
     ],
+    links: [{ rel: "canonical", href: "https://modobook.uk/terms" }],
   }),
   component: TermsPage,
 });

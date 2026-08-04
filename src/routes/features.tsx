@@ -16,11 +16,15 @@ import {
 export const Route = createFileRoute("/features")({
   head: () => ({
     meta: [
-      { title: "Features | MODO — the aesthetics-only booking & clinical platform" },
-      { name: "description", content: "Every feature inside MODO — booking, branding, consultations, consent, face mapping, photos, payments, Klarna, Clearpay, marketing, multi-practitioner clinics and more." },
+      { title: "Features | Aesthetics Clinic Software | MODO" },
+      { name: "description", content: "Every MODO feature: branded booking pages, consultations, consent, face mapping, photos, payments, Klarna, Clearpay, marketing and multi-practitioner clinics." },
       { property: "og:title", content: "MODO — Features" },
       { property: "og:description", content: "The full feature list of MODO, the UK aesthetics-only booking and clinical platform." },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://modobook.uk/features" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
+    links: [{ rel: "canonical", href: "https://modobook.uk/features" }],
   }),
   component: FeaturesPage,
 });

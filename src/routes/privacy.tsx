@@ -11,7 +11,16 @@ export const Route = createFileRoute("/privacy")({
         content:
           "How MODO collects, uses and protects personal and health data under UK GDPR and the Data Protection Act 2018.",
       },
+      { property: "og:title", content: "Privacy Policy | MODO" },
+      {
+        property: "og:description",
+        content: "How MODO protects personal and health data under UK GDPR and the Data Protection Act 2018.",
+      },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://modobook.uk/privacy" },
+      { name: "twitter:card", content: "summary" },
     ],
+    links: [{ rel: "canonical", href: "https://modobook.uk/privacy" }],
   }),
   component: PrivacyPage,
 });
