@@ -23,7 +23,7 @@ export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
       { title: "Create your account | MODO" },
-      { name: "description", content: "Create your MODO practitioner account. Waitlist access only." },
+      { name: "description", content: "Create your MODO practitioner account — first month free, no card details required." },
     ],
   }),
   component: AuthPage,
@@ -120,7 +120,7 @@ function AuthPage() {
             <CardDescription>
               {mode === "signin"
                 ? "Sign in to your practitioner account."
-                : "Available to clinics on the MODO waitlist. Already registered? Sign in instead."}
+                : "Open to all aesthetics practitioners — first month free, no card details required."}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4 pt-4">
@@ -146,9 +146,9 @@ function AuthPage() {
                 <Input id="signup-name" value={signupName} onChange={(e) => setSignupName(e.target.value)} placeholder="Jane Smith" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="signup-email">Waitlist email</Label>
+                <Label htmlFor="signup-email">Work email</Label>
                 <Input id="signup-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="you@clinic.co.uk" />
-                <p className="text-xs text-muted-foreground">Use the same email you joined the waitlist with.</p>
+                <p className="text-xs text-muted-foreground">Your first month is free — no card details needed.</p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="signup-password">Password</Label>
@@ -193,8 +193,8 @@ function AuthPage() {
             )}
 
             <div className="rounded-lg border border-dashed bg-muted/40 p-3 text-center text-xs text-muted-foreground">
-              Our launch list is closed and accounts are limited to clinics on it. Not on the
-              list?{" "}
+              MODO is now open to every aesthetics practitioner. Your first month is free
+              and we don&rsquo;t ask for card details to start. Questions?{" "}
               <a
                 href="mailto:info@modobook.co.uk"
                 className="font-medium text-foreground underline underline-offset-2"

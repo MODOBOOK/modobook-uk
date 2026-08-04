@@ -95,6 +95,8 @@ const signUpSchema = z.object({
   name: z.string().trim().max(120).optional().nullable(),
 })
 
+// MODO is now open to everyone — signup is no longer gated on the waitlist.
+// Waitlist rows are still used to prefill name/clinic when we have them.
 export const signUpFromWaitlist = createServerFn({ method: 'POST' })
   .inputValidator((input: unknown) => signUpSchema.parse(input))
   .handler(async ({ data }) => {
@@ -106,22 +108,14 @@ export const signUpFromWaitlist = createServerFn({ method: 'POST' })
       .eq('email', data.email)
       .maybeSingle()
 
-    if (!row) {
-      return {
-        ok: false as const,
-        code: 'not_on_waitlist' as const,
-        error: "That email isn't on the MODO waitlist yet. Join the waitlist and we'll open your account.",
-      }
-    }
-
     const { error } = await supabaseAdmin.auth.admin.createUser({
       email: data.email,
       password: data.password,
       email_confirm: true,
       user_metadata: {
-        full_name: data.name?.trim() || row.name || null,
-        clinic_name: row.clinic_name || null,
-        source: 'waitlist',
+        full_name: data.name?.trim() || row?.name || null,
+        clinic_name: row?.clinic_name || null,
+        source: row ? 'waitlist' : 'open-signup',
       },
     })
 

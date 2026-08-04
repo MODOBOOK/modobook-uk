@@ -175,8 +175,8 @@ function LandingPage() {
               </div>
 
               <p className="mt-5 text-xs text-[color:var(--ink-soft)]">
-                <span className="font-semibold text-[color:var(--accent)]">First month free · No card required.</span>{" "}
-                Now open to founding clinics · Launch-list members lock in founding-clinic pricing
+                <span className="font-semibold text-[color:var(--accent)]">First month free · No card details required.</span>{" "}
+                Now open to every aesthetics practitioner — sign up in minutes, cancel anytime
               </p>
 
             </div>
@@ -433,14 +433,15 @@ function LandingPage() {
 
         <section className="bg-white">
           <div className="mx-auto max-w-4xl px-5 py-24 text-center lg:px-8">
-            <div className="eyebrow">Launching soon</div>
+            <div className="eyebrow">Now open</div>
             <h2 className="mt-4 text-4xl font-bold leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl">
               MODO is live
               <br />
-              <span className="text-[color:var(--ink-soft)]">for founding clinics.</span>
+              <span className="text-[color:var(--ink-soft)]">and open to everyone.</span>
             </h2>
             <p className="mx-auto mt-5 max-w-lg text-[color:var(--ink-soft)]">
-              Our launch list is closed and MODO is open to founding clinics. Create your account with the email you signed up with — founding members keep 100% of booking revenue and lock in launch pricing.
+              Anyone can join MODO today — no waitlist and no card details. Your first month
+              is free, you keep 100% of your booking revenue, and you can cancel anytime.
             </p>
             <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
               <Link to="/auth" className="w-full sm:w-auto">
@@ -448,7 +449,7 @@ function LandingPage() {
                   size="lg"
                   className="w-full rounded-full bg-[color:var(--ink)] px-10 text-sm font-medium text-white hover:bg-[color:var(--ink)]/90 sm:w-auto"
                 >
-                  Create your account
+                  Start your free month
                 </Button>
               </Link>
               <Link to="/who-its-for" className="w-full sm:w-auto">
@@ -537,23 +538,27 @@ function WaitlistSection() {
     <section className="scroll-mt-24 border-t border-[color:var(--hairline)] bg-[color:var(--paper)]">
       <div className="mx-auto grid max-w-6xl gap-10 px-5 py-20 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:gap-16 lg:px-8">
         <div>
-          <div className="eyebrow">§ Now open</div>
+          <div className="eyebrow">§ Now open to everyone</div>
           <h2 className="mt-4 text-3xl font-bold leading-tight tracking-tight sm:text-4xl">
             MODO is open
             <br />
-            <span className="text-[color:var(--ink-soft)]">for founding clinics.</span>
+            <span className="text-[color:var(--ink-soft)]">to every practitioner.</span>
           </h2>
           <p className="mt-5 max-w-md text-[color:var(--ink-soft)]">
-            Our launch list is now closed. If you joined it, create your account
-            and start taking bookings today.
+            No waitlist, no sales call, no card details. Create your account, set up your
+            clinic and take your first booking today — your first month is completely free.
           </p>
         </div>
 
         <div className="rounded-3xl border border-[color:var(--hairline)] bg-white p-6 shadow-sm sm:p-8">
           <div className="py-4 text-center sm:py-6">
+            <div className="mx-auto mb-4 inline-flex items-center gap-2 rounded-full border border-[color:var(--accent)]/25 bg-[color:var(--clinical-blue-soft)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[color:var(--accent)]">
+              First month free · No card required
+            </div>
             <h3 className="text-xl font-semibold">Create your account</h3>
             <p className="mx-auto mt-2 max-w-sm text-sm text-[color:var(--ink-soft)]">
-              Founding-clinic pricing, first month free and onboarding support — set up your clinic in minutes.
+              Full access to bookings, consultations, consent, payments and the prescriber
+              hub — set up your clinic in minutes.
             </p>
             <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
               <Link to="/auth" className="w-full sm:w-auto">
@@ -561,7 +566,7 @@ function WaitlistSection() {
                   size="lg"
                   className="w-full rounded-full bg-[color:var(--ink)] px-8 text-sm font-medium text-white hover:bg-[color:var(--ink)]/90 sm:w-auto"
                 >
-                  Create your account <ArrowRight className="ml-1 h-4 w-4" />
+                  Start free <ArrowRight className="ml-1 h-4 w-4" />
                 </Button>
               </Link>
               <Link to="/pricing" className="w-full sm:w-auto">
@@ -575,7 +580,7 @@ function WaitlistSection() {
               </Link>
             </div>
             <p className="mt-4 text-[11px] text-[color:var(--ink-soft)]">
-              Launch-list clinics only. UK/EU data residency.
+              Open to all UK aesthetics practitioners. Cancel anytime. UK/EU data residency.
             </p>
           </div>
         </div>
