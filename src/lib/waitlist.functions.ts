@@ -113,9 +113,9 @@ export const signUpFromWaitlist = createServerFn({ method: 'POST' })
       password: data.password,
       email_confirm: true,
       user_metadata: {
-        full_name: data.name?.trim() || row.name || null,
-        clinic_name: row.clinic_name || null,
-        source: 'waitlist',
+        full_name: data.name?.trim() || row?.name || null,
+        clinic_name: row?.clinic_name || null,
+        source: row ? 'waitlist' : 'open-signup',
       },
     })
 
