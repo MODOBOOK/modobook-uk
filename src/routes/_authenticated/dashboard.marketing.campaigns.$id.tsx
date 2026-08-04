@@ -65,6 +65,7 @@ function CampaignEditor() {
   const [aiOpen, setAiOpen] = useState(false)
   const [aiPrompt, setAiPrompt] = useState('')
   const [aiTone, setAiTone] = useState('')
+  const [aiMode, setAiMode] = useState<'content' | 'html'>('content')
   const [aiBusy, setAiBusy] = useState(false)
 
   useEffect(() => {
@@ -159,10 +160,14 @@ function CampaignEditor() {
     if (!aiPrompt.trim()) { toast.error('Tell the AI what the email is about'); return }
     setAiBusy(true)
     try {
-      const r = await generateAi({ data: { prompt: aiPrompt, mode: 'content', tone: aiTone } }) as any
+      const r = await generateAi({ data: { prompt: aiPrompt, mode: aiMode, tone: aiTone } }) as any
       setSubject(r.subject || '')
       setPreheader(r.preheader || '')
-      setBlocks(parsePresetBody(r.body || '') as Block[])
+      if (r.mode === 'html') {
+        setBlocks([{ type: 'html', html: r.html || '', full: true }] as Block[])
+      } else {
+        setBlocks(parsePresetBody(r.body || '') as Block[])
+      }
       setAiOpen(false)
       toast.success('Draft generated — edit anything you like')
     } catch (e) { toast.error(e instanceof Error ? e.message : 'Generation failed') }
@@ -286,8 +291,18 @@ function CampaignEditor() {
                 <Label>Tone (optional)</Label>
                 <Input value={aiTone} onChange={(e) => setAiTone(e.target.value)} placeholder="Warm and calm / upbeat / clinical" />
               </div>
+              <div className="flex gap-2">
+                <Button type="button" size="sm" variant={aiMode === 'content' ? 'default' : 'outline'} onClick={() => setAiMode('content')}>
+                  Branded content
+                </Button>
+                <Button type="button" size="sm" variant={aiMode === 'html' ? 'default' : 'outline'} onClick={() => setAiMode('html')}>
+                  <Code className="h-4 w-4 mr-2" />Email code (HTML)
+                </Button>
+              </div>
               <p className="text-xs text-muted-foreground">
-                The content is placed into your branded email — logo, colours and buttons stay on-brand.
+                {aiMode === 'content'
+                  ? 'The content is placed into your branded email — logo, colours and buttons stay on-brand.'
+                  : 'AI writes ready-to-send HTML using your brand colour and logo. It lands in an editable code block.'}
               </p>
             </div>
             <DialogFooter>
