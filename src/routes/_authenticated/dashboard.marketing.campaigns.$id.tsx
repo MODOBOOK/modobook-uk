@@ -159,10 +159,14 @@ function CampaignEditor() {
     if (!aiPrompt.trim()) { toast.error('Tell the AI what the email is about'); return }
     setAiBusy(true)
     try {
-      const r = await generateAi({ data: { prompt: aiPrompt, mode: 'content', tone: aiTone } }) as any
+      const r = await generateAi({ data: { prompt: aiPrompt, mode: aiMode, tone: aiTone } }) as any
       setSubject(r.subject || '')
       setPreheader(r.preheader || '')
-      setBlocks(parsePresetBody(r.body || '') as Block[])
+      if (r.mode === 'html') {
+        setBlocks([{ type: 'html', html: r.html || '', full: true }] as Block[])
+      } else {
+        setBlocks(parsePresetBody(r.body || '') as Block[])
+      }
       setAiOpen(false)
       toast.success('Draft generated — edit anything you like')
     } catch (e) { toast.error(e instanceof Error ? e.message : 'Generation failed') }
