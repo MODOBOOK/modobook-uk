@@ -65,6 +65,7 @@ function CampaignEditor() {
   const [aiOpen, setAiOpen] = useState(false)
   const [aiPrompt, setAiPrompt] = useState('')
   const [aiTone, setAiTone] = useState('')
+  const [aiMode, setAiMode] = useState<'content' | 'html'>('content')
   const [aiBusy, setAiBusy] = useState(false)
 
   useEffect(() => {
