@@ -120,7 +120,35 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&family=DM+Serif+Display&family=Fraunces:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&family=Montserrat:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&family=Lora:wght@400;500;600;700&family=Figtree:wght@400;500;600;700&family=Syne:wght@400;500;600;700;800&family=Bricolage+Grotesque:wght@400;500;600;700&family=Crimson+Pro:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&display=swap",
       },
     ],
-
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "Organization",
+              "@id": "https://modobook.uk/#organization",
+              name: "MODO",
+              url: "https://modobook.uk",
+              logo: "https://modobook.uk/icon-512.png",
+              description:
+                "MODO is the UK booking, consultation and clinical records platform built only for aesthetics practitioners.",
+              areaServed: "GB",
+              sameAs: ["https://www.instagram.com/modobook"],
+            },
+            {
+              "@type": "WebSite",
+              "@id": "https://modobook.uk/#website",
+              url: "https://modobook.uk",
+              name: "MODO",
+              publisher: { "@id": "https://modobook.uk/#organization" },
+              inLanguage: "en-GB",
+            },
+          ],
+        }),
+      },
+    ],
   }),
   shellComponent: RootShell,
   component: RootComponent,
