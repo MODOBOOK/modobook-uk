@@ -14,6 +14,7 @@ import { Route as WaitlistRouteImport } from './routes/waitlist'
 import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as TlaCompetitionRouteImport } from './routes/tla-competition'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as RewardsRouteImport } from './routes/rewards'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PrivacyRouteImport } from './routes/privacy'
@@ -184,6 +185,11 @@ const TlaCompetitionRoute = TlaCompetitionRouteImport.update({
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RewardsRoute = RewardsRouteImport.update({
@@ -1018,6 +1024,7 @@ export interface FileRoutesByFullPath {
   '/privacy': typeof PrivacyRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/rewards': typeof RewardsRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/tla-competition': typeof TlaCompetitionRoute
   '/unsubscribe': typeof UnsubscribeRoute
@@ -1170,6 +1177,7 @@ export interface FileRoutesByTo {
   '/privacy': typeof PrivacyRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/rewards': typeof RewardsRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/tla-competition': typeof TlaCompetitionRoute
   '/unsubscribe': typeof UnsubscribeRoute
@@ -1315,6 +1323,7 @@ export interface FileRoutesById {
   '/privacy': typeof PrivacyRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/rewards': typeof RewardsRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/tla-competition': typeof TlaCompetitionRoute
   '/unsubscribe': typeof UnsubscribeRoute
@@ -1469,6 +1478,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/reset-password'
     | '/rewards'
+    | '/sitemap.xml'
     | '/terms'
     | '/tla-competition'
     | '/unsubscribe'
@@ -1621,6 +1631,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/reset-password'
     | '/rewards'
+    | '/sitemap.xml'
     | '/terms'
     | '/tla-competition'
     | '/unsubscribe'
@@ -1765,6 +1776,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/reset-password'
     | '/rewards'
+    | '/sitemap.xml'
     | '/terms'
     | '/tla-competition'
     | '/unsubscribe'
@@ -1919,6 +1931,7 @@ export interface RootRouteChildren {
   PrivacyRoute: typeof PrivacyRouteWithChildren
   ResetPasswordRoute: typeof ResetPasswordRoute
   RewardsRoute: typeof RewardsRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
   TlaCompetitionRoute: typeof TlaCompetitionRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
@@ -1987,6 +2000,13 @@ declare module '@tanstack/react-router' {
       path: '/terms'
       fullPath: '/terms'
       preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/rewards': {
@@ -3446,6 +3466,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyRoute: PrivacyRouteWithChildren,
   ResetPasswordRoute: ResetPasswordRoute,
   RewardsRoute: RewardsRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
   TlaCompetitionRoute: TlaCompetitionRoute,
   UnsubscribeRoute: UnsubscribeRoute,

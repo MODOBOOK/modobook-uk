@@ -12,11 +12,15 @@ import {
 export const Route = createFileRoute("/prescriber-hub")({
   head: () => ({
     meta: [
-      { title: "Prescriber Hub | MODO — in-person prescriber collaboration" },
-      { name: "description", content: "The MODO Prescriber Hub is built for in-person prescribing — prescribers request days to work at a practitioner's clinic, patients book into those days, and every record, consent and prescription is shared and audited." },
+      { title: "Prescriber Hub | In-Person Prescribing | MODO" },
+      { name: "description", content: "Prescribers request days at a practitioner's clinic, patients book those days, and every record, consent and prescription is shared and audited." },
       { property: "og:title", content: "MODO Prescriber Hub" },
       { property: "og:description", content: "In-person prescriber collaboration — request clinic days, share the patient record, prescribe on-site with a full audit trail." },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://modobook.uk/prescriber-hub" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
+    links: [{ rel: "canonical", href: "https://modobook.uk/prescriber-hub" }],
   }),
   component: HubPage,
 });

@@ -8,13 +8,18 @@ import { resolveDisplayNames } from "@/lib/display-name";
 
 export const Route = createFileRoute("/m/$slug/about")({
   loader: async ({ params }) => getPractitionerBio({ data: { slug: params.slug } }),
-  head: ({ loaderData }) => {
+  head: ({ params, loaderData }) => {
     const name = loaderData?.profile ? resolveDisplayNames(loaderData.profile).primary : "practitioner";
+    const description = (loaderData?.profile.bio ?? "").slice(0, 160) || "Meet your practitioner on MODO.";
     return {
       meta: [
         { title: `About ${name} · MODO` },
-        { name: "description", content: (loaderData?.profile.bio ?? "").slice(0, 160) || "Meet your practitioner on MODO." },
+        { name: "description", content: description },
+        { property: "og:title", content: `About ${name}` },
+        { property: "og:description", content: description },
+        { property: "og:url", content: `https://modobook.uk/m/${params.slug}/about` },
       ],
+      links: [{ rel: "canonical", href: `https://modobook.uk/m/${params.slug}/about` }],
     };
   },
 

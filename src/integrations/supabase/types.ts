@@ -7731,6 +7731,12 @@ export type Database = {
         }[]
       }
       list_my_prescriber_visits: { Args: never; Returns: Json }
+      list_public_clinic_slugs: {
+        Args: never
+        Returns: {
+          slug: string
+        }[]
+      }
       lookup_active_discount_code: {
         Args: { _code: string }
         Returns: {

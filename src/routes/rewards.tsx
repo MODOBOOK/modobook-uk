@@ -24,7 +24,11 @@ export const Route = createFileRoute("/rewards")({
         content:
           "Design your own referral offers, loyalty points and reward tiers — MODO handles the tracking, payouts and reporting for you.",
       },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://modobook.uk/rewards" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
+    links: [{ rel: "canonical", href: "https://modobook.uk/rewards" }],
   }),
   component: RewardsPage,
 });

@@ -46,18 +46,43 @@ import {
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "MODO | The aesthetics-only booking & clinical platform" },
+      { title: "MODO | Aesthetics Clinic Booking Software UK" },
       {
         name: "description",
         content:
-          "MODO is the UK booking, consultation and clinical platform built only for aesthetics — for HCPs and non-HCPs alike, with patient safety and collaborative working at the core.",
+          "Booking, consultations, consent and payments in one UK platform built only for aesthetics clinics. Free first month, no card required.",
       },
-      { property: "og:title", content: "MODO — The aesthetics-only platform" },
-
+      { property: "og:title", content: "MODO — Aesthetics clinic booking & clinical software" },
       {
         property: "og:description",
         content:
           "Booking, consultations, consent, face mapping, payments and a prescriber hub — in one platform built only for aesthetics.",
+      },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://modobook.uk/" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+    links: [{ rel: "canonical", href: "https://modobook.uk/" }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "SoftwareApplication",
+          name: "MODO",
+          applicationCategory: "BusinessApplication",
+          operatingSystem: "Web",
+          url: "https://modobook.uk/",
+          description:
+            "Booking, consultations, consent, clinical records and payments for UK aesthetics practitioners.",
+          publisher: { "@id": "https://modobook.uk/#organization" },
+          offers: {
+            "@type": "Offer",
+            price: "29.99",
+            priceCurrency: "GBP",
+            url: "https://modobook.uk/pricing",
+          },
+        }),
       },
     ],
   }),

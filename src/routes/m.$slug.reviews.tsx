@@ -12,12 +12,43 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/m/$slug/reviews")({
   loader: async ({ params }) => getPractitionerReviews({ data: { slug: params.slug } }),
-  head: ({ loaderData }) => ({
-    meta: [
-      { title: `Reviews · ${loaderData?.profile.clinic_name ?? "Clinic"} · MODO` },
-      { name: "description", content: `Patient reviews for ${loaderData?.profile.clinic_name ?? "this clinic"}.` },
-    ],
-  }),
+  head: ({ params, loaderData }) => {
+    const clinic = loaderData?.profile.clinic_name ?? "Clinic";
+    const reviews = loaderData?.patientReviews ?? [];
+    const count = reviews.length;
+    const avg = count
+      ? Math.round((reviews.reduce((s, r) => s + (r.rating ?? 0), 0) / count) * 10) / 10
+      : 0;
+    return {
+      meta: [
+        { title: `Reviews · ${clinic} · MODO` },
+        { name: "description", content: `Patient reviews for ${clinic}.` },
+        { property: "og:title", content: `Reviews · ${clinic}` },
+        { property: "og:description", content: `Patient reviews for ${clinic}.` },
+        { property: "og:url", content: `https://modobook.uk/m/${params.slug}/reviews` },
+      ],
+      links: [{ rel: "canonical", href: `https://modobook.uk/m/${params.slug}/reviews` }],
+      scripts: count
+        ? [
+            {
+              type: "application/ld+json",
+              children: JSON.stringify({
+                "@context": "https://schema.org",
+                "@type": "LocalBusiness",
+                name: clinic,
+                url: `https://modobook.uk/m/${params.slug}`,
+                aggregateRating: {
+                  "@type": "AggregateRating",
+                  ratingValue: avg,
+                  reviewCount: count,
+                  bestRating: 5,
+                },
+              }),
+            },
+          ]
+        : undefined,
+    };
+  },
   component: Reviews,
 });
 

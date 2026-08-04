@@ -10,11 +10,15 @@ import { Syringe, Sparkles, Stethoscope, Users, MapPin, HeartHandshake, CheckCir
 export const Route = createFileRoute("/who-its-for")({
   head: () => ({
     meta: [
-      { title: "Who MODO is for | Aesthetics-only booking for HCPs & non-HCPs" },
-      { name: "description", content: "MODO is built for every aesthetics practitioner — Nurse Prescribers, doctors, dentists, pharmacists, therapists and skin specialists — under one safe clinical standard." },
+      { title: "Who MODO Is For | Aesthetics Practitioners" },
+      { name: "description", content: "Built for every aesthetics practitioner — nurse prescribers, doctors, dentists, pharmacists and therapists — under one safe clinical standard." },
       { property: "og:title", content: "Who MODO is for" },
       { property: "og:description", content: "Aesthetics-only software for HCPs and non-HCPs, supporting safer collaborative care." },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://modobook.uk/who-its-for" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
+    links: [{ rel: "canonical", href: "https://modobook.uk/who-its-for" }],
   }),
   component: WhoPage,
 });
