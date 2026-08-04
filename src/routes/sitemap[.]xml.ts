@@ -29,18 +29,24 @@ const STATIC_ENTRIES: SitemapEntry[] = [
 ];
 
 async function fetchClinicSlugs(): Promise<string[]> {
-  const url = process.env["VITE_SUPABASE_URL"] ?? process.env["SUPABASE_URL"];
+  const url = process.env["SUPABASE_URL"] ?? process.env["VITE_SUPABASE_URL"];
   const key =
-    process.env["VITE_SUPABASE_PUBLISHABLE_KEY"] ??
     process.env["SUPABASE_PUBLISHABLE_KEY"] ??
+    process.env["VITE_SUPABASE_PUBLISHABLE_KEY"] ??
     process.env["SUPABASE_ANON_KEY"];
   if (!url || !key) return [];
 
   try {
-    const res = await fetch(
-      `${url}/rest/v1/profiles?select=slug&slug=not.is.null&limit=5000`,
-      { headers: { apikey: key, Accept: "application/json" } },
-    );
+    const res = await fetch(`${url}/rest/v1/rpc/list_public_clinic_slugs`, {
+      method: "POST",
+      headers: {
+        apikey: key,
+        Authorization: `Bearer ${key}`,
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: "{}",
+    });
     if (!res.ok) return [];
     const rows = (await res.json()) as Array<{ slug: string | null }>;
     return rows.map((r) => r.slug).filter((s): s is string => Boolean(s));
