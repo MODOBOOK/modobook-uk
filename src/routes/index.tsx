@@ -433,14 +433,15 @@ function LandingPage() {
 
         <section className="bg-white">
           <div className="mx-auto max-w-4xl px-5 py-24 text-center lg:px-8">
-            <div className="eyebrow">Launching soon</div>
+            <div className="eyebrow">Now open</div>
             <h2 className="mt-4 text-4xl font-bold leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl">
               MODO is live
               <br />
-              <span className="text-[color:var(--ink-soft)]">for founding clinics.</span>
+              <span className="text-[color:var(--ink-soft)]">and open to everyone.</span>
             </h2>
             <p className="mx-auto mt-5 max-w-lg text-[color:var(--ink-soft)]">
-              Our launch list is closed and MODO is open to founding clinics. Create your account with the email you signed up with — founding members keep 100% of booking revenue and lock in launch pricing.
+              Anyone can join MODO today — no waitlist and no card details. Your first month
+              is free, you keep 100% of your booking revenue, and you can cancel anytime.
             </p>
             <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
               <Link to="/auth" className="w-full sm:w-auto">
@@ -448,7 +449,7 @@ function LandingPage() {
                   size="lg"
                   className="w-full rounded-full bg-[color:var(--ink)] px-10 text-sm font-medium text-white hover:bg-[color:var(--ink)]/90 sm:w-auto"
                 >
-                  Create your account
+                  Start your free month
                 </Button>
               </Link>
               <Link to="/who-its-for" className="w-full sm:w-auto">
