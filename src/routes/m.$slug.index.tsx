@@ -66,6 +66,10 @@ type Pricing = Database["public"]["Tables"]["treatment_location_pricing"]["Row"]
 
 export const Route = createFileRoute("/m/$slug/")({
   loader: async ({ params }) => getPublicClinic({ data: { slug: params.slug } }),
+  head: ({ params }) => ({
+    meta: [{ property: "og:url", content: `https://modobook.uk/m/${params.slug}` }],
+    links: [{ rel: "canonical", href: `https://modobook.uk/m/${params.slug}` }],
+  }),
   component: BookPage,
 });
 
