@@ -21,8 +21,10 @@ import {
 import {
   Loader2, Save, Send, Calendar as CalIcon, Trash2, Plus, ArrowUp, ArrowDown,
   Type as TypeIcon, Image as ImageIcon, MousePointerClick, Minus, Space, Heading as HeadingIcon,
-  Eye, Code,
+  Eye, Code, Sparkles, LayoutTemplate,
 } from 'lucide-react'
+import { MARKETING_PRESETS, parsePresetBody } from '@/lib/marketing-presets'
+import { generateMarketingEmail } from '@/lib/ai-marketing.functions'
 import { toast } from 'sonner'
 import { getMyProfile } from '@/lib/profiles.functions'
 import { ImageUploader } from '@/components/ImageUploader'
