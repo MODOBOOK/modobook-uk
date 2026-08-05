@@ -1357,13 +1357,24 @@ function CheckoutSheet({
         <div className="border-t pt-2 text-sm">
           <div className="flex justify-between text-muted-foreground"><span>Subtotal</span><span>£{subtotal.toFixed(2)}</span></div>
           {discountValue > 0 && <div className="flex justify-between text-emerald-600"><span>Discount</span><span>-£{discountValue.toFixed(2)}</span></div>}
-          {Number(a.amount_paid_cents ?? 0) > 0 && (
-            <div className="flex justify-between text-emerald-700"><span>Already paid</span><span>-£{(Number(a.amount_paid_cents ?? 0) / 100).toFixed(2)}</span></div>
-          )}
-          <div className="flex justify-between font-bold">
-            <span>Outstanding</span>
-            <span>£{(a.payment_status === "paid" ? 0 : Math.max(0, total - Number(a.amount_paid_cents ?? 0) / 100)).toFixed(2)}</span>
-          </div>
+          {(() => {
+            const paidRaw = Number(a.amount_paid_cents ?? 0) / 100;
+            // Never show more paid than the invoice total — a full payment should
+            // read as "paid in full", not a negative/credit balance.
+            const paidShown = a.payment_status === "paid" ? Math.min(paidRaw || total, total) : Math.min(paidRaw, total);
+            const outstanding = a.payment_status === "paid" ? 0 : Math.max(0, total - paidShown);
+            return (
+              <>
+                {paidShown > 0 && (
+                  <div className="flex justify-between text-emerald-700"><span>Already paid</span><span>-£{paidShown.toFixed(2)}</span></div>
+                )}
+                <div className="flex justify-between font-bold">
+                  <span>Outstanding</span>
+                  <span>£{outstanding.toFixed(2)}</span>
+                </div>
+              </>
+            );
+          })()}
         </div>
 
         <label className="flex items-start gap-2 rounded-md border p-2.5">
