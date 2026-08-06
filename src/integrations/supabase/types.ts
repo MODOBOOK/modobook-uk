@@ -6099,6 +6099,7 @@ export type Database = {
         Row: {
           booking_date: string
           created_at: string
+          deposit_amount: number | null
           end_time: string
           hours: number
           id: string
@@ -6121,6 +6122,7 @@ export type Database = {
         Insert: {
           booking_date: string
           created_at?: string
+          deposit_amount?: number | null
           end_time: string
           hours?: number
           id?: string
@@ -6143,6 +6145,7 @@ export type Database = {
         Update: {
           booking_date?: string
           created_at?: string
+          deposit_amount?: number | null
           end_time?: string
           hours?: number
           id?: string
@@ -6218,6 +6221,7 @@ export type Database = {
           active: boolean
           booking_mode: string
           created_at: string
+          deposit_percent: number | null
           description: string | null
           full_day_rate: number | null
           half_day_hours: number
@@ -6230,6 +6234,7 @@ export type Database = {
           name: string
           profile_id: string
           quantity: number
+          skip_room_selection: boolean
           sort_order: number
           updated_at: string
         }
@@ -6237,6 +6242,7 @@ export type Database = {
           active?: boolean
           booking_mode?: string
           created_at?: string
+          deposit_percent?: number | null
           description?: string | null
           full_day_rate?: number | null
           half_day_hours?: number
@@ -6249,6 +6255,7 @@ export type Database = {
           name: string
           profile_id: string
           quantity?: number
+          skip_room_selection?: boolean
           sort_order?: number
           updated_at?: string
         }
@@ -6256,6 +6263,7 @@ export type Database = {
           active?: boolean
           booking_mode?: string
           created_at?: string
+          deposit_percent?: number | null
           description?: string | null
           full_day_rate?: number | null
           half_day_hours?: number
@@ -6268,6 +6276,7 @@ export type Database = {
           name?: string
           profile_id?: string
           quantity?: number
+          skip_room_selection?: boolean
           sort_order?: number
           updated_at?: string
         }

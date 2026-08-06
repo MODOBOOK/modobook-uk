@@ -54,6 +54,8 @@ const roomSchema = z.object({
   half_day_hours: z.number().int().positive().max(12).optional(),
   min_hours: z.number().positive().max(12).optional(),
   quantity: z.number().int().positive().max(50).optional(),
+  skip_room_selection: z.boolean().optional(),
+  deposit_percent: z.number().min(0).max(100).nullable().optional(),
   booking_mode: z.enum(["enquiry", "pay_online", "pay_in_clinic"]),
   active: z.boolean().optional(),
   sort_order: z.number().int().optional(),
@@ -171,7 +173,7 @@ export const getPublicRooms = createServerFn({ method: "GET" })
     if (!prof.room_rental_enabled) return { enabled: false, clinicName: prof.clinic_name, rooms: [], locations: [] };
     const { data: rooms } = await supabaseAdmin
       .from("rental_rooms")
-      .select("id,name,description,image_url,location_id,hourly_rate,half_day_rate,full_day_rate,half_day_hours,min_hours,quantity,booking_mode")
+      .select("id,name,description,image_url,location_id,hourly_rate,half_day_rate,full_day_rate,half_day_hours,min_hours,quantity,skip_room_selection,deposit_percent,booking_mode")
       .eq("profile_id", prof.user_id)
       .eq("active", true)
       .order("sort_order");
@@ -269,6 +271,11 @@ export const requestRoomBooking = createServerFn({ method: "POST" })
     const mode = room.booking_mode as "enquiry" | "pay_online" | "pay_in_clinic";
     const status = mode === "enquiry" ? "pending" : mode === "pay_in_clinic" ? "confirmed" : "pending";
 
+    // Optional deposit: charge a % of the total online, balance settled with the clinic.
+    const pct = Number((room as any).deposit_percent ?? 0);
+    const takesDeposit = mode === "pay_online" && pct > 0 && pct < 100;
+    const chargeAmount = takesDeposit ? Math.round(price * pct) / 100 : price;
+
     const { data: booking, error } = await supabaseAdmin
       .from("rental_bookings")
       .insert({
@@ -280,6 +287,7 @@ export const requestRoomBooking = createServerFn({ method: "POST" })
         unit: data.unit,
         hours,
         price,
+        deposit_amount: takesDeposit ? chargeAmount : null,
         status,
         payment_status: "unpaid",
         payment_mode: mode,
@@ -292,6 +300,7 @@ export const requestRoomBooking = createServerFn({ method: "POST" })
       .select("id")
       .single();
     if (error) throw error;
+
 
     try {
       await supabaseAdmin.rpc("create_notification", {
@@ -324,8 +333,12 @@ export const requestRoomBooking = createServerFn({ method: "POST" })
           quantity: 1,
           price_data: {
             currency: "gbp",
-            unit_amount: Math.round(price * 100),
-            product_data: { name: `Room hire — ${room.name} (${data.booking_date} ${hhmm(data.start_time)}–${hhmm(data.end_time)})` },
+            unit_amount: Math.round(chargeAmount * 100),
+            product_data: {
+              name: takesDeposit
+                ? `Deposit (${pct}%) — ${room.name} (${data.booking_date} ${hhmm(data.start_time)}–${hhmm(data.end_time)})`
+                : `Room hire — ${room.name} (${data.booking_date} ${hhmm(data.start_time)}–${hhmm(data.end_time)})`,
+            },
           },
         },
       ],

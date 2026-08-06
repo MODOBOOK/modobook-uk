@@ -51,6 +51,8 @@ type Room = {
   half_day_hours: number;
   min_hours: number;
   quantity: number;
+  skip_room_selection: boolean;
+  deposit_percent: number | null;
   booking_mode: "enquiry" | "pay_online" | "pay_in_clinic";
   active: boolean;
   sort_order: number;
@@ -254,6 +256,9 @@ function RoomDialog({
           half_day_hours: Number(f.half_day_hours ?? 4),
           min_hours: Number(f.min_hours ?? 1),
           quantity: Math.max(1, Number(f.quantity ?? 1)),
+          skip_room_selection: f.skip_room_selection ?? false,
+          deposit_percent:
+            f.deposit_percent == null || f.deposit_percent === ("" as never) ? null : Number(f.deposit_percent),
           booking_mode: (f.booking_mode ?? "enquiry") as Room["booking_mode"],
           active: f.active ?? true,
           sort_order: Number(f.sort_order ?? 0),
@@ -322,6 +327,35 @@ function RoomDialog({
               </SelectContent>
             </Select>
           </div>
+
+          {(f.booking_mode ?? "enquiry") === "pay_online" && (
+            <div>
+              <Label>Deposit instead of full payment (%)</Label>
+              <Input
+                type="number"
+                min="0"
+                max="100"
+                step="1"
+                placeholder="Leave blank to take full payment"
+                value={f.deposit_percent ?? ""}
+                onChange={(e) => setF({ ...f, deposit_percent: e.target.value === "" ? null : Number(e.target.value) })}
+              />
+              <p className="mt-1 text-xs text-muted-foreground">
+                e.g. 25 — renters pay 25% online and settle the balance with you.
+              </p>
+            </div>
+          )}
+
+          <label className="flex items-start gap-3 pt-1">
+            <Switch checked={f.skip_room_selection ?? false} onCheckedChange={(v) => setF({ ...f, skip_room_selection: v })} />
+            <span className="text-sm">
+              Skip choosing a room
+              <span className="block text-xs text-muted-foreground">
+                Renters go straight to a calendar and pick a date and time — you just have “{f.quantity ?? 1} rooms” available.
+              </span>
+            </span>
+          </label>
+
           <label className="flex items-center gap-3 pt-1">
             <Switch checked={f.active ?? true} onCheckedChange={(v) => setF({ ...f, active: v })} />
             <span className="text-sm">Show on the public rental page</span>

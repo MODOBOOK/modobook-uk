@@ -8,8 +8,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Calendar } from "@/components/ui/calendar";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DoorOpen, Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/m/$slug/roomrental")({
@@ -37,11 +39,18 @@ type Room = {
   full_day_rate: number | null;
   half_day_hours: number;
   min_hours: number;
+  quantity: number;
+  skip_room_selection: boolean;
+  deposit_percent: number | null;
   booking_mode: "enquiry" | "pay_online" | "pay_in_clinic";
 };
 
 function money(n: number | null | undefined) {
   return n == null ? null : `£${Number(n).toFixed(2)}`;
+}
+
+function toISODate(d: Date) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
 function PublicRoomRental() {
@@ -52,6 +61,9 @@ function PublicRoomRental() {
 
   const rooms = (q.data?.rooms ?? []) as Room[];
   const locations = (q.data?.locations ?? []) as { id: string; name: string; city: string | null }[];
+
+  // "Skip room selection" — renters just pick a date/time from the pooled rooms.
+  const pooled = rooms.find((r) => r.skip_room_selection) ?? null;
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:py-12">
@@ -71,54 +83,78 @@ function PublicRoomRental() {
         <Card><CardContent className="py-16 text-center text-sm opacity-70">Room rental isn’t available here right now.</CardContent></Card>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {rooms.map((r) => {
-          const loc = locations.find((l) => l.id === r.location_id);
-          const prices = [
-            r.hourly_rate ? `${money(r.hourly_rate)} / hour` : null,
-            r.half_day_rate ? `${money(r.half_day_rate)} half day` : null,
-            r.full_day_rate ? `${money(r.full_day_rate)} full day` : null,
-          ].filter(Boolean);
-          return (
-            <Card key={r.id} className="overflow-hidden">
-              {r.image_url ? (
-                <img src={r.image_url} alt={r.name} className="h-40 w-full object-cover" />
-              ) : (
-                <div className="flex h-40 w-full items-center justify-center bg-gradient-to-br from-[var(--brand,#111)]/20 to-[var(--brand-accent,#111)]/10">
-                  <DoorOpen className="h-10 w-10 opacity-60" style={{ color: "var(--brand, #111)" }} />
-                </div>
-              )}
-              <CardContent className="space-y-2 p-4">
-                <h2 className="font-semibold">{r.name}</h2>
-                {loc && <p className="text-xs opacity-60">{[loc.name, loc.city].filter(Boolean).join(" · ")}</p>}
-                {r.description && <p className="text-sm opacity-70 line-clamp-3">{r.description}</p>}
-                <ul className="space-y-0.5 text-sm">
-                  {prices.map((p) => <li key={p as string}>{p}</li>)}
-                </ul>
-                <Button
-                  className="mt-2 w-full"
-                  style={{ backgroundColor: "var(--brand, #111)", color: "#fff" }}
-                  onClick={() => setBooking(r)}
-                >
-                  {r.booking_mode === "enquiry" ? "Enquire" : "Book this room"}
-                </Button>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+      {pooled ? (
+        <Card>
+          <CardContent className="space-y-5 p-4 sm:p-6">
+            <div>
+              <h2 className="text-lg font-semibold">{pooled.name}</h2>
+              <p className="text-sm opacity-70">
+                {pooled.quantity > 1 ? `${pooled.quantity} rooms available` : "Pick a date and time"} — choose your slot below and we’ll assign a room.
+              </p>
+              {pooled.description && <p className="mt-2 text-sm opacity-70">{pooled.description}</p>}
+            </div>
+            <BookingPanel room={pooled} slug={slug} />
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {rooms.map((r) => {
+            const loc = locations.find((l) => l.id === r.location_id);
+            const prices = [
+              r.hourly_rate ? `${money(r.hourly_rate)} / hour` : null,
+              r.half_day_rate ? `${money(r.half_day_rate)} half day` : null,
+              r.full_day_rate ? `${money(r.full_day_rate)} full day` : null,
+            ].filter(Boolean);
+            return (
+              <Card key={r.id} className="overflow-hidden">
+                {r.image_url ? (
+                  <img src={r.image_url} alt={r.name} className="h-40 w-full object-cover" />
+                ) : (
+                  <div className="flex h-40 w-full items-center justify-center bg-gradient-to-br from-[var(--brand,#111)]/20 to-[var(--brand-accent,#111)]/10">
+                    <DoorOpen className="h-10 w-10 opacity-60" style={{ color: "var(--brand, #111)" }} />
+                  </div>
+                )}
+                <CardContent className="space-y-2 p-4">
+                  <h2 className="font-semibold">{r.name}</h2>
+                  {loc && <p className="text-xs opacity-60">{[loc.name, loc.city].filter(Boolean).join(" · ")}</p>}
+                  {r.description && <p className="text-sm opacity-70 line-clamp-3">{r.description}</p>}
+                  <ul className="space-y-0.5 text-sm">
+                    {prices.map((p) => <li key={p as string}>{p}</li>)}
+                  </ul>
+                  <Button
+                    className="mt-2 w-full"
+                    style={{ backgroundColor: "var(--brand, #111)", color: "#fff" }}
+                    onClick={() => setBooking(r)}
+                  >
+                    {r.booking_mode === "enquiry" ? "Enquire" : "Book this room"}
+                  </Button>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
 
-      {booking && <BookDialog room={booking} slug={slug} onClose={() => setBooking(null)} />}
+      {booking && (
+        <Dialog open onOpenChange={(v) => !v && setBooking(null)}>
+          <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-lg">
+            <DialogHeader><DialogTitle>{booking.name}</DialogTitle></DialogHeader>
+            <BookingPanel room={booking} slug={slug} onDone={() => setBooking(null)} />
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }
 
-function BookDialog({ room, slug, onClose }: { room: Room; slug: string; onClose: () => void }) {
+function BookingPanel({ room, slug, onDone }: { room: Room; slug: string; onDone?: () => void }) {
   const fetchAvail = useServerFn(getRoomAvailability);
   const submit = useServerFn(requestRoomBooking);
 
-  const today = new Date().toISOString().slice(0, 10);
-  const [date, setDate] = useState(today);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const [day, setDay] = useState<Date>(today);
+  const date = toISODate(day);
   const [unit, setUnit] = useState<"hour" | "half_day" | "full_day">(
     room.hourly_rate ? "hour" : room.half_day_rate ? "half_day" : "full_day",
   );
@@ -134,9 +170,8 @@ function BookDialog({ room, slug, onClose }: { room: Room; slug: string; onClose
   });
   const slots = (availQ.data?.slots ?? []) as { start: string; end: string; available: boolean }[];
 
-  const blockHours = unit === "hour" ? hours : unit === "half_day" ? room.half_day_hours || 4 : Math.max(slots.length, 1);
+  const blockHours = unit === "hour" ? Math.ceil(hours) : unit === "half_day" ? room.half_day_hours || 4 : Math.max(slots.length, 1);
 
-  // A start slot only works if every consecutive hour it needs is free.
   const startable = useMemo(() => {
     const set = new Set<string>();
     for (let i = 0; i + blockHours <= slots.length; i++) {
@@ -158,6 +193,10 @@ function BookDialog({ room, slug, onClose }: { room: Room; slug: string; onClose
     unit === "hour" ? (room.hourly_rate ?? 0) * hours
     : unit === "half_day" ? (room.half_day_rate ?? 0)
     : (room.full_day_rate ?? 0);
+
+  const pct = Number(room.deposit_percent ?? 0);
+  const takesDeposit = room.booking_mode === "pay_online" && pct > 0 && pct < 100;
+  const dueNow = takesDeposit ? Math.round(price * pct) / 100 : price;
 
   async function go() {
     if (!start || !endTime) return toast.error("Pick a start time");
@@ -189,7 +228,7 @@ function BookDialog({ room, slug, onClose }: { room: Room; slug: string; onClose
           ? "Enquiry sent — the clinic will be in touch."
           : "Booked! You'll settle payment at the clinic.",
       );
-      onClose();
+      onDone?.();
     } catch (e) {
       toast.error((e as Error).message);
     } finally {
@@ -198,92 +237,107 @@ function BookDialog({ room, slug, onClose }: { room: Room; slug: string; onClose
   }
 
   return (
-    <Dialog open onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-lg">
-        <DialogHeader><DialogTitle>{room.name}</DialogTitle></DialogHeader>
+    <div className="space-y-4">
+      <div className="flex flex-wrap gap-2">
+        {room.hourly_rate != null && (
+          <UnitButton active={unit === "hour"} onClick={() => { setUnit("hour"); setStart(null); }} label={`Hourly · ${money(room.hourly_rate)}`} />
+        )}
+        {room.half_day_rate != null && (
+          <UnitButton active={unit === "half_day"} onClick={() => { setUnit("half_day"); setStart(null); }} label={`Half day · ${money(room.half_day_rate)}`} />
+        )}
+        {room.full_day_rate != null && (
+          <UnitButton active={unit === "full_day"} onClick={() => { setUnit("full_day"); setStart(null); }} label={`Full day · ${money(room.full_day_rate)}`} />
+        )}
+      </div>
 
-        <div className="space-y-4">
-          <div className="flex flex-wrap gap-2">
-            {room.hourly_rate != null && (
-              <UnitButton active={unit === "hour"} onClick={() => { setUnit("hour"); setStart(null); }} label={`Hourly · ${money(room.hourly_rate)}`} />
-            )}
-            {room.half_day_rate != null && (
-              <UnitButton active={unit === "half_day"} onClick={() => { setUnit("half_day"); setStart(null); }} label={`Half day · ${money(room.half_day_rate)}`} />
-            )}
-            {room.full_day_rate != null && (
-              <UnitButton active={unit === "full_day"} onClick={() => { setUnit("full_day"); setStart(null); }} label={`Full day · ${money(room.full_day_rate)}`} />
-            )}
-          </div>
+      {unit === "hour" && (
+        <div>
+          <Label>How many hours?</Label>
+          <Input
+            type="number"
+            min={room.min_hours || 1}
+            max={12}
+            step="0.5"
+            value={hours}
+            onChange={(e) => { setHours(Math.max(room.min_hours || 1, Number(e.target.value) || 1)); setStart(null); }}
+          />
+        </div>
+      )}
 
-          {unit === "hour" && (
-            <div>
-              <Label>How many hours?</Label>
-              <Input
-                type="number"
-                min={room.min_hours || 1}
-                max={12}
-                value={hours}
-                onChange={(e) => { setHours(Math.max(room.min_hours || 1, Number(e.target.value) || 1)); setStart(null); }}
-              />
-            </div>
-          )}
-
-          <div>
-            <Label>Date</Label>
-            <Input type="date" min={today} value={date} onChange={(e) => { setDate(e.target.value); setStart(null); }} />
-          </div>
-
-          <div>
-            <Label>Start time</Label>
-            {availQ.isLoading ? (
-              <div className="py-4 text-sm opacity-60">Checking availability…</div>
-            ) : slots.length === 0 ? (
-              <p className="py-2 text-sm opacity-70">Closed on this date.</p>
-            ) : startable.size === 0 ? (
-              <p className="py-2 text-sm opacity-70">No slot long enough on this date — try another day.</p>
-            ) : (
-              <div className="mt-1 grid grid-cols-4 gap-2">
-                {slots.map((s) => {
-                  const ok = startable.has(s.start);
-                  return (
-                    <button
-                      key={s.start}
-                      type="button"
-                      disabled={!ok}
-                      onClick={() => setStart(s.start)}
-                      className={`rounded-md border px-2 py-2 text-sm transition ${
-                        start === s.start ? "border-transparent text-white" : ok ? "hover:bg-black/5" : "cursor-not-allowed opacity-30"
-                      }`}
-                      style={start === s.start ? { backgroundColor: "var(--brand, #111)" } : undefined}
-                    >
-                      {s.start}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-            {start && endTime && (
-              <p className="mt-2 text-sm opacity-70">{start} – {endTime} · {money(price)}</p>
-            )}
-          </div>
-
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div><Label>Your name</Label><Input value={form.renter_name} onChange={(e) => setForm({ ...form, renter_name: e.target.value })} /></div>
-            <div><Label>Email</Label><Input type="email" value={form.renter_email} onChange={(e) => setForm({ ...form, renter_email: e.target.value })} /></div>
-            <div><Label>Phone</Label><Input value={form.renter_phone} onChange={(e) => setForm({ ...form, renter_phone: e.target.value })} /></div>
-            <div><Label>Business (optional)</Label><Input value={form.renter_business} onChange={(e) => setForm({ ...form, renter_business: e.target.value })} /></div>
-          </div>
-          <div><Label>Anything we should know?</Label><Textarea rows={3} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
+      <div className="grid gap-4 md:grid-cols-2">
+        <div>
+          <Label>Pick a date</Label>
+          <Calendar
+            mode="single"
+            selected={day}
+            onSelect={(d) => { if (d) { setDay(d); setStart(null); } }}
+            disabled={{ before: today }}
+            className={cn("mt-1 rounded-md border p-3 pointer-events-auto")}
+          />
         </div>
 
-        <DialogFooter>
-          <Button variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button onClick={go} disabled={busy} style={{ backgroundColor: "var(--brand, #111)", color: "#fff" }}>
-            {busy ? "Sending…" : room.booking_mode === "pay_online" ? `Pay ${money(price)}` : room.booking_mode === "enquiry" ? "Send enquiry" : "Confirm booking"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        <div>
+          <Label>Available times</Label>
+          {availQ.isLoading ? (
+            <div className="py-4 text-sm opacity-60">Checking availability…</div>
+          ) : slots.length === 0 ? (
+            <p className="py-2 text-sm opacity-70">Closed on this date.</p>
+          ) : startable.size === 0 ? (
+            <p className="py-2 text-sm opacity-70">No slot long enough on this date — try another day.</p>
+          ) : (
+            <div className="mt-1 grid grid-cols-3 gap-2 sm:grid-cols-4">
+              {slots.map((s) => {
+                const ok = startable.has(s.start);
+                return (
+                  <button
+                    key={s.start}
+                    type="button"
+                    disabled={!ok}
+                    onClick={() => setStart(s.start)}
+                    className={`rounded-md border px-2 py-2 text-sm transition ${
+                      start === s.start ? "border-transparent text-white" : ok ? "hover:bg-black/5" : "cursor-not-allowed opacity-30"
+                    }`}
+                    style={start === s.start ? { backgroundColor: "var(--brand, #111)" } : undefined}
+                  >
+                    {s.start}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+          {start && endTime && (
+            <div className="mt-3 rounded-md border p-3 text-sm">
+              <div className="font-medium">{start} – {endTime}</div>
+              <div className="opacity-70">Total {money(price)}</div>
+              {takesDeposit && (
+                <div className="mt-1 opacity-70">
+                  Pay {money(dueNow)} deposit now ({pct}%) · {money(price - dueNow)} balance due at the clinic
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div><Label>Your name</Label><Input value={form.renter_name} onChange={(e) => setForm({ ...form, renter_name: e.target.value })} /></div>
+        <div><Label>Email</Label><Input type="email" value={form.renter_email} onChange={(e) => setForm({ ...form, renter_email: e.target.value })} /></div>
+        <div><Label>Phone</Label><Input value={form.renter_phone} onChange={(e) => setForm({ ...form, renter_phone: e.target.value })} /></div>
+        <div><Label>Business (optional)</Label><Input value={form.renter_business} onChange={(e) => setForm({ ...form, renter_business: e.target.value })} /></div>
+      </div>
+      <div><Label>Anything we should know?</Label><Textarea rows={3} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
+
+      <div className="flex justify-end gap-2">
+        {onDone && <Button variant="ghost" onClick={onDone}>Cancel</Button>}
+        <Button onClick={go} disabled={busy} style={{ backgroundColor: "var(--brand, #111)", color: "#fff" }}>
+          {busy
+            ? "Sending…"
+            : room.booking_mode === "pay_online"
+              ? takesDeposit ? `Pay ${money(dueNow)} deposit` : `Pay ${money(price)}`
+              : room.booking_mode === "enquiry" ? "Send enquiry" : "Confirm booking"}
+        </Button>
+      </div>
+    </div>
   );
 }
 
