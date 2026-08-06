@@ -485,6 +485,8 @@ const manualBookingSchema = z.object({
   notes: z.string().max(2000).nullable().optional(),
   /** none = just book it, payment_link = email a Stripe link, confirmation = email details only */
   send: z.enum(["none", "payment_link", "confirmation"]).default("none"),
+  /** Optional personal note from the clinic, shown at the top of the email. */
+  message: z.string().max(2000).nullable().optional(),
   origin: z.string().url(),
 });
 
@@ -539,6 +541,7 @@ export const createManualRentalBooking = createServerFn({ method: "POST" })
     if (error) throw error;
 
     const when = `${data.booking_date} · ${hhmm(data.start_time)}–${hhmm(data.end_time)}`;
+    const note = data.message?.trim() ? `${data.message.trim()}\n\n` : "";
     let checkoutUrl: string | null = null;
 
     if (data.send === "payment_link") {
@@ -555,7 +558,7 @@ export const createManualRentalBooking = createServerFn({ method: "POST" })
         to: data.renter_email,
         replyTo: prof.email,
         subject: `Your room booking — ${when}`,
-        body: `Hi ${data.renter_name},\n\nYour room hire is booked:\n\n${room.name}\n${when}\nTotal £${Number(data.price).toFixed(2)}\n\nPlease complete payment using the button below to secure the room.`,
+        body: `Hi ${data.renter_name},\n\n${note}Your room hire is booked:\n\n${room.name}\n${when}\nTotal £${Number(data.price).toFixed(2)}\n\nPlease complete payment using the button below to secure the room.`,
         actionLabel: `Pay £${Number(data.price).toFixed(2)}`,
         actionUrl: checkoutUrl,
       });
@@ -565,7 +568,7 @@ export const createManualRentalBooking = createServerFn({ method: "POST" })
         to: data.renter_email,
         replyTo: prof.email,
         subject: `Your room booking — ${when}`,
-        body: `Hi ${data.renter_name},\n\nYour room hire is confirmed:\n\n${room.name}\n${when}\nTotal £${Number(data.price).toFixed(2)}\n\nSee you then.`,
+        body: `Hi ${data.renter_name},\n\n${note}Your room hire is confirmed:\n\n${room.name}\n${when}\nTotal £${Number(data.price).toFixed(2)}\n\nSee you then.`,
       });
     }
 
@@ -575,7 +578,7 @@ export const createManualRentalBooking = createServerFn({ method: "POST" })
 /** Email (or just generate) a Stripe payment link for an existing rental booking. */
 export const sendRentalPaymentLink = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { id: string; amount?: number | null; origin: string; email?: boolean }) => d)
+  .inputValidator((d: { id: string; amount?: number | null; origin: string; email?: boolean; message?: string | null }) => d)
   .handler(async ({ data, context }) => {
     const sb = context.supabase as any;
     const uid = context.userId;
@@ -602,7 +605,7 @@ export const sendRentalPaymentLink = createServerFn({ method: "POST" })
         to: booking.renter_email,
         replyTo: prof.email,
         subject: `Payment for your room booking — ${when}`,
-        body: `Hi ${booking.renter_name},\n\nHere's the payment link for your room hire:\n\n${room?.name ?? "Room"}\n${when}\nAmount due £${amount.toFixed(2)}\n\nTap below to pay securely.`,
+        body: `Hi ${booking.renter_name},\n\n${data.message?.trim() ? `${data.message.trim()}\n\n` : ""}Here's the payment link for your room hire:\n\n${room?.name ?? "Room"}\n${when}\nAmount due £${amount.toFixed(2)}\n\nTap below to pay securely.`,
         actionLabel: `Pay £${amount.toFixed(2)}`,
         actionUrl: url,
       });
