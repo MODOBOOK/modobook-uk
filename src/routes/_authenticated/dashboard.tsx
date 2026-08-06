@@ -3,6 +3,7 @@ import { getMyProfile } from "@/lib/profiles.functions";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import {
+  DoorOpen,
   LayoutDashboard,
   Store,
   Scissors,
@@ -82,6 +83,7 @@ const navItems = [
   { label: "Add-ons", to: "/dashboard/addons", icon: Sparkles },
   { label: "Packages", to: "/dashboard/packages", icon: Package },
   { label: "Gift cards", to: "/dashboard/gift-cards", icon: Gift },
+  { label: "Room rental", to: "/dashboard/room-rental", icon: DoorOpen },
   { label: "Discounts", to: "/dashboard/discounts", icon: Percent },
   { label: "Model slots", to: "/dashboard/model-slots", icon: Sparkles },
   { label: "Locations", to: "/dashboard/locations", icon: MapPin },
