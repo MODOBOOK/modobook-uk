@@ -333,9 +333,14 @@ export const requestRoomBooking = createServerFn({ method: "POST" })
           quantity: 1,
           price_data: {
             currency: "gbp",
-            unit_amount: Math.round(price * 100),
-            product_data: { name: `Room hire — ${room.name} (${data.booking_date} ${hhmm(data.start_time)}–${hhmm(data.end_time)})` },
+            unit_amount: Math.round(chargeAmount * 100),
+            product_data: {
+              name: takesDeposit
+                ? `Deposit (${pct}%) — ${room.name} (${data.booking_date} ${hhmm(data.start_time)}–${hhmm(data.end_time)})`
+                : `Room hire — ${room.name} (${data.booking_date} ${hhmm(data.start_time)}–${hhmm(data.end_time)})`,
+            },
           },
+        },
         },
       ],
       successUrl: `${returnUrl}&status=paid`,
