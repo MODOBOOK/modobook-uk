@@ -136,12 +136,15 @@ function RoomRentalPage() {
       </Card>
 
       <Tabs defaultValue="rooms">
-        <TabsList>
-          <TabsTrigger value="rooms">Rooms</TabsTrigger>
-          <TabsTrigger value="hours">Opening hours</TabsTrigger>
-          <TabsTrigger value="blocks">Closures</TabsTrigger>
-          <TabsTrigger value="bookings">Bookings</TabsTrigger>
-        </TabsList>
+        <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+          <TabsList className="w-max min-w-full justify-start">
+            <TabsTrigger value="rooms">Rooms</TabsTrigger>
+            <TabsTrigger value="hours">Opening hours</TabsTrigger>
+            <TabsTrigger value="blocks">Closures</TabsTrigger>
+            <TabsTrigger value="bookings">Bookings</TabsTrigger>
+          </TabsList>
+        </div>
+
 
         <TabsContent value="rooms" className="mt-4 space-y-3">
           {rooms.length === 0 && (
