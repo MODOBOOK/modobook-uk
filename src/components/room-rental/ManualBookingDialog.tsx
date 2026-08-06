@@ -50,6 +50,7 @@ export function ManualBookingDialog({
   const [send, setSend] = useState<"none" | "payment_link" | "confirmation">("payment_link");
   const [priceOverride, setPriceOverride] = useState<string>("");
   const [f, setF] = useState({ renter_name: "", renter_email: "", renter_phone: "", renter_business: "", notes: "" });
+  const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
 
   const availQ = useQuery({
@@ -107,6 +108,7 @@ export function ManualBookingDialog({
           renter_business: f.renter_business || null,
           notes: f.notes || null,
           send,
+          message: message || null,
           origin: window.location.origin,
         },
       });
@@ -209,7 +211,7 @@ export function ManualBookingDialog({
             <div><Label>Phone</Label><Input value={f.renter_phone} onChange={(e) => setF({ ...f, renter_phone: e.target.value })} /></div>
             <div><Label>Business</Label><Input value={f.renter_business} onChange={(e) => setF({ ...f, renter_business: e.target.value })} /></div>
           </div>
-          <div><Label>Notes</Label><Textarea rows={2} value={f.notes} onChange={(e) => setF({ ...f, notes: e.target.value })} /></div>
+          <div><Label>Internal notes</Label><Textarea rows={2} value={f.notes} onChange={(e) => setF({ ...f, notes: e.target.value })} /></div>
 
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
@@ -230,6 +232,18 @@ export function ManualBookingDialog({
               </Select>
             </div>
           </div>
+
+          {send !== "none" && (
+            <div>
+              <Label>Message to include in the email (optional)</Label>
+              <Textarea
+                rows={3}
+                placeholder="e.g. Parking is round the back — buzz 2 when you arrive."
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+              />
+            </div>
+          )}
         </div>
 
         <DialogFooter>
