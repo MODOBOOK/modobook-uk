@@ -294,15 +294,21 @@ function RoomDialog({
               </Select>
             </div>
           )}
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <div><Label>£ / hour</Label><Input type="number" step="0.01" value={f.hourly_rate ?? ""} onChange={(e) => setF({ ...f, hourly_rate: e.target.value === "" ? null : Number(e.target.value) })} /></div>
             <div><Label>£ half day</Label><Input type="number" step="0.01" value={f.half_day_rate ?? ""} onChange={(e) => setF({ ...f, half_day_rate: e.target.value === "" ? null : Number(e.target.value) })} /></div>
             <div><Label>£ full day</Label><Input type="number" step="0.01" value={f.full_day_rate ?? ""} onChange={(e) => setF({ ...f, full_day_rate: e.target.value === "" ? null : Number(e.target.value) })} /></div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <div><Label>Hours in a half day</Label><Input type="number" value={f.half_day_hours ?? 4} onChange={(e) => setF({ ...f, half_day_hours: Number(e.target.value) })} /></div>
-            <div><Label>Minimum hours</Label><Input type="number" value={f.min_hours ?? 1} onChange={(e) => setF({ ...f, min_hours: Number(e.target.value) })} /></div>
+            <div><Label>Minimum hours</Label><Input type="number" step="0.5" min="0.5" value={f.min_hours ?? 1} onChange={(e) => setF({ ...f, min_hours: Number(e.target.value) })} /></div>
+            <div>
+              <Label>How many of this room</Label>
+              <Input type="number" min="1" step="1" value={f.quantity ?? 1} onChange={(e) => setF({ ...f, quantity: Number(e.target.value) })} />
+              <p className="mt-1 text-xs text-muted-foreground">Renters book a time, not a specific room.</p>
+            </div>
           </div>
+
           <div>
             <Label>How bookings are taken</Label>
             <Select value={f.booking_mode ?? "enquiry"} onValueChange={(v) => setF({ ...f, booking_mode: v as Room["booking_mode"] })}>
