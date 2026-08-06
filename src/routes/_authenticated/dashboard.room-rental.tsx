@@ -449,42 +449,6 @@ function HoursCard({ room, hours, onSaved }: { room: Room; hours: any[]; onSaved
           }}
         >Save hours</Button>
       </CardContent>
-
-      <Dialog open={linkOpen} onOpenChange={setLinkOpen}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Send payment link</DialogTitle></DialogHeader>
-          <div className="space-y-2">
-            <Label>Message (optional)</Label>
-            <Textarea
-              rows={4}
-              placeholder={`Hi ${booking.renter_name}, here's the link for your room hire…`}
-              value={linkMessage}
-              onChange={(e) => setLinkMessage(e.target.value)}
-            />
-            <p className="text-xs text-muted-foreground">Appears at the top of the email, above the booking details and pay button.</p>
-          </div>
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setLinkOpen(false)}>Cancel</Button>
-            <Button
-              disabled={sending}
-              onClick={async () => {
-                setSending(true);
-                try {
-                  await sendLink({ data: { id: booking.id, origin: window.location.origin, message: linkMessage || null } });
-                  toast.success(`Payment link emailed to ${booking.renter_email}`);
-                  setLinkOpen(false);
-                  setLinkMessage("");
-                  onChanged();
-                } catch (e) {
-                  toast.error((e as Error).message);
-                } finally {
-                  setSending(false);
-                }
-              }}
-            >{sending ? "Sending…" : "Send email"}</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </Card>
   );
 }
@@ -596,6 +560,42 @@ function BookingRow({ booking, roomName, onChanged }: { booking: any; roomName: 
           )}
         </div>
       </CardContent>
+
+      <Dialog open={linkOpen} onOpenChange={setLinkOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Send payment link</DialogTitle></DialogHeader>
+          <div className="space-y-2">
+            <Label>Message (optional)</Label>
+            <Textarea
+              rows={4}
+              placeholder={`Hi ${booking.renter_name}, here's the link for your room hire…`}
+              value={linkMessage}
+              onChange={(e) => setLinkMessage(e.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">Appears at the top of the email, above the booking details and pay button.</p>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setLinkOpen(false)}>Cancel</Button>
+            <Button
+              disabled={sending}
+              onClick={async () => {
+                setSending(true);
+                try {
+                  await sendLink({ data: { id: booking.id, origin: window.location.origin, message: linkMessage || null } });
+                  toast.success(`Payment link emailed to ${booking.renter_email}`);
+                  setLinkOpen(false);
+                  setLinkMessage("");
+                  onChanged();
+                } catch (e) {
+                  toast.error((e as Error).message);
+                } finally {
+                  setSending(false);
+                }
+              }}
+            >{sending ? "Sending…" : "Send email"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }
