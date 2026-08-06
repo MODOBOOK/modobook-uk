@@ -15,6 +15,42 @@ function fromMin(m: number) {
   return `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
 }
 
+type Span = { s: number; e: number; units?: number | null };
+
+/** How many rooms are taken out of service across [s,e) by closures. */
+function blockedUnits(blocks: any[], capacity: number, s: number, e: number) {
+  let max = 0;
+  for (const b of blocks) {
+    const bs = b.start_time ? toMin(b.start_time) : 0;
+    const be = b.end_time ? toMin(b.end_time) : 1440;
+    if (s < be && e > bs) {
+      const u = b.units == null ? capacity : Math.max(0, Number(b.units));
+      if (u > max) max = u;
+    }
+  }
+  return Math.min(capacity, max);
+}
+
+/** Lowest free room number for [s,e), or null when nothing is free. */
+function allocateUnit(capacity: number, blocks: any[], bookings: any[], s: number, e: number) {
+  const usable = capacity - blockedUnits(blocks, capacity, s, e);
+  if (usable <= 0) return null;
+  const taken = new Set<number>();
+  let unknown = 0;
+  for (const b of bookings) {
+    if (!(s < toMin(b.end_time) && e > toMin(b.start_time))) continue;
+    if (b.unit_index) taken.add(Number(b.unit_index));
+    else unknown += 1;
+  }
+  for (let i = 1; i <= usable; i += 1) {
+    if (taken.has(i)) continue;
+    if (unknown > 0) { unknown -= 1; continue; }
+    return i;
+  }
+  return null;
+}
+
+
 /* -------------------------------- owner side ------------------------------- */
 
 export const listMyRooms = createServerFn({ method: "GET" })
