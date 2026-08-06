@@ -357,3 +357,255 @@ export const requestRoomBooking = createServerFn({ method: "POST" })
     if (!session.url) throw new Error("Could not create checkout session");
     return { id: booking.id as string, checkoutUrl: session.url as string, status };
   });
+
+/* --------------------------- owner-side scheduling -------------------------- */
+
+/** Availability grid for the signed-in clinic (works even when the public page is off). */
+export const getOwnerRoomAvailability = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { room_id: string; date: string }) => d)
+  .handler(async ({ data, context }) => {
+    const sb = context.supabase as any;
+    const weekday = new Date(`${data.date}T12:00:00`).getDay();
+    const [roomRes, hoursRes, blocksRes, bookingsRes] = await Promise.all([
+      sb.from("rental_rooms").select("quantity").eq("id", data.room_id).maybeSingle(),
+      sb.from("rental_hours").select("start_time,end_time").eq("room_id", data.room_id).eq("weekday", weekday),
+      sb.from("rental_blocks").select("start_time,end_time").eq("block_date", data.date)
+        .or(`room_id.eq.${data.room_id},room_id.is.null`),
+      sb.from("rental_bookings").select("start_time,end_time")
+        .eq("room_id", data.room_id).eq("booking_date", data.date).neq("status", "cancelled"),
+    ]);
+    const capacity = Math.max(1, Number(roomRes.data?.quantity ?? 1));
+    const closed: [number, number][] = ((blocksRes.data ?? []) as any[]).map((b) =>
+      b.start_time && b.end_time ? ([toMin(b.start_time), toMin(b.end_time)] as [number, number]) : ([0, 1440] as [number, number]),
+    );
+    const booked: [number, number][] = ((bookingsRes.data ?? []) as any[]).map(
+      (b) => [toMin(b.start_time), toMin(b.end_time)] as [number, number],
+    );
+    const slots: { start: string; end: string; available: boolean }[] = [];
+    for (const h of (hoursRes.data ?? []) as any[]) {
+      for (let m = toMin(h.start_time); m + 60 <= toMin(h.end_time); m += 60) {
+        const blocked = closed.some(([s, e]) => m < e && m + 60 > s);
+        const used = booked.filter(([s, e]) => m < e && m + 60 > s).length;
+        slots.push({ start: fromMin(m), end: fromMin(m + 60), available: !blocked && used < capacity });
+      }
+    }
+    return { slots, capacity };
+  });
+
+async function ownerProfile(sb: any, uid: string) {
+  const { data } = await sb
+    .from("profiles")
+    .select("id, slug, clinic_name, email, stripe_connect_account_id")
+    .eq("user_id", uid)
+    .maybeSingle();
+  return data;
+}
+
+/** Build a Stripe checkout link for a rental booking and (optionally) email it. */
+async function buildRentalPaymentLink(opts: {
+  prof: any;
+  booking: any;
+  roomName: string;
+  amount: number;
+  origin: string;
+}) {
+  if (!opts.prof?.stripe_connect_account_id) {
+    throw new Error("Connect Stripe in Payments before sending payment links");
+  }
+  if (!(opts.amount > 0)) throw new Error("Set an amount greater than £0");
+  const { createCheckoutSession } = await import("./stripe.server");
+  const base = `${opts.origin.replace(/\/$/, "")}/m/${opts.prof.slug}/roomrental?booking=${opts.booking.id}`;
+  const session = await createCheckoutSession({
+    accountId: opts.prof.stripe_connect_account_id,
+    lineItems: [
+      {
+        quantity: 1,
+        price_data: {
+          currency: "gbp",
+          unit_amount: Math.round(opts.amount * 100),
+          product_data: {
+            name: `Room hire — ${opts.roomName} (${opts.booking.booking_date} ${hhmm(opts.booking.start_time)}–${hhmm(opts.booking.end_time)})`,
+          },
+        },
+      },
+    ],
+    successUrl: `${base}&status=paid`,
+    cancelUrl: `${base}&status=cancelled`,
+    customerEmail: opts.booking.renter_email,
+    metadata: {
+      kind: "room_rental_booking",
+      rental_booking_id: opts.booking.id,
+      profile_id: opts.prof.user_id ?? "",
+    },
+    descriptorName: opts.prof.clinic_name,
+  });
+  if (!session.url) throw new Error("Could not create a payment link");
+  return session.url as string;
+}
+
+async function emailRenter(opts: {
+  profileId: string;
+  to: string;
+  replyTo?: string | null;
+  subject: string;
+  body: string;
+  actionLabel?: string;
+  actionUrl?: string;
+}) {
+  const { enqueueAppEmail, getPractitionerBranding } = await import("./email/send.server");
+  const branding = await getPractitionerBranding(opts.profileId);
+  await enqueueAppEmail({
+    templateName: "patient-message",
+    recipientEmail: opts.to,
+    replyTo: opts.replyTo || undefined,
+    templateData: {
+      subject: opts.subject,
+      body: opts.body,
+      clinicName: branding.clinicName,
+      logoUrl: branding.logoUrl,
+      brandColor: branding.brandColor,
+      profileId: opts.profileId,
+      actions: opts.actionUrl ? [{ label: opts.actionLabel || "Pay now", url: opts.actionUrl, variant: "primary" }] : undefined,
+    },
+  });
+}
+
+const manualBookingSchema = z.object({
+  room_id: z.string().uuid(),
+  booking_date: z.string(),
+  start_time: z.string(),
+  end_time: z.string(),
+  unit: z.enum(["hour", "half_day", "full_day"]),
+  price: z.number().nonnegative(),
+  renter_name: z.string().min(1).max(120),
+  renter_email: z.string().email(),
+  renter_phone: z.string().max(40).nullable().optional(),
+  renter_business: z.string().max(160).nullable().optional(),
+  notes: z.string().max(2000).nullable().optional(),
+  /** none = just book it, payment_link = email a Stripe link, confirmation = email details only */
+  send: z.enum(["none", "payment_link", "confirmation"]).default("none"),
+  origin: z.string().url(),
+});
+
+/** Practitioner books a renter in themselves, optionally emailing a payment link. */
+export const createManualRentalBooking = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => manualBookingSchema.parse(d))
+  .handler(async ({ data, context }) => {
+    const sb = context.supabase as any;
+    const uid = context.userId;
+    const prof = await ownerProfile(sb, uid);
+    if (!prof) throw new Error("Profile not found");
+
+    const { data: room } = await sb
+      .from("rental_rooms").select("*").eq("id", data.room_id).eq("profile_id", uid).maybeSingle();
+    if (!room) throw new Error("Room not found");
+
+    const hours = (toMin(data.end_time) - toMin(data.start_time)) / 60;
+    if (hours <= 0) throw new Error("Invalid time range");
+
+    const capacity = Math.max(1, Number(room.quantity ?? 1));
+    const { data: clashes } = await sb
+      .from("rental_bookings").select("start_time,end_time")
+      .eq("room_id", data.room_id).eq("booking_date", data.booking_date).neq("status", "cancelled");
+    const overlaps = ((clashes ?? []) as any[]).filter(
+      (b) => toMin(data.start_time) < toMin(b.end_time) && toMin(data.end_time) > toMin(b.start_time),
+    ).length;
+    if (overlaps >= capacity) throw new Error("That time is already fully booked");
+
+    const { data: booking, error } = await sb
+      .from("rental_bookings")
+      .insert({
+        profile_id: uid,
+        room_id: room.id,
+        booking_date: data.booking_date,
+        start_time: data.start_time,
+        end_time: data.end_time,
+        unit: data.unit,
+        hours,
+        price: data.price,
+        status: "confirmed",
+        payment_status: "unpaid",
+        payment_mode: data.send === "payment_link" ? "pay_online" : room.booking_mode,
+        renter_name: data.renter_name,
+        renter_email: data.renter_email,
+        renter_phone: data.renter_phone ?? null,
+        renter_business: data.renter_business ?? null,
+        notes: data.notes ?? null,
+      })
+      .select("*")
+      .single();
+    if (error) throw error;
+
+    const when = `${data.booking_date} · ${hhmm(data.start_time)}–${hhmm(data.end_time)}`;
+    let checkoutUrl: string | null = null;
+
+    if (data.send === "payment_link") {
+      checkoutUrl = await buildRentalPaymentLink({
+        prof: { ...prof, user_id: uid },
+        booking,
+        roomName: room.name,
+        amount: data.price,
+        origin: data.origin,
+      });
+      await sb.from("rental_bookings").update({ stripe_session_id: null }).eq("id", booking.id);
+      await emailRenter({
+        profileId: prof.id,
+        to: data.renter_email,
+        replyTo: prof.email,
+        subject: `Your room booking — ${when}`,
+        body: `Hi ${data.renter_name},\n\nYour room hire is booked:\n\n${room.name}\n${when}\nTotal £${Number(data.price).toFixed(2)}\n\nPlease complete payment using the button below to secure the room.`,
+        actionLabel: `Pay £${Number(data.price).toFixed(2)}`,
+        actionUrl: checkoutUrl,
+      });
+    } else if (data.send === "confirmation") {
+      await emailRenter({
+        profileId: prof.id,
+        to: data.renter_email,
+        replyTo: prof.email,
+        subject: `Your room booking — ${when}`,
+        body: `Hi ${data.renter_name},\n\nYour room hire is confirmed:\n\n${room.name}\n${when}\nTotal £${Number(data.price).toFixed(2)}\n\nSee you then.`,
+      });
+    }
+
+    return { id: booking.id as string, checkoutUrl };
+  });
+
+/** Email (or just generate) a Stripe payment link for an existing rental booking. */
+export const sendRentalPaymentLink = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string; amount?: number | null; origin: string; email?: boolean }) => d)
+  .handler(async ({ data, context }) => {
+    const sb = context.supabase as any;
+    const uid = context.userId;
+    const prof = await ownerProfile(sb, uid);
+    if (!prof) throw new Error("Profile not found");
+    const { data: booking } = await sb
+      .from("rental_bookings").select("*").eq("id", data.id).eq("profile_id", uid).maybeSingle();
+    if (!booking) throw new Error("Booking not found");
+    const { data: room } = await sb.from("rental_rooms").select("name").eq("id", booking.room_id).maybeSingle();
+
+    const amount = Number(data.amount ?? booking.deposit_amount ?? booking.price ?? 0);
+    const url = await buildRentalPaymentLink({
+      prof: { ...prof, user_id: uid },
+      booking,
+      roomName: room?.name ?? "Room",
+      amount,
+      origin: data.origin,
+    });
+
+    if (data.email !== false) {
+      const when = `${booking.booking_date} · ${hhmm(booking.start_time)}–${hhmm(booking.end_time)}`;
+      await emailRenter({
+        profileId: prof.id,
+        to: booking.renter_email,
+        replyTo: prof.email,
+        subject: `Payment for your room booking — ${when}`,
+        body: `Hi ${booking.renter_name},\n\nHere's the payment link for your room hire:\n\n${room?.name ?? "Room"}\n${when}\nAmount due £${amount.toFixed(2)}\n\nTap below to pay securely.`,
+        actionLabel: `Pay £${amount.toFixed(2)}`,
+        actionUrl: url,
+      });
+    }
+    return { url };
+  });
