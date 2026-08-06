@@ -28,7 +28,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { ImageUploader } from "@/components/ImageUploader";
-import { Plus, Pencil, Trash2, DoorOpen, Clock, CalendarX2, Copy, Check, CalendarDays, Send } from "lucide-react";
+import { Plus, Pencil, Trash2, DoorOpen, Clock, CalendarX2, Copy, Check, CalendarDays, Send, FileText } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/dashboard/room-rental")({
