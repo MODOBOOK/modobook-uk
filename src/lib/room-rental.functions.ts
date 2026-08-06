@@ -341,7 +341,6 @@ export const requestRoomBooking = createServerFn({ method: "POST" })
             },
           },
         },
-        },
       ],
       successUrl: `${returnUrl}&status=paid`,
       cancelUrl: `${returnUrl}&status=cancelled`,
