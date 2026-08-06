@@ -387,6 +387,17 @@ function RoomDialog({
             </span>
           </label>
 
+          <label className="flex items-start gap-3 pt-1">
+            <Switch checked={f.auto_invoice ?? false} onCheckedChange={(v) => setF({ ...f, auto_invoice: v })} />
+            <span className="text-sm">
+              Auto-send an invoice
+              <span className="block text-xs text-muted-foreground">
+                The renting practitioner gets your branded invoice by email as soon as they book (or as soon as their payment clears), with a pay button and your bank details.
+              </span>
+            </span>
+          </label>
+
+
           <label className="flex items-center gap-3 pt-1">
             <Switch checked={f.active ?? true} onCheckedChange={(v) => setF({ ...f, active: v })} />
             <span className="text-sm">Show on the public rental page</span>
