@@ -54,6 +54,8 @@ const roomSchema = z.object({
   half_day_hours: z.number().int().positive().max(12).optional(),
   min_hours: z.number().positive().max(12).optional(),
   quantity: z.number().int().positive().max(50).optional(),
+  skip_room_selection: z.boolean().optional(),
+  deposit_percent: z.number().min(0).max(100).nullable().optional(),
   booking_mode: z.enum(["enquiry", "pay_online", "pay_in_clinic"]),
   active: z.boolean().optional(),
   sort_order: z.number().int().optional(),
