@@ -6106,6 +6106,7 @@ export type Database = {
           end_time: string
           hours: number
           id: string
+          invoice_sent_at: string | null
           notes: string | null
           payment_mode: string
           payment_status: string
@@ -6130,6 +6131,7 @@ export type Database = {
           end_time: string
           hours?: number
           id?: string
+          invoice_sent_at?: string | null
           notes?: string | null
           payment_mode?: string
           payment_status?: string
@@ -6154,6 +6156,7 @@ export type Database = {
           end_time?: string
           hours?: number
           id?: string
+          invoice_sent_at?: string | null
           notes?: string | null
           payment_mode?: string
           payment_status?: string
@@ -6225,6 +6228,7 @@ export type Database = {
       rental_rooms: {
         Row: {
           active: boolean
+          auto_invoice: boolean
           booking_mode: string
           created_at: string
           deposit_percent: number | null
@@ -6246,6 +6250,7 @@ export type Database = {
         }
         Insert: {
           active?: boolean
+          auto_invoice?: boolean
           booking_mode?: string
           created_at?: string
           deposit_percent?: number | null
@@ -6267,6 +6272,7 @@ export type Database = {
         }
         Update: {
           active?: boolean
+          auto_invoice?: boolean
           booking_mode?: string
           created_at?: string
           deposit_percent?: number | null

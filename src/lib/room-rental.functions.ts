@@ -105,6 +105,7 @@ const roomSchema = z.object({
   min_hours: z.number().positive().max(12).optional(),
   quantity: z.number().int().positive().max(50).optional(),
   skip_room_selection: z.boolean().optional(),
+  auto_invoice: z.boolean().optional(),
   deposit_percent: z.number().min(0).max(100).nullable().optional(),
   booking_mode: z.enum(["enquiry", "pay_online", "pay_in_clinic"]),
   active: z.boolean().optional(),
@@ -376,6 +377,20 @@ export const requestRoomBooking = createServerFn({ method: "POST" })
     }
 
     if (mode !== "pay_online") {
+      if ((room as any).auto_invoice) {
+        try {
+          const { data: full } = await supabaseAdmin.from("rental_bookings").select("*").eq("id", booking.id).maybeSingle();
+          await sendRentalInvoiceEmail({
+            sb: supabaseAdmin,
+            userId: prof.user_id,
+            profileId: prof.id,
+            booking: full,
+            roomName: room.name,
+          });
+        } catch (e) {
+          console.error("[room-rental] auto invoice failed", e);
+        }
+      }
       return { id: booking.id as string, checkoutUrl: null as string | null, status };
     }
 
@@ -526,6 +541,146 @@ async function emailRenter(opts: {
   });
 }
 
+
+/** Branded invoice email for a rental booking — same layout as patient invoices. */
+async function sendRentalInvoiceEmail(opts: {
+  sb: any;
+  userId: string;
+  profileId: string;
+  booking: any;
+  roomName: string;
+  origin?: string | null;
+  message?: string | null;
+  payUrl?: string | null;
+}) {
+  const { sb, booking } = opts;
+  const { data: p } = await sb
+    .from("profiles")
+    .select(
+      "clinic_name, full_name, email, phone, address, invoice_bank_name, invoice_account_name, invoice_sort_code, invoice_account_number, invoice_iban, invoice_swift, invoice_payment_reference, invoice_footer_notes, invoice_vat_number, invoice_company_number, invoice_show_bank_details",
+    )
+    .eq("user_id", opts.userId)
+    .maybeSingle();
+
+  const clinicName = p?.clinic_name || p?.full_name || "your clinic";
+  const total = Number(booking.price ?? 0);
+  const paid = booking.payment_status === "paid" ? total : 0;
+  const due = Math.max(0, total - paid);
+  const when = `${booking.booking_date} · ${hhmm(booking.start_time)}–${hhmm(booking.end_time)}`;
+  const reference = String(booking.id).slice(0, 8).toUpperCase();
+
+  const addr = (p?.address ?? {}) as Record<string, string>;
+  const addressLines = [addr.line1, addr.line2, [addr.city, addr.postcode].filter(Boolean).join(" "), addr.country]
+    .filter(Boolean)
+    .join("\n");
+
+  const bank =
+    p?.invoice_show_bank_details
+      ? [
+          "\nBank transfer",
+          p.invoice_account_name ? `Account name: ${p.invoice_account_name}` : null,
+          p.invoice_bank_name ? `Bank: ${p.invoice_bank_name}` : null,
+          p.invoice_sort_code ? `Sort code: ${p.invoice_sort_code}` : null,
+          p.invoice_account_number ? `Account number: ${p.invoice_account_number}` : null,
+          p.invoice_iban ? `IBAN: ${p.invoice_iban}` : null,
+          p.invoice_swift ? `SWIFT/BIC: ${p.invoice_swift}` : null,
+          `Reference: ${p.invoice_payment_reference || reference}`,
+        ]
+          .filter(Boolean)
+          .join("\n")
+      : "";
+
+  const note = opts.message?.trim() ? `${opts.message.trim()}\n\n` : "";
+  const body =
+    `Hi ${booking.renter_name || "there"},\n\n` +
+    `${note}Please find your invoice from ${clinicName} below.\n\n` +
+    `Invoice ${reference} · ${new Date().toLocaleDateString("en-GB")}\n\n` +
+    `• Room hire — ${opts.roomName}${booking.unit_index ? ` (Room ${booking.unit_index})` : ""}, ${when} — £${total.toFixed(2)}\n\n` +
+    `Total: £${total.toFixed(2)}\n` +
+    (paid > 0 ? `Already paid: £${paid.toFixed(2)}\n` : "") +
+    `Amount due: £${due.toFixed(2)}\n` +
+    (bank ? `${bank}\n` : "") +
+    (addressLines ? `\n${clinicName}\n${addressLines}\n` : "") +
+    (p?.invoice_vat_number ? `VAT no. ${p.invoice_vat_number}\n` : "") +
+    (p?.invoice_company_number ? `Company no. ${p.invoice_company_number}\n` : "") +
+    (p?.invoice_footer_notes ? `\n${p.invoice_footer_notes}\n` : "") +
+    `\nThank you,\n${p?.full_name || clinicName}`;
+
+  await emailRenter({
+    profileId: opts.profileId,
+    to: booking.renter_email,
+    replyTo: p?.email ?? null,
+    subject: `Invoice ${reference} from ${clinicName}`,
+    body,
+    actionLabel: `Pay £${due.toFixed(2)}`,
+    actionUrl: due > 0 ? opts.payUrl || undefined : undefined,
+  });
+
+  await sb.from("rental_bookings").update({ invoice_sent_at: new Date().toISOString() }).eq("id", booking.id);
+}
+
+/** Auto-invoice used by the payment webhook once a rental payment clears. */
+export async function sendRentalInvoiceForBooking(bookingId: string) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const sb = supabaseAdmin as any;
+  const { data: booking } = await sb.from("rental_bookings").select("*").eq("id", bookingId).maybeSingle();
+  if (!booking) return;
+  const { data: room } = await sb.from("rental_rooms").select("name, auto_invoice").eq("id", booking.room_id).maybeSingle();
+  if (!room?.auto_invoice) return;
+  const { data: prof } = await sb.from("profiles").select("id").eq("user_id", booking.profile_id).maybeSingle();
+  if (!prof) return;
+  await sendRentalInvoiceEmail({
+    sb,
+    userId: booking.profile_id,
+    profileId: prof.id,
+    booking,
+    roomName: room.name ?? "Room",
+  });
+}
+
+/** Send (or resend) the invoice for a booking to the practitioner who hired the room. */
+export const sendRentalInvoice = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string; origin: string; message?: string | null }) => d)
+  .handler(async ({ data, context }) => {
+    const sb = context.supabase as any;
+    const uid = context.userId;
+    const prof = await ownerProfile(sb, uid);
+    if (!prof) throw new Error("Profile not found");
+    const { data: booking } = await sb
+      .from("rental_bookings").select("*").eq("id", data.id).eq("profile_id", uid).maybeSingle();
+    if (!booking) throw new Error("Booking not found");
+    const { data: room } = await sb.from("rental_rooms").select("name").eq("id", booking.room_id).maybeSingle();
+
+    let payUrl: string | null = null;
+    const due = Number(booking.price ?? 0);
+    if (booking.payment_status !== "paid" && due > 0 && prof.stripe_connect_account_id) {
+      try {
+        payUrl = await buildRentalPaymentLink({
+          prof: { ...prof, user_id: uid },
+          booking,
+          roomName: room?.name ?? "Room",
+          amount: due,
+          origin: data.origin,
+        });
+      } catch (e) {
+        console.error("[room-rental] invoice payment link failed", e);
+      }
+    }
+
+    await sendRentalInvoiceEmail({
+      sb,
+      userId: uid,
+      profileId: prof.id,
+      booking,
+      roomName: room?.name ?? "Room",
+      origin: data.origin,
+      message: data.message ?? null,
+      payUrl,
+    });
+    return { ok: true };
+  });
+
 const manualBookingSchema = z.object({
   room_id: z.string().uuid(),
   booking_date: z.string(),
@@ -633,6 +788,22 @@ export const createManualRentalBooking = createServerFn({ method: "POST" })
         subject: `Your room booking — ${when}`,
         body: `Hi ${data.renter_name},\n\n${note}Your room hire is confirmed:\n\n${room.name}${unitIndex && capacity > 1 ? ` — Room ${unitIndex}` : ""}\n${when}\nTotal £${Number(data.price).toFixed(2)}\n\nSee you then.`,
       });
+    }
+
+    if (room.auto_invoice) {
+      try {
+        await sendRentalInvoiceEmail({
+          sb,
+          userId: uid,
+          profileId: prof.id,
+          booking,
+          roomName: room.name,
+          message: data.message ?? null,
+          payUrl: checkoutUrl,
+        });
+      } catch (e) {
+        console.error("[room-rental] auto invoice failed", e);
+      }
     }
 
     return { id: booking.id as string, checkoutUrl };
