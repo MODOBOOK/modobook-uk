@@ -15,8 +15,6 @@ function fromMin(m: number) {
   return `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
 }
 
-type Span = { s: number; e: number; units?: number | null };
-
 /** How many rooms are taken out of service across [s,e) by closures. */
 function blockedUnits(blocks: any[], capacity: number, s: number, e: number) {
   let max = 0;
@@ -141,7 +139,7 @@ export const saveRentalHours = createServerFn({ method: "POST" })
 
 export const addRentalBlock = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { room_id: string | null; block_date: string; start_time?: string | null; end_time?: string | null; reason?: string | null }) => d)
+  .inputValidator((d: { room_id: string | null; block_date: string; start_time?: string | null; end_time?: string | null; reason?: string | null; units?: number | null }) => d)
   .handler(async ({ data, context }) => {
     const { error } = await (context.supabase as any).from("rental_blocks").insert({
       room_id: data.room_id,
@@ -149,6 +147,7 @@ export const addRentalBlock = createServerFn({ method: "POST" })
       start_time: data.start_time || null,
       end_time: data.end_time || null,
       reason: data.reason || null,
+      units: data.units ?? null,
       profile_id: context.userId,
     });
     if (error) throw error;
