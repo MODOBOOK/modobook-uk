@@ -271,6 +271,11 @@ export const requestRoomBooking = createServerFn({ method: "POST" })
     const mode = room.booking_mode as "enquiry" | "pay_online" | "pay_in_clinic";
     const status = mode === "enquiry" ? "pending" : mode === "pay_in_clinic" ? "confirmed" : "pending";
 
+    // Optional deposit: charge a % of the total online, balance settled with the clinic.
+    const pct = Number((room as any).deposit_percent ?? 0);
+    const takesDeposit = mode === "pay_online" && pct > 0 && pct < 100;
+    const chargeAmount = takesDeposit ? Math.round(price * pct) / 100 : price;
+
     const { data: booking, error } = await supabaseAdmin
       .from("rental_bookings")
       .insert({
@@ -282,6 +287,7 @@ export const requestRoomBooking = createServerFn({ method: "POST" })
         unit: data.unit,
         hours,
         price,
+        deposit_amount: takesDeposit ? chargeAmount : null,
         status,
         payment_status: "unpaid",
         payment_mode: mode,
@@ -294,6 +300,7 @@ export const requestRoomBooking = createServerFn({ method: "POST" })
       .select("id")
       .single();
     if (error) throw error;
+
 
     try {
       await supabaseAdmin.rpc("create_notification", {
