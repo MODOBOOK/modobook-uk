@@ -377,6 +377,20 @@ export const requestRoomBooking = createServerFn({ method: "POST" })
     }
 
     if (mode !== "pay_online") {
+      if ((room as any).auto_invoice) {
+        try {
+          const { data: full } = await supabaseAdmin.from("rental_bookings").select("*").eq("id", booking.id).maybeSingle();
+          await sendRentalInvoiceEmail({
+            sb: supabaseAdmin,
+            userId: prof.user_id,
+            profileId: prof.id,
+            booking: full,
+            roomName: room.name,
+          });
+        } catch (e) {
+          console.error("[room-rental] auto invoice failed", e);
+        }
+      }
       return { id: booking.id as string, checkoutUrl: null as string | null, status };
     }
 
@@ -605,6 +619,25 @@ async function sendRentalInvoiceEmail(opts: {
   await sb.from("rental_bookings").update({ invoice_sent_at: new Date().toISOString() }).eq("id", booking.id);
 }
 
+/** Auto-invoice used by the payment webhook once a rental payment clears. */
+export async function sendRentalInvoiceForBooking(bookingId: string) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const sb = supabaseAdmin as any;
+  const { data: booking } = await sb.from("rental_bookings").select("*").eq("id", bookingId).maybeSingle();
+  if (!booking) return;
+  const { data: room } = await sb.from("rental_rooms").select("name, auto_invoice").eq("id", booking.room_id).maybeSingle();
+  if (!room?.auto_invoice) return;
+  const { data: prof } = await sb.from("profiles").select("id").eq("user_id", booking.profile_id).maybeSingle();
+  if (!prof) return;
+  await sendRentalInvoiceEmail({
+    sb,
+    userId: booking.profile_id,
+    profileId: prof.id,
+    booking,
+    roomName: room.name ?? "Room",
+  });
+}
+
 /** Send (or resend) the invoice for a booking to the practitioner who hired the room. */
 export const sendRentalInvoice = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -755,6 +788,22 @@ export const createManualRentalBooking = createServerFn({ method: "POST" })
         subject: `Your room booking — ${when}`,
         body: `Hi ${data.renter_name},\n\n${note}Your room hire is confirmed:\n\n${room.name}${unitIndex && capacity > 1 ? ` — Room ${unitIndex}` : ""}\n${when}\nTotal £${Number(data.price).toFixed(2)}\n\nSee you then.`,
       });
+    }
+
+    if (room.auto_invoice) {
+      try {
+        await sendRentalInvoiceEmail({
+          sb,
+          userId: uid,
+          profileId: prof.id,
+          booking,
+          roomName: room.name,
+          message: data.message ?? null,
+          payUrl: checkoutUrl,
+        });
+      } catch (e) {
+        console.error("[room-rental] auto invoice failed", e);
+      }
     }
 
     return { id: booking.id as string, checkoutUrl };
