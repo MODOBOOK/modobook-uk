@@ -12,6 +12,7 @@ import {
   updateRentalBooking,
   setRoomRentalEnabled,
   sendRentalPaymentLink,
+  sendRentalInvoice,
 } from "@/lib/room-rental.functions";
 import { RentalCalendar } from "@/components/room-rental/RentalCalendar";
 import { ManualBookingDialog } from "@/components/room-rental/ManualBookingDialog";
@@ -544,9 +545,11 @@ function BlocksCard({ rooms, blocks, onChanged }: { rooms: Room[]; blocks: any[]
 function BookingRow({ booking, roomName, onChanged }: { booking: any; roomName: string; onChanged: () => void }) {
   const update = useServerFn(updateRentalBooking);
   const sendLink = useServerFn(sendRentalPaymentLink);
+  const sendInvoice = useServerFn(sendRentalInvoice);
   const [sending, setSending] = useState(false);
   const [linkOpen, setLinkOpen] = useState(false);
   const [linkMessage, setLinkMessage] = useState("");
+  const [mode, setMode] = useState<"link" | "invoice">("link");
   return (
     <Card>
       <CardContent className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:gap-4">
@@ -573,11 +576,19 @@ function BookingRow({ booking, roomName, onChanged }: { booking: any; roomName: 
               size="sm"
               variant="outline"
               disabled={sending}
-              onClick={() => setLinkOpen(true)}
+              onClick={() => { setMode("link"); setLinkOpen(true); }}
             >
               <Send className="mr-2 h-4 w-4 shrink-0" /> {sending ? "Sending…" : "Payment link"}
             </Button>
           )}
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={sending}
+            onClick={() => { setMode("invoice"); setLinkOpen(true); }}
+          >
+            <FileText className="mr-2 h-4 w-4 shrink-0" /> Invoice
+          </Button>
           {booking.payment_status !== "paid" && (
             <Button size="sm" variant="outline" onClick={async () => { await update({ data: { id: booking.id, payment_status: "paid" } }); onChanged(); }}>Mark paid</Button>
           )}
@@ -589,7 +600,9 @@ function BookingRow({ booking, roomName, onChanged }: { booking: any; roomName: 
 
       <Dialog open={linkOpen} onOpenChange={setLinkOpen}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Send payment link</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>{mode === "invoice" ? "Send invoice" : "Send payment link"}</DialogTitle>
+          </DialogHeader>
           <div className="space-y-2">
             <Label>Message (optional)</Label>
             <Textarea
@@ -607,8 +620,13 @@ function BookingRow({ booking, roomName, onChanged }: { booking: any; roomName: 
               onClick={async () => {
                 setSending(true);
                 try {
-                  await sendLink({ data: { id: booking.id, origin: window.location.origin, message: linkMessage || null } });
-                  toast.success(`Payment link emailed to ${booking.renter_email}`);
+                  if (mode === "invoice") {
+                    await sendInvoice({ data: { id: booking.id, origin: window.location.origin, message: linkMessage || null } });
+                    toast.success(`Invoice emailed to ${booking.renter_email}`);
+                  } else {
+                    await sendLink({ data: { id: booking.id, origin: window.location.origin, message: linkMessage || null } });
+                    toast.success(`Payment link emailed to ${booking.renter_email}`);
+                  }
                   setLinkOpen(false);
                   setLinkMessage("");
                   onChanged();
