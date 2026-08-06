@@ -250,14 +250,16 @@ export const requestRoomBooking = createServerFn({ method: "POST" })
     const hours = (toMin(data.end_time) - toMin(data.start_time)) / 60;
     if (hours <= 0) throw new Error("Invalid time range");
 
-    // Double-booking guard
+    // Capacity guard (a room entry can represent several identical rooms)
+    const capacity = Math.max(1, Number((room as any).quantity ?? 1));
     const { data: clashes } = await supabaseAdmin
       .from("rental_bookings").select("start_time,end_time")
       .eq("room_id", data.room_id).eq("booking_date", data.booking_date).neq("status", "cancelled");
-    const overlap = ((clashes ?? []) as any[]).some(
+    const overlaps = ((clashes ?? []) as any[]).filter(
       (b) => toMin(data.start_time) < toMin(b.end_time) && toMin(data.end_time) > toMin(b.start_time),
-    );
-    if (overlap) throw new Error("That time has just been taken — please pick another slot");
+    ).length;
+    if (overlaps >= capacity) throw new Error("That time has just been taken — please pick another slot");
+
 
     let price = 0;
     if (data.unit === "half_day") price = Number(room.half_day_rate ?? 0);
