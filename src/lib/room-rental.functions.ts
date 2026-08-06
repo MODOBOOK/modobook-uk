@@ -22,12 +22,16 @@ export const listMyRooms = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const sb = context.supabase as any;
     const uid = context.userId;
+    const { data: profile } = await sb
+      .from("profiles").select("id").eq("user_id", uid).maybeSingle();
     const [rooms, hours, blocks, bookings, locations] = await Promise.all([
       sb.from("rental_rooms").select("*").eq("profile_id", uid).order("sort_order").order("created_at"),
       sb.from("rental_hours").select("*").eq("profile_id", uid).order("weekday").order("start_time"),
       sb.from("rental_blocks").select("*").eq("profile_id", uid).order("block_date"),
       sb.from("rental_bookings").select("*").eq("profile_id", uid).order("booking_date", { ascending: false }),
-      sb.from("locations").select("id, name").order("name"),
+      profile
+        ? sb.from("locations").select("id, name").eq("profile_id", profile.id).order("name")
+        : Promise.resolve({ data: [] }),
     ]);
     return {
       rooms: rooms.data ?? [],
@@ -48,11 +52,13 @@ const roomSchema = z.object({
   half_day_rate: z.number().nonnegative().nullable().optional(),
   full_day_rate: z.number().nonnegative().nullable().optional(),
   half_day_hours: z.number().int().positive().max(12).optional(),
-  min_hours: z.number().int().positive().max(12).optional(),
+  min_hours: z.number().positive().max(12).optional(),
+  quantity: z.number().int().positive().max(50).optional(),
   booking_mode: z.enum(["enquiry", "pay_online", "pay_in_clinic"]),
   active: z.boolean().optional(),
   sort_order: z.number().int().optional(),
 });
+
 
 export const upsertRentalRoom = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -165,7 +171,7 @@ export const getPublicRooms = createServerFn({ method: "GET" })
     if (!prof.room_rental_enabled) return { enabled: false, clinicName: prof.clinic_name, rooms: [], locations: [] };
     const { data: rooms } = await supabaseAdmin
       .from("rental_rooms")
-      .select("id,name,description,image_url,location_id,hourly_rate,half_day_rate,full_day_rate,half_day_hours,min_hours,booking_mode")
+      .select("id,name,description,image_url,location_id,hourly_rate,half_day_rate,full_day_rate,half_day_hours,min_hours,quantity,booking_mode")
       .eq("profile_id", prof.user_id)
       .eq("active", true)
       .order("sort_order");
@@ -187,7 +193,8 @@ export const getRoomAvailability = createServerFn({ method: "GET" })
     if (!prof?.room_rental_enabled) return { slots: [] };
     const weekday = new Date(`${data.date}T12:00:00`).getDay();
 
-    const [hoursRes, blocksRes, bookingsRes] = await Promise.all([
+    const [roomRes, hoursRes, blocksRes, bookingsRes] = await Promise.all([
+      supabaseAdmin.from("rental_rooms").select("quantity").eq("id", data.room_id).maybeSingle(),
       supabaseAdmin.from("rental_hours").select("start_time,end_time").eq("room_id", data.room_id).eq("weekday", weekday),
       supabaseAdmin.from("rental_blocks").select("start_time,end_time").eq("block_date", data.date)
         .or(`room_id.eq.${data.room_id},room_id.is.null`),
@@ -195,21 +202,24 @@ export const getRoomAvailability = createServerFn({ method: "GET" })
         .eq("room_id", data.room_id).eq("booking_date", data.date).neq("status", "cancelled"),
     ]);
 
-    const busy: [number, number][] = [
-      ...((blocksRes.data ?? []) as any[]).map((b) =>
-        b.start_time && b.end_time ? ([toMin(b.start_time), toMin(b.end_time)] as [number, number]) : ([0, 1440] as [number, number]),
-      ),
-      ...((bookingsRes.data ?? []) as any[]).map((b) => [toMin(b.start_time), toMin(b.end_time)] as [number, number]),
-    ];
+    const capacity = Math.max(1, Number((roomRes.data as any)?.quantity ?? 1));
+    const closed: [number, number][] = ((blocksRes.data ?? []) as any[]).map((b) =>
+      b.start_time && b.end_time ? ([toMin(b.start_time), toMin(b.end_time)] as [number, number]) : ([0, 1440] as [number, number]),
+    );
+    const booked: [number, number][] = ((bookingsRes.data ?? []) as any[]).map(
+      (b) => [toMin(b.start_time), toMin(b.end_time)] as [number, number],
+    );
 
     const slots: { start: string; end: string; available: boolean }[] = [];
     for (const h of (hoursRes.data ?? []) as any[]) {
       for (let m = toMin(h.start_time); m + 60 <= toMin(h.end_time); m += 60) {
-        const clash = busy.some(([s, e]) => m < e && m + 60 > s);
-        slots.push({ start: fromMin(m), end: fromMin(m + 60), available: !clash });
+        const blocked = closed.some(([s, e]) => m < e && m + 60 > s);
+        const used = booked.filter(([s, e]) => m < e && m + 60 > s).length;
+        slots.push({ start: fromMin(m), end: fromMin(m + 60), available: !blocked && used < capacity });
       }
     }
     return { slots };
+
   });
 
 const bookingSchema = z.object({
@@ -240,14 +250,16 @@ export const requestRoomBooking = createServerFn({ method: "POST" })
     const hours = (toMin(data.end_time) - toMin(data.start_time)) / 60;
     if (hours <= 0) throw new Error("Invalid time range");
 
-    // Double-booking guard
+    // Capacity guard (a room entry can represent several identical rooms)
+    const capacity = Math.max(1, Number((room as any).quantity ?? 1));
     const { data: clashes } = await supabaseAdmin
       .from("rental_bookings").select("start_time,end_time")
       .eq("room_id", data.room_id).eq("booking_date", data.booking_date).neq("status", "cancelled");
-    const overlap = ((clashes ?? []) as any[]).some(
+    const overlaps = ((clashes ?? []) as any[]).filter(
       (b) => toMin(data.start_time) < toMin(b.end_time) && toMin(data.end_time) > toMin(b.start_time),
-    );
-    if (overlap) throw new Error("That time has just been taken — please pick another slot");
+    ).length;
+    if (overlaps >= capacity) throw new Error("That time has just been taken — please pick another slot");
+
 
     let price = 0;
     if (data.unit === "half_day") price = Number(room.half_day_rate ?? 0);

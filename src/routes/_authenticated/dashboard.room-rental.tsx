@@ -50,6 +50,7 @@ type Room = {
   full_day_rate: number | null;
   half_day_hours: number;
   min_hours: number;
+  quantity: number;
   booking_mode: "enquiry" | "pay_online" | "pay_in_clinic";
   active: boolean;
   sort_order: number;
@@ -95,7 +96,7 @@ function RoomRentalPage() {
             Rent your rooms out by the hour, half day or full day — on its own public link.
           </p>
         </div>
-        <Button onClick={() => setEditing({ booking_mode: "enquiry", active: true, half_day_hours: 4, min_hours: 1 })}>
+        <Button onClick={() => setEditing({ booking_mode: "enquiry", active: true, half_day_hours: 4, min_hours: 1, quantity: 1 })}>
           <Plus className="mr-2 h-4 w-4" /> Add room
         </Button>
       </div>
@@ -136,12 +137,15 @@ function RoomRentalPage() {
       </Card>
 
       <Tabs defaultValue="rooms">
-        <TabsList>
-          <TabsTrigger value="rooms">Rooms</TabsTrigger>
-          <TabsTrigger value="hours">Opening hours</TabsTrigger>
-          <TabsTrigger value="blocks">Closures</TabsTrigger>
-          <TabsTrigger value="bookings">Bookings</TabsTrigger>
-        </TabsList>
+        <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+          <TabsList className="w-max min-w-full justify-start">
+            <TabsTrigger value="rooms">Rooms</TabsTrigger>
+            <TabsTrigger value="hours">Opening hours</TabsTrigger>
+            <TabsTrigger value="blocks">Closures</TabsTrigger>
+            <TabsTrigger value="bookings">Bookings</TabsTrigger>
+          </TabsList>
+        </div>
+
 
         <TabsContent value="rooms" className="mt-4 space-y-3">
           {rooms.length === 0 && (
@@ -249,6 +253,7 @@ function RoomDialog({
           full_day_rate: f.full_day_rate != null && f.full_day_rate !== ("" as never) ? Number(f.full_day_rate) : null,
           half_day_hours: Number(f.half_day_hours ?? 4),
           min_hours: Number(f.min_hours ?? 1),
+          quantity: Math.max(1, Number(f.quantity ?? 1)),
           booking_mode: (f.booking_mode ?? "enquiry") as Room["booking_mode"],
           active: f.active ?? true,
           sort_order: Number(f.sort_order ?? 0),
@@ -291,15 +296,21 @@ function RoomDialog({
               </Select>
             </div>
           )}
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <div><Label>£ / hour</Label><Input type="number" step="0.01" value={f.hourly_rate ?? ""} onChange={(e) => setF({ ...f, hourly_rate: e.target.value === "" ? null : Number(e.target.value) })} /></div>
             <div><Label>£ half day</Label><Input type="number" step="0.01" value={f.half_day_rate ?? ""} onChange={(e) => setF({ ...f, half_day_rate: e.target.value === "" ? null : Number(e.target.value) })} /></div>
             <div><Label>£ full day</Label><Input type="number" step="0.01" value={f.full_day_rate ?? ""} onChange={(e) => setF({ ...f, full_day_rate: e.target.value === "" ? null : Number(e.target.value) })} /></div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <div><Label>Hours in a half day</Label><Input type="number" value={f.half_day_hours ?? 4} onChange={(e) => setF({ ...f, half_day_hours: Number(e.target.value) })} /></div>
-            <div><Label>Minimum hours</Label><Input type="number" value={f.min_hours ?? 1} onChange={(e) => setF({ ...f, min_hours: Number(e.target.value) })} /></div>
+            <div><Label>Minimum hours</Label><Input type="number" step="0.5" min="0.5" value={f.min_hours ?? 1} onChange={(e) => setF({ ...f, min_hours: Number(e.target.value) })} /></div>
+            <div>
+              <Label>How many of this room</Label>
+              <Input type="number" min="1" step="1" value={f.quantity ?? 1} onChange={(e) => setF({ ...f, quantity: Number(e.target.value) })} />
+              <p className="mt-1 text-xs text-muted-foreground">Renters book a time, not a specific room.</p>
+            </div>
           </div>
+
           <div>
             <Label>How bookings are taken</Label>
             <Select value={f.booking_mode ?? "enquiry"} onValueChange={(v) => setF({ ...f, booking_mode: v as Room["booking_mode"] })}>

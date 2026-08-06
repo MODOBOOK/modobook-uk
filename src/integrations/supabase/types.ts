@@ -6229,6 +6229,7 @@ export type Database = {
           min_hours: number
           name: string
           profile_id: string
+          quantity: number
           sort_order: number
           updated_at: string
         }
@@ -6247,6 +6248,7 @@ export type Database = {
           min_hours?: number
           name: string
           profile_id: string
+          quantity?: number
           sort_order?: number
           updated_at?: string
         }
@@ -6265,6 +6267,7 @@ export type Database = {
           min_hours?: number
           name?: string
           profile_id?: string
+          quantity?: number
           sort_order?: number
           updated_at?: string
         }
