@@ -50,6 +50,7 @@ type Room = {
   full_day_rate: number | null;
   half_day_hours: number;
   min_hours: number;
+  quantity: number;
   booking_mode: "enquiry" | "pay_online" | "pay_in_clinic";
   active: boolean;
   sort_order: number;
@@ -95,7 +96,7 @@ function RoomRentalPage() {
             Rent your rooms out by the hour, half day or full day — on its own public link.
           </p>
         </div>
-        <Button onClick={() => setEditing({ booking_mode: "enquiry", active: true, half_day_hours: 4, min_hours: 1 })}>
+        <Button onClick={() => setEditing({ booking_mode: "enquiry", active: true, half_day_hours: 4, min_hours: 1, quantity: 1 })}>
           <Plus className="mr-2 h-4 w-4" /> Add room
         </Button>
       </div>
@@ -252,6 +253,7 @@ function RoomDialog({
           full_day_rate: f.full_day_rate != null && f.full_day_rate !== ("" as never) ? Number(f.full_day_rate) : null,
           half_day_hours: Number(f.half_day_hours ?? 4),
           min_hours: Number(f.min_hours ?? 1),
+          quantity: Math.max(1, Number(f.quantity ?? 1)),
           booking_mode: (f.booking_mode ?? "enquiry") as Room["booking_mode"],
           active: f.active ?? true,
           sort_order: Number(f.sort_order ?? 0),
