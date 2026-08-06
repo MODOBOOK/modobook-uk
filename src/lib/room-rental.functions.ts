@@ -193,7 +193,8 @@ export const getRoomAvailability = createServerFn({ method: "GET" })
     if (!prof?.room_rental_enabled) return { slots: [] };
     const weekday = new Date(`${data.date}T12:00:00`).getDay();
 
-    const [hoursRes, blocksRes, bookingsRes] = await Promise.all([
+    const [roomRes, hoursRes, blocksRes, bookingsRes] = await Promise.all([
+      supabaseAdmin.from("rental_rooms").select("quantity").eq("id", data.room_id).maybeSingle(),
       supabaseAdmin.from("rental_hours").select("start_time,end_time").eq("room_id", data.room_id).eq("weekday", weekday),
       supabaseAdmin.from("rental_blocks").select("start_time,end_time").eq("block_date", data.date)
         .or(`room_id.eq.${data.room_id},room_id.is.null`),
@@ -201,21 +202,24 @@ export const getRoomAvailability = createServerFn({ method: "GET" })
         .eq("room_id", data.room_id).eq("booking_date", data.date).neq("status", "cancelled"),
     ]);
 
-    const busy: [number, number][] = [
-      ...((blocksRes.data ?? []) as any[]).map((b) =>
-        b.start_time && b.end_time ? ([toMin(b.start_time), toMin(b.end_time)] as [number, number]) : ([0, 1440] as [number, number]),
-      ),
-      ...((bookingsRes.data ?? []) as any[]).map((b) => [toMin(b.start_time), toMin(b.end_time)] as [number, number]),
-    ];
+    const capacity = Math.max(1, Number((roomRes.data as any)?.quantity ?? 1));
+    const closed: [number, number][] = ((blocksRes.data ?? []) as any[]).map((b) =>
+      b.start_time && b.end_time ? ([toMin(b.start_time), toMin(b.end_time)] as [number, number]) : ([0, 1440] as [number, number]),
+    );
+    const booked: [number, number][] = ((bookingsRes.data ?? []) as any[]).map(
+      (b) => [toMin(b.start_time), toMin(b.end_time)] as [number, number],
+    );
 
     const slots: { start: string; end: string; available: boolean }[] = [];
     for (const h of (hoursRes.data ?? []) as any[]) {
       for (let m = toMin(h.start_time); m + 60 <= toMin(h.end_time); m += 60) {
-        const clash = busy.some(([s, e]) => m < e && m + 60 > s);
-        slots.push({ start: fromMin(m), end: fromMin(m + 60), available: !clash });
+        const blocked = closed.some(([s, e]) => m < e && m + 60 > s);
+        const used = booked.filter(([s, e]) => m < e && m + 60 > s).length;
+        slots.push({ start: fromMin(m), end: fromMin(m + 60), available: !blocked && used < capacity });
       }
     }
     return { slots };
+
   });
 
 const bookingSchema = z.object({
