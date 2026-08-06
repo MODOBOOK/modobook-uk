@@ -173,7 +173,7 @@ export const getPublicRooms = createServerFn({ method: "GET" })
     if (!prof.room_rental_enabled) return { enabled: false, clinicName: prof.clinic_name, rooms: [], locations: [] };
     const { data: rooms } = await supabaseAdmin
       .from("rental_rooms")
-      .select("id,name,description,image_url,location_id,hourly_rate,half_day_rate,full_day_rate,half_day_hours,min_hours,quantity,booking_mode")
+      .select("id,name,description,image_url,location_id,hourly_rate,half_day_rate,full_day_rate,half_day_hours,min_hours,quantity,skip_room_selection,deposit_percent,booking_mode")
       .eq("profile_id", prof.user_id)
       .eq("active", true)
       .order("sort_order");
