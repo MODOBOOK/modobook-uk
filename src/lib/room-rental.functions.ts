@@ -22,12 +22,16 @@ export const listMyRooms = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const sb = context.supabase as any;
     const uid = context.userId;
+    const { data: profile } = await sb
+      .from("profiles").select("id").eq("user_id", uid).maybeSingle();
     const [rooms, hours, blocks, bookings, locations] = await Promise.all([
       sb.from("rental_rooms").select("*").eq("profile_id", uid).order("sort_order").order("created_at"),
       sb.from("rental_hours").select("*").eq("profile_id", uid).order("weekday").order("start_time"),
       sb.from("rental_blocks").select("*").eq("profile_id", uid).order("block_date"),
       sb.from("rental_bookings").select("*").eq("profile_id", uid).order("booking_date", { ascending: false }),
-      sb.from("locations").select("id, name").order("name"),
+      profile
+        ? sb.from("locations").select("id, name").eq("profile_id", profile.id).order("name")
+        : Promise.resolve({ data: [] }),
     ]);
     return {
       rooms: rooms.data ?? [],
@@ -48,11 +52,13 @@ const roomSchema = z.object({
   half_day_rate: z.number().nonnegative().nullable().optional(),
   full_day_rate: z.number().nonnegative().nullable().optional(),
   half_day_hours: z.number().int().positive().max(12).optional(),
-  min_hours: z.number().int().positive().max(12).optional(),
+  min_hours: z.number().positive().max(12).optional(),
+  quantity: z.number().int().positive().max(50).optional(),
   booking_mode: z.enum(["enquiry", "pay_online", "pay_in_clinic"]),
   active: z.boolean().optional(),
   sort_order: z.number().int().optional(),
 });
+
 
 export const upsertRentalRoom = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
