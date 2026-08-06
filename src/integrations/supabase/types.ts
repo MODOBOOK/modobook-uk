@@ -6061,6 +6061,7 @@ export type Database = {
           reason: string | null
           room_id: string | null
           start_time: string | null
+          units: number | null
           updated_at: string
         }
         Insert: {
@@ -6072,6 +6073,7 @@ export type Database = {
           reason?: string | null
           room_id?: string | null
           start_time?: string | null
+          units?: number | null
           updated_at?: string
         }
         Update: {
@@ -6083,6 +6085,7 @@ export type Database = {
           reason?: string | null
           room_id?: string | null
           start_time?: string | null
+          units?: number | null
           updated_at?: string
         }
         Relationships: [
@@ -6117,6 +6120,7 @@ export type Database = {
           status: string
           stripe_session_id: string | null
           unit: string
+          unit_index: number | null
           updated_at: string
         }
         Insert: {
@@ -6140,6 +6144,7 @@ export type Database = {
           status?: string
           stripe_session_id?: string | null
           unit?: string
+          unit_index?: number | null
           updated_at?: string
         }
         Update: {
@@ -6163,6 +6168,7 @@ export type Database = {
           status?: string
           stripe_session_id?: string | null
           unit?: string
+          unit_index?: number | null
           updated_at?: string
         }
         Relationships: [
