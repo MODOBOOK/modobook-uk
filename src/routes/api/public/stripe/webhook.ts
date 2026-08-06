@@ -204,6 +204,8 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
                     .from("rental_bookings")
                     .update({ payment_status: "paid", status: "confirmed" })
                     .eq("id", metadata.rental_booking_id);
+                  const { sendRentalInvoiceForBooking } = await import("@/lib/room-rental.functions");
+                  await sendRentalInvoiceForBooking(String(metadata.rental_booking_id));
                 } catch (e) {
                   console.error("[stripe-webhook] rental booking payment failed", e);
                 }
