@@ -11,7 +11,10 @@ import {
   deleteRentalBlock,
   updateRentalBooking,
   setRoomRentalEnabled,
+  sendRentalPaymentLink,
 } from "@/lib/room-rental.functions";
+import { RentalCalendar } from "@/components/room-rental/RentalCalendar";
+import { ManualBookingDialog } from "@/components/room-rental/ManualBookingDialog";
 import { getMyProfile } from "@/lib/profiles.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,7 +27,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { ImageUploader } from "@/components/ImageUploader";
-import { Plus, Pencil, Trash2, DoorOpen, Clock, CalendarX2, Copy, Check } from "lucide-react";
+import { Plus, Pencil, Trash2, DoorOpen, Clock, CalendarX2, Copy, Check, CalendarDays, Send } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/dashboard/room-rental")({
@@ -82,6 +85,7 @@ function RoomRentalPage() {
   const locations = (q.data?.locations ?? []) as { id: string; name: string }[];
 
   const [editing, setEditing] = useState<Partial<Room> | null>(null);
+  const [manual, setManual] = useState<{ roomId?: string; date?: string } | null>(null);
   const [copied, setCopied] = useState(false);
   const refresh = () => qc.invalidateQueries({ queryKey: ["my-rental-rooms"] });
 
@@ -98,9 +102,14 @@ function RoomRentalPage() {
             Rent your rooms out by the hour, half day or full day — on its own public link.
           </p>
         </div>
+        <div className="flex gap-2">
+        <Button variant="outline" onClick={() => setManual({})} disabled={rooms.length === 0}>
+          <CalendarDays className="mr-2 h-4 w-4" /> Book someone in
+        </Button>
         <Button onClick={() => setEditing({ booking_mode: "enquiry", active: true, half_day_hours: 4, min_hours: 1, quantity: 1 })}>
           <Plus className="mr-2 h-4 w-4" /> Add room
         </Button>
+        </div>
       </div>
 
       <Card>
@@ -142,6 +151,7 @@ function RoomRentalPage() {
         <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
           <TabsList className="w-max min-w-full justify-start">
             <TabsTrigger value="rooms">Rooms</TabsTrigger>
+            <TabsTrigger value="calendar">Calendar</TabsTrigger>
             <TabsTrigger value="hours">Opening hours</TabsTrigger>
             <TabsTrigger value="blocks">Closures</TabsTrigger>
             <TabsTrigger value="bookings">Bookings</TabsTrigger>
@@ -192,6 +202,16 @@ function RoomRentalPage() {
           ))}
         </TabsContent>
 
+        <TabsContent value="calendar" className="mt-4">
+          <RentalCalendar
+            rooms={rooms}
+            hours={hours}
+            blocks={blocks}
+            bookings={bookings}
+            onBookDay={(roomId, date) => setManual({ roomId, date })}
+          />
+        </TabsContent>
+
         <TabsContent value="hours" className="mt-4 space-y-4">
           {rooms.map((r) => (
             <HoursCard key={r.id} room={r} hours={hours.filter((h) => h.room_id === r.id)} onSaved={refresh} />
@@ -212,6 +232,16 @@ function RoomRentalPage() {
           ))}
         </TabsContent>
       </Tabs>
+
+      {manual && (
+        <ManualBookingDialog
+          rooms={rooms as any}
+          initialRoomId={manual.roomId}
+          initialDate={manual.date}
+          onClose={() => setManual(null)}
+          onSaved={() => { setManual(null); refresh(); }}
+        />
+      )}
 
       {editing && (
         <RoomDialog
@@ -487,6 +517,8 @@ function BlocksCard({ rooms, blocks, onChanged }: { rooms: Room[]; blocks: any[]
 
 function BookingRow({ booking, roomName, onChanged }: { booking: any; roomName: string; onChanged: () => void }) {
   const update = useServerFn(updateRentalBooking);
+  const sendLink = useServerFn(sendRentalPaymentLink);
+  const [sending, setSending] = useState(false);
   return (
     <Card>
       <CardContent className="flex flex-wrap items-center gap-4 py-4">
@@ -507,6 +539,27 @@ function BookingRow({ booking, roomName, onChanged }: { booking: any; roomName: 
         <div className="flex gap-2">
           {booking.status !== "confirmed" && (
             <Button size="sm" onClick={async () => { await update({ data: { id: booking.id, status: "confirmed" } }); onChanged(); }}>Confirm</Button>
+          )}
+          {booking.payment_status !== "paid" && (
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={sending}
+              onClick={async () => {
+                setSending(true);
+                try {
+                  await sendLink({ data: { id: booking.id, origin: window.location.origin } });
+                  toast.success(`Payment link emailed to ${booking.renter_email}`);
+                  onChanged();
+                } catch (e) {
+                  toast.error((e as Error).message);
+                } finally {
+                  setSending(false);
+                }
+              }}
+            >
+              <Send className="mr-2 h-4 w-4" /> {sending ? "Sending…" : "Payment link"}
+            </Button>
           )}
           {booking.payment_status !== "paid" && (
             <Button size="sm" variant="outline" onClick={async () => { await update({ data: { id: booking.id, payment_status: "paid" } }); onChanged(); }}>Mark paid</Button>
