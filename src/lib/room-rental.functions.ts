@@ -327,6 +327,7 @@ export const requestRoomBooking = createServerFn({ method: "POST" })
         start_time: data.start_time,
         end_time: data.end_time,
         unit: data.unit,
+        unit_index: unitIndex,
         hours,
         price,
         deposit_amount: takesDeposit ? chargeAmount : null,
@@ -412,24 +413,21 @@ export const getOwnerRoomAvailability = createServerFn({ method: "GET" })
     const [roomRes, hoursRes, blocksRes, bookingsRes] = await Promise.all([
       sb.from("rental_rooms").select("quantity").eq("id", data.room_id).maybeSingle(),
       sb.from("rental_hours").select("start_time,end_time").eq("room_id", data.room_id).eq("weekday", weekday),
-      sb.from("rental_blocks").select("start_time,end_time").eq("block_date", data.date)
+      sb.from("rental_blocks").select("start_time,end_time,units").eq("block_date", data.date)
         .or(`room_id.eq.${data.room_id},room_id.is.null`),
       sb.from("rental_bookings").select("start_time,end_time")
         .eq("room_id", data.room_id).eq("booking_date", data.date).neq("status", "cancelled"),
     ]);
     const capacity = Math.max(1, Number(roomRes.data?.quantity ?? 1));
-    const closed: [number, number][] = ((blocksRes.data ?? []) as any[]).map((b) =>
-      b.start_time && b.end_time ? ([toMin(b.start_time), toMin(b.end_time)] as [number, number]) : ([0, 1440] as [number, number]),
-    );
-    const booked: [number, number][] = ((bookingsRes.data ?? []) as any[]).map(
-      (b) => [toMin(b.start_time), toMin(b.end_time)] as [number, number],
-    );
-    const slots: { start: string; end: string; available: boolean }[] = [];
+    const closedBlocks = (blocksRes.data ?? []) as any[];
+    const booked = (bookingsRes.data ?? []) as any[];
+    const slots: { start: string; end: string; available: boolean; free: number }[] = [];
     for (const h of (hoursRes.data ?? []) as any[]) {
       for (let m = toMin(h.start_time); m + 60 <= toMin(h.end_time); m += 60) {
-        const blocked = closed.some(([s, e]) => m < e && m + 60 > s);
-        const used = booked.filter(([s, e]) => m < e && m + 60 > s).length;
-        slots.push({ start: fromMin(m), end: fromMin(m + 60), available: !blocked && used < capacity });
+        const usable = capacity - blockedUnits(closedBlocks, capacity, m, m + 60);
+        const used = booked.filter((b: any) => m < toMin(b.end_time) && m + 60 > toMin(b.start_time)).length;
+        const free = Math.max(0, usable - used);
+        slots.push({ start: fromMin(m), end: fromMin(m + 60), available: free > 0, free });
       }
     }
     return { slots, capacity };
@@ -550,13 +548,20 @@ export const createManualRentalBooking = createServerFn({ method: "POST" })
     if (hours <= 0) throw new Error("Invalid time range");
 
     const capacity = Math.max(1, Number(room.quantity ?? 1));
-    const { data: clashes } = await sb
-      .from("rental_bookings").select("start_time,end_time")
-      .eq("room_id", data.room_id).eq("booking_date", data.booking_date).neq("status", "cancelled");
-    const overlaps = ((clashes ?? []) as any[]).filter(
-      (b) => toMin(data.start_time) < toMin(b.end_time) && toMin(data.end_time) > toMin(b.start_time),
-    ).length;
-    if (overlaps >= capacity) throw new Error("That time is already fully booked");
+    const [clashesRes, blockRes] = await Promise.all([
+      sb.from("rental_bookings").select("start_time,end_time,unit_index")
+        .eq("room_id", data.room_id).eq("booking_date", data.booking_date).neq("status", "cancelled"),
+      sb.from("rental_blocks").select("start_time,end_time,units").eq("block_date", data.booking_date)
+        .or(`room_id.eq.${data.room_id},room_id.is.null`),
+    ]);
+    const unitIndex = allocateUnit(
+      capacity,
+      (blockRes.data ?? []) as any[],
+      (clashesRes.data ?? []) as any[],
+      toMin(data.start_time),
+      toMin(data.end_time),
+    );
+    if (unitIndex == null) throw new Error("That time is already fully booked");
 
     const { data: booking, error } = await sb
       .from("rental_bookings")
@@ -567,6 +572,7 @@ export const createManualRentalBooking = createServerFn({ method: "POST" })
         start_time: data.start_time,
         end_time: data.end_time,
         unit: data.unit,
+        unit_index: unitIndex,
         hours,
         price: data.price,
         status: "confirmed",
@@ -600,7 +606,7 @@ export const createManualRentalBooking = createServerFn({ method: "POST" })
         to: data.renter_email,
         replyTo: prof.email,
         subject: `Your room booking — ${when}`,
-        body: `Hi ${data.renter_name},\n\n${note}Your room hire is booked:\n\n${room.name}\n${when}\nTotal £${Number(data.price).toFixed(2)}\n\nPlease complete payment using the button below to secure the room.`,
+        body: `Hi ${data.renter_name},\n\n${note}Your room hire is booked:\n\n${room.name}${unitIndex && capacity > 1 ? ` — Room ${unitIndex}` : ""}\n${when}\nTotal £${Number(data.price).toFixed(2)}\n\nPlease complete payment using the button below to secure the room.`,
         actionLabel: `Pay £${Number(data.price).toFixed(2)}`,
         actionUrl: checkoutUrl,
       });
@@ -610,7 +616,7 @@ export const createManualRentalBooking = createServerFn({ method: "POST" })
         to: data.renter_email,
         replyTo: prof.email,
         subject: `Your room booking — ${when}`,
-        body: `Hi ${data.renter_name},\n\n${note}Your room hire is confirmed:\n\n${room.name}\n${when}\nTotal £${Number(data.price).toFixed(2)}\n\nSee you then.`,
+        body: `Hi ${data.renter_name},\n\n${note}Your room hire is confirmed:\n\n${room.name}${unitIndex && capacity > 1 ? ` — Room ${unitIndex}` : ""}\n${when}\nTotal £${Number(data.price).toFixed(2)}\n\nSee you then.`,
       });
     }
 
