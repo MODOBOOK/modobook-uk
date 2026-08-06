@@ -456,13 +456,13 @@ function HoursCard({ room, hours, onSaved }: { room: Room; hours: any[]; onSaved
 function BlocksCard({ rooms, blocks, onChanged }: { rooms: Room[]; blocks: any[]; onChanged: () => void }) {
   const add = useServerFn(addRentalBlock);
   const del = useServerFn(deleteRentalBlock);
-  const [f, setF] = useState({ room_id: "all", block_date: "", start_time: "", end_time: "", reason: "" });
+  const [f, setF] = useState({ room_id: "all", block_date: "", start_time: "", end_time: "", reason: "", units: "" });
 
   return (
     <Card>
       <CardHeader className="pb-2"><CardTitle className="flex items-center gap-2 text-base"><CalendarX2 className="h-4 w-4" /> Closures</CardTitle></CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid gap-3 sm:grid-cols-5">
+        <div className="grid gap-3 sm:grid-cols-6">
           <div>
             <Label>Room</Label>
             <Select value={f.room_id} onValueChange={(v) => setF({ ...f, room_id: v })}>
@@ -476,6 +476,17 @@ function BlocksCard({ rooms, blocks, onChanged }: { rooms: Room[]; blocks: any[]
           <div><Label>Date</Label><Input type="date" value={f.block_date} onChange={(e) => setF({ ...f, block_date: e.target.value })} /></div>
           <div><Label>From (optional)</Label><Input type="time" value={f.start_time} onChange={(e) => setF({ ...f, start_time: e.target.value })} /></div>
           <div><Label>To (optional)</Label><Input type="time" value={f.end_time} onChange={(e) => setF({ ...f, end_time: e.target.value })} /></div>
+          <div>
+            <Label>Rooms closed</Label>
+            <Input
+              type="number"
+              min={1}
+              placeholder="All"
+              value={f.units}
+              onChange={(e) => setF({ ...f, units: e.target.value })}
+            />
+            <span className="text-[11px] text-muted-foreground">Leave blank to close them all</span>
+          </div>
           <div><Label>Reason</Label><Input value={f.reason} onChange={(e) => setF({ ...f, reason: e.target.value })} /></div>
         </div>
         <Button
@@ -488,9 +499,10 @@ function BlocksCard({ rooms, blocks, onChanged }: { rooms: Room[]; blocks: any[]
                 start_time: f.start_time || null,
                 end_time: f.end_time || null,
                 reason: f.reason || null,
+                units: f.units ? Math.max(1, Number(f.units)) : null,
               },
             });
-            setF({ room_id: "all", block_date: "", start_time: "", end_time: "", reason: "" });
+            setF({ room_id: "all", block_date: "", start_time: "", end_time: "", reason: "", units: "" });
             onChanged();
           }}
         ><Plus className="mr-2 h-4 w-4" /> Block this out</Button>
@@ -501,6 +513,7 @@ function BlocksCard({ rooms, blocks, onChanged }: { rooms: Room[]; blocks: any[]
               <span>
                 {b.block_date} · {b.start_time ? `${String(b.start_time).slice(0, 5)}–${String(b.end_time).slice(0, 5)}` : "All day"} ·{" "}
                 {b.room_id ? rooms.find((r) => r.id === b.room_id)?.name ?? "Room" : "All rooms"}
+                {b.units ? ` · ${b.units} room${b.units > 1 ? "s" : ""} closed` : " · fully closed"}
                 {b.reason ? ` · ${b.reason}` : ""}
               </span>
               <Button size="icon" variant="ghost" onClick={async () => { await del({ data: { id: b.id } }); onChanged(); }}>
@@ -531,7 +544,7 @@ function BookingRow({ booking, roomName, onChanged }: { booking: any; roomName: 
             <Badge variant={booking.payment_status === "paid" ? "default" : "outline"}>{booking.payment_status}</Badge>
           </div>
           <p className="text-sm text-muted-foreground">
-            {roomName} · {booking.booking_date} · {String(booking.start_time).slice(0, 5)}–{String(booking.end_time).slice(0, 5)} · £{Number(booking.price).toFixed(2)}
+            {roomName}{booking.unit_index ? ` · Room ${booking.unit_index}` : ""} · {booking.booking_date} · {String(booking.start_time).slice(0, 5)}–{String(booking.end_time).slice(0, 5)} · £{Number(booking.price).toFixed(2)}
           </p>
           <p className="text-sm text-muted-foreground">
             {booking.renter_email}{booking.renter_phone ? ` · ${booking.renter_phone}` : ""}{booking.renter_business ? ` · ${booking.renter_business}` : ""}

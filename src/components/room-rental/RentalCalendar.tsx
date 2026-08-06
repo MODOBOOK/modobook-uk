@@ -24,7 +24,10 @@ function daySlots(room: Room, date: string, hours: any[], blocks: any[], booking
   const open = hours.filter((h) => h.room_id === room.id && h.weekday === weekday);
   const closed = blocks
     .filter((b) => b.block_date === date && (b.room_id === room.id || b.room_id == null))
-    .map((b) => (b.start_time && b.end_time ? [toMin(b.start_time), toMin(b.end_time)] : [0, 1440]) as [number, number]);
+    .map((b) => ({
+      span: (b.start_time && b.end_time ? [toMin(b.start_time), toMin(b.end_time)] : [0, 1440]) as [number, number],
+      units: b.units == null ? null : Math.max(0, Number(b.units)),
+    }));
   const booked = bookings
     .filter((b) => b.room_id === room.id && b.booking_date === date && b.status !== "cancelled")
     .map((b) => [toMin(b.start_time), toMin(b.end_time)] as [number, number]);
@@ -33,9 +36,12 @@ function daySlots(room: Room, date: string, hours: any[], blocks: any[], booking
   const slots: { start: string; end: string; free: number; blocked: boolean }[] = [];
   for (const h of open) {
     for (let m = toMin(h.start_time); m + 60 <= toMin(h.end_time); m += 60) {
-      const blocked = closed.some(([s, e]) => m < e && m + 60 > s);
+      const out = closed
+        .filter((b) => m < b.span[1] && m + 60 > b.span[0])
+        .reduce((mx, b) => Math.max(mx, b.units == null ? capacity : b.units), 0);
+      const usable = Math.max(0, capacity - Math.min(capacity, out));
       const used = booked.filter(([s, e]) => m < e && m + 60 > s).length;
-      slots.push({ start: fromMin(m), end: fromMin(m + 60), free: Math.max(0, capacity - used), blocked });
+      slots.push({ start: fromMin(m), end: fromMin(m + 60), free: Math.max(0, usable - used), blocked: usable === 0 });
     }
   }
   return slots;
@@ -169,6 +175,7 @@ export function RentalCalendar({
                   <div key={b.id} className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm">
                     <span>
                       {String(b.start_time).slice(0, 5)}–{String(b.end_time).slice(0, 5)} · {b.renter_name}
+                      {b.unit_index ? ` · Room ${b.unit_index}` : ""}
                     </span>
                     <span className="flex gap-2">
                       <Badge variant="outline">{b.status}</Badge>
