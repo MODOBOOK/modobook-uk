@@ -286,15 +286,23 @@ export const requestRoomBooking = createServerFn({ method: "POST" })
     const hours = (toMin(data.end_time) - toMin(data.start_time)) / 60;
     if (hours <= 0) throw new Error("Invalid time range");
 
-    // Capacity guard (a room entry can represent several identical rooms)
+    // Capacity guard + auto-allocation (a room entry can represent several identical rooms)
     const capacity = Math.max(1, Number((room as any).quantity ?? 1));
-    const { data: clashes } = await supabaseAdmin
-      .from("rental_bookings").select("start_time,end_time")
-      .eq("room_id", data.room_id).eq("booking_date", data.booking_date).neq("status", "cancelled");
-    const overlaps = ((clashes ?? []) as any[]).filter(
-      (b) => toMin(data.start_time) < toMin(b.end_time) && toMin(data.end_time) > toMin(b.start_time),
-    ).length;
-    if (overlaps >= capacity) throw new Error("That time has just been taken — please pick another slot");
+    const [clashesRes, blocksRes2] = await Promise.all([
+      supabaseAdmin.from("rental_bookings").select("start_time,end_time,unit_index")
+        .eq("room_id", data.room_id).eq("booking_date", data.booking_date).neq("status", "cancelled"),
+      supabaseAdmin.from("rental_blocks").select("start_time,end_time,units").eq("block_date", data.booking_date)
+        .or(`room_id.eq.${data.room_id},room_id.is.null`),
+    ]);
+    const unitIndex = allocateUnit(
+      capacity,
+      (blocksRes2.data ?? []) as any[],
+      (clashesRes.data ?? []) as any[],
+      toMin(data.start_time),
+      toMin(data.end_time),
+    );
+    if (unitIndex == null) throw new Error("That time has just been taken — please pick another slot");
+
 
 
     let price = 0;
