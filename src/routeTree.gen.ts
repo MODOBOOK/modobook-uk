@@ -54,6 +54,7 @@ import { Route as AuthenticatedHubIndexRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedDashboardIndexRouteImport } from './routes/_authenticated/dashboard.index'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as MSlugTrainingRouteImport } from './routes/m.$slug.training'
+import { Route as MSlugRoomrentalRouteImport } from './routes/m.$slug.roomrental'
 import { Route as MSlugRewardsRouteImport } from './routes/m.$slug.rewards'
 import { Route as MSlugReviewsRouteImport } from './routes/m.$slug.reviews'
 import { Route as MSlugPayRouteImport } from './routes/m.$slug.pay'
@@ -81,6 +82,7 @@ import { Route as AuthenticatedDashboardStaffRouteImport } from './routes/_authe
 import { Route as AuthenticatedDashboardSettingsRouteImport } from './routes/_authenticated/dashboard.settings'
 import { Route as AuthenticatedDashboardServicesRouteImport } from './routes/_authenticated/dashboard.services'
 import { Route as AuthenticatedDashboardRxRequestsRouteImport } from './routes/_authenticated/dashboard.rx-requests'
+import { Route as AuthenticatedDashboardRoomRentalRouteImport } from './routes/_authenticated/dashboard.room-rental'
 import { Route as AuthenticatedDashboardRewardsRouteImport } from './routes/_authenticated/dashboard.rewards'
 import { Route as AuthenticatedDashboardReviewsRouteImport } from './routes/_authenticated/dashboard.reviews'
 import { Route as AuthenticatedDashboardReferralsRouteImport } from './routes/_authenticated/dashboard.referrals'
@@ -389,6 +391,11 @@ const MSlugTrainingRoute = MSlugTrainingRouteImport.update({
   path: '/training',
   getParentRoute: () => MSlugRoute,
 } as any)
+const MSlugRoomrentalRoute = MSlugRoomrentalRouteImport.update({
+  id: '/roomrental',
+  path: '/roomrental',
+  getParentRoute: () => MSlugRoute,
+} as any)
 const MSlugRewardsRoute = MSlugRewardsRouteImport.update({
   id: '/rewards',
   path: '/rewards',
@@ -539,6 +546,12 @@ const AuthenticatedDashboardRxRequestsRoute =
   AuthenticatedDashboardRxRequestsRouteImport.update({
     id: '/rx-requests',
     path: '/rx-requests',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardRoomRentalRoute =
+  AuthenticatedDashboardRoomRentalRouteImport.update({
+    id: '/room-rental',
+    path: '/room-rental',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
 const AuthenticatedDashboardRewardsRoute =
@@ -1091,6 +1104,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/referrals': typeof AuthenticatedDashboardReferralsRoute
   '/dashboard/reviews': typeof AuthenticatedDashboardReviewsRoute
   '/dashboard/rewards': typeof AuthenticatedDashboardRewardsRoute
+  '/dashboard/room-rental': typeof AuthenticatedDashboardRoomRentalRoute
   '/dashboard/rx-requests': typeof AuthenticatedDashboardRxRequestsRouteWithChildren
   '/dashboard/services': typeof AuthenticatedDashboardServicesRoute
   '/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
@@ -1118,6 +1132,7 @@ export interface FileRoutesByFullPath {
   '/m/$slug/pay': typeof MSlugPayRoute
   '/m/$slug/reviews': typeof MSlugReviewsRoute
   '/m/$slug/rewards': typeof MSlugRewardsRoute
+  '/m/$slug/roomrental': typeof MSlugRoomrentalRoute
   '/m/$slug/training': typeof MSlugTrainingRouteWithChildren
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/dashboard/': typeof AuthenticatedDashboardIndexRoute
@@ -1236,6 +1251,7 @@ export interface FileRoutesByTo {
   '/dashboard/referrals': typeof AuthenticatedDashboardReferralsRoute
   '/dashboard/reviews': typeof AuthenticatedDashboardReviewsRoute
   '/dashboard/rewards': typeof AuthenticatedDashboardRewardsRoute
+  '/dashboard/room-rental': typeof AuthenticatedDashboardRoomRentalRoute
   '/dashboard/rx-requests': typeof AuthenticatedDashboardRxRequestsRouteWithChildren
   '/dashboard/services': typeof AuthenticatedDashboardServicesRoute
   '/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
@@ -1263,6 +1279,7 @@ export interface FileRoutesByTo {
   '/m/$slug/pay': typeof MSlugPayRoute
   '/m/$slug/reviews': typeof MSlugReviewsRoute
   '/m/$slug/rewards': typeof MSlugRewardsRoute
+  '/m/$slug/roomrental': typeof MSlugRoomrentalRoute
   '/m/$slug/training': typeof MSlugTrainingRouteWithChildren
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/dashboard': typeof AuthenticatedDashboardIndexRoute
@@ -1390,6 +1407,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/referrals': typeof AuthenticatedDashboardReferralsRoute
   '/_authenticated/dashboard/reviews': typeof AuthenticatedDashboardReviewsRoute
   '/_authenticated/dashboard/rewards': typeof AuthenticatedDashboardRewardsRoute
+  '/_authenticated/dashboard/room-rental': typeof AuthenticatedDashboardRoomRentalRoute
   '/_authenticated/dashboard/rx-requests': typeof AuthenticatedDashboardRxRequestsRouteWithChildren
   '/_authenticated/dashboard/services': typeof AuthenticatedDashboardServicesRoute
   '/_authenticated/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
@@ -1417,6 +1435,7 @@ export interface FileRoutesById {
   '/m/$slug/pay': typeof MSlugPayRoute
   '/m/$slug/reviews': typeof MSlugReviewsRoute
   '/m/$slug/rewards': typeof MSlugRewardsRoute
+  '/m/$slug/roomrental': typeof MSlugRoomrentalRoute
   '/m/$slug/training': typeof MSlugTrainingRouteWithChildren
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/dashboard/': typeof AuthenticatedDashboardIndexRoute
@@ -1545,6 +1564,7 @@ export interface FileRouteTypes {
     | '/dashboard/referrals'
     | '/dashboard/reviews'
     | '/dashboard/rewards'
+    | '/dashboard/room-rental'
     | '/dashboard/rx-requests'
     | '/dashboard/services'
     | '/dashboard/settings'
@@ -1572,6 +1592,7 @@ export interface FileRouteTypes {
     | '/m/$slug/pay'
     | '/m/$slug/reviews'
     | '/m/$slug/rewards'
+    | '/m/$slug/roomrental'
     | '/m/$slug/training'
     | '/admin/'
     | '/dashboard/'
@@ -1690,6 +1711,7 @@ export interface FileRouteTypes {
     | '/dashboard/referrals'
     | '/dashboard/reviews'
     | '/dashboard/rewards'
+    | '/dashboard/room-rental'
     | '/dashboard/rx-requests'
     | '/dashboard/services'
     | '/dashboard/settings'
@@ -1717,6 +1739,7 @@ export interface FileRouteTypes {
     | '/m/$slug/pay'
     | '/m/$slug/reviews'
     | '/m/$slug/rewards'
+    | '/m/$slug/roomrental'
     | '/m/$slug/training'
     | '/admin'
     | '/dashboard'
@@ -1843,6 +1866,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/referrals'
     | '/_authenticated/dashboard/reviews'
     | '/_authenticated/dashboard/rewards'
+    | '/_authenticated/dashboard/room-rental'
     | '/_authenticated/dashboard/rx-requests'
     | '/_authenticated/dashboard/services'
     | '/_authenticated/dashboard/settings'
@@ -1870,6 +1894,7 @@ export interface FileRouteTypes {
     | '/m/$slug/pay'
     | '/m/$slug/reviews'
     | '/m/$slug/rewards'
+    | '/m/$slug/roomrental'
     | '/m/$slug/training'
     | '/_authenticated/admin/'
     | '/_authenticated/dashboard/'
@@ -2282,6 +2307,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MSlugTrainingRouteImport
       parentRoute: typeof MSlugRoute
     }
+    '/m/$slug/roomrental': {
+      id: '/m/$slug/roomrental'
+      path: '/roomrental'
+      fullPath: '/m/$slug/roomrental'
+      preLoaderRoute: typeof MSlugRoomrentalRouteImport
+      parentRoute: typeof MSlugRoute
+    }
     '/m/$slug/rewards': {
       id: '/m/$slug/rewards'
       path: '/rewards'
@@ -2469,6 +2501,13 @@ declare module '@tanstack/react-router' {
       path: '/rx-requests'
       fullPath: '/dashboard/rx-requests'
       preLoaderRoute: typeof AuthenticatedDashboardRxRequestsRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/room-rental': {
+      id: '/_authenticated/dashboard/room-rental'
+      path: '/room-rental'
+      fullPath: '/dashboard/room-rental'
+      preLoaderRoute: typeof AuthenticatedDashboardRoomRentalRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
     '/_authenticated/dashboard/rewards': {
@@ -3214,6 +3253,7 @@ interface AuthenticatedDashboardRouteChildren {
   AuthenticatedDashboardReferralsRoute: typeof AuthenticatedDashboardReferralsRoute
   AuthenticatedDashboardReviewsRoute: typeof AuthenticatedDashboardReviewsRoute
   AuthenticatedDashboardRewardsRoute: typeof AuthenticatedDashboardRewardsRoute
+  AuthenticatedDashboardRoomRentalRoute: typeof AuthenticatedDashboardRoomRentalRoute
   AuthenticatedDashboardRxRequestsRoute: typeof AuthenticatedDashboardRxRequestsRouteWithChildren
   AuthenticatedDashboardServicesRoute: typeof AuthenticatedDashboardServicesRoute
   AuthenticatedDashboardSettingsRoute: typeof AuthenticatedDashboardSettingsRoute
@@ -3275,6 +3315,8 @@ const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
     AuthenticatedDashboardReferralsRoute: AuthenticatedDashboardReferralsRoute,
     AuthenticatedDashboardReviewsRoute: AuthenticatedDashboardReviewsRoute,
     AuthenticatedDashboardRewardsRoute: AuthenticatedDashboardRewardsRoute,
+    AuthenticatedDashboardRoomRentalRoute:
+      AuthenticatedDashboardRoomRentalRoute,
     AuthenticatedDashboardRxRequestsRoute:
       AuthenticatedDashboardRxRequestsRouteWithChildren,
     AuthenticatedDashboardServicesRoute: AuthenticatedDashboardServicesRoute,
@@ -3430,6 +3472,7 @@ interface MSlugRouteChildren {
   MSlugPayRoute: typeof MSlugPayRoute
   MSlugReviewsRoute: typeof MSlugReviewsRoute
   MSlugRewardsRoute: typeof MSlugRewardsRoute
+  MSlugRoomrentalRoute: typeof MSlugRoomrentalRoute
   MSlugTrainingRoute: typeof MSlugTrainingRouteWithChildren
   MSlugIndexRoute: typeof MSlugIndexRoute
   MSlugBookTreatmentIdRoute: typeof MSlugBookTreatmentIdRoute
@@ -3445,6 +3488,7 @@ const MSlugRouteChildren: MSlugRouteChildren = {
   MSlugPayRoute: MSlugPayRoute,
   MSlugReviewsRoute: MSlugReviewsRoute,
   MSlugRewardsRoute: MSlugRewardsRoute,
+  MSlugRoomrentalRoute: MSlugRoomrentalRoute,
   MSlugTrainingRoute: MSlugTrainingRouteWithChildren,
   MSlugIndexRoute: MSlugIndexRoute,
   MSlugBookTreatmentIdRoute: MSlugBookTreatmentIdRoute,
@@ -3505,13 +3549,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

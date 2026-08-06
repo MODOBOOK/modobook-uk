@@ -5667,6 +5667,7 @@ export type Database = {
           require_medical_forms_before_appt: boolean
           require_phone: boolean
           role: Database["public"]["Enums"]["app_role"]
+          room_rental_enabled: boolean
           rota_anchor_date: string | null
           save_card_on_file: boolean
           show_prices_on_booking: boolean
@@ -5788,6 +5789,7 @@ export type Database = {
           require_medical_forms_before_appt?: boolean
           require_phone?: boolean
           role?: Database["public"]["Enums"]["app_role"]
+          room_rental_enabled?: boolean
           rota_anchor_date?: string | null
           save_card_on_file?: boolean
           show_prices_on_booking?: boolean
@@ -5909,6 +5911,7 @@ export type Database = {
           require_medical_forms_before_appt?: boolean
           require_phone?: boolean
           role?: Database["public"]["Enums"]["app_role"]
+          room_rental_enabled?: boolean
           rota_anchor_date?: string | null
           save_card_on_file?: boolean
           show_prices_on_booking?: boolean
@@ -6044,6 +6047,233 @@ export type Database = {
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rental_blocks: {
+        Row: {
+          block_date: string
+          created_at: string
+          end_time: string | null
+          id: string
+          profile_id: string
+          reason: string | null
+          room_id: string | null
+          start_time: string | null
+          updated_at: string
+        }
+        Insert: {
+          block_date: string
+          created_at?: string
+          end_time?: string | null
+          id?: string
+          profile_id: string
+          reason?: string | null
+          room_id?: string | null
+          start_time?: string | null
+          updated_at?: string
+        }
+        Update: {
+          block_date?: string
+          created_at?: string
+          end_time?: string | null
+          id?: string
+          profile_id?: string
+          reason?: string | null
+          room_id?: string | null
+          start_time?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rental_blocks_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rental_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rental_bookings: {
+        Row: {
+          booking_date: string
+          created_at: string
+          end_time: string
+          hours: number
+          id: string
+          notes: string | null
+          payment_mode: string
+          payment_status: string
+          price: number
+          profile_id: string
+          renter_business: string | null
+          renter_email: string
+          renter_name: string
+          renter_phone: string | null
+          room_id: string
+          start_time: string
+          status: string
+          stripe_session_id: string | null
+          unit: string
+          updated_at: string
+        }
+        Insert: {
+          booking_date: string
+          created_at?: string
+          end_time: string
+          hours?: number
+          id?: string
+          notes?: string | null
+          payment_mode?: string
+          payment_status?: string
+          price?: number
+          profile_id: string
+          renter_business?: string | null
+          renter_email: string
+          renter_name: string
+          renter_phone?: string | null
+          room_id: string
+          start_time: string
+          status?: string
+          stripe_session_id?: string | null
+          unit?: string
+          updated_at?: string
+        }
+        Update: {
+          booking_date?: string
+          created_at?: string
+          end_time?: string
+          hours?: number
+          id?: string
+          notes?: string | null
+          payment_mode?: string
+          payment_status?: string
+          price?: number
+          profile_id?: string
+          renter_business?: string | null
+          renter_email?: string
+          renter_name?: string
+          renter_phone?: string | null
+          room_id?: string
+          start_time?: string
+          status?: string
+          stripe_session_id?: string | null
+          unit?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rental_bookings_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rental_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rental_hours: {
+        Row: {
+          created_at: string
+          end_time: string
+          id: string
+          profile_id: string
+          room_id: string
+          start_time: string
+          updated_at: string
+          weekday: number
+        }
+        Insert: {
+          created_at?: string
+          end_time: string
+          id?: string
+          profile_id: string
+          room_id: string
+          start_time: string
+          updated_at?: string
+          weekday: number
+        }
+        Update: {
+          created_at?: string
+          end_time?: string
+          id?: string
+          profile_id?: string
+          room_id?: string
+          start_time?: string
+          updated_at?: string
+          weekday?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rental_hours_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rental_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rental_rooms: {
+        Row: {
+          active: boolean
+          booking_mode: string
+          created_at: string
+          description: string | null
+          full_day_rate: number | null
+          half_day_hours: number
+          half_day_rate: number | null
+          hourly_rate: number | null
+          id: string
+          image_url: string | null
+          location_id: string | null
+          min_hours: number
+          name: string
+          profile_id: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          booking_mode?: string
+          created_at?: string
+          description?: string | null
+          full_day_rate?: number | null
+          half_day_hours?: number
+          half_day_rate?: number | null
+          hourly_rate?: number | null
+          id?: string
+          image_url?: string | null
+          location_id?: string | null
+          min_hours?: number
+          name: string
+          profile_id: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          booking_mode?: string
+          created_at?: string
+          description?: string | null
+          full_day_rate?: number | null
+          half_day_hours?: number
+          half_day_rate?: number | null
+          hourly_rate?: number | null
+          id?: string
+          image_url?: string | null
+          location_id?: string | null
+          min_hours?: number
+          name?: string
+          profile_id?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rental_rooms_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
             referencedColumns: ["id"]
           },
         ]
