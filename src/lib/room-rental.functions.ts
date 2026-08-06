@@ -234,29 +234,27 @@ export const getRoomAvailability = createServerFn({ method: "GET" })
     const [roomRes, hoursRes, blocksRes, bookingsRes] = await Promise.all([
       supabaseAdmin.from("rental_rooms").select("quantity").eq("id", data.room_id).maybeSingle(),
       supabaseAdmin.from("rental_hours").select("start_time,end_time").eq("room_id", data.room_id).eq("weekday", weekday),
-      supabaseAdmin.from("rental_blocks").select("start_time,end_time").eq("block_date", data.date)
+      supabaseAdmin.from("rental_blocks").select("start_time,end_time,units").eq("block_date", data.date)
         .or(`room_id.eq.${data.room_id},room_id.is.null`),
       supabaseAdmin.from("rental_bookings").select("start_time,end_time")
         .eq("room_id", data.room_id).eq("booking_date", data.date).neq("status", "cancelled"),
     ]);
 
     const capacity = Math.max(1, Number((roomRes.data as any)?.quantity ?? 1));
-    const closed: [number, number][] = ((blocksRes.data ?? []) as any[]).map((b) =>
-      b.start_time && b.end_time ? ([toMin(b.start_time), toMin(b.end_time)] as [number, number]) : ([0, 1440] as [number, number]),
-    );
-    const booked: [number, number][] = ((bookingsRes.data ?? []) as any[]).map(
-      (b) => [toMin(b.start_time), toMin(b.end_time)] as [number, number],
-    );
+    const closedBlocks = (blocksRes.data ?? []) as any[];
+    const booked = (bookingsRes.data ?? []) as any[];
 
-    const slots: { start: string; end: string; available: boolean }[] = [];
+    const slots: { start: string; end: string; available: boolean; free: number }[] = [];
     for (const h of (hoursRes.data ?? []) as any[]) {
       for (let m = toMin(h.start_time); m + 60 <= toMin(h.end_time); m += 60) {
-        const blocked = closed.some(([s, e]) => m < e && m + 60 > s);
-        const used = booked.filter(([s, e]) => m < e && m + 60 > s).length;
-        slots.push({ start: fromMin(m), end: fromMin(m + 60), available: !blocked && used < capacity });
+        const usable = capacity - blockedUnits(closedBlocks, capacity, m, m + 60);
+        const used = booked.filter((b) => m < toMin(b.end_time) && m + 60 > toMin(b.start_time)).length;
+        const free = Math.max(0, usable - used);
+        slots.push({ start: fromMin(m), end: fromMin(m + 60), available: free > 0, free });
       }
     }
     return { slots };
+
 
   });
 
