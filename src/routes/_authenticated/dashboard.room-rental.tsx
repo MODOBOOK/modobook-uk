@@ -51,6 +51,8 @@ type Room = {
   half_day_hours: number;
   min_hours: number;
   quantity: number;
+  skip_room_selection: boolean;
+  deposit_percent: number | null;
   booking_mode: "enquiry" | "pay_online" | "pay_in_clinic";
   active: boolean;
   sort_order: number;
