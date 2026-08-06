@@ -256,6 +256,9 @@ function RoomDialog({
           half_day_hours: Number(f.half_day_hours ?? 4),
           min_hours: Number(f.min_hours ?? 1),
           quantity: Math.max(1, Number(f.quantity ?? 1)),
+          skip_room_selection: f.skip_room_selection ?? false,
+          deposit_percent:
+            f.deposit_percent == null || f.deposit_percent === ("" as never) ? null : Number(f.deposit_percent),
           booking_mode: (f.booking_mode ?? "enquiry") as Room["booking_mode"],
           active: f.active ?? true,
           sort_order: Number(f.sort_order ?? 0),
