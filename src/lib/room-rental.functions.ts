@@ -29,6 +29,22 @@ function blockedUnits(blocks: any[], capacity: number, s: number, e: number) {
   return Math.min(capacity, max);
 }
 
+
+/** Online-checkout bookings hold the slot for 20 minutes; unpaid after that, they're abandoned. */
+const HOLD_MS = 20 * 60 * 1000;
+function isUnpaidOnlineHold(b: any) {
+  return b?.status === "pending" && b?.payment_mode === "pay_online" && b?.payment_status !== "paid";
+}
+/** Rows that should count against availability (paid, or still inside their checkout hold). */
+function activeBookings(rows: any[]) {
+  const now = Date.now();
+  return (rows ?? []).filter((b) => {
+    if (!isUnpaidOnlineHold(b)) return true;
+    const created = b.created_at ? new Date(b.created_at).getTime() : 0;
+    return now - created < HOLD_MS;
+  });
+}
+
 /** Lowest free room number for [s,e), or null when nothing is free. */
 function allocateUnit(capacity: number, blocks: any[], bookings: any[], s: number, e: number) {
   const usable = capacity - blockedUnits(blocks, capacity, s, e);
@@ -71,7 +87,7 @@ export const listMyRooms = createServerFn({ method: "GET" })
       rooms: rooms.data ?? [],
       hours: hours.data ?? [],
       blocks: blocks.data ?? [],
-      bookings: bookings.data ?? [],
+      bookings: (bookings.data ?? []).filter((b: any) => !isUnpaidOnlineHold(b)),
       locations: locations.data ?? [],
     };
   });
@@ -235,13 +251,13 @@ export const getRoomAvailability = createServerFn({ method: "GET" })
       supabaseAdmin.from("rental_hours").select("start_time,end_time").eq("room_id", data.room_id).eq("weekday", weekday),
       supabaseAdmin.from("rental_blocks").select("start_time,end_time,units").eq("block_date", data.date)
         .or(`room_id.eq.${data.room_id},room_id.is.null`),
-      supabaseAdmin.from("rental_bookings").select("start_time,end_time")
+      supabaseAdmin.from("rental_bookings").select("start_time,end_time,status,payment_status,payment_mode,created_at")
         .eq("room_id", data.room_id).eq("booking_date", data.date).neq("status", "cancelled"),
     ]);
 
     const capacity = Math.max(1, Number((roomRes.data as any)?.quantity ?? 1));
     const closedBlocks = (blocksRes.data ?? []) as any[];
-    const booked = (bookingsRes.data ?? []) as any[];
+    const booked = activeBookings((bookingsRes.data ?? []) as any[]);
 
     const slots: { start: string; end: string; available: boolean; free: number }[] = [];
     for (const h of (hoursRes.data ?? []) as any[]) {
@@ -288,7 +304,7 @@ export const requestRoomBooking = createServerFn({ method: "POST" })
     // Capacity guard + auto-allocation (a room entry can represent several identical rooms)
     const capacity = Math.max(1, Number((room as any).quantity ?? 1));
     const [clashesRes, blocksRes2] = await Promise.all([
-      supabaseAdmin.from("rental_bookings").select("start_time,end_time,unit_index")
+      supabaseAdmin.from("rental_bookings").select("start_time,end_time,unit_index,status,payment_status,payment_mode,created_at")
         .eq("room_id", data.room_id).eq("booking_date", data.booking_date).neq("status", "cancelled"),
       supabaseAdmin.from("rental_blocks").select("start_time,end_time,units").eq("block_date", data.booking_date)
         .or(`room_id.eq.${data.room_id},room_id.is.null`),
@@ -296,7 +312,7 @@ export const requestRoomBooking = createServerFn({ method: "POST" })
     const unitIndex = allocateUnit(
       capacity,
       (blocksRes2.data ?? []) as any[],
-      (clashesRes.data ?? []) as any[],
+      activeBookings((clashesRes.data ?? []) as any[]),
       toMin(data.start_time),
       toMin(data.end_time),
     );
@@ -414,12 +430,12 @@ export const getOwnerRoomAvailability = createServerFn({ method: "GET" })
       sb.from("rental_hours").select("start_time,end_time").eq("room_id", data.room_id).eq("weekday", weekday),
       sb.from("rental_blocks").select("start_time,end_time,units").eq("block_date", data.date)
         .or(`room_id.eq.${data.room_id},room_id.is.null`),
-      sb.from("rental_bookings").select("start_time,end_time")
+      sb.from("rental_bookings").select("start_time,end_time,status,payment_status,payment_mode,created_at")
         .eq("room_id", data.room_id).eq("booking_date", data.date).neq("status", "cancelled"),
     ]);
     const capacity = Math.max(1, Number(roomRes.data?.quantity ?? 1));
     const closedBlocks = (blocksRes.data ?? []) as any[];
-    const booked = (bookingsRes.data ?? []) as any[];
+    const booked = activeBookings((bookingsRes.data ?? []) as any[]);
     const slots: { start: string; end: string; available: boolean; free: number }[] = [];
     for (const h of (hoursRes.data ?? []) as any[]) {
       for (let m = toMin(h.start_time); m + 60 <= toMin(h.end_time); m += 60) {
@@ -548,7 +564,7 @@ export const createManualRentalBooking = createServerFn({ method: "POST" })
 
     const capacity = Math.max(1, Number(room.quantity ?? 1));
     const [clashesRes, blockRes] = await Promise.all([
-      sb.from("rental_bookings").select("start_time,end_time,unit_index")
+      sb.from("rental_bookings").select("start_time,end_time,unit_index,status,payment_status,payment_mode,created_at")
         .eq("room_id", data.room_id).eq("booking_date", data.booking_date).neq("status", "cancelled"),
       sb.from("rental_blocks").select("start_time,end_time,units").eq("block_date", data.booking_date)
         .or(`room_id.eq.${data.room_id},room_id.is.null`),
@@ -556,7 +572,7 @@ export const createManualRentalBooking = createServerFn({ method: "POST" })
     const unitIndex = allocateUnit(
       capacity,
       (blockRes.data ?? []) as any[],
-      (clashesRes.data ?? []) as any[],
+      activeBookings((clashesRes.data ?? []) as any[]),
       toMin(data.start_time),
       toMin(data.end_time),
     );

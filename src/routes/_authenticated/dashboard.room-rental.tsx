@@ -536,22 +536,22 @@ function BookingRow({ booking, roomName, onChanged }: { booking: any; roomName: 
   const [linkMessage, setLinkMessage] = useState("");
   return (
     <Card>
-      <CardContent className="flex flex-wrap items-center gap-4 py-4">
+      <CardContent className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:gap-4">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <span className="font-semibold">{booking.renter_name}</span>
             <Badge variant={booking.status === "confirmed" ? "default" : booking.status === "cancelled" ? "secondary" : "outline"}>{booking.status}</Badge>
             <Badge variant={booking.payment_status === "paid" ? "default" : "outline"}>{booking.payment_status}</Badge>
           </div>
-          <p className="text-sm text-muted-foreground">
+          <p className="break-words text-sm text-muted-foreground">
             {roomName}{booking.unit_index ? ` · Room ${booking.unit_index}` : ""} · {booking.booking_date} · {String(booking.start_time).slice(0, 5)}–{String(booking.end_time).slice(0, 5)} · £{Number(booking.price).toFixed(2)}
           </p>
-          <p className="text-sm text-muted-foreground">
+          <p className="break-words text-sm text-muted-foreground">
             {booking.renter_email}{booking.renter_phone ? ` · ${booking.renter_phone}` : ""}{booking.renter_business ? ` · ${booking.renter_business}` : ""}
           </p>
           {booking.notes && <p className="mt-1 text-sm">{booking.notes}</p>}
         </div>
-        <div className="flex gap-2">
+        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-end">
           {booking.status !== "confirmed" && (
             <Button size="sm" onClick={async () => { await update({ data: { id: booking.id, status: "confirmed" } }); onChanged(); }}>Confirm</Button>
           )}
@@ -562,7 +562,7 @@ function BookingRow({ booking, roomName, onChanged }: { booking: any; roomName: 
               disabled={sending}
               onClick={() => setLinkOpen(true)}
             >
-              <Send className="mr-2 h-4 w-4" /> {sending ? "Sending…" : "Payment link"}
+              <Send className="mr-2 h-4 w-4 shrink-0" /> {sending ? "Sending…" : "Payment link"}
             </Button>
           )}
           {booking.payment_status !== "paid" && (

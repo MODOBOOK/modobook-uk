@@ -196,6 +196,20 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
                 break;
               }
 
+              // Room rental: only confirm the booking once the money lands.
+              if (metadata.kind === "room_rental_booking" && metadata.rental_booking_id) {
+                if (session.payment_status !== "paid") break;
+                try {
+                  await supabaseAdmin
+                    .from("rental_bookings")
+                    .update({ payment_status: "paid", status: "confirmed" })
+                    .eq("id", metadata.rental_booking_id);
+                } catch (e) {
+                  console.error("[stripe-webhook] rental booking payment failed", e);
+                }
+                break;
+              }
+
               if (session.payment_status !== "paid") break;
               const paymentLinkId =
                 typeof session.payment_link === "string"
