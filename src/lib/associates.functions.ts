@@ -138,18 +138,26 @@ export const inviteAssociate = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
 
     try {
-      const { enqueueEmail } = await import("./email/send.server");
-      const clinic = prof.clinic_name || prof.full_name || "a MODO clinic";
-      await (enqueueEmail as any)({
-        to: email,
-        subject: `${clinic} has invited you to work as an associate`,
-        html: `<p>Hi ${data.name.trim()},</p>
-          <p><strong>${clinic}</strong> has invited you to join MODO as a self-employed associate practitioner.</p>
-          <p>You keep your own MODO account, your own booking link and all of your own payments. ${clinic} will be able to see your clinical records, appointments and any incidents for regulatory audit purposes only.</p>
-          <p><a href="https://modobook.uk/auth">Create or sign in to your MODO account</a> using this email address, then open <em>Associates</em> in your dashboard to accept.</p>`,
+      const { tryEnqueueAppEmail, getPractitionerBranding } = await import("@/lib/email/send.server");
+      const branding = await getPractitionerBranding(prof.id);
+      const clinic = prof.clinic_name || prof.full_name || branding.clinicName || "a MODO clinic";
+      const origin = process.env['PUBLIC_APP_URL'] || process.env['APP_URL'] || "https://modobook.uk";
+      await tryEnqueueAppEmail({
+        templateName: "staff-invite",
+        recipientEmail: email,
+        messageId: `associate-invite-${row?.id}`,
+        templateData: {
+          inviteeName: data.name.trim().split(" ")[0] || "there",
+          clinicName: clinic,
+          role: "Self-employed associate practitioner",
+          acceptUrl: `${origin}/dashboard/associates`,
+          logoUrl: branding.logoUrl,
+          brandColor: branding.brandColor,
+        },
       });
     } catch (e) {
       console.error("[associates] invite email failed", e);
+
     }
 
     return row;
