@@ -8,6 +8,9 @@ import {
   updateAssociate,
   removeAssociate,
   respondToAssociateInvite,
+  updateMyHostLink,
+  leaveHostClinic,
+
   getAssociateOversight,
   getAssociatePatients,
   getAssociatePatientRecord,
@@ -50,6 +53,9 @@ function AssociatesPage() {
   const update = useServerFn(updateAssociate);
   const remove = useServerFn(removeAssociate);
   const respond = useServerFn(respondToAssociateInvite);
+  const updateHost = useServerFn(updateMyHostLink);
+  const leaveHost = useServerFn(leaveHostClinic);
+
 
   const [inviteOpen, setInviteOpen] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", notes: "" });
@@ -102,6 +108,16 @@ function AssociatesPage() {
     }
   }
 
+  async function patchHost(id: string, p: Record<string, boolean>) {
+    try {
+      await updateHost({ data: { id, patch: p as any } });
+      refresh();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Could not save");
+    }
+  }
+
+
   return (
     <div className="space-y-8">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -128,25 +144,75 @@ function AssociatesPage() {
           </CardHeader>
           <CardContent className="space-y-3">
             {hostLinks.map((h: any) => (
-              <div key={h.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border p-4">
-                <div className="min-w-0">
-                  <div className="font-medium">{h.clinic_name ?? "Clinic"}</div>
-                  <div className="text-xs text-muted-foreground">
-                    They can see: {[h.oversight_records && "clinical records", h.oversight_appointments && "appointments", h.oversight_incidents && "incidents"].filter(Boolean).join(" · ") || "nothing"}
-                    {h.room_allocation_enabled ? " · room auto-allocated" : ""}
+              <div key={h.id} className="space-y-3 rounded-xl border p-4">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="font-medium">{h.clinic_name ?? "Clinic"}</div>
+                    <div className="text-xs text-muted-foreground">
+                      They can see: {[h.oversight_records && "clinical records", h.oversight_appointments && "appointments", h.oversight_incidents && "incidents"].filter(Boolean).join(" · ") || "nothing"}
+                      {h.room_allocation_enabled ? " · room auto-allocated" : ""}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant={h.status === "active" ? "default" : "secondary"}>{h.status}</Badge>
+                    {h.status !== "active" && h.status !== "revoked" && (
+                      <>
+                        <Button size="sm" onClick={async () => { await respond({ data: { id: h.id, accept: true } }); toast.success("Joined"); refresh(); }}>Accept</Button>
+                        <Button size="sm" variant="ghost" onClick={async () => { await respond({ data: { id: h.id, accept: false } }); refresh(); }}>Decline</Button>
+                      </>
+                    )}
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Badge variant={h.status === "active" ? "default" : "secondary"}>{h.status}</Badge>
-                  {h.status !== "active" && (
-                    <>
-                      <Button size="sm" onClick={async () => { await respond({ data: { id: h.id, accept: true } }); toast.success("Joined"); refresh(); }}>Accept</Button>
-                      <Button size="sm" variant="ghost" onClick={async () => { await respond({ data: { id: h.id, accept: false } }); refresh(); }}>Decline</Button>
-                    </>
-                  )}
-                </div>
+
+                {h.status === "active" && (
+                  <div className="space-y-2 border-t pt-3">
+                    <div className="text-xs font-medium text-muted-foreground">What this clinic can see</div>
+                    <ToggleRow
+                      label="Clinical records"
+                      desc="Notes, consents, forms"
+                      checked={h.oversight_records}
+                      onChange={(v) => patchHost(h.id, { oversight_records: v })}
+                    />
+                    <ToggleRow
+                      label="Appointments"
+                      desc="Your diary and bookings"
+                      checked={h.oversight_appointments}
+                      onChange={(v) => patchHost(h.id, { oversight_appointments: v })}
+                    />
+                    <ToggleRow
+                      label="Incidents"
+                      desc="Adverse events & complaints"
+                      checked={h.oversight_incidents}
+                      onChange={(v) => patchHost(h.id, { oversight_incidents: v })}
+                    />
+                    <p className="text-[11px] text-muted-foreground">
+                      Your host clinic may be required to hold oversight for regulatory audits — check your agreement before
+                      switching these off.
+                    </p>
+                    <div className="pt-1">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-destructive"
+                        onClick={async () => {
+                          if (!confirm(`Remove ${h.clinic_name ?? "this clinic"} as your clinic owner? They will lose all access to your records.`)) return;
+                          try {
+                            await leaveHost({ data: { id: h.id } });
+                            toast.success("Clinic removed");
+                            refresh();
+                          } catch (e: any) {
+                            toast.error(e?.message ?? "Could not remove clinic");
+                          }
+                        }}
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" /> Remove clinic owner
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
+
           </CardContent>
         </Card>
       )}
