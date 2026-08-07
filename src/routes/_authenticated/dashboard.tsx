@@ -36,6 +36,8 @@ import {
   ExternalLink,
   TrendingUp,
   MessageCircle,
+  ShieldCheck,
+
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
