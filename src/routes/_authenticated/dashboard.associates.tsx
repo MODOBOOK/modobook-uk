@@ -108,6 +108,16 @@ function AssociatesPage() {
     }
   }
 
+  async function patchHost(id: string, p: Record<string, boolean>) {
+    try {
+      await updateHost({ data: { id, patch: p as any } });
+      refresh();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Could not save");
+    }
+  }
+
+
   return (
     <div className="space-y-8">
       <div className="flex flex-wrap items-start justify-between gap-3">
