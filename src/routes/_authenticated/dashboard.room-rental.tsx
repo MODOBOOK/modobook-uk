@@ -567,33 +567,35 @@ function BookingRow({ booking, roomName, onChanged }: { booking: any; roomName: 
           </p>
           {booking.notes && <p className="mt-1 text-sm">{booking.notes}</p>}
         </div>
-        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-end">
+        <div className="grid w-full min-w-0 grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:justify-end">
           {booking.status !== "confirmed" && (
-            <Button size="sm" onClick={async () => { await update({ data: { id: booking.id, status: "confirmed" } }); onChanged(); }}>Confirm</Button>
+            <Button className="w-full min-w-0 sm:w-auto" size="sm" onClick={async () => { await update({ data: { id: booking.id, status: "confirmed" } }); onChanged(); }}>Confirm</Button>
           )}
           {booking.payment_status !== "paid" && (
             <Button
+              className="w-full min-w-0 sm:w-auto"
               size="sm"
               variant="outline"
               disabled={sending}
               onClick={() => { setMode("link"); setLinkOpen(true); }}
             >
-              <Send className="mr-2 h-4 w-4 shrink-0" /> {sending ? "Sending…" : "Payment link"}
+              <Send className="mr-2 h-4 w-4 shrink-0" /> <span className="truncate">{sending ? "Sending…" : "Payment link"}</span>
             </Button>
           )}
           <Button
+            className="w-full min-w-0 sm:w-auto"
             size="sm"
             variant="outline"
             disabled={sending}
             onClick={() => { setMode("invoice"); setLinkOpen(true); }}
           >
-            <FileText className="mr-2 h-4 w-4 shrink-0" /> Invoice
+            <FileText className="mr-2 h-4 w-4 shrink-0" /> <span className="truncate">Invoice</span>
           </Button>
           {booking.payment_status !== "paid" && (
-            <Button size="sm" variant="outline" onClick={async () => { await update({ data: { id: booking.id, payment_status: "paid" } }); onChanged(); }}>Mark paid</Button>
+            <Button className="w-full min-w-0 sm:w-auto" size="sm" variant="outline" onClick={async () => { await update({ data: { id: booking.id, payment_status: "paid" } }); onChanged(); }}>Mark paid</Button>
           )}
           {booking.status !== "cancelled" && (
-            <Button size="sm" variant="ghost" onClick={async () => { await update({ data: { id: booking.id, status: "cancelled" } }); onChanged(); }}>Cancel</Button>
+            <Button className="w-full min-w-0 sm:w-auto" size="sm" variant="ghost" onClick={async () => { await update({ data: { id: booking.id, status: "cancelled" } }); onChanged(); }}>Cancel</Button>
           )}
         </div>
       </CardContent>
