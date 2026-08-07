@@ -89,6 +89,8 @@ const navItems = [
   { label: "Locations", to: "/dashboard/locations", icon: MapPin },
   { label: "Practitioners", to: "/dashboard/practitioners", icon: Users },
   { label: "Staff", to: "/dashboard/staff", icon: Users },
+  { label: "Associates", to: "/dashboard/associates", icon: ShieldCheck, flag: "associates_enabled" as const },
+
   { label: "Medical forms", to: "/dashboard/medical-forms", icon: FileText },
   { label: "Consent forms", to: "/dashboard/consent-forms", icon: FileSignature },
   { label: "Pre-treatment info", to: "/dashboard/pre-treatment", icon: Info },
