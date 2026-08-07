@@ -12,6 +12,8 @@ import {
   getAssociatePatients,
   getAssociatePatientRecord,
   saveAssociateIncident,
+  listAssociateIncidentsForMe,
+  setIncidentResolved,
 } from "@/lib/associates.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -148,6 +150,10 @@ function AssociatesPage() {
           </CardContent>
         </Card>
       )}
+
+      <IncidentsPanel onOpenAssociate={(linkId) => setOversightId(linkId)} />
+
+
 
       {enabled && (
         <div className="space-y-4">
@@ -368,6 +374,7 @@ function OversightDialog({ id, onClose }: { id: string; onClose: () => void }) {
                   toast.success("Incident logged");
                   setIncident({ title: "", severity: "minor", description: "", action_taken: "", occurred_at: new Date().toISOString().slice(0, 10) });
                   qc.invalidateQueries({ queryKey: ["associate-oversight", id] });
+                  qc.invalidateQueries({ queryKey: ["associate-incidents-all"] });
                 }}
               >
                 Save incident
@@ -393,5 +400,85 @@ function OversightDialog({ id, onClose }: { id: string; onClose: () => void }) {
         </Tabs>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function IncidentsPanel({ onOpenAssociate }: { onOpenAssociate: (linkId: string) => void }) {
+  const listFn = useServerFn(listAssociateIncidentsForMe);
+  const resolveFn = useServerFn(setIncidentResolved);
+  const qc = useQueryClient();
+  const { data, isLoading } = useQuery({ queryKey: ["associate-incidents-all"], queryFn: () => listFn() });
+  const [showResolved, setShowResolved] = useState(false);
+
+  const all = (data ?? []) as any[];
+  const open = all.filter((i) => !i.resolved_at);
+  const rows = showResolved ? all : open;
+
+  if (isLoading || all.length === 0) return null;
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <CardTitle className="text-base">Incidents</CardTitle>
+            <CardDescription>
+              Adverse events and complaints logged across your associate links. {open.length} open.
+            </CardDescription>
+          </div>
+          <Button size="sm" variant="ghost" onClick={() => setShowResolved((v) => !v)}>
+            {showResolved ? "Hide resolved" : `Show all (${all.length})`}
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {rows.length === 0 && <p className="text-sm text-muted-foreground">No open incidents.</p>}
+        {rows.map((i) => (
+          <div key={i.id} className="rounded-xl border p-3 text-sm">
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <div className="flex min-w-0 items-center gap-2 font-medium">
+                <AlertTriangle className={`h-4 w-4 shrink-0 ${i.resolved_at ? "text-muted-foreground" : "text-amber-600"}`} />
+                <span className="break-words">{i.title}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary">{i.severity}</Badge>
+                {i.resolved_at && <Badge variant="outline">resolved</Badge>}
+              </div>
+            </div>
+            <div className="mt-1 text-xs text-muted-foreground">
+              {new Date(i.occurred_at).toLocaleDateString("en-GB")}
+              {" · "}
+              {i.mine ? i.associate_name ?? "Associate" : `${i.clinic_name ?? "Host clinic"} (host)`}
+            </div>
+            {i.description && <p className="mt-2 whitespace-pre-wrap">{i.description}</p>}
+            {i.action_taken && (
+              <p className="mt-2 text-muted-foreground"><strong>Action:</strong> {i.action_taken}</p>
+            )}
+            <div className="mt-3 flex flex-wrap gap-2">
+              {i.mine && i.link_id && (
+                <Button size="sm" variant="outline" className="rounded-full" onClick={() => onOpenAssociate(i.link_id)}>
+                  <ShieldCheck className="mr-2 h-3.5 w-3.5" /> Open oversight
+                </Button>
+              )}
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={async () => {
+                  try {
+                    await resolveFn({ data: { id: i.id, resolved: !i.resolved_at } });
+                    qc.invalidateQueries({ queryKey: ["associate-incidents-all"] });
+                    qc.invalidateQueries({ queryKey: ["associate-oversight"] });
+                  } catch (e: any) {
+                    toast.error(e?.message ?? "Could not update");
+                  }
+                }}
+              >
+                {i.resolved_at ? "Re-open" : "Mark resolved"}
+              </Button>
+            </div>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
   );
 }

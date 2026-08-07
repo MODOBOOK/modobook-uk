@@ -445,3 +445,58 @@ export const listMyIncidents = createServerFn({ method: "GET" })
       .order("occurred_at", { ascending: false });
     return rows ?? [];
   });
+
+/** Every incident visible to me — as the host clinic and as an associate. */
+export const listAssociateIncidentsForMe = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const prof = await getProfile(context.supabase, context.userId);
+    if (!prof) return [];
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const admin: any = supabaseAdmin;
+
+    const { data: rows } = await admin
+      .from("associate_incidents")
+      .select("*")
+      .or(`clinic_profile_id.eq.${prof.id},associate_profile_id.eq.${prof.id}`)
+      .order("occurred_at", { ascending: false })
+      .limit(200);
+
+    const list = rows ?? [];
+    if (!list.length) return [];
+
+    const ids = Array.from(
+      new Set(list.flatMap((r: any) => [r.clinic_profile_id, r.associate_profile_id]).filter(Boolean)),
+    );
+    const { data: profs } = await admin.from("profiles").select("id, clinic_name, full_name").in("id", ids);
+    const nameById: Record<string, string> = Object.fromEntries(
+      (profs ?? []).map((p: any) => [p.id, p.clinic_name || p.full_name || "Practitioner"]),
+    );
+
+    return list.map((r: any) => ({
+      ...r,
+      mine: r.clinic_profile_id === prof.id,
+      clinic_name: nameById[r.clinic_profile_id] ?? null,
+      associate_name: r.associate_profile_id ? nameById[r.associate_profile_id] ?? null : null,
+    }));
+  });
+
+/** Mark an incident resolved / re-opened. */
+export const setIncidentResolved = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string; resolved: boolean }) => d)
+  .handler(async ({ data, context }) => {
+    const prof = await getProfile(context.supabase, context.userId);
+    if (!prof) throw new Error("Profile not found");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const admin: any = supabaseAdmin;
+    const { data: row } = await admin.from("associate_incidents").select("*").eq("id", data.id).maybeSingle();
+    if (!row) throw new Error("Incident not found");
+    if (row.clinic_profile_id !== prof.id && row.associate_profile_id !== prof.id) throw new Error("Not permitted");
+    const { error } = await admin
+      .from("associate_incidents")
+      .update({ resolved_at: data.resolved ? new Date().toISOString() : null })
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
