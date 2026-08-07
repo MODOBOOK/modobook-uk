@@ -177,7 +177,7 @@ function DashboardLayout() {
           </div>
         </div>
         <nav className="flex-1 space-y-0.5 overflow-y-auto px-4 py-6">
-          {navItems.map((item) => {
+          {navItems.filter((item) => !("flag" in item) || (profile as Record<string, unknown>)?.[(item as { flag: string }).flag]).map((item) => {
             const badge =
               item.to === "/dashboard/reviews" && pendingReviews > 0
                 ? pendingReviews
