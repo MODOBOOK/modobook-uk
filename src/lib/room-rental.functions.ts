@@ -941,6 +941,7 @@ export const confirmRentalPayment = createServerFn({ method: "POST" })
       const { getStripe } = await import("./stripe.server");
       const session = await getStripe().checkout.sessions.retrieve(
         booking.stripe_session_id,
+        undefined,
         { stripeAccount: prof.stripe_connect_account_id },
       );
       if (session.payment_status !== "paid") return { paid: false };
