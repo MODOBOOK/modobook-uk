@@ -625,6 +625,7 @@ export async function sendRentalInvoiceForBooking(bookingId: string) {
   const sb = supabaseAdmin as any;
   const { data: booking } = await sb.from("rental_bookings").select("*").eq("id", bookingId).maybeSingle();
   if (!booking) return;
+  if (booking.invoice_sent_at) return; // already invoiced — never send twice
   const { data: room } = await sb.from("rental_rooms").select("name, auto_invoice").eq("id", booking.room_id).maybeSingle();
   if (!room?.auto_invoice) return;
   const { data: prof } = await sb.from("profiles").select("id").eq("user_id", booking.profile_id).maybeSingle();
