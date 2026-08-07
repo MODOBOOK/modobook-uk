@@ -151,6 +151,10 @@ function AssociatesPage() {
         </Card>
       )}
 
+      <IncidentsPanel onOpenAssociate={(linkId) => setOversightId(linkId)} />
+
+
+
       {enabled && (
         <div className="space-y-4">
           {(ctx?.associates ?? []).length === 0 && (
