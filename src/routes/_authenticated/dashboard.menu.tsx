@@ -73,6 +73,8 @@ const groups: { title: string; items: Item[] }[] = [
       { label: "Locations", description: "Manage your clinic addresses", to: "/dashboard/locations", icon: MapPin, ...T.cream },
       { label: "Practitioners", description: "Team members, titles, photos & locations", to: "/dashboard/practitioners", icon: Users, ...T.taupe },
       { label: "Staff", description: "Invite team members & control what they can see", to: "/dashboard/staff", icon: ShieldCheck, ...T.espresso },
+      { label: "Associates", description: "Self-employed practitioners hosted in your clinic — oversight & rooms", to: "/dashboard/associates", icon: ShieldCheck, ...T.sand },
+
 
     ],
   },
