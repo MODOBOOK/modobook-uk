@@ -759,7 +759,17 @@ export const requestBooking = createServerFn({ method: "POST" })
       } catch (e) { console.error("[requestBooking] email failed", e); }
     }
 
+    // If this practitioner is an associate hosted by another clinic, reserve a
+    // room unit at the host clinic for the appointment window.
+    try {
+      const { allocateRoomForAppointment } = await import("./associates.server");
+      await allocateRoomForAppointment(id);
+    } catch (e) {
+      console.error("[requestBooking] associate room allocation failed", e);
+    }
+
     const checkoutUrl = payment?.kind === "hosted" ? payment.checkoutUrl : null;
+
     const embeddedPayment = payment?.kind === "embedded" ? payment : null;
     return { id, consents, medicalForms, checkoutUrl, embeddedPayment };
   });
