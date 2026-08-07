@@ -244,6 +244,69 @@ export const respondToAssociateInvite = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+/** Associate side: restrict what a host clinic can see about them. */
+export const updateMyHostLink = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    (d: {
+      id: string;
+      patch: Partial<{ oversight_records: boolean; oversight_appointments: boolean; oversight_incidents: boolean }>;
+    }) => d,
+  )
+  .handler(async ({ data, context }) => {
+    const prof = await getProfile(context.supabase, context.userId);
+    if (!prof) throw new Error("Profile not found");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const admin: any = supabaseAdmin;
+    const { data: link } = await admin.from("clinic_associates").select("*").eq("id", data.id).maybeSingle();
+    if (!link) throw new Error("Link not found");
+    const mine =
+      link.associate_profile_id === prof.id ||
+      (prof.email && link.invited_email?.toLowerCase() === prof.email.toLowerCase());
+    if (!mine) throw new Error("Not permitted");
+
+    const patch: Record<string, boolean> = {};
+    for (const k of ["oversight_records", "oversight_appointments", "oversight_incidents"] as const) {
+      if (typeof data.patch[k] === "boolean") patch[k] = data.patch[k] as boolean;
+    }
+    if (!Object.keys(patch).length) return { ok: true };
+    const { error } = await admin.from("clinic_associates").update(patch).eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+/** Associate side: leave a host clinic entirely — ends all oversight. */
+export const leaveHostClinic = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string }) => d)
+  .handler(async ({ data, context }) => {
+    const prof = await getProfile(context.supabase, context.userId);
+    if (!prof) throw new Error("Profile not found");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const admin: any = supabaseAdmin;
+    const { data: link } = await admin.from("clinic_associates").select("*").eq("id", data.id).maybeSingle();
+    if (!link) throw new Error("Link not found");
+    const mine =
+      link.associate_profile_id === prof.id ||
+      (prof.email && link.invited_email?.toLowerCase() === prof.email.toLowerCase());
+    if (!mine) throw new Error("Not permitted");
+
+    const { error } = await admin
+      .from("clinic_associates")
+      .update({
+        status: "revoked",
+        accepted_at: null,
+        oversight_records: false,
+        oversight_appointments: false,
+        oversight_incidents: false,
+        room_allocation_enabled: false,
+      })
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+
 /** Oversight: the associate's appointments (clinic-visible for audit). */
 export const getAssociateOversight = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
