@@ -844,6 +844,96 @@ export type Database = {
           },
         ]
       }
+      associate_incidents: {
+        Row: {
+          action_taken: string | null
+          appointment_id: string | null
+          associate_profile_id: string | null
+          client_id: string | null
+          clinic_profile_id: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          link_id: string
+          occurred_at: string
+          resolved_at: string | null
+          severity: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          action_taken?: string | null
+          appointment_id?: string | null
+          associate_profile_id?: string | null
+          client_id?: string | null
+          clinic_profile_id: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          link_id: string
+          occurred_at?: string
+          resolved_at?: string | null
+          severity?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          action_taken?: string | null
+          appointment_id?: string | null
+          associate_profile_id?: string | null
+          client_id?: string | null
+          clinic_profile_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          link_id?: string
+          occurred_at?: string
+          resolved_at?: string | null
+          severity?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "associate_incidents_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "associate_incidents_associate_profile_id_fkey"
+            columns: ["associate_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "associate_incidents_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clinic_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "associate_incidents_clinic_profile_id_fkey"
+            columns: ["clinic_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "associate_incidents_link_id_fkey"
+            columns: ["link_id"]
+            isOneToOne: false
+            referencedRelation: "clinic_associates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       availability_overrides: {
         Row: {
           created_at: string
@@ -1477,6 +1567,107 @@ export type Database = {
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clinic_associates: {
+        Row: {
+          accepted_at: string | null
+          associate_profile_id: string | null
+          block_when_no_room: boolean
+          charge_room_rent: boolean
+          clinic_profile_id: string
+          created_at: string
+          id: string
+          invite_expires_at: string | null
+          invite_token: string | null
+          invited_email: string
+          invited_name: string
+          location_id: string | null
+          notes: string | null
+          oversight_appointments: boolean
+          oversight_incidents: boolean
+          oversight_records: boolean
+          room_allocation_enabled: boolean
+          room_id: string | null
+          seat_sponsored: boolean
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          associate_profile_id?: string | null
+          block_when_no_room?: boolean
+          charge_room_rent?: boolean
+          clinic_profile_id: string
+          created_at?: string
+          id?: string
+          invite_expires_at?: string | null
+          invite_token?: string | null
+          invited_email: string
+          invited_name: string
+          location_id?: string | null
+          notes?: string | null
+          oversight_appointments?: boolean
+          oversight_incidents?: boolean
+          oversight_records?: boolean
+          room_allocation_enabled?: boolean
+          room_id?: string | null
+          seat_sponsored?: boolean
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          associate_profile_id?: string | null
+          block_when_no_room?: boolean
+          charge_room_rent?: boolean
+          clinic_profile_id?: string
+          created_at?: string
+          id?: string
+          invite_expires_at?: string | null
+          invite_token?: string | null
+          invited_email?: string
+          invited_name?: string
+          location_id?: string | null
+          notes?: string | null
+          oversight_appointments?: boolean
+          oversight_incidents?: boolean
+          oversight_records?: boolean
+          room_allocation_enabled?: boolean
+          room_id?: string | null
+          seat_sponsored?: boolean
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clinic_associates_associate_profile_id_fkey"
+            columns: ["associate_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clinic_associates_clinic_profile_id_fkey"
+            columns: ["clinic_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clinic_associates_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clinic_associates_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rental_rooms"
             referencedColumns: ["id"]
           },
         ]
@@ -5581,6 +5772,7 @@ export type Database = {
           allow_patient_cancel: boolean
           allow_patient_reschedule: boolean
           allow_pay_in_clinic: boolean
+          associates_enabled: boolean
           auto_confirm_bookings: boolean
           avatar_url: string | null
           bio: string | null
@@ -5703,6 +5895,7 @@ export type Database = {
           allow_patient_cancel?: boolean
           allow_patient_reschedule?: boolean
           allow_pay_in_clinic?: boolean
+          associates_enabled?: boolean
           auto_confirm_bookings?: boolean
           avatar_url?: string | null
           bio?: string | null
@@ -5825,6 +6018,7 @@ export type Database = {
           allow_patient_cancel?: boolean
           allow_patient_reschedule?: boolean
           allow_pay_in_clinic?: boolean
+          associates_enabled?: boolean
           auto_confirm_bookings?: boolean
           avatar_url?: string | null
           bio?: string | null
@@ -6100,6 +6294,8 @@ export type Database = {
       }
       rental_bookings: {
         Row: {
+          associate_appointment_id: string | null
+          associate_profile_id: string | null
           booking_date: string
           created_at: string
           deposit_amount: number | null
@@ -6125,6 +6321,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          associate_appointment_id?: string | null
+          associate_profile_id?: string | null
           booking_date: string
           created_at?: string
           deposit_amount?: number | null
@@ -6150,6 +6348,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          associate_appointment_id?: string | null
+          associate_profile_id?: string | null
           booking_date?: string
           created_at?: string
           deposit_amount?: number | null
@@ -6175,6 +6375,20 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "rental_bookings_associate_appointment_id_fkey"
+            columns: ["associate_appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rental_bookings_associate_profile_id_fkey"
+            columns: ["associate_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "rental_bookings_room_id_fkey"
             columns: ["room_id"]

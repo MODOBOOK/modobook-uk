@@ -73,6 +73,8 @@ const groups: { title: string; items: Item[] }[] = [
       { label: "Locations", description: "Manage your clinic addresses", to: "/dashboard/locations", icon: MapPin, ...T.cream },
       { label: "Practitioners", description: "Team members, titles, photos & locations", to: "/dashboard/practitioners", icon: Users, ...T.taupe },
       { label: "Staff", description: "Invite team members & control what they can see", to: "/dashboard/staff", icon: ShieldCheck, ...T.espresso },
+      { label: "Associates", description: "Self-employed practitioners hosted in your clinic — oversight & rooms", to: "/dashboard/associates", icon: ShieldCheck, ...T.sand },
+
 
     ],
   },
@@ -136,18 +138,23 @@ const groups: { title: string; items: Item[] }[] = [
 ];
 
 function MenuPage() {
-  const { profile } = Route.useRouteContext() as { profile: { slug: string; clinic_name?: string | null } };
+  const { profile } = Route.useRouteContext() as { profile: { slug: string; clinic_name?: string | null; associates_enabled?: boolean | null } };
   const { admin } = Route.useLoaderData();
   const [query, setQuery] = useState("");
 
 
   const filtered = useMemo(() => {
-    if (!query.trim()) return groups;
+    const visible = groups.map((g) => ({
+      ...g,
+      items: g.items.filter((i) => i.to !== "/dashboard/associates" || !!profile.associates_enabled),
+    }));
+    if (!query.trim()) return visible;
     const q = query.toLowerCase();
-    return groups
+    return visible
       .map((g) => ({ ...g, items: g.items.filter((i) => i.label.toLowerCase().includes(q) || i.description.toLowerCase().includes(q)) }))
       .filter((g) => g.items.length > 0);
-  }, [query]);
+  }, [query, profile.associates_enabled]);
+
 
   return (
     <div className="mx-auto max-w-2xl space-y-6 px-1">

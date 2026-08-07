@@ -389,7 +389,18 @@ export const getDayAvailability = createServerFn({ method: "GET" })
       (o) => !o.location_id || !data.locationId || o.location_id === data.locationId,
     );
 
-    return { isBlocked, busy: [...paddedAppts, ...blockedBusy], overrides: scopedOverrides };
+    // Associate practitioners hosted inside another clinic can only take
+    // bookings while a room is free at the host clinic.
+    let roomBusy: { start_time: string; end_time: string; status: string; location_id: string | null }[] = [];
+    try {
+      const { associateRoomBusy } = await import("./associates.server");
+      roomBusy = (await associateRoomBusy(supabaseAdmin, data.profileId, data.date)).map((b) => ({ ...b, location_id: null }));
+    } catch (e) {
+      console.error("[getDayAvailability] associate room check failed", e);
+    }
+
+    return { isBlocked, busy: [...paddedAppts, ...blockedBusy, ...roomBusy], overrides: scopedOverrides };
+
 
   });
 
@@ -748,7 +759,17 @@ export const requestBooking = createServerFn({ method: "POST" })
       } catch (e) { console.error("[requestBooking] email failed", e); }
     }
 
+    // If this practitioner is an associate hosted by another clinic, reserve a
+    // room unit at the host clinic for the appointment window.
+    try {
+      const { allocateRoomForAppointment } = await import("./associates.server");
+      await allocateRoomForAppointment(id);
+    } catch (e) {
+      console.error("[requestBooking] associate room allocation failed", e);
+    }
+
     const checkoutUrl = payment?.kind === "hosted" ? payment.checkoutUrl : null;
+
     const embeddedPayment = payment?.kind === "embedded" ? payment : null;
     return { id, consents, medicalForms, checkoutUrl, embeddedPayment };
   });

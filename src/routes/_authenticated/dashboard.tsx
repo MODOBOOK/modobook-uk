@@ -36,6 +36,8 @@ import {
   ExternalLink,
   TrendingUp,
   MessageCircle,
+  ShieldCheck,
+
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
@@ -89,6 +91,8 @@ const navItems = [
   { label: "Locations", to: "/dashboard/locations", icon: MapPin },
   { label: "Practitioners", to: "/dashboard/practitioners", icon: Users },
   { label: "Staff", to: "/dashboard/staff", icon: Users },
+  { label: "Associates", to: "/dashboard/associates", icon: ShieldCheck, flag: "associates_enabled" as const },
+
   { label: "Medical forms", to: "/dashboard/medical-forms", icon: FileText },
   { label: "Consent forms", to: "/dashboard/consent-forms", icon: FileSignature },
   { label: "Pre-treatment info", to: "/dashboard/pre-treatment", icon: Info },
@@ -173,7 +177,7 @@ function DashboardLayout() {
           </div>
         </div>
         <nav className="flex-1 space-y-0.5 overflow-y-auto px-4 py-6">
-          {navItems.map((item) => {
+          {navItems.filter((item) => !("flag" in item) || (profile as Record<string, unknown>)?.[(item as { flag: string }).flag]).map((item) => {
             const badge =
               item.to === "/dashboard/reviews" && pendingReviews > 0
                 ? pendingReviews
