@@ -291,11 +291,19 @@ function BookingPanel({ room, slug, onDone }: { room: Room; slug: string; onDone
           <Calendar
             mode="single"
             selected={day}
+            month={month}
+            onMonthChange={setMonth}
             onSelect={(d) => { if (d) { setDay(d); setStart(null); } }}
-            disabled={{ before: today }}
+            disabled={[{ before: today }, (d: Date) => closedDays.has(toISODate(d))]}
+            modifiers={{ unavailable: (d: Date) => closedDays.has(toISODate(d)) }}
+            modifiersClassNames={{ unavailable: "line-through opacity-40" }}
             className={cn("mt-1 rounded-md border p-3 pointer-events-auto")}
           />
+          <p className="mt-2 text-xs opacity-60">
+            {monthQ.isLoading ? "Checking the diary…" : "Crossed-out dates aren’t available."}
+          </p>
         </div>
+
 
         <div>
           <Label>Available times</Label>
