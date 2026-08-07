@@ -53,6 +53,9 @@ function AssociatesPage() {
   const update = useServerFn(updateAssociate);
   const remove = useServerFn(removeAssociate);
   const respond = useServerFn(respondToAssociateInvite);
+  const updateHost = useServerFn(updateMyHostLink);
+  const leaveHost = useServerFn(leaveHostClinic);
+
 
   const [inviteOpen, setInviteOpen] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", notes: "" });
