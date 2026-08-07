@@ -391,10 +391,10 @@ export const getDayAvailability = createServerFn({ method: "GET" })
 
     // Associate practitioners hosted inside another clinic can only take
     // bookings while a room is free at the host clinic.
-    let roomBusy: { start_time: string; end_time: string; status: string }[] = [];
+    let roomBusy: { start_time: string; end_time: string; status: string; location_id: string | null }[] = [];
     try {
       const { associateRoomBusy } = await import("./associates.server");
-      roomBusy = await associateRoomBusy(supabaseAdmin, data.profileId, data.date);
+      roomBusy = (await associateRoomBusy(supabaseAdmin, data.profileId, data.date)).map((b) => ({ ...b, location_id: null }));
     } catch (e) {
       console.error("[getDayAvailability] associate room check failed", e);
     }
