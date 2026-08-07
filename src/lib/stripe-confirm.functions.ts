@@ -77,12 +77,18 @@ export const confirmCheckoutSession = createServerFn({ method: "POST" })
     for (const apptId of ids) {
       const { data: cur } = await supabaseAdmin
         .from("appointments")
-        .select("amount_paid_cents, payment_status")
+        .select("amount_paid_cents, payment_status, total_amount, stripe_payment_intent_id")
         .eq("id", apptId)
         .maybeSingle();
-      const already = cur as { amount_paid_cents?: number; payment_status?: string } | null;
+      const already = cur as {
+        amount_paid_cents?: number;
+        payment_status?: string;
+        total_amount?: number | null;
+        stripe_payment_intent_id?: string | null;
+      } | null;
       // Idempotent: if already marked paid with intent recorded, skip amount bump.
       const alreadyPaid = already?.payment_status === "paid";
+      const samePayment = Boolean(paymentIntentId && already?.stripe_payment_intent_id === paymentIntentId);
       const patch: Record<string, unknown> = {
         status: "confirmed",
         payment_hold_expires_at: null,
@@ -95,8 +101,12 @@ export const confirmCheckoutSession = createServerFn({ method: "POST" })
         patch.payment_method = "stripe_link";
         patch.checkout_completed_at = new Date().toISOString();
       }
-      if (!alreadyPaid) {
-        patch.amount_paid_cents = Number(already?.amount_paid_cents ?? 0) + perAppt;
+      if (!alreadyPaid && !samePayment) {
+        const appointmentTotal = Math.round(Number(already?.total_amount ?? 0) * 100);
+        patch.amount_paid_cents = Math.min(
+          appointmentTotal,
+          Number(already?.amount_paid_cents ?? 0) + perAppt,
+        );
       }
       const { error } = await supabaseAdmin
         .from("appointments")

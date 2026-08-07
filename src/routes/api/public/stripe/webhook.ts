@@ -265,10 +265,21 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
                   // Increment amount_paid_cents by the treatment portion of this charge.
                   const { data: cur } = await supabaseAdmin
                     .from("appointments")
-                    .select("amount_paid_cents")
+                    .select("amount_paid_cents, total_amount, stripe_payment_intent_id")
                     .eq("id", apptId)
                     .maybeSingle();
-                  patch.amount_paid_cents = Number((cur as { amount_paid_cents?: number } | null)?.amount_paid_cents ?? 0) + treatmentPaidCents;
+                  const current = cur as {
+                    amount_paid_cents?: number;
+                    total_amount?: number | null;
+                    stripe_payment_intent_id?: string | null;
+                  } | null;
+                  if (!paymentIntentId || current?.stripe_payment_intent_id !== paymentIntentId) {
+                    const appointmentTotal = Math.round(Number(current?.total_amount ?? 0) * 100);
+                    patch.amount_paid_cents = Math.min(
+                      appointmentTotal,
+                      Number(current?.amount_paid_cents ?? 0) + treatmentPaidCents,
+                    );
+                  }
                   await supabaseAdmin
                     .from("appointments")
                     .update(patch as never)
@@ -285,10 +296,21 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
                     const patch = buildApptPatch(kind);
                     const { data: cur } = await supabaseAdmin
                       .from("appointments")
-                      .select("amount_paid_cents")
+                      .select("amount_paid_cents, total_amount, stripe_payment_intent_id")
                       .eq("id", apptId)
                       .maybeSingle();
-                    patch.amount_paid_cents = Number((cur as { amount_paid_cents?: number } | null)?.amount_paid_cents ?? 0) + perAppt;
+                    const current = cur as {
+                      amount_paid_cents?: number;
+                      total_amount?: number | null;
+                      stripe_payment_intent_id?: string | null;
+                    } | null;
+                    if (!paymentIntentId || current?.stripe_payment_intent_id !== paymentIntentId) {
+                      const appointmentTotal = Math.round(Number(current?.total_amount ?? 0) * 100);
+                      patch.amount_paid_cents = Math.min(
+                        appointmentTotal,
+                        Number(current?.amount_paid_cents ?? 0) + perAppt,
+                      );
+                    }
                     await supabaseAdmin
                       .from("appointments")
                       .update(patch as never)
