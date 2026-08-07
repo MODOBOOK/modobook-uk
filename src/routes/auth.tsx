@@ -19,6 +19,7 @@ export const Route = createFileRoute("/auth")({
   validateSearch: (s: Record<string, unknown>) => ({
     as: s.as === "prescriber" ? "prescriber" : undefined,
     next: typeof s.next === "string" && s.next.startsWith("/") ? s.next : undefined,
+    email: typeof s.email === "string" ? s.email : undefined,
   }),
   head: () => ({
     meta: [
@@ -32,13 +33,13 @@ export const Route = createFileRoute("/auth")({
 function AuthPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const { as, next } = Route.useSearch();
+  const { as, next, email: prefillEmail } = Route.useSearch();
   const isPrescriberFlow = as === "prescriber";
   const postAuthTo = () =>
     next
       ? ({ to: next } as any)
       : { to: isPrescriberFlow ? "/hub/verification" : "/dashboard" };
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(prefillEmail ?? "");
   const [password, setPassword] = useState("");
 
   const [mode, setMode] = useState<"signin" | "signup">("signup");

@@ -150,7 +150,7 @@ export const inviteAssociate = createServerFn({ method: "POST" })
           inviteeName: data.name.trim().split(" ")[0] || "there",
           clinicName: clinic,
           role: "Self-employed associate practitioner",
-          acceptUrl: `${origin}/dashboard/associates`,
+          acceptUrl: `${origin}/auth?next=${encodeURIComponent("/dashboard/associates")}&email=${encodeURIComponent(email)}`,
           logoUrl: branding.logoUrl,
           brandColor: branding.brandColor,
         },
