@@ -113,7 +113,7 @@ export async function findFreeRoomUnit(
   if (!state) return { ok: false, unitIndex: null };
   const s = t2m(startTime);
   const e = t2m(endTime);
-  const withinOpen = state.open.length === 0 ? false : state.open.some((o) => s >= o.start && e <= o.end);
+  const withinOpen = state.open.length === 0 ? false : state.open.some((o: { start: number; end: number }) => s >= o.start && e <= o.end);
   if (!withinOpen) return { ok: false, unitIndex: null };
   if (peakUsage(state.taken, s, e) >= state.capacity) return { ok: false, unitIndex: null };
 
