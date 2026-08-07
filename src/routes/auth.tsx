@@ -19,6 +19,7 @@ export const Route = createFileRoute("/auth")({
   validateSearch: (s: Record<string, unknown>) => ({
     as: s.as === "prescriber" ? "prescriber" : undefined,
     next: typeof s.next === "string" && s.next.startsWith("/") ? s.next : undefined,
+    email: typeof s.email === "string" ? s.email : undefined,
   }),
   head: () => ({
     meta: [
