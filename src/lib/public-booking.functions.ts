@@ -389,7 +389,18 @@ export const getDayAvailability = createServerFn({ method: "GET" })
       (o) => !o.location_id || !data.locationId || o.location_id === data.locationId,
     );
 
-    return { isBlocked, busy: [...paddedAppts, ...blockedBusy], overrides: scopedOverrides };
+    // Associate practitioners hosted inside another clinic can only take
+    // bookings while a room is free at the host clinic.
+    let roomBusy: { start_time: string; end_time: string; status: string }[] = [];
+    try {
+      const { associateRoomBusy } = await import("./associates.server");
+      roomBusy = await associateRoomBusy(supabaseAdmin, data.profileId, data.date);
+    } catch (e) {
+      console.error("[getDayAvailability] associate room check failed", e);
+    }
+
+    return { isBlocked, busy: [...paddedAppts, ...blockedBusy, ...roomBusy], overrides: scopedOverrides };
+
 
   });
 
