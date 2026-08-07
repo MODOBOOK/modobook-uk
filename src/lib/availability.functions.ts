@@ -156,6 +156,14 @@ export const cancelAppointment = createServerFn({ method: "POST" })
       .eq("profile_id", profileId);
     if (error) throw error;
 
+    // Free any host-clinic room that was auto-allocated for this appointment.
+    try {
+      const { releaseRoomForAppointment } = await import("./associates.server");
+      await releaseRoomForAppointment(data.id);
+    } catch (e) { console.error("[cancelAppointment] room release failed", e); }
+
+
+
     if (appt?.patient_email) {
       try {
         const { data: prof } = await context.supabase
