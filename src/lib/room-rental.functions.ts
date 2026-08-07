@@ -625,6 +625,7 @@ export async function sendRentalInvoiceForBooking(bookingId: string) {
   const sb = supabaseAdmin as any;
   const { data: booking } = await sb.from("rental_bookings").select("*").eq("id", bookingId).maybeSingle();
   if (!booking) return;
+  if (booking.invoice_sent_at) return; // already invoiced — never send twice
   const { data: room } = await sb.from("rental_rooms").select("name, auto_invoice").eq("id", booking.room_id).maybeSingle();
   if (!room?.auto_invoice) return;
   const { data: prof } = await sb.from("profiles").select("id").eq("user_id", booking.profile_id).maybeSingle();
@@ -845,4 +846,112 @@ export const sendRentalPaymentLink = createServerFn({ method: "POST" })
       });
     }
     return { url };
+  });
+
+/* --------------------------- month calendar blocking ------------------------ */
+
+/**
+ * Which dates in a month can't be booked (clinic closed, fully blocked, or fully booked).
+ * `hours` lets the calendar grey out days with no window long enough for the chosen slot.
+ */
+export const getRoomMonthAvailability = createServerFn({ method: "GET" })
+  .inputValidator((d: { slug: string; room_id: string; month: string; hours?: number }) => d)
+  .handler(async ({ data }) => {
+    const { supabaseAdmin, prof } = await resolveClinic(data.slug);
+    if (!prof?.room_rental_enabled) return { unavailable: [] as string[] };
+
+    const [y, m] = data.month.split("-").map(Number);
+    if (!y || !m) return { unavailable: [] as string[] };
+    const first = `${y}-${String(m).padStart(2, "0")}-01`;
+    const lastDay = new Date(y, m, 0).getDate();
+    const last = `${y}-${String(m).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
+    const need = Math.max(1, Math.ceil(Number(data.hours ?? 1)));
+
+    const [roomRes, hoursRes, blocksRes, bookingsRes] = await Promise.all([
+      supabaseAdmin.from("rental_rooms").select("quantity").eq("id", data.room_id).maybeSingle(),
+      supabaseAdmin.from("rental_hours").select("weekday,start_time,end_time").eq("room_id", data.room_id),
+      supabaseAdmin.from("rental_blocks").select("block_date,start_time,end_time,units")
+        .gte("block_date", first).lte("block_date", last)
+        .or(`room_id.eq.${data.room_id},room_id.is.null`),
+      supabaseAdmin.from("rental_bookings")
+        .select("booking_date,start_time,end_time,status,payment_status,payment_mode,created_at")
+        .eq("room_id", data.room_id).gte("booking_date", first).lte("booking_date", last)
+        .neq("status", "cancelled"),
+    ]);
+
+    const capacity = Math.max(1, Number((roomRes.data as any)?.quantity ?? 1));
+    const openHours = (hoursRes.data ?? []) as any[];
+    const allBlocks = (blocksRes.data ?? []) as any[];
+    const allBookings = activeBookings((bookingsRes.data ?? []) as any[]);
+
+    const unavailable: string[] = [];
+    for (let d = 1; d <= lastDay; d += 1) {
+      const date = `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+      const weekday = new Date(`${date}T12:00:00`).getDay();
+      const dayHours = openHours.filter((h) => Number(h.weekday) === weekday);
+      if (dayHours.length === 0) { unavailable.push(date); continue; }
+
+      const blocks = allBlocks.filter((b) => b.block_date === date);
+      const booked = allBookings.filter((b) => b.booking_date === date);
+
+      // Build the hourly grid, then look for `need` contiguous free hours.
+      let run = 0;
+      let ok = false;
+      for (const h of dayHours) {
+        run = 0;
+        for (let mm = toMin(h.start_time); mm + 60 <= toMin(h.end_time); mm += 60) {
+          const usable = capacity - blockedUnits(blocks, capacity, mm, mm + 60);
+          const used = booked.filter((b: any) => mm < toMin(b.end_time) && mm + 60 > toMin(b.start_time)).length;
+          run = usable - used > 0 ? run + 1 : 0;
+          if (run >= need) { ok = true; break; }
+        }
+        if (ok) break;
+      }
+      if (!ok) unavailable.push(date);
+    }
+    return { unavailable };
+  });
+
+/* ------------------- confirm a rental payment on return ---------------------- */
+
+/**
+ * Called when the renter lands back from Stripe. Verifies the session, marks the
+ * booking paid and fires the invoice straight away (the webhook does the same —
+ * both paths are idempotent, so whichever arrives first wins).
+ */
+export const confirmRentalPayment = createServerFn({ method: "POST" })
+  .inputValidator((d: { booking_id: string }) => d)
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const sb = supabaseAdmin as any;
+    const { data: booking } = await sb
+      .from("rental_bookings").select("*").eq("id", data.booking_id).maybeSingle();
+    if (!booking) return { paid: false };
+    if (booking.payment_status === "paid") {
+      await sendRentalInvoiceForBooking(booking.id);
+      return { paid: true };
+    }
+    if (!booking.stripe_session_id) return { paid: false };
+
+    const { data: prof } = await sb
+      .from("profiles").select("stripe_connect_account_id").eq("user_id", booking.profile_id).maybeSingle();
+    if (!prof?.stripe_connect_account_id) return { paid: false };
+
+    try {
+      const { getStripe } = await import("./stripe.server");
+      const session = await getStripe().checkout.sessions.retrieve(
+        booking.stripe_session_id,
+        undefined,
+        { stripeAccount: prof.stripe_connect_account_id },
+      );
+      if (session.payment_status !== "paid") return { paid: false };
+      await sb.from("rental_bookings")
+        .update({ payment_status: "paid", status: "confirmed" })
+        .eq("id", booking.id).neq("payment_status", "paid");
+      await sendRentalInvoiceForBooking(booking.id);
+      return { paid: true };
+    } catch (e) {
+      console.error("[room-rental] confirm payment failed", e);
+      return { paid: false };
+    }
   });

@@ -1,8 +1,14 @@
 import { createFileRoute, useParams } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useMemo, useState } from "react";
-import { getPublicRooms, getRoomAvailability, requestRoomBooking } from "@/lib/room-rental.functions";
+import { useEffect, useMemo, useState } from "react";
+import {
+  getPublicRooms,
+  getRoomAvailability,
+  getRoomMonthAvailability,
+  requestRoomBooking,
+  confirmRentalPayment,
+} from "@/lib/room-rental.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -56,8 +62,26 @@ function toISODate(d: Date) {
 function PublicRoomRental() {
   const { slug } = useParams({ from: "/m/$slug/roomrental" });
   const fetchRooms = useServerFn(getPublicRooms);
+  const confirmPayment = useServerFn(confirmRentalPayment);
   const q = useQuery({ queryKey: ["public-rooms", slug], queryFn: () => fetchRooms({ data: { slug } }) });
   const [booking, setBooking] = useState<Room | null>(null);
+
+  // Back from checkout — confirm the payment (and fire the invoice) without waiting on the webhook.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get("booking");
+    if (!id || params.get("status") !== "paid") return;
+    confirmPayment({ data: { booking_id: id } })
+      .then((r) => {
+        toast.success(r?.paid ? "Payment received — your room is booked." : "Thanks! We're confirming your payment.");
+      })
+      .catch(() => {})
+      .finally(() => {
+        window.history.replaceState({}, "", window.location.pathname);
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
 
   const rooms = (q.data?.rooms ?? []) as Room[];
   const locations = (q.data?.locations ?? []) as { id: string; name: string; city: string | null }[];
@@ -149,11 +173,13 @@ function PublicRoomRental() {
 
 function BookingPanel({ room, slug, onDone }: { room: Room; slug: string; onDone?: () => void }) {
   const fetchAvail = useServerFn(getRoomAvailability);
+  const fetchMonth = useServerFn(getRoomMonthAvailability);
   const submit = useServerFn(requestRoomBooking);
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const [day, setDay] = useState<Date>(today);
+  const [month, setMonth] = useState<Date>(today);
   const date = toISODate(day);
   const [unit, setUnit] = useState<"hour" | "half_day" | "full_day">(
     room.hourly_rate ? "hour" : room.half_day_rate ? "half_day" : "full_day",
@@ -171,6 +197,19 @@ function BookingPanel({ room, slug, onDone }: { room: Room; slug: string; onDone
   const slots = (availQ.data?.slots ?? []) as { start: string; end: string; available: boolean }[];
 
   const blockHours = unit === "hour" ? Math.ceil(hours) : unit === "half_day" ? room.half_day_hours || 4 : Math.max(slots.length, 1);
+
+  // Grey out whole days on the calendar when nothing long enough is left.
+  const monthKey = `${month.getFullYear()}-${String(month.getMonth() + 1).padStart(2, "0")}`;
+  const needHours = unit === "hour" ? Math.ceil(hours) : unit === "half_day" ? room.half_day_hours || 4 : 1;
+  const monthQ = useQuery({
+    queryKey: ["room-month", slug, room.id, monthKey, needHours],
+    queryFn: () => fetchMonth({ data: { slug, room_id: room.id, month: monthKey, hours: needHours } }),
+  });
+  const closedDays = useMemo(
+    () => new Set<string>((monthQ.data?.unavailable ?? []) as string[]),
+    [monthQ.data],
+  );
+
 
   const startable = useMemo(() => {
     const set = new Set<string>();
@@ -270,11 +309,19 @@ function BookingPanel({ room, slug, onDone }: { room: Room; slug: string; onDone
           <Calendar
             mode="single"
             selected={day}
+            month={month}
+            onMonthChange={setMonth}
             onSelect={(d) => { if (d) { setDay(d); setStart(null); } }}
-            disabled={{ before: today }}
+            disabled={[{ before: today }, (d: Date) => closedDays.has(toISODate(d))]}
+            modifiers={{ unavailable: (d: Date) => closedDays.has(toISODate(d)) }}
+            modifiersClassNames={{ unavailable: "line-through opacity-40" }}
             className={cn("mt-1 rounded-md border p-3 pointer-events-auto")}
           />
+          <p className="mt-2 text-xs opacity-60">
+            {monthQ.isLoading ? "Checking the diary…" : "Crossed-out dates aren’t available."}
+          </p>
         </div>
+
 
         <div>
           <Label>Available times</Label>
