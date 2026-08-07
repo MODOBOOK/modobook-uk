@@ -552,7 +552,7 @@ function BookingRow({ booking, roomName, onChanged }: { booking: any; roomName: 
   const [mode, setMode] = useState<"link" | "invoice">("link");
   return (
     <Card>
-      <CardContent className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:gap-4">
+      <CardContent className="flex w-full min-w-0 flex-col gap-3 py-4 sm:flex-row sm:items-center sm:gap-4">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <span className="font-semibold">{booking.renter_name}</span>
