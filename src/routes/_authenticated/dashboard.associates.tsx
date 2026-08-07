@@ -374,6 +374,7 @@ function OversightDialog({ id, onClose }: { id: string; onClose: () => void }) {
                   toast.success("Incident logged");
                   setIncident({ title: "", severity: "minor", description: "", action_taken: "", occurred_at: new Date().toISOString().slice(0, 10) });
                   qc.invalidateQueries({ queryKey: ["associate-oversight", id] });
+                  qc.invalidateQueries({ queryKey: ["associate-incidents-all"] });
                 }}
               >
                 Save incident
