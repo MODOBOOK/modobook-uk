@@ -1,8 +1,14 @@
 import { createFileRoute, useParams } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useMemo, useState } from "react";
-import { getPublicRooms, getRoomAvailability, requestRoomBooking } from "@/lib/room-rental.functions";
+import { useEffect, useMemo, useState } from "react";
+import {
+  getPublicRooms,
+  getRoomAvailability,
+  getRoomMonthAvailability,
+  requestRoomBooking,
+  confirmRentalPayment,
+} from "@/lib/room-rental.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
