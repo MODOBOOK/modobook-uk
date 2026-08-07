@@ -397,13 +397,15 @@ function OversightDialog({ id, onClose }: { id: string; onClose: () => void }) {
             {openClient && record && (
               <div className="space-y-3 rounded-xl border bg-muted/30 p-4 text-sm">
                 <div className="flex items-center gap-2 font-medium"><FileText className="h-4 w-4" /> Record</div>
-                <div className="text-xs text-muted-foreground">{record.appointments.length} appointments · {record.notes.length} notes · {record.consents.length} consents</div>
-                {record.notes.slice(0, 10).map((n: any) => (
+                <div className="text-xs text-muted-foreground">{(record.appointments ?? []).length} appointments · {(record.notes ?? []).length} notes · {(record.consents ?? []).length} consents</div>
+                {(record.notes ?? []).length === 0 && <p className="text-xs text-muted-foreground">No clinical notes recorded.</p>}
+                {(record.notes ?? []).slice(0, 10).map((n: any) => (
                   <div key={n.id} className="rounded-md bg-background p-3">
                     <div className="text-[11px] text-muted-foreground">{new Date(n.created_at).toLocaleString("en-GB")}</div>
-                    <div className="whitespace-pre-wrap">{n.note}</div>
+                    <div className="whitespace-pre-wrap">{n.body}</div>
                   </div>
                 ))}
+
               </div>
             )}
           </TabsContent>
