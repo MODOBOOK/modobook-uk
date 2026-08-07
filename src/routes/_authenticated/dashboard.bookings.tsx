@@ -1184,7 +1184,7 @@ function CheckoutSheet({
     try {
       const row = await createLink({
         data: {
-          amountCents: Math.round(total * 100),
+          amountCents: outstandingCents,
           description: `${a.treatments?.name ?? "Treatment"} · ${a.patient_name}`,
           kind: "checkout",
           appointmentId: a.id,
@@ -1383,7 +1383,7 @@ function CheckoutSheet({
             <span className="block font-medium">Add platform &amp; processing fees to the Stripe link</span>
             <span className="text-muted-foreground">
             {addFeesToLink && appointmentFee > 0
-              ? `Adds £${(appointmentFee / 100).toFixed(2)} — patient pays £${(total + appointmentFee / 100).toFixed(2)}.`
+              ? `Adds £${(appointmentFee / 100).toFixed(2)} — patient pays £${((outstandingCents + appointmentFee) / 100).toFixed(2)}.`
               : "Shown as a separate line to the patient on the Stripe page."}
           </span>
           </span>
