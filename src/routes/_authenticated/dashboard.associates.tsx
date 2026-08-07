@@ -12,6 +12,8 @@ import {
   getAssociatePatients,
   getAssociatePatientRecord,
   saveAssociateIncident,
+  listAssociateIncidentsForMe,
+  setIncidentResolved,
 } from "@/lib/associates.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
