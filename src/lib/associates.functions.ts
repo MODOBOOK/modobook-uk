@@ -413,23 +413,37 @@ export const getAssociatePatientRecord = createServerFn({ method: "GET" })
       .maybeSingle();
     if (!link?.oversight_records || link.status !== "active") throw new Error("Not permitted");
 
-    const [{ data: client }, { data: notes }, { data: appts }, { data: consents }] = await Promise.all([
-      admin.from("clinic_clients").select("*").eq("id", data.clientId).eq("profile_id", link.associate_profile_id).maybeSingle(),
-      admin.from("client_notes").select("id, note, created_at").eq("client_id", data.clientId).order("created_at", { ascending: false }).limit(100),
+    const { data: client } = await admin
+      .from("clinic_clients")
+      .select("*")
+      .eq("id", data.clientId)
+      .eq("profile_id", link.associate_profile_id)
+      .maybeSingle();
+    if (!client) throw new Error("Patient not found");
+
+    const [{ data: notes }, { data: appts }, { data: consents }] = await Promise.all([
       admin
-        .from("appointments")
-        .select("id, scheduled_date, start_time, status, patient_name, notes, treatments(name)")
-        .eq("profile_id", link.associate_profile_id)
+        .from("client_notes")
+        .select("id, body, created_at")
         .eq("client_id", data.clientId)
-        .order("scheduled_date", { ascending: false })
+        .order("created_at", { ascending: false })
         .limit(100),
+      client.email
+        ? admin
+            .from("appointments")
+            .select("id, scheduled_date, start_time, status, patient_name, notes, treatments(name)")
+            .eq("profile_id", link.associate_profile_id)
+            .ilike("patient_email", client.email)
+            .order("scheduled_date", { ascending: false })
+            .limit(100)
+        : Promise.resolve({ data: [] }),
       admin
         .from("appointment_consents")
         .select("id, signed_at, consent_templates(name)")
         .eq("client_id", data.clientId)
         .limit(100),
     ]);
-    if (!client) throw new Error("Patient not found");
+
 
     // Audit trail: record that the host clinic viewed this record.
     try {
