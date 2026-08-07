@@ -62,8 +62,26 @@ function toISODate(d: Date) {
 function PublicRoomRental() {
   const { slug } = useParams({ from: "/m/$slug/roomrental" });
   const fetchRooms = useServerFn(getPublicRooms);
+  const confirmPayment = useServerFn(confirmRentalPayment);
   const q = useQuery({ queryKey: ["public-rooms", slug], queryFn: () => fetchRooms({ data: { slug } }) });
   const [booking, setBooking] = useState<Room | null>(null);
+
+  // Back from checkout — confirm the payment (and fire the invoice) without waiting on the webhook.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get("booking");
+    if (!id || params.get("status") !== "paid") return;
+    confirmPayment({ data: { booking_id: id } })
+      .then((r) => {
+        toast.success(r?.paid ? "Payment received — your room is booked." : "Thanks! We're confirming your payment.");
+      })
+      .catch(() => {})
+      .finally(() => {
+        window.history.replaceState({}, "", window.location.pathname);
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
 
   const rooms = (q.data?.rooms ?? []) as Room[];
   const locations = (q.data?.locations ?? []) as { id: string; name: string; city: string | null }[];
