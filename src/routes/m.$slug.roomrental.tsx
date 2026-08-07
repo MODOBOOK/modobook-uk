@@ -155,11 +155,13 @@ function PublicRoomRental() {
 
 function BookingPanel({ room, slug, onDone }: { room: Room; slug: string; onDone?: () => void }) {
   const fetchAvail = useServerFn(getRoomAvailability);
+  const fetchMonth = useServerFn(getRoomMonthAvailability);
   const submit = useServerFn(requestRoomBooking);
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const [day, setDay] = useState<Date>(today);
+  const [month, setMonth] = useState<Date>(today);
   const date = toISODate(day);
   const [unit, setUnit] = useState<"hour" | "half_day" | "full_day">(
     room.hourly_rate ? "hour" : room.half_day_rate ? "half_day" : "full_day",
@@ -177,6 +179,19 @@ function BookingPanel({ room, slug, onDone }: { room: Room; slug: string; onDone
   const slots = (availQ.data?.slots ?? []) as { start: string; end: string; available: boolean }[];
 
   const blockHours = unit === "hour" ? Math.ceil(hours) : unit === "half_day" ? room.half_day_hours || 4 : Math.max(slots.length, 1);
+
+  // Grey out whole days on the calendar when nothing long enough is left.
+  const monthKey = `${month.getFullYear()}-${String(month.getMonth() + 1).padStart(2, "0")}`;
+  const needHours = unit === "hour" ? Math.ceil(hours) : unit === "half_day" ? room.half_day_hours || 4 : 1;
+  const monthQ = useQuery({
+    queryKey: ["room-month", slug, room.id, monthKey, needHours],
+    queryFn: () => fetchMonth({ data: { slug, room_id: room.id, month: monthKey, hours: needHours } }),
+  });
+  const closedDays = useMemo(
+    () => new Set<string>((monthQ.data?.unavailable ?? []) as string[]),
+    [monthQ.data],
+  );
+
 
   const startable = useMemo(() => {
     const set = new Set<string>();
