@@ -8,6 +8,9 @@ import {
   updateAssociate,
   removeAssociate,
   respondToAssociateInvite,
+  updateMyHostLink,
+  leaveHostClinic,
+
   getAssociateOversight,
   getAssociatePatients,
   getAssociatePatientRecord,
