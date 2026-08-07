@@ -145,12 +145,15 @@ export const inviteAssociate = createServerFn({ method: "POST" })
       await tryEnqueueAppEmail({
         templateName: "staff-invite",
         recipientEmail: email,
-        messageId: `associate-invite-${row?.id}`,
+        // A clinic can re-invite the same email after correcting details or
+        // after an earlier link has gone stale. Use a fresh id so email
+        // idempotency does not suppress the replacement invitation.
+        messageId: `associate-invite-${row?.id}-${crypto.randomUUID()}`,
         templateData: {
           inviteeName: data.name.trim().split(" ")[0] || "there",
           clinicName: clinic,
           role: "Self-employed associate practitioner",
-          acceptUrl: `${origin}/auth?next=${encodeURIComponent("/dashboard/associates")}&email=${encodeURIComponent(email)}`,
+          acceptUrl: `${origin.replace(/\/$/, "")}/auth?next=${encodeURIComponent("/dashboard/associates")}&email=${encodeURIComponent(email)}`,
           logoUrl: branding.logoUrl,
           brandColor: branding.brandColor,
         },

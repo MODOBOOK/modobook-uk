@@ -87,7 +87,10 @@ function AuthPage() {
 
   async function handleOAuth(provider: "google" | "apple") {
     setLoading(true);
-    const redirectUri = `${window.location.origin}/auth`;
+    const callbackUrl = new URL("/auth", window.location.origin);
+    if (next) callbackUrl.searchParams.set("next", next);
+    if (prefillEmail) callbackUrl.searchParams.set("email", prefillEmail);
+    const redirectUri = callbackUrl.toString();
     const result = await lovable.auth.signInWithOAuth(provider, { redirect_uri: redirectUri });
     setLoading(false);
     if (result.error) {
