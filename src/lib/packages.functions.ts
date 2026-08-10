@@ -15,7 +15,22 @@ type PackageInput = {
   active: boolean;
   category_id: string | null;
   allow_split_payment?: boolean;
+  is_limited?: boolean;
+  limited_starts_at?: string | null;
+  limited_ends_at?: string | null;
+  limited_quantity?: number | null;
 };
+
+function limitedFields(data: PackageInput) {
+  const on = Boolean(data.is_limited);
+  return {
+    is_limited: on,
+    limited_starts_at: on ? data.limited_starts_at ?? null : null,
+    limited_ends_at: on ? data.limited_ends_at ?? null : null,
+    limited_quantity: on ? data.limited_quantity ?? null : null,
+  };
+}
+
 
 /** Drop treatment ids that no longer exist (e.g. deleted treatments still
  *  referenced by an older package) so we never violate the FK on save. */
