@@ -505,6 +505,54 @@ function BookPage() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [selectedPackageIds, setSelectedPackageIds] = useState<string[]>([]);
   const pkgById = useMemo(() => new Map(packages.map((p) => [p.id, p])), [packages]);
+  // Limited-time offers: tick so the countdown stays live
+  const [nowTs, setNowTs] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNowTs(Date.now()), 30_000);
+    return () => clearInterval(id);
+  }, []);
+  type LimitedPkg = (typeof packages)[number] & {
+    is_limited?: boolean | null;
+    limited_starts_at?: string | null;
+    limited_ends_at?: string | null;
+    limited_quantity?: number | null;
+    limited_claimed?: number | null;
+  };
+  const limitedState = (p: LimitedPkg) => {
+    if (!p.is_limited) return { limited: false, live: true, remaining: null as number | null, endsAt: null as number | null };
+    const starts = p.limited_starts_at ? new Date(p.limited_starts_at).getTime() : null;
+    const ends = p.limited_ends_at ? new Date(p.limited_ends_at).getTime() : null;
+    const remaining =
+      p.limited_quantity == null ? null : Math.max(0, Number(p.limited_quantity) - Number(p.limited_claimed ?? 0));
+    const live =
+      (starts == null || nowTs >= starts) &&
+      (ends == null || nowTs < ends) &&
+      (remaining == null || remaining > 0);
+    return { limited: true, live, remaining, endsAt: ends };
+  };
+  const limitedPackages = useMemo(
+    () => (packages as LimitedPkg[]).filter((p) => limitedState(p).limited && limitedState(p).live),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [packages, nowTs],
+  );
+  // Expired / not-yet-started / sold-out limited offers drop out of the menu
+  const visiblePackages = useMemo(
+    () => (packages as LimitedPkg[]).filter((p) => limitedState(p).live),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [packages, nowTs],
+  );
+  const countdownLabel = (endsAt: number | null) => {
+    if (!endsAt) return null;
+    const ms = endsAt - nowTs;
+    if (ms <= 0) return null;
+    const mins = Math.floor(ms / 60000);
+    const days = Math.floor(mins / 1440);
+    const hours = Math.floor((mins % 1440) / 60);
+    if (days > 0) return `${days}d ${hours}h left`;
+    if (hours > 0) return `${hours}h ${mins % 60}m left`;
+    return `${mins}m left`;
+  };
+
   const togglePackageSelect = (id: string) =>
     setSelectedPackageIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   const isPackageSelected = (id: string) => selectedPackageIds.includes(id);
@@ -1663,10 +1711,115 @@ function BookPage() {
             }
 
             return (
+              <>
+              {limitedPackages.length > 0 && (
+                <section
+                  className="mb-5 rounded-2xl border p-3 sm:p-4"
+                  style={{ borderColor: `${brand}40`, background: `${brand}0d` }}
+                  aria-label="Limited time offers"
+                >
+                  <div className="mb-3 flex flex-wrap items-center gap-2">
+                    <span
+                      className="rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-white"
+                      style={{ backgroundColor: brand }}
+                    >
+                      Limited time
+                    </span>
+                    <h2 className="text-base font-bold sm:text-lg" style={headingStyle}>
+                      Offers ending soon
+                    </h2>
+                  </div>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {limitedPackages.map((p) => {
+                      const st = limitedState(p);
+                      const ids = (p.treatment_ids as string[] | null) ?? (p.treatment_id ? [p.treatment_id] : []);
+                      const firstTreatmentId = ids[0];
+                      const price = Number(p.price ?? 0);
+                      const autoTotal = ids
+                        .map((tid) => treatments.find((t) => t.id === tid))
+                        .reduce((s, t) => s + Number(t?.price ?? 0), 0);
+                      const compareAt = (p as { compare_at_price?: number | null }).compare_at_price;
+                      const wasPrice = compareAt == null ? autoTotal : Number(compareAt);
+                      const saving = wasPrice > price ? wasPrice - price : 0;
+                      const cd = countdownLabel(st.endsAt);
+                      return (
+                        <Card key={p.id} className="overflow-hidden rounded-2xl border-2" style={{ borderColor: `${brand}59` }}>
+                          {(p as { image_url?: string | null }).image_url && (
+                            <div className="aspect-[16/9] w-full overflow-hidden bg-muted">
+                              <img src={(p as { image_url?: string | null }).image_url as string} alt={p.name} className="h-full w-full object-cover" loading="lazy" />
+                            </div>
+                          )}
+                          <CardContent className="p-4">
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              {cd && (
+                                <span className="rounded-full bg-rose-100 px-2 py-0.5 text-[11px] font-semibold text-rose-800">
+                                  {cd}
+                                </span>
+                              )}
+                              {st.remaining != null && (
+                                <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-900">
+                                  {st.remaining} left
+                                </span>
+                              )}
+                              {saving > 0 && (
+                                <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-800">
+                                  Save £{saving.toFixed(2)}
+                                </span>
+                              )}
+                            </div>
+                            <div className="mt-2 font-semibold" style={{ color: brand }}>{p.name}</div>
+                            {(p as { description?: string | null }).description && (
+                              <p className="mt-1 line-clamp-2 text-sm opacity-70">
+                                {(p as { description?: string | null }).description}
+                              </p>
+                            )}
+                            <div className="mt-3 flex items-center justify-between gap-2">
+                              <div className="flex items-baseline gap-2">
+                                <p className="font-bold" style={{ color: brand }}>£{price.toFixed(2)}</p>
+                                {saving > 0 && (
+                                  <span className="text-xs opacity-60 line-through">£{wasPrice.toFixed(2)}</span>
+                                )}
+                              </div>
+                              {firstTreatmentId ? (
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => togglePackageSelect(p.id)}
+                                    aria-pressed={isPackageSelected(p.id)}
+                                    className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition"
+                                    style={
+                                      isPackageSelected(p.id)
+                                        ? { backgroundColor: brand, borderColor: brand, color: "#fff" }
+                                        : { borderColor: `${brand}66`, color: brand }
+                                    }
+                                  >
+                                    {isPackageSelected(p.id) ? (<><Check className="h-3 w-3" /> Added</>) : "Add"}
+                                  </button>
+                                  <Link
+                                    to="/m/$slug/book/$treatmentId"
+                                    search={{ locationId: locationId ?? undefined }}
+                                    params={{ slug, treatmentId: firstTreatmentId }}
+                                    className="modo-btn px-4 py-1.5 text-sm font-semibold"
+                                  >
+                                    Book
+                                  </Link>
+                                </div>
+                              ) : (
+                                <span className="text-xs opacity-60">Contact to book</span>
+                              )}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                </section>
+              )}
               <Tabs defaultValue="treatments" className="w-full">
-                <TabsList className="grid w-full h-auto" style={{ backgroundColor: `${brand}10`, gridTemplateColumns: `repeat(${1 + (packages.length > 0 ? 1 : 0) + (hasGiftCards ? 1 : 0) + (hasTraining ? 1 : 0) + (hasClinicVisits ? 1 : 0)}, minmax(0, 1fr))` }}>
+                <TabsList className="grid w-full h-auto" style={{ backgroundColor: `${brand}10`, gridTemplateColumns: `repeat(${1 + (visiblePackages.length > 0 ? 1 : 0) + (hasGiftCards ? 1 : 0) + (hasTraining ? 1 : 0) + (hasClinicVisits ? 1 : 0)}, minmax(0, 1fr))` }}>
                   <TabsTrigger value="treatments" className="text-sm sm:text-base py-2.5">Treatments</TabsTrigger>
-                  {packages.length > 0 && (
+                  {visiblePackages.length > 0 && (
+
                     <TabsTrigger value="packages" className="text-sm sm:text-base py-2.5">
                       <PackageIcon className="mr-1.5 h-4 w-4" />
                       Packages
@@ -1872,10 +2025,10 @@ function BookPage() {
 
                 <TabsContent value="packages" className="mt-4">
                   {(() => {
-                    if (packages.length === 0) {
+                    if (visiblePackages.length === 0) {
                       return <p className="opacity-70">No packages available.</p>;
                     }
-                    const renderPackageCard = (p: (typeof packages)[number]) => {
+                    const renderPackageCard = (p: (typeof visiblePackages)[number]) => {
                       const pkg = p as Package & {
                         description?: string | null;
                         treatment_ids?: string[] | null;
@@ -2010,22 +2163,22 @@ function BookPage() {
 
                     const pkgCats = (categories as { id: string; name: string; kind?: string | null }[])
                       .filter((c) => c.kind === "package");
-                    const byCat = new Map<string | null, typeof packages>();
-                    for (const p of packages) {
+                    const byCat = new Map<string | null, typeof visiblePackages>();
+                    for (const p of visiblePackages) {
                       const key = ((p as { category_id?: string | null }).category_id ?? null);
-                      const bucket = byCat.get(key) ?? ([] as typeof packages);
+                      const bucket = byCat.get(key) ?? ([] as typeof visiblePackages);
                       bucket.push(p);
                       byCat.set(key, bucket);
                     }
                     const groups = pkgCats
-                      .map((c) => ({ id: c.id, name: c.name, items: byCat.get(c.id) ?? ([] as typeof packages) }))
+                      .map((c) => ({ id: c.id, name: c.name, items: byCat.get(c.id) ?? ([] as typeof visiblePackages) }))
                       .filter((g) => g.items.length > 0);
-                    const uncategorised = byCat.get(null) ?? ([] as typeof packages);
+                    const uncategorised = byCat.get(null) ?? ([] as typeof visiblePackages);
 
                     if (groups.length === 0) {
                       return (
                         <div className="grid gap-3 sm:grid-cols-2">
-                          {packages.map((p) => renderPackageCard(p))}
+                          {visiblePackages.map((p) => renderPackageCard(p))}
                         </div>
                       );
                     }
@@ -2181,9 +2334,9 @@ function BookPage() {
 
 
               </Tabs>
-
-
+              </>
             );
+
           })()}
         </section>
       ) : !locationId ? (

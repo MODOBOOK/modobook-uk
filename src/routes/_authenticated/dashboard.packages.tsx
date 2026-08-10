@@ -39,11 +39,30 @@ type Pkg = {
   active: boolean;
   category_id: string | null;
   allow_split_payment?: boolean | null;
+  is_limited?: boolean | null;
+  limited_starts_at?: string | null;
+  limited_ends_at?: string | null;
+  limited_quantity?: number | null;
+  limited_claimed?: number | null;
 };
 type Treatment = { id: string; name: string; price: number | null };
 type Category = { id: string; name: string; parent_id: string | null };
 
 type PriceMode = "custom" | "percent";
+
+/** ISO string -> value for <input type="datetime-local"> in local time */
+function toLocalInput(iso: string | null | undefined) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+function fromLocalInput(v: string) {
+  if (!v.trim()) return null;
+  const d = new Date(v);
+  return Number.isNaN(d.getTime()) ? null : d.toISOString();
+}
 
 const blankForm = {
   name: "",
@@ -60,7 +79,12 @@ const blankForm = {
   active: true,
   category_id: "" as string,
   allow_split_payment: false,
+  is_limited: false,
+  limited_starts_at: "" as string,
+  limited_ends_at: "" as string,
+  limited_quantity: "" as string,
 };
+
 
 function PackagesPage() {
   const list = useServerFn(listMyPackages);
@@ -127,7 +151,12 @@ function PackagesPage() {
       active: p.active,
       category_id: p.category_id ?? "",
       allow_split_payment: Boolean(p.allow_split_payment),
+      is_limited: Boolean(p.is_limited),
+      limited_starts_at: toLocalInput(p.limited_starts_at),
+      limited_ends_at: toLocalInput(p.limited_ends_at),
+      limited_quantity: p.limited_quantity == null ? "" : String(p.limited_quantity),
     });
+
     setOpen(true);
   }
 
@@ -216,7 +245,12 @@ function PackagesPage() {
       active: form.active,
       category_id: form.category_id || null,
       allow_split_payment: form.allow_split_payment && totalSessions > 1,
+      is_limited: form.is_limited,
+      limited_starts_at: fromLocalInput(form.limited_starts_at),
+      limited_ends_at: fromLocalInput(form.limited_ends_at),
+      limited_quantity: form.limited_quantity.trim() === "" ? null : Math.max(1, Number(form.limited_quantity) || 1),
     };
+
 
     try {
       if (editing) await update({ data: { id: editing.id, ...payload } });
@@ -506,6 +540,60 @@ function PackagesPage() {
                   </div>
                 </div>
               )}
+
+              <div className="rounded-lg border p-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <Label>Limited time offer</Label>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      Features this package in a highlighted "Limited time" band at the
+                      top of your booking page, with a countdown and spots remaining.
+                    </p>
+                  </div>
+                  <Switch
+                    checked={form.is_limited}
+                    onCheckedChange={(v) => setForm({ ...form, is_limited: v })}
+                  />
+                </div>
+                {form.is_limited && (
+                  <div className="mt-3 space-y-3">
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div>
+                        <Label>Starts (optional)</Label>
+                        <Input
+                          type="datetime-local"
+                          value={form.limited_starts_at}
+                          onChange={(e) => setForm({ ...form, limited_starts_at: e.target.value })}
+                        />
+                      </div>
+                      <div>
+                        <Label>Ends</Label>
+                        <Input
+                          type="datetime-local"
+                          value={form.limited_ends_at}
+                          onChange={(e) => setForm({ ...form, limited_ends_at: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <Label>Limit number available (optional)</Label>
+                      <Input
+                        type="number"
+                        min={1}
+                        value={form.limited_quantity}
+                        onChange={(e) => setForm({ ...form, limited_quantity: e.target.value })}
+                        placeholder="e.g. 10 spots"
+                      />
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Leave blank for unlimited. Once the end date passes or the spots run
+                        out, the offer disappears from the booking page automatically.
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
