@@ -1378,6 +1378,9 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
           status: "active",
         } as never);
         if (purchErr) throw new Error(purchErr.message);
+        // Count the claim against any limited-time allocation
+        await (supabaseAdmin as never as { rpc: (n: string, a: Record<string, unknown>) => Promise<unknown> })
+          .rpc("increment_package_claim", { p_package_id: p.packageId });
         packagePurchases.push({ id: purchaseId, packageId: p.packageId, sessionsRemaining: remaining });
       }
     }
