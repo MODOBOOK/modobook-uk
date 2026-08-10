@@ -2334,9 +2334,9 @@ function BookPage() {
 
 
               </Tabs>
-
-
+              </>
             );
+
           })()}
         </section>
       ) : !locationId ? (
