@@ -260,8 +260,16 @@ function AvailabilityPage() {
 
 
   async function removeRule(id: string) {
-    try { await del({ data: { id } }); await refresh(); }
+    if (!confirm("Delete this shift? Patients will no longer be able to book these hours.")) return;
+    try { await del({ data: { id } }); await refresh(); toast.success("Shift deleted"); }
     catch (err: any) { toast.error(err?.message ?? "Failed"); }
+  }
+
+  async function deleteEditing() {
+    if (!editing) return;
+    await removeRule(editing.id);
+    setDlgOpen(false);
+    setEditing(null);
   }
 
   async function addOverride(e: React.FormEvent) {
