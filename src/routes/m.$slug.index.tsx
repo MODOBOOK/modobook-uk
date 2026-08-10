@@ -505,6 +505,54 @@ function BookPage() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [selectedPackageIds, setSelectedPackageIds] = useState<string[]>([]);
   const pkgById = useMemo(() => new Map(packages.map((p) => [p.id, p])), [packages]);
+  // Limited-time offers: tick so the countdown stays live
+  const [nowTs, setNowTs] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNowTs(Date.now()), 30_000);
+    return () => clearInterval(id);
+  }, []);
+  type LimitedPkg = (typeof packages)[number] & {
+    is_limited?: boolean | null;
+    limited_starts_at?: string | null;
+    limited_ends_at?: string | null;
+    limited_quantity?: number | null;
+    limited_claimed?: number | null;
+  };
+  const limitedState = (p: LimitedPkg) => {
+    if (!p.is_limited) return { limited: false, live: true, remaining: null as number | null, endsAt: null as number | null };
+    const starts = p.limited_starts_at ? new Date(p.limited_starts_at).getTime() : null;
+    const ends = p.limited_ends_at ? new Date(p.limited_ends_at).getTime() : null;
+    const remaining =
+      p.limited_quantity == null ? null : Math.max(0, Number(p.limited_quantity) - Number(p.limited_claimed ?? 0));
+    const live =
+      (starts == null || nowTs >= starts) &&
+      (ends == null || nowTs < ends) &&
+      (remaining == null || remaining > 0);
+    return { limited: true, live, remaining, endsAt: ends };
+  };
+  const limitedPackages = useMemo(
+    () => (packages as LimitedPkg[]).filter((p) => limitedState(p).limited && limitedState(p).live),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [packages, nowTs],
+  );
+  // Expired / not-yet-started / sold-out limited offers drop out of the menu
+  const visiblePackages = useMemo(
+    () => (packages as LimitedPkg[]).filter((p) => limitedState(p).live),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [packages, nowTs],
+  );
+  const countdownLabel = (endsAt: number | null) => {
+    if (!endsAt) return null;
+    const ms = endsAt - nowTs;
+    if (ms <= 0) return null;
+    const mins = Math.floor(ms / 60000);
+    const days = Math.floor(mins / 1440);
+    const hours = Math.floor((mins % 1440) / 60);
+    if (days > 0) return `${days}d ${hours}h left`;
+    if (hours > 0) return `${hours}h ${mins % 60}m left`;
+    return `${mins}m left`;
+  };
+
   const togglePackageSelect = (id: string) =>
     setSelectedPackageIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   const isPackageSelected = (id: string) => selectedPackageIds.includes(id);
