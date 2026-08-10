@@ -118,7 +118,9 @@ export const updatePackage = createServerFn({ method: "POST" })
       active: data.active,
       category_id: data.category_id,
       allow_split_payment: data.allow_split_payment ?? false,
+      ...limitedFields(data),
     }).eq("id", data.id);
+
     if (error) throw new Error(error.message);
     return { ok: true };
   });
