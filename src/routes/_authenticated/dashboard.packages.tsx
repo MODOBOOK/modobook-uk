@@ -245,7 +245,12 @@ function PackagesPage() {
       active: form.active,
       category_id: form.category_id || null,
       allow_split_payment: form.allow_split_payment && totalSessions > 1,
+      is_limited: form.is_limited,
+      limited_starts_at: fromLocalInput(form.limited_starts_at),
+      limited_ends_at: fromLocalInput(form.limited_ends_at),
+      limited_quantity: form.limited_quantity.trim() === "" ? null : Math.max(1, Number(form.limited_quantity) || 1),
     };
+
 
     try {
       if (editing) await update({ data: { id: editing.id, ...payload } });
