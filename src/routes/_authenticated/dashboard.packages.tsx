@@ -39,11 +39,30 @@ type Pkg = {
   active: boolean;
   category_id: string | null;
   allow_split_payment?: boolean | null;
+  is_limited?: boolean | null;
+  limited_starts_at?: string | null;
+  limited_ends_at?: string | null;
+  limited_quantity?: number | null;
+  limited_claimed?: number | null;
 };
 type Treatment = { id: string; name: string; price: number | null };
 type Category = { id: string; name: string; parent_id: string | null };
 
 type PriceMode = "custom" | "percent";
+
+/** ISO string -> value for <input type="datetime-local"> in local time */
+function toLocalInput(iso: string | null | undefined) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+function fromLocalInput(v: string) {
+  if (!v.trim()) return null;
+  const d = new Date(v);
+  return Number.isNaN(d.getTime()) ? null : d.toISOString();
+}
 
 const blankForm = {
   name: "",
@@ -60,7 +79,12 @@ const blankForm = {
   active: true,
   category_id: "" as string,
   allow_split_payment: false,
+  is_limited: false,
+  limited_starts_at: "" as string,
+  limited_ends_at: "" as string,
+  limited_quantity: "" as string,
 };
+
 
 function PackagesPage() {
   const list = useServerFn(listMyPackages);
