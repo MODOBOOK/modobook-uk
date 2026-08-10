@@ -260,8 +260,16 @@ function AvailabilityPage() {
 
 
   async function removeRule(id: string) {
-    try { await del({ data: { id } }); await refresh(); }
+    if (!confirm("Delete this shift? Patients will no longer be able to book these hours.")) return;
+    try { await del({ data: { id } }); await refresh(); toast.success("Shift deleted"); }
     catch (err: any) { toast.error(err?.message ?? "Failed"); }
+  }
+
+  async function deleteEditing() {
+    if (!editing) return;
+    await removeRule(editing.id);
+    setDlgOpen(false);
+    setEditing(null);
   }
 
   async function addOverride(e: React.FormEvent) {
@@ -471,7 +479,8 @@ function AvailabilityPage() {
                                 role="button"
                                 aria-label="Delete shift"
                                 onClick={(e) => { e.stopPropagation(); removeRule(cell[0].id); }}
-                                className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition p-1 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
+                                className="absolute top-1 right-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition p-1 rounded-md bg-background/70 hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
+
                               >
                                 <Trash2 className="h-3 w-3" />
                               </span>
@@ -774,9 +783,16 @@ function AvailabilityPage() {
               </div>
             )}
           </div>
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setDlgOpen(false)}>Cancel</Button>
-            <Button onClick={saveShift}>Save</Button>
+          <DialogFooter className="gap-2 sm:justify-between">
+            {editing ? (
+              <Button variant="outline" className="text-destructive hover:text-destructive" onClick={deleteEditing}>
+                <Trash2 className="h-4 w-4 mr-2" /> Delete
+              </Button>
+            ) : <span />}
+            <div className="flex gap-2 justify-end">
+              <Button variant="ghost" onClick={() => setDlgOpen(false)}>Cancel</Button>
+              <Button onClick={saveShift}>Save</Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
