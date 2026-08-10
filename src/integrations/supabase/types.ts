@@ -3831,6 +3831,11 @@ export type Database = {
           expiry_days: number | null
           id: string
           image_url: string | null
+          is_limited: boolean
+          limited_claimed: number
+          limited_ends_at: string | null
+          limited_quantity: number | null
+          limited_starts_at: string | null
           name: string
           price: number
           profile_id: string
@@ -3851,6 +3856,11 @@ export type Database = {
           expiry_days?: number | null
           id?: string
           image_url?: string | null
+          is_limited?: boolean
+          limited_claimed?: number
+          limited_ends_at?: string | null
+          limited_quantity?: number | null
+          limited_starts_at?: string | null
           name: string
           price: number
           profile_id: string
@@ -3871,6 +3881,11 @@ export type Database = {
           expiry_days?: number | null
           id?: string
           image_url?: string | null
+          is_limited?: boolean
+          limited_claimed?: number
+          limited_ends_at?: string | null
+          limited_quantity?: number | null
+          limited_starts_at?: string | null
           name?: string
           price?: number
           profile_id?: string
