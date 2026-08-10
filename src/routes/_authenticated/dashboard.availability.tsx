@@ -783,9 +783,16 @@ function AvailabilityPage() {
               </div>
             )}
           </div>
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setDlgOpen(false)}>Cancel</Button>
-            <Button onClick={saveShift}>Save</Button>
+          <DialogFooter className="gap-2 sm:justify-between">
+            {editing ? (
+              <Button variant="outline" className="text-destructive hover:text-destructive" onClick={deleteEditing}>
+                <Trash2 className="h-4 w-4 mr-2" /> Delete
+              </Button>
+            ) : <span />}
+            <div className="flex gap-2 justify-end">
+              <Button variant="ghost" onClick={() => setDlgOpen(false)}>Cancel</Button>
+              <Button onClick={saveShift}>Save</Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
