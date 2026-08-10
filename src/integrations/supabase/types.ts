@@ -8137,6 +8137,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_package_claim: {
+        Args: { p_package_id: string }
+        Returns: undefined
+      }
       is_active_profile: { Args: { _profile_id: string }; Returns: boolean }
       is_active_profile_path: { Args: { path: string }; Returns: boolean }
       is_clinic_client_for_user: {
