@@ -151,7 +151,12 @@ function PackagesPage() {
       active: p.active,
       category_id: p.category_id ?? "",
       allow_split_payment: Boolean(p.allow_split_payment),
+      is_limited: Boolean(p.is_limited),
+      limited_starts_at: toLocalInput(p.limited_starts_at),
+      limited_ends_at: toLocalInput(p.limited_ends_at),
+      limited_quantity: p.limited_quantity == null ? "" : String(p.limited_quantity),
     });
+
     setOpen(true);
   }
 
