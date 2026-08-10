@@ -2025,10 +2025,10 @@ function BookPage() {
 
                 <TabsContent value="packages" className="mt-4">
                   {(() => {
-                    if (packages.length === 0) {
+                    if (visiblePackages.length === 0) {
                       return <p className="opacity-70">No packages available.</p>;
                     }
-                    const renderPackageCard = (p: (typeof packages)[number]) => {
+                    const renderPackageCard = (p: (typeof visiblePackages)[number]) => {
                       const pkg = p as Package & {
                         description?: string | null;
                         treatment_ids?: string[] | null;
@@ -2163,22 +2163,22 @@ function BookPage() {
 
                     const pkgCats = (categories as { id: string; name: string; kind?: string | null }[])
                       .filter((c) => c.kind === "package");
-                    const byCat = new Map<string | null, typeof packages>();
-                    for (const p of packages) {
+                    const byCat = new Map<string | null, typeof visiblePackages>();
+                    for (const p of visiblePackages) {
                       const key = ((p as { category_id?: string | null }).category_id ?? null);
-                      const bucket = byCat.get(key) ?? ([] as typeof packages);
+                      const bucket = byCat.get(key) ?? ([] as typeof visiblePackages);
                       bucket.push(p);
                       byCat.set(key, bucket);
                     }
                     const groups = pkgCats
-                      .map((c) => ({ id: c.id, name: c.name, items: byCat.get(c.id) ?? ([] as typeof packages) }))
+                      .map((c) => ({ id: c.id, name: c.name, items: byCat.get(c.id) ?? ([] as typeof visiblePackages) }))
                       .filter((g) => g.items.length > 0);
-                    const uncategorised = byCat.get(null) ?? ([] as typeof packages);
+                    const uncategorised = byCat.get(null) ?? ([] as typeof visiblePackages);
 
                     if (groups.length === 0) {
                       return (
                         <div className="grid gap-3 sm:grid-cols-2">
-                          {packages.map((p) => renderPackageCard(p))}
+                          {visiblePackages.map((p) => renderPackageCard(p))}
                         </div>
                       );
                     }
