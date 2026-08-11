@@ -530,10 +530,17 @@ function BookPage() {
       (remaining == null || remaining > 0);
     return { limited: true, live, remaining, endsAt: ends };
   };
+  // Limited offers pinned into a treatment category are shown inline there, not in the band.
   const limitedPackages = useMemo(
-    () => (packages as LimitedPkg[]).filter((p) => limitedState(p).limited && limitedState(p).live),
+    () =>
+      (packages as LimitedPkg[]).filter((p) => {
+        const st = limitedState(p);
+        if (!st.limited || !st.live) return false;
+        const catId = (p as { menu_category_id?: string | null }).menu_category_id ?? null;
+        return !(catId && categories.some((c) => c.id === catId));
+      }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [packages, nowTs],
+    [packages, categories, nowTs],
   );
   // Expired / not-yet-started / sold-out limited offers drop out of the menu
   const visiblePackages = useMemo(
