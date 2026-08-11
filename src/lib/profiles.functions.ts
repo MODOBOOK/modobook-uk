@@ -197,6 +197,9 @@ export const updateProfile = createServerFn({ method: "POST" })
     const update: Record<string, unknown> = {};
     if (data.full_name !== undefined) update.full_name = data.full_name;
     if (data.packages_label !== undefined) update.packages_label = data.packages_label;
+    if (data.packages_countdown_ends_at !== undefined) update.packages_countdown_ends_at = data.packages_countdown_ends_at;
+    if (data.packages_countdown_label !== undefined) update.packages_countdown_label = data.packages_countdown_label;
+
     if (data.clinic_name !== undefined) update.clinic_name = data.clinic_name;
     if (data.slug !== undefined) update.slug = data.slug.toLowerCase().replace(/[^a-z0-9-]/g, "-");
     if (data.tagline !== undefined) update.tagline = data.tagline;
