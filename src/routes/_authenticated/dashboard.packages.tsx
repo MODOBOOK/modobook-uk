@@ -678,57 +678,7 @@ function PackagesPage() {
                 </div>
               )}
 
-              <div className="rounded-lg border p-3">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <Label>Limited time offer</Label>
-                    <p className="mt-0.5 text-xs text-muted-foreground">
-                      Features this package in a highlighted "Limited time" band at the
-                      top of your booking page, with a countdown and spots remaining.
-                    </p>
-                  </div>
-                  <Switch
-                    checked={form.is_limited}
-                    onCheckedChange={(v) => setForm({ ...form, is_limited: v })}
-                  />
-                </div>
-                {form.is_limited && (
-                  <div className="mt-3 space-y-3">
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <div>
-                        <Label>Starts (optional)</Label>
-                        <Input
-                          type="datetime-local"
-                          value={form.limited_starts_at}
-                          onChange={(e) => setForm({ ...form, limited_starts_at: e.target.value })}
-                        />
-                      </div>
-                      <div>
-                        <Label>Ends</Label>
-                        <Input
-                          type="datetime-local"
-                          value={form.limited_ends_at}
-                          onChange={(e) => setForm({ ...form, limited_ends_at: e.target.value })}
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <Label>Limit number available (optional)</Label>
-                      <Input
-                        type="number"
-                        min={1}
-                        value={form.limited_quantity}
-                        onChange={(e) => setForm({ ...form, limited_quantity: e.target.value })}
-                        placeholder="e.g. 10 spots"
-                      />
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        Leave blank for unlimited. Once the end date passes or the spots run
-                        out, the offer disappears from the booking page automatically.
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
+              {/* Timed promos live in Services → Time-limited offers */}
 
 
 
