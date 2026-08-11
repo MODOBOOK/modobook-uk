@@ -2201,66 +2201,6 @@ function BookPage() {
                 </TabsContent>
 
 
-                <TabsContent value="packages" className="mt-4">
-                  {(() => {
-                    const tabPackages = inlinePackages.rest;
-                    if (tabPackages.length === 0) {
-                      return <p className="opacity-70">No packages available.</p>;
-                    }
-
-                    const pkgCats = (categories as { id: string; name: string; kind?: string | null }[])
-                      .filter((c) => c.kind === "package");
-                    const byCat = new Map<string | null, typeof tabPackages>();
-                    for (const p of tabPackages) {
-                      const key = ((p as { category_id?: string | null }).category_id ?? null);
-                      const bucket = byCat.get(key) ?? ([] as typeof tabPackages);
-                      bucket.push(p);
-                      byCat.set(key, bucket);
-                    }
-                    const groups = pkgCats
-                      .map((c) => ({ id: c.id, name: c.name, items: byCat.get(c.id) ?? ([] as typeof tabPackages) }))
-                      .filter((g) => g.items.length > 0);
-                    const uncategorised = byCat.get(null) ?? ([] as typeof tabPackages);
-
-                    if (groups.length === 0) {
-                      return (
-                        <div className="grid gap-3 sm:grid-cols-2">
-                          {tabPackages.map((p) => renderPackageCard(p))}
-                        </div>
-                      );
-                    }
-                    return (
-                      <Accordion type="multiple" className="w-full space-y-2">
-                        {groups.map((g) => (
-                          <AccordionItem key={g.id} value={g.id} className="rounded-xl border px-3" style={{ borderColor: `${brand}26` }}>
-                            <AccordionTrigger className="text-left text-base font-semibold" style={{ color: brand }}>
-                              {g.name}
-                              <span className="ml-2 rounded-full bg-muted px-2 py-0.5 text-[11px] font-normal opacity-70">{g.items.length}</span>
-                            </AccordionTrigger>
-                            <AccordionContent>
-                              <div className="grid gap-3 pt-1 sm:grid-cols-2">
-                                {g.items.map((p) => renderPackageCard(p))}
-                              </div>
-                            </AccordionContent>
-                          </AccordionItem>
-                        ))}
-                        {uncategorised.length > 0 && (
-                          <AccordionItem value="__uncat" className="rounded-xl border px-3" style={{ borderColor: `${brand}26` }}>
-                            <AccordionTrigger className="text-left text-base font-semibold" style={{ color: brand }}>
-                              Other {packagesLabel.toLowerCase()}
-                              <span className="ml-2 rounded-full bg-muted px-2 py-0.5 text-[11px] font-normal opacity-70">{uncategorised.length}</span>
-                            </AccordionTrigger>
-                            <AccordionContent>
-                              <div className="grid gap-3 pt-1 sm:grid-cols-2">
-                                {uncategorised.map((p) => renderPackageCard(p))}
-                              </div>
-                            </AccordionContent>
-                          </AccordionItem>
-                        )}
-                      </Accordion>
-                    );
-                  })()}
-                </TabsContent>
 
                 {hasGiftCards && (
                   <TabsContent value="gift-cards" className="mt-4">
