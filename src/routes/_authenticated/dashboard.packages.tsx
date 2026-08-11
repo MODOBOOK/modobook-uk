@@ -111,6 +111,9 @@ function PackagesPage() {
   const [profileId, setProfileId] = useState<string>("");
   const [treatmentCats, setTreatmentCats] = useState<Category[]>([]);
   const [packagesLabel, setPackagesLabel] = useState("");
+  const [countdownEnds, setCountdownEnds] = useState("");
+  const [countdownLabel, setCountdownLabel] = useState("");
+
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Pkg | null>(null);
   const [form, setForm] = useState(blankForm);
