@@ -93,6 +93,8 @@ export const createPackage = createServerFn({ method: "POST" })
       category_id: data.category_id,
       menu_category_id: data.menu_category_id ?? null,
       menu_placement: data.menu_placement ?? "top",
+      menu_group_name: data.menu_group_name?.trim() || null,
+      menu_group_ends_at: data.menu_group_ends_at ?? null,
       allow_split_payment: data.allow_split_payment ?? false,
       ...limitedFields(data),
     });
@@ -125,6 +127,8 @@ export const updatePackage = createServerFn({ method: "POST" })
       category_id: data.category_id,
       menu_category_id: data.menu_category_id ?? null,
       menu_placement: data.menu_placement ?? "top",
+      menu_group_name: data.menu_group_name?.trim() || null,
+      menu_group_ends_at: data.menu_group_ends_at ?? null,
       allow_split_payment: data.allow_split_payment ?? false,
       ...limitedFields(data),
     }).eq("id", data.id);
