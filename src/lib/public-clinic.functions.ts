@@ -88,6 +88,29 @@ export const getPublicClinic = createServerFn({ method: "GET" })
       .eq("profile_id", profile.id)
       .maybeSingle();
 
+    const nowIso = new Date().toISOString();
+    const { data: offerGroupRows } = await supabase
+      .from("offer_groups")
+      .select("*")
+      .eq("profile_id", profile.id)
+      .eq("active", true)
+      .order("sort_order", { ascending: true });
+    const liveOfferGroups = (offerGroupRows ?? []).filter(
+      (g: any) =>
+        (!g.starts_at || g.starts_at <= nowIso) && (!g.ends_at || g.ends_at > nowIso),
+    );
+    const { data: offerGroupItems } = liveOfferGroups.length
+      ? await supabase
+          .from("offer_group_items")
+          .select("*")
+          .in("group_id", liveOfferGroups.map((g: any) => g.id))
+          .order("sort_order")
+      : { data: [] as any[] };
+    const offerGroups = liveOfferGroups.map((g: any) => ({
+      ...g,
+      items: (offerGroupItems ?? []).filter((i: any) => i.group_id === g.id),
+    }));
+
     const { data: reviews } = await supabase
       .from("patient_reviews")
       .select("id, rating")
@@ -182,6 +205,8 @@ export const getPublicClinic = createServerFn({ method: "GET" })
       careGuides: careGuides.data ?? [],
       pretreatment: pretreatment.data ?? [],
       bookingCounts: (bookingCounts.data ?? []) as { treatment_id: string; booked_count: number }[],
+      offerGroups,
+
     };
   });
 
