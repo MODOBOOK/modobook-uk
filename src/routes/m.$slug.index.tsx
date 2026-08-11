@@ -2189,8 +2189,35 @@ function BookPage() {
                             ))}
                           </div>
                         )}
+                        {inlinePackages.rest.length > 0 && (
+                          <Accordion type="single" collapsible className="pt-2">
+                            <AccordionItem value="__packages" className="overflow-hidden rounded-2xl border-0 shadow-sm">
+                              <AccordionTrigger
+                                className="px-5 py-4 hover:no-underline [&[data-state=open]>svg]:rotate-180"
+                                style={{ backgroundColor: menuCatBg, color: menuCatText, fontFamily: `${headingFont}, system-ui, sans-serif` }}
+                              >
+                                <div className="flex-1 text-left">
+                                  <div className={`flex flex-wrap items-center gap-2 text-xl leading-tight sm:text-2xl ${menuCategoryBold ? "font-extrabold" : "font-medium"}`}>
+                                    <span>{packagesLabel}</span>
+                                    {packagesCountdown && (
+                                      <span className="rounded-full bg-white/90 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber-900 shadow-sm">
+                                        ⏳ {packagesCountdownPrefix ? `${packagesCountdownPrefix} · ` : ""}{packagesCountdown}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              </AccordionTrigger>
+                              <AccordionContent className="space-y-2 px-2 pb-3 pt-3" style={{ backgroundColor: `${menuCatBg}08` }}>
+                                <div className="grid gap-3 px-1 py-1 sm:grid-cols-2">
+                                  {inlinePackages.rest.map((p) => renderPackageCard(p))}
+                                </div>
+                              </AccordionContent>
+                            </AccordionItem>
+                          </Accordion>
+                        )}
                       </div>
                     );
+
 
                     return modelPosition === "top" ? (
                       <>{modelBlock}{menuBlock}</>
