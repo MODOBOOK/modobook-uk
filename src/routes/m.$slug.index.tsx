@@ -2131,10 +2131,12 @@ function BookPage() {
                       </div>
                     );
 
-                    const menuBlock = visibleTreatments.length === 0 ? (
-                      <p className="opacity-70">No treatments available here yet.</p>
-                    ) : (
+                    const menuBlock = (
                       <div className="space-y-2">
+                        {visibleTreatments.length === 0 && (
+                          <p className="opacity-70">No treatments available here yet.</p>
+                        )}
+
                         {tree.roots.length > 0 && (
                           <CategoryTree
                             nodes={tree.roots}
