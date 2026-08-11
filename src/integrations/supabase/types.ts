@@ -3775,6 +3775,124 @@ export type Database = {
           },
         ]
       }
+      offer_group_items: {
+        Row: {
+          created_at: string
+          group_id: string
+          id: string
+          offer_price: number | null
+          package_id: string | null
+          profile_id: string
+          sort_order: number
+          treatment_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          group_id: string
+          id?: string
+          offer_price?: number | null
+          package_id?: string | null
+          profile_id: string
+          sort_order?: number
+          treatment_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          group_id?: string
+          id?: string
+          offer_price?: number | null
+          package_id?: string | null
+          profile_id?: string
+          sort_order?: number
+          treatment_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offer_group_items_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "offer_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offer_group_items_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "packages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offer_group_items_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offer_group_items_treatment_id_fkey"
+            columns: ["treatment_id"]
+            isOneToOne: false
+            referencedRelation: "treatments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      offer_groups: {
+        Row: {
+          active: boolean
+          created_at: string
+          discount_percent: number | null
+          ends_at: string | null
+          id: string
+          name: string
+          pricing_mode: string
+          profile_id: string
+          sort_order: number
+          starts_at: string | null
+          subtitle: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          discount_percent?: number | null
+          ends_at?: string | null
+          id?: string
+          name: string
+          pricing_mode?: string
+          profile_id: string
+          sort_order?: number
+          starts_at?: string | null
+          subtitle?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          discount_percent?: number | null
+          ends_at?: string | null
+          id?: string
+          name?: string
+          pricing_mode?: string
+          profile_id?: string
+          sort_order?: number
+          starts_at?: string | null
+          subtitle?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offer_groups_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       package_purchases: {
         Row: {
           created_at: string
