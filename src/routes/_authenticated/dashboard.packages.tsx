@@ -323,6 +323,49 @@ function PackagesPage() {
             </Button>
           </div>
           <p className="mt-1 text-xs text-muted-foreground">What patients see this section called, e.g. "Courses" or "Bundles".</p>
+          <div className="mt-3 rounded-lg border p-3">
+            <p className="text-sm font-semibold">Countdown on the {packagesLabel.trim() || "Packages"} category</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">Shows a live timer on the section header on your booking page. Leave blank for no countdown.</p>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <Input
+                type="datetime-local"
+                value={countdownEnds}
+                onChange={(e) => setCountdownEnds(e.target.value)}
+                aria-label="Countdown end date and time"
+                className="h-9 w-auto"
+              />
+              <Input
+                value={countdownLabel}
+                onChange={(e) => setCountdownLabel(e.target.value)}
+                placeholder="Offer ends"
+                aria-label="Countdown label"
+                className="h-9 w-40"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={async () => {
+                  if (!profileId) return;
+                  try {
+                    await saveProfile({
+                      data: {
+                        id: profileId,
+                        packages_countdown_ends_at: countdownEnds ? new Date(countdownEnds).toISOString() : null,
+                        packages_countdown_label: countdownLabel.trim() || null,
+                      },
+                    });
+                    toast.success("Countdown saved");
+                  } catch (e) {
+                    toast.error(e instanceof Error ? e.message : "Failed");
+                  }
+                }}
+              >
+                Save countdown
+              </Button>
+            </div>
+          </div>
+
         </div>
 
 
