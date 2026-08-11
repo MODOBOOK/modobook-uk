@@ -3,7 +3,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { listMyPackages, createPackage, updatePackage, deletePackage, reorderPackages } from "@/lib/packages.functions";
 import { getMyTreatments } from "@/lib/treatments.functions";
-import { getMyPackageCategories, createPackageCategory, deletePackageCategory } from "@/lib/categories.functions";
+import { getMyPackageCategories, createPackageCategory, deletePackageCategory, getMyCategories } from "@/lib/categories.functions";
+import { updateProfile } from "@/lib/profiles.functions";
 import { getMyProfile } from "@/lib/profiles.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,6 +39,8 @@ type Pkg = {
   image_url: string | null;
   active: boolean;
   category_id: string | null;
+  menu_category_id?: string | null;
+  menu_placement?: string | null;
   allow_split_payment?: boolean | null;
   is_limited?: boolean | null;
   limited_starts_at?: string | null;
@@ -78,6 +81,8 @@ const blankForm = {
   image_url: "",
   active: true,
   category_id: "" as string,
+  menu_category_id: "" as string,
+  menu_placement: "top" as "top" | "bottom",
   allow_split_payment: false,
   is_limited: false,
   limited_starts_at: "" as string,
@@ -97,21 +102,27 @@ function PackagesPage() {
   const createCat = useServerFn(createPackageCategory);
   const deleteCat = useServerFn(deletePackageCategory);
   const fetchProfile = useServerFn(getMyProfile);
+  const listTreatmentCats = useServerFn(getMyCategories);
+  const saveProfile = useServerFn(updateProfile);
 
   const [packages, setPackages] = useState<Pkg[]>([]);
   const [treatments, setTreatments] = useState<Treatment[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [profileId, setProfileId] = useState<string>("");
+  const [treatmentCats, setTreatmentCats] = useState<Category[]>([]);
+  const [packagesLabel, setPackagesLabel] = useState("");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Pkg | null>(null);
   const [form, setForm] = useState(blankForm);
 
   async function refresh() {
-    const [p, t, c, profile] = await Promise.all([list(), listTreatments(), listCategories(), fetchProfile()]);
+    const [p, t, c, profile, tc] = await Promise.all([list(), listTreatments(), listCategories(), fetchProfile(), listTreatmentCats()]);
     setPackages(p as Pkg[]);
     setTreatments((t as Treatment[]) ?? []);
     setCategories((c as Category[]) ?? []);
     setProfileId((profile as { id?: string } | null)?.id ?? "");
+    setPackagesLabel((profile as { packages_label?: string | null } | null)?.packages_label ?? "");
+    setTreatmentCats((tc as Category[]) ?? []);
   }
   useEffect(() => { refresh(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
 
@@ -150,6 +161,8 @@ function PackagesPage() {
       image_url: p.image_url ?? "",
       active: p.active,
       category_id: p.category_id ?? "",
+      menu_category_id: p.menu_category_id ?? "",
+      menu_placement: p.menu_placement === "bottom" ? "bottom" : "top",
       allow_split_payment: Boolean(p.allow_split_payment),
       is_limited: Boolean(p.is_limited),
       limited_starts_at: toLocalInput(p.limited_starts_at),
@@ -244,6 +257,8 @@ function PackagesPage() {
       image_url: form.image_url.trim() || null,
       active: form.active,
       category_id: form.category_id || null,
+      menu_category_id: form.menu_category_id || null,
+      menu_placement: form.menu_placement,
       allow_split_payment: form.allow_split_payment && totalSessions > 1,
       is_limited: form.is_limited,
       limited_starts_at: fromLocalInput(form.limited_starts_at),
