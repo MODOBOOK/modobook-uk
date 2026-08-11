@@ -1,6 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { createClient } from "@supabase/supabase-js";
 import type { Database, Json } from "@/integrations/supabase/types";
+import { filterUnblockedModelSlots } from "@/lib/model-slot-blocks";
+
 
 function getServerSupabasePublic() {
   return createClient<Database>(
@@ -131,7 +133,11 @@ export const getPublicClinic = createServerFn({ method: "GET" })
       (supabase as any).rpc("get_public_treatment_booking_counts", { p_profile_id: profile.id }),
     ]);
 
-
+    const todayIso = new Date().toISOString().slice(0, 10);
+    const [blockedDates, blockedTimes] = await Promise.all([
+      supabase.from("blocked_dates").select("date, location_id").eq("profile_id", profile.id).gte("date", todayIso),
+      supabase.from("blocked_times").select("date, start_time, end_time, location_id").eq("profile_id", profile.id).gte("date", todayIso),
+    ]);
 
 
     return {
@@ -151,7 +157,7 @@ export const getPublicClinic = createServerFn({ method: "GET" })
       modelSlots: (() => {
         const now = new Date();
         const todayStr = now.toISOString().slice(0, 10);
-        return (modelSlots.data ?? []).filter((s: any) => {
+        const live = (modelSlots.data ?? []).filter((s: any) => {
           if (s.is_flexible) return true;
           if (!s.slot_date) return true;
           if (s.slot_date > todayStr) return true;
@@ -162,7 +168,13 @@ export const getPublicClinic = createServerFn({ method: "GET" })
           const slotEnd = new Date(`${s.slot_date}T${timeStr}`);
           return slotEnd.getTime() > now.getTime();
         });
+        return filterUnblockedModelSlots(
+          live,
+          (blockedDates.data ?? []) as any,
+          (blockedTimes.data ?? []) as any,
+        );
       })(),
+
       addonLinks: addonLinks.data ?? [],
       practitioners: practitioners.data ?? [],
       locationPractitioners: locationPractitioners.data ?? [],

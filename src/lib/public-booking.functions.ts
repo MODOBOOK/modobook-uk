@@ -1,6 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
+import { filterUnblockedModelSlots } from "@/lib/model-slot-blocks";
+
 
 function publicClient() {
   return createClient<Database>(
@@ -97,6 +99,11 @@ export const getBookingContext = createServerFn({ method: "GET" })
       .order("slot_date", { ascending: true })
       .order("start_time", { ascending: true });
 
+    const [{ data: msBlockedDates }, { data: msBlockedTimes }] = await Promise.all([
+      sb.from("blocked_dates").select("date, location_id").eq("profile_id", profile.id).gte("date", today),
+      sb.from("blocked_times").select("date, start_time, end_time, location_id").eq("profile_id", profile.id).gte("date", today),
+    ]);
+
     const bookableFrom = await computeBookableFrom(sb, profile.id, [
       (treatment as { category_id: string | null }).category_id,
     ]);
@@ -114,7 +121,7 @@ export const getBookingContext = createServerFn({ method: "GET" })
       modelSlots: (() => {
         const now = new Date();
         const todayStr = now.toISOString().slice(0, 10);
-        return (modelSlots ?? []).filter((s: any) => {
+        const live = (modelSlots ?? []).filter((s: any) => {
           if (!s.slot_date) return true;
           if (s.slot_date > todayStr) return true;
           if (s.slot_date < todayStr) return false;
@@ -122,7 +129,9 @@ export const getBookingContext = createServerFn({ method: "GET" })
           if (!timeStr) return true;
           return new Date(`${s.slot_date}T${timeStr}`).getTime() > now.getTime();
         });
+        return filterUnblockedModelSlots(live, (msBlockedDates ?? []) as any, (msBlockedTimes ?? []) as any);
       })(),
+
       bookableFrom,
       settings,
       rotaAnchor,
