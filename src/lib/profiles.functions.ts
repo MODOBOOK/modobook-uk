@@ -184,6 +184,9 @@ export const updateProfile = createServerFn({ method: "POST" })
       timeline?: { year: string; label: string }[];
       avatar_url?: string | null;
       packages_label?: string | null;
+      packages_countdown_ends_at?: string | null;
+      packages_countdown_label?: string | null;
+
     }) => input,
   )
 
