@@ -468,32 +468,11 @@ function PackagesPage() {
                     ))}
                   </div>
                 )}
-                {!form.menu_category_id && (
-                  <div className="mt-3 border-t pt-3">
-                    <Label>Or show it in its own services section</Label>
-                    <p className="mt-0.5 text-xs text-muted-foreground">
-                      Give a section name (e.g. "Autumn packages") and this package appears as its own category in the services menu. Packages sharing the same name group together.
-                    </p>
-                    <Input
-                      className="mt-2"
-                      value={form.menu_group_name}
-                      onChange={(e) => setForm({ ...form, menu_group_name: e.target.value })}
-                      placeholder="Autumn packages"
-                    />
-                    {form.menu_group_name.trim() && (
-                      <div className="mt-2">
-                        <Label className="text-xs">Countdown ends (optional)</Label>
-                        <Input
-                          type="datetime-local"
-                          className="mt-1"
-                          value={form.menu_group_ends_at}
-                          onChange={(e) => setForm({ ...form, menu_group_ends_at: e.target.value })}
-                        />
-                        <p className="mt-1 text-xs text-muted-foreground">Shows a live "time left to book" timer on this section.</p>
-                      </div>
-                    )}
-                  </div>
-                )}
+                <p className="mt-3 border-t pt-3 text-xs text-muted-foreground">
+                  Running a timed promo (e.g. "Autumn packages")? Build it in Services → Time-limited
+                  offers — you can mix treatments and packages there and set one countdown for the whole
+                  section.
+                </p>
               </div>
 
 
