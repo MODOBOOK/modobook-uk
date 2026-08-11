@@ -356,7 +356,10 @@ function TreatmentsPage() {
           ))}
         </div>
       )}
+
+      <OfferGroupsPanel treatments={items.map((t) => ({ id: t.id, name: t.name, price: t.price }))} />
     </div>
+
   );
 }
 
