@@ -22,7 +22,6 @@ import {
   ExternalLink,
   Star,
   Check,
-  Package as PackageIcon,
   Sparkles,
   MessageCircle,
   Facebook,
