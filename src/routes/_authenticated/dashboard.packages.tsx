@@ -125,6 +125,10 @@ function PackagesPage() {
     setCategories((c as Category[]) ?? []);
     setProfileId((profile as { id?: string } | null)?.id ?? "");
     setPackagesLabel((profile as { packages_label?: string | null } | null)?.packages_label ?? "");
+    const ends = (profile as { packages_countdown_ends_at?: string | null } | null)?.packages_countdown_ends_at ?? "";
+    setCountdownEnds(ends ? toLocalInput(ends) : "");
+    setCountdownLabel((profile as { packages_countdown_label?: string | null } | null)?.packages_countdown_label ?? "");
+
     setTreatmentCats((tc as Category[]) ?? []);
   }
   useEffect(() => { refresh(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
