@@ -131,7 +131,11 @@ export const getPublicClinic = createServerFn({ method: "GET" })
       (supabase as any).rpc("get_public_treatment_booking_counts", { p_profile_id: profile.id }),
     ]);
 
-
+    const todayIso = new Date().toISOString().slice(0, 10);
+    const [blockedDates, blockedTimes] = await Promise.all([
+      supabase.from("blocked_dates").select("date, location_id").eq("profile_id", profile.id).gte("date", todayIso),
+      supabase.from("blocked_times").select("date, start_time, end_time, location_id").eq("profile_id", profile.id).gte("date", todayIso),
+    ]);
 
 
     return {
