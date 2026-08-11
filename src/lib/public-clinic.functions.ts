@@ -205,6 +205,8 @@ export const getPublicClinic = createServerFn({ method: "GET" })
       careGuides: careGuides.data ?? [],
       pretreatment: pretreatment.data ?? [],
       bookingCounts: (bookingCounts.data ?? []) as { treatment_id: string; booked_count: number }[],
+      offerGroups,
+
     };
   });
 
