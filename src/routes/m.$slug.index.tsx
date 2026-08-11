@@ -2195,7 +2195,95 @@ function BookPage() {
                             ))}
                           </div>
                         )}
+                        {offerGroups.length > 0 && (
+                          <Accordion type="single" collapsible className="space-y-2 pt-2">
+                            {offerGroups.map((g) => {
+                              const endsMs = g.ends_at ? new Date(g.ends_at).getTime() : NaN;
+                              const cd = Number.isFinite(endsMs) ? countdownLabel(endsMs) : null;
+                              if (g.ends_at && !cd) return null;
+                              const offerPrice = (base: number, override: number | null) => {
+                                if (g.pricing_mode === "item") return override != null ? override : base;
+                                if (g.pricing_mode === "percent" && g.discount_percent)
+                                  return Math.max(0, base * (1 - g.discount_percent / 100));
+                                return base;
+                              };
+                              const offerTreatments = g.items
+                                .filter((i) => i.treatment_id)
+                                .map((i) => ({ item: i, t: treatments.find((t) => t.id === i.treatment_id) }))
+                                .filter((x): x is { item: typeof x.item; t: Treatment } => Boolean(x.t));
+                              const offerPkgs = g.items
+                                .filter((i) => i.package_id)
+                                .map((i) => ({ item: i, p: (packages as LimitedPkg[]).find((p) => p.id === i.package_id) }))
+                                .filter((x): x is { item: typeof x.item; p: LimitedPkg } => Boolean(x.p));
+                              if (offerTreatments.length === 0 && offerPkgs.length === 0) return null;
+                              return (
+                                <AccordionItem key={g.id} value={`offer-${g.id}`} className="overflow-hidden rounded-2xl border-0 shadow-sm">
+                                  <AccordionTrigger
+                                    className="px-5 py-4 hover:no-underline [&[data-state=open]>svg]:rotate-180"
+                                    style={{ backgroundColor: menuCatBg, color: menuCatText, fontFamily: `${headingFont}, system-ui, sans-serif` }}
+                                  >
+                                    <div className="flex-1 text-left">
+                                      <div className={`flex flex-wrap items-center gap-2 text-xl leading-tight sm:text-2xl ${menuCategoryBold ? "font-extrabold" : "font-medium"}`}>
+                                        <span>{g.name}</span>
+                                        {cd && (
+                                          <span className="rounded-full bg-white/90 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber-900 shadow-sm">
+                                            ⏳ Ends in {cd}
+                                          </span>
+                                        )}
+                                      </div>
+                                      {g.subtitle && <p className="mt-1 text-xs opacity-80">{g.subtitle}</p>}
+                                    </div>
+                                  </AccordionTrigger>
+                                  <AccordionContent className="space-y-2 px-2 pb-3 pt-3" style={{ backgroundColor: `${menuCatBg}08` }}>
+                                    {offerTreatments.length > 0 && (
+                                      <div className="space-y-2 px-1">
+                                        {offerTreatments.map(({ item, t }) => (
+                                          <TreatmentRow
+                                            key={t.id}
+                                            t={t}
+                                            slug={slug}
+                                            price={offerPrice(priceFor(t), item.offer_price)}
+                                            duration={durationFor(t)}
+                                            brand={brand}
+                                            selected={isSelected(t.id)}
+                                            onToggle={() => toggleSelect(t.id)}
+                                            cardBg={menuCardBg}
+                                            cardBorder={menuCardBorder}
+                                            nameColor={menuNameColor}
+                                            priceColor={menuPriceColor}
+                                            size={menuSize}
+                                            bold={menuTreatmentBold}
+                                            capInfo={capFor(t)}
+                                          />
+                                        ))}
+                                      </div>
+                                    )}
+                                    {offerPkgs.length > 0 && (
+                                      <div className="grid gap-3 px-1 py-1 sm:grid-cols-2">
+                                        {offerPkgs.map(({ item, p }) => {
+                                          const base = Number(p.price ?? 0);
+                                          const next = offerPrice(base, item.offer_price);
+                                          return renderPackageCard(
+                                            next === base
+                                              ? p
+                                              : ({
+                                                  ...p,
+                                                  price: next,
+                                                  compare_at_price:
+                                                    (p as { compare_at_price?: number | null }).compare_at_price ?? base,
+                                                } as LimitedPkg),
+                                          );
+                                        })}
+                                      </div>
+                                    )}
+                                  </AccordionContent>
+                                </AccordionItem>
+                              );
+                            })}
+                          </Accordion>
+                        )}
                         {(() => {
+
                           type PkgGroup = { key: string; label: string; endsAt: string | null; items: typeof inlinePackages.rest };
                           const groups: PkgGroup[] = [];
                           for (const p of inlinePackages.rest) {
