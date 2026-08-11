@@ -8088,6 +8088,8 @@ export type Database = {
           hero_url: string
           id: string
           model_slots_position: string
+          packages_countdown_ends_at: string
+          packages_countdown_label: string
           packages_label: string
           payment_card_full_enabled: boolean
           payment_clearpay_enabled: boolean
