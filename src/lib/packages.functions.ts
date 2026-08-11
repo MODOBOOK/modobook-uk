@@ -14,6 +14,8 @@ type PackageInput = {
   image_url: string | null;
   active: boolean;
   category_id: string | null;
+  menu_category_id?: string | null;
+  menu_placement?: "top" | "bottom";
   allow_split_payment?: boolean;
   is_limited?: boolean;
   limited_starts_at?: string | null;
@@ -87,6 +89,8 @@ export const createPackage = createServerFn({ method: "POST" })
       image_url: data.image_url,
       active: data.active,
       category_id: data.category_id,
+      menu_category_id: data.menu_category_id ?? null,
+      menu_placement: data.menu_placement ?? "top",
       allow_split_payment: data.allow_split_payment ?? false,
       ...limitedFields(data),
     });
@@ -117,6 +121,8 @@ export const updatePackage = createServerFn({ method: "POST" })
       image_url: data.image_url,
       active: data.active,
       category_id: data.category_id,
+      menu_category_id: data.menu_category_id ?? null,
+      menu_placement: data.menu_placement ?? "top",
       allow_split_payment: data.allow_split_payment ?? false,
       ...limitedFields(data),
     }).eq("id", data.id);

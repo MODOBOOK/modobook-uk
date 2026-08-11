@@ -3836,6 +3836,8 @@ export type Database = {
           limited_ends_at: string | null
           limited_quantity: number | null
           limited_starts_at: string | null
+          menu_category_id: string | null
+          menu_placement: string
           name: string
           price: number
           profile_id: string
@@ -3861,6 +3863,8 @@ export type Database = {
           limited_ends_at?: string | null
           limited_quantity?: number | null
           limited_starts_at?: string | null
+          menu_category_id?: string | null
+          menu_placement?: string
           name: string
           price: number
           profile_id: string
@@ -3886,6 +3890,8 @@ export type Database = {
           limited_ends_at?: string | null
           limited_quantity?: number | null
           limited_starts_at?: string | null
+          menu_category_id?: string | null
+          menu_placement?: string
           name?: string
           price?: number
           profile_id?: string
@@ -3899,6 +3905,13 @@ export type Database = {
           {
             foreignKeyName: "packages_category_id_fkey"
             columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "treatment_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "packages_menu_category_id_fkey"
+            columns: ["menu_category_id"]
             isOneToOne: false
             referencedRelation: "treatment_categories"
             referencedColumns: ["id"]
@@ -5846,6 +5859,7 @@ export type Database = {
           is_demo: boolean
           late_cancel_mode: string
           model_slots_position: string
+          packages_label: string | null
           patient_cancel_cutoff_hours: number | null
           patient_reschedule_cutoff_hours: number | null
           patient_reschedule_max: number | null
@@ -5969,6 +5983,7 @@ export type Database = {
           is_demo?: boolean
           late_cancel_mode?: string
           model_slots_position?: string
+          packages_label?: string | null
           patient_cancel_cutoff_hours?: number | null
           patient_reschedule_cutoff_hours?: number | null
           patient_reschedule_max?: number | null
@@ -6092,6 +6107,7 @@ export type Database = {
           is_demo?: boolean
           late_cancel_mode?: string
           model_slots_position?: string
+          packages_label?: string | null
           patient_cancel_cutoff_hours?: number | null
           patient_reschedule_cutoff_hours?: number | null
           patient_reschedule_max?: number | null
@@ -8066,6 +8082,7 @@ export type Database = {
           hero_url: string
           id: string
           model_slots_position: string
+          packages_label: string
           payment_card_full_enabled: boolean
           payment_clearpay_enabled: boolean
           payment_deposit_enabled: boolean
