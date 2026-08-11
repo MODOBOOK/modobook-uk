@@ -722,6 +722,16 @@ function BookPage() {
   }, [visiblePackages, categories]);
   const packagesLabel =
     ((profile as { packages_label?: string | null }).packages_label ?? "").trim() || "Packages";
+  const packagesCountdown = (() => {
+    const raw = (profile as { packages_countdown_ends_at?: string | null }).packages_countdown_ends_at;
+    if (!raw) return null;
+    const ends = new Date(raw).getTime();
+    if (!Number.isFinite(ends)) return null;
+    return countdownLabel(ends);
+  })();
+  const packagesCountdownPrefix =
+    ((profile as { packages_countdown_label?: string | null }).packages_countdown_label ?? "").trim();
+
   const treatById = useMemo(() => new Map(treatments.map((t) => [t.id, t])), [treatments]);
   const addonsFor = useMemo(() => {
     const m = new Map<string, string[]>();
