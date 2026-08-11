@@ -71,11 +71,11 @@ export function OfferGroupsPanel({ treatments }: { treatments: Treatment[] }) {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="flex items-center gap-2 text-lg font-semibold">
-            <Timer className="h-4 w-4" /> Time-limited offers
+            <Timer className="h-4 w-4" /> Time-limited service categories
           </h2>
           <p className="text-sm text-muted-foreground">
-            Build a named offer section (e.g. "Autumn packages") with its own countdown. It appears as its own
-            category in your booking menu and hides automatically when the timer runs out.
+            Build and name a temporary category using any treatments or packages. It appears in your main services
+            menu and hides automatically when the countdown ends.
           </p>
         </div>
         <Button
@@ -85,7 +85,7 @@ export function OfferGroupsPanel({ treatments }: { treatments: Treatment[] }) {
             setOpen(true);
           }}
         >
-          <Plus className="mr-2 h-4 w-4" /> New offer group
+          <Plus className="mr-2 h-4 w-4" /> Build category
         </Button>
       </div>
 
@@ -232,13 +232,13 @@ function OfferGroupDialog({
   return (
     <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
       <DialogHeader>
-        <DialogTitle>{group ? "Edit offer group" : "New offer group"}</DialogTitle>
+            <DialogTitle>{group ? "Edit service category" : "Build a time-limited category"}</DialogTitle>
       </DialogHeader>
 
       <div className="space-y-4">
         <div className="grid gap-3 sm:grid-cols-2">
           <div>
-            <Label>Name patients see</Label>
+            <Label>Category name</Label>
             <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Autumn packages" />
           </div>
           <div>
@@ -380,7 +380,7 @@ function OfferGroupDialog({
             });
           }}
         >
-          Save offer
+          Save category
         </Button>
       </DialogFooter>
     </DialogContent>

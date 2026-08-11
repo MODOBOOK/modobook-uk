@@ -29,7 +29,6 @@ import { Plus, Trash2, Pencil, FileText, X, Tag, PlusCircle, Sparkles, Loader2 }
 import { SearchableMultiPicker } from "@/components/ui/searchable-multi-picker";
 import { BulkRebookRemindersDialog } from "@/components/BulkRebookRemindersDialog";
 import { generateTreatmentDescription } from "@/lib/ai-treatment-description.functions";
-import { OfferGroupsPanel } from "@/components/OfferGroupsPanel";
 
 
 
@@ -359,7 +358,6 @@ function TreatmentsPage() {
         </div>
       )}
 
-      <OfferGroupsPanel treatments={items.map((t) => ({ id: t.id, name: t.name, price: t.price }))} />
     </div>
 
   );
