@@ -94,6 +94,7 @@ const blankForm = {
 function PackagesPage() {
   const list = useServerFn(listMyPackages);
   const create = useServerFn(createPackage);
+
   const update = useServerFn(updatePackage);
   const remove = useServerFn(deletePackage);
   const reorder = useServerFn(reorderPackages);
