@@ -276,6 +276,17 @@ function BookPage() {
         is_flexible?: boolean | null;
       }[];
       bookingCounts?: { treatment_id: string; booked_count: number }[];
+      offerGroups?: {
+        id: string;
+        name: string;
+        subtitle: string | null;
+        starts_at: string | null;
+        ends_at: string | null;
+        pricing_mode: "none" | "percent" | "item";
+        discount_percent: number | null;
+        items: { treatment_id: string | null; package_id: string | null; offer_price: number | null }[];
+      }[];
+
 
       addonLinks?: { treatment_id: string; addon_id: string; discount_percent: number | null; discount_amount: number | null }[];
       practitioners?: { id: string; name: string; professional_title: string | null; photo_url: string | null; bio: string | null; display_order: number }[];
