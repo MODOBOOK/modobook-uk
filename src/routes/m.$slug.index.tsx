@@ -1992,15 +1992,9 @@ function BookPage() {
                 </section>
               )}
               <Tabs defaultValue="treatments" className="w-full">
-                <TabsList className="grid w-full h-auto" style={{ backgroundColor: `${brand}10`, gridTemplateColumns: `repeat(${1 + (inlinePackages.rest.length > 0 ? 1 : 0) + (hasGiftCards ? 1 : 0) + (hasTraining ? 1 : 0) + (hasClinicVisits ? 1 : 0)}, minmax(0, 1fr))` }}>
+                <TabsList className="grid w-full h-auto" style={{ backgroundColor: `${brand}10`, gridTemplateColumns: `repeat(${1 + (hasGiftCards ? 1 : 0) + (hasTraining ? 1 : 0) + (hasClinicVisits ? 1 : 0)}, minmax(0, 1fr))` }}>
                   <TabsTrigger value="treatments" className="text-sm sm:text-base py-2.5">Treatments</TabsTrigger>
-                  {inlinePackages.rest.length > 0 && (
 
-                    <TabsTrigger value="packages" className="text-sm sm:text-base py-2.5">
-                      <PackageIcon className="mr-1.5 h-4 w-4" />
-                      {packagesLabel}
-                    </TabsTrigger>
-                  )}
                   {hasGiftCards && (
                     <TabsTrigger value="gift-cards" className="text-sm sm:text-base py-2.5">
                       <Gift className="mr-1.5 h-4 w-4" />
