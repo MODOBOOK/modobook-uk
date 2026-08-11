@@ -3837,6 +3837,8 @@ export type Database = {
           limited_quantity: number | null
           limited_starts_at: string | null
           menu_category_id: string | null
+          menu_group_ends_at: string | null
+          menu_group_name: string | null
           menu_placement: string
           name: string
           price: number
@@ -3864,6 +3866,8 @@ export type Database = {
           limited_quantity?: number | null
           limited_starts_at?: string | null
           menu_category_id?: string | null
+          menu_group_ends_at?: string | null
+          menu_group_name?: string | null
           menu_placement?: string
           name: string
           price: number
@@ -3891,6 +3895,8 @@ export type Database = {
           limited_quantity?: number | null
           limited_starts_at?: string | null
           menu_category_id?: string | null
+          menu_group_ends_at?: string | null
+          menu_group_name?: string | null
           menu_placement?: string
           name?: string
           price?: number

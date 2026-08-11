@@ -2184,32 +2184,64 @@ function BookPage() {
                             ))}
                           </div>
                         )}
-                        {inlinePackages.rest.length > 0 && (
-                          <Accordion type="single" collapsible className="pt-2">
-                            <AccordionItem value="__packages" className="overflow-hidden rounded-2xl border-0 shadow-sm">
-                              <AccordionTrigger
-                                className="px-5 py-4 hover:no-underline [&[data-state=open]>svg]:rotate-180"
-                                style={{ backgroundColor: menuCatBg, color: menuCatText, fontFamily: `${headingFont}, system-ui, sans-serif` }}
-                              >
-                                <div className="flex-1 text-left">
-                                  <div className={`flex flex-wrap items-center gap-2 text-xl leading-tight sm:text-2xl ${menuCategoryBold ? "font-extrabold" : "font-medium"}`}>
-                                    <span>{packagesLabel}</span>
-                                    {packagesCountdown && (
-                                      <span className="rounded-full bg-white/90 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber-900 shadow-sm">
-                                        ⏳ {packagesCountdownPrefix ? `${packagesCountdownPrefix} · ` : ""}{packagesCountdown}
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                              </AccordionTrigger>
-                              <AccordionContent className="space-y-2 px-2 pb-3 pt-3" style={{ backgroundColor: `${menuCatBg}08` }}>
-                                <div className="grid gap-3 px-1 py-1 sm:grid-cols-2">
-                                  {inlinePackages.rest.map((p) => renderPackageCard(p))}
-                                </div>
-                              </AccordionContent>
-                            </AccordionItem>
-                          </Accordion>
-                        )}
+                        {(() => {
+                          type PkgGroup = { key: string; label: string; endsAt: string | null; items: typeof inlinePackages.rest };
+                          const groups: PkgGroup[] = [];
+                          for (const p of inlinePackages.rest) {
+                            const name = ((p as { menu_group_name?: string | null }).menu_group_name ?? "").trim();
+                            const key = name || "__packages";
+                            let g = groups.find((x) => x.key === key);
+                            if (!g) {
+                              g = {
+                                key,
+                                label: name || packagesLabel,
+                                endsAt: name ? ((p as { menu_group_ends_at?: string | null }).menu_group_ends_at ?? null) : null,
+                                items: [],
+                              };
+                              groups.push(g);
+                            }
+                            if (name && !g.endsAt) g.endsAt = (p as { menu_group_ends_at?: string | null }).menu_group_ends_at ?? null;
+                            g.items.push(p);
+                          }
+                          // named sections first, generic packages last
+                          groups.sort((a, b) => (a.key === "__packages" ? 1 : 0) - (b.key === "__packages" ? 1 : 0));
+                          if (groups.length === 0) return null;
+                          return (
+                            <Accordion type="single" collapsible className="space-y-2 pt-2">
+                              {groups.map((g) => {
+                                const endsMs = g.endsAt ? new Date(g.endsAt).getTime() : NaN;
+                                const cd = g.key === "__packages"
+                                  ? packagesCountdown
+                                  : Number.isFinite(endsMs) ? countdownLabel(endsMs) : null;
+                                const prefix = g.key === "__packages" ? packagesCountdownPrefix : "Ends in";
+                                return (
+                                  <AccordionItem key={g.key} value={g.key} className="overflow-hidden rounded-2xl border-0 shadow-sm">
+                                    <AccordionTrigger
+                                      className="px-5 py-4 hover:no-underline [&[data-state=open]>svg]:rotate-180"
+                                      style={{ backgroundColor: menuCatBg, color: menuCatText, fontFamily: `${headingFont}, system-ui, sans-serif` }}
+                                    >
+                                      <div className="flex-1 text-left">
+                                        <div className={`flex flex-wrap items-center gap-2 text-xl leading-tight sm:text-2xl ${menuCategoryBold ? "font-extrabold" : "font-medium"}`}>
+                                          <span>{g.label}</span>
+                                          {cd && (
+                                            <span className="rounded-full bg-white/90 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber-900 shadow-sm">
+                                              ⏳ {prefix ? `${prefix} · ` : ""}{cd}
+                                            </span>
+                                          )}
+                                        </div>
+                                      </div>
+                                    </AccordionTrigger>
+                                    <AccordionContent className="space-y-2 px-2 pb-3 pt-3" style={{ backgroundColor: `${menuCatBg}08` }}>
+                                      <div className="grid gap-3 px-1 py-1 sm:grid-cols-2">
+                                        {g.items.map((p) => renderPackageCard(p))}
+                                      </div>
+                                    </AccordionContent>
+                                  </AccordionItem>
+                                );
+                              })}
+                            </Accordion>
+                          );
+                        })()}
                       </div>
                     );
 
