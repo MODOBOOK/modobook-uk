@@ -22,7 +22,6 @@ import {
   ExternalLink,
   Star,
   Check,
-  Package as PackageIcon,
   Sparkles,
   MessageCircle,
   Facebook,
@@ -722,6 +721,16 @@ function BookPage() {
   }, [visiblePackages, categories]);
   const packagesLabel =
     ((profile as { packages_label?: string | null }).packages_label ?? "").trim() || "Packages";
+  const packagesCountdown = (() => {
+    const raw = (profile as { packages_countdown_ends_at?: string | null }).packages_countdown_ends_at;
+    if (!raw) return null;
+    const ends = new Date(raw).getTime();
+    if (!Number.isFinite(ends)) return null;
+    return countdownLabel(ends);
+  })();
+  const packagesCountdownPrefix =
+    ((profile as { packages_countdown_label?: string | null }).packages_countdown_label ?? "").trim();
+
   const treatById = useMemo(() => new Map(treatments.map((t) => [t.id, t])), [treatments]);
   const addonsFor = useMemo(() => {
     const m = new Map<string, string[]>();
@@ -1982,15 +1991,9 @@ function BookPage() {
                 </section>
               )}
               <Tabs defaultValue="treatments" className="w-full">
-                <TabsList className="grid w-full h-auto" style={{ backgroundColor: `${brand}10`, gridTemplateColumns: `repeat(${1 + (inlinePackages.rest.length > 0 ? 1 : 0) + (hasGiftCards ? 1 : 0) + (hasTraining ? 1 : 0) + (hasClinicVisits ? 1 : 0)}, minmax(0, 1fr))` }}>
+                <TabsList className="grid w-full h-auto" style={{ backgroundColor: `${brand}10`, gridTemplateColumns: `repeat(${1 + (hasGiftCards ? 1 : 0) + (hasTraining ? 1 : 0) + (hasClinicVisits ? 1 : 0)}, minmax(0, 1fr))` }}>
                   <TabsTrigger value="treatments" className="text-sm sm:text-base py-2.5">Treatments</TabsTrigger>
-                  {inlinePackages.rest.length > 0 && (
 
-                    <TabsTrigger value="packages" className="text-sm sm:text-base py-2.5">
-                      <PackageIcon className="mr-1.5 h-4 w-4" />
-                      {packagesLabel}
-                    </TabsTrigger>
-                  )}
                   {hasGiftCards && (
                     <TabsTrigger value="gift-cards" className="text-sm sm:text-base py-2.5">
                       <Gift className="mr-1.5 h-4 w-4" />
@@ -2121,10 +2124,12 @@ function BookPage() {
                       </div>
                     );
 
-                    const menuBlock = visibleTreatments.length === 0 ? (
-                      <p className="opacity-70">No treatments available here yet.</p>
-                    ) : (
+                    const menuBlock = (
                       <div className="space-y-2">
+                        {visibleTreatments.length === 0 && (
+                          <p className="opacity-70">No treatments available here yet.</p>
+                        )}
+
                         {tree.roots.length > 0 && (
                           <CategoryTree
                             nodes={tree.roots}
@@ -2179,8 +2184,35 @@ function BookPage() {
                             ))}
                           </div>
                         )}
+                        {inlinePackages.rest.length > 0 && (
+                          <Accordion type="single" collapsible className="pt-2">
+                            <AccordionItem value="__packages" className="overflow-hidden rounded-2xl border-0 shadow-sm">
+                              <AccordionTrigger
+                                className="px-5 py-4 hover:no-underline [&[data-state=open]>svg]:rotate-180"
+                                style={{ backgroundColor: menuCatBg, color: menuCatText, fontFamily: `${headingFont}, system-ui, sans-serif` }}
+                              >
+                                <div className="flex-1 text-left">
+                                  <div className={`flex flex-wrap items-center gap-2 text-xl leading-tight sm:text-2xl ${menuCategoryBold ? "font-extrabold" : "font-medium"}`}>
+                                    <span>{packagesLabel}</span>
+                                    {packagesCountdown && (
+                                      <span className="rounded-full bg-white/90 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber-900 shadow-sm">
+                                        ⏳ {packagesCountdownPrefix ? `${packagesCountdownPrefix} · ` : ""}{packagesCountdown}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              </AccordionTrigger>
+                              <AccordionContent className="space-y-2 px-2 pb-3 pt-3" style={{ backgroundColor: `${menuCatBg}08` }}>
+                                <div className="grid gap-3 px-1 py-1 sm:grid-cols-2">
+                                  {inlinePackages.rest.map((p) => renderPackageCard(p))}
+                                </div>
+                              </AccordionContent>
+                            </AccordionItem>
+                          </Accordion>
+                        )}
                       </div>
                     );
+
 
                     return modelPosition === "top" ? (
                       <>{modelBlock}{menuBlock}</>
@@ -2191,66 +2223,6 @@ function BookPage() {
                 </TabsContent>
 
 
-                <TabsContent value="packages" className="mt-4">
-                  {(() => {
-                    const tabPackages = inlinePackages.rest;
-                    if (tabPackages.length === 0) {
-                      return <p className="opacity-70">No packages available.</p>;
-                    }
-
-                    const pkgCats = (categories as { id: string; name: string; kind?: string | null }[])
-                      .filter((c) => c.kind === "package");
-                    const byCat = new Map<string | null, typeof tabPackages>();
-                    for (const p of tabPackages) {
-                      const key = ((p as { category_id?: string | null }).category_id ?? null);
-                      const bucket = byCat.get(key) ?? ([] as typeof tabPackages);
-                      bucket.push(p);
-                      byCat.set(key, bucket);
-                    }
-                    const groups = pkgCats
-                      .map((c) => ({ id: c.id, name: c.name, items: byCat.get(c.id) ?? ([] as typeof tabPackages) }))
-                      .filter((g) => g.items.length > 0);
-                    const uncategorised = byCat.get(null) ?? ([] as typeof tabPackages);
-
-                    if (groups.length === 0) {
-                      return (
-                        <div className="grid gap-3 sm:grid-cols-2">
-                          {tabPackages.map((p) => renderPackageCard(p))}
-                        </div>
-                      );
-                    }
-                    return (
-                      <Accordion type="multiple" className="w-full space-y-2">
-                        {groups.map((g) => (
-                          <AccordionItem key={g.id} value={g.id} className="rounded-xl border px-3" style={{ borderColor: `${brand}26` }}>
-                            <AccordionTrigger className="text-left text-base font-semibold" style={{ color: brand }}>
-                              {g.name}
-                              <span className="ml-2 rounded-full bg-muted px-2 py-0.5 text-[11px] font-normal opacity-70">{g.items.length}</span>
-                            </AccordionTrigger>
-                            <AccordionContent>
-                              <div className="grid gap-3 pt-1 sm:grid-cols-2">
-                                {g.items.map((p) => renderPackageCard(p))}
-                              </div>
-                            </AccordionContent>
-                          </AccordionItem>
-                        ))}
-                        {uncategorised.length > 0 && (
-                          <AccordionItem value="__uncat" className="rounded-xl border px-3" style={{ borderColor: `${brand}26` }}>
-                            <AccordionTrigger className="text-left text-base font-semibold" style={{ color: brand }}>
-                              Other {packagesLabel.toLowerCase()}
-                              <span className="ml-2 rounded-full bg-muted px-2 py-0.5 text-[11px] font-normal opacity-70">{uncategorised.length}</span>
-                            </AccordionTrigger>
-                            <AccordionContent>
-                              <div className="grid gap-3 pt-1 sm:grid-cols-2">
-                                {uncategorised.map((p) => renderPackageCard(p))}
-                              </div>
-                            </AccordionContent>
-                          </AccordionItem>
-                        )}
-                      </Accordion>
-                    );
-                  })()}
-                </TabsContent>
 
                 {hasGiftCards && (
                   <TabsContent value="gift-cards" className="mt-4">

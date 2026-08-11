@@ -94,6 +94,7 @@ const blankForm = {
 function PackagesPage() {
   const list = useServerFn(listMyPackages);
   const create = useServerFn(createPackage);
+
   const update = useServerFn(updatePackage);
   const remove = useServerFn(deletePackage);
   const reorder = useServerFn(reorderPackages);
@@ -111,6 +112,9 @@ function PackagesPage() {
   const [profileId, setProfileId] = useState<string>("");
   const [treatmentCats, setTreatmentCats] = useState<Category[]>([]);
   const [packagesLabel, setPackagesLabel] = useState("");
+  const [countdownEnds, setCountdownEnds] = useState("");
+  const [countdownLabel, setCountdownLabel] = useState("");
+
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Pkg | null>(null);
   const [form, setForm] = useState(blankForm);
@@ -122,6 +126,10 @@ function PackagesPage() {
     setCategories((c as Category[]) ?? []);
     setProfileId((profile as { id?: string } | null)?.id ?? "");
     setPackagesLabel((profile as { packages_label?: string | null } | null)?.packages_label ?? "");
+    const ends = (profile as { packages_countdown_ends_at?: string | null } | null)?.packages_countdown_ends_at ?? "";
+    setCountdownEnds(ends ? toLocalInput(ends) : "");
+    setCountdownLabel((profile as { packages_countdown_label?: string | null } | null)?.packages_countdown_label ?? "");
+
     setTreatmentCats((tc as Category[]) ?? []);
   }
   useEffect(() => { refresh(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
@@ -316,6 +324,49 @@ function PackagesPage() {
             </Button>
           </div>
           <p className="mt-1 text-xs text-muted-foreground">What patients see this section called, e.g. "Courses" or "Bundles".</p>
+          <div className="mt-3 rounded-lg border p-3">
+            <p className="text-sm font-semibold">Countdown on the {packagesLabel.trim() || "Packages"} category</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">Shows a live timer on the section header on your booking page. Leave blank for no countdown.</p>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <Input
+                type="datetime-local"
+                value={countdownEnds}
+                onChange={(e) => setCountdownEnds(e.target.value)}
+                aria-label="Countdown end date and time"
+                className="h-9 w-auto"
+              />
+              <Input
+                value={countdownLabel}
+                onChange={(e) => setCountdownLabel(e.target.value)}
+                placeholder="Offer ends"
+                aria-label="Countdown label"
+                className="h-9 w-40"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={async () => {
+                  if (!profileId) return;
+                  try {
+                    await saveProfile({
+                      data: {
+                        id: profileId,
+                        packages_countdown_ends_at: countdownEnds ? new Date(countdownEnds).toISOString() : null,
+                        packages_countdown_label: countdownLabel.trim() || null,
+                      },
+                    });
+                    toast.success("Countdown saved");
+                  } catch (e) {
+                    toast.error(e instanceof Error ? e.message : "Failed");
+                  }
+                }}
+              >
+                Save countdown
+              </Button>
+            </div>
+          </div>
+
         </div>
 
 
@@ -890,3 +941,4 @@ function PackageCategoriesManager({
     </Card>
   );
 }
+

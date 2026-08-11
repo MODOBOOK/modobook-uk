@@ -5859,6 +5859,8 @@ export type Database = {
           is_demo: boolean
           late_cancel_mode: string
           model_slots_position: string
+          packages_countdown_ends_at: string | null
+          packages_countdown_label: string | null
           packages_label: string | null
           patient_cancel_cutoff_hours: number | null
           patient_reschedule_cutoff_hours: number | null
@@ -5983,6 +5985,8 @@ export type Database = {
           is_demo?: boolean
           late_cancel_mode?: string
           model_slots_position?: string
+          packages_countdown_ends_at?: string | null
+          packages_countdown_label?: string | null
           packages_label?: string | null
           patient_cancel_cutoff_hours?: number | null
           patient_reschedule_cutoff_hours?: number | null
@@ -6107,6 +6111,8 @@ export type Database = {
           is_demo?: boolean
           late_cancel_mode?: string
           model_slots_position?: string
+          packages_countdown_ends_at?: string | null
+          packages_countdown_label?: string | null
           packages_label?: string | null
           patient_cancel_cutoff_hours?: number | null
           patient_reschedule_cutoff_hours?: number | null
@@ -8082,6 +8088,8 @@ export type Database = {
           hero_url: string
           id: string
           model_slots_position: string
+          packages_countdown_ends_at: string
+          packages_countdown_label: string
           packages_label: string
           payment_card_full_enabled: boolean
           payment_clearpay_enabled: boolean
