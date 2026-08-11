@@ -1,6 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
+import { filterUnblockedModelSlots } from "@/lib/model-slot-blocks";
+
 
 function publicClient() {
   return createClient<Database>(
