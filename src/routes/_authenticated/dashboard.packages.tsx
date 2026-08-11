@@ -332,48 +332,10 @@ function PackagesPage() {
             </Button>
           </div>
           <p className="mt-1 text-xs text-muted-foreground">What patients see this section called, e.g. "Courses" or "Bundles".</p>
-          <div className="mt-3 rounded-lg border p-3">
-            <p className="text-sm font-semibold">Countdown on the {packagesLabel.trim() || "Packages"} category</p>
-            <p className="mt-0.5 text-xs text-muted-foreground">Shows a live timer on the section header on your booking page. Leave blank for no countdown.</p>
-            <div className="mt-2 flex flex-wrap items-center gap-2">
-              <Input
-                type="datetime-local"
-                value={countdownEnds}
-                onChange={(e) => setCountdownEnds(e.target.value)}
-                aria-label="Countdown end date and time"
-                className="h-9 w-auto"
-              />
-              <Input
-                value={countdownLabel}
-                onChange={(e) => setCountdownLabel(e.target.value)}
-                placeholder="Offer ends"
-                aria-label="Countdown label"
-                className="h-9 w-40"
-              />
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={async () => {
-                  if (!profileId) return;
-                  try {
-                    await saveProfile({
-                      data: {
-                        id: profileId,
-                        packages_countdown_ends_at: countdownEnds ? new Date(countdownEnds).toISOString() : null,
-                        packages_countdown_label: countdownLabel.trim() || null,
-                      },
-                    });
-                    toast.success("Countdown saved");
-                  } catch (e) {
-                    toast.error(e instanceof Error ? e.message : "Failed");
-                  }
-                }}
-              >
-                Save countdown
-              </Button>
-            </div>
-          </div>
+          <p className="mt-3 rounded-lg border p-3 text-xs text-muted-foreground">
+            Timed promos and countdowns now live in <span className="font-medium">Services → Time-limited
+            offers</span>, where you can mix treatments and packages into one named section.
+          </p>
 
         </div>
 
@@ -468,32 +430,11 @@ function PackagesPage() {
                     ))}
                   </div>
                 )}
-                {!form.menu_category_id && (
-                  <div className="mt-3 border-t pt-3">
-                    <Label>Or show it in its own services section</Label>
-                    <p className="mt-0.5 text-xs text-muted-foreground">
-                      Give a section name (e.g. "Autumn packages") and this package appears as its own category in the services menu. Packages sharing the same name group together.
-                    </p>
-                    <Input
-                      className="mt-2"
-                      value={form.menu_group_name}
-                      onChange={(e) => setForm({ ...form, menu_group_name: e.target.value })}
-                      placeholder="Autumn packages"
-                    />
-                    {form.menu_group_name.trim() && (
-                      <div className="mt-2">
-                        <Label className="text-xs">Countdown ends (optional)</Label>
-                        <Input
-                          type="datetime-local"
-                          className="mt-1"
-                          value={form.menu_group_ends_at}
-                          onChange={(e) => setForm({ ...form, menu_group_ends_at: e.target.value })}
-                        />
-                        <p className="mt-1 text-xs text-muted-foreground">Shows a live "time left to book" timer on this section.</p>
-                      </div>
-                    )}
-                  </div>
-                )}
+                <p className="mt-3 border-t pt-3 text-xs text-muted-foreground">
+                  Running a timed promo (e.g. "Autumn packages")? Build it in Services → Time-limited
+                  offers — you can mix treatments and packages there and set one countdown for the whole
+                  section.
+                </p>
               </div>
 
 
@@ -699,57 +640,7 @@ function PackagesPage() {
                 </div>
               )}
 
-              <div className="rounded-lg border p-3">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <Label>Limited time offer</Label>
-                    <p className="mt-0.5 text-xs text-muted-foreground">
-                      Features this package in a highlighted "Limited time" band at the
-                      top of your booking page, with a countdown and spots remaining.
-                    </p>
-                  </div>
-                  <Switch
-                    checked={form.is_limited}
-                    onCheckedChange={(v) => setForm({ ...form, is_limited: v })}
-                  />
-                </div>
-                {form.is_limited && (
-                  <div className="mt-3 space-y-3">
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <div>
-                        <Label>Starts (optional)</Label>
-                        <Input
-                          type="datetime-local"
-                          value={form.limited_starts_at}
-                          onChange={(e) => setForm({ ...form, limited_starts_at: e.target.value })}
-                        />
-                      </div>
-                      <div>
-                        <Label>Ends</Label>
-                        <Input
-                          type="datetime-local"
-                          value={form.limited_ends_at}
-                          onChange={(e) => setForm({ ...form, limited_ends_at: e.target.value })}
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <Label>Limit number available (optional)</Label>
-                      <Input
-                        type="number"
-                        min={1}
-                        value={form.limited_quantity}
-                        onChange={(e) => setForm({ ...form, limited_quantity: e.target.value })}
-                        placeholder="e.g. 10 spots"
-                      />
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        Leave blank for unlimited. Once the end date passes or the spots run
-                        out, the offer disappears from the booking page automatically.
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
+              {/* Timed promos live in Services → Time-limited offers */}
 
 
 
