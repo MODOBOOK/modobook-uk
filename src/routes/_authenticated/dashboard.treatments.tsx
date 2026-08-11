@@ -29,6 +29,8 @@ import { Plus, Trash2, Pencil, FileText, X, Tag, PlusCircle, Sparkles, Loader2 }
 import { SearchableMultiPicker } from "@/components/ui/searchable-multi-picker";
 import { BulkRebookRemindersDialog } from "@/components/BulkRebookRemindersDialog";
 import { generateTreatmentDescription } from "@/lib/ai-treatment-description.functions";
+import { OfferGroupsPanel } from "@/components/OfferGroupsPanel";
+
 
 
 export const Route = createFileRoute("/_authenticated/dashboard/treatments")({
