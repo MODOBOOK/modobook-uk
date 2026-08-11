@@ -155,7 +155,7 @@ export const getPublicClinic = createServerFn({ method: "GET" })
       modelSlots: (() => {
         const now = new Date();
         const todayStr = now.toISOString().slice(0, 10);
-        return (modelSlots.data ?? []).filter((s: any) => {
+        const live = (modelSlots.data ?? []).filter((s: any) => {
           if (s.is_flexible) return true;
           if (!s.slot_date) return true;
           if (s.slot_date > todayStr) return true;
@@ -166,7 +166,13 @@ export const getPublicClinic = createServerFn({ method: "GET" })
           const slotEnd = new Date(`${s.slot_date}T${timeStr}`);
           return slotEnd.getTime() > now.getTime();
         });
+        return filterUnblockedModelSlots(
+          live,
+          (blockedDates.data ?? []) as any,
+          (blockedTimes.data ?? []) as any,
+        );
       })(),
+
       addonLinks: addonLinks.data ?? [],
       practitioners: practitioners.data ?? [],
       locationPractitioners: locationPractitioners.data ?? [],
