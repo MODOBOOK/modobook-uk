@@ -16,6 +16,8 @@ type PackageInput = {
   category_id: string | null;
   menu_category_id?: string | null;
   menu_placement?: "top" | "bottom";
+  menu_group_name?: string | null;
+  menu_group_ends_at?: string | null;
   allow_split_payment?: boolean;
   is_limited?: boolean;
   limited_starts_at?: string | null;
