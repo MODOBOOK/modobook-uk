@@ -290,6 +290,32 @@ function PackagesPage() {
         <div>
           <h1 className="text-2xl font-bold">Packages</h1>
           <p className="text-sm text-muted-foreground">Bundle multiple treatments or sessions and sell them as one bookable package.</p>
+          <div className="mt-2 flex max-w-sm items-center gap-2">
+            <Input
+              value={packagesLabel}
+              onChange={(e) => setPackagesLabel(e.target.value)}
+              placeholder="Packages"
+              aria-label="Name of the packages section patients see"
+              className="h-9"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                if (!profileId) return;
+                try {
+                  await saveProfile({ data: { id: profileId, packages_label: packagesLabel.trim() || null } });
+                  toast.success("Section name saved");
+                } catch (e) {
+                  toast.error(e instanceof Error ? e.message : "Failed");
+                }
+              }}
+            >
+              Save name
+            </Button>
+          </div>
+          <p className="mt-1 text-xs text-muted-foreground">What patients see this section called, e.g. "Courses" or "Bundles".</p>
         </div>
 
 
@@ -351,6 +377,38 @@ function PackagesPage() {
                 <p className="mt-1 text-xs text-muted-foreground">
                   Package categories are separate from treatment categories. Patients see packages grouped by these on the booking page.
                 </p>
+              </div>
+
+              <div className="rounded-lg border p-3">
+                <Label>Show inside the treatment menu</Label>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  Place this package inside one of your treatment categories so patients see it alongside the treatments, instead of in the separate packages tab.
+                </p>
+                <select
+                  className="mt-2 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={form.menu_category_id}
+                  onChange={(e) => setForm({ ...form, menu_category_id: e.target.value })}
+                >
+                  <option value="">— Keep in the packages tab —</option>
+                  {treatmentCats.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+                {form.menu_category_id && (
+                  <div className="mt-2 flex gap-2">
+                    {(["top", "bottom"] as const).map((pos) => (
+                      <Button
+                        key={pos}
+                        type="button"
+                        size="sm"
+                        variant={form.menu_placement === pos ? "default" : "outline"}
+                        onClick={() => setForm({ ...form, menu_placement: pos })}
+                      >
+                        {pos === "top" ? "Above treatments" : "Below treatments"}
+                      </Button>
+                    ))}
+                  </div>
+                )}
               </div>
 
 
