@@ -41,6 +41,8 @@ type Pkg = {
   category_id: string | null;
   menu_category_id?: string | null;
   menu_placement?: string | null;
+  menu_group_name?: string | null;
+  menu_group_ends_at?: string | null;
   allow_split_payment?: boolean | null;
   is_limited?: boolean | null;
   limited_starts_at?: string | null;
@@ -83,6 +85,8 @@ const blankForm = {
   category_id: "" as string,
   menu_category_id: "" as string,
   menu_placement: "top" as "top" | "bottom",
+  menu_group_name: "" as string,
+  menu_group_ends_at: "" as string,
   allow_split_payment: false,
   is_limited: false,
   limited_starts_at: "" as string,
@@ -171,6 +175,8 @@ function PackagesPage() {
       category_id: p.category_id ?? "",
       menu_category_id: p.menu_category_id ?? "",
       menu_placement: p.menu_placement === "bottom" ? "bottom" : "top",
+      menu_group_name: p.menu_group_name ?? "",
+      menu_group_ends_at: toLocalInput(p.menu_group_ends_at),
       allow_split_payment: Boolean(p.allow_split_payment),
       is_limited: Boolean(p.is_limited),
       limited_starts_at: toLocalInput(p.limited_starts_at),
@@ -267,6 +273,8 @@ function PackagesPage() {
       category_id: form.category_id || null,
       menu_category_id: form.menu_category_id || null,
       menu_placement: form.menu_placement,
+      menu_group_name: form.menu_group_name.trim() || null,
+      menu_group_ends_at: fromLocalInput(form.menu_group_ends_at),
       allow_split_payment: form.allow_split_payment && totalSessions > 1,
       is_limited: form.is_limited,
       limited_starts_at: fromLocalInput(form.limited_starts_at),
@@ -458,6 +466,32 @@ function PackagesPage() {
                         {pos === "top" ? "Above treatments" : "Below treatments"}
                       </Button>
                     ))}
+                  </div>
+                )}
+                {!form.menu_category_id && (
+                  <div className="mt-3 border-t pt-3">
+                    <Label>Or show it in its own services section</Label>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      Give a section name (e.g. "Autumn packages") and this package appears as its own category in the services menu. Packages sharing the same name group together.
+                    </p>
+                    <Input
+                      className="mt-2"
+                      value={form.menu_group_name}
+                      onChange={(e) => setForm({ ...form, menu_group_name: e.target.value })}
+                      placeholder="Autumn packages"
+                    />
+                    {form.menu_group_name.trim() && (
+                      <div className="mt-2">
+                        <Label className="text-xs">Countdown ends (optional)</Label>
+                        <Input
+                          type="datetime-local"
+                          className="mt-1"
+                          value={form.menu_group_ends_at}
+                          onChange={(e) => setForm({ ...form, menu_group_ends_at: e.target.value })}
+                        />
+                        <p className="mt-1 text-xs text-muted-foreground">Shows a live "time left to book" timer on this section.</p>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
