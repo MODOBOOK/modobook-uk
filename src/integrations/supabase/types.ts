@@ -8082,6 +8082,7 @@ export type Database = {
           hero_url: string
           id: string
           model_slots_position: string
+          packages_label: string
           payment_card_full_enabled: boolean
           payment_clearpay_enabled: boolean
           payment_deposit_enabled: boolean
