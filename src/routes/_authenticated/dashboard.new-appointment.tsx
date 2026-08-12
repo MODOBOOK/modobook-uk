@@ -390,10 +390,12 @@ function NewAppointmentPage() {
         : null;
 
       let depositUrl: string | null = null;
+      let depositEmailed = false;
       if (paidMode === "send_link" && primary) {
         const amt = depositCents;
         const hrs = Math.max(1, parseInt(depositHours || "24", 10));
         if (amt >= 100) {
+          const expiresAt = new Date(Date.now() + hrs * 3600 * 1000).toISOString();
           try {
             const link = await createLink({
               data: {
@@ -403,23 +405,46 @@ function NewAppointmentPage() {
                 appointmentId: primary.id,
                 recipientEmail: patientEmail,
                 recipientName: patientName,
-                expiresAt: new Date(Date.now() + hrs * 3600 * 1000).toISOString(),
+                expiresAt,
               },
             });
             depositUrl = (link as { stripe_url: string | null }).stripe_url;
+            const totalCents = Number((link as { total_cents?: number }).total_cents ?? amt);
+            if (depositUrl && patientEmail) {
+              const res = await emailLink({
+                data: {
+                  url: depositUrl,
+                  recipientEmail: patientEmail,
+                  recipientName: patientName,
+                  amountCents: totalCents,
+                  description: created.map((c) => c.treatmentName).join(" + "),
+                  kind: "deposit",
+                  expiresAt,
+                },
+              });
+              depositEmailed = !!(res as { ok?: boolean }).ok;
+              if (!depositEmailed) {
+                toast.error(`Deposit link created but email failed: ${(res as { error?: string }).error ?? "unknown error"}`);
+              }
+            }
           } catch (e) {
             toast.error(`Deposit link failed: ${(e as Error).message}`);
           }
+        } else {
+          toast.error("Deposit amount must be at least £1.00 — no link was sent");
         }
       }
 
       toast.success(`Created ${created.length} appointment${created.length === 1 ? "" : "s"}`, {
-        description: depositUrl
+        description: depositEmailed
+          ? `Deposit link emailed to ${patientEmail} and copied to clipboard.`
+          : depositUrl
           ? "Deposit link copied to clipboard."
           : manageUrl
           ? "Manage link copied to clipboard."
           : "Confirmed.",
       });
+
       if (navigator.clipboard) {
         await navigator.clipboard.writeText(depositUrl ?? manageUrl ?? "");
       }
