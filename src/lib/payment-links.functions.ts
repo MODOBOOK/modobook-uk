@@ -164,6 +164,68 @@ export const createPaymentLink = createServerFn({ method: "POST" })
     };
   });
 
+// Email a Stripe payment link to the patient (deposit request / balance).
+export const emailPaymentLink = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    (input: {
+      url: string;
+      recipientEmail: string;
+      recipientName?: string | null;
+      amountCents: number;
+      description?: string | null;
+      kind?: "deposit" | "balance" | "payment";
+      expiresAt?: string | null;
+      message?: string | null;
+    }) => input,
+  )
+  .handler(async ({ data, context }) => {
+    const profile = await getProfile(context.supabase, context.userId);
+    if (!profile) throw new Error("Profile not found");
+    if (!data.url || !data.recipientEmail) return { ok: false, error: "Missing link or email" };
+
+    const { tryEnqueueAppEmail, getPractitionerBranding } = await import("./email/send.server");
+    const branding = await getPractitionerBranding(profile.id);
+    const clinicName = profile.clinic_name || branding.clinicName;
+    const amount = `£${(Math.max(0, Math.round(data.amountCents)) / 100).toFixed(2)}`;
+    const kind = data.kind ?? "payment";
+    const label = kind === "deposit" ? "deposit" : kind === "balance" ? "balance" : "payment";
+    const firstName = (data.recipientName ?? "").split(" ")[0] || "there";
+    const expiryLine = data.expiresAt
+      ? `\n\nPlease complete this by ${new Date(data.expiresAt).toLocaleString("en-GB", {
+          weekday: "short",
+          day: "numeric",
+          month: "short",
+          hour: "2-digit",
+          minute: "2-digit",
+        })}.`
+      : "";
+
+    const body =
+      (data.message?.trim() ? `${data.message.trim()}\n\n` : "") +
+      `Hi ${firstName},\n\n` +
+      `Here's your secure ${label} link for ${data.description || "your appointment"}.\n\n` +
+      `Amount due: ${amount}${expiryLine}\n\n` +
+      `Tap the button below to pay securely by card.\n\n` +
+      `Thanks,\n${clinicName}`;
+
+    const res = await tryEnqueueAppEmail({
+      templateName: "patient-message",
+      recipientEmail: data.recipientEmail,
+      messageId: `pay-link-${crypto.randomUUID()}`,
+      templateData: {
+        profileId: profile.id,
+        subject: `Your ${label} link — ${clinicName}`,
+        body,
+        clinicName,
+        logoUrl: branding.logoUrl,
+        brandColor: branding.brandColor,
+        actions: [{ label: `Pay ${amount} now`, url: data.url, variant: "primary" }],
+      },
+    });
+    return { ok: res.ok, error: res.error ?? null, skipped: res.skipped ?? null };
+  });
+
 
 export const listPaymentLinks = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])

@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { getMyProfile } from "@/lib/profiles.functions";
 import { createAppointmentForPatient } from "@/lib/appointments.functions";
-import { createPaymentLink } from "@/lib/payment-links.functions";
+import { createPaymentLink, emailPaymentLink } from "@/lib/payment-links.functions";
 import { listMyModelSlots } from "@/lib/discounts.functions";
 import { listClients } from "@/lib/clients.functions";
 import { listConsentTemplates } from "@/lib/templates.functions";
@@ -101,6 +101,7 @@ function NewAppointmentPage() {
   const [paidMethod, setPaidMethod] = useState<"cash" | "card_in_person" | "bank_transfer" | "other">("cash");
   const [paidReference, setPaidReference] = useState("");
   const createLink = useServerFn(createPaymentLink);
+  const emailLink = useServerFn(emailPaymentLink);
   const fetchModelSlots = useServerFn(listMyModelSlots);
   const [modelSlots, setModelSlots] = useState<ModelSlot[]>([]);
   const [modelExpanded, setModelExpanded] = useState(true);
@@ -390,10 +391,12 @@ function NewAppointmentPage() {
         : null;
 
       let depositUrl: string | null = null;
+      let depositEmailed = false;
       if (paidMode === "send_link" && primary) {
         const amt = depositCents;
         const hrs = Math.max(1, parseInt(depositHours || "24", 10));
         if (amt >= 100) {
+          const expiresAt = new Date(Date.now() + hrs * 3600 * 1000).toISOString();
           try {
             const link = await createLink({
               data: {
@@ -403,23 +406,46 @@ function NewAppointmentPage() {
                 appointmentId: primary.id,
                 recipientEmail: patientEmail,
                 recipientName: patientName,
-                expiresAt: new Date(Date.now() + hrs * 3600 * 1000).toISOString(),
+                expiresAt,
               },
             });
             depositUrl = (link as { stripe_url: string | null }).stripe_url;
+            const totalCents = Number((link as { total_cents?: number }).total_cents ?? amt);
+            if (depositUrl && patientEmail) {
+              const res = await emailLink({
+                data: {
+                  url: depositUrl,
+                  recipientEmail: patientEmail,
+                  recipientName: patientName,
+                  amountCents: totalCents,
+                  description: created.map((c) => c.treatmentName).join(" + "),
+                  kind: "deposit",
+                  expiresAt,
+                },
+              });
+              depositEmailed = !!(res as { ok?: boolean }).ok;
+              if (!depositEmailed) {
+                toast.error(`Deposit link created but email failed: ${(res as { error?: string }).error ?? "unknown error"}`);
+              }
+            }
           } catch (e) {
             toast.error(`Deposit link failed: ${(e as Error).message}`);
           }
+        } else {
+          toast.error("Deposit amount must be at least £1.00 — no link was sent");
         }
       }
 
       toast.success(`Created ${created.length} appointment${created.length === 1 ? "" : "s"}`, {
-        description: depositUrl
+        description: depositEmailed
+          ? `Deposit link emailed to ${patientEmail} and copied to clipboard.`
+          : depositUrl
           ? "Deposit link copied to clipboard."
           : manageUrl
           ? "Manage link copied to clipboard."
           : "Confirmed.",
       });
+
       if (navigator.clipboard) {
         await navigator.clipboard.writeText(depositUrl ?? manageUrl ?? "");
       }
