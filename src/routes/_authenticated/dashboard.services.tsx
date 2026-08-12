@@ -30,7 +30,6 @@ import { listMyLocations, setTreatmentLocationPricing } from "@/lib/locations.fu
 import { getMyProfile, updateProfile } from "@/lib/profiles.functions";
 import { ImageUploader } from "@/components/ImageUploader";
 import { PrescribingClinicCard } from "@/components/PrescribingClinicCard";
-import { OfferGroupsPanel } from "@/components/OfferGroupsPanel";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { Star, X, Check, ChevronsUpDown, MapPin } from "lucide-react";
@@ -384,14 +383,6 @@ function ServicesPage() {
           )}
         </div>
       )}
-
-      <OfferGroupsPanel
-        treatments={((treats.data ?? []) as Treat[]).map((t) => ({
-          id: t.id,
-          name: t.name,
-          price: t.price,
-        }))}
-      />
 
 
       <MoveTreatmentDialog

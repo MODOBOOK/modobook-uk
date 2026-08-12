@@ -22,6 +22,7 @@ import {
   ExternalLink,
   Star,
   Check,
+  Package as PackageIcon,
   Sparkles,
   MessageCircle,
   Facebook,
@@ -219,7 +220,7 @@ function WelcomeIntroBlock({
 type Theme = Database["public"]["Tables"]["clinic_theme"]["Row"];
 
 function BookPage() {
-  const { profile, treatments, packages, locations, categories, pricing, theme, reviews, concernAreas, concerns, concernLinks, modelSlots = [], addonLinks = [], practitioners = [], locationPractitioners = [], aboutPage, careGuides = [], pretreatment = [], bookingCounts = [], offerGroups = [] } =
+  const { profile, treatments, packages, locations, categories, pricing, theme, reviews, concernAreas, concerns, concernLinks, modelSlots = [], addonLinks = [], practitioners = [], locationPractitioners = [], aboutPage, careGuides = [], pretreatment = [], bookingCounts = [] } =
     Route.useLoaderData() as {
       profile: {
         id: string;
@@ -276,17 +277,6 @@ function BookPage() {
         is_flexible?: boolean | null;
       }[];
       bookingCounts?: { treatment_id: string; booked_count: number }[];
-      offerGroups?: {
-        id: string;
-        name: string;
-        subtitle: string | null;
-        starts_at: string | null;
-        ends_at: string | null;
-        pricing_mode: "none" | "percent" | "item";
-        discount_percent: number | null;
-        items: { treatment_id: string | null; package_id: string | null; offer_price: number | null }[];
-      }[];
-
 
       addonLinks?: { treatment_id: string; addon_id: string; discount_percent: number | null; discount_amount: number | null }[];
       practitioners?: { id: string; name: string; professional_title: string | null; photo_url: string | null; bio: string | null; display_order: number }[];
@@ -540,17 +530,10 @@ function BookPage() {
       (remaining == null || remaining > 0);
     return { limited: true, live, remaining, endsAt: ends };
   };
-  // Limited offers pinned into a treatment category are shown inline there, not in the band.
   const limitedPackages = useMemo(
-    () =>
-      (packages as LimitedPkg[]).filter((p) => {
-        const st = limitedState(p);
-        if (!st.limited || !st.live) return false;
-        const catId = (p as { menu_category_id?: string | null }).menu_category_id ?? null;
-        return !(catId && categories.some((c) => c.id === catId));
-      }),
+    () => (packages as LimitedPkg[]).filter((p) => limitedState(p).limited && limitedState(p).live),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [packages, categories, nowTs],
+    [packages, nowTs],
   );
   // Expired / not-yet-started / sold-out limited offers drop out of the menu
   const visiblePackages = useMemo(
@@ -573,175 +556,6 @@ function BookPage() {
   const togglePackageSelect = (id: string) =>
     setSelectedPackageIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   const isPackageSelected = (id: string) => selectedPackageIds.includes(id);
-
-  /** Package card — used both in the Packages tab and inline in the treatment menu. */
-  const renderPackageCard = (p: LimitedPkg) => {
-    const pkg = p as Package & {
-      description?: string | null;
-      treatment_ids?: string[] | null;
-      duration_minutes?: number | null;
-      image_url?: string | null;
-      category_id?: string | null;
-    };
-    const ids = pkg.treatment_ids ?? (pkg.treatment_id ? [pkg.treatment_id] : []);
-    const firstTreatmentId = ids[0];
-    const includedTreatments = ids
-      .map((tid) => treatments.find((t) => t.id === tid))
-      .filter((t): t is Treatment => Boolean(t));
-    const includedGrouped = includedTreatments.reduce<{ t: Treatment; qty: number }[]>((acc, t) => {
-      const found = acc.find((x) => x.t.id === t.id);
-      if (found) found.qty += 1;
-      else acc.push({ t, qty: 1 });
-      return acc;
-    }, []);
-    const autoTotal = includedTreatments.reduce((s, t) => s + Number(t.price ?? 0), 0);
-    const compareAt = (p as { compare_at_price?: number | null }).compare_at_price;
-    const originalTotal = compareAt == null ? autoTotal : Number(compareAt);
-    const price = Number(p.price ?? 0);
-    const saving = originalTotal > price ? originalTotal - price : 0;
-    const savingPct = originalTotal > 0 && saving > 0 ? Math.round((saving / originalTotal) * 100) : 0;
-    const lim = limitedState(p);
-    const countdown = lim.limited ? countdownLabel(lim.endsAt) : null;
-    return (
-      <Card key={p.id} className="overflow-hidden rounded-2xl">
-        {pkg.image_url && (
-          <div className="aspect-[16/9] w-full overflow-hidden bg-muted">
-            <img src={pkg.image_url} alt={p.name} className="h-full w-full object-cover" loading="lazy" />
-          </div>
-        )}
-        <CardContent className="p-4">
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="font-semibold" style={{ color: brand }}>{p.name}</div>
-            {lim.limited && (
-              <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-900">
-                Limited
-              </span>
-            )}
-          </div>
-          {(countdown || (lim.limited && lim.remaining != null)) && (
-            <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] font-semibold text-amber-800">
-              {countdown && <span>⏳ {countdown}</span>}
-              {lim.remaining != null && <span>· {lim.remaining} left</span>}
-            </div>
-          )}
-          {pkg.description && (
-            <div className="mt-1">
-              <p className={`text-sm opacity-70 ${expandedPkgIds.has(p.id) ? "" : "line-clamp-3"}`}>
-                {pkg.description}
-              </p>
-              {pkg.description.length > 120 && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setExpandedPkgIds((prev) => {
-                      const next = new Set(prev);
-                      if (next.has(p.id)) next.delete(p.id);
-                      else next.add(p.id);
-                      return next;
-                    });
-                  }}
-                  className="mt-1 flex items-center gap-1 text-xs font-semibold"
-                  style={{ color: brand }}
-                  aria-label={expandedPkgIds.has(p.id) ? "Show less" : "Read more"}
-                >
-                  {expandedPkgIds.has(p.id) ? "Show less" : "Read more"}
-                  {expandedPkgIds.has(p.id) ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-                </button>
-              )}
-            </div>
-          )}
-          <p className="mt-2 text-xs opacity-60">
-            {p.session_count} session{p.session_count === 1 ? "" : "s"}
-            {pkg.duration_minutes ? ` · ${pkg.duration_minutes} min each` : ""}
-          </p>
-          {(p as { allow_split_payment?: boolean | null }).allow_split_payment && (p.session_count || 1) > 1 && (
-            <p className="mt-1 text-xs font-medium" style={{ color: brand }}>
-              Split payment available — £{(price / (p.session_count || 1)).toFixed(2)} per session
-            </p>
-          )}
-          {includedGrouped.length > 0 && (
-            <div className="mt-3 rounded-lg border p-2.5" style={{ borderColor: `${brand}26`, background: `${brand}0a` }}>
-              <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide opacity-70">Includes</div>
-              <ul className="space-y-0.5 text-sm">
-                {includedGrouped.map(({ t, qty }) => (
-                  <li key={t.id} className="flex items-start gap-1.5">
-                    <span style={{ color: brand }}>•</span>
-                    <span>{qty > 1 ? `${qty} × ${t.name}` : t.name}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-          {saving > 0 && (
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-800">
-                Save £{saving.toFixed(2)} ({savingPct}%)
-              </span>
-              <span className="text-xs opacity-60 line-through">£{originalTotal.toFixed(2)}</span>
-            </div>
-          )}
-          <div className="mt-3 flex items-center justify-between gap-2">
-            <p className="font-bold" style={{ color: brand }}>£{price.toFixed(2)}</p>
-            {firstTreatmentId ? (
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => togglePackageSelect(p.id)}
-                  aria-pressed={isPackageSelected(p.id)}
-                  className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition"
-                  style={
-                    isPackageSelected(p.id)
-                      ? { backgroundColor: brand, borderColor: brand, color: "#fff" }
-                      : { borderColor: `${brand}66`, color: brand }
-                  }
-                >
-                  {isPackageSelected(p.id) ? (<><Check className="h-3 w-3" /> Added</>) : "Add"}
-                </button>
-                <Link
-                  to="/m/$slug/book/$treatmentId"
-                  search={{ locationId: locationId ?? undefined }}
-                  params={{ slug, treatmentId: firstTreatmentId }}
-                  className="modo-btn px-4 py-1.5 text-sm font-semibold"
-                >
-                  Book
-                </Link>
-              </div>
-            ) : (
-              <span className="text-xs opacity-60">Contact to book</span>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-    );
-  };
-
-  /** Packages the practitioner has pinned into a treatment category. */
-  const inlinePackages = useMemo(() => {
-    const catIds = new Set(categories.map((c) => c.id));
-    const map = new Map<string, { top: LimitedPkg[]; bottom: LimitedPkg[] }>();
-    const rest: LimitedPkg[] = [];
-    for (const p of visiblePackages) {
-      const catId = (p as { menu_category_id?: string | null }).menu_category_id ?? null;
-      if (!catId || !catIds.has(catId)) { rest.push(p); continue; }
-      const bucket = map.get(catId) ?? { top: [], bottom: [] };
-      const where = (p as { menu_placement?: string | null }).menu_placement === "bottom" ? "bottom" : "top";
-      bucket[where].push(p);
-      map.set(catId, bucket);
-    }
-    return { map, rest };
-  }, [visiblePackages, categories]);
-  const packagesLabel =
-    ((profile as { packages_label?: string | null }).packages_label ?? "").trim() || "Packages";
-  const packagesCountdown = (() => {
-    const raw = (profile as { packages_countdown_ends_at?: string | null }).packages_countdown_ends_at;
-    if (!raw) return null;
-    const ends = new Date(raw).getTime();
-    if (!Number.isFinite(ends)) return null;
-    return countdownLabel(ends);
-  })();
-  const packagesCountdownPrefix =
-    ((profile as { packages_countdown_label?: string | null }).packages_countdown_label ?? "").trim();
-
   const treatById = useMemo(() => new Map(treatments.map((t) => [t.id, t])), [treatments]);
   const addonsFor = useMemo(() => {
     const m = new Map<string, string[]>();
@@ -2002,9 +1816,15 @@ function BookPage() {
                 </section>
               )}
               <Tabs defaultValue="treatments" className="w-full">
-                <TabsList className="grid w-full h-auto" style={{ backgroundColor: `${brand}10`, gridTemplateColumns: `repeat(${1 + (hasGiftCards ? 1 : 0) + (hasTraining ? 1 : 0) + (hasClinicVisits ? 1 : 0)}, minmax(0, 1fr))` }}>
+                <TabsList className="grid w-full h-auto" style={{ backgroundColor: `${brand}10`, gridTemplateColumns: `repeat(${1 + (visiblePackages.length > 0 ? 1 : 0) + (hasGiftCards ? 1 : 0) + (hasTraining ? 1 : 0) + (hasClinicVisits ? 1 : 0)}, minmax(0, 1fr))` }}>
                   <TabsTrigger value="treatments" className="text-sm sm:text-base py-2.5">Treatments</TabsTrigger>
+                  {visiblePackages.length > 0 && (
 
+                    <TabsTrigger value="packages" className="text-sm sm:text-base py-2.5">
+                      <PackageIcon className="mr-1.5 h-4 w-4" />
+                      Packages
+                    </TabsTrigger>
+                  )}
                   {hasGiftCards && (
                     <TabsTrigger value="gift-cards" className="text-sm sm:text-base py-2.5">
                       <Gift className="mr-1.5 h-4 w-4" />
@@ -2135,12 +1955,10 @@ function BookPage() {
                       </div>
                     );
 
-                    const menuBlock = (
+                    const menuBlock = visibleTreatments.length === 0 ? (
+                      <p className="opacity-70">No treatments available here yet.</p>
+                    ) : (
                       <div className="space-y-2">
-                        {visibleTreatments.length === 0 && (
-                          <p className="opacity-70">No treatments available here yet.</p>
-                        )}
-
                         {tree.roots.length > 0 && (
                           <CategoryTree
                             nodes={tree.roots}
@@ -2161,8 +1979,6 @@ function BookPage() {
                             categoryBold={menuCategoryBold}
                             headingFont={headingFont}
                             capFor={capFor}
-                            packagesFor={(catId) => inlinePackages.map.get(catId) ?? null}
-                            renderPackage={renderPackageCard}
                           />
 
                         )}
@@ -2195,155 +2011,8 @@ function BookPage() {
                             ))}
                           </div>
                         )}
-                        {offerGroups.length > 0 && (
-                          <Accordion type="single" collapsible className="space-y-2 pt-2">
-                            {offerGroups.map((g) => {
-                              const endsMs = g.ends_at ? new Date(g.ends_at).getTime() : NaN;
-                              const cd = Number.isFinite(endsMs) ? countdownLabel(endsMs) : null;
-                              if (g.ends_at && !cd) return null;
-                              const offerPrice = (base: number, override: number | null) => {
-                                if (g.pricing_mode === "item") return override != null ? override : base;
-                                if (g.pricing_mode === "percent" && g.discount_percent)
-                                  return Math.max(0, base * (1 - g.discount_percent / 100));
-                                return base;
-                              };
-                              const offerTreatments = g.items
-                                .filter((i) => i.treatment_id)
-                                .map((i) => ({ item: i, t: treatments.find((t) => t.id === i.treatment_id) }))
-                                .filter((x): x is { item: typeof x.item; t: Treatment } => Boolean(x.t));
-                              const offerPkgs = g.items
-                                .filter((i) => i.package_id)
-                                .map((i) => ({ item: i, p: (packages as LimitedPkg[]).find((p) => p.id === i.package_id) }))
-                                .filter((x): x is { item: typeof x.item; p: LimitedPkg } => Boolean(x.p));
-                              if (offerTreatments.length === 0 && offerPkgs.length === 0) return null;
-                              return (
-                                <AccordionItem key={g.id} value={`offer-${g.id}`} className="overflow-hidden rounded-2xl border-0 shadow-sm">
-                                  <AccordionTrigger
-                                    className="px-5 py-4 hover:no-underline [&[data-state=open]>svg]:rotate-180"
-                                    style={{ backgroundColor: menuCatBg, color: menuCatText, fontFamily: `${headingFont}, system-ui, sans-serif` }}
-                                  >
-                                    <div className="flex-1 text-left">
-                                      <div className={`flex flex-wrap items-center gap-2 text-xl leading-tight sm:text-2xl ${menuCategoryBold ? "font-extrabold" : "font-medium"}`}>
-                                        <span>{g.name}</span>
-                                        {cd && (
-                                          <span className="rounded-full bg-white/90 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber-900 shadow-sm">
-                                            ⏳ Ends in {cd}
-                                          </span>
-                                        )}
-                                      </div>
-                                      {g.subtitle && <p className="mt-1 text-xs opacity-80">{g.subtitle}</p>}
-                                    </div>
-                                  </AccordionTrigger>
-                                  <AccordionContent className="space-y-2 px-2 pb-3 pt-3" style={{ backgroundColor: `${menuCatBg}08` }}>
-                                    {offerTreatments.length > 0 && (
-                                      <div className="space-y-2 px-1">
-                                        {offerTreatments.map(({ item, t }) => (
-                                          <TreatmentRow
-                                            key={t.id}
-                                            t={t}
-                                            slug={slug}
-                                            price={offerPrice(priceFor(t), item.offer_price)}
-                                            duration={durationFor(t)}
-                                            brand={brand}
-                                            selected={isSelected(t.id)}
-                                            onToggle={() => toggleSelect(t.id)}
-                                            cardBg={menuCardBg}
-                                            cardBorder={menuCardBorder}
-                                            nameColor={menuNameColor}
-                                            priceColor={menuPriceColor}
-                                            size={menuSize}
-                                            bold={menuTreatmentBold}
-                                            capInfo={capFor(t)}
-                                          />
-                                        ))}
-                                      </div>
-                                    )}
-                                    {offerPkgs.length > 0 && (
-                                      <div className="grid gap-3 px-1 py-1 sm:grid-cols-2">
-                                        {offerPkgs.map(({ item, p }) => {
-                                          const base = Number(p.price ?? 0);
-                                          const next = offerPrice(base, item.offer_price);
-                                          return renderPackageCard(
-                                            next === base
-                                              ? p
-                                              : ({
-                                                  ...p,
-                                                  price: next,
-                                                  compare_at_price:
-                                                    (p as { compare_at_price?: number | null }).compare_at_price ?? base,
-                                                } as LimitedPkg),
-                                          );
-                                        })}
-                                      </div>
-                                    )}
-                                  </AccordionContent>
-                                </AccordionItem>
-                              );
-                            })}
-                          </Accordion>
-                        )}
-                        {(() => {
-
-                          type PkgGroup = { key: string; label: string; endsAt: string | null; items: typeof inlinePackages.rest };
-                          const groups: PkgGroup[] = [];
-                          for (const p of inlinePackages.rest) {
-                            const name = ((p as { menu_group_name?: string | null }).menu_group_name ?? "").trim();
-                            const key = name || "__packages";
-                            let g = groups.find((x) => x.key === key);
-                            if (!g) {
-                              g = {
-                                key,
-                                label: name || packagesLabel,
-                                endsAt: name ? ((p as { menu_group_ends_at?: string | null }).menu_group_ends_at ?? null) : null,
-                                items: [],
-                              };
-                              groups.push(g);
-                            }
-                            if (name && !g.endsAt) g.endsAt = (p as { menu_group_ends_at?: string | null }).menu_group_ends_at ?? null;
-                            g.items.push(p);
-                          }
-                          // named sections first, generic packages last
-                          groups.sort((a, b) => (a.key === "__packages" ? 1 : 0) - (b.key === "__packages" ? 1 : 0));
-                          if (groups.length === 0) return null;
-                          return (
-                            <Accordion type="single" collapsible className="space-y-2 pt-2">
-                              {groups.map((g) => {
-                                const endsMs = g.endsAt ? new Date(g.endsAt).getTime() : NaN;
-                                const cd = g.key === "__packages"
-                                  ? packagesCountdown
-                                  : Number.isFinite(endsMs) ? countdownLabel(endsMs) : null;
-                                const prefix = g.key === "__packages" ? packagesCountdownPrefix : "Ends in";
-                                return (
-                                  <AccordionItem key={g.key} value={g.key} className="overflow-hidden rounded-2xl border-0 shadow-sm">
-                                    <AccordionTrigger
-                                      className="px-5 py-4 hover:no-underline [&[data-state=open]>svg]:rotate-180"
-                                      style={{ backgroundColor: menuCatBg, color: menuCatText, fontFamily: `${headingFont}, system-ui, sans-serif` }}
-                                    >
-                                      <div className="flex-1 text-left">
-                                        <div className={`flex flex-wrap items-center gap-2 text-xl leading-tight sm:text-2xl ${menuCategoryBold ? "font-extrabold" : "font-medium"}`}>
-                                          <span>{g.label}</span>
-                                          {cd && (
-                                            <span className="rounded-full bg-white/90 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber-900 shadow-sm">
-                                              ⏳ {prefix ? `${prefix} · ` : ""}{cd}
-                                            </span>
-                                          )}
-                                        </div>
-                                      </div>
-                                    </AccordionTrigger>
-                                    <AccordionContent className="space-y-2 px-2 pb-3 pt-3" style={{ backgroundColor: `${menuCatBg}08` }}>
-                                      <div className="grid gap-3 px-1 py-1 sm:grid-cols-2">
-                                        {g.items.map((p) => renderPackageCard(p))}
-                                      </div>
-                                    </AccordionContent>
-                                  </AccordionItem>
-                                );
-                              })}
-                            </Accordion>
-                          );
-                        })()}
                       </div>
                     );
-
 
                     return modelPosition === "top" ? (
                       <>{modelBlock}{menuBlock}</>
@@ -2354,6 +2023,197 @@ function BookPage() {
                 </TabsContent>
 
 
+                <TabsContent value="packages" className="mt-4">
+                  {(() => {
+                    if (visiblePackages.length === 0) {
+                      return <p className="opacity-70">No packages available.</p>;
+                    }
+                    const renderPackageCard = (p: (typeof visiblePackages)[number]) => {
+                      const pkg = p as Package & {
+                        description?: string | null;
+                        treatment_ids?: string[] | null;
+                        duration_minutes?: number | null;
+                        image_url?: string | null;
+                        category_id?: string | null;
+                      };
+                      const ids = pkg.treatment_ids ?? (pkg.treatment_id ? [pkg.treatment_id] : []);
+                      const firstTreatmentId = ids[0];
+                      const includedTreatments = ids
+                        .map((tid) => treatments.find((t) => t.id === tid))
+                        .filter((t): t is Treatment => Boolean(t));
+                      // ids may repeat to express "3 × treatment"; group them
+                      const includedGrouped = includedTreatments.reduce<{ t: Treatment; qty: number }[]>((acc, t) => {
+                        const found = acc.find((x) => x.t.id === t.id);
+                        if (found) found.qty += 1;
+                        else acc.push({ t, qty: 1 });
+                        return acc;
+                      }, []);
+                      // Count each included treatment once. Repeats are already
+                      // listed individually, so multiplying by session_count here
+                      // would inflate the "usual price".
+                      const autoTotal = includedTreatments.reduce((s, t) => s + Number(t.price ?? 0), 0);
+                      // Practitioner-set usual price wins; 0 hides the savings badge.
+                      const compareAt = (p as { compare_at_price?: number | null }).compare_at_price;
+                      const originalTotal = compareAt == null ? autoTotal : Number(compareAt);
+
+                      const price = Number(p.price ?? 0);
+                      const saving = originalTotal > price ? originalTotal - price : 0;
+                      const savingPct = originalTotal > 0 && saving > 0 ? Math.round((saving / originalTotal) * 100) : 0;
+                      return (
+                        <Card key={p.id} className="overflow-hidden rounded-2xl">
+                          {pkg.image_url && (
+                            <div className="aspect-[16/9] w-full overflow-hidden bg-muted">
+                              <img src={pkg.image_url} alt={p.name} className="h-full w-full object-cover" loading="lazy" />
+                            </div>
+                          )}
+                          <CardContent className="p-4">
+                            <div className="font-semibold" style={{ color: brand }}>{p.name}</div>
+                            {pkg.description && (
+                              <div className="mt-1">
+                                <p className={`text-sm opacity-70 ${expandedPkgIds.has(p.id) ? "" : "line-clamp-3"}`}>
+                                  {pkg.description}
+                                </p>
+                                {pkg.description.length > 120 && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setExpandedPkgIds((prev) => {
+                                        const next = new Set(prev);
+                                        if (next.has(p.id)) next.delete(p.id);
+                                        else next.add(p.id);
+                                        return next;
+                                      });
+                                    }}
+                                    className="mt-1 flex items-center gap-1 text-xs font-semibold"
+                                    style={{ color: brand }}
+                                    aria-label={expandedPkgIds.has(p.id) ? "Show less" : "Read more"}
+                                  >
+                                    {expandedPkgIds.has(p.id) ? "Show less" : "Read more"}
+                                    {expandedPkgIds.has(p.id) ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                                  </button>
+                                )}
+                              </div>
+                            )}
+                            <p className="mt-2 text-xs opacity-60">
+                              {p.session_count} session{p.session_count === 1 ? "" : "s"}
+                              {pkg.duration_minutes ? ` · ${pkg.duration_minutes} min each` : ""}
+                            </p>
+                            {(p as { allow_split_payment?: boolean | null }).allow_split_payment && (p.session_count || 1) > 1 && (
+                              <p className="mt-1 text-xs font-medium" style={{ color: brand }}>
+                                Split payment available — £{(price / (p.session_count || 1)).toFixed(2)} per session
+                              </p>
+                            )}
+
+                            {includedGrouped.length > 0 && (
+                              <div className="mt-3 rounded-lg border p-2.5" style={{ borderColor: `${brand}26`, background: `${brand}0a` }}>
+                                <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide opacity-70">Includes</div>
+                                <ul className="space-y-0.5 text-sm">
+                                  {includedGrouped.map(({ t, qty }) => (
+                                    <li key={t.id} className="flex items-start gap-1.5">
+                                      <span style={{ color: brand }}>•</span>
+                                      <span>{qty > 1 ? `${qty} × ${t.name}` : t.name}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+
+                            {saving > 0 && (
+                              <div className="mt-3 flex flex-wrap items-center gap-2">
+                                <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-800">
+                                  Save £{saving.toFixed(2)} ({savingPct}%)
+                                </span>
+                                <span className="text-xs opacity-60 line-through">£{originalTotal.toFixed(2)}</span>
+                              </div>
+                            )}
+                            <div className="mt-3 flex items-center justify-between gap-2">
+                              <p className="font-bold" style={{ color: brand }}>£{price.toFixed(2)}</p>
+                              {firstTreatmentId ? (
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => togglePackageSelect(p.id)}
+                                    aria-pressed={isPackageSelected(p.id)}
+                                    className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition"
+                                    style={
+                                      isPackageSelected(p.id)
+                                        ? { backgroundColor: brand, borderColor: brand, color: "#fff" }
+                                        : { borderColor: `${brand}66`, color: brand }
+                                    }
+                                  >
+                                    {isPackageSelected(p.id) ? (<><Check className="h-3 w-3" /> Added</>) : "Add"}
+                                  </button>
+                                  <Link
+                                    to="/m/$slug/book/$treatmentId"
+                    search={{ locationId: locationId ?? undefined }}
+                                    params={{ slug, treatmentId: firstTreatmentId }}
+                                    className="modo-btn px-4 py-1.5 text-sm font-semibold"
+                                  >
+                                    Book
+                                  </Link>
+                                </div>
+                              ) : (
+                                <span className="text-xs opacity-60">Contact to book</span>
+                              )}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    };
+
+                    const pkgCats = (categories as { id: string; name: string; kind?: string | null }[])
+                      .filter((c) => c.kind === "package");
+                    const byCat = new Map<string | null, typeof visiblePackages>();
+                    for (const p of visiblePackages) {
+                      const key = ((p as { category_id?: string | null }).category_id ?? null);
+                      const bucket = byCat.get(key) ?? ([] as typeof visiblePackages);
+                      bucket.push(p);
+                      byCat.set(key, bucket);
+                    }
+                    const groups = pkgCats
+                      .map((c) => ({ id: c.id, name: c.name, items: byCat.get(c.id) ?? ([] as typeof visiblePackages) }))
+                      .filter((g) => g.items.length > 0);
+                    const uncategorised = byCat.get(null) ?? ([] as typeof visiblePackages);
+
+                    if (groups.length === 0) {
+                      return (
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          {visiblePackages.map((p) => renderPackageCard(p))}
+                        </div>
+                      );
+                    }
+                    return (
+                      <Accordion type="multiple" className="w-full space-y-2">
+                        {groups.map((g) => (
+                          <AccordionItem key={g.id} value={g.id} className="rounded-xl border px-3" style={{ borderColor: `${brand}26` }}>
+                            <AccordionTrigger className="text-left text-base font-semibold" style={{ color: brand }}>
+                              {g.name}
+                              <span className="ml-2 rounded-full bg-muted px-2 py-0.5 text-[11px] font-normal opacity-70">{g.items.length}</span>
+                            </AccordionTrigger>
+                            <AccordionContent>
+                              <div className="grid gap-3 pt-1 sm:grid-cols-2">
+                                {g.items.map((p) => renderPackageCard(p))}
+                              </div>
+                            </AccordionContent>
+                          </AccordionItem>
+                        ))}
+                        {uncategorised.length > 0 && (
+                          <AccordionItem value="__uncat" className="rounded-xl border px-3" style={{ borderColor: `${brand}26` }}>
+                            <AccordionTrigger className="text-left text-base font-semibold" style={{ color: brand }}>
+                              Other packages
+                              <span className="ml-2 rounded-full bg-muted px-2 py-0.5 text-[11px] font-normal opacity-70">{uncategorised.length}</span>
+                            </AccordionTrigger>
+                            <AccordionContent>
+                              <div className="grid gap-3 pt-1 sm:grid-cols-2">
+                                {uncategorised.map((p) => renderPackageCard(p))}
+                              </div>
+                            </AccordionContent>
+                          </AccordionItem>
+                        )}
+                      </Accordion>
+                    );
+                  })()}
+                </TabsContent>
 
                 {hasGiftCards && (
                   <TabsContent value="gift-cards" className="mt-4">
@@ -2912,8 +2772,6 @@ type MenuStyleProps = {
   bold: boolean;
 };
 
-type PkgLike = Package & { menu_category_id?: string | null; menu_placement?: string | null };
-
 function CategoryTree({
   nodes,
   slug,
@@ -2934,8 +2792,6 @@ function CategoryTree({
   categoryBold,
   headingFont,
   capFor,
-  packagesFor,
-  renderPackage,
 }: {
   nodes: CatNode[];
   slug: string;
@@ -2956,19 +2812,12 @@ function CategoryTree({
   categoryBold: boolean;
   headingFont: string;
   capFor: (t: Treatment) => { cap: number; count: number; left: number; full: boolean } | null;
-  packagesFor?: (catId: string) => { top: PkgLike[]; bottom: PkgLike[] } | null;
-  renderPackage?: (p: PkgLike) => React.ReactNode;
 
 }) {
-  const hasPkgs = (n: CatNode): boolean => {
-    const g = packagesFor?.(n.id);
-    return Boolean(g && (g.top.length > 0 || g.bottom.length > 0)) || n.children.some(hasPkgs);
-  };
   const visible = nodes.filter(
     (n) =>
       n.treatments.length > 0 ||
-      n.children.some((c) => countTreatments(c) > 0) ||
-      hasPkgs(n),
+      n.children.some((c) => countTreatments(c) > 0),
   );
   if (visible.length === 0) return null;
 
@@ -2976,13 +2825,6 @@ function CategoryTree({
     <div className={depth === 0 ? "space-y-4" : "space-y-3"}>
       {visible.map((node) => {
         const isSub = depth > 0;
-        const nodePkgs = packagesFor?.(node.id) ?? null;
-        const pkgGrid = (items: PkgLike[]) =>
-          items.length === 0 || !renderPackage ? null : (
-            <div className="grid gap-3 px-1 py-1 sm:grid-cols-2">
-              {items.map((p) => renderPackage(p))}
-            </div>
-          );
         const isComingSoon = !!node.coming_soon_at && new Date(node.coming_soon_at) > new Date();
         const comingLabel = isComingSoon
           ? new Date(node.coming_soon_at!).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })
@@ -3042,12 +2884,9 @@ function CategoryTree({
                     categoryBold={categoryBold}
                     headingFont={headingFont}
                     capFor={capFor}
-                    packagesFor={packagesFor}
-                    renderPackage={renderPackage}
                   />
 
                 )}
-                {nodePkgs && pkgGrid(nodePkgs.top)}
                 {node.treatments.map((t) => (
                   <TreatmentRow
                     key={t.id}
@@ -3067,7 +2906,6 @@ function CategoryTree({
                     capInfo={capFor(t)}
                   />
                 ))}
-                {nodePkgs && pkgGrid(nodePkgs.bottom)}
 
               </AccordionContent>
             </AccordionItem>

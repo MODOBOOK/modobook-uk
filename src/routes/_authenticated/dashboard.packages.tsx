@@ -3,8 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { listMyPackages, createPackage, updatePackage, deletePackage, reorderPackages } from "@/lib/packages.functions";
 import { getMyTreatments } from "@/lib/treatments.functions";
-import { getMyPackageCategories, createPackageCategory, deletePackageCategory, getMyCategories } from "@/lib/categories.functions";
-import { updateProfile } from "@/lib/profiles.functions";
+import { getMyPackageCategories, createPackageCategory, deletePackageCategory } from "@/lib/categories.functions";
 import { getMyProfile } from "@/lib/profiles.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,10 +38,6 @@ type Pkg = {
   image_url: string | null;
   active: boolean;
   category_id: string | null;
-  menu_category_id?: string | null;
-  menu_placement?: string | null;
-  menu_group_name?: string | null;
-  menu_group_ends_at?: string | null;
   allow_split_payment?: boolean | null;
   is_limited?: boolean | null;
   limited_starts_at?: string | null;
@@ -83,10 +78,6 @@ const blankForm = {
   image_url: "",
   active: true,
   category_id: "" as string,
-  menu_category_id: "" as string,
-  menu_placement: "top" as "top" | "bottom",
-  menu_group_name: "" as string,
-  menu_group_ends_at: "" as string,
   allow_split_payment: false,
   is_limited: false,
   limited_starts_at: "" as string,
@@ -98,7 +89,6 @@ const blankForm = {
 function PackagesPage() {
   const list = useServerFn(listMyPackages);
   const create = useServerFn(createPackage);
-
   const update = useServerFn(updatePackage);
   const remove = useServerFn(deletePackage);
   const reorder = useServerFn(reorderPackages);
@@ -107,34 +97,21 @@ function PackagesPage() {
   const createCat = useServerFn(createPackageCategory);
   const deleteCat = useServerFn(deletePackageCategory);
   const fetchProfile = useServerFn(getMyProfile);
-  const listTreatmentCats = useServerFn(getMyCategories);
-  const saveProfile = useServerFn(updateProfile);
 
   const [packages, setPackages] = useState<Pkg[]>([]);
   const [treatments, setTreatments] = useState<Treatment[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [profileId, setProfileId] = useState<string>("");
-  const [treatmentCats, setTreatmentCats] = useState<Category[]>([]);
-  const [packagesLabel, setPackagesLabel] = useState("");
-  const [countdownEnds, setCountdownEnds] = useState("");
-  const [countdownLabel, setCountdownLabel] = useState("");
-
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Pkg | null>(null);
   const [form, setForm] = useState(blankForm);
 
   async function refresh() {
-    const [p, t, c, profile, tc] = await Promise.all([list(), listTreatments(), listCategories(), fetchProfile(), listTreatmentCats()]);
+    const [p, t, c, profile] = await Promise.all([list(), listTreatments(), listCategories(), fetchProfile()]);
     setPackages(p as Pkg[]);
     setTreatments((t as Treatment[]) ?? []);
     setCategories((c as Category[]) ?? []);
     setProfileId((profile as { id?: string } | null)?.id ?? "");
-    setPackagesLabel((profile as { packages_label?: string | null } | null)?.packages_label ?? "");
-    const ends = (profile as { packages_countdown_ends_at?: string | null } | null)?.packages_countdown_ends_at ?? "";
-    setCountdownEnds(ends ? toLocalInput(ends) : "");
-    setCountdownLabel((profile as { packages_countdown_label?: string | null } | null)?.packages_countdown_label ?? "");
-
-    setTreatmentCats((tc as Category[]) ?? []);
   }
   useEffect(() => { refresh(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
 
@@ -173,10 +150,6 @@ function PackagesPage() {
       image_url: p.image_url ?? "",
       active: p.active,
       category_id: p.category_id ?? "",
-      menu_category_id: p.menu_category_id ?? "",
-      menu_placement: p.menu_placement === "bottom" ? "bottom" : "top",
-      menu_group_name: p.menu_group_name ?? "",
-      menu_group_ends_at: toLocalInput(p.menu_group_ends_at),
       allow_split_payment: Boolean(p.allow_split_payment),
       is_limited: Boolean(p.is_limited),
       limited_starts_at: toLocalInput(p.limited_starts_at),
@@ -271,10 +244,6 @@ function PackagesPage() {
       image_url: form.image_url.trim() || null,
       active: form.active,
       category_id: form.category_id || null,
-      menu_category_id: form.menu_category_id || null,
-      menu_placement: form.menu_placement,
-      menu_group_name: form.menu_group_name.trim() || null,
-      menu_group_ends_at: fromLocalInput(form.menu_group_ends_at),
       allow_split_payment: form.allow_split_payment && totalSessions > 1,
       is_limited: form.is_limited,
       limited_starts_at: fromLocalInput(form.limited_starts_at),
@@ -306,37 +275,6 @@ function PackagesPage() {
         <div>
           <h1 className="text-2xl font-bold">Packages</h1>
           <p className="text-sm text-muted-foreground">Bundle multiple treatments or sessions and sell them as one bookable package.</p>
-          <div className="mt-2 flex max-w-sm items-center gap-2">
-            <Input
-              value={packagesLabel}
-              onChange={(e) => setPackagesLabel(e.target.value)}
-              placeholder="Packages"
-              aria-label="Name of the packages section patients see"
-              className="h-9"
-            />
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={async () => {
-                if (!profileId) return;
-                try {
-                  await saveProfile({ data: { id: profileId, packages_label: packagesLabel.trim() || null } });
-                  toast.success("Section name saved");
-                } catch (e) {
-                  toast.error(e instanceof Error ? e.message : "Failed");
-                }
-              }}
-            >
-              Save name
-            </Button>
-          </div>
-          <p className="mt-1 text-xs text-muted-foreground">What patients see this section called, e.g. "Courses" or "Bundles".</p>
-          <p className="mt-3 rounded-lg border p-3 text-xs text-muted-foreground">
-            Timed promos and countdowns now live in <span className="font-medium">Services → Time-limited
-            offers</span>, where you can mix treatments and packages into one named section.
-          </p>
-
         </div>
 
 
@@ -397,43 +335,6 @@ function PackagesPage() {
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">
                   Package categories are separate from treatment categories. Patients see packages grouped by these on the booking page.
-                </p>
-              </div>
-
-              <div className="rounded-lg border p-3">
-                <Label>Show inside the treatment menu</Label>
-                <p className="mt-0.5 text-xs text-muted-foreground">
-                  Place this package inside one of your treatment categories so patients see it alongside the treatments, instead of in the separate packages tab.
-                </p>
-                <select
-                  className="mt-2 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                  value={form.menu_category_id}
-                  onChange={(e) => setForm({ ...form, menu_category_id: e.target.value })}
-                >
-                  <option value="">— Keep in the packages tab —</option>
-                  {treatmentCats.map((c) => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
-                </select>
-                {form.menu_category_id && (
-                  <div className="mt-2 flex gap-2">
-                    {(["top", "bottom"] as const).map((pos) => (
-                      <Button
-                        key={pos}
-                        type="button"
-                        size="sm"
-                        variant={form.menu_placement === pos ? "default" : "outline"}
-                        onClick={() => setForm({ ...form, menu_placement: pos })}
-                      >
-                        {pos === "top" ? "Above treatments" : "Below treatments"}
-                      </Button>
-                    ))}
-                  </div>
-                )}
-                <p className="mt-3 border-t pt-3 text-xs text-muted-foreground">
-                  Running a timed promo (e.g. "Autumn packages")? Build it in Services → Time-limited
-                  offers — you can mix treatments and packages there and set one countdown for the whole
-                  section.
                 </p>
               </div>
 
@@ -640,7 +541,57 @@ function PackagesPage() {
                 </div>
               )}
 
-              {/* Timed promos live in Services → Time-limited offers */}
+              <div className="rounded-lg border p-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <Label>Limited time offer</Label>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      Features this package in a highlighted "Limited time" band at the
+                      top of your booking page, with a countdown and spots remaining.
+                    </p>
+                  </div>
+                  <Switch
+                    checked={form.is_limited}
+                    onCheckedChange={(v) => setForm({ ...form, is_limited: v })}
+                  />
+                </div>
+                {form.is_limited && (
+                  <div className="mt-3 space-y-3">
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div>
+                        <Label>Starts (optional)</Label>
+                        <Input
+                          type="datetime-local"
+                          value={form.limited_starts_at}
+                          onChange={(e) => setForm({ ...form, limited_starts_at: e.target.value })}
+                        />
+                      </div>
+                      <div>
+                        <Label>Ends</Label>
+                        <Input
+                          type="datetime-local"
+                          value={form.limited_ends_at}
+                          onChange={(e) => setForm({ ...form, limited_ends_at: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <Label>Limit number available (optional)</Label>
+                      <Input
+                        type="number"
+                        min={1}
+                        value={form.limited_quantity}
+                        onChange={(e) => setForm({ ...form, limited_quantity: e.target.value })}
+                        placeholder="e.g. 10 spots"
+                      />
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Leave blank for unlimited. Once the end date passes or the spots run
+                        out, the offer disappears from the booking page automatically.
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
 
 
 
@@ -866,4 +817,3 @@ function PackageCategoriesManager({
     </Card>
   );
 }
-

@@ -31,7 +31,6 @@ import { BulkRebookRemindersDialog } from "@/components/BulkRebookRemindersDialo
 import { generateTreatmentDescription } from "@/lib/ai-treatment-description.functions";
 
 
-
 export const Route = createFileRoute("/_authenticated/dashboard/treatments")({
   ssr: false,
   validateSearch: (s: Record<string, unknown>) => ({
@@ -357,9 +356,7 @@ function TreatmentsPage() {
           ))}
         </div>
       )}
-
     </div>
-
   );
 }
 
