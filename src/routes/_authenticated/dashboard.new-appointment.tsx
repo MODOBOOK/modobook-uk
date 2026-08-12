@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { getMyProfile } from "@/lib/profiles.functions";
 import { createAppointmentForPatient } from "@/lib/appointments.functions";
-import { createPaymentLink } from "@/lib/payment-links.functions";
+import { createPaymentLink, emailPaymentLink } from "@/lib/payment-links.functions";
 import { listMyModelSlots } from "@/lib/discounts.functions";
 import { listClients } from "@/lib/clients.functions";
 import { listConsentTemplates } from "@/lib/templates.functions";
@@ -101,6 +101,7 @@ function NewAppointmentPage() {
   const [paidMethod, setPaidMethod] = useState<"cash" | "card_in_person" | "bank_transfer" | "other">("cash");
   const [paidReference, setPaidReference] = useState("");
   const createLink = useServerFn(createPaymentLink);
+  const emailLink = useServerFn(emailPaymentLink);
   const fetchModelSlots = useServerFn(listMyModelSlots);
   const [modelSlots, setModelSlots] = useState<ModelSlot[]>([]);
   const [modelExpanded, setModelExpanded] = useState(true);
