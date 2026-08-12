@@ -103,6 +103,9 @@ export const createCategory = createServerFn({ method: "POST" })
       coming_soon_at?: string | null;
       rebook_reminder_days?: number | null;
       topup_reminder_days?: number | null;
+      is_limited?: boolean;
+      limited_starts_at?: string | null;
+      limited_ends_at?: string | null;
     }) => input,
   )
   .handler(async ({ data, context }) => {
@@ -125,6 +128,9 @@ export const createCategory = createServerFn({ method: "POST" })
         coming_soon_at: data.coming_soon_at ?? null,
         rebook_reminder_days: data.rebook_reminder_days ?? null,
         topup_reminder_days: data.topup_reminder_days ?? null,
+        is_limited: data.is_limited ?? false,
+        limited_starts_at: data.limited_starts_at ?? null,
+        limited_ends_at: data.limited_ends_at ?? null,
       } as never)
       .select()
       .single();
@@ -145,6 +151,9 @@ export const updateCategory = createServerFn({ method: "POST" })
       coming_soon_at?: string | null;
       rebook_reminder_days?: number | null;
       topup_reminder_days?: number | null;
+      is_limited?: boolean;
+      limited_starts_at?: string | null;
+      limited_ends_at?: string | null;
     }) => input,
   )
   .handler(async ({ data, context }) => {
@@ -158,6 +167,9 @@ export const updateCategory = createServerFn({ method: "POST" })
     if (data.coming_soon_at !== undefined) update.coming_soon_at = data.coming_soon_at;
     if (data.rebook_reminder_days !== undefined) (update as Record<string, unknown>).rebook_reminder_days = data.rebook_reminder_days;
     if (data.topup_reminder_days !== undefined) (update as Record<string, unknown>).topup_reminder_days = data.topup_reminder_days;
+    if (data.is_limited !== undefined) (update as Record<string, unknown>).is_limited = data.is_limited;
+    if (data.limited_starts_at !== undefined) (update as Record<string, unknown>).limited_starts_at = data.limited_starts_at;
+    if (data.limited_ends_at !== undefined) (update as Record<string, unknown>).limited_ends_at = data.limited_ends_at;
     const { data: row, error } = await supabase
       .from("treatment_categories")
       .update(update)
