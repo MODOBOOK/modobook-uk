@@ -1157,6 +1157,30 @@ function CategoryDialog({
               Before this date the category shows a "Book from [date]" badge and cannot be booked. After it passes, it becomes bookable automatically. Leave blank to disable.
             </p>
           </div>
+          <div className="space-y-3 rounded-lg border border-dashed border-rose-300 bg-rose-50/50 p-3">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <Label className="text-rose-900">Limited time category</Label>
+                <p className="text-[11px] text-rose-800/80">
+                  Give this category a countdown (e.g. "Autumn offers"). Everything inside it — treatments or packages —
+                  shows the timer and the whole category disappears from your booking page when it ends.
+                </p>
+              </div>
+              <Switch checked={limited} onCheckedChange={setLimited} />
+            </div>
+            {limited && (
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label className="text-xs">Starts (optional)</Label>
+                  <Input type="datetime-local" value={limStart} onChange={(e) => setLimStart(e.target.value)} />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Ends</Label>
+                  <Input type="datetime-local" value={limEnd} onChange={(e) => setLimEnd(e.target.value)} />
+                </div>
+              </div>
+            )}
+          </div>
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={onClose}>
@@ -1172,7 +1196,14 @@ function CategoryDialog({
                 icon: icon.trim() || undefined,
                 coming_soon_at: comingSoon ? new Date(comingSoon + "T00:00:00").toISOString() : null,
                 parent_id: parentId,
+                is_limited: limited,
+                limited_starts_at: limited ? fromLocalDT(limStart) : null,
+                limited_ends_at: limited ? fromLocalDT(limEnd) : null,
               });
+              setSaving(false);
+            }}
+          >
+
               setSaving(false);
             }}
           >
