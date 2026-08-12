@@ -536,10 +536,31 @@ function BookPage() {
     [packages, nowTs],
   );
   // Expired / not-yet-started / sold-out limited offers drop out of the menu
+  const catWindowLive = (categoryId: string | null | undefined) => {
+    if (!categoryId) return true;
+    const c = (categories as unknown as {
+      id: string; is_limited?: boolean | null; limited_starts_at?: string | null; limited_ends_at?: string | null;
+    }[]).find((x) => x.id === categoryId);
+    if (!c || !c.is_limited) return true;
+    const starts = c.limited_starts_at ? new Date(c.limited_starts_at).getTime() : null;
+    const ends = c.limited_ends_at ? new Date(c.limited_ends_at).getTime() : null;
+    return (starts == null || nowTs >= starts) && (ends == null || nowTs < ends);
+  };
+  const catEndsAt = (categoryId: string | null | undefined) => {
+    if (!categoryId) return null;
+    const c = (categories as unknown as {
+      id: string; is_limited?: boolean | null; limited_ends_at?: string | null;
+    }[]).find((x) => x.id === categoryId);
+    if (!c || !c.is_limited || !c.limited_ends_at) return null;
+    return new Date(c.limited_ends_at).getTime();
+  };
   const visiblePackages = useMemo(
-    () => (packages as LimitedPkg[]).filter((p) => limitedState(p).live),
+    () =>
+      (packages as LimitedPkg[]).filter(
+        (p) => limitedState(p).live && catWindowLive((p as { category_id?: string | null }).category_id),
+      ),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [packages, nowTs],
+    [packages, categories, nowTs],
   );
   const countdownLabel = (endsAt: number | null) => {
     if (!endsAt) return null;
@@ -1712,109 +1733,6 @@ function BookPage() {
 
             return (
               <>
-              {limitedPackages.length > 0 && (
-                <section
-                  className="mb-5 rounded-2xl border p-3 sm:p-4"
-                  style={{ borderColor: `${brand}40`, background: `${brand}0d` }}
-                  aria-label="Limited time offers"
-                >
-                  <div className="mb-3 flex flex-wrap items-center gap-2">
-                    <span
-                      className="rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-white"
-                      style={{ backgroundColor: brand }}
-                    >
-                      Limited time
-                    </span>
-                    <h2 className="text-base font-bold sm:text-lg" style={headingStyle}>
-                      Offers ending soon
-                    </h2>
-                  </div>
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    {limitedPackages.map((p) => {
-                      const st = limitedState(p);
-                      const ids = (p.treatment_ids as string[] | null) ?? (p.treatment_id ? [p.treatment_id] : []);
-                      const firstTreatmentId = ids[0];
-                      const price = Number(p.price ?? 0);
-                      const autoTotal = ids
-                        .map((tid) => treatments.find((t) => t.id === tid))
-                        .reduce((s, t) => s + Number(t?.price ?? 0), 0);
-                      const compareAt = (p as { compare_at_price?: number | null }).compare_at_price;
-                      const wasPrice = compareAt == null ? autoTotal : Number(compareAt);
-                      const saving = wasPrice > price ? wasPrice - price : 0;
-                      const cd = countdownLabel(st.endsAt);
-                      return (
-                        <Card key={p.id} className="overflow-hidden rounded-2xl border-2" style={{ borderColor: `${brand}59` }}>
-                          {(p as { image_url?: string | null }).image_url && (
-                            <div className="aspect-[16/9] w-full overflow-hidden bg-muted">
-                              <img src={(p as { image_url?: string | null }).image_url as string} alt={p.name} className="h-full w-full object-cover" loading="lazy" />
-                            </div>
-                          )}
-                          <CardContent className="p-4">
-                            <div className="flex flex-wrap items-center gap-1.5">
-                              {cd && (
-                                <span className="rounded-full bg-rose-100 px-2 py-0.5 text-[11px] font-semibold text-rose-800">
-                                  {cd}
-                                </span>
-                              )}
-                              {st.remaining != null && (
-                                <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-900">
-                                  {st.remaining} left
-                                </span>
-                              )}
-                              {saving > 0 && (
-                                <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-800">
-                                  Save £{saving.toFixed(2)}
-                                </span>
-                              )}
-                            </div>
-                            <div className="mt-2 font-semibold" style={{ color: brand }}>{p.name}</div>
-                            {(p as { description?: string | null }).description && (
-                              <p className="mt-1 line-clamp-2 text-sm opacity-70">
-                                {(p as { description?: string | null }).description}
-                              </p>
-                            )}
-                            <div className="mt-3 flex items-center justify-between gap-2">
-                              <div className="flex items-baseline gap-2">
-                                <p className="font-bold" style={{ color: brand }}>£{price.toFixed(2)}</p>
-                                {saving > 0 && (
-                                  <span className="text-xs opacity-60 line-through">£{wasPrice.toFixed(2)}</span>
-                                )}
-                              </div>
-                              {firstTreatmentId ? (
-                                <div className="flex items-center gap-2">
-                                  <button
-                                    type="button"
-                                    onClick={() => togglePackageSelect(p.id)}
-                                    aria-pressed={isPackageSelected(p.id)}
-                                    className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition"
-                                    style={
-                                      isPackageSelected(p.id)
-                                        ? { backgroundColor: brand, borderColor: brand, color: "#fff" }
-                                        : { borderColor: `${brand}66`, color: brand }
-                                    }
-                                  >
-                                    {isPackageSelected(p.id) ? (<><Check className="h-3 w-3" /> Added</>) : "Add"}
-                                  </button>
-                                  <Link
-                                    to="/m/$slug/book/$treatmentId"
-                                    search={{ locationId: locationId ?? undefined }}
-                                    params={{ slug, treatmentId: firstTreatmentId }}
-                                    className="modo-btn px-4 py-1.5 text-sm font-semibold"
-                                  >
-                                    Book
-                                  </Link>
-                                </div>
-                              ) : (
-                                <span className="text-xs opacity-60">Contact to book</span>
-                              )}
-                            </div>
-                          </CardContent>
-                        </Card>
-                      );
-                    })}
-                  </div>
-                </section>
-              )}
               <Tabs defaultValue="treatments" className="w-full">
                 <TabsList className="grid w-full h-auto" style={{ backgroundColor: `${brand}10`, gridTemplateColumns: `repeat(${1 + (visiblePackages.length > 0 ? 1 : 0) + (hasGiftCards ? 1 : 0) + (hasTraining ? 1 : 0) + (hasClinicVisits ? 1 : 0)}, minmax(0, 1fr))` }}>
                   <TabsTrigger value="treatments" className="text-sm sm:text-base py-2.5">Treatments</TabsTrigger>
@@ -2067,6 +1985,32 @@ function BookPage() {
                             </div>
                           )}
                           <CardContent className="p-4">
+                            {(() => {
+                              const st = limitedState(p as LimitedPkg);
+                              const ends = st.endsAt ?? catEndsAt(pkg.category_id);
+                              const cd = countdownLabel(ends);
+                              const bookByOnly = (p as { limited_book_by_only?: boolean | null }).limited_book_by_only !== false;
+                              if (!cd && st.remaining == null) return null;
+                              return (
+                                <div className="mb-2 flex flex-wrap items-center gap-1.5">
+                                  {cd && (
+                                    <span className="inline-flex items-center gap-1 rounded-full bg-rose-100 px-2 py-0.5 text-[11px] font-semibold text-rose-800">
+                                      <Timer className="h-3 w-3" /> {cd}
+                                    </span>
+                                  )}
+                                  {st.remaining != null && (
+                                    <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-900">
+                                      {st.remaining} left
+                                    </span>
+                                  )}
+                                  {cd && bookByOnly && ends && (
+                                    <span className="text-[11px] opacity-60">
+                                      Book by {new Date(ends).toLocaleDateString(undefined, { day: "numeric", month: "short" })} · appointment any time after
+                                    </span>
+                                  )}
+                                </div>
+                              );
+                            })()}
                             <div className="font-semibold" style={{ color: brand }}>{p.name}</div>
                             {pkg.description && (
                               <div className="mt-1">
