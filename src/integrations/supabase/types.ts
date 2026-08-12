@@ -3950,6 +3950,7 @@ export type Database = {
           id: string
           image_url: string | null
           is_limited: boolean
+          limited_book_by_only: boolean
           limited_claimed: number
           limited_ends_at: string | null
           limited_quantity: number | null
@@ -3979,6 +3980,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_limited?: boolean
+          limited_book_by_only?: boolean
           limited_claimed?: number
           limited_ends_at?: string | null
           limited_quantity?: number | null
@@ -4008,6 +4010,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_limited?: boolean
+          limited_book_by_only?: boolean
           limited_claimed?: number
           limited_ends_at?: string | null
           limited_quantity?: number | null
@@ -7279,7 +7282,10 @@ export type Database = {
           description: string | null
           icon: string | null
           id: string
+          is_limited: boolean
           kind: string
+          limited_ends_at: string | null
+          limited_starts_at: string | null
           name: string
           parent_id: string | null
           profile_id: string
@@ -7295,7 +7301,10 @@ export type Database = {
           description?: string | null
           icon?: string | null
           id?: string
+          is_limited?: boolean
           kind?: string
+          limited_ends_at?: string | null
+          limited_starts_at?: string | null
           name: string
           parent_id?: string | null
           profile_id: string
@@ -7311,7 +7320,10 @@ export type Database = {
           description?: string | null
           icon?: string | null
           id?: string
+          is_limited?: boolean
           kind?: string
+          limited_ends_at?: string | null
+          limited_starts_at?: string | null
           name?: string
           parent_id?: string | null
           profile_id?: string
