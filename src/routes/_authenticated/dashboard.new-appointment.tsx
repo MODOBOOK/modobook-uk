@@ -27,7 +27,7 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/dashboard/new-appointment")({
   ssr: false,
-  validateSearch: (search: Record<string, unknown>) => ({
+  validateSearch: (search: Record<string, unknown>): { clientId?: string } => ({
     clientId: typeof search.clientId === "string" ? search.clientId : undefined,
   }),
   loader: async () => {

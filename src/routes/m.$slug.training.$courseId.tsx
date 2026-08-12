@@ -15,7 +15,7 @@ import { ArrowLeft, Award, Clock, Users, CheckCircle2, Loader2 } from "lucide-re
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/m/$slug/training/$courseId")({
-  validateSearch: (s: Record<string, unknown>) => ({ preview: typeof s.preview === "string" ? s.preview : undefined }),
+  validateSearch: (s: Record<string, unknown>): { preview?: string } => ({ preview: typeof s.preview === "string" ? s.preview : undefined }),
   loaderDeps: ({ search }) => ({ preview: search.preview ?? null }),
   loader: ({ params, deps }) => getPublicCourse({ data: { slug: params.slug, courseId: params.courseId, previewToken: deps.preview } }),
   head: ({ loaderData }) => ({

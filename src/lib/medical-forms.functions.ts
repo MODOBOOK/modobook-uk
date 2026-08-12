@@ -355,6 +355,63 @@ export const updateFormSubmission = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+/* ---------- Resend an existing form link to the patient ---------- */
+export const resendFormToClient = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: { id: string; email?: string }) => i)
+  .handler(async ({ data, context }) => {
+    const profileId = await getProfileId(context.supabase, context.userId);
+    if (!profileId) throw new Error("Profile not found");
+    const { data: row, error } = await context.supabase
+      .from("appointment_medical_forms")
+      .select("id, token, recipient_email, client_id, template:template_id (name), client:client_id (full_name, email)")
+      .eq("id", data.id)
+      .eq("profile_id", profileId)
+      .single();
+    if (error) throw error;
+    const r = row as any;
+    const to = data.email || r.recipient_email || r.client?.email;
+    if (!to) throw new Error("No email on file for this patient");
+
+    const { data: profile } = await context.supabase
+      .from("profiles").select("id, clinic_name").eq("user_id", context.userId).maybeSingle();
+    const { tryEnqueueAppEmail, getPractitionerBranding } = await import("@/lib/email/send.server");
+    const branding = await getPractitionerBranding(profileId);
+    const origin = process.env.PUBLIC_APP_URL || process.env.APP_URL || "https://modobook.uk";
+    await tryEnqueueAppEmail({
+      templateName: "medical-form-request",
+      recipientEmail: to,
+      messageId: `form-resend-${r.id}-${Date.now()}`,
+      templateData: {
+        patientName: (r.client?.full_name ?? "").split(" ")[0] || "there",
+        clinicName: profile?.clinic_name ?? branding.clinicName,
+        formName: r.template?.name ?? "medical form",
+        formUrl: `${origin}/f/${r.token}`,
+        logoUrl: branding.logoUrl,
+        brandColor: branding.brandColor,
+      },
+    });
+    return { ok: true, email: to as string };
+  });
+
+/* ---------- Delete a form from a patient profile ---------- */
+export const deleteFormSubmission = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: { id: string }) => i)
+  .handler(async ({ data, context }) => {
+    const profileId = await getProfileId(context.supabase, context.userId);
+    if (!profileId) throw new Error("Profile not found");
+    const { error } = await context.supabase
+      .from("appointment_medical_forms")
+      .delete()
+      .eq("id", data.id)
+      .eq("profile_id", profileId);
+    if (error) throw error;
+    return { ok: true };
+  });
+
+
+
 
 
 /* ---------- Recent submissions across the practitioner ---------- */

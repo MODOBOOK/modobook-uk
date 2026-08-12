@@ -39,7 +39,8 @@ import type { Database } from "@/integrations/supabase/types";
 import { SafeHtml } from "@/components/SafeHtml";
 
 type Rule = Database["public"]["Tables"]["availability_rules"]["Row"];
-type Loc = Database["public"]["Tables"]["locations"]["Row"];
+type Loc = Omit<Database["public"]["Tables"]["locations"]["Row"], "is_public" | "notes" | "phone"> &
+  Partial<Pick<Database["public"]["Tables"]["locations"]["Row"], "is_public" | "notes" | "phone">>;
 type Treatment = Database["public"]["Tables"]["treatments"]["Row"];
 type Pricing = Database["public"]["Tables"]["treatment_location_pricing"]["Row"];
 

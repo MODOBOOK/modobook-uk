@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { getConsentForClient, listConsentsForClient, sendConsentToClient, listMyConsentTemplates } from "@/lib/treatment-consents.functions";
+import { getConsentForClient, listConsentsForClient, sendConsentToClient, listMyConsentTemplates, resendConsentToClient, deleteConsentForClient } from "@/lib/treatment-consents.functions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ConsentSectionsView, type ConsentSection } from "@/components/ConsentSections";
-import { ShieldCheck, Send, Loader2, CheckCircle2, Clock, Eye, Copy, PenLine, Mail, Download } from "lucide-react";
+import { ShieldCheck, Send, Loader2, CheckCircle2, Clock, Eye, Copy, PenLine, Mail, Download, RefreshCw, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { getMyProfile } from "@/lib/profiles.functions";
 
@@ -27,7 +27,10 @@ export function ClientConsentsList({
   const send = useServerFn(sendConsentToClient);
   const getConsent = useServerFn(getConsentForClient);
   const fetchProfile = useServerFn(getMyProfile);
+  const resend = useServerFn(resendConsentToClient);
+  const removeConsent = useServerFn(deleteConsentForClient);
   const [downloading, setDownloading] = useState<string | null>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
 
   async function downloadConsent(row: { token: string; template_name: string }) {
     setDownloading(row.token);
@@ -165,6 +168,30 @@ export function ClientConsentsList({
     }
   }
 
+  async function doResend(id: string) {
+    if (!client.email) { toast.error("No email on file for this patient"); return; }
+    setBusyId(id);
+    try {
+      await resend({ data: { id, client_id: client.id, email: client.email } });
+      toast.success(`Consent form re-sent to ${client.email}`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to resend");
+    } finally { setBusyId(null); }
+  }
+
+  async function doDelete(id: string, name: string) {
+    if (!window.confirm(`Delete "${name}" from this patient's profile? This cannot be undone.`)) return;
+    setBusyId(id);
+    try {
+      await removeConsent({ data: { id } });
+      toast.success("Consent form deleted");
+      setBump((x) => x + 1);
+      onSent?.();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to delete");
+    } finally { setBusyId(null); }
+  }
+
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
@@ -238,6 +265,22 @@ export function ClientConsentsList({
                   title="Download consent as PDF"
                 >
                   {downloading === r.token ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
+                </Button>
+                <Button
+                  size="sm" variant="ghost" className="h-7 px-2"
+                  onClick={() => doResend(r.id)}
+                  disabled={busyId !== null || !client.email}
+                  title={client.email ? "Email this consent form again" : "No email on file"}
+                >
+                  {busyId === r.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+                </Button>
+                <Button
+                  size="sm" variant="ghost" className="h-7 px-2 text-destructive hover:text-destructive"
+                  onClick={() => doDelete(r.id, r.template_name)}
+                  disabled={busyId !== null}
+                  title="Delete consent form"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
                 </Button>
               </div>
             );
