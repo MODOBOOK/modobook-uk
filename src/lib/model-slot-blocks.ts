@@ -48,8 +48,11 @@ export function isModelSlotBlocked(
     const bs = toMin(b.start_time);
     const be = toMin(b.end_time);
     if (bs === null || be === null) continue;
-    if (s < be && e > bs) return true;
+    // Only hide the slot when the closure covers the WHOLE model-slot window.
+    // A short block inside a long window just removes some bookable times.
+    if (bs <= s && be >= e) return true;
   }
+
   return false;
 }
 
