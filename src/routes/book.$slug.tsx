@@ -124,7 +124,7 @@ function ClinicPage() {
                 <Calendar className="mr-2 h-4 w-4" />
                 Book now
               </Button>
-            </Link>
+            </a>
           </div>
         </div>
 
