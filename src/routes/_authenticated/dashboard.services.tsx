@@ -601,6 +601,20 @@ function CategoryRow({
             Book from {new Date(node.coming_soon_at).toLocaleDateString(undefined, { day: "numeric", month: "short" })}
           </span>
         )}
+        {(node as { is_limited?: boolean | null }).is_limited && (
+          <span className="rounded-full bg-rose-100 px-2 py-0.5 text-[11px] font-medium text-rose-800">
+            {(() => {
+              const ends = (node as { limited_ends_at?: string | null }).limited_ends_at;
+              if (!ends) return "Limited";
+              const ms = new Date(ends).getTime() - Date.now();
+              if (ms <= 0) return "Ended";
+              const mins = Math.floor(ms / 60000);
+              const days = Math.floor(mins / 1440);
+              const hours = Math.floor((mins % 1440) / 60);
+              return days > 0 ? `${days}d ${hours}h left` : hours > 0 ? `${hours}h left` : `${mins}m left`;
+            })()}
+          </span>
+        )}
         {totalCount > 0 && (
           <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
             {totalCount}
