@@ -1224,13 +1224,20 @@ function CheckoutSheet({
         window.location.href = `sms:${phone}?body=${body}`;
         toast.success("Opening SMS with payment link");
       } else if (url && a.patient_email) {
-        const subject = encodeURIComponent("Your payment link");
-        const body = encodeURIComponent(
-          `Hi ${a.patient_name},\n\nHere's your secure payment link:${feeLine}\n\n${url}\n\nThanks!`,
-        );
-        window.open(`mailto:${a.patient_email}?subject=${subject}&body=${body}`);
-        toast.success("Payment link copied — email opened");
+        const res = await emailLink({
+          data: {
+            url,
+            recipientEmail: a.patient_email,
+            recipientName: a.patient_name,
+            amountCents: totalCents,
+            description: a.treatments?.name ?? "your appointment",
+            kind: "balance",
+          },
+        });
+        if ((res as { ok?: boolean }).ok) toast.success(`Payment link emailed to ${a.patient_email}`);
+        else toast.error(`Email failed: ${(res as { error?: string }).error ?? "unknown error"} — link copied to clipboard`);
       } else {
+
         toast.success("Payment link copied to clipboard");
       }
     } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
