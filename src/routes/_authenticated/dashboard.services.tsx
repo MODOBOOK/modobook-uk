@@ -1012,13 +1012,25 @@ function MoveCategoryDialog({
 }
 
 
+function toLocalDT(iso: string | null | undefined) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+function fromLocalDT(v: string) {
+  if (!v.trim()) return null;
+  const d = new Date(v);
+  return Number.isNaN(d.getTime()) ? null : d.toISOString();
+}
+
 function CategoryDialog({
   state,
   allCategories,
   onClose,
   onSubmit,
 }: {
-  state: { mode: "create" | "edit"; parentId: string | null; cat?: Cat } | null;
+  state: { mode: "create" | "edit"; parentId: string | null; cat?: Cat; limited?: boolean } | null;
   allCategories: Cat[];
   onClose: () => void;
   onSubmit: (v: {
@@ -1027,6 +1039,9 @@ function CategoryDialog({
     icon?: string;
     coming_soon_at?: string | null;
     parent_id?: string | null;
+    is_limited?: boolean;
+    limited_starts_at?: string | null;
+    limited_ends_at?: string | null;
   }) => Promise<void>;
 }) {
   const open = !!state;
@@ -1036,6 +1051,9 @@ function CategoryDialog({
   const [comingSoon, setComingSoon] = useState("");
   const [parentId, setParentId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [limited, setLimited] = useState(false);
+  const [limStart, setLimStart] = useState("");
+  const [limEnd, setLimEnd] = useState("");
 
   useMemo(() => {
     if (open) {
@@ -1044,6 +1062,10 @@ function CategoryDialog({
       setIcon(state?.cat?.icon ?? "");
       setComingSoon(state?.cat?.coming_soon_at ? state.cat.coming_soon_at.slice(0, 10) : "");
       setParentId(state?.cat ? state.cat.parent_id : state?.parentId ?? null);
+      const c = state?.cat as (Cat & { is_limited?: boolean | null; limited_starts_at?: string | null; limited_ends_at?: string | null }) | undefined;
+      setLimited(Boolean(c?.is_limited) || Boolean(state?.limited));
+      setLimStart(toLocalDT(c?.limited_starts_at));
+      setLimEnd(toLocalDT(c?.limited_ends_at));
     }
   }, [open, state]);
 
@@ -1055,6 +1077,7 @@ function CategoryDialog({
       ),
     [allCategories, state],
   );
+
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
