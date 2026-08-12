@@ -90,6 +90,67 @@ export const sendConsentToClient = createServerFn({ method: "POST" })
     return { id, token };
   });
 
+/** Resend an existing consent signing link to the patient. */
+export const resendConsentToClient = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: { id: string; client_id: string; email?: string }) => i)
+  .handler(async ({ data, context }) => {
+    const { data: profile } = await context.supabase
+      .from("profiles").select("id, clinic_name").eq("user_id", context.userId).maybeSingle();
+    if (!profile) throw new Error("Profile not found");
+
+    const { data: row, error } = await context.supabase
+      .from("appointment_consents")
+      .select("id, token, template:template_id (name)")
+      .eq("id", data.id)
+      .eq("profile_id", profile.id)
+      .single();
+    if (error) throw error;
+    const r = row as any;
+
+    const { data: client } = await context.supabase
+      .from("clinic_clients").select("full_name, email").eq("id", data.client_id).maybeSingle();
+    const to = data.email || client?.email;
+    if (!to) throw new Error("No email on file for this patient");
+
+    const { tryEnqueueAppEmail, getPractitionerBranding } = await import("@/lib/email/send.server");
+    const branding = await getPractitionerBranding(profile.id);
+    const origin = process.env.PUBLIC_APP_URL || process.env.APP_URL || "https://modobook.uk";
+    await tryEnqueueAppEmail({
+      templateName: "medical-form-request",
+      recipientEmail: to,
+      messageId: `consent-resend-${r.id}-${Date.now()}`,
+      templateData: {
+        patientName: (client?.full_name ?? "").split(" ")[0] || "there",
+        clinicName: profile.clinic_name ?? branding.clinicName,
+        formName: r.template?.name ?? "consent form",
+        formUrl: `${origin}/c/${r.token}`,
+        logoUrl: branding.logoUrl,
+        brandColor: branding.brandColor,
+      },
+    });
+    return { ok: true, email: to as string };
+  });
+
+/** Delete a consent form from a patient profile. */
+export const deleteConsentForClient = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: { id: string }) => i)
+  .handler(async ({ data, context }) => {
+    const { data: profile } = await context.supabase
+      .from("profiles").select("id").eq("user_id", context.userId).maybeSingle();
+    if (!profile) throw new Error("Profile not found");
+    const { error } = await context.supabase
+      .from("appointment_consents")
+      .delete()
+      .eq("id", data.id)
+      .eq("profile_id", profile.id);
+    if (error) throw error;
+    return { ok: true };
+  });
+
+
+
 export const getTreatmentConsents = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { treatmentId: string }) => input)
