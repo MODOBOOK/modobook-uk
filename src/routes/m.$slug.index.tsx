@@ -691,8 +691,12 @@ function BookPage() {
     [treatments, locationId, pricing],
   );
   const treatmentCategories = useMemo(
-    () => categories.filter((c) => (c as { kind?: string | null }).kind !== "package"),
-    [categories],
+    () =>
+      categories.filter(
+        (c) => (c as { kind?: string | null }).kind !== "package" && catWindowLive(c.id),
+      ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [categories, nowTs],
   );
   const { roots, uncategorised } = useMemo(
     () => buildTree(treatmentCategories, visibleTreatments),
