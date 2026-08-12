@@ -186,7 +186,7 @@ function ServicesPage() {
   const [tab, setTab] = useState<"catalogue" | "offers">("catalogue");
   const [search, setSearch] = useState("");
   const [catDialog, setCatDialog] = useState<
-    { mode: "create" | "edit"; parentId: string | null; cat?: Cat } | null
+    { mode: "create" | "edit"; parentId: string | null; cat?: Cat; limited?: boolean } | null
   >(null);
   const [svcDialog, setSvcDialog] = useState<{ defaultCatId: string | null } | null>(null);
   const [moveTreatState, setMoveTreatState] = useState<Treat | null>(null);
@@ -340,7 +340,15 @@ function ServicesPage() {
         >
           Add Service
         </Button>
+        <Button
+          variant="outline"
+          className="col-span-2 h-12 rounded-full border-rose-300 bg-rose-50 font-semibold text-rose-900 hover:bg-rose-100"
+          onClick={() => setCatDialog({ mode: "create", parentId: null, limited: true })}
+        >
+          Add Limited Time Category
+        </Button>
       </div>
+
 
       <FavouritesCard treatments={(treats.data ?? []) as Treat[]} />
 
@@ -591,6 +599,20 @@ function CategoryRow({
         {node.coming_soon_at && new Date(node.coming_soon_at) > new Date() && (
           <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-800">
             Book from {new Date(node.coming_soon_at).toLocaleDateString(undefined, { day: "numeric", month: "short" })}
+          </span>
+        )}
+        {(node as { is_limited?: boolean | null }).is_limited && (
+          <span className="rounded-full bg-rose-100 px-2 py-0.5 text-[11px] font-medium text-rose-800">
+            {(() => {
+              const ends = (node as { limited_ends_at?: string | null }).limited_ends_at;
+              if (!ends) return "Limited";
+              const ms = new Date(ends).getTime() - Date.now();
+              if (ms <= 0) return "Ended";
+              const mins = Math.floor(ms / 60000);
+              const days = Math.floor(mins / 1440);
+              const hours = Math.floor((mins % 1440) / 60);
+              return days > 0 ? `${days}d ${hours}h left` : hours > 0 ? `${hours}h left` : `${mins}m left`;
+            })()}
           </span>
         )}
         {totalCount > 0 && (
@@ -1012,13 +1034,25 @@ function MoveCategoryDialog({
 }
 
 
+function toLocalDT(iso: string | null | undefined) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+function fromLocalDT(v: string) {
+  if (!v.trim()) return null;
+  const d = new Date(v);
+  return Number.isNaN(d.getTime()) ? null : d.toISOString();
+}
+
 function CategoryDialog({
   state,
   allCategories,
   onClose,
   onSubmit,
 }: {
-  state: { mode: "create" | "edit"; parentId: string | null; cat?: Cat } | null;
+  state: { mode: "create" | "edit"; parentId: string | null; cat?: Cat; limited?: boolean } | null;
   allCategories: Cat[];
   onClose: () => void;
   onSubmit: (v: {
@@ -1027,6 +1061,9 @@ function CategoryDialog({
     icon?: string;
     coming_soon_at?: string | null;
     parent_id?: string | null;
+    is_limited?: boolean;
+    limited_starts_at?: string | null;
+    limited_ends_at?: string | null;
   }) => Promise<void>;
 }) {
   const open = !!state;
@@ -1036,6 +1073,9 @@ function CategoryDialog({
   const [comingSoon, setComingSoon] = useState("");
   const [parentId, setParentId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [limited, setLimited] = useState(false);
+  const [limStart, setLimStart] = useState("");
+  const [limEnd, setLimEnd] = useState("");
 
   useMemo(() => {
     if (open) {
@@ -1044,6 +1084,10 @@ function CategoryDialog({
       setIcon(state?.cat?.icon ?? "");
       setComingSoon(state?.cat?.coming_soon_at ? state.cat.coming_soon_at.slice(0, 10) : "");
       setParentId(state?.cat ? state.cat.parent_id : state?.parentId ?? null);
+      const c = state?.cat as (Cat & { is_limited?: boolean | null; limited_starts_at?: string | null; limited_ends_at?: string | null }) | undefined;
+      setLimited(Boolean(c?.is_limited) || Boolean(state?.limited));
+      setLimStart(toLocalDT(c?.limited_starts_at));
+      setLimEnd(toLocalDT(c?.limited_ends_at));
     }
   }, [open, state]);
 
@@ -1055,6 +1099,7 @@ function CategoryDialog({
       ),
     [allCategories, state],
   );
+
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
@@ -1134,6 +1179,30 @@ function CategoryDialog({
               Before this date the category shows a "Book from [date]" badge and cannot be booked. After it passes, it becomes bookable automatically. Leave blank to disable.
             </p>
           </div>
+          <div className="space-y-3 rounded-lg border border-dashed border-rose-300 bg-rose-50/50 p-3">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <Label className="text-rose-900">Limited time category</Label>
+                <p className="text-[11px] text-rose-800/80">
+                  Give this category a countdown (e.g. "Autumn offers"). Everything inside it — treatments or packages —
+                  shows the timer and the whole category disappears from your booking page when it ends.
+                </p>
+              </div>
+              <Switch checked={limited} onCheckedChange={setLimited} />
+            </div>
+            {limited && (
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label className="text-xs">Starts (optional)</Label>
+                  <Input type="datetime-local" value={limStart} onChange={(e) => setLimStart(e.target.value)} />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Ends</Label>
+                  <Input type="datetime-local" value={limEnd} onChange={(e) => setLimEnd(e.target.value)} />
+                </div>
+              </div>
+            )}
+          </div>
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={onClose}>
@@ -1149,6 +1218,9 @@ function CategoryDialog({
                 icon: icon.trim() || undefined,
                 coming_soon_at: comingSoon ? new Date(comingSoon + "T00:00:00").toISOString() : null,
                 parent_id: parentId,
+                is_limited: limited,
+                limited_starts_at: limited ? fromLocalDT(limStart) : null,
+                limited_ends_at: limited ? fromLocalDT(limEnd) : null,
               });
               setSaving(false);
             }}
