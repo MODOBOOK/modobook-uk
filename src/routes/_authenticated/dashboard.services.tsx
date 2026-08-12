@@ -340,7 +340,15 @@ function ServicesPage() {
         >
           Add Service
         </Button>
+        <Button
+          variant="outline"
+          className="col-span-2 h-12 rounded-full border-rose-300 bg-rose-50 font-semibold text-rose-900 hover:bg-rose-100"
+          onClick={() => setCatDialog({ mode: "create", parentId: null, limited: true })}
+        >
+          Add Limited Time Category
+        </Button>
       </div>
+
 
       <FavouritesCard treatments={(treats.data ?? []) as Treat[]} />
 
