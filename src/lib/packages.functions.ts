@@ -19,6 +19,7 @@ type PackageInput = {
   limited_starts_at?: string | null;
   limited_ends_at?: string | null;
   limited_quantity?: number | null;
+  limited_book_by_only?: boolean;
 };
 
 function limitedFields(data: PackageInput) {
@@ -28,8 +29,47 @@ function limitedFields(data: PackageInput) {
     limited_starts_at: on ? data.limited_starts_at ?? null : null,
     limited_ends_at: on ? data.limited_ends_at ?? null : null,
     limited_quantity: on ? data.limited_quantity ?? null : null,
+    limited_book_by_only: on ? data.limited_book_by_only ?? true : true,
   };
 }
+
+/** Update just the limited-time offer settings for one package (Offers tab). */
+export const setPackageLimitedOffer = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    (d: {
+      id: string;
+      is_limited: boolean;
+      limited_starts_at?: string | null;
+      limited_ends_at?: string | null;
+      limited_quantity?: number | null;
+      limited_book_by_only?: boolean;
+      price?: number | null;
+      compare_at_price?: number | null;
+    }) => d,
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: profile } = await supabase
+      .from("profiles").select("id").eq("user_id", userId).single();
+    if (!profile) throw new Error("No profile");
+    const update: Record<string, unknown> = {
+      is_limited: data.is_limited,
+      limited_starts_at: data.is_limited ? data.limited_starts_at ?? null : null,
+      limited_ends_at: data.is_limited ? data.limited_ends_at ?? null : null,
+      limited_quantity: data.is_limited ? data.limited_quantity ?? null : null,
+      limited_book_by_only: data.is_limited ? data.limited_book_by_only ?? true : true,
+    };
+    if (data.price != null) update.price = data.price;
+    if (data.compare_at_price !== undefined) update.compare_at_price = data.compare_at_price;
+    const { error } = await supabase
+      .from("packages")
+      .update(update as never)
+      .eq("id", data.id)
+      .eq("profile_id", profile.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
 
 
 /** Drop treatment ids that no longer exist (e.g. deleted treatments still
