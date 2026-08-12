@@ -30,6 +30,7 @@ import { listMyLocations, setTreatmentLocationPricing } from "@/lib/locations.fu
 import { getMyProfile, updateProfile } from "@/lib/profiles.functions";
 import { ImageUploader } from "@/components/ImageUploader";
 import { PrescribingClinicCard } from "@/components/PrescribingClinicCard";
+import { LimitedOffersPanel } from "@/components/LimitedOffersPanel";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { Star, X, Check, ChevronsUpDown, MapPin } from "lucide-react";
@@ -182,6 +183,7 @@ function ServicesPage() {
   );
   const picker = useMemo(() => flattenForPicker(roots), [roots]);
 
+  const [tab, setTab] = useState<"catalogue" | "offers">("catalogue");
   const [search, setSearch] = useState("");
   const [catDialog, setCatDialog] = useState<
     { mode: "create" | "edit"; parentId: string | null; cat?: Cat } | null
