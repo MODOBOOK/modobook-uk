@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { listFormsForClient, getFormSubmission, updateFormSubmission } from "@/lib/medical-forms.functions";
+import { listFormsForClient, getFormSubmission, updateFormSubmission, resendFormToClient, deleteFormSubmission } from "@/lib/medical-forms.functions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   FileText, Send, Loader2, CheckCircle2, Clock, Lock,
-  ChevronDown, Pencil, Eye, EyeOff, X, Save,
+  ChevronDown, Pencil, Eye, EyeOff, X, Save, RefreshCw, Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { SendFormDialog } from "./SendFormDialog";
@@ -344,6 +344,9 @@ export function ClientFormsList({
   openConsentSendKey?: number;
 }) {
   const list = useServerFn(listFormsForClient);
+  const resend = useServerFn(resendFormToClient);
+  const removeForm = useServerFn(deleteFormSubmission);
+  const [busyId, setBusyId] = useState<string | null>(null);
   const [rows, setRows] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [sendOpen, setSendOpen] = useState(false);
@@ -361,6 +364,29 @@ export function ClientFormsList({
     return () => { alive = false; };
   }, [client.id, refreshKey, bump, list]);
 
+
+  async function doResend(id: string) {
+    if (!client.email) { toast.error("No email on file for this patient"); return; }
+    setBusyId(id);
+    try {
+      await resend({ data: { id, email: client.email } });
+      toast.success(`Form re-sent to ${client.email}`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to resend");
+    } finally { setBusyId(null); }
+  }
+
+  async function doDelete(id: string, name: string) {
+    if (!window.confirm(`Delete "${name}" from this patient's profile? This cannot be undone.`)) return;
+    setBusyId(id);
+    try {
+      await removeForm({ data: { id } });
+      toast.success("Form deleted");
+      setBump((x) => x + 1);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to delete");
+    } finally { setBusyId(null); }
+  }
 
   function toggle(id: string) {
     setExpanded((prev) => {
@@ -424,6 +450,24 @@ export function ClientFormsList({
                       <ChevronDown className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${isOpen ? "rotate-180" : ""}`} />
                     </button>
                   </CollapsibleTrigger>
+                  <div className="flex items-center justify-end gap-1 border-t bg-muted/20 px-2 py-1">
+                    <Button
+                      size="sm" variant="ghost" className="h-7 px-2 text-xs"
+                      onClick={() => doResend(r.id)}
+                      disabled={busyId !== null || !client.email}
+                      title={client.email ? "Email this form again" : "No email on file"}
+                    >
+                      {busyId === r.id ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <RefreshCw className="mr-1 h-3 w-3" />}
+                      Resend
+                    </Button>
+                    <Button
+                      size="sm" variant="ghost" className="h-7 px-2 text-xs text-destructive hover:text-destructive"
+                      onClick={() => doDelete(r.id, r.template?.name ?? "Form")}
+                      disabled={busyId !== null}
+                    >
+                      <Trash2 className="mr-1 h-3 w-3" />Delete
+                    </Button>
+                  </div>
                   <CollapsibleContent>
                     {isOpen && <InlineFormPanel submissionId={r.id} onSaved={() => setBump((x) => x + 1)} />}
                   </CollapsibleContent>
