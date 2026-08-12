@@ -321,6 +321,17 @@ function BookPage() {
     staleTime: 60_000,
   });
   const clinicVisits = clinicVisitsQuery.data ?? [];
+  const fetchStaleClinicTreatments = useServerFn(listPublicStaleClinicTreatments);
+  const staleClinicQuery = useQuery({
+    queryKey: ["public-stale-clinic-treatments", slug],
+    queryFn: () => fetchStaleClinicTreatments({ data: { slug } }),
+    staleTime: 60_000,
+  });
+  const staleClinicTreatmentIds = useMemo(
+    () => new Set(staleClinicQuery.data?.hiddenTreatmentIds ?? []),
+    [staleClinicQuery.data],
+  );
+
   // When clinic days are priced they are bookable as a normal "Prescribing clinic"
   // treatment category, so the standalone tab is not needed.
   const clinicVisitsAreBookable = clinicVisits.some(
