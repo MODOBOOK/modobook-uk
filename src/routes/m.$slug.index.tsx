@@ -687,8 +687,9 @@ function BookPage() {
   };
 
   const visibleTreatments = useMemo(
-    () => treatments.filter(isAvailableAtLocation),
-    [treatments, locationId, pricing],
+    () => treatments.filter((t) => isAvailableAtLocation(t) && catWindowLive(t.category_id)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [treatments, locationId, pricing, categories, nowTs],
   );
   const treatmentCategories = useMemo(
     () =>
