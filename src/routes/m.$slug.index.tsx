@@ -687,10 +687,15 @@ function BookPage() {
   };
 
   const visibleTreatments = useMemo(
-    () => treatments.filter((t) => isAvailableAtLocation(t) && catWindowLive(t.category_id)),
+    () =>
+      treatments.filter(
+        (t) =>
+          isAvailableAtLocation(t) && catWindowLive(t.category_id) && !staleClinicTreatmentIds.has(t.id),
+      ),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [treatments, locationId, pricing, categories, nowTs],
+    [treatments, locationId, pricing, categories, nowTs, staleClinicTreatmentIds],
   );
+
   const treatmentCategories = useMemo(
     () =>
       categories.filter(
