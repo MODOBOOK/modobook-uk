@@ -531,11 +531,6 @@ function BookPage() {
       (remaining == null || remaining > 0);
     return { limited: true, live, remaining, endsAt: ends };
   };
-  const limitedPackages = useMemo(
-    () => (packages as LimitedPkg[]).filter((p) => limitedState(p).limited && limitedState(p).live),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [packages, nowTs],
-  );
   // Expired / not-yet-started / sold-out limited offers drop out of the menu
   const catWindowLive = (categoryId: string | null | undefined) => {
     if (!categoryId) return true;
