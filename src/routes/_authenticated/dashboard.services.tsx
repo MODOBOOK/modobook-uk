@@ -186,7 +186,7 @@ function ServicesPage() {
   const [tab, setTab] = useState<"catalogue" | "offers">("catalogue");
   const [search, setSearch] = useState("");
   const [catDialog, setCatDialog] = useState<
-    { mode: "create" | "edit"; parentId: string | null; cat?: Cat } | null
+    { mode: "create" | "edit"; parentId: string | null; cat?: Cat; limited?: boolean } | null
   >(null);
   const [svcDialog, setSvcDialog] = useState<{ defaultCatId: string | null } | null>(null);
   const [moveTreatState, setMoveTreatState] = useState<Treat | null>(null);
