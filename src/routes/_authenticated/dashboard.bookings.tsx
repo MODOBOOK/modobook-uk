@@ -46,6 +46,7 @@ import {
 import { ruleAppliesOnDate } from "@/lib/rota";
 import {
   createPaymentLink,
+  emailPaymentLink,
   completeAppointmentCheckout,
 } from "@/lib/payment-links.functions";
 import { refundAppointment } from "@/lib/stripe.functions";
@@ -1086,6 +1087,7 @@ function CheckoutSheet({
   const updateAfter = useServerFn(updateAppointmentAftercareAndAllergy);
   const checkout = useServerFn(completeAppointmentCheckout);
   const createLink = useServerFn(createPaymentLink);
+  const emailLink = useServerFn(emailPaymentLink);
   const getOrCreateClient = useServerFn(getOrCreateClientForAppointment);
   const markNoShow = useServerFn(markAppointmentNoShow);
   const blockClient = useServerFn(setClientBlocked);
