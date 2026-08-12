@@ -1897,6 +1897,7 @@ function BookPage() {
                             categoryBold={menuCategoryBold}
                             headingFont={headingFont}
                             capFor={capFor}
+                            catCountdown={(id) => countdownLabel(catEndsAt(id))}
                           />
 
                         )}
@@ -2736,6 +2737,7 @@ function CategoryTree({
   categoryBold,
   headingFont,
   capFor,
+  catCountdown,
 }: {
   nodes: CatNode[];
   slug: string;
@@ -2756,6 +2758,7 @@ function CategoryTree({
   categoryBold: boolean;
   headingFont: string;
   capFor: (t: Treatment) => { cap: number; count: number; left: number; full: boolean } | null;
+  catCountdown?: (id: string) => string | null;
 
 }) {
   const visible = nodes.filter(
@@ -2797,6 +2800,11 @@ function CategoryTree({
                         Book from {comingLabel}
                       </span>
                     )}
+                    {catCountdown?.(node.id) && (
+                      <span className="rounded-full bg-rose-600 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white shadow-sm">
+                        {catCountdown(node.id)}
+                      </span>
+                    )}
                   </div>
                   {node.description && (
                     <CategoryDescription text={node.description} color={isSub ? catBg : catText} />
@@ -2828,6 +2836,7 @@ function CategoryTree({
                     categoryBold={categoryBold}
                     headingFont={headingFont}
                     capFor={capFor}
+                    catCountdown={catCountdown}
                   />
 
                 )}
