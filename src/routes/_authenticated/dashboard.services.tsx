@@ -1203,10 +1203,6 @@ function CategoryDialog({
               setSaving(false);
             }}
           >
-
-              setSaving(false);
-            }}
-          >
             {saving ? "Saving…" : "Save"}
           </Button>
         </DialogFooter>
