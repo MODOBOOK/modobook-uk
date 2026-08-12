@@ -5,7 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { getPublicClinic } from "@/lib/public-clinic.functions";
 import { listPublicCourses } from "@/lib/training-public.functions";
 import { listPublicGiftCards } from "@/lib/gift-cards.functions";
-import { listPublicClinicVisits } from "@/lib/clinic-visits.functions";
+import { listPublicClinicVisits, listPublicStaleClinicTreatments } from "@/lib/clinic-visits.functions";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -321,6 +321,17 @@ function BookPage() {
     staleTime: 60_000,
   });
   const clinicVisits = clinicVisitsQuery.data ?? [];
+  const fetchStaleClinicTreatments = useServerFn(listPublicStaleClinicTreatments);
+  const staleClinicQuery = useQuery({
+    queryKey: ["public-stale-clinic-treatments", slug],
+    queryFn: () => fetchStaleClinicTreatments({ data: { slug } }),
+    staleTime: 60_000,
+  });
+  const staleClinicTreatmentIds = useMemo(
+    () => new Set(staleClinicQuery.data?.hiddenTreatmentIds ?? []),
+    [staleClinicQuery.data],
+  );
+
   // When clinic days are priced they are bookable as a normal "Prescribing clinic"
   // treatment category, so the standalone tab is not needed.
   const clinicVisitsAreBookable = clinicVisits.some(
@@ -687,10 +698,15 @@ function BookPage() {
   };
 
   const visibleTreatments = useMemo(
-    () => treatments.filter((t) => isAvailableAtLocation(t) && catWindowLive(t.category_id)),
+    () =>
+      treatments.filter(
+        (t) =>
+          isAvailableAtLocation(t) && catWindowLive(t.category_id) && !staleClinicTreatmentIds.has(t.id),
+      ),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [treatments, locationId, pricing, categories, nowTs],
+    [treatments, locationId, pricing, categories, nowTs, staleClinicTreatmentIds],
   );
+
   const treatmentCategories = useMemo(
     () =>
       categories.filter(

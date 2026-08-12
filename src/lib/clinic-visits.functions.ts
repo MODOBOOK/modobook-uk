@@ -533,3 +533,34 @@ export const listPublicClinicVisits = createServerFn({ method: "GET" })
       treatment_id: (r as { treatment_id?: string | null }).treatment_id ?? null,
     }));
   });
+
+// ---- Public: treatments tied to prescribing clinic days that have no upcoming dates ----
+export const listPublicStaleClinicTreatments = createServerFn({ method: "GET" })
+  .inputValidator((i: { slug: string }) => i)
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: profile } = await supabaseAdmin
+      .rpc("get_public_profile_by_slug", { p_slug: data.slug.toLowerCase() })
+      .single();
+    const profileId = (profile as { id?: string } | null)?.id;
+    if (!profileId) return { hiddenTreatmentIds: [] as string[] };
+
+    const today = new Date().toISOString().slice(0, 10);
+    const { data: rows } = await supabaseAdmin
+      .from("prescriber_clinic_visits")
+      .select("treatment_id, visit_date, status")
+      .eq("practitioner_profile_id", profileId)
+      .not("treatment_id", "is", null);
+
+    const linked = new Set<string>();
+    const live = new Set<string>();
+    for (const r of rows ?? []) {
+      const tid = (r as { treatment_id?: string | null }).treatment_id;
+      if (!tid) continue;
+      linked.add(tid);
+      const status = (r as { status?: string | null }).status ?? "";
+      const date = (r as { visit_date?: string | null }).visit_date ?? "";
+      if (date >= today && ["scheduled", "confirmed", "approved"].includes(status)) live.add(tid);
+    }
+    return { hiddenTreatmentIds: Array.from(linked).filter((id) => !live.has(id)) };
+  });
