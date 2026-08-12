@@ -16,7 +16,7 @@ import { lovable } from "@/integrations/lovable";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/auth")({
-  validateSearch: (s: Record<string, unknown>) => ({
+  validateSearch: (s: Record<string, unknown>): { as?: "prescriber"; next?: string; email?: string } => ({
     as: s.as === "prescriber" ? "prescriber" : undefined,
     next: typeof s.next === "string" && s.next.startsWith("/") ? s.next : undefined,
     email: typeof s.email === "string" ? s.email : undefined,

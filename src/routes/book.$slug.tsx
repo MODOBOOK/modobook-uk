@@ -119,7 +119,7 @@ function ClinicPage() {
           <div className="rounded-xl border bg-muted/30 p-6">
             <h3 className="font-semibold">Book an appointment</h3>
             <p className="mt-1 text-sm text-muted-foreground">Choose a treatment and select a time.</p>
-            <Link to={`/book/${profile.slug}/checkout`}>
+            <Link to="/book/$slug/checkout" params={{ slug: profile.slug }}>
               <Button className="mt-4 w-full" style={{ backgroundColor: brandColor }}>
                 <Calendar className="mr-2 h-4 w-4" />
                 Book now

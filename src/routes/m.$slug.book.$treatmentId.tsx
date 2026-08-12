@@ -28,7 +28,8 @@ import { AddressAutocomplete } from "@/components/AddressAutocomplete";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 type Rule = Database["public"]["Tables"]["availability_rules"]["Row"];
-type Loc = Database["public"]["Tables"]["locations"]["Row"];
+type Loc = Omit<Database["public"]["Tables"]["locations"]["Row"], "is_public" | "notes" | "phone"> &
+  Partial<Pick<Database["public"]["Tables"]["locations"]["Row"], "is_public" | "notes" | "phone">>;
 
 
 function toIsoDate(d: Date) {
@@ -43,7 +44,7 @@ function fromIsoDate(iso: string) {
 }
 
 export const Route = createFileRoute("/m/$slug/book/$treatmentId")({
-  validateSearch: (search: Record<string, unknown>) => ({
+  validateSearch: (search: Record<string, unknown>): { locationId?: string; model?: string } => ({
     locationId: typeof search.locationId === "string" ? search.locationId : undefined,
     model: typeof search.model === "string" ? search.model : undefined,
   }),
