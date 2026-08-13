@@ -2786,6 +2786,7 @@ function CategoryTree({
   headingFont,
   capFor,
   catCountdown,
+  categoryExtra,
 }: {
   nodes: CatNode[];
   slug: string;
@@ -2807,12 +2808,19 @@ function CategoryTree({
   headingFont: string;
   capFor: (t: Treatment) => { cap: number; count: number; left: number; full: boolean } | null;
   catCountdown?: (id: string) => string | null;
+  categoryExtra?: (id: string) => ReactNode;
 
 }) {
+  const hasExtra = (n: CatNode): boolean => {
+    const own = categoryExtra?.(n.id);
+    if (own !== null && own !== undefined && own !== false) return true;
+    return n.children.some(hasExtra);
+  };
   const visible = nodes.filter(
     (n) =>
       n.treatments.length > 0 ||
-      n.children.some((c) => countTreatments(c) > 0),
+      n.children.some((c) => countTreatments(c) > 0) ||
+      hasExtra(n),
   );
   if (visible.length === 0) return null;
 
