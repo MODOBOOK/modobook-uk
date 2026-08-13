@@ -1,0 +1,1 @@
+ALTER TABLE public.package_builders ADD COLUMN IF NOT EXISTS duration_minutes integer;
