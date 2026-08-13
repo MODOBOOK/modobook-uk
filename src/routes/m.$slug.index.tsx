@@ -1945,6 +1945,15 @@ function BookPage() {
                             headingFont={headingFont}
                             capFor={capFor}
                             catCountdown={(id) => countdownLabel(catEndsAt(id))}
+                            categoryExtra={(id) => {
+                              const bs = menuBuilders.filter((b) => b.category_id === id);
+                              if (bs.length === 0) return null;
+                              return (
+                                <div className="mb-3 grid gap-3 sm:grid-cols-2">
+                                  {bs.map(renderBuilder)}
+                                </div>
+                              );
+                            }}
                           />
 
                         )}
