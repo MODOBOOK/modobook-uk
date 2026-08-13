@@ -578,6 +578,10 @@ function BookPage() {
   );
   const packagesTabBuilders = activeBuilders.filter((b) => b.show_in_packages !== false);
   const menuBuilders = activeBuilders.filter((b) => Boolean(b.category_id));
+  // Builders with no category still show at the top of the Treatments tab
+  const uncategorisedMenuBuilders = activeBuilders.filter(
+    (b) => !b.category_id && b.show_in_packages === false,
+  );
   const renderBuilder = (b: PublicBuilder) => (
     <PackageBuilderCard
       key={b.id}
