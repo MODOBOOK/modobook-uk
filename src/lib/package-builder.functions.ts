@@ -15,6 +15,7 @@ export type BuilderInput = {
   min_items: number;
   max_items: number | null;
   category_id: string | null;
+  duration_minutes: number | null;
   show_in_packages: boolean;
   active: boolean;
   items: { treatment_id: string; max_qty: number }[];
@@ -64,6 +65,7 @@ export const savePackageBuilder = createServerFn({ method: "POST" })
       min_items: data.min_items ?? 1,
       max_items: data.max_items,
       category_id: data.category_id,
+      duration_minutes: data.duration_minutes ?? null,
       show_in_packages: data.show_in_packages,
       active: data.active,
     };
@@ -185,7 +187,7 @@ export const buildCustomPackage = createServerFn({ method: "POST" })
         session_count: sessionCount,
         price: total,
         compare_at_price: base > total ? base : null,
-        duration_minutes: Math.round(duration / Math.max(1, sessionCount)),
+        duration_minutes: Number((builder as { duration_minutes?: number | null }).duration_minutes) || Math.round(duration / Math.max(1, sessionCount)),
         allow_split_payment: false,
       } as never)
       .select("id")

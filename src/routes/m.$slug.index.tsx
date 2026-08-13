@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getPublicClinic } from "@/lib/public-clinic.functions";
@@ -578,6 +578,10 @@ function BookPage() {
   );
   const packagesTabBuilders = activeBuilders.filter((b) => b.show_in_packages !== false);
   const menuBuilders = activeBuilders.filter((b) => Boolean(b.category_id));
+  // Builders with no category still show at the top of the Treatments tab
+  const uncategorisedMenuBuilders = activeBuilders.filter(
+    (b) => !b.category_id && b.show_in_packages === false,
+  );
   const renderBuilder = (b: PublicBuilder) => (
     <PackageBuilderCard
       key={b.id}
@@ -1804,9 +1808,9 @@ function BookPage() {
 
 
                 <TabsContent value="treatments" className="mt-4">
-                  {menuBuilders.length > 0 && (
+                  {uncategorisedMenuBuilders.length > 0 && (
                     <div className="mb-4 grid gap-3 sm:grid-cols-2">
-                      {menuBuilders.map(renderBuilder)}
+                      {uncategorisedMenuBuilders.map(renderBuilder)}
                     </div>
                   )}
                   <p className="mb-3 text-sm opacity-70">
@@ -1941,6 +1945,15 @@ function BookPage() {
                             headingFont={headingFont}
                             capFor={capFor}
                             catCountdown={(id) => countdownLabel(catEndsAt(id))}
+                            categoryExtra={(id) => {
+                              const bs = menuBuilders.filter((b) => b.category_id === id);
+                              if (bs.length === 0) return null;
+                              return (
+                                <div className="mb-3 grid gap-3 sm:grid-cols-2">
+                                  {bs.map(renderBuilder)}
+                                </div>
+                              );
+                            }}
                           />
 
                         )}
@@ -2786,6 +2799,7 @@ function CategoryTree({
   headingFont,
   capFor,
   catCountdown,
+  categoryExtra,
 }: {
   nodes: CatNode[];
   slug: string;
@@ -2807,12 +2821,19 @@ function CategoryTree({
   headingFont: string;
   capFor: (t: Treatment) => { cap: number; count: number; left: number; full: boolean } | null;
   catCountdown?: (id: string) => string | null;
+  categoryExtra?: (id: string) => ReactNode;
 
 }) {
+  const hasExtra = (n: CatNode): boolean => {
+    const own = categoryExtra?.(n.id);
+    if (own !== null && own !== undefined && own !== false) return true;
+    return n.children.some(hasExtra);
+  };
   const visible = nodes.filter(
     (n) =>
       n.treatments.length > 0 ||
-      n.children.some((c) => countTreatments(c) > 0),
+      n.children.some((c) => countTreatments(c) > 0) ||
+      hasExtra(n),
   );
   if (visible.length === 0) return null;
 
@@ -2863,6 +2884,7 @@ function CategoryTree({
                 className="space-y-2 px-2 pb-3 pt-3"
                 style={{ backgroundColor: isSub ? "transparent" : `${catBg}08` }}
               >
+                {categoryExtra?.(node.id)}
                 {node.children.length > 0 && (
                   <CategoryTree
                     nodes={node.children}
@@ -2885,6 +2907,7 @@ function CategoryTree({
                     headingFont={headingFont}
                     capFor={capFor}
                     catCountdown={catCountdown}
+                    categoryExtra={categoryExtra}
                   />
 
                 )}

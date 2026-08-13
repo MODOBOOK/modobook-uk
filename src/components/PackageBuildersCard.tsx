@@ -47,6 +47,7 @@ const emptyBuilder = (): BuilderInput => ({
   min_items: 2,
   max_items: null,
   category_id: null,
+  duration_minutes: null,
   show_in_packages: true,
   active: true,
   items: [],
@@ -296,6 +297,21 @@ function BuilderDialog({
                 {categories.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label>Appointment length (minutes)</Label>
+            <Input
+              type="number"
+              min={5}
+              step={5}
+              placeholder="Auto (adds up the treatments)"
+              value={form.duration_minutes ?? ""}
+              onChange={(e) => set("duration_minutes", e.target.value === "" ? null : Number(e.target.value))}
+            />
+            <p className="text-xs text-muted-foreground">
+              Leave blank to total the selected treatments' durations automatically.
+            </p>
           </div>
 
           <div className="flex items-center justify-between rounded-xl border p-3">
