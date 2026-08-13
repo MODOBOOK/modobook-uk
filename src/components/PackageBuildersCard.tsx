@@ -21,6 +21,8 @@ import {
 import { describeBuilder, type BuilderMode } from "@/lib/package-builder-pricing";
 import { getMyTreatments } from "@/lib/treatments.functions";
 import { getMyCategories } from "@/lib/categories.functions";
+import { getMyProfile } from "@/lib/profiles.functions";
+import { packageBuilderEnabled } from "@/lib/feature-flags";
 
 type Treat = { id: string; name: string; price: number | null; active?: boolean | null };
 type Cat = { id: string; name: string };
