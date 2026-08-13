@@ -131,10 +131,10 @@ export function PackageBuilderCard({
       </Card>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-h-[85vh] max-w-lg overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle style={{ color: brand }}>{builder.name}</DialogTitle>
-            <DialogDescription>{summary}</DialogDescription>
+        <DialogContent className="max-h-[85vh] w-[calc(100vw-1.5rem)] max-w-lg overflow-y-auto overflow-x-hidden p-4 sm:p-6">
+          <DialogHeader className="text-left">
+            <DialogTitle className="text-base sm:text-lg" style={{ color: brand }}>{builder.name}</DialogTitle>
+            <DialogDescription className="text-sm">{summary}</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-2">
@@ -143,7 +143,7 @@ export function PackageBuilderCard({
               return (
                 <div
                   key={o.treatment_id}
-                  className="flex items-center justify-between gap-3 rounded-xl border p-3"
+                  className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 rounded-xl border p-2.5 sm:p-3"
                   style={{ borderColor: n > 0 ? brand : `${brand}26`, backgroundColor: n > 0 ? `${brand}0d` : undefined }}
                 >
                   <div className="min-w-0">
@@ -178,7 +178,7 @@ export function PackageBuilderCard({
             {options.length === 0 && <p className="text-sm opacity-70">Nothing available to build with yet.</p>}
           </div>
 
-          <div className="sticky bottom-0 -mx-6 mt-2 border-t bg-background px-6 pt-3">
+          <div className="sticky bottom-0 -mx-4 mt-2 border-t bg-background px-4 pt-3 sm:-mx-6 sm:px-6">
             <div className="flex items-center justify-between text-sm">
               <span className="opacity-70">
                 {selection.reduce((s, x) => s + x.qty, 0)} item
