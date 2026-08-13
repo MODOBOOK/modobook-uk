@@ -192,13 +192,17 @@ export const getMultiBookingContext = createServerFn({ method: "GET" })
     const packageIds = (data.packageIds ?? []).filter(Boolean);
     let packagesRows: Array<Record<string, unknown>> = [];
     if (packageIds.length > 0) {
-      const { data: pkgs } = await sb
+      // Use admin client: custom "build your own" packages are created inactive
+      // and are therefore invisible to the anon (RLS) client.
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: pkgs } = await supabaseAdmin
         .from("packages")
         .select("*")
         .in("id", packageIds)
         .eq("profile_id", profile.id);
       packagesRows = (pkgs ?? []) as Array<Record<string, unknown>>;
     }
+
     const pkgFirstTreatmentIds = packagesRows
       .map((p) => {
         const ids = (p.treatment_ids as string[] | null) ?? [];
