@@ -55,6 +55,7 @@ function AuthPage() {
   async function handleSignUp(e: React.FormEvent) {
     e.preventDefault();
     if (password.length < 8) { toast.error("Password must be at least 8 characters."); return; }
+    if (!acceptedTerms) { toast.error("Please accept the Terms & Conditions to continue."); return; }
     setLoading(true);
     try {
       const res = await createAccount({ data: { email, password, name: signupName || null } });
@@ -66,6 +67,12 @@ function AuthPage() {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       setLoading(false);
       if (error) { toast.error(error.message); return; }
+      try {
+        const active = await fetchActiveTerms();
+        if (active) await recordTermsAcceptance(active.id, "signup");
+      } catch {
+        // acceptance is re-prompted by the in-app gate if this fails
+      }
       toast.success("Welcome to MODO");
       router.navigate(postAuthTo());
     } catch (err) {
@@ -73,6 +80,7 @@ function AuthPage() {
       toast.error("Could not create your account. Please try again.");
     }
   }
+
 
   async function handleForgot(e: React.FormEvent) {
     e.preventDefault();
