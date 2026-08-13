@@ -53,6 +53,7 @@ import type { Database } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 import { SafeHtml } from "@/components/SafeHtml";
 import { PackageBuilderCard, type PublicBuilder } from "@/components/PackageBuilderCard";
+import { packageBuilderEnabled } from "@/lib/feature-flags";
 import { resolveDisplayNames } from "@/lib/display-name";
 import { formatPrice, BADGE_LABEL, badgeClasses, type TreatmentBadge } from "@/lib/price-display";
 
@@ -571,7 +572,8 @@ function BookPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [packages, categories, nowTs],
   );
-  const activeBuilders = (packageBuilders ?? []).filter(
+  const buildersEnabled = packageBuilderEnabled(slug);
+  const activeBuilders = (buildersEnabled ? (packageBuilders ?? []) : []).filter(
     (b) => (b.items ?? []).length > 0 && catWindowLive(b.category_id),
   );
   const packagesTabBuilders = activeBuilders.filter((b) => b.show_in_packages !== false);

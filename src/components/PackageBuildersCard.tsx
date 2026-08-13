@@ -21,6 +21,8 @@ import {
 import { describeBuilder, type BuilderMode } from "@/lib/package-builder-pricing";
 import { getMyTreatments } from "@/lib/treatments.functions";
 import { getMyCategories } from "@/lib/categories.functions";
+import { getMyProfile } from "@/lib/profiles.functions";
+import { packageBuilderEnabled } from "@/lib/feature-flags";
 
 type Treat = { id: string; name: string; price: number | null; active?: boolean | null };
 type Cat = { id: string; name: string };
@@ -54,12 +56,16 @@ export function PackageBuildersCard() {
   const fetchBuilders = useServerFn(listMyPackageBuilders);
   const fetchTreats = useServerFn(getMyTreatments);
   const fetchCats = useServerFn(getMyCategories);
+  const fetchProfile = useServerFn(getMyProfile);
   const save = useServerFn(savePackageBuilder);
   const remove = useServerFn(deletePackageBuilder);
 
-  const builders = useQuery({ queryKey: ["package-builders"], queryFn: () => fetchBuilders({}) });
-  const treats = useQuery({ queryKey: ["my-treatments-builder"], queryFn: () => fetchTreats({}) });
-  const cats = useQuery({ queryKey: ["my-categories-builder"], queryFn: () => fetchCats({}) });
+  const profile = useQuery({ queryKey: ["my-profile"], queryFn: () => fetchProfile({}) });
+  const enabled = packageBuilderEnabled((profile.data as { slug?: string | null } | null)?.slug);
+
+  const builders = useQuery({ queryKey: ["package-builders"], queryFn: () => fetchBuilders({}), enabled });
+  const treats = useQuery({ queryKey: ["my-treatments-builder"], queryFn: () => fetchTreats({}), enabled });
+  const cats = useQuery({ queryKey: ["my-categories-builder"], queryFn: () => fetchCats({}), enabled });
 
   const [editing, setEditing] = useState<BuilderInput | null>(null);
 
@@ -76,6 +82,8 @@ export function PackageBuildersCard() {
       toast.error((e as Error).message);
     }
   }
+
+  if (!enabled) return null;
 
   return (
     <Card>
