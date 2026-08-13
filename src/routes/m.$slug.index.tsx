@@ -571,7 +571,7 @@ function BookPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [packages, categories, nowTs],
   );
-  const buildersEnabled = packageBuilderEnabled(profile?.slug);
+  const buildersEnabled = packageBuilderEnabled(slug);
   const activeBuilders = (buildersEnabled ? (packageBuilders ?? []) : []).filter(
     (b) => (b.items ?? []).length > 0 && catWindowLive(b.category_id),
   );
