@@ -186,7 +186,7 @@ export const buildCustomPackage = createServerFn({ method: "POST" })
         price: total,
         compare_at_price: base > total ? base : null,
         duration_minutes: Math.round(duration / Math.max(1, sessionCount)),
-        allow_split_payment: sessionCount >= 2,
+        allow_split_payment: false,
       } as never)
       .select("id")
       .single();
