@@ -1804,9 +1804,9 @@ function BookPage() {
 
 
                 <TabsContent value="treatments" className="mt-4">
-                  {menuBuilders.length > 0 && (
+                  {uncategorisedMenuBuilders.length > 0 && (
                     <div className="mb-4 grid gap-3 sm:grid-cols-2">
-                      {menuBuilders.map(renderBuilder)}
+                      {uncategorisedMenuBuilders.map(renderBuilder)}
                     </div>
                   )}
                   <p className="mb-3 text-sm opacity-70">
