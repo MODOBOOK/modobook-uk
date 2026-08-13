@@ -36,6 +36,7 @@ export const getPublicClinic = createServerFn({ method: "GET" })
       .select("*")
       .eq("profile_id", profile.id)
       .eq("active", true)
+      .eq("is_custom", false)
       .order("sort_order", { ascending: true })
       .order("created_at", { ascending: false });
     if (packageError) throw packageError;
@@ -78,6 +79,17 @@ export const getPublicClinic = createServerFn({ method: "GET" })
           .select("*")
           .in("treatment_id", treatmentIds)
           .eq("available", true)
+      : { data: [] as never[] };
+
+    const { data: builders } = await supabase
+      .from("package_builders")
+      .select("*")
+      .eq("profile_id", profile.id)
+      .eq("active", true)
+      .order("sort_order", { ascending: true });
+    const builderIds = (builders ?? []).map((b) => b.id);
+    const { data: builderItems } = builderIds.length
+      ? await supabase.from("package_builder_items").select("*").in("builder_id", builderIds).order("sort_order")
       : { data: [] as never[] };
 
     const { data: theme } = await supabase
@@ -138,6 +150,10 @@ export const getPublicClinic = createServerFn({ method: "GET" })
       profile,
       treatments: treatments ?? [],
       packages: packages ?? [],
+      packageBuilders: (builders ?? []).map((b) => ({
+        ...b,
+        items: (builderItems ?? []).filter((i) => i.builder_id === b.id),
+      })),
       gallery: gallery ?? [],
       testimonials: testimonials ?? [],
       locations: locations ?? [],

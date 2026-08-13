@@ -29,6 +29,7 @@ import {
 import { listMyLocations, setTreatmentLocationPricing } from "@/lib/locations.functions";
 import { getMyProfile, updateProfile } from "@/lib/profiles.functions";
 import { ImageUploader } from "@/components/ImageUploader";
+import { PackageBuildersCard } from "@/components/PackageBuildersCard";
 import { PrescribingClinicCard } from "@/components/PrescribingClinicCard";
 import { LimitedOffersPanel } from "@/components/LimitedOffersPanel";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -353,6 +354,8 @@ function ServicesPage() {
       <FavouritesCard treatments={(treats.data ?? []) as Treat[]} />
 
       <PrescribingClinicCard />
+
+      <PackageBuildersCard />
 
 
       {cats.isLoading || treats.isLoading ? (

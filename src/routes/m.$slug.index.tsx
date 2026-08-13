@@ -52,6 +52,7 @@ import { mapsUrl, formatAddress } from "@/lib/maps";
 import type { Database } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 import { SafeHtml } from "@/components/SafeHtml";
+import { PackageBuilderCard, type PublicBuilder } from "@/components/PackageBuilderCard";
 import { resolveDisplayNames } from "@/lib/display-name";
 import { formatPrice, BADGE_LABEL, badgeClasses, type TreatmentBadge } from "@/lib/price-display";
 
@@ -221,7 +222,7 @@ function WelcomeIntroBlock({
 type Theme = Database["public"]["Tables"]["clinic_theme"]["Row"];
 
 function BookPage() {
-  const { profile, treatments, packages, locations, categories, pricing, theme, reviews, concernAreas, concerns, concernLinks, modelSlots = [], addonLinks = [], practitioners = [], locationPractitioners = [], aboutPage, careGuides = [], pretreatment = [], bookingCounts = [] } =
+  const { profile, treatments, packages, packageBuilders = [], locations, categories, pricing, theme, reviews, concernAreas, concerns, concernLinks, modelSlots = [], addonLinks = [], practitioners = [], locationPractitioners = [], aboutPage, careGuides = [], pretreatment = [], bookingCounts = [] } =
     Route.useLoaderData() as {
       profile: {
         id: string;
@@ -262,6 +263,7 @@ function BookPage() {
 
       treatments: Treatment[];
       packages: Package[];
+      packageBuilders?: PublicBuilder[];
       locations: (Location & { image_url?: string | null })[];
       categories: Category[];
       pricing: Pricing[];
@@ -569,6 +571,23 @@ function BookPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [packages, categories, nowTs],
   );
+  const activeBuilders = (packageBuilders ?? []).filter(
+    (b) => (b.items ?? []).length > 0 && catWindowLive(b.category_id),
+  );
+  const packagesTabBuilders = activeBuilders.filter((b) => b.show_in_packages !== false);
+  const menuBuilders = activeBuilders.filter((b) => Boolean(b.category_id));
+  const renderBuilder = (b: PublicBuilder) => (
+    <PackageBuilderCard
+      key={b.id}
+      builder={b}
+      treatments={treatments as unknown as { id: string; name: string; price: number | null; duration: number | null }[]}
+      slug={slug}
+      brand={brand}
+      accent={accent}
+      locationId={locationId}
+    />
+  );
+
   const countdownLabel = (endsAt: number | null) => {
     if (!endsAt) return null;
     const ms = endsAt - nowTs;
@@ -1751,9 +1770,9 @@ function BookPage() {
             return (
               <>
               <Tabs defaultValue="treatments" className="w-full">
-                <TabsList className="grid w-full h-auto" style={{ backgroundColor: `${brand}10`, gridTemplateColumns: `repeat(${1 + (visiblePackages.length > 0 ? 1 : 0) + (hasGiftCards ? 1 : 0) + (hasTraining ? 1 : 0) + (hasClinicVisits ? 1 : 0)}, minmax(0, 1fr))` }}>
+                <TabsList className="grid w-full h-auto" style={{ backgroundColor: `${brand}10`, gridTemplateColumns: `repeat(${1 + (visiblePackages.length > 0 || packagesTabBuilders.length > 0 ? 1 : 0) + (hasGiftCards ? 1 : 0) + (hasTraining ? 1 : 0) + (hasClinicVisits ? 1 : 0)}, minmax(0, 1fr))` }}>
                   <TabsTrigger value="treatments" className="text-sm sm:text-base py-2.5">Treatments</TabsTrigger>
-                  {visiblePackages.length > 0 && (
+                  {(visiblePackages.length > 0 || packagesTabBuilders.length > 0) && (
 
                     <TabsTrigger value="packages" className="text-sm sm:text-base py-2.5">
                       <PackageIcon className="mr-1.5 h-4 w-4" />
@@ -1783,6 +1802,11 @@ function BookPage() {
 
 
                 <TabsContent value="treatments" className="mt-4">
+                  {menuBuilders.length > 0 && (
+                    <div className="mb-4 grid gap-3 sm:grid-cols-2">
+                      {menuBuilders.map(renderBuilder)}
+                    </div>
+                  )}
                   <p className="mb-3 text-sm opacity-70">
                     Tick all the treatments you'd like, then press Book Now.
                   </p>
@@ -1960,9 +1984,14 @@ function BookPage() {
 
 
                 <TabsContent value="packages" className="mt-4">
+                  {packagesTabBuilders.length > 0 && (
+                    <div className="mb-4 grid gap-3 sm:grid-cols-2">
+                      {packagesTabBuilders.map(renderBuilder)}
+                    </div>
+                  )}
                   {(() => {
                     if (visiblePackages.length === 0) {
-                      return <p className="opacity-70">No packages available.</p>;
+                      return packagesTabBuilders.length > 0 ? null : <p className="opacity-70">No packages available.</p>;
                     }
                     const renderPackageCard = (p: (typeof visiblePackages)[number]) => {
                       const pkg = p as Package & {
