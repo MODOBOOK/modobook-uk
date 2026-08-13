@@ -171,10 +171,28 @@ function AuthPage() {
                 <Label htmlFor="signup-password">Password</Label>
                 <Input id="signup-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} placeholder="At least 8 characters" />
               </div>
-              <Button type="submit" className="w-full" disabled={loading}>
+              <label className="flex items-start gap-3 rounded-lg border bg-muted/30 p-3 text-xs leading-relaxed">
+                <Checkbox
+                  checked={acceptedTerms}
+                  onCheckedChange={(v) => setAcceptedTerms(Boolean(v))}
+                  className="mt-0.5"
+                />
+                <span>
+                  I have read and accept the{" "}
+                  <Link to="/terms" target="_blank" className="font-medium text-foreground underline underline-offset-2">
+                    Terms &amp; Conditions
+                  </Link>{" "}
+                  and{" "}
+                  <Link to="/privacy" target="_blank" className="font-medium text-foreground underline underline-offset-2">
+                    Privacy Policy
+                  </Link>.
+                </span>
+              </label>
+              <Button type="submit" className="w-full" disabled={loading || !acceptedTerms}>
                 {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                 Create my account
               </Button>
+
             </form>
             ) : (
             <form onSubmit={handleSignIn} className="space-y-4">
