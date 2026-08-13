@@ -12,6 +12,9 @@ import { Loader2 } from "lucide-react";
 import { BrandMark } from "@/components/BrandMark";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
+import { Checkbox } from "@/components/ui/checkbox";
+import { fetchActiveTerms, recordTermsAcceptance } from "@/lib/platform-terms";
+
 
 import { toast } from "sonner";
 
