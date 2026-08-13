@@ -44,11 +44,13 @@ function AuthPage() {
 
   const [mode, setMode] = useState<"signin" | "signup">("signup");
   const [signupName, setSignupName] = useState("");
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   const [forgotOpen, setForgotOpen] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
 
   const createAccount = useServerFn(signUpFromWaitlist);
+
 
   async function handleSignUp(e: React.FormEvent) {
     e.preventDefault();
