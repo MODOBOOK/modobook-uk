@@ -571,7 +571,8 @@ function BookPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [packages, categories, nowTs],
   );
-  const activeBuilders = (packageBuilders ?? []).filter(
+  const buildersEnabled = packageBuilderEnabled(profile?.slug);
+  const activeBuilders = (buildersEnabled ? (packageBuilders ?? []) : []).filter(
     (b) => (b.items ?? []).length > 0 && catWindowLive(b.category_id),
   );
   const packagesTabBuilders = activeBuilders.filter((b) => b.show_in_packages !== false);
