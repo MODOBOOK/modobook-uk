@@ -83,6 +83,8 @@ export function PackageBuildersCard() {
     }
   }
 
+  if (!enabled) return null;
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
