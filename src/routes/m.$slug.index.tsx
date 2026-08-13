@@ -2871,6 +2871,7 @@ function CategoryTree({
                 className="space-y-2 px-2 pb-3 pt-3"
                 style={{ backgroundColor: isSub ? "transparent" : `${catBg}08` }}
               >
+                {categoryExtra?.(node.id)}
                 {node.children.length > 0 && (
                   <CategoryTree
                     nodes={node.children}
@@ -2893,6 +2894,7 @@ function CategoryTree({
                     headingFont={headingFont}
                     capFor={capFor}
                     catCountdown={catCountdown}
+                    categoryExtra={categoryExtra}
                   />
 
                 )}
