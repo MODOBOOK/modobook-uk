@@ -12,6 +12,9 @@ import { Loader2 } from "lucide-react";
 import { BrandMark } from "@/components/BrandMark";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
+import { Checkbox } from "@/components/ui/checkbox";
+import { fetchActiveTerms, recordTermsAcceptance } from "@/lib/platform-terms";
+
 
 import { toast } from "sonner";
 
@@ -44,15 +47,18 @@ function AuthPage() {
 
   const [mode, setMode] = useState<"signin" | "signup">("signup");
   const [signupName, setSignupName] = useState("");
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   const [forgotOpen, setForgotOpen] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
 
   const createAccount = useServerFn(signUpFromWaitlist);
 
+
   async function handleSignUp(e: React.FormEvent) {
     e.preventDefault();
     if (password.length < 8) { toast.error("Password must be at least 8 characters."); return; }
+    if (!acceptedTerms) { toast.error("Please accept the Terms & Conditions to continue."); return; }
     setLoading(true);
     try {
       const res = await createAccount({ data: { email, password, name: signupName || null } });
@@ -64,6 +70,12 @@ function AuthPage() {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       setLoading(false);
       if (error) { toast.error(error.message); return; }
+      try {
+        const active = await fetchActiveTerms();
+        if (active) await recordTermsAcceptance(active.id, "signup");
+      } catch {
+        // acceptance is re-prompted by the in-app gate if this fails
+      }
       toast.success("Welcome to MODO");
       router.navigate(postAuthTo());
     } catch (err) {
@@ -71,6 +83,7 @@ function AuthPage() {
       toast.error("Could not create your account. Please try again.");
     }
   }
+
 
   async function handleForgot(e: React.FormEvent) {
     e.preventDefault();
@@ -158,10 +171,28 @@ function AuthPage() {
                 <Label htmlFor="signup-password">Password</Label>
                 <Input id="signup-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} placeholder="At least 8 characters" />
               </div>
-              <Button type="submit" className="w-full" disabled={loading}>
+              <label className="flex items-start gap-3 rounded-lg border bg-muted/30 p-3 text-xs leading-relaxed">
+                <Checkbox
+                  checked={acceptedTerms}
+                  onCheckedChange={(v) => setAcceptedTerms(Boolean(v))}
+                  className="mt-0.5"
+                />
+                <span>
+                  I have read and accept the{" "}
+                  <Link to="/terms" target="_blank" className="font-medium text-foreground underline underline-offset-2">
+                    Terms &amp; Conditions
+                  </Link>{" "}
+                  and{" "}
+                  <Link to="/privacy" target="_blank" className="font-medium text-foreground underline underline-offset-2">
+                    Privacy Policy
+                  </Link>.
+                </span>
+              </label>
+              <Button type="submit" className="w-full" disabled={loading || !acceptedTerms}>
                 {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                 Create my account
               </Button>
+
             </form>
             ) : (
             <form onSubmit={handleSignIn} className="space-y-4">

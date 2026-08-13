@@ -21,21 +21,27 @@ export function TermsAcceptanceGate() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      let accepted = false;
       try {
-        const accepted = await hasAcceptedCurrentTerms();
-        if (accepted || cancelled) return;
+        accepted = await hasAcceptedCurrentTerms();
+      } catch {
+        // If the check fails, fall through and prompt anyway.
+      }
+      if (accepted || cancelled) return;
+      try {
         const active = await fetchActiveTerms();
         if (!active || cancelled) return;
         setTerms(active);
         setOpen(true);
       } catch {
-        // silent — don't block the app if this check fails
+        // silent — don't block the app if terms can't be loaded
       }
     })();
     return () => {
       cancelled = true;
     };
   }, []);
+
 
   const accept = async () => {
     if (!terms || !checked) return;
