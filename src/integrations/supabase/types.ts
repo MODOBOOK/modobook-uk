@@ -3893,6 +3893,126 @@ export type Database = {
           },
         ]
       }
+      package_builder_items: {
+        Row: {
+          builder_id: string
+          created_at: string
+          id: string
+          max_qty: number
+          sort_order: number
+          treatment_id: string
+        }
+        Insert: {
+          builder_id: string
+          created_at?: string
+          id?: string
+          max_qty?: number
+          sort_order?: number
+          treatment_id: string
+        }
+        Update: {
+          builder_id?: string
+          created_at?: string
+          id?: string
+          max_qty?: number
+          sort_order?: number
+          treatment_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "package_builder_items_builder_id_fkey"
+            columns: ["builder_id"]
+            isOneToOne: false
+            referencedRelation: "package_builders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "package_builder_items_treatment_id_fkey"
+            columns: ["treatment_id"]
+            isOneToOne: false
+            referencedRelation: "treatments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      package_builders: {
+        Row: {
+          active: boolean
+          category_id: string | null
+          created_at: string
+          description: string | null
+          discount_percent: number
+          fixed_price: number | null
+          id: string
+          image_url: string | null
+          max_items: number | null
+          min_items: number
+          mode: string
+          name: string
+          pick_count: number | null
+          profile_id: string
+          show_in_packages: boolean
+          sort_order: number
+          tiers: Json
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          category_id?: string | null
+          created_at?: string
+          description?: string | null
+          discount_percent?: number
+          fixed_price?: number | null
+          id?: string
+          image_url?: string | null
+          max_items?: number | null
+          min_items?: number
+          mode?: string
+          name?: string
+          pick_count?: number | null
+          profile_id: string
+          show_in_packages?: boolean
+          sort_order?: number
+          tiers?: Json
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          category_id?: string | null
+          created_at?: string
+          description?: string | null
+          discount_percent?: number
+          fixed_price?: number | null
+          id?: string
+          image_url?: string | null
+          max_items?: number | null
+          min_items?: number
+          mode?: string
+          name?: string
+          pick_count?: number | null
+          profile_id?: string
+          show_in_packages?: boolean
+          sort_order?: number
+          tiers?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "package_builders_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "treatment_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "package_builders_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       package_purchases: {
         Row: {
           created_at: string
@@ -3941,6 +4061,7 @@ export type Database = {
         Row: {
           active: boolean | null
           allow_split_payment: boolean
+          builder_id: string | null
           category_id: string | null
           compare_at_price: number | null
           created_at: string
@@ -3949,6 +4070,7 @@ export type Database = {
           expiry_days: number | null
           id: string
           image_url: string | null
+          is_custom: boolean
           is_limited: boolean
           limited_book_by_only: boolean
           limited_claimed: number
@@ -3971,6 +4093,7 @@ export type Database = {
         Insert: {
           active?: boolean | null
           allow_split_payment?: boolean
+          builder_id?: string | null
           category_id?: string | null
           compare_at_price?: number | null
           created_at?: string
@@ -3979,6 +4102,7 @@ export type Database = {
           expiry_days?: number | null
           id?: string
           image_url?: string | null
+          is_custom?: boolean
           is_limited?: boolean
           limited_book_by_only?: boolean
           limited_claimed?: number
@@ -4001,6 +4125,7 @@ export type Database = {
         Update: {
           active?: boolean | null
           allow_split_payment?: boolean
+          builder_id?: string | null
           category_id?: string | null
           compare_at_price?: number | null
           created_at?: string
@@ -4009,6 +4134,7 @@ export type Database = {
           expiry_days?: number | null
           id?: string
           image_url?: string | null
+          is_custom?: boolean
           is_limited?: boolean
           limited_book_by_only?: boolean
           limited_claimed?: number
@@ -4029,6 +4155,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "packages_builder_id_fkey"
+            columns: ["builder_id"]
+            isOneToOne: false
+            referencedRelation: "package_builders"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "packages_category_id_fkey"
             columns: ["category_id"]
