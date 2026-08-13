@@ -3942,6 +3942,7 @@ export type Database = {
           created_at: string
           description: string | null
           discount_percent: number
+          duration_minutes: number | null
           fixed_price: number | null
           id: string
           image_url: string | null
@@ -3962,6 +3963,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           discount_percent?: number
+          duration_minutes?: number | null
           fixed_price?: number | null
           id?: string
           image_url?: string | null
@@ -3982,6 +3984,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           discount_percent?: number
+          duration_minutes?: number | null
           fixed_price?: number | null
           id?: string
           image_url?: string | null
