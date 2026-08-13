@@ -393,6 +393,13 @@ export const getDayAvailability = createServerFn({ method: "GET" })
       (o) => !o.location_id || !data.locationId || o.location_id === data.locationId,
     );
 
+    // An ad-hoc slot added for this date is an explicit opening, so it beats a
+    // closed/blocked day. The daily cap still applies.
+    const capReached = dailyCap != null && activeAppts.length >= Number(dailyCap);
+    if (scopedOverrides.length > 0 && !capReached) isBlocked = false;
+
+
+
     // Associate practitioners hosted inside another clinic can only take
     // bookings while a room is free at the host clinic.
     let roomBusy: { start_time: string; end_time: string; status: string; location_id: string | null }[] = [];

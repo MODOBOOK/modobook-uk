@@ -274,8 +274,10 @@ function BookTreatmentPage() {
     if (modelMode) return !modelDates.has(iso);
     const data = monthQuery.data;
     if (!data) return false;
-    if (data.blockedDates.includes(iso)) return true;
+    // An ad-hoc open slot is an explicit "I'm working this day" and wins
+    // over a closed/blocked day for the same date.
     if (data.overrideDates.includes(iso)) return false;
+    if (data.blockedDates.includes(iso)) return true;
     if (Array.isArray((data as { openDates?: string[] }).openDates)) {
       return !(data as { openDates: string[] }).openDates.includes(iso);
     }
