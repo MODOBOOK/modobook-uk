@@ -97,7 +97,7 @@ export const listMyPackages = createServerFn({ method: "GET" })
       .from("profiles").select("id").eq("user_id", userId).single();
     if (!profile) return [];
     const { data, error } = await supabase
-      .from("packages").select("*").eq("profile_id", profile.id)
+      .from("packages").select("*").eq("profile_id", profile.id).eq("is_custom", false)
       .order("sort_order", { ascending: true })
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
