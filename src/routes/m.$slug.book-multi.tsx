@@ -351,8 +351,9 @@ function MultiBookPage() {
     const iso = toIsoDate(d);
     const data = monthQuery.data;
     if (!data) return false;
-    if (data.blockedDates.includes(iso)) return true;
+    // Ad-hoc open slots win over a closed day.
     if (data.overrideDates.includes(iso)) return false;
+    if (data.blockedDates.includes(iso)) return true;
     if (Array.isArray((data as { openDates?: string[] }).openDates)) {
       return !(data as { openDates: string[] }).openDates.includes(iso);
     }
