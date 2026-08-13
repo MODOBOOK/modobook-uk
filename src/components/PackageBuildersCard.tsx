@@ -54,12 +54,16 @@ export function PackageBuildersCard() {
   const fetchBuilders = useServerFn(listMyPackageBuilders);
   const fetchTreats = useServerFn(getMyTreatments);
   const fetchCats = useServerFn(getMyCategories);
+  const fetchProfile = useServerFn(getMyProfile);
   const save = useServerFn(savePackageBuilder);
   const remove = useServerFn(deletePackageBuilder);
 
-  const builders = useQuery({ queryKey: ["package-builders"], queryFn: () => fetchBuilders({}) });
-  const treats = useQuery({ queryKey: ["my-treatments-builder"], queryFn: () => fetchTreats({}) });
-  const cats = useQuery({ queryKey: ["my-categories-builder"], queryFn: () => fetchCats({}) });
+  const profile = useQuery({ queryKey: ["my-profile"], queryFn: () => fetchProfile({}) });
+  const enabled = packageBuilderEnabled((profile.data as { slug?: string | null } | null)?.slug);
+
+  const builders = useQuery({ queryKey: ["package-builders"], queryFn: () => fetchBuilders({}), enabled });
+  const treats = useQuery({ queryKey: ["my-treatments-builder"], queryFn: () => fetchTreats({}), enabled });
+  const cats = useQuery({ queryKey: ["my-categories-builder"], queryFn: () => fetchCats({}), enabled });
 
   const [editing, setEditing] = useState<BuilderInput | null>(null);
 
