@@ -185,11 +185,20 @@ function PractitionersPage() {
             Add the team members who work at your clinic and assign them to locations. They appear under each location on your booking page.
           </p>
         </div>
-        <Button onClick={seatsFull && canReserve ? handleReserveSeat : openNew} disabled={reserving || (seatsFull && !canReserve)}>
+        <Button onClick={requestNew} disabled={reserving}>
           <Plus className="mr-2 h-4 w-4" />
-          {seatsFull && canReserve ? (reserving ? "Adding seat…" : "Add a seat & practitioner") : "Add practitioner"}
+          {reserving ? "Adding seat…" : "Add practitioner"}
         </Button>
       </div>
+
+      <SeatCostWarning
+        open={warnOpen}
+        onOpenChange={setWarnOpen}
+        kind="practitioner"
+        seats={seats as unknown as SeatSummary}
+        onConfirm={confirmSeatCost}
+      />
+
 
       {seats && !seats.comped && (
         <Card className={seatsFull ? "border-amber-500/50 bg-amber-500/5" : undefined}>
