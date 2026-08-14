@@ -2876,6 +2876,7 @@ export type Database = {
       }
       gift_card_purchases: {
         Row: {
+          amount_paid: number | null
           buyer_email: string | null
           buyer_name: string | null
           code: string
@@ -2902,6 +2903,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          amount_paid?: number | null
           buyer_email?: string | null
           buyer_name?: string | null
           code: string
@@ -2928,6 +2930,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          amount_paid?: number | null
           buyer_email?: string | null
           buyer_name?: string | null
           code?: string
@@ -3011,6 +3014,7 @@ export type Database = {
           name: string
           package_id: string | null
           package_ids: string[]
+          price: number | null
           profile_id: string
           sort_order: number
           treatment_id: string | null
@@ -3029,6 +3033,7 @@ export type Database = {
           name: string
           package_id?: string | null
           package_ids?: string[]
+          price?: number | null
           profile_id: string
           sort_order?: number
           treatment_id?: string | null
@@ -3047,6 +3052,7 @@ export type Database = {
           name?: string
           package_id?: string | null
           package_ids?: string[]
+          price?: number | null
           profile_id?: string
           sort_order?: number
           treatment_id?: string | null
