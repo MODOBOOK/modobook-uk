@@ -15,6 +15,8 @@ import {
   sendWaitlistOpenEmail,
 } from '@/lib/admin-emails.functions'
 import type { AdminBlock as Block } from '@/lib/email-templates/admin-broadcast'
+import { generateAdminEmail } from '@/lib/ai-admin-email.functions'
+import { parsePresetBody } from '@/lib/marketing-presets'
 import { EMAIL_DEFAULTS } from '@/lib/email-templates/defaults'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -24,9 +26,10 @@ import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { Loader2, Mail, Send, ArrowLeft, Shield, Plus, Trash2, ChevronUp, ChevronDown, Eye, Image as ImageIcon, Link as LinkIcon, Code, Rocket, PartyPopper } from 'lucide-react'
+import { Loader2, Mail, Send, ArrowLeft, Shield, Plus, Trash2, ChevronUp, ChevronDown, Eye, Image as ImageIcon, Link as LinkIcon, Code, Rocket, PartyPopper, Sparkles } from 'lucide-react'
 import { AdminShell } from '@/components/admin/AdminShell'
 import { toast } from 'sonner'
+
 
 export const Route = createFileRoute('/_authenticated/admin/emails')({
   ssr: false,
