@@ -142,7 +142,7 @@ function AssociatesPage() {
           </p>
         </div>
         {enabled && (
-          <Button onClick={() => setInviteOpen(true)} className="rounded-full">
+          <Button onClick={requestInvite} className="rounded-full">
             <UserPlus className="mr-2 h-4 w-4" /> Invite associate
           </Button>
         )}
