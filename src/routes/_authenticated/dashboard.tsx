@@ -182,7 +182,9 @@ function DashboardLayout() {
         <nav className="flex-1 space-y-0.5 overflow-y-auto px-4 py-6">
           {(() => {
             const visible = navItems.filter(
-              (item) => !("flag" in item) || (profile as Record<string, unknown>)?.[(item as { flag: string }).flag],
+              (item) =>
+                (!("flag" in item) || (profile as Record<string, unknown>)?.[(item as { flag: string }).flag]) &&
+                (!(item as { pilot?: boolean }).pilot || pilotFeaturesEnabled(profile?.slug)),
             );
             let lastSection: string | undefined;
             return visible.map((item) => {
