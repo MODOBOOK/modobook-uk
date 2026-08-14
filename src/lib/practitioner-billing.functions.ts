@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { associateBillingEnabled } from "@/lib/feature-flags";
 
 /**
  * Practitioner-facing billing server functions. Everything is scoped to the
@@ -407,7 +408,7 @@ export const getSeatSummary = createServerFn({ method: "GET" })
         .from("subscription_plans")
         .select("id, kind, name, amount_cents, currency, interval, active")
         .eq("active", true),
-      context.supabase.from("profiles").select("associates_enabled").eq("id", profile.id).maybeSingle(),
+      context.supabase.from("profiles").select("associates_enabled, slug").eq("id", profile.id).maybeSingle(),
       context.supabase
         .from("clinic_associates")
         .select("id", { count: "exact", head: true })
@@ -438,7 +439,9 @@ export const getSeatSummary = createServerFn({ method: "GET" })
     // Associates: the service itself is a flat monthly add-on that covers the
     // first 5 associates, then each further associate adds its own seat fee.
     // Admins can waive the module fee and/or grant extra complimentary seats.
-    const assocWaived = Boolean((sub as any)?.waive_associates_fee);
+    // Charging for the Associates module is currently limited to pilot accounts.
+    const assocBilling = associateBillingEnabled((profRow as any)?.slug);
+    const assocWaived = Boolean((sub as any)?.waive_associates_fee) || !assocBilling;
     const freeAssoc = Math.max(0, Number((sub as any)?.free_associates ?? 0));
     const ASSOC_INCLUDED = 5 + freeAssoc;
     const associatesEnabled = Boolean((profRow as any)?.associates_enabled);

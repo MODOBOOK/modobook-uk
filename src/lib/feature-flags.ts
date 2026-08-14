@@ -25,3 +25,14 @@ export function whatsNewEnabled(slug?: string | null) {
   return isFeatureLive(WHATS_NEW_SLUGS, slug);
 }
 
+/**
+ * Paid Associates module (£4.99/mo + £2.99 per associate beyond 5) — charging
+ * is live on the pilot account only; other clinics keep it free for now.
+ */
+export const ASSOCIATE_BILLING_SLUGS = ["aestheticsbynurseryan"];
+
+export function associateBillingEnabled(slug?: string | null) {
+  return isFeatureLive(ASSOCIATE_BILLING_SLUGS, slug);
+}
+
+
