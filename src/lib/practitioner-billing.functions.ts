@@ -639,7 +639,7 @@ export const updateMySubscriptionItems = createServerFn({ method: "POST" })
     const { data: plans, error: pErr } = await context.supabase
       .from("subscription_plans")
       .select("id, kind, stripe_price_id, active")
-      .in("kind", ["base", "addon_location", "addon_practitioner"])
+      .in("kind", ["base", "addon_location", "addon_practitioner", "addon_associates_module", "addon_associate"])
       .eq("active", true);
     if (pErr) throw pErr;
 
@@ -647,6 +647,9 @@ export const updateMySubscriptionItems = createServerFn({ method: "POST" })
     if (!base?.stripe_price_id) throw new Error("Plan not available");
     const locAddon = (plans ?? []).find((p: any) => p.kind === "addon_location");
     const pracAddon = (plans ?? []).find((p: any) => p.kind === "addon_practitioner");
+    const assocModule = (plans ?? []).find((p: any) => p.kind === "addon_associates_module");
+    const assocAddon = (plans ?? []).find((p: any) => p.kind === "addon_associate");
+    const associates = await computeAssociateCharge(context.supabase, profile.id);
 
     const { getStripe } = await import("./stripe.server");
     const stripe = getStripe();
@@ -660,6 +663,10 @@ export const updateMySubscriptionItems = createServerFn({ method: "POST" })
       wanted.push({ price: locAddon.stripe_price_id, quantity: data.extraLocations });
     if (data.extraPractitioners > 0 && pracAddon?.stripe_price_id)
       wanted.push({ price: pracAddon.stripe_price_id, quantity: data.extraPractitioners });
+    if (associates.moduleActive && assocModule?.stripe_price_id)
+      wanted.push({ price: assocModule.stripe_price_id, quantity: 1 });
+    if (associates.extraBlocks > 0 && assocAddon?.stripe_price_id)
+      wanted.push({ price: assocAddon.stripe_price_id, quantity: associates.extraBlocks });
 
     const items: Array<{ id?: string; price?: string; quantity?: number; deleted?: boolean }> = [];
     const usedPriceIds = new Set<string>();
