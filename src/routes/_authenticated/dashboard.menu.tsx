@@ -49,6 +49,8 @@ export const Route = createFileRoute("/_authenticated/dashboard/menu")({
 
 type Item = { label: string; description: string; to: string; icon: React.ElementType; tone: string; iconColor: string; soon?: ComingSoonKey };
 
+type Group = { title: string; items: Item[] };
+
 // Theme-aware icon tones — pull from the practitioner's branding tokens so
 // changing the preset/colours updates every icon chip across the dashboard.
 const T = {
