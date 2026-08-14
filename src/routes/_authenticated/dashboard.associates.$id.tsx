@@ -1,4 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
+import { pilotFeaturesEnabled } from "@/lib/feature-flags";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -46,6 +47,10 @@ import {
 
 export const Route = createFileRoute("/_authenticated/dashboard/associates/$id")({
   ssr: false,
+  beforeLoad: ({ context }) => {
+    const slug = (context as { profile?: { slug?: string } })?.profile?.slug;
+    if (!pilotFeaturesEnabled(slug)) throw redirect({ to: "/dashboard" });
+  },
   head: () => ({
     meta: [
       { title: "Associate · MODO" },

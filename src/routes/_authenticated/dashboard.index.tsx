@@ -22,6 +22,7 @@ import { getStripePayouts } from "@/lib/stripe.functions";
 import { buildBookingUrl } from "@/lib/booking-url";
 import { resolveDisplayNames } from "@/lib/display-name";
 import { SetupChecklistCard } from "@/components/SetupChecklistCard";
+import { pilotFeaturesEnabled } from "@/lib/feature-flags";
 import { WhatsNewBanner } from "@/components/WhatsNewBanner";
 
 import { toast } from "sonner";
@@ -302,7 +303,9 @@ function DashboardIndex() {
             <p className="text-[10px] font-medium uppercase tracking-[0.25em] text-muted-foreground">Schedule</p>
             <h2 className="mt-1 font-serif text-2xl sm:text-3xl">Upcoming appointments</h2>
           </div>
-          <Link to="/dashboard/upcoming" className="text-xs font-medium uppercase tracking-[0.2em] text-foreground underline-offset-4 hover:underline">View all</Link>
+          {pilotFeaturesEnabled(profile.slug) && (
+            <Link to="/dashboard/upcoming" className="text-xs font-medium uppercase tracking-[0.2em] text-foreground underline-offset-4 hover:underline">View all</Link>
+          )}
         </div>
 
 

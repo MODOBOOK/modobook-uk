@@ -1,3 +1,4 @@
+import { pilotFeaturesEnabled } from "@/lib/feature-flags";
 import { createFileRoute, Link, Outlet, redirect, useRouterState } from "@tanstack/react-router";
 import { getMyProfile } from "@/lib/profiles.functions";
 import { Button } from "@/components/ui/button";
@@ -91,7 +92,7 @@ const navItems = [
   { label: "Practitioners", to: "/dashboard/practitioners", icon: Users },
   { label: "Staff", to: "/dashboard/staff", icon: Users },
 
-  { section: "Clinic owner" as const, label: "Associates", to: "/dashboard/associates", icon: ShieldCheck, flag: "associates_enabled" as const },
+  { section: "Clinic owner" as const, label: "Associates", to: "/dashboard/associates", icon: ShieldCheck, flag: "associates_enabled" as const, pilot: true },
   { section: "Clinic owner" as const, label: "Room rental", to: "/dashboard/room-rental", icon: DoorOpen },
 
 
@@ -105,7 +106,7 @@ const navItems = [
   { label: "Availability", to: "/dashboard/availability", icon: CalendarDays },
   { label: "New appointment", to: "/dashboard/new-appointment", icon: CalendarPlus },
   { label: "Bookings", to: "/dashboard/bookings", icon: Users },
-  { label: "Upcoming", to: "/dashboard/upcoming", icon: CalendarDays },
+  { label: "Upcoming", to: "/dashboard/upcoming", icon: CalendarDays, pilot: true },
   { label: "Patients", to: "/dashboard/patients", icon: Users },
   { label: "Consultations", to: "/dashboard/consultations", icon: ClipboardList },
   
@@ -182,7 +183,9 @@ function DashboardLayout() {
         <nav className="flex-1 space-y-0.5 overflow-y-auto px-4 py-6">
           {(() => {
             const visible = navItems.filter(
-              (item) => !("flag" in item) || (profile as Record<string, unknown>)?.[(item as { flag: string }).flag],
+              (item) =>
+                (!("flag" in item) || (profile as Record<string, unknown>)?.[(item as { flag: string }).flag]) &&
+                (!(item as { pilot?: boolean }).pilot || pilotFeaturesEnabled(profile?.slug)),
             );
             let lastSection: string | undefined;
             return visible.map((item) => {
