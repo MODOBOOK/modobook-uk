@@ -17,6 +17,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Badge } from "@/components/ui/badge";
 import { ImageUploader } from "@/components/ImageUploader";
+import { PackageBuildersCard } from "@/components/PackageBuildersCard";
 import { toast } from "sonner";
 import { Plus, Minus, Pencil, Trash2, Package, X, Search, Check, ArrowUp, ArrowDown } from "lucide-react";
 
@@ -632,6 +633,10 @@ function PackagesPage() {
           </DialogContent>
         </Dialog>
       </div>
+
+      <PackageBuildersCard />
+
+
 
       <PackageCategoriesManager
         categories={categories}
