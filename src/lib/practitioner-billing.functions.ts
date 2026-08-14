@@ -504,6 +504,10 @@ export const getSeatSummary = createServerFn({ method: "GET" })
         enabled: associatesEnabled,
         used: usedAssoc,
         included: ASSOC_INCLUDED,
+        blockSize: ASSOC_BLOCK,
+        /** Seats already paid for (included + purchased blocks of 5). */
+        covered: ASSOC_INCLUDED + billableAssoc * ASSOC_BLOCK,
+        /** Number of extra 5-seat blocks being charged. */
         billable: billableAssoc,
         waived: assocWaived,
         moduleCents: assocModuleCents,
