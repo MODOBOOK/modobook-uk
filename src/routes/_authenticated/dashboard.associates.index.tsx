@@ -18,6 +18,8 @@ import {
   listAssociateIncidentsForMe,
   setIncidentResolved,
 } from "@/lib/associates.functions";
+import { getSeatSummary } from "@/lib/practitioner-billing.functions";
+import { SeatCostWarning, seatWillCharge, type SeatSummary } from "@/components/SeatCostWarning";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
