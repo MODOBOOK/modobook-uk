@@ -392,7 +392,8 @@ export const getSeatSummary = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const profile = await getMyProfileId(context);
-    const [{ data: sub }, { count: locCount }, { count: pracCount }, { data: plans }] = await Promise.all([
+    const [{ data: sub }, { count: locCount }, { count: pracCount }, { data: plans }, { data: profRow }, { count: assocCount }] =
+      await Promise.all([
       context.supabase
         .from("practitioner_subscriptions")
         .select(
@@ -406,7 +407,14 @@ export const getSeatSummary = createServerFn({ method: "GET" })
         .from("subscription_plans")
         .select("id, kind, name, amount_cents, currency, interval, active")
         .eq("active", true),
+      context.supabase.from("profiles").select("associates_enabled").eq("id", profile.id).maybeSingle(),
+      context.supabase
+        .from("clinic_associates")
+        .select("id", { count: "exact", head: true })
+        .eq("clinic_profile_id", profile.id)
+        .in("status", ["invited", "active"]),
     ]);
+
     const trialActive = Boolean(sub?.trial_end && new Date(sub.trial_end as string).getTime() > Date.now());
     const liveSub = Boolean(sub?.stripe_subscription_id && ["active", "trialing"].includes(String(sub?.status)));
 
