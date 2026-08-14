@@ -92,6 +92,12 @@ export const upsertLocation = createServerFn({ method: "POST" })
         .select()
         .single();
       if (error) throw error;
+      try {
+        const { syncSubscriptionSeats } = await import("./billing-sync.server");
+        await syncSubscriptionSeats(supabase, profile.id);
+      } catch (err) {
+        console.error("[saveLocation] seat sync failed", err);
+      }
       return row;
     }
   });

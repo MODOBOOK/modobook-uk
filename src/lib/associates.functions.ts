@@ -148,6 +148,14 @@ export const inviteAssociate = createServerFn({ method: "POST" })
       .maybeSingle();
     if (error) throw new Error(error.message);
 
+    // Keep the live direct debit in step with the new seat count.
+    try {
+      const { syncSubscriptionSeats } = await import("@/lib/billing-sync.server");
+      await syncSubscriptionSeats(admin, prof.id);
+    } catch (err) {
+      console.error("[inviteAssociate] seat sync failed", err);
+    }
+
     try {
       const { tryEnqueueAppEmail, getPractitionerBranding } = await import("@/lib/email/send.server");
       const branding = await getPractitionerBranding(prof.id);
@@ -224,6 +232,12 @@ export const removeAssociate = createServerFn({ method: "POST" })
       .eq("id", data.id)
       .eq("clinic_profile_id", prof.id);
     if (error) throw new Error(error.message);
+    try {
+      const { syncSubscriptionSeats } = await import("@/lib/billing-sync.server");
+      await syncSubscriptionSeats(supabaseAdmin as any, prof.id);
+    } catch (err) {
+      console.error("[removeAssociate] seat sync failed", err);
+    }
     return { ok: true };
   });
 

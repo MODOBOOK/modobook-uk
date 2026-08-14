@@ -234,6 +234,13 @@ export const getMyBilling = createServerFn({ method: "GET" })
         // Keep the billing page usable during a temporary Stripe failure.
         console.error("[getMyBilling] Stripe reconciliation failed", err);
       }
+      // Keep the live direct debit in step with what's on the account.
+      try {
+        const { syncSubscriptionSeats } = await import("./billing-sync.server");
+        await syncSubscriptionSeats(context.supabase, profile.id);
+      } catch (err) {
+        console.error("[getMyBilling] seat sync failed", err);
+      }
     }
 
     const [{ data: sub }, { data: plans }, { data: access }, { count: locCount }, { count: pracCount }] = await Promise.all([
