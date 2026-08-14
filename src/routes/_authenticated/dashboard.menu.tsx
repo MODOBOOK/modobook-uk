@@ -47,7 +47,9 @@ export const Route = createFileRoute("/_authenticated/dashboard/menu")({
   component: MenuPage,
 });
 
-type Item = { label: string; description: string; to: string; icon: React.ElementType; tone: string; iconColor: string; soon?: ComingSoonKey };
+type Item = { label: string; description: string; to: string; icon: React.ElementType; tone: string; iconColor: string };
+
+type Group = { title: string; items: Item[] };
 
 // Theme-aware icon tones — pull from the practitioner's branding tokens so
 // changing the preset/colours updates every icon chip across the dashboard.
@@ -62,7 +64,7 @@ const T = {
 
 
 
-const groups: { title: string; items: Item[] }[] = [
+const groups: Group[] = [
   {
     title: "Your business",
     items: [
@@ -152,6 +154,15 @@ function MenuPage() {
 
   const pilot = pilotFeaturesEnabled(profile.slug);
 
+  function comingSoonFor(to: string): ComingSoonKey | null {
+    if (pilot) return null;
+    if (to === "/dashboard/upcoming") return "upcoming";
+    if (to === "/dashboard/associates") return "associates";
+    if (to === "/dashboard/packages") return "packages";
+    if (to === "/dashboard/room-rental") return "room-rental";
+    return null;
+  }
+
   const filtered = useMemo(() => {
     const visible = groups.map((g) => ({
       ...g,
@@ -165,11 +176,8 @@ function MenuPage() {
         )
         .concat(
           !pilot && g.title === "Bookings"
-            ? [{ label: "Upcoming appointments", description: "Every booking in one list with AI patient briefs", to: "/dashboard/upcoming", icon: CalendarDays, ...T.ivory, soon: "upcoming" as const }]
+            ? [{ label: "Upcoming appointments", description: "Every booking in one list with AI patient briefs", to: "/dashboard/upcoming", icon: CalendarDays, ...T.ivory }]
             : [],
-        )
-        .map((i) =>
-          !pilot && i.to === "/dashboard/associates" ? { ...i, soon: "associates" as const } : i,
         ),
     })).filter((g) => g.items.length > 0);
     if (!query.trim()) return visible;
@@ -216,11 +224,12 @@ function MenuPage() {
           <h2 className="px-2 text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">{g.title}</h2>
           <div className="space-y-3">
             {g.items.map((item) => {
+              const soon = comingSoonFor(item.to);
               const Wrapper = ({ children }: { children: React.ReactNode }) =>
-                item.soon ? (
+                soon ? (
                   <button
                     type="button"
-                    onClick={() => setComingSoon(item.soon!)}
+                    onClick={() => setComingSoon(soon)}
                     className="group block w-full rounded-2xl border border-primary/20 bg-card p-4 text-left shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition hover:border-primary/40 active:scale-[0.99]"
                   >
                     {children}
@@ -242,7 +251,7 @@ function MenuPage() {
                   <div className="min-w-0 flex-1">
                     <p className="flex items-center gap-2 truncate text-base font-semibold leading-tight">
                       {item.label}
-                      {item.soon && (
+                      {soon && (
                         <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.1em] text-primary">
                           Soon
                         </span>

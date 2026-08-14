@@ -85,7 +85,7 @@ const navItems = [
   { label: "Services", to: "/dashboard/services", icon: Scissors },
   { label: "Training", to: "/dashboard/training", icon: GraduationCap },
   { label: "Add-ons", to: "/dashboard/addons", icon: Sparkles },
-  { label: "Packages", to: "/dashboard/packages", icon: Package },
+  { label: "Packages", to: "/dashboard/packages", icon: Package, pilot: true },
   { label: "Gift cards", to: "/dashboard/gift-cards", icon: Gift },
   { label: "Discounts", to: "/dashboard/discounts", icon: Percent },
   { label: "Model slots", to: "/dashboard/model-slots", icon: Sparkles },
@@ -94,7 +94,7 @@ const navItems = [
   { label: "Staff", to: "/dashboard/staff", icon: Users },
 
   { section: "Clinic owner" as const, label: "Associates", to: "/dashboard/associates", icon: ShieldCheck, flag: "associates_enabled" as const, pilot: true },
-  { section: "Clinic owner" as const, label: "Room rental", to: "/dashboard/room-rental", icon: DoorOpen },
+  { section: "Clinic owner" as const, label: "Room rental", to: "/dashboard/room-rental", icon: DoorOpen, pilot: true },
 
 
   { label: "Medical forms", to: "/dashboard/medical-forms", icon: FileText },
@@ -214,7 +214,15 @@ function DashboardLayout() {
                       icon={item.icon}
                       label={item.label}
                       onClick={() =>
-                        setComingSoon(item.to === "/dashboard/upcoming" ? "upcoming" : "associates")
+                        setComingSoon(
+                          item.to === "/dashboard/upcoming"
+                            ? "upcoming"
+                            : item.to === "/dashboard/associates"
+                              ? "associates"
+                              : item.to === "/dashboard/packages"
+                                ? "packages"
+                                : "room-rental",
+                        )
                       }
                     />
                   ) : (

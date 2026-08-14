@@ -11,7 +11,7 @@ export const Route = createFileRoute("/_authenticated/dashboard/coming-soon")({
       { title: "Coming soon · MODO" },
       {
         name: "description",
-        content: "New MODO features in final testing — upcoming appointments and associate oversight.",
+        content: "New MODO features in final testing — upcoming appointments, associate oversight, treatment packages and room rental.",
       },
     ],
   }),
