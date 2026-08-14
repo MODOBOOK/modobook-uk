@@ -7,6 +7,8 @@ import {
   deletePractitioner,
 } from "@/lib/practitioners.functions";
 import { getSeatSummary, reserveExtraSeat } from "@/lib/practitioner-billing.functions";
+import { SeatCostWarning, seatWillCharge, type SeatSummary } from "@/components/SeatCostWarning";
+
 import { listMyLocations } from "@/lib/locations.functions";
 import { getMyProfile, updateProfile } from "@/lib/profiles.functions";
 import { ImageUploader } from "@/components/ImageUploader";
