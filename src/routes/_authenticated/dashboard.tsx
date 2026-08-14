@@ -105,7 +105,7 @@ const navItems = [
   { label: "Availability", to: "/dashboard/availability", icon: CalendarDays },
   { label: "New appointment", to: "/dashboard/new-appointment", icon: CalendarPlus },
   { label: "Bookings", to: "/dashboard/bookings", icon: Users },
-  { label: "Upcoming", to: "/dashboard/upcoming", icon: CalendarDays },
+  { label: "Upcoming", to: "/dashboard/upcoming", icon: CalendarDays, pilot: true },
   { label: "Patients", to: "/dashboard/patients", icon: Users },
   { label: "Consultations", to: "/dashboard/consultations", icon: ClipboardList },
   
