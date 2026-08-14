@@ -178,6 +178,7 @@ export const sendAdminBroadcastTest = createServerFn({ method: 'POST' })
       templateName: 'admin-broadcast',
       recipientEmail: email,
       messageId: `admin-broadcast-test-${crypto.randomUUID()}`,
+      replyTo: PLATFORM_REPLY_TO,
       templateData: {
         subject: `[TEST] ${data.subject.trim()}`,
         message: data.message.trim(),
