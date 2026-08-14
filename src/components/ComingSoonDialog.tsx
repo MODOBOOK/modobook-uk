@@ -97,8 +97,8 @@ export function ComingSoonDialog({
             <div key={f.title} className="rounded-2xl border border-border/60 bg-muted/30 p-4">
               <div className="flex items-center gap-2">
                 <f.icon className="h-4 w-4 text-primary" />
-                <p className="text-sm font-semibold">{f.title}</p>
-                <span className="ml-auto rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.12em] text-primary">
+                <p className="min-w-0 flex-1 text-sm font-semibold">{f.title}</p>
+                <span className="ml-auto shrink-0 whitespace-nowrap rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.12em] text-primary">
                   Soon
                 </span>
               </div>
