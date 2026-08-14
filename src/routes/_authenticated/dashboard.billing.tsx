@@ -106,6 +106,13 @@ function BillingPage() {
   const basePlans = (state.plans as any[]).filter((p: any) => p.kind === "base" || !p.kind);
   const locAddon = (state.plans as any[]).find((p: any) => p.kind === "addon_location");
   const pracAddon = (state.plans as any[]).find((p: any) => p.kind === "addon_practitioner");
+  const assocModulePlan = (state.plans as any[]).find((p: any) => p.kind === "addon_associates_module");
+  const assocAddonPlan = (state.plans as any[]).find((p: any) => p.kind === "addon_associate");
+  const associates = (state as any).associates as
+    | { enabled: boolean; waived: boolean; used: number; included: number; blockSize: number; moduleActive: boolean; extraBlocks: number }
+    | undefined;
+  const assocModuleCents = associates?.moduleActive ? Number(assocModulePlan?.amount_cents ?? 0) : 0;
+  const assocBlocksCents = (associates?.extraBlocks ?? 0) * Number(assocAddonPlan?.amount_cents ?? 0);
   const selectedPlan = basePlans.find((p: any) => p.id === selectedPlanId);
   const discountCode = state.discountCode as any;
 
@@ -115,7 +122,9 @@ function BillingPage() {
   const projected =
     (selectedPlan?.amount_cents ?? 0) +
     extraLocations * (locAddon?.amount_cents ?? 0) +
-    extraPractitioners * (pracAddon?.amount_cents ?? 0);
+    extraPractitioners * (pracAddon?.amount_cents ?? 0) +
+    assocModuleCents +
+    assocBlocksCents;
 
   const hasLiveSub = !!sub?.stripe_subscription_id && sub?.status !== "canceled";
 
