@@ -397,7 +397,7 @@ export const getSeatSummary = createServerFn({ method: "GET" })
       context.supabase
         .from("practitioner_subscriptions")
         .select(
-          "status, comped, trial_end, current_period_end, stripe_subscription_id, plan_id, custom_price_cents, extra_locations, extra_practitioners, free_locations, free_practitioners",
+          "status, comped, trial_end, current_period_end, stripe_subscription_id, plan_id, custom_price_cents, extra_locations, extra_practitioners, free_locations, free_practitioners, waive_associates_fee, free_associates, discount_percent, discount_amount_cents",
         )
         .eq("profile_id", profile.id)
         .maybeSingle(),
