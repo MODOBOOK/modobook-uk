@@ -71,6 +71,8 @@ function AdminEmailsPage() {
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState<AuthEmailDef | null>(null)
   const [composing, setComposing] = useState(false)
+  const [composingPreset, setComposingPreset] = useState<'platform-updates' | undefined>(undefined)
+
 
   const [waitlistLaunchOpen, setWaitlistLaunchOpen] = useState(false)
 
@@ -107,7 +109,27 @@ function AdminEmailsPage() {
         </Link>
       </div>
 
+      <Card className="border-primary/30 bg-primary/5">
+        <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0">
+          <div className="min-w-0">
+            <CardTitle className="flex items-center gap-2">
+              <Rocket className="h-4 w-4 shrink-0" /> Product updates announcement
+            </CardTitle>
+            <p className="text-sm text-muted-foreground mt-1">
+              Clean MODO-branded email with the logo, icon feature rows and a dashboard button. Opens ready to preview, test-send, then broadcast.
+            </p>
+          </div>
+          <Button
+            className="shrink-0"
+            onClick={() => { setComposingPreset('platform-updates'); setComposing(true) }}
+          >
+            Open email
+          </Button>
+        </CardHeader>
+      </Card>
+
       <WaitlistLaunchCard onOpen={() => setWaitlistLaunchOpen(true)} />
+
 
       {waitlistLaunchOpen && (
         <WaitlistLaunchDialog
@@ -215,8 +237,10 @@ function AdminEmailsPage() {
 
       {composing && (
         <BroadcastDialog
-          onClose={() => setComposing(false)}
+          preset={composingPreset}
+          onClose={() => { setComposing(false); setComposingPreset(undefined) }}
           onSend={async (payload) => {
+
             try {
               const res = await sendBroadcast({ data: payload })
               toast.success(`Queued ${res.sent} email${res.sent === 1 ? '' : 's'}${res.failed ? ` (${res.failed} failed)` : ''}`)
@@ -289,9 +313,10 @@ function EditAuthEmailDialog({
 }
 
 function BroadcastDialog({
-  onClose, onSend,
+  onClose, onSend, preset,
 }: {
   onClose: () => void
+  preset?: 'platform-updates'
   onSend: (payload: {
     audience: 'all_practitioners' | 'user' | 'waitlist'
     recipient_email?: string | null
@@ -308,13 +333,18 @@ function BroadcastDialog({
 
   const [audience, setAudience] = useState<'all_practitioners' | 'user' | 'waitlist'>('all_practitioners')
   const [email, setEmail] = useState('')
-  const [subject, setSubject] = useState('')
+  const [subject, setSubject] = useState(preset === 'platform-updates' ? PLATFORM_UPDATES_SUBJECT : '')
   const [message, setMessage] = useState('')
   const [ctaText, setCtaText] = useState('')
   const [ctaUrl, setCtaUrl] = useState('')
-  const [blocks, setBlocks] = useState<Block[]>([])
+  const [blocks, setBlocks] = useState<Block[]>(
+    preset === 'platform-updates'
+      ? ([{ type: 'html', html: PLATFORM_UPDATES_HTML, full: true }] as Block[])
+      : [],
+  )
   const [busy, setBusy] = useState(false)
   const [waitlist, setWaitlist] = useState<number | null>(null)
+
 
   // Preview state
   const [previewHtml, setPreviewHtml] = useState<string | null>(null)
