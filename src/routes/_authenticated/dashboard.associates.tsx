@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -238,8 +238,10 @@ function AssociatesPage() {
                     </div>
                     <div className="flex items-center gap-2">
                       <Badge variant={a.status === "active" ? "default" : "secondary"}>{a.status}</Badge>
-                      <Button size="sm" variant="outline" className="rounded-full" onClick={() => setOversightId(a.id)}>
-                        <ShieldCheck className="mr-2 h-4 w-4" /> Oversight
+                      <Button asChild size="sm" className="rounded-full">
+                        <Link to="/dashboard/associates/$id" params={{ id: a.id }}>
+                          <ShieldCheck className="mr-2 h-4 w-4" /> Open
+                        </Link>
                       </Button>
                       <Button size="icon" variant="ghost" onClick={async () => { if (confirm("Remove this associate link?")) { await remove({ data: { id: a.id } }); refresh(); } }}>
                         <Trash2 className="h-4 w-4" />
@@ -247,7 +249,20 @@ function AssociatesPage() {
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-3">
+                  <div className="flex flex-wrap gap-2 text-xs">
+                    {[
+                      a.oversight_records && "Records",
+                      a.oversight_appointments && "Appointments",
+                      a.oversight_incidents && "Incidents",
+                      a.room_allocation_enabled && "Room allocated",
+                      a.seat_sponsored && "Seat sponsored",
+                    ]
+                      .filter(Boolean)
+                      .map((t) => (
+                        <Badge key={String(t)} variant="secondary" className="rounded-full font-normal">{t}</Badge>
+                      ))}
+                  </div>
                   {bookingUrl && (
                     <div className="flex flex-wrap items-center gap-2 rounded-lg bg-muted/50 p-3 text-xs">
                       <span className="text-muted-foreground">Their booking link</span>
@@ -260,36 +275,11 @@ function AssociatesPage() {
                       </a>
                     </div>
                   )}
-
-                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                    <ToggleRow label="Clinical records" desc="Notes, consents, forms" checked={a.oversight_records} onChange={(v) => patch(a.id, { oversight_records: v })} />
-                    <ToggleRow label="Appointments" desc="Diary visibility" checked={a.oversight_appointments} onChange={(v) => patch(a.id, { oversight_appointments: v })} />
-                    <ToggleRow label="Incidents" desc="Adverse events & complaints" checked={a.oversight_incidents} onChange={(v) => patch(a.id, { oversight_incidents: v })} />
-                    <ToggleRow label="Clinic pays their MODO seat" desc="Otherwise they subscribe themselves" checked={a.seat_sponsored} onChange={(v) => patch(a.id, { seat_sponsored: v })} />
-                    <ToggleRow label="Allocate a room" desc="Auto-book a room per appointment" checked={a.room_allocation_enabled} onChange={(v) => patch(a.id, { room_allocation_enabled: v })} />
-                    {a.room_allocation_enabled && (
-                      <>
-                        <div className="space-y-1.5">
-                          <Label className="text-xs">Room</Label>
-                          <Select value={a.room_id ?? "none"} onValueChange={(v) => patch(a.id, { room_id: v === "none" ? null : v })}>
-                            <SelectTrigger><SelectValue placeholder="Choose a room" /></SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="none">No room</SelectItem>
-                              {(ctx?.rooms ?? []).map((r: any) => (
-                                <SelectItem key={r.id} value={r.id}>{r.name} ({r.quantity} unit{r.quantity === 1 ? "" : "s"})</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <ToggleRow label="Close their diary with no room" desc="Blocks slots when the room is full" checked={a.block_when_no_room} onChange={(v) => patch(a.id, { block_when_no_room: v })} />
-                        <ToggleRow label="Charge room rent" desc="Bill the hourly rate per booking" checked={a.charge_room_rent} onChange={(v) => patch(a.id, { charge_room_rent: v })} />
-                      </>
-                    )}
-                  </div>
                 </CardContent>
               </Card>
             );
           })}
+
         </div>
       )}
 
