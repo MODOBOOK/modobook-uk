@@ -29,7 +29,7 @@ export const Route = createFileRoute("/_authenticated/dashboard/upcoming")({
   ssr: false,
   beforeLoad: ({ context }) => {
     const slug = (context as { profile?: { slug?: string } })?.profile?.slug;
-    if (!pilotFeaturesEnabled(slug)) throw redirect({ to: "/dashboard" });
+    if (!pilotFeaturesEnabled(slug)) throw redirect({ to: "/dashboard/coming-soon" });
   },
   component: UpcomingPage,
 });

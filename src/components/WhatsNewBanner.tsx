@@ -4,6 +4,7 @@ import { Sparkles, X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { whatsNewEnabled } from "@/lib/feature-flags";
+import { COMING_SOON_FEATURES } from "@/components/ComingSoonDialog";
 
 /**
  * Bump this whenever the list below changes — dismissals are keyed by version
@@ -43,7 +44,12 @@ export function WhatsNewBanner({ slug }: { slug?: string | null }) {
     }
   }, [storageKey]);
 
-  if (!whatsNewEnabled(slug) || hidden) return null;
+  if (hidden) return null;
+  const live = whatsNewEnabled(slug);
+  const items: Item[] = live
+    ? ITEMS
+    : Object.values(COMING_SOON_FEATURES).map((f) => ({ title: f.title, body: f.blurb }));
+  const heading = live ? "What's new in MODO" : "Coming soon to MODO";
 
   const dismiss = () => {
     try {
@@ -62,9 +68,9 @@ export function WhatsNewBanner({ slug }: { slug?: string | null }) {
             <Sparkles className="h-4 w-4" />
           </span>
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold tracking-tight">What's new in MODO</p>
+            <p className="text-sm font-semibold tracking-tight">{heading}</p>
             <ul className="mt-3 space-y-2.5">
-              {ITEMS.map((item) => (
+              {items.map((item) => (
                 <li key={item.title} className="text-sm">
                   {item.to ? (
                     <Link to={item.to} className="font-medium underline-offset-4 hover:underline">
@@ -77,6 +83,14 @@ export function WhatsNewBanner({ slug }: { slug?: string | null }) {
                 </li>
               ))}
             </ul>
+            {!live && (
+              <Link
+                to="/dashboard/coming-soon"
+                className="mt-3 inline-block text-xs font-medium text-primary underline-offset-4 hover:underline"
+              >
+                See what's coming
+              </Link>
+            )}
           </div>
           <Button
             variant="ghost"
