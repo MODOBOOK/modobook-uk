@@ -495,7 +495,7 @@ export const adminGetSeatAllowance = createServerFn({ method: "POST" })
       db
         .from("practitioner_subscriptions")
         .select(
-          "free_locations, free_practitioners, extra_locations, extra_practitioners, comped, status, trial_end, custom_price_cents, discount_code_id, stripe_subscription_id",
+          "free_locations, free_practitioners, extra_locations, extra_practitioners, comped, status, trial_end, custom_price_cents, discount_code_id, stripe_subscription_id, waive_associates_fee, free_associates, discount_percent, discount_amount_cents",
         )
         .eq("profile_id", data.profileId)
         .maybeSingle(),
