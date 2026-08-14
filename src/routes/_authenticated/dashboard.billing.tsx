@@ -119,6 +119,19 @@ function BillingPage() {
 
   const hasLiveSub = !!sub?.stripe_subscription_id && sub?.status !== "canceled";
 
+  // Seats already in use can't be removed here — delete the location or
+  // practitioner instead and the plan re-collates automatically.
+  const freeLocs = Math.max(0, sub?.free_locations ?? 0);
+  const freePracs = Math.max(0, sub?.free_practitioners ?? 0);
+  const usedLocations = state.usage?.locations ?? 0;
+  const usedPractitioners = state.usage?.practitioners ?? 0;
+  const minLocations = Math.max(0, usedLocations - 1 - freeLocs);
+  const minPractitioners = Math.max(0, usedPractitioners - 1 - freePracs);
+  const nextBilling = sub?.current_period_end
+    ? new Date(sub.current_period_end as string).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })
+    : null;
+
+
   async function checkoutOrUpdate() {
     if (!selectedPlanId) return;
     setBusy(true);
