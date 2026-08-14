@@ -217,8 +217,10 @@ function AdminEmailsPage() {
 
       {composing && (
         <BroadcastDialog
-          onClose={() => setComposing(false)}
+          preset={composingPreset}
+          onClose={() => { setComposing(false); setComposingPreset(undefined) }}
           onSend={async (payload) => {
+
             try {
               const res = await sendBroadcast({ data: payload })
               toast.success(`Queued ${res.sent} email${res.sent === 1 ? '' : 's'}${res.failed ? ` (${res.failed} failed)` : ''}`)
