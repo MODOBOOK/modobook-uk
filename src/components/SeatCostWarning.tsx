@@ -29,6 +29,8 @@ export type SeatSummary = {
     enabled: boolean;
     used: number;
     included: number;
+    blockSize?: number;
+    covered?: number;
     billable: number;
     moduleCents: number;
     moduleActive: boolean;
@@ -45,7 +47,10 @@ export function seatChargeCents(seats: SeatSummary | null, kind: SeatKind) {
     const a = seats.associates;
     if (!a) return 0;
     const moduleCents = a.moduleActive ? 0 : a.moduleCents; // first time switches the service on
-    const seatCents = a.used + 1 > a.included ? a.addonCents : 0;
+    // Seats are sold in blocks: the module covers the first block, and every
+    // further block of 5 associates costs one add-on fee.
+    const covered = a.covered ?? a.included;
+    const seatCents = a.used + 1 > covered ? a.addonCents : 0;
     return moduleCents + seatCents;
   }
   const s = kind === "location" ? seats.locations : seats.practitioners;
