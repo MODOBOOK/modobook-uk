@@ -760,41 +760,60 @@ export const redeemDiscountCode = createServerFn({ method: "POST" })
     const code = Array.isArray(dc) ? dc[0] : dc;
     if (!code) return { ok: false as const, message: "Code not found or expired" };
 
-    const { data: sub } = await context.supabase
+    // The subscription row may not exist yet (brand-new account) — a code can
+    // still be redeemed against the plan, it simply applies to the total the
+    // Plan & billing page collates.
+    let { data: sub } = await context.supabase
       .from("practitioner_subscriptions")
       .select("id, stripe_subscription_id, stripe_customer_id")
       .eq("profile_id", profile.id)
       .maybeSingle();
-    if (!sub) return { ok: false as const, message: "Start a subscription first" };
+    if (!sub) {
+      const { data: created, error: cErr } = await context.supabase
+        .from("practitioner_subscriptions")
+        .insert({ profile_id: profile.id, status: "trialing" } as any)
+        .select("id, stripe_subscription_id, stripe_customer_id")
+        .single();
+      if (cErr) throw cErr;
+      sub = created as typeof sub;
+    }
 
-    const { data: full } = await context.supabase
+    // platform_discount_codes is admin-only under RLS — read the full row with
+    // the service client so we can reuse / create the matching Stripe coupon.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: full } = await supabaseAdmin
       .from("platform_discount_codes")
-      .select("stripe_coupon_id, percent_off")
+      .select("id, code, description, percent_off, amount_off_cents, duration, duration_in_months, stripe_coupon_id")
       .eq("id", code.id)
       .maybeSingle();
 
     const isFullyFree = (full?.percent_off ?? code.percent_off ?? 0) >= 100;
 
-    // Attach discount / cancel DD as needed on the live Stripe subscription
-    if (sub.stripe_subscription_id) {
+    // Mirror onto the live direct debit when there is one, so the amount that
+    // is actually collected matches the discounted plan total. Stripe problems
+    // never block the code — it still applies on the MODO plan.
+    if (sub!.stripe_subscription_id) {
       try {
         const { getStripeStable } = await import("./stripe.server");
         const stripe = getStripeStable();
         if (isFullyFree) {
           // 100% off — cancel the direct debit; no charges will be attempted.
-          await stripe.subscriptions.cancel(sub.stripe_subscription_id, {
+          await stripe.subscriptions.cancel(sub!.stripe_subscription_id, {
             invoice_now: false,
             prorate: false,
           } as any);
-        } else if (full?.stripe_coupon_id) {
-          await stripe.subscriptions.update(sub.stripe_subscription_id, {
-            discounts: [{ coupon: full.stripe_coupon_id }],
-          } as any);
+        } else if (full) {
+          const { ensureStripeCoupon } = await import("./discount-codes.server");
+          const couponId = await ensureStripeCoupon(full as any);
+          if (couponId) {
+            await stripe.subscriptions.update(sub!.stripe_subscription_id, {
+              discounts: [{ coupon: couponId }],
+            } as any);
+          }
         }
       } catch (err) {
-        const msg = err instanceof Error ? err.message : "Stripe rejected the discount";
+        const msg = err instanceof Error ? err.message : "Stripe error";
         console.error("[redeemDiscountCode] stripe error", msg);
-        throw new Error(`Could not apply code: ${msg}`);
       }
     }
 
@@ -805,9 +824,37 @@ export const redeemDiscountCode = createServerFn({ method: "POST" })
       update.cancel_at_period_end = false;
       update.stripe_subscription_id = null;
     }
-    await context.supabase.from("practitioner_subscriptions").update(update as any).eq("id", sub.id);
+    await context.supabase.from("practitioner_subscriptions").update(update as any).eq("id", sub!.id);
     return { ok: true as const, code: code.code, fullyFree: isFullyFree };
   });
+
+/** Remove a redeemed code from the plan (and from the live direct debit). */
+export const removeDiscountCode = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const profile = await getMyProfileId(context);
+    const { data: sub } = await context.supabase
+      .from("practitioner_subscriptions")
+      .select("id, stripe_subscription_id")
+      .eq("profile_id", profile.id)
+      .maybeSingle();
+    if (!sub) return { ok: true as const };
+    if (sub.stripe_subscription_id) {
+      try {
+        const { getStripeStable } = await import("./stripe.server");
+        const stripe = getStripeStable();
+        await stripe.subscriptions.update(sub.stripe_subscription_id, { discounts: [] } as any);
+      } catch (err) {
+        console.error("[removeDiscountCode] stripe error", err instanceof Error ? err.message : err);
+      }
+    }
+    await context.supabase
+      .from("practitioner_subscriptions")
+      .update({ discount_code_id: null } as any)
+      .eq("id", sub.id);
+    return { ok: true as const };
+  });
+
 
 export const cancelMySubscription = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
