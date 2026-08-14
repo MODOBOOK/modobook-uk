@@ -64,7 +64,7 @@ const T = {
 
 
 
-const groups: { title: string; items: Item[] }[] = [
+const groups: Group[] = [
   {
     title: "Your business",
     items: [
