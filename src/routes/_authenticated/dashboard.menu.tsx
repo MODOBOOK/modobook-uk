@@ -165,7 +165,10 @@ function MenuPage() {
         )
         .map((i) => {
           // Pilot clinics keep full access; non-pilot clinics see pilot-only pages as "coming soon".
-          if (pilot) return i;
+          if (pilot) {
+            const { soon: _, ...rest } = i;
+            return rest;
+          }
           if (i.to === "/dashboard/associates") return { ...i, soon: "associates" as const };
           return i;
         })
