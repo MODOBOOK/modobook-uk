@@ -15,8 +15,8 @@ type Item = { title: string; body: string; to?: string };
 
 const ITEMS: Item[] = [
   {
-    title: "Who's in — room rental",
-    body: "See exactly who's in which room, unit by unit, for any day.",
+    title: "Room rental",
+    body: "Rent out spare rooms to self-employed practitioners — now live in MODO.",
     to: "/dashboard/room-rental",
   },
   {
@@ -25,9 +25,9 @@ const ITEMS: Item[] = [
     to: "/dashboard/packages",
   },
   {
-    title: "Gift cards with sale prices",
-    body: "Sell a £100 card for £80 — the recipient still gets the full credit.",
-    to: "/dashboard/gift-cards",
+    title: "Regulated clinic owner?",
+    body: "Add your practitioners to MODO so they can book rooms and work under your clinic's regulation.",
+    to: "/dashboard/practitioners",
   },
 ];
 
