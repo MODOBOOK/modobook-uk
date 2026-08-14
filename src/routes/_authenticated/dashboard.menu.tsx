@@ -47,7 +47,7 @@ export const Route = createFileRoute("/_authenticated/dashboard/menu")({
   component: MenuPage,
 });
 
-type Item = { label: string; description: string; to: string; icon: React.ElementType; tone: string; iconColor: string; soon?: ComingSoonKey };
+type Item = { label: string; description: string; to: string; icon: React.ElementType; tone: string; iconColor: string };
 
 type Group = { title: string; items: Item[] };
 
@@ -154,6 +154,15 @@ function MenuPage() {
 
   const pilot = pilotFeaturesEnabled(profile.slug);
 
+  function comingSoonFor(to: string): ComingSoonKey | null {
+    if (pilot) return null;
+    if (to === "/dashboard/upcoming") return "upcoming";
+    if (to === "/dashboard/associates") return "associates";
+    if (to === "/dashboard/packages") return "packages";
+    if (to === "/dashboard/room-rental") return "room-rental";
+    return null;
+  }
+
   const filtered = useMemo(() => {
     const visible = groups.map((g) => ({
       ...g,
@@ -165,18 +174,9 @@ function MenuPage() {
               : true // non-pilot clinics see it as "coming soon"
             : true,
         )
-        .map((i) => {
-          // Pilot clinics keep full access; non-pilot clinics see pilot-only pages as "coming soon".
-          if (pilot) {
-            const { soon: _, ...rest } = i;
-            return rest;
-          }
-          if (i.to === "/dashboard/associates") return { ...i, soon: "associates" as const };
-          return i;
-        })
         .concat(
           !pilot && g.title === "Bookings"
-            ? [{ label: "Upcoming appointments", description: "Every booking in one list with AI patient briefs", to: "/dashboard/upcoming", icon: CalendarDays, ...T.ivory, soon: "upcoming" as const }]
+            ? [{ label: "Upcoming appointments", description: "Every booking in one list with AI patient briefs", to: "/dashboard/upcoming", icon: CalendarDays, ...T.ivory }]
             : [],
         ),
     })).filter((g) => g.items.length > 0);
