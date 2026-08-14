@@ -360,6 +360,11 @@ function DashboardLayout() {
         </nav>
 
       </div>
+      <ComingSoonDialog
+        open={comingSoon !== null}
+        onOpenChange={(v) => !v && setComingSoon(null)}
+        feature={comingSoon ?? "general"}
+      />
     </div>
   );
 }
