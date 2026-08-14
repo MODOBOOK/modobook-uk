@@ -185,3 +185,75 @@ export const ensureConsultationPatient = createServerFn({ method: "POST" })
 
     return { patient_id: clientId };
   });
+
+// Read-only notes derived from a patient's consultations, so they can be
+// surfaced inside the Notes section of the patient profile.
+export const listConsultationNotesForClient = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { client_id: string }) => d)
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const pid = await getProfileId(supabase, userId);
+    if (!pid) return [];
+
+    const { data: client } = await supabase
+      .from("clinic_clients")
+      .select("id, full_name, email")
+      .eq("id", data.client_id)
+      .eq("profile_id", pid)
+      .maybeSingle();
+    if (!client) return [];
+
+    const filters = [`patient_id.eq.${client.id}`];
+    if (client.email) filters.push(`patient_email.ilike.${client.email}`);
+    if (client.full_name) filters.push(`patient_name.ilike.${client.full_name}`);
+
+    const { data: rows, error } = await supabase
+      .from("consultations")
+      .select("id, created_at, updated_at, completed_at, status, medical, concerns, assessment, treatment_plan, treatment_log, notes")
+      .eq("profile_id", pid)
+      .or(filters.join(","))
+      .order("created_at", { ascending: false })
+      .limit(100);
+    if (error) throw error;
+
+    const text = (v: any): string => {
+      if (!v) return "";
+      if (typeof v === "string") return v.trim();
+      if (typeof v === "object" && typeof v.notes === "string") return v.notes.trim();
+      return "";
+    };
+
+    const out: any[] = [];
+    for (const c of (rows as any[]) ?? []) {
+      const parts: { label: string; body: string }[] = [
+        { label: "Medical history notes", body: text(c.medical) },
+        { label: "Patient concerns", body: text(c.concerns) },
+        { label: "Clinical assessment", body: text(c.assessment) },
+        { label: "Treatment plan", body: text(c.treatment_plan) },
+        { label: "Treatment log", body: text(c.treatment_log) },
+        { label: "Consultation notes", body: text(c.notes) },
+      ].filter((p) => p.body);
+
+      const products = (c.treatment_log as any)?.products;
+      if (Array.isArray(products) && products.length) {
+        const lines = products
+          .map((p: any) => [p.product || p.name, p.area, p.quantity ? `x${p.quantity}` : null].filter(Boolean).join(" · "))
+          .filter(Boolean);
+        if (lines.length) parts.push({ label: "Products used", body: lines.join("\n") });
+      }
+
+      for (const p of parts) {
+        out.push({
+          id: `consult:${c.id}:${p.label}`,
+          consultation_id: c.id,
+          source: "consultation",
+          heading: p.label,
+          body: p.body,
+          visible_to_patient: false,
+          created_at: c.completed_at || c.updated_at || c.created_at,
+        });
+      }
+    }
+    return out;
+  });
