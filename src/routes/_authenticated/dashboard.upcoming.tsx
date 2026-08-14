@@ -1,4 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
+import { pilotFeaturesEnabled } from "@/lib/feature-flags";
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Card, CardContent } from "@/components/ui/card";
@@ -26,6 +27,10 @@ import {
 
 export const Route = createFileRoute("/_authenticated/dashboard/upcoming")({
   ssr: false,
+  beforeLoad: ({ context }) => {
+    const slug = (context as { profile?: { slug?: string } })?.profile?.slug;
+    if (!pilotFeaturesEnabled(slug)) throw redirect({ to: "/dashboard" });
+  },
   component: UpcomingPage,
 });
 
