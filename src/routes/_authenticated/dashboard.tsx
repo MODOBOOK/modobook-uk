@@ -85,13 +85,15 @@ const navItems = [
   { label: "Add-ons", to: "/dashboard/addons", icon: Sparkles },
   { label: "Packages", to: "/dashboard/packages", icon: Package },
   { label: "Gift cards", to: "/dashboard/gift-cards", icon: Gift },
-  { label: "Room rental", to: "/dashboard/room-rental", icon: DoorOpen },
   { label: "Discounts", to: "/dashboard/discounts", icon: Percent },
   { label: "Model slots", to: "/dashboard/model-slots", icon: Sparkles },
   { label: "Locations", to: "/dashboard/locations", icon: MapPin },
   { label: "Practitioners", to: "/dashboard/practitioners", icon: Users },
   { label: "Staff", to: "/dashboard/staff", icon: Users },
-  { label: "Associates", to: "/dashboard/associates", icon: ShieldCheck, flag: "associates_enabled" as const },
+
+  { section: "Clinic owner" as const, label: "Associates", to: "/dashboard/associates", icon: ShieldCheck, flag: "associates_enabled" as const },
+  { section: "Clinic owner" as const, label: "Room rental", to: "/dashboard/room-rental", icon: DoorOpen },
+
 
   { label: "Medical forms", to: "/dashboard/medical-forms", icon: FileText },
   { label: "Consent forms", to: "/dashboard/consent-forms", icon: FileSignature },
@@ -178,16 +180,35 @@ function DashboardLayout() {
           </div>
         </div>
         <nav className="flex-1 space-y-0.5 overflow-y-auto px-4 py-6">
-          {navItems.filter((item) => !("flag" in item) || (profile as Record<string, unknown>)?.[(item as { flag: string }).flag]).map((item) => {
-            const badge =
-              item.to === "/dashboard/reviews" && pendingReviews > 0
-                ? pendingReviews
-                : item.to === "/hub" && hubCounts.total > 0
-                  ? hubCounts.total
-                  : undefined;
-            return <NavLink key={item.to} to={item.to} icon={item.icon} label={item.label} badge={badge} />;
-          })}
+          {(() => {
+            const visible = navItems.filter(
+              (item) => !("flag" in item) || (profile as Record<string, unknown>)?.[(item as { flag: string }).flag],
+            );
+            let lastSection: string | undefined;
+            return visible.map((item) => {
+              const badge =
+                item.to === "/dashboard/reviews" && pendingReviews > 0
+                  ? pendingReviews
+                  : item.to === "/hub" && hubCounts.total > 0
+                    ? hubCounts.total
+                    : undefined;
+              const section = (item as { section?: string }).section;
+              const showHeading = Boolean(section) && section !== lastSection;
+              lastSection = section;
+              return (
+                <div key={item.to}>
+                  {showHeading && (
+                    <p className="px-3 pb-1 pt-4 text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+                      {section}
+                    </p>
+                  )}
+                  <NavLink to={item.to} icon={item.icon} label={item.label} badge={badge} />
+                </div>
+              );
+            });
+          })()}
         </nav>
+
         <div className="border-t border-border/60 p-4 space-y-2">
           <Button
             variant="ghost"

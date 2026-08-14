@@ -73,11 +73,16 @@ const groups: { title: string; items: Item[] }[] = [
       { label: "Locations", description: "Manage your clinic addresses", to: "/dashboard/locations", icon: MapPin, ...T.cream },
       { label: "Practitioners", description: "Team members, titles, photos & locations", to: "/dashboard/practitioners", icon: Users, ...T.taupe },
       { label: "Staff", description: "Invite team members & control what they can see", to: "/dashboard/staff", icon: ShieldCheck, ...T.espresso },
-      { label: "Associates", description: "Self-employed practitioners hosted in your clinic — oversight & rooms", to: "/dashboard/associates", icon: ShieldCheck, ...T.sand },
-
-
     ],
   },
+  {
+    title: "Clinic owner",
+    items: [
+      { label: "Associates", description: "Self-employed practitioners hosted in your clinic — oversight, compliance & records", to: "/dashboard/associates", icon: ShieldCheck, ...T.sand },
+      { label: "Room rental", description: "Rent your rooms by the hour, half day or full day", to: "/dashboard/room-rental", icon: DoorOpen, ...T.cream },
+    ],
+  },
+
   {
     title: "Services & forms",
     items: [
@@ -86,7 +91,6 @@ const groups: { title: string; items: Item[] }[] = [
       { label: "Packages", description: "Bundle treatments for patients", to: "/dashboard/packages", icon: Package, ...T.espresso },
       { label: "Discounts", description: "Menu discounts & promo codes", to: "/dashboard/discounts", icon: Percent, ...T.sand },
       { label: "Gift cards", description: "Sell branded gift cards — value, treatment or package", to: "/dashboard/gift-cards", icon: Gift, ...T.cream },
-      { label: "Room rental", description: "Rent your rooms by the hour, half day or full day", to: "/dashboard/room-rental", icon: DoorOpen, ...T.cream },
       { label: "Model slots", description: "Discounted dates & times", to: "/dashboard/model-slots", icon: Sparkles, ...T.mocha },
       { label: "Medical forms", description: "Pre-treatment questionnaires", to: "/dashboard/medical-forms", icon: FileText, ...T.cream },
       { label: "Consent forms", description: "Templates sent at booking", to: "/dashboard/consent-forms", icon: FileSignature, ...T.ivory },
