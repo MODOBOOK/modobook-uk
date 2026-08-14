@@ -438,7 +438,9 @@ export const getSeatSummary = createServerFn({ method: "GET" })
     // Associates: the service itself is a flat monthly add-on that covers the
     // first 5 associates, then each further associate adds its own seat fee.
     // Admins can waive the module fee and/or grant extra complimentary seats.
-    const assocWaived = Boolean((sub as any)?.waive_associates_fee);
+    // Charging for the Associates module is currently limited to pilot accounts.
+    const assocBilling = associateBillingEnabled((profRow as any)?.slug);
+    const assocWaived = Boolean((sub as any)?.waive_associates_fee) || !assocBilling;
     const freeAssoc = Math.max(0, Number((sub as any)?.free_associates ?? 0));
     const ASSOC_INCLUDED = 5 + freeAssoc;
     const associatesEnabled = Boolean((profRow as any)?.associates_enabled);
