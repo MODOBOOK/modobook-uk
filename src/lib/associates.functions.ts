@@ -385,16 +385,48 @@ export const getAssociatePatients = createServerFn({ method: "GET" })
 
     let q = admin
       .from("clinic_clients")
-      .select("id, first_name, last_name, email, phone, created_at")
+      .select(
+        "id, full_name, email, phone, dob, has_allergies, allergies, safeguarding_flag, no_show_count, archived, created_at, medical_form_updated_at",
+      )
       .eq("profile_id", link.associate_profile_id)
       .order("created_at", { ascending: false })
-      .limit(200);
+      .limit(500);
     if (data.search?.trim()) {
       const s = `%${data.search.trim()}%`;
-      q = q.or(`first_name.ilike.${s},last_name.ilike.${s},email.ilike.${s}`);
+      q = q.or(`full_name.ilike.${s},email.ilike.${s},phone.ilike.${s}`);
     }
     const { data: rows } = await q;
-    return rows ?? [];
+    const list = (rows ?? []) as any[];
+    if (!list.length) return [];
+
+    // Decorate with visit counts and last/next appointment so the clinic owner
+    // sees a real patient list, not just names.
+    const emails = list.map((c) => (c.email ?? "").toLowerCase()).filter(Boolean);
+    const stats: Record<string, { visits: number; last: string | null; next: string | null }> = {};
+    if (emails.length) {
+      const today = new Date().toISOString().slice(0, 10);
+      const { data: appts } = await admin
+        .from("appointments")
+        .select("patient_email, scheduled_date, status")
+        .eq("profile_id", link.associate_profile_id)
+        .in("patient_email", emails)
+        .limit(3000);
+      for (const a of (appts ?? []) as any[]) {
+        const key = (a.patient_email ?? "").toLowerCase();
+        const s = (stats[key] ??= { visits: 0, last: null, next: null });
+        if (a.status !== "cancelled") s.visits += 1;
+        if (a.scheduled_date <= today) {
+          if (!s.last || a.scheduled_date > s.last) s.last = a.scheduled_date;
+        } else if (a.status !== "cancelled") {
+          if (!s.next || a.scheduled_date < s.next) s.next = a.scheduled_date;
+        }
+      }
+    }
+    return list.map((c) => ({
+      ...c,
+      ...(stats[(c.email ?? "").toLowerCase()] ?? { visits: 0, last: null, next: null }),
+    }));
+
   });
 
 export const getAssociatePatientRecord = createServerFn({ method: "GET" })
@@ -421,7 +453,15 @@ export const getAssociatePatientRecord = createServerFn({ method: "GET" })
       .maybeSingle();
     if (!client) throw new Error("Patient not found");
 
-    const [{ data: notes }, { data: appts }, { data: consents }] = await Promise.all([
+    const [
+      { data: notes },
+      { data: appts },
+      { data: consents },
+      { data: forms },
+      { data: meds },
+      { data: concerns },
+      { data: files },
+    ] = await Promise.all([
       admin
         .from("client_notes")
         .select("id, body, created_at")
@@ -431,7 +471,7 @@ export const getAssociatePatientRecord = createServerFn({ method: "GET" })
       client.email
         ? admin
             .from("appointments")
-            .select("id, scheduled_date, start_time, status, patient_name, notes, treatments(name)")
+            .select("id, scheduled_date, start_time, status, patient_name, notes, total_price, payment_status, treatments(name)")
             .eq("profile_id", link.associate_profile_id)
             .ilike("patient_email", client.email)
             .order("scheduled_date", { ascending: false })
@@ -442,6 +482,30 @@ export const getAssociatePatientRecord = createServerFn({ method: "GET" })
         .select("id, signed_at, consent_templates(name)")
         .eq("client_id", data.clientId)
         .limit(100),
+      admin
+        .from("appointment_medical_forms")
+        .select("id, status, submitted_at, created_at, response, medical_form_templates(name)")
+        .eq("client_id", data.clientId)
+        .order("created_at", { ascending: false })
+        .limit(50),
+      admin
+        .from("client_medications")
+        .select("id, drug, dose, route, frequency, prescriber, is_current, started_on, stopped_on, notes")
+        .eq("client_id", data.clientId)
+        .order("created_at", { ascending: false })
+        .limit(100),
+      admin
+        .from("client_concerns")
+        .select("id, label, severity, resolved, notes, created_at")
+        .eq("client_id", data.clientId)
+        .order("created_at", { ascending: false })
+        .limit(100),
+      admin
+        .from("client_files")
+        .select("id, kind, url, filename, created_at")
+        .eq("client_id", data.clientId)
+        .order("created_at", { ascending: false })
+        .limit(60),
     ]);
 
 
@@ -455,7 +519,17 @@ export const getAssociatePatientRecord = createServerFn({ method: "GET" })
       /* logging is best-effort */
     }
 
-    return { client, notes: notes ?? [], appointments: appts ?? [], consents: consents ?? [] };
+    return {
+      client,
+      notes: notes ?? [],
+      appointments: appts ?? [],
+      consents: consents ?? [],
+      forms: forms ?? [],
+      medications: meds ?? [],
+      concerns: concerns ?? [],
+      files: files ?? [],
+    };
+
   });
 
 export const saveAssociateIncident = createServerFn({ method: "POST" })

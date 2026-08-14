@@ -844,6 +844,85 @@ export type Database = {
           },
         ]
       }
+      associate_documents: {
+        Row: {
+          associate_profile_id: string | null
+          clinic_profile_id: string
+          created_at: string
+          created_by: string | null
+          expires_on: string | null
+          file_name: string | null
+          file_path: string | null
+          id: string
+          issued_on: string | null
+          kind: string
+          link_id: string
+          notes: string | null
+          outcome: string | null
+          reference_number: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          associate_profile_id?: string | null
+          clinic_profile_id: string
+          created_at?: string
+          created_by?: string | null
+          expires_on?: string | null
+          file_name?: string | null
+          file_path?: string | null
+          id?: string
+          issued_on?: string | null
+          kind?: string
+          link_id: string
+          notes?: string | null
+          outcome?: string | null
+          reference_number?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          associate_profile_id?: string | null
+          clinic_profile_id?: string
+          created_at?: string
+          created_by?: string | null
+          expires_on?: string | null
+          file_name?: string | null
+          file_path?: string | null
+          id?: string
+          issued_on?: string | null
+          kind?: string
+          link_id?: string
+          notes?: string | null
+          outcome?: string | null
+          reference_number?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "associate_documents_associate_profile_id_fkey"
+            columns: ["associate_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "associate_documents_clinic_profile_id_fkey"
+            columns: ["clinic_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "associate_documents_link_id_fkey"
+            columns: ["link_id"]
+            isOneToOne: false
+            referencedRelation: "clinic_associates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       associate_incidents: {
         Row: {
           action_taken: string | null
@@ -927,6 +1006,76 @@ export type Database = {
           },
           {
             foreignKeyName: "associate_incidents_link_id_fkey"
+            columns: ["link_id"]
+            isOneToOne: false
+            referencedRelation: "clinic_associates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      associate_meetings: {
+        Row: {
+          actions: string | null
+          associate_profile_id: string | null
+          attendees: string | null
+          clinic_profile_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          link_id: string
+          met_at: string
+          next_meeting_on: string | null
+          notes: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          actions?: string | null
+          associate_profile_id?: string | null
+          attendees?: string | null
+          clinic_profile_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          link_id: string
+          met_at?: string
+          next_meeting_on?: string | null
+          notes?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          actions?: string | null
+          associate_profile_id?: string | null
+          attendees?: string | null
+          clinic_profile_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          link_id?: string
+          met_at?: string
+          next_meeting_on?: string | null
+          notes?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "associate_meetings_associate_profile_id_fkey"
+            columns: ["associate_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "associate_meetings_clinic_profile_id_fkey"
+            columns: ["clinic_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "associate_meetings_link_id_fkey"
             columns: ["link_id"]
             isOneToOne: false
             referencedRelation: "clinic_associates"
