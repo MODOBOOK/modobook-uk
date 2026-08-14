@@ -17,3 +17,11 @@ export function isFeatureLive(allowlist: string[], slug?: string | null) {
 export function packageBuilderEnabled(slug?: string | null) {
   return isFeatureLive(PACKAGE_BUILDER_SLUGS, slug);
 }
+
+/** "What's new in MODO" dashboard banner — pilot account only for now. */
+export const WHATS_NEW_SLUGS = ["aestheticsbynurseryan"];
+
+export function whatsNewEnabled(slug?: string | null) {
+  return isFeatureLive(WHATS_NEW_SLUGS, slug);
+}
+
