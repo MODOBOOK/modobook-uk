@@ -15,6 +15,7 @@ import {
   sendRentalInvoice,
 } from "@/lib/room-rental.functions";
 import { RentalCalendar } from "@/components/room-rental/RentalCalendar";
+import { RentalDaySheet } from "@/components/room-rental/RentalDaySheet";
 import { ManualBookingDialog } from "@/components/room-rental/ManualBookingDialog";
 import { getMyProfile } from "@/lib/profiles.functions";
 import { Button } from "@/components/ui/button";
@@ -149,9 +150,10 @@ function RoomRentalPage() {
         </CardContent>
       </Card>
 
-      <Tabs defaultValue="rooms">
+      <Tabs defaultValue="today">
         <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
           <TabsList className="w-max min-w-full justify-start">
+            <TabsTrigger value="today">Who's in</TabsTrigger>
             <TabsTrigger value="rooms">Rooms</TabsTrigger>
             <TabsTrigger value="calendar">Calendar</TabsTrigger>
             <TabsTrigger value="hours">Opening hours</TabsTrigger>
@@ -160,6 +162,14 @@ function RoomRentalPage() {
           </TabsList>
         </div>
 
+
+        <TabsContent value="today" className="mt-4">
+          <RentalDaySheet
+            rooms={rooms as any}
+            bookings={bookings as any}
+            onBookRoom={(roomId, date) => setManual({ roomId, date })}
+          />
+        </TabsContent>
 
         <TabsContent value="rooms" className="mt-4 space-y-3">
           {rooms.length === 0 && (
