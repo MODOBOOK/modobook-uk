@@ -708,6 +708,7 @@ function CardOnFileSection({ client, onReload }: { client: any; onReload: () => 
 
 function NotesSection({ clientId, patient }: { clientId: string; patient: any }) {
   const list = useServerFn(listClientNotes);
+  const listConsultNotes = useServerFn(listConsultationNotesForClient);
   const up = useServerFn(upsertClientNote);
   const del = useServerFn(deleteClientNote);
   const toggleVis = useServerFn(toggleClientNoteVisibility);
