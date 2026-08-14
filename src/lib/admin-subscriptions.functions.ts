@@ -597,6 +597,8 @@ export const adminSetBilling = createServerFn({ method: "POST" })
       discountCodeId?: string | null;
       trialDays?: number | null;
       customPriceCents?: number | null;
+      discountPercent?: number | null;
+      discountAmountCents?: number | null;
     }) => i,
   )
   .handler(async ({ data, context }) => {
@@ -607,9 +609,14 @@ export const adminSetBilling = createServerFn({ method: "POST" })
     const patch: Record<string, unknown> = {};
     if (data.comped !== undefined) patch.comped = Boolean(data.comped);
     if (data.discountCodeId !== undefined) patch.discount_code_id = data.discountCodeId || null;
+    if (data.discountPercent !== undefined)
+      patch.discount_percent = Math.max(0, Math.min(100, Number(data.discountPercent) || 0));
+    if (data.discountAmountCents !== undefined)
+      patch.discount_amount_cents = Math.max(0, Math.floor(Number(data.discountAmountCents) || 0));
     if (data.customPriceCents !== undefined)
       patch.custom_price_cents =
         data.customPriceCents === null ? null : Math.max(0, Math.floor(data.customPriceCents));
+
     if (data.trialDays != null && data.trialDays > 0) {
       const end = new Date();
       end.setDate(end.getDate() + Math.floor(data.trialDays));
