@@ -731,6 +731,13 @@ function SeatAllowanceCard({ profileId }: { profileId: string }) {
                     Using {data?.practitioner_count ?? 0} · free allowance {1 + (data?.free_practitioners ?? 0)}
                   </p>
                 </div>
+                <div>
+                  <Label className="text-xs">Free extra associates</Label>
+                  <Input type="number" min={0} value={freeAssoc} onChange={(e) => setAssoc(e.target.value)} />
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    5 associates are included as standard · free allowance {5 + (data?.free_associates ?? 0)}
+                  </p>
+                </div>
               </div>
               <Button size="sm" disabled={busy} onClick={save}>
                 {busy ? "Saving…" : "Save free seats"}
