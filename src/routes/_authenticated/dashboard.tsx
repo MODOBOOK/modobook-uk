@@ -85,13 +85,15 @@ const navItems = [
   { label: "Add-ons", to: "/dashboard/addons", icon: Sparkles },
   { label: "Packages", to: "/dashboard/packages", icon: Package },
   { label: "Gift cards", to: "/dashboard/gift-cards", icon: Gift },
-  { label: "Room rental", to: "/dashboard/room-rental", icon: DoorOpen },
   { label: "Discounts", to: "/dashboard/discounts", icon: Percent },
   { label: "Model slots", to: "/dashboard/model-slots", icon: Sparkles },
   { label: "Locations", to: "/dashboard/locations", icon: MapPin },
   { label: "Practitioners", to: "/dashboard/practitioners", icon: Users },
   { label: "Staff", to: "/dashboard/staff", icon: Users },
-  { label: "Associates", to: "/dashboard/associates", icon: ShieldCheck, flag: "associates_enabled" as const },
+
+  { section: "Clinic owner" as const, label: "Associates", to: "/dashboard/associates", icon: ShieldCheck, flag: "associates_enabled" as const },
+  { section: "Clinic owner" as const, label: "Room rental", to: "/dashboard/room-rental", icon: DoorOpen },
+
 
   { label: "Medical forms", to: "/dashboard/medical-forms", icon: FileText },
   { label: "Consent forms", to: "/dashboard/consent-forms", icon: FileSignature },
