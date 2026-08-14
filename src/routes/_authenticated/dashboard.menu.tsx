@@ -37,6 +37,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { amIAdmin } from "@/lib/admin.functions";
+import { ComingSoonDialog, type ComingSoonKey } from "@/components/ComingSoonDialog";
 
 export const Route = createFileRoute("/_authenticated/dashboard/menu")({
   ssr: false,
@@ -46,7 +47,7 @@ export const Route = createFileRoute("/_authenticated/dashboard/menu")({
   component: MenuPage,
 });
 
-type Item = { label: string; description: string; to: string; icon: React.ElementType; tone: string; iconColor: string };
+type Item = { label: string; description: string; to: string; icon: React.ElementType; tone: string; iconColor: string; soon?: ComingSoonKey };
 
 // Theme-aware icon tones — pull from the practitioner's branding tokens so
 // changing the preset/colours updates every icon chip across the dashboard.
@@ -146,6 +147,7 @@ function MenuPage() {
   const { profile } = Route.useRouteContext() as { profile: { slug: string; clinic_name?: string | null; associates_enabled?: boolean | null } };
   const { admin } = Route.useLoaderData();
   const [query, setQuery] = useState("");
+  const [comingSoon, setComingSoon] = useState<ComingSoonKey | null>(null);
 
 
   const pilot = pilotFeaturesEnabled(profile.slug);
@@ -153,9 +155,22 @@ function MenuPage() {
   const filtered = useMemo(() => {
     const visible = groups.map((g) => ({
       ...g,
-      items: g.items.filter((i) =>
-        i.to === "/dashboard/associates" ? pilot && !!profile.associates_enabled : true,
-      ),
+      items: g.items
+        .filter((i) =>
+          i.to === "/dashboard/associates"
+            ? pilot
+              ? !!profile.associates_enabled
+              : true // non-pilot clinics see it as "coming soon"
+            : true,
+        )
+        .concat(
+          !pilot && g.title === "Bookings"
+            ? [{ label: "Upcoming appointments", description: "Every booking in one list with AI patient briefs", to: "/dashboard/upcoming", icon: CalendarDays, ...T.ivory, soon: "upcoming" as const }]
+            : [],
+        )
+        .map((i) =>
+          !pilot && i.to === "/dashboard/associates" ? { ...i, soon: "associates" as const } : i,
+        ),
     })).filter((g) => g.items.length > 0);
     if (!query.trim()) return visible;
     const q = query.toLowerCase();
@@ -200,24 +215,46 @@ function MenuPage() {
         <section key={g.title} className="space-y-3">
           <h2 className="px-2 text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">{g.title}</h2>
           <div className="space-y-3">
-            {g.items.map((item) => (
-              <Link
-                key={item.to}
-                to={item.to}
-                className="group block rounded-2xl border border-muted-foreground/10 bg-card p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition hover:border-primary/30 hover:shadow-md active:scale-[0.99]"
-              >
+            {g.items.map((item) => {
+              const Wrapper = ({ children }: { children: React.ReactNode }) =>
+                item.soon ? (
+                  <button
+                    type="button"
+                    onClick={() => setComingSoon(item.soon!)}
+                    className="group block w-full rounded-2xl border border-primary/20 bg-card p-4 text-left shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition hover:border-primary/40 active:scale-[0.99]"
+                  >
+                    {children}
+                  </button>
+                ) : (
+                  <Link
+                    to={item.to}
+                    className="group block rounded-2xl border border-muted-foreground/10 bg-card p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition hover:border-primary/30 hover:shadow-md active:scale-[0.99]"
+                  >
+                    {children}
+                  </Link>
+                );
+              return (
+              <Wrapper key={item.to}>
                 <div className="flex items-center gap-4">
                   <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-full ring-1 ring-black/5 ${item.tone}`}>
                     <item.icon className={`h-6 w-6 ${item.iconColor}`} />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-base font-semibold leading-tight">{item.label}</p>
+                    <p className="flex items-center gap-2 truncate text-base font-semibold leading-tight">
+                      {item.label}
+                      {item.soon && (
+                        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.1em] text-primary">
+                          Soon
+                        </span>
+                      )}
+                    </p>
                     <p className="mt-0.5 truncate text-xs text-muted-foreground">{item.description}</p>
                   </div>
                   <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground transition group-hover:translate-x-0.5" />
                 </div>
-              </Link>
-            ))}
+              </Wrapper>
+              );
+            })}
           </div>
         </section>
       ))}
@@ -268,6 +305,11 @@ function MenuPage() {
         <LogOut className="mr-2 h-4 w-4" /> Log out
       </Button>
       <div className="h-4" />
+      <ComingSoonDialog
+        open={comingSoon !== null}
+        onOpenChange={(v) => !v && setComingSoon(null)}
+        feature={comingSoon ?? "general"}
+      />
     </div>
   );
 }
