@@ -263,6 +263,8 @@ export const getMyBilling = createServerFn({ method: "GET" })
       discountCode = (dc as typeof discountCode) ?? null;
     }
 
+    const associates = await computeAssociateCharge(context.supabase, profile.id);
+
     return {
       profileId: profile.id,
       subscription: sub,
@@ -270,9 +272,11 @@ export const getMyBilling = createServerFn({ method: "GET" })
       hasAccess: Boolean(access),
       discountCode,
       profileCreatedAt: profile.created_at,
+      associates,
       usage: {
         locations: locCount ?? 0,
         practitioners: pracCount ?? 0,
+        associates: associates.used,
       },
     };
   });
