@@ -78,7 +78,7 @@ export const listUpcomingAppointments = createServerFn({ method: "GET" })
     );
 
     const [medRes, consentRes, clientRes] = await Promise.all([
-      sb.from("appointment_medical_forms").select("appointment_id, status").in("appointment_id", ids),
+      sb.from("appointment_medical_forms").select("appointment_id, status, submitted_at").in("appointment_id", ids),
       sb.from("appointment_consents").select("appointment_id, status, signed_at").in("appointment_id", ids),
       emails.length
         ? sb
