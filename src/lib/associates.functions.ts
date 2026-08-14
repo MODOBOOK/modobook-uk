@@ -1,6 +1,17 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+
+/**
+ * A link is "live" for oversight when the associate accepted the invite, or
+ * when the clinic has linked its own profile (self-managed / testing), where
+ * there is nobody else to accept.
+ */
+function isLinkLive(link: { status?: string | null; associate_profile_id?: string | null }, clinicProfileId: string) {
+  if (link?.status === "active") return true;
+  return Boolean(link?.associate_profile_id) && link.associate_profile_id === clinicProfileId;
+}
+
 export type AssociateStatus = "invited" | "active" | "revoked" | "declined";
 
 export type AssociateRow = {
@@ -323,7 +334,7 @@ export const getAssociateOversight = createServerFn({ method: "GET" })
       .eq("id", data.id)
       .eq("clinic_profile_id", prof.id)
       .maybeSingle();
-    if (!link || !link.associate_profile_id || link.status !== "active") {
+    if (!link || !link.associate_profile_id || !isLinkLive(link, prof.id)) {
       return { appointments: [], incidents: [], patients: 0, roomBookings: [] };
     }
 
@@ -381,7 +392,7 @@ export const getAssociatePatients = createServerFn({ method: "GET" })
       .eq("id", data.id)
       .eq("clinic_profile_id", prof.id)
       .maybeSingle();
-    if (!link?.oversight_records || link.status !== "active" || !link.associate_profile_id) return [];
+    if (!link?.oversight_records || !isLinkLive(link, prof.id) || !link.associate_profile_id) return [];
 
     let q = admin
       .from("clinic_clients")
@@ -443,7 +454,7 @@ export const getAssociatePatientRecord = createServerFn({ method: "GET" })
       .eq("id", data.id)
       .eq("clinic_profile_id", prof.id)
       .maybeSingle();
-    if (!link?.oversight_records || link.status !== "active") throw new Error("Not permitted");
+    if (!link?.oversight_records || !isLinkLive(link, prof.id)) throw new Error("Not permitted");
 
     const { data: client } = await admin
       .from("clinic_clients")
