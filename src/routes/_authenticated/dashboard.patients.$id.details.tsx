@@ -893,33 +893,53 @@ function NotesSection({ clientId, patient }: { clientId: string; patient: any })
       ) : (
         <ul className="divide-y">
           {filtered.map((n: any) => {
-            const isSel = selected.has(n.id);
-            return (
-              <li key={n.id} className={`group flex items-start gap-3 p-3 transition ${isSel ? "bg-primary/5" : ""}`}>
-                <Checkbox
-                  checked={isSel}
-                  onCheckedChange={() => toggleSelect(n.id)}
-                  className="mt-1"
-                />
-                <button
-                  type="button"
-                  onClick={() => { setEditing({ id: n.id, body: n.body, visible_to_patient: !!n.visible_to_patient, face_map: n.face_map ?? null }); setShowMap(!!n.face_map); }}
-                  className="min-w-0 flex-1 text-left"
-                >
-                  <div className="whitespace-pre-wrap break-words text-sm leading-relaxed">{n.body}</div>
-                  {n.face_map && (
-                    <FaceMapView value={n.face_map} className="mt-2 max-w-[180px]" />
-                  )}
-                  <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[10px] text-muted-foreground">
-                    <span>{new Date(n.created_at).toLocaleString()}</span>
-                    {n.face_map && <Badge variant="outline" className="h-4 px-1.5 text-[9px]">Diagram</Badge>}
-                    {n.visible_to_patient
-                      ? <Badge variant="secondary" className="h-4 px-1.5 text-[9px]">Shared with patient</Badge>
-                      : <Badge variant="outline" className="h-4 px-1.5 text-[9px]">Private</Badge>}
-                  </div>
-                </button>
-                <div className="flex shrink-0 items-center gap-1">
-                  <Button
+             const isSel = selected.has(n.id);
+             const fromConsult = n.source === "consultation";
+             return (
+               <li key={n.id} className={`group flex items-start gap-3 p-3 transition ${isSel ? "bg-primary/5" : ""}`}>
+                 <Checkbox
+                   checked={isSel}
+                   onCheckedChange={() => toggleSelect(n.id)}
+                   className="mt-1"
+                 />
+                 <div className="min-w-0 flex-1">
+                 <button
+                   type="button"
+                   onClick={() => {
+                     if (fromConsult) return;
+                     setEditing({ id: n.id, body: n.body, visible_to_patient: !!n.visible_to_patient, face_map: n.face_map ?? null }); setShowMap(!!n.face_map);
+                   }}
+                   className={`w-full min-w-0 text-left ${fromConsult ? "cursor-default" : ""}`}
+                 >
+                   {n.heading && (
+                     <div className="mb-0.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{n.heading}</div>
+                   )}
+                   <div className="whitespace-pre-wrap break-words text-sm leading-relaxed">{n.body}</div>
+                   {n.face_map && (
+                     <FaceMapView value={n.face_map} className="mt-2 max-w-[180px]" />
+                   )}
+                   <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[10px] text-muted-foreground">
+                     <span>{new Date(n.created_at).toLocaleString()}</span>
+                     {n.face_map && <Badge variant="outline" className="h-4 px-1.5 text-[9px]">Diagram</Badge>}
+                     {fromConsult
+                       ? <Badge variant="secondary" className="h-4 px-1.5 text-[9px]">From consultation</Badge>
+                       : n.visible_to_patient
+                       ? <Badge variant="secondary" className="h-4 px-1.5 text-[9px]">Shared with patient</Badge>
+                       : <Badge variant="outline" className="h-4 px-1.5 text-[9px]">Private</Badge>}
+                   </div>
+                 </button>
+                 {fromConsult && (
+                   <Link
+                     to="/dashboard/consultations/$id"
+                     params={{ id: n.consultation_id }}
+                     className="mt-1.5 inline-flex items-center text-[11px] font-medium text-primary hover:underline"
+                   >
+                     Open consultation<ChevronRight className="h-3 w-3" />
+                   </Link>
+                 )}
+                 </div>
+                 <div className={`flex shrink-0 items-center gap-1 ${fromConsult ? "hidden" : ""}`}>
+                   <Button
                     size="icon" variant="ghost"
                     title={n.visible_to_patient ? "Make private" : "Share with patient"}
                     onClick={async () => {
