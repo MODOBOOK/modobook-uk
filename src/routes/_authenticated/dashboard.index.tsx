@@ -303,8 +303,10 @@ function DashboardIndex() {
             <p className="text-[10px] font-medium uppercase tracking-[0.25em] text-muted-foreground">Schedule</p>
             <h2 className="mt-1 font-serif text-2xl sm:text-3xl">Upcoming appointments</h2>
           </div>
-          {pilotFeaturesEnabled(profile.slug) && (
+          {pilotFeaturesEnabled(profile.slug) ? (
             <Link to="/dashboard/upcoming" className="text-xs font-medium uppercase tracking-[0.2em] text-foreground underline-offset-4 hover:underline">View all</Link>
+          ) : (
+            <Link to="/dashboard/coming-soon" className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground underline-offset-4 hover:underline">View all · Soon</Link>
           )}
         </div>
 
