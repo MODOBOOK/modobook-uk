@@ -606,6 +606,82 @@ function SeatAllowanceCard({ profileId }: { profileId: string }) {
               </div>
             </div>
 
+            {/* Standing discount on the collated monthly fee */}
+            <div className="rounded-md border p-3 space-y-2">
+              <p className="font-medium">Discount their monthly fee</p>
+              <p className="text-xs text-muted-foreground">
+                Applied to the whole collated plan (base + extra locations, practitioners and associates).
+                Percentage first, then the fixed amount. Leave both at 0 for full price.
+              </p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <Label className="text-xs">Percent off</Label>
+                  <Input type="number" min={0} max={100} value={pctVal} onChange={(e) => setPct(e.target.value)} />
+                </div>
+                <div>
+                  <Label className="text-xs">Fixed amount off (£ / month)</Label>
+                  <Input type="number" min={0} step="0.01" value={amtVal} onChange={(e) => setAmt(e.target.value)} />
+                </div>
+              </div>
+              <Button size="sm" disabled={busy} onClick={saveDiscount}>
+                {busy ? "Saving…" : "Save discount"}
+              </Button>
+            </div>
+
+            {/* Associates service fee */}
+            <div className="rounded-md border p-3 space-y-2">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p className="font-medium">Associates service fee</p>
+                  <p className="text-xs text-muted-foreground">
+                    Waiving this removes the £4.99/month module fee and all per-associate seat charges for
+                    this clinic.
+                  </p>
+                </div>
+                {data?.waive_associates_fee ? (
+                  <div className="flex items-center gap-2">
+                    <Badge>Waived</Badge>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={busy}
+                      onClick={async () => {
+                        setBusy(true);
+                        try {
+                          await setSeats({ data: { profileId, waiveAssociatesFee: false } });
+                          toast.success("Associates fee reinstated");
+                          refetch();
+                        } finally {
+                          setBusy(false);
+                        }
+                      }}
+                    >
+                      Charge again
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    size="sm"
+                    disabled={busy}
+                    onClick={async () => {
+                      setBusy(true);
+                      try {
+                        await setSeats({ data: { profileId, waiveAssociatesFee: true } });
+                        toast.success("Associates fee waived");
+                        refetch();
+                      } finally {
+                        setBusy(false);
+                      }
+                    }}
+                  >
+                    Waive associates fee
+                  </Button>
+                )}
+              </div>
+            </div>
+
+
+
             {/* Trial */}
             <div className="rounded-md border p-3 space-y-2">
               <p className="font-medium">Extend free trial</p>
