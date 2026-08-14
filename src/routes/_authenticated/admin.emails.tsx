@@ -319,6 +319,34 @@ function BroadcastDialog({
   const [previewing, setPreviewing] = useState(false)
   const [testEmail, setTestEmail] = useState('')
 
+  // AI composer
+  const generateAi = useServerFn(generateAdminEmail)
+  const [aiPrompt, setAiPrompt] = useState('')
+  const [aiTone, setAiTone] = useState('')
+  const [aiMode, setAiMode] = useState<'content' | 'html'>('content')
+  const [aiBusy, setAiBusy] = useState(false)
+
+  const runAi = async () => {
+    if (!aiPrompt.trim()) { toast.error('Tell the AI what the email is about'); return }
+    setAiBusy(true)
+    try {
+      const r = await generateAi({ data: { prompt: aiPrompt, mode: aiMode, tone: aiTone } }) as any
+      if (r.subject) setSubject(r.subject)
+      if (r.mode === 'html') {
+        setMessage('')
+        setBlocks([{ type: 'html', html: r.html || '', full: true }] as Block[])
+      } else {
+        setMessage('')
+        setBlocks(parsePresetBody(r.body || '') as Block[])
+      }
+      setPreviewHtml(null)
+      toast.success('Draft generated — edit anything you like')
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Generation failed')
+    } finally { setAiBusy(false) }
+  }
+
+
   useEffect(() => {
     waitlistCount().then((r: any) => setWaitlist(r.count)).catch(() => {})
   }, [])
