@@ -224,11 +224,12 @@ function MenuPage() {
           <h2 className="px-2 text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">{g.title}</h2>
           <div className="space-y-3">
             {g.items.map((item) => {
+              const soon = comingSoonFor(item.to);
               const Wrapper = ({ children }: { children: React.ReactNode }) =>
-                item.soon ? (
+                soon ? (
                   <button
                     type="button"
-                    onClick={() => setComingSoon(item.soon!)}
+                    onClick={() => setComingSoon(soon)}
                     className="group block w-full rounded-2xl border border-primary/20 bg-card p-4 text-left shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition hover:border-primary/40 active:scale-[0.99]"
                   >
                     {children}
@@ -250,7 +251,7 @@ function MenuPage() {
                   <div className="min-w-0 flex-1">
                     <p className="flex items-center gap-2 truncate text-base font-semibold leading-tight">
                       {item.label}
-                      {item.soon && (
+                      {soon && (
                         <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.1em] text-primary">
                           Soon
                         </span>
