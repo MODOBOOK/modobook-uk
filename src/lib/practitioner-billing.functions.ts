@@ -293,7 +293,7 @@ export const startBillingCheckout = createServerFn({ method: "POST" })
     const { data: plans, error: pErr } = await context.supabase
       .from("subscription_plans")
       .select("*")
-      .in("kind", ["base", "addon_location", "addon_practitioner"])
+      .in("kind", ["base", "addon_location", "addon_practitioner", "addon_associates_module", "addon_associate"])
       .eq("active", true);
     if (pErr) throw pErr;
 
@@ -302,6 +302,9 @@ export const startBillingCheckout = createServerFn({ method: "POST" })
 
     const locAddon = (plans ?? []).find((p: any) => p.kind === "addon_location");
     const pracAddon = (plans ?? []).find((p: any) => p.kind === "addon_practitioner");
+    const assocModule = (plans ?? []).find((p: any) => p.kind === "addon_associates_module");
+    const assocAddon = (plans ?? []).find((p: any) => p.kind === "addon_associate");
+    const associates = await computeAssociateCharge(context.supabase, profile.id);
 
     const line_items: Array<{ price: string; quantity: number }> = [
       { price: base.stripe_price_id, quantity: 1 },
@@ -311,6 +314,12 @@ export const startBillingCheckout = createServerFn({ method: "POST" })
     }
     if ((data.extraPractitioners ?? 0) > 0 && pracAddon?.stripe_price_id) {
       line_items.push({ price: pracAddon.stripe_price_id, quantity: data.extraPractitioners! });
+    }
+    if (associates.moduleActive && assocModule?.stripe_price_id) {
+      line_items.push({ price: assocModule.stripe_price_id, quantity: 1 });
+    }
+    if (associates.extraBlocks > 0 && assocAddon?.stripe_price_id) {
+      line_items.push({ price: assocAddon.stripe_price_id, quantity: associates.extraBlocks });
     }
 
     // Existing subscription row / customer
