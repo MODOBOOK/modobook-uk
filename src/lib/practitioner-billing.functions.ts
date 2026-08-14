@@ -422,6 +422,8 @@ export const getSeatSummary = createServerFn({ method: "GET" })
     const base = list.find((p) => p.id === sub?.plan_id) ?? list.find((p) => p.kind === "base") ?? null;
     const locAddon = list.find((p) => p.kind === "addon_location") ?? null;
     const pracAddon = list.find((p) => p.kind === "addon_practitioner") ?? null;
+    const assocModule = list.find((p) => p.kind === "addon_associates_module") ?? null;
+    const assocAddon = list.find((p) => p.kind === "addon_associate") ?? null;
 
     const freeLocs = Math.max(0, Number(sub?.free_locations ?? 0));
     const freePracs = Math.max(0, Number(sub?.free_practitioners ?? 0));
@@ -432,6 +434,15 @@ export const getSeatSummary = createServerFn({ method: "GET" })
     // this is what the plan price is collated from, not a manual selection.
     const billableLocs = Math.max(0, usedLocs - 1 - freeLocs);
     const billablePracs = Math.max(0, usedPracs - 1 - freePracs);
+
+    // Associates: the service itself is a flat monthly add-on that covers the
+    // first 5 associates, then each further associate adds its own seat fee.
+    const ASSOC_INCLUDED = 5;
+    const associatesEnabled = Boolean((profRow as any)?.associates_enabled);
+    const usedAssoc = assocCount ?? 0;
+    const assocModuleCents = associatesEnabled ? Number(assocModule?.amount_cents ?? 0) : 0;
+    const billableAssoc = associatesEnabled ? Math.max(0, usedAssoc - ASSOC_INCLUDED) : 0;
+
     const baseCents = Number(sub?.custom_price_cents ?? base?.amount_cents ?? 0);
     const currency = (base?.currency ?? locAddon?.currency ?? "gbp") as string;
     const interval = (base?.interval ?? "month") as string;
@@ -439,7 +450,9 @@ export const getSeatSummary = createServerFn({ method: "GET" })
       ? 0
       : baseCents +
         billableLocs * Number(locAddon?.amount_cents ?? 0) +
-        billablePracs * Number(pracAddon?.amount_cents ?? 0);
+        billablePracs * Number(pracAddon?.amount_cents ?? 0) +
+        assocModuleCents +
+        billableAssoc * Number(assocAddon?.amount_cents ?? 0);
 
     return {
       comped: Boolean(sub?.comped),
@@ -464,7 +477,17 @@ export const getSeatSummary = createServerFn({ method: "GET" })
         billable: billableLocs,
         addonCents: Number(locAddon?.amount_cents ?? 0),
       },
+      associates: {
+        enabled: associatesEnabled,
+        used: usedAssoc,
+        included: ASSOC_INCLUDED,
+        billable: billableAssoc,
+        moduleCents: Number(assocModule?.amount_cents ?? 0),
+        moduleActive: associatesEnabled && assocModuleCents > 0,
+        addonCents: Number(assocAddon?.amount_cents ?? 0),
+      },
     };
+
   });
 
 
