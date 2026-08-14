@@ -524,9 +524,26 @@ export const getSeatSummary = createServerFn({ method: "GET" })
     // Admin-set standing discount on the collated monthly fee.
     const discountPercent = Math.max(0, Math.min(100, Number((sub as any)?.discount_percent ?? 0)));
     const discountAmountCents = Math.max(0, Number((sub as any)?.discount_amount_cents ?? 0));
+
+    // A redeemed platform discount code also comes off the MODO plan total.
+    let codeRow: { id: string; code: string; percent_off: number | null; amount_off_cents: number | null } | null = null;
+    if ((sub as any)?.discount_code_id) {
+      const { data: dc } = await context.supabase
+        .from("platform_discount_codes")
+        .select("id, code, percent_off, amount_off_cents")
+        .eq("id", (sub as any).discount_code_id)
+        .maybeSingle();
+      codeRow = (dc as typeof codeRow) ?? null;
+    }
+    const { computeCodeDiscountCents } = await import("./discount-codes.server");
+    const codeDiscountCents = sub?.comped ? 0 : computeCodeDiscountCents(grossCents, codeRow);
+
     const discountCents = sub?.comped
       ? 0
-      : Math.min(grossCents, Math.round((grossCents * discountPercent) / 100) + discountAmountCents);
+      : Math.min(
+          grossCents,
+          Math.round((grossCents * discountPercent) / 100) + discountAmountCents + codeDiscountCents,
+        );
     const monthlyTotalCents = sub?.comped ? 0 : Math.max(0, grossCents - discountCents);
 
     return {
@@ -541,7 +558,10 @@ export const getSeatSummary = createServerFn({ method: "GET" })
       discountCents,
       discountPercent,
       discountAmountCents,
+      discountCode: codeRow,
+      codeDiscountCents,
       monthlyTotalCents,
+
       practitioners: {
         used: usedPracs,
         allowed: 1 + Math.max(0, Number(sub?.extra_practitioners ?? 0)) + freePracs,
