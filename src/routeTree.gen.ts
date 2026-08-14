@@ -20,6 +20,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PrescriberHubRouteImport } from './routes/prescriber-hub'
+import { Route as HairBeautyWaitlistRouteImport } from './routes/hair-beauty-waitlist'
 import { Route as FeaturesRouteImport } from './routes/features'
 import { Route as FaqRouteImport } from './routes/faq'
 import { Route as DemoRouteImport } from './routes/demo'
@@ -222,6 +223,11 @@ const PricingRoute = PricingRouteImport.update({
 const PrescriberHubRoute = PrescriberHubRouteImport.update({
   id: '/prescriber-hub',
   path: '/prescriber-hub',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HairBeautyWaitlistRoute = HairBeautyWaitlistRouteImport.update({
+  id: '/hair-beauty-waitlist',
+  path: '/hair-beauty-waitlist',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FeaturesRoute = FeaturesRouteImport.update({
@@ -1067,6 +1073,7 @@ export interface FileRoutesByFullPath {
   '/demo': typeof DemoRoute
   '/faq': typeof FaqRoute
   '/features': typeof FeaturesRoute
+  '/hair-beauty-waitlist': typeof HairBeautyWaitlistRoute
   '/prescriber-hub': typeof PrescriberHubRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRouteWithChildren
@@ -1227,6 +1234,7 @@ export interface FileRoutesByTo {
   '/demo': typeof DemoRoute
   '/faq': typeof FaqRoute
   '/features': typeof FeaturesRoute
+  '/hair-beauty-waitlist': typeof HairBeautyWaitlistRoute
   '/prescriber-hub': typeof PrescriberHubRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRouteWithChildren
@@ -1380,6 +1388,7 @@ export interface FileRoutesById {
   '/demo': typeof DemoRoute
   '/faq': typeof FaqRoute
   '/features': typeof FeaturesRoute
+  '/hair-beauty-waitlist': typeof HairBeautyWaitlistRoute
   '/prescriber-hub': typeof PrescriberHubRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRouteWithChildren
@@ -1542,6 +1551,7 @@ export interface FileRouteTypes {
     | '/demo'
     | '/faq'
     | '/features'
+    | '/hair-beauty-waitlist'
     | '/prescriber-hub'
     | '/pricing'
     | '/privacy'
@@ -1702,6 +1712,7 @@ export interface FileRouteTypes {
     | '/demo'
     | '/faq'
     | '/features'
+    | '/hair-beauty-waitlist'
     | '/prescriber-hub'
     | '/pricing'
     | '/privacy'
@@ -1854,6 +1865,7 @@ export interface FileRouteTypes {
     | '/demo'
     | '/faq'
     | '/features'
+    | '/hair-beauty-waitlist'
     | '/prescriber-hub'
     | '/pricing'
     | '/privacy'
@@ -2016,6 +2028,7 @@ export interface RootRouteChildren {
   DemoRoute: typeof DemoRoute
   FaqRoute: typeof FaqRoute
   FeaturesRoute: typeof FeaturesRoute
+  HairBeautyWaitlistRoute: typeof HairBeautyWaitlistRoute
   PrescriberHubRoute: typeof PrescriberHubRoute
   PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRouteWithChildren
@@ -2132,6 +2145,13 @@ declare module '@tanstack/react-router' {
       path: '/prescriber-hub'
       fullPath: '/prescriber-hub'
       preLoaderRoute: typeof PrescriberHubRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/hair-beauty-waitlist': {
+      id: '/hair-beauty-waitlist'
+      path: '/hair-beauty-waitlist'
+      fullPath: '/hair-beauty-waitlist'
+      preLoaderRoute: typeof HairBeautyWaitlistRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/features': {
@@ -3619,6 +3639,7 @@ const rootRouteChildren: RootRouteChildren = {
   DemoRoute: DemoRoute,
   FaqRoute: FaqRoute,
   FeaturesRoute: FeaturesRoute,
+  HairBeautyWaitlistRoute: HairBeautyWaitlistRoute,
   PrescriberHubRoute: PrescriberHubRoute,
   PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRouteWithChildren,
