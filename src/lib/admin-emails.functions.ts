@@ -2,6 +2,7 @@
 // plus one-off broadcasts to all practitioners or a single user.
 import { createServerFn } from '@tanstack/react-start'
 import { requireSupabaseAuth } from '@/integrations/supabase/auth-middleware'
+import { PLATFORM_REPLY_TO } from '@/lib/admin-email-presets'
 
 async function assertAdmin(context: { supabase: any; userId: string }) {
   const { data, error } = await context.supabase.rpc('has_role', {
@@ -177,6 +178,7 @@ export const sendAdminBroadcastTest = createServerFn({ method: 'POST' })
       templateName: 'admin-broadcast',
       recipientEmail: email,
       messageId: `admin-broadcast-test-${crypto.randomUUID()}`,
+      replyTo: PLATFORM_REPLY_TO,
       templateData: {
         subject: `[TEST] ${data.subject.trim()}`,
         message: data.message.trim(),
@@ -234,6 +236,7 @@ export const sendAdminBroadcast = createServerFn({ method: 'POST' })
         templateName: 'admin-broadcast',
         recipientEmail: r.email,
         messageId: `admin-broadcast-${log.id}-${r.email}`,
+        replyTo: PLATFORM_REPLY_TO,
         templateData: {
           subject: data.subject.trim(),
           message: data.message.trim(),
