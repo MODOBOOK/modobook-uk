@@ -64,6 +64,8 @@ function PractitionersPage() {
   const [saving, setSaving] = useState(false);
   const [seats, setSeats] = useState<Awaited<ReturnType<typeof getSeatSummary>> | null>(null);
   const [reserving, setReserving] = useState(false);
+  const [warnOpen, setWarnOpen] = useState(false);
+
 
   async function refresh() {
     setLoading(true);
