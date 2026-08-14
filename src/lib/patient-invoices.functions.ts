@@ -126,7 +126,7 @@ export const savePatientInvoice = createServerFn({ method: "POST" })
     if (data.id) {
       const { data: row, error } = await context.supabase
         .from("patient_invoices")
-        .update(patch)
+        .update(patch as never)
         .eq("id", data.id)
         .eq("profile_id", profileId)
         .select()
@@ -156,7 +156,7 @@ export const setPatientInvoiceStatus = createServerFn({ method: "POST" })
     if (data.status === "draft") { patch.paid_at = null; patch.sent_at = null; }
     const { error } = await context.supabase
       .from("patient_invoices")
-      .update(patch)
+      .update(patch as never)
       .eq("id", data.id)
       .eq("profile_id", profileId);
     if (error) throw error;
