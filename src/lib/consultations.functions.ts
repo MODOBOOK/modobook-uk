@@ -106,8 +106,31 @@ export const updateConsultation = createServerFn({ method: "POST" })
       .eq("id", data.id)
       .eq("profile_id", pid);
     if (error) throw error;
+    // Whenever a signed consent is saved, mirror it onto the patient profile.
+    if (patch['consent'] && (patch['consent'] as any).signature) {
+      try {
+        const { syncConsultationConsent } = await import("@/lib/consultation-consent.server");
+        await syncConsultationConsent(supabase, pid, data.id);
+      } catch (e) { console.error("[updateConsultation] consent sync failed", e); }
+    }
     return { ok: true };
   });
+
+
+// Mirrors a signed consultation consent onto the patient's profile straight
+// away, regardless of whether the consultation has been completed.
+export const saveConsultationConsentToProfile = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string }) => d)
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const pid = await getProfileId(supabase, userId);
+    if (!pid) throw new Error("No profile");
+    const { syncConsultationConsent } = await import("@/lib/consultation-consent.server");
+    return await syncConsultationConsent(supabase, pid, data.id);
+  });
+
+
 
 export const deleteConsultation = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
