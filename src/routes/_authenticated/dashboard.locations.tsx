@@ -9,7 +9,10 @@ import {
   setTreatmentLocationPricing,
 } from "@/lib/locations.functions";
 import { getMyProfile } from "@/lib/profiles.functions";
+import { getSeatSummary } from "@/lib/practitioner-billing.functions";
+import { SeatCostWarning, seatWillCharge, type SeatSummary } from "@/components/SeatCostWarning";
 import { ImageUploader } from "@/components/ImageUploader";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -59,6 +62,8 @@ function LocationsPage() {
   const remove = useServerFn(deleteLocation);
   const fetchPriceList = useServerFn(getLocationPriceList);
   const savePricing = useServerFn(setTreatmentLocationPricing);
+  const fetchSeats = useServerFn(getSeatSummary);
+
 
   const [locations, setLocations] = useState<Location[]>([]);
   const [profileId, setProfileId] = useState<string>("");
@@ -66,6 +71,8 @@ function LocationsPage() {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<Partial<Location>>(emptyDraft());
   const [saving, setSaving] = useState(false);
+  const [seats, setSeats] = useState<SeatSummary | null>(null);
+  const [warnOpen, setWarnOpen] = useState(false);
 
   // Price list dialog state
   const [priceOpen, setPriceOpen] = useState(false);
@@ -76,8 +83,13 @@ function LocationsPage() {
   async function refresh() {
     setLoading(true);
     try {
-      const [rows, profile] = await Promise.all([fetchLocations(), fetchProfile()]);
+      const [rows, profile, seatInfo] = await Promise.all([
+        fetchLocations(),
+        fetchProfile(),
+        fetchSeats().catch(() => null),
+      ]);
       setLocations(rows);
+      setSeats((seatInfo as SeatSummary | null) ?? null);
       if (profile && typeof profile === "object" && "id" in profile) {
         setProfileId((profile as { id: string }).id);
       }
@@ -95,6 +107,13 @@ function LocationsPage() {
     setDraft({ ...emptyDraft(), is_primary: locations.length === 0 });
     setOpen(true);
   }
+
+  /** Warn about the price change first when this location adds a paid seat. */
+  function requestNew() {
+    if (seatWillCharge(seats, "location")) setWarnOpen(true);
+    else openNew();
+  }
+
 
   function openEdit(loc: Location) {
     setDraft(loc);
@@ -193,11 +212,28 @@ function LocationsPage() {
             hidden locations you only book by message.
           </p>
         </div>
-        <Button onClick={openNew}>
+        <Button onClick={requestNew}>
           <Plus className="mr-2 h-4 w-4" />
           Add location
         </Button>
       </div>
+
+      <SeatCostWarning
+        open={warnOpen}
+        onOpenChange={setWarnOpen}
+        kind="location"
+        seats={seats}
+        onConfirm={() => { setWarnOpen(false); openNew(); }}
+      />
+
+      {seats && !seats.comped && seats.locations.used > 0 && (
+        <p className="text-xs text-muted-foreground">
+          Your plan price is worked out from your account: {seats.locations.used} location
+          {seats.locations.used === 1 ? "" : "s"} ({1 + seats.locations.freeExtras} included
+          {seats.locations.billable > 0 ? `, ${seats.locations.billable} charged` : ""}).
+        </p>
+      )}
+
 
       {loading ? (
         <p className="text-sm text-muted-foreground">Loading…</p>

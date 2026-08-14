@@ -107,11 +107,24 @@ function PractitionersPage() {
     }
   }
 
-
   function openNew() {
     setDraft(emptyDraft());
     setOpen(true);
   }
+
+  /** Confirm the price change first whenever this practitioner adds a paid seat. */
+  function requestNew() {
+    if (seatWillCharge(seats as unknown as SeatSummary, "practitioner")) setWarnOpen(true);
+    else if (seatsFull && canReserve) handleReserveSeat();
+    else openNew();
+  }
+
+  function confirmSeatCost() {
+    setWarnOpen(false);
+    if (seatsFull && canReserve) handleReserveSeat();
+    else openNew();
+  }
+
   function openEdit(p: Pract) {
     setDraft({
       ...p,

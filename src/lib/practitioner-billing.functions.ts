@@ -65,8 +65,9 @@ export async function assertSeatAvailable(
       .insert({ profile_id: profileId, status: "pending", ...patch });
   }
 
-  // If they're already on direct debit, push the new quantity to Stripe so the
-  // charge is added automatically (prorated onto the next invoice).
+  // If they're already on direct debit, push the new quantity to Stripe. We use
+  // `proration_behavior: "none"` so nothing is charged mid-cycle — the higher
+  // quantity simply bills in full from the next direct-debit cycle.
   if (sub?.stripe_subscription_id && ["active", "trialing", "past_due"].includes(String(sub?.status))) {
     try {
       const { data: addon } = await supabase
@@ -84,9 +85,10 @@ export async function assertSeatAvailable(
           items: item
             ? [{ id: item.id, quantity: neededPaid }]
             : [{ price: addon.stripe_price_id, quantity: neededPaid }],
-          proration_behavior: "create_prorations",
+          proration_behavior: "none",
         });
       }
+
     } catch (e) {
       console.error("[billing] failed to sync extra seat to Stripe", e);
     }
@@ -390,37 +392,73 @@ export const getSeatSummary = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const profile = await getMyProfileId(context);
-    const [{ data: sub }, { count: locCount }, { count: pracCount }] = await Promise.all([
+    const [{ data: sub }, { count: locCount }, { count: pracCount }, { data: plans }] = await Promise.all([
       context.supabase
         .from("practitioner_subscriptions")
-        .select("status, comped, trial_end, stripe_subscription_id, extra_locations, extra_practitioners, free_locations, free_practitioners")
+        .select(
+          "status, comped, trial_end, current_period_end, stripe_subscription_id, plan_id, custom_price_cents, extra_locations, extra_practitioners, free_locations, free_practitioners",
+        )
         .eq("profile_id", profile.id)
         .maybeSingle(),
       context.supabase.from("locations").select("id", { count: "exact", head: true }).eq("profile_id", profile.id),
       context.supabase.from("practitioners").select("id", { count: "exact", head: true }).eq("profile_id", profile.id),
+      context.supabase
+        .from("subscription_plans")
+        .select("id, kind, name, amount_cents, currency, interval, active")
+        .eq("active", true),
     ]);
     const trialActive = Boolean(sub?.trial_end && new Date(sub.trial_end as string).getTime() > Date.now());
     const liveSub = Boolean(sub?.stripe_subscription_id && ["active", "trialing"].includes(String(sub?.status)));
+
+    const list = (plans ?? []) as any[];
+    const base = list.find((p) => p.id === sub?.plan_id) ?? list.find((p) => p.kind === "base") ?? null;
+    const locAddon = list.find((p) => p.kind === "addon_location") ?? null;
+    const pracAddon = list.find((p) => p.kind === "addon_practitioner") ?? null;
+
+    const freeLocs = Math.max(0, Number(sub?.free_locations ?? 0));
+    const freePracs = Math.max(0, Number(sub?.free_practitioners ?? 0));
+    const usedLocs = locCount ?? 0;
+    const usedPracs = pracCount ?? 0;
+
+    // Chargeable seats are derived from what actually exists on the account —
+    // this is what the plan price is collated from, not a manual selection.
+    const billableLocs = Math.max(0, usedLocs - 1 - freeLocs);
+    const billablePracs = Math.max(0, usedPracs - 1 - freePracs);
+    const baseCents = Number(sub?.custom_price_cents ?? base?.amount_cents ?? 0);
+    const currency = (base?.currency ?? locAddon?.currency ?? "gbp") as string;
+    const interval = (base?.interval ?? "month") as string;
+    const monthlyTotalCents = sub?.comped
+      ? 0
+      : baseCents +
+        billableLocs * Number(locAddon?.amount_cents ?? 0) +
+        billablePracs * Number(pracAddon?.amount_cents ?? 0);
+
     return {
       comped: Boolean(sub?.comped),
       trialActive,
       liveSub,
+      currency,
+      interval,
+      nextBillingDate: (sub?.current_period_end as string | null) ?? (sub?.trial_end as string | null) ?? null,
+      basePlan: base ? { id: base.id, name: base.name, amount_cents: baseCents } : null,
+      monthlyTotalCents,
       practitioners: {
-        used: pracCount ?? 0,
-        allowed:
-          1 +
-          Math.max(0, Number(sub?.extra_practitioners ?? 0)) +
-          Math.max(0, Number(sub?.free_practitioners ?? 0)),
+        used: usedPracs,
+        allowed: 1 + Math.max(0, Number(sub?.extra_practitioners ?? 0)) + freePracs,
+        freeExtras: freePracs,
+        billable: billablePracs,
+        addonCents: Number(pracAddon?.amount_cents ?? 0),
       },
       locations: {
-        used: locCount ?? 0,
-        allowed:
-          1 +
-          Math.max(0, Number(sub?.extra_locations ?? 0)) +
-          Math.max(0, Number(sub?.free_locations ?? 0)),
+        used: usedLocs,
+        allowed: 1 + Math.max(0, Number(sub?.extra_locations ?? 0)) + freeLocs,
+        freeExtras: freeLocs,
+        billable: billableLocs,
+        addonCents: Number(locAddon?.amount_cents ?? 0),
       },
     };
   });
+
 
 /**
  * During the free trial a practitioner can reserve an extra seat instantly —
@@ -470,9 +508,10 @@ export const reserveExtraSeat = createServerFn({ method: "POST" })
 
 /**
  * Update the existing live Stripe subscription in place: change the base plan
- * and/or add-on quantities. Uses `proration_behavior: create_prorations` so
- * the change is added to the next scheduled direct-debit invoice rather than
- * starting a new payment schedule.
+ * and/or add-on quantities. Uses `proration_behavior: "none"` so nothing is
+ * charged mid-cycle — the new amount is collected from the next direct-debit
+ * invoice, keeping the existing payment schedule.
+
  */
 export const updateMySubscriptionItems = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -531,7 +570,7 @@ export const updateMySubscriptionItems = createServerFn({ method: "POST" })
 
     await stripe.subscriptions.update(sub.stripe_subscription_id, {
       items,
-      proration_behavior: "create_prorations",
+      proration_behavior: "none",
     });
 
     await context.supabase
