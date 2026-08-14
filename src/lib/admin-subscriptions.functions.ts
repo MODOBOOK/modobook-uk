@@ -553,20 +553,31 @@ async function upsertSubscriptionPatch(profileId: string, patch: Record<string, 
   return existing as { id: string; stripe_subscription_id: string | null } | null;
 }
 
-/** Grant / adjust complimentary extra locations and practitioners. */
+/** Grant / adjust complimentary extra locations, practitioners and associates. */
 export const adminSetSeatAllowance = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: { profileId: string; freeLocations?: number; freePractitioners?: number }) => i)
+  .inputValidator(
+    (i: {
+      profileId: string;
+      freeLocations?: number;
+      freePractitioners?: number;
+      freeAssociates?: number;
+      waiveAssociatesFee?: boolean;
+    }) => i,
+  )
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const clamp = (n: unknown) => Math.max(0, Math.min(50, Math.floor(Number(n) || 0)));
-    const patch: Record<string, number> = {};
+    const patch: Record<string, number | boolean> = {};
     if (data.freeLocations !== undefined) patch.free_locations = clamp(data.freeLocations);
     if (data.freePractitioners !== undefined) patch.free_practitioners = clamp(data.freePractitioners);
+    if (data.freeAssociates !== undefined) patch.free_associates = clamp(data.freeAssociates);
+    if (data.waiveAssociatesFee !== undefined) patch.waive_associates_fee = Boolean(data.waiveAssociatesFee);
     if (!Object.keys(patch).length) return { ok: true };
     await upsertSubscriptionPatch(data.profileId, patch);
     return { ok: true, ...patch };
   });
+
 
 /**
  * Free subscriptions & discounts.
