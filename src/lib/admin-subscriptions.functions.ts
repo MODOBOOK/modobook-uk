@@ -318,8 +318,7 @@ export const createDiscountCode = createServerFn({ method: "POST" })
   }) => i)
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const { getStripeStable } = await import("./stripe.server");
-    const stripe = getStripeStable();
+
 
     // Validate: Stripe rejects coupons with both percent_off and amount_off.
     const hasPercent = data.percent_off != null && data.percent_off > 0;
