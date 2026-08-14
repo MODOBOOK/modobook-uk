@@ -318,8 +318,7 @@ export const createDiscountCode = createServerFn({ method: "POST" })
   }) => i)
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const { getStripeStable } = await import("./stripe.server");
-    const stripe = getStripeStable();
+
 
     // Validate: Stripe rejects coupons with both percent_off and amount_off.
     const hasPercent = data.percent_off != null && data.percent_off > 0;
@@ -338,6 +337,8 @@ export const createDiscountCode = createServerFn({ method: "POST" })
     let coupon: { id: string } | null = null;
     let promo: { id: string } | null = null;
     try {
+      const { getStripeStable } = await import("./stripe.server");
+      const stripe = getStripeStable();
       coupon = await stripe.coupons.create({
         name: data.description || data.code,
         duration: data.duration,
@@ -349,7 +350,7 @@ export const createDiscountCode = createServerFn({ method: "POST" })
         redeem_by: data.expires_at ? Math.floor(new Date(data.expires_at).getTime() / 1000) : undefined,
       });
       promo = await stripe.promotionCodes.create({
-        coupon: coupon.id,
+        coupon: coupon!.id,
         code: data.code.toUpperCase(),
         max_redemptions: data.max_redemptions ?? undefined,
         expires_at: data.expires_at ? Math.floor(new Date(data.expires_at).getTime() / 1000) : undefined,
