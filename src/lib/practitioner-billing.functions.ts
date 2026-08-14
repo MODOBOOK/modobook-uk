@@ -437,22 +437,32 @@ export const getSeatSummary = createServerFn({ method: "GET" })
 
     // Associates: the service itself is a flat monthly add-on that covers the
     // first 5 associates, then each further associate adds its own seat fee.
-    const ASSOC_INCLUDED = 5;
+    // Admins can waive the module fee and/or grant extra complimentary seats.
+    const assocWaived = Boolean((sub as any)?.waive_associates_fee);
+    const freeAssoc = Math.max(0, Number((sub as any)?.free_associates ?? 0));
+    const ASSOC_INCLUDED = 5 + freeAssoc;
     const associatesEnabled = Boolean((profRow as any)?.associates_enabled);
     const usedAssoc = assocCount ?? 0;
-    const assocModuleCents = associatesEnabled ? Number(assocModule?.amount_cents ?? 0) : 0;
-    const billableAssoc = associatesEnabled ? Math.max(0, usedAssoc - ASSOC_INCLUDED) : 0;
+    const assocModuleCents = associatesEnabled && !assocWaived ? Number(assocModule?.amount_cents ?? 0) : 0;
+    const billableAssoc = associatesEnabled && !assocWaived ? Math.max(0, usedAssoc - ASSOC_INCLUDED) : 0;
 
     const baseCents = Number(sub?.custom_price_cents ?? base?.amount_cents ?? 0);
     const currency = (base?.currency ?? locAddon?.currency ?? "gbp") as string;
     const interval = (base?.interval ?? "month") as string;
-    const monthlyTotalCents = sub?.comped
+    const grossCents =
+      baseCents +
+      billableLocs * Number(locAddon?.amount_cents ?? 0) +
+      billablePracs * Number(pracAddon?.amount_cents ?? 0) +
+      assocModuleCents +
+      billableAssoc * Number(assocAddon?.amount_cents ?? 0);
+
+    // Admin-set standing discount on the collated monthly fee.
+    const discountPercent = Math.max(0, Math.min(100, Number((sub as any)?.discount_percent ?? 0)));
+    const discountAmountCents = Math.max(0, Number((sub as any)?.discount_amount_cents ?? 0));
+    const discountCents = sub?.comped
       ? 0
-      : baseCents +
-        billableLocs * Number(locAddon?.amount_cents ?? 0) +
-        billablePracs * Number(pracAddon?.amount_cents ?? 0) +
-        assocModuleCents +
-        billableAssoc * Number(assocAddon?.amount_cents ?? 0);
+      : Math.min(grossCents, Math.round((grossCents * discountPercent) / 100) + discountAmountCents);
+    const monthlyTotalCents = sub?.comped ? 0 : Math.max(0, grossCents - discountCents);
 
     return {
       comped: Boolean(sub?.comped),
@@ -462,6 +472,10 @@ export const getSeatSummary = createServerFn({ method: "GET" })
       interval,
       nextBillingDate: (sub?.current_period_end as string | null) ?? (sub?.trial_end as string | null) ?? null,
       basePlan: base ? { id: base.id, name: base.name, amount_cents: baseCents } : null,
+      grossMonthlyCents: grossCents,
+      discountCents,
+      discountPercent,
+      discountAmountCents,
       monthlyTotalCents,
       practitioners: {
         used: usedPracs,
@@ -482,11 +496,13 @@ export const getSeatSummary = createServerFn({ method: "GET" })
         used: usedAssoc,
         included: ASSOC_INCLUDED,
         billable: billableAssoc,
-        moduleCents: Number(assocModule?.amount_cents ?? 0),
+        waived: assocWaived,
+        moduleCents: assocModuleCents,
         moduleActive: associatesEnabled && assocModuleCents > 0,
-        addonCents: Number(assocAddon?.amount_cents ?? 0),
+        addonCents: associatesEnabled && !assocWaived ? Number(assocAddon?.amount_cents ?? 0) : 0,
       },
     };
+
 
   });
 
