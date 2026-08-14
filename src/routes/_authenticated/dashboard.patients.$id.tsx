@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { getClient } from "@/lib/clients.functions";
 import {
-  ArrowLeft, Activity, Camera, Pill, FileText, AlertTriangle, Loader2,
+  ArrowLeft, Activity, Camera, Pill, FileText, AlertTriangle, Loader2, Receipt,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
@@ -17,6 +17,7 @@ const TABS: Array<{ to: any; label: string; icon: any; exact?: boolean; matchInd
   { to: "/dashboard/patients/$id/timeline", label: "Timeline", icon: Activity },
   { to: "/dashboard/patients/$id/photos", label: "Before / After", icon: Camera },
   { to: "/dashboard/patients/$id/medications", label: "Medications", icon: Pill },
+  { to: "/dashboard/patients/$id/invoices", label: "Invoices", icon: Receipt },
 ];
 
 function initials(name: string) {
