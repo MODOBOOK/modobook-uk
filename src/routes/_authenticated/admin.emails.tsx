@@ -15,6 +15,8 @@ import {
   sendWaitlistOpenEmail,
 } from '@/lib/admin-emails.functions'
 import type { AdminBlock as Block } from '@/lib/email-templates/admin-broadcast'
+import { generateAdminEmail } from '@/lib/ai-admin-email.functions'
+import { parsePresetBody } from '@/lib/marketing-presets'
 import { EMAIL_DEFAULTS } from '@/lib/email-templates/defaults'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -24,9 +26,10 @@ import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { Loader2, Mail, Send, ArrowLeft, Shield, Plus, Trash2, ChevronUp, ChevronDown, Eye, Image as ImageIcon, Link as LinkIcon, Code, Rocket, PartyPopper } from 'lucide-react'
+import { Loader2, Mail, Send, ArrowLeft, Shield, Plus, Trash2, ChevronUp, ChevronDown, Eye, Image as ImageIcon, Link as LinkIcon, Code, Rocket, PartyPopper, Sparkles } from 'lucide-react'
 import { AdminShell } from '@/components/admin/AdminShell'
 import { toast } from 'sonner'
+
 
 export const Route = createFileRoute('/_authenticated/admin/emails')({
   ssr: false,
@@ -316,6 +319,34 @@ function BroadcastDialog({
   const [previewing, setPreviewing] = useState(false)
   const [testEmail, setTestEmail] = useState('')
 
+  // AI composer
+  const generateAi = useServerFn(generateAdminEmail)
+  const [aiPrompt, setAiPrompt] = useState('')
+  const [aiTone, setAiTone] = useState('')
+  const [aiMode, setAiMode] = useState<'content' | 'html'>('content')
+  const [aiBusy, setAiBusy] = useState(false)
+
+  const runAi = async () => {
+    if (!aiPrompt.trim()) { toast.error('Tell the AI what the email is about'); return }
+    setAiBusy(true)
+    try {
+      const r = await generateAi({ data: { prompt: aiPrompt, mode: aiMode, tone: aiTone } }) as any
+      if (r.subject) setSubject(r.subject)
+      if (r.mode === 'html') {
+        setMessage('')
+        setBlocks([{ type: 'html', html: r.html || '', full: true }] as Block[])
+      } else {
+        setMessage('')
+        setBlocks(parsePresetBody(r.body || '') as Block[])
+      }
+      setPreviewHtml(null)
+      toast.success('Draft generated — edit anything you like')
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Generation failed')
+    } finally { setAiBusy(false) }
+  }
+
+
   useEffect(() => {
     waitlistCount().then((r: any) => setWaitlist(r.count)).catch(() => {})
   }, [])
@@ -400,6 +431,39 @@ function BroadcastDialog({
               Blank lines start a new paragraph. Use <code>{'{{first_name}}'}</code> to personalise.
             </p>
           </div>
+
+          {/* AI composer */}
+          <div className="rounded-lg border p-3 space-y-3 bg-muted/20">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-primary" />
+              <p className="text-sm font-medium">Write it with AI</p>
+            </div>
+            <Textarea
+              rows={3}
+              value={aiPrompt}
+              onChange={(e) => setAiPrompt(e.target.value)}
+              placeholder="e.g. Announce the new upcoming appointments dashboard and invite practitioners to try it this week."
+            />
+            <Input value={aiTone} onChange={(e) => setAiTone(e.target.value)} placeholder="Tone (optional) — warm / upbeat / clinical" />
+            <div className="flex flex-wrap items-center gap-2">
+              <Button type="button" size="sm" variant={aiMode === 'content' ? 'default' : 'outline'} onClick={() => setAiMode('content')}>
+                Branded content
+              </Button>
+              <Button type="button" size="sm" variant={aiMode === 'html' ? 'default' : 'outline'} onClick={() => setAiMode('html')}>
+                <Code className="mr-1 h-3.5 w-3.5" /> Email code (HTML)
+              </Button>
+              <Button type="button" size="sm" className="ml-auto" onClick={runAi} disabled={aiBusy}>
+                {aiBusy ? <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> : <Sparkles className="mr-1 h-3.5 w-3.5" />}
+                Generate
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {aiMode === 'content'
+                ? 'Content is placed into the MODO layout as editable blocks.'
+                : 'AI writes ready-to-send MODO-branded HTML into a full-email code block.'}
+            </p>
+          </div>
+
 
           {/* Content blocks */}
           <div className="rounded-lg border p-3 space-y-3">
