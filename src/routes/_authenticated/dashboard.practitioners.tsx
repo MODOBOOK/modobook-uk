@@ -7,6 +7,8 @@ import {
   deletePractitioner,
 } from "@/lib/practitioners.functions";
 import { getSeatSummary, reserveExtraSeat } from "@/lib/practitioner-billing.functions";
+import { SeatCostWarning, seatWillCharge, type SeatSummary } from "@/components/SeatCostWarning";
+
 import { listMyLocations } from "@/lib/locations.functions";
 import { getMyProfile, updateProfile } from "@/lib/profiles.functions";
 import { ImageUploader } from "@/components/ImageUploader";
@@ -62,6 +64,8 @@ function PractitionersPage() {
   const [saving, setSaving] = useState(false);
   const [seats, setSeats] = useState<Awaited<ReturnType<typeof getSeatSummary>> | null>(null);
   const [reserving, setReserving] = useState(false);
+  const [warnOpen, setWarnOpen] = useState(false);
+
 
   async function refresh() {
     setLoading(true);
@@ -107,11 +111,24 @@ function PractitionersPage() {
     }
   }
 
-
   function openNew() {
     setDraft(emptyDraft());
     setOpen(true);
   }
+
+  /** Confirm the price change first whenever this practitioner adds a paid seat. */
+  function requestNew() {
+    if (seatWillCharge(seats as unknown as SeatSummary, "practitioner")) setWarnOpen(true);
+    else if (seatsFull && canReserve) handleReserveSeat();
+    else openNew();
+  }
+
+  function confirmSeatCost() {
+    setWarnOpen(false);
+    if (seatsFull && canReserve) handleReserveSeat();
+    else openNew();
+  }
+
   function openEdit(p: Pract) {
     setDraft({
       ...p,
@@ -168,11 +185,20 @@ function PractitionersPage() {
             Add the team members who work at your clinic and assign them to locations. They appear under each location on your booking page.
           </p>
         </div>
-        <Button onClick={seatsFull && canReserve ? handleReserveSeat : openNew} disabled={reserving || (seatsFull && !canReserve)}>
+        <Button onClick={requestNew} disabled={reserving}>
           <Plus className="mr-2 h-4 w-4" />
-          {seatsFull && canReserve ? (reserving ? "Adding seat…" : "Add a seat & practitioner") : "Add practitioner"}
+          {reserving ? "Adding seat…" : "Add practitioner"}
         </Button>
       </div>
+
+      <SeatCostWarning
+        open={warnOpen}
+        onOpenChange={setWarnOpen}
+        kind="practitioner"
+        seats={seats as unknown as SeatSummary}
+        onConfirm={confirmSeatCost}
+      />
+
 
       {seats && !seats.comped && (
         <Card className={seatsFull ? "border-amber-500/50 bg-amber-500/5" : undefined}>
@@ -183,11 +209,10 @@ function PractitionersPage() {
               </p>
               <p className="text-xs text-muted-foreground">
                 {seatsFull
-                  ? canReserve
-                    ? "Your plan includes one practitioner. Add another seat now — it's reserved during your free trial and billed when your direct debit starts."
-                    : "You've used all the practitioner seats on your plan. Increase the practitioner add-on in Plan & billing to add more."
-                  : "You can add another practitioner right now."}
+                  ? "Your plan price is worked out from your account — adding another practitioner adds a seat automatically, and your direct debit updates from your next billing date."
+                  : "You can add another practitioner right now at no extra cost."}
               </p>
+
             </div>
             <Button asChild variant="outline" size="sm">
               <Link to="/dashboard/billing">Plan &amp; billing</Link>
