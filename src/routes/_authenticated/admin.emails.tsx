@@ -71,6 +71,8 @@ function AdminEmailsPage() {
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState<AuthEmailDef | null>(null)
   const [composing, setComposing] = useState(false)
+  const [composingPreset, setComposingPreset] = useState<'platform-updates' | undefined>(undefined)
+
 
   const [waitlistLaunchOpen, setWaitlistLaunchOpen] = useState(false)
 
