@@ -148,17 +148,21 @@ function MenuPage() {
   const [query, setQuery] = useState("");
 
 
+  const pilot = pilotFeaturesEnabled(profile.slug);
+
   const filtered = useMemo(() => {
     const visible = groups.map((g) => ({
       ...g,
-      items: g.items.filter((i) => i.to !== "/dashboard/associates" || !!profile.associates_enabled),
-    }));
+      items: g.items.filter((i) =>
+        i.to === "/dashboard/associates" ? pilot && !!profile.associates_enabled : true,
+      ),
+    })).filter((g) => g.items.length > 0);
     if (!query.trim()) return visible;
     const q = query.toLowerCase();
     return visible
       .map((g) => ({ ...g, items: g.items.filter((i) => i.label.toLowerCase().includes(q) || i.description.toLowerCase().includes(q)) }))
       .filter((g) => g.items.length > 0);
-  }, [query, profile.associates_enabled]);
+  }, [query, profile.associates_enabled, pilot]);
 
 
   return (
