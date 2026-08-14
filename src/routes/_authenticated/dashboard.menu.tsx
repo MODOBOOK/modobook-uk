@@ -109,6 +109,7 @@ const groups: Group[] = [
     items: [
       { label: "Booking flow", description: "Concern picker shown before treatments", to: "/dashboard/booking-flow", icon: HelpCircle, ...T.taupe },
       { label: "Availability", description: "Opening times & ad-hoc slots", to: "/dashboard/availability", icon: CalendarDays, ...T.espresso },
+      { label: "Upcoming appointments", description: "Every booking in one list with AI patient briefs", to: "/dashboard/upcoming", icon: CalendarDays, ...T.ivory },
       { label: "New appointment", description: "Book in a patient manually", to: "/dashboard/new-appointment", icon: CalendarPlus, ...T.sand },
       { label: "Consultations", description: "MODO step-by-step records", to: "/dashboard/consultations", icon: ClipboardList, ...T.mocha },
       { label: "Patients", description: "Client list, history & files", to: "/dashboard/patients", icon: Users, ...T.cream },
@@ -173,11 +174,6 @@ function MenuPage() {
               ? !!profile.associates_enabled
               : true // non-pilot clinics see it as "coming soon"
             : true,
-        )
-        .concat(
-          !pilot && g.title === "Bookings"
-            ? [{ label: "Upcoming appointments", description: "Every booking in one list with AI patient briefs", to: "/dashboard/upcoming", icon: CalendarDays, ...T.ivory }]
-            : [],
         ),
     })).filter((g) => g.items.length > 0);
     if (!query.trim()) return visible;
