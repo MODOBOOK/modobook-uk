@@ -109,7 +109,27 @@ function AdminEmailsPage() {
         </Link>
       </div>
 
+      <Card className="border-primary/30 bg-primary/5">
+        <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0">
+          <div className="min-w-0">
+            <CardTitle className="flex items-center gap-2">
+              <Rocket className="h-4 w-4 shrink-0" /> Product updates announcement
+            </CardTitle>
+            <p className="text-sm text-muted-foreground mt-1">
+              Clean MODO-branded email with the logo, icon feature rows and a dashboard button. Opens ready to preview, test-send, then broadcast.
+            </p>
+          </div>
+          <Button
+            className="shrink-0"
+            onClick={() => { setComposingPreset('platform-updates'); setComposing(true) }}
+          >
+            Open email
+          </Button>
+        </CardHeader>
+      </Card>
+
       <WaitlistLaunchCard onOpen={() => setWaitlistLaunchOpen(true)} />
+
 
       {waitlistLaunchOpen && (
         <WaitlistLaunchDialog
