@@ -20,6 +20,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PrescriberHubRouteImport } from './routes/prescriber-hub'
+import { Route as HairBeautyWaitlistRouteImport } from './routes/hair-beauty-waitlist'
 import { Route as FeaturesRouteImport } from './routes/features'
 import { Route as FaqRouteImport } from './routes/faq'
 import { Route as DemoRouteImport } from './routes/demo'
@@ -122,6 +123,7 @@ import { Route as AuthenticatedDashboardAftercareRouteImport } from './routes/_a
 import { Route as AuthenticatedDashboardAddonsRouteImport } from './routes/_authenticated/dashboard.addons'
 import { Route as AuthenticatedDashboardAboutRouteImport } from './routes/_authenticated/dashboard.about'
 import { Route as AuthenticatedAdminPractitionersRouteImport } from './routes/_authenticated/admin.practitioners'
+import { Route as AuthenticatedAdminHairBeautyRouteImport } from './routes/_authenticated/admin.hair-beauty'
 import { Route as AuthenticatedAdminEmailsRouteImport } from './routes/_authenticated/admin.emails'
 import { Route as AuthenticatedAdminCompetitionRouteImport } from './routes/_authenticated/admin.competition'
 import { Route as AuthenticatedAdminAuditRouteImport } from './routes/_authenticated/admin.audit'
@@ -222,6 +224,11 @@ const PricingRoute = PricingRouteImport.update({
 const PrescriberHubRoute = PrescriberHubRouteImport.update({
   id: '/prescriber-hub',
   path: '/prescriber-hub',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HairBeautyWaitlistRoute = HairBeautyWaitlistRouteImport.update({
+  id: '/hair-beauty-waitlist',
+  path: '/hair-beauty-waitlist',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FeaturesRoute = FeaturesRouteImport.update({
@@ -793,6 +800,12 @@ const AuthenticatedAdminPractitionersRoute =
     path: '/practitioners',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminHairBeautyRoute =
+  AuthenticatedAdminHairBeautyRouteImport.update({
+    id: '/hair-beauty',
+    path: '/hair-beauty',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminEmailsRoute =
   AuthenticatedAdminEmailsRouteImport.update({
     id: '/emails',
@@ -1067,6 +1080,7 @@ export interface FileRoutesByFullPath {
   '/demo': typeof DemoRoute
   '/faq': typeof FaqRoute
   '/features': typeof FeaturesRoute
+  '/hair-beauty-waitlist': typeof HairBeautyWaitlistRoute
   '/prescriber-hub': typeof PrescriberHubRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRouteWithChildren
@@ -1102,6 +1116,7 @@ export interface FileRoutesByFullPath {
   '/admin/audit': typeof AuthenticatedAdminAuditRoute
   '/admin/competition': typeof AuthenticatedAdminCompetitionRoute
   '/admin/emails': typeof AuthenticatedAdminEmailsRoute
+  '/admin/hair-beauty': typeof AuthenticatedAdminHairBeautyRoute
   '/admin/practitioners': typeof AuthenticatedAdminPractitionersRouteWithChildren
   '/dashboard/about': typeof AuthenticatedDashboardAboutRoute
   '/dashboard/addons': typeof AuthenticatedDashboardAddonsRoute
@@ -1227,6 +1242,7 @@ export interface FileRoutesByTo {
   '/demo': typeof DemoRoute
   '/faq': typeof FaqRoute
   '/features': typeof FeaturesRoute
+  '/hair-beauty-waitlist': typeof HairBeautyWaitlistRoute
   '/prescriber-hub': typeof PrescriberHubRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRouteWithChildren
@@ -1257,6 +1273,7 @@ export interface FileRoutesByTo {
   '/admin/audit': typeof AuthenticatedAdminAuditRoute
   '/admin/competition': typeof AuthenticatedAdminCompetitionRoute
   '/admin/emails': typeof AuthenticatedAdminEmailsRoute
+  '/admin/hair-beauty': typeof AuthenticatedAdminHairBeautyRoute
   '/dashboard/about': typeof AuthenticatedDashboardAboutRoute
   '/dashboard/addons': typeof AuthenticatedDashboardAddonsRoute
   '/dashboard/aftercare': typeof AuthenticatedDashboardAftercareRoute
@@ -1380,6 +1397,7 @@ export interface FileRoutesById {
   '/demo': typeof DemoRoute
   '/faq': typeof FaqRoute
   '/features': typeof FeaturesRoute
+  '/hair-beauty-waitlist': typeof HairBeautyWaitlistRoute
   '/prescriber-hub': typeof PrescriberHubRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRouteWithChildren
@@ -1415,6 +1433,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/audit': typeof AuthenticatedAdminAuditRoute
   '/_authenticated/admin/competition': typeof AuthenticatedAdminCompetitionRoute
   '/_authenticated/admin/emails': typeof AuthenticatedAdminEmailsRoute
+  '/_authenticated/admin/hair-beauty': typeof AuthenticatedAdminHairBeautyRoute
   '/_authenticated/admin/practitioners': typeof AuthenticatedAdminPractitionersRouteWithChildren
   '/_authenticated/dashboard/about': typeof AuthenticatedDashboardAboutRoute
   '/_authenticated/dashboard/addons': typeof AuthenticatedDashboardAddonsRoute
@@ -1542,6 +1561,7 @@ export interface FileRouteTypes {
     | '/demo'
     | '/faq'
     | '/features'
+    | '/hair-beauty-waitlist'
     | '/prescriber-hub'
     | '/pricing'
     | '/privacy'
@@ -1577,6 +1597,7 @@ export interface FileRouteTypes {
     | '/admin/audit'
     | '/admin/competition'
     | '/admin/emails'
+    | '/admin/hair-beauty'
     | '/admin/practitioners'
     | '/dashboard/about'
     | '/dashboard/addons'
@@ -1702,6 +1723,7 @@ export interface FileRouteTypes {
     | '/demo'
     | '/faq'
     | '/features'
+    | '/hair-beauty-waitlist'
     | '/prescriber-hub'
     | '/pricing'
     | '/privacy'
@@ -1732,6 +1754,7 @@ export interface FileRouteTypes {
     | '/admin/audit'
     | '/admin/competition'
     | '/admin/emails'
+    | '/admin/hair-beauty'
     | '/dashboard/about'
     | '/dashboard/addons'
     | '/dashboard/aftercare'
@@ -1854,6 +1877,7 @@ export interface FileRouteTypes {
     | '/demo'
     | '/faq'
     | '/features'
+    | '/hair-beauty-waitlist'
     | '/prescriber-hub'
     | '/pricing'
     | '/privacy'
@@ -1889,6 +1913,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/audit'
     | '/_authenticated/admin/competition'
     | '/_authenticated/admin/emails'
+    | '/_authenticated/admin/hair-beauty'
     | '/_authenticated/admin/practitioners'
     | '/_authenticated/dashboard/about'
     | '/_authenticated/dashboard/addons'
@@ -2016,6 +2041,7 @@ export interface RootRouteChildren {
   DemoRoute: typeof DemoRoute
   FaqRoute: typeof FaqRoute
   FeaturesRoute: typeof FeaturesRoute
+  HairBeautyWaitlistRoute: typeof HairBeautyWaitlistRoute
   PrescriberHubRoute: typeof PrescriberHubRoute
   PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRouteWithChildren
@@ -2132,6 +2158,13 @@ declare module '@tanstack/react-router' {
       path: '/prescriber-hub'
       fullPath: '/prescriber-hub'
       preLoaderRoute: typeof PrescriberHubRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/hair-beauty-waitlist': {
+      id: '/hair-beauty-waitlist'
+      path: '/hair-beauty-waitlist'
+      fullPath: '/hair-beauty-waitlist'
+      preLoaderRoute: typeof HairBeautyWaitlistRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/features': {
@@ -2848,6 +2881,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminPractitionersRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/hair-beauty': {
+      id: '/_authenticated/admin/hair-beauty'
+      path: '/hair-beauty'
+      fullPath: '/admin/hair-beauty'
+      preLoaderRoute: typeof AuthenticatedAdminHairBeautyRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/emails': {
       id: '/_authenticated/admin/emails'
       path: '/emails'
@@ -3195,6 +3235,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminAuditRoute: typeof AuthenticatedAdminAuditRoute
   AuthenticatedAdminCompetitionRoute: typeof AuthenticatedAdminCompetitionRoute
   AuthenticatedAdminEmailsRoute: typeof AuthenticatedAdminEmailsRoute
+  AuthenticatedAdminHairBeautyRoute: typeof AuthenticatedAdminHairBeautyRoute
   AuthenticatedAdminPractitionersRoute: typeof AuthenticatedAdminPractitionersRouteWithChildren
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
 }
@@ -3203,6 +3244,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminAuditRoute: AuthenticatedAdminAuditRoute,
   AuthenticatedAdminCompetitionRoute: AuthenticatedAdminCompetitionRoute,
   AuthenticatedAdminEmailsRoute: AuthenticatedAdminEmailsRoute,
+  AuthenticatedAdminHairBeautyRoute: AuthenticatedAdminHairBeautyRoute,
   AuthenticatedAdminPractitionersRoute:
     AuthenticatedAdminPractitionersRouteWithChildren,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
@@ -3619,6 +3661,7 @@ const rootRouteChildren: RootRouteChildren = {
   DemoRoute: DemoRoute,
   FaqRoute: FaqRoute,
   FeaturesRoute: FeaturesRoute,
+  HairBeautyWaitlistRoute: HairBeautyWaitlistRoute,
   PrescriberHubRoute: PrescriberHubRoute,
   PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRouteWithChildren,
