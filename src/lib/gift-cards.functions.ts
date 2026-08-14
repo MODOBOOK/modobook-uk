@@ -30,6 +30,8 @@ const upsertSchema = z.object({
   description: z.string().max(2000).nullable().optional(),
   kind: z.enum(["value", "treatment", "package"]),
   amount: z.number().nonnegative().nullable().optional(),
+  /** What the buyer pays. Null = same as the card value (no discount). */
+  price: z.number().nonnegative().nullable().optional(),
   treatment_id: z.string().uuid().nullable().optional(),
   package_id: z.string().uuid().nullable().optional(),
   treatment_ids: z.array(z.string().uuid()).optional(),
@@ -209,7 +211,7 @@ export const listPublicGiftCards = createServerFn({ method: "GET" })
     if (!prof?.user_id) return { cards: [] };
     const { data: cards, error } = await supabaseAdmin
       .from("gift_cards")
-      .select("id,name,description,kind,amount,image_url,treatment_id,package_id,treatment_ids,package_ids,expires_months")
+      .select("id,name,description,kind,amount,price,image_url,treatment_id,package_id,treatment_ids,package_ids,expires_months")
       .eq("profile_id", prof.user_id)
       .eq("active", true)
       .order("amount", { ascending: true, nullsFirst: false })
@@ -279,6 +281,10 @@ export const purchaseGiftCard = createServerFn({ method: "POST" })
     }
     if (!amount || amount <= 0) throw new Error("Gift card price is not set");
 
+    // What the buyer actually pays. A lower sale price than the card value is a
+    // discount (e.g. pay £80, get £100 of credit).
+    const chargeAmount = card.price != null && Number(card.price) > 0 ? Number(card.price) : amount;
+
     const expiresAt = card.expires_months
       ? new Date(Date.now() + card.expires_months * 30 * 24 * 3600 * 1000).toISOString()
       : null;
@@ -297,6 +303,7 @@ export const purchaseGiftCard = createServerFn({ method: "POST" })
         package_ids: pIds,
         initial_amount: amount,
         remaining_amount: amount,
+        amount_paid: chargeAmount,
         buyer_name: data.buyer_name,
         buyer_email: data.buyer_email,
         recipient_name: data.recipient_name,
@@ -319,7 +326,7 @@ export const purchaseGiftCard = createServerFn({ method: "POST" })
           quantity: 1,
           price_data: {
             currency: "gbp",
-            unit_amount: Math.round(amount * 100),
+            unit_amount: Math.round(chargeAmount * 100),
             product_data: { name: `Gift card — ${card.name}` },
           },
         },

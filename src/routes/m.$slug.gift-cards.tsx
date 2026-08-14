@@ -23,7 +23,7 @@ export const Route = createFileRoute("/m/$slug/gift-cards")({
   component: PublicGiftCards,
 });
 
-type Card = { id: string; name: string; description: string | null; kind: "value" | "treatment" | "package"; amount: number | null; image_url: string | null };
+type Card = { id: string; name: string; description: string | null; kind: "value" | "treatment" | "package"; amount: number | null; price: number | null; image_url: string | null };
 
 function PublicGiftCards() {
   const { slug } = useParams({ from: "/m/$slug/gift-cards" });
@@ -62,7 +62,12 @@ function PublicGiftCards() {
               <div className="flex items-start justify-between gap-2">
                 <h3 className="font-semibold">{c.name}</h3>
                 {c.kind === "value" && c.amount != null && (
-                  <span className="shrink-0 rounded-full bg-black/5 px-2 py-0.5 text-sm font-semibold">£{Number(c.amount).toFixed(2)}</span>
+                  <span className="flex shrink-0 items-baseline gap-1.5 rounded-full bg-black/5 px-2 py-0.5 text-sm font-semibold">
+                    {c.price != null && Number(c.price) > 0 && Number(c.price) < Number(c.amount) && (
+                      <span className="text-xs font-normal line-through opacity-60">£{Number(c.amount).toFixed(2)}</span>
+                    )}
+                    £{Number(c.price != null && Number(c.price) > 0 ? c.price : c.amount).toFixed(2)}
+                  </span>
                 )}
               </div>
               {c.description && <p className="text-sm opacity-70 line-clamp-3">{c.description}</p>}
