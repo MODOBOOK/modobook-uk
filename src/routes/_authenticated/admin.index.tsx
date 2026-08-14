@@ -162,6 +162,11 @@ function AdminPage() {
               <Shield className="mr-2 h-4 w-4" /> TLAs competition
             </Button>
           </Link>
+          <Link to="/admin/hair-beauty">
+            <Button variant="outline" size="sm">
+              <Shield className="mr-2 h-4 w-4" /> Hair & beauty waitlist
+            </Button>
+          </Link>
         </div>
       </div>
 
