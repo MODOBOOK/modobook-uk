@@ -432,6 +432,39 @@ function BroadcastDialog({
             </p>
           </div>
 
+          {/* AI composer */}
+          <div className="rounded-lg border p-3 space-y-3 bg-muted/20">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-primary" />
+              <p className="text-sm font-medium">Write it with AI</p>
+            </div>
+            <Textarea
+              rows={3}
+              value={aiPrompt}
+              onChange={(e) => setAiPrompt(e.target.value)}
+              placeholder="e.g. Announce the new upcoming appointments dashboard and invite practitioners to try it this week."
+            />
+            <Input value={aiTone} onChange={(e) => setAiTone(e.target.value)} placeholder="Tone (optional) — warm / upbeat / clinical" />
+            <div className="flex flex-wrap items-center gap-2">
+              <Button type="button" size="sm" variant={aiMode === 'content' ? 'default' : 'outline'} onClick={() => setAiMode('content')}>
+                Branded content
+              </Button>
+              <Button type="button" size="sm" variant={aiMode === 'html' ? 'default' : 'outline'} onClick={() => setAiMode('html')}>
+                <Code className="mr-1 h-3.5 w-3.5" /> Email code (HTML)
+              </Button>
+              <Button type="button" size="sm" className="ml-auto" onClick={runAi} disabled={aiBusy}>
+                {aiBusy ? <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> : <Sparkles className="mr-1 h-3.5 w-3.5" />}
+                Generate
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {aiMode === 'content'
+                ? 'Content is placed into the MODO layout as editable blocks.'
+                : 'AI writes ready-to-send MODO-branded HTML into a full-email code block.'}
+            </p>
+          </div>
+
+
           {/* Content blocks */}
           <div className="rounded-lg border p-3 space-y-3">
             <div className="flex flex-wrap items-center gap-2">
