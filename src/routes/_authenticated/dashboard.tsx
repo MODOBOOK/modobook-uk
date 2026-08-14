@@ -91,7 +91,7 @@ const navItems = [
   { label: "Practitioners", to: "/dashboard/practitioners", icon: Users },
   { label: "Staff", to: "/dashboard/staff", icon: Users },
 
-  { section: "Clinic owner" as const, label: "Associates", to: "/dashboard/associates", icon: ShieldCheck, flag: "associates_enabled" as const },
+  { section: "Clinic owner" as const, label: "Associates", to: "/dashboard/associates", icon: ShieldCheck, flag: "associates_enabled" as const, pilot: true },
   { section: "Clinic owner" as const, label: "Room rental", to: "/dashboard/room-rental", icon: DoorOpen },
 
 
