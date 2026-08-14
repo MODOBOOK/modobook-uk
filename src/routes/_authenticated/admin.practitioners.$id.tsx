@@ -470,11 +470,17 @@ function SeatAllowanceCard({ profileId }: { profileId: string }) {
   });
   const [loc, setLoc] = useState<string>("");
   const [prac, setPrac] = useState<string>("");
+  const [assoc, setAssoc] = useState<string>("");
+  const [pct, setPct] = useState<string>("");
+  const [amt, setAmt] = useState<string>("");
   const [busy, setBusy] = useState(false);
   const [trialDays, setTrialDays] = useState("30");
 
   const freeLoc = loc === "" ? String(data?.free_locations ?? 0) : loc;
   const freePrac = prac === "" ? String(data?.free_practitioners ?? 0) : prac;
+  const freeAssoc = assoc === "" ? String(data?.free_associates ?? 0) : assoc;
+  const pctVal = pct === "" ? String(data?.discount_percent ?? 0) : pct;
+  const amtVal = amt === "" ? ((data?.discount_amount_cents ?? 0) / 100).toFixed(2) : amt;
 
   async function save() {
     setBusy(true);
@@ -484,10 +490,11 @@ function SeatAllowanceCard({ profileId }: { profileId: string }) {
           profileId,
           freeLocations: Number(freeLoc) || 0,
           freePractitioners: Number(freePrac) || 0,
+          freeAssociates: Number(freeAssoc) || 0,
         },
       });
       toast.success("Free seats updated");
-      setLoc(""); setPrac("");
+      setLoc(""); setPrac(""); setAssoc("");
       refetch();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed");
@@ -495,6 +502,18 @@ function SeatAllowanceCard({ profileId }: { profileId: string }) {
       setBusy(false);
     }
   }
+
+  async function saveDiscount() {
+    await applyBilling(
+      {
+        discountPercent: Number(pctVal) || 0,
+        discountAmountCents: Math.round((Number(amtVal) || 0) * 100),
+      },
+      "Monthly discount updated",
+    );
+    setPct(""); setAmt("");
+  }
+
 
   async function applyBilling(patch: Record<string, unknown>, msg: string) {
     setBusy(true);
