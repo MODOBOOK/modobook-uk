@@ -10,6 +10,11 @@ import {
 } from "@/components/ui/alert-dialog";
 import { AlertTriangle } from "lucide-react";
 
+const money = (cents: number, currency = "gbp") =>
+  new Intl.NumberFormat("en-GB", { style: "currency", currency: currency.toUpperCase() }).format((cents ?? 0) / 100);
+
+
+
 export type SeatSummary = {
   comped: boolean;
   trialActive: boolean;
@@ -20,17 +25,38 @@ export type SeatSummary = {
   monthlyTotalCents: number;
   practitioners: { used: number; allowed: number; freeExtras: number; billable: number; addonCents: number };
   locations: { used: number; allowed: number; freeExtras: number; billable: number; addonCents: number };
+  associates?: {
+    enabled: boolean;
+    used: number;
+    included: number;
+    billable: number;
+    moduleCents: number;
+    moduleActive: boolean;
+    addonCents: number;
+  };
 };
 
-const money = (cents: number, currency = "gbp") =>
-  new Intl.NumberFormat("en-GB", { style: "currency", currency: currency.toUpperCase() }).format((cents ?? 0) / 100);
+export type SeatKind = "location" | "practitioner" | "associate";
+
+/** What adding one more seat of this kind would add to the plan, in cents. */
+export function seatChargeCents(seats: SeatSummary | null, kind: SeatKind) {
+  if (!seats || seats.comped) return 0;
+  if (kind === "associate") {
+    const a = seats.associates;
+    if (!a) return 0;
+    const moduleCents = a.moduleActive ? 0 : a.moduleCents; // first time switches the service on
+    const seatCents = a.used + 1 > a.included ? a.addonCents : 0;
+    return moduleCents + seatCents;
+  }
+  const s = kind === "location" ? seats.locations : seats.practitioners;
+  return s.used + 1 > 1 + s.freeExtras ? s.addonCents : 0;
+}
 
 /** True when creating one more seat of this kind would add a charge. */
-export function seatWillCharge(seats: SeatSummary | null, kind: "location" | "practitioner") {
-  if (!seats || seats.comped) return false;
-  const s = kind === "location" ? seats.locations : seats.practitioners;
-  return s.used + 1 > 1 + s.freeExtras && s.addonCents > 0;
+export function seatWillCharge(seats: SeatSummary | null, kind: SeatKind) {
+  return seatChargeCents(seats, kind) > 0;
 }
+
 
 /**
  * Shown before a practitioner adds a chargeable extra location or team member.
@@ -46,14 +72,17 @@ export function SeatCostWarning({
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
-  kind: "location" | "practitioner";
+  kind: SeatKind;
   seats: SeatSummary | null;
   onConfirm: () => void;
 }) {
   if (!seats) return null;
+  const isAssoc = kind === "associate";
+  const a = seats.associates;
   const s = kind === "location" ? seats.locations : seats.practitioners;
-  const noun = kind === "location" ? "location" : "practitioner";
-  const newTotal = seats.monthlyTotalCents + s.addonCents;
+  const noun = isAssoc ? "associate" : kind === "location" ? "location" : "practitioner";
+  const delta = seatChargeCents(seats, kind);
+  const newTotal = seats.monthlyTotalCents + delta;
   const when = seats.nextBillingDate ? new Date(seats.nextBillingDate).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }) : null;
 
   return (
@@ -62,16 +91,40 @@ export function SeatCostWarning({
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-amber-600" />
-            This adds {money(s.addonCents, seats.currency)} to your plan
+            This adds {money(delta, seats.currency)} to your plan
           </AlertDialogTitle>
           <AlertDialogDescription asChild>
             <div className="space-y-3 text-sm">
-              <p>
-                You currently have {s.used} {noun}
-                {s.used === 1 ? "" : "s"}. Your plan includes {1 + s.freeExtras} at no extra cost, so adding another
-                {" "}{noun} adds an extra {noun} seat at{" "}
-                <strong>{money(s.addonCents, seats.currency)}</strong>/{seats.interval}.
-              </p>
+              {isAssoc && a ? (
+                <p>
+                  {a.moduleActive ? null : (
+                    <>
+                      Turning on the Associates service adds <strong>{money(a.moduleCents, seats.currency)}</strong>/
+                      {seats.interval} to your plan, which covers your first {a.included} associates.{" "}
+                    </>
+                  )}
+                  You currently have {a.used} associate{a.used === 1 ? "" : "s"}.
+                  {a.used + 1 > a.included ? (
+                    <>
+                      {" "}That's beyond the {a.included} included, so this one adds a further{" "}
+                      <strong>{money(a.addonCents, seats.currency)}</strong>/{seats.interval}.
+                    </>
+                  ) : (
+                    <>
+                      {" "}This one is included — each associate beyond {a.included} adds{" "}
+                      {money(a.addonCents, seats.currency)}/{seats.interval}.
+                    </>
+                  )}
+                </p>
+              ) : (
+                <p>
+                  You currently have {s.used} {noun}
+                  {s.used === 1 ? "" : "s"}. Your plan includes {1 + s.freeExtras} at no extra cost, so adding another
+                  {" "}{noun} adds an extra {noun} seat at{" "}
+                  <strong>{money(s.addonCents, seats.currency)}</strong>/{seats.interval}.
+                </p>
+              )}
+
               <div className="rounded-lg border bg-muted/50 p-3">
                 <div className="flex items-center justify-between">
                   <span>Plan today</span>

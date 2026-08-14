@@ -392,7 +392,8 @@ export const getSeatSummary = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const profile = await getMyProfileId(context);
-    const [{ data: sub }, { count: locCount }, { count: pracCount }, { data: plans }] = await Promise.all([
+    const [{ data: sub }, { count: locCount }, { count: pracCount }, { data: plans }, { data: profRow }, { count: assocCount }] =
+      await Promise.all([
       context.supabase
         .from("practitioner_subscriptions")
         .select(
@@ -406,7 +407,14 @@ export const getSeatSummary = createServerFn({ method: "GET" })
         .from("subscription_plans")
         .select("id, kind, name, amount_cents, currency, interval, active")
         .eq("active", true),
+      context.supabase.from("profiles").select("associates_enabled").eq("id", profile.id).maybeSingle(),
+      context.supabase
+        .from("clinic_associates")
+        .select("id", { count: "exact", head: true })
+        .eq("clinic_profile_id", profile.id)
+        .in("status", ["invited", "active"]),
     ]);
+
     const trialActive = Boolean(sub?.trial_end && new Date(sub.trial_end as string).getTime() > Date.now());
     const liveSub = Boolean(sub?.stripe_subscription_id && ["active", "trialing"].includes(String(sub?.status)));
 
@@ -414,6 +422,8 @@ export const getSeatSummary = createServerFn({ method: "GET" })
     const base = list.find((p) => p.id === sub?.plan_id) ?? list.find((p) => p.kind === "base") ?? null;
     const locAddon = list.find((p) => p.kind === "addon_location") ?? null;
     const pracAddon = list.find((p) => p.kind === "addon_practitioner") ?? null;
+    const assocModule = list.find((p) => p.kind === "addon_associates_module") ?? null;
+    const assocAddon = list.find((p) => p.kind === "addon_associate") ?? null;
 
     const freeLocs = Math.max(0, Number(sub?.free_locations ?? 0));
     const freePracs = Math.max(0, Number(sub?.free_practitioners ?? 0));
@@ -424,6 +434,15 @@ export const getSeatSummary = createServerFn({ method: "GET" })
     // this is what the plan price is collated from, not a manual selection.
     const billableLocs = Math.max(0, usedLocs - 1 - freeLocs);
     const billablePracs = Math.max(0, usedPracs - 1 - freePracs);
+
+    // Associates: the service itself is a flat monthly add-on that covers the
+    // first 5 associates, then each further associate adds its own seat fee.
+    const ASSOC_INCLUDED = 5;
+    const associatesEnabled = Boolean((profRow as any)?.associates_enabled);
+    const usedAssoc = assocCount ?? 0;
+    const assocModuleCents = associatesEnabled ? Number(assocModule?.amount_cents ?? 0) : 0;
+    const billableAssoc = associatesEnabled ? Math.max(0, usedAssoc - ASSOC_INCLUDED) : 0;
+
     const baseCents = Number(sub?.custom_price_cents ?? base?.amount_cents ?? 0);
     const currency = (base?.currency ?? locAddon?.currency ?? "gbp") as string;
     const interval = (base?.interval ?? "month") as string;
@@ -431,7 +450,9 @@ export const getSeatSummary = createServerFn({ method: "GET" })
       ? 0
       : baseCents +
         billableLocs * Number(locAddon?.amount_cents ?? 0) +
-        billablePracs * Number(pracAddon?.amount_cents ?? 0);
+        billablePracs * Number(pracAddon?.amount_cents ?? 0) +
+        assocModuleCents +
+        billableAssoc * Number(assocAddon?.amount_cents ?? 0);
 
     return {
       comped: Boolean(sub?.comped),
@@ -456,7 +477,17 @@ export const getSeatSummary = createServerFn({ method: "GET" })
         billable: billableLocs,
         addonCents: Number(locAddon?.amount_cents ?? 0),
       },
+      associates: {
+        enabled: associatesEnabled,
+        used: usedAssoc,
+        included: ASSOC_INCLUDED,
+        billable: billableAssoc,
+        moduleCents: Number(assocModule?.amount_cents ?? 0),
+        moduleActive: associatesEnabled && assocModuleCents > 0,
+        addonCents: Number(assocAddon?.amount_cents ?? 0),
+      },
     };
+
   });
 
 

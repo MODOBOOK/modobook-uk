@@ -18,6 +18,8 @@ import {
   listAssociateIncidentsForMe,
   setIncidentResolved,
 } from "@/lib/associates.functions";
+import { getSeatSummary } from "@/lib/practitioner-billing.functions";
+import { SeatCostWarning, seatWillCharge, type SeatSummary } from "@/components/SeatCostWarning";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -58,12 +60,23 @@ function AssociatesPage() {
 
 
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [warnOpen, setWarnOpen] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", notes: "" });
   const [saving, setSaving] = useState(false);
   const [oversightId, setOversightId] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
 
+  const fetchSeats = useServerFn(getSeatSummary);
+  const { data: seats } = useQuery({ queryKey: ["seat-summary"], queryFn: () => fetchSeats().catch(() => null) });
+
+  /** Be explicit about the plan change before another associate is invited. */
+  function requestInvite() {
+    if (seatWillCharge(seats as unknown as SeatSummary, "associate")) setWarnOpen(true);
+    else setInviteOpen(true);
+  }
+
   const refresh = () => qc.invalidateQueries({ queryKey: ["associates-ctx"] });
+
 
   if (isLoading) return <div className="text-sm text-muted-foreground">Loading…</div>;
 
@@ -129,11 +142,40 @@ function AssociatesPage() {
           </p>
         </div>
         {enabled && (
-          <Button onClick={() => setInviteOpen(true)} className="rounded-full">
+          <Button onClick={requestInvite} className="rounded-full">
             <UserPlus className="mr-2 h-4 w-4" /> Invite associate
           </Button>
         )}
       </div>
+
+      <SeatCostWarning
+        open={warnOpen}
+        onOpenChange={setWarnOpen}
+        kind="associate"
+        seats={seats as unknown as SeatSummary}
+        onConfirm={() => { setWarnOpen(false); setInviteOpen(true); }}
+      />
+
+      {enabled && seats?.associates && !seats.comped && (
+        <Card>
+          <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4 text-sm">
+            <div>
+              <p className="font-medium">
+                {seats.associates.used} associate{seats.associates.used === 1 ? "" : "s"} · {seats.associates.included} included
+              </p>
+              <p className="text-xs text-muted-foreground">
+                The Associates service is{" "}
+                {new Intl.NumberFormat("en-GB", { style: "currency", currency: (seats.currency || "gbp").toUpperCase() }).format(seats.associates.moduleCents / 100)}
+                /{seats.interval} and covers your first {seats.associates.included} associates. Each one after that adds{" "}
+                {new Intl.NumberFormat("en-GB", { style: "currency", currency: (seats.currency || "gbp").toUpperCase() }).format(seats.associates.addonCents / 100)}
+                /{seats.interval}, collected from your next billing date.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+
 
       {/* Invitations addressed to me */}
       {hostLinks.length > 0 && (
