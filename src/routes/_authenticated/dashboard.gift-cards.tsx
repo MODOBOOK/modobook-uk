@@ -42,6 +42,7 @@ type GiftCard = {
   description: string | null;
   kind: "value" | "treatment" | "package";
   amount: number | null;
+  price: number | null;
   treatment_id: string | null;
   package_id: string | null;
   treatment_ids: string[] | null;
@@ -111,6 +112,9 @@ function GiftCardsPage() {
                     <Badge variant="outline">
                       {c.kind === "value" ? `£${Number(c.amount ?? 0).toFixed(2)}` : c.kind === "treatment" ? "Treatment" : "Package"}
                     </Badge>
+                    {c.price != null && Number(c.price) > 0 && Number(c.price) !== Number(c.amount ?? 0) && (
+                      <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100">Sells for £{Number(c.price).toFixed(2)}</Badge>
+                    )}
                     {c.expires_months && <Badge variant="outline">Expires {c.expires_months}m</Badge>}
                   </div>
                   {c.description && <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{c.description}</p>}
@@ -198,6 +202,7 @@ function GiftCardDialog({
           description: form.description || null,
           kind: form.kind,
           amount: savedAmount,
+          price: form.price.trim() === "" ? null : Number(form.price),
           treatment_ids: form.kind === "treatment" ? form.treatment_ids : [],
           package_ids: form.kind === "package" ? form.package_ids : [],
           image_url: form.image_url || null,
@@ -237,10 +242,12 @@ function GiftCardDialog({
           </div>
           {form.kind === "value" && (
             <div>
-              <Label>Amount (£)</Label>
+              <Label>Card value (£)</Label>
               <Input type="number" min="1" step="0.01" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} />
+              <p className="mt-1 text-xs text-muted-foreground">The credit the recipient can spend with you.</p>
             </div>
           )}
+          <SalePrice form={form} setForm={setForm} faceValue={form.kind === "value" ? Number(form.amount || 0) : (form.amount.trim() !== "" ? Number(form.amount) : mirroredTotal)} />
           {form.kind === "treatment" && (
             <div className="space-y-2">
               <Label>Treatments (select one or more)</Label>
@@ -500,6 +507,7 @@ function defaultForm(c: GiftCard | null) {
     description: c?.description ?? "",
     kind: (c?.kind ?? "value") as GiftCard["kind"],
     amount: c?.amount != null ? String(c.amount) : "",
+    price: c?.price != null ? String(c.price) : "",
     treatment_ids: tIds,
     package_ids: pIds,
     image_url: c?.image_url ?? "",
@@ -550,6 +558,49 @@ function PriceOverride({
           Buyers will pay <span className="font-medium text-foreground">£{Number(effective || 0).toFixed(2)}</span>{effective !== mirrored && ` instead of £${mirrored.toFixed(2)}`}.
         </div>
       )}
+    </div>
+  );
+}
+
+function SalePrice({
+  form,
+  setForm,
+  faceValue,
+}: {
+  form: FormShape;
+  setForm: React.Dispatch<React.SetStateAction<FormShape>>;
+  faceValue: number;
+}) {
+  const price = form.price.trim() === "" ? null : Number(form.price);
+  const saving = price != null && faceValue > 0 ? faceValue - price : 0;
+  return (
+    <div className="rounded-md border bg-muted/30 p-3">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <div className="text-sm font-medium">Sale price (optional)</div>
+          <div className="text-xs text-muted-foreground">
+            Charge less than the card is worth — e.g. pay £80, get £{faceValue > 0 ? faceValue.toFixed(0) : "100"} of credit. Leave blank to sell at full value.
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">£</span>
+          <Input
+            type="number"
+            min="0"
+            step="0.01"
+            className="w-28"
+            placeholder={faceValue > 0 ? faceValue.toFixed(2) : ""}
+            value={form.price}
+            onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))}
+          />
+        </div>
+      </div>
+      {saving > 0 && (
+        <div className="mt-2 text-xs text-emerald-700">
+          Buyers save £{saving.toFixed(2)} ({Math.round((saving / faceValue) * 100)}% off).
+        </div>
+      )}
+      {saving < 0 && <div className="mt-2 text-xs text-amber-700">Sale price is higher than the card value.</div>}
     </div>
   );
 }
