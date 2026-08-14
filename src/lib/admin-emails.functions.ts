@@ -236,6 +236,7 @@ export const sendAdminBroadcast = createServerFn({ method: 'POST' })
         templateName: 'admin-broadcast',
         recipientEmail: r.email,
         messageId: `admin-broadcast-${log.id}-${r.email}`,
+        replyTo: PLATFORM_REPLY_TO,
         templateData: {
           subject: data.subject.trim(),
           message: data.message.trim(),
