@@ -295,6 +295,26 @@ function BillingPage() {
             )}
           </div>
 
+          {associates?.moduleActive && (
+            <div className="rounded-lg border p-3">
+              <div className="font-medium text-sm">Associates module</div>
+              <div className="text-xs text-muted-foreground">
+                {money(assocModulePlan?.amount_cents ?? 0)}/month for the first {associates.included} associates, then{" "}
+                {money(assocAddonPlan?.amount_cents ?? 0)}/month per further block of {associates.blockSize}
+              </div>
+              <p className="mt-2 text-xs text-muted-foreground flex items-center gap-1">
+                <Users className="h-3 w-3" />
+                <Link to="/dashboard/associates" className="underline underline-offset-2">
+                  {associates.used} associate{associates.used === 1 ? "" : "s"} on your account
+                </Link>
+                {associates.extraBlocks > 0 ? ` — +${associates.extraBlocks} block${associates.extraBlocks === 1 ? "" : "s"}` : " — all included"}
+              </p>
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                Counted automatically from your associates list.
+              </p>
+            </div>
+          )}
+
           <div className="rounded-md bg-muted p-3 text-sm space-y-1">
             <div className="flex items-center justify-between">
               <span>{selectedPlan?.name ?? "Base plan"}</span>
@@ -310,6 +330,18 @@ function BillingPage() {
               <div className="flex items-center justify-between text-muted-foreground">
                 <span>{extraPractitioners} × extra practitioner</span>
                 <span>{money(extraPractitioners * pracAddon.amount_cents)}</span>
+              </div>
+            )}
+            {assocModuleCents > 0 && (
+              <div className="flex items-center justify-between text-muted-foreground">
+                <span>Associates module ({associates?.used} associate{associates?.used === 1 ? "" : "s"})</span>
+                <span>{money(assocModuleCents)}</span>
+              </div>
+            )}
+            {assocBlocksCents > 0 && (
+              <div className="flex items-center justify-between text-muted-foreground">
+                <span>{associates?.extraBlocks} × extra associate block of {associates?.blockSize}</span>
+                <span>{money(assocBlocksCents)}</span>
               </div>
             )}
             <div className="flex items-center justify-between border-t pt-1 font-semibold">
