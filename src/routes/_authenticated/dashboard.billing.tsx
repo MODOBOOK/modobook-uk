@@ -7,6 +7,7 @@ import {
   startBillingCheckout,
   openStripePortal,
   redeemDiscountCode,
+  removeDiscountCode,
   cancelMySubscription,
   resumeMySubscription,
   saveAddonSelection,
@@ -35,6 +36,7 @@ function BillingPage() {
   const startCheckout = useServerFn(startBillingCheckout);
   const openPortal = useServerFn(openStripePortal);
   const redeem = useServerFn(redeemDiscountCode);
+  const removeCode = useServerFn(removeDiscountCode);
   const cancel = useServerFn(cancelMySubscription);
   const resume = useServerFn(resumeMySubscription);
   const saveAddons = useServerFn(saveAddonSelection);
@@ -125,6 +127,17 @@ function BillingPage() {
     extraPractitioners * (pracAddon?.amount_cents ?? 0) +
     assocModuleCents +
     assocBlocksCents;
+
+  // Admin discount codes come off the MODO plan total here — nothing needs to
+  // be entered on Stripe's own billing screen.
+  const codeDiscount = discountCode
+    ? Math.min(
+        projected,
+        Math.round((projected * Math.max(0, Math.min(100, Number(discountCode.percent_off ?? 0)))) / 100) +
+          Math.max(0, Number(discountCode.amount_off_cents ?? 0)),
+      )
+    : 0;
+  const projectedTotal = Math.max(0, projected - codeDiscount);
 
   const hasLiveSub = !!sub?.stripe_subscription_id && sub?.status !== "canceled";
 
@@ -344,9 +357,15 @@ function BillingPage() {
                 <span>{money(assocBlocksCents)}</span>
               </div>
             )}
+            {codeDiscount > 0 && (
+              <div className="flex items-center justify-between text-primary">
+                <span>Discount code {discountCode.code}</span>
+                <span>−{money(codeDiscount)}</span>
+              </div>
+            )}
             <div className="flex items-center justify-between border-t pt-1 font-semibold">
               <span>{hasLiveSub ? "New total" : "Estimated total"}</span>
-              <span>{money(projected)}/{selectedPlan?.interval ?? "month"}</span>
+              <span>{money(projectedTotal)}/{selectedPlan?.interval ?? "month"}</span>
             </div>
             {hasLiveSub && (
               <p className="pt-1 text-xs text-muted-foreground">
@@ -417,15 +436,37 @@ function BillingPage() {
           <CardDescription>
             {discountCode
               ? <>Applied: <strong>{discountCode.code}</strong>{discountCode.percent_off ? ` — ${discountCode.percent_off}% off` : discountCode.amount_off_cents ? ` — ${money(discountCode.amount_off_cents)} off` : ""}</>
-              : "Have a promo code? Redeem it here."}
+              : "Have a MODO promo code? Redeem it here — it comes straight off your plan total, no need to enter anything on the Stripe page."}
           </CardDescription>
         </CardHeader>
-        <CardContent className="flex gap-2 items-end">
-          <div className="flex-1">
-            <Label>Code</Label>
-            <Input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="MODO2026" />
+        <CardContent className="space-y-3">
+          <div className="flex gap-2 items-end">
+            <div className="flex-1">
+              <Label>Code</Label>
+              <Input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="MODO2026" />
+            </div>
+            <Button onClick={apply} disabled={busy || !code.trim()}>Apply</Button>
           </div>
-          <Button onClick={apply} disabled={busy || !code.trim()}>Apply</Button>
+          {discountCode && (
+            <div className="flex flex-wrap items-center justify-between gap-2 rounded-md bg-muted p-3 text-sm">
+              <span>
+                <strong>{discountCode.code}</strong> applied — saving {money(codeDiscount)}/month
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={busy}
+                onClick={async () => {
+                  setBusy(true);
+                  try { await removeCode(); toast.success("Code removed"); reload(); }
+                  catch (e) { toast.error(e instanceof Error ? e.message : "Could not remove"); }
+                  finally { setBusy(false); }
+                }}
+              >
+                Remove
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

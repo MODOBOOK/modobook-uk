@@ -331,8 +331,12 @@ export const createDiscountCode = createServerFn({ method: "POST" })
       throw new Error("Enter a percent off or an amount off.");
     }
 
-    let coupon;
-    let promo;
+    // The code lives on MODO and is redeemed on the practitioner's Plan &
+    // billing screen. A matching Stripe coupon is created best-effort so live
+    // direct debits collect the discounted amount — if Stripe rejects it the
+    // code is still created and works on the MODO plan.
+    let coupon: { id: string } | null = null;
+    let promo: { id: string } | null = null;
     try {
       coupon = await stripe.coupons.create({
         name: data.description || data.code,
@@ -352,8 +356,7 @@ export const createDiscountCode = createServerFn({ method: "POST" })
       } as any);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Stripe rejected the discount code";
-      console.error("[createDiscountCode] stripe error", msg);
-      throw new Error(`Stripe rejected the discount code: ${msg}`);
+      console.error("[createDiscountCode] stripe error — saving MODO-only code", msg);
     }
 
     const { data: row, error } = await context.supabase
@@ -368,8 +371,9 @@ export const createDiscountCode = createServerFn({ method: "POST" })
         duration_in_months: data.duration_in_months ?? null,
         max_redemptions: data.max_redemptions ?? null,
         expires_at: data.expires_at ?? null,
-        stripe_coupon_id: coupon.id,
-        stripe_promo_code_id: promo.id,
+        stripe_coupon_id: coupon?.id ?? null,
+        stripe_promo_code_id: promo?.id ?? null,
+
         active: true,
       } as any)
       .select()
