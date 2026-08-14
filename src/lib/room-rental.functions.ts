@@ -811,7 +811,7 @@ export const createManualRentalBooking = createServerFn({ method: "POST" })
         to: data.renter_email,
         replyTo: prof.email,
         subject: `Your room booking — ${when}`,
-        body: `Hi ${data.renter_name},\n\n${note}Your room hire is booked:\n\n${room.name}${unitIndex && capacity > 1 ? ` — Room ${unitIndex}` : ""}\n${when}\nTotal £${Number(data.price).toFixed(2)}\n\nPlease complete payment using the button below to secure the room.`,
+        body: `Hi ${data.renter_name},\n\n${note}Your room hire is booked:\n\n${room.name}${booking.unit_index && capacity > 1 ? ` — Room ${booking.unit_index}` : ""}\n${when}\nTotal £${Number(data.price).toFixed(2)}\n\nPlease complete payment using the button below to secure the room.`,
         actionLabel: `Pay £${Number(data.price).toFixed(2)}`,
         actionUrl: checkoutUrl,
       });
@@ -821,7 +821,7 @@ export const createManualRentalBooking = createServerFn({ method: "POST" })
         to: data.renter_email,
         replyTo: prof.email,
         subject: `Your room booking — ${when}`,
-        body: `Hi ${data.renter_name},\n\n${note}Your room hire is confirmed:\n\n${room.name}${unitIndex && capacity > 1 ? ` — Room ${unitIndex}` : ""}\n${when}\nTotal £${Number(data.price).toFixed(2)}\n\nSee you then.`,
+        body: `Hi ${data.renter_name},\n\n${note}Your room hire is confirmed:\n\n${room.name}${booking.unit_index && capacity > 1 ? ` — Room ${booking.unit_index}` : ""}\n${when}\nTotal £${Number(data.price).toFixed(2)}\n\nSee you then.`,
       });
     }
 
