@@ -3225,6 +3225,48 @@ export type Database = {
           },
         ]
       }
+      hair_beauty_waitlist: {
+        Row: {
+          clinic_name: string | null
+          clinic_type: string
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          ideas: string | null
+          instagram: string | null
+          phone: string | null
+          source: string | null
+          updated_at: string
+        }
+        Insert: {
+          clinic_name?: string | null
+          clinic_type: string
+          created_at?: string
+          email: string
+          full_name: string
+          id?: string
+          ideas?: string | null
+          instagram?: string | null
+          phone?: string | null
+          source?: string | null
+          updated_at?: string
+        }
+        Update: {
+          clinic_name?: string | null
+          clinic_type?: string
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          ideas?: string | null
+          instagram?: string | null
+          phone?: string | null
+          source?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       hub_codes: {
         Row: {
           code: string
