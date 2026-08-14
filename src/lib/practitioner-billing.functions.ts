@@ -437,17 +437,23 @@ export const getSeatSummary = createServerFn({ method: "GET" })
     const billablePracs = Math.max(0, usedPracs - 1 - freePracs);
 
     // Associates: the service itself is a flat monthly add-on that covers the
-    // first 5 associates, then each further associate adds its own seat fee.
+    // first 5 associates, then every further block of 5 associates adds one
+    // extra seat fee (6–10 = +1 block, 11–15 = +2 blocks, and so on).
     // Admins can waive the module fee and/or grant extra complimentary seats.
     // Charging for the Associates module is currently limited to pilot accounts.
+    const ASSOC_BLOCK = 5;
     const assocBilling = associateBillingEnabled((profRow as any)?.slug);
     const assocWaived = Boolean((sub as any)?.waive_associates_fee) || !assocBilling;
     const freeAssoc = Math.max(0, Number((sub as any)?.free_associates ?? 0));
-    const ASSOC_INCLUDED = 5 + freeAssoc;
+    const ASSOC_INCLUDED = ASSOC_BLOCK + freeAssoc;
     const associatesEnabled = Boolean((profRow as any)?.associates_enabled);
     const usedAssoc = assocCount ?? 0;
     const assocModuleCents = associatesEnabled && !assocWaived ? Number(assocModule?.amount_cents ?? 0) : 0;
-    const billableAssoc = associatesEnabled && !assocWaived ? Math.max(0, usedAssoc - ASSOC_INCLUDED) : 0;
+    const billableAssoc =
+      associatesEnabled && !assocWaived
+        ? Math.ceil(Math.max(0, usedAssoc - ASSOC_INCLUDED) / ASSOC_BLOCK)
+        : 0;
+
 
     const baseCents = Number(sub?.custom_price_cents ?? base?.amount_cents ?? 0);
     const currency = (base?.currency ?? locAddon?.currency ?? "gbp") as string;
@@ -498,6 +504,10 @@ export const getSeatSummary = createServerFn({ method: "GET" })
         enabled: associatesEnabled,
         used: usedAssoc,
         included: ASSOC_INCLUDED,
+        blockSize: ASSOC_BLOCK,
+        /** Seats already paid for (included + purchased blocks of 5). */
+        covered: ASSOC_INCLUDED + billableAssoc * ASSOC_BLOCK,
+        /** Number of extra 5-seat blocks being charged. */
         billable: billableAssoc,
         waived: assocWaived,
         moduleCents: assocModuleCents,

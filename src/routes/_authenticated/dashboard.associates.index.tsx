@@ -166,12 +166,14 @@ function AssociatesPage() {
           <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4 text-sm">
             <div>
               <p className="font-medium">
-                {seats.associates.used} associate{seats.associates.used === 1 ? "" : "s"} · {seats.associates.included} included
+                {seats.associates.used} associate{seats.associates.used === 1 ? "" : "s"} ·{" "}
+                {(seats.associates as any).covered ?? seats.associates.included} covered
               </p>
               <p className="text-xs text-muted-foreground">
                 The Associates service is{" "}
                 {new Intl.NumberFormat("en-GB", { style: "currency", currency: (seats.currency || "gbp").toUpperCase() }).format(seats.associates.moduleCents / 100)}
-                /{seats.interval} and covers your first {seats.associates.included} associates. Each one after that adds{" "}
+                /{seats.interval} and covers your first {seats.associates.included} associates. Every further block of{" "}
+                {(seats.associates as any).blockSize ?? 5} adds{" "}
                 {new Intl.NumberFormat("en-GB", { style: "currency", currency: (seats.currency || "gbp").toUpperCase() }).format(seats.associates.addonCents / 100)}
                 /{seats.interval}, collected from your next billing date.
               </p>

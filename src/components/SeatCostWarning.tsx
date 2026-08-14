@@ -29,6 +29,8 @@ export type SeatSummary = {
     enabled: boolean;
     used: number;
     included: number;
+    blockSize?: number;
+    covered?: number;
     billable: number;
     moduleCents: number;
     moduleActive: boolean;
@@ -45,7 +47,10 @@ export function seatChargeCents(seats: SeatSummary | null, kind: SeatKind) {
     const a = seats.associates;
     if (!a) return 0;
     const moduleCents = a.moduleActive ? 0 : a.moduleCents; // first time switches the service on
-    const seatCents = a.used + 1 > a.included ? a.addonCents : 0;
+    // Seats are sold in blocks: the module covers the first block, and every
+    // further block of 5 associates costs one add-on fee.
+    const covered = a.covered ?? a.included;
+    const seatCents = a.used + 1 > covered ? a.addonCents : 0;
     return moduleCents + seatCents;
   }
   const s = kind === "location" ? seats.locations : seats.practitioners;
@@ -104,14 +109,15 @@ export function SeatCostWarning({
                     </>
                   )}
                   You currently have {a.used} associate{a.used === 1 ? "" : "s"}.
-                  {a.used + 1 > a.included ? (
+                  {a.used + 1 > (a.covered ?? a.included) ? (
                     <>
-                      {" "}That's beyond the {a.included} included, so this one adds a further{" "}
+                      {" "}That's beyond the {a.covered ?? a.included} you're covered for, so this unlocks the next block
+                      of {a.blockSize ?? 5} associates for a further{" "}
                       <strong>{money(a.addonCents, seats.currency)}</strong>/{seats.interval}.
                     </>
                   ) : (
                     <>
-                      {" "}This one is included — each associate beyond {a.included} adds{" "}
+                      {" "}This one is covered — every further block of {a.blockSize ?? 5} associates adds{" "}
                       {money(a.addonCents, seats.currency)}/{seats.interval}.
                     </>
                   )}
