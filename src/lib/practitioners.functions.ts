@@ -64,6 +64,12 @@ export const upsertPractitioner = createServerFn({ method: "POST" })
         .insert(payload).select().single();
       if (error) throw error;
       row = r;
+      try {
+        const { syncSubscriptionSeats } = await import("./billing-sync.server");
+        await syncSubscriptionSeats(supabase, profile.id);
+      } catch (err) {
+        console.error("[savePractitioner] seat sync failed", err);
+      }
     }
 
     if (data.location_ids) {

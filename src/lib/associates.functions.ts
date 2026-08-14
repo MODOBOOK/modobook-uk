@@ -232,6 +232,12 @@ export const removeAssociate = createServerFn({ method: "POST" })
       .eq("id", data.id)
       .eq("clinic_profile_id", prof.id);
     if (error) throw new Error(error.message);
+    try {
+      const { syncSubscriptionSeats } = await import("@/lib/billing-sync.server");
+      await syncSubscriptionSeats(supabaseAdmin as any, prof.id);
+    } catch (err) {
+      console.error("[removeAssociate] seat sync failed", err);
+    }
     return { ok: true };
   });
 
