@@ -20,17 +20,38 @@ export type SeatSummary = {
   monthlyTotalCents: number;
   practitioners: { used: number; allowed: number; freeExtras: number; billable: number; addonCents: number };
   locations: { used: number; allowed: number; freeExtras: number; billable: number; addonCents: number };
+  associates?: {
+    enabled: boolean;
+    used: number;
+    included: number;
+    billable: number;
+    moduleCents: number;
+    moduleActive: boolean;
+    addonCents: number;
+  };
 };
 
-const money = (cents: number, currency = "gbp") =>
-  new Intl.NumberFormat("en-GB", { style: "currency", currency: currency.toUpperCase() }).format((cents ?? 0) / 100);
+export type SeatKind = "location" | "practitioner" | "associate";
+
+/** What adding one more seat of this kind would add to the plan, in cents. */
+export function seatChargeCents(seats: SeatSummary | null, kind: SeatKind) {
+  if (!seats || seats.comped) return 0;
+  if (kind === "associate") {
+    const a = seats.associates;
+    if (!a) return 0;
+    const moduleCents = a.moduleActive ? 0 : a.moduleCents; // first time switches the service on
+    const seatCents = a.used + 1 > a.included ? a.addonCents : 0;
+    return moduleCents + seatCents;
+  }
+  const s = kind === "location" ? seats.locations : seats.practitioners;
+  return s.used + 1 > 1 + s.freeExtras ? s.addonCents : 0;
+}
 
 /** True when creating one more seat of this kind would add a charge. */
-export function seatWillCharge(seats: SeatSummary | null, kind: "location" | "practitioner") {
-  if (!seats || seats.comped) return false;
-  const s = kind === "location" ? seats.locations : seats.practitioners;
-  return s.used + 1 > 1 + s.freeExtras && s.addonCents > 0;
+export function seatWillCharge(seats: SeatSummary | null, kind: SeatKind) {
+  return seatChargeCents(seats, kind) > 0;
 }
+
 
 /**
  * Shown before a practitioner adds a chargeable extra location or team member.
