@@ -65,6 +65,74 @@ function allocateUnit(capacity: number, blocks: any[], bookings: any[], s: numbe
 }
 
 
+/**
+ * Abandoned online checkouts keep holding a room number, which would block a
+ * real booking from being inserted. Cancel them before allocating.
+ */
+async function releaseExpiredHolds(sb: any, roomId: string, date: string) {
+  const cutoff = new Date(Date.now() - HOLD_MS).toISOString();
+  await sb
+    .from("rental_bookings")
+    .update({ status: "cancelled" })
+    .eq("room_id", roomId)
+    .eq("booking_date", date)
+    .eq("status", "pending")
+    .eq("payment_mode", "pay_online")
+    .neq("payment_status", "paid")
+    .lt("created_at", cutoff);
+}
+
+/**
+ * Allocate a free room number and insert, retrying if another booking grabbed
+ * the same number first. The database also enforces this with an overlap
+ * constraint, so two renters can never share a room unit.
+ */
+async function insertBookingWithUnit(
+  sb: any,
+  row: Record<string, unknown>,
+  opts: { roomId: string; date: string; capacity: number; start: string; end: string },
+) {
+  await releaseExpiredHolds(sb, opts.roomId, opts.date);
+  const s = toMin(opts.start);
+  const e = toMin(opts.end);
+  let lastError: any = null;
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    const [clashesRes, blocksRes] = await Promise.all([
+      sb
+        .from("rental_bookings")
+        .select("start_time,end_time,unit_index,status,payment_status,payment_mode,created_at")
+        .eq("room_id", opts.roomId)
+        .eq("booking_date", opts.date)
+        .neq("status", "cancelled"),
+      sb
+        .from("rental_blocks")
+        .select("start_time,end_time,units")
+        .eq("block_date", opts.date)
+        .or(`room_id.eq.${opts.roomId},room_id.is.null`),
+    ]);
+    const unitIndex = allocateUnit(
+      opts.capacity,
+      (blocksRes.data ?? []) as any[],
+      activeBookings((clashesRes.data ?? []) as any[]),
+      s,
+      e,
+    );
+    if (unitIndex == null) throw new Error("That time has just been taken — please pick another slot");
+
+    const { data, error } = await sb
+      .from("rental_bookings")
+      .insert({ ...row, unit_index: unitIndex })
+      .select("*")
+      .single();
+    if (!error) return data;
+    // 23P01 = exclusion violation: someone took this room unit in the meantime.
+    if (error.code !== "23P01") throw error;
+    lastError = error;
+  }
+  throw new Error("That time has just been taken — please pick another slot");
+}
+
+
 /* -------------------------------- owner side ------------------------------- */
 
 export const listMyRooms = createServerFn({ method: "GET" })
@@ -304,22 +372,6 @@ export const requestRoomBooking = createServerFn({ method: "POST" })
 
     // Capacity guard + auto-allocation (a room entry can represent several identical rooms)
     const capacity = Math.max(1, Number((room as any).quantity ?? 1));
-    const [clashesRes, blocksRes2] = await Promise.all([
-      supabaseAdmin.from("rental_bookings").select("start_time,end_time,unit_index,status,payment_status,payment_mode,created_at")
-        .eq("room_id", data.room_id).eq("booking_date", data.booking_date).neq("status", "cancelled"),
-      supabaseAdmin.from("rental_blocks").select("start_time,end_time,units").eq("block_date", data.booking_date)
-        .or(`room_id.eq.${data.room_id},room_id.is.null`),
-    ]);
-    const unitIndex = allocateUnit(
-      capacity,
-      (blocksRes2.data ?? []) as any[],
-      activeBookings((clashesRes.data ?? []) as any[]),
-      toMin(data.start_time),
-      toMin(data.end_time),
-    );
-    if (unitIndex == null) throw new Error("That time has just been taken — please pick another slot");
-
-
 
     let price = 0;
     if (data.unit === "half_day") price = Number(room.half_day_rate ?? 0);
@@ -334,16 +386,15 @@ export const requestRoomBooking = createServerFn({ method: "POST" })
     const takesDeposit = mode === "pay_online" && pct > 0 && pct < 100;
     const chargeAmount = takesDeposit ? Math.round(price * pct) / 100 : price;
 
-    const { data: booking, error } = await supabaseAdmin
-      .from("rental_bookings")
-      .insert({
+    const booking = await insertBookingWithUnit(
+      supabaseAdmin,
+      {
         profile_id: prof.user_id,
         room_id: room.id,
         booking_date: data.booking_date,
         start_time: data.start_time,
         end_time: data.end_time,
         unit: data.unit,
-        unit_index: unitIndex,
         hours,
         price,
         deposit_amount: takesDeposit ? chargeAmount : null,
@@ -355,9 +406,10 @@ export const requestRoomBooking = createServerFn({ method: "POST" })
         renter_phone: data.renter_phone ?? null,
         renter_business: data.renter_business ?? null,
         notes: data.notes ?? null,
-      })
-      .select("id")
-      .single();
+      },
+      { roomId: room.id, date: data.booking_date, capacity, start: data.start_time, end: data.end_time },
+    );
+    const error = null as any;
     if (error) throw error;
 
 
@@ -719,31 +771,15 @@ export const createManualRentalBooking = createServerFn({ method: "POST" })
     if (hours <= 0) throw new Error("Invalid time range");
 
     const capacity = Math.max(1, Number(room.quantity ?? 1));
-    const [clashesRes, blockRes] = await Promise.all([
-      sb.from("rental_bookings").select("start_time,end_time,unit_index,status,payment_status,payment_mode,created_at")
-        .eq("room_id", data.room_id).eq("booking_date", data.booking_date).neq("status", "cancelled"),
-      sb.from("rental_blocks").select("start_time,end_time,units").eq("block_date", data.booking_date)
-        .or(`room_id.eq.${data.room_id},room_id.is.null`),
-    ]);
-    const unitIndex = allocateUnit(
-      capacity,
-      (blockRes.data ?? []) as any[],
-      activeBookings((clashesRes.data ?? []) as any[]),
-      toMin(data.start_time),
-      toMin(data.end_time),
-    );
-    if (unitIndex == null) throw new Error("That time is already fully booked");
-
-    const { data: booking, error } = await sb
-      .from("rental_bookings")
-      .insert({
+    const booking = await insertBookingWithUnit(
+      sb,
+      {
         profile_id: uid,
         room_id: room.id,
         booking_date: data.booking_date,
         start_time: data.start_time,
         end_time: data.end_time,
         unit: data.unit,
-        unit_index: unitIndex,
         hours,
         price: data.price,
         status: "confirmed",
@@ -754,11 +790,9 @@ export const createManualRentalBooking = createServerFn({ method: "POST" })
         renter_phone: data.renter_phone ?? null,
         renter_business: data.renter_business ?? null,
         notes: data.notes ?? null,
-      })
-      .select("*")
-      .single();
-    if (error) throw error;
-
+      },
+      { roomId: room.id, date: data.booking_date, capacity, start: data.start_time, end: data.end_time },
+    );
     const when = `${data.booking_date} · ${hhmm(data.start_time)}–${hhmm(data.end_time)}`;
     const note = data.message?.trim() ? `${data.message.trim()}\n\n` : "";
     let checkoutUrl: string | null = null;
@@ -777,7 +811,7 @@ export const createManualRentalBooking = createServerFn({ method: "POST" })
         to: data.renter_email,
         replyTo: prof.email,
         subject: `Your room booking — ${when}`,
-        body: `Hi ${data.renter_name},\n\n${note}Your room hire is booked:\n\n${room.name}${unitIndex && capacity > 1 ? ` — Room ${unitIndex}` : ""}\n${when}\nTotal £${Number(data.price).toFixed(2)}\n\nPlease complete payment using the button below to secure the room.`,
+        body: `Hi ${data.renter_name},\n\n${note}Your room hire is booked:\n\n${room.name}${booking.unit_index && capacity > 1 ? ` — Room ${booking.unit_index}` : ""}\n${when}\nTotal £${Number(data.price).toFixed(2)}\n\nPlease complete payment using the button below to secure the room.`,
         actionLabel: `Pay £${Number(data.price).toFixed(2)}`,
         actionUrl: checkoutUrl,
       });
@@ -787,7 +821,7 @@ export const createManualRentalBooking = createServerFn({ method: "POST" })
         to: data.renter_email,
         replyTo: prof.email,
         subject: `Your room booking — ${when}`,
-        body: `Hi ${data.renter_name},\n\n${note}Your room hire is confirmed:\n\n${room.name}${unitIndex && capacity > 1 ? ` — Room ${unitIndex}` : ""}\n${when}\nTotal £${Number(data.price).toFixed(2)}\n\nSee you then.`,
+        body: `Hi ${data.renter_name},\n\n${note}Your room hire is confirmed:\n\n${room.name}${booking.unit_index && capacity > 1 ? ` — Room ${booking.unit_index}` : ""}\n${when}\nTotal £${Number(data.price).toFixed(2)}\n\nSee you then.`,
       });
     }
 
