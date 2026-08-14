@@ -58,12 +58,23 @@ function AssociatesPage() {
 
 
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [warnOpen, setWarnOpen] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", notes: "" });
   const [saving, setSaving] = useState(false);
   const [oversightId, setOversightId] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
 
+  const fetchSeats = useServerFn(getSeatSummary);
+  const { data: seats } = useQuery({ queryKey: ["seat-summary"], queryFn: () => fetchSeats().catch(() => null) });
+
+  /** Be explicit about the plan change before another associate is invited. */
+  function requestInvite() {
+    if (seatWillCharge(seats as unknown as SeatSummary, "associate")) setWarnOpen(true);
+    else setInviteOpen(true);
+  }
+
   const refresh = () => qc.invalidateQueries({ queryKey: ["associates-ctx"] });
+
 
   if (isLoading) return <div className="text-sm text-muted-foreground">Loading…</div>;
 
