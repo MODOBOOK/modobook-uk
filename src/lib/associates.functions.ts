@@ -148,6 +148,14 @@ export const inviteAssociate = createServerFn({ method: "POST" })
       .maybeSingle();
     if (error) throw new Error(error.message);
 
+    // Keep the live direct debit in step with the new seat count.
+    try {
+      const { syncSubscriptionSeats } = await import("@/lib/billing-sync.server");
+      await syncSubscriptionSeats(admin, prof.id);
+    } catch (err) {
+      console.error("[inviteAssociate] seat sync failed", err);
+    }
+
     try {
       const { tryEnqueueAppEmail, getPractitionerBranding } = await import("@/lib/email/send.server");
       const branding = await getPractitionerBranding(prof.id);
