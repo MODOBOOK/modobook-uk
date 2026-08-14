@@ -407,7 +407,7 @@ export const getSeatSummary = createServerFn({ method: "GET" })
         .from("subscription_plans")
         .select("id, kind, name, amount_cents, currency, interval, active")
         .eq("active", true),
-      context.supabase.from("profiles").select("associates_enabled").eq("id", profile.id).maybeSingle(),
+      context.supabase.from("profiles").select("associates_enabled, slug").eq("id", profile.id).maybeSingle(),
       context.supabase
         .from("clinic_associates")
         .select("id", { count: "exact", head: true })
