@@ -243,14 +243,20 @@ function BillingPage() {
                 <div className="font-medium text-sm">Extra locations</div>
                 <div className="text-xs text-muted-foreground">{money(locAddon.amount_cents, locAddon.currency)}/{locAddon.interval} each</div>
                 <div className="mt-2 flex items-center gap-2">
-                  <Button size="icon" variant="outline" onClick={() => bump(setExtraLocations, Math.max(0, extraLocations - 1))}><Minus className="h-4 w-4" /></Button>
+                  <Button size="icon" variant="outline" disabled={extraLocations <= minLocations} onClick={() => bump(setExtraLocations, Math.max(minLocations, extraLocations - 1))}><Minus className="h-4 w-4" /></Button>
                   <span className="w-8 text-center">{extraLocations}</span>
                   <Button size="icon" variant="outline" onClick={() => bump(setExtraLocations, extraLocations + 1)}><Plus className="h-4 w-4" /></Button>
                 </div>
-                {extraLocations > 0 && (
-                  <p className="mt-2 text-xs text-muted-foreground flex items-center gap-1">
-                    <MapPin className="h-3 w-3" />
-                    <Link to="/dashboard/locations" className="underline underline-offset-2">Add your extra {extraLocations === 1 ? "location" : "locations"}</Link>{hasLiveSub ? "." : " now — they'll be included when billing starts."}
+                <p className="mt-2 text-xs text-muted-foreground flex items-center gap-1">
+                  <MapPin className="h-3 w-3" />
+                  <Link to="/dashboard/locations" className="underline underline-offset-2">
+                    {usedLocations} location{usedLocations === 1 ? "" : "s"} on your account
+                  </Link>
+                  {minLocations > 0 ? ` — ${minLocations} charged` : " — all included"}
+                </p>
+                {minLocations > 0 && (
+                  <p className="mt-1 text-[11px] text-muted-foreground">
+                    Counted automatically. Remove a location to reduce this.
                   </p>
                 )}
               </div>
@@ -260,25 +266,60 @@ function BillingPage() {
                 <div className="font-medium text-sm">Extra practitioners</div>
                 <div className="text-xs text-muted-foreground">{money(pracAddon.amount_cents, pracAddon.currency)}/{pracAddon.interval} each</div>
                 <div className="mt-2 flex items-center gap-2">
-                  <Button size="icon" variant="outline" onClick={() => bump(setExtraPractitioners, Math.max(0, extraPractitioners - 1))}><Minus className="h-4 w-4" /></Button>
+                  <Button size="icon" variant="outline" disabled={extraPractitioners <= minPractitioners} onClick={() => bump(setExtraPractitioners, Math.max(minPractitioners, extraPractitioners - 1))}><Minus className="h-4 w-4" /></Button>
                   <span className="w-8 text-center">{extraPractitioners}</span>
                   <Button size="icon" variant="outline" onClick={() => bump(setExtraPractitioners, extraPractitioners + 1)}><Plus className="h-4 w-4" /></Button>
                 </div>
-                {extraPractitioners > 0 && (
-                  <p className="mt-2 text-xs text-muted-foreground flex items-center gap-1">
-                    <Users className="h-3 w-3" />
-                    <Link to="/dashboard/staff" className="underline underline-offset-2">Invite your team {extraPractitioners === 1 ? "member" : "members"}</Link>{hasLiveSub ? "." : " now — seats are reserved for your trial."}
+                <p className="mt-2 text-xs text-muted-foreground flex items-center gap-1">
+                  <Users className="h-3 w-3" />
+                  <Link to="/dashboard/practitioners" className="underline underline-offset-2">
+                    {usedPractitioners} practitioner{usedPractitioners === 1 ? "" : "s"} on your account
+                  </Link>
+                  {minPractitioners > 0 ? ` — ${minPractitioners} charged` : " — all included"}
+                </p>
+                {minPractitioners > 0 && (
+                  <p className="mt-1 text-[11px] text-muted-foreground">
+                    Counted automatically. Remove a practitioner to reduce this.
                   </p>
                 )}
               </div>
             )}
           </div>
 
-          <div className="rounded-md bg-muted p-3 text-sm">
-            {hasLiveSub ? "New total after change: " : "Estimated total: "}<strong>{money(projected)}</strong>/{selectedPlan?.interval ?? "month"}
-            {hasLiveSub && <span className="text-muted-foreground"> — prorated charges appear on your next direct-debit invoice.</span>}
-            {!hasLiveSub && trialActive && <span className="text-muted-foreground"> — your selection is saved and will pre-fill when you set up the direct debit after your {trialDaysLeft}-day trial.</span>}
+          <div className="rounded-md bg-muted p-3 text-sm space-y-1">
+            <div className="flex items-center justify-between">
+              <span>{selectedPlan?.name ?? "Base plan"}</span>
+              <span>{money(selectedPlan?.amount_cents ?? 0)}</span>
+            </div>
+            {locAddon && extraLocations > 0 && (
+              <div className="flex items-center justify-between text-muted-foreground">
+                <span>{extraLocations} × extra location</span>
+                <span>{money(extraLocations * locAddon.amount_cents)}</span>
+              </div>
+            )}
+            {pracAddon && extraPractitioners > 0 && (
+              <div className="flex items-center justify-between text-muted-foreground">
+                <span>{extraPractitioners} × extra practitioner</span>
+                <span>{money(extraPractitioners * pracAddon.amount_cents)}</span>
+              </div>
+            )}
+            <div className="flex items-center justify-between border-t pt-1 font-semibold">
+              <span>{hasLiveSub ? "New total" : "Estimated total"}</span>
+              <span>{money(projected)}/{selectedPlan?.interval ?? "month"}</span>
+            </div>
+            {hasLiveSub && (
+              <p className="pt-1 text-xs text-muted-foreground">
+                Nothing is charged today — your direct debit updates and collects the new amount from your next
+                billing date{nextBilling ? ` (${nextBilling})` : ""}.
+              </p>
+            )}
+            {!hasLiveSub && trialActive && (
+              <p className="pt-1 text-xs text-muted-foreground">
+                Saved and pre-filled when you set up the direct debit after your {trialDaysLeft}-day trial.
+              </p>
+            )}
           </div>
+
 
           <Button onClick={checkoutOrUpdate} disabled={busy || !selectedPlanId} className="w-full sm:w-auto">
             {hasLiveSub ? "Save changes" : trialActive ? "Set up direct debit (Stripe)" : "Start subscription"}
