@@ -18,6 +18,42 @@ async function getMyProfileId(context: { supabase: any; userId: string }) {
 }
 
 /**
+ * Associates billing: the module is a flat monthly fee covering the first 5
+ * associates, then every further block of 5 adds one extra seat fee.
+ * Returns what should actually be charged for this clinic right now.
+ */
+async function computeAssociateCharge(supabase: any, profileId: string) {
+  const ASSOC_BLOCK = 5;
+  const [{ data: sub }, { data: profRow }, { count: assocCount }] = await Promise.all([
+    supabase
+      .from("practitioner_subscriptions")
+      .select("waive_associates_fee, free_associates")
+      .eq("profile_id", profileId)
+      .maybeSingle(),
+    supabase.from("profiles").select("associates_enabled, slug").eq("id", profileId).maybeSingle(),
+    supabase
+      .from("clinic_associates")
+      .select("id", { count: "exact", head: true })
+      .eq("clinic_profile_id", profileId)
+      .in("status", ["invited", "active"]),
+  ]);
+  const enabled = Boolean(profRow?.associates_enabled);
+  const waived = Boolean(sub?.waive_associates_fee) || !associateBillingEnabled(profRow?.slug);
+  const included = ASSOC_BLOCK + Math.max(0, Number(sub?.free_associates ?? 0));
+  const used = assocCount ?? 0;
+  const chargeable = enabled && !waived;
+  return {
+    enabled,
+    waived,
+    used,
+    included,
+    blockSize: ASSOC_BLOCK,
+    moduleActive: chargeable,
+    extraBlocks: chargeable ? Math.ceil(Math.max(0, used - included) / ASSOC_BLOCK) : 0,
+  };
+}
+
+/**
  * Seat handling. Every clinic gets 1 free seat of each kind (location /
  * practitioner). Extra seats are never blocked — adding one automatically
  * increases the paid add-on quantity:
@@ -227,6 +263,8 @@ export const getMyBilling = createServerFn({ method: "GET" })
       discountCode = (dc as typeof discountCode) ?? null;
     }
 
+    const associates = await computeAssociateCharge(context.supabase, profile.id);
+
     return {
       profileId: profile.id,
       subscription: sub,
@@ -234,9 +272,11 @@ export const getMyBilling = createServerFn({ method: "GET" })
       hasAccess: Boolean(access),
       discountCode,
       profileCreatedAt: profile.created_at,
+      associates,
       usage: {
         locations: locCount ?? 0,
         practitioners: pracCount ?? 0,
+        associates: associates.used,
       },
     };
   });
@@ -253,7 +293,7 @@ export const startBillingCheckout = createServerFn({ method: "POST" })
     const { data: plans, error: pErr } = await context.supabase
       .from("subscription_plans")
       .select("*")
-      .in("kind", ["base", "addon_location", "addon_practitioner"])
+      .in("kind", ["base", "addon_location", "addon_practitioner", "addon_associates_module", "addon_associate"])
       .eq("active", true);
     if (pErr) throw pErr;
 
@@ -262,6 +302,9 @@ export const startBillingCheckout = createServerFn({ method: "POST" })
 
     const locAddon = (plans ?? []).find((p: any) => p.kind === "addon_location");
     const pracAddon = (plans ?? []).find((p: any) => p.kind === "addon_practitioner");
+    const assocModule = (plans ?? []).find((p: any) => p.kind === "addon_associates_module");
+    const assocAddon = (plans ?? []).find((p: any) => p.kind === "addon_associate");
+    const associates = await computeAssociateCharge(context.supabase, profile.id);
 
     const line_items: Array<{ price: string; quantity: number }> = [
       { price: base.stripe_price_id, quantity: 1 },
@@ -271,6 +314,12 @@ export const startBillingCheckout = createServerFn({ method: "POST" })
     }
     if ((data.extraPractitioners ?? 0) > 0 && pracAddon?.stripe_price_id) {
       line_items.push({ price: pracAddon.stripe_price_id, quantity: data.extraPractitioners! });
+    }
+    if (associates.moduleActive && assocModule?.stripe_price_id) {
+      line_items.push({ price: assocModule.stripe_price_id, quantity: 1 });
+    }
+    if (associates.extraBlocks > 0 && assocAddon?.stripe_price_id) {
+      line_items.push({ price: assocAddon.stripe_price_id, quantity: associates.extraBlocks });
     }
 
     // Existing subscription row / customer
@@ -590,7 +639,7 @@ export const updateMySubscriptionItems = createServerFn({ method: "POST" })
     const { data: plans, error: pErr } = await context.supabase
       .from("subscription_plans")
       .select("id, kind, stripe_price_id, active")
-      .in("kind", ["base", "addon_location", "addon_practitioner"])
+      .in("kind", ["base", "addon_location", "addon_practitioner", "addon_associates_module", "addon_associate"])
       .eq("active", true);
     if (pErr) throw pErr;
 
@@ -598,6 +647,9 @@ export const updateMySubscriptionItems = createServerFn({ method: "POST" })
     if (!base?.stripe_price_id) throw new Error("Plan not available");
     const locAddon = (plans ?? []).find((p: any) => p.kind === "addon_location");
     const pracAddon = (plans ?? []).find((p: any) => p.kind === "addon_practitioner");
+    const assocModule = (plans ?? []).find((p: any) => p.kind === "addon_associates_module");
+    const assocAddon = (plans ?? []).find((p: any) => p.kind === "addon_associate");
+    const associates = await computeAssociateCharge(context.supabase, profile.id);
 
     const { getStripe } = await import("./stripe.server");
     const stripe = getStripe();
@@ -611,6 +663,10 @@ export const updateMySubscriptionItems = createServerFn({ method: "POST" })
       wanted.push({ price: locAddon.stripe_price_id, quantity: data.extraLocations });
     if (data.extraPractitioners > 0 && pracAddon?.stripe_price_id)
       wanted.push({ price: pracAddon.stripe_price_id, quantity: data.extraPractitioners });
+    if (associates.moduleActive && assocModule?.stripe_price_id)
+      wanted.push({ price: assocModule.stripe_price_id, quantity: 1 });
+    if (associates.extraBlocks > 0 && assocAddon?.stripe_price_id)
+      wanted.push({ price: assocAddon.stripe_price_id, quantity: associates.extraBlocks });
 
     const items: Array<{ id?: string; price?: string; quantity?: number; deleted?: boolean }> = [];
     const usedPriceIds = new Set<string>();
