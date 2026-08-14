@@ -17,6 +17,8 @@ import {
 import type { AdminBlock as Block } from '@/lib/email-templates/admin-broadcast'
 import { generateAdminEmail } from '@/lib/ai-admin-email.functions'
 import { parsePresetBody } from '@/lib/marketing-presets'
+import { PLATFORM_UPDATES_HTML, PLATFORM_UPDATES_SUBJECT } from '@/lib/admin-email-presets'
+
 import { EMAIL_DEFAULTS } from '@/lib/email-templates/defaults'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
