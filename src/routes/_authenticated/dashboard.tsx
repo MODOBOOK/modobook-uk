@@ -180,16 +180,35 @@ function DashboardLayout() {
           </div>
         </div>
         <nav className="flex-1 space-y-0.5 overflow-y-auto px-4 py-6">
-          {navItems.filter((item) => !("flag" in item) || (profile as Record<string, unknown>)?.[(item as { flag: string }).flag]).map((item) => {
-            const badge =
-              item.to === "/dashboard/reviews" && pendingReviews > 0
-                ? pendingReviews
-                : item.to === "/hub" && hubCounts.total > 0
-                  ? hubCounts.total
-                  : undefined;
-            return <NavLink key={item.to} to={item.to} icon={item.icon} label={item.label} badge={badge} />;
-          })}
+          {(() => {
+            const visible = navItems.filter(
+              (item) => !("flag" in item) || (profile as Record<string, unknown>)?.[(item as { flag: string }).flag],
+            );
+            let lastSection: string | undefined;
+            return visible.map((item) => {
+              const badge =
+                item.to === "/dashboard/reviews" && pendingReviews > 0
+                  ? pendingReviews
+                  : item.to === "/hub" && hubCounts.total > 0
+                    ? hubCounts.total
+                    : undefined;
+              const section = (item as { section?: string }).section;
+              const showHeading = Boolean(section) && section !== lastSection;
+              lastSection = section;
+              return (
+                <div key={item.to}>
+                  {showHeading && (
+                    <p className="px-3 pb-1 pt-4 text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+                      {section}
+                    </p>
+                  )}
+                  <NavLink to={item.to} icon={item.icon} label={item.label} badge={badge} />
+                </div>
+              );
+            });
+          })()}
         </nav>
+
         <div className="border-t border-border/60 p-4 space-y-2">
           <Button
             variant="ghost"
