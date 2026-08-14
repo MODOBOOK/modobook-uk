@@ -209,11 +209,10 @@ function PractitionersPage() {
               </p>
               <p className="text-xs text-muted-foreground">
                 {seatsFull
-                  ? canReserve
-                    ? "Your plan includes one practitioner. Add another seat now — it's reserved during your free trial and billed when your direct debit starts."
-                    : "You've used all the practitioner seats on your plan. Increase the practitioner add-on in Plan & billing to add more."
-                  : "You can add another practitioner right now."}
+                  ? "Your plan price is worked out from your account — adding another practitioner adds a seat automatically, and your direct debit updates from your next billing date."
+                  : "You can add another practitioner right now at no extra cost."}
               </p>
+
             </div>
             <Button asChild variant="outline" size="sm">
               <Link to="/dashboard/billing">Plan &amp; billing</Link>
