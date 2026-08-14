@@ -723,7 +723,11 @@ function NotesSection({ clientId, patient }: { clientId: string; patient: any })
   const [exporting, setExporting] = useState(false);
 
   async function reload() {
-    setRows((await list({ data: { client_id: clientId } })) as any[]);
+    const [own, fromConsults] = await Promise.all([
+      list({ data: { client_id: clientId } }) as Promise<any[]>,
+      (listConsultNotes({ data: { client_id: clientId } }) as Promise<any[]>).catch(() => [] as any[]),
+    ]);
+    setRows([...(own ?? []), ...(fromConsults ?? [])]);
   }
   useEffect(() => { reload(); /* eslint-disable-next-line */ }, [clientId]);
 
@@ -732,7 +736,7 @@ function NotesSection({ clientId, patient }: { clientId: string; patient: any })
     let out = rows.filter((n: any) => {
       if (filter === "shared" && !n.visible_to_patient) return false;
       if (filter === "private" && n.visible_to_patient) return false;
-      if (query && !String(n.body ?? "").toLowerCase().includes(query)) return false;
+      if (query && !`${n.heading ?? ""} ${n.body ?? ""}`.toLowerCase().includes(query)) return false;
       return true;
     });
     out.sort((a: any, b: any) => {
