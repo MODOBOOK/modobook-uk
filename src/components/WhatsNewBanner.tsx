@@ -9,7 +9,7 @@ import { whatsNewEnabled } from "@/lib/feature-flags";
  * Bump this whenever the list below changes — dismissals are keyed by version
  * so a new release shows the banner again.
  */
-export const WHATS_NEW_VERSION = "2026-08-14";
+export const WHATS_NEW_VERSION = "2026-08-14-v2";
 
 type Item = { title: string; body: string; to?: string };
 
