@@ -50,6 +50,7 @@ import { getHubNotifications } from "@/lib/hub.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { NotificationsBell } from "@/components/NotificationsBell";
 import { PlatformBillingGate } from "@/components/PlatformBillingGate";
+import { ComingSoonDialog, type ComingSoonKey } from "@/components/ComingSoonDialog";
 
 
 
@@ -142,6 +143,7 @@ function DashboardLayout() {
   const fetchPending = useServerFn(countPendingReviews);
   const fetchHub = useServerFn(getHubNotifications);
   const [pendingReviews, setPendingReviews] = useState(0);
+  const [comingSoon, setComingSoon] = useState<ComingSoonKey | null>(null);
   const [hubCounts, setHubCounts] = useState<{ total: number; links: number; referrals: number; visits: number }>({ total: 0, links: 0, referrals: 0, visits: 0 });
   useEffect(() => {
     let alive = true;
@@ -182,11 +184,13 @@ function DashboardLayout() {
         </div>
         <nav className="flex-1 space-y-0.5 overflow-y-auto px-4 py-6">
           {(() => {
-            const visible = navItems.filter(
-              (item) =>
-                (!("flag" in item) || (profile as Record<string, unknown>)?.[(item as { flag: string }).flag]) &&
-                (!(item as { pilot?: boolean }).pilot || pilotFeaturesEnabled(profile?.slug)),
-            );
+            const pilotOn = pilotFeaturesEnabled(profile?.slug);
+            const visible = navItems.filter((item) => {
+              // Pilot features stay visible for everyone — non-pilot clinics see
+              // a "Soon" chip and get the explainer dialog instead of the page.
+              if ((item as { pilot?: boolean }).pilot && !pilotOn) return true;
+              return !("flag" in item) || (profile as Record<string, unknown>)?.[(item as { flag: string }).flag];
+            });
             let lastSection: string | undefined;
             return visible.map((item) => {
               const badge =
@@ -205,7 +209,17 @@ function DashboardLayout() {
                       {section}
                     </p>
                   )}
-                  <NavLink to={item.to} icon={item.icon} label={item.label} badge={badge} />
+                  {(item as { pilot?: boolean }).pilot && !pilotOn ? (
+                    <NavSoon
+                      icon={item.icon}
+                      label={item.label}
+                      onClick={() =>
+                        setComingSoon(item.to === "/dashboard/upcoming" ? "upcoming" : "associates")
+                      }
+                    />
+                  ) : (
+                    <NavLink to={item.to} icon={item.icon} label={item.label} badge={badge} />
+                  )}
                 </div>
               );
             });
@@ -363,6 +377,30 @@ function BackButton() {
     >
       <ChevronLeft className="h-5 w-5" />
     </Button>
+  );
+}
+
+function NavSoon({
+  icon: Icon,
+  label,
+  onClick,
+}: {
+  icon: React.ElementType;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm text-muted-foreground transition-all hover:bg-sidebar-accent hover:text-foreground"
+    >
+      <Icon className="h-4 w-4 opacity-60" />
+      <span className="flex-1 tracking-wide opacity-70">{label}</span>
+      <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.1em] text-primary">
+        Soon
+      </span>
+    </button>
   );
 }
 
