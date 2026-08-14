@@ -5207,9 +5207,12 @@ export type Database = {
           created_at: string
           current_period_end: string | null
           custom_price_cents: number | null
+          discount_amount_cents: number
           discount_code_id: string | null
+          discount_percent: number
           extra_locations: number
           extra_practitioners: number
+          free_associates: number
           free_locations: number
           free_practitioners: number
           id: string
@@ -5223,6 +5226,7 @@ export type Database = {
           suspended_at: string | null
           trial_end: string | null
           updated_at: string
+          waive_associates_fee: boolean
         }
         Insert: {
           cancel_at_period_end?: boolean
@@ -5230,9 +5234,12 @@ export type Database = {
           created_at?: string
           current_period_end?: string | null
           custom_price_cents?: number | null
+          discount_amount_cents?: number
           discount_code_id?: string | null
+          discount_percent?: number
           extra_locations?: number
           extra_practitioners?: number
+          free_associates?: number
           free_locations?: number
           free_practitioners?: number
           id?: string
@@ -5246,6 +5253,7 @@ export type Database = {
           suspended_at?: string | null
           trial_end?: string | null
           updated_at?: string
+          waive_associates_fee?: boolean
         }
         Update: {
           cancel_at_period_end?: boolean
@@ -5253,9 +5261,12 @@ export type Database = {
           created_at?: string
           current_period_end?: string | null
           custom_price_cents?: number | null
+          discount_amount_cents?: number
           discount_code_id?: string | null
+          discount_percent?: number
           extra_locations?: number
           extra_practitioners?: number
+          free_associates?: number
           free_locations?: number
           free_practitioners?: number
           id?: string
@@ -5269,6 +5280,7 @@ export type Database = {
           suspended_at?: string | null
           trial_end?: string | null
           updated_at?: string
+          waive_associates_fee?: boolean
         }
         Relationships: [
           {

@@ -495,7 +495,7 @@ export const adminGetSeatAllowance = createServerFn({ method: "POST" })
       db
         .from("practitioner_subscriptions")
         .select(
-          "free_locations, free_practitioners, extra_locations, extra_practitioners, comped, status, trial_end, custom_price_cents, discount_code_id, stripe_subscription_id",
+          "free_locations, free_practitioners, extra_locations, extra_practitioners, comped, status, trial_end, custom_price_cents, discount_code_id, stripe_subscription_id, waive_associates_fee, free_associates, discount_percent, discount_amount_cents",
         )
         .eq("profile_id", data.profileId)
         .maybeSingle(),
@@ -517,6 +517,10 @@ export const adminGetSeatAllowance = createServerFn({ method: "POST" })
       trial_end: (sub?.trial_end as string) ?? null,
       custom_price_cents: sub?.custom_price_cents ?? null,
       discount_code_id: (sub?.discount_code_id as string) ?? null,
+      waive_associates_fee: Boolean(sub?.waive_associates_fee),
+      free_associates: Number(sub?.free_associates ?? 0),
+      discount_percent: Number(sub?.discount_percent ?? 0),
+      discount_amount_cents: Number(sub?.discount_amount_cents ?? 0),
       has_stripe_subscription: Boolean(sub?.stripe_subscription_id),
       location_count: locs.count ?? 0,
       practitioner_count: pracs.count ?? 0,
@@ -549,20 +553,31 @@ async function upsertSubscriptionPatch(profileId: string, patch: Record<string, 
   return existing as { id: string; stripe_subscription_id: string | null } | null;
 }
 
-/** Grant / adjust complimentary extra locations and practitioners. */
+/** Grant / adjust complimentary extra locations, practitioners and associates. */
 export const adminSetSeatAllowance = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: { profileId: string; freeLocations?: number; freePractitioners?: number }) => i)
+  .inputValidator(
+    (i: {
+      profileId: string;
+      freeLocations?: number;
+      freePractitioners?: number;
+      freeAssociates?: number;
+      waiveAssociatesFee?: boolean;
+    }) => i,
+  )
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const clamp = (n: unknown) => Math.max(0, Math.min(50, Math.floor(Number(n) || 0)));
-    const patch: Record<string, number> = {};
+    const patch: Record<string, number | boolean> = {};
     if (data.freeLocations !== undefined) patch.free_locations = clamp(data.freeLocations);
     if (data.freePractitioners !== undefined) patch.free_practitioners = clamp(data.freePractitioners);
+    if (data.freeAssociates !== undefined) patch.free_associates = clamp(data.freeAssociates);
+    if (data.waiveAssociatesFee !== undefined) patch.waive_associates_fee = Boolean(data.waiveAssociatesFee);
     if (!Object.keys(patch).length) return { ok: true };
     await upsertSubscriptionPatch(data.profileId, patch);
     return { ok: true, ...patch };
   });
+
 
 /**
  * Free subscriptions & discounts.
@@ -582,6 +597,8 @@ export const adminSetBilling = createServerFn({ method: "POST" })
       discountCodeId?: string | null;
       trialDays?: number | null;
       customPriceCents?: number | null;
+      discountPercent?: number | null;
+      discountAmountCents?: number | null;
     }) => i,
   )
   .handler(async ({ data, context }) => {
@@ -592,9 +609,14 @@ export const adminSetBilling = createServerFn({ method: "POST" })
     const patch: Record<string, unknown> = {};
     if (data.comped !== undefined) patch.comped = Boolean(data.comped);
     if (data.discountCodeId !== undefined) patch.discount_code_id = data.discountCodeId || null;
+    if (data.discountPercent !== undefined)
+      patch.discount_percent = Math.max(0, Math.min(100, Number(data.discountPercent) || 0));
+    if (data.discountAmountCents !== undefined)
+      patch.discount_amount_cents = Math.max(0, Math.floor(Number(data.discountAmountCents) || 0));
     if (data.customPriceCents !== undefined)
       patch.custom_price_cents =
         data.customPriceCents === null ? null : Math.max(0, Math.floor(data.customPriceCents));
+
     if (data.trialDays != null && data.trialDays > 0) {
       const end = new Date();
       end.setDate(end.getDate() + Math.floor(data.trialDays));

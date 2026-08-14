@@ -470,11 +470,17 @@ function SeatAllowanceCard({ profileId }: { profileId: string }) {
   });
   const [loc, setLoc] = useState<string>("");
   const [prac, setPrac] = useState<string>("");
+  const [assoc, setAssoc] = useState<string>("");
+  const [pct, setPct] = useState<string>("");
+  const [amt, setAmt] = useState<string>("");
   const [busy, setBusy] = useState(false);
   const [trialDays, setTrialDays] = useState("30");
 
   const freeLoc = loc === "" ? String(data?.free_locations ?? 0) : loc;
   const freePrac = prac === "" ? String(data?.free_practitioners ?? 0) : prac;
+  const freeAssoc = assoc === "" ? String(data?.free_associates ?? 0) : assoc;
+  const pctVal = pct === "" ? String(data?.discount_percent ?? 0) : pct;
+  const amtVal = amt === "" ? ((data?.discount_amount_cents ?? 0) / 100).toFixed(2) : amt;
 
   async function save() {
     setBusy(true);
@@ -484,10 +490,11 @@ function SeatAllowanceCard({ profileId }: { profileId: string }) {
           profileId,
           freeLocations: Number(freeLoc) || 0,
           freePractitioners: Number(freePrac) || 0,
+          freeAssociates: Number(freeAssoc) || 0,
         },
       });
       toast.success("Free seats updated");
-      setLoc(""); setPrac("");
+      setLoc(""); setPrac(""); setAssoc("");
       refetch();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed");
@@ -495,6 +502,18 @@ function SeatAllowanceCard({ profileId }: { profileId: string }) {
       setBusy(false);
     }
   }
+
+  async function saveDiscount() {
+    await applyBilling(
+      {
+        discountPercent: Number(pctVal) || 0,
+        discountAmountCents: Math.round((Number(amtVal) || 0) * 100),
+      },
+      "Monthly discount updated",
+    );
+    setPct(""); setAmt("");
+  }
+
 
   async function applyBilling(patch: Record<string, unknown>, msg: string) {
     setBusy(true);
@@ -587,6 +606,82 @@ function SeatAllowanceCard({ profileId }: { profileId: string }) {
               </div>
             </div>
 
+            {/* Standing discount on the collated monthly fee */}
+            <div className="rounded-md border p-3 space-y-2">
+              <p className="font-medium">Discount their monthly fee</p>
+              <p className="text-xs text-muted-foreground">
+                Applied to the whole collated plan (base + extra locations, practitioners and associates).
+                Percentage first, then the fixed amount. Leave both at 0 for full price.
+              </p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <Label className="text-xs">Percent off</Label>
+                  <Input type="number" min={0} max={100} value={pctVal} onChange={(e) => setPct(e.target.value)} />
+                </div>
+                <div>
+                  <Label className="text-xs">Fixed amount off (£ / month)</Label>
+                  <Input type="number" min={0} step="0.01" value={amtVal} onChange={(e) => setAmt(e.target.value)} />
+                </div>
+              </div>
+              <Button size="sm" disabled={busy} onClick={saveDiscount}>
+                {busy ? "Saving…" : "Save discount"}
+              </Button>
+            </div>
+
+            {/* Associates service fee */}
+            <div className="rounded-md border p-3 space-y-2">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p className="font-medium">Associates service fee</p>
+                  <p className="text-xs text-muted-foreground">
+                    Waiving this removes the £4.99/month module fee and all per-associate seat charges for
+                    this clinic.
+                  </p>
+                </div>
+                {data?.waive_associates_fee ? (
+                  <div className="flex items-center gap-2">
+                    <Badge>Waived</Badge>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={busy}
+                      onClick={async () => {
+                        setBusy(true);
+                        try {
+                          await setSeats({ data: { profileId, waiveAssociatesFee: false } });
+                          toast.success("Associates fee reinstated");
+                          refetch();
+                        } finally {
+                          setBusy(false);
+                        }
+                      }}
+                    >
+                      Charge again
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    size="sm"
+                    disabled={busy}
+                    onClick={async () => {
+                      setBusy(true);
+                      try {
+                        await setSeats({ data: { profileId, waiveAssociatesFee: true } });
+                        toast.success("Associates fee waived");
+                        refetch();
+                      } finally {
+                        setBusy(false);
+                      }
+                    }}
+                  >
+                    Waive associates fee
+                  </Button>
+                )}
+              </div>
+            </div>
+
+
+
             {/* Trial */}
             <div className="rounded-md border p-3 space-y-2">
               <p className="font-medium">Extend free trial</p>
@@ -634,6 +729,13 @@ function SeatAllowanceCard({ profileId }: { profileId: string }) {
                   <Input type="number" min={0} value={freePrac} onChange={(e) => setPrac(e.target.value)} />
                   <p className="mt-1 text-xs text-muted-foreground">
                     Using {data?.practitioner_count ?? 0} · free allowance {1 + (data?.free_practitioners ?? 0)}
+                  </p>
+                </div>
+                <div>
+                  <Label className="text-xs">Free extra associates</Label>
+                  <Input type="number" min={0} value={freeAssoc} onChange={(e) => setAssoc(e.target.value)} />
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    5 associates are included as standard · free allowance {5 + (data?.free_associates ?? 0)}
                   </p>
                 </div>
               </div>
