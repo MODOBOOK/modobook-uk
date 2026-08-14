@@ -81,7 +81,7 @@ const groups: { title: string; items: Item[] }[] = [
     title: "Clinic owner",
     items: [
       { label: "Associates", description: "Self-employed practitioners hosted in your clinic — oversight, compliance & records", to: "/dashboard/associates", icon: ShieldCheck, ...T.sand },
-      { label: "Room rental", description: "Rent your rooms by the hour, half day or full day", to: "/dashboard/room-rental", icon: DoorOpen, ...T.cream },
+      { label: "Room rental", description: "Rent your rooms by the hour, half day or full day", to: "/dashboard/room-rental", icon: DoorOpen, ...T.cream, soon: "room-rental" as const },
     ],
   },
 
@@ -90,7 +90,7 @@ const groups: { title: string; items: Item[] }[] = [
     items: [
       { label: "Services", description: "Treatments, categories, pricing", to: "/dashboard/services", icon: Scissors, ...T.taupe },
       { label: "Add-ons", description: "Optional extras offered with treatments", to: "/dashboard/addons", icon: Sparkles, ...T.ivory },
-      { label: "Packages", description: "Bundle treatments for patients", to: "/dashboard/packages", icon: Package, ...T.espresso },
+      { label: "Packages", description: "Bundle treatments for patients", to: "/dashboard/packages", icon: Package, ...T.espresso, soon: "packages" as const },
       { label: "Discounts", description: "Menu discounts & promo codes", to: "/dashboard/discounts", icon: Percent, ...T.sand },
       { label: "Gift cards", description: "Sell branded gift cards — value, treatment or package", to: "/dashboard/gift-cards", icon: Gift, ...T.cream },
       { label: "Model slots", description: "Discounted dates & times", to: "/dashboard/model-slots", icon: Sparkles, ...T.mocha },
@@ -163,13 +163,16 @@ function MenuPage() {
               : true // non-pilot clinics see it as "coming soon"
             : true,
         )
+        .map((i) => {
+          // Pilot clinics keep full access; non-pilot clinics see pilot-only pages as "coming soon".
+          if (pilot) return i;
+          if (i.to === "/dashboard/associates") return { ...i, soon: "associates" as const };
+          return i;
+        })
         .concat(
           !pilot && g.title === "Bookings"
             ? [{ label: "Upcoming appointments", description: "Every booking in one list with AI patient briefs", to: "/dashboard/upcoming", icon: CalendarDays, ...T.ivory, soon: "upcoming" as const }]
             : [],
-        )
-        .map((i) =>
-          !pilot && i.to === "/dashboard/associates" ? { ...i, soon: "associates" as const } : i,
         ),
     })).filter((g) => g.items.length > 0);
     if (!query.trim()) return visible;
