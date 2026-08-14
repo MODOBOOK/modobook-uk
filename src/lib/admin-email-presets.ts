@@ -67,6 +67,10 @@ function featureRow(f: Feature) {
 
 export const PLATFORM_UPDATES_SUBJECT = "What's coming to MODO"
 
+export const PLATFORM_REPLY_TO = 'info@modobook.uk'
+export const PLATFORM_WHATSAPP_NUMBER = '+44 7385 790119'
+export const PLATFORM_WHATSAPP_LINK = `https://wa.me/${PLATFORM_WHATSAPP_NUMBER.replace(/\D/g, '')}`
+
 export const PLATFORM_UPDATES_HTML = `<div style="background-color:${page};margin:0;padding:28px 12px 40px;font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
   <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:560px;margin:0 auto;">
     <tr>
@@ -95,7 +99,18 @@ ${FEATURES.map(featureRow).join('')}
         </table>
 
         <hr style="border:none;border-top:1px solid ${border};margin:26px 0 16px;" />
-        <p style="margin:0;font-size:13px;color:${muted};line-height:1.65;">Features roll out gradually &mdash; you&rsquo;ll see a <strong>Soon</strong> badge in your dashboard where something isn&rsquo;t switched on yet. Reply to this email any time with questions or ideas.</p>
+
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+          <tr>
+            <td style="background-color:${soft};border-radius:12px;padding:18px 20px;">
+              <p style="margin:0 0 8px;font-size:14px;font-weight:600;color:${ink};">Questions or ideas?</p>
+              <p style="margin:0 0 12px;font-size:13px;color:${muted};line-height:1.6;">Reply to this email or message us on WhatsApp &mdash; it goes straight to the MODO team.</p>
+              <a href="${PLATFORM_WHATSAPP_LINK}" style="display:inline-block;background-color:#ffffff;border:1px solid ${border};border-radius:999px;padding:10px 20px;font-size:13px;font-weight:600;color:${ink};text-decoration:none;">Chat on WhatsApp</a>
+              <p style="margin:10px 0 0;font-size:12px;color:${muted};">${PLATFORM_WHATSAPP_NUMBER}</p>
+            </td>
+          </tr>
+        </table>
+
         <p style="margin:16px 0 0;font-size:13px;color:${muted};">&mdash; The MODO team</p>
       </td>
     </tr>
