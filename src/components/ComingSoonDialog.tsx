@@ -40,12 +40,13 @@ export const COMING_SOON_FEATURES: Record<
     ],
   },
   packages: {
-    title: "Treatment packages",
+    title: "Treatment packages & build your own",
     icon: Package,
     blurb:
-      "Bundle treatments into packages that patients can buy upfront and redeem over multiple visits.",
+      "Bundle treatments into packages patients buy upfront — plus a 'build your own' option where they pick their own combination.",
     points: [
       "Build packages from any of your services with custom session counts",
+      "Build your own: patients choose treatments themselves for a set price or with an automatic discount",
       "Set expiry windows and sale pricing to drive commitment",
       "Patients see packages on your booking page alongside treatments",
       "Track redemptions and remaining sessions automatically",
