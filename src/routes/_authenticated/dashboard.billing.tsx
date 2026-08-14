@@ -61,16 +61,19 @@ function BillingPage() {
           || d.plans.find((p: any) => p.kind === "base");
         if (base) setSelectedPlanId(base.id);
       }
-      // Preset add-on quantities to the greater of what they've saved and
-      // what they've actually created (first seat of each is always free).
-      const usedExtraLocs = Math.max(0, (d.usage?.locations ?? 0) - 1);
-      const usedExtraPracs = Math.max(0, (d.usage?.practitioners ?? 0) - 1);
+      // The plan price is collated from the account itself: chargeable seats are
+      // whatever exists beyond the one included (plus any comped extras).
+      const freeLocs = Math.max(0, (d.subscription as any)?.free_locations ?? 0);
+      const freePracs = Math.max(0, (d.subscription as any)?.free_practitioners ?? 0);
+      const usedExtraLocs = Math.max(0, (d.usage?.locations ?? 0) - 1 - freeLocs);
+      const usedExtraPracs = Math.max(0, (d.usage?.practitioners ?? 0) - 1 - freePracs);
       const savedLocs = d.subscription?.extra_locations ?? 0;
       const savedPracs = d.subscription?.extra_practitioners ?? 0;
       const nextLocs = Math.max(savedLocs, usedExtraLocs);
       const nextPracs = Math.max(savedPracs, usedExtraPracs);
       setExtraLocations(nextLocs);
       setExtraPractitioners(nextPracs);
+
       // If the actual usage is above the saved selection, persist that so
       // checkout reflects the reserved seats.
       if (nextLocs !== savedLocs || nextPracs !== savedPracs) {
