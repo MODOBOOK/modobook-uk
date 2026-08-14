@@ -306,7 +306,13 @@ function DashboardIndex() {
           {pilotFeaturesEnabled(profile.slug) ? (
             <Link to="/dashboard/upcoming" className="text-xs font-medium uppercase tracking-[0.2em] text-foreground underline-offset-4 hover:underline">View all</Link>
           ) : (
-            <Link to="/dashboard/coming-soon" className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground underline-offset-4 hover:underline">View all · Soon</Link>
+            <Link
+              to="/dashboard/coming-soon"
+              className="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/5 px-3 py-1.5 text-xs font-medium uppercase tracking-[0.2em] text-foreground transition hover:bg-primary/10"
+            >
+              View all
+              <span className="rounded-full bg-primary/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.1em] text-primary">Soon</span>
+            </Link>
           )}
         </div>
 
