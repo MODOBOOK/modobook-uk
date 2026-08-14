@@ -135,7 +135,7 @@ function AssociateDetailPage() {
         </TabsList>
 
         <TabsContent value="patients" className="pt-4">
-          <PatientsTab id={id} allowed={!!a.oversight_records && a.status === "active"} />
+          <PatientsTab id={id} allowed={!!a.oversight_records && a.status !== "declined" && a.status !== "revoked"} />
         </TabsContent>
         <TabsContent value="appointments" className="pt-4">
           <AppointmentsTab id={id} />
@@ -222,7 +222,7 @@ function PatientsTab({ id, allowed }: { id: string; allowed: boolean }) {
   if (!allowed)
     return (
       <Card><CardContent className="py-10 text-center text-sm text-muted-foreground">
-        This associate has not shared clinical records with your clinic.
+        No shared clinical records yet. Records appear once the associate accepts the invite and record sharing stays on.
       </CardContent></Card>
     );
 
