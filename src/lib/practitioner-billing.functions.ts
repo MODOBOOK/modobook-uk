@@ -362,13 +362,32 @@ export const startBillingCheckout = createServerFn({ method: "POST" })
       ? Math.floor(new Date(existing.trial_end).getTime() / 1000)
       : undefined;
 
+    // Carry any code redeemed on the Plan & billing page into checkout, so the
+    // practitioner never has to re-enter it on Stripe's screen.
+    let redeemedCouponId: string | null = null;
+    if ((existing as any)?.discount_code_id) {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: full } = await supabaseAdmin
+        .from("platform_discount_codes")
+        .select("id, code, description, percent_off, amount_off_cents, duration, duration_in_months, stripe_coupon_id")
+        .eq("id", (existing as any).discount_code_id)
+        .maybeSingle();
+      if (full) {
+        const { ensureStripeCoupon } = await import("./discount-codes.server");
+        redeemedCouponId = await ensureStripeCoupon(full as any);
+      }
+    }
+
     let session;
     try {
       session = await stripe.checkout.sessions.create({
         mode: "subscription",
         customer: customerId ?? undefined,
         line_items,
-        allow_promotion_codes: true,
+        ...(redeemedCouponId
+          ? { discounts: [{ coupon: redeemedCouponId }] }
+          : { allow_promotion_codes: true }),
+
         // This Checkout session is created directly on MODO's Stripe account.
         // Card is currently enabled there and is saved for recurring billing;
         // explicitly requesting Bacs makes Stripe reject the whole session
