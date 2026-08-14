@@ -4469,6 +4469,93 @@ export type Database = {
         }
         Relationships: []
       }
+      patient_invoices: {
+        Row: {
+          client_id: string | null
+          created_at: string
+          currency: string
+          due_date: string | null
+          fee_cents: number
+          id: string
+          include_fees: boolean
+          invoice_number: string
+          items: Json
+          notes: string | null
+          paid_at: string | null
+          payment_link: string | null
+          payment_link_id: string | null
+          pdf_url: string | null
+          profile_id: string
+          recipient_email: string | null
+          recipient_name: string | null
+          sent_at: string | null
+          status: string
+          subtotal_cents: number
+          updated_at: string
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string
+          currency?: string
+          due_date?: string | null
+          fee_cents?: number
+          id?: string
+          include_fees?: boolean
+          invoice_number: string
+          items?: Json
+          notes?: string | null
+          paid_at?: string | null
+          payment_link?: string | null
+          payment_link_id?: string | null
+          pdf_url?: string | null
+          profile_id: string
+          recipient_email?: string | null
+          recipient_name?: string | null
+          sent_at?: string | null
+          status?: string
+          subtotal_cents?: number
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string
+          currency?: string
+          due_date?: string | null
+          fee_cents?: number
+          id?: string
+          include_fees?: boolean
+          invoice_number?: string
+          items?: Json
+          notes?: string | null
+          paid_at?: string | null
+          payment_link?: string | null
+          payment_link_id?: string | null
+          pdf_url?: string | null
+          profile_id?: string
+          recipient_email?: string | null
+          recipient_name?: string | null
+          sent_at?: string | null
+          status?: string
+          subtotal_cents?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_invoices_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clinic_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_invoices_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       patient_points_ledger: {
         Row: {
           clinic_profile_id: string
