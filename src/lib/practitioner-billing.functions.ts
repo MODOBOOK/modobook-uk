@@ -775,7 +775,7 @@ export const redeemDiscountCode = createServerFn({ method: "POST" })
         .select("id, stripe_subscription_id, stripe_customer_id")
         .single();
       if (cErr) throw cErr;
-      sub = created as typeof sub;
+      sub = created as unknown as typeof sub;
     }
 
     // platform_discount_codes is admin-only under RLS — read the full row with
