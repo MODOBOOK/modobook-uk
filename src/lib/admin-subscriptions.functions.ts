@@ -337,6 +337,8 @@ export const createDiscountCode = createServerFn({ method: "POST" })
     let coupon: { id: string } | null = null;
     let promo: { id: string } | null = null;
     try {
+      const { getStripeStable } = await import("./stripe.server");
+      const stripe = getStripeStable();
       coupon = await stripe.coupons.create({
         name: data.description || data.code,
         duration: data.duration,
