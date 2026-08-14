@@ -18,6 +18,42 @@ async function getMyProfileId(context: { supabase: any; userId: string }) {
 }
 
 /**
+ * Associates billing: the module is a flat monthly fee covering the first 5
+ * associates, then every further block of 5 adds one extra seat fee.
+ * Returns what should actually be charged for this clinic right now.
+ */
+async function computeAssociateCharge(supabase: any, profileId: string) {
+  const ASSOC_BLOCK = 5;
+  const [{ data: sub }, { data: profRow }, { count: assocCount }] = await Promise.all([
+    supabase
+      .from("practitioner_subscriptions")
+      .select("waive_associates_fee, free_associates")
+      .eq("profile_id", profileId)
+      .maybeSingle(),
+    supabase.from("profiles").select("associates_enabled, slug").eq("id", profileId).maybeSingle(),
+    supabase
+      .from("clinic_associates")
+      .select("id", { count: "exact", head: true })
+      .eq("clinic_profile_id", profileId)
+      .in("status", ["invited", "active"]),
+  ]);
+  const enabled = Boolean(profRow?.associates_enabled);
+  const waived = Boolean(sub?.waive_associates_fee) || !associateBillingEnabled(profRow?.slug);
+  const included = ASSOC_BLOCK + Math.max(0, Number(sub?.free_associates ?? 0));
+  const used = assocCount ?? 0;
+  const chargeable = enabled && !waived;
+  return {
+    enabled,
+    waived,
+    used,
+    included,
+    blockSize: ASSOC_BLOCK,
+    moduleActive: chargeable,
+    extraBlocks: chargeable ? Math.ceil(Math.max(0, used - included) / ASSOC_BLOCK) : 0,
+  };
+}
+
+/**
  * Seat handling. Every clinic gets 1 free seat of each kind (location /
  * practitioner). Extra seats are never blocked — adding one automatically
  * increases the paid add-on quantity:
