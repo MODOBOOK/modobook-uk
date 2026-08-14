@@ -633,6 +633,10 @@ function PackagesPage() {
         </Dialog>
       </div>
 
+      <PackageBuildersCard />
+
+
+
       <PackageCategoriesManager
         categories={categories}
         onAdd={async (name) => {
