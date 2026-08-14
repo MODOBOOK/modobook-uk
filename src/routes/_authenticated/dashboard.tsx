@@ -1,3 +1,4 @@
+import { pilotFeaturesEnabled } from "@/lib/feature-flags";
 import { createFileRoute, Link, Outlet, redirect, useRouterState } from "@tanstack/react-router";
 import { getMyProfile } from "@/lib/profiles.functions";
 import { Button } from "@/components/ui/button";
