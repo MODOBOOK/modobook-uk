@@ -289,9 +289,10 @@ function EditAuthEmailDialog({
 }
 
 function BroadcastDialog({
-  onClose, onSend,
+  onClose, onSend, preset,
 }: {
   onClose: () => void
+  preset?: 'platform-updates'
   onSend: (payload: {
     audience: 'all_practitioners' | 'user' | 'waitlist'
     recipient_email?: string | null
@@ -308,13 +309,18 @@ function BroadcastDialog({
 
   const [audience, setAudience] = useState<'all_practitioners' | 'user' | 'waitlist'>('all_practitioners')
   const [email, setEmail] = useState('')
-  const [subject, setSubject] = useState('')
+  const [subject, setSubject] = useState(preset === 'platform-updates' ? PLATFORM_UPDATES_SUBJECT : '')
   const [message, setMessage] = useState('')
   const [ctaText, setCtaText] = useState('')
   const [ctaUrl, setCtaUrl] = useState('')
-  const [blocks, setBlocks] = useState<Block[]>([])
+  const [blocks, setBlocks] = useState<Block[]>(
+    preset === 'platform-updates'
+      ? ([{ type: 'html', html: PLATFORM_UPDATES_HTML, full: true }] as Block[])
+      : [],
+  )
   const [busy, setBusy] = useState(false)
   const [waitlist, setWaitlist] = useState<number | null>(null)
+
 
   // Preview state
   const [previewHtml, setPreviewHtml] = useState<string | null>(null)
