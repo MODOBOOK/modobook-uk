@@ -8,7 +8,7 @@ import {
   listClientPrescriptions, upsertClientPrescription, deleteClientPrescription,
 } from "@/lib/clients.functions";
 import { listMyAppointments } from "@/lib/availability.functions";
-import { listConsultationsForPatient, createConsultation } from "@/lib/consultations.functions";
+import { listConsultationsForPatient, createConsultation, listConsultationNotesForClient } from "@/lib/consultations.functions";
 import { getMyProfile } from "@/lib/profiles.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { NoteTemplatePicker, appendTemplate } from "@/components/NoteTemplatePicker";
