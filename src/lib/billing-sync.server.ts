@@ -33,7 +33,7 @@ export async function syncSubscriptionSeats(supabase: any, profileId: string) {
         .in("status", ["invited", "active"]),
       supabase
         .from("subscription_plans")
-        .select("id, kind, stripe_price_id, active")
+        .select("id, kind, name, amount_cents, stripe_price_id, active")
         .in("kind", ["base", "addon_location", "addon_practitioner", "addon_associates_module", "addon_associate"])
         .eq("active", true),
       supabase.from("profiles").select("associates_enabled, slug").eq("id", profileId).maybeSingle(),
@@ -66,10 +66,15 @@ export async function syncSubscriptionSeats(supabase: any, profileId: string) {
     wanted.push({ price: locAddon.stripe_price_id, quantity: extraLocations });
   if (extraPractitioners > 0 && pracAddon?.stripe_price_id)
     wanted.push({ price: pracAddon.stripe_price_id, quantity: extraPractitioners });
-  if (assocChargeable && assocModule?.stripe_price_id)
-    wanted.push({ price: assocModule.stripe_price_id, quantity: 1 });
-  if (assocBlocks > 0 && assocAddon?.stripe_price_id)
-    wanted.push({ price: assocAddon.stripe_price_id, quantity: assocBlocks });
+  const { ensurePlanPrice } = await import("./plan-prices.server");
+  if (assocChargeable) {
+    const priceId = await ensurePlanPrice(assocModule as any);
+    if (priceId) wanted.push({ price: priceId, quantity: 1 });
+  }
+  if (assocBlocks > 0) {
+    const priceId = await ensurePlanPrice(assocAddon as any);
+    if (priceId) wanted.push({ price: priceId, quantity: assocBlocks });
+  }
 
   const { getStripe } = await import("./stripe.server");
   const stripe = getStripe();

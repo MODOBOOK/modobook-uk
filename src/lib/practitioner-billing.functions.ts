@@ -322,11 +322,14 @@ export const startBillingCheckout = createServerFn({ method: "POST" })
     if ((data.extraPractitioners ?? 0) > 0 && pracAddon?.stripe_price_id) {
       line_items.push({ price: pracAddon.stripe_price_id, quantity: data.extraPractitioners! });
     }
-    if (associates.moduleActive && assocModule?.stripe_price_id) {
-      line_items.push({ price: assocModule.stripe_price_id, quantity: 1 });
+    const { ensurePlanPrice } = await import("./plan-prices.server");
+    if (associates.moduleActive) {
+      const priceId = await ensurePlanPrice(assocModule);
+      if (priceId) line_items.push({ price: priceId, quantity: 1 });
     }
-    if (associates.extraBlocks > 0 && assocAddon?.stripe_price_id) {
-      line_items.push({ price: assocAddon.stripe_price_id, quantity: associates.extraBlocks });
+    if (associates.extraBlocks > 0) {
+      const priceId = await ensurePlanPrice(assocAddon);
+      if (priceId) line_items.push({ price: priceId, quantity: associates.extraBlocks });
     }
 
     // Existing subscription row / customer
@@ -684,7 +687,7 @@ export const updateMySubscriptionItems = createServerFn({ method: "POST" })
 
     const { data: plans, error: pErr } = await context.supabase
       .from("subscription_plans")
-      .select("id, kind, stripe_price_id, active")
+      .select("id, kind, name, amount_cents, stripe_price_id, active")
       .in("kind", ["base", "addon_location", "addon_practitioner", "addon_associates_module", "addon_associate"])
       .eq("active", true);
     if (pErr) throw pErr;
@@ -709,10 +712,15 @@ export const updateMySubscriptionItems = createServerFn({ method: "POST" })
       wanted.push({ price: locAddon.stripe_price_id, quantity: data.extraLocations });
     if (data.extraPractitioners > 0 && pracAddon?.stripe_price_id)
       wanted.push({ price: pracAddon.stripe_price_id, quantity: data.extraPractitioners });
-    if (associates.moduleActive && assocModule?.stripe_price_id)
-      wanted.push({ price: assocModule.stripe_price_id, quantity: 1 });
-    if (associates.extraBlocks > 0 && assocAddon?.stripe_price_id)
-      wanted.push({ price: assocAddon.stripe_price_id, quantity: associates.extraBlocks });
+    const { ensurePlanPrice } = await import("./plan-prices.server");
+    if (associates.moduleActive) {
+      const priceId = await ensurePlanPrice(assocModule);
+      if (priceId) wanted.push({ price: priceId, quantity: 1 });
+    }
+    if (associates.extraBlocks > 0) {
+      const priceId = await ensurePlanPrice(assocAddon);
+      if (priceId) wanted.push({ price: priceId, quantity: associates.extraBlocks });
+    }
 
     const items: Array<{ id?: string; price?: string; quantity?: number; deleted?: boolean }> = [];
     const usedPriceIds = new Set<string>();
