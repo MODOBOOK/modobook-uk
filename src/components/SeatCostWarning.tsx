@@ -109,14 +109,15 @@ export function SeatCostWarning({
                     </>
                   )}
                   You currently have {a.used} associate{a.used === 1 ? "" : "s"}.
-                  {a.used + 1 > a.included ? (
+                  {a.used + 1 > (a.covered ?? a.included) ? (
                     <>
-                      {" "}That's beyond the {a.included} included, so this one adds a further{" "}
+                      {" "}That's beyond the {a.covered ?? a.included} you're covered for, so this unlocks the next block
+                      of {a.blockSize ?? 5} associates for a further{" "}
                       <strong>{money(a.addonCents, seats.currency)}</strong>/{seats.interval}.
                     </>
                   ) : (
                     <>
-                      {" "}This one is included — each associate beyond {a.included} adds{" "}
+                      {" "}This one is covered — every further block of {a.blockSize ?? 5} associates adds{" "}
                       {money(a.addonCents, seats.currency)}/{seats.interval}.
                     </>
                   )}
