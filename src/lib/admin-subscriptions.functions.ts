@@ -350,7 +350,7 @@ export const createDiscountCode = createServerFn({ method: "POST" })
         redeem_by: data.expires_at ? Math.floor(new Date(data.expires_at).getTime() / 1000) : undefined,
       });
       promo = await stripe.promotionCodes.create({
-        coupon: coupon.id,
+        coupon: coupon!.id,
         code: data.code.toUpperCase(),
         max_redemptions: data.max_redemptions ?? undefined,
         expires_at: data.expires_at ? Math.floor(new Date(data.expires_at).getTime() / 1000) : undefined,
