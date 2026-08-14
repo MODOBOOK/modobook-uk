@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { CalendarDays, ShieldCheck, Sparkles } from "lucide-react";
+import { CalendarDays, ShieldCheck, Package, DoorOpen, Sparkles } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
-export type ComingSoonKey = "upcoming" | "associates" | "general";
+export type ComingSoonKey = "upcoming" | "associates" | "packages" | "room-rental" | "general";
 
 export const COMING_SOON_FEATURES: Record<
   Exclude<ComingSoonKey, "general">,
@@ -37,6 +37,30 @@ export const COMING_SOON_FEATURES: Record<
       "Clinical records pulled through to you as the responsible clinic",
       "Compliance tracking for DBS, insurance and qualifications with expiry reminders",
       "Supervision meeting logs and incident reporting",
+    ],
+  },
+  packages: {
+    title: "Treatment packages",
+    icon: Package,
+    blurb:
+      "Bundle treatments into packages that patients can buy upfront and redeem over multiple visits.",
+    points: [
+      "Build packages from any of your services with custom session counts",
+      "Set expiry windows and sale pricing to drive commitment",
+      "Patients see packages on your booking page alongside treatments",
+      "Track redemptions and remaining sessions automatically",
+    ],
+  },
+  "room-rental": {
+    title: "Room rental",
+    icon: DoorOpen,
+    blurb:
+      "Rent out your treatment rooms by the hour, half day or full day to self-employed practitioners.",
+    points: [
+      "Set availability and pricing for each room",
+      "Online booking with automatic room allocation",
+      "Built-in invoices sent straight to renters",
+      "See who's in and which room they're using at a glance",
     ],
   },
 };
