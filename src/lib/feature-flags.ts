@@ -36,3 +36,14 @@ export function associateBillingEnabled(slug?: string | null) {
 }
 
 
+
+/**
+ * Everything shipped in the current pilot round (upcoming appointments page,
+ * associate oversight, clinic-owner grouping). Pilot account only until we
+ * flip these live for everyone.
+ */
+export const PILOT_SLUGS = ["aestheticsbynurseryan"];
+
+export function pilotFeaturesEnabled(slug?: string | null) {
+  return isFeatureLive(PILOT_SLUGS, slug);
+}
