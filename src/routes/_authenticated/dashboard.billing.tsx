@@ -233,6 +233,46 @@ function BillingPage() {
 
       <Card>
         <CardHeader>
+          <CardTitle>Discount code</CardTitle>
+          <CardDescription>
+            {discountCode
+              ? <>Applied: <strong>{discountCode.code}</strong>{discountCode.percent_off ? ` — ${discountCode.percent_off}% off` : discountCode.amount_off_cents ? ` — ${money(discountCode.amount_off_cents)} off` : ""}</>
+              : "Have a MODO promo code? Redeem it here — it comes straight off your plan total."}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex gap-2 items-end">
+            <div className="flex-1">
+              <Label>Code</Label>
+              <Input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="MODO2026" />
+            </div>
+            <Button onClick={apply} disabled={busy || !code.trim()}>Apply</Button>
+          </div>
+          {discountCode && (
+            <div className="flex flex-wrap items-center justify-between gap-2 rounded-md bg-muted p-3 text-sm">
+              <span>
+                <strong>{discountCode.code}</strong> applied — saving {money(codeDiscount)}/month
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={busy}
+                onClick={async () => {
+                  setBusy(true);
+                  try { await removeCode(); toast.success("Code removed"); reload(); }
+                  catch (e) { toast.error(e instanceof Error ? e.message : "Could not remove"); }
+                  finally { setBusy(false); }
+                }}
+              >
+                Remove
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <CardTitle>{hasLiveSub ? "Edit your plan" : "Choose a plan"}</CardTitle>
           <CardDescription>
             {hasLiveSub
@@ -430,45 +470,6 @@ function BillingPage() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Discount code</CardTitle>
-          <CardDescription>
-            {discountCode
-              ? <>Applied: <strong>{discountCode.code}</strong>{discountCode.percent_off ? ` — ${discountCode.percent_off}% off` : discountCode.amount_off_cents ? ` — ${money(discountCode.amount_off_cents)} off` : ""}</>
-              : "Have a MODO promo code? Redeem it here — it comes straight off your plan total, no need to enter anything on the Stripe page."}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="flex gap-2 items-end">
-            <div className="flex-1">
-              <Label>Code</Label>
-              <Input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="MODO2026" />
-            </div>
-            <Button onClick={apply} disabled={busy || !code.trim()}>Apply</Button>
-          </div>
-          {discountCode && (
-            <div className="flex flex-wrap items-center justify-between gap-2 rounded-md bg-muted p-3 text-sm">
-              <span>
-                <strong>{discountCode.code}</strong> applied — saving {money(codeDiscount)}/month
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={busy}
-                onClick={async () => {
-                  setBusy(true);
-                  try { await removeCode(); toast.success("Code removed"); reload(); }
-                  catch (e) { toast.error(e instanceof Error ? e.message : "Could not remove"); }
-                  finally { setBusy(false); }
-                }}
-              >
-                Remove
-              </Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
     </div>
   );
 }
