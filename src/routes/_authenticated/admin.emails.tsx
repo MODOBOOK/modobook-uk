@@ -17,6 +17,8 @@ import {
 import type { AdminBlock as Block } from '@/lib/email-templates/admin-broadcast'
 import { generateAdminEmail } from '@/lib/ai-admin-email.functions'
 import { parsePresetBody } from '@/lib/marketing-presets'
+import { PLATFORM_UPDATES_HTML, PLATFORM_UPDATES_SUBJECT } from '@/lib/admin-email-presets'
+
 import { EMAIL_DEFAULTS } from '@/lib/email-templates/defaults'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -432,7 +434,32 @@ function BroadcastDialog({
             </p>
           </div>
 
+          {/* Ready-made branded templates */}
+          <div className="rounded-lg border p-3 space-y-2 bg-muted/20">
+            <p className="text-sm font-medium">Branded templates</p>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                setSubject(PLATFORM_UPDATES_SUBJECT)
+                setMessage('')
+                setCtaText('')
+                setCtaUrl('')
+                setBlocks([{ type: 'html', html: PLATFORM_UPDATES_HTML, full: true }] as Block[])
+                setPreviewHtml(null)
+                toast.success('Loaded — preview or edit the code below')
+              }}
+            >
+              Product updates announcement
+            </Button>
+            <p className="text-xs text-muted-foreground">
+              MODO logo, icon list of what&rsquo;s coming, and a dashboard button. Fully editable before sending.
+            </p>
+          </div>
+
           {/* AI composer */}
+
           <div className="rounded-lg border p-3 space-y-3 bg-muted/20">
             <div className="flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-primary" />
