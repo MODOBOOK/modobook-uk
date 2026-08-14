@@ -31,7 +31,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { UserPlus, ShieldCheck, DoorOpen, Trash2, ExternalLink, AlertTriangle, FileText, Copy, Check } from "lucide-react";
 
-export const Route = createFileRoute("/_authenticated/dashboard/associates")({
+export const Route = createFileRoute("/_authenticated/dashboard/associates/")({
   ssr: false,
   head: () => ({
     meta: [
