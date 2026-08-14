@@ -174,11 +174,6 @@ function MenuPage() {
               ? !!profile.associates_enabled
               : true // non-pilot clinics see it as "coming soon"
             : true,
-        )
-        .concat(
-          !pilot && g.title === "Bookings"
-            ? [{ label: "Upcoming appointments", description: "Every booking in one list with AI patient briefs", to: "/dashboard/upcoming", icon: CalendarDays, ...T.ivory }]
-            : [],
         ),
     })).filter((g) => g.items.length > 0);
     if (!query.trim()) return visible;
