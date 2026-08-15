@@ -1,14 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-
-async function assertAdmin(context: { supabase: any; userId: string }) {
-  const { data, error } = await context.supabase.rpc("has_role", {
-    _user_id: context.userId,
-    _role: "admin",
-  });
-  if (error) throw error;
-  if (!data) throw new Error("Forbidden");
-}
+import { assertAdmin } from "@/lib/admin-auth";
 
 export const listSubscriptionPlans = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])

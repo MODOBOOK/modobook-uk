@@ -1071,21 +1071,42 @@ function DiscountCodesSection() {
 
   async function create() {
     if (!code.trim()) return;
+    const percentValue = percent ? Number(percent) : null;
+    const amountValue = amount ? Math.round(Number(amount) * 100) : null;
+    if (percentValue && amountValue) {
+      toast.error("Choose either percent off or amount off, not both");
+      return;
+    }
+    if (!percentValue && !amountValue) {
+      toast.error("Enter a percent off or amount off");
+      return;
+    }
+    if (duration === "repeating" && (!months || Number(months) < 1)) {
+      toast.error("Enter how many months the discount repeats");
+      return;
+    }
     setBusy(true);
     try {
       const { createDiscountCode } = await import("@/lib/admin-subscriptions.functions");
       await createDiscountCode({ data: {
         code: code.trim(),
         description: desc || undefined,
-        percent_off: percent ? Number(percent) : null,
-        amount_off_cents: amount ? Math.round(Number(amount) * 100) : null,
+        percent_off: percentValue,
+        amount_off_cents: amountValue,
         duration,
         duration_in_months: months ? Number(months) : null,
       } });
       toast.success("Code created");
       setShowNew(false); setCode(""); setDesc(""); setPercent(""); setAmount(""); setMonths("");
       reload();
-    } catch (e) { toast.error(e instanceof Error ? e.message : "Failed"); }
+    } catch (e) {
+      const message = e instanceof Error
+        ? e.message
+        : typeof e === "object" && e && "message" in e
+          ? String(e.message)
+          : "Could not create discount code";
+      toast.error(message);
+    }
     finally { setBusy(false); }
   }
 
@@ -1109,8 +1130,8 @@ function DiscountCodesSection() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <div><Label>Code</Label><Input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="MODO2026" /></div>
               <div><Label>Description</Label><Input value={desc} onChange={(e) => setDesc(e.target.value)} /></div>
-              <div><Label>Percent off</Label><Input type="number" value={percent} onChange={(e) => setPercent(e.target.value)} placeholder="20" /></div>
-              <div><Label>Amount off (£)</Label><Input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="10" /></div>
+              <div><Label>Percent off</Label><Input type="number" min="1" max="100" value={percent} onChange={(e) => { setPercent(e.target.value); if (e.target.value) setAmount(""); }} placeholder="20" /></div>
+              <div><Label>Amount off (£)</Label><Input type="number" min="0.01" step="0.01" value={amount} onChange={(e) => { setAmount(e.target.value); if (e.target.value) setPercent(""); }} placeholder="10" /></div>
               <div>
                 <Label>Duration</Label>
                 <Select value={duration} onValueChange={(v) => setDuration(v as any)}>
@@ -1123,7 +1144,7 @@ function DiscountCodesSection() {
                 </Select>
               </div>
               {duration === "repeating" && (
-                <div><Label>Months</Label><Input type="number" value={months} onChange={(e) => setMonths(e.target.value)} /></div>
+                <div><Label>Months</Label><Input type="number" min="1" value={months} onChange={(e) => setMonths(e.target.value)} /></div>
               )}
             </div>
             <Button onClick={create} disabled={busy}>Create</Button>
