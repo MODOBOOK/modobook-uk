@@ -133,6 +133,7 @@ function AssociateDetailPage() {
           <TabsTrigger value="compliance">Compliance</TabsTrigger>
           <TabsTrigger value="meetings">Meetings</TabsTrigger>
           <TabsTrigger value="incidents">Incidents</TabsTrigger>
+          <TabsTrigger value="audit">Access log</TabsTrigger>
           <TabsTrigger value="settings">Settings</TabsTrigger>
         </TabsList>
 
