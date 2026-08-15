@@ -295,25 +295,6 @@ function ServicesPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-2 rounded-full bg-muted p-1">
-        {(["catalogue", "offers"] as const).map((t) => (
-          <button
-            key={t}
-            type="button"
-            onClick={() => setTab(t)}
-            className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
-              tab === t ? "bg-background shadow-sm" : "text-muted-foreground"
-            }`}
-          >
-            {t === "catalogue" ? "Catalogue" : "Offers"}
-          </button>
-        ))}
-      </div>
-
-      {tab === "offers" && <LimitedOffersPanel />}
-
-      {tab === "catalogue" && (
-      <>
       <div className="relative">
 
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
