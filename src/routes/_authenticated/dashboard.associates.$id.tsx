@@ -323,10 +323,22 @@ function PatientRecordDialog({
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{c?.full_name ?? clientName ?? "Patient record"}</DialogTitle>
+      <DialogContent className="flex h-[100dvh] max-h-[100dvh] w-screen max-w-none flex-col gap-0 overflow-hidden rounded-none p-0 sm:h-auto sm:max-h-[92vh] sm:w-full sm:max-w-4xl sm:rounded-lg">
+        <DialogHeader className="border-b bg-muted/30 px-4 py-3 text-left sm:px-6">
+          <div className="flex items-center gap-3">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary/10 text-sm font-semibold">
+              {initials(c?.full_name ?? clientName)}
+            </span>
+            <div className="min-w-0">
+              <DialogTitle className="truncate text-base sm:text-lg">{c?.full_name ?? clientName ?? "Patient record"}</DialogTitle>
+              <p className="truncate text-[11px] text-muted-foreground">
+                {record ? "Read-only clinical record · access logged" : "Locked — confirm a reason to open"}
+              </p>
+            </div>
+          </div>
         </DialogHeader>
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-6">
+
 
         {!record && (
           <div className="space-y-4 text-sm">
