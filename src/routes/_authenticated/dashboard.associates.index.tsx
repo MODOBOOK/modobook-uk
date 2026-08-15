@@ -14,7 +14,6 @@ import {
 
   getAssociateOversight,
   getAssociatePatients,
-  getAssociatePatientRecord,
   saveAssociateIncident,
   listAssociateIncidentsForMe,
   setIncidentResolved,
