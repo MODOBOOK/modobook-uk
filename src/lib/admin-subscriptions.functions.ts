@@ -1,14 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-
-async function assertAdmin(context: { supabase: any; userId: string }) {
-  const { data, error } = await context.supabase.rpc("has_role", {
-    _user_id: context.userId,
-    _role: "admin",
-  });
-  if (error) throw error;
-  if (!data) throw new Error("Forbidden");
-}
+import { assertAdmin } from "@/lib/admin-auth";
 
 export const listSubscriptionPlans = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -369,7 +361,7 @@ export const createDiscountCode = createServerFn({ method: "POST" })
         description: data.description ?? null,
         percent_off: data.percent_off ?? null,
         amount_off_cents: data.amount_off_cents ?? null,
-        currency: data.amount_off_cents ? "gbp" : null,
+        currency: "gbp",
         duration: data.duration,
         duration_in_months: data.duration_in_months ?? null,
         max_redemptions: data.max_redemptions ?? null,
