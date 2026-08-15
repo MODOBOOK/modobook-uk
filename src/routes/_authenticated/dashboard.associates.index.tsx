@@ -18,6 +18,7 @@ import {
   listAssociateIncidentsForMe,
   setIncidentResolved,
 } from "@/lib/associates.functions";
+import { listMyRecordAccessLog } from "@/lib/associate-audit.functions";
 import { getSeatSummary } from "@/lib/practitioner-billing.functions";
 import { SeatCostWarning, seatWillCharge, type SeatSummary } from "@/components/SeatCostWarning";
 import { Button } from "@/components/ui/button";
@@ -574,6 +575,41 @@ function IncidentsPanel({ onOpenAssociate }: { onOpenAssociate: (linkId: string)
                 {i.resolved_at ? "Re-open" : "Mark resolved"}
               </Button>
             </div>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  );
+}
+
+/* ------------------- Associate side: who opened my records ------------------ */
+
+function MyRecordAccessPanel() {
+  const logFn = useServerFn(listMyRecordAccessLog);
+  const { data: rows } = useQuery({ queryKey: ["my-record-access-log"], queryFn: () => logFn() });
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">Who has opened your patient records</CardTitle>
+        <CardDescription>
+          Your host clinic must give a reason and confirm a lawful basis every time they open one of your patient records.
+          The full trail is here.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        {(rows ?? []).length === 0 && <p className="text-sm text-muted-foreground">No one has opened your records.</p>}
+        {(rows ?? []).map((r: any) => (
+          <div key={r.id} className="rounded-lg border p-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="text-sm font-medium">{r.client_name ?? "Patient record"}</div>
+              <div className="text-[11px] text-muted-foreground">{new Date(r.created_at).toLocaleString("en-GB")}</div>
+            </div>
+            <div className="mt-1 text-xs text-muted-foreground">
+              Opened by {r.actor_name ?? "host clinic"}
+              {r.lawful_basis ? ` · ${r.lawful_basis}` : ""}
+            </div>
+            {r.reason && <p className="mt-2 text-xs">{r.reason}</p>}
           </div>
         ))}
       </CardContent>

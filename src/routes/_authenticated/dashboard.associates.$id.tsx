@@ -16,7 +16,6 @@ import {
   updateAssociate,
   getAssociateOversight,
   getAssociatePatients,
-  getAssociatePatientRecord,
   saveAssociateIncident,
   setIncidentResolved,
 } from "@/lib/associates.functions";
