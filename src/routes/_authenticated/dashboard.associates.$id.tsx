@@ -679,12 +679,61 @@ function MedicalFormRow({ form }: { form: any }) {
         {form.response && <Badge variant="secondary" className="shrink-0 text-[10px]">{open ? "Hide" : "View"}</Badge>}
       </button>
       {open && form.response && (
-        <div className="mt-2 rounded-md bg-muted/40 p-2 text-[12px]">
-          <PrettyValue value={form.response} />
+        <div className="mt-2 space-y-3 rounded-md bg-muted/40 p-2 text-[12px]">
+          <FormAnswers schema={form.medical_form_templates?.schema} response={form.response} />
         </div>
       )}
     </div>
   );
+}
+
+/**
+ * Renders a submitted medical form using the template's own question labels,
+ * falling back to a plain readable list when no schema is available.
+ */
+function FormAnswers({ schema, response }: { schema: any; response: Record<string, any> }) {
+  const steps = (schema?.steps ?? []) as { id: string; title?: string; elements?: any[] }[];
+  const skip = ["heading", "paragraph", "separator", "space", "info"];
+  if (!steps.length) return <PrettyValue value={response} />;
+  return (
+    <>
+      {steps.map((s, si) => {
+        const els = (s.elements ?? []).filter((el) => !skip.includes(el.type));
+        if (!els.length) return null;
+        return (
+          <div key={s.id ?? si} className="space-y-1">
+            {s.title && (
+              <div className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{s.title}</div>
+            )}
+            <div className="rounded-md bg-background/60 p-2">
+              {els.map((el) => (
+                <div key={el.id} className="grid grid-cols-[110px_1fr] gap-2 border-b py-1 last:border-0">
+                  <div className="text-[11px] text-muted-foreground">{el.label ?? el.text ?? "Question"}</div>
+                  <div><AnswerValue value={response?.[el.id]} type={el.type} /></div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })}
+    </>
+  );
+}
+
+function AnswerValue({ value, type }: { value: any; type?: string }) {
+  const isGroup = type === "checkbox_group" || type === "checkboxes";
+  const empty = value === undefined || value === null || value === "" || (Array.isArray(value) && value.length === 0);
+  if (empty) return <span className="text-muted-foreground">{isGroup ? "None of the above" : "—"}</span>;
+  if (typeof value === "string" && value.startsWith("data:image")) {
+    return <img src={value} alt="Signature" className="max-h-20 rounded border bg-white" />;
+  }
+  if (value && typeof value === "object" && "dataUrl" in value) {
+    return <img src={(value as any).dataUrl} alt="Signature" className="max-h-20 rounded border bg-white" />;
+  }
+  if (Array.isArray(value) && value.every((v) => typeof v !== "object")) {
+    return <span className="whitespace-pre-wrap">{value.join(", ")}</span>;
+  }
+  return <PrettyValue value={value} />;
 }
 
 /* --------------------------------- Access log -------------------------------- */
