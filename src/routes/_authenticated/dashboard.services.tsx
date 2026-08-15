@@ -183,7 +183,7 @@ function ServicesPage() {
   );
   const picker = useMemo(() => flattenForPicker(roots), [roots]);
 
-  const [tab, setTab] = useState<"catalogue" | "offers">("catalogue");
+  
   const [search, setSearch] = useState("");
   const [catDialog, setCatDialog] = useState<
     { mode: "create" | "edit"; parentId: string | null; cat?: Cat; limited?: boolean } | null
