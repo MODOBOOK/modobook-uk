@@ -589,13 +589,78 @@ function ConsultationCard({ consultation }: { consultation: any }) {
             .map((b) => (
               <div key={b.label} className="rounded-md bg-muted/40 p-2">
                 <div className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{b.label}</div>
-                <pre className="mt-1 whitespace-pre-wrap break-words text-[11px]">
-                  {typeof b.value === "string" ? b.value : JSON.stringify(b.value, null, 2)}
-                </pre>
+                <div className="mt-1 text-[12px]">
+                  <PrettyValue value={b.value} />
+                </div>
               </div>
             ))}
         </div>
       )}
+    </div>
+  );
+}
+
+/** Human-readable label from a snake_case key. */
+function prettyLabel(key: string) {
+  return key.replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase());
+}
+
+/**
+ * Renders clinical JSON (assessment, treatment plan, medical answers) as
+ * readable text instead of raw code. Face-map pin arrays are summarised.
+ */
+function PrettyValue({ value, depth = 0 }: { value: unknown; depth?: number }) {
+  if (value === null || value === undefined || value === "") return <span className="text-muted-foreground">—</span>;
+  if (typeof value === "boolean") return <span>{value ? "Yes" : "No"}</span>;
+  if (typeof value === "number") return <span>{value}</span>;
+  if (typeof value === "string") return <span className="whitespace-pre-wrap break-words">{value}</span>;
+
+  if (Array.isArray(value)) {
+    if (value.length === 0) return <span className="text-muted-foreground">None</span>;
+    // Injection-point style arrays: summarise rather than dump coordinates.
+    const isPins = value.every((v) => v && typeof v === "object" && ("x" in (v as any)) && ("y" in (v as any)));
+    if (isPins) {
+      const byCat = new Map<string, number>();
+      for (const p of value as any[]) {
+        const k = p.category || "Points";
+        byCat.set(k, (byCat.get(k) ?? 0) + 1);
+      }
+      return (
+        <div className="flex flex-wrap gap-1">
+          {[...byCat.entries()].map(([k, n]) => (
+            <Badge key={k} variant="secondary" className="text-[10px]">
+              {prettyLabel(k)} · {n} point{n === 1 ? "" : "s"}
+            </Badge>
+          ))}
+        </div>
+      );
+    }
+    return (
+      <ul className="list-disc space-y-1 pl-4">
+        {value.map((v, i) => (
+          <li key={i}><PrettyValue value={v} depth={depth + 1} /></li>
+        ))}
+      </ul>
+    );
+  }
+
+  const entries = Object.entries(value as Record<string, unknown>).filter(
+    ([, v]) => v !== null && v !== undefined && v !== "" && !(Array.isArray(v) && v.length === 0),
+  );
+  if (entries.length === 0) return <span className="text-muted-foreground">—</span>;
+  return (
+    <div className={depth > 0 ? "space-y-1 border-l pl-2" : "space-y-1.5"}>
+      {entries.map(([k, v]) => {
+        const simple = v === null || ["string", "number", "boolean"].includes(typeof v);
+        return (
+          <div key={k} className={simple ? "flex flex-wrap gap-x-2" : ""}>
+            <span className="text-[11px] font-medium text-muted-foreground">{prettyLabel(k)}</span>
+            <div className={simple ? "" : "mt-0.5"}>
+              <PrettyValue value={v} depth={depth + 1} />
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -614,9 +679,9 @@ function MedicalFormRow({ form }: { form: any }) {
         {form.response && <Badge variant="secondary" className="shrink-0 text-[10px]">{open ? "Hide" : "View"}</Badge>}
       </button>
       {open && form.response && (
-        <pre className="mt-2 whitespace-pre-wrap break-words rounded-md bg-muted/40 p-2 text-[11px]">
-          {JSON.stringify(form.response, null, 2)}
-        </pre>
+        <div className="mt-2 rounded-md bg-muted/40 p-2 text-[12px]">
+          <PrettyValue value={form.response} />
+        </div>
       )}
     </div>
   );
