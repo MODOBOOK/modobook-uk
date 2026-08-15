@@ -1,5 +1,6 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { pilotFeaturesEnabled } from "@/lib/feature-flags";
+import { FaceMapView } from "@/components/consultation/FaceMapView";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -647,8 +648,19 @@ function PrettyValue({ value, depth = 0 }: { value: unknown; depth?: number }) {
     );
   }
 
-  const entries = Object.entries(value as Record<string, unknown>).filter(
-    ([, v]) => v !== null && v !== undefined && v !== "" && !(Array.isArray(v) && v.length === 0),
+  const obj = value as Record<string, unknown>;
+  if (typeof obj.dataUrl === "string") {
+    return <img src={obj.dataUrl} alt="Signature" className="max-h-20 rounded border bg-white" />;
+  }
+  // Saved face maps render as the annotated diagram, not as raw coordinates.
+  if (Array.isArray(obj.pins) || Array.isArray(obj.strokes)) {
+    return <FaceMapView value={obj} className="max-w-[240px]" />;
+  }
+
+  const entries = Object.entries(obj).filter(
+    ([k, v]) =>
+      v !== null && v !== undefined && v !== "" && !(Array.isArray(v) && v.length === 0) &&
+      !/(^|_)ids?$|token/i.test(k),
   );
   if (entries.length === 0) return <span className="text-muted-foreground">—</span>;
   return (
