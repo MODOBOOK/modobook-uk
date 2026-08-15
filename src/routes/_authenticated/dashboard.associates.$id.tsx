@@ -649,6 +649,9 @@ function PrettyValue({ value, depth = 0 }: { value: unknown; depth?: number }) {
   }
 
   const obj = value as Record<string, unknown>;
+  if (typeof obj.dataUrl === "string") {
+    return <img src={obj.dataUrl} alt="Signature" className="max-h-20 rounded border bg-white" />;
+  }
   // Saved face maps render as the annotated diagram, not as raw coordinates.
   if (Array.isArray(obj.pins) || Array.isArray(obj.strokes)) {
     return <FaceMapView value={obj} className="max-w-[240px]" />;
