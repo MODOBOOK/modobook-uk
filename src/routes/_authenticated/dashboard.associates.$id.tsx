@@ -262,21 +262,111 @@ function PatientsTab({ id, allowed }: { id: string; allowed: boolean }) {
   );
 }
 
-function PatientRecordDialog({ id, clientId, onClose }: { id: string; clientId: string; onClose: () => void }) {
-  const recordFn = useServerFn(getAssociatePatientRecord);
-  const { data: record, isLoading } = useQuery({
-    queryKey: ["associate-record", id, clientId],
-    queryFn: () => recordFn({ data: { id, clientId } }),
-  });
+const LAWFUL_BASES = [
+  "Clinical governance / supervision",
+  "Complaint or incident investigation",
+  "Safeguarding concern",
+  "Audit or regulatory inspection",
+  "Continuity of care",
+];
+
+/**
+ * Two-stage: the clinic owner must tick the consent statements and log a
+ * reason before the record is fetched. Every open writes to the shared
+ * audit trail the associate can also see.
+ */
+function PatientRecordDialog({
+  id,
+  clientId,
+  clientName,
+  onClose,
+}: {
+  id: string;
+  clientId: string;
+  clientName?: string | null;
+  onClose: () => void;
+}) {
+  const openFn = useServerFn(openAssociatePatientRecord);
+  const qc = useQueryClient();
+  const [record, setRecord] = useState<any>(null);
+  const [reason, setReason] = useState("");
+  const [basis, setBasis] = useState(LAWFUL_BASES[0]!);
+  const [c1, setC1] = useState(false);
+  const [c2, setC2] = useState(false);
+  const [c3, setC3] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  const ready = c1 && c2 && c3 && reason.trim().length >= 4;
+
+  async function unlock() {
+    setBusy(true);
+    try {
+      const r = await openFn({
+        data: { id, clientId, reason, lawfulBasis: basis, consentClinical: c1, consentMinimum: c2, consentLogged: c3 },
+      });
+      setRecord(r);
+      qc.invalidateQueries({ queryKey: ["associate-access-log", id] });
+    } catch (e: any) {
+      toast.error(e?.message ?? "Could not open the record");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   const c: any = record?.client;
 
   return (
     <Dialog open onOpenChange={onClose}>
       <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{c?.full_name ?? "Patient record"}</DialogTitle>
+          <DialogTitle>{c?.full_name ?? clientName ?? "Patient record"}</DialogTitle>
         </DialogHeader>
-        {isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
+
+        {!record && (
+          <div className="space-y-4 text-sm">
+            <div className="rounded-lg border border-amber-500/40 bg-amber-500/5 p-3 text-xs">
+              <div className="flex items-center gap-2 font-medium">
+                <ShieldCheck className="h-4 w-4" /> Confirm before opening
+              </div>
+              <p className="mt-1 text-muted-foreground">
+                This is another clinician's patient. Opening the record is recorded and shared with the associate.
+                Financial information is never shown.
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <ConsentTick checked={c1} onChange={setC1} label="I have a legitimate clinical or governance reason to view this record." />
+              <ConsentTick checked={c2} onChange={setC2} label="I will view only the minimum information needed and keep it confidential." />
+              <ConsentTick checked={c3} onChange={setC3} label="I understand this access is logged and visible to the associate." />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label>Lawful basis</Label>
+              <Select value={basis} onValueChange={setBasis}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {LAWFUL_BASES.map((b) => <SelectItem key={b} value={b}>{b}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label>Reason for access</Label>
+              <Textarea
+                rows={3}
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                placeholder="e.g. Reviewing consent and aftercare following a patient complaint on 12 May"
+              />
+            </div>
+
+            <DialogFooter>
+              <Button variant="ghost" onClick={onClose}>Cancel</Button>
+              <Button onClick={unlock} disabled={!ready || busy}>{busy ? "Opening…" : "Open record"}</Button>
+            </DialogFooter>
+          </div>
+        )}
+
         {record && (
           <div className="space-y-5 text-sm">
             <div className="grid gap-2 sm:grid-cols-2">
@@ -295,64 +385,206 @@ function PatientRecordDialog({ id, clientId, onClose }: { id: string; clientId: 
               </div>
             )}
 
-            <Section title={`Concerns (${record.concerns.length})`}>
-              {record.concerns.map((x: any) => (
-                <Row key={x.id} title={x.label} meta={`${x.severity ?? ""}${x.resolved ? " · resolved" : ""}`} body={x.notes} />
-              ))}
-            </Section>
+            <Tabs defaultValue="clinical">
+              <TabsList className="flex w-full overflow-x-auto">
+                <TabsTrigger value="clinical">Clinical</TabsTrigger>
+                <TabsTrigger value="consultations">Consultations</TabsTrigger>
+                <TabsTrigger value="notes">Notes</TabsTrigger>
+                <TabsTrigger value="forms">Forms &amp; consents</TabsTrigger>
+                <TabsTrigger value="appointments">Appointments</TabsTrigger>
+                <TabsTrigger value="files">Files</TabsTrigger>
+              </TabsList>
 
-            <Section title={`Medications (${record.medications.length})`}>
-              {record.medications.map((m: any) => (
-                <Row key={m.id} title={`${m.drug}${m.dose ? ` — ${m.dose}` : ""}`} meta={m.is_current ? "current" : "stopped"} body={m.notes} />
-              ))}
-            </Section>
+              <TabsContent value="clinical" className="space-y-5 pt-4">
+                <Section title={`Concerns (${record.concerns.length})`}>
+                  {record.concerns.map((x: any) => (
+                    <Row key={x.id} title={x.label} meta={`${x.severity ?? ""}${x.resolved ? " · resolved" : ""}`} body={x.notes} />
+                  ))}
+                </Section>
+                <Section title={`Medications (${record.medications.length})`}>
+                  {record.medications.map((m: any) => (
+                    <Row key={m.id} title={`${m.drug}${m.dose ? ` — ${m.dose}` : ""}`} meta={m.is_current ? "current" : "stopped"} body={m.notes} />
+                  ))}
+                </Section>
+                <Section title={`Prescriptions (${record.prescriptions.length})`}>
+                  {record.prescriptions.map((p: any) => (
+                    <Row
+                      key={p.id}
+                      title={`${p.product ?? "Prescription"}${p.dose ? ` — ${p.dose}` : ""}`}
+                      meta={[p.prescribed_on ? fmt(p.prescribed_on) : null, p.prescriber_name].filter(Boolean).join(" · ")}
+                      body={p.directions}
+                    />
+                  ))}
+                </Section>
+              </TabsContent>
 
-            <Section title={`Medical forms (${record.forms.length})`}>
-              {record.forms.map((f: any) => (
-                <Row
-                  key={f.id}
-                  title={f.medical_form_templates?.name ?? "Medical form"}
-                  meta={f.submitted_at ? `submitted ${fmt(f.submitted_at)}` : `status: ${f.status ?? "pending"}`}
-                />
-              ))}
-            </Section>
+              <TabsContent value="consultations" className="space-y-3 pt-4">
+                {record.consultations.length === 0 && <p className="text-xs text-muted-foreground">No consultations recorded.</p>}
+                {record.consultations.map((x: any) => (
+                  <ConsultationCard key={x.id} consultation={x} />
+                ))}
+              </TabsContent>
 
-            <Section title={`Consents (${record.consents.length})`}>
-              {record.consents.map((x: any) => (
-                <Row key={x.id} title={x.consent_templates?.name ?? "Consent"} meta={x.signed_at ? `signed ${fmt(x.signed_at)}` : "unsigned"} />
-              ))}
-            </Section>
+              <TabsContent value="notes" className="space-y-3 pt-4">
+                <Section title={`Clinical notes (${record.notes.length})`}>
+                  {record.notes.map((n: any) => (
+                    <Row key={n.id} title={new Date(n.created_at).toLocaleString("en-GB")} meta={n.visible_to_patient ? "shared with patient" : undefined} body={n.body} />
+                  ))}
+                </Section>
+              </TabsContent>
 
-            <Section title={`Appointments (${record.appointments.length})`}>
-              {record.appointments.map((x: any) => (
-                <Row
-                  key={x.id}
-                  title={x.treatments?.name ?? "Appointment"}
-                  meta={`${fmt(x.scheduled_date)} ${String(x.start_time).slice(0, 5)} · ${x.status}`}
-                  body={x.notes}
-                />
-              ))}
-            </Section>
+              <TabsContent value="forms" className="space-y-5 pt-4">
+                <Section title={`Medical forms (${record.forms.length})`}>
+                  {record.forms.map((f: any) => (
+                    <MedicalFormRow key={f.id} form={f} />
+                  ))}
+                </Section>
+                <Section title={`Consents (${record.consents.length})`}>
+                  {record.consents.map((x: any) => (
+                    <Row key={x.id} title={x.consent_templates?.name ?? "Consent"} meta={x.signed_at ? `signed ${fmt(x.signed_at)}` : x.status ?? "unsigned"} />
+                  ))}
+                </Section>
+              </TabsContent>
 
-            <Section title={`Clinical notes (${record.notes.length})`}>
-              {record.notes.map((n: any) => (
-                <Row key={n.id} title={new Date(n.created_at).toLocaleString("en-GB")} body={n.body} />
-              ))}
-            </Section>
+              <TabsContent value="appointments" className="space-y-3 pt-4">
+                <Section title={`Appointments (${record.appointments.length})`}>
+                  {record.appointments.map((x: any) => (
+                    <Row
+                      key={x.id}
+                      title={x.treatments?.name ?? x.treatment_name_snapshot ?? "Appointment"}
+                      meta={`${fmt(x.scheduled_date)} ${String(x.start_time).slice(0, 5)} · ${x.status}`}
+                      body={x.notes}
+                    />
+                  ))}
+                </Section>
+              </TabsContent>
 
-            <Section title={`Files (${record.files.length})`}>
-              {record.files.map((f: any) => (
-                <a key={f.id} href={f.url} target="_blank" rel="noreferrer" className="flex items-center gap-2 rounded-md border p-2 text-xs hover:bg-muted/50">
-                  <Paperclip className="h-3.5 w-3.5" /> {f.filename ?? f.kind}
-                </a>
-              ))}
-            </Section>
+              <TabsContent value="files" className="space-y-2 pt-4">
+                {record.files.length === 0 && <p className="text-xs text-muted-foreground">No files.</p>}
+                {record.files.map((f: any) => (
+                  <a key={f.id} href={f.url} target="_blank" rel="noreferrer" className="flex items-center gap-2 rounded-md border p-2 text-xs hover:bg-muted/50">
+                    <Paperclip className="h-3.5 w-3.5" /> {f.filename ?? f.kind}
+                  </a>
+                ))}
+              </TabsContent>
+            </Tabs>
 
-            <p className="text-[11px] text-muted-foreground">Read-only oversight view. This access has been logged for audit.</p>
+            <p className="text-[11px] text-muted-foreground">
+              Read-only clinical view — no payment or invoice data. This access has been logged and is visible to the associate.
+            </p>
           </div>
         )}
       </DialogContent>
     </Dialog>
+  );
+}
+
+function ConsentTick({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
+  return (
+    <label className="flex cursor-pointer items-start gap-3 rounded-lg border p-3 text-xs">
+      <Checkbox checked={checked} onCheckedChange={(v) => onChange(v === true)} className="mt-0.5" />
+      <span>{label}</span>
+    </label>
+  );
+}
+
+function ConsultationCard({ consultation }: { consultation: any }) {
+  const [open, setOpen] = useState(false);
+  const blocks: { label: string; value: unknown }[] = [
+    { label: "Medical history", value: consultation.medical },
+    { label: "Concerns", value: consultation.concerns },
+    { label: "Assessment", value: consultation.assessment },
+    { label: "Treatment plan", value: consultation.treatment_plan },
+    { label: "Treatment log", value: consultation.treatment_log },
+    { label: "Consent", value: consultation.consent },
+    { label: "Notes", value: consultation.notes },
+  ];
+  return (
+    <div className="rounded-lg border p-3">
+      <button className="flex w-full items-center justify-between gap-2 text-left" onClick={() => setOpen((o) => !o)}>
+        <div>
+          <div className="text-sm font-medium">Consultation · {fmt(consultation.created_at)}</div>
+          <div className="text-[11px] text-muted-foreground">
+            {consultation.completed_at ? `Completed ${fmt(consultation.completed_at)}` : `In progress · ${consultation.status ?? "draft"}`}
+          </div>
+        </div>
+        <Badge variant="secondary" className="shrink-0 text-[10px]">{open ? "Hide" : "View"}</Badge>
+      </button>
+      {open && (
+        <div className="mt-3 space-y-2">
+          {blocks
+            .filter((b) => b.value && (typeof b.value !== "object" || Object.keys(b.value as object).length > 0))
+            .map((b) => (
+              <div key={b.label} className="rounded-md bg-muted/40 p-2">
+                <div className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{b.label}</div>
+                <pre className="mt-1 whitespace-pre-wrap break-words text-[11px]">
+                  {typeof b.value === "string" ? b.value : JSON.stringify(b.value, null, 2)}
+                </pre>
+              </div>
+            ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MedicalFormRow({ form }: { form: any }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="rounded-lg border p-3">
+      <button className="flex w-full items-center justify-between gap-2 text-left" onClick={() => setOpen((o) => !o)}>
+        <div>
+          <div className="text-sm font-medium">{form.medical_form_templates?.name ?? "Medical form"}</div>
+          <div className="text-[11px] text-muted-foreground">
+            {form.submitted_at ? `Submitted ${fmt(form.submitted_at)}` : `Status: ${form.status ?? "pending"}`}
+          </div>
+        </div>
+        {form.response && <Badge variant="secondary" className="shrink-0 text-[10px]">{open ? "Hide" : "View"}</Badge>}
+      </button>
+      {open && form.response && (
+        <pre className="mt-2 whitespace-pre-wrap break-words rounded-md bg-muted/40 p-2 text-[11px]">
+          {JSON.stringify(form.response, null, 2)}
+        </pre>
+      )}
+    </div>
+  );
+}
+
+/* --------------------------------- Access log -------------------------------- */
+
+function AccessLogTab({ id }: { id: string }) {
+  const logFn = useServerFn(listAssociateAccessLog);
+  const { data: rows, isLoading } = useQuery({
+    queryKey: ["associate-access-log", id],
+    queryFn: () => logFn({ data: { id } }),
+  });
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">Record access log</CardTitle>
+        <CardDescription>
+          Every time you open one of this associate's patient records it's recorded here — and they see the same list.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        {isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
+        {!isLoading && (rows ?? []).length === 0 && <p className="text-sm text-muted-foreground">No records opened yet.</p>}
+        {(rows ?? []).map((r: any) => (
+          <div key={r.id} className="rounded-lg border p-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="text-sm font-medium">{r.client_name ?? "Patient record"}</div>
+              <div className="text-[11px] text-muted-foreground">{new Date(r.created_at).toLocaleString("en-GB")}</div>
+            </div>
+            <div className="mt-1 text-xs text-muted-foreground">
+              {r.actor_name ?? "Clinic owner"}
+              {r.lawful_basis ? ` · ${r.lawful_basis}` : ""}
+            </div>
+            {r.reason && <p className="mt-2 text-xs">{r.reason}</p>}
+          </div>
+        ))}
+      </CardContent>
+    </Card>
   );
 }
 
