@@ -679,9 +679,9 @@ function MedicalFormRow({ form }: { form: any }) {
         {form.response && <Badge variant="secondary" className="shrink-0 text-[10px]">{open ? "Hide" : "View"}</Badge>}
       </button>
       {open && form.response && (
-        <pre className="mt-2 whitespace-pre-wrap break-words rounded-md bg-muted/40 p-2 text-[11px]">
-          {JSON.stringify(form.response, null, 2)}
-        </pre>
+        <div className="mt-2 rounded-md bg-muted/40 p-2 text-[12px]">
+          <PrettyValue value={form.response} />
+        </div>
       )}
     </div>
   );
