@@ -403,6 +403,15 @@ function PatientRecordDialog({
               </div>
             )}
 
+            <div className="flex flex-wrap gap-2">
+              <Chip label="Appointments" value={record.appointments.length} />
+              <Chip label="Consultations" value={record.consultations.length} />
+              <Chip label="Notes" value={record.notes.length} />
+              <Chip label="Forms" value={record.forms.length} />
+              <Chip label="Consents" value={record.consents.length} />
+              <Chip label="Files" value={record.files.length} />
+            </div>
+
             <Tabs defaultValue="clinical">
               <TabsList className="flex w-full overflow-x-auto">
                 <TabsTrigger value="clinical">Clinical</TabsTrigger>
@@ -411,7 +420,9 @@ function PatientRecordDialog({
                 <TabsTrigger value="forms">Forms &amp; consents</TabsTrigger>
                 <TabsTrigger value="appointments">Appointments</TabsTrigger>
                 <TabsTrigger value="files">Files</TabsTrigger>
+                <TabsTrigger value="audit">Access log</TabsTrigger>
               </TabsList>
+
 
               <TabsContent value="clinical" className="space-y-5 pt-4">
                 <Section title={`Concerns (${record.concerns.length})`}>
