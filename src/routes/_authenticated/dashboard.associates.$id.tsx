@@ -613,7 +613,10 @@ function PrettyValue({ value, depth = 0 }: { value: unknown; depth?: number }) {
   if (value === null || value === undefined || value === "") return <span className="text-muted-foreground">—</span>;
   if (typeof value === "boolean") return <span>{value ? "Yes" : "No"}</span>;
   if (typeof value === "number") return <span>{value}</span>;
-  if (typeof value === "string") return <span className="whitespace-pre-wrap break-words">{value}</span>;
+  if (typeof value === "string") {
+    if (value.startsWith("data:image")) return <img src={value} alt="" className="max-h-20 rounded border bg-white" />;
+    return <span className="whitespace-pre-wrap break-words">{value}</span>;
+  }
 
   if (Array.isArray(value)) {
     if (value.length === 0) return <span className="text-muted-foreground">None</span>;
