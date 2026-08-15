@@ -419,26 +419,23 @@ function OversightDialog({ id, onClose }: { id: string; onClose: () => void }) {
 
           <TabsContent value="patients" className="space-y-2 pt-4">
             {(patients ?? []).length === 0 && <p className="text-sm text-muted-foreground">No patient records shared.</p>}
-            {(patients ?? []).map((p: any) => (
-              <button key={p.id} onClick={() => setOpenClient(p.id === openClient ? null : p.id)} className="w-full rounded-lg border p-3 text-left text-sm hover:bg-muted/50">
-                <div className="font-medium">{p.first_name} {p.last_name}</div>
-                <div className="text-xs text-muted-foreground">{p.email}</div>
-              </button>
-            ))}
-            {openClient && record && (
-              <div className="space-y-3 rounded-xl border bg-muted/30 p-4 text-sm">
-                <div className="flex items-center gap-2 font-medium"><FileText className="h-4 w-4" /> Record</div>
-                <div className="text-xs text-muted-foreground">{(record.appointments ?? []).length} appointments · {(record.notes ?? []).length} notes · {(record.consents ?? []).length} consents</div>
-                {(record.notes ?? []).length === 0 && <p className="text-xs text-muted-foreground">No clinical notes recorded.</p>}
-                {(record.notes ?? []).slice(0, 10).map((n: any) => (
-                  <div key={n.id} className="rounded-md bg-background p-3">
-                    <div className="text-[11px] text-muted-foreground">{new Date(n.created_at).toLocaleString("en-GB")}</div>
-                    <div className="whitespace-pre-wrap">{n.body}</div>
-                  </div>
-                ))}
-
-              </div>
+            {(patients ?? []).length > 0 && (
+              <p className="text-xs text-muted-foreground">
+                Full profiles — notes, consultations, forms and consents — open from the associate's page, where you confirm a
+                reason first.
+              </p>
             )}
+            {(patients ?? []).map((p: any) => (
+              <div key={p.id} className="w-full rounded-lg border p-3 text-left text-sm">
+                <div className="font-medium">{p.full_name ?? "Unnamed patient"}</div>
+                <div className="text-xs text-muted-foreground">{p.email ?? p.phone ?? "No contact details"}</div>
+              </div>
+            ))}
+            <Button asChild size="sm" variant="outline" className="mt-2">
+              <Link to="/dashboard/associates/$id" params={{ id }}>
+                <FileText className="mr-2 h-4 w-4" /> Open full associate page
+              </Link>
+            </Button>
           </TabsContent>
 
           <TabsContent value="incidents" className="space-y-3 pt-4">
