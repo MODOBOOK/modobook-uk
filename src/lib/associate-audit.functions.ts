@@ -122,7 +122,7 @@ export const openAssociatePatientRecord = createServerFn({ method: "POST" })
         .limit(100),
       admin
         .from("appointment_medical_forms")
-        .select("id, status, submitted_at, created_at, response, medical_form_templates(name)")
+        .select("id, status, submitted_at, created_at, response, medical_form_templates(name, schema)")
         .eq("client_id", data.clientId)
         .order("created_at", { ascending: false })
         .limit(50),
