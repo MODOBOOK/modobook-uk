@@ -298,7 +298,8 @@ export const listDiscountCodes = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await assertAdmin(context);
-    const { data, error } = await context.supabase
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await supabaseAdmin
       .from("platform_discount_codes")
       .select("*")
       .order("created_at", { ascending: false });
@@ -343,14 +344,14 @@ export const createDiscountCode = createServerFn({ method: "POST" })
         name: data.description || data.code,
         duration: data.duration,
         duration_in_months: data.duration === "repeating" ? (data.duration_in_months ?? 3) : undefined,
-        percent_off: hasPercent ? data.percent_off! : undefined,
-        amount_off: hasAmount ? data.amount_off_cents! : undefined,
+        percent_off: hasPercent ? data.percent_off ?? undefined : undefined,
+        amount_off: hasAmount ? data.amount_off_cents ?? undefined : undefined,
         currency: hasAmount ? "gbp" : undefined,
         max_redemptions: data.max_redemptions ?? undefined,
         redeem_by: data.expires_at ? Math.floor(new Date(data.expires_at).getTime() / 1000) : undefined,
       });
       promo = await stripe.promotionCodes.create({
-        coupon: coupon!.id,
+        coupon: coupon.id,
         code: data.code.toUpperCase(),
         max_redemptions: data.max_redemptions ?? undefined,
         expires_at: data.expires_at ? Math.floor(new Date(data.expires_at).getTime() / 1000) : undefined,
@@ -360,7 +361,8 @@ export const createDiscountCode = createServerFn({ method: "POST" })
       console.error("[createDiscountCode] stripe error — saving MODO-only code", msg);
     }
 
-    const { data: row, error } = await context.supabase
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: row, error } = await supabaseAdmin
       .from("platform_discount_codes")
       .insert({
         code: data.code.toUpperCase(),
@@ -388,7 +390,8 @@ export const toggleDiscountCode = createServerFn({ method: "POST" })
   .inputValidator((i: { id: string; active: boolean }) => i)
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const { data: dc, error } = await context.supabase
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: dc, error } = await supabaseAdmin
       .from("platform_discount_codes")
       .select("stripe_promo_code_id")
       .eq("id", data.id)
@@ -399,10 +402,11 @@ export const toggleDiscountCode = createServerFn({ method: "POST" })
       const stripe = getStripeStable();
       await stripe.promotionCodes.update(dc.stripe_promo_code_id, { active: data.active });
     }
-    await context.supabase
+    const { error: updateError } = await supabaseAdmin
       .from("platform_discount_codes")
       .update({ active: data.active })
       .eq("id", data.id);
+    if (updateError) throw updateError;
     return { ok: true };
   });
 
