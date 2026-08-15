@@ -30,7 +30,7 @@ import { listMyLocations, setTreatmentLocationPricing } from "@/lib/locations.fu
 import { getMyProfile, updateProfile } from "@/lib/profiles.functions";
 import { ImageUploader } from "@/components/ImageUploader";
 import { PrescribingClinicCard } from "@/components/PrescribingClinicCard";
-import { LimitedOffersPanel } from "@/components/LimitedOffersPanel";
+
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { Star, X, Check, ChevronsUpDown, MapPin } from "lucide-react";
