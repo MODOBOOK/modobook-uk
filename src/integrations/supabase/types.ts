@@ -844,6 +844,68 @@ export type Database = {
           },
         ]
       }
+      associate_access_log: {
+        Row: {
+          action: string
+          actor_name: string | null
+          actor_user_id: string | null
+          associate_profile_id: string | null
+          client_id: string | null
+          client_name: string | null
+          clinic_profile_id: string
+          consent_clinical: boolean
+          consent_logged: boolean
+          consent_minimum: boolean
+          created_at: string
+          id: string
+          lawful_basis: string | null
+          link_id: string
+          reason: string | null
+        }
+        Insert: {
+          action?: string
+          actor_name?: string | null
+          actor_user_id?: string | null
+          associate_profile_id?: string | null
+          client_id?: string | null
+          client_name?: string | null
+          clinic_profile_id: string
+          consent_clinical?: boolean
+          consent_logged?: boolean
+          consent_minimum?: boolean
+          created_at?: string
+          id?: string
+          lawful_basis?: string | null
+          link_id: string
+          reason?: string | null
+        }
+        Update: {
+          action?: string
+          actor_name?: string | null
+          actor_user_id?: string | null
+          associate_profile_id?: string | null
+          client_id?: string | null
+          client_name?: string | null
+          clinic_profile_id?: string
+          consent_clinical?: boolean
+          consent_logged?: boolean
+          consent_minimum?: boolean
+          created_at?: string
+          id?: string
+          lawful_basis?: string | null
+          link_id?: string
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "associate_access_log_link_id_fkey"
+            columns: ["link_id"]
+            isOneToOne: false
+            referencedRelation: "clinic_associates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       associate_documents: {
         Row: {
           associate_profile_id: string | null
