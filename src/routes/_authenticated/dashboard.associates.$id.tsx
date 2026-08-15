@@ -257,7 +257,14 @@ function PatientsTab({ id, allowed }: { id: string; allowed: boolean }) {
           </button>
         ))}
       </div>
-      {openClient && <PatientRecordDialog id={id} clientId={openClient} onClose={() => setOpenClient(null)} />}
+      {openClient && (
+        <PatientRecordDialog
+          id={id}
+          clientId={openClient}
+          clientName={(patients ?? []).find((p: any) => p.id === openClient)?.full_name ?? null}
+          onClose={() => setOpenClient(null)}
+        />
+      )}
     </div>
   );
 }
