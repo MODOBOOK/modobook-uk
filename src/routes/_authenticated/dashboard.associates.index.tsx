@@ -380,18 +380,11 @@ function ToggleRow({ label, desc, checked, onChange }: { label: string; desc: st
 function OversightDialog({ id, onClose }: { id: string; onClose: () => void }) {
   const oversight = useServerFn(getAssociateOversight);
   const patientsFn = useServerFn(getAssociatePatients);
-  const recordFn = useServerFn(getAssociatePatientRecord);
   const saveIncident = useServerFn(saveAssociateIncident);
   const qc = useQueryClient();
 
   const { data } = useQuery({ queryKey: ["associate-oversight", id], queryFn: () => oversight({ data: { id } }) });
   const { data: patients } = useQuery({ queryKey: ["associate-patients", id], queryFn: () => patientsFn({ data: { id } }) });
-  const [openClient, setOpenClient] = useState<string | null>(null);
-  const { data: record } = useQuery({
-    queryKey: ["associate-record", id, openClient],
-    queryFn: () => recordFn({ data: { id, clientId: openClient! } }),
-    enabled: !!openClient,
-  });
 
   const [incident, setIncident] = useState({ title: "", severity: "minor", description: "", action_taken: "", occurred_at: new Date().toISOString().slice(0, 10) });
 
