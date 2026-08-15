@@ -152,6 +152,9 @@ function AssociateDetailPage() {
         <TabsContent value="incidents" className="pt-4">
           <IncidentsTab id={id} onChange={refresh} />
         </TabsContent>
+        <TabsContent value="audit" className="pt-4">
+          <AccessLogTab id={id} />
+        </TabsContent>
         <TabsContent value="settings" className="space-y-3 pt-4">
           <div className="grid gap-3 sm:grid-cols-2">
             <ToggleRow label="Clinical records" desc="Notes, consents, forms" checked={a.oversight_records} onChange={(v) => patch({ oversight_records: v })} />
