@@ -323,10 +323,22 @@ function PatientRecordDialog({
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{c?.full_name ?? clientName ?? "Patient record"}</DialogTitle>
+      <DialogContent className="flex h-[100dvh] max-h-[100dvh] w-screen max-w-none flex-col gap-0 overflow-hidden rounded-none p-0 sm:h-auto sm:max-h-[92vh] sm:w-full sm:max-w-4xl sm:rounded-lg">
+        <DialogHeader className="border-b bg-muted/30 px-4 py-3 text-left sm:px-6">
+          <div className="flex items-center gap-3">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary/10 text-sm font-semibold">
+              {initials(c?.full_name ?? clientName)}
+            </span>
+            <div className="min-w-0">
+              <DialogTitle className="truncate text-base sm:text-lg">{c?.full_name ?? clientName ?? "Patient record"}</DialogTitle>
+              <p className="truncate text-[11px] text-muted-foreground">
+                {record ? "Read-only clinical record · access logged" : "Locked — confirm a reason to open"}
+              </p>
+            </div>
+          </div>
         </DialogHeader>
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-6">
+
 
         {!record && (
           <div className="space-y-4 text-sm">
@@ -391,6 +403,15 @@ function PatientRecordDialog({
               </div>
             )}
 
+            <div className="flex flex-wrap gap-2">
+              <Chip label="Appointments" value={record.appointments.length} />
+              <Chip label="Consultations" value={record.consultations.length} />
+              <Chip label="Notes" value={record.notes.length} />
+              <Chip label="Forms" value={record.forms.length} />
+              <Chip label="Consents" value={record.consents.length} />
+              <Chip label="Files" value={record.files.length} />
+            </div>
+
             <Tabs defaultValue="clinical">
               <TabsList className="flex w-full overflow-x-auto">
                 <TabsTrigger value="clinical">Clinical</TabsTrigger>
@@ -399,7 +420,9 @@ function PatientRecordDialog({
                 <TabsTrigger value="forms">Forms &amp; consents</TabsTrigger>
                 <TabsTrigger value="appointments">Appointments</TabsTrigger>
                 <TabsTrigger value="files">Files</TabsTrigger>
+                <TabsTrigger value="audit">Access log</TabsTrigger>
               </TabsList>
+
 
               <TabsContent value="clinical" className="space-y-5 pt-4">
                 <Section title={`Concerns (${record.concerns.length})`}>
@@ -473,6 +496,10 @@ function PatientRecordDialog({
                   </a>
                 ))}
               </TabsContent>
+
+              <TabsContent value="audit" className="space-y-2 pt-4">
+                <PatientAccessLog id={id} clientId={clientId} />
+              </TabsContent>
             </Tabs>
 
             <p className="text-[11px] text-muted-foreground">
@@ -480,10 +507,49 @@ function PatientRecordDialog({
             </p>
           </div>
         )}
+        </div>
       </DialogContent>
     </Dialog>
   );
 }
+
+function Chip({ label, value }: { label: string; value: number }) {
+  return (
+    <span className="rounded-full border bg-muted/40 px-2.5 py-1 text-[11px]">
+      <strong className="font-semibold">{value}</strong> {label}
+    </span>
+  );
+}
+
+function initials(name?: string | null) {
+  const parts = (name ?? "").trim().split(/\s+/).filter(Boolean).slice(0, 2);
+  return parts.map((p) => p[0]!.toUpperCase()).join("") || "?";
+}
+
+function PatientAccessLog({ id, clientId }: { id: string; clientId: string }) {
+  const logFn = useServerFn(listAssociateAccessLog);
+  const { data: rows, isLoading } = useQuery({
+    queryKey: ["associate-access-log", id, clientId],
+    queryFn: () => logFn({ data: { id, clientId } }),
+  });
+  if (isLoading) return <p className="text-xs text-muted-foreground">Loading…</p>;
+  if ((rows ?? []).length === 0) return <p className="text-xs text-muted-foreground">No previous access recorded.</p>;
+  return (
+    <div className="space-y-2">
+      {(rows ?? []).map((r: any) => (
+        <div key={r.id} className="rounded-lg border p-3 text-xs">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span className="font-medium">{r.actor_name ?? "Clinic owner"}</span>
+            <span className="text-muted-foreground">{new Date(r.created_at).toLocaleString("en-GB")}</span>
+          </div>
+          {r.lawful_basis && <div className="mt-1 text-muted-foreground">{r.lawful_basis}</div>}
+          {r.reason && <p className="mt-1">{r.reason}</p>}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 
 function ConsentTick({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
   return (
