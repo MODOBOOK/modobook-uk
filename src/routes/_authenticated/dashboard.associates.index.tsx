@@ -265,6 +265,8 @@ function AssociatesPage() {
         </Card>
       )}
 
+      {hostLinks.length > 0 && <MyRecordAccessPanel />}
+
       <IncidentsPanel onOpenAssociate={(linkId) => setOversightId(linkId)} />
 
 
