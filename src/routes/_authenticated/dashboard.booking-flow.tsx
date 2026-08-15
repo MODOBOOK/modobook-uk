@@ -362,7 +362,7 @@ function BookingFlowPage() {
           <Row label='Show "I know what I want"'>
             <Switch checked={showKnow} onCheckedChange={setShowKnow} />
           </Row>
-          <Row label='Show "I\u2019m unsure what to book"'>
+          <Row label='Show "I\'m unsure what to book"'>
             <Switch checked={showUnsure} onCheckedChange={setShowUnsure} />
           </Row>
           <Row label='Show "I need a consultation"'>
