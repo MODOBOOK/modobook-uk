@@ -14,11 +14,11 @@ import {
 
   getAssociateOversight,
   getAssociatePatients,
-  getAssociatePatientRecord,
   saveAssociateIncident,
   listAssociateIncidentsForMe,
   setIncidentResolved,
 } from "@/lib/associates.functions";
+import { listMyRecordAccessLog } from "@/lib/associate-audit.functions";
 import { getSeatSummary } from "@/lib/practitioner-billing.functions";
 import { SeatCostWarning, seatWillCharge, type SeatSummary } from "@/components/SeatCostWarning";
 import { Button } from "@/components/ui/button";
@@ -266,6 +266,8 @@ function AssociatesPage() {
         </Card>
       )}
 
+      {hostLinks.length > 0 && <MyRecordAccessPanel />}
+
       <IncidentsPanel onOpenAssociate={(linkId) => setOversightId(linkId)} />
 
 
@@ -381,18 +383,11 @@ function ToggleRow({ label, desc, checked, onChange }: { label: string; desc: st
 function OversightDialog({ id, onClose }: { id: string; onClose: () => void }) {
   const oversight = useServerFn(getAssociateOversight);
   const patientsFn = useServerFn(getAssociatePatients);
-  const recordFn = useServerFn(getAssociatePatientRecord);
   const saveIncident = useServerFn(saveAssociateIncident);
   const qc = useQueryClient();
 
   const { data } = useQuery({ queryKey: ["associate-oversight", id], queryFn: () => oversight({ data: { id } }) });
   const { data: patients } = useQuery({ queryKey: ["associate-patients", id], queryFn: () => patientsFn({ data: { id } }) });
-  const [openClient, setOpenClient] = useState<string | null>(null);
-  const { data: record } = useQuery({
-    queryKey: ["associate-record", id, openClient],
-    queryFn: () => recordFn({ data: { id, clientId: openClient! } }),
-    enabled: !!openClient,
-  });
 
   const [incident, setIncident] = useState({ title: "", severity: "minor", description: "", action_taken: "", occurred_at: new Date().toISOString().slice(0, 10) });
 
@@ -427,26 +422,23 @@ function OversightDialog({ id, onClose }: { id: string; onClose: () => void }) {
 
           <TabsContent value="patients" className="space-y-2 pt-4">
             {(patients ?? []).length === 0 && <p className="text-sm text-muted-foreground">No patient records shared.</p>}
-            {(patients ?? []).map((p: any) => (
-              <button key={p.id} onClick={() => setOpenClient(p.id === openClient ? null : p.id)} className="w-full rounded-lg border p-3 text-left text-sm hover:bg-muted/50">
-                <div className="font-medium">{p.first_name} {p.last_name}</div>
-                <div className="text-xs text-muted-foreground">{p.email}</div>
-              </button>
-            ))}
-            {openClient && record && (
-              <div className="space-y-3 rounded-xl border bg-muted/30 p-4 text-sm">
-                <div className="flex items-center gap-2 font-medium"><FileText className="h-4 w-4" /> Record</div>
-                <div className="text-xs text-muted-foreground">{(record.appointments ?? []).length} appointments · {(record.notes ?? []).length} notes · {(record.consents ?? []).length} consents</div>
-                {(record.notes ?? []).length === 0 && <p className="text-xs text-muted-foreground">No clinical notes recorded.</p>}
-                {(record.notes ?? []).slice(0, 10).map((n: any) => (
-                  <div key={n.id} className="rounded-md bg-background p-3">
-                    <div className="text-[11px] text-muted-foreground">{new Date(n.created_at).toLocaleString("en-GB")}</div>
-                    <div className="whitespace-pre-wrap">{n.body}</div>
-                  </div>
-                ))}
-
-              </div>
+            {(patients ?? []).length > 0 && (
+              <p className="text-xs text-muted-foreground">
+                Full profiles — notes, consultations, forms and consents — open from the associate's page, where you confirm a
+                reason first.
+              </p>
             )}
+            {(patients ?? []).map((p: any) => (
+              <div key={p.id} className="w-full rounded-lg border p-3 text-left text-sm">
+                <div className="font-medium">{p.full_name ?? "Unnamed patient"}</div>
+                <div className="text-xs text-muted-foreground">{p.email ?? p.phone ?? "No contact details"}</div>
+              </div>
+            ))}
+            <Button asChild size="sm" variant="outline" className="mt-2">
+              <Link to="/dashboard/associates/$id" params={{ id }}>
+                <FileText className="mr-2 h-4 w-4" /> Open full associate page
+              </Link>
+            </Button>
           </TabsContent>
 
           <TabsContent value="incidents" className="space-y-3 pt-4">
@@ -583,6 +575,41 @@ function IncidentsPanel({ onOpenAssociate }: { onOpenAssociate: (linkId: string)
                 {i.resolved_at ? "Re-open" : "Mark resolved"}
               </Button>
             </div>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  );
+}
+
+/* ------------------- Associate side: who opened my records ------------------ */
+
+function MyRecordAccessPanel() {
+  const logFn = useServerFn(listMyRecordAccessLog);
+  const { data: rows } = useQuery({ queryKey: ["my-record-access-log"], queryFn: () => logFn() });
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">Who has opened your patient records</CardTitle>
+        <CardDescription>
+          Your host clinic must give a reason and confirm a lawful basis every time they open one of your patient records.
+          The full trail is here.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        {(rows ?? []).length === 0 && <p className="text-sm text-muted-foreground">No one has opened your records.</p>}
+        {(rows ?? []).map((r: any) => (
+          <div key={r.id} className="rounded-lg border p-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="text-sm font-medium">{r.client_name ?? "Patient record"}</div>
+              <div className="text-[11px] text-muted-foreground">{new Date(r.created_at).toLocaleString("en-GB")}</div>
+            </div>
+            <div className="mt-1 text-xs text-muted-foreground">
+              Opened by {r.actor_name ?? "host clinic"}
+              {r.lawful_basis ? ` · ${r.lawful_basis}` : ""}
+            </div>
+            {r.reason && <p className="mt-2 text-xs">{r.reason}</p>}
           </div>
         ))}
       </CardContent>
