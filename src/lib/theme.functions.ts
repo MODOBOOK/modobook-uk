@@ -82,6 +82,11 @@ export type ClinicThemeInput = {
   // Density
   page_density?: string;
   section_gap?: string;
+  // Custom link button (e.g. skincare store)
+  link_button_enabled?: boolean;
+  link_button_label?: string | null;
+  link_button_subtitle?: string | null;
+  link_button_url?: string | null;
   // Contact tiles
   contact_tile_layout?: string;
   contact_tile_icon_size?: string;
@@ -137,6 +142,15 @@ export const upsertMyTheme = createServerFn({ method: "POST" })
         .replace(/<!--[\s\S]*?-->/g, "")
         .slice(0, 20000);
     }
+
+    if (typeof sanitized.link_button_url === "string") {
+      const raw = sanitized.link_button_url.trim();
+      if (!raw) sanitized.link_button_url = null;
+      else if (/^https?:\/\//i.test(raw)) sanitized.link_button_url = raw.slice(0, 500);
+      else sanitized.link_button_url = `https://${raw.replace(/^\/+/, "")}`.slice(0, 500);
+    }
+    if (typeof sanitized.link_button_label === "string") sanitized.link_button_label = sanitized.link_button_label.slice(0, 60);
+    if (typeof sanitized.link_button_subtitle === "string") sanitized.link_button_subtitle = sanitized.link_button_subtitle.slice(0, 120);
 
     const { data: row, error } = await context.supabase
       .from("clinic_theme")
