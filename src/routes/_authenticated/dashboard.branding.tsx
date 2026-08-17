@@ -14,6 +14,7 @@ import { Palette, Check, X, Wand2 } from "lucide-react";
 import { PRESETS, LAYOUTS, type ThemePresetKey, type BookingLayoutKey, type ThemePreset } from "@/lib/theme-presets";
 import { COLOR_PALETTES, CUSTOM_PALETTE_SLOTS, buildCustomPalette, type ColorPalette } from "@/lib/color-palettes";
 import { SaveReminder } from "@/components/SaveReminder";
+import { linkButtonEnabled } from "@/lib/feature-flags";
 
 export const Route = createFileRoute("/_authenticated/dashboard/branding")({
   component: BrandingPage,
@@ -123,6 +124,7 @@ function BrandingPage() {
   const save = useServerFn(upsertMyTheme);
   const [state, setState] = useState<ClinicThemeInput>({ ...DEFAULTS });
   const [profileId, setProfileId] = useState<string>("");
+  const [slug, setSlug] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -144,7 +146,10 @@ function BrandingPage() {
 
         setState(merged);
       }
-      if (p) setProfileId(p.id);
+      if (p) {
+        setProfileId(p.id);
+        setSlug((p as { slug?: string | null }).slug ?? null);
+      }
       setLoading(false);
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -599,6 +604,54 @@ function BrandingPage() {
         </Card>
       ) : null}
 
+
+      {/* Custom link button */}
+      {linkButtonEnabled(slug) && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Link button</CardTitle>
+            <p className="text-xs text-muted-foreground">
+              Add a button above your welcome message — perfect for linking your skincare store or any other page.
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={!!state.link_button_enabled}
+                onChange={(e) => set("link_button_enabled", e.target.checked)}
+              />
+              Show link button on my booking page
+            </label>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label>Button text</Label>
+                <Input
+                  placeholder="Shop skincare"
+                  value={state.link_button_label ?? ""}
+                  onChange={(e) => set("link_button_label", e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Web address</Label>
+                <Input
+                  placeholder="https://yourstore.com"
+                  value={state.link_button_url ?? ""}
+                  onChange={(e) => set("link_button_url", e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Short description (optional)</Label>
+              <Input
+                placeholder="Clinic-grade products, delivered to your door"
+                value={state.link_button_subtitle ?? ""}
+                onChange={(e) => set("link_button_subtitle", e.target.value)}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Welcome card */}
       <Card>
