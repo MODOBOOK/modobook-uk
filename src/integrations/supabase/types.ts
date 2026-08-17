@@ -2288,6 +2288,10 @@ export type Database = {
           hero_use_logo: boolean
           id: string
           layout_key: string | null
+          link_button_enabled: boolean
+          link_button_label: string | null
+          link_button_subtitle: string | null
+          link_button_url: string | null
           logo_url: string | null
           menu_card_bg: string | null
           menu_card_border_color: string | null
@@ -2371,6 +2375,10 @@ export type Database = {
           hero_use_logo?: boolean
           id?: string
           layout_key?: string | null
+          link_button_enabled?: boolean
+          link_button_label?: string | null
+          link_button_subtitle?: string | null
+          link_button_url?: string | null
           logo_url?: string | null
           menu_card_bg?: string | null
           menu_card_border_color?: string | null
@@ -2454,6 +2462,10 @@ export type Database = {
           hero_use_logo?: boolean
           id?: string
           layout_key?: string | null
+          link_button_enabled?: boolean
+          link_button_label?: string | null
+          link_button_subtitle?: string | null
+          link_button_url?: string | null
           logo_url?: string | null
           menu_card_bg?: string | null
           menu_card_border_color?: string | null
