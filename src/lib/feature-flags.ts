@@ -4,8 +4,8 @@
  * the array (see `isFeatureLive`) to release it to all clinics.
  */
 
-/** "Build your own package" builders — pilot accounts only for now. */
-export const PACKAGE_BUILDER_SLUGS = ["aestheticsbynurseryan"];
+/** "Build your own package" builders — live for everyone. */
+export const PACKAGE_BUILDER_SLUGS: string[] = [];
 
 /** An empty allowlist means "live for everyone". */
 export function isFeatureLive(allowlist: string[], slug?: string | null) {
@@ -46,4 +46,12 @@ export const PILOT_SLUGS = ["aestheticsbynurseryan"];
 
 export function pilotFeaturesEnabled(slug?: string | null) {
   return isFeatureLive(PILOT_SLUGS, slug);
+}
+
+
+/** Treatment packages — live for everyone. */
+export const PACKAGES_SLUGS: string[] = [];
+
+export function packagesEnabled(slug?: string | null) {
+  return isFeatureLive(PACKAGES_SLUGS, slug);
 }

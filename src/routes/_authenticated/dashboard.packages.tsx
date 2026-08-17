@@ -1,5 +1,5 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { pilotFeaturesEnabled } from "@/lib/feature-flags";
+import { packagesEnabled } from "@/lib/feature-flags";
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { listMyPackages, createPackage, updatePackage, deletePackage, reorderPackages } from "@/lib/packages.functions";
@@ -25,7 +25,7 @@ export const Route = createFileRoute("/_authenticated/dashboard/packages")({
   ssr: false,
   beforeLoad: ({ context }) => {
     const slug = (context as { profile?: { slug?: string } })?.profile?.slug;
-    if (!pilotFeaturesEnabled(slug)) throw redirect({ to: "/dashboard/coming-soon" });
+    if (!packagesEnabled(slug)) throw redirect({ to: "/dashboard/coming-soon" });
   },
   component: PackagesPage,
 });
