@@ -85,7 +85,7 @@ const navItems = [
   { label: "Services", to: "/dashboard/services", icon: Scissors },
   { label: "Training", to: "/dashboard/training", icon: GraduationCap },
   { label: "Add-ons", to: "/dashboard/addons", icon: Sparkles },
-  { label: "Packages", to: "/dashboard/packages", icon: Package, pilot: true },
+  { label: "Packages", to: "/dashboard/packages", icon: Package },
   { label: "Gift cards", to: "/dashboard/gift-cards", icon: Gift },
   { label: "Discounts", to: "/dashboard/discounts", icon: Percent },
   { label: "Model slots", to: "/dashboard/model-slots", icon: Sparkles },

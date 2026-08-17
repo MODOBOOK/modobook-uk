@@ -1,4 +1,4 @@
-import { pilotFeaturesEnabled } from "@/lib/feature-flags";
+import { pilotFeaturesEnabled, packagesEnabled } from "@/lib/feature-flags";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -159,7 +159,7 @@ function MenuPage() {
     if (pilot) return null;
     if (to === "/dashboard/upcoming") return "upcoming";
     if (to === "/dashboard/associates") return "associates";
-    if (to === "/dashboard/packages") return "packages";
+    if (to === "/dashboard/packages") return packagesEnabled(profile.slug) ? null : "packages";
     if (to === "/dashboard/room-rental") return "room-rental";
     return null;
   }
