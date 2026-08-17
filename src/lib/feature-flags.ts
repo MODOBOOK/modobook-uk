@@ -55,3 +55,14 @@ export const PACKAGES_SLUGS: string[] = [];
 export function packagesEnabled(slug?: string | null) {
   return isFeatureLive(PACKAGES_SLUGS, slug);
 }
+
+
+/**
+ * Custom link button on the public booking page (e.g. a skincare store) —
+ * pilot account only until we're happy with it.
+ */
+export const LINK_BUTTON_SLUGS = ["aestheticsbynurseryan"];
+
+export function linkButtonEnabled(slug?: string | null) {
+  return isFeatureLive(LINK_BUTTON_SLUGS, slug);
+}

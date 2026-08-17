@@ -53,7 +53,7 @@ import type { Database } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 import { SafeHtml } from "@/components/SafeHtml";
 import { PackageBuilderCard, type PublicBuilder } from "@/components/PackageBuilderCard";
-import { packageBuilderEnabled } from "@/lib/feature-flags";
+import { packageBuilderEnabled, linkButtonEnabled } from "@/lib/feature-flags";
 import { resolveDisplayNames } from "@/lib/display-name";
 import { formatPrice, BADGE_LABEL, badgeClasses, type TreatmentBadge } from "@/lib/price-display";
 
@@ -451,6 +451,39 @@ function BookPage() {
   const introFlag = (aboutPage as { intro_expandable?: boolean } | null | undefined)?.intro_expandable;
   const introLength = (welcomeHtml || "").replace(/<[^>]*>/g, "").trim().length;
   const introExpandable = introFlag ?? introLength > 240;
+
+  // Optional practitioner link button (e.g. skincare store) shown above the
+  // welcome message. Pilot accounts only for now.
+  const linkBtn = theme as {
+    link_button_enabled?: boolean | null;
+    link_button_label?: string | null;
+    link_button_subtitle?: string | null;
+    link_button_url?: string | null;
+  } | null;
+  const linkButtonUrl = (linkBtn?.link_button_url ?? "").trim();
+  const showLinkButton =
+    linkButtonEnabled(slug) &&
+    !!linkBtn?.link_button_enabled &&
+    /^https?:\/\//i.test(linkButtonUrl);
+  const linkButtonNode = showLinkButton ? (
+    <a
+      href={linkButtonUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex items-center justify-between gap-3 rounded-2xl border px-5 py-4 shadow-sm transition hover:shadow-md"
+      style={{ borderColor: `${brand}26`, backgroundColor: `${brand}0d`, color: textColor }}
+    >
+      <span className="min-w-0">
+        <span className="block text-base font-semibold" style={{ color: brand }}>
+          {linkBtn?.link_button_label?.trim() || "Visit our shop"}
+        </span>
+        {linkBtn?.link_button_subtitle?.trim() ? (
+          <span className="mt-0.5 block text-sm opacity-70">{linkBtn.link_button_subtitle}</span>
+        ) : null}
+      </span>
+      <ExternalLink className="h-5 w-5 shrink-0" style={{ color: brand }} />
+    </a>
+  ) : null;
 
   const [locationId, setLocationId] = useState<string | null>(
     locations.length === 1 ? locations[0]!.id : null,
@@ -1133,6 +1166,11 @@ function BookPage() {
 
 
 
+      {/* Mobile link button (above welcome message) */}
+      {isMobile && linkButtonNode && (
+        <section className="mx-auto mt-4 max-w-3xl px-4">{linkButtonNode}</section>
+      )}
+
       {/* Mobile welcome intro at top */}
       {isMobile && (introHeading || introLength > 0) && (
         <section id="welcome-intro-mobile" className="mx-auto mt-4 max-w-3xl px-4">
@@ -1205,6 +1243,11 @@ function BookPage() {
       })()}
 
 
+
+      {/* Link button (above welcome message) */}
+      {linkButtonNode && (
+        <section className="mx-auto mt-8 hidden max-w-3xl px-4 sm:block">{linkButtonNode}</section>
+      )}
 
       {/* Welcome message */}
       {(introHeading || introLength > 0) && (
