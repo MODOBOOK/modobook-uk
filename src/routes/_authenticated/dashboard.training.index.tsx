@@ -456,17 +456,16 @@ function CourseEditor({ id, onClose }: { id: string; onClose: () => void }) {
               </Select>
             </div>
             <div>
-              <Label>Duration</Label>
+              <Label>{isMulti ? "Hours per day" : "Duration"}</Label>
               <div className="flex items-center gap-2">
                 <Input
                   type="number"
                   min={0}
                   aria-label="Hours"
-                  value={Math.floor((Number(form.duration_min) || 0) / 60)}
+                  value={Math.floor(perDayMin / 60)}
                   onChange={(e) => {
                     const hrs = Math.max(0, Number(e.target.value) || 0);
-                    const mins = (Number(form.duration_min) || 0) % 60;
-                    setForm({ ...form, duration_min: hrs * 60 + mins });
+                    setDayDuration(hrs * 60 + (perDayMin % 60));
                   }}
                 />
                 <span className="text-xs text-muted-foreground">hrs</span>
@@ -475,17 +474,21 @@ function CourseEditor({ id, onClose }: { id: string; onClose: () => void }) {
                   min={0}
                   max={59}
                   aria-label="Minutes"
-                  value={(Number(form.duration_min) || 0) % 60}
+                  value={perDayMin % 60}
                   onChange={(e) => {
                     const mins = Math.min(59, Math.max(0, Number(e.target.value) || 0));
-                    const hrs = Math.floor((Number(form.duration_min) || 0) / 60);
-                    setForm({ ...form, duration_min: hrs * 60 + mins });
+                    setDayDuration(Math.floor(perDayMin / 60) * 60 + mins);
                   }}
                 />
                 <span className="text-xs text-muted-foreground">min</span>
               </div>
-              <p className="mt-1 text-[11px] text-muted-foreground">{formatDuration(form.duration_min)}</p>
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                {isMulti
+                  ? `${dayCount} day${dayCount === 1 ? "" : "s"} × ${formatDuration(perDayMin)} · ${formatDuration(perDayMin * dayCount)} total`
+                  : formatDuration(form.duration_min)}
+              </p>
             </div>
+
             {isSchedule && (
               <div>
                 <Label>Capacity (seats)</Label>
