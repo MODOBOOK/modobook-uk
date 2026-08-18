@@ -183,6 +183,9 @@ function TrainingPage() {
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="font-semibold">{c.name}</span>
                     <Badge variant="outline">{MODE_LABEL[c.mode]}</Badge>
+                    {(c as Course & { category?: string | null }).category && (
+                      <Badge variant="secondary">{(c as Course & { category?: string | null }).category}</Badge>
+                    )}
                     {(() => {
                       const v = (c as Course & { visibility?: string }).visibility ?? (c.active ? "live" : "hidden");
                       const map: Record<string, { label: string; cls: string }> = {
