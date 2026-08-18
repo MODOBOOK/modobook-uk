@@ -13,6 +13,8 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import { ArrowLeft, Award, Clock, Users, CheckCircle2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { formatDuration } from "@/lib/format-duration";
+import { getLeafletSignedUrl } from "@/lib/leaflets.functions";
 
 export const Route = createFileRoute("/m/$slug/training/$courseId")({
   validateSearch: (s: Record<string, unknown>): { preview?: string } => ({ preview: typeof s.preview === "string" ? s.preview : undefined }),
@@ -44,6 +46,8 @@ function BookCoursePage() {
     scheduling_mode?: string;
     duration_min: number; price: number | string; capacity: number | null;
     cpd_hours: number | string | null; prerequisites: string | null;
+    cover_image_url?: string | null;
+    handout_url?: string | null; handout_name?: string | null;
     require_prereq_confirm: boolean;
   };
   const sessions = data.sessions as Session[];
@@ -142,11 +146,18 @@ function BookCoursePage() {
         <Button variant="ghost" size="sm"><ArrowLeft className="mr-2 h-4 w-4" /> All courses</Button>
       </Link>
 
-      <Card>
+      <Card className="overflow-hidden">
+        {course.cover_image_url && (
+          <img
+            src={course.cover_image_url}
+            alt={course.name}
+            className="h-52 w-full object-cover sm:h-64"
+          />
+        )}
         <CardContent className="space-y-3 p-5">
           <h1 className="font-serif text-2xl">{course.name}</h1>
           <div className="flex flex-wrap gap-2 text-xs">
-            <Badge variant="outline"><Clock className="mr-1 h-3 w-3" /> {course.duration_min} min</Badge>
+            <Badge variant="outline"><Clock className="mr-1 h-3 w-3" /> {formatDuration(course.duration_min)}</Badge>
             {course.capacity && <Badge variant="outline"><Users className="mr-1 h-3 w-3" /> up to {course.capacity}</Badge>}
             {course.cpd_hours != null && <Badge variant="outline"><Award className="mr-1 h-3 w-3" /> {course.cpd_hours} CPD</Badge>}
             <Badge>£{Number(course.price).toFixed(2)}</Badge>
@@ -154,6 +165,8 @@ function BookCoursePage() {
           {course.description && <p className="text-sm text-muted-foreground">{course.description}</p>}
         </CardContent>
       </Card>
+
+      {course.handout_url && <CourseHandout url={course.handout_url} name={course.handout_name} />}
 
       {course.prerequisites && (
         <Card>
@@ -313,5 +326,38 @@ function BookCoursePage() {
           : "This course isn't open for bookings yet — check back soon."}
       </p>
     </div>
+  );
+}
+
+
+/** Course reading material (PDF) — opens in a new tab via a temporary signed link. */
+function CourseHandout({ url, name }: { url: string; name?: string | null }) {
+  const signFn = useServerFn(getLeafletSignedUrl);
+  const [loading, setLoading] = useState(false);
+
+  async function open() {
+    setLoading(true);
+    try {
+      const target = url.startsWith("storage:") ? (await signFn({ data: { path: url } })).url : url;
+      if (!target) throw new Error("Could not open the document");
+      window.open(target, "_blank", "noopener");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not open the document");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <Card>
+      <CardHeader><CardTitle className="text-base">Course reading</CardTitle></CardHeader>
+      <CardContent className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-sm text-muted-foreground">{name || "Course information (PDF)"}</p>
+        <Button variant="outline" size="sm" onClick={open} disabled={loading}>
+          {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+          View PDF
+        </Button>
+      </CardContent>
+    </Card>
   );
 }
