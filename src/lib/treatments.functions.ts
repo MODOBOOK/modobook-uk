@@ -148,7 +148,11 @@ export const updateTreatment = createServerFn({ method: "POST" })
       prescriber_routing?: "same_address" | "clinic_visit" | "in_person_consult";
       prescriber_note?: string | null;
       booking_cap?: number | null;
+      leaflet_title?: string | null;
+      leaflet_html?: string | null;
+      leaflet_url?: string | null;
     }) => input,
+
 
 
 
