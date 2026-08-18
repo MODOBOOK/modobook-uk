@@ -12,6 +12,7 @@ import {
   setCourseLocations,
 } from "@/lib/training.functions";
 import { listMyLocations } from "@/lib/locations.functions";
+import { getMyProfile } from "@/lib/profiles.functions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,7 +23,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { GraduationCap, Plus, Trash2, ArrowLeft, Users, Calendar as CalendarIcon, Award, Loader2 } from "lucide-react";
+import { GraduationCap, Plus, Trash2, ArrowLeft, Users, Calendar as CalendarIcon, Award, Loader2, Copy, Check, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -45,12 +46,17 @@ function TrainingPage() {
   const listFn = useServerFn(listMyCourses);
   const createFn = useServerFn(createCourse);
   const deleteFn = useServerFn(deleteCourse);
+  const profileFn = useServerFn(getMyProfile);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   const q = useQuery({
     queryKey: ["training-courses"],
     queryFn: () => listFn(),
   });
+  const profileQ = useQuery({ queryKey: ["my-profile"], queryFn: () => profileFn() });
+  const slug = (profileQ.data as { slug?: string } | undefined)?.slug ?? "";
+  const publicUrl = slug ? `https://modobook.uk/m/${slug}/training` : "";
 
   const createMut = useMutation({
     mutationFn: () => createFn({ data: { name: "New course", mode: "one_to_one" } }),
@@ -81,7 +87,7 @@ function TrainingPage() {
             <GraduationCap className="h-6 w-6" /> Training
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Create aesthetics training courses trainees can book from your clinic page.
+            Courses live on their own public training page — share the link on its own.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -91,6 +97,40 @@ function TrainingPage() {
           </Button>
         </div>
       </div>
+
+      <Card>
+        <CardContent className="flex flex-wrap items-center justify-between gap-4 py-4">
+          <div className="min-w-0">
+            <div className="font-medium">Your training page</div>
+            <p className="text-sm text-muted-foreground break-all">
+              {publicUrl ? publicUrl.replace("https://", "") : "Set your booking link to publish"}
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Dates come from your clinic calendar, or set fixed dates per course.
+            </p>
+          </div>
+          {publicUrl && (
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  navigator.clipboard.writeText(publicUrl);
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 2000);
+                  toast.success("Training link copied");
+                }}
+              >
+                {copied ? <Check className="mr-2 h-4 w-4" /> : <Copy className="mr-2 h-4 w-4" />} Copy link
+              </Button>
+              <a href={publicUrl} target="_blank" rel="noreferrer">
+                <Button size="sm" variant="ghost"><ExternalLink className="mr-2 h-4 w-4" /> Open</Button>
+              </a>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
 
       {q.isLoading ? (
         <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin" /></div>

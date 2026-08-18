@@ -49,7 +49,10 @@ function TrainingList() {
   return (
     <div className="mx-auto max-w-4xl space-y-6 px-4 py-8">
       <div>
-        <h1 className="flex items-center gap-2 font-serif text-3xl">
+        <Link to="/m/$slug" params={{ slug }} className="text-xs text-muted-foreground underline underline-offset-4">
+          ← Back to clinic
+        </Link>
+        <h1 className="mt-3 flex items-center gap-2 font-serif text-3xl">
           <GraduationCap className="h-7 w-7" /> Training courses
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
