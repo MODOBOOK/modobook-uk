@@ -148,7 +148,11 @@ export const updateTreatment = createServerFn({ method: "POST" })
       prescriber_routing?: "same_address" | "clinic_visit" | "in_person_consult";
       prescriber_note?: string | null;
       booking_cap?: number | null;
+      leaflet_title?: string | null;
+      leaflet_html?: string | null;
+      leaflet_url?: string | null;
     }) => input,
+
 
 
 
@@ -195,6 +199,10 @@ export const updateTreatment = createServerFn({ method: "POST" })
     if (data.prescriber_routing !== undefined) update.prescriber_routing = data.prescriber_routing;
     if (data.prescriber_note !== undefined) update.prescriber_note = data.prescriber_note;
     if (data.booking_cap !== undefined) update.booking_cap = data.booking_cap;
+    if (data.leaflet_title !== undefined) update.leaflet_title = data.leaflet_title;
+    if (data.leaflet_html !== undefined) update.leaflet_html = data.leaflet_html;
+    if (data.leaflet_url !== undefined) update.leaflet_url = data.leaflet_url;
+
 
 
 

@@ -53,7 +53,7 @@ import type { Database } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 import { SafeHtml } from "@/components/SafeHtml";
 import { PackageBuilderCard, type PublicBuilder } from "@/components/PackageBuilderCard";
-import { packageBuilderEnabled, linkButtonEnabled } from "@/lib/feature-flags";
+import { packageBuilderEnabled, linkButtonEnabled, treatmentLeafletsEnabled } from "@/lib/feature-flags";
 import { resolveDisplayNames } from "@/lib/display-name";
 import { formatPrice, BADGE_LABEL, badgeClasses, type TreatmentBadge } from "@/lib/price-display";
 
@@ -2952,6 +2952,8 @@ function CategoryTree({
 
 function TreatmentRow({
   t,
+  slug,
+
   price,
   duration,
   brand,
@@ -2976,6 +2978,13 @@ function TreatmentRow({
 } & MenuStyleProps) {
 
   const [expanded, setExpanded] = useState(false);
+  const [leafletOpen, setLeafletOpen] = useState(false);
+  const leafletEnabled = treatmentLeafletsEnabled(slug);
+  const leafletHtml = (t as { leaflet_html?: string | null }).leaflet_html || "";
+  const leafletUrl = (t as { leaflet_url?: string | null }).leaflet_url || "";
+  const leafletTitle =
+    (t as { leaflet_title?: string | null }).leaflet_title || `${t.name} — information`;
+
   const desc = t.description ?? "";
   const isLong = desc.length > 110;
   const shown = expanded || !isLong ? desc : desc.slice(0, 110).trimEnd() + " …";
@@ -2990,7 +2999,7 @@ function TreatmentRow({
 
   return (
     <div
-      className={`group flex w-full items-start gap-3 rounded-xl border transition hover:shadow-sm ${padding}`}
+      className={`group flex w-full flex-wrap items-start gap-3 rounded-xl border transition hover:shadow-sm ${padding}`}
       style={{
         backgroundColor: cardBg,
         borderColor: selected ? brand : cardBorder,
@@ -3106,6 +3115,47 @@ function TreatmentRow({
           </div>
         )}
       </button>
+      {leafletEnabled && (leafletHtml || leafletUrl) && (
+        <div className="basis-full pl-8">
+          <button
+            type="button"
+            onClick={() => setLeafletOpen(true)}
+            className="mt-1 inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold transition hover:opacity-80"
+            style={{ borderColor: `${brand}55`, color: brand }}
+          >
+            <Info className="h-3.5 w-3.5" />
+            Information leaflet
+          </button>
+          <Dialog open={leafletOpen} onOpenChange={setLeafletOpen}>
+            <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
+              <DialogHeader>
+                <DialogTitle>{leafletTitle}</DialogTitle>
+                <DialogDescription>Patient information for {t.name}</DialogDescription>
+              </DialogHeader>
+              {leafletHtml && (
+                <SafeHtml
+                  html={leafletHtml}
+                  className="prose prose-sm max-w-none whitespace-pre-line text-sm leading-relaxed"
+                />
+              )}
+              {leafletUrl && (
+                <a
+                  href={leafletUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm font-semibold underline"
+                  style={{ color: brand }}
+                >
+                  Open full leaflet (PDF)
+                </a>
+              )}
+              <Button variant="outline" onClick={() => setLeafletOpen(false)}>
+                Close
+              </Button>
+            </DialogContent>
+          </Dialog>
+        </div>
+      )}
       <button
         type="button"
         onClick={onToggle}
@@ -3113,6 +3163,7 @@ function TreatmentRow({
         className="sr-only"
       />
     </div>
+
   );
 }
 

@@ -108,7 +108,11 @@ type TreatmentForm = {
   prescriber_note: string | null;
   booking_cap: number | null;
   color: string | null;
+  leaflet_title: string | null;
+  leaflet_html: string | null;
+  leaflet_url: string | null;
 };
+
 
 
 
@@ -448,9 +452,19 @@ function TreatmentDialog({
   const [sessionIntervalUnit, setSessionIntervalUnit] = useState<"days" | "weeks">(
     initialSessionIntervalDays != null && initialSessionIntervalDays % 7 === 0 ? "weeks" : "days",
   );
+  const [leafletTitle, setLeafletTitle] = useState<string>(
+    (treatment as { leaflet_title?: string | null } | null)?.leaflet_title ?? "",
+  );
+  const [leafletHtml, setLeafletHtml] = useState<string>(
+    (treatment as { leaflet_html?: string | null } | null)?.leaflet_html ?? "",
+  );
+  const [leafletUrl, setLeafletUrl] = useState<string>(
+    (treatment as { leaflet_url?: string | null } | null)?.leaflet_url ?? "",
+  );
   const [aftercareHtml, setAftercareHtml] = useState<string>(
     (treatment as { aftercare_html?: string | null } | null)?.aftercare_html ?? "",
   );
+
   const [aftercareDelay, setAftercareDelay] = useState<number>(
     (treatment as { aftercare_delay_hours?: number } | null)?.aftercare_delay_hours ?? 2,
   );
@@ -546,6 +560,10 @@ function TreatmentDialog({
     setSessionIntervalValue(interval != null ? String(interval % 7 === 0 ? interval / 7 : interval) : "");
     setSessionIntervalUnit(interval != null && interval % 7 === 0 ? "weeks" : "days");
     setAftercareHtml((treatment as { aftercare_html?: string | null } | null)?.aftercare_html ?? "");
+    setLeafletTitle((treatment as { leaflet_title?: string | null } | null)?.leaflet_title ?? "");
+    setLeafletHtml((treatment as { leaflet_html?: string | null } | null)?.leaflet_html ?? "");
+    setLeafletUrl((treatment as { leaflet_url?: string | null } | null)?.leaflet_url ?? "");
+
     setAftercareDelay((treatment as { aftercare_delay_hours?: number } | null)?.aftercare_delay_hours ?? 2);
     setAutoSendForms((treatment as { auto_send_medical_forms?: boolean } | null)?.auto_send_medical_forms ?? true);
     setAutoSendAftercare((treatment as { auto_send_aftercare?: boolean } | null)?.auto_send_aftercare ?? true);
@@ -1012,7 +1030,44 @@ function TreatmentDialog({
           <p className="text-[11px] text-muted-foreground">Selected templates send automatically at each template's delay (default 2 hours after the appointment ends).</p>
         </div>
 
+        {/* Information leaflet (optional) */}
+        <details className="rounded-md border p-3">
+          <summary className="cursor-pointer text-sm font-medium">Information leaflet (optional)</summary>
+          <div className="mt-3 space-y-3">
+            <p className="text-[11px] text-muted-foreground">
+              Patients see an “Information leaflet” button on this treatment. It opens over the
+              menu and closes again to show the treatment.
+            </p>
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">Leaflet title</Label>
+              <Input
+                value={leafletTitle}
+                onChange={(e) => setLeafletTitle(e.target.value)}
+                placeholder="e.g. Anti-wrinkle treatment — patient information"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">Leaflet content</Label>
+              <Textarea
+                rows={8}
+                value={leafletHtml}
+                onChange={(e) => setLeafletHtml(e.target.value)}
+                placeholder="What the treatment is, how it works, risks, aftercare…"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">Or link a PDF/leaflet (optional)</Label>
+              <Input
+                value={leafletUrl}
+                onChange={(e) => setLeafletUrl(e.target.value)}
+                placeholder="https://…"
+              />
+            </div>
+          </div>
+        </details>
+
         {/* One-off override (optional) */}
+
         <details className="rounded-md border p-3">
           <summary className="cursor-pointer text-sm font-medium">Custom aftercare for this treatment (optional)</summary>
           <div className="mt-3 space-y-3">
@@ -1143,6 +1198,10 @@ function TreatmentDialog({
               prescriber_note: prescriberNote.trim() ? prescriberNote.trim() : null,
               booking_cap: bookingCap.trim() === "" ? null : Math.max(0, Math.floor(Number(bookingCap))),
               color: color || null,
+              leaflet_title: leafletTitle.trim() || null,
+              leaflet_html: leafletHtml.trim() || null,
+              leaflet_url: leafletUrl.trim() || null,
+
             })
 
 
