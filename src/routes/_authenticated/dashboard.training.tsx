@@ -555,3 +555,334 @@ function CourseEditor({ id, onClose }: { id: string; onClose: () => void }) {
     </div>
   );
 }
+
+type PageDraft = {
+  eyebrow: string;
+  headline: string;
+  intro: string;
+  hero_image_url: string | null;
+  courses_heading: string;
+  highlights: { title: string; body: string }[];
+  body_heading: string;
+  body_html: string;
+  show_highlights: boolean;
+  show_cta: boolean;
+  cta_heading: string;
+  cta_body: string;
+  cta_button_label: string;
+  cta_url: string;
+  seo_title: string;
+  seo_description: string;
+};
+
+const EMPTY_PAGE: PageDraft = {
+  eyebrow: "",
+  headline: "",
+  intro: "",
+  hero_image_url: null,
+  courses_heading: "",
+  highlights: [],
+  body_heading: "",
+  body_html: "",
+  show_highlights: true,
+  show_cta: true,
+  cta_heading: "",
+  cta_body: "",
+  cta_button_label: "",
+  cta_url: "",
+  seo_title: "",
+  seo_description: "",
+};
+
+/** Write your own copy for the public /training page. */
+function TrainingPageEditor({ onClose }: { onClose: () => void }) {
+  const getFn = useServerFn(getMyTrainingPage);
+  const saveFn = useServerFn(saveMyTrainingPage);
+  const profileFn = useServerFn(getMyProfile);
+  const [draft, setDraft] = useState<PageDraft | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  const profileQ = useQuery({ queryKey: ["my-profile"], queryFn: () => profileFn() });
+  const profileId = (profileQ.data as { id?: string } | undefined)?.id ?? "";
+  const slug = (profileQ.data as { slug?: string } | undefined)?.slug ?? "";
+
+  const q = useQuery({ queryKey: ["training-page"], queryFn: () => getFn() });
+
+  if (q.isLoading) {
+    return (
+      <div className="flex justify-center p-10">
+        <Loader2 className="h-6 w-6 animate-spin" />
+      </div>
+    );
+  }
+
+  const row = (q.data ?? null) as Record<string, unknown> | null;
+  const current: PageDraft =
+    draft ??
+    ({
+      ...EMPTY_PAGE,
+      ...(row
+        ? {
+            eyebrow: (row.eyebrow as string) ?? "",
+            headline: (row.headline as string) ?? "",
+            intro: (row.intro as string) ?? "",
+            hero_image_url: (row.hero_image_url as string) ?? null,
+            courses_heading: (row.courses_heading as string) ?? "",
+            highlights: (row.highlights as { title: string; body: string }[]) ?? [],
+            body_heading: (row.body_heading as string) ?? "",
+            body_html: (row.body_html as string) ?? "",
+            show_highlights: row.show_highlights !== false,
+            show_cta: row.show_cta !== false,
+            cta_heading: (row.cta_heading as string) ?? "",
+            cta_body: (row.cta_body as string) ?? "",
+            cta_button_label: (row.cta_button_label as string) ?? "",
+            cta_url: (row.cta_url as string) ?? "",
+            seo_title: (row.seo_title as string) ?? "",
+            seo_description: (row.seo_description as string) ?? "",
+          }
+        : {}),
+    } as PageDraft);
+
+  const set = (patch: Partial<PageDraft>) => setDraft({ ...current, ...patch });
+
+  async function save() {
+    setSaving(true);
+    try {
+      await saveFn({ data: current });
+      toast.success("Training page updated");
+      onClose();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to save");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="mx-auto max-w-3xl space-y-6 p-4 md:p-6">
+      <div className="flex items-center justify-between gap-3">
+        <Button variant="ghost" onClick={onClose}>
+          <ArrowLeft className="mr-2 h-4 w-4" /> Back
+        </Button>
+        <div className="flex items-center gap-2">
+          {slug && (
+            <a href={`/m/${slug}/training`} target="_blank" rel="noopener noreferrer">
+              <Button variant="outline" size="sm">
+                <ExternalLink className="mr-2 h-4 w-4" /> Preview
+              </Button>
+            </a>
+          )}
+          <Button onClick={save} disabled={saving}>
+            {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Save
+          </Button>
+        </div>
+      </div>
+
+      <div>
+        <h1 className="text-2xl font-bold">Training page content</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Write your own words for the public training page. Leave a field blank to keep the default text.
+        </p>
+      </div>
+
+      <Card>
+        <CardHeader><CardTitle>Top of the page</CardTitle></CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label>Small label above the title</Label>
+            <Input
+              value={current.eyebrow}
+              placeholder="Academy"
+              onChange={(e) => set({ eyebrow: e.target.value })}
+            />
+          </div>
+          <div>
+            <Label>Headline</Label>
+            <Input
+              value={current.headline}
+              placeholder="Training courses taught by a practising clinician"
+              onChange={(e) => set({ headline: e.target.value })}
+            />
+          </div>
+          <div>
+            <Label>Intro paragraph</Label>
+            <Textarea
+              rows={3}
+              value={current.intro}
+              placeholder="Small cohorts, live models where applicable, and full aftercare guidance."
+              onChange={(e) => set({ intro: e.target.value })}
+            />
+          </div>
+          {profileId && (
+            <ImageUploader
+              label="Hero background image"
+              value={current.hero_image_url}
+              onChange={(url) => set({ hero_image_url: url })}
+              profileId={profileId}
+              folder="training"
+              previewClass="mt-2 h-28 w-full max-w-sm rounded-xl object-cover"
+            />
+          )}
+          <div>
+            <Label>Courses section heading</Label>
+            <Input
+              value={current.courses_heading}
+              placeholder="Available courses"
+              onChange={(e) => set({ courses_heading: e.target.value })}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader><CardTitle>Your own section</CardTitle></CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label>Section heading</Label>
+            <Input
+              value={current.body_heading}
+              placeholder="Why train with us"
+              onChange={(e) => set({ body_heading: e.target.value })}
+            />
+          </div>
+          <div>
+            <Label>Content</Label>
+            <RichTextEditor value={current.body_html} onChange={(html) => set({ body_html: html })} />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between gap-3">
+            <CardTitle>What's included</CardTitle>
+            <Switch
+              checked={current.show_highlights}
+              onCheckedChange={(v) => set({ show_highlights: v })}
+            />
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            Add up to 8 points. Leave empty to use the default four.
+          </p>
+          {current.highlights.map((h, i) => (
+            <div key={i} className="space-y-2 rounded-lg border p-3">
+              <div className="flex items-center gap-2">
+                <Input
+                  value={h.title}
+                  placeholder="Small groups"
+                  onChange={(e) => {
+                    const next = [...current.highlights];
+                    next[i] = { ...h, title: e.target.value };
+                    set({ highlights: next });
+                  }}
+                />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label="Remove point"
+                  onClick={() => set({ highlights: current.highlights.filter((_, j) => j !== i) })}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+              <Textarea
+                rows={2}
+                value={h.body}
+                placeholder="Limited places so you get genuine hands-on time."
+                onChange={(e) => {
+                  const next = [...current.highlights];
+                  next[i] = { ...h, body: e.target.value };
+                  set({ highlights: next });
+                }}
+              />
+            </div>
+          ))}
+          {current.highlights.length < 8 && (
+            <Button
+              variant="outline"
+              onClick={() => set({ highlights: [...current.highlights, { title: "", body: "" }] })}
+            >
+              <Plus className="mr-2 h-4 w-4" /> Add point
+            </Button>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between gap-3">
+            <CardTitle>Call to action</CardTitle>
+            <Switch checked={current.show_cta} onCheckedChange={(v) => set({ show_cta: v })} />
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label>Heading</Label>
+            <Input
+              value={current.cta_heading}
+              placeholder="Not sure which course is right for you?"
+              onChange={(e) => set({ cta_heading: e.target.value })}
+            />
+          </div>
+          <div>
+            <Label>Text</Label>
+            <Textarea
+              rows={3}
+              value={current.cta_body}
+              onChange={(e) => set({ cta_body: e.target.value })}
+            />
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <Label>Button label</Label>
+              <Input
+                value={current.cta_button_label}
+                placeholder="Contact the clinic"
+                onChange={(e) => set({ cta_button_label: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label>Button link (optional)</Label>
+              <Input
+                value={current.cta_url}
+                placeholder="https://wa.me/…"
+                onChange={(e) => set({ cta_url: e.target.value })}
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader><CardTitle>Search & sharing</CardTitle></CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label>Page title</Label>
+            <Input
+              value={current.seo_title}
+              placeholder="Aesthetics training courses"
+              onChange={(e) => set({ seo_title: e.target.value })}
+            />
+          </div>
+          <div>
+            <Label>Page description</Label>
+            <Textarea
+              rows={2}
+              value={current.seo_description}
+              onChange={(e) => set({ seo_description: e.target.value })}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="flex justify-end gap-2 pb-10">
+        <Button variant="ghost" onClick={onClose}>Cancel</Button>
+        <Button onClick={save} disabled={saving}>
+          {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Save
+        </Button>
+      </div>
+    </div>
+  );
+}
