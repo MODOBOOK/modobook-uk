@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { listMyPackages, createPackage, updatePackage, deletePackage, reorderPackages } from "@/lib/packages.functions";
 import { getMyTreatments } from "@/lib/treatments.functions";
-import { getMyPackageCategories, createPackageCategory, deletePackageCategory } from "@/lib/categories.functions";
+import { getMyPackageCategories, createPackageCategory, deletePackageCategory, updateCategory } from "@/lib/categories.functions";
 import { getMyProfile } from "@/lib/profiles.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -109,6 +109,7 @@ function PackagesPage() {
   const listCategories = useServerFn(getMyPackageCategories);
   const createCat = useServerFn(createPackageCategory);
   const deleteCat = useServerFn(deletePackageCategory);
+  const updateCat = useServerFn(updateCategory);
   const fetchProfile = useServerFn(getMyProfile);
 
   const [packages, setPackages] = useState<Pkg[]>([]);
