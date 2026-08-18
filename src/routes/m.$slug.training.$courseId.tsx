@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import { ArrowLeft, Award, Clock, Users, CheckCircle2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { courseDuration } from "@/lib/course-duration";
 import { formatDuration } from "@/lib/format-duration";
 import { getLeafletSignedUrl } from "@/lib/leaflets.functions";
 import { CourseCopy } from "@/components/CourseCopy";
@@ -49,7 +50,7 @@ function BookCoursePage() {
   const course = data.course as {
     id: string; name: string; description: string | null; mode: string;
     scheduling_mode?: string;
-    duration_min: number; price: number | string; capacity: number | null;
+    duration_min: number; day_count?: number | null; days_consecutive?: boolean | null; day_duration_min?: number | null; price: number | string; capacity: number | null;
     cpd_hours: number | string | null; prerequisites: string | null;
     cover_image_url?: string | null;
     handout_url?: string | null; handout_name?: string | null;
@@ -181,7 +182,7 @@ function BookCoursePage() {
         <CardContent className="space-y-3 p-5">
           <h1 className="font-serif text-2xl">{course.name}</h1>
           <div className="flex flex-wrap gap-2 text-xs">
-            <Badge variant="outline"><Clock className="mr-1 h-3 w-3" /> {formatDuration(course.duration_min)}</Badge>
+            <Badge variant="outline"><Clock className="mr-1 h-3 w-3" /> {courseDuration(course)}</Badge>
             {course.capacity && <Badge variant="outline"><Users className="mr-1 h-3 w-3" /> up to {course.capacity}</Badge>}
             {course.cpd_hours != null && <Badge variant="outline"><Award className="mr-1 h-3 w-3" /> {course.cpd_hours} CPD</Badge>}
             <Badge>£{Number(course.price).toFixed(2)}</Badge>

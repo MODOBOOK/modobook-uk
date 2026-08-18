@@ -286,6 +286,23 @@ function CourseEditor({ id, onClose }: { id: string; onClose: () => void }) {
     ? `${typeof window !== "undefined" ? window.location.origin : ""}/m/${(q.data as { slug?: string })?.slug ?? ""}/training/${id}?preview=${previewToken}`
     : "";
 
+  type MultiDay = { day_count?: number | null; days_consecutive?: boolean | null; day_duration_min?: number | null };
+  const isMulti = form.mode === "multi_day";
+  const dayCount = Math.max(1, Number((form as Course & MultiDay).day_count ?? 1) || 1);
+  const perDayMin = Number(
+    (form as Course & MultiDay).day_duration_min ?? Math.round((Number(form.duration_min) || 0) / dayCount),
+  ) || 0;
+  const daysConsecutive = (form as Course & MultiDay).days_consecutive ?? true;
+  const patchMulti = (p: MultiDay) => setForm({ ...form, ...((p as unknown) as Partial<Course>) });
+  const setDayDuration = (mins: number) =>
+    patchMulti({ day_duration_min: mins, ...(isMulti ? { duration_min: mins * dayCount } as MultiDay : { duration_min: mins } as MultiDay) });
+  const setDayCount = (n: number) => {
+    const days = Math.max(1, n || 1);
+    patchMulti({ day_count: days, day_duration_min: perDayMin, ...({ duration_min: perDayMin * days } as MultiDay) });
+  };
+
+
+
   async function save() {
     if (!form?.name?.trim()) { toast.error("Course name is required"); return; }
     setSaving(true);
@@ -298,7 +315,10 @@ function CourseEditor({ id, onClose }: { id: string; onClose: () => void }) {
           description: form.description ?? null,
           cover_image_url: form.cover_image_url ?? null,
           mode: form.mode,
-          duration_min: Number(form.duration_min) || 120,
+          duration_min: isMulti ? Math.max(1, perDayMin * dayCount) : (Number(form.duration_min) || 120),
+          day_count: isMulti ? dayCount : 1,
+          days_consecutive: isMulti ? !!daysConsecutive : true,
+          day_duration_min: isMulti ? perDayMin : null,
           price: Number(form.price) || 0,
           deposit_amount: form.deposit_amount != null ? Number(form.deposit_amount) : null,
           payment_mode: form.payment_mode,
@@ -456,17 +476,16 @@ function CourseEditor({ id, onClose }: { id: string; onClose: () => void }) {
               </Select>
             </div>
             <div>
-              <Label>Duration</Label>
+              <Label>{isMulti ? "Hours per day" : "Duration"}</Label>
               <div className="flex items-center gap-2">
                 <Input
                   type="number"
                   min={0}
                   aria-label="Hours"
-                  value={Math.floor((Number(form.duration_min) || 0) / 60)}
+                  value={Math.floor(perDayMin / 60)}
                   onChange={(e) => {
                     const hrs = Math.max(0, Number(e.target.value) || 0);
-                    const mins = (Number(form.duration_min) || 0) % 60;
-                    setForm({ ...form, duration_min: hrs * 60 + mins });
+                    setDayDuration(hrs * 60 + (perDayMin % 60));
                   }}
                 />
                 <span className="text-xs text-muted-foreground">hrs</span>
@@ -475,17 +494,21 @@ function CourseEditor({ id, onClose }: { id: string; onClose: () => void }) {
                   min={0}
                   max={59}
                   aria-label="Minutes"
-                  value={(Number(form.duration_min) || 0) % 60}
+                  value={perDayMin % 60}
                   onChange={(e) => {
                     const mins = Math.min(59, Math.max(0, Number(e.target.value) || 0));
-                    const hrs = Math.floor((Number(form.duration_min) || 0) / 60);
-                    setForm({ ...form, duration_min: hrs * 60 + mins });
+                    setDayDuration(Math.floor(perDayMin / 60) * 60 + mins);
                   }}
                 />
                 <span className="text-xs text-muted-foreground">min</span>
               </div>
-              <p className="mt-1 text-[11px] text-muted-foreground">{formatDuration(form.duration_min)}</p>
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                {isMulti
+                  ? `${dayCount} day${dayCount === 1 ? "" : "s"} × ${formatDuration(perDayMin)} · ${formatDuration(perDayMin * dayCount)} total`
+                  : formatDuration(form.duration_min)}
+              </p>
             </div>
+
             {isSchedule && (
               <div>
                 <Label>Capacity (seats)</Label>
@@ -493,6 +516,46 @@ function CourseEditor({ id, onClose }: { id: string; onClose: () => void }) {
               </div>
             )}
           </div>
+
+          {isMulti && (
+            <div className="rounded-lg border bg-muted/30 p-4 space-y-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  <Label>Number of days</Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={30}
+                    value={dayCount}
+                    onChange={(e) => setDayCount(Number(e.target.value))}
+                  />
+                  <p className="mt-1 text-[11px] text-muted-foreground">
+                    Total course time: {formatDuration(perDayMin * dayCount)}
+                  </p>
+                </div>
+                <div className="flex items-center justify-between rounded-md border bg-background px-3 py-2">
+                  <div className="pr-3">
+                    <Label className="text-sm">Consecutive days</Label>
+                    <p className="text-[11px] text-muted-foreground">
+                      {daysConsecutive
+                        ? "Days run back-to-back (e.g. Mon–Wed)."
+                        : "Days are spread out — set each date separately."}
+                    </p>
+                  </div>
+                  <Switch
+                    checked={!!daysConsecutive}
+                    onCheckedChange={(v) => patchMulti({ days_consecutive: v })}
+                  />
+                </div>
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                {schedulingMode === "fixed"
+                  ? `Add ${dayCount} session date${dayCount === 1 ? "" : "s"} below${daysConsecutive ? " on consecutive days" : ""}.`
+                  : `Trainees book each day from your calendar using ${formatDuration(perDayMin)} slots.`}
+              </p>
+            </div>
+          )}
+
         </CardContent>
       </Card>
 

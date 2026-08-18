@@ -7,6 +7,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 
 import { CourseCopy } from "@/components/CourseCopy";
 import { SafeHtml } from "@/components/SafeHtml";
+import { courseDuration } from "@/lib/course-duration";
 import { formatDuration } from "@/lib/format-duration";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -84,6 +85,9 @@ type Course = {
   cover_image_url: string | null;
   mode: string;
   duration_min: number;
+  day_count?: number | null;
+  days_consecutive?: boolean | null;
+  day_duration_min?: number | null;
   price: number | string;
   capacity: number | null;
   cpd_hours: number | string | null;
@@ -235,7 +239,7 @@ function TrainingList() {
                     )}
                     <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
                       <span className="inline-flex items-center gap-1">
-                        <Clock className="h-3 w-3" /> {formatDuration(c.duration_min)}
+                        <Clock className="h-3 w-3" /> {courseDuration(c)}
                       </span>
                       {c.capacity && (
                         <span className="inline-flex items-center gap-1">
@@ -366,7 +370,7 @@ function CourseDetailsDialog({
             <div className="flex flex-wrap items-center gap-2">
               <Badge variant="outline">{MODE_LABEL[course.mode] ?? course.mode}</Badge>
               <Badge variant="outline" className="gap-1">
-                <Clock className="h-3 w-3" /> {formatDuration(course.duration_min)}
+                <Clock className="h-3 w-3" /> {courseDuration(course)}
               </Badge>
               {course.capacity && (
                 <Badge variant="outline" className="gap-1">

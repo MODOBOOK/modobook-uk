@@ -21,7 +21,7 @@ export const listPublicCourses = createServerFn({ method: "GET" })
 
     const { data: courses, error } = await supabase
       .from("training_courses")
-      .select("id, name, description, cover_image_url, mode, scheduling_mode, duration_min, price, deposit_amount, payment_mode, capacity, prerequisites, require_prereq_confirm, cpd_hours, kit_list, materials_html, handout_url, handout_name, sort_order, visibility")
+      .select("id, name, description, cover_image_url, mode, scheduling_mode, duration_min, day_count, days_consecutive, day_duration_min, price, deposit_amount, payment_mode, capacity, prerequisites, require_prereq_confirm, cpd_hours, kit_list, materials_html, handout_url, handout_name, sort_order, visibility")
       .eq("profile_id", profile.id)
       .eq("active", true)
       .in("visibility", ["live", "coming_soon"])
@@ -145,12 +145,15 @@ export const getTrainingAvailability = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: course } = await supabase
       .from("training_courses")
-      .select("id, profile_id, duration_min, scheduling_mode")
+      .select("id, profile_id, duration_min, day_count, day_duration_min, scheduling_mode")
       .eq("id", data.courseId)
       .maybeSingle();
     if (!course) throw new Error("Course not found");
     const profileId = course.profile_id;
-    const duration = Number(course.duration_min ?? 120);
+    const dayCount = Math.max(1, Number((course as { day_count?: number }).day_count ?? 1));
+    const perDay = Number((course as { day_duration_min?: number | null }).day_duration_min ?? 0);
+    // Multi-day courses book one day at a time, so slots use the per-day length
+    const duration = dayCount > 1 && perDay > 0 ? perDay : Number(course.duration_min ?? 120);
 
     const [y, m, d] = data.date.split("-").map(Number);
     const dow = new Date(Date.UTC(y, m - 1, d)).getUTCDay();
@@ -213,12 +216,15 @@ export const getTrainingAvailableDays = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: course } = await supabase
       .from("training_courses")
-      .select("id, profile_id, duration_min")
+      .select("id, profile_id, duration_min, day_count, day_duration_min")
       .eq("id", data.courseId)
       .maybeSingle();
     if (!course) return { days: [] as string[] };
     const profileId = course.profile_id;
-    const duration = Number(course.duration_min ?? 120);
+    const dayCount = Math.max(1, Number((course as { day_count?: number }).day_count ?? 1));
+    const perDay = Number((course as { day_duration_min?: number | null }).day_duration_min ?? 0);
+    // Multi-day courses book one day at a time, so slots use the per-day length
+    const duration = dayCount > 1 && perDay > 0 ? perDay : Number(course.duration_min ?? 120);
 
     const [ys, ms] = data.month.split("-").map(Number);
     const daysInMonth = new Date(Date.UTC(ys, ms, 0)).getUTCDate();
