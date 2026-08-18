@@ -108,7 +108,11 @@ type TreatmentForm = {
   prescriber_note: string | null;
   booking_cap: number | null;
   color: string | null;
+  leaflet_title: string | null;
+  leaflet_html: string | null;
+  leaflet_url: string | null;
 };
+
 
 
 
