@@ -26,6 +26,8 @@ export type CourseInput = {
   certificate_template_url?: string | null;
   materials_html?: string | null;
   kit_list?: string | null;
+  handout_url?: string | null;
+  handout_name?: string | null;
   active?: boolean;
   visibility?: CourseVisibility;
   scheduling_mode?: SchedulingMode;

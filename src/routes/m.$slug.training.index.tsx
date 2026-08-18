@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SafeHtml } from "@/components/SafeHtml";
+import { formatDuration } from "@/lib/format-duration";
 import {
   GraduationCap,
   Award,
@@ -198,7 +199,7 @@ function TrainingList() {
                     )}
                     <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
                       <span className="inline-flex items-center gap-1">
-                        <Clock className="h-3 w-3" /> {c.duration_min} min
+                        <Clock className="h-3 w-3" /> {formatDuration(c.duration_min)}
                       </span>
                       {c.capacity && (
                         <span className="inline-flex items-center gap-1">
