@@ -28,7 +28,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { GraduationCap, Plus, Trash2, ArrowLeft, Users, Calendar as CalendarIcon, Award, Loader2, Copy, Check, ExternalLink, PencilLine } from "lucide-react";
+import { GraduationCap, Plus, Trash2, ArrowLeft, Users, Calendar as CalendarIcon, Award, Loader2, Copy, Check, ExternalLink, PencilLine, ArrowUp, ArrowDown } from "lucide-react";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -159,7 +159,7 @@ function TrainingPage() {
         </Card>
       ) : (
         <div className="grid gap-3">
-          {courses.map((c) => (
+          {courses.map((c, idx) => (
             <Card key={c.id} className="hover:shadow-md transition-shadow">
               <CardContent className="flex flex-wrap items-center gap-3 p-4">
                 <div className="flex-1 min-w-0">
@@ -187,6 +187,22 @@ function TrainingPage() {
                     £{Number(c.price).toFixed(2)} · {formatDuration(c.duration_min)}
                     {c.capacity ? ` · up to ${c.capacity} trainees` : ""}
                   </p>
+                </div>
+                <div className="flex items-center">
+                  <Button
+                    size="icon" variant="ghost" aria-label="Move up"
+                    disabled={idx === 0 || reorderMut.isPending}
+                    onClick={() => reorderMut.mutate({ index: idx, dir: -1 })}
+                  >
+                    <ArrowUp className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    size="icon" variant="ghost" aria-label="Move down"
+                    disabled={idx === courses.length - 1 || reorderMut.isPending}
+                    onClick={() => reorderMut.mutate({ index: idx, dir: 1 })}
+                  >
+                    <ArrowDown className="h-4 w-4" />
+                  </Button>
                 </div>
                 <Button size="sm" variant="outline" onClick={() => setEditingId(c.id)}>Edit</Button>
                 <Button
