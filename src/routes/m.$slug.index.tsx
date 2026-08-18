@@ -486,14 +486,19 @@ function BookPage() {
     </a>
   ) : null;
 
-  const [locationId, setLocationId] = useState<string | null>(
-    locations.length === 1 ? locations[0]!.id : null,
+  // "Coming soon" locations are visible but cannot be booked yet.
+  const bookableLocations = locations.filter(
+    (l) => !(l as { coming_soon?: boolean | null }).coming_soon,
   );
-  // Auto-select when only one location exists (no need for the patient to click)
+  const [locationId, setLocationId] = useState<string | null>(
+    bookableLocations.length === 1 ? bookableLocations[0]!.id : null,
+  );
+  // Auto-select when only one bookable location exists (no need for the patient to click)
   useEffect(() => {
-    if (locations.length === 1 && !locationId) {
-      setLocationId(locations[0]!.id);
+    if (bookableLocations.length === 1 && !locationId) {
+      setLocationId(bookableLocations[0]!.id);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [locations, locationId]);
   const [directionsOpen, setDirectionsOpen] = useState(false);
   const [careGuideOpen, setCareGuideOpen] = useState(false);
@@ -1312,7 +1317,10 @@ function BookPage() {
           <div className={`grid gap-4 ${locations.length > 1 ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"}`}>
             {locations.map((loc) => {
               const selected = loc.id === locationId;
-              const singleLocation = locations.length === 1;
+              const comingSoon = !!(loc as { coming_soon?: boolean | null }).coming_soon;
+              const comingSoonLabel =
+                (loc as { coming_soon_label?: string | null }).coming_soon_label || "Coming soon";
+              const singleLocation = bookableLocations.length === 1 && !comingSoon;
               const photo = loc.image_url || profile.avatar_url;
               const locPracts = locationPractitioners
                 .filter((lp) => lp.location_id === loc.id)
@@ -1333,6 +1341,14 @@ function BookPage() {
                       {loc.name}
                       {loc.is_primary && !singleLocation && <Star className="ml-1 inline h-3 w-3" fill="currentColor" />}
                     </div>
+                    {comingSoon && (
+                      <span
+                        className="mt-1 inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
+                        style={{ backgroundColor: `${brand}18`, color: brand }}
+                      >
+                        {comingSoonLabel}
+                      </span>
+                    )}
                     {formatAddress(loc) && (
                       <div className="mt-1 text-xs opacity-70">{formatAddress(loc)}</div>
                     )}
@@ -1349,8 +1365,13 @@ function BookPage() {
                     backgroundColor: menuCardBg,
                   }}
                 >
-                  {singleLocation ? (
-                    <div className="flex w-full items-center gap-3 text-left">{cardInner}</div>
+                  {singleLocation || comingSoon ? (
+                    <div
+                      className="flex w-full items-center gap-3 text-left"
+                      style={comingSoon ? { opacity: 0.65 } : undefined}
+                    >
+                      {cardInner}
+                    </div>
                   ) : (
                     <button
                       type="button"
