@@ -1,0 +1,1 @@
+UPDATE public.clinic_theme SET primary_color = '#2F4349', menu_price_color = '#3F7F7C', menu_category_bg = '#3F7F7C', menu_category_text = '#F7F5EF' WHERE profile_id = 'b8118d60-745e-4130-8008-085bab10df35';
