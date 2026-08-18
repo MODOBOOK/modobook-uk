@@ -3,7 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getPractitionerBio } from "@/lib/practitioner-public.functions";
 import { getPublicRewardsOverview } from "@/lib/rewards.functions";
-import { listPublicCourses } from "@/lib/training-public.functions";
 import { listPublicGiftCards } from "@/lib/gift-cards.functions";
 import { Button } from "@/components/ui/button";
 import { UserCircle2 } from "lucide-react";
@@ -261,7 +260,6 @@ function ModoLayout() {
             <nav className="flex shrink-0 items-center gap-0.5 text-sm sm:gap-1">
               <TabLink slug={slug} to="/m/$slug" label={theme?.header_button_label || "Book"} exact />
               <TabLink slug={slug} to="/m/$slug/about" label="About" />
-              <TrainingTabLink slug={slug} />
               <RewardsTabLink slug={slug} />
               <TabLink slug={slug} to="/m/$slug/reviews" label="Reviews" />
               <Link to="/m/$slug/account" params={{ slug }} aria-label="My account">
@@ -334,18 +332,6 @@ function RewardsTabLink({ slug }: { slug: string }) {
   });
   if (!q.data || q.data.visible !== true) return null;
   return <TabLink slug={slug} to="/m/$slug/rewards" label="Rewards" />;
-}
-
-function TrainingTabLink({ slug }: { slug: string }) {
-  const fetchCourses = useServerFn(listPublicCourses);
-  const q = useQuery({
-    queryKey: ["public-training-visible", slug],
-    queryFn: () => fetchCourses({ data: { slug } }),
-    staleTime: 60_000,
-  });
-  const courses = (q.data?.courses ?? []) as Array<unknown>;
-  if (courses.length === 0) return null;
-  return <TabLink slug={slug} to="/m/$slug/training" label="Training" />;
 }
 
 function GiftCardsTabLink({ slug }: { slug: string }) {
