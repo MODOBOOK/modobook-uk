@@ -16,6 +16,9 @@ export type CourseInput = {
   cover_image_url?: string | null;
   mode?: TrainingMode;
   duration_min?: number;
+  day_count?: number;
+  days_consecutive?: boolean;
+  day_duration_min?: number | null;
   price?: number;
   deposit_amount?: number | null;
   payment_mode?: PaymentMode;
