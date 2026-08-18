@@ -65,11 +65,16 @@ export const getBookingContext = createServerFn({ method: "GET" })
 
     const { data: locations } = await sb
       .from("locations")
-      .select("id, profile_id, name, address_line1, address_line2, city, postcode, country, is_primary, display_order, active, created_at, updated_at, image_url")
+      .select("id, profile_id, name, address_line1, address_line2, city, postcode, country, is_primary, display_order, active, created_at, updated_at, image_url, coming_soon, coming_soon_label")
       .eq("profile_id", profile.id)
       .eq("active", true)
       .eq("is_public", true)
+      .order("display_order", { ascending: true, nullsFirst: false })
       .order("is_primary", { ascending: false });
+    // "Coming soon" locations are announced on the clinic page but not bookable.
+    const bookableLocations = (locations ?? []).filter(
+      (l) => !(l as { coming_soon?: boolean | null }).coming_soon,
+    );
 
     const { data: rules } = await sb
       .from("availability_rules")
@@ -107,7 +112,7 @@ export const getBookingContext = createServerFn({ method: "GET" })
       profileId: profile.id,
       clinicName: profile.clinic_name,
       treatment,
-      locations: locations ?? [],
+      locations: bookableLocations,
       rules: rules ?? [],
       theme: theme ?? null,
       brandColor: (profile as { brand_color?: string | null }).brand_color ?? null,
@@ -224,11 +229,16 @@ export const getMultiBookingContext = createServerFn({ method: "GET" })
 
     const { data: locations } = await sb
       .from("locations")
-      .select("id, profile_id, name, address_line1, address_line2, city, postcode, country, is_primary, display_order, active, created_at, updated_at, image_url")
+      .select("id, profile_id, name, address_line1, address_line2, city, postcode, country, is_primary, display_order, active, created_at, updated_at, image_url, coming_soon, coming_soon_label")
       .eq("profile_id", profile.id)
       .eq("active", true)
       .eq("is_public", true)
+      .order("display_order", { ascending: true, nullsFirst: false })
       .order("is_primary", { ascending: false });
+    // "Coming soon" locations are announced on the clinic page but not bookable.
+    const bookableLocations = (locations ?? []).filter(
+      (l) => !(l as { coming_soon?: boolean | null }).coming_soon,
+    );
 
     const { data: rules } = await sb
       .from("availability_rules")
@@ -279,7 +289,7 @@ export const getMultiBookingContext = createServerFn({ method: "GET" })
       clinicName: profile.clinic_name,
       treatments: treatments ?? [],
       pricing: pricing ?? [],
-      locations: locations ?? [],
+      locations: bookableLocations,
       rules: rules ?? [],
       theme: theme ?? null,
       brandColor: (profile as { brand_color?: string | null }).brand_color ?? null,
@@ -437,7 +447,7 @@ export const getMonthAvailability = createServerFn({ method: "GET" })
 
     const { data: rules } = await sb
       .from("availability_rules")
-      .select("day_of_week,location_id,cycle_length,weeks_mask")
+      .select("day_of_week,location_id,cycle_length,weeks_mask,effective_from,effective_to")
       .eq("profile_id", data.profileId);
     const { data: blocked } = await sb
       .from("blocked_dates")

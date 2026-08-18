@@ -6,6 +6,10 @@
 export type RotaRule = {
   cycle_length?: number | null;
   weeks_mask?: number | null;
+  /** Rota start date — the shift does not apply before this date. */
+  effective_from?: string | null;
+  /** Rota end date — the shift stops applying after this date. */
+  effective_to?: string | null;
 };
 
 export function toMondayIso(iso: string): string {
@@ -26,6 +30,8 @@ export function weekLetterFor(iso: string, anchorIso: string | null | undefined,
 }
 
 export function ruleAppliesOnDate(rule: RotaRule, iso: string, anchorIso: string | null | undefined): boolean {
+  if (rule.effective_from && iso < rule.effective_from) return false;
+  if (rule.effective_to && iso > rule.effective_to) return false;
   const cycle = rule.cycle_length ?? 1;
   const mask = rule.weeks_mask ?? 1;
   if (cycle <= 1) return true;

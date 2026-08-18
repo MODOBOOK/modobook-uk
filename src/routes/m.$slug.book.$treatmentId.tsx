@@ -28,8 +28,9 @@ import { AddressAutocomplete } from "@/components/AddressAutocomplete";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 type Rule = Database["public"]["Tables"]["availability_rules"]["Row"];
-type Loc = Omit<Database["public"]["Tables"]["locations"]["Row"], "is_public" | "notes" | "phone"> &
-  Partial<Pick<Database["public"]["Tables"]["locations"]["Row"], "is_public" | "notes" | "phone">>;
+type LocOptional = "is_public" | "notes" | "phone" | "coming_soon" | "coming_soon_label";
+type Loc = Omit<Database["public"]["Tables"]["locations"]["Row"], LocOptional> &
+  Partial<Pick<Database["public"]["Tables"]["locations"]["Row"], LocOptional>>;
 
 
 function toIsoDate(d: Date) {
@@ -299,7 +300,7 @@ function BookTreatmentPage() {
         (r: Rule) =>
           r.day_of_week === dow &&
           (!locationId || !r.location_id || r.location_id === locationId) &&
-          ruleAppliesOnDate(r as unknown as { cycle_length?: number; weeks_mask?: number }, date, anchor),
+          ruleAppliesOnDate(r as unknown as { cycle_length?: number; weeks_mask?: number; effective_from?: string | null; effective_to?: string | null }, date, anchor),
       );
     },
     [ctx.rules, dow, locationId, date, (ctx as { rotaAnchor?: string | null }).rotaAnchor],

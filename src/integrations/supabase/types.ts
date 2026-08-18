@@ -1201,6 +1201,8 @@ export type Database = {
           created_at: string
           cycle_length: number
           day_of_week: number
+          effective_from: string | null
+          effective_to: string | null
           end_time: string
           id: string
           location_id: string | null
@@ -1215,6 +1217,8 @@ export type Database = {
           created_at?: string
           cycle_length?: number
           day_of_week: number
+          effective_from?: string | null
+          effective_to?: string | null
           end_time: string
           id?: string
           location_id?: string | null
@@ -1229,6 +1233,8 @@ export type Database = {
           created_at?: string
           cycle_length?: number
           day_of_week?: number
+          effective_from?: string | null
+          effective_to?: string | null
           end_time?: string
           id?: string
           location_id?: string | null
@@ -3440,6 +3446,8 @@ export type Database = {
           address_line1: string | null
           address_line2: string | null
           city: string | null
+          coming_soon: boolean
+          coming_soon_label: string | null
           country: string | null
           created_at: string
           display_order: number
@@ -3459,6 +3467,8 @@ export type Database = {
           address_line1?: string | null
           address_line2?: string | null
           city?: string | null
+          coming_soon?: boolean
+          coming_soon_label?: string | null
           country?: string | null
           created_at?: string
           display_order?: number
@@ -3478,6 +3488,8 @@ export type Database = {
           address_line1?: string | null
           address_line2?: string | null
           city?: string | null
+          coming_soon?: boolean
+          coming_soon_label?: string | null
           country?: string | null
           created_at?: string
           display_order?: number

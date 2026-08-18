@@ -15,8 +15,8 @@ export const listMyLocations = createServerFn({ method: "GET" })
       .from("locations")
       .select("*")
       .eq("profile_id", profile.id)
+      .order("display_order", { ascending: true, nullsFirst: false })
       .order("is_primary", { ascending: false })
-      .order("display_order")
       .order("created_at");
     if (error) throw error;
     return data ?? [];
@@ -36,7 +36,44 @@ type LocationInput = {
   active?: boolean;
   is_public?: boolean;
   image_url?: string | null;
+  coming_soon?: boolean;
+  coming_soon_label?: string | null;
 };
+
+/** Move a location up or down in the order shown to patients. */
+export const reorderLocation = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { id: string; direction: "up" | "down" }) => input)
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: profile } = await supabase
+      .from("profiles").select("id").eq("user_id", userId).maybeSingle();
+    if (!profile) throw new Error("Profile not found");
+    const { data: rows } = await supabase
+      .from("locations")
+      .select("id, display_order, is_primary, created_at")
+      .eq("profile_id", profile.id)
+      .order("display_order", { ascending: true, nullsFirst: false })
+      .order("is_primary", { ascending: false })
+      .order("created_at");
+    const list = rows ?? [];
+    const idx = list.findIndex((l) => l.id === data.id);
+    if (idx < 0) throw new Error("Location not found");
+    const swapWith = data.direction === "up" ? idx - 1 : idx + 1;
+    if (swapWith < 0 || swapWith >= list.length) return { ok: true };
+    const reordered = [...list];
+    const tmp = reordered[idx]!;
+    reordered[idx] = reordered[swapWith]!;
+    reordered[swapWith] = tmp;
+    for (let i = 0; i < reordered.length; i++) {
+      await supabase
+        .from("locations")
+        .update({ display_order: i })
+        .eq("id", reordered[i]!.id)
+        .eq("profile_id", profile.id);
+    }
+    return { ok: true };
+  });
 
 export const upsertLocation = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -71,6 +108,8 @@ export const upsertLocation = createServerFn({ method: "POST" })
       active: data.active ?? true,
       is_public: data.is_public ?? true,
       image_url: data.image_url ?? null,
+      coming_soon: data.coming_soon ?? false,
+      coming_soon_label: data.coming_soon_label || null,
     };
 
     if (data.id) {

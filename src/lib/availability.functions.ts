@@ -36,6 +36,8 @@ type RuleInput = {
   cycle_length?: number;
   weeks_mask?: number;
   practitioner_id?: string | null;
+  effective_from?: string | null;
+  effective_to?: string | null;
 };
 
 
@@ -60,6 +62,8 @@ export const upsertAvailabilityRule = createServerFn({ method: "POST" })
       cycle_length: cycle,
       weeks_mask: mask,
       practitioner_id: data.practitioner_id ?? null,
+      effective_from: data.effective_from || null,
+      effective_to: data.effective_to || null,
     };
 
     if (data.id) {
