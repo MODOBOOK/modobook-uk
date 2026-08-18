@@ -87,7 +87,7 @@ function TrainingPage() {
             <GraduationCap className="h-6 w-6" /> Training
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Create aesthetics training courses trainees can book from your clinic page.
+            Courses live on their own public training page — share the link on its own.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -97,6 +97,40 @@ function TrainingPage() {
           </Button>
         </div>
       </div>
+
+      <Card>
+        <CardContent className="flex flex-wrap items-center justify-between gap-4 py-4">
+          <div className="min-w-0">
+            <div className="font-medium">Your training page</div>
+            <p className="text-sm text-muted-foreground break-all">
+              {publicUrl ? publicUrl.replace("https://", "") : "Set your booking link to publish"}
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Dates come from your clinic calendar, or set fixed dates per course.
+            </p>
+          </div>
+          {publicUrl && (
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  navigator.clipboard.writeText(publicUrl);
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 2000);
+                  toast.success("Training link copied");
+                }}
+              >
+                {copied ? <Check className="mr-2 h-4 w-4" /> : <Copy className="mr-2 h-4 w-4" />} Copy link
+              </Button>
+              <a href={publicUrl} target="_blank" rel="noreferrer">
+                <Button size="sm" variant="ghost"><ExternalLink className="mr-2 h-4 w-4" /> Open</Button>
+              </a>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
 
       {q.isLoading ? (
         <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin" /></div>
