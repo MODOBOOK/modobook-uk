@@ -136,13 +136,13 @@ function BookCoursePage() {
       <div className="mx-auto max-w-lg space-y-4 px-4 py-12 text-center">
         <CheckCircle2 className="mx-auto h-12 w-12 text-emerald-600" />
         <h1 className="font-serif text-2xl">
-          {isAvailability ? "You're booked in" : "Booking request sent"}
+          {search.status === "paid" || isAvailability ? "You're booked in" : "Booking request sent"}
         </h1>
         <p className="text-sm text-muted-foreground">
           {search.status === "paid"
             ? "Payment received — your place is confirmed and we've emailed your details."
             : isAvailability
-            ? `Thanks ${name.split(" ")[0]} — your slot is confirmed. You'll get an email shortly.`
+            ? `Thanks${name ? ` ${name.split(" ")[0]}` : ""} — your slot is confirmed. You'll get an email shortly.`
             : `Thanks ${name.split(" ")[0]} — the practitioner will confirm your place shortly and email you the details.`}
         </p>
         <Link to="/m/$slug" params={{ slug }}>
