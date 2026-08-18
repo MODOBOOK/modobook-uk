@@ -23,7 +23,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { GraduationCap, Plus, Trash2, ArrowLeft, Users, Calendar as CalendarIcon, Award, Loader2 } from "lucide-react";
+import { GraduationCap, Plus, Trash2, ArrowLeft, Users, Calendar as CalendarIcon, Award, Loader2, Copy, Check, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 
