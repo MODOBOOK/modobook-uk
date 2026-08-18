@@ -402,7 +402,10 @@ export const getDayAvailability = createServerFn({ method: "GET" })
     // An ad-hoc slot added for this date is an explicit opening, so it beats a
     // closed/blocked day. The daily cap still applies.
     const capReached = dailyCap != null && activeAppts.length >= Number(dailyCap);
-    if (scopedOverrides.length > 0 && !capReached) isBlocked = false;
+    const openingOverrides = hasLocationSpecificBlock
+      ? scopedOverrides.filter((o) => o.location_id === data.locationId)
+      : scopedOverrides;
+    if (openingOverrides.length > 0 && !capReached) isBlocked = false;
 
 
 
