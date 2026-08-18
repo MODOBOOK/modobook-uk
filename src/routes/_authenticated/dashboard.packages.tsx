@@ -52,7 +52,14 @@ type Pkg = {
   limited_claimed?: number | null;
 };
 type Treatment = { id: string; name: string; price: number | null };
-type Category = { id: string; name: string; parent_id: string | null };
+type Category = {
+  id: string;
+  name: string;
+  parent_id: string | null;
+  is_limited?: boolean | null;
+  limited_starts_at?: string | null;
+  limited_ends_at?: string | null;
+};
 
 type PriceMode = "custom" | "percent";
 
