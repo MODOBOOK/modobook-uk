@@ -452,9 +452,19 @@ function TreatmentDialog({
   const [sessionIntervalUnit, setSessionIntervalUnit] = useState<"days" | "weeks">(
     initialSessionIntervalDays != null && initialSessionIntervalDays % 7 === 0 ? "weeks" : "days",
   );
+  const [leafletTitle, setLeafletTitle] = useState<string>(
+    (treatment as { leaflet_title?: string | null } | null)?.leaflet_title ?? "",
+  );
+  const [leafletHtml, setLeafletHtml] = useState<string>(
+    (treatment as { leaflet_html?: string | null } | null)?.leaflet_html ?? "",
+  );
+  const [leafletUrl, setLeafletUrl] = useState<string>(
+    (treatment as { leaflet_url?: string | null } | null)?.leaflet_url ?? "",
+  );
   const [aftercareHtml, setAftercareHtml] = useState<string>(
     (treatment as { aftercare_html?: string | null } | null)?.aftercare_html ?? "",
   );
+
   const [aftercareDelay, setAftercareDelay] = useState<number>(
     (treatment as { aftercare_delay_hours?: number } | null)?.aftercare_delay_hours ?? 2,
   );
