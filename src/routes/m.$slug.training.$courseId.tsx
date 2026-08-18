@@ -18,7 +18,11 @@ import { getLeafletSignedUrl } from "@/lib/leaflets.functions";
 import { CourseCopy } from "@/components/CourseCopy";
 
 export const Route = createFileRoute("/m/$slug/training/$courseId")({
-  validateSearch: (s: Record<string, unknown>): { preview?: string } => ({ preview: typeof s.preview === "string" ? s.preview : undefined }),
+  validateSearch: (s: Record<string, unknown>): { preview?: string; booking?: string; status?: string } => ({
+    preview: typeof s.preview === "string" ? s.preview : undefined,
+    booking: typeof s.booking === "string" ? s.booking : undefined,
+    status: typeof s.status === "string" ? s.status : undefined,
+  }),
   loaderDeps: ({ search }) => ({ preview: search.preview ?? null }),
   loader: ({ params, deps }) => getPublicCourse({ data: { slug: params.slug, courseId: params.courseId, previewToken: deps.preview } }),
   head: ({ loaderData }) => ({
@@ -74,7 +78,8 @@ function BookCoursePage() {
   const [notes, setNotes] = useState("");
   const [prereq, setPrereq] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [done, setDone] = useState(false);
+  const search = Route.useSearch();
+  const [done, setDone] = useState(search.status === "paid");
 
   const dayIso = pickedDate ? toIsoDate(pickedDate) : null;
   const slotsQuery = useQuery({
@@ -134,7 +139,9 @@ function BookCoursePage() {
           {isAvailability ? "You're booked in" : "Booking request sent"}
         </h1>
         <p className="text-sm text-muted-foreground">
-          {isAvailability
+          {search.status === "paid"
+            ? "Payment received — your place is confirmed and we've emailed your details."
+            : isAvailability
             ? `Thanks ${name.split(" ")[0]} — your slot is confirmed. You'll get an email shortly.`
             : `Thanks ${name.split(" ")[0]} — the practitioner will confirm your place shortly and email you the details.`}
         </p>
