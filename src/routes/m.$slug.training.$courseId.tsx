@@ -15,6 +15,7 @@ import { ArrowLeft, Award, Clock, Users, CheckCircle2, Loader2 } from "lucide-re
 import { toast } from "sonner";
 import { formatDuration } from "@/lib/format-duration";
 import { getLeafletSignedUrl } from "@/lib/leaflets.functions";
+import { CourseCopy } from "@/components/CourseCopy";
 
 export const Route = createFileRoute("/m/$slug/training/$courseId")({
   validateSearch: (s: Record<string, unknown>): { preview?: string } => ({ preview: typeof s.preview === "string" ? s.preview : undefined }),
@@ -162,7 +163,7 @@ function BookCoursePage() {
             {course.cpd_hours != null && <Badge variant="outline"><Award className="mr-1 h-3 w-3" /> {course.cpd_hours} CPD</Badge>}
             <Badge>£{Number(course.price).toFixed(2)}</Badge>
           </div>
-          {course.description && <p className="text-sm text-muted-foreground">{course.description}</p>}
+          {course.description && <CourseCopy text={course.description} />}
         </CardContent>
       </Card>
 
