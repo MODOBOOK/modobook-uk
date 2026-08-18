@@ -107,16 +107,16 @@ function TrainingPage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-6 p-4 md:p-6">
-      <div className="flex items-start justify-between gap-4">
-        <div>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
           <h1 className="flex items-center gap-2 text-2xl font-bold">
-            <GraduationCap className="h-6 w-6" /> Training
+            <GraduationCap className="h-6 w-6 shrink-0" /> Training
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Courses live on their own public training page — share the link on its own.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 sm:justify-end">
           <Button variant="outline" onClick={() => setEditingPage(true)}>
             <PencilLine className="mr-2 h-4 w-4" /> Edit page
           </Button>
