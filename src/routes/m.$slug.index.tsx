@@ -1730,7 +1730,7 @@ function BookPage() {
       })()}
       {/* Treatments + Packages */}
 
-      {locationId && (hasTraining || !chooserOn || mode === "know" || mode === "consult" || (mode === "unsure" && concernsConfirmed && pickedConcernIds.length > 0)) ? (
+      {locationId && (!chooserOn || mode === "know" || mode === "consult" || (mode === "unsure" && concernsConfirmed && pickedConcernIds.length > 0)) ? (
         <section className="mx-auto mt-10 max-w-3xl px-4 pb-32">
           {chooserOn && (
             <div className="mb-4 flex items-center justify-between">
@@ -1819,7 +1819,7 @@ function BookPage() {
             return (
               <>
               <Tabs defaultValue="treatments" className="w-full">
-                <TabsList className="grid w-full h-auto" style={{ backgroundColor: `${brand}10`, gridTemplateColumns: `repeat(${1 + (visiblePackages.length > 0 || packagesTabBuilders.length > 0 ? 1 : 0) + (hasGiftCards ? 1 : 0) + (hasTraining ? 1 : 0) + (hasClinicVisits ? 1 : 0)}, minmax(0, 1fr))` }}>
+                <TabsList className="grid w-full h-auto" style={{ backgroundColor: `${brand}10`, gridTemplateColumns: `repeat(${1 + (visiblePackages.length > 0 || packagesTabBuilders.length > 0 ? 1 : 0) + (hasGiftCards ? 1 : 0) + (hasClinicVisits ? 1 : 0)}, minmax(0, 1fr))` }}>
                   <TabsTrigger value="treatments" className="text-sm sm:text-base py-2.5">Treatments</TabsTrigger>
                   {(visiblePackages.length > 0 || packagesTabBuilders.length > 0) && (
 
@@ -1838,11 +1838,6 @@ function BookPage() {
                     <TabsTrigger value="prescribing" className="text-sm sm:text-base py-2.5">
                       <Stethoscope className="mr-1.5 h-4 w-4" />
                       Prescribing clinic
-                    </TabsTrigger>
-                  )}
-                  {hasTraining && (
-                    <TabsTrigger value="training" className="text-sm sm:text-base py-2.5">
-                      Training
                     </TabsTrigger>
                   )}
                 </TabsList>
@@ -2350,34 +2345,6 @@ function BookPage() {
                 )}
 
 
-                {hasTraining && (
-                  <TabsContent value="training" className="mt-4">
-                    <div className="grid gap-3">
-                      {trainingCourses.map((c) => (
-                        <Card key={c.id} className="overflow-hidden">
-                          {c.cover_image_url && (
-                            <img src={c.cover_image_url} alt={c.name} className="h-32 w-full object-cover" />
-                          )}
-                          <CardContent className="space-y-2 p-4">
-                            <div className="flex flex-wrap items-center justify-between gap-2">
-                              <h3 className="font-serif text-lg" style={{ color: brand }}>{c.name}</h3>
-                              <span className="text-sm font-semibold" style={{ color: brand }}>£{Number(c.price).toFixed(2)}</span>
-                            </div>
-                            {c.description && <p className="text-sm opacity-80">{c.description}</p>}
-                            <div className="flex flex-wrap gap-3 text-xs opacity-70">
-                              <span>{c.duration_min} min</span>
-                              <span>{c.mode === "one_to_one" ? "1:1" : c.mode === "group" ? "Group" : "Multi-day"}</span>
-                              {c.cpd_hours != null && <span>{c.cpd_hours} CPD hours</span>}
-                            </div>
-                            <Link to="/m/$slug/training/$courseId" params={{ slug, courseId: c.id }}>
-                              <Button size="sm" style={{ backgroundColor: brand, color: "#fff" }}>Book this course</Button>
-                            </Link>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  </TabsContent>
-                )}
 
 
 
