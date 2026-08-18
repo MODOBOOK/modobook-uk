@@ -219,6 +219,9 @@ export const createTrainingBooking = createServerFn({ method: "POST" })
     appointment_end?: string;   // HH:MM
     location_id?: string | null;
     notes?: string;
+    // Where Stripe should send the trainee back to after checkout.
+    slug?: string;
+    return_origin?: string;
   }) => i)
   .handler(async ({ data }) => {
     const supabase = getPub();
@@ -323,5 +326,92 @@ export const createTrainingBooking = createServerFn({ method: "POST" })
       .select("id")
       .single();
     if (error) throw error;
-    return { id: row.id };
+
+    // Fixed-date courses: put the session on the practitioner's calendar too,
+    // so training shows up alongside treatments.
+    if (!appointment_id && data.session_id) {
+      try {
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        const { data: sess } = await supabaseAdmin
+          .from("training_course_sessions")
+          .select("session_date, start_time, end_time, location_id")
+          .eq("id", data.session_id)
+          .maybeSingle();
+        if (sess) {
+          const { data: appt } = await supabaseAdmin
+            .from("appointments")
+            .insert({
+              profile_id: course.profile_id,
+              patient_name: data.trainee_name.trim(),
+              patient_email: data.trainee_email.trim().toLowerCase(),
+              patient_phone: data.trainee_phone?.trim() || null,
+              scheduled_date: sess.session_date,
+              start_time: sess.start_time,
+              end_time: sess.end_time,
+              location_id: sess.location_id ?? data.location_id ?? null,
+              status: "confirmed",
+              payment_status: "pending",
+              service_name: `Training — ${course.name}`,
+              service_price_cents: Math.round(Number(course.price ?? 0) * 100),
+              notes: data.notes?.trim() || null,
+            } as never)
+            .select("id")
+            .single();
+          if (appt) {
+            appointment_id = appt.id;
+            await supabaseAdmin
+              .from("training_bookings")
+              .update({
+                appointment_id: appt.id,
+                appointment_date: sess.session_date,
+                appointment_start: sess.start_time,
+                appointment_end: sess.end_time,
+              } as never)
+              .eq("id", row.id);
+          }
+        }
+      } catch (e) {
+        console.error("[training] calendar appointment failed", e);
+      }
+    }
+
+    // Take payment online when the clinic has Stripe connected and the course
+    // has a price. The webhook confirms the booking once the money lands.
+    const price = Number(course.price ?? 0);
+    let checkoutUrl: string | null = null;
+    if (price > 0 && data.return_origin && data.slug) {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: prof } = await supabaseAdmin
+        .from("profiles")
+        .select("stripe_connect_account_id, clinic_name")
+        .eq("id", course.profile_id)
+        .maybeSingle();
+      if (prof?.stripe_connect_account_id) {
+        const { createCheckoutSession } = await import("./stripe.server");
+        const base = `${data.return_origin.replace(/\/$/, "")}/m/${data.slug}/training/${course.id}?booking=${row.id}`;
+        const session = await createCheckoutSession({
+          accountId: prof.stripe_connect_account_id,
+          lineItems: [{
+            quantity: 1,
+            price_data: {
+              currency: "gbp",
+              unit_amount: Math.round(price * 100),
+              product_data: { name: `Training — ${course.name}` },
+            },
+          }],
+          successUrl: `${base}&status=paid`,
+          cancelUrl: `${base}&status=cancelled`,
+          customerEmail: data.trainee_email.trim().toLowerCase(),
+          metadata: {
+            kind: "training_booking",
+            training_booking_id: row.id,
+          },
+          descriptorName: prof.clinic_name,
+          idempotencyKey: `training-${row.id}`,
+        });
+        checkoutUrl = session.url ?? null;
+      }
+    }
+
+    return { id: row.id as string, checkoutUrl };
   });
