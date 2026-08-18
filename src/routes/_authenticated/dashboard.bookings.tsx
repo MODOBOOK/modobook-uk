@@ -265,7 +265,7 @@ function BookingsPage() {
     const dayRules = (rulesByDow.get(dow) ?? []).filter(
       (r) =>
         (locationFilter === "all" || r.location_id == null || r.location_id === locationFilter) &&
-        ruleAppliesOnDate(r as unknown as { cycle_length?: number; weeks_mask?: number }, iso, rotaAnchor),
+        ruleAppliesOnDate(r as unknown as { cycle_length?: number; weeks_mask?: number; effective_from?: string | null; effective_to?: string | null }, iso, rotaAnchor),
     );
     const dayOverrides = overrides.filter(
       (o) =>
@@ -691,7 +691,7 @@ function MonthView({
           const matchLoc = (locId: string | null | undefined) =>
             locationFilter === "all" || locId == null || locId === locationFilter;
           const activeRules = (rulesByDow.get(d.getDay()) ?? []).filter(
-            (r) => matchLoc(r.location_id) && ruleAppliesOnDate(r as unknown as { cycle_length?: number; weeks_mask?: number }, key, rotaAnchor),
+            (r) => matchLoc(r.location_id) && ruleAppliesOnDate(r as unknown as { cycle_length?: number; weeks_mask?: number; effective_from?: string | null; effective_to?: string | null }, key, rotaAnchor),
           );
           const hasOverride = overrides.some((o) => o.date === key && matchLoc(o.location_id));
           const hasAvail = activeRules.length > 0 || hasOverride;

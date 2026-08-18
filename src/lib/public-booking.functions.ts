@@ -65,7 +65,7 @@ export const getBookingContext = createServerFn({ method: "GET" })
 
     const { data: locations } = await sb
       .from("locations")
-      .select("id, profile_id, name, address_line1, address_line2, city, postcode, country, is_primary, display_order, active, created_at, updated_at, image_url")
+      .select("id, profile_id, name, address_line1, address_line2, city, postcode, country, is_primary, display_order, active, created_at, updated_at, image_url, coming_soon, coming_soon_label")
       .eq("profile_id", profile.id)
       .eq("active", true)
       .eq("is_public", true)
@@ -224,7 +224,7 @@ export const getMultiBookingContext = createServerFn({ method: "GET" })
 
     const { data: locations } = await sb
       .from("locations")
-      .select("id, profile_id, name, address_line1, address_line2, city, postcode, country, is_primary, display_order, active, created_at, updated_at, image_url")
+      .select("id, profile_id, name, address_line1, address_line2, city, postcode, country, is_primary, display_order, active, created_at, updated_at, image_url, coming_soon, coming_soon_label")
       .eq("profile_id", profile.id)
       .eq("active", true)
       .eq("is_public", true)
@@ -437,7 +437,7 @@ export const getMonthAvailability = createServerFn({ method: "GET" })
 
     const { data: rules } = await sb
       .from("availability_rules")
-      .select("day_of_week,location_id,cycle_length,weeks_mask")
+      .select("day_of_week,location_id,cycle_length,weeks_mask,effective_from,effective_to")
       .eq("profile_id", data.profileId);
     const { data: blocked } = await sb
       .from("blocked_dates")
