@@ -7631,6 +7631,7 @@ export type Database = {
           active: boolean
           allow_split_payment: boolean
           capacity: number | null
+          category: string | null
           certificate_template_url: string | null
           cover_image_url: string | null
           cpd_hours: number | null
@@ -7660,6 +7661,7 @@ export type Database = {
           active?: boolean
           allow_split_payment?: boolean
           capacity?: number | null
+          category?: string | null
           certificate_template_url?: string | null
           cover_image_url?: string | null
           cpd_hours?: number | null
@@ -7689,6 +7691,7 @@ export type Database = {
           active?: boolean
           allow_split_payment?: boolean
           capacity?: number | null
+          category?: string | null
           certificate_template_url?: string | null
           cover_image_url?: string | null
           cpd_hours?: number | null

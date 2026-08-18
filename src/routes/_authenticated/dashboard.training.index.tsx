@@ -183,6 +183,9 @@ function TrainingPage() {
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="font-semibold">{c.name}</span>
                     <Badge variant="outline">{MODE_LABEL[c.mode]}</Badge>
+                    {(c as Course & { category?: string | null }).category && (
+                      <Badge variant="secondary">{(c as Course & { category?: string | null }).category}</Badge>
+                    )}
                     {(() => {
                       const v = (c as Course & { visibility?: string }).visibility ?? (c.active ? "live" : "hidden");
                       const map: Record<string, { label: string; cls: string }> = {
@@ -258,6 +261,11 @@ function CourseEditor({ id, onClose }: { id: string; onClose: () => void }) {
   const [pickedLocs, setPickedLocs] = useState<string[] | null>(null);
   const [saving, setSaving] = useState(false);
 
+  const cachedCourses = (qc.getQueryData(["training-courses"]) ?? []) as Array<{ category?: string | null }>;
+  const existingCategories = Array.from(
+    new Set(cachedCourses.map((c) => (c.category ?? "").trim()).filter(Boolean)),
+  ) as string[];
+
   // Initialise once data loads
   if (form === null && q.data) {
     setForm(q.data.course as Course);
@@ -286,6 +294,7 @@ function CourseEditor({ id, onClose }: { id: string; onClose: () => void }) {
         data: {
           id,
           name: form.name!,
+          category: ((form as Course & { category?: string | null }).category || null) as string | null,
           description: form.description ?? null,
           cover_image_url: form.cover_image_url ?? null,
           mode: form.mode,
@@ -413,6 +422,21 @@ function CourseEditor({ id, onClose }: { id: string; onClose: () => void }) {
           <div>
             <Label>Name</Label>
             <Input value={form.name ?? ""} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="e.g. Foundation Lip Filler Training" />
+          </div>
+          <div>
+            <Label>Category</Label>
+            <Input
+              list="training-category-options"
+              value={(form as Course & { category?: string | null }).category ?? ""}
+              onChange={(e) => setForm({ ...form, ...(({ category: e.target.value } as unknown) as Partial<Course>) })}
+              placeholder="e.g. Foundation, Advanced, Masterclass"
+            />
+            <datalist id="training-category-options">
+              {existingCategories.map((c) => <option key={c} value={c} />)}
+            </datalist>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Courses are grouped by category on your public training page. Leave blank for “Other courses”.
+            </p>
           </div>
           <div>
             <Label>Short description</Label>
