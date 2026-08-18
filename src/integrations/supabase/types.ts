@@ -7638,6 +7638,8 @@ export type Database = {
           deposit_amount: number | null
           description: string | null
           duration_min: number
+          handout_name: string | null
+          handout_url: string | null
           id: string
           kit_list: string | null
           materials_html: string | null
@@ -7665,6 +7667,8 @@ export type Database = {
           deposit_amount?: number | null
           description?: string | null
           duration_min?: number
+          handout_name?: string | null
+          handout_url?: string | null
           id?: string
           kit_list?: string | null
           materials_html?: string | null
@@ -7692,6 +7696,8 @@ export type Database = {
           deposit_amount?: number | null
           description?: string | null
           duration_min?: number
+          handout_name?: string | null
+          handout_url?: string | null
           id?: string
           kit_list?: string | null
           materials_html?: string | null
