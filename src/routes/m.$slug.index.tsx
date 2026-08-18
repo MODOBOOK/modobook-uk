@@ -2979,11 +2979,28 @@ function TreatmentRow({
 
   const [expanded, setExpanded] = useState(false);
   const [leafletOpen, setLeafletOpen] = useState(false);
+  const [leafletPdfUrl, setLeafletPdfUrl] = useState<string | null>(null);
   const leafletEnabled = treatmentLeafletsEnabled(slug);
   const leafletHtml = (t as { leaflet_html?: string | null }).leaflet_html || "";
   const leafletUrl = (t as { leaflet_url?: string | null }).leaflet_url || "";
   const leafletTitle =
     (t as { leaflet_title?: string | null }).leaflet_title || `${t.name} — information`;
+  useEffect(() => {
+    if (!leafletOpen || !leafletUrl) return;
+    if (!leafletUrl.startsWith("storage:")) {
+      setLeafletPdfUrl(leafletUrl);
+      return;
+    }
+    let cancelled = false;
+    getLeafletSignedUrl({ data: { path: leafletUrl } })
+      .then((r) => {
+        if (!cancelled) setLeafletPdfUrl(r.url);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [leafletOpen, leafletUrl]);
 
   const desc = t.description ?? "";
   const isLong = desc.length > 110;
@@ -3139,15 +3156,26 @@ function TreatmentRow({
                 />
               )}
               {leafletUrl && (
-                <a
-                  href={leafletUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm font-semibold underline"
-                  style={{ color: brand }}
-                >
-                  Open full leaflet (PDF)
-                </a>
+                leafletPdfUrl ? (
+                  <div className="space-y-2">
+                    <iframe
+                      src={leafletPdfUrl}
+                      title={leafletTitle}
+                      className="h-[55vh] w-full rounded-md border"
+                    />
+                    <a
+                      href={leafletPdfUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm font-semibold underline"
+                      style={{ color: brand }}
+                    >
+                      Open full leaflet (PDF)
+                    </a>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">Loading leaflet…</p>
+                )
               )}
               <Button variant="outline" onClick={() => setLeafletOpen(false)}>
                 Close
