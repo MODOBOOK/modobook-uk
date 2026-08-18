@@ -25,6 +25,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import { Plus, Trash2, Pencil, FileText, X, Tag, PlusCircle, Sparkles, Loader2 } from "lucide-react";
 import { SearchableMultiPicker } from "@/components/ui/searchable-multi-picker";
 import { BulkRebookRemindersDialog } from "@/components/BulkRebookRemindersDialog";
@@ -458,6 +459,7 @@ function TreatmentDialog({
   const [leafletHtml, setLeafletHtml] = useState<string>(
     (treatment as { leaflet_html?: string | null } | null)?.leaflet_html ?? "",
   );
+  const [leafletUploading, setLeafletUploading] = useState(false);
   const [leafletUrl, setLeafletUrl] = useState<string>(
     (treatment as { leaflet_url?: string | null } | null)?.leaflet_url ?? "",
   );
