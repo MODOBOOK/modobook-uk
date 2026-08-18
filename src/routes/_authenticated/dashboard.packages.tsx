@@ -768,19 +768,39 @@ function PackageCategoriesManager({
   categories,
   onAdd,
   onDelete,
+  onSaveTimer,
 }: {
   categories: Category[];
   onAdd: (name: string) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
+  onSaveTimer: (v: {
+    id: string;
+    is_limited: boolean;
+    limited_starts_at: string | null;
+    limited_ends_at: string | null;
+  }) => Promise<void>;
 }) {
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
+  const [editing, setEditing] = useState<Category | null>(null);
+  const [limited, setLimited] = useState(false);
+  const [limStart, setLimStart] = useState("");
+  const [limEnd, setLimEnd] = useState("");
+
+  function openTimer(c: Category) {
+    setEditing(c);
+    setLimited(Boolean(c.is_limited));
+    setLimStart(toLocalInput(c.limited_starts_at));
+    setLimEnd(toLocalInput(c.limited_ends_at));
+  }
+
   return (
     <Card>
       <CardHeader className="pb-3">
         <CardTitle className="text-base">Package categories</CardTitle>
         <p className="text-xs text-muted-foreground">
           Group packages on the booking page. Kept separate from your treatment categories.
+          Add a countdown to run seasonal sets like "Autumn packages".
         </p>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -791,6 +811,19 @@ function PackageCategoriesManager({
             categories.map((c) => (
               <Badge key={c.id} variant="secondary" className="gap-1 pr-1">
                 <span>{c.name}</span>
+                {c.is_limited && (
+                  <span className="rounded-full bg-rose-100 px-1.5 text-[10px] font-semibold text-rose-800">
+                    timer
+                  </span>
+                )}
+                <button
+                  type="button"
+                  aria-label={`Countdown for ${c.name}`}
+                  onClick={() => openTimer(c)}
+                  className="rounded p-0.5 hover:bg-background/60"
+                >
+                  <Pencil className="h-3 w-3" />
+                </button>
                 <button
                   type="button"
                   aria-label={`Delete ${c.name}`}
@@ -807,7 +840,7 @@ function PackageCategoriesManager({
           <Input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="e.g. Skin, Anti-wrinkle, Wellness…"
+            placeholder="e.g. Skin, Anti-wrinkle, Autumn packages…"
             className="h-9"
           />
           <Button
@@ -824,6 +857,65 @@ function PackageCategoriesManager({
           </Button>
         </div>
       </CardContent>
+
+      <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editing?.name} — limited time</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="flex items-start justify-between gap-3 rounded-lg border border-dashed border-rose-300 bg-rose-50/50 p-3">
+              <div>
+                <Label className="text-rose-900">Limited time category</Label>
+                <p className="text-[11px] text-rose-800/80">
+                  Every package in this category shows a countdown, and the whole set drops off
+                  your booking page once it ends.
+                </p>
+              </div>
+              <Switch checked={limited} onCheckedChange={setLimited} />
+            </div>
+            {limited && (
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label className="text-xs">Starts (optional)</Label>
+                  <Input type="datetime-local" value={limStart} onChange={(e) => setLimStart(e.target.value)} />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Ends</Label>
+                  <Input type="datetime-local" value={limEnd} onChange={(e) => setLimEnd(e.target.value)} />
+                </div>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditing(null)}>Cancel</Button>
+            <Button
+              disabled={busy}
+              onClick={async () => {
+                if (!editing) return;
+                setBusy(true);
+                try {
+                  await onSaveTimer({
+                    id: editing.id,
+                    is_limited: limited,
+                    limited_starts_at: limited ? fromLocalInput(limStart) : null,
+                    limited_ends_at: limited ? fromLocalInput(limEnd) : null,
+                  });
+                  toast.success("Saved");
+                  setEditing(null);
+                } catch (e) {
+                  toast.error(e instanceof Error ? e.message : "Failed");
+                } finally {
+                  setBusy(false);
+                }
+              }}
+            >
+              Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }
+
