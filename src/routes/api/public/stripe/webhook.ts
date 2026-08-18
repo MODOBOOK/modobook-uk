@@ -196,6 +196,34 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
                 break;
               }
 
+              // Training courses: confirm the booking (and its calendar entry)
+              // once payment lands.
+              if (metadata.kind === "training_booking" && metadata.training_booking_id) {
+                if (session.payment_status !== "paid") break;
+                try {
+                  const { data: tb } = await supabaseAdmin
+                    .from("training_bookings")
+                    .update({
+                      payment_status: "paid",
+                      status: "confirmed",
+                      amount_paid: (session.amount_total ?? 0) / 100,
+                      stripe_payment_intent_id: typeof session.payment_intent === "string" ? session.payment_intent : null,
+                    })
+                    .eq("id", metadata.training_booking_id)
+                    .select("appointment_id")
+                    .maybeSingle();
+                  if (tb?.appointment_id) {
+                    await supabaseAdmin
+                      .from("appointments")
+                      .update({ payment_status: "paid", status: "confirmed" })
+                      .eq("id", tb.appointment_id);
+                  }
+                } catch (e) {
+                  console.error("[stripe-webhook] training booking payment failed", e);
+                }
+                break;
+              }
+
               // Room rental: only confirm the booking once the money lands.
               if (metadata.kind === "room_rental_booking" && metadata.rental_booking_id) {
                 if (session.payment_status !== "paid") break;

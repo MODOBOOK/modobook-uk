@@ -15,9 +15,14 @@ import { ArrowLeft, Award, Clock, Users, CheckCircle2, Loader2 } from "lucide-re
 import { toast } from "sonner";
 import { formatDuration } from "@/lib/format-duration";
 import { getLeafletSignedUrl } from "@/lib/leaflets.functions";
+import { CourseCopy } from "@/components/CourseCopy";
 
 export const Route = createFileRoute("/m/$slug/training/$courseId")({
-  validateSearch: (s: Record<string, unknown>): { preview?: string } => ({ preview: typeof s.preview === "string" ? s.preview : undefined }),
+  validateSearch: (s: Record<string, unknown>): { preview?: string; booking?: string; status?: string } => ({
+    preview: typeof s.preview === "string" ? s.preview : undefined,
+    booking: typeof s.booking === "string" ? s.booking : undefined,
+    status: typeof s.status === "string" ? s.status : undefined,
+  }),
   loaderDeps: ({ search }) => ({ preview: search.preview ?? null }),
   loader: ({ params, deps }) => getPublicCourse({ data: { slug: params.slug, courseId: params.courseId, previewToken: deps.preview } }),
   head: ({ loaderData }) => ({
@@ -73,7 +78,8 @@ function BookCoursePage() {
   const [notes, setNotes] = useState("");
   const [prereq, setPrereq] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [done, setDone] = useState(false);
+  const search = Route.useSearch();
+  const [done, setDone] = useState(search.status === "paid");
 
   const dayIso = pickedDate ? toIsoDate(pickedDate) : null;
   const slotsQuery = useQuery({
@@ -94,8 +100,10 @@ function BookCoursePage() {
     }
     setSubmitting(true);
     try {
-      await bookFn({
+      const res = await bookFn({
         data: {
+          slug,
+          return_origin: window.location.origin,
           course_id: course.id,
           session_id: isSchedule ? sessionId : null,
           trainee_name: name,
@@ -111,6 +119,10 @@ function BookCoursePage() {
           notes,
         },
       });
+      if (res?.checkoutUrl) {
+        window.location.href = res.checkoutUrl;
+        return;
+      }
       setDone(true);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to book");
@@ -124,11 +136,13 @@ function BookCoursePage() {
       <div className="mx-auto max-w-lg space-y-4 px-4 py-12 text-center">
         <CheckCircle2 className="mx-auto h-12 w-12 text-emerald-600" />
         <h1 className="font-serif text-2xl">
-          {isAvailability ? "You're booked in" : "Booking request sent"}
+          {search.status === "paid" || isAvailability ? "You're booked in" : "Booking request sent"}
         </h1>
         <p className="text-sm text-muted-foreground">
-          {isAvailability
-            ? `Thanks ${name.split(" ")[0]} — your slot is confirmed. You'll get an email shortly.`
+          {search.status === "paid"
+            ? "Payment received — your place is confirmed and we've emailed your details."
+            : isAvailability
+            ? `Thanks${name ? ` ${name.split(" ")[0]}` : ""} — your slot is confirmed. You'll get an email shortly.`
             : `Thanks ${name.split(" ")[0]} — the practitioner will confirm your place shortly and email you the details.`}
         </p>
         <Link to="/m/$slug" params={{ slug }}>
@@ -162,7 +176,7 @@ function BookCoursePage() {
             {course.cpd_hours != null && <Badge variant="outline"><Award className="mr-1 h-3 w-3" /> {course.cpd_hours} CPD</Badge>}
             <Badge>£{Number(course.price).toFixed(2)}</Badge>
           </div>
-          {course.description && <p className="text-sm text-muted-foreground">{course.description}</p>}
+          {course.description && <CourseCopy text={course.description} />}
         </CardContent>
       </Card>
 
