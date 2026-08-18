@@ -560,6 +560,10 @@ function TreatmentDialog({
     setSessionIntervalValue(interval != null ? String(interval % 7 === 0 ? interval / 7 : interval) : "");
     setSessionIntervalUnit(interval != null && interval % 7 === 0 ? "weeks" : "days");
     setAftercareHtml((treatment as { aftercare_html?: string | null } | null)?.aftercare_html ?? "");
+    setLeafletTitle((treatment as { leaflet_title?: string | null } | null)?.leaflet_title ?? "");
+    setLeafletHtml((treatment as { leaflet_html?: string | null } | null)?.leaflet_html ?? "");
+    setLeafletUrl((treatment as { leaflet_url?: string | null } | null)?.leaflet_url ?? "");
+
     setAftercareDelay((treatment as { aftercare_delay_hours?: number } | null)?.aftercare_delay_hours ?? 2);
     setAutoSendForms((treatment as { auto_send_medical_forms?: boolean } | null)?.auto_send_medical_forms ?? true);
     setAutoSendAftercare((treatment as { auto_send_aftercare?: boolean } | null)?.auto_send_aftercare ?? true);
