@@ -1056,13 +1056,68 @@ function TreatmentDialog({
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground">Or link a PDF/leaflet (optional)</Label>
-              <Input
-                value={leafletUrl}
-                onChange={(e) => setLeafletUrl(e.target.value)}
-                placeholder="https://…"
-              />
+              <Label className="text-xs text-muted-foreground">Upload a PDF leaflet (optional)</Label>
+              {leafletUrl ? (
+                <div className="flex items-center gap-2 rounded-md border p-2 text-xs">
+                  <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  <span className="min-w-0 flex-1 truncate">
+                    {leafletUrl.startsWith("storage:")
+                      ? decodeURIComponent(leafletUrl.split("/").pop() || "PDF attached")
+                      : leafletUrl}
+                  </span>
+                  <Button type="button" size="sm" variant="ghost" onClick={() => setLeafletUrl("")}>
+                    <X className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              ) : (
+                <Input
+                  type="file"
+                  accept="application/pdf"
+                  disabled={leafletUploading}
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    e.target.value = "";
+                    if (!file) return;
+                    if (file.type !== "application/pdf") {
+                      toast.error("Please upload a PDF file");
+                      return;
+                    }
+                    if (file.size > 15 * 1024 * 1024) {
+                      toast.error("PDF must be under 15MB");
+                      return;
+                    }
+                    setLeafletUploading(true);
+                    try {
+                      const { data: auth } = await supabase.auth.getUser();
+                      const uid = auth.user?.id;
+                      if (!uid) throw new Error("Not signed in");
+                      const { data: prof, error: pErr } = await supabase
+                        .from("profiles")
+                        .select("id")
+                        .eq("user_id", uid)
+                        .single();
+                      if (pErr) throw pErr;
+                      const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+                      const path = `${prof.id}/${Date.now()}-${safe}`;
+                      const { error: upErr } = await supabase.storage
+                        .from("treatment-leaflets")
+                        .upload(path, file, { contentType: "application/pdf", upsert: false });
+                      if (upErr) throw upErr;
+                      setLeafletUrl(`storage:${path}`);
+                      toast.success("Leaflet uploaded");
+                    } catch (err) {
+                      toast.error(err instanceof Error ? err.message : "Upload failed");
+                    } finally {
+                      setLeafletUploading(false);
+                    }
+                  }}
+                />
+              )}
+              {leafletUploading && (
+                <p className="text-[11px] text-muted-foreground">Uploading…</p>
+              )}
             </div>
+
           </div>
         </details>
 
