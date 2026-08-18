@@ -656,6 +656,10 @@ function PackagesPage() {
           await deleteCat({ data: { id } });
           setCategories((prev) => prev.filter((c) => c.id !== id));
         }}
+        onSaveTimer={async (v) => {
+          await updateCat({ data: v });
+          setCategories((prev) => prev.map((c) => (c.id === v.id ? { ...c, ...v } : c)));
+        }}
       />
 
 
