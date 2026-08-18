@@ -15,6 +15,8 @@ import { listMyLocations } from "@/lib/locations.functions";
 import { getMyTrainingPage, saveMyTrainingPage } from "@/lib/training-page.functions";
 import { RichTextEditor } from "@/components/RichTextEditor";
 import { ImageUploader } from "@/components/ImageUploader";
+import { formatDuration } from "@/lib/format-duration";
+import { supabase } from "@/integrations/supabase/client";
 import { getMyProfile } from "@/lib/profiles.functions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -182,7 +184,7 @@ function TrainingPage() {
                     )}
                   </div>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    £{Number(c.price).toFixed(2)} · {c.duration_min} min
+                    £{Number(c.price).toFixed(2)} · {formatDuration(c.duration_min)}
                     {c.capacity ? ` · up to ${c.capacity} trainees` : ""}
                   </p>
                 </div>
@@ -266,6 +268,8 @@ function CourseEditor({ id, onClose }: { id: string; onClose: () => void }) {
           certificate_template_url: form.certificate_template_url ?? null,
           materials_html: form.materials_html ?? null,
           kit_list: form.kit_list ?? null,
+          handout_url: (form as Course & { handout_url?: string | null }).handout_url ?? null,
+          handout_name: (form as Course & { handout_name?: string | null }).handout_name ?? null,
           active: visibility !== "hidden",
           visibility: visibility as "live" | "hidden" | "preview_link" | "coming_soon",
           scheduling_mode: schedulingMode,
@@ -381,6 +385,7 @@ function CourseEditor({ id, onClose }: { id: string; onClose: () => void }) {
             <Label>Short description</Label>
             <Textarea rows={3} value={form.description ?? ""} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="What trainees will learn, level, etc." />
           </div>
+          <CourseMedia form={form} setForm={setForm} />
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div>
               <Label>Format</Label>
@@ -394,8 +399,35 @@ function CourseEditor({ id, onClose }: { id: string; onClose: () => void }) {
               </Select>
             </div>
             <div>
-              <Label>Duration (min)</Label>
-              <Input type="number" value={form.duration_min ?? 120} onChange={(e) => setForm({ ...form, duration_min: Number(e.target.value) })} />
+              <Label>Duration</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  type="number"
+                  min={0}
+                  aria-label="Hours"
+                  value={Math.floor((Number(form.duration_min) || 0) / 60)}
+                  onChange={(e) => {
+                    const hrs = Math.max(0, Number(e.target.value) || 0);
+                    const mins = (Number(form.duration_min) || 0) % 60;
+                    setForm({ ...form, duration_min: hrs * 60 + mins });
+                  }}
+                />
+                <span className="text-xs text-muted-foreground">hrs</span>
+                <Input
+                  type="number"
+                  min={0}
+                  max={59}
+                  aria-label="Minutes"
+                  value={(Number(form.duration_min) || 0) % 60}
+                  onChange={(e) => {
+                    const mins = Math.min(59, Math.max(0, Number(e.target.value) || 0));
+                    const hrs = Math.floor((Number(form.duration_min) || 0) / 60);
+                    setForm({ ...form, duration_min: hrs * 60 + mins });
+                  }}
+                />
+                <span className="text-xs text-muted-foreground">min</span>
+              </div>
+              <p className="mt-1 text-[11px] text-muted-foreground">{formatDuration(form.duration_min)}</p>
             </div>
             {isSchedule && (
               <div>
@@ -882,6 +914,105 @@ function TrainingPageEditor({ onClose }: { onClose: () => void }) {
         <Button onClick={save} disabled={saving}>
           {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Save
         </Button>
+      </div>
+    </div>
+  );
+}
+
+
+/** Cover photo + optional PDF reading material for a course. */
+function CourseMedia({
+  form,
+  setForm,
+}: {
+  form: Partial<Course>;
+  setForm: (f: Partial<Course>) => void;
+}) {
+  const profileFn = useServerFn(getMyProfile);
+  const profileQ = useQuery({ queryKey: ["my-profile"], queryFn: () => profileFn() });
+  const profileId = (profileQ.data as { id?: string } | undefined)?.id ?? "";
+  const extra = form as Course & { handout_url?: string | null; handout_name?: string | null };
+  const [uploading, setUploading] = useState(false);
+
+  async function uploadPdf(file: File) {
+    if (!profileId) return;
+    if (file.type !== "application/pdf") {
+      toast.error("Please choose a PDF file");
+      return;
+    }
+    setUploading(true);
+    try {
+      const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+      const path = `${profileId}/training/${Date.now()}-${safe}`;
+      const { error } = await supabase.storage
+        .from("treatment-leaflets")
+        .upload(path, file, { contentType: "application/pdf", upsert: false });
+      if (error) throw error;
+      setForm({
+        ...form,
+        ...(({ handout_url: `storage:${path}`, handout_name: extra.handout_name || file.name } as unknown) as Partial<Course>),
+      });
+      toast.success("PDF uploaded — remember to save");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Upload failed");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  return (
+    <div className="space-y-4 rounded-md border p-3">
+      {profileId && (
+        <ImageUploader
+          label="Course photo"
+          value={form.cover_image_url}
+          onChange={(url) => setForm({ ...form, cover_image_url: url })}
+          profileId={profileId}
+          folder="training-courses"
+          previewClass="mt-2 h-28 w-full max-w-sm rounded-lg object-cover"
+        />
+      )}
+
+      <div>
+        <Label>Reading material (PDF)</Label>
+        {extra.handout_url ? (
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <span className="text-sm text-muted-foreground">
+              {extra.handout_name || "Attached PDF"}
+            </span>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() =>
+                setForm({ ...form, ...(({ handout_url: null, handout_name: null } as unknown) as Partial<Course>) })
+              }
+            >
+              <Trash2 className="mr-1 h-4 w-4" /> Remove
+            </Button>
+          </div>
+        ) : (
+          <Input
+            className="mt-2"
+            type="file"
+            accept="application/pdf"
+            disabled={uploading || !profileId}
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) void uploadPdf(f);
+            }}
+          />
+        )}
+        {extra.handout_url && (
+          <Input
+            className="mt-2"
+            placeholder="Label shown to trainees, e.g. Sculptra pre-reading"
+            value={extra.handout_name ?? ""}
+            onChange={(e) =>
+              setForm({ ...form, ...(({ handout_name: e.target.value } as unknown) as Partial<Course>) })
+            }
+          />
+        )}
+        {uploading && <p className="mt-1 text-[11px] text-muted-foreground">Uploading…</p>}
       </div>
     </div>
   );
