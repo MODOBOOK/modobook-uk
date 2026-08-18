@@ -321,6 +321,12 @@ export const getDayAvailability = createServerFn({ method: "GET" })
     let isBlocked = (blockedRows ?? []).some(
       (b) => !b.location_id || !data.locationId || b.location_id === data.locationId,
     );
+    // A closure set for THIS specific location can only be re-opened by an
+    // ad-hoc slot that is also scoped to this location — an "all locations"
+    // opening must not cancel a location-specific closure.
+    const hasLocationSpecificBlock = (blockedRows ?? []).some(
+      (b) => !!b.location_id && !!data.locationId && b.location_id === data.locationId,
+    );
 
     const { data: appts } = await supabaseAdmin
       .from("appointments")
@@ -396,7 +402,10 @@ export const getDayAvailability = createServerFn({ method: "GET" })
     // An ad-hoc slot added for this date is an explicit opening, so it beats a
     // closed/blocked day. The daily cap still applies.
     const capReached = dailyCap != null && activeAppts.length >= Number(dailyCap);
-    if (scopedOverrides.length > 0 && !capReached) isBlocked = false;
+    const openingOverrides = hasLocationSpecificBlock
+      ? scopedOverrides.filter((o) => o.location_id === data.locationId)
+      : scopedOverrides;
+    if (openingOverrides.length > 0 && !capReached) isBlocked = false;
 
 
 
@@ -410,7 +419,7 @@ export const getDayAvailability = createServerFn({ method: "GET" })
       console.error("[getDayAvailability] associate room check failed", e);
     }
 
-    return { isBlocked, busy: [...paddedAppts, ...blockedBusy, ...roomBusy], overrides: scopedOverrides };
+    return { isBlocked, busy: [...paddedAppts, ...blockedBusy, ...roomBusy], overrides: openingOverrides };
 
 
   });
@@ -453,7 +462,17 @@ export const getMonthAvailability = createServerFn({ method: "GET" })
       new Set((rules ?? []).filter((r) => matchLoc(r.location_id)).map((r) => r.day_of_week)),
     );
     const blockedDates = (blocked ?? []).filter((b) => matchLoc(b.location_id)).map((b) => b.date);
-    const overrideDates = (overrides ?? []).filter((o) => matchLoc(o.location_id)).map((o) => o.date);
+    // Dates closed specifically for the selected location: only an ad-hoc slot
+    // scoped to that same location can re-open them.
+    const locationBlockedDates = new Set(
+      (blocked ?? [])
+        .filter((b) => !!b.location_id && !!data.locationId && b.location_id === data.locationId)
+        .map((b) => b.date),
+    );
+    const overrideDates = (overrides ?? [])
+      .filter((o) => matchLoc(o.location_id))
+      .filter((o) => !locationBlockedDates.has(o.date) || o.location_id === data.locationId)
+      .map((o) => o.date);
 
     // Expand rota-aware open dates across the month
     const openDates: string[] = [];
