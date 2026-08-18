@@ -8295,6 +8295,9 @@ export type Database = {
           duration: number
           id: string
           is_consultation: boolean | null
+          leaflet_html: string | null
+          leaflet_title: string | null
+          leaflet_url: string | null
           name: string
           payment_mode: Database["public"]["Enums"]["payment_mode"]
           picture_url: string | null
@@ -8341,6 +8344,9 @@ export type Database = {
           duration: number
           id?: string
           is_consultation?: boolean | null
+          leaflet_html?: string | null
+          leaflet_title?: string | null
+          leaflet_url?: string | null
           name: string
           payment_mode?: Database["public"]["Enums"]["payment_mode"]
           picture_url?: string | null
@@ -8387,6 +8393,9 @@ export type Database = {
           duration?: number
           id?: string
           is_consultation?: boolean | null
+          leaflet_html?: string | null
+          leaflet_title?: string | null
+          leaflet_url?: string | null
           name?: string
           payment_mode?: Database["public"]["Enums"]["payment_mode"]
           picture_url?: string | null
