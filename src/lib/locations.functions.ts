@@ -108,6 +108,8 @@ export const upsertLocation = createServerFn({ method: "POST" })
       active: data.active ?? true,
       is_public: data.is_public ?? true,
       image_url: data.image_url ?? null,
+      coming_soon: data.coming_soon ?? false,
+      coming_soon_label: data.coming_soon_label || null,
     };
 
     if (data.id) {
