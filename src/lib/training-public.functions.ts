@@ -202,6 +202,76 @@ export const getTrainingAvailability = createServerFn({ method: "GET" })
     return { slots: dedup, duration };
   });
 
+/**
+ * Which days in a month have at least one bookable slot for this course.
+ * Used to grey out unavailable dates in the public date picker.
+ */
+export const getTrainingAvailableDays = createServerFn({ method: "GET" })
+  .inputValidator((i: { courseId: string; month: string; locationId?: string | null }) => i)
+  .handler(async ({ data }) => {
+    const supabase = getPub();
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: course } = await supabase
+      .from("training_courses")
+      .select("id, profile_id, duration_min")
+      .eq("id", data.courseId)
+      .maybeSingle();
+    if (!course) return { days: [] as string[] };
+    const profileId = course.profile_id;
+    const duration = Number(course.duration_min ?? 120);
+
+    const [ys, ms] = data.month.split("-").map(Number);
+    const daysInMonth = new Date(Date.UTC(ys, ms, 0)).getUTCDate();
+    const iso = (d: number) => `${ys}-${String(ms).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+    const from = iso(1);
+    const to = iso(daysInMonth);
+
+    const [rulesR, overridesR, blockedR, blockedTimesR, apptsR] = await Promise.all([
+      supabase.from("availability_rules").select("day_of_week,start_time,end_time,slot_interval,location_id").eq("profile_id", profileId),
+      supabase.from("availability_overrides").select("date,start_time,end_time,slot_interval,location_id").eq("profile_id", profileId).gte("date", from).lte("date", to),
+      supabase.from("blocked_dates").select("date,location_id").eq("profile_id", profileId).gte("date", from).lte("date", to),
+      supabase.from("blocked_times").select("date,start_time,end_time,location_id").eq("profile_id", profileId).gte("date", from).lte("date", to),
+      supabaseAdmin.from("appointments").select("scheduled_date,start_time,end_time,location_id,status").eq("profile_id", profileId).gte("scheduled_date", from).lte("scheduled_date", to).neq("status", "cancelled"),
+    ]);
+
+    const locOk = (loc: string | null) => !data.locationId || !loc || loc === data.locationId;
+    const now = new Date();
+    const todayIso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+    const nowMin = now.getHours() * 60 + now.getMinutes();
+
+    const days: string[] = [];
+    for (let d = 1; d <= daysInMonth; d++) {
+      const date = iso(d);
+      if (date < todayIso) continue;
+      if ((blockedR.data ?? []).some((b) => b.date === date && locOk(b.location_id))) continue;
+
+      const dow = new Date(Date.UTC(ys, ms - 1, d)).getUTCDay();
+      const rules = [
+        ...((rulesR.data ?? []).filter((r) => r.day_of_week === dow && locOk(r.location_id))),
+        ...((overridesR.data ?? []).filter((o) => o.date === date && locOk(o.location_id))),
+      ];
+      if (!rules.length) continue;
+
+      const busy = [
+        ...((apptsR.data ?? []).filter((a) => a.scheduled_date === date && locOk(a.location_id)).map((a) => ({ start: toMin(a.start_time), end: toMin(a.end_time) }))),
+        ...((blockedTimesR.data ?? []).filter((b) => b.date === date && locOk(b.location_id)).map((b) => ({ start: toMin(b.start_time), end: toMin(b.end_time) }))),
+      ];
+
+      const cutoff = date === todayIso ? nowMin : 0;
+      const has = rules.some((r) => {
+        const step = r.slot_interval ?? duration;
+        for (let t = toMin(r.start_time); t + duration <= toMin(r.end_time); t += step) {
+          if (t < cutoff) continue;
+          const end = t + duration;
+          if (!busy.some((b) => t < b.end && end > b.start)) return true;
+        }
+        return false;
+      });
+      if (has) days.push(date);
+    }
+    return { days };
+  });
+
 export const createTrainingBooking = createServerFn({ method: "POST" })
   .inputValidator((i: {
     course_id: string;

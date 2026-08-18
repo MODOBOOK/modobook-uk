@@ -2,7 +2,7 @@ import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
-import { getPublicCourse, createTrainingBooking, getTrainingAvailability } from "@/lib/training-public.functions";
+import { getPublicCourse, createTrainingBooking, getTrainingAvailability, getTrainingAvailableDays } from "@/lib/training-public.functions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -60,6 +60,7 @@ function BookCoursePage() {
   const locations = data.locations as Loc[];
   const bookFn = useServerFn(createTrainingBooking);
   const availFn = useServerFn(getTrainingAvailability);
+  const daysFn = useServerFn(getTrainingAvailableDays);
   const bookable = (data as { bookable?: boolean }).bookable !== false;
 
   const schedulingMode = (course.scheduling_mode ?? "fixed") as "fixed" | "availability";
@@ -80,6 +81,15 @@ function BookCoursePage() {
   const [submitting, setSubmitting] = useState(false);
   const search = Route.useSearch();
   const [done, setDone] = useState(search.status === "paid");
+
+  const [calMonth, setCalMonth] = useState<Date>(new Date());
+  const monthKey = `${calMonth.getFullYear()}-${String(calMonth.getMonth() + 1).padStart(2, "0")}`;
+  const daysQuery = useQuery({
+    enabled: isAvailability,
+    queryKey: ["training-avail-days", course.id, monthKey, locationId],
+    queryFn: () => daysFn({ data: { courseId: course.id, month: monthKey, locationId } }),
+  });
+  const availableDays = new Set(daysQuery.data?.days ?? []);
 
   const dayIso = pickedDate ? toIsoDate(pickedDate) : null;
   const slotsQuery = useQuery({
@@ -254,7 +264,12 @@ function BookCoursePage() {
                 mode="single"
                 selected={pickedDate}
                 onSelect={(d) => { setPickedDate(d); setPickedSlot(null); }}
-                disabled={(d) => d < new Date(new Date().setHours(0, 0, 0, 0))}
+                month={calMonth}
+                onMonthChange={(m) => setCalMonth(m)}
+                disabled={(d) =>
+                  d < new Date(new Date().setHours(0, 0, 0, 0)) ||
+                  (!daysQuery.isLoading && !availableDays.has(toIsoDate(d)))
+                }
                 className="rounded-md border pointer-events-auto"
               />
               {dayIso && (
