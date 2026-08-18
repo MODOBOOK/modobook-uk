@@ -46,7 +46,19 @@ export const listPublicCourses = createServerFn({ method: "GET" })
       });
     }
 
-    return { profileId: profile.id as string, courses: list };
+    // Practitioner-authored copy for the public training page (optional).
+    const { data: page } = await supabase
+      .from("training_pages")
+      .select("*")
+      .eq("profile_id", profile.id)
+      .maybeSingle();
+
+    return {
+      profileId: profile.id as string,
+      clinicName: (profile as { clinic_name?: string | null }).clinic_name ?? null,
+      courses: list,
+      page: page ?? null,
+    };
   });
 
 export const getPublicCourse = createServerFn({ method: "GET" })

@@ -7718,6 +7718,83 @@ export type Database = {
           },
         ]
       }
+      training_pages: {
+        Row: {
+          body_heading: string | null
+          body_html: string | null
+          courses_heading: string | null
+          created_at: string
+          cta_body: string | null
+          cta_button_label: string | null
+          cta_heading: string | null
+          cta_url: string | null
+          eyebrow: string | null
+          headline: string | null
+          hero_image_url: string | null
+          highlights: Json
+          id: string
+          intro: string | null
+          profile_id: string
+          seo_description: string | null
+          seo_title: string | null
+          show_cta: boolean
+          show_highlights: boolean
+          updated_at: string
+        }
+        Insert: {
+          body_heading?: string | null
+          body_html?: string | null
+          courses_heading?: string | null
+          created_at?: string
+          cta_body?: string | null
+          cta_button_label?: string | null
+          cta_heading?: string | null
+          cta_url?: string | null
+          eyebrow?: string | null
+          headline?: string | null
+          hero_image_url?: string | null
+          highlights?: Json
+          id?: string
+          intro?: string | null
+          profile_id: string
+          seo_description?: string | null
+          seo_title?: string | null
+          show_cta?: boolean
+          show_highlights?: boolean
+          updated_at?: string
+        }
+        Update: {
+          body_heading?: string | null
+          body_html?: string | null
+          courses_heading?: string | null
+          created_at?: string
+          cta_body?: string | null
+          cta_button_label?: string | null
+          cta_heading?: string | null
+          cta_url?: string | null
+          eyebrow?: string | null
+          headline?: string | null
+          hero_image_url?: string | null
+          highlights?: Json
+          id?: string
+          intro?: string | null
+          profile_id?: string
+          seo_description?: string | null
+          seo_title?: string | null
+          show_cta?: boolean
+          show_highlights?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_pages_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       treatment_addons: {
         Row: {
           addon_id: string
