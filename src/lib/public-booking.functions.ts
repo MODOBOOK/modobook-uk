@@ -462,7 +462,17 @@ export const getMonthAvailability = createServerFn({ method: "GET" })
       new Set((rules ?? []).filter((r) => matchLoc(r.location_id)).map((r) => r.day_of_week)),
     );
     const blockedDates = (blocked ?? []).filter((b) => matchLoc(b.location_id)).map((b) => b.date);
-    const overrideDates = (overrides ?? []).filter((o) => matchLoc(o.location_id)).map((o) => o.date);
+    // Dates closed specifically for the selected location: only an ad-hoc slot
+    // scoped to that same location can re-open them.
+    const locationBlockedDates = new Set(
+      (blocked ?? [])
+        .filter((b) => !!b.location_id && !!data.locationId && b.location_id === data.locationId)
+        .map((b) => b.date),
+    );
+    const overrideDates = (overrides ?? [])
+      .filter((o) => matchLoc(o.location_id))
+      .filter((o) => !locationBlockedDates.has(o.date) || o.location_id === data.locationId)
+      .map((o) => o.date);
 
     // Expand rota-aware open dates across the month
     const openDates: string[] = [];
