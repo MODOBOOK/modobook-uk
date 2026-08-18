@@ -3,6 +3,7 @@ import { listPublicCourses } from "@/lib/training-public.functions";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { SafeHtml } from "@/components/SafeHtml";
 import {
   GraduationCap,
   Award,
@@ -17,16 +18,31 @@ import {
 
 export const Route = createFileRoute("/m/$slug/training")({
   loader: ({ params }) => listPublicCourses({ data: { slug: params.slug } }),
-  head: () => ({
-    meta: [
-      { title: "Aesthetics training courses" },
-      { name: "description", content: "Hands-on aesthetics training courses with small group sizes, CPD hours and certification. View dates and book your place." },
-      { property: "og:title", content: "Aesthetics training courses" },
-      { property: "og:description", content: "Hands-on aesthetics training with small group sizes, CPD hours and certification." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-  }),
+  head: ({ loaderData }) => {
+    const page = (loaderData as { page?: TrainingPage | null } | undefined)?.page ?? null;
+    const title = page?.seo_title || page?.headline || "Aesthetics training courses";
+    const description =
+      page?.seo_description ||
+      page?.intro ||
+      "Hands-on aesthetics training courses with small group sizes, CPD hours and certification. View dates and book your place.";
+    const image = page?.hero_image_url;
+    return {
+      meta: [
+        { title },
+        { name: "description", content: description },
+        { property: "og:title", content: title },
+        { property: "og:description", content: description },
+        { property: "og:type", content: "website" },
+        { name: "twitter:card", content: "summary_large_image" },
+        ...(image && image.startsWith("https://")
+          ? [
+              { property: "og:image", content: image },
+              { name: "twitter:image", content: image },
+            ]
+          : []),
+      ],
+    };
+  },
   component: TrainingList,
 });
 
@@ -34,6 +50,25 @@ const MODE_LABEL: Record<string, string> = {
   one_to_one: "1:1",
   group: "Group",
   multi_day: "Multi-day",
+};
+
+export type TrainingPage = {
+  eyebrow: string | null;
+  headline: string | null;
+  intro: string | null;
+  hero_image_url: string | null;
+  courses_heading: string | null;
+  highlights: { title: string; body: string }[] | null;
+  body_heading: string | null;
+  body_html: string | null;
+  show_highlights: boolean | null;
+  show_cta: boolean | null;
+  cta_heading: string | null;
+  cta_body: string | null;
+  cta_button_label: string | null;
+  cta_url: string | null;
+  seo_title: string | null;
+  seo_description: string | null;
 };
 
 type Course = {
@@ -48,22 +83,34 @@ type Course = {
   cpd_hours: number | string | null;
 };
 
-function Hero({ slug, count }: { slug: string; count: number }) {
+function Hero({ slug, count, page }: { slug: string; count: number; page: TrainingPage | null }) {
+  const heroImage = page?.hero_image_url ?? null;
   return (
     <section className="relative overflow-hidden border-b border-border/60 bg-gradient-to-br from-accent/20 via-background to-background">
-      <div className="mx-auto max-w-5xl px-4 py-10 sm:py-14">
+      {heroImage && (
+        <>
+          <img
+            src={heroImage}
+            alt=""
+            aria-hidden="true"
+            className="absolute inset-0 h-full w-full object-cover opacity-25"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-background via-background/85 to-background/40" />
+        </>
+      )}
+      <div className="relative mx-auto max-w-5xl px-4 py-10 sm:py-14">
         <Link to="/m/$slug" params={{ slug }} className="text-xs text-muted-foreground underline underline-offset-4">
           ← Back to clinic
         </Link>
         <p className="mt-5 text-[10px] font-medium uppercase tracking-[0.3em] text-muted-foreground">
-          Academy
+          {page?.eyebrow || "Academy"}
         </p>
         <h1 className="mt-2 max-w-2xl font-serif text-3xl leading-tight sm:text-5xl">
-          Training courses taught by a practising clinician
+          {page?.headline || "Training courses taught by a practising clinician"}
         </h1>
-        <p className="mt-4 max-w-xl text-sm text-muted-foreground sm:text-base">
-          Small cohorts, live models where applicable, and full aftercare guidance — so you leave
-          confident, not just certified.
+        <p className="mt-4 max-w-xl whitespace-pre-line text-sm text-muted-foreground sm:text-base">
+          {page?.intro ||
+            "Small cohorts, live models where applicable, and full aftercare guidance — so you leave confident, not just certified."}
         </p>
         {count > 0 && (
           <p className="mt-5 inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/70 px-3 py-1.5 text-xs text-muted-foreground backdrop-blur">
@@ -87,10 +134,15 @@ function TrainingList() {
   const { slug } = useParams({ from: "/m/$slug/training" });
   const data = Route.useLoaderData();
   const courses = (data.courses ?? []) as Course[];
+  const page = ((data as { page?: TrainingPage | null }).page ?? null) as TrainingPage | null;
+  const highlights =
+    page?.highlights && page.highlights.length > 0
+      ? page.highlights.map((h) => ({ icon: Sparkles, title: h.title, body: h.body }))
+      : HIGHLIGHTS;
 
   return (
     <div>
-      <Hero slug={slug} count={courses.length} />
+      <Hero slug={slug} count={courses.length} page={page} />
 
       <div className="mx-auto max-w-5xl px-4 py-10 sm:py-12">
         {courses.length === 0 ? (
@@ -106,7 +158,7 @@ function TrainingList() {
           </div>
         ) : (
           <>
-            <h2 className="font-serif text-2xl sm:text-3xl">Available courses</h2>
+            <h2 className="font-serif text-2xl sm:text-3xl">{page?.courses_heading || "Available courses"}</h2>
             <div className="mt-5 grid gap-5 sm:grid-cols-2">
               {courses.map((c) => (
                 <Card
@@ -170,10 +222,23 @@ function TrainingList() {
           </>
         )}
 
+        {page?.body_html && (
+          <section className="mt-14">
+            {page.body_heading && (
+              <h2 className="font-serif text-2xl sm:text-3xl">{page.body_heading}</h2>
+            )}
+            <SafeHtml
+              html={page.body_html}
+              className="prose prose-sm mt-4 max-w-3xl text-muted-foreground dark:prose-invert"
+            />
+          </section>
+        )}
+
+        {page?.show_highlights !== false && (
         <section className="mt-14">
           <h2 className="font-serif text-2xl sm:text-3xl">What's included</h2>
           <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {HIGHLIGHTS.map((h) => (
+            {highlights.map((h) => (
               <div key={h.title} className="rounded-2xl border border-border/60 bg-card p-5">
                 <div className="grid size-10 place-items-center rounded-full bg-primary/10 text-primary">
                   <h.icon className="size-5" />
@@ -184,17 +249,32 @@ function TrainingList() {
             ))}
           </div>
         </section>
+        )}
 
+        {page?.show_cta !== false && (
         <section className="mt-12 rounded-2xl border border-border/60 bg-gradient-to-br from-accent/15 via-card to-card p-6 sm:p-8">
-          <h2 className="font-serif text-2xl">Not sure which course is right for you?</h2>
-          <p className="mt-2 max-w-xl text-sm text-muted-foreground">
-            Get in touch through the clinic page and we'll help you pick the course that matches your
-            experience level and the treatments you want to offer.
+          <h2 className="font-serif text-2xl">
+            {page?.cta_heading || "Not sure which course is right for you?"}
+          </h2>
+          <p className="mt-2 max-w-xl whitespace-pre-line text-sm text-muted-foreground">
+            {page?.cta_body ||
+              "Get in touch through the clinic page and we'll help you pick the course that matches your experience level and the treatments you want to offer."}
           </p>
-          <Link to="/m/$slug/about" params={{ slug }}>
-            <Button variant="outline" className="mt-5">Contact the clinic</Button>
-          </Link>
+          {page?.cta_url ? (
+            <a href={page.cta_url} target="_blank" rel="noopener noreferrer">
+              <Button variant="outline" className="mt-5">
+                {page.cta_button_label || "Get in touch"}
+              </Button>
+            </a>
+          ) : (
+            <Link to="/m/$slug/about" params={{ slug }}>
+              <Button variant="outline" className="mt-5">
+                {page?.cta_button_label || "Contact the clinic"}
+              </Button>
+            </Link>
+          )}
         </section>
+        )}
       </div>
     </div>
   );
