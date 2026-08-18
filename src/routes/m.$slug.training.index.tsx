@@ -195,17 +195,18 @@ function TrainingList() {
             <h2 className="font-serif text-2xl sm:text-3xl">{page?.courses_heading || "Available courses"}</h2>
             <Accordion
               type="multiple"
-              defaultValue={groups.map((g) => g.name)}
               className="mt-5 w-full space-y-3"
             >
             {groups.map((group) => (
-            <AccordionItem key={group.name} value={group.name} className="rounded-2xl border border-border/60 px-4">
-            <AccordionTrigger className="py-4 text-left font-serif text-lg hover:no-underline sm:text-xl">
+            <AccordionItem
+              key={group.name}
+              value={group.name}
+              className="rounded-2xl border border-primary/25 bg-primary/5 px-4 data-[state=open]:border-primary/40"
+            >
+            <AccordionTrigger className="py-4 text-left font-serif text-lg text-primary hover:no-underline sm:text-xl [&>svg]:text-primary">
               {group.name}
-              <span className="ml-2 text-xs font-sans text-muted-foreground">
-                {group.courses.length}
-              </span>
             </AccordionTrigger>
+
             <AccordionContent className="pb-5">
 
               {group.courses.map((c) => (
