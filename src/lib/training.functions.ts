@@ -12,6 +12,7 @@ export type SchedulingMode = "fixed" | "availability";
 export type CourseInput = {
   name: string;
   category?: string | null;
+  training_category_id?: string | null;
   description?: string | null;
   cover_image_url?: string | null;
   mode?: TrainingMode;
@@ -114,6 +115,7 @@ export const createCourse = createServerFn({ method: "POST" })
       .insert({
         profile_id: profileId,
         name: data.name,
+        training_category_id: data.training_category_id ?? null,
         description: data.description ?? null,
         cover_image_url: data.cover_image_url ?? null,
         mode: data.mode ?? "one_to_one",

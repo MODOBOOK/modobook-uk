@@ -12,6 +12,13 @@ import {
   setCourseLocations,
 } from "@/lib/training.functions";
 import { listMyLocations } from "@/lib/locations.functions";
+import {
+  listTrainingCategories,
+  createTrainingCategory,
+  renameTrainingCategory,
+  deleteTrainingCategory,
+  reorderTrainingCategories,
+} from "@/lib/training-categories.functions";
 import { getMyTrainingPage, saveMyTrainingPage } from "@/lib/training-page.functions";
 import { RichTextEditor } from "@/components/RichTextEditor";
 import { ImageUploader } from "@/components/ImageUploader";
@@ -61,6 +68,13 @@ function TrainingPage() {
     queryFn: () => listFn(),
   });
   const profileQ = useQuery({ queryKey: ["my-profile"], queryFn: () => profileFn() });
+  const catListFn = useServerFn(listTrainingCategories);
+  const catsQ = useQuery({ queryKey: ["training-categories"], queryFn: () => catListFn() });
+  const catName = new Map(
+    ((catsQ.data ?? []) as { id: string; name: string }[]).map((c) => [c.id, c.name]),
+  );
+  const categoryName = (c: Course) =>
+    catName.get((c as Course & { training_category_id?: string | null }).training_category_id ?? "") ?? null;
   const slug = (profileQ.data as { slug?: string } | undefined)?.slug ?? "";
   const publicUrl = slug ? `https://modobook.uk/m/${slug}/training` : "";
 
@@ -161,6 +175,8 @@ function TrainingPage() {
       </Card>
 
 
+      <TrainingCategoriesCard />
+
       {q.isLoading ? (
         <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin" /></div>
       ) : courses.length === 0 ? (
@@ -183,8 +199,8 @@ function TrainingPage() {
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="font-semibold">{c.name}</span>
                     <Badge variant="outline">{MODE_LABEL[c.mode]}</Badge>
-                    {(c as Course & { category?: string | null }).category && (
-                      <Badge variant="secondary">{(c as Course & { category?: string | null }).category}</Badge>
+                    {categoryName(c) && (
+                      <Badge variant="secondary">{categoryName(c)}</Badge>
                     )}
                     {(() => {
                       const v = (c as Course & { visibility?: string }).visibility ?? (c.active ? "live" : "hidden");
@@ -261,10 +277,9 @@ function CourseEditor({ id, onClose }: { id: string; onClose: () => void }) {
   const [pickedLocs, setPickedLocs] = useState<string[] | null>(null);
   const [saving, setSaving] = useState(false);
 
-  const cachedCourses = (qc.getQueryData(["training-courses"]) ?? []) as Array<{ category?: string | null }>;
-  const existingCategories = Array.from(
-    new Set(cachedCourses.map((c) => (c.category ?? "").trim()).filter(Boolean)),
-  ) as string[];
+  const catFn = useServerFn(listTrainingCategories);
+  const catQ = useQuery({ queryKey: ["training-categories"], queryFn: () => catFn() });
+  const editorCategories = (catQ.data ?? []) as { id: string; name: string }[];
 
   // Initialise once data loads
   if (form === null && q.data) {
@@ -311,7 +326,8 @@ function CourseEditor({ id, onClose }: { id: string; onClose: () => void }) {
         data: {
           id,
           name: form.name!,
-          category: ((form as Course & { category?: string | null }).category || null) as string | null,
+          training_category_id:
+            ((form as Course & { training_category_id?: string | null }).training_category_id || null) as string | null,
           description: form.description ?? null,
           cover_image_url: form.cover_image_url ?? null,
           mode: form.mode,
@@ -445,17 +461,25 @@ function CourseEditor({ id, onClose }: { id: string; onClose: () => void }) {
           </div>
           <div>
             <Label>Category</Label>
-            <Input
-              list="training-category-options"
-              value={(form as Course & { category?: string | null }).category ?? ""}
-              onChange={(e) => setForm({ ...form, ...(({ category: e.target.value } as unknown) as Partial<Course>) })}
-              placeholder="e.g. Foundation, Advanced, Masterclass"
-            />
-            <datalist id="training-category-options">
-              {existingCategories.map((c) => <option key={c} value={c} />)}
-            </datalist>
+            <Select
+              value={(form as Course & { training_category_id?: string | null }).training_category_id ?? "none"}
+              onValueChange={(v) =>
+                setForm({
+                  ...form,
+                  ...(({ training_category_id: v === "none" ? null : v } as unknown) as Partial<Course>),
+                })
+              }
+            >
+              <SelectTrigger><SelectValue placeholder="Uncategorised" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Uncategorised</SelectItem>
+                {editorCategories.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <p className="mt-1 text-xs text-muted-foreground">
-              Courses are grouped by category on your public training page. Leave blank for “Other courses”.
+              Courses are grouped by category on your public training page, in the order you set on the Training screen.
             </p>
           </div>
           <div>
@@ -1135,5 +1159,110 @@ function CourseMedia({
         {uploading && <p className="mt-1 text-[11px] text-muted-foreground">Uploading…</p>}
       </div>
     </div>
+  );
+}
+
+
+/* ---------------- Training categories ---------------- */
+
+function TrainingCategoriesCard() {
+  const qc = useQueryClient();
+  const listFn = useServerFn(listTrainingCategories);
+  const createFn = useServerFn(createTrainingCategory);
+  const renameFn = useServerFn(renameTrainingCategory);
+  const deleteFn = useServerFn(deleteTrainingCategory);
+  const reorderFn = useServerFn(reorderTrainingCategories);
+  const [name, setName] = useState("");
+
+  const q = useQuery({ queryKey: ["training-categories"], queryFn: () => listFn() });
+  const cats = (q.data ?? []) as { id: string; name: string }[];
+
+  const refresh = () => {
+    qc.invalidateQueries({ queryKey: ["training-categories"] });
+    qc.invalidateQueries({ queryKey: ["training-courses"] });
+  };
+
+  const addMut = useMutation({
+    mutationFn: () => createFn({ data: { name: name.trim() } }),
+    onSuccess: () => { setName(""); refresh(); },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to add category"),
+  });
+  const renameMut = useMutation({
+    mutationFn: (v: { id: string; name: string }) => renameFn({ data: v }),
+    onSuccess: refresh,
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to rename"),
+  });
+  const delMut = useMutation({
+    mutationFn: (id: string) => deleteFn({ data: { id } }),
+    onSuccess: refresh,
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to delete"),
+  });
+  const moveMut = useMutation({
+    mutationFn: ({ index, dir }: { index: number; dir: -1 | 1 }) => {
+      const list = [...cats];
+      const target = index + dir;
+      if (target < 0 || target >= list.length) return Promise.resolve({ ok: true });
+      const [moved] = list.splice(index, 1);
+      list.splice(target, 0, moved);
+      return reorderFn({ data: { ids: list.map((c) => c.id) } });
+    },
+    onSuccess: refresh,
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to reorder"),
+  });
+
+  return (
+    <Card>
+      <CardHeader><CardTitle className="text-base">Course categories</CardTitle></CardHeader>
+      <CardContent className="space-y-3">
+        <p className="text-sm text-muted-foreground">
+          Group your courses and set the order they appear in on your public training page.
+        </p>
+        <div className="flex gap-2">
+          <Input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="e.g. Foundation, Advanced, Masterclass"
+            onKeyDown={(e) => { if (e.key === "Enter" && name.trim()) addMut.mutate(); }}
+          />
+          <Button onClick={() => addMut.mutate()} disabled={!name.trim() || addMut.isPending}>
+            <Plus className="mr-2 h-4 w-4" /> Add
+          </Button>
+        </div>
+        {cats.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No categories yet.</p>
+        ) : (
+          <ul className="divide-y rounded-lg border">
+            {cats.map((c, idx) => (
+              <li key={c.id} className="flex items-center gap-2 p-2">
+                <Input
+                  className="h-9 flex-1"
+                  defaultValue={c.name}
+                  onBlur={(e) => {
+                    const v = e.target.value.trim();
+                    if (v && v !== c.name) renameMut.mutate({ id: c.id, name: v });
+                  }}
+                />
+                <Button size="icon" variant="ghost" aria-label="Move up"
+                  disabled={idx === 0 || moveMut.isPending}
+                  onClick={() => moveMut.mutate({ index: idx, dir: -1 })}>
+                  <ArrowUp className="h-4 w-4" />
+                </Button>
+                <Button size="icon" variant="ghost" aria-label="Move down"
+                  disabled={idx === cats.length - 1 || moveMut.isPending}
+                  onClick={() => moveMut.mutate({ index: idx, dir: 1 })}>
+                  <ArrowDown className="h-4 w-4" />
+                </Button>
+                <Button size="icon" variant="ghost" aria-label="Delete category"
+                  onClick={() => {
+                    if (confirm(`Delete "${c.name}"? Courses in it become uncategorised.`)) delMut.mutate(c.id);
+                  }}>
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </CardContent>
+    </Card>
   );
 }

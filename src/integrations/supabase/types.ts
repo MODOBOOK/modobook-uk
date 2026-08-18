@@ -7657,6 +7657,7 @@ export type Database = {
           require_prereq_confirm: boolean
           scheduling_mode: Database["public"]["Enums"]["training_scheduling_mode"]
           sort_order: number
+          training_category_id: string | null
           updated_at: string
           visibility: Database["public"]["Enums"]["training_visibility"]
         }
@@ -7690,6 +7691,7 @@ export type Database = {
           require_prereq_confirm?: boolean
           scheduling_mode?: Database["public"]["Enums"]["training_scheduling_mode"]
           sort_order?: number
+          training_category_id?: string | null
           updated_at?: string
           visibility?: Database["public"]["Enums"]["training_visibility"]
         }
@@ -7723,6 +7725,7 @@ export type Database = {
           require_prereq_confirm?: boolean
           scheduling_mode?: Database["public"]["Enums"]["training_scheduling_mode"]
           sort_order?: number
+          training_category_id?: string | null
           updated_at?: string
           visibility?: Database["public"]["Enums"]["training_visibility"]
         }
@@ -7732,6 +7735,13 @@ export type Database = {
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_courses_training_category_id_fkey"
+            columns: ["training_category_id"]
+            isOneToOne: false
+            referencedRelation: "treatment_categories"
             referencedColumns: ["id"]
           },
         ]

@@ -21,7 +21,7 @@ export const listPublicCourses = createServerFn({ method: "GET" })
 
     const { data: courses, error } = await supabase
       .from("training_courses")
-      .select("id, name, description, cover_image_url, mode, scheduling_mode, duration_min, day_count, days_consecutive, day_duration_min, price, deposit_amount, payment_mode, capacity, prerequisites, require_prereq_confirm, cpd_hours, kit_list, materials_html, handout_url, handout_name, sort_order, visibility")
+      .select("id, name, description, cover_image_url, mode, scheduling_mode, duration_min, day_count, days_consecutive, day_duration_min, price, deposit_amount, payment_mode, capacity, prerequisites, require_prereq_confirm, cpd_hours, kit_list, materials_html, handout_url, handout_name, sort_order, visibility, training_category_id")
       .eq("profile_id", profile.id)
       .eq("active", true)
       .in("visibility", ["live", "coming_soon"])
@@ -46,6 +46,14 @@ export const listPublicCourses = createServerFn({ method: "GET" })
       });
     }
 
+    // Orderable training categories for grouping on the public page.
+    const { data: cats } = await supabase
+      .from("treatment_categories")
+      .select("id, name, sort_order")
+      .eq("profile_id", profile.id)
+      .eq("kind", "training")
+      .order("sort_order", { ascending: true });
+
     // Practitioner-authored copy for the public training page (optional).
     const { data: page } = await supabase
       .from("training_pages")
@@ -57,6 +65,7 @@ export const listPublicCourses = createServerFn({ method: "GET" })
       profileId: profile.id as string,
       clinicName: (profile as { clinic_name?: string | null }).clinic_name ?? null,
       courses: list,
+      categories: (cats ?? []) as { id: string; name: string; sort_order: number }[],
       page: page ?? null,
     };
   });
