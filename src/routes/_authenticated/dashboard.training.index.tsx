@@ -28,7 +28,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { GraduationCap, Plus, Trash2, ArrowLeft, Users, Calendar as CalendarIcon, Award, Loader2, Copy, Check, ExternalLink, PencilLine } from "lucide-react";
+import { GraduationCap, Plus, Trash2, ArrowLeft, Users, Calendar as CalendarIcon, Award, Loader2, Copy, Check, ExternalLink, PencilLine, ArrowUp, ArrowDown } from "lucide-react";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -77,6 +77,23 @@ function TrainingPage() {
     mutationFn: (id: string) => deleteFn({ data: { id } }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["training-courses"] }),
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
+  });
+
+  // Move a course up/down and persist the new order for the public page.
+  const updateFn = useServerFn(updateCourse);
+  const reorderMut = useMutation({
+    mutationFn: async ({ index, dir }: { index: number; dir: -1 | 1 }) => {
+      const list = [...((q.data ?? []) as Course[])];
+      const target = index + dir;
+      if (target < 0 || target >= list.length) return;
+      const [moved] = list.splice(index, 1);
+      list.splice(target, 0, moved);
+      await Promise.all(
+        list.map((c, i) => updateFn({ data: { id: c.id, sort_order: i } as never })),
+      );
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["training-courses"] }),
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to reorder"),
   });
 
   if (editingId) {
@@ -159,7 +176,7 @@ function TrainingPage() {
         </Card>
       ) : (
         <div className="grid gap-3">
-          {courses.map((c) => (
+          {courses.map((c, idx) => (
             <Card key={c.id} className="hover:shadow-md transition-shadow">
               <CardContent className="flex flex-wrap items-center gap-3 p-4">
                 <div className="flex-1 min-w-0">
@@ -187,6 +204,22 @@ function TrainingPage() {
                     £{Number(c.price).toFixed(2)} · {formatDuration(c.duration_min)}
                     {c.capacity ? ` · up to ${c.capacity} trainees` : ""}
                   </p>
+                </div>
+                <div className="flex items-center">
+                  <Button
+                    size="icon" variant="ghost" aria-label="Move up"
+                    disabled={idx === 0 || reorderMut.isPending}
+                    onClick={() => reorderMut.mutate({ index: idx, dir: -1 })}
+                  >
+                    <ArrowUp className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    size="icon" variant="ghost" aria-label="Move down"
+                    disabled={idx === courses.length - 1 || reorderMut.isPending}
+                    onClick={() => reorderMut.mutate({ index: idx, dir: 1 })}
+                  >
+                    <ArrowDown className="h-4 w-4" />
+                  </Button>
                 </div>
                 <Button size="sm" variant="outline" onClick={() => setEditingId(c.id)}>Edit</Button>
                 <Button

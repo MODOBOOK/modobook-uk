@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SafeHtml } from "@/components/SafeHtml";
 import { formatDuration } from "@/lib/format-duration";
+import { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   GraduationCap,
   Award,
@@ -82,6 +84,9 @@ type Course = {
   price: number | string;
   capacity: number | null;
   cpd_hours: number | string | null;
+  prerequisites?: string | null;
+  kit_list?: string | null;
+  materials_html?: string | null;
 };
 
 function Hero({ slug, count, page }: { slug: string; count: number; page: TrainingPage | null }) {
@@ -133,6 +138,7 @@ const HIGHLIGHTS = [
 
 function TrainingList() {
   const { slug } = useParams({ from: "/m/$slug/training/" });
+  const [openCourse, setOpenCourse] = useState<Course | null>(null);
   const data = Route.useLoaderData();
   const courses = (data.courses ?? []) as Course[];
   const page = ((data as { page?: TrainingPage | null }).page ?? null) as TrainingPage | null;
@@ -143,6 +149,7 @@ function TrainingList() {
 
   return (
     <div>
+      <CourseDetailsDialog slug={slug} course={openCourse} onClose={() => setOpenCourse(null)} />
       <Hero slug={slug} count={courses.length} page={page} />
 
       <div className="mx-auto max-w-5xl px-4 py-10 sm:py-12">
@@ -207,15 +214,24 @@ function TrainingList() {
                         </span>
                       )}
                     </div>
-                    <Link
-                      to="/m/$slug/training/$courseId"
-                      params={{ slug, courseId: c.id }}
-                      className="mt-auto"
-                    >
-                      <Button className="w-full">
-                        View dates & book <ArrowRight className="ml-1 h-4 w-4" />
+                    <div className="mt-auto flex flex-col gap-2 sm:flex-row">
+                      <Button
+                        variant="outline"
+                        className="sm:flex-1"
+                        onClick={() => setOpenCourse(c)}
+                      >
+                        Read more
                       </Button>
-                    </Link>
+                      <Link
+                        to="/m/$slug/training/$courseId"
+                        params={{ slug, courseId: c.id }}
+                        className="sm:flex-1"
+                      >
+                        <Button className="w-full">
+                          View dates & book <ArrowRight className="ml-1 h-4 w-4" />
+                        </Button>
+                      </Link>
+                    </div>
                   </CardContent>
                 </Card>
               ))}
@@ -284,4 +300,87 @@ function TrainingList() {
 // Loading state
 export function _pending() {
   return <div className="flex justify-center py-16"><Loader2 className="h-6 w-6 animate-spin" /></div>;
+}
+
+
+/** Read-more overlay: full course info, closable, with a direct link to the dates. */
+function CourseDetailsDialog({
+  slug,
+  course,
+  onClose,
+}: {
+  slug: string;
+  course: Course | null;
+  onClose: () => void;
+}) {
+  return (
+    <Dialog open={!!course} onOpenChange={(o) => { if (!o) onClose(); }}>
+      <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto">
+        {course && (
+          <>
+            <DialogHeader>
+              <DialogTitle className="font-serif text-2xl">{course.name}</DialogTitle>
+            </DialogHeader>
+
+            {course.cover_image_url && (
+              <img
+                src={course.cover_image_url}
+                alt={course.name}
+                className="h-48 w-full rounded-xl object-cover sm:h-60"
+              />
+            )}
+
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge variant="outline">{MODE_LABEL[course.mode] ?? course.mode}</Badge>
+              <Badge variant="outline" className="gap-1">
+                <Clock className="h-3 w-3" /> {formatDuration(course.duration_min)}
+              </Badge>
+              {course.capacity && (
+                <Badge variant="outline" className="gap-1">
+                  <Users className="h-3 w-3" /> up to {course.capacity}
+                </Badge>
+              )}
+              {course.cpd_hours != null && (
+                <Badge variant="outline" className="gap-1">
+                  <Award className="h-3 w-3" /> {course.cpd_hours} CPD
+                </Badge>
+              )}
+              <span className="ml-auto font-serif text-xl">£{Number(course.price).toFixed(2)}</span>
+            </div>
+
+            {course.description && (
+              <p className="whitespace-pre-line text-sm text-muted-foreground">{course.description}</p>
+            )}
+
+            {course.materials_html && (
+              <SafeHtml html={course.materials_html} className="prose prose-sm max-w-none dark:prose-invert" />
+            )}
+
+            {course.prerequisites && (
+              <div>
+                <h3 className="text-sm font-semibold">Prerequisites</h3>
+                <p className="mt-1 whitespace-pre-line text-sm text-muted-foreground">{course.prerequisites}</p>
+              </div>
+            )}
+
+            {course.kit_list && (
+              <div>
+                <h3 className="text-sm font-semibold">What to bring</h3>
+                <p className="mt-1 whitespace-pre-line text-sm text-muted-foreground">{course.kit_list}</p>
+              </div>
+            )}
+
+            <div className="flex flex-col gap-2 pt-2 sm:flex-row">
+              <Button variant="outline" className="sm:flex-1" onClick={onClose}>Close</Button>
+              <Link to="/m/$slug/training/$courseId" params={{ slug, courseId: course.id }} className="sm:flex-1">
+                <Button className="w-full">
+                  View dates & book <ArrowRight className="ml-1 h-4 w-4" />
+                </Button>
+              </Link>
+            </div>
+          </>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
 }
