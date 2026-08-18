@@ -419,7 +419,7 @@ export const getDayAvailability = createServerFn({ method: "GET" })
       console.error("[getDayAvailability] associate room check failed", e);
     }
 
-    return { isBlocked, busy: [...paddedAppts, ...blockedBusy, ...roomBusy], overrides: scopedOverrides };
+    return { isBlocked, busy: [...paddedAppts, ...blockedBusy, ...roomBusy], overrides: openingOverrides };
 
 
   });
