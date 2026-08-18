@@ -79,6 +79,23 @@ function TrainingPage() {
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
   });
 
+  // Move a course up/down and persist the new order for the public page.
+  const updateFn = useServerFn(updateCourse);
+  const reorderMut = useMutation({
+    mutationFn: async ({ index, dir }: { index: number; dir: -1 | 1 }) => {
+      const list = [...((q.data ?? []) as Course[])];
+      const target = index + dir;
+      if (target < 0 || target >= list.length) return;
+      const [moved] = list.splice(index, 1);
+      list.splice(target, 0, moved);
+      await Promise.all(
+        list.map((c, i) => updateFn({ data: { id: c.id, sort_order: i } as never })),
+      );
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["training-courses"] }),
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to reorder"),
+  });
+
   if (editingId) {
     return <CourseEditor id={editingId} onClose={() => setEditingId(null)} />;
   }
