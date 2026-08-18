@@ -7636,6 +7636,9 @@ export type Database = {
           cover_image_url: string | null
           cpd_hours: number | null
           created_at: string
+          day_count: number
+          day_duration_min: number | null
+          days_consecutive: boolean
           deposit_amount: number | null
           description: string | null
           duration_min: number
@@ -7666,6 +7669,9 @@ export type Database = {
           cover_image_url?: string | null
           cpd_hours?: number | null
           created_at?: string
+          day_count?: number
+          day_duration_min?: number | null
+          days_consecutive?: boolean
           deposit_amount?: number | null
           description?: string | null
           duration_min?: number
@@ -7696,6 +7702,9 @@ export type Database = {
           cover_image_url?: string | null
           cpd_hours?: number | null
           created_at?: string
+          day_count?: number
+          day_duration_min?: number | null
+          days_consecutive?: boolean
           deposit_amount?: number | null
           description?: string | null
           duration_min?: number
