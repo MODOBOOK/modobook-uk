@@ -2952,6 +2952,8 @@ function CategoryTree({
 
 function TreatmentRow({
   t,
+  slug,
+
   price,
   duration,
   brand,
