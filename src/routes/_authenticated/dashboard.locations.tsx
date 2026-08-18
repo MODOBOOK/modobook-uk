@@ -5,6 +5,7 @@ import {
   listMyLocations,
   upsertLocation,
   deleteLocation,
+  reorderLocation,
   getLocationPriceList,
   setTreatmentLocationPricing,
 } from "@/lib/locations.functions";
@@ -27,7 +28,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { EyeOff, ExternalLink, MapPin, Pencil, Plus, Star, Tag, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Clock3, EyeOff, ExternalLink, MapPin, Pencil, Plus, Star, Tag, Trash2 } from "lucide-react";
 import { mapsUrl } from "@/lib/maps";
 import { toast } from "sonner";
 
@@ -51,6 +52,8 @@ function emptyDraft(): Partial<Location> {
     is_primary: false,
     active: true,
     is_public: true,
+    coming_soon: false,
+    coming_soon_label: "",
   };
 }
 
@@ -60,6 +63,7 @@ function LocationsPage() {
   const fetchProfile = useServerFn(getMyProfile);
   const save = useServerFn(upsertLocation);
   const remove = useServerFn(deleteLocation);
+  const reorder = useServerFn(reorderLocation);
   const fetchPriceList = useServerFn(getLocationPriceList);
   const savePricing = useServerFn(setTreatmentLocationPricing);
   const fetchSeats = useServerFn(getSeatSummary);
@@ -178,6 +182,8 @@ function LocationsPage() {
           active: draft.active !== false,
           is_public: draft.is_public !== false,
           image_url: draft.image_url ?? null,
+          coming_soon: !!draft.coming_soon,
+          coming_soon_label: draft.coming_soon_label ?? null,
         },
       });
       toast.success("Location saved");
@@ -188,6 +194,15 @@ function LocationsPage() {
       toast.error(e instanceof Error ? e.message : "Failed to save");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function move(id: string, direction: "up" | "down") {
+    try {
+      await reorder({ data: { id, direction } });
+      await refresh();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to reorder");
     }
   }
 
@@ -264,6 +279,11 @@ function LocationsPage() {
                         Hidden
                       </span>
                     )}
+                    {loc.coming_soon && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                        <Clock3 className="h-3 w-3" /> {loc.coming_soon_label || "Coming soon"}
+                      </span>
+                    )}
                     {loc.active && loc.is_public === false && (
                       <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-xs font-medium text-amber-700 dark:text-amber-400">
                         <EyeOff className="h-3 w-3" /> Private
@@ -278,6 +298,28 @@ function LocationsPage() {
                   </p>
                 </div>
                 <div className="flex gap-1">
+                  <div className="flex flex-col">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6"
+                      aria-label="Move up"
+                      disabled={locations.indexOf(loc) === 0}
+                      onClick={() => move(loc.id, "up")}
+                    >
+                      <ArrowUp className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6"
+                      aria-label="Move down"
+                      disabled={locations.indexOf(loc) === locations.length - 1}
+                      onClick={() => move(loc.id, "down")}
+                    >
+                      <ArrowDown className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
                   <Button variant="ghost" size="sm" onClick={() => openPriceList(loc)} title="Per-location price list">
                     <Tag className="mr-1 h-4 w-4" /> Price list
                   </Button>
@@ -405,6 +447,31 @@ function LocationsPage() {
                 placeholder="Parking info, entrance details, etc."
                 rows={3}
               />
+            </div>
+            <div className="rounded-md border p-3 space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium">Coming soon</p>
+                  <p className="text-xs text-muted-foreground">
+                    Show this location to patients but stop bookings until it opens.
+                  </p>
+                </div>
+                <Switch
+                  checked={!!draft.coming_soon}
+                  onCheckedChange={(v) => setDraft((d) => ({ ...d, coming_soon: v }))}
+                />
+              </div>
+              {draft.coming_soon && (
+                <div className="space-y-1.5">
+                  <Label htmlFor="cslabel">Badge text</Label>
+                  <Input
+                    id="cslabel"
+                    value={draft.coming_soon_label ?? ""}
+                    onChange={(e) => setDraft((d) => ({ ...d, coming_soon_label: e.target.value }))}
+                    placeholder="Coming soon"
+                  />
+                </div>
+              )}
             </div>
             <div className="flex items-center justify-between rounded-md border p-3">
               <div>
