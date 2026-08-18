@@ -12,6 +12,9 @@ import {
   setCourseLocations,
 } from "@/lib/training.functions";
 import { listMyLocations } from "@/lib/locations.functions";
+import { getMyTrainingPage, saveMyTrainingPage } from "@/lib/training-page.functions";
+import { RichTextEditor } from "@/components/RichTextEditor";
+import { ImageUploader } from "@/components/ImageUploader";
 import { getMyProfile } from "@/lib/profiles.functions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -23,7 +26,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { GraduationCap, Plus, Trash2, ArrowLeft, Users, Calendar as CalendarIcon, Award, Loader2, Copy, Check, ExternalLink } from "lucide-react";
+import { GraduationCap, Plus, Trash2, ArrowLeft, Users, Calendar as CalendarIcon, Award, Loader2, Copy, Check, ExternalLink, PencilLine } from "lucide-react";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -48,6 +51,7 @@ function TrainingPage() {
   const deleteFn = useServerFn(deleteCourse);
   const profileFn = useServerFn(getMyProfile);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingPage, setEditingPage] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const q = useQuery({
@@ -76,6 +80,9 @@ function TrainingPage() {
   if (editingId) {
     return <CourseEditor id={editingId} onClose={() => setEditingId(null)} />;
   }
+  if (editingPage) {
+    return <TrainingPageEditor onClose={() => setEditingPage(false)} />;
+  }
 
   const courses = (q.data ?? []) as Course[];
 
@@ -91,6 +98,9 @@ function TrainingPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => setEditingPage(true)}>
+            <PencilLine className="mr-2 h-4 w-4" /> Edit page
+          </Button>
           <Link to="/dashboard/training/bookings"><Button variant="outline"><Users className="mr-2 h-4 w-4" /> Bookings</Button></Link>
           <Button onClick={() => createMut.mutate()} disabled={createMut.isPending}>
             <Plus className="mr-2 h-4 w-4" /> New course
