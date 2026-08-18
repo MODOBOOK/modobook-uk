@@ -57,10 +57,11 @@ export const getPublicClinic = createServerFn({ method: "GET" })
 
     const { data: locations, error: locationsError } = await supabase
       .from("locations")
-      .select("id, profile_id, name, address_line1, address_line2, city, postcode, country, is_primary, display_order, active, created_at, updated_at, image_url")
+      .select("id, profile_id, name, address_line1, address_line2, city, postcode, country, is_primary, display_order, active, created_at, updated_at, image_url, coming_soon, coming_soon_label")
       .eq("profile_id", profile.id)
       .eq("active", true)
       .eq("is_public", true)
+      .order("display_order", { ascending: true, nullsFirst: false })
       .order("is_primary", { ascending: false })
       .order("name", { ascending: true });
     if (locationsError) throw locationsError;
