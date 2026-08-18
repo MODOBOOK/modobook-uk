@@ -3106,6 +3106,47 @@ function TreatmentRow({
           </div>
         )}
       </button>
+      {leafletEnabled && (leafletHtml || leafletUrl) && (
+        <div className="basis-full pl-8">
+          <button
+            type="button"
+            onClick={() => setLeafletOpen(true)}
+            className="mt-1 inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold transition hover:opacity-80"
+            style={{ borderColor: `${brand}55`, color: brand }}
+          >
+            <Info className="h-3.5 w-3.5" />
+            Information leaflet
+          </button>
+          <Dialog open={leafletOpen} onOpenChange={setLeafletOpen}>
+            <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
+              <DialogHeader>
+                <DialogTitle>{leafletTitle}</DialogTitle>
+                <DialogDescription>Patient information for {t.name}</DialogDescription>
+              </DialogHeader>
+              {leafletHtml && (
+                <SafeHtml
+                  html={leafletHtml}
+                  className="prose prose-sm max-w-none whitespace-pre-line text-sm leading-relaxed"
+                />
+              )}
+              {leafletUrl && (
+                <a
+                  href={leafletUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm font-semibold underline"
+                  style={{ color: brand }}
+                >
+                  Open full leaflet (PDF)
+                </a>
+              )}
+              <Button variant="outline" onClick={() => setLeafletOpen(false)}>
+                Close
+              </Button>
+            </DialogContent>
+          </Dialog>
+        </div>
+      )}
       <button
         type="button"
         onClick={onToggle}
@@ -3113,6 +3154,7 @@ function TreatmentRow({
         className="sr-only"
       />
     </div>
+
   );
 }
 
