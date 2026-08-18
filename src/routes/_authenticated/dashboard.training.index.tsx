@@ -258,6 +258,11 @@ function CourseEditor({ id, onClose }: { id: string; onClose: () => void }) {
   const [pickedLocs, setPickedLocs] = useState<string[] | null>(null);
   const [saving, setSaving] = useState(false);
 
+  const cachedCourses = (qc.getQueryData(["training-courses"]) ?? []) as Array<{ category?: string | null }>;
+  const existingCategories = Array.from(
+    new Set(cachedCourses.map((c) => (c.category ?? "").trim()).filter(Boolean)),
+  ) as string[];
+
   // Initialise once data loads
   if (form === null && q.data) {
     setForm(q.data.course as Course);
