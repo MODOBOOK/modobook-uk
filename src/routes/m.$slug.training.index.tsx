@@ -91,7 +91,7 @@ type Course = {
   price: number | string;
   capacity: number | null;
   cpd_hours: number | string | null;
-  category?: string | null;
+  training_category_id?: string | null;
   prerequisites?: string | null;
   kit_list?: string | null;
   materials_html?: string | null;
@@ -144,14 +144,19 @@ const HIGHLIGHTS = [
   { icon: Sparkles, title: "Ongoing support", body: "Post-course guidance as you start treating your own clients." },
 ];
 
-function groupCourses(courses: Course[]) {
+type CategoryRow = { id: string; name: string; sort_order: number };
+
+function groupCourses(courses: Course[], categories: CategoryRow[]) {
   const groups: { name: string; courses: Course[] }[] = [];
-  for (const c of courses) {
-    const name = (c.category ?? "").trim() || "Other courses";
-    const g = groups.find((x) => x.name === name);
-    if (g) g.courses.push(c);
-    else groups.push({ name, courses: [c] });
+  for (const cat of categories) {
+    const inCat = courses.filter((c) => c.training_category_id === cat.id);
+    if (inCat.length) groups.push({ name: cat.name, courses: inCat });
   }
+  const known = new Set(categories.map((c) => c.id));
+  const rest = courses.filter(
+    (c) => !c.training_category_id || !known.has(c.training_category_id),
+  );
+  if (rest.length) groups.push({ name: "Other courses", courses: rest });
   return groups;
 }
 
@@ -161,6 +166,8 @@ function TrainingList() {
   const data = Route.useLoaderData();
   const courses = (data.courses ?? []) as Course[];
   const page = ((data as { page?: TrainingPage | null }).page ?? null) as TrainingPage | null;
+  const categories = ((data as { categories?: CategoryRow[] }).categories ?? []) as CategoryRow[];
+  const groups = groupCourses(courses, categories);
   const highlights =
     page?.highlights && page.highlights.length > 0
       ? page.highlights.map((h) => ({ icon: Sparkles, title: h.title, body: h.body }))
@@ -188,10 +195,10 @@ function TrainingList() {
             <h2 className="font-serif text-2xl sm:text-3xl">{page?.courses_heading || "Available courses"}</h2>
             <Accordion
               type="multiple"
-              defaultValue={groupCourses(courses).map((g) => g.name)}
+              defaultValue={groups.map((g) => g.name)}
               className="mt-5 w-full space-y-3"
             >
-            {groupCourses(courses).map((group) => (
+            {groups.map((group) => (
             <AccordionItem key={group.name} value={group.name} className="rounded-2xl border border-border/60 px-4">
             <AccordionTrigger className="py-4 text-left font-serif text-lg hover:no-underline sm:text-xl">
               {group.name}
