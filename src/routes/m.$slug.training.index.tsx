@@ -3,6 +3,8 @@ import { listPublicCourses } from "@/lib/training-public.functions";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+
 import { CourseCopy } from "@/components/CourseCopy";
 import { SafeHtml } from "@/components/SafeHtml";
 import { formatDuration } from "@/lib/format-duration";
@@ -180,14 +182,21 @@ function TrainingList() {
         ) : (
           <>
             <h2 className="font-serif text-2xl sm:text-3xl">{page?.courses_heading || "Available courses"}</h2>
+            <Accordion
+              type="multiple"
+              defaultValue={groupCourses(courses).map((g) => g.name)}
+              className="mt-5 w-full space-y-3"
+            >
             {groupCourses(courses).map((group) => (
-            <div key={group.name} className="mt-8 first:mt-5">
-            {groupCourses(courses).length > 1 && (
-              <h3 className="mb-3 text-[11px] font-medium uppercase tracking-[0.25em] text-muted-foreground">
-                {group.name}
-              </h3>
-            )}
-            <div className="grid gap-5 sm:grid-cols-2">
+            <AccordionItem key={group.name} value={group.name} className="rounded-2xl border border-border/60 px-4">
+            <AccordionTrigger className="py-4 text-left font-serif text-lg hover:no-underline sm:text-xl">
+              {group.name}
+              <span className="ml-2 text-xs font-sans text-muted-foreground">
+                {group.courses.length}
+              </span>
+            </AccordionTrigger>
+            <AccordionContent className="pb-5">
+
               {group.courses.map((c) => (
                 <Card
                   key={c.id}
@@ -255,9 +264,11 @@ function TrainingList() {
                   </CardContent>
                 </Card>
               ))}
-            </div>
-            </div>
+            </AccordionContent>
+            </AccordionItem>
             ))}
+            </Accordion>
+
           </>
         )}
 
