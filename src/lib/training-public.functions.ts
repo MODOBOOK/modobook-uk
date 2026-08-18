@@ -21,7 +21,7 @@ export const listPublicCourses = createServerFn({ method: "GET" })
 
     const { data: courses, error } = await supabase
       .from("training_courses")
-      .select("id, name, description, cover_image_url, mode, scheduling_mode, duration_min, price, deposit_amount, payment_mode, capacity, prerequisites, require_prereq_confirm, cpd_hours, kit_list, sort_order, visibility")
+      .select("id, name, description, cover_image_url, mode, scheduling_mode, duration_min, price, deposit_amount, payment_mode, capacity, prerequisites, require_prereq_confirm, cpd_hours, kit_list, materials_html, handout_url, handout_name, sort_order, visibility")
       .eq("profile_id", profile.id)
       .eq("active", true)
       .in("visibility", ["live", "coming_soon"])
