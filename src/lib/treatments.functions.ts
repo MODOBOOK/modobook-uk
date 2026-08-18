@@ -199,6 +199,10 @@ export const updateTreatment = createServerFn({ method: "POST" })
     if (data.prescriber_routing !== undefined) update.prescriber_routing = data.prescriber_routing;
     if (data.prescriber_note !== undefined) update.prescriber_note = data.prescriber_note;
     if (data.booking_cap !== undefined) update.booking_cap = data.booking_cap;
+    if (data.leaflet_title !== undefined) update.leaflet_title = data.leaflet_title;
+    if (data.leaflet_html !== undefined) update.leaflet_html = data.leaflet_html;
+    if (data.leaflet_url !== undefined) update.leaflet_url = data.leaflet_url;
+
 
 
 
