@@ -12,6 +12,7 @@ import {
   setCourseLocations,
 } from "@/lib/training.functions";
 import { listMyLocations } from "@/lib/locations.functions";
+import { getMyProfile } from "@/lib/profiles.functions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
