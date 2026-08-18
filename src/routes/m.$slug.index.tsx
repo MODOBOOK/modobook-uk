@@ -2999,7 +2999,7 @@ function TreatmentRow({
 
   return (
     <div
-      className={`group flex w-full items-start gap-3 rounded-xl border transition hover:shadow-sm ${padding}`}
+      className={`group flex w-full flex-wrap items-start gap-3 rounded-xl border transition hover:shadow-sm ${padding}`}
       style={{
         backgroundColor: cardBg,
         borderColor: selected ? brand : cardBorder,
