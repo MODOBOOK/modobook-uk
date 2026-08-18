@@ -513,6 +513,46 @@ function CourseEditor({ id, onClose }: { id: string; onClose: () => void }) {
               </div>
             )}
           </div>
+
+          {isMulti && (
+            <div className="rounded-lg border bg-muted/30 p-4 space-y-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  <Label>Number of days</Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={30}
+                    value={dayCount}
+                    onChange={(e) => setDayCount(Number(e.target.value))}
+                  />
+                  <p className="mt-1 text-[11px] text-muted-foreground">
+                    Total course time: {formatDuration(perDayMin * dayCount)}
+                  </p>
+                </div>
+                <div className="flex items-center justify-between rounded-md border bg-background px-3 py-2">
+                  <div className="pr-3">
+                    <Label className="text-sm">Consecutive days</Label>
+                    <p className="text-[11px] text-muted-foreground">
+                      {daysConsecutive
+                        ? "Days run back-to-back (e.g. Mon–Wed)."
+                        : "Days are spread out — set each date separately."}
+                    </p>
+                  </div>
+                  <Switch
+                    checked={!!daysConsecutive}
+                    onCheckedChange={(v) => patchMulti({ days_consecutive: v })}
+                  />
+                </div>
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                {schedulingMode === "fixed"
+                  ? `Add ${dayCount} session date${dayCount === 1 ? "" : "s"} below${daysConsecutive ? " on consecutive days" : ""}.`
+                  : `Trainees book each day from your calendar using ${formatDuration(perDayMin)} slots.`}
+              </p>
+            </div>
+          )}
+
         </CardContent>
       </Card>
 
