@@ -15,8 +15,8 @@ export const listMyLocations = createServerFn({ method: "GET" })
       .from("locations")
       .select("*")
       .eq("profile_id", profile.id)
+      .order("display_order", { ascending: true, nullsFirst: false })
       .order("is_primary", { ascending: false })
-      .order("display_order")
       .order("created_at");
     if (error) throw error;
     return data ?? [];

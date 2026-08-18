@@ -98,6 +98,8 @@ type Rule = {
   cycle_length?: number | null;
   weeks_mask?: number | null;
   practitioner_id?: string | null;
+  effective_from?: string | null;
+  effective_to?: string | null;
 };
 type Location = { id: string; name: string };
 type Practitioner = { id: string; name: string };
@@ -147,6 +149,8 @@ function AvailabilityPage() {
 
     practitioner_id: "none",
     weeks: [true, false, false, false] as boolean[], // A,B,C,D
+    effective_from: "",
+    effective_to: "",
   });
 
   const today = new Date().toISOString().slice(0, 10);
@@ -208,6 +212,7 @@ function AvailabilityPage() {
     setForm({
       day_of_week: day, start: "09:00", end: "17:00", interval: "30",
       location_ids: [], practitioner_id: "none", weeks,
+      effective_from: "", effective_to: "",
     });
     setDlgOpen(true);
   }
@@ -223,12 +228,17 @@ function AvailabilityPage() {
       location_ids: r.location_id ? [r.location_id] : [],
       practitioner_id: r.practitioner_id ?? "none",
       weeks,
+      effective_from: r.effective_from ?? "",
+      effective_to: r.effective_to ?? "",
     });
     setDlgOpen(true);
   }
 
   async function saveShift() {
     if (form.start >= form.end) { toast.error("End time must be after start"); return; }
+    if (form.effective_from && form.effective_to && form.effective_from > form.effective_to) {
+      toast.error("Rota end date must be after the start date"); return;
+    }
     let mask = 0;
     for (let i = 0; i < cycleLength; i++) if (form.weeks[i]) mask |= (1 << i);
     if (mask === 0) { toast.error("Pick at least one week"); return; }
@@ -249,6 +259,8 @@ function AvailabilityPage() {
             practitioner_id: form.practitioner_id === "none" ? null : form.practitioner_id,
             cycle_length: cycleLength,
             weeks_mask: mask,
+            effective_from: form.effective_from || null,
+            effective_to: form.effective_to || null,
           },
         });
       }
@@ -465,6 +477,12 @@ function AvailabilityPage() {
                                     <div className="flex items-center gap-1 mt-0.5 text-muted-foreground truncate">
                                       <span className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
                                       <span className="truncate">{locName(r.location_id)}</span>
+                                    </div>
+                                  )}
+                                  {(r.effective_from || r.effective_to) && (
+                                    <div className="truncate text-[10px] text-muted-foreground/80">
+                                      {r.effective_from ? `from ${r.effective_from.slice(5)}` : ""}
+                                      {r.effective_to ? ` to ${r.effective_to.slice(5)}` : ""}
                                     </div>
                                   )}
                                   {pracName(r.practitioner_id) && (
@@ -764,6 +782,27 @@ function AvailabilityPage() {
                 </Select>
               </div>
             )}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Rota starts</Label>
+                <Input
+                  type="date"
+                  value={form.effective_from}
+                  onChange={(e) => setForm({ ...form, effective_from: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label>Rota ends</Label>
+                <Input
+                  type="date"
+                  value={form.effective_to}
+                  onChange={(e) => setForm({ ...form, effective_to: e.target.value })}
+                />
+              </div>
+              <p className="col-span-2 -mt-1 text-xs text-muted-foreground">
+                Leave blank for no limit. Set an end date to finish a rota, then add a new shift starting the next day.
+              </p>
+            </div>
             {cycleLength > 1 && (
               <div>
                 <Label>Applies on weeks</Label>
