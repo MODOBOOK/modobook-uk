@@ -2978,6 +2978,13 @@ function TreatmentRow({
 } & MenuStyleProps) {
 
   const [expanded, setExpanded] = useState(false);
+  const [leafletOpen, setLeafletOpen] = useState(false);
+  const leafletEnabled = treatmentLeafletsEnabled(slug);
+  const leafletHtml = (t as { leaflet_html?: string | null }).leaflet_html || "";
+  const leafletUrl = (t as { leaflet_url?: string | null }).leaflet_url || "";
+  const leafletTitle =
+    (t as { leaflet_title?: string | null }).leaflet_title || `${t.name} — information`;
+
   const desc = t.description ?? "";
   const isLong = desc.length > 110;
   const shown = expanded || !isLong ? desc : desc.slice(0, 110).trimEnd() + " …";
