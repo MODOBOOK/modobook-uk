@@ -66,3 +66,14 @@ export const LINK_BUTTON_SLUGS = ["aestheticsbynurseryan"];
 export function linkButtonEnabled(slug?: string | null) {
   return isFeatureLive(LINK_BUTTON_SLUGS, slug);
 }
+
+/**
+ * Treatment information leaflets (open/close panel on the booking page) —
+ * pilot account only for now.
+ */
+export const TREATMENT_LEAFLET_SLUGS = ["aestheticsbynurseryan"];
+
+export function treatmentLeafletsEnabled(slug?: string | null) {
+  return isFeatureLive(TREATMENT_LEAFLET_SLUGS, slug);
+}
+
