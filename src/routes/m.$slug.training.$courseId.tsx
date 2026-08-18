@@ -95,8 +95,10 @@ function BookCoursePage() {
     }
     setSubmitting(true);
     try {
-      await bookFn({
+      const res = await bookFn({
         data: {
+          slug,
+          return_origin: window.location.origin,
           course_id: course.id,
           session_id: isSchedule ? sessionId : null,
           trainee_name: name,
@@ -112,6 +114,10 @@ function BookCoursePage() {
           notes,
         },
       });
+      if (res?.checkoutUrl) {
+        window.location.href = res.checkoutUrl;
+        return;
+      }
       setDone(true);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to book");
