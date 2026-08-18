@@ -1030,7 +1030,44 @@ function TreatmentDialog({
           <p className="text-[11px] text-muted-foreground">Selected templates send automatically at each template's delay (default 2 hours after the appointment ends).</p>
         </div>
 
+        {/* Information leaflet (optional) */}
+        <details className="rounded-md border p-3">
+          <summary className="cursor-pointer text-sm font-medium">Information leaflet (optional)</summary>
+          <div className="mt-3 space-y-3">
+            <p className="text-[11px] text-muted-foreground">
+              Patients see an “Information leaflet” button on this treatment. It opens over the
+              menu and closes again to show the treatment.
+            </p>
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">Leaflet title</Label>
+              <Input
+                value={leafletTitle}
+                onChange={(e) => setLeafletTitle(e.target.value)}
+                placeholder="e.g. Anti-wrinkle treatment — patient information"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">Leaflet content</Label>
+              <Textarea
+                rows={8}
+                value={leafletHtml}
+                onChange={(e) => setLeafletHtml(e.target.value)}
+                placeholder="What the treatment is, how it works, risks, aftercare…"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">Or link a PDF/leaflet (optional)</Label>
+              <Input
+                value={leafletUrl}
+                onChange={(e) => setLeafletUrl(e.target.value)}
+                placeholder="https://…"
+              />
+            </div>
+          </div>
+        </details>
+
         {/* One-off override (optional) */}
+
         <details className="rounded-md border p-3">
           <summary className="cursor-pointer text-sm font-medium">Custom aftercare for this treatment (optional)</summary>
           <div className="mt-3 space-y-3">
