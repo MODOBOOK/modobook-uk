@@ -11,6 +11,7 @@ export type SchedulingMode = "fixed" | "availability";
 
 export type CourseInput = {
   name: string;
+  category?: string | null;
   description?: string | null;
   cover_image_url?: string | null;
   mode?: TrainingMode;
