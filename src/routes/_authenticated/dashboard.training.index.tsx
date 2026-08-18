@@ -286,6 +286,7 @@ function CourseEditor({ id, onClose }: { id: string; onClose: () => void }) {
         data: {
           id,
           name: form.name!,
+          category: ((form as Course & { category?: string | null }).category || null) as string | null,
           description: form.description ?? null,
           cover_image_url: form.cover_image_url ?? null,
           mode: form.mode,
