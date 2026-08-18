@@ -286,6 +286,23 @@ function CourseEditor({ id, onClose }: { id: string; onClose: () => void }) {
     ? `${typeof window !== "undefined" ? window.location.origin : ""}/m/${(q.data as { slug?: string })?.slug ?? ""}/training/${id}?preview=${previewToken}`
     : "";
 
+  type MultiDay = { day_count?: number | null; days_consecutive?: boolean | null; day_duration_min?: number | null };
+  const isMulti = form.mode === "multi_day";
+  const dayCount = Math.max(1, Number((form as Course & MultiDay).day_count ?? 1) || 1);
+  const perDayMin = Number(
+    (form as Course & MultiDay).day_duration_min ?? Math.round((Number(form.duration_min) || 0) / dayCount),
+  ) || 0;
+  const daysConsecutive = (form as Course & MultiDay).days_consecutive ?? true;
+  const patchMulti = (p: MultiDay) => setForm({ ...form, ...((p as unknown) as Partial<Course>) });
+  const setDayDuration = (mins: number) =>
+    patchMulti({ day_duration_min: mins, ...(isMulti ? { duration_min: mins * dayCount } as MultiDay : { duration_min: mins } as MultiDay) });
+  const setDayCount = (n: number) => {
+    const days = Math.max(1, n || 1);
+    patchMulti({ day_count: days, day_duration_min: perDayMin, ...({ duration_min: perDayMin * days } as MultiDay) });
+  };
+
+
+
   async function save() {
     if (!form?.name?.trim()) { toast.error("Course name is required"); return; }
     setSaving(true);
