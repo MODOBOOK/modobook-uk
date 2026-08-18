@@ -84,6 +84,7 @@ type Course = {
   price: number | string;
   capacity: number | null;
   cpd_hours: number | string | null;
+  category?: string | null;
   prerequisites?: string | null;
   kit_list?: string | null;
   materials_html?: string | null;
@@ -136,6 +137,17 @@ const HIGHLIGHTS = [
   { icon: Sparkles, title: "Ongoing support", body: "Post-course guidance as you start treating your own clients." },
 ];
 
+function groupCourses(courses: Course[]) {
+  const groups: { name: string; courses: Course[] }[] = [];
+  for (const c of courses) {
+    const name = (c.category ?? "").trim() || "Other courses";
+    const g = groups.find((x) => x.name === name);
+    if (g) g.courses.push(c);
+    else groups.push({ name, courses: [c] });
+  }
+  return groups;
+}
+
 function TrainingList() {
   const { slug } = useParams({ from: "/m/$slug/training/" });
   const [openCourse, setOpenCourse] = useState<Course | null>(null);
@@ -167,8 +179,15 @@ function TrainingList() {
         ) : (
           <>
             <h2 className="font-serif text-2xl sm:text-3xl">{page?.courses_heading || "Available courses"}</h2>
-            <div className="mt-5 grid gap-5 sm:grid-cols-2">
-              {courses.map((c) => (
+            {groupCourses(courses).map((group) => (
+            <div key={group.name} className="mt-8 first:mt-5">
+            {groupCourses(courses).length > 1 && (
+              <h3 className="mb-3 text-[11px] font-medium uppercase tracking-[0.25em] text-muted-foreground">
+                {group.name}
+              </h3>
+            )}
+            <div className="grid gap-5 sm:grid-cols-2">
+              {group.courses.map((c) => (
                 <Card
                   key={c.id}
                   className="group flex flex-col overflow-hidden border-border/60 transition hover:border-accent hover:shadow-luxe"
@@ -236,6 +255,8 @@ function TrainingList() {
                 </Card>
               ))}
             </div>
+            </div>
+            ))}
           </>
         )}
 
