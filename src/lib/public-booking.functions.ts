@@ -321,6 +321,12 @@ export const getDayAvailability = createServerFn({ method: "GET" })
     let isBlocked = (blockedRows ?? []).some(
       (b) => !b.location_id || !data.locationId || b.location_id === data.locationId,
     );
+    // A closure set for THIS specific location can only be re-opened by an
+    // ad-hoc slot that is also scoped to this location — an "all locations"
+    // opening must not cancel a location-specific closure.
+    const hasLocationSpecificBlock = (blockedRows ?? []).some(
+      (b) => !!b.location_id && !!data.locationId && b.location_id === data.locationId,
+    );
 
     const { data: appts } = await supabaseAdmin
       .from("appointments")
