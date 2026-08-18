@@ -1161,6 +1161,10 @@ function TreatmentDialog({
               prescriber_note: prescriberNote.trim() ? prescriberNote.trim() : null,
               booking_cap: bookingCap.trim() === "" ? null : Math.max(0, Math.floor(Number(bookingCap))),
               color: color || null,
+              leaflet_title: leafletTitle.trim() || null,
+              leaflet_html: leafletHtml.trim() || null,
+              leaflet_url: leafletUrl.trim() || null,
+
             })
 
 
