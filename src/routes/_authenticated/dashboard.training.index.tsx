@@ -416,6 +416,21 @@ function CourseEditor({ id, onClose }: { id: string; onClose: () => void }) {
             <Input value={form.name ?? ""} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="e.g. Foundation Lip Filler Training" />
           </div>
           <div>
+            <Label>Category</Label>
+            <Input
+              list="training-category-options"
+              value={(form as Course & { category?: string | null }).category ?? ""}
+              onChange={(e) => setForm({ ...form, ...(({ category: e.target.value } as unknown) as Partial<Course>) })}
+              placeholder="e.g. Foundation, Advanced, Masterclass"
+            />
+            <datalist id="training-category-options">
+              {existingCategories.map((c) => <option key={c} value={c} />)}
+            </datalist>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Courses are grouped by category on your public training page. Leave blank for “Other courses”.
+            </p>
+          </div>
+          <div>
             <Label>Short description</Label>
             <Textarea rows={3} value={form.description ?? ""} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="What trainees will learn, level, etc." />
           </div>
