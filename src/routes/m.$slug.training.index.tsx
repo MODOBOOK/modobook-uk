@@ -3,6 +3,8 @@ import { listPublicCourses } from "@/lib/training-public.functions";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+
 import { CourseCopy } from "@/components/CourseCopy";
 import { SafeHtml } from "@/components/SafeHtml";
 import { formatDuration } from "@/lib/format-duration";
