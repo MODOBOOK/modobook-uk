@@ -45,12 +45,17 @@ function TrainingPage() {
   const listFn = useServerFn(listMyCourses);
   const createFn = useServerFn(createCourse);
   const deleteFn = useServerFn(deleteCourse);
+  const profileFn = useServerFn(getMyProfile);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   const q = useQuery({
     queryKey: ["training-courses"],
     queryFn: () => listFn(),
   });
+  const profileQ = useQuery({ queryKey: ["my-profile"], queryFn: () => profileFn() });
+  const slug = (profileQ.data as { slug?: string } | undefined)?.slug ?? "";
+  const publicUrl = slug ? `https://modobook.uk/m/${slug}/training` : "";
 
   const createMut = useMutation({
     mutationFn: () => createFn({ data: { name: "New course", mode: "one_to_one" } }),
