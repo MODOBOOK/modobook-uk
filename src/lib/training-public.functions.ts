@@ -374,8 +374,10 @@ export const createTrainingBooking = createServerFn({ method: "POST" })
           location_id: data.location_id ?? null,
           status: "confirmed",
           payment_status: "pending",
-          service_name: `Training — ${course.name}`,
-          service_price_cents: Math.round(Number(course.price ?? 0) * 100),
+          treatment_name_snapshot: `Training — ${course.name}`,
+          treatment_price_snapshot: Number(course.price ?? 0),
+          base_amount: Number(course.price ?? 0),
+          total_amount: Number(course.price ?? 0),
           notes: data.notes?.trim() || null,
         } as never)
         .select("id")
@@ -436,8 +438,10 @@ export const createTrainingBooking = createServerFn({ method: "POST" })
               location_id: sess.location_id ?? data.location_id ?? null,
               status: "confirmed",
               payment_status: "pending",
-              service_name: `Training — ${course.name}`,
-              service_price_cents: Math.round(Number(course.price ?? 0) * 100),
+              treatment_name_snapshot: `Training — ${course.name}`,
+              treatment_price_snapshot: Number(course.price ?? 0),
+              base_amount: Number(course.price ?? 0),
+              total_amount: Number(course.price ?? 0),
               notes: data.notes?.trim() || null,
             } as never)
             .select("id")
@@ -465,38 +469,54 @@ export const createTrainingBooking = createServerFn({ method: "POST" })
     const price = Number(course.price ?? 0);
     let checkoutUrl: string | null = null;
     if (price > 0 && data.return_origin && data.slug) {
-      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-      const { data: prof } = await supabaseAdmin
-        .from("profiles")
-        .select("stripe_connect_account_id, clinic_name")
-        .eq("id", course.profile_id)
-        .maybeSingle();
-      if (prof?.stripe_connect_account_id) {
-        const { createCheckoutSession } = await import("./stripe.server");
-        const base = `${data.return_origin.replace(/\/$/, "")}/m/${data.slug}/training/${course.id}?booking=${row.id}`;
-        const session = await createCheckoutSession({
-          accountId: prof.stripe_connect_account_id,
-          lineItems: [{
-            quantity: 1,
-            price_data: {
-              currency: "gbp",
-              unit_amount: Math.round(price * 100),
-              product_data: { name: `Training — ${course.name}` },
+      try {
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        const { data: prof } = await supabaseAdmin
+          .from("profiles")
+          .select("stripe_connect_account_id, clinic_name")
+          .eq("id", course.profile_id)
+          .maybeSingle();
+        if (prof?.stripe_connect_account_id) {
+          const { createCheckoutSession } = await import("./stripe.server");
+          const base = `${data.return_origin.replace(/\/$/, "")}/m/${data.slug}/training/${course.id}?booking=${row.id}`;
+          const session = await createCheckoutSession({
+            accountId: prof.stripe_connect_account_id,
+            lineItems: [{
+              quantity: 1,
+              price_data: {
+                currency: "gbp",
+                unit_amount: Math.round(price * 100),
+                product_data: { name: `Training — ${course.name}` },
+              },
+            }],
+            successUrl: `${base}&status=paid`,
+            cancelUrl: `${base}&status=cancelled`,
+            customerEmail: data.trainee_email.trim().toLowerCase(),
+            metadata: {
+              kind: "training_booking",
+              training_booking_id: row.id,
             },
-          }],
-          successUrl: `${base}&status=paid`,
-          cancelUrl: `${base}&status=cancelled`,
-          customerEmail: data.trainee_email.trim().toLowerCase(),
-          metadata: {
-            kind: "training_booking",
-            training_booking_id: row.id,
-          },
-          descriptorName: prof.clinic_name,
-          idempotencyKey: `training-${row.id}`,
-        });
-        checkoutUrl = session.url ?? null;
+            descriptorName: prof.clinic_name,
+            idempotencyKey: `training-${row.id}`,
+          });
+          checkoutUrl = session.url ?? null;
+        }
+      } catch (e) {
+        console.error("[training] stripe checkout failed", e);
+      }
+    }
+
+    // No online payment needed (free course, or clinic not on Stripe): confirm
+    // straight away and email the trainee their booking confirmation.
+    if (!checkoutUrl && appointment_id) {
+      try {
+        const { sendBookingConfirmationEmails } = await import("@/lib/email/send.server");
+        await sendBookingConfirmationEmails([appointment_id]);
+      } catch (e) {
+        console.error("[training] confirmation email failed", e);
       }
     }
 
     return { id: row.id as string, checkoutUrl };
+
   });
