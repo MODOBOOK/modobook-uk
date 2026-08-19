@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getMyBillingStatus } from "@/lib/practitioner-billing.functions";
 import { Button } from "@/components/ui/button";
@@ -7,23 +8,65 @@ import { AlertTriangle, Lock } from "lucide-react";
 
 type Status = Awaited<ReturnType<typeof getMyBillingStatus>>;
 
+const BLOCKED_FALLBACK: Status = {
+  state: "blocked",
+  hasAccess: false,
+  daysLeft: 0,
+  deadline: null,
+  arrearsCents: 0,
+  arrearsInvoiceUrl: null,
+} as Status;
+
+/** Routes that stay reachable while the account is locked (payment only). */
+const ALLOWED_WHEN_LOCKED = ["/dashboard/billing", "/dashboard/invoices"];
+
 export function PlatformBillingGate({ children }: { children: React.ReactNode }) {
   const load = useServerFn(getMyBillingStatus);
-  const [status, setStatus] = useState<Status | null>(null);
   const [dismissed, setDismissed] = useState(false);
+  const navigate = useNavigate();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+
+  const { data: status } = useQuery({
+    queryKey: ["platform-billing-status"],
+    queryFn: async () => {
+      try {
+        return (await load()) as Status;
+      } catch {
+        return BLOCKED_FALLBACK;
+      }
+    },
+    staleTime: 15_000,
+    refetchOnWindowFocus: true,
+    // While locked, poll so access re-opens automatically right after payment.
+    refetchInterval: (q) => ((q.state.data as Status | undefined)?.hasAccess === false ? 10_000 : false),
+  });
+
+  const locked = Boolean(status) && !status!.hasAccess;
+  const onPaymentPage = ALLOWED_WHEN_LOCKED.some((p) => pathname.startsWith(p));
 
   useEffect(() => {
-    let alive = true;
-    load()
-      .then((s) => alive && setStatus(s as Status))
-      .catch(() => alive && setStatus({ state: "blocked", hasAccess: false, daysLeft: 0, deadline: null, arrearsCents: 0, arrearsInvoiceUrl: null } as Status));
-    return () => { alive = false; };
-  }, []);
+    if (locked && status!.state !== "suspended" && !onPaymentPage) {
+      navigate({ to: "/dashboard/billing", replace: true });
+    }
+  }, [locked, onPaymentPage, status?.state]);
 
   if (!status) return <>{children}</>;
 
-  // Hard block
-  if (!status.hasAccess) {
+  // Hard block — only the payment page is reachable.
+  if (locked) {
+    if (status.state !== "suspended" && onPaymentPage) {
+      return (
+        <>
+          <div className="mb-4 flex flex-wrap items-center gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm">
+            <Lock className="h-4 w-4 flex-shrink-0 text-destructive" />
+            <div className="flex-1 min-w-0">
+              Your account is locked because your trial has ended. Choose a plan below to unlock MODO again.
+            </div>
+          </div>
+          {children}
+        </>
+      );
+    }
     return (
       <div className="mx-auto max-w-lg py-16 text-center">
         <div className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-destructive/10 text-destructive mb-4">
