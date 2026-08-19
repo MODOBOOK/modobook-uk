@@ -438,8 +438,10 @@ export const createTrainingBooking = createServerFn({ method: "POST" })
               location_id: sess.location_id ?? data.location_id ?? null,
               status: "confirmed",
               payment_status: "pending",
-              service_name: `Training — ${course.name}`,
-              service_price_cents: Math.round(Number(course.price ?? 0) * 100),
+              treatment_name_snapshot: `Training — ${course.name}`,
+              treatment_price_snapshot: Number(course.price ?? 0),
+              base_amount: Number(course.price ?? 0),
+              total_amount: Number(course.price ?? 0),
               notes: data.notes?.trim() || null,
             } as never)
             .select("id")
