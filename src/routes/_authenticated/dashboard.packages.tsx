@@ -15,7 +15,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogT
 import { Switch } from "@/components/ui/switch";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
-import { Badge } from "@/components/ui/badge";
+
 import { ImageUploader } from "@/components/ImageUploader";
 import { PackageBuildersCard } from "@/components/PackageBuildersCard";
 import { toast } from "sonner";
@@ -816,38 +816,55 @@ function PackageCategoriesManager({
         </p>
       </CardHeader>
       <CardContent className="space-y-3">
-        <div className="flex flex-wrap gap-1.5">
+        <div className="space-y-2">
           {categories.length === 0 ? (
             <p className="text-xs text-muted-foreground">No package categories yet.</p>
           ) : (
             categories.map((c) => (
-              <Badge key={c.id} variant="secondary" className="gap-1 pr-1">
-                <span>{c.name}</span>
-                {c.is_limited && (
-                  <span className="rounded-full bg-rose-100 px-1.5 text-[10px] font-semibold text-rose-800">
-                    timer
-                  </span>
-                )}
-                <button
-                  type="button"
-                  aria-label={`Countdown for ${c.name}`}
-                  onClick={() => openTimer(c)}
-                  className="rounded p-0.5 hover:bg-background/60"
-                >
-                  <Pencil className="h-3 w-3" />
-                </button>
-                <button
-                  type="button"
-                  aria-label={`Delete ${c.name}`}
-                  onClick={() => onDelete(c.id)}
-                  className="rounded p-0.5 hover:bg-background/60"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              </Badge>
+              <div
+                key={c.id}
+                className="flex flex-wrap items-center justify-between gap-2 rounded-lg border bg-muted/30 px-3 py-2"
+              >
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium">{c.name}</p>
+                  {c.is_limited && (
+                    <p className="text-[11px] text-rose-800">
+                      Countdown on
+                      {c.limited_ends_at
+                        ? ` · ends ${new Date(c.limited_ends_at).toLocaleString(undefined, {
+                            day: "numeric", month: "short", hour: "2-digit", minute: "2-digit",
+                          })}`
+                        : ""}
+                    </p>
+                  )}
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={c.is_limited ? "default" : "outline"}
+                    className="h-8"
+                    onClick={() => openTimer(c)}
+                  >
+                    <Pencil className="mr-1 h-3.5 w-3.5" />
+                    {c.is_limited ? "Edit countdown" : "Limited time"}
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    className="h-8 w-8 p-0"
+                    aria-label={`Delete ${c.name}`}
+                    onClick={() => onDelete(c.id)}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
             ))
           )}
         </div>
+
         <div className="flex gap-2">
           <Input
             value={name}
