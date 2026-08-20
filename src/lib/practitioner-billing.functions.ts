@@ -138,14 +138,26 @@ export const getMyBillingStatus = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { data: profile, error: pErr } = await context.supabase
       .from("profiles")
-      .select("id")
+      .select("id, email")
       .eq("user_id", context.userId)
       .maybeSingle();
     if (pErr) throw pErr;
     if (!profile) return { state: "blocked", hasAccess: false, daysLeft: 0, deadline: null, arrearsCents: 0, arrearsInvoiceUrl: null };
-    const { data, error } = await context.supabase.rpc("practitioner_billing_status", { _profile_id: profile.id });
-    if (error) throw error;
-    const row = Array.isArray(data) ? data[0] : data;
+    const readStatus = async () => {
+      const { data, error } = await context.supabase.rpc("practitioner_billing_status", { _profile_id: profile.id });
+      if (error) throw error;
+      return Array.isArray(data) ? data[0] : data;
+    };
+    let row = await readStatus();
+
+    // Locked out? A paid subscription may exist in Stripe that a missed webhook
+    // never mirrored here — reconcile before blocking access.
+    if (!row?.has_access) {
+      const { reconcileSubscriptionFromStripe } = await import("./billing-reconcile.server");
+      const healed = await reconcileSubscriptionFromStripe(context.supabase, profile.id, profile.email);
+      if (healed) row = await readStatus();
+    }
+
 
     // Sum outstanding platform invoices (open / uncollectible / past_due).
     const { data: openInvoices } = await context.supabase
