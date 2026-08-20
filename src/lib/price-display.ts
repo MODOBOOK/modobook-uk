@@ -35,3 +35,56 @@ export function badgeClasses(badge: TreatmentBadge): string {
       return "bg-indigo-100 text-indigo-900 border-indigo-300";
   }
 }
+
+export type DiscountableTreatment = {
+  price?: number | null;
+  price_mode?: string | null;
+  discount_percent?: number | null;
+  discount_starts_at?: string | null;
+  discount_ends_at?: string | null;
+  discount_days_of_week?: number[] | null;
+  discount_show_was_now?: boolean | null;
+  discount_label?: string | null;
+};
+
+/**
+ * Single source of truth for a treatment's live sale price.
+ * Returns the base price plus the discounted price when an active
+ * percentage discount window applies.
+ */
+export function treatmentPricing(
+  t: DiscountableTreatment | null | undefined,
+  basePriceOverride?: number,
+): {
+  mode: PriceMode;
+  base: number;
+  price: number;
+  hasDiscount: boolean;
+  percent: number;
+  showWasNow: boolean;
+  label: string | null;
+} {
+  const mode = ((t?.price_mode ?? "fixed") as PriceMode) || "fixed";
+  const base = Number(basePriceOverride ?? t?.price ?? 0);
+  const pct = t?.discount_percent ?? null;
+  const startsAt = t?.discount_starts_at ?? null;
+  const endsAt = t?.discount_ends_at ?? null;
+  const dows = t?.discount_days_of_week ?? null;
+  const now = new Date();
+  const inWindow =
+    (!startsAt || new Date(startsAt) <= now) &&
+    (!endsAt || new Date(endsAt) >= now) &&
+    (!dows || dows.length === 0 || dows.includes(now.getDay()));
+  const allow = mode !== "poa" && mode !== "free";
+  const hasDiscount = Boolean(allow && pct != null && pct > 0 && inWindow && base > 0);
+  const price = hasDiscount ? Math.round(base * (1 - (pct as number) / 100) * 100) / 100 : base;
+  return {
+    mode,
+    base,
+    price,
+    hasDiscount,
+    percent: hasDiscount ? (pct as number) : 0,
+    showWasNow: t?.discount_show_was_now !== false,
+    label: t?.discount_label ?? null,
+  };
+}
