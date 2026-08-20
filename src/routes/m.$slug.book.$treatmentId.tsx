@@ -652,7 +652,17 @@ function BookTreatmentPage() {
                 <span className="opacity-60"> or £{price.toFixed(2)} paid upfront</span>
               </span>
             ) : (
-              <span className="text-sm font-semibold" style={{ color: brand }}>£{price.toFixed(2)}</span>
+              <span className="inline-flex items-center gap-2 text-sm font-semibold" style={{ color: brand }}>
+                {pricing.hasDiscount && pricing.showWasNow && (
+                  <span className="font-normal text-muted-foreground line-through">£{pricing.base.toFixed(2)}</span>
+                )}
+                <span>£{price.toFixed(2)}</span>
+                {pricing.hasDiscount && (
+                  <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
+                    {pricing.label || `−${pricing.percent}%`}
+                  </span>
+                )}
+              </span>
             )
           )}
           {sessionCount > 1 && (
