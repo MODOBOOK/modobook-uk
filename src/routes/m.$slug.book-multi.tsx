@@ -37,6 +37,7 @@ import { AddressAutocomplete } from "@/components/AddressAutocomplete";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 import { SafeHtml } from "@/components/SafeHtml";
+import { treatmentPricing } from "@/lib/price-display";
 
 type Rule = Database["public"]["Tables"]["availability_rules"]["Row"];
 type LocOptional = "is_public" | "notes" | "phone" | "coming_soon" | "coming_soon_label";
