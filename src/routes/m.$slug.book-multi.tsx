@@ -155,6 +155,14 @@ function MultiBookPage() {
   const [locationId, setLocationId] = useState<string | null>(initialLocationId);
 
   const priceFor = (t: Treatment) => {
+    let base = Number(t.price ?? 0);
+    if (locationId) {
+      const o = ctx.pricing.find((p: Pricing) => p.treatment_id === t.id && p.location_id === locationId);
+      if (o?.price_cents != null) base = o.price_cents / 100;
+    }
+    return treatmentPricing(t as never, base).price;
+  };
+  const basePriceFor = (t: Treatment) => {
     if (locationId) {
       const o = ctx.pricing.find((p: Pricing) => p.treatment_id === t.id && p.location_id === locationId);
       if (o?.price_cents != null) return o.price_cents / 100;
