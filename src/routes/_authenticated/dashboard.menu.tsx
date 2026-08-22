@@ -1,4 +1,4 @@
-import { pilotFeaturesEnabled, packagesEnabled } from "@/lib/feature-flags";
+import { pilotFeaturesEnabled, packagesEnabled, upcomingEnabled } from "@/lib/feature-flags";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
