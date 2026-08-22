@@ -1,0 +1,1 @@
+UPDATE public.profiles SET room_rental_enabled = true WHERE email = 'snatchuralaesthetics@gmail.com';
