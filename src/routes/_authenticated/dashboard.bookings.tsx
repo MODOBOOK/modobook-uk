@@ -625,25 +625,36 @@ function BookingsPage() {
                       );
                     })}
 
-                    {/* Appointments */}
-                    {dayAppts.map((a) => {
+                    {/* Appointments — overlapping ones sit side by side */}
+                    {layoutOverlaps(dayAppts).map(({ item: a, leftPct, widthPct, index, columns }) => {
                       const start = parseTime(a.start_time);
                       const end = parseTime(a.end_time);
                       const top = (start - START_HOUR) * HOUR_HEIGHT;
                       const height = Math.max(22, (end - start) * HOUR_HEIGHT - 2);
                       const color = a.treatments?.color || "#3b82f6";
+                      const compact = columns > 1;
                       return (
                         <button
                           key={a.id}
                           onClick={() => setSelectedAppt(a)}
-                          className="absolute left-1 right-1 z-[5] overflow-hidden rounded-md border-l-4 px-2 py-1 text-left text-[11px] shadow-sm transition hover:shadow"
-                          style={{ top, height, borderLeftColor: color, backgroundColor: hexToRgba(color, 0.18), color: "var(--foreground)" }}
+                          className={`absolute overflow-hidden rounded-md border border-background border-l-4 text-left text-[11px] shadow-sm transition hover:z-20 hover:shadow-md ${compact ? "px-1 py-0.5" : "px-2 py-1"}`}
+                          style={{
+                            top,
+                            height,
+                            left: `calc(${leftPct}% + 2px)`,
+                            width: `calc(${widthPct}% - 4px)`,
+                            zIndex: 5 + index,
+                            borderLeftColor: color,
+                            backgroundColor: hexToRgba(color, 0.18),
+                            color: "var(--foreground)",
+                          }}
+                          title={`${a.start_time.slice(0, 5)}–${a.end_time.slice(0, 5)} · ${a.patient_name} · ${a.treatments?.name ?? "Treatment"}`}
                         >
                           <div className="truncate font-semibold">{a.patient_name}</div>
                           <div className="truncate opacity-80">
-                            {a.start_time.slice(0, 5)} · {a.treatments?.name ?? "Treatment"}
+                            {a.start_time.slice(0, 5)}{compact ? "" : ` · ${a.treatments?.name ?? "Treatment"}`}
                           </div>
-                          {a.has_allergies && (
+                          {a.has_allergies && !compact && (
                             <div className="mt-0.5 flex items-center gap-1 text-[10px] text-red-600">
                               <AlertTriangle className="h-2.5 w-2.5" /> Allergies
                             </div>
