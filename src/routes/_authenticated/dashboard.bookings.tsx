@@ -134,6 +134,56 @@ function parseTime(t: string) {
   const [h, m] = t.split(":").map(Number);
   return h + (m || 0) / 60;
 }
+/**
+ * Google-Calendar style overlap layout: events that share time sit side by side
+ * instead of stacking on top of each other.
+ */
+function layoutOverlaps<T extends { start_time: string; end_time: string }>(
+  items: T[],
+): { item: T; leftPct: number; widthPct: number; index: number; columns: number }[] {
+  const evts = items
+    .map((item) => {
+      const s = parseTime(item.start_time);
+      let e = parseTime(item.end_time);
+      if (!(e > s)) e = s + 0.25;
+      return { item, s, e: Math.max(e, s + 0.25) };
+    })
+    .sort((a, b) => a.s - b.s || a.e - b.e);
+
+  const out: { item: T; leftPct: number; widthPct: number; index: number; columns: number }[] = [];
+  let group: typeof evts = [];
+  let groupEnd = -Infinity;
+
+  const flush = () => {
+    if (!group.length) return;
+    const colEnds: number[] = [];
+    const placed = group.map((g) => {
+      let col = colEnds.findIndex((end) => end <= g.s + 1e-9);
+      if (col === -1) { col = colEnds.length; colEnds.push(g.e); } else { colEnds[col] = g.e; }
+      return { ...g, col };
+    });
+    const columns = colEnds.length;
+    for (const p of placed) {
+      out.push({
+        item: p.item,
+        leftPct: (p.col / columns) * 100,
+        widthPct: 100 / columns,
+        index: p.col,
+        columns,
+      });
+    }
+    group = [];
+    groupEnd = -Infinity;
+  };
+
+  for (const e of evts) {
+    if (group.length && e.s >= groupEnd - 1e-9) flush();
+    group.push(e);
+    groupEnd = Math.max(groupEnd, e.e);
+  }
+  flush();
+  return out;
+}
 function hexToRgba(hex: string, a: number) {
   const h = hex.replace("#", "");
   const r = parseInt(h.slice(0, 2), 16);
@@ -575,25 +625,36 @@ function BookingsPage() {
                       );
                     })}
 
-                    {/* Appointments */}
-                    {dayAppts.map((a) => {
+                    {/* Appointments — overlapping ones sit side by side */}
+                    {layoutOverlaps(dayAppts).map(({ item: a, leftPct, widthPct, index, columns }) => {
                       const start = parseTime(a.start_time);
                       const end = parseTime(a.end_time);
                       const top = (start - START_HOUR) * HOUR_HEIGHT;
                       const height = Math.max(22, (end - start) * HOUR_HEIGHT - 2);
                       const color = a.treatments?.color || "#3b82f6";
+                      const compact = columns > 1;
                       return (
                         <button
                           key={a.id}
                           onClick={() => setSelectedAppt(a)}
-                          className="absolute left-1 right-1 z-[5] overflow-hidden rounded-md border-l-4 px-2 py-1 text-left text-[11px] shadow-sm transition hover:shadow"
-                          style={{ top, height, borderLeftColor: color, backgroundColor: hexToRgba(color, 0.18), color: "var(--foreground)" }}
+                          className={`absolute overflow-hidden rounded-md border border-background border-l-4 text-left text-[11px] shadow-sm transition hover:z-20 hover:shadow-md ${compact ? "px-1 py-0.5" : "px-2 py-1"}`}
+                          style={{
+                            top,
+                            height,
+                            left: `calc(${leftPct}% + 2px)`,
+                            width: `calc(${widthPct}% - 4px)`,
+                            zIndex: 5 + index,
+                            borderLeftColor: color,
+                            backgroundColor: hexToRgba(color, 0.18),
+                            color: "var(--foreground)",
+                          }}
+                          title={`${a.start_time.slice(0, 5)}–${a.end_time.slice(0, 5)} · ${a.patient_name} · ${a.treatments?.name ?? "Treatment"}`}
                         >
                           <div className="truncate font-semibold">{a.patient_name}</div>
                           <div className="truncate opacity-80">
-                            {a.start_time.slice(0, 5)} · {a.treatments?.name ?? "Treatment"}
+                            {a.start_time.slice(0, 5)}{compact ? "" : ` · ${a.treatments?.name ?? "Treatment"}`}
                           </div>
-                          {a.has_allergies && (
+                          {a.has_allergies && !compact && (
                             <div className="mt-0.5 flex items-center gap-1 text-[10px] text-red-600">
                               <AlertTriangle className="h-2.5 w-2.5" /> Allergies
                             </div>
