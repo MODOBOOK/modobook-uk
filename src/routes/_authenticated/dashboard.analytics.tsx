@@ -92,6 +92,7 @@ function AnalyticsPage() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const from = new Date(today);
+    const to = new Date(today);
 
     switch (range) {
       case "7d":
@@ -100,19 +101,28 @@ function AnalyticsPage() {
       case "30d":
         from.setDate(today.getDate() - 29);
         break;
+      case "upcoming":
+        to.setDate(today.getDate() + 90);
+        break;
       case "month":
         from.setDate(1);
+        // include the whole month, not just up to today
+        to.setMonth(today.getMonth() + 1, 0);
         break;
       case "year":
         from.setMonth(0, 1);
+        to.setMonth(11, 31);
         break;
       case "all":
       default:
         from.setFullYear(2000);
+        to.setFullYear(today.getFullYear() + 2);
     }
 
-    const fromIso = from.toISOString().slice(0, 10);
-    const toIso = today.toISOString().slice(0, 10);
+    const iso = (d: Date) =>
+      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    const fromIso = iso(from);
+    const toIso = iso(to);
 
     const filtered = data.appointments.filter((a) => a.scheduled_date >= fromIso && a.scheduled_date <= toIso);
 
@@ -133,17 +143,30 @@ function AnalyticsPage() {
       avgBookingValue,
     };
 
-    // Build daily buckets
+    // Build buckets — daily for short spans, monthly for long ones.
+    const spanDays = Math.round((to.getTime() - from.getTime()) / 86400000);
+    const monthly = spanDays > 120;
+    const bucketKey = (dateIso: string) => (monthly ? dateIso.slice(0, 7) : dateIso);
+
     const buckets = new Map<string, { date: string; bookings: number; revenue: number }>();
-    for (let i = 0; i <= Math.max(0, Math.round((new Date(toIso).getTime() - new Date(fromIso).getTime()) / 86400000)); i++) {
-      const d = new Date(from);
-      d.setDate(from.getDate() + i);
-      const iso = d.toISOString().slice(0, 10);
-      buckets.set(iso, { date: iso, bookings: 0, revenue: 0 });
+    if (monthly) {
+      // only span months that actually contain data, bounded by the range
+      const keys = new Set(
+        filtered.map((a) => a.scheduled_date.slice(0, 7)),
+      );
+      Array.from(keys)
+        .sort()
+        .forEach((k) => buckets.set(k, { date: `${k}-01`, bookings: 0, revenue: 0 }));
+    } else {
+      for (let i = 0; i <= Math.max(0, spanDays); i++) {
+        const d = new Date(from);
+        d.setDate(from.getDate() + i);
+        buckets.set(iso(d), { date: iso(d), bookings: 0, revenue: 0 });
+      }
     }
     for (const a of filtered) {
       if (a.status === "cancelled" || a.status === "no_show") continue;
-      const b = buckets.get(a.scheduled_date);
+      const b = buckets.get(bucketKey(a.scheduled_date));
       if (b) {
         b.bookings += 1;
         b.revenue += amt(a);
@@ -151,7 +174,9 @@ function AnalyticsPage() {
     }
     const chartData = Array.from(buckets.values()).map((b) => ({
       ...b,
-      label: formatDateLabel(b.date),
+      label: monthly
+        ? new Date(b.date + "T00:00:00").toLocaleDateString(undefined, { month: "short", year: "2-digit" })
+        : formatDateLabel(b.date),
     }));
 
     // Treatment breakdown
