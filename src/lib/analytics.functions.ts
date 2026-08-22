@@ -31,7 +31,8 @@ export const getDashboardAnalytics = createServerFn({ method: "GET" })
       )
       .eq("profile_id", profileId)
       .order("scheduled_date", { ascending: true })
-      .order("start_time", { ascending: true });
+      .order("start_time", { ascending: true })
+      .range(0, 9999);
 
     if (apptErr) throw apptErr;
 
