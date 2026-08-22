@@ -134,6 +134,56 @@ function parseTime(t: string) {
   const [h, m] = t.split(":").map(Number);
   return h + (m || 0) / 60;
 }
+/**
+ * Google-Calendar style overlap layout: events that share time sit side by side
+ * instead of stacking on top of each other.
+ */
+function layoutOverlaps<T extends { start_time: string; end_time: string }>(
+  items: T[],
+): { item: T; leftPct: number; widthPct: number; index: number; columns: number }[] {
+  const evts = items
+    .map((item) => {
+      const s = parseTime(item.start_time);
+      let e = parseTime(item.end_time);
+      if (!(e > s)) e = s + 0.25;
+      return { item, s, e: Math.max(e, s + 0.25) };
+    })
+    .sort((a, b) => a.s - b.s || a.e - b.e);
+
+  const out: { item: T; leftPct: number; widthPct: number; index: number; columns: number }[] = [];
+  let group: typeof evts = [];
+  let groupEnd = -Infinity;
+
+  const flush = () => {
+    if (!group.length) return;
+    const colEnds: number[] = [];
+    const placed = group.map((g) => {
+      let col = colEnds.findIndex((end) => end <= g.s + 1e-9);
+      if (col === -1) { col = colEnds.length; colEnds.push(g.e); } else { colEnds[col] = g.e; }
+      return { ...g, col };
+    });
+    const columns = colEnds.length;
+    for (const p of placed) {
+      out.push({
+        item: p.item,
+        leftPct: (p.col / columns) * 100,
+        widthPct: 100 / columns,
+        index: p.col,
+        columns,
+      });
+    }
+    group = [];
+    groupEnd = -Infinity;
+  };
+
+  for (const e of evts) {
+    if (group.length && e.s >= groupEnd - 1e-9) flush();
+    group.push(e);
+    groupEnd = Math.max(groupEnd, e.e);
+  }
+  flush();
+  return out;
+}
 function hexToRgba(hex: string, a: number) {
   const h = hex.replace("#", "");
   const r = parseInt(h.slice(0, 2), 16);
