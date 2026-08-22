@@ -37,7 +37,7 @@ export const Route = createFileRoute("/_authenticated/dashboard/analytics")({
 
 type Appt = Awaited<ReturnType<typeof getDashboardAnalytics>>["appointments"][number];
 
-type Range = "7d" | "30d" | "month" | "year" | "all";
+type Range = "7d" | "30d" | "upcoming" | "month" | "year" | "all";
 
 const CHART_COLORS = [
   "#c98a4b",
@@ -229,6 +229,7 @@ function AnalyticsPage() {
           <TabsList className="w-max rounded-full bg-muted/60">
             <TabsTrigger value="7d" className="rounded-full text-xs">7 days</TabsTrigger>
             <TabsTrigger value="30d" className="rounded-full text-xs">30 days</TabsTrigger>
+            <TabsTrigger value="upcoming" className="rounded-full text-xs">Upcoming</TabsTrigger>
             <TabsTrigger value="month" className="rounded-full text-xs">This month</TabsTrigger>
             <TabsTrigger value="year" className="rounded-full text-xs">This year</TabsTrigger>
             <TabsTrigger value="all" className="rounded-full text-xs">All time</TabsTrigger>
