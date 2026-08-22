@@ -1050,7 +1050,7 @@ function BookPage() {
                 </div>
 
                 {/* Typographic block */}
-                <div className="sm:col-span-6 sm:flex sm:flex-col sm:justify-end">
+                <div className="min-w-0 sm:col-span-6 sm:flex sm:flex-col sm:justify-end">
                   {heroUseLogo ? (
                     <img
                       src={themeAny!.logo_url!}
@@ -1059,16 +1059,16 @@ function BookPage() {
                     />
                   ) : (
                     <h1
-                      className="font-light leading-[0.92] tracking-tight"
+                      className="font-light leading-[0.92] tracking-tight break-words hyphens-auto text-[clamp(2.25rem,11vw,3.5rem)] sm:text-[clamp(2rem,5.2vw,5.5rem)]"
                       style={{
                         fontFamily: nameFont,
-                        fontSize: "clamp(2.25rem, 11vw, 5.5rem)",
                         color: heroTextColor,
                       }}
                     >
                       {displayPrimary}
                     </h1>
                   )}
+
                   {profile.tagline && (
                     <p className="mt-3 max-w-md text-sm leading-relaxed sm:text-base" style={{ color: heroMuted }}>
                       {profile.tagline}
