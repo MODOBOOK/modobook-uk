@@ -1,4 +1,4 @@
-import { pilotFeaturesEnabled, packagesEnabled } from "@/lib/feature-flags";
+import { pilotFeaturesEnabled, packagesEnabled, upcomingEnabled } from "@/lib/feature-flags";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -157,7 +157,7 @@ function MenuPage() {
 
   function comingSoonFor(to: string): ComingSoonKey | null {
     if (pilot) return null;
-    if (to === "/dashboard/upcoming") return "upcoming";
+    if (to === "/dashboard/upcoming") return upcomingEnabled(profile.slug) ? null : "upcoming";
     if (to === "/dashboard/associates") return "associates";
     if (to === "/dashboard/packages") return packagesEnabled(profile.slug) ? null : "packages";
     if (to === "/dashboard/room-rental") return "room-rental";
