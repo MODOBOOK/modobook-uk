@@ -77,3 +77,10 @@ export function treatmentLeafletsEnabled(slug?: string | null) {
   return isFeatureLive(TREATMENT_LEAFLET_SLUGS, slug);
 }
 
+
+/** Upcoming appointments page with AI patient briefs — live for everyone. */
+export const UPCOMING_SLUGS: string[] = [];
+
+export function upcomingEnabled(slug?: string | null) {
+  return isFeatureLive(UPCOMING_SLUGS, slug);
+}

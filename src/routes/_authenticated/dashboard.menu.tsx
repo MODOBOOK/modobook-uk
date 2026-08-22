@@ -157,7 +157,7 @@ function MenuPage() {
 
   function comingSoonFor(to: string): ComingSoonKey | null {
     if (pilot) return null;
-    if (to === "/dashboard/upcoming") return "upcoming";
+    if (to === "/dashboard/upcoming") return upcomingEnabled(profile.slug) ? null : "upcoming";
     if (to === "/dashboard/associates") return "associates";
     if (to === "/dashboard/packages") return packagesEnabled(profile.slug) ? null : "packages";
     if (to === "/dashboard/room-rental") return "room-rental";
