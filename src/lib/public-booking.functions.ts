@@ -621,6 +621,10 @@ export const requestBooking = createServerFn({ method: "POST" })
       .select("auto_confirm_bookings,require_account_to_book,slug,clinic_name,stripe_connect_account_id,stripe_connect_onboarding_status,payment_deposit_enabled,require_deposit_to_confirm,deposit_amount_cents,deposit_type,deposit_percent,payment_card_full_enabled,payment_klarna_enabled,payment_clearpay_enabled,payment_pass_fees_to_customer,payment_surcharge_card_enabled,payment_surcharge_card_percent,payment_surcharge_bnpl_enabled,payment_surcharge_bnpl_percent,payment_surcharge_deposit_enabled,payment_surcharge_deposit_percent,stripe_fee_pass_to_patient,stripe_fee_bnpl_pass_to_patient,stripe_fee_card_percent,stripe_fee_card_fixed_cents,stripe_fee_bnpl_percent,stripe_fee_bnpl_fixed_cents,save_card_on_file,payment_card_capture_enabled,card_capture_policy_text")
       .eq("id", data.profileId)
       .maybeSingle();
+    {
+      const { assertNotDemoPatientBooking } = await import("./demo-guard.server");
+      await assertNotDemoPatientBooking(data.profileId, data.patientEmail);
+    }
     if (prof?.require_account_to_book && !data.patientUserId) {
       throw new Error("Please sign in to book — this clinic requires an account.");
     }
@@ -1350,6 +1354,10 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
       .select("auto_confirm_bookings,require_account_to_book,slug,clinic_name,stripe_connect_account_id,stripe_connect_onboarding_status,payment_deposit_enabled,require_deposit_to_confirm,deposit_amount_cents,deposit_type,deposit_percent,payment_card_full_enabled,payment_klarna_enabled,payment_clearpay_enabled,payment_pass_fees_to_customer,payment_surcharge_card_enabled,payment_surcharge_card_percent,payment_surcharge_bnpl_enabled,payment_surcharge_bnpl_percent,payment_surcharge_deposit_enabled,payment_surcharge_deposit_percent,stripe_fee_pass_to_patient,stripe_fee_bnpl_pass_to_patient,stripe_fee_card_percent,stripe_fee_card_fixed_cents,stripe_fee_bnpl_percent,stripe_fee_bnpl_fixed_cents,save_card_on_file,payment_card_capture_enabled,card_capture_policy_text")
       .eq("id", data.profileId)
       .maybeSingle();
+    {
+      const { assertNotDemoPatientBooking } = await import("./demo-guard.server");
+      await assertNotDemoPatientBooking(data.profileId, data.patientEmail);
+    }
     if (prof?.require_account_to_book && !data.patientUserId) {
       throw new Error("Please sign in to book — this clinic requires an account.");
     }
