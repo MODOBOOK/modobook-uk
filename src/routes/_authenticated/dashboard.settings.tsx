@@ -57,6 +57,8 @@ function SettingsPage() {
     allow_pay_in_clinic: profile.allow_pay_in_clinic !== false,
     cash_only_balance: !!(profile as { cash_only_balance?: boolean }).cash_only_balance,
     save_card_on_file: !!(profile as { save_card_on_file?: boolean }).save_card_on_file,
+    payment_card_capture_enabled: !!(profile as { payment_card_capture_enabled?: boolean }).payment_card_capture_enabled,
+    card_capture_policy_text: ((profile as { card_capture_policy_text?: string | null }).card_capture_policy_text ?? "") as string,
     show_prices_on_booking: profile.show_prices_on_booking !== false,
     enforce_cancellation_fee: !!profile.enforce_cancellation_fee,
     // patient rules
@@ -310,6 +312,26 @@ function SettingsPage() {
             checked={s.save_card_on_file}
             onChange={(v) => set("save_card_on_file", v)}
           />
+          <ToggleRow
+            label="Card capture instead of a deposit"
+            hint="Patients can secure a booking by saving their card (nothing charged today) and ticking your cancellation policy. You can charge the no-show fee later."
+            checked={s.payment_card_capture_enabled}
+            onChange={(v) => set("payment_card_capture_enabled", v)}
+          />
+          {s.payment_card_capture_enabled && (
+            <div className="rounded-xl border p-3 space-y-2">
+              <Label>Cancellation policy the patient must tick</Label>
+              <Textarea
+                rows={3}
+                placeholder="I authorise the clinic to securely store my card details and to charge the cancellation or no-show fee set out in their booking policy if I cancel late or do not attend."
+                value={s.card_capture_policy_text}
+                onChange={(e) => set("card_capture_policy_text", e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Leave blank to use the standard wording. Their acceptance is stamped on the appointment.
+              </p>
+            </div>
+          )}
           <ToggleRow
             label="Show prices on booking page"
             hint="Turn off to hide prices (good for consult-led clinics)."
