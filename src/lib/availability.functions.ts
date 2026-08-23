@@ -465,3 +465,73 @@ export const listPractitioners = createServerFn({ method: "GET" })
       .order("name");
     return data ?? [];
   });
+
+/**
+ * Close off the shifts that are currently running (stamp an end date on them so
+ * they become a "previous rota"), and optionally copy them forward as the
+ * starting point of the next rota.
+ */
+export const endCurrentRota = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { end_date: string; new_start_date?: string | null; copy?: boolean }) => d)
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+    const profileId = await getProfileId(supabase, context.userId);
+    if (!profileId) throw new Error("Profile not found");
+
+    const { data: rows, error } = await supabase
+      .from("availability_rules")
+      .select("*")
+      .eq("profile_id", profileId);
+    if (error) throw error;
+
+    const active = (rows ?? []).filter((r: any) => {
+      if (r.effective_to && r.effective_to <= data.end_date) return false; // already ended
+      if (r.effective_from && r.effective_from > data.end_date) return false; // future rota
+      return true;
+    });
+    if (active.length === 0) return { ended: 0, created: 0 };
+
+    const { error: upErr } = await supabase
+      .from("availability_rules")
+      .update({ effective_to: data.end_date })
+      .in("id", active.map((r: any) => r.id));
+    if (upErr) throw upErr;
+
+    let created = 0;
+    if (data.copy && data.new_start_date) {
+      const clones = active.map((r: any) => ({
+        profile_id: profileId,
+        day_of_week: r.day_of_week,
+        start_time: r.start_time,
+        end_time: r.end_time,
+        slot_interval: r.slot_interval,
+        location_id: r.location_id,
+        cycle_length: r.cycle_length,
+        weeks_mask: r.weeks_mask,
+        practitioner_id: r.practitioner_id,
+        effective_from: data.new_start_date,
+        effective_to: null,
+      }));
+      const { error: insErr } = await supabase.from("availability_rules").insert(clones);
+      if (insErr) throw insErr;
+      created = clones.length;
+    }
+    return { ended: active.length, created };
+  });
+
+/** Permanently remove an archived rota (all shifts sharing the same end date). */
+export const deletePreviousRota = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { effective_to: string }) => d)
+  .handler(async ({ data, context }) => {
+    const profileId = await getProfileId(context.supabase, context.userId);
+    if (!profileId) throw new Error("Profile not found");
+    const { error } = await context.supabase
+      .from("availability_rules")
+      .delete()
+      .eq("profile_id", profileId)
+      .eq("effective_to", data.effective_to);
+    if (error) throw error;
+    return { ok: true };
+  });
