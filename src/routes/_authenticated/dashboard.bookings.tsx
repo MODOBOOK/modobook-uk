@@ -219,7 +219,14 @@ function BookingsPage() {
   const [showBlock, setShowBlock] = useState(false);
   const [showUnblock, setShowUnblock] = useState(false);
   const [now, setNow] = useState(new Date());
+  const isMobile = useIsMobile();
+  const nowTop = (() => {
+    const hr = now.getHours() + now.getMinutes() / 60;
+    if (hr < START_HOUR || hr > END_HOUR + 1) return null;
+    return (hr - START_HOUR) * HOUR_HEIGHT;
+  })();
   const scrollRef = useRef<HTMLDivElement>(null);
+
 
   async function refresh() {
     const [a, b, r, o, bd, l, rota] = await Promise.all([list(), listBlocks(), listRules(), listOverrides(), listBlockedDatesFn(), listLocations(), getRota()]);
