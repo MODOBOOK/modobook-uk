@@ -149,15 +149,24 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
                   console.error("[stripe webhook] card_capture setup intent lookup failed", e);
                 }
                 for (const apptId of ids) {
-                  await supabaseAdmin
+                  const { data: appt } = await supabaseAdmin
                     .from("appointments")
-                    .update({
-                      status: "confirmed",
-                      card_captured_at: new Date().toISOString(),
-                      stripe_customer_id: customerId,
-                      stripe_payment_method_id: paymentMethodId,
-                    } as never)
-                    .eq("id", apptId);
+                    .update({ status: "confirmed", card_captured_at: new Date().toISOString() } as never)
+                    .eq("id", apptId)
+                    .select("client_id")
+                    .maybeSingle();
+                  // The reusable card lives on the client record so the clinic
+                  // can charge a no-show fee later.
+                  const clientId = (appt as { client_id?: string | null } | null)?.client_id ?? null;
+                  if (clientId && (customerId || paymentMethodId)) {
+                    await supabaseAdmin
+                      .from("clinic_clients")
+                      .update({
+                        ...(customerId ? { stripe_customer_id: customerId } : {}),
+                        ...(paymentMethodId ? { stripe_payment_method_id: paymentMethodId } : {}),
+                      } as never)
+                      .eq("id", clientId);
+                  }
                   paidAppointmentIds.push(apptId);
                 }
                 break;
