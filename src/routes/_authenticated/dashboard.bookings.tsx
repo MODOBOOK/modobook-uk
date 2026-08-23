@@ -599,20 +599,10 @@ function BookingsPage() {
                       <div key={h} className="absolute left-0 right-0 border-t border-dashed border-muted"
                         style={{ top: (h - START_HOUR) * HOUR_HEIGHT }} />
                     ))}
-                    {isToday && (() => {
-                      const hr = now.getHours() + now.getMinutes() / 60;
-                      if (hr < START_HOUR || hr > END_HOUR + 1) return null;
-                      const top = (hr - START_HOUR) * HOUR_HEIGHT;
-                      return (
-                        <>
-                          <div className="absolute left-0 right-0 z-10 h-px bg-red-500" style={{ top }} />
-                          <div className="absolute z-10 -translate-y-1/2 rounded-full border border-red-500 bg-background px-1 text-[10px] font-semibold text-red-500"
-                            style={{ top, left: 2 }}>
-                            {String(now.getHours()).padStart(2, "0")}:{String(now.getMinutes()).padStart(2, "0")}
-                          </div>
-                        </>
-                      );
-                    })()}
+                    {isToday && nowTop != null && (
+                      <div className="pointer-events-none absolute left-0 right-0 z-10 h-px bg-red-500" style={{ top: nowTop }} />
+                    )}
+
 
                     {/* Blocked times + appointments share one layout so nothing ever overlaps */}
                     {layoutOverlaps<any>([
