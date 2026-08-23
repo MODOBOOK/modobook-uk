@@ -1625,23 +1625,10 @@ function CheckoutSheet({
                 Already refunded: £{(Number(a.amount_refunded_cents ?? 0) / 100).toFixed(2)}
               </div>
             )}
-            <Button
-              size="sm"
-              variant="outline"
+            <RefundControl
+              maxRefund={(Number(a.amount_paid_cents ?? 0) - Number(a.amount_refunded_cents ?? 0)) / 100}
               disabled={busy}
-              className="w-full text-destructive"
-              onClick={async () => {
-                const maxRefund = (Number(a.amount_paid_cents ?? 0) - Number(a.amount_refunded_cents ?? 0)) / 100;
-                const input = prompt(
-                  `Refund via Stripe.\n\nMax refundable: £${maxRefund.toFixed(2)}\n\nLeave blank to refund the full amount, or enter a smaller amount (£):`,
-                  "",
-                );
-                if (input === null) return;
-                const amt = input.trim() === "" ? undefined : Number(input);
-                if (amt !== undefined && (!isFinite(amt) || amt <= 0)) {
-                  toast.error("Enter a valid amount");
-                  return;
-                }
+              onRefund={async (amt) => {
                 setBusy(true);
                 try {
                   const r = await refund({ data: { appointmentId: a.id, amount: amt } });
@@ -1654,11 +1641,10 @@ function CheckoutSheet({
                   toast.success(`Refunded £${(r.refundedCents / 100).toFixed(2)}`);
                 } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
               }}
-            >
-              <Undo2 className="h-3.5 w-3.5 mr-1" /> Refund via Stripe
-            </Button>
+            />
           </div>
         )}
+
       </div>
 
 
