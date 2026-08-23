@@ -694,9 +694,10 @@ function AvailabilityPage() {
               </div>
               {isDraftPeriod && (
                 <p className="rounded-md bg-muted/60 p-2 text-xs text-muted-foreground">
-                  This is a blank rota. Set its dates below, then tap a cell in the weekly schedule to add its shifts.
+                  This is a blank rota. Tap a cell in the weekly schedule below to add its shifts — your old rota keeps running until you end it.
                 </p>
               )}
+
               <div className="flex flex-wrap items-center gap-2">
                 <Button size="sm" variant="outline" onClick={openEndRota}>
                   <CalendarRange className="mr-2 h-4 w-4" /> End this rota
