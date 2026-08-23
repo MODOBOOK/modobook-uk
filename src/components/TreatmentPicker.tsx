@@ -105,13 +105,7 @@ export function TreatmentPicker({
         <Command
           filter={(val, search) => (val.toLowerCase().includes(search.toLowerCase()) ? 1 : 0)}
         >
-          <div className="flex items-center border-b px-3">
-            <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
-            <CommandInput
-              placeholder="Search treatments…"
-              className="h-10 border-0 p-0 focus:ring-0"
-            />
-          </div>
+          <CommandInput placeholder="Search treatments…" />
           <CommandList className="max-h-[50vh]">
             <CommandEmpty>No treatments found.</CommandEmpty>
             {groups.map((g) => (
