@@ -103,7 +103,7 @@ type BlockedTime = {
 };
 
 const HOUR_HEIGHT = 60;
-const START_HOUR = 7;
+const START_HOUR = 0;
 const END_HOUR = 23;
 const HOURS = Array.from({ length: END_HOUR - START_HOUR + 1 }, (_, i) => START_HOUR + i);
 
@@ -556,7 +556,7 @@ function BookingsPage() {
         <Card className="overflow-hidden" style={{ ["--gutter" as any]: isMobile ? "38px" : "56px" }}>
           <div
             ref={scrollRef}
-            className="relative h-[calc(100dvh-15rem)] max-h-[75vh] min-h-[420px] overflow-auto overscroll-contain [-webkit-overflow-scrolling:touch]"
+            className="relative h-[calc(100dvh-11rem)] max-h-[85vh] min-h-[460px] overflow-auto overscroll-contain [-webkit-overflow-scrolling:touch]"
           >
             <div
               style={{
