@@ -886,9 +886,11 @@ async function maybeCreateBookingCheckout(args: {
   if (!p.stripe_connect_account_id) return null;
   if (p.stripe_connect_onboarding_status && p.stripe_connect_onboarding_status !== "active") return null;
 
-  // "Save my card, pay in clinic": capture the card with a £0 Stripe setup
-  // session, record the patient's acceptance of the cancellation policy on the
-  // appointment, and confirm once the card is stored (webhook).
+  // "Save my card, pay in clinic": routed exactly like a deposit — our own
+  // embedded Payment Element (no hosted Checkout redirect, no wallets/Link) —
+  // except it confirms a SetupIntent so nothing is charged today. The patient's
+  // acceptance of the cancellation policy is recorded on the appointment and
+  // the booking is confirmed once the card is stored (webhook).
   if (args.choice?.mode === "card_capture" && p.payment_card_capture_enabled && args.choice.policyAgreed) {
     const policyText = (p.card_capture_policy_text ?? "").trim() || DEFAULT_CARD_CAPTURE_POLICY;
     try {
@@ -905,12 +907,15 @@ async function maybeCreateBookingCheckout(args: {
     }
     try {
       const origin0 = process.env.PUBLIC_APP_URL || process.env.APP_URL || "https://modobook.uk";
-      const { createCardCaptureSession } = await import("./stripe.server");
-      const session = await createCardCaptureSession({
+      const publishableKey0 = process.env.STRIPE_PUBLISHABLE_KEY;
+      if (!publishableKey0) {
+        console.error("[maybeCreateBookingCheckout] STRIPE_PUBLISHABLE_KEY missing");
+        return null;
+      }
+      const { createCardCaptureSetupIntent } = await import("./stripe.server");
+      const si = await createCardCaptureSetupIntent({
         accountId: p.stripe_connect_account_id,
         customerEmail: args.patientEmail,
-        successUrl: `${origin0}/m/${p.slug ?? ""}/account?card_saved=1&session_id={CHECKOUT_SESSION_ID}`,
-        cancelUrl: `${origin0}/m/${p.slug ?? ""}`,
         metadata: {
           appointment_ids: args.appointmentIds.join(","),
           kind: "card_capture",
@@ -920,10 +925,20 @@ async function maybeCreateBookingCheckout(args: {
           ? `modo:${args.dedupeKey}:card_capture:${Math.floor(Date.now() / (10 * 60 * 1000))}`
           : undefined,
       });
-      if (!session.url) return null;
-      return { kind: "hosted", checkoutUrl: session.url };
+      if (!si.clientSecret) return null;
+      return {
+        kind: "embedded",
+        mode: "setup",
+        clientSecret: si.clientSecret,
+        paymentIntentId: si.setupIntentId,
+        publishableKey: publishableKey0,
+        connectedAccountId: p.stripe_connect_account_id,
+        amountCents: 0,
+        currency: "gbp",
+        returnUrl: `${origin0}/m/${p.slug ?? ""}/account?card_saved=1&si=${si.setupIntentId}`,
+      };
     } catch (e) {
-      console.error("[maybeCreateBookingCheckout] card capture session error", e);
+      console.error("[maybeCreateBookingCheckout] card capture setup intent error", e);
       return null;
     }
   }
