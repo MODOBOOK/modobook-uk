@@ -932,9 +932,22 @@ async function maybeCreateBookingCheckout(args: {
     : depositEnabled && (depositPer >= 100 || (depositTypeMode === "percent" && depositPct > 0));
   if (wantsDeposit && depositEnabled) {
     amountCents = await computeDepositTotalCents();
-    if (amountCents < 100) return null;
-    kind = "deposit";
+    if (amountCents < 100) {
+      // Deposit waived (e.g. treatment-level £0 override). Fall back to a full
+      // payment when the patient asked to pay now, otherwise take nothing —
+      // the booking is confirmed and settled in clinic.
+      if (args.choice?.mode === "full" && fullEnabled) {
+        amountCents = Math.round(args.totalAmount * 100);
+        kind = "checkout";
+        if (amountCents < 100) return null;
+      } else {
+        return null;
+      }
+    } else {
+      kind = "deposit";
+    }
   } else if (fullEnabled) {
+
     amountCents = Math.round(args.totalAmount * 100);
     kind = "checkout";
   } else {
