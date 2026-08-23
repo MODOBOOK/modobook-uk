@@ -1,3 +1,5 @@
+import { getCookie } from "@tanstack/react-start/server";
+
 /**
  * Resolves which clinic (profiles.id) the signed-in user is currently working in.
  *
@@ -31,9 +33,6 @@ const NONE: ClinicAccess = {
 
 function selectedClinicCookie(): string | null {
   try {
-    // Lazily required so this module stays importable from any server context.
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { getCookie } = require("@tanstack/react-start/server");
     return (getCookie("modo_clinic") as string | undefined) || null;
   } catch {
     return null;
