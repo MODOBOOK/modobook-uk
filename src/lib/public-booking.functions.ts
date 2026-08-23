@@ -522,6 +522,8 @@ export type BookingPaymentResult =
   | { kind: "hosted"; checkoutUrl: string }
   | {
       kind: "embedded";
+      /** "setup" = card capture (nothing charged), "payment" = deposit / full. */
+      mode?: "payment" | "setup";
       clientSecret: string;
       paymentIntentId: string;
       publishableKey: string;
