@@ -37,13 +37,12 @@ export const Route = createFileRoute('/api/public/hooks/rebook-reminders')({
         const { data: rows, error } = await supabaseAdmin
           .from('appointments')
           .select(`
-            id, patient_name, patient_email, scheduled_date, profile_id,
+            id, patient_name, patient_email, patient_phone, scheduled_date, profile_id,
             treatments(name, rebook_reminder_days, topup_reminder_days, category_id),
             practitioners(name),
             profiles(clinic_name, slug)
           `)
           .eq('status', 'confirmed')
-          .not('patient_email', 'is', null)
           .gte('scheduled_date', lookbackIso)
           .lte('scheduled_date', todayIso)
           .limit(1000)
@@ -112,14 +111,13 @@ export const Route = createFileRoute('/api/public/hooks/rebook-reminders')({
             id: string
             patient_name: string | null
             patient_email: string | null
+            patient_phone: string | null
             scheduled_date: string
             profile_id: string
             treatments?: { name?: string; rebook_reminder_days?: number | null; topup_reminder_days?: number | null; category_id?: string | null } | null
             practitioners?: { name?: string } | null
             profiles?: { clinic_name?: string; slug?: string } | null
           }
-          if (!r.patient_email) continue
-
           const catMap = await getCategoryMap(r.profile_id)
           const scheduledMs = new Date(`${r.scheduled_date}T00:00:00Z`).getTime()
           const daysSince = Math.floor((Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()) - scheduledMs) / (24 * 60 * 60 * 1000))
@@ -142,6 +140,35 @@ export const Route = createFileRoute('/api/public/hooks/rebook-reminders')({
             const bookingUrl = r.profiles?.slug ? `${origin}/m/${r.profiles.slug}` : origin
             const templateName = kind === 'rebook' ? 'rebook-reminder' : 'topup-reminder'
             const messageId = `${kind}-${r.id}`
+
+            // WhatsApp version (per-clinic toggle; no-ops when off / no phone)
+            try {
+              const { sendWhatsApp, buildWhatsAppBody } = await import('@/lib/whatsapp/send.server')
+              const waKind = kind === 'rebook' ? 'rebook-reminder' : 'topup-reminder'
+              await sendWhatsApp({
+                profileId: r.profile_id,
+                appointmentId: r.id,
+                kind: waKind,
+                toPhone: r.patient_phone,
+                messageKey: `wa-${kind}-${r.id}`,
+                body: buildWhatsAppBody(waKind, {
+                  patientName: r.patient_name,
+                  clinicName: r.profiles?.clinic_name ?? branding.clinicName,
+                  treatmentName: r.treatments?.name,
+                  bookingUrl,
+                }),
+              })
+            } catch (e) {
+              console.error('[whatsapp] rebook reminder failed', e)
+            }
+
+            if (!r.patient_email) {
+              await supabaseAdmin
+                .from('appointment_rebook_reminders_sent')
+                .insert({ appointment_id: r.id, kind } as never)
+                .then(() => {}, () => {})
+              continue
+            }
 
             const result = await tryEnqueueAppEmail({
               templateName,

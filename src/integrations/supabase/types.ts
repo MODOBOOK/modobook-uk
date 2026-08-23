@@ -1942,6 +1942,7 @@ export type Database = {
           stripe_customer_id: string | null
           stripe_payment_method_id: string | null
           updated_at: string
+          whatsapp_opt_out: boolean
         }
         Insert: {
           address?: string | null
@@ -1995,6 +1996,7 @@ export type Database = {
           stripe_customer_id?: string | null
           stripe_payment_method_id?: string | null
           updated_at?: string
+          whatsapp_opt_out?: boolean
         }
         Update: {
           address?: string | null
@@ -2048,6 +2050,7 @@ export type Database = {
           stripe_customer_id?: string | null
           stripe_payment_method_id?: string | null
           updated_at?: string
+          whatsapp_opt_out?: boolean
         }
         Relationships: [
           {
@@ -6561,6 +6564,10 @@ export type Database = {
           updated_at: string
           user_id: string
           welcome_intro_html: string | null
+          whatsapp_notify_cancellation: boolean
+          whatsapp_notify_confirmation: boolean
+          whatsapp_notify_rebook: boolean
+          whatsapp_notify_reminder: boolean
           whatsapp_reminders_enabled: boolean
         }
         Insert: {
@@ -6687,6 +6694,10 @@ export type Database = {
           updated_at?: string
           user_id: string
           welcome_intro_html?: string | null
+          whatsapp_notify_cancellation?: boolean
+          whatsapp_notify_confirmation?: boolean
+          whatsapp_notify_rebook?: boolean
+          whatsapp_notify_reminder?: boolean
           whatsapp_reminders_enabled?: boolean
         }
         Update: {
@@ -6813,6 +6824,10 @@ export type Database = {
           updated_at?: string
           user_id?: string
           welcome_intro_html?: string | null
+          whatsapp_notify_cancellation?: boolean
+          whatsapp_notify_confirmation?: boolean
+          whatsapp_notify_rebook?: boolean
+          whatsapp_notify_reminder?: boolean
           whatsapp_reminders_enabled?: boolean
         }
         Relationships: [
@@ -8569,6 +8584,56 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      whatsapp_send_log: {
+        Row: {
+          appointment_id: string | null
+          body: string | null
+          created_at: string
+          error: string | null
+          id: string
+          kind: string
+          message_key: string
+          profile_id: string | null
+          provider_sid: string | null
+          status: string
+          to_phone: string
+        }
+        Insert: {
+          appointment_id?: string | null
+          body?: string | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          kind: string
+          message_key: string
+          profile_id?: string | null
+          provider_sid?: string | null
+          status?: string
+          to_phone: string
+        }
+        Update: {
+          appointment_id?: string | null
+          body?: string | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          kind?: string
+          message_key?: string
+          profile_id?: string | null
+          provider_sid?: string | null
+          status?: string
+          to_phone?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_send_log_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
