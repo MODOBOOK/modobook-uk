@@ -76,7 +76,7 @@ function DashboardIndex() {
 
   const today = new Date().toISOString().slice(0, 10);
 
-  const { todays, upcoming, todayBookings, todayCancellations, weekCount, monthBookings, salesToday, salesWeek, salesMonth } = useMemo(() => {
+  const { todays, upcoming, todayBookings, todayCancellations, weekCount, monthBookings, salesToday, salesWeek, salesMonth, thisMonthName, nextMonthName, nextMonthBookings, nextMonthSales } = useMemo(() => {
     const todays = appts.filter((a) => a.scheduled_date === today);
     const upcoming = appts
       .filter((a) => a.scheduled_date >= today && a.status !== "cancelled")
@@ -96,6 +96,11 @@ function DashboardIndex() {
     const weekStartIso = startOfWeek.toISOString().slice(0, 10);
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
     const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().slice(0, 10);
+    // Next calendar month bounds + names
+    const nextStartOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1).toISOString().slice(0, 10);
+    const nextEndOfMonth = new Date(now.getFullYear(), now.getMonth() + 2, 0).toISOString().slice(0, 10);
+    const thisMonthName = new Date(now.getFullYear(), now.getMonth(), 1).toLocaleDateString(undefined, { month: "long" });
+    const nextMonthName = new Date(now.getFullYear(), now.getMonth() + 1, 1).toLocaleDateString(undefined, { month: "long" });
     const amt = (a: Appt) => Number((a as Appt & { total_amount?: number | null }).total_amount ?? 0);
     const inRange = (a: Appt, from: string, to: string) =>
       a.status !== "cancelled" && a.scheduled_date >= from && a.scheduled_date <= to;
@@ -103,7 +108,9 @@ function DashboardIndex() {
     const salesWeek = appts.filter((a) => inRange(a, weekStartIso, today)).reduce((s, a) => s + amt(a), 0);
     const salesMonth = appts.filter((a) => inRange(a, startOfMonth, endOfMonth)).reduce((s, a) => s + amt(a), 0);
     const monthBookings = appts.filter((a) => inRange(a, startOfMonth, endOfMonth)).length;
-    return { todays, upcoming, todayBookings, todayCancellations, weekCount, monthBookings, salesToday, salesWeek, salesMonth };
+    const nextMonthBookings = appts.filter((a) => inRange(a, nextStartOfMonth, nextEndOfMonth)).length;
+    const nextMonthSales = appts.filter((a) => inRange(a, nextStartOfMonth, nextEndOfMonth)).reduce((s, a) => s + amt(a), 0);
+    return { todays, upcoming, todayBookings, todayCancellations, weekCount, monthBookings, salesToday, salesWeek, salesMonth, thisMonthName, nextMonthName, nextMonthBookings, nextMonthSales };
   }, [appts, today]);
 
   const grouped = useMemo(() => {
