@@ -99,7 +99,8 @@ function AnalyticsPage() {
         from.setDate(today.getDate() - 6);
         break;
       case "30d":
-        from.setDate(today.getDate() - 29);
+        // next 30 days (forward-looking), not the trailing window
+        to.setDate(today.getDate() + 30);
         break;
       case "upcoming":
         to.setDate(today.getDate() + 90);
