@@ -31,7 +31,6 @@ import {
   ChevronRight,
   ChevronDown,
   ChevronUp,
-  GraduationCap,
   Gift,
   Trophy,
   Stethoscope,
