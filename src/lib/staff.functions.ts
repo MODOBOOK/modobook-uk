@@ -16,6 +16,33 @@ function randomToken() {
   return Array.from(bytes).map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
+
+// Treating staff each get a bookable practitioner record so they show on the
+// booking page, rota and calendar. Keeps staff logins and practitioners in sync.
+async function ensurePractitionerRecord(
+  supabase: any,
+  profileId: string,
+  staff: { id: string; name: string; practitioner_id: string | null },
+) {
+  if (staff.practitioner_id) {
+    await supabase.from("practitioners").update({ active: true }).eq("id", staff.practitioner_id).eq("profile_id", profileId);
+    return staff.practitioner_id as string;
+  }
+  const { data: created, error } = await supabase
+    .from("practitioners")
+    .insert({ profile_id: profileId, name: staff.name, active: true })
+    .select("id")
+    .single();
+  if (error) throw error;
+  await supabase.from("staff_members").update({ practitioner_id: created.id }).eq("id", staff.id).eq("profile_id", profileId);
+  return created.id as string;
+}
+
+async function deactivatePractitionerRecord(supabase: any, profileId: string, practitionerId: string | null) {
+  if (!practitionerId) return;
+  await supabase.from("practitioners").update({ active: false }).eq("id", practitionerId).eq("profile_id", profileId);
+}
+
 export const listStaff = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
@@ -32,7 +59,8 @@ export const listStaff = createServerFn({ method: "GET" })
 
 type InviteInput = {
   name: string;
-  email: string;
+  /** Optional — a team member can be added now and invited to log in later. */
+  email?: string;
   role: StaffRole;
   data_scope?: StaffScope;
   practitioner_id?: string | null;
@@ -44,8 +72,8 @@ export const inviteStaff = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const profileId = await getProfileId(context.supabase, context.userId);
     if (!profileId) throw new Error("Profile not found");
-    const email = data.email.trim().toLowerCase();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error("Invalid email");
+    const email = (data.email ?? "").trim().toLowerCase();
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error("Invalid email");
     if (!data.name.trim()) throw new Error("Name is required");
 
     // Demo clinic must never be able to hand out real MODO logins.
@@ -65,14 +93,14 @@ export const inviteStaff = createServerFn({ method: "POST" })
       .upsert(
         {
           profile_id: profileId,
-          invited_email: email,
+          invited_email: email || null,
           name: data.name.trim(),
           role: data.role,
           data_scope: data.data_scope ?? "clinic",
           practitioner_id: data.role === "practitioner" ? data.practitioner_id ?? null : null,
           status: "invited",
-          invite_token: token,
-          invite_expires_at: expires,
+          invite_token: email ? token : null,
+          invite_expires_at: email ? expires : null,
           invited_at: new Date().toISOString(),
         },
         { onConflict: "profile_id,invited_email" },
@@ -80,6 +108,13 @@ export const inviteStaff = createServerFn({ method: "POST" })
       .select()
       .single();
     if (error) throw error;
+
+    if (data.role === "practitioner") {
+      await ensurePractitionerRecord(context.supabase, profileId, row as any);
+    }
+
+    // No email yet — the clinic can add one later and send the login invite.
+    if (!email) return row;
 
     // Send invite email using service-role (public flow)
     try {
@@ -123,9 +158,37 @@ export const updateStaff = createServerFn({ method: "POST" })
     if (data.data_scope !== undefined) patch.data_scope = data.data_scope;
     if (data.practitioner_id !== undefined) patch.practitioner_id = data.practitioner_id;
     if (data.status !== undefined) patch.status = data.status;
+
+    const { data: existing } = await context.supabase
+      .from("staff_members")
+      .select("id, name, role, status, practitioner_id")
+      .eq("id", data.id).eq("profile_id", profileId).maybeSingle();
+    if (!existing) throw new Error("Team member not found");
+
+    const nextRole = (data.role ?? existing.role) as StaffRole;
+    const nextStatus = (data.status ?? existing.status) as StaffStatus;
+    if (nextRole === "practitioner" && data.role === "practitioner" && existing.role !== "practitioner") {
+      const { assertSeatAvailable } = await import("./practitioner-billing.functions");
+      await assertSeatAvailable(context.supabase, profileId, "practitioner");
+    }
+
     const { error } = await context.supabase
       .from("staff_members").update(patch).eq("id", data.id).eq("profile_id", profileId);
     if (error) throw error;
+
+    if (nextRole === "practitioner" && nextStatus !== "disabled") {
+      await ensurePractitionerRecord(context.supabase, profileId, {
+        id: existing.id,
+        name: data.name ?? existing.name,
+        practitioner_id: data.practitioner_id !== undefined ? data.practitioner_id : existing.practitioner_id,
+      });
+      if (data.name) {
+        const pid = data.practitioner_id !== undefined ? data.practitioner_id : existing.practitioner_id;
+        if (pid) await context.supabase.from("practitioners").update({ name: data.name }).eq("id", pid).eq("profile_id", profileId);
+      }
+    } else {
+      await deactivatePractitionerRecord(context.supabase, profileId, existing.practitioner_id);
+    }
     return { ok: true };
   });
 
@@ -135,9 +198,12 @@ export const revokeStaff = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const profileId = await getProfileId(context.supabase, context.userId);
     if (!profileId) throw new Error("Profile not found");
+    const { data: existing } = await context.supabase
+      .from("staff_members").select("practitioner_id").eq("id", data.id).eq("profile_id", profileId).maybeSingle();
     const { error } = await context.supabase
       .from("staff_members").delete().eq("id", data.id).eq("profile_id", profileId);
     if (error) throw error;
+    await deactivatePractitionerRecord(context.supabase, profileId, existing?.practitioner_id ?? null);
     return { ok: true };
   });
 
