@@ -31,7 +31,6 @@ import {
   ChevronRight,
   ChevronDown,
   ChevronUp,
-  GraduationCap,
   Gift,
   Trophy,
   Stethoscope,
@@ -304,7 +303,6 @@ function BookPage() {
     staleTime: 60_000,
   });
   const trainingCourses = (trainingQuery.data?.courses ?? []) as Array<{ id: string; name: string; mode: string; cpd_hours: number | string | null; price: number | string; duration_min: number; description: string | null; cover_image_url: string | null }>;
-  const hasTraining = trainingCourses.length > 0;
 
   const fetchGiftCards = useServerFn(listPublicGiftCards);
   const giftCardsQuery = useQuery({
@@ -1160,11 +1158,6 @@ function BookPage() {
               <ActionPlaceholder label="Pre-treatment" brand={brand}>
                 <Info className="h-5 w-5 opacity-30" />
               </ActionPlaceholder>
-            )}
-            {hasTraining && (
-              <ActionLink to="/m/$slug/training" params={{ slug }} label="Training" brand={brand}>
-                <GraduationCap className="h-5 w-5" />
-              </ActionLink>
             )}
           </div>
         </section>
