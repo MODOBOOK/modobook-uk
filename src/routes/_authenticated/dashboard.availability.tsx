@@ -944,6 +944,40 @@ function AvailabilityPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={endOpen} onOpenChange={setEndOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>End rota & start a new one</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Your current shifts stop after the end date and move to “Previous rotas”. Patients can’t book those hours afterwards.
+            </p>
+            <div>
+              <Label className="text-sm">Current rota ends on</Label>
+              <Input type="date" className="mt-1" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+            </div>
+            <div>
+              <Label className="text-sm">New rota starts on</Label>
+              <Input type="date" className="mt-1" value={newStart} onChange={(e) => setNewStart(e.target.value)} />
+              <p className="mt-1 text-xs text-muted-foreground">Leave blank to just end the rota and build the next one yourself.</p>
+            </div>
+            {!!newStart && (
+              <label className="flex items-start gap-2 text-sm">
+                <Checkbox checked={copyForward} onCheckedChange={(v) => setCopyForward(!!v)} />
+                <span>Copy my current shifts into the new rota as a starting point</span>
+              </label>
+            )}
+          </div>
+          <DialogFooter>
+            <div className="flex justify-end gap-2">
+              <Button variant="ghost" onClick={() => setEndOpen(false)}>Cancel</Button>
+              <Button onClick={confirmEndRota} disabled={endingRota}>{endingRota ? "Saving…" : "End rota"}</Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
