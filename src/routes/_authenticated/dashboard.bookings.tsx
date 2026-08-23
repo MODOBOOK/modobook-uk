@@ -562,9 +562,9 @@ function BookingsPage() {
                 {days.map((d) => {
                   const isToday = ymd(d) === todayStr;
                   return (
-                    <div key={ymd(d)} className={`flex flex-col items-center py-2 ${isToday ? "text-primary" : ""}`}>
-                      <span className="text-[10px] uppercase tracking-wide">{d.toLocaleDateString(undefined, { weekday: "short" })}</span>
-                      <span className={`mt-0.5 inline-flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold ${isToday ? "bg-primary text-primary-foreground" : ""}`}>
+                    <div key={ymd(d)} className={`flex flex-col items-center py-1.5 sm:py-2 ${isToday ? "text-primary" : ""}`}>
+                      <span className="text-[9px] uppercase tracking-wide sm:text-[10px]">{d.toLocaleDateString(undefined, { weekday: "short" })}</span>
+                      <span className={`mt-0.5 inline-flex h-7 w-7 items-center justify-center rounded-full text-[13px] font-bold sm:h-8 sm:w-8 sm:text-sm ${isToday ? "bg-primary text-primary-foreground" : ""}`}>
                         {d.getDate()}
                       </span>
                     </div>
@@ -575,11 +575,12 @@ function BookingsPage() {
             <div className="grid relative" style={{ gridTemplateColumns: `var(--gutter) repeat(${daysVisible}, minmax(0, 1fr))`, height: totalHeight }}>
               <div className="sticky left-0 z-20 border-r bg-background">
                 {HOURS.map((h) => (
-                  <div key={h} className="absolute left-0 right-0 pr-1 text-right text-[10px] text-muted-foreground"
+                  <div key={h} className="absolute left-0 right-0 pr-1 text-right text-[9px] tabular-nums text-muted-foreground sm:text-[10px]"
                     style={{ top: (h - START_HOUR) * HOUR_HEIGHT - 6 }}>
-                    {String(h).padStart(2, "0")}:00
+                    {isMobile ? `${String(h).padStart(2, "0")}` : `${String(h).padStart(2, "0")}:00`}
                   </div>
                 ))}
+
                 {nowTop != null && (
                   <div
                     className="absolute right-0.5 z-30 -translate-y-1/2 rounded-full bg-red-500 px-1 py-px text-[10px] font-semibold text-white"
