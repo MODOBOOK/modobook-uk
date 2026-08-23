@@ -74,11 +74,19 @@ export async function assertSeatAvailable(
     .eq("profile_id", profileId)
     .maybeSingle();
 
-  const table = kind === "location" ? "locations" : "practitioners";
-  const { count } = await supabase
-    .from(table)
-    .select("id", { count: "exact", head: true })
-    .eq("profile_id", profileId);
+  // Locations are counted from the locations table; treating seats are counted
+  // from staff members with the Practitioner role (they each get a login).
+  const { count } = kind === "location"
+    ? await supabase
+        .from("locations")
+        .select("id", { count: "exact", head: true })
+        .eq("profile_id", profileId)
+    : await supabase
+        .from("staff_members")
+        .select("id", { count: "exact", head: true })
+        .eq("profile_id", profileId)
+        .eq("role", "practitioner")
+        .in("status", ["invited", "active"]);
   const current = count ?? 0;
   if (current < 1) return; // first seat is always free
   if (sub?.comped) return;
@@ -269,7 +277,12 @@ export const getMyBilling = createServerFn({ method: "GET" })
         .order("amount_cents", { ascending: true }),
       context.supabase.rpc("practitioner_has_platform_access", { _profile_id: profile.id }),
       context.supabase.from("locations").select("id", { count: "exact", head: true }).eq("profile_id", profile.id),
-      context.supabase.from("practitioners").select("id", { count: "exact", head: true }).eq("profile_id", profile.id),
+      context.supabase
+        .from("staff_members")
+        .select("id", { count: "exact", head: true })
+        .eq("profile_id", profile.id)
+        .eq("role", "practitioner")
+        .in("status", ["invited", "active"]),
     ]);
 
     let discountCode: { id: string; code: string; description: string | null; percent_off: number | null; amount_off_cents: number | null } | null = null;
@@ -493,7 +506,12 @@ export const getSeatSummary = createServerFn({ method: "GET" })
         .eq("profile_id", profile.id)
         .maybeSingle(),
       context.supabase.from("locations").select("id", { count: "exact", head: true }).eq("profile_id", profile.id),
-      context.supabase.from("practitioners").select("id", { count: "exact", head: true }).eq("profile_id", profile.id),
+      context.supabase
+        .from("staff_members")
+        .select("id", { count: "exact", head: true })
+        .eq("profile_id", profile.id)
+        .eq("role", "practitioner")
+        .in("status", ["invited", "active"]),
       context.supabase
         .from("subscription_plans")
         .select("id, kind, name, amount_cents, currency, interval, active")
