@@ -489,14 +489,41 @@ function AvailabilityPage() {
   useEffect(() => {
     if (!periods.some((p) => p.key === periodKey)) setPeriodKey("current");
   }, [periods, periodKey]);
+  const isDraftPeriod = !!draft && activePeriod?.key === draft.start;
+
   useEffect(() => {
+    if (isDraftPeriod && draft) {
+      setPeriodEnd(draft.end);
+      setPeriodStart(draft.start);
+      return;
+    }
     setPeriodEnd(periodEndDates.length === 1 ? periodEndDates[0] : "");
     setPeriodStart(activePeriod?.start ?? "");
-  }, [activePeriod?.key, periodEndDates.join(",")]);
+  }, [activePeriod?.key, periodEndDates.join(","), isDraftPeriod, draft?.start, draft?.end]);
+
+  function createDraftRota() {
+    if (!newRotaStart) { toast.error("Pick a start date"); return; }
+    const end = newRotaRolling ? "" : newRotaEnd;
+    if (end && end < newRotaStart) { toast.error("The end date must be after the start date"); return; }
+    setDraft({ start: newRotaStart, end });
+    setPeriodKey(newRotaStart);
+    setNewRotaOpen(false);
+    toast.success("New rota created — add its shifts below");
+  }
 
   async function savePeriodDates() {
     const ids = periodRules.map((r) => r.id);
-    if (!ids.length) { toast.error("Add a shift to this rota first"); return; }
+    if (!ids.length) {
+      if (isDraftPeriod) {
+        if (!periodStart) { toast.error("Pick a start date"); return; }
+        if (periodEnd && periodEnd < periodStart) { toast.error("The end date must be after the start date"); return; }
+        setDraft({ start: periodStart, end: periodEnd });
+        setPeriodKey(periodStart);
+        toast.success("Rota dates updated");
+        return;
+      }
+      toast.error("Add a shift to this rota first"); return;
+    }
     if (periodStart && periodEnd && periodStart > periodEnd) {
       toast.error("The end date must be after the start date"); return;
     }
