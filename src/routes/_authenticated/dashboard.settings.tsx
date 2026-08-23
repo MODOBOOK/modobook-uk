@@ -465,7 +465,8 @@ function SettingsPage() {
         </CardContent>
       </Card>
 
-      {/* WHATSAPP */}
+      {/* WHATSAPP — hidden until sending is live at MODO level */}
+      {whatsappMessagingEnabled(null) && (
       <Card>
         <CardHeader>
           <CardTitle>WhatsApp messages</CardTitle>
@@ -543,6 +544,7 @@ function SettingsPage() {
           )}
         </CardContent>
       </Card>
+      )}
 
       {/* INVOICE & BANK DETAILS */}
       <Card>
