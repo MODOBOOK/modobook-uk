@@ -247,6 +247,8 @@ function BookPage() {
         deposit_type?: string | null;
         deposit_percent?: number | null;
         deposit_policy_text?: string | null;
+        no_refund_policy_enabled?: boolean | null;
+        no_refund_policy_text?: string | null;
         cancellation_rules?: { hours_before: number; fee_percent: number }[] | null;
         chooser_enabled?: boolean | null;
         chooser_show_know?: boolean | null;
@@ -1273,7 +1275,11 @@ function BookPage() {
         const percent = Number(profile.deposit_percent ?? 0);
         const cents = Number(profile.deposit_amount_cents ?? 0);
         const hasDeposit = isPercent ? percent > 0 : cents > 0;
-        if (!hasDeposit && !profile.deposit_policy_text && !(profile.cancellation_rules && profile.cancellation_rules.length > 0)) return null;
+        const noRefund = !!profile.no_refund_policy_enabled;
+        const noRefundText =
+          (profile.no_refund_policy_text ?? "").trim() ||
+          "All deposits and payments are non-refundable. If you cancel or reschedule, your payment cannot be returned.";
+        if (!hasDeposit && !noRefund && !profile.deposit_policy_text && !(profile.cancellation_rules && profile.cancellation_rules.length > 0)) return null;
         return (
         <section className="mx-auto mt-4 max-w-3xl px-4">
           <details className="rounded-2xl border bg-card px-5 py-4 text-sm sm:px-7" style={{ borderColor: `${brand}1a` }}>
@@ -1293,6 +1299,11 @@ function BookPage() {
                 <ul className="ml-4 list-disc space-y-1">
                   {describeCancellationRules(profile.cancellation_rules).map((r, i) => <li key={i}>{r}</li>)}
                 </ul>
+              )}
+              {noRefund && (
+                <p className="rounded-lg px-3 py-2 font-medium" style={{ backgroundColor: `${brand}0f`, color: brand }}>
+                  No refunds: {noRefundText}
+                </p>
               )}
             </div>
           </details>
