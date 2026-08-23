@@ -277,6 +277,15 @@ function BookingsPage() {
     return [];
   }, [anchor, view]);
 
+  // 3-day strip: fixed column width so exactly 3 fit on screen, rest scrolls sideways.
+  const stripColWidth = isMobile
+    ? "calc((100vw - var(--gutter) - 2.5rem) / 3)"
+    : "calc((100vw - var(--gutter) - 22rem) / 3)";
+  const gridCols = isStrip
+    ? `var(--gutter) repeat(${days.length}, ${stripColWidth})`
+    : `var(--gutter) repeat(${days.length}, minmax(0, 1fr))`;
+
+
   const filteredAppts = useMemo(
     () => (locationFilter === "all" ? appts : appts.filter((a) => (a.location_id ?? null) === locationFilter)),
     [appts, locationFilter]
