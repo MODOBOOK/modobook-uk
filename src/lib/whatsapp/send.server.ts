@@ -176,8 +176,10 @@ export async function sendWhatsApp(input: SendWhatsAppInput): Promise<SendWhatsA
     }
 
     const lovableKey = process.env['LOVABLE_API_KEY']
+    const gatewayApiKey = process.env['GATEWAYAPI_API_KEY']
     const twilioKey = process.env['TWILIO_API_KEY']
     const from = process.env['MODO_WHATSAPP_FROM']
+    const smsSender = (process.env['MODO_SMS_SENDER'] || 'MODO').slice(0, 11)
 
     async function mark(status: string, patch: Record<string, unknown> = {}) {
       await supabaseAdmin
@@ -187,31 +189,55 @@ export async function sendWhatsApp(input: SendWhatsAppInput): Promise<SendWhatsA
         .then(() => {}, () => {})
     }
 
-    if (!lovableKey || !twilioKey || !from) {
+    // Provider preference: GatewayAPI SMS (cheapest, no Meta approval needed),
+    // falling back to Twilio WhatsApp when that's the configured route.
+    const useSms = !!(lovableKey && gatewayApiKey)
+    const useWhatsApp = !useSms && !!(lovableKey && twilioKey && from)
+
+    if (!useSms && !useWhatsApp) {
       await mark('not_configured')
       return { ok: false, skipped: 'not-configured' }
     }
 
-    const res = await fetch(`${GATEWAY_URL}/Messages.json`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${lovableKey}`,
-        'X-Connection-Api-Key': twilioKey,
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: new URLSearchParams({
-        To: `whatsapp:${to}`,
-        From: from.startsWith('whatsapp:') ? from : `whatsapp:${toE164(from) ?? from}`,
-        Body: input.body,
-      }),
-    })
+    let res: Response
+    if (useSms) {
+      res = await fetch('https://connector-gateway.lovable.dev/gatewayapi/mobile/single', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${lovableKey}`,
+          'X-Connection-Api-Key': gatewayApiKey!,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          sender: smsSender,
+          recipient: Number(to.replace(/\D/g, '')),
+          message: input.body,
+          reference: input.messageKey,
+        }),
+      })
+    } else {
+      res = await fetch(`${GATEWAY_URL}/Messages.json`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${lovableKey}`,
+          'X-Connection-Api-Key': twilioKey!,
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          To: `whatsapp:${to}`,
+          From: from!.startsWith('whatsapp:') ? from! : `whatsapp:${toE164(from!) ?? from!}`,
+          Body: input.body,
+        }),
+      })
+    }
 
     const text = await res.text()
     if (!res.ok) {
-      console.error(`[whatsapp] send failed [${res.status}]: ${text}`)
+      console.error(`[messaging] send failed [${res.status}]: ${text}`)
       await mark('failed', { error: `${res.status}: ${text.slice(0, 500)}` })
       return { ok: false, error: `${res.status}: ${text}` }
     }
+
 
     let sid: string | undefined
     try { sid = (JSON.parse(text) as { sid?: string }).sid } catch { /* non-JSON */ }
