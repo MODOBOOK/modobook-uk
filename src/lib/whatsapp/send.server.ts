@@ -222,7 +222,7 @@ export async function sendWhatsApp(input: SendWhatsAppInput): Promise<SendWhatsA
         body: JSON.stringify({
           sender: smsSender,
           recipient: Number(to.replace(/\D/g, '')),
-          message: input.body,
+          message: smsBody,
           reference: input.messageKey,
         }),
       })
