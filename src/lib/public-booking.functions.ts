@@ -897,8 +897,11 @@ async function maybeCreateBookingCheckout(args: {
       for (const r of rows ?? []) {
         const t = (r as { treatments?: { deposit_amount?: number | null; price?: number | null } | null }).treatments;
         const override = t?.deposit_amount != null ? Math.round(Number(t.deposit_amount) * 100) : null;
-        if (override != null && override > 0) {
-          total += override;
+        if (override != null) {
+          // An explicit override wins — including £0, which waives the deposit
+          // for this treatment entirely.
+          total += Math.max(0, override);
+
         } else if (depositTypeMode === "percent" && depositPct > 0) {
           const priceCents = Math.round(Number(t?.price ?? 0) * 100);
           total += Math.round((priceCents * depositPct) / 100);
