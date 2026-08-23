@@ -251,6 +251,7 @@ function AvailabilityPage() {
           : "Rota ended — add the shifts for your new rota",
       );
       setEndOpen(false);
+      if (newStart) setPeriodKey(newStart > today ? newStart : "current");
       await refresh();
     } catch (err: any) { toast.error(err?.message ?? "Failed"); }
     finally { setEndingRota(false); }
