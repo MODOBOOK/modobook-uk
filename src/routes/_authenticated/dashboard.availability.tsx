@@ -465,8 +465,16 @@ function AvailabilityPage() {
         rules: rs,
       });
     }
+    if (draft && !list.some((p) => p.key === draft.start)) {
+      list.push({
+        key: draft.start,
+        label: `New rota · ${format(new Date(draft.start + "T00:00:00"), "d MMM yyyy")}`,
+        start: draft.start,
+        rules: [],
+      });
+    }
     return list;
-  }, [activeRules, today]);
+  }, [activeRules, today, draft]);
 
   const activePeriod = useMemo(
     () => periods.find((p) => p.key === periodKey) ?? periods[0],
