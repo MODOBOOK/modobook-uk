@@ -30,6 +30,8 @@ import {
   getRotaSettings,
   setRotaAnchor,
   listPractitioners,
+  endCurrentRota,
+  deletePreviousRota,
 } from "@/lib/availability.functions";
 import { listMyLocations } from "@/lib/locations.functions";
 import { WEEK_LETTERS, weekLetterFor, toMondayIso } from "@/lib/rota";
@@ -127,6 +129,8 @@ function AvailabilityPage() {
   const delBlT = useServerFn(deleteBlockedTime);
   const getRota = useServerFn(getRotaSettings);
   const setAnchor = useServerFn(setRotaAnchor);
+  const endRota = useServerFn(endCurrentRota);
+  const delPrevRota = useServerFn(deletePreviousRota);
 
   const [rules, setRules] = useState<Rule[]>([]);
   const [overrides, setOverrides] = useState<Override[]>([]);
@@ -137,6 +141,14 @@ function AvailabilityPage() {
   const [anchorDate, setAnchorDate] = useState<string | null>(null);
 
   const [cycleLength, setCycleLength] = useState<number>(1);
+
+  // End-rota flow
+  const [endOpen, setEndOpen] = useState(false);
+  const [endDate, setEndDate] = useState("");
+  const [newStart, setNewStart] = useState("");
+  const [copyForward, setCopyForward] = useState(true);
+  const [endingRota, setEndingRota] = useState(false);
+  const [showPrevious, setShowPrevious] = useState(false);
 
   const [dlgOpen, setDlgOpen] = useState(false);
   const [editing, setEditing] = useState<Rule | null>(null);
@@ -205,6 +217,43 @@ function AvailabilityPage() {
       } catch (err: any) { toast.error(err?.message ?? "Failed"); }
     }
   }
+
+  function openEndRota() {
+    const d = new Date();
+    const iso = (dt: Date) => dt.toISOString().slice(0, 10);
+    setEndDate(iso(d));
+    const next = new Date(d); next.setDate(next.getDate() + 1);
+    setNewStart(iso(next));
+    setCopyForward(true);
+    setEndOpen(true);
+  }
+
+  async function confirmEndRota() {
+    if (!endDate) { toast.error("Pick an end date"); return; }
+    if (newStart && newStart <= endDate) { toast.error("The new rota must start after the end date"); return; }
+    setEndingRota(true);
+    try {
+      const res: any = await endRota({
+        data: { end_date: endDate, new_start_date: newStart || null, copy: copyForward && !!newStart },
+      });
+      toast.success(
+        res?.created
+          ? `Rota ended — ${res.created} shift${res.created === 1 ? "" : "s"} copied into the new rota`
+          : "Rota ended — add the shifts for your new rota",
+      );
+      setEndOpen(false);
+      await refresh();
+    } catch (err: any) { toast.error(err?.message ?? "Failed"); }
+    finally { setEndingRota(false); }
+  }
+
+  async function removePreviousRota(endedOn: string) {
+    if (!confirm("Delete this previous rota permanently?")) return;
+    try { await delPrevRota({ data: { effective_to: endedOn } }); await refresh(); toast.success("Previous rota deleted"); }
+    catch (err: any) { toast.error(err?.message ?? "Failed"); }
+  }
+
+
 
   function openAdd(day: number, weekIdx: number) {
     setEditing(null);
@@ -363,9 +412,25 @@ function AvailabilityPage() {
     try { await delBlT({ data: { id } }); await refresh(); } catch (err: any) { toast.error(err?.message ?? "Failed"); }
   }
 
+  // Only shifts that are still running (or start in the future) belong to the
+  // live rota; anything with an end date in the past is a previous rota.
+  const activeRules = useMemo(
+    () => rules.filter((r) => !r.effective_to || r.effective_to >= today),
+    [rules, today],
+  );
+  const previousRotas = useMemo(() => {
+    const groups = new Map<string, Rule[]>();
+    for (const r of rules) {
+      if (r.effective_to && r.effective_to < today) {
+        groups.set(r.effective_to, [...(groups.get(r.effective_to) ?? []), r]);
+      }
+    }
+    return [...groups.entries()].sort((a, b) => (a[0] < b[0] ? 1 : -1));
+  }, [rules, today]);
+
   // Group rules for grid rendering: [weekIdx][dow] -> Rule[]
   function rulesFor(day: number, weekIdx: number): Rule[] {
-    return rules.filter((r) => {
+    return activeRules.filter((r) => {
       if (r.day_of_week !== day) return false;
       const cycle = r.cycle_length ?? 1;
       const mask = r.weeks_mask ?? 1;
@@ -373,6 +438,7 @@ function AvailabilityPage() {
       return (mask & (1 << weekIdx)) !== 0;
     });
   }
+
 
   function locName(id: string | null | undefined) {
     return locations.find((l) => l.id === id)?.name;
@@ -418,8 +484,51 @@ function AvailabilityPage() {
                   )}
                 </div>
               </div>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <Button size="sm" variant="outline" onClick={openEndRota}>
+                  <CalendarRange className="mr-2 h-4 w-4" /> End rota & start a new one
+                </Button>
+                {previousRotas.length > 0 && (
+                  <Button size="sm" variant="ghost" onClick={() => setShowPrevious((v) => !v)}>
+                    {showPrevious ? "Hide" : "Show"} previous rotas ({previousRotas.length})
+                  </Button>
+                )}
+              </div>
             </CardHeader>
           </Card>
+
+          {showPrevious && previousRotas.length > 0 && (
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">Previous rotas</CardTitle>
+                <CardDescription>Archived shift patterns — kept for your records, not bookable.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {previousRotas.map(([endedOn, rs]) => (
+                  <div key={endedOn} className="rounded-lg border p-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="text-sm font-medium">
+                        Ended {format(new Date(endedOn + "T00:00:00"), "d MMM yyyy")}
+                        <span className="ml-2 text-xs text-muted-foreground">{rs.length} shift{rs.length === 1 ? "" : "s"}</span>
+                      </div>
+                      <Button size="sm" variant="ghost" onClick={() => removePreviousRota(endedOn)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="mt-2 grid gap-1 sm:grid-cols-2">
+                      {rs.map((r) => (
+                        <div key={r.id} className="text-xs text-muted-foreground">
+                          {DAYS_SHORT[DOW_ORDER.indexOf(r.day_of_week)]} · {r.start_time.slice(0, 5)}–{r.end_time.slice(0, 5)}
+                          {locName(r.location_id) ? ` · ${locName(r.location_id)}` : ""}
+                          {pracName(r.practitioner_id) ? ` · ${pracName(r.practitioner_id)}` : ""}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
 
           <Card className="overflow-hidden">
             <CardHeader className="pb-3">
@@ -429,7 +538,7 @@ function AvailabilityPage() {
                   <CardDescription>Tap a cell to add or edit a shift.</CardDescription>
                 </div>
                 <div className="text-xs text-muted-foreground hidden sm:block">
-                  {rules.length} shift{rules.length === 1 ? "" : "s"}
+                  {activeRules.length} shift{activeRules.length === 1 ? "" : "s"}
                 </div>
               </div>
             </CardHeader>
@@ -510,7 +619,7 @@ function AvailabilityPage() {
                   ))}
                 </div>
               </div>
-              {rules.length === 0 && (
+              {activeRules.length === 0 && (
                 <div className="mt-4 text-center text-sm text-muted-foreground">No shifts yet — tap any cell to add your first.</div>
               )}
             </CardContent>
@@ -831,6 +940,40 @@ function AvailabilityPage() {
             <div className="flex gap-2 justify-end">
               <Button variant="ghost" onClick={() => setDlgOpen(false)}>Cancel</Button>
               <Button onClick={saveShift}>Save</Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={endOpen} onOpenChange={setEndOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>End rota & start a new one</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Your current shifts stop after the end date and move to “Previous rotas”. Patients can’t book those hours afterwards.
+            </p>
+            <div>
+              <Label className="text-sm">Current rota ends on</Label>
+              <Input type="date" className="mt-1" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+            </div>
+            <div>
+              <Label className="text-sm">New rota starts on</Label>
+              <Input type="date" className="mt-1" value={newStart} onChange={(e) => setNewStart(e.target.value)} />
+              <p className="mt-1 text-xs text-muted-foreground">Leave blank to just end the rota and build the next one yourself.</p>
+            </div>
+            {!!newStart && (
+              <label className="flex items-start gap-2 text-sm">
+                <Checkbox checked={copyForward} onCheckedChange={(v) => setCopyForward(!!v)} />
+                <span>Copy my current shifts into the new rota as a starting point</span>
+              </label>
+            )}
+          </div>
+          <DialogFooter>
+            <div className="flex justify-end gap-2">
+              <Button variant="ghost" onClick={() => setEndOpen(false)}>Cancel</Button>
+              <Button onClick={confirmEndRota} disabled={endingRota}>{endingRota ? "Saving…" : "End rota"}</Button>
             </div>
           </DialogFooter>
         </DialogContent>
