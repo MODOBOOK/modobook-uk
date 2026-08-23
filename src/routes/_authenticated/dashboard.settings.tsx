@@ -9,6 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { SaveReminder } from "@/components/SaveReminder";
 import { sendWhatsAppTest } from "@/lib/whatsapp.functions";
+import { whatsappMessagingEnabled } from "@/lib/feature-flags";
 
 
 
@@ -465,7 +466,8 @@ function SettingsPage() {
         </CardContent>
       </Card>
 
-      {/* WHATSAPP */}
+      {/* WHATSAPP — hidden until sending is live at MODO level */}
+      {whatsappMessagingEnabled(null) && (
       <Card>
         <CardHeader>
           <CardTitle>WhatsApp messages</CardTitle>
@@ -543,6 +545,7 @@ function SettingsPage() {
           )}
         </CardContent>
       </Card>
+      )}
 
       {/* INVOICE & BANK DETAILS */}
       <Card>

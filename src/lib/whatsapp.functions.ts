@@ -1,41 +1,18 @@
 import { createServerFn } from '@tanstack/react-start'
 import { requireSupabaseAuth } from '@/integrations/supabase/auth-middleware'
 
-/** Sends a one-off test WhatsApp message to the practitioner's own number. */
+/**
+ * Patient text/WhatsApp messaging is not live at MODO level yet, so this test
+ * endpoint is disabled for every clinic. Restore the send logic only when
+ * sending is genuinely switched on.
+ */
 export const sendWhatsAppTest = createServerFn({ method: 'POST' })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { phone: string }) => input)
-  .handler(async ({ data, context }) => {
-    const { supabase, userId } = context
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('id, clinic_name')
-      .eq('user_id', userId)
-      .maybeSingle()
-    if (!profile) throw new Error('Profile not found')
-
-    const { sendWhatsApp, buildWhatsAppBody, toE164 } = await import('@/lib/whatsapp/send.server')
-    const to = toE164(data.phone)
-    if (!to) return { ok: false, message: "That doesn't look like a valid mobile number." }
-
-    const res = await sendWhatsApp({
-      profileId: profile.id,
-      kind: 'test',
-      toPhone: to,
-      messageKey: `wa-test-${profile.id}-${Date.now()}`,
-      body: buildWhatsAppBody('test', { clinicName: profile.clinic_name }),
-      force: true,
-    })
-
-    if (res.ok) return { ok: true, message: `Test sent to ${to}.` }
-    if (res.skipped === 'not-configured') {
-      return {
-        ok: false,
-        message: 'WhatsApp sending is not switched on at MODO level yet — nothing was sent.',
-      }
-    }
-    return { ok: false, message: res.error || res.skipped || 'Could not send.' }
-  })
+  .handler(async () => ({
+    ok: false as boolean,
+    message: 'Patient text messaging is not available yet.',
+  }))
 
 /** Recent WhatsApp activity for the signed-in clinic. */
 export const listWhatsAppLog = createServerFn({ method: 'GET' })

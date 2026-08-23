@@ -84,3 +84,16 @@ export const UPCOMING_SLUGS: string[] = [];
 export function upcomingEnabled(slug?: string | null) {
   return isFeatureLive(UPCOMING_SLUGS, slug);
 }
+
+/**
+ * WhatsApp / SMS patient notifications. Not live at MODO level (no approved
+ * sender yet), so the whole section is hidden from every clinic. Add slugs
+ * here only once sending is actually switched on.
+ */
+export const WHATSAPP_SLUGS: string[] = [];
+
+export function whatsappMessagingEnabled(slug?: string | null) {
+  if (WHATSAPP_SLUGS.length === 0) return false;
+  if (!slug) return false;
+  return WHATSAPP_SLUGS.includes(slug.toLowerCase());
+}

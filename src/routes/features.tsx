@@ -78,7 +78,7 @@ const groups = [
     title: "Communication & marketing",
     icon: MessageSquare,
     items: [
-      { icon: Bell, title: "Reminders", desc: "Email, SMS and WhatsApp confirmations and reminders at the hours you set." },
+      { icon: Bell, title: "Reminders", desc: "Email confirmations and reminders at the hours you set." },
       { icon: MessageSquare, title: "Aftercare", desc: "Per-treatment aftercare sent automatically X hours after the appointment." },
       { icon: Star, title: "Reviews", desc: "Patient review collection and moderation built in." },
       { icon: Smartphone, title: "Mobile-first patient flow", desc: "The booking page is built mobile-first — no app to download." },

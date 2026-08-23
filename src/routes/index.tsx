@@ -352,7 +352,7 @@ function LandingPage() {
               <ClinicalFeature icon={Users} title="Patient records" desc="History, allergies, notes, photos, forms and messages in one place." />
               <ClinicalFeature icon={Layers} title="Packages & courses" desc="Bundles, top-ups, add-ons and split payments — without the spreadsheet." />
               <ClinicalFeature icon={CreditCard} title="Payments your way" desc="Card, deposits, pay-in-clinic, Klarna, Clearpay — fees can be passed on." />
-              <ClinicalFeature icon={Bell} title="Reminders that work" desc="Email, SMS and WhatsApp. Cancellation rules enforced automatically." />
+              <ClinicalFeature icon={Bell} title="Reminders that work" desc="Automated email reminders. Cancellation rules enforced automatically." />
               <ClinicalFeature icon={MessageSquare} title="Marketing built-in" desc="Email your list, follow up after treatment, drive rebooks and reviews." />
               <ClinicalFeature icon={Lock} title="GDPR-ready storage" desc="Encrypted at rest, UK/EU residency, granular photo & marketing consent." />
             </div>
