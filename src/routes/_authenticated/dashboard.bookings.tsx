@@ -577,7 +577,7 @@ function BookingsPage() {
                 })}
               </div>
 
-            <div className="grid relative" style={{ gridTemplateColumns: `var(--gutter) repeat(${daysVisible}, minmax(0, 1fr))`, height: totalHeight }}>
+            <div className="grid relative" style={{ gridTemplateColumns: gridCols, height: totalHeight }}>
               <div className="sticky left-0 z-20 border-r bg-background">
                 {HOURS.map((h) => (
                   <div key={h} className="absolute left-0 right-0 pr-1 text-right text-[9px] tabular-nums text-muted-foreground sm:text-[10px]"
