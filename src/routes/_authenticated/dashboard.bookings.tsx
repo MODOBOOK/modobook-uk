@@ -262,17 +262,29 @@ function BookingsPage() {
     }
   }, [loading, view]);
 
-  const daysVisible = view === "day" ? 1 : view === "3day" ? 3 : view === "week" ? 7 : 0;
+  // In 3-day view we render a long horizontal strip (3 columns wide on screen)
+  // so you can keep scrolling sideways through following days.
+  const STRIP_DAYS = 21;
+  const isStrip = view === "3day";
 
   const days = useMemo(() => {
     if (view === "day") return [anchor];
-    if (view === "3day") return Array.from({ length: 3 }, (_, i) => addDays(anchor, i));
+    if (view === "3day") return Array.from({ length: STRIP_DAYS }, (_, i) => addDays(anchor, i));
     if (view === "week") {
       const start = startOfWeek(anchor);
       return Array.from({ length: 7 }, (_, i) => addDays(start, i));
     }
     return [];
   }, [anchor, view]);
+
+  // 3-day strip: fixed column width so exactly 3 fit on screen, rest scrolls sideways.
+  const stripColWidth = isMobile
+    ? "calc((100vw - var(--gutter) - 2.5rem) / 3)"
+    : "calc((100vw - var(--gutter) - 22rem) / 3)";
+  const gridCols = isStrip
+    ? `var(--gutter) repeat(${days.length}, ${stripColWidth})`
+    : `var(--gutter) repeat(${days.length}, minmax(0, 1fr))`;
+
 
   const filteredAppts = useMemo(
     () => (locationFilter === "all" ? appts : appts.filter((a) => (a.location_id ?? null) === locationFilter)),
@@ -548,14 +560,16 @@ function BookingsPage() {
           >
             <div
               style={{
-                minWidth: isMobile
-                  ? `calc(var(--gutter) + ${daysVisible * (view === "day" ? 0 : view === "3day" ? 118 : 112)}px)`
+                minWidth: isStrip
+                  ? "max-content"
+                  : isMobile
+                  ? `calc(var(--gutter) + ${days.length * (view === "day" ? 0 : 112)}px)`
                   : undefined,
               }}
             >
               <div
                 className="sticky top-0 z-30 grid border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80"
-                style={{ gridTemplateColumns: `var(--gutter) repeat(${daysVisible}, minmax(0, 1fr))` }}
+                style={{ gridTemplateColumns: gridCols }}
               >
                 <div className="sticky left-0 z-10 bg-background/95" />
 
@@ -572,7 +586,7 @@ function BookingsPage() {
                 })}
               </div>
 
-            <div className="grid relative" style={{ gridTemplateColumns: `var(--gutter) repeat(${daysVisible}, minmax(0, 1fr))`, height: totalHeight }}>
+            <div className="grid relative" style={{ gridTemplateColumns: gridCols, height: totalHeight }}>
               <div className="sticky left-0 z-20 border-r bg-background">
                 {HOURS.map((h) => (
                   <div key={h} className="absolute left-0 right-0 pr-1 text-right text-[9px] tabular-nums text-muted-foreground sm:text-[10px]"
