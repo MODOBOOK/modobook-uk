@@ -598,70 +598,84 @@ function BookingsPage() {
                       );
                     })()}
 
-                    {/* Blocked times (black) */}
-                    {dayBlocks.map((b) => {
-                      const start = parseTime(b.start_time);
-                      const end = parseTime(b.end_time);
+                    {/* Blocked times + appointments share one layout so nothing ever overlaps */}
+                    {layoutOverlaps<any>([
+                      ...dayBlocks.map((b) => ({ ...b, __kind: "block" as const })),
+                      ...dayAppts.map((a) => ({ ...a, __kind: "appt" as const })),
+                    ]).map(({ item, leftPct, widthPct, index, columns }) => {
+                      const start = parseTime(item.start_time);
+                      const end = parseTime(item.end_time);
                       const top = (start - START_HOUR) * HOUR_HEIGHT;
-                      const height = Math.max(22, (end - start) * HOUR_HEIGHT - 2);
-                      return (
-                        <button
-                          key={b.id}
-                          onClick={async () => {
-                            if (!confirm(`Unblock ${b.start_time.slice(0,5)}–${b.end_time.slice(0,5)}?`)) return;
-                            try {
-                              await deleteBlockedTime({ data: { id: b.id } });
-                              setBlocks((p) => p.filter((x) => x.id !== b.id));
-                              toast.success("Unblocked — time now open");
-                            } catch (e) { toast.error((e as Error).message); }
-                          }}
-                          className="absolute left-1 right-1 z-[4] overflow-hidden rounded-md bg-slate-900 px-2 py-1 text-left text-[11px] text-white shadow-sm"
-                          style={{ top, height }}
-                          title="Tap to open this slot"
-                        >
-                          <div className="truncate font-semibold flex items-center gap-1"><Ban className="h-3 w-3" /> Blocked</div>
-                          <div className="truncate opacity-80">{b.start_time.slice(0,5)}–{b.end_time.slice(0,5)}{b.reason ? ` · ${b.reason}` : ""}</div>
-                        </button>
-                      );
-                    })}
+                      const height = Math.max(20, (end - start) * HOUR_HEIGHT - 3);
+                      const tight = height < 40;
+                      const narrow = columns > 2;
+                      const posStyle = {
+                        top,
+                        height,
+                        left: `calc(${leftPct}% + 2px)`,
+                        width: `calc(${widthPct}% - 4px)`,
+                        zIndex: 5 + index,
+                      } as const;
 
-                    {/* Appointments — overlapping ones sit side by side */}
-                    {layoutOverlaps(dayAppts).map(({ item: a, leftPct, widthPct, index, columns }) => {
-                      const start = parseTime(a.start_time);
-                      const end = parseTime(a.end_time);
-                      const top = (start - START_HOUR) * HOUR_HEIGHT;
-                      const height = Math.max(22, (end - start) * HOUR_HEIGHT - 2);
+                      if (item.__kind === "block") {
+                        const b = item;
+                        return (
+                          <button
+                            key={`b-${b.id}`}
+                            onClick={async () => {
+                              if (!confirm(`Unblock ${b.start_time.slice(0,5)}–${b.end_time.slice(0,5)}?`)) return;
+                              try {
+                                await deleteBlockedTime({ data: { id: b.id } });
+                                setBlocks((p) => p.filter((x) => x.id !== b.id));
+                                toast.success("Unblocked — time now open");
+                              } catch (e) { toast.error((e as Error).message); }
+                            }}
+                            className="absolute overflow-hidden rounded-lg bg-slate-800 px-2 py-1 text-left text-[11px] leading-tight text-white shadow-sm transition hover:z-30 hover:brightness-110"
+                            style={posStyle}
+                            title="Tap to open this slot"
+                          >
+                            <div className="truncate font-semibold flex items-center gap-1"><Ban className="h-3 w-3 shrink-0" /> Blocked</div>
+                            {!tight && (
+                              <div className="truncate opacity-80">{b.start_time.slice(0,5)}–{b.end_time.slice(0,5)}{b.reason ? ` · ${b.reason}` : ""}</div>
+                            )}
+                          </button>
+                        );
+                      }
+
+                      const a = item;
                       const color = a.treatments?.color || "#3b82f6";
-                      const compact = columns > 1;
                       return (
                         <button
-                          key={a.id}
+                          key={`a-${a.id}`}
                           onClick={() => setSelectedAppt(a)}
-                          className={`absolute overflow-hidden rounded-md border border-background border-l-4 text-left text-[11px] shadow-sm transition hover:z-20 hover:shadow-md ${compact ? "px-1 py-0.5" : "px-2 py-1"}`}
+                          className="absolute cursor-pointer overflow-hidden rounded-lg px-2 py-1 text-left text-[11px] leading-tight shadow-sm ring-1 ring-black/5 transition hover:z-30 hover:shadow-md"
                           style={{
-                            top,
-                            height,
-                            left: `calc(${leftPct}% + 2px)`,
-                            width: `calc(${widthPct}% - 4px)`,
-                            zIndex: 5 + index,
-                            borderLeftColor: color,
-                            backgroundColor: hexToRgba(color, 0.18),
-                            color: "var(--foreground)",
+                            ...posStyle,
+                            backgroundColor: hexToRgba(color, 0.45),
+                            color: "#0f172a",
                           }}
                           title={`${a.start_time.slice(0, 5)}–${a.end_time.slice(0, 5)} · ${a.patient_name} · ${a.treatments?.name ?? "Treatment"}`}
                         >
-                          <div className="truncate font-semibold">{a.patient_name}</div>
-                          <div className="truncate opacity-80">
-                            {a.start_time.slice(0, 5)}{compact ? "" : ` · ${a.treatments?.name ?? "Treatment"}`}
+                          <div className="flex items-baseline gap-1">
+                            <span className="truncate font-semibold">{a.patient_name}</span>
+                            {!narrow && (
+                              <span className="shrink-0 text-[10px] opacity-70">
+                                {a.start_time.slice(0, 5)}–{a.end_time.slice(0, 5)}
+                              </span>
+                            )}
                           </div>
-                          {a.has_allergies && !compact && (
-                            <div className="mt-0.5 flex items-center gap-1 text-[10px] text-red-600">
+                          {!tight && (
+                            <div className="truncate opacity-80">{a.treatments?.name ?? "Treatment"}</div>
+                          )}
+                          {a.has_allergies && !tight && !narrow && (
+                            <div className="mt-0.5 flex items-center gap-1 text-[10px] font-medium text-red-700">
                               <AlertTriangle className="h-2.5 w-2.5" /> Allergies
                             </div>
                           )}
                         </button>
                       );
                     })}
+
                   </div>
                 );
               })}
