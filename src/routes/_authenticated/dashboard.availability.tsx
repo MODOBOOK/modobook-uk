@@ -363,9 +363,25 @@ function AvailabilityPage() {
     try { await delBlT({ data: { id } }); await refresh(); } catch (err: any) { toast.error(err?.message ?? "Failed"); }
   }
 
+  // Only shifts that are still running (or start in the future) belong to the
+  // live rota; anything with an end date in the past is a previous rota.
+  const activeRules = useMemo(
+    () => rules.filter((r) => !r.effective_to || r.effective_to >= today),
+    [rules, today],
+  );
+  const previousRotas = useMemo(() => {
+    const groups = new Map<string, Rule[]>();
+    for (const r of rules) {
+      if (r.effective_to && r.effective_to < today) {
+        groups.set(r.effective_to, [...(groups.get(r.effective_to) ?? []), r]);
+      }
+    }
+    return [...groups.entries()].sort((a, b) => (a[0] < b[0] ? 1 : -1));
+  }, [rules, today]);
+
   // Group rules for grid rendering: [weekIdx][dow] -> Rule[]
   function rulesFor(day: number, weekIdx: number): Rule[] {
-    return rules.filter((r) => {
+    return activeRules.filter((r) => {
       if (r.day_of_week !== day) return false;
       const cycle = r.cycle_length ?? 1;
       const mask = r.weeks_mask ?? 1;
@@ -373,6 +389,7 @@ function AvailabilityPage() {
       return (mask & (1 << weekIdx)) !== 0;
     });
   }
+
 
   function locName(id: string | null | undefined) {
     return locations.find((l) => l.id === id)?.name;
