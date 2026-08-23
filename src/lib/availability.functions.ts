@@ -549,7 +549,7 @@ export const updateRotaPeriod = createServerFn({ method: "POST" })
     const profileId = await getProfileId(context.supabase, context.userId);
     if (!profileId) throw new Error("Profile not found");
     if (!data.ids?.length) return { ok: true, updated: 0 };
-    const patch: Record<string, string | null> = {};
+    const patch: { effective_from?: string | null; effective_to?: string | null } = {};
     if ("effective_from" in data) patch.effective_from = data.effective_from || null;
     if ("effective_to" in data) patch.effective_to = data.effective_to || null;
     if (Object.keys(patch).length === 0) return { ok: true, updated: 0 };
