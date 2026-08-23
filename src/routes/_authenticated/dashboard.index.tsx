@@ -76,7 +76,7 @@ function DashboardIndex() {
 
   const today = new Date().toISOString().slice(0, 10);
 
-  const { todays, upcoming, todayBookings, todayCancellations, weekCount, monthBookings, salesToday, salesWeek, salesMonth } = useMemo(() => {
+  const { todays, upcoming, todayBookings, todayCancellations, weekCount, monthBookings, salesToday, salesWeek, salesMonth, thisMonthName, nextMonthName, nextMonthBookings, nextMonthSales } = useMemo(() => {
     const todays = appts.filter((a) => a.scheduled_date === today);
     const upcoming = appts
       .filter((a) => a.scheduled_date >= today && a.status !== "cancelled")
@@ -96,6 +96,11 @@ function DashboardIndex() {
     const weekStartIso = startOfWeek.toISOString().slice(0, 10);
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
     const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().slice(0, 10);
+    // Next calendar month bounds + names
+    const nextStartOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1).toISOString().slice(0, 10);
+    const nextEndOfMonth = new Date(now.getFullYear(), now.getMonth() + 2, 0).toISOString().slice(0, 10);
+    const thisMonthName = new Date(now.getFullYear(), now.getMonth(), 1).toLocaleDateString(undefined, { month: "long" });
+    const nextMonthName = new Date(now.getFullYear(), now.getMonth() + 1, 1).toLocaleDateString(undefined, { month: "long" });
     const amt = (a: Appt) => Number((a as Appt & { total_amount?: number | null }).total_amount ?? 0);
     const inRange = (a: Appt, from: string, to: string) =>
       a.status !== "cancelled" && a.scheduled_date >= from && a.scheduled_date <= to;
@@ -103,7 +108,9 @@ function DashboardIndex() {
     const salesWeek = appts.filter((a) => inRange(a, weekStartIso, today)).reduce((s, a) => s + amt(a), 0);
     const salesMonth = appts.filter((a) => inRange(a, startOfMonth, endOfMonth)).reduce((s, a) => s + amt(a), 0);
     const monthBookings = appts.filter((a) => inRange(a, startOfMonth, endOfMonth)).length;
-    return { todays, upcoming, todayBookings, todayCancellations, weekCount, monthBookings, salesToday, salesWeek, salesMonth };
+    const nextMonthBookings = appts.filter((a) => inRange(a, nextStartOfMonth, nextEndOfMonth)).length;
+    const nextMonthSales = appts.filter((a) => inRange(a, nextStartOfMonth, nextEndOfMonth)).reduce((s, a) => s + amt(a), 0);
+    return { todays, upcoming, todayBookings, todayCancellations, weekCount, monthBookings, salesToday, salesWeek, salesMonth, thisMonthName, nextMonthName, nextMonthBookings, nextMonthSales };
   }, [appts, today]);
 
   const grouped = useMemo(() => {
@@ -197,7 +204,7 @@ function DashboardIndex() {
         <div className="flex items-end justify-between px-1">
           <div>
             <p className="text-[10px] font-medium uppercase tracking-[0.25em] text-muted-foreground">Analytics</p>
-            <h2 className="mt-1 font-serif text-2xl sm:text-3xl">This month at a glance</h2>
+            <h2 className="mt-1 font-serif text-2xl sm:text-3xl">At a glance</h2>
           </div>
           <Link
             to="/dashboard/analytics"
@@ -207,12 +214,26 @@ function DashboardIndex() {
           </Link>
         </div>
         <Link to="/dashboard/analytics" className="block">
-          <Card className="border-border/60 transition hover:border-accent hover:shadow-luxe">
-            <CardContent className="grid grid-cols-2 gap-px overflow-hidden rounded-xl bg-border/60 p-0 sm:grid-cols-4">
-              <Stat label="Bookings this month" value={String(monthBookings)} />
-              <Stat label="Sales today" value={`£${salesToday.toFixed(0)}`} />
-              <Stat label="Sales (7d)" value={`£${salesWeek.toFixed(0)}`} />
-              <Stat label="Sales this month" value={`£${salesMonth.toFixed(0)}`} />
+          <Card className="overflow-hidden border-border/60 transition hover:border-accent hover:shadow-luxe">
+            <CardContent className="p-0">
+              {/* This month */}
+              <div className="grid grid-cols-2 gap-px bg-border/60 sm:grid-cols-4">
+                <Stat label={`Bookings in ${thisMonthName}`} value={String(monthBookings)} />
+                <Stat label={`Sales in ${thisMonthName}`} value={`£${salesMonth.toFixed(0)}`} />
+                <Stat label="Sales today" value={`£${salesToday.toFixed(0)}`} />
+                <Stat label="Sales (7d)" value={`£${salesWeek.toFixed(0)}`} />
+              </div>
+              {/* Next month */}
+              <div className="border-t border-border/60 bg-muted/20">
+                <p className="px-4 pt-3 text-[10px] font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                  Next month · {nextMonthName}
+                </p>
+                <div className="grid grid-cols-2 gap-px bg-border/60 sm:grid-cols-3">
+                  <Stat label={`Bookings in ${nextMonthName}`} value={String(nextMonthBookings)} />
+                  <Stat label={`Sales in ${nextMonthName}`} value={`£${nextMonthSales.toFixed(0)}`} />
+                  <Stat label="Avg. booking" value={nextMonthBookings ? `£${(nextMonthSales / nextMonthBookings).toFixed(0)}` : "—"} />
+                </div>
+              </div>
             </CardContent>
           </Card>
         </Link>

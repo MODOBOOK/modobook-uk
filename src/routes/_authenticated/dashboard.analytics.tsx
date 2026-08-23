@@ -99,7 +99,8 @@ function AnalyticsPage() {
         from.setDate(today.getDate() - 6);
         break;
       case "30d":
-        from.setDate(today.getDate() - 29);
+        // next 30 days (forward-looking), not the trailing window
+        to.setDate(today.getDate() + 30);
         break;
       case "upcoming":
         to.setDate(today.getDate() + 90);
@@ -228,7 +229,7 @@ function AnalyticsPage() {
         <Tabs value={range} className="-mx-1 w-full overflow-x-auto sm:mx-0 sm:w-auto" onValueChange={(v) => setRange(v as Range)}>
           <TabsList className="w-max rounded-full bg-muted/60">
             <TabsTrigger value="7d" className="rounded-full text-xs">7 days</TabsTrigger>
-            <TabsTrigger value="30d" className="rounded-full text-xs">30 days</TabsTrigger>
+            <TabsTrigger value="30d" className="rounded-full text-xs">Next 30 days</TabsTrigger>
             <TabsTrigger value="upcoming" className="rounded-full text-xs">Upcoming</TabsTrigger>
             <TabsTrigger value="month" className="rounded-full text-xs">This month</TabsTrigger>
             <TabsTrigger value="year" className="rounded-full text-xs">This year</TabsTrigger>
