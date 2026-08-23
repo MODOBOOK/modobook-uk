@@ -303,7 +303,6 @@ function BookPage() {
     staleTime: 60_000,
   });
   const trainingCourses = (trainingQuery.data?.courses ?? []) as Array<{ id: string; name: string; mode: string; cpd_hours: number | string | null; price: number | string; duration_min: number; description: string | null; cover_image_url: string | null }>;
-  const hasTraining = trainingCourses.length > 0;
 
   const fetchGiftCards = useServerFn(listPublicGiftCards);
   const giftCardsQuery = useQuery({
