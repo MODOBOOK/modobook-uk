@@ -1625,23 +1625,10 @@ function CheckoutSheet({
                 Already refunded: £{(Number(a.amount_refunded_cents ?? 0) / 100).toFixed(2)}
               </div>
             )}
-            <Button
-              size="sm"
-              variant="outline"
+            <RefundControl
+              maxRefund={(Number(a.amount_paid_cents ?? 0) - Number(a.amount_refunded_cents ?? 0)) / 100}
               disabled={busy}
-              className="w-full text-destructive"
-              onClick={async () => {
-                const maxRefund = (Number(a.amount_paid_cents ?? 0) - Number(a.amount_refunded_cents ?? 0)) / 100;
-                const input = prompt(
-                  `Refund via Stripe.\n\nMax refundable: £${maxRefund.toFixed(2)}\n\nLeave blank to refund the full amount, or enter a smaller amount (£):`,
-                  "",
-                );
-                if (input === null) return;
-                const amt = input.trim() === "" ? undefined : Number(input);
-                if (amt !== undefined && (!isFinite(amt) || amt <= 0)) {
-                  toast.error("Enter a valid amount");
-                  return;
-                }
+              onRefund={async (amt) => {
                 setBusy(true);
                 try {
                   const r = await refund({ data: { appointmentId: a.id, amount: amt } });
@@ -1654,11 +1641,10 @@ function CheckoutSheet({
                   toast.success(`Refunded £${(r.refundedCents / 100).toFixed(2)}`);
                 } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
               }}
-            >
-              <Undo2 className="h-3.5 w-3.5 mr-1" /> Refund via Stripe
-            </Button>
+            />
           </div>
         )}
+
       </div>
 
 
@@ -1703,3 +1689,61 @@ function CheckoutSheet({
   );
 }
 
+
+/** Refund a booking through Stripe — full amount by default, or a set amount. */
+function RefundControl({
+  maxRefund,
+  disabled,
+  onRefund,
+}: {
+  maxRefund: number;
+  disabled?: boolean;
+  onRefund: (amount?: number) => Promise<void>;
+}) {
+  const [amount, setAmount] = useState("");
+
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-center gap-2">
+        <div className="relative flex-1">
+          <span className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">£</span>
+          <Input
+            type="number"
+            min="0"
+            step="0.01"
+            inputMode="decimal"
+            placeholder={maxRefund.toFixed(2)}
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            className="h-8 pl-5 text-sm"
+          />
+        </div>
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={disabled}
+          className="text-destructive"
+          onClick={async () => {
+            const raw = amount.trim();
+            const amt = raw === "" ? undefined : Number(raw);
+            if (amt !== undefined && (!isFinite(amt) || amt <= 0)) {
+              toast.error("Enter a valid amount");
+              return;
+            }
+            if (amt !== undefined && amt > maxRefund + 0.001) {
+              toast.error(`Max refundable is £${maxRefund.toFixed(2)}`);
+              return;
+            }
+            await onRefund(amt);
+            setAmount("");
+          }}
+        >
+          <Undo2 className="h-3.5 w-3.5 mr-1" /> Refund
+        </Button>
+      </div>
+      <p className="text-[11px] text-muted-foreground">
+        Leave blank to refund the full £{maxRefund.toFixed(2)}.
+      </p>
+    </div>
+  );
+}

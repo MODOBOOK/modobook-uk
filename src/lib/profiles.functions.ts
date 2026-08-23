@@ -174,6 +174,9 @@ export const updateProfile = createServerFn({ method: "POST" })
       patient_reschedule_cutoff_hours?: number | null;
       patient_cancel_cutoff_hours?: number | null;
       late_cancel_mode?: "block" | "warn_agree";
+      auto_refund_on_cancel?: boolean;
+      no_refund_policy_enabled?: boolean;
+      no_refund_policy_text?: string | null;
       // Confirmations & reminders
       auto_confirm_bookings?: boolean;
       email_confirmations_enabled?: boolean;
@@ -284,6 +287,7 @@ export const updateProfile = createServerFn({ method: "POST" })
       "require_account_to_book","require_phone","require_dob","require_address",
       "require_medical_forms_before_appt","allow_patient_reschedule","allow_patient_cancel",
       "patient_reschedule_max","patient_reschedule_cutoff_hours","patient_cancel_cutoff_hours","late_cancel_mode",
+      "auto_refund_on_cancel","no_refund_policy_enabled","no_refund_policy_text",
       "auto_confirm_bookings","email_confirmations_enabled","sms_reminders_enabled",
       "whatsapp_reminders_enabled","whatsapp_notify_confirmation","whatsapp_notify_reminder",
       "whatsapp_notify_cancellation","whatsapp_notify_rebook","reminder_hours_before",

@@ -74,6 +74,9 @@ function SettingsPage() {
     patient_reschedule_cutoff_hours: (profile.patient_reschedule_cutoff_hours as number | null) ?? (24 as number | null),
     patient_cancel_cutoff_hours: (profile.patient_cancel_cutoff_hours as number | null) ?? (24 as number | null),
     late_cancel_mode: ((profile as { late_cancel_mode?: string }).late_cancel_mode as "block" | "warn_agree" | undefined) ?? "block",
+    auto_refund_on_cancel: !!(profile as { auto_refund_on_cancel?: boolean }).auto_refund_on_cancel,
+    no_refund_policy_enabled: !!(profile as { no_refund_policy_enabled?: boolean }).no_refund_policy_enabled,
+    no_refund_policy_text: ((profile as { no_refund_policy_text?: string | null }).no_refund_policy_text ?? "") as string,
     // confirm & reminders
     auto_confirm_bookings: profile.auto_confirm_bookings !== false,
     email_confirmations_enabled: profile.email_confirmations_enabled !== false,
@@ -434,6 +437,31 @@ function SettingsPage() {
               </div>
             </div>
           )}
+          <ToggleRow
+            label="Automatic refunds on in-time cancellations"
+            hint="If a patient cancels before your cancel cutoff, anything they paid by card is refunded automatically."
+            checked={s.auto_refund_on_cancel}
+            onChange={(v) => set("auto_refund_on_cancel", v)}
+          />
+          <ToggleRow
+            label="Show a no-refund policy"
+            hint="Displays under your booking & cancellation policy on your booking page."
+            checked={s.no_refund_policy_enabled}
+            onChange={(v) => set("no_refund_policy_enabled", v)}
+          />
+          {s.no_refund_policy_enabled && (
+            <div className="ml-2 rounded-lg border bg-muted/30 p-3">
+              <Label className="text-sm font-medium">No-refund policy wording</Label>
+              <Textarea
+                className="mt-2"
+                rows={3}
+                placeholder="All deposits and payments are non-refundable. If you cancel or reschedule, your payment cannot be returned."
+                value={s.no_refund_policy_text}
+                onChange={(e) => set("no_refund_policy_text", e.target.value)}
+              />
+            </div>
+          )}
+
         </CardContent>
       </Card>
 

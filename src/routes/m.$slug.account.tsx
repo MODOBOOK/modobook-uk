@@ -20,6 +20,7 @@ import { SafeHtml } from "@/components/SafeHtml";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getMyRewardsForClinic } from "@/lib/rewards.functions";
+import { autoRefundCancelledAppointment } from "@/lib/refunds.functions";
 
 
 export const Route = createFileRoute("/m/$slug/account")({
@@ -407,6 +408,8 @@ function Account() {
     setCancelTarget(a);
   }
 
+  const autoRefund = useServerFn(autoRefundCancelledAppointment);
+
   async function performCancel(confirmLate: boolean) {
     if (!cancelTarget) return;
     setCancelling(true);
@@ -416,7 +419,16 @@ function Account() {
     } as any);
     setCancelling(false);
     if (error) return toast.error(error.message);
-    toast.success("Appointment cancelled");
+    try {
+      const r = await autoRefund({ data: { appointmentId: cancelTarget.id } });
+      if (r.refunded) {
+        toast.success(`Appointment cancelled — £${(r.refundedCents / 100).toFixed(2)} refunded`);
+      } else {
+        toast.success("Appointment cancelled");
+      }
+    } catch {
+      toast.success("Appointment cancelled");
+    }
     setCancelTarget(null);
     loadAll();
   }

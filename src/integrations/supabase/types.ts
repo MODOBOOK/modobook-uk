@@ -6459,6 +6459,7 @@ export type Database = {
           allow_pay_in_clinic: boolean
           associates_enabled: boolean
           auto_confirm_bookings: boolean
+          auto_refund_on_cancel: boolean
           avatar_url: string | null
           bio: string | null
           booking_buffer_after_minutes: number
@@ -6517,6 +6518,8 @@ export type Database = {
           is_demo: boolean
           late_cancel_mode: string
           model_slots_position: string
+          no_refund_policy_enabled: boolean
+          no_refund_policy_text: string | null
           packages_countdown_ends_at: string | null
           packages_countdown_label: string | null
           packages_label: string | null
@@ -6591,6 +6594,7 @@ export type Database = {
           allow_pay_in_clinic?: boolean
           associates_enabled?: boolean
           auto_confirm_bookings?: boolean
+          auto_refund_on_cancel?: boolean
           avatar_url?: string | null
           bio?: string | null
           booking_buffer_after_minutes?: number
@@ -6649,6 +6653,8 @@ export type Database = {
           is_demo?: boolean
           late_cancel_mode?: string
           model_slots_position?: string
+          no_refund_policy_enabled?: boolean
+          no_refund_policy_text?: string | null
           packages_countdown_ends_at?: string | null
           packages_countdown_label?: string | null
           packages_label?: string | null
@@ -6723,6 +6729,7 @@ export type Database = {
           allow_pay_in_clinic?: boolean
           associates_enabled?: boolean
           auto_confirm_bookings?: boolean
+          auto_refund_on_cancel?: boolean
           avatar_url?: string | null
           bio?: string | null
           booking_buffer_after_minutes?: number
@@ -6781,6 +6788,8 @@ export type Database = {
           is_demo?: boolean
           late_cancel_mode?: string
           model_slots_position?: string
+          no_refund_policy_enabled?: boolean
+          no_refund_policy_text?: string | null
           packages_countdown_ends_at?: string | null
           packages_countdown_label?: string | null
           packages_label?: string | null
@@ -8936,9 +8945,8 @@ export type Database = {
           hero_url: string
           id: string
           model_slots_position: string
-          packages_countdown_ends_at: string
-          packages_countdown_label: string
-          packages_label: string
+          no_refund_policy_enabled: boolean
+          no_refund_policy_text: string
           payment_card_full_enabled: boolean
           payment_clearpay_enabled: boolean
           payment_deposit_enabled: boolean

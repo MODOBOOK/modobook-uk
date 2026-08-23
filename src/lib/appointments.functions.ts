@@ -208,6 +208,16 @@ export const cancelAppointmentByToken = createServerFn({ method: "POST" })
     if (error) throw error;
 
     const a: ApptCtx | null = apptRow;
+    // Refund automatically when the clinic allows it and the cancellation
+    // landed inside their refund window.
+    let autoRefundedCents = 0;
+    if (ok && a?.id) {
+      try {
+        const { autoRefundCancelledAppointment } = await import("./refunds.functions");
+        const r = await autoRefundCancelledAppointment({ data: { appointmentId: a.id } });
+        if (r.refunded) autoRefundedCents = r.refundedCents;
+      } catch (e) { console.error("[cancelAppointmentByToken] auto refund failed", e); }
+    }
     if (ok && a && a.patient_email && a.id) {
       try {
         const { tryEnqueueAppEmail, formatBookingDateTime, getPractitionerBranding } = await import("@/lib/email/send.server");
@@ -251,7 +261,7 @@ export const cancelAppointmentByToken = createServerFn({ method: "POST" })
         });
       } catch (e) { console.error("[cancelAppointmentByToken] email failed", e); }
     }
-    return { ok: !!ok };
+    return { ok: !!ok, autoRefundedCents };
   });
 
 export const markAppointmentPaymentReceived = createServerFn({ method: "POST" })
