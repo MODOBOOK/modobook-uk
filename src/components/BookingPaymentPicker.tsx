@@ -61,15 +61,20 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
 
   const treatmentTotalCents = Math.round(totalAmount * 100);
 
+  // An explicit treatment-level override of £0 waives the deposit entirely for
+  // this treatment — the patient books with no deposit, or pays in full.
+  const depositWaived = depositOverrideCents != null && depositOverrideCents <= 0;
+
   const effectiveDepositCents = useMemo(() => {
     if (!configured) return 0;
+    if (depositWaived) return 0;
     const o = opts as ConfiguredOptions;
     if (depositOverrideCents != null && depositOverrideCents > 0) return depositOverrideCents;
     if (o.depositType === "percent" && o.depositPercent > 0) {
       return Math.round((treatmentTotalCents * o.depositPercent) / 100);
     }
     return o.depositCents;
-  }, [configured, opts, depositOverrideCents, treatmentTotalCents]);
+  }, [configured, opts, depositOverrideCents, depositWaived, treatmentTotalCents]);
 
 
   const availableModes = useMemo(() => {
@@ -79,17 +84,18 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
     // If the deposit equals or exceeds the treatment total, the deposit
     // effectively IS the full payment — hide the deposit option and only
     // offer "Pay in full".
-    const depositMakesSense = o.depositEnabled && effectiveDepositCents >= 100 && effectiveDepositCents < treatmentTotalCents;
-    if (o.requireDepositToConfirm) {
+    const depositMakesSense = !depositWaived && o.depositEnabled && effectiveDepositCents >= 100 && effectiveDepositCents < treatmentTotalCents;
+    if (o.requireDepositToConfirm && !depositWaived) {
       if (depositMakesSense) arr.push("deposit");
       if (o.fullCardEnabled || o.klarnaEnabled || o.clearpayEnabled) arr.push("full");
       return arr;
     }
     if (depositMakesSense) arr.push("deposit");
     if (o.fullCardEnabled || o.klarnaEnabled || o.clearpayEnabled) arr.push("full");
-    if (o.cashEnabled) arr.push("cash");
+    if (o.cashEnabled || depositWaived) arr.push("cash");
     return arr;
-  }, [configured, opts, effectiveDepositCents, treatmentTotalCents]);
+  }, [configured, opts, depositWaived, effectiveDepositCents, treatmentTotalCents]);
+
 
 
   // Methods depend on the selected mode: deposits are always card-only
