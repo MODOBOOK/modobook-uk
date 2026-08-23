@@ -697,48 +697,10 @@ function AvailabilityPage() {
                   This is a blank rota. Set its dates below, then tap a cell in the weekly schedule to add its shifts.
                 </p>
               )}
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  size="sm"
-                  variant={!periodEnd ? "secondary" : "outline"}
-                  onClick={() => setPeriodEnd("")}
-                >
-                  Rolling — no end date
-                </Button>
-                <Button
-                  size="sm"
-                  variant={periodEnd ? "secondary" : "outline"}
-                  onClick={() => setPeriodEnd(periodEnd || periodEndDates[0] || today)}
-                >
-                  Fixed end date
-                </Button>
-              </div>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div>
-                  <Label className="text-xs">Rota starts</Label>
-                  <Input type="date" value={periodStart} onChange={(e) => setPeriodStart(e.target.value)} />
-                </div>
-                {periodEnd !== "" && (
-                  <div>
-                    <Label className="text-xs">Rota ends</Label>
-                    <Input type="date" value={periodEnd} onChange={(e) => setPeriodEnd(e.target.value)} />
-                  </div>
-                )}
-              </div>
-              {periodEndDates.length > 1 && (
-                <p className="text-xs text-amber-600">
-                  Shifts in this rota currently end on different dates ({periodEndDates.join(", ")}). Saving will set them all to the same date.
-                </p>
-              )}
               <div className="flex flex-wrap items-center gap-2">
-                <Button size="sm" onClick={savePeriodDates} disabled={savingPeriod}>
-                  {savingPeriod ? "Saving…" : "Save rota dates"}
+                <Button size="sm" variant="outline" onClick={openEndRota}>
+                  <CalendarRange className="mr-2 h-4 w-4" /> End this rota
                 </Button>
-                {periodEnd && (
-                  <Button size="sm" variant="outline" onClick={() => { setPeriodEnd(""); }}>
-                    Clear end date
-                  </Button>
-                )}
                 <Button size="sm" variant="ghost" className="text-destructive" onClick={removePeriod}>
                   <Trash2 className="mr-2 h-4 w-4" /> Delete this rota
                 </Button>
@@ -746,8 +708,9 @@ function AvailabilityPage() {
               <p className="text-xs text-muted-foreground">
                 {periodEnd
                   ? `This rota stops after ${format(new Date(periodEnd + "T00:00:00"), "d MMM yyyy")}.`
-                  : "This rota runs with no end date."}
+                  : "This rota runs with no end date. Ending it keeps it in your previous rotas."}
               </p>
+
             </CardContent>
           </Card>
 
