@@ -228,11 +228,10 @@ function DashboardIndex() {
                 <p className="px-4 pt-3 text-[10px] font-medium uppercase tracking-[0.2em] text-muted-foreground">
                   Next month · {nextMonthName}
                 </p>
-                <div className="grid grid-cols-2 gap-px bg-border/60">
+                <div className="grid grid-cols-2 gap-px bg-border/60 sm:grid-cols-3">
                   <Stat label={`Bookings in ${nextMonthName}`} value={String(nextMonthBookings)} />
                   <Stat label={`Sales in ${nextMonthName}`} value={`£${nextMonthSales.toFixed(0)}`} />
                   <Stat label="Avg. booking" value={nextMonthBookings ? `£${(nextMonthSales / nextMonthBookings).toFixed(0)}` : "—"} />
-                  <Stat label="Confirmed only" value="Tracked" />
                 </div>
               </div>
             </CardContent>
