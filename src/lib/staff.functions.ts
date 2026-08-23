@@ -158,6 +158,9 @@ export const resendStaffInvite = createServerFn({ method: "POST" })
       .update({ invite_token: token, invite_expires_at: expires, status: "invited", invited_at: new Date().toISOString() })
       .eq("id", data.id).eq("profile_id", profileId).select().single();
     if (error) throw error;
+    if (!row.invited_email) {
+      throw new Error("Add an email address for this team member before sending their invite.");
+    }
     try {
       const { tryEnqueueAppEmail, getPractitionerBranding } = await import("@/lib/email/send.server");
       const branding = await getPractitionerBranding(profileId);
@@ -233,7 +236,7 @@ export const acceptStaffInvite = createServerFn({ method: "POST" })
     }
     // Get caller's email
     const email = (context.claims as any)?.email as string | undefined;
-    if (email && email.toLowerCase() !== row.invited_email.toLowerCase()) {
+    if (email && row.invited_email && email.toLowerCase() !== row.invited_email.toLowerCase()) {
       throw new Error(`This invite is for ${row.invited_email}. Sign in with that email to accept.`);
     }
     const { error } = await supabaseAdmin
