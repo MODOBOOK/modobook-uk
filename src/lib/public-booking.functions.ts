@@ -854,7 +854,10 @@ async function maybeCreateBookingCheckout(args: {
     stripe_fee_bnpl_percent?: number | string | null;
     stripe_fee_bnpl_fixed_cents?: number | string | null;
     save_card_on_file?: boolean | null;
+    payment_card_capture_enabled?: boolean | null;
+    card_capture_policy_text?: string | null;
     clinic_name?: string | null;
+
   } | null;
   appointmentIds: string[];
   totalAmount: number;
