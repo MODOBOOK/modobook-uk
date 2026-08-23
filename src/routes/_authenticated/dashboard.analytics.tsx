@@ -229,7 +229,7 @@ function AnalyticsPage() {
         <Tabs value={range} className="-mx-1 w-full overflow-x-auto sm:mx-0 sm:w-auto" onValueChange={(v) => setRange(v as Range)}>
           <TabsList className="w-max rounded-full bg-muted/60">
             <TabsTrigger value="7d" className="rounded-full text-xs">7 days</TabsTrigger>
-            <TabsTrigger value="30d" className="rounded-full text-xs">30 days</TabsTrigger>
+            <TabsTrigger value="30d" className="rounded-full text-xs">Next 30 days</TabsTrigger>
             <TabsTrigger value="upcoming" className="rounded-full text-xs">Upcoming</TabsTrigger>
             <TabsTrigger value="month" className="rounded-full text-xs">This month</TabsTrigger>
             <TabsTrigger value="year" className="rounded-full text-xs">This year</TabsTrigger>
