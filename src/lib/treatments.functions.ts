@@ -3,6 +3,11 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 
+async function __activeProfileId(supabase: any, userId: string) {
+  const { activeProfileId } = await import("./clinic-context.server");
+  return (await activeProfileId(supabase, userId)) ?? "00000000-0000-0000-0000-000000000000";
+}
+
 function getServerSupabasePublic() {
   return createClient<Database>(
     process.env.SUPABASE_URL!,
@@ -20,7 +25,7 @@ export const getMyTreatments = createServerFn({ method: "GET" })
     const { data, error } = await supabase
       .from("profiles")
       .select("id")
-      .eq("user_id", context.userId)
+      .eq("id", await __activeProfileId(context.supabase, context.userId))
       .single();
     if (error) throw error;
     const { data: treatments, error: tErr } = await supabase
@@ -68,7 +73,7 @@ export const createTreatment = createServerFn({ method: "POST" })
     const { data: profile, error } = await supabase
       .from("profiles")
       .select("id")
-      .eq("user_id", context.userId)
+      .eq("id", await __activeProfileId(context.supabase, context.userId))
       .single();
     if (error) throw error;
     const { data: treatment, error: tErr } = await supabase
@@ -252,7 +257,7 @@ export const reorderTreatments = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const { data: profile, error } = await supabase
-      .from("profiles").select("id").eq("user_id", context.userId).single();
+      .from("profiles").select("id").eq("id", await __activeProfileId(context.supabase, context.userId)).single();
     if (error) throw error;
     await Promise.all(
       data.ids.map((id, idx) =>
@@ -281,7 +286,7 @@ export const bulkSetRebookReminders = createServerFn({ method: "POST" })
     const { supabase } = context;
     if (data.ids.length === 0) return { success: true, updated: 0 };
     const { data: profile, error: pErr } = await supabase
-      .from("profiles").select("id").eq("user_id", context.userId).single();
+      .from("profiles").select("id").eq("id", await __activeProfileId(context.supabase, context.userId)).single();
     if (pErr) throw pErr;
     const update: Record<string, unknown> = {};
     if (data.rebook_reminder_days !== undefined) update.rebook_reminder_days = data.rebook_reminder_days;

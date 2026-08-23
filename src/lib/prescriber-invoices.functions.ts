@@ -1,6 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+async function __activeProfileId(supabase: any, userId: string) {
+  const { activeProfileId } = await import("./clinic-context.server");
+  return (await activeProfileId(supabase, userId)) ?? "00000000-0000-0000-0000-000000000000";
+}
+
 export type InvoiceItem = {
   description: string;
   qty: number;
@@ -229,7 +234,7 @@ export const ensurePrescriberInvoiceStripeLink = createServerFn({ method: "POST"
     const { data: profile } = await context.supabase
       .from("profiles")
       .select("id, full_name, clinic_name, stripe_connect_account_id")
-      .eq("user_id", context.userId)
+      .eq("id", await __activeProfileId(context.supabase, context.userId))
       .single();
     if (!profile?.stripe_connect_account_id) {
       throw new Error("Connect your Stripe account first (Dashboard → Payments).");

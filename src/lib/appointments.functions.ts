@@ -3,6 +3,11 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 
+async function __activeProfileId(supabase: any, userId: string) {
+  const { activeProfileId } = await import("./clinic-context.server");
+  return (await activeProfileId(supabase, userId)) ?? "00000000-0000-0000-0000-000000000000";
+}
+
 function publicClient() {
   return createClient<Database>(
     process.env.SUPABASE_URL!,
@@ -43,7 +48,7 @@ export const createAppointmentForPatient = createServerFn({ method: "POST" })
     const { data: profile, error: pErr } = await supabase
       .from("profiles")
       .select("id")
-      .eq("user_id", userId)
+      .eq("id", await __activeProfileId(supabase, userId))
       .single();
     if (pErr || !profile) throw new Error("Profile not found");
 
@@ -263,7 +268,7 @@ export const markAppointmentPaymentReceived = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { data: profile } = await supabase
-      .from("profiles").select("id").eq("user_id", userId).maybeSingle();
+      .from("profiles").select("id").eq("id", await __activeProfileId(supabase, userId)).maybeSingle();
     if (!profile) throw new Error("Profile not found");
 
     const { data: appt, error: aErr } = await supabase
@@ -319,7 +324,7 @@ export const rescheduleAppointment = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { data: profile } = await supabase
-      .from("profiles").select("id").eq("user_id", userId).maybeSingle();
+      .from("profiles").select("id").eq("id", await __activeProfileId(supabase, userId)).maybeSingle();
     if (!profile) throw new Error("Profile not found");
 
     const { data: appt, error: aErr } = await supabase

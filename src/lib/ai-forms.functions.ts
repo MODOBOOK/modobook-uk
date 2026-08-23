@@ -1,6 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+async function __activeProfileId(supabase: any, userId: string) {
+  const { activeProfileId } = await import("./clinic-context.server");
+  return (await activeProfileId(supabase, userId)) ?? "00000000-0000-0000-0000-000000000000";
+}
+
 /* ============================================================
    AI-assisted matching: pair the practitioner's existing
    treatments with the appropriate medical forms, consent forms
@@ -57,7 +62,7 @@ export const suggestFormMatches = createServerFn({ method: "POST" })
     const { data: profile, error: pErr } = await supabase
       .from("profiles")
       .select("id")
-      .eq("user_id", userId)
+      .eq("id", await __activeProfileId(supabase, userId))
       .single();
     if (pErr) throw pErr;
     const profileId = profile.id;
@@ -170,7 +175,7 @@ export const commitFormMatches = createServerFn({ method: "POST" })
     const { data: profile, error: pErr } = await supabase
       .from("profiles")
       .select("id")
-      .eq("user_id", userId)
+      .eq("id", await __activeProfileId(supabase, userId))
       .single();
     if (pErr) throw pErr;
     const profileId = profile.id;

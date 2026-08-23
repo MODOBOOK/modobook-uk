@@ -2,6 +2,11 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+async function __activeProfileId(supabase: any, userId: string) {
+  const { activeProfileId } = await import("./clinic-context.server");
+  return (await activeProfileId(supabase, userId)) ?? "00000000-0000-0000-0000-000000000000";
+}
+
 /* ---------------------------------- utils --------------------------------- */
 
 function hhmm(t: string) {
@@ -268,7 +273,7 @@ export const setRoomRentalEnabled = createServerFn({ method: "POST" })
   .inputValidator((d: { enabled: boolean }) => d)
   .handler(async ({ data, context }) => {
     const { error } = await (context.supabase as any)
-      .from("profiles").update({ room_rental_enabled: data.enabled }).eq("user_id", context.userId);
+      .from("profiles").update({ room_rental_enabled: data.enabled }).eq("id", await __activeProfileId(context.supabase, context.userId));
     if (error) throw error;
     return { ok: true };
   });

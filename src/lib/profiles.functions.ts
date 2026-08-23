@@ -17,13 +17,26 @@ export const getMyProfile = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
+    const { resolveClinicAccess } = await import("./clinic-context.server");
+    const access = await resolveClinicAccess(supabase, userId);
+    if (!access.profileId) return null;
     const { data, error } = await supabase
       .from("profiles")
       .select("*")
-      .eq("user_id", userId)
+      .eq("id", access.profileId)
       .single();
     if (error && error.code !== "PGRST116") throw error;
-    return data ?? null;
+    if (!data) return null;
+    return {
+      ...data,
+      __clinic_role: access.role,
+      __is_owner: access.isOwner,
+      __data_scope: access.dataScope,
+    } as typeof data & {
+      __clinic_role: string;
+      __is_owner: boolean;
+      __data_scope: string;
+    };
   });
 
 export const createProfile = createServerFn({ method: "POST" })

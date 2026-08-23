@@ -1,6 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+async function __activeProfileId(supabase: any, userId: string) {
+  const { activeProfileId } = await import("./clinic-context.server");
+  return (await activeProfileId(supabase, userId)) ?? "00000000-0000-0000-0000-000000000000";
+}
+
 /**
  * Aggregate loader for the "Attach forms" allocation matrix.
  * Returns treatments + all medical / consent / aftercare templates
@@ -13,7 +18,7 @@ export const listFormAllocation = createServerFn({ method: "GET" })
     const { data: profile } = await supabase
       .from("profiles")
       .select("id")
-      .eq("user_id", userId)
+      .eq("id", await __activeProfileId(supabase, userId))
       .maybeSingle();
     if (!profile) {
       return {

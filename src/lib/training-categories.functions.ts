@@ -1,6 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+async function __activeProfileId(supabase: any, userId: string) {
+  const { activeProfileId } = await import("./clinic-context.server");
+  return (await activeProfileId(supabase, userId)) ?? "00000000-0000-0000-0000-000000000000";
+}
+
 const KIND = "training";
 
 function slugify(name: string) {
@@ -9,7 +14,7 @@ function slugify(name: string) {
 
 async function profileIdOf(supabase: any, userId: string) {
   const { data, error } = await supabase
-    .from("profiles").select("id").eq("user_id", userId).single();
+    .from("profiles").select("id").eq("id", await __activeProfileId(supabase, userId)).single();
   if (error) throw error;
   return data.id as string;
 }

@@ -3,6 +3,11 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 
+async function __activeProfileId(supabase: any, userId: string) {
+  const { activeProfileId } = await import("./clinic-context.server");
+  return (await activeProfileId(supabase, userId)) ?? "00000000-0000-0000-0000-000000000000";
+}
+
 function getServerSupabasePublic() {
   return createClient<Database>(
     process.env.SUPABASE_URL!,
@@ -17,7 +22,7 @@ async function getMyProfileId(supabase: ReturnType<typeof getServerSupabasePubli
   const { data, error } = await supabase
     .from("profiles")
     .select("id")
-    .eq("user_id", userId)
+    .eq("id", await __activeProfileId(supabase, userId))
     .single();
   if (error) throw error;
   return data.id;
@@ -199,7 +204,7 @@ export const reorderCategories = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const { data: profile, error } = await supabase
-      .from("profiles").select("id").eq("user_id", context.userId).single();
+      .from("profiles").select("id").eq("id", await __activeProfileId(context.supabase, context.userId)).single();
     if (error) throw error;
     await Promise.all(
       data.ids.map((id, idx) =>

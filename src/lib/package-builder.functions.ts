@@ -2,6 +2,11 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { computeBuilderPrice, validateSelection, type BuilderRules } from "@/lib/package-builder-pricing";
 
+async function __activeProfileId(supabase: any, userId: string) {
+  const { activeProfileId } = await import("./clinic-context.server");
+  return (await activeProfileId(supabase, userId)) ?? "00000000-0000-0000-0000-000000000000";
+}
+
 export type BuilderInput = {
   id?: string;
   name: string;
@@ -26,7 +31,7 @@ export const listMyPackageBuilders = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
     const { data: profile } = await supabase
-      .from("profiles").select("id").eq("user_id", userId).single();
+      .from("profiles").select("id").eq("id", await __activeProfileId(supabase, userId)).single();
     if (!profile) return [];
     const { data: builders, error } = await supabase
       .from("package_builders").select("*").eq("profile_id", profile.id)
@@ -49,7 +54,7 @@ export const savePackageBuilder = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { data: profile } = await supabase
-      .from("profiles").select("id").eq("user_id", userId).single();
+      .from("profiles").select("id").eq("id", await __activeProfileId(supabase, userId)).single();
     if (!profile) throw new Error("No profile");
 
     const row = {

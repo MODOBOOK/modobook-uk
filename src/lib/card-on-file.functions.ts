@@ -1,8 +1,13 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+async function __activeProfileId(supabase: any, userId: string) {
+  const { activeProfileId } = await import("./clinic-context.server");
+  return (await activeProfileId(supabase, userId)) ?? "00000000-0000-0000-0000-000000000000";
+}
+
 async function getProfileId(supabase: any, userId: string): Promise<string | null> {
-  const { data } = await supabase.from("profiles").select("id").eq("user_id", userId).maybeSingle();
+  const { data } = await supabase.from("profiles").select("id").eq("id", await __activeProfileId(supabase, userId)).maybeSingle();
   return data?.id ?? null;
 }
 

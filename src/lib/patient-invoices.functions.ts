@@ -1,6 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+async function __activeProfileId(supabase: any, userId: string) {
+  const { activeProfileId } = await import("./clinic-context.server");
+  return (await activeProfileId(supabase, userId)) ?? "00000000-0000-0000-0000-000000000000";
+}
+
 export type PatientInvoiceItem = {
   description: string;
   qty: number;
@@ -34,7 +39,7 @@ async function myProfileId(supabase: any, userId: string) {
   const { data, error } = await supabase
     .from("profiles")
     .select("id")
-    .eq("user_id", userId)
+    .eq("id", await __activeProfileId(supabase, userId))
     .single();
   if (error || !data) throw error || new Error("Profile not found");
   return data.id as string;
@@ -185,7 +190,7 @@ export const getInvoiceClinicProfile = createServerFn({ method: "GET" })
       .select(
         "id, clinic_name, full_name, address, email, phone, brand_color, avatar_url, invoice_bank_name, invoice_account_name, invoice_sort_code, invoice_account_number, invoice_iban, invoice_swift, invoice_payment_reference, invoice_footer_notes, invoice_vat_number, invoice_company_number, invoice_show_bank_details, invoice_show_logo",
       )
-      .eq("user_id", context.userId)
+      .eq("id", await __activeProfileId(context.supabase, context.userId))
       .single();
     if (error) throw error;
     return data;

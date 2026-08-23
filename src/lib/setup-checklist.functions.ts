@@ -1,6 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+async function __activeProfileId(supabase: any, userId: string) {
+  const { activeProfileId } = await import("./clinic-context.server");
+  return (await activeProfileId(supabase, userId)) ?? "00000000-0000-0000-0000-000000000000";
+}
+
 export type SetupStep = {
   key: string;
   label: string;
@@ -23,7 +28,7 @@ export const getSetupChecklist = createServerFn({ method: "GET" })
       .select(
         "id, clinic_name, avatar_url, phone, welcome_intro_html, about_page, stripe_connect_account_id, deposit_amount_cents, deposit_percent, deposit_policy_text",
       )
-      .eq("user_id", userId)
+      .eq("id", await __activeProfileId(supabase, userId))
       .maybeSingle();
 
     if (!profile) return { steps: [] as SetupStep[], done: 0, total: 0 };

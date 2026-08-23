@@ -3,6 +3,11 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 
+async function __activeProfileId(supabase: any, userId: string) {
+  const { activeProfileId } = await import("./clinic-context.server");
+  return (await activeProfileId(supabase, userId)) ?? "00000000-0000-0000-0000-000000000000";
+}
+
 function publicClient() {
   return createClient<Database>(
     process.env.SUPABASE_URL!,
@@ -12,7 +17,7 @@ function publicClient() {
 }
 
 async function getProfileId(supabase: any, userId: string) {
-  const { data } = await supabase.from("profiles").select("id").eq("user_id", userId).maybeSingle();
+  const { data } = await supabase.from("profiles").select("id").eq("id", await __activeProfileId(supabase, userId)).maybeSingle();
   return data?.id ?? null;
 }
 
@@ -273,7 +278,7 @@ export const sendFormToClient = createServerFn({ method: "POST" })
         const [{ data: tpl }, { data: client }, { data: profile }] = await Promise.all([
           context.supabase.from("medical_form_templates").select("name").eq("id", data.template_id).maybeSingle(),
           context.supabase.from("clinic_clients").select("full_name, profile_id").eq("id", data.client_id).maybeSingle(),
-          context.supabase.from("profiles").select("id, clinic_name").eq("user_id", context.userId).maybeSingle(),
+          context.supabase.from("profiles").select("id, clinic_name").eq("id", await __activeProfileId(context.supabase, context.userId)).maybeSingle(),
         ]);
         const { tryEnqueueAppEmail, getPractitionerBranding } = await import("@/lib/email/send.server");
         const branding = await getPractitionerBranding((profile as { id?: string } | null)?.id);
@@ -374,7 +379,7 @@ export const resendFormToClient = createServerFn({ method: "POST" })
     if (!to) throw new Error("No email on file for this patient");
 
     const { data: profile } = await context.supabase
-      .from("profiles").select("id, clinic_name").eq("user_id", context.userId).maybeSingle();
+      .from("profiles").select("id, clinic_name").eq("id", await __activeProfileId(context.supabase, context.userId)).maybeSingle();
     const { tryEnqueueAppEmail, getPractitionerBranding } = await import("@/lib/email/send.server");
     const branding = await getPractitionerBranding(profileId);
     const origin = process.env.PUBLIC_APP_URL || process.env.APP_URL || "https://modobook.uk";
