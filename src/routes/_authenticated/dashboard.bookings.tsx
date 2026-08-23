@@ -551,14 +551,16 @@ function BookingsPage() {
           >
             <div
               style={{
-                minWidth: isMobile
-                  ? `calc(var(--gutter) + ${daysVisible * (view === "day" ? 0 : view === "3day" ? 118 : 112)}px)`
+                minWidth: isStrip
+                  ? "max-content"
+                  : isMobile
+                  ? `calc(var(--gutter) + ${days.length * (view === "day" ? 0 : 112)}px)`
                   : undefined,
               }}
             >
               <div
                 className="sticky top-0 z-30 grid border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80"
-                style={{ gridTemplateColumns: `var(--gutter) repeat(${daysVisible}, minmax(0, 1fr))` }}
+                style={{ gridTemplateColumns: gridCols }}
               >
                 <div className="sticky left-0 z-10 bg-background/95" />
 
