@@ -865,11 +865,13 @@ async function maybeCreateBookingCheckout(args: {
   if (!(args.totalAmount > 0)) return null;
 
   // Patient chose to pay in cash at the appointment — skip Stripe only when
-  // this clinic has not made an upfront deposit mandatory. Never trust a stale
+  // this clinic has not made an upfront deposit mandatory (or the treatment
+  // waives the deposit with an explicit £0 override). Never trust a stale
   // client-side cash choice to bypass a required deposit/card capture.
   if (args.choice?.mode === "cash" && !depositRequiredForProfile(p)) return null;
   if (!p.stripe_connect_account_id) return null;
   if (p.stripe_connect_onboarding_status && p.stripe_connect_onboarding_status !== "active") return null;
+
 
 
   const depositEnabled = !!p.payment_deposit_enabled;
