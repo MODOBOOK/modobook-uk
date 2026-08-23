@@ -158,6 +158,12 @@ function AvailabilityPage() {
   const [periodEnd, setPeriodEnd] = useState("");
   const [periodStart, setPeriodStart] = useState("");
   const [savingPeriod, setSavingPeriod] = useState(false);
+  // A brand-new, still-empty rota the user is building ("" end = rolling)
+  const [draft, setDraft] = useState<{ start: string; end: string } | null>(null);
+  const [newRotaOpen, setNewRotaOpen] = useState(false);
+  const [newRotaStart, setNewRotaStart] = useState("");
+  const [newRotaEnd, setNewRotaEnd] = useState("");
+  const [newRotaRolling, setNewRotaRolling] = useState(true);
 
   const [dlgOpen, setDlgOpen] = useState(false);
   const [editing, setEditing] = useState<Rule | null>(null);
@@ -271,8 +277,10 @@ function AvailabilityPage() {
     setForm({
       day_of_week: day, start: "09:00", end: "17:00", interval: "30",
       location_ids: [], practitioner_id: "none", weeks,
-      effective_from: activePeriod?.start ?? "",
-      effective_to: periodEndDates.length === 1 ? periodEndDates[0] : "",
+      effective_from: periodStart || activePeriod?.start || "",
+      effective_to: draft && activePeriod?.key === draft.start
+        ? draft.end
+        : (periodEndDates.length === 1 ? periodEndDates[0] : ""),
     });
     setDlgOpen(true);
   }
@@ -326,6 +334,7 @@ function AvailabilityPage() {
       }
       toast.success(editing ? "Shift updated" : "Shift added");
       setDlgOpen(false);
+      if (draft && form.effective_from === draft.start) setDraft(null);
       await refresh();
     } catch (err: any) { toast.error(err?.message ?? "Failed"); }
   }
@@ -459,8 +468,16 @@ function AvailabilityPage() {
         rules: rs,
       });
     }
+    if (draft && !list.some((p) => p.key === draft.start)) {
+      list.push({
+        key: draft.start,
+        label: `New rota · ${format(new Date(draft.start + "T00:00:00"), "d MMM yyyy")}`,
+        start: draft.start,
+        rules: [],
+      });
+    }
     return list;
-  }, [activeRules, today]);
+  }, [activeRules, today, draft]);
 
   const activePeriod = useMemo(
     () => periods.find((p) => p.key === periodKey) ?? periods[0],
@@ -475,14 +492,41 @@ function AvailabilityPage() {
   useEffect(() => {
     if (!periods.some((p) => p.key === periodKey)) setPeriodKey("current");
   }, [periods, periodKey]);
+  const isDraftPeriod = !!draft && activePeriod?.key === draft.start;
+
   useEffect(() => {
+    if (isDraftPeriod && draft) {
+      setPeriodEnd(draft.end);
+      setPeriodStart(draft.start);
+      return;
+    }
     setPeriodEnd(periodEndDates.length === 1 ? periodEndDates[0] : "");
     setPeriodStart(activePeriod?.start ?? "");
-  }, [activePeriod?.key, periodEndDates.join(",")]);
+  }, [activePeriod?.key, periodEndDates.join(","), isDraftPeriod, draft?.start, draft?.end]);
+
+  function createDraftRota() {
+    if (!newRotaStart) { toast.error("Pick a start date"); return; }
+    const end = newRotaRolling ? "" : newRotaEnd;
+    if (end && end < newRotaStart) { toast.error("The end date must be after the start date"); return; }
+    setDraft({ start: newRotaStart, end });
+    setPeriodKey(newRotaStart);
+    setNewRotaOpen(false);
+    toast.success("New rota created — add its shifts below");
+  }
 
   async function savePeriodDates() {
     const ids = periodRules.map((r) => r.id);
-    if (!ids.length) { toast.error("Add a shift to this rota first"); return; }
+    if (!ids.length) {
+      if (isDraftPeriod) {
+        if (!periodStart) { toast.error("Pick a start date"); return; }
+        if (periodEnd && periodEnd < periodStart) { toast.error("The end date must be after the start date"); return; }
+        setDraft({ start: periodStart, end: periodEnd });
+        setPeriodKey(periodStart);
+        toast.success("Rota dates updated");
+        return;
+      }
+      toast.error("Add a shift to this rota first"); return;
+    }
     if (periodStart && periodEnd && periodStart > periodEnd) {
       toast.error("The end date must be after the start date"); return;
     }
@@ -498,7 +542,10 @@ function AvailabilityPage() {
 
   async function removePeriod() {
     const ids = periodRules.map((r) => r.id);
-    if (!ids.length) return;
+    if (!ids.length) {
+      if (isDraftPeriod) { setDraft(null); setPeriodKey("current"); toast.success("New rota discarded"); }
+      return;
+    }
     if (!confirm(`Delete this rota and all ${ids.length} of its shifts?`)) return;
     try {
       await delPeriod({ data: { ids } });
@@ -612,8 +659,24 @@ function AvailabilityPage() {
 
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-base">Rotas</CardTitle>
-              <CardDescription>Pick a rota to view and edit its shifts and dates.</CardDescription>
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <CardTitle className="text-base">Rotas</CardTitle>
+                  <CardDescription>Pick a rota to view and edit its shifts and dates.</CardDescription>
+                </div>
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    const t = new Date(); t.setDate(t.getDate() + 1);
+                    setNewRotaStart(t.toISOString().slice(0, 10));
+                    setNewRotaEnd("");
+                    setNewRotaRolling(true);
+                    setNewRotaOpen(true);
+                  }}
+                >
+                  <Plus className="mr-2 h-4 w-4" /> Add new rota
+                </Button>
+              </div>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex flex-wrap gap-2">
@@ -629,6 +692,11 @@ function AvailabilityPage() {
                   </Button>
                 ))}
               </div>
+              {isDraftPeriod && (
+                <p className="rounded-md bg-muted/60 p-2 text-xs text-muted-foreground">
+                  This is a blank rota. Set its dates below, then tap a cell in the weekly schedule to add its shifts.
+                </p>
+              )}
               <div className="flex flex-wrap gap-2">
                 <Button
                   size="sm"
@@ -1136,6 +1204,51 @@ function AvailabilityPage() {
             <div className="flex justify-end gap-2">
               <Button variant="ghost" onClick={() => setEndOpen(false)}>Cancel</Button>
               <Button onClick={confirmEndRota} disabled={endingRota}>{endingRota ? "Saving…" : "End rota"}</Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={newRotaOpen} onOpenChange={setNewRotaOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add a new rota</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Start a blank rota. You'll add its shifts afterwards in the weekly schedule.
+            </p>
+            <div>
+              <Label className="text-sm">Starts on</Label>
+              <Input type="date" className="mt-1" value={newRotaStart} onChange={(e) => setNewRotaStart(e.target.value)} />
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                size="sm"
+                variant={newRotaRolling ? "secondary" : "outline"}
+                onClick={() => { setNewRotaRolling(true); setNewRotaEnd(""); }}
+              >
+                Rolling — no end date
+              </Button>
+              <Button
+                size="sm"
+                variant={!newRotaRolling ? "secondary" : "outline"}
+                onClick={() => { setNewRotaRolling(false); setNewRotaEnd(newRotaEnd || newRotaStart); }}
+              >
+                Fixed end date
+              </Button>
+            </div>
+            {!newRotaRolling && (
+              <div>
+                <Label className="text-sm">Ends on</Label>
+                <Input type="date" className="mt-1" value={newRotaEnd} onChange={(e) => setNewRotaEnd(e.target.value)} />
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <div className="flex justify-end gap-2">
+              <Button variant="ghost" onClick={() => setNewRotaOpen(false)}>Cancel</Button>
+              <Button onClick={createDraftRota}>Create rota</Button>
             </div>
           </DialogFooter>
         </DialogContent>
