@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { SaveReminder } from "@/components/SaveReminder";
+import { sendWhatsAppTest } from "@/lib/whatsapp.functions";
 
 
 
@@ -72,6 +73,11 @@ function SettingsPage() {
     // confirm & reminders
     auto_confirm_bookings: profile.auto_confirm_bookings !== false,
     email_confirmations_enabled: profile.email_confirmations_enabled !== false,
+    whatsapp_reminders_enabled: !!profile.whatsapp_reminders_enabled,
+    whatsapp_notify_confirmation: profile.whatsapp_notify_confirmation !== false,
+    whatsapp_notify_reminder: profile.whatsapp_notify_reminder !== false,
+    whatsapp_notify_cancellation: profile.whatsapp_notify_cancellation !== false,
+    whatsapp_notify_rebook: profile.whatsapp_notify_rebook !== false,
     reminder_hours_before: (profile.reminder_hours_before as number[] | null) ?? [24, 2],
     // invoice branding
     invoice_show_logo: profile.invoice_show_logo !== false,
@@ -88,6 +94,8 @@ function SettingsPage() {
     invoice_footer_notes: (profile.invoice_footer_notes as string | null) ?? "",
   });
   const [saving, setSaving] = useState(false);
+  const [testPhone, setTestPhone] = useState("");
+  const [testing, setTesting] = useState(false);
 
   const REMINDER_PRESETS: { value: number; label: string }[] = [
     { value: 48, label: "2 days before" },
@@ -454,6 +462,85 @@ function SettingsPage() {
               <p className="mt-2 text-xs text-muted-foreground italic">No reminders will be sent.</p>
             )}
           </div>
+        </CardContent>
+      </Card>
+
+      {/* WHATSAPP */}
+      <Card>
+        <CardHeader>
+          <CardTitle>WhatsApp messages</CardTitle>
+          <CardDescription>
+            Patients get a WhatsApp from the official MODO business number, on your clinic&rsquo;s
+            behalf. Only patients with a mobile number on file are messaged, and they can reply
+            STOP at any time.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <ToggleRow
+            label="WhatsApp notifications"
+            hint="Master switch for this clinic. Off by default."
+            checked={s.whatsapp_reminders_enabled}
+            onChange={(v) => set("whatsapp_reminders_enabled", v)}
+          />
+          {s.whatsapp_reminders_enabled && (
+            <div className="space-y-3 rounded-lg border border-dashed p-3">
+              <ToggleRow
+                label="Booking confirmation"
+                hint="Sent as soon as a booking is made."
+                checked={s.whatsapp_notify_confirmation}
+                onChange={(v) => set("whatsapp_notify_confirmation", v)}
+              />
+              <ToggleRow
+                label="Appointment reminder"
+                hint="Follows the same timings as your email reminders above."
+                checked={s.whatsapp_notify_reminder}
+                onChange={(v) => set("whatsapp_notify_reminder", v)}
+              />
+              <ToggleRow
+                label="Cancellations & reschedules"
+                hint="Sent when an appointment is cancelled or moved."
+                checked={s.whatsapp_notify_cancellation}
+                onChange={(v) => set("whatsapp_notify_cancellation", v)}
+              />
+              <ToggleRow
+                label="Rebook & top-up reminders"
+                hint="Mirrors your rebook and top-up email reminders."
+                checked={s.whatsapp_notify_rebook}
+                onChange={(v) => set("whatsapp_notify_rebook", v)}
+              />
+              <div className="rounded-lg border p-3">
+                <Label className="text-sm font-medium">Send yourself a test</Label>
+                <p className="mb-2 text-xs text-muted-foreground">
+                  Enter your own mobile to check how it looks.
+                </p>
+                <div className="flex gap-2">
+                  <Input
+                    value={testPhone}
+                    onChange={(e) => setTestPhone(e.target.value)}
+                    placeholder="07700 900123"
+                  />
+                  <Button
+                    variant="outline"
+                    disabled={testing || !testPhone.trim()}
+                    onClick={async () => {
+                      setTesting(true);
+                      try {
+                        const r = await sendWhatsAppTest({ data: { phone: testPhone.trim() } });
+                        if (r.ok) toast.success(r.message);
+                        else toast.error(r.message);
+                      } catch (e) {
+                        toast.error(e instanceof Error ? e.message : "Could not send");
+                      } finally {
+                        setTesting(false);
+                      }
+                    }}
+                  >
+                    {testing ? "Sending…" : "Send test"}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
