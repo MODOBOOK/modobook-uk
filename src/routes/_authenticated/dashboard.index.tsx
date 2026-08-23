@@ -204,7 +204,7 @@ function DashboardIndex() {
         <div className="flex items-end justify-between px-1">
           <div>
             <p className="text-[10px] font-medium uppercase tracking-[0.25em] text-muted-foreground">Analytics</p>
-            <h2 className="mt-1 font-serif text-2xl sm:text-3xl">This month at a glance</h2>
+            <h2 className="mt-1 font-serif text-2xl sm:text-3xl">At a glance</h2>
           </div>
           <Link
             to="/dashboard/analytics"
@@ -214,12 +214,27 @@ function DashboardIndex() {
           </Link>
         </div>
         <Link to="/dashboard/analytics" className="block">
-          <Card className="border-border/60 transition hover:border-accent hover:shadow-luxe">
-            <CardContent className="grid grid-cols-2 gap-px overflow-hidden rounded-xl bg-border/60 p-0 sm:grid-cols-4">
-              <Stat label="Bookings this month" value={String(monthBookings)} />
-              <Stat label="Sales today" value={`£${salesToday.toFixed(0)}`} />
-              <Stat label="Sales (7d)" value={`£${salesWeek.toFixed(0)}`} />
-              <Stat label="Sales this month" value={`£${salesMonth.toFixed(0)}`} />
+          <Card className="overflow-hidden border-border/60 transition hover:border-accent hover:shadow-luxe">
+            <CardContent className="p-0">
+              {/* This month */}
+              <div className="grid grid-cols-2 gap-px bg-border/60 sm:grid-cols-4">
+                <Stat label={`Bookings in ${thisMonthName}`} value={String(monthBookings)} />
+                <Stat label={`Sales in ${thisMonthName}`} value={`£${salesMonth.toFixed(0)}`} />
+                <Stat label="Sales today" value={`£${salesToday.toFixed(0)}`} />
+                <Stat label="Sales (7d)" value={`£${salesWeek.toFixed(0)}`} />
+              </div>
+              {/* Next month */}
+              <div className="border-t border-border/60 bg-muted/20">
+                <p className="px-4 pt-3 text-[10px] font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                  Next month · {nextMonthName}
+                </p>
+                <div className="grid grid-cols-2 gap-px bg-border/60">
+                  <Stat label={`Bookings in ${nextMonthName}`} value={String(nextMonthBookings)} />
+                  <Stat label={`Sales in ${nextMonthName}`} value={`£${nextMonthSales.toFixed(0)}`} />
+                  <Stat label="Avg. booking" value={nextMonthBookings ? `£${(nextMonthSales / nextMonthBookings).toFixed(0)}` : "—"} />
+                  <Stat label="Confirmed only" value="Tracked" />
+                </div>
+              </div>
             </CardContent>
           </Card>
         </Link>
