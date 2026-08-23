@@ -611,16 +611,14 @@ function AvailabilityPage() {
                   )}
                 </div>
               </div>
-              <div className="mt-3 flex flex-wrap items-center gap-2">
-                <Button size="sm" variant="outline" onClick={openEndRota}>
-                  <CalendarRange className="mr-2 h-4 w-4" /> End rota & start a new one
-                </Button>
-                {previousRotas.length > 0 && (
+              {previousRotas.length > 0 && (
+                <div className="mt-3 flex flex-wrap items-center gap-2">
                   <Button size="sm" variant="ghost" onClick={() => setShowPrevious((v) => !v)}>
                     {showPrevious ? "Hide" : "Show"} previous rotas ({previousRotas.length})
                   </Button>
-                )}
-              </div>
+                </div>
+              )}
+
             </CardHeader>
           </Card>
 
