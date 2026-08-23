@@ -651,7 +651,7 @@ function BookingsPage() {
                           className="absolute cursor-pointer overflow-hidden rounded-lg px-2 py-1 text-left text-[11px] leading-tight shadow-sm ring-1 ring-black/5 transition hover:z-30 hover:shadow-md"
                           style={{
                             ...posStyle,
-                            backgroundColor: hexToRgba(color, 0.85),
+                            backgroundColor: hexToRgba(color, 0.45),
                             color: "#0f172a",
                           }}
                           title={`${a.start_time.slice(0, 5)}–${a.end_time.slice(0, 5)} · ${a.patient_name} · ${a.treatments?.name ?? "Treatment"}`}
