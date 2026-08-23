@@ -364,6 +364,8 @@ function MultiBookPage() {
     // Ad-hoc open slots win over a closed day.
     if (data.overrideDates.includes(iso)) return false;
     if (data.blockedDates.includes(iso)) return true;
+    // Fully booked days have nothing left to offer — grey them out.
+    if ((data as { fullDates?: string[] }).fullDates?.includes(iso)) return true;
     if (Array.isArray((data as { openDates?: string[] }).openDates)) {
       return !(data as { openDates: string[] }).openDates.includes(iso);
     }
