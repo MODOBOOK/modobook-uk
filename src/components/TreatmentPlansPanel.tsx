@@ -20,8 +20,10 @@ import {
   suggestPlanSession,
 } from "@/lib/treatment-plans.functions";
 import { supabase } from "@/integrations/supabase/client";
+import { TreatmentPicker } from "@/components/TreatmentPicker";
 
-type Treatment = { id: string; name: string; price: number | null; duration: number | null };
+type Treatment = { id: string; name: string; price: number | null; duration: number | null; category_id?: string | null };
+type Category = { id: string; name: string };
 
 export function TreatmentPlansPanel({
   clientId,
@@ -41,6 +43,7 @@ export function TreatmentPlansPanel({
 
   const [plans, setPlans] = useState<any[]>([]);
   const [treatments, setTreatments] = useState<Treatment[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [newOpen, setNewOpen] = useState(false);
   const [newName, setNewName] = useState("");
@@ -63,10 +66,15 @@ export function TreatmentPlansPanel({
     (async () => {
       const { data } = await supabase
         .from("treatments")
-        .select("id,name,price,duration")
+        .select("id,name,price,duration,category_id")
         .eq("active", true)
         .order("name");
       setTreatments((data || []) as Treatment[]);
+      const { data: cats } = await supabase
+        .from("treatment_categories")
+        .select("id,name")
+        .order("sort_order", { ascending: true });
+      setCategories((cats || []) as Category[]);
     })();
   }, [clientId]);
 
@@ -278,6 +286,7 @@ export function TreatmentPlansPanel({
           plan={editing}
           clientId={clientId}
           treatments={treatments}
+          categories={categories}
           onClose={() => setEditing(null)}
           onSaved={() => {
             setEditing(null);
@@ -293,12 +302,14 @@ function EditPlanDialog({
   plan,
   clientId,
   treatments,
+  categories,
   onClose,
   onSaved,
 }: {
   plan: any;
   clientId: string;
   treatments: Treatment[];
+  categories: Category[];
   onClose: () => void;
   onSaved: () => void;
 }) {
@@ -597,24 +608,17 @@ function EditPlanDialog({
                   </div>
 
                   <div className="grid grid-cols-2 gap-2">
-                    <Select
-                      value={s.treatmentId ?? ""}
-                      onValueChange={(v) =>
+                    <TreatmentPicker
+                      treatments={treatments}
+                      categories={categories}
+                      value={s.treatmentId ?? null}
+                      disabled={s.locked}
+                      placeholder="Choose treatment"
+                      className="h-9 text-xs"
+                      onSelect={(v) =>
                         setSessions((prev) => prev.map((x, i) => (i === idx ? { ...x, treatmentId: v } : x)))
                       }
-                      disabled={s.locked}
-                    >
-                      <SelectTrigger className="text-xs">
-                        <SelectValue placeholder="Choose treatment" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {treatments.map((tt) => (
-                          <SelectItem key={tt.id} value={tt.id}>
-                            {tt.name}{tt.price != null ? ` — £${tt.price}` : ""}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    />
                     <div className="flex items-center gap-1">
                       <Input
                         type="number"
