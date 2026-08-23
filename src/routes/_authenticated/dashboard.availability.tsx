@@ -32,6 +32,8 @@ import {
   listPractitioners,
   endCurrentRota,
   deletePreviousRota,
+  updateRotaPeriod,
+  deleteRotaPeriod,
 } from "@/lib/availability.functions";
 import { listMyLocations } from "@/lib/locations.functions";
 import { WEEK_LETTERS, weekLetterFor, toMondayIso } from "@/lib/rota";
@@ -131,6 +133,8 @@ function AvailabilityPage() {
   const setAnchor = useServerFn(setRotaAnchor);
   const endRota = useServerFn(endCurrentRota);
   const delPrevRota = useServerFn(deletePreviousRota);
+  const updPeriod = useServerFn(updateRotaPeriod);
+  const delPeriod = useServerFn(deleteRotaPeriod);
 
   const [rules, setRules] = useState<Rule[]>([]);
   const [overrides, setOverrides] = useState<Override[]>([]);
@@ -149,6 +153,11 @@ function AvailabilityPage() {
   const [copyForward, setCopyForward] = useState(true);
   const [endingRota, setEndingRota] = useState(false);
   const [showPrevious, setShowPrevious] = useState(false);
+  // Which rota period the weekly grid is showing ("current" or an ISO start date)
+  const [periodKey, setPeriodKey] = useState<string>("current");
+  const [periodEnd, setPeriodEnd] = useState("");
+  const [periodStart, setPeriodStart] = useState("");
+  const [savingPeriod, setSavingPeriod] = useState(false);
 
   const [dlgOpen, setDlgOpen] = useState(false);
   const [editing, setEditing] = useState<Rule | null>(null);
@@ -261,7 +270,8 @@ function AvailabilityPage() {
     setForm({
       day_of_week: day, start: "09:00", end: "17:00", interval: "30",
       location_ids: [], practitioner_id: "none", weeks,
-      effective_from: "", effective_to: "",
+      effective_from: activePeriod?.start ?? "",
+      effective_to: periodEndDates.length === 1 ? periodEndDates[0] : "",
     });
     setDlgOpen(true);
   }
@@ -428,9 +438,78 @@ function AvailabilityPage() {
     return [...groups.entries()].sort((a, b) => (a[0] < b[0] ? 1 : -1));
   }, [rules, today]);
 
+  /** Live rota periods: the one running now, plus any that start in the future. */
+  const periods = useMemo(() => {
+    const current: Rule[] = [];
+    const future = new Map<string, Rule[]>();
+    for (const r of activeRules) {
+      if (r.effective_from && r.effective_from > today) {
+        future.set(r.effective_from, [...(future.get(r.effective_from) ?? []), r]);
+      } else current.push(r);
+    }
+    const list: { key: string; label: string; start: string | null; rules: Rule[] }[] = [
+      { key: "current", label: "Current rota", start: null, rules: current },
+    ];
+    for (const [start, rs] of [...future.entries()].sort()) {
+      list.push({
+        key: start,
+        label: `Starts ${format(new Date(start + "T00:00:00"), "d MMM yyyy")}`,
+        start,
+        rules: rs,
+      });
+    }
+    return list;
+  }, [activeRules, today]);
+
+  const activePeriod = useMemo(
+    () => periods.find((p) => p.key === periodKey) ?? periods[0],
+    [periods, periodKey],
+  );
+  const periodRules = activePeriod?.rules ?? [];
+  const periodEndDates = useMemo(
+    () => [...new Set(periodRules.map((r) => r.effective_to).filter(Boolean) as string[])],
+    [periodRules],
+  );
+
+  useEffect(() => {
+    if (!periods.some((p) => p.key === periodKey)) setPeriodKey("current");
+  }, [periods, periodKey]);
+  useEffect(() => {
+    setPeriodEnd(periodEndDates.length === 1 ? periodEndDates[0] : "");
+    setPeriodStart(activePeriod?.start ?? "");
+  }, [activePeriod?.key, periodEndDates.join(",")]);
+
+  async function savePeriodDates() {
+    const ids = periodRules.map((r) => r.id);
+    if (!ids.length) { toast.error("Add a shift to this rota first"); return; }
+    if (periodStart && periodEnd && periodStart > periodEnd) {
+      toast.error("The end date must be after the start date"); return;
+    }
+    setSavingPeriod(true);
+    try {
+      await updPeriod({ data: { ids, effective_from: periodStart || null, effective_to: periodEnd || null } });
+      toast.success("Rota dates updated");
+      if (periodStart) setPeriodKey(periodStart > today ? periodStart : "current");
+      await refresh();
+    } catch (err: any) { toast.error(err?.message ?? "Failed"); }
+    finally { setSavingPeriod(false); }
+  }
+
+  async function removePeriod() {
+    const ids = periodRules.map((r) => r.id);
+    if (!ids.length) return;
+    if (!confirm(`Delete this rota and all ${ids.length} of its shifts?`)) return;
+    try {
+      await delPeriod({ data: { ids } });
+      setPeriodKey("current");
+      await refresh();
+      toast.success("Rota deleted");
+    } catch (err: any) { toast.error(err?.message ?? "Failed"); }
+  }
+
   // Group rules for grid rendering: [weekIdx][dow] -> Rule[]
   function rulesFor(day: number, weekIdx: number): Rule[] {
-    return activeRules.filter((r) => {
+    return periodRules.filter((r) => {
       if (r.day_of_week !== day) return false;
       const cycle = r.cycle_length ?? 1;
       const mask = r.weeks_mask ?? 1;
@@ -530,15 +609,70 @@ function AvailabilityPage() {
             </Card>
           )}
 
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">Rotas</CardTitle>
+              <CardDescription>Pick a rota to view and edit its shifts and dates.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex flex-wrap gap-2">
+                {periods.map((p) => (
+                  <Button
+                    key={p.key}
+                    size="sm"
+                    variant={p.key === activePeriod?.key ? "default" : "outline"}
+                    onClick={() => setPeriodKey(p.key)}
+                  >
+                    {p.label}
+                    <span className="ml-2 text-xs opacity-70">{p.rules.length}</span>
+                  </Button>
+                ))}
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <Label className="text-xs">Rota starts</Label>
+                  <Input type="date" value={periodStart} onChange={(e) => setPeriodStart(e.target.value)} />
+                </div>
+                <div>
+                  <Label className="text-xs">Rota ends</Label>
+                  <Input type="date" value={periodEnd} onChange={(e) => setPeriodEnd(e.target.value)} />
+                </div>
+              </div>
+              {periodEndDates.length > 1 && (
+                <p className="text-xs text-amber-600">
+                  Shifts in this rota currently end on different dates ({periodEndDates.join(", ")}). Saving will set them all to the same date.
+                </p>
+              )}
+              <div className="flex flex-wrap items-center gap-2">
+                <Button size="sm" onClick={savePeriodDates} disabled={savingPeriod}>
+                  {savingPeriod ? "Saving…" : "Save rota dates"}
+                </Button>
+                {periodEnd && (
+                  <Button size="sm" variant="outline" onClick={() => { setPeriodEnd(""); }}>
+                    Clear end date
+                  </Button>
+                )}
+                <Button size="sm" variant="ghost" className="text-destructive" onClick={removePeriod}>
+                  <Trash2 className="mr-2 h-4 w-4" /> Delete this rota
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {periodEnd
+                  ? `This rota stops after ${format(new Date(periodEnd + "T00:00:00"), "d MMM yyyy")}.`
+                  : "This rota runs with no end date."}
+              </p>
+            </CardContent>
+          </Card>
+
           <Card className="overflow-hidden">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <CardTitle>Weekly schedule</CardTitle>
+                  <CardTitle>{activePeriod?.label === "Current rota" ? "Weekly schedule" : `Weekly schedule · ${activePeriod?.label}`}</CardTitle>
                   <CardDescription>Tap a cell to add or edit a shift.</CardDescription>
                 </div>
                 <div className="text-xs text-muted-foreground hidden sm:block">
-                  {activeRules.length} shift{activeRules.length === 1 ? "" : "s"}
+                  {periodRules.length} shift{periodRules.length === 1 ? "" : "s"}
                 </div>
               </div>
             </CardHeader>
@@ -619,7 +753,7 @@ function AvailabilityPage() {
                   ))}
                 </div>
               </div>
-              {activeRules.length === 0 && (
+              {periodRules.length === 0 && (
                 <div className="mt-4 text-center text-sm text-muted-foreground">No shifts yet — tap any cell to add your first.</div>
               )}
             </CardContent>
