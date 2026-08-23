@@ -597,24 +597,17 @@ function EditPlanDialog({
                   </div>
 
                   <div className="grid grid-cols-2 gap-2">
-                    <Select
-                      value={s.treatmentId ?? ""}
-                      onValueChange={(v) =>
+                    <TreatmentPicker
+                      treatments={treatments}
+                      categories={categories}
+                      value={s.treatmentId ?? null}
+                      disabled={s.locked}
+                      placeholder="Choose treatment"
+                      className="h-9 text-xs"
+                      onSelect={(v) =>
                         setSessions((prev) => prev.map((x, i) => (i === idx ? { ...x, treatmentId: v } : x)))
                       }
-                      disabled={s.locked}
-                    >
-                      <SelectTrigger className="text-xs">
-                        <SelectValue placeholder="Choose treatment" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {treatments.map((tt) => (
-                          <SelectItem key={tt.id} value={tt.id}>
-                            {tt.name}{tt.price != null ? ` — £${tt.price}` : ""}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    />
                     <div className="flex items-center gap-1">
                       <Input
                         type="number"
