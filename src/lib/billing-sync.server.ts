@@ -25,7 +25,12 @@ export async function syncSubscriptionSeats(supabase: any, profileId: string) {
   const [{ count: locCount }, { count: pracCount }, { count: assocCount }, { data: plans }, { data: profRow }] =
     await Promise.all([
       supabase.from("locations").select("id", { count: "exact", head: true }).eq("profile_id", profileId),
-      supabase.from("practitioners").select("id", { count: "exact", head: true }).eq("profile_id", profileId),
+      supabase
+        .from("staff_members")
+        .select("id", { count: "exact", head: true })
+        .eq("profile_id", profileId)
+        .eq("role", "practitioner")
+        .in("status", ["invited", "active"]),
       supabase
         .from("clinic_associates")
         .select("id", { count: "exact", head: true })

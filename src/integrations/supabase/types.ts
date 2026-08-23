@@ -7317,7 +7317,7 @@ export type Database = {
           invite_expires_at: string | null
           invite_token: string | null
           invited_at: string
-          invited_email: string
+          invited_email: string | null
           last_active_at: string | null
           name: string
           practitioner_id: string | null
@@ -7335,7 +7335,7 @@ export type Database = {
           invite_expires_at?: string | null
           invite_token?: string | null
           invited_at?: string
-          invited_email: string
+          invited_email?: string | null
           last_active_at?: string | null
           name: string
           practitioner_id?: string | null
@@ -7353,7 +7353,7 @@ export type Database = {
           invite_expires_at?: string | null
           invite_token?: string | null
           invited_at?: string
-          invited_email?: string
+          invited_email?: string | null
           last_active_at?: string | null
           name?: string
           practitioner_id?: string | null
@@ -9239,6 +9239,7 @@ export type Database = {
         Args: { p_response: Json; p_token: string }
         Returns: boolean
       }
+      treating_staff_count: { Args: { _profile_id: string }; Returns: number }
       validate_discount_code: {
         Args: { p_code: string; p_slug: string; p_treatment_ids: string[] }
         Returns: {

@@ -92,7 +92,6 @@ const navItems = [
   { label: "Discounts", to: "/dashboard/discounts", icon: Percent },
   { label: "Model slots", to: "/dashboard/model-slots", icon: Sparkles },
   { label: "Locations", to: "/dashboard/locations", icon: MapPin },
-  { label: "Practitioners", to: "/dashboard/practitioners", icon: Users },
   { label: "Staff", to: "/dashboard/staff", icon: Users },
 
   { section: "Clinic owner" as const, label: "Associates", to: "/dashboard/associates", icon: ShieldCheck, flag: "associates_enabled" as const, pilot: true },

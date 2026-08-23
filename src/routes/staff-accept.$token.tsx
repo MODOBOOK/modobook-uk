@@ -37,7 +37,7 @@ function AcceptInvitePage() {
     (async () => {
       const res = await lookup({ data: { token } });
       if (!res.ok) setState({ status: "invalid", reason: res.reason });
-      else setState({ status: "ok", name: res.name, email: res.email, role: res.role, clinicName: res.clinicName });
+      else setState({ status: "ok", name: res.name, email: res.email ?? "", role: res.role, clinicName: res.clinicName });
       const { data } = await supabase.auth.getUser();
       setSessionEmail(data.user?.email ?? null);
     })();

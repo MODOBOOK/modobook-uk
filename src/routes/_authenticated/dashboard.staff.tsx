@@ -14,6 +14,8 @@ import { Trash2, Plus, Mail, RefreshCw, ShieldCheck, Stethoscope, UserRound, Eye
 import { useDemoGuard } from "@/hooks/use-demo-mode";
 import { listStaff, inviteStaff, updateStaff, revokeStaff, resendStaffInvite, type StaffRole, type StaffScope, type StaffStatus } from "@/lib/staff.functions";
 import { listPractitioners } from "@/lib/availability.functions";
+import { getSeatSummary } from "@/lib/practitioner-billing.functions";
+import { Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_authenticated/dashboard/staff")({
   ssr: false,
@@ -21,7 +23,7 @@ export const Route = createFileRoute("/_authenticated/dashboard/staff")({
 });
 
 type Staff = {
-  id: string; name: string; invited_email: string; role: StaffRole;
+  id: string; name: string; invited_email: string | null; role: StaffRole;
   data_scope: StaffScope; practitioner_id: string | null; status: StaffStatus;
   invited_at: string; accepted_at: string | null; last_active_at: string | null;
   invite_expires_at: string | null;
@@ -30,7 +32,7 @@ type Practitioner = { id: string; name: string };
 
 const ROLES: { value: StaffRole; label: string; desc: string; icon: any }[] = [
   { value: "admin", label: "Admin", desc: "Full access · not bookable", icon: ShieldCheck },
-  { value: "practitioner", label: "Practitioner", desc: "Bookable clinician", icon: Stethoscope },
+  { value: "practitioner", label: "Practitioner", desc: "Bookable clinician · uses a paid seat", icon: Stethoscope },
   { value: "receptionist", label: "Receptionist", desc: "Bookings & patients · not bookable", icon: UserRound },
   { value: "viewer", label: "Viewer", desc: "Read-only access", icon: Eye },
 ];
@@ -43,9 +45,11 @@ function StaffPage() {
   const revoke = useServerFn(revokeStaff);
   const resend = useServerFn(resendStaffInvite);
   const listPracts = useServerFn(listPractitioners);
+  const fetchSeats = useServerFn(getSeatSummary);
 
   const [staff, setStaff] = useState<Staff[]>([]);
   const [practitioners, setPractitioners] = useState<Practitioner[]>([]);
+  const [seats, setSeats] = useState<any>(null);
   const [ownerEmail, setOwnerEmail] = useState<string | null>(null);
   useEffect(() => { supabase.auth.getUser().then(({ data }) => setOwnerEmail(data.user?.email ?? null)); }, []);
   const [dlgOpen, setDlgOpen] = useState(false);
@@ -57,9 +61,10 @@ function StaffPage() {
   });
 
   async function refresh() {
-    const [s, p] = await Promise.all([list(), listPracts()]);
+    const [s, p, sum] = await Promise.all([list(), listPracts(), fetchSeats().catch(() => null)]);
     setStaff(s as Staff[]);
     setPractitioners(p as Practitioner[]);
+    setSeats(sum);
   }
   useEffect(() => { refresh(); }, []);
 
@@ -72,7 +77,7 @@ function StaffPage() {
   function openEdit(s: Staff) {
     setEditing(s);
     setForm({
-      name: s.name, email: s.invited_email, role: s.role,
+      name: s.name, email: s.invited_email ?? "", role: s.role,
       data_scope: s.data_scope, practitioner_id: s.practitioner_id ?? "none",
     });
     setDlgOpen(true);
@@ -83,7 +88,7 @@ function StaffPage() {
     try {
       if (editing) {
         await update({ data: {
-          id: editing.id, name: form.name, role: form.role, data_scope: form.data_scope,
+          id: editing.id, name: form.name, email: form.email, role: form.role, data_scope: form.data_scope,
           practitioner_id: form.role === "practitioner" ? (form.practitioner_id === "none" ? null : form.practitioner_id) : null,
         } });
         toast.success("Staff updated");
@@ -92,7 +97,7 @@ function StaffPage() {
           name: form.name, email: form.email, role: form.role, data_scope: form.data_scope,
           practitioner_id: form.role === "practitioner" ? (form.practitioner_id === "none" ? null : form.practitioner_id) : null,
         } });
-        toast.success("Invite sent");
+        toast.success(form.email.trim() ? "Invite sent" : "Team member added");
       }
       setDlgOpen(false);
       await refresh();
@@ -123,15 +128,39 @@ function StaffPage() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">Staff</h1>
-          <p className="text-muted-foreground">Invite your team and control what they can do.</p>
+          <p className="text-muted-foreground">
+            Everyone who works at your clinic lives here — each person gets their own login.
+            Only team members with the <strong>Practitioner</strong> role use a paid seat.
+          </p>
         </div>
-        <Button onClick={openInvite}><Plus className="h-4 w-4 mr-1" />Invite staff</Button>
+        <Button onClick={openInvite}><Plus className="h-4 w-4 mr-1" />Add team member</Button>
       </div>
+
+      {seats && !seats.comped && (
+        <Card>
+          <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4">
+            <div className="text-sm">
+              <p className="font-medium">
+                {seats.practitioners.used} of {seats.practitioners.allowed} treating {seats.practitioners.allowed === 1 ? "seat" : "seats"} used
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Admins, receptionists and viewers are free. Adding another Practitioner adds a seat to your
+                plan automatically from your next billing date.
+              </p>
+            </div>
+            <Button asChild variant="outline" size="sm"><Link to="/dashboard/billing">Billing</Link></Button>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>
           <CardTitle>Team members</CardTitle>
-          <CardDescription>Admins have full access but don't appear as bookable practitioners.</CardDescription>
+          <CardDescription>
+            Admins, receptionists and viewers have logins but never appear as bookable clinicians.
+            Practitioners get a bookable calendar — edit their photo, title, bio and locations on{" "}
+            <Link to="/dashboard/practitioners" className="underline underline-offset-2">booking profiles</Link>.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {staff.length === 0 ? (
@@ -151,7 +180,9 @@ function StaffPage() {
                       </div>
                       <div className="min-w-0">
                         <div className="font-medium truncate">{s.name}</div>
-                        <div className="text-xs text-muted-foreground truncate">{s.invited_email}</div>
+                        <div className="text-xs text-muted-foreground truncate">
+                          {s.invited_email ?? "No login yet — add an email to invite them"}
+                        </div>
                       </div>
                     </div>
                     <div className="flex items-center gap-2 flex-wrap">
@@ -166,7 +197,7 @@ function StaffPage() {
                         {s.status}
                       </Badge>
                       <div className="flex items-center gap-1">
-                        {s.status === "invited" && (
+                        {s.status === "invited" && s.invited_email && (
                           <Button variant="ghost" size="icon" title="Resend invite" onClick={() => resendInvite(s.id)}>
                             <RefreshCw className="h-4 w-4" />
                           </Button>
@@ -205,7 +236,7 @@ function StaffPage() {
                 type="email"
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
-                disabled={!!editing}
+                disabled={!!editing && !!editing.invited_email}
                 placeholder="sam@example.com"
               />
               {!editing && ownerEmail && form.email.trim().toLowerCase() === ownerEmail.toLowerCase() && (
@@ -266,9 +297,9 @@ function StaffPage() {
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setDlgOpen(false)}>Cancel</Button>
-            <Button onClick={save} disabled={saving || !form.name || (!editing && !form.email) || (!editing && !!ownerEmail && form.email.trim().toLowerCase() === ownerEmail.toLowerCase())}>
+            <Button onClick={save} disabled={saving || !form.name || (!!ownerEmail && form.email.trim().toLowerCase() === ownerEmail.toLowerCase())}>
               <Mail className="h-4 w-4 mr-1" />
-              {saving ? "Saving…" : editing ? "Save changes" : "Send invite"}
+              {saving ? "Saving…" : editing ? "Save changes" : form.email.trim() ? "Send invite" : "Add team member"}
             </Button>
           </DialogFooter>
         </DialogContent>
