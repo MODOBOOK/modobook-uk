@@ -240,7 +240,11 @@ export async function sendWhatsApp(input: SendWhatsAppInput): Promise<SendWhatsA
 
 
     let sid: string | undefined
-    try { sid = (JSON.parse(text) as { sid?: string }).sid } catch { /* non-JSON */ }
+    try {
+      const parsed = JSON.parse(text) as { sid?: string; id?: string | number; ids?: Array<string | number> }
+      sid = parsed.sid ?? (parsed.id != null ? String(parsed.id) : undefined) ?? (parsed.ids?.[0] != null ? String(parsed.ids[0]) : undefined)
+    } catch { /* non-JSON */ }
+
     await mark('sent', { provider_sid: sid ?? null })
     return { ok: true, sid }
   } catch (e) {
