@@ -334,6 +334,7 @@ function AvailabilityPage() {
       }
       toast.success(editing ? "Shift updated" : "Shift added");
       setDlgOpen(false);
+      if (draft && form.effective_from === draft.start) setDraft(null);
       await refresh();
     } catch (err: any) { toast.error(err?.message ?? "Failed"); }
   }
