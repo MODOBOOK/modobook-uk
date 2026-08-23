@@ -38,6 +38,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { amIAdmin } from "@/lib/admin.functions";
 import { ComingSoonDialog, type ComingSoonKey } from "@/components/ComingSoonDialog";
+import { canAccessRoute, type ClinicRole } from "@/lib/staff-nav";
 
 export const Route = createFileRoute("/_authenticated/dashboard/menu")({
   ssr: false,
@@ -147,7 +148,15 @@ const groups: Group[] = [
 ];
 
 function MenuPage() {
-  const { profile } = Route.useRouteContext() as { profile: { slug: string; clinic_name?: string | null; associates_enabled?: boolean | null } };
+  const { profile } = Route.useRouteContext() as {
+    profile: {
+      slug: string;
+      clinic_name?: string | null;
+      associates_enabled?: boolean | null;
+      __clinic_role?: ClinicRole;
+    };
+  };
+  const clinicRole: ClinicRole = profile.__clinic_role ?? "owner";
   const { admin } = Route.useLoaderData();
   const [query, setQuery] = useState("");
   const [comingSoon, setComingSoon] = useState<ComingSoonKey | null>(null);
@@ -168,6 +177,7 @@ function MenuPage() {
     const visible = groups.map((g) => ({
       ...g,
       items: g.items
+        .filter((i) => canAccessRoute(clinicRole, i.to))
         .filter((i) =>
           i.to === "/dashboard/associates"
             ? pilot
@@ -181,7 +191,7 @@ function MenuPage() {
     return visible
       .map((g) => ({ ...g, items: g.items.filter((i) => i.label.toLowerCase().includes(q) || i.description.toLowerCase().includes(q)) }))
       .filter((g) => g.items.length > 0);
-  }, [query, profile.associates_enabled, pilot]);
+  }, [query, profile.associates_enabled, pilot, clinicRole]);
 
 
   return (
