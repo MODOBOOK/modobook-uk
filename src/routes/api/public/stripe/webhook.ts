@@ -504,6 +504,45 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
               break;
             }
 
+            case "setup_intent.succeeded": {
+              // Card capture routed through our embedded Payment Element:
+              // nothing is charged, so there's no PaymentIntent — this fires on
+              // the connected account once the card is stored.
+              const si = event.data.object as Stripe.SetupIntent;
+              const metadata = si.metadata ?? {};
+              if (metadata.kind !== "card_capture" || !metadata.appointment_ids) break;
+              const ids = String(metadata.appointment_ids)
+                .split(",")
+                .map((s) => s.trim())
+                .filter(Boolean);
+              const paymentMethodId = typeof si.payment_method === "string"
+                ? si.payment_method
+                : si.payment_method?.id ?? null;
+              const customerId = typeof si.customer === "string"
+                ? si.customer
+                : si.customer?.id ?? null;
+              for (const apptId of ids) {
+                const { data: appt } = await supabaseAdmin
+                  .from("appointments")
+                  .update({ status: "confirmed", card_captured_at: new Date().toISOString() } as never)
+                  .eq("id", apptId)
+                  .select("client_id")
+                  .maybeSingle();
+                const clientId = (appt as { client_id?: string | null } | null)?.client_id ?? null;
+                if (clientId && (customerId || paymentMethodId)) {
+                  await supabaseAdmin
+                    .from("clinic_clients")
+                    .update({
+                      ...(customerId ? { stripe_customer_id: customerId } : {}),
+                      ...(paymentMethodId ? { stripe_payment_method_id: paymentMethodId } : {}),
+                    } as never)
+                    .eq("id", clientId);
+                }
+                paidAppointmentIds.push(apptId);
+              }
+              break;
+            }
+
 
             case "payment_intent.succeeded": {
               // Embedded card payments use our own Payment Element instead of
