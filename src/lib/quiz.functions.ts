@@ -3,6 +3,11 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 
+async function __activeProfileId(supabase: any, userId: string) {
+  const { activeProfileId } = await import("./clinic-context.server");
+  return await activeProfileId(supabase, userId);
+}
+
 function serverPublic() {
   return createClient<Database>(
     process.env.SUPABASE_URL!,
@@ -17,7 +22,7 @@ export const getMyQuizConfig = createServerFn({ method: "GET" })
     const { data, error } = await context.supabase
       .from("profiles")
       .select("id, quiz_enabled, quiz_intro, quiz_outro, chooser_consultation_treatment_id")
-      .eq("user_id", context.userId)
+      .eq("id", await __activeProfileId(context.supabase, context.userId))
       .single();
     if (error) throw error;
     return data;
@@ -34,7 +39,7 @@ export const saveQuizConfig = createServerFn({ method: "POST" })
     const { error } = await context.supabase
       .from("profiles")
       .update(data)
-      .eq("user_id", context.userId);
+      .eq("id", await __activeProfileId(context.supabase, context.userId));
     if (error) throw error;
     return { ok: true };
   });
@@ -94,7 +99,7 @@ export const listMyQuizResponses = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { data: profile } = await context.supabase
-      .from("profiles").select("id").eq("user_id", context.userId).single();
+      .from("profiles").select("id").eq("id", await __activeProfileId(context.supabase, context.userId)).single();
     if (!profile) return [];
     const { data, error } = await context.supabase
       .from("quiz_responses")

@@ -1,6 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+async function __activeProfileId(supabase: any, userId: string) {
+  const { activeProfileId } = await import("./clinic-context.server");
+  return await activeProfileId(supabase, userId);
+}
+
 /* ============================================================
    AI-assisted onboarding: extract clinic data from PDFs/images/
    spreadsheets/URLs and import into MODO.
@@ -340,7 +345,7 @@ export const commitClinicImport = createServerFn({ method: "POST" })
     const { data: profile, error: pErr } = await supabase
       .from("profiles")
       .select("id, clinic_name, tagline, bio, welcome_intro_html")
-      .eq("user_id", userId)
+      .eq("id", await __activeProfileId(supabase, userId))
       .single();
     if (pErr) throw pErr;
     const profileId = profile.id;
@@ -632,7 +637,7 @@ export const resetClinicServices = createServerFn({ method: "POST" })
     const { data: profile, error: pErr } = await supabase
       .from("profiles")
       .select("id")
-      .eq("user_id", userId)
+      .eq("id", await __activeProfileId(supabase, userId))
       .single();
     if (pErr) throw pErr;
     const profileId = profile.id;

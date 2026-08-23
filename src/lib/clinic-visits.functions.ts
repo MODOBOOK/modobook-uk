@@ -2,6 +2,11 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 
+async function __activeProfileId(supabase: any, userId: string) {
+  const { activeProfileId } = await import("./clinic-context.server");
+  return await activeProfileId(supabase, userId);
+}
+
 const TimeStr = z.string().regex(/^\d{2}:\d{2}(:\d{2})?$/);
 
 const UpsertSchema = z.object({
@@ -35,7 +40,7 @@ export const listMyClinicVisits = createServerFn({ method: "GET" })
     const { data: profile } = await supabase
       .from("profiles")
       .select("id")
-      .eq("user_id", userId)
+      .eq("id", await __activeProfileId(supabase, userId))
       .maybeSingle();
     if (!profile) return [];
     const { data, error } = await supabase
@@ -101,7 +106,7 @@ export const upsertClinicVisit = createServerFn({ method: "POST" })
     const { data: profile } = await supabase
       .from("profiles")
       .select("id")
-      .eq("user_id", userId)
+      .eq("id", await __activeProfileId(supabase, userId))
       .maybeSingle();
     if (!profile) throw new Error("No profile");
 
@@ -248,7 +253,7 @@ export const cancelClinicVisit = createServerFn({ method: "POST" })
     const { data: profile } = await supabase
       .from("profiles")
       .select("id")
-      .eq("user_id", userId)
+      .eq("id", await __activeProfileId(supabase, userId))
       .maybeSingle();
     if (!profile) throw new Error("No profile");
     let query = supabase

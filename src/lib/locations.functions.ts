@@ -1,6 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+async function __activeProfileId(supabase: any, userId: string) {
+  const { activeProfileId } = await import("./clinic-context.server");
+  return await activeProfileId(supabase, userId);
+}
+
 export const listMyLocations = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
@@ -8,7 +13,7 @@ export const listMyLocations = createServerFn({ method: "GET" })
     const { data: profile } = await supabase
       .from("profiles")
       .select("id")
-      .eq("user_id", userId)
+      .eq("id", await __activeProfileId(supabase, userId))
       .maybeSingle();
     if (!profile) return [];
     const { data, error } = await supabase
@@ -47,7 +52,7 @@ export const reorderLocation = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { data: profile } = await supabase
-      .from("profiles").select("id").eq("user_id", userId).maybeSingle();
+      .from("profiles").select("id").eq("id", await __activeProfileId(supabase, userId)).maybeSingle();
     if (!profile) throw new Error("Profile not found");
     const { data: rows } = await supabase
       .from("locations")
@@ -83,7 +88,7 @@ export const upsertLocation = createServerFn({ method: "POST" })
     const { data: profile } = await supabase
       .from("profiles")
       .select("id")
-      .eq("user_id", userId)
+      .eq("id", await __activeProfileId(supabase, userId))
       .maybeSingle();
     if (!profile) throw new Error("Profile not found");
 
@@ -149,7 +154,7 @@ export const deleteLocation = createServerFn({ method: "POST" })
     const { data: profile } = await supabase
       .from("profiles")
       .select("id")
-      .eq("user_id", userId)
+      .eq("id", await __activeProfileId(supabase, userId))
       .maybeSingle();
     if (!profile) throw new Error("Profile not found");
     const { error } = await supabase
@@ -199,7 +204,7 @@ export const getLocationPriceList = createServerFn({ method: "GET" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { data: profile } = await supabase
-      .from("profiles").select("id").eq("user_id", userId).maybeSingle();
+      .from("profiles").select("id").eq("id", await __activeProfileId(supabase, userId)).maybeSingle();
     if (!profile) throw new Error("Profile not found");
 
     const [{ data: treatments }, { data: pricing }] = await Promise.all([

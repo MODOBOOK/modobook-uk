@@ -1,12 +1,17 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+async function __activeProfileId(supabase: any, userId: string) {
+  const { activeProfileId } = await import("./clinic-context.server");
+  return await activeProfileId(supabase, userId);
+}
+
 export const listMyPractitioners = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
     const { data: profile } = await supabase
-      .from("profiles").select("id").eq("user_id", userId).maybeSingle();
+      .from("profiles").select("id").eq("id", await __activeProfileId(supabase, userId)).maybeSingle();
     if (!profile) return { practitioners: [], links: [] };
     const [{ data: practitioners }, { data: links }] = await Promise.all([
       supabase.from("practitioners").select("*").eq("profile_id", profile.id)
@@ -37,7 +42,7 @@ export const upsertPractitioner = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { data: profile } = await supabase
-      .from("profiles").select("id").eq("user_id", userId).maybeSingle();
+      .from("profiles").select("id").eq("id", await __activeProfileId(supabase, userId)).maybeSingle();
     if (!profile) throw new Error("Profile not found");
 
     const payload = {
@@ -94,7 +99,7 @@ export const deletePractitioner = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { data: profile } = await supabase
-      .from("profiles").select("id").eq("user_id", userId).maybeSingle();
+      .from("profiles").select("id").eq("id", await __activeProfileId(supabase, userId)).maybeSingle();
     if (!profile) throw new Error("Profile not found");
     const { error } = await supabase.from("practitioners")
       .delete().eq("id", data.id).eq("profile_id", profile.id);

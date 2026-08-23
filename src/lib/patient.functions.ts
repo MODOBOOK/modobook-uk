@@ -3,6 +3,11 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 
+async function __activeProfileId(supabase: any, userId: string) {
+  const { activeProfileId } = await import("./clinic-context.server");
+  return await activeProfileId(supabase, userId);
+}
+
 function publicClient() {
   return createClient<Database>(
     process.env.SUPABASE_URL!,
@@ -266,7 +271,7 @@ export const listMyReviews = createServerFn({ method: "GET" })
     const { data: profile } = await context.supabase
       .from("profiles")
       .select("id")
-      .eq("user_id", context.userId)
+      .eq("id", await __activeProfileId(context.supabase, context.userId))
       .maybeSingle();
     if (!profile) return { reviews: [] };
     const { data, error } = await context.supabase
@@ -283,7 +288,7 @@ export const countPendingReviews = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { data: profile } = await context.supabase
-      .from("profiles").select("id").eq("user_id", context.userId).maybeSingle();
+      .from("profiles").select("id").eq("id", await __activeProfileId(context.supabase, context.userId)).maybeSingle();
     if (!profile) return { count: 0 };
     const { count, error } = await context.supabase
       .from("patient_reviews")
@@ -311,7 +316,7 @@ export const deletePatientReview = createServerFn({ method: "POST" })
   .inputValidator((input: { reviewId: string }) => input)
   .handler(async ({ data, context }) => {
     const { data: profile } = await context.supabase
-      .from("profiles").select("id").eq("user_id", context.userId).maybeSingle();
+      .from("profiles").select("id").eq("id", await __activeProfileId(context.supabase, context.userId)).maybeSingle();
     if (!profile) throw new Error("Profile not found");
     const { error } = await context.supabase
       .from("patient_reviews")
@@ -346,7 +351,7 @@ export const updatePractitionerBio = createServerFn({ method: "POST" })
     const { data: updated, error } = await context.supabase
       .from("profiles")
       .update(patch as never)
-      .eq("user_id", context.userId)
+      .eq("id", await __activeProfileId(context.supabase, context.userId))
       .select("*")
       .single();
     if (error) throw error;
@@ -358,7 +363,7 @@ export const listMyTestimonials = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { data: profile } = await context.supabase
-      .from("profiles").select("id").eq("user_id", context.userId).maybeSingle();
+      .from("profiles").select("id").eq("id", await __activeProfileId(context.supabase, context.userId)).maybeSingle();
     if (!profile) return { testimonials: [] };
     const { data, error } = await context.supabase
       .from("clinic_testimonials")
@@ -377,7 +382,7 @@ export const upsertTestimonial = createServerFn({ method: "POST" })
     if (!data.author_name.trim()) throw new Error("Patient first name is required");
     if (!data.quote.trim()) throw new Error("Review text is required");
     const { data: profile } = await context.supabase
-      .from("profiles").select("id").eq("user_id", context.userId).maybeSingle();
+      .from("profiles").select("id").eq("id", await __activeProfileId(context.supabase, context.userId)).maybeSingle();
     if (!profile) throw new Error("Profile not found");
     const payload = {
       profile_id: profile.id,
@@ -404,7 +409,7 @@ export const deleteTestimonial = createServerFn({ method: "POST" })
   .inputValidator((input: { id: string }) => input)
   .handler(async ({ data, context }) => {
     const { data: profile } = await context.supabase
-      .from("profiles").select("id").eq("user_id", context.userId).maybeSingle();
+      .from("profiles").select("id").eq("id", await __activeProfileId(context.supabase, context.userId)).maybeSingle();
     if (!profile) throw new Error("Profile not found");
     const { error } = await context.supabase
       .from("clinic_testimonials").delete().eq("id", data.id).eq("profile_id", profile.id);

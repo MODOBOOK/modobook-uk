@@ -1,6 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+async function __activeProfileId(supabase: any, userId: string) {
+  const { activeProfileId } = await import("./clinic-context.server");
+  return await activeProfileId(supabase, userId);
+}
+
 type PackageInput = {
   name: string;
   description: string | null;
@@ -51,7 +56,7 @@ export const setPackageLimitedOffer = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { data: profile } = await supabase
-      .from("profiles").select("id").eq("user_id", userId).single();
+      .from("profiles").select("id").eq("id", await __activeProfileId(supabase, userId)).single();
     if (!profile) throw new Error("No profile");
     const update: Record<string, unknown> = {
       is_limited: data.is_limited,
@@ -94,7 +99,7 @@ export const listMyPackages = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
     const { data: profile } = await supabase
-      .from("profiles").select("id").eq("user_id", userId).single();
+      .from("profiles").select("id").eq("id", await __activeProfileId(supabase, userId)).single();
     if (!profile) return [];
     const { data, error } = await supabase
       .from("packages").select("*").eq("profile_id", profile.id).eq("is_custom", false)
@@ -110,7 +115,7 @@ export const createPackage = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { data: profile } = await supabase
-      .from("profiles").select("id").eq("user_id", userId).single();
+      .from("profiles").select("id").eq("id", await __activeProfileId(supabase, userId)).single();
     if (!profile) throw new Error("No profile");
     const clean = await sanitizeTreatments(supabase, profile.id, data.treatment_ids);
     const { error } = await supabase.from("packages").insert({
@@ -141,7 +146,7 @@ export const updatePackage = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { data: profile } = await supabase
-      .from("profiles").select("id").eq("user_id", userId).single();
+      .from("profiles").select("id").eq("id", await __activeProfileId(supabase, userId)).single();
     if (!profile) throw new Error("No profile");
     const clean = await sanitizeTreatments(supabase, profile.id, data.treatment_ids);
     const { error } = await supabase.from("packages").update({
@@ -180,7 +185,7 @@ export const reorderPackages = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { data: profile } = await supabase
-      .from("profiles").select("id").eq("user_id", userId).single();
+      .from("profiles").select("id").eq("id", await __activeProfileId(supabase, userId)).single();
     if (!profile) throw new Error("No profile");
     for (let i = 0; i < data.ids.length; i++) {
       const { error } = await supabase

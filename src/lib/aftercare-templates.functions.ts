@@ -1,6 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+async function __activeProfileId(supabase: any, userId: string) {
+  const { activeProfileId } = await import("./clinic-context.server");
+  return await activeProfileId(supabase, userId);
+}
+
 function decodeEntities(s: string) {
   const named: Record<string, string> = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " " };
   return s.replace(/&(#x?[0-9a-f]+|[a-z]+);/gi, (match, entity) => {
@@ -30,7 +35,7 @@ function plainAftercareText(value: string | null | undefined) {
 }
 
 async function getProfileId(supabase: any, userId: string) {
-  const { data } = await supabase.from("profiles").select("id").eq("user_id", userId).maybeSingle();
+  const { data } = await supabase.from("profiles").select("id").eq("id", await __activeProfileId(supabase, userId)).maybeSingle();
   return data?.id ?? null;
 }
 
@@ -162,7 +167,7 @@ export const getAftercareTemplateTreatmentIds = createServerFn({ method: "GET" }
   .inputValidator((i: { template_id: string }) => i)
   .handler(async ({ data, context }) => {
     const { data: profile } = await context.supabase
-      .from("profiles").select("id").eq("user_id", context.userId).maybeSingle();
+      .from("profiles").select("id").eq("id", await __activeProfileId(context.supabase, context.userId)).maybeSingle();
     if (!profile) return [];
     const { data: myTreatments } = await context.supabase
       .from("treatments").select("id").eq("profile_id", profile.id);
@@ -184,7 +189,7 @@ export const setAftercareTemplateTreatmentIds = createServerFn({ method: "POST" 
     // Scope both delete and insert to the current practitioner's treatments so
     // attaching a system template does not clobber other practitioners' links.
     const { data: profile } = await context.supabase
-      .from("profiles").select("id").eq("user_id", context.userId).maybeSingle();
+      .from("profiles").select("id").eq("id", await __activeProfileId(context.supabase, context.userId)).maybeSingle();
     if (!profile) throw new Error("Profile not found");
     const { data: myTreatments } = await context.supabase
       .from("treatments").select("id").eq("profile_id", profile.id);

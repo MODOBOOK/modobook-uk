@@ -1,11 +1,16 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+async function __activeProfileId(supabase: any, userId: string) {
+  const { activeProfileId } = await import("./clinic-context.server");
+  return await activeProfileId(supabase, userId);
+}
+
 async function getProfileId(supabase: any, userId: string) {
   const { data } = await supabase
     .from("profiles")
     .select("id")
-    .eq("user_id", userId)
+    .eq("id", await __activeProfileId(supabase, userId))
     .maybeSingle();
   return data?.id as string | undefined;
 }

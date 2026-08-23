@@ -2,6 +2,11 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Database } from "@/integrations/supabase/types";
 
+async function __activeProfileId(supabase: any, userId: string) {
+  const { activeProfileId } = await import("./clinic-context.server");
+  return await activeProfileId(supabase, userId);
+}
+
 type TrainingMode = Database["public"]["Enums"]["training_mode"];
 type PaymentMode = Database["public"]["Enums"]["payment_mode"];
 type BookingStatus = Database["public"]["Enums"]["training_booking_status"];
@@ -43,7 +48,7 @@ async function getProfileId(
   userId: string,
 ) {
   const { data, error } = await supabase
-    .from("profiles").select("id").eq("user_id", userId).single();
+    .from("profiles").select("id").eq("id", await __activeProfileId(supabase, userId)).single();
   if (error) throw error;
   return data.id as string;
 }
@@ -84,7 +89,7 @@ export const getCourseWithSessions = createServerFn({ method: "GET" })
       .select("location_id").eq("course_id", data.id);
     const location_ids = (locs ?? []).map((r: { location_id: string }) => r.location_id);
     const { data: prof } = await supabase
-      .from("profiles").select("slug").eq("user_id", userId).single();
+      .from("profiles").select("slug").eq("id", await __activeProfileId(supabase, userId)).single();
     return { course, sessions: sessions ?? [], location_ids, slug: prof?.slug ?? null };
   });
 

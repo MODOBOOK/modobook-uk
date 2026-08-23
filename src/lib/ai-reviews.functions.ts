@@ -1,6 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+async function __activeProfileId(supabase: any, userId: string) {
+  const { activeProfileId } = await import("./clinic-context.server");
+  return await activeProfileId(supabase, userId);
+}
+
 const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 const MODEL = "google/gemini-3-flash-preview";
 
@@ -117,7 +122,7 @@ export const commitReviews = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { data: profile, error: pErr } = await supabase
-      .from("profiles").select("id").eq("user_id", userId).single();
+      .from("profiles").select("id").eq("id", await __activeProfileId(supabase, userId)).single();
     if (pErr) throw pErr;
 
     const rows = data.reviews

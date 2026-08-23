@@ -1,6 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+async function __activeProfileId(supabase: any, userId: string) {
+  const { activeProfileId } = await import("./clinic-context.server");
+  return await activeProfileId(supabase, userId);
+}
+
 /** List all consents (per-appointment + standalone) for a client. */
 export const listConsentsForClient = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -66,7 +71,7 @@ export const sendConsentToClient = createServerFn({ method: "POST" })
         const [{ data: tpl }, { data: client }, { data: profile }] = await Promise.all([
           context.supabase.from("consent_templates").select("name").eq("id", data.template_id).maybeSingle(),
           context.supabase.from("clinic_clients").select("full_name").eq("id", data.client_id).maybeSingle(),
-          context.supabase.from("profiles").select("id, clinic_name").eq("user_id", context.userId).maybeSingle(),
+          context.supabase.from("profiles").select("id, clinic_name").eq("id", await __activeProfileId(context.supabase, context.userId)).maybeSingle(),
         ]);
         const { tryEnqueueAppEmail, getPractitionerBranding } = await import("@/lib/email/send.server");
         const branding = await getPractitionerBranding((profile as { id?: string } | null)?.id);
@@ -96,7 +101,7 @@ export const resendConsentToClient = createServerFn({ method: "POST" })
   .inputValidator((i: { id: string; client_id: string; email?: string }) => i)
   .handler(async ({ data, context }) => {
     const { data: profile } = await context.supabase
-      .from("profiles").select("id, clinic_name").eq("user_id", context.userId).maybeSingle();
+      .from("profiles").select("id, clinic_name").eq("id", await __activeProfileId(context.supabase, context.userId)).maybeSingle();
     if (!profile) throw new Error("Profile not found");
 
     const { data: row, error } = await context.supabase
@@ -138,7 +143,7 @@ export const deleteConsentForClient = createServerFn({ method: "POST" })
   .inputValidator((i: { id: string }) => i)
   .handler(async ({ data, context }) => {
     const { data: profile } = await context.supabase
-      .from("profiles").select("id").eq("user_id", context.userId).maybeSingle();
+      .from("profiles").select("id").eq("id", await __activeProfileId(context.supabase, context.userId)).maybeSingle();
     if (!profile) throw new Error("Profile not found");
     const { error } = await context.supabase
       .from("appointment_consents")
@@ -174,7 +179,7 @@ export const setTreatmentConsents = createServerFn({ method: "POST" })
     const { data: profile } = await supabase
       .from("profiles")
       .select("id")
-      .eq("user_id", context.userId)
+      .eq("id", await __activeProfileId(context.supabase, context.userId))
       .single();
     if (!profile) throw new Error("Profile not found");
 
@@ -209,7 +214,7 @@ export const listMyConsentTemplates = createServerFn({ method: "GET" })
     const { data: profile } = await context.supabase
       .from("profiles")
       .select("id")
-      .eq("user_id", context.userId)
+      .eq("id", await __activeProfileId(context.supabase, context.userId))
       .single();
     if (!profile) return [];
     const { data } = await context.supabase
@@ -240,7 +245,7 @@ export const getConsentTemplateTreatmentIds = createServerFn({ method: "GET" })
   .inputValidator((i: { template_id: string }) => i)
   .handler(async ({ data, context }) => {
     const { data: profile } = await context.supabase
-      .from("profiles").select("id").eq("user_id", context.userId).maybeSingle();
+      .from("profiles").select("id").eq("id", await __activeProfileId(context.supabase, context.userId)).maybeSingle();
     if (!profile) return [];
     const { data: rows, error } = await context.supabase
       .from("treatment_consents")
@@ -257,7 +262,7 @@ export const setConsentTemplateTreatmentIds = createServerFn({ method: "POST" })
   .inputValidator((i: { template_id: string; treatment_ids: string[] }) => i)
   .handler(async ({ data, context }) => {
     const { data: profile } = await context.supabase
-      .from("profiles").select("id").eq("user_id", context.userId).maybeSingle();
+      .from("profiles").select("id").eq("id", await __activeProfileId(context.supabase, context.userId)).maybeSingle();
     if (!profile) throw new Error("Profile not found");
     await context.supabase
       .from("treatment_consents")
