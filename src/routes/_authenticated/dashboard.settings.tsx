@@ -9,6 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { SaveReminder } from "@/components/SaveReminder";
 import { sendWhatsAppTest } from "@/lib/whatsapp.functions";
+import { whatsappMessagingEnabled } from "@/lib/feature-flags";
 
 
 

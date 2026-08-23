@@ -6,6 +6,13 @@ export const sendWhatsAppTest = createServerFn({ method: 'POST' })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { phone: string }) => input)
   .handler(async ({ data, context }) => {
+    // Patient messaging is not live at MODO level yet — no clinic may test or
+    // trigger it. Remove this guard only when sending is genuinely switched on.
+    return {
+      ok: false,
+      message: 'Patient text messaging is not available yet.',
+    }
+    // eslint-disable-next-line no-unreachable
     const { supabase, userId } = context
     const { data: profile } = await supabase
       .from('profiles')
@@ -13,6 +20,7 @@ export const sendWhatsAppTest = createServerFn({ method: 'POST' })
       .eq('user_id', userId)
       .maybeSingle()
     if (!profile) throw new Error('Profile not found')
+
 
     const { sendWhatsApp, buildWhatsAppBody, toE164 } = await import('@/lib/whatsapp/send.server')
     const to = toE164(data.phone)
