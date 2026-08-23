@@ -81,6 +81,9 @@ type Appt = {
   amount_refunded_cents: number | null;
   checkout_discount_cents?: number | null;
   stripe_payment_intent_id: string | null;
+  card_capture_agreed_at?: string | null;
+  card_captured_at?: string | null;
+  card_capture_policy_text?: string | null;
 
 
   notes: string | null;
@@ -1391,9 +1394,30 @@ function CheckoutSheet({
             {outstanding > 0 && a.total_amount != null && (
               <Badge className="bg-amber-500 text-white hover:bg-amber-500">Outstanding £{outstanding.toFixed(2)}</Badge>
             )}
+            {a.card_captured_at && (
+              <Badge className="bg-sky-600 text-white hover:bg-sky-600">Card on file</Badge>
+            )}
+            {a.card_capture_agreed_at && !a.card_captured_at && (
+              <Badge variant="outline">Card capture pending</Badge>
+            )}
           </div>
         );
       })()}
+
+      {a.card_capture_agreed_at && (
+        <div className="rounded-lg border bg-muted/40 p-3 text-xs">
+          <div className="font-medium">
+            Cancellation policy accepted{" "}
+            {new Date(a.card_capture_agreed_at).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" })}
+          </div>
+          {a.card_capture_policy_text && (
+            <p className="mt-1 text-muted-foreground leading-relaxed">"{a.card_capture_policy_text}"</p>
+          )}
+          <p className="mt-1 text-muted-foreground">
+            {a.card_captured_at ? "Card securely stored — you can charge a no-show fee." : "Card not yet saved."}
+          </p>
+        </div>
+      )}
 
 
       {(a.patient_email || a.patient_phone) && (
