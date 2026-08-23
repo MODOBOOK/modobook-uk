@@ -19,6 +19,8 @@ import { getPractitionerBio } from "@/lib/practitioner-public.functions";
 // late-cancel fees).
 
 type EmbeddedPayment = {
+  /** "setup" = card capture (nothing charged today). */
+  mode?: "payment" | "setup";
   clientSecret: string;
   paymentIntentId: string;
   publishableKey: string;
@@ -96,8 +98,10 @@ function PayPage() {
   // Do not release on visibility changes: Stripe may temporarily hide/navigate
   // the page during bank authentication, and cancelling then causes the generic
   // "processing error" patients were seeing after pressing Pay.
+  const isSetup = details?.mode === "setup";
+
   useEffect(() => {
-    if (!details || confirmed) return;
+    if (!details || confirmed || details.mode === "setup") return;
     const release = () => {
       if (confirmed || confirmingRef.current) return;
       try {
@@ -154,10 +158,12 @@ function PayPage() {
     <main className="min-h-screen" style={{ color: textColor }}>
       <div className="mx-auto max-w-lg px-4 py-10">
         <h1 className="text-2xl font-semibold" style={{ fontFamily: headingFont, color: textColor }}>
-          Complete your payment
+          {isSetup ? "Secure your booking" : "Complete your payment"}
         </h1>
         <p className="mt-1 text-sm opacity-75">
-          Your card will be securely saved as per this clinic's booking policy.
+          {isSetup
+            ? "Nothing is charged today \u2014 your card is securely saved as per this clinic's cancellation policy."
+            : "Your card will be securely saved as per this clinic's booking policy."}
         </p>
 
         {error && (
@@ -177,11 +183,12 @@ function PayPage() {
             style={{ backgroundColor: cardBg, borderColor: cardBorder }}
           >
             <div className="mb-4 flex items-baseline justify-between">
-              <span className="text-sm opacity-75">Amount</span>
-              <span className="text-xl font-semibold">{amountLabel}</span>
+              <span className="text-sm opacity-75">{isSetup ? "Due today" : "Amount"}</span>
+              <span className="text-xl font-semibold">{isSetup ? "\u00a30.00" : amountLabel}</span>
             </div>
             <Elements stripe={stripe} options={options}>
               <CardForm
+                setupMode={isSetup}
                 returnUrl={details.returnUrl}
                 brand={brand}
                 accent={accent}
@@ -207,12 +214,14 @@ function PayPage() {
 }
 
 function CardForm({
+  setupMode,
   returnUrl,
   brand,
   accent,
   onConfirming,
   onPaymentError,
 }: {
+  setupMode: boolean;
   returnUrl: string;
   brand: string;
   accent: string;
@@ -232,13 +241,14 @@ function CardForm({
     // Mark as confirming so the page-abandon beacon doesn't fire when Stripe
     // redirects to return_url on success.
     onConfirming();
-    const { error } = await stripe.confirmPayment({
-      elements,
-      confirmParams: { return_url: returnUrl },
-    });
+    // Card capture confirms a SetupIntent (no charge); deposits and full
+    // payments confirm a PaymentIntent. Same embedded form either way.
+    const { error } = setupMode
+      ? await stripe.confirmSetup({ elements, confirmParams: { return_url: returnUrl } })
+      : await stripe.confirmPayment({ elements, confirmParams: { return_url: returnUrl } });
     if (error) {
       onPaymentError();
-      setMessage(error.message ?? "Payment failed. Please try again.");
+      setMessage(error.message ?? (setupMode ? "Could not save your card. Please try again." : "Payment failed. Please try again."));
       setSubmitting(false);
     }
   }
@@ -264,7 +274,7 @@ function CardForm({
         className="w-full"
         style={{ backgroundColor: brand, color: "#ffffff", borderColor: accent }}
       >
-        {submitting ? "Processing…" : "Pay now"}
+        {submitting ? "Processing…" : setupMode ? "Save card & confirm booking" : "Pay now"}
       </Button>
     </form>
   );
