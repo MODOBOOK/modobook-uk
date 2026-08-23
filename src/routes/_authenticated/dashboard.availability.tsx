@@ -619,7 +619,7 @@ function AvailabilityPage() {
                   ))}
                 </div>
               </div>
-              {rules.length === 0 && (
+              {activeRules.length === 0 && (
                 <div className="mt-4 text-center text-sm text-muted-foreground">No shifts yet — tap any cell to add your first.</div>
               )}
             </CardContent>
