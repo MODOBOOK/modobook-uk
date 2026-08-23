@@ -535,3 +535,46 @@ export const deletePreviousRota = createServerFn({ method: "POST" })
     if (error) throw error;
     return { ok: true };
   });
+
+/**
+ * Change the start/end dates of a whole rota period at once (the set of shifts
+ * currently shown as one rota). Pass null to clear a date.
+ */
+export const updateRotaPeriod = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    (d: { ids: string[]; effective_from?: string | null; effective_to?: string | null }) => d,
+  )
+  .handler(async ({ data, context }) => {
+    const profileId = await getProfileId(context.supabase, context.userId);
+    if (!profileId) throw new Error("Profile not found");
+    if (!data.ids?.length) return { ok: true, updated: 0 };
+    const patch: { effective_from?: string | null; effective_to?: string | null } = {};
+    if ("effective_from" in data) patch.effective_from = data.effective_from || null;
+    if ("effective_to" in data) patch.effective_to = data.effective_to || null;
+    if (Object.keys(patch).length === 0) return { ok: true, updated: 0 };
+    const { error } = await context.supabase
+      .from("availability_rules")
+      .update(patch)
+      .eq("profile_id", profileId)
+      .in("id", data.ids);
+    if (error) throw error;
+    return { ok: true, updated: data.ids.length };
+  });
+
+/** Permanently delete a whole rota period (by its shift ids). */
+export const deleteRotaPeriod = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { ids: string[] }) => d)
+  .handler(async ({ data, context }) => {
+    const profileId = await getProfileId(context.supabase, context.userId);
+    if (!profileId) throw new Error("Profile not found");
+    if (!data.ids?.length) return { ok: true };
+    const { error } = await context.supabase
+      .from("availability_rules")
+      .delete()
+      .eq("profile_id", profileId)
+      .in("id", data.ids);
+    if (error) throw error;
+    return { ok: true };
+  });
