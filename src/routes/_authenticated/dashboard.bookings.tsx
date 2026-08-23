@@ -686,7 +686,9 @@ function BookingsPage() {
                 );
               })}
             </div>
+            </div>
           </div>
+
         </Card>
       )}
 
