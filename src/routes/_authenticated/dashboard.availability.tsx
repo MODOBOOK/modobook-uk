@@ -1045,6 +1045,13 @@ function AvailabilityPage() {
               </div>
             )}
             <div className="grid grid-cols-2 gap-3">
+              <div className="col-span-2 flex items-center gap-2">
+                <Checkbox
+                  checked={!form.effective_to}
+                  onCheckedChange={(v) => setForm({ ...form, effective_to: v ? "" : (form.effective_to || today) })}
+                />
+                <span className="text-sm">Rolling shift — repeats with no end date</span>
+              </div>
               <div>
                 <Label>Rota starts</Label>
                 <Input
@@ -1053,16 +1060,18 @@ function AvailabilityPage() {
                   onChange={(e) => setForm({ ...form, effective_from: e.target.value })}
                 />
               </div>
-              <div>
-                <Label>Rota ends</Label>
-                <Input
-                  type="date"
-                  value={form.effective_to}
-                  onChange={(e) => setForm({ ...form, effective_to: e.target.value })}
-                />
-              </div>
+              {!!form.effective_to && (
+                <div>
+                  <Label>Rota ends</Label>
+                  <Input
+                    type="date"
+                    value={form.effective_to}
+                    onChange={(e) => setForm({ ...form, effective_to: e.target.value })}
+                  />
+                </div>
+              )}
               <p className="col-span-2 -mt-1 text-xs text-muted-foreground">
-                Leave blank for no limit. Set an end date to finish a rota, then add a new shift starting the next day.
+                Rolling shifts run indefinitely. Untick to set an end date and finish the rota on a given day.
               </p>
             </div>
             {cycleLength > 1 && (
