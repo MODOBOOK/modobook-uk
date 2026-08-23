@@ -2,7 +2,12 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo } from "react";
 import { getPublicPaymentOptions, type PaymentChoice } from "@/lib/public-booking.functions";
-import { CreditCard } from "lucide-react";
+import { CreditCard, ShieldCheck } from "lucide-react";
+
+type BookingMode = "deposit" | "full" | "cash" | "card_capture";
+
+const DEFAULT_POLICY =
+  "I authorise the clinic to securely store my card details and to charge the cancellation or no-show fee set out in their booking policy if I cancel late or do not attend.";
 
 type ConfiguredOptions = {
   configured: true;
@@ -14,6 +19,8 @@ type ConfiguredOptions = {
   depositEnabled: boolean;
   cashEnabled: boolean;
   cashOnlyBalance: boolean;
+  cardCaptureEnabled: boolean;
+  cardCapturePolicy: string | null;
   depositCents: number;
   depositType: "fixed" | "percent";
   depositPercent: number;
@@ -78,8 +85,8 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
 
 
   const availableModes = useMemo(() => {
-    if (!configured) return [] as Array<"deposit" | "full" | "cash">;
-    const arr: Array<"deposit" | "full" | "cash"> = [];
+    if (!configured) return [] as BookingMode[];
+    const arr: BookingMode[] = [];
     const o = opts as ConfiguredOptions;
     // If the deposit equals or exceeds the treatment total, the deposit
     // effectively IS the full payment — hide the deposit option and only
@@ -88,10 +95,14 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
     if (o.requireDepositToConfirm && !depositWaived) {
       if (depositMakesSense) arr.push("deposit");
       if (o.fullCardEnabled || o.klarnaEnabled || o.clearpayEnabled) arr.push("full");
+      // Card on file secures the booking without charging now — a valid
+      // alternative to a deposit when the clinic offers it.
+      if (o.cardCaptureEnabled && o.cardEnabled) arr.push("card_capture");
       return arr;
     }
     if (depositMakesSense) arr.push("deposit");
     if (o.fullCardEnabled || o.klarnaEnabled || o.clearpayEnabled) arr.push("full");
+    if (o.cardCaptureEnabled && o.cardEnabled) arr.push("card_capture");
     if (o.cashEnabled || depositWaived) arr.push("cash");
     return arr;
   }, [configured, opts, depositWaived, effectiveDepositCents, treatmentTotalCents]);
@@ -105,7 +116,7 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
     if (!configured) return [] as Array<"card" | "klarna" | "clearpay">;
     const o = opts as ConfiguredOptions;
     const mode = value?.mode ?? availableModes[0];
-    if (mode === "deposit") {
+    if (mode === "deposit" || mode === "card_capture") {
       return o.cardEnabled ? (["card"] as Array<"card" | "klarna" | "clearpay">) : [];
     }
     const arr: Array<"card" | "klarna" | "clearpay"> = [];
@@ -139,7 +150,7 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
     if (!value) return;
     const chosenMode = availableModes.includes(value.mode) ? value.mode : availableModes[0];
     // Cash mode doesn't need a method; keep any prior method for stability.
-    const needsMethod = chosenMode !== "cash";
+    const needsMethod = chosenMode !== "cash" && chosenMode !== "card_capture";
     const chosenMethod = availableMethods.includes(value.method)
       ? value.method
       : (availableMethods[0] ?? value.method);
@@ -147,7 +158,7 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
     if (!chosenMode || (needsMethod && !chosenMethod)) {
       onChange(null);
     } else if (normalizedMode !== value.mode || chosenMethod !== value.method) {
-      onChange({ mode: normalizedMode, method: chosenMethod });
+      onChange({ ...value, mode: normalizedMode, method: chosenMethod });
     }
   }, [value, configured, opts, availableModes, availableMethods, effectiveDepositCents, treatmentTotalCents, depositWaived, onChange]);
 
@@ -162,7 +173,7 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
     const method = availableMethods.includes(value.method) ? value.method : (availableMethods[0] ?? "card");
     // When deposit equals the full price, treat it as a full payment.
     const normalizedMode = mode === "deposit" && effectiveDepositCents === treatmentTotalCents ? "full" : mode;
-    return { mode: normalizedMode, method };
+    return { mode: normalizedMode, method, policyAgreed: value.policyAgreed === true };
   }, [value, opts, availableModes, availableMethods, depositWaived, effectiveDepositCents, treatmentTotalCents]);
 
 
@@ -222,14 +233,20 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
     };
   };
 
-  const selectMode = (mode: "deposit" | "full" | "cash") => {
+  const selectMode = (mode: BookingMode) => {
     const method = mode === "deposit" && o.requireDepositToConfirm && availableMethods.includes("card")
       ? "card"
       : availableMethods[0] ?? "card";
     if (!chosen) {
       onChange({ mode, method });
     } else {
-      onChange({ ...chosen, mode, method: mode === "deposit" ? method : chosen.method });
+      onChange({
+        ...chosen,
+        mode,
+        method: mode === "deposit" || mode === "card_capture" ? method : chosen.method,
+        // Consent is specific to the card-capture option; drop it otherwise.
+        policyAgreed: mode === "card_capture" ? chosen.policyAgreed === true : undefined,
+      });
     }
   };
 
@@ -242,6 +259,8 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
   };
 
   const isCash = chosen?.mode === "cash";
+  const isCardCapture = chosen?.mode === "card_capture";
+  const policyText = (o.cardCapturePolicy ?? "").trim() || DEFAULT_POLICY;
 
   return (
     <div className="rounded-2xl border-2 p-4 sm:p-5" style={cardStyle}>
@@ -279,6 +298,21 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
                 </div>
               </button>
             )}
+            {availableModes.includes("card_capture") && (
+              <button
+                type="button"
+                onClick={() => selectMode("card_capture")}
+                className="text-left rounded-xl border-2 px-3 py-2.5 transition sm:col-span-2"
+                style={optionStyle(isCardCapture)}
+              >
+                <div className="text-sm font-semibold flex items-center gap-1.5">
+                  <ShieldCheck className="h-3.5 w-3.5" /> Secure with card details
+                </div>
+                <div className="text-xs opacity-75">
+                  Nothing charged today — your card is stored securely and only used if the clinic's cancellation policy applies.
+                </div>
+              </button>
+            )}
             {availableModes.includes("cash") && (
               <button
                 type="button"
@@ -294,7 +328,7 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
         </div>
       )}
 
-      {!isCash && availableMethods.length > 0 && (
+      {!isCash && !isCardCapture && availableMethods.length > 0 && (
         <div>
           <div className="text-[11px] uppercase tracking-[0.14em] opacity-60 mb-2">Method</div>
           <div className="grid grid-cols-3 gap-2">
@@ -314,8 +348,40 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
         </div>
       )}
 
+      {isCardCapture && (
+        <label
+          className="mt-4 flex items-start gap-2.5 rounded-xl border-2 px-3 py-2.5 text-xs leading-relaxed cursor-pointer"
+          style={optionStyle(chosen?.policyAgreed === true)}
+        >
+          <input
+            type="checkbox"
+            className="mt-0.5 h-4 w-4 shrink-0"
+            checked={chosen?.policyAgreed === true}
+            onChange={(e) =>
+              onChange({ mode: "card_capture", method: "card", policyAgreed: e.target.checked })
+            }
+          />
+          <span>{policyText}</span>
+        </label>
+      )}
+
       {chosen ? (
-        isCash ? (
+        isCardCapture ? (
+          <div
+            className="mt-4 pt-3 text-sm border-t"
+            style={accent ? { borderColor: `color-mix(in oklab, ${accent} 25%, transparent)` } : undefined}
+          >
+            <div className="flex items-baseline justify-between">
+              <span className="font-medium">Due today</span>
+              <span className="text-lg font-bold" style={headingStyle}>£0.00</span>
+            </div>
+            <p className="mt-1 text-xs opacity-70">
+              {chosen.policyAgreed
+                ? `You'll be taken to a secure Stripe page to save your card. ${formatGBP(treatmentTotalCents)} is due at your appointment.`
+                : "Please tick the box above to continue."}
+            </p>
+          </div>
+        ) : isCash ? (
           <div
             className="mt-4 pt-3 text-sm border-t"
             style={accent ? { borderColor: `color-mix(in oklab, ${accent} 25%, transparent)` } : undefined}
