@@ -503,6 +503,9 @@ export const getMonthAvailability = createServerFn({ method: "GET" })
 
 
 
+export const DEFAULT_CARD_CAPTURE_POLICY =
+  "I authorise the clinic to securely store my card details and to charge the cancellation or no-show fee set out in their booking policy if I cancel late or do not attend.";
+
 export type PaymentChoice = {
   /** "card_capture" = store the card (no charge now) and pay in clinic. */
   mode: "deposit" | "full" | "cash" | "card_capture";
@@ -877,6 +880,48 @@ async function maybeCreateBookingCheckout(args: {
   if (args.choice?.mode === "cash" && !depositRequiredForProfile(p)) return null;
   if (!p.stripe_connect_account_id) return null;
   if (p.stripe_connect_onboarding_status && p.stripe_connect_onboarding_status !== "active") return null;
+
+  // "Save my card, pay in clinic": capture the card with a £0 Stripe setup
+  // session, record the patient's acceptance of the cancellation policy on the
+  // appointment, and confirm once the card is stored (webhook).
+  if (args.choice?.mode === "card_capture" && p.payment_card_capture_enabled && args.choice.policyAgreed) {
+    const policyText = (p.card_capture_policy_text ?? "").trim() || DEFAULT_CARD_CAPTURE_POLICY;
+    try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      await supabaseAdmin
+        .from("appointments")
+        .update({
+          card_capture_agreed_at: new Date().toISOString(),
+          card_capture_policy_text: policyText,
+        } as never)
+        .in("id", args.appointmentIds);
+    } catch (e) {
+      console.error("[maybeCreateBookingCheckout] recording card-capture consent failed", e);
+    }
+    try {
+      const origin0 = process.env.PUBLIC_APP_URL || process.env.APP_URL || "https://modobook.uk";
+      const { createCardCaptureSession } = await import("./stripe.server");
+      const session = await createCardCaptureSession({
+        accountId: p.stripe_connect_account_id,
+        customerEmail: args.patientEmail,
+        successUrl: `${origin0}/m/${p.slug ?? ""}/account?card_saved=1&session_id={CHECKOUT_SESSION_ID}`,
+        cancelUrl: `${origin0}/m/${p.slug ?? ""}`,
+        metadata: {
+          appointment_ids: args.appointmentIds.join(","),
+          kind: "card_capture",
+          patient_email: args.patientEmail,
+        },
+        idempotencyKey: args.dedupeKey
+          ? `modo:${args.dedupeKey}:card_capture:${Math.floor(Date.now() / (10 * 60 * 1000))}`
+          : undefined,
+      });
+      if (!session.url) return null;
+      return { kind: "hosted", checkoutUrl: session.url };
+    } catch (e) {
+      console.error("[maybeCreateBookingCheckout] card capture session error", e);
+      return null;
+    }
+  }
 
 
 
