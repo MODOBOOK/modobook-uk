@@ -120,6 +120,49 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
               const session = event.data.object as Stripe.Checkout.Session;
               const metadata = session.metadata ?? {};
 
+              // Card capture: no money moves. The patient saved a card against
+              // the clinic's Stripe account, so store it on the appointment and
+              // confirm the booking.
+              if (session.mode === "setup" && metadata.kind === "card_capture") {
+                const ids = String(metadata.appointment_ids ?? "")
+                  .split(",")
+                  .map((s) => s.trim())
+                  .filter(Boolean);
+                let paymentMethodId: string | null = null;
+                let customerId = typeof session.customer === "string" ? session.customer : session.customer?.id ?? null;
+                try {
+                  const setupIntentId = typeof session.setup_intent === "string"
+                    ? session.setup_intent
+                    : session.setup_intent?.id;
+                  if (setupIntentId) {
+                    const si = await stripe.setupIntents.retrieve(
+                      setupIntentId,
+                      connectedAccountId ? { stripeAccount: connectedAccountId } : undefined,
+                    );
+                    paymentMethodId = typeof si.payment_method === "string"
+                      ? si.payment_method
+                      : si.payment_method?.id ?? null;
+                    customerId = customerId ?? (typeof si.customer === "string" ? si.customer : si.customer?.id ?? null);
+                  }
+                } catch (e) {
+                  console.error("[stripe webhook] card_capture setup intent lookup failed", e);
+                }
+                for (const apptId of ids) {
+                  await supabaseAdmin
+                    .from("appointments")
+                    .update({
+                      status: "confirmed",
+                      card_captured_at: new Date().toISOString(),
+                      stripe_customer_id: customerId,
+                      stripe_payment_method_id: paymentMethodId,
+                    } as never)
+                    .eq("id", apptId);
+                  paidAppointmentIds.push(apptId);
+                }
+                break;
+              }
+
+
               // Platform subscriptions commonly return `no_payment_required`
               // while the free trial is active. Link them immediately rather
               // than treating them like an unpaid patient booking.
