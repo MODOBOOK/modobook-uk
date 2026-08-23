@@ -484,8 +484,51 @@ function AvailabilityPage() {
                   )}
                 </div>
               </div>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <Button size="sm" variant="outline" onClick={openEndRota}>
+                  <CalendarRange className="mr-2 h-4 w-4" /> End rota & start a new one
+                </Button>
+                {previousRotas.length > 0 && (
+                  <Button size="sm" variant="ghost" onClick={() => setShowPrevious((v) => !v)}>
+                    {showPrevious ? "Hide" : "Show"} previous rotas ({previousRotas.length})
+                  </Button>
+                )}
+              </div>
             </CardHeader>
           </Card>
+
+          {showPrevious && previousRotas.length > 0 && (
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">Previous rotas</CardTitle>
+                <CardDescription>Archived shift patterns — kept for your records, not bookable.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {previousRotas.map(([endedOn, rs]) => (
+                  <div key={endedOn} className="rounded-lg border p-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="text-sm font-medium">
+                        Ended {format(new Date(endedOn + "T00:00:00"), "d MMM yyyy")}
+                        <span className="ml-2 text-xs text-muted-foreground">{rs.length} shift{rs.length === 1 ? "" : "s"}</span>
+                      </div>
+                      <Button size="sm" variant="ghost" onClick={() => removePreviousRota(endedOn)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="mt-2 grid gap-1 sm:grid-cols-2">
+                      {rs.map((r) => (
+                        <div key={r.id} className="text-xs text-muted-foreground">
+                          {DAYS_SHORT[DOW_ORDER.indexOf(r.day_of_week)]} · {r.start_time.slice(0, 5)}–{r.end_time.slice(0, 5)}
+                          {locName(r.location_id) ? ` · ${locName(r.location_id)}` : ""}
+                          {pracName(r.practitioner_id) ? ` · ${pracName(r.practitioner_id)}` : ""}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
 
           <Card className="overflow-hidden">
             <CardHeader className="pb-3">
@@ -495,7 +538,7 @@ function AvailabilityPage() {
                   <CardDescription>Tap a cell to add or edit a shift.</CardDescription>
                 </div>
                 <div className="text-xs text-muted-foreground hidden sm:block">
-                  {rules.length} shift{rules.length === 1 ? "" : "s"}
+                  {activeRules.length} shift{activeRules.length === 1 ? "" : "s"}
                 </div>
               </div>
             </CardHeader>
