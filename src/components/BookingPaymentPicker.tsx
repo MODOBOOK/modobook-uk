@@ -103,7 +103,10 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
     if (depositMakesSense) arr.push("deposit");
     if (o.fullCardEnabled || o.klarnaEnabled || o.clearpayEnabled) arr.push("full");
     if (o.cardCaptureEnabled && o.cardEnabled) arr.push("card_capture");
-    if (o.cashEnabled || depositWaived) arr.push("cash");
+    // Respect the clinic's "Allow pay in clinic" setting. A waived deposit no
+    // longer forces the cash option on — it's only used as a last resort when
+    // no online option is available at all, so booking can still complete.
+    if (o.cashEnabled || arr.length === 0) arr.push("cash");
     return arr;
   }, [configured, opts, depositWaived, effectiveDepositCents, treatmentTotalCents]);
 
