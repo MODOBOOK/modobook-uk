@@ -201,6 +201,17 @@ export async function sendWhatsApp(input: SendWhatsAppInput): Promise<SendWhatsA
 
     let res: Response
     if (useSms) {
+      // UK networks content-filter SMS containing emoji / unusual symbols
+      // (GatewayAPI status 0x1904 "Message filtered by content"), so strip
+      // everything back to plain GSM-friendly text for the SMS route.
+      const smsBody = input.body
+        .replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}\u{2190}-\u{21FF}\u{2B00}-\u{2BFF}]/gu, '')
+        .replace(/[“”]/g, '"')
+        .replace(/[‘’]/g, "'")
+        .replace(/[–—]/g, '-')
+        .replace(/[ \t]+/g, ' ')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim()
       res = await fetch('https://connector-gateway.lovable.dev/gatewayapi/mobile/single', {
         method: 'POST',
         headers: {
@@ -211,7 +222,7 @@ export async function sendWhatsApp(input: SendWhatsAppInput): Promise<SendWhatsA
         body: JSON.stringify({
           sender: smsSender,
           recipient: Number(to.replace(/\D/g, '')),
-          message: input.body,
+          message: smsBody,
           reference: input.messageKey,
         }),
       })
