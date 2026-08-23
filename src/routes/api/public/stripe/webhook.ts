@@ -137,6 +137,7 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
                   if (setupIntentId) {
                     const si = await stripe.setupIntents.retrieve(
                       setupIntentId,
+                      {},
                       connectedAccountId ? { stripeAccount: connectedAccountId } : undefined,
                     );
                     paymentMethodId = typeof si.payment_method === "string"
