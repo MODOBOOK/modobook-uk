@@ -30,6 +30,8 @@ import {
   getRotaSettings,
   setRotaAnchor,
   listPractitioners,
+  endCurrentRota,
+  deletePreviousRota,
 } from "@/lib/availability.functions";
 import { listMyLocations } from "@/lib/locations.functions";
 import { WEEK_LETTERS, weekLetterFor, toMondayIso } from "@/lib/rota";
