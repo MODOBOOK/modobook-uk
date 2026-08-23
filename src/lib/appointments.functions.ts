@@ -328,6 +328,28 @@ export const rescheduleAppointment = createServerFn({ method: "POST" })
       .eq("profile_id", profile.id);
     if (uErr) throw uErr;
 
+    if (data.notifyPatient ?? true) {
+      try {
+        const { formatBookingDateTime, getPractitionerBranding } = await import("@/lib/email/send.server");
+        const { sendWhatsApp, buildWhatsAppBody } = await import("@/lib/whatsapp/send.server");
+        const branding = await getPractitionerBranding(profile.id);
+        await sendWhatsApp({
+          profileId: profile.id,
+          appointmentId: data.appointmentId,
+          kind: "booking-reschedule",
+          toPhone: (appt as { patient_phone?: string | null }).patient_phone,
+          messageKey: `wa-reschedule-${data.appointmentId}-${data.date}-${startHM}`,
+          body: buildWhatsAppBody("booking-reschedule", {
+            patientName: appt.patient_name,
+            clinicName: branding.clinicName,
+            dateTime: formatBookingDateTime(data.date, startHM),
+          }),
+        });
+      } catch (e) {
+        console.error("[rescheduleAppointment] whatsapp failed", e);
+      }
+    }
+
     if ((data.notifyPatient ?? true) && appt.patient_email) {
       try {
         const { tryEnqueueAppEmail, formatBookingDateTime, getPractitionerBranding } = await import("@/lib/email/send.server");
