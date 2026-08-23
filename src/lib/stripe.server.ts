@@ -690,3 +690,50 @@ export async function retrieveSetupSessionWithPaymentMethod(accountId: string, s
     { stripeAccount: accountId },
   );
 }
+
+// Card capture routed exactly like deposits: an embedded SetupIntent rendered
+// with our own Payment Element (no hosted Checkout redirect, no Apple Pay /
+// Google Pay / Link) so the stored card is always a reusable off-session card
+// on the clinic's connected account.
+export async function createCardCaptureSetupIntent(params: {
+  accountId: string;
+  customerEmail: string;
+  customerName?: string | null;
+  metadata?: Record<string, string>;
+  idempotencyKey?: string;
+}) {
+  const stripe = getStripe();
+
+  let customerId: string | null = null;
+  try {
+    const existing = await stripe.customers.list(
+      { email: params.customerEmail, limit: 1 },
+      { stripeAccount: params.accountId },
+    );
+    customerId = existing.data[0]?.id ?? null;
+  } catch {
+    customerId = null;
+  }
+  if (!customerId) {
+    const created = await stripe.customers.create(
+      { email: params.customerEmail, name: params.customerName ?? undefined },
+      { stripeAccount: params.accountId },
+    );
+    customerId = created.id;
+  }
+
+  const si = await stripe.setupIntents.create(
+    {
+      customer: customerId,
+      usage: "off_session",
+      automatic_payment_methods: { enabled: true, allow_redirects: "never" },
+      metadata: params.metadata,
+    },
+    {
+      stripeAccount: params.accountId,
+      ...(params.idempotencyKey ? { idempotencyKey: params.idempotencyKey } : {}),
+    },
+  );
+
+  return { clientSecret: si.client_secret, setupIntentId: si.id, customerId };
+}
