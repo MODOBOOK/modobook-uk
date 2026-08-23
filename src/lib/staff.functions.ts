@@ -145,15 +145,20 @@ export const inviteStaff = createServerFn({ method: "POST" })
 
 export const updateStaff = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { id: string; name?: string; role?: StaffRole; data_scope?: StaffScope; practitioner_id?: string | null; status?: StaffStatus }) => d)
+  .inputValidator((d: { id: string; name?: string; email?: string; role?: StaffRole; data_scope?: StaffScope; practitioner_id?: string | null; status?: StaffStatus }) => d)
   .handler(async ({ data, context }) => {
     const profileId = await getProfileId(context.supabase, context.userId);
     if (!profileId) throw new Error("Profile not found");
     const patch: {
-      name?: string; role?: StaffRole; data_scope?: StaffScope;
+      name?: string; invited_email?: string | null; role?: StaffRole; data_scope?: StaffScope;
       practitioner_id?: string | null; status?: StaffStatus;
     } = {};
     if (data.name !== undefined) patch.name = data.name;
+    if (data.email !== undefined) {
+      const em = data.email.trim().toLowerCase();
+      if (em && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) throw new Error("Invalid email");
+      patch.invited_email = em || null;
+    }
     if (data.role !== undefined) patch.role = data.role;
     if (data.data_scope !== undefined) patch.data_scope = data.data_scope;
     if (data.practitioner_id !== undefined) patch.practitioner_id = data.practitioner_id;
