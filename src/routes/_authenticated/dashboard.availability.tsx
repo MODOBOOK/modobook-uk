@@ -277,8 +277,10 @@ function AvailabilityPage() {
     setForm({
       day_of_week: day, start: "09:00", end: "17:00", interval: "30",
       location_ids: [], practitioner_id: "none", weeks,
-      effective_from: activePeriod?.start ?? "",
-      effective_to: periodEndDates.length === 1 ? periodEndDates[0] : "",
+      effective_from: periodStart || activePeriod?.start || "",
+      effective_to: draft && activePeriod?.key === draft.start
+        ? draft.end
+        : (periodEndDates.length === 1 ? periodEndDates[0] : ""),
     });
     setDlgOpen(true);
   }
