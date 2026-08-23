@@ -149,7 +149,7 @@ export const cancelAppointment = createServerFn({ method: "POST" })
     if (!profileId) throw new Error("Profile not found");
     const { data: appt } = await context.supabase
       .from("appointments")
-      .select("id, patient_name, patient_email, scheduled_date, start_time, treatments(name)")
+      .select("id, patient_name, patient_email, patient_phone, scheduled_date, start_time, treatments(name)")
       .eq("id", data.id)
       .eq("profile_id", profileId)
       .maybeSingle();
@@ -167,6 +167,30 @@ export const cancelAppointment = createServerFn({ method: "POST" })
     } catch (e) { console.error("[cancelAppointment] room release failed", e); }
 
 
+
+    if (appt) {
+      try {
+        const { data: prof } = await context.supabase
+          .from("profiles").select("clinic_name, slug").eq("id", profileId).maybeSingle();
+        const { formatBookingDateTime } = await import("@/lib/email/send.server");
+        const { sendWhatsApp, buildWhatsAppBody } = await import("@/lib/whatsapp/send.server");
+        const origin = process.env.PUBLIC_APP_URL || process.env.APP_URL || "https://modobook.uk";
+        await sendWhatsApp({
+          profileId,
+          appointmentId: appt.id,
+          kind: "booking-cancellation",
+          toPhone: (appt as { patient_phone?: string | null }).patient_phone,
+          messageKey: `wa-cancel-${appt.id}`,
+          body: buildWhatsAppBody("booking-cancellation", {
+            patientName: appt.patient_name,
+            clinicName: prof?.clinic_name,
+            treatmentName: (appt as { treatments?: { name?: string } | null }).treatments?.name,
+            dateTime: formatBookingDateTime(appt.scheduled_date as string, appt.start_time as string),
+            bookingUrl: prof?.slug ? `${origin}/m/${prof.slug}` : origin,
+          }),
+        });
+      } catch (e) { console.error("[cancelAppointment] whatsapp failed", e); }
+    }
 
     if (appt?.patient_email) {
       try {
