@@ -262,11 +262,14 @@ function BookingsPage() {
     }
   }, [loading, view]);
 
-  const daysVisible = view === "day" ? 1 : view === "3day" ? 3 : view === "week" ? 7 : 0;
+  // In 3-day view we render a long horizontal strip (3 columns wide on screen)
+  // so you can keep scrolling sideways through following days.
+  const STRIP_DAYS = 21;
+  const isStrip = view === "3day";
 
   const days = useMemo(() => {
     if (view === "day") return [anchor];
-    if (view === "3day") return Array.from({ length: 3 }, (_, i) => addDays(anchor, i));
+    if (view === "3day") return Array.from({ length: STRIP_DAYS }, (_, i) => addDays(anchor, i));
     if (view === "week") {
       const start = startOfWeek(anchor);
       return Array.from({ length: 7 }, (_, i) => addDays(start, i));
