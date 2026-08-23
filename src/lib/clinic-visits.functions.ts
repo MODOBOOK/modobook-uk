@@ -4,7 +4,7 @@ import { z } from "zod";
 
 async function __activeProfileId(supabase: any, userId: string) {
   const { activeProfileId } = await import("./clinic-context.server");
-  return await activeProfileId(supabase, userId);
+  return (await activeProfileId(supabase, userId)) ?? "00000000-0000-0000-0000-000000000000";
 }
 
 const TimeStr = z.string().regex(/^\d{2}:\d{2}(:\d{2})?$/);

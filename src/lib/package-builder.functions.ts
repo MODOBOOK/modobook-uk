@@ -4,7 +4,7 @@ import { computeBuilderPrice, validateSelection, type BuilderRules } from "@/lib
 
 async function __activeProfileId(supabase: any, userId: string) {
   const { activeProfileId } = await import("./clinic-context.server");
-  return await activeProfileId(supabase, userId);
+  return (await activeProfileId(supabase, userId)) ?? "00000000-0000-0000-0000-000000000000";
 }
 
 export type BuilderInput = {
