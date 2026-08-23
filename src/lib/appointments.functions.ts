@@ -208,9 +208,26 @@ export const cancelAppointmentByToken = createServerFn({ method: "POST" })
         const { tryEnqueueAppEmail, formatBookingDateTime, getPractitionerBranding } = await import("@/lib/email/send.server");
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const { data: apptFull } = await supabaseAdmin
-          .from("appointments").select("profile_id").eq("id", a.id).maybeSingle();
+          .from("appointments").select("profile_id, patient_phone").eq("id", a.id).maybeSingle();
         const branding = await getPractitionerBranding((apptFull as { profile_id?: string } | null)?.profile_id);
         const origin = process.env.PUBLIC_APP_URL || process.env.APP_URL || "https://modobook.uk";
+        try {
+          const { sendWhatsApp, buildWhatsAppBody } = await import("@/lib/whatsapp/send.server");
+          await sendWhatsApp({
+            profileId: (apptFull as { profile_id?: string } | null)?.profile_id ?? null,
+            appointmentId: a.id,
+            kind: "booking-cancellation",
+            toPhone: (apptFull as { patient_phone?: string | null } | null)?.patient_phone,
+            messageKey: `wa-cancel-${a.id}`,
+            body: buildWhatsAppBody("booking-cancellation", {
+              patientName: a.patient_name,
+              clinicName: a.clinic_name ?? branding.clinicName,
+              treatmentName: a.treatment_name,
+              dateTime: a.scheduled_date && a.start_time ? formatBookingDateTime(a.scheduled_date, a.start_time) : null,
+              bookingUrl: a.clinic_slug ? `${origin}/m/${a.clinic_slug}` : origin,
+            }),
+          });
+        } catch (e) { console.error("[cancelAppointmentByToken] whatsapp failed", e); }
         await tryEnqueueAppEmail({
           templateName: "booking-cancellation",
           recipientEmail: a.patient_email,
