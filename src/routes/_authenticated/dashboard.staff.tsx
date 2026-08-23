@@ -77,7 +77,7 @@ function StaffPage() {
   function openEdit(s: Staff) {
     setEditing(s);
     setForm({
-      name: s.name, email: s.invited_email, role: s.role,
+      name: s.name, email: s.invited_email ?? "", role: s.role,
       data_scope: s.data_scope, practitioner_id: s.practitioner_id ?? "none",
     });
     setDlgOpen(true);
