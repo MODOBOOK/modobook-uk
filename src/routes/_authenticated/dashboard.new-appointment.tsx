@@ -692,27 +692,16 @@ function NewAppointmentPage() {
             })}
           </div>
 
-          {/* Add treatment dropdown */}
+          {/* Add treatment dropdown — searchable + grouped by category */}
           <div>
             <Label>Add treatment</Label>
-            <Select value="" onValueChange={(v) => { if (v) addTreatmentRow(v); }}>
-              <SelectTrigger><SelectValue placeholder="Select treatment to add" /></SelectTrigger>
-              <SelectContent className="max-h-[60vh]">
-                {treatmentGroups.map((g) => (
-                  <SelectGroup key={g.key}>
-                    <SelectLabel>{g.name}</SelectLabel>
-                    {g.items.map((t) => (
-                      <SelectItem key={t.id} value={t.id}>
-                        <span className="flex items-center gap-2">
-                          <Plus className="h-3 w-3 opacity-60" />
-                          {t.name} — £{Number(t.price ?? 0).toFixed(2)} · {t.duration}min
-                        </span>
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                ))}
-              </SelectContent>
-            </Select>
+            <TreatmentPicker
+              treatments={treatments}
+              categories={categories}
+              placeholder="Search or select treatment to add"
+              clearAfterSelect
+              onSelect={(id) => addTreatmentRow(id)}
+            />
           </div>
 
           {items.length > 0 && (
