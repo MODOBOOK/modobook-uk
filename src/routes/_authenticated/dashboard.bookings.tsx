@@ -9,6 +9,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useLinkFee } from "@/lib/use-link-fee";
+import { useIsMobile } from "@/hooks/use-mobile";
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import {
   ChevronLeft,
@@ -219,7 +221,14 @@ function BookingsPage() {
   const [showBlock, setShowBlock] = useState(false);
   const [showUnblock, setShowUnblock] = useState(false);
   const [now, setNow] = useState(new Date());
+  const isMobile = useIsMobile();
+  const nowTop = (() => {
+    const hr = now.getHours() + now.getMinutes() / 60;
+    if (hr < START_HOUR || hr > END_HOUR + 1) return null;
+    return (hr - START_HOUR) * HOUR_HEIGHT;
+  })();
   const scrollRef = useRef<HTMLDivElement>(null);
+
 
   async function refresh() {
     const [a, b, r, o, bd, l, rota] = await Promise.all([list(), listBlocks(), listRules(), listOverrides(), listBlockedDatesFn(), listLocations(), getRota()]);
@@ -532,35 +541,51 @@ function BookingsPage() {
         />
 
       ) : (
-        <Card className="overflow-hidden" style={{ ["--gutter" as any]: "44px" }}>
-          <div
-            className="sticky top-0 z-20 grid border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80"
-            style={{ gridTemplateColumns: `var(--gutter) repeat(${daysVisible}, 1fr)` }}
-          >
-            <div />
-            {days.map((d) => {
-              const isToday = ymd(d) === todayStr;
-              return (
-                <div key={ymd(d)} className={`flex flex-col items-center py-2 ${isToday ? "text-primary" : ""}`}>
-                  <span className="text-[10px] uppercase tracking-wide">{d.toLocaleDateString(undefined, { weekday: "short" })}</span>
-                  <span className={`mt-0.5 inline-flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold ${isToday ? "bg-primary text-primary-foreground" : ""}`}>
-                    {d.getDate()}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
+        <Card className="overflow-hidden" style={{ ["--gutter" as any]: "48px" }}>
+          <div ref={scrollRef} className="relative max-h-[75vh] overflow-auto overscroll-contain">
+            <div style={{ minWidth: isMobile ? `calc(var(--gutter) + ${daysVisible * 128}px)` : undefined }}>
+              <div
+                className="sticky top-0 z-30 grid border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80"
+                style={{ gridTemplateColumns: `var(--gutter) repeat(${daysVisible}, minmax(0, 1fr))` }}
+              >
+                <div className="sticky left-0 z-10 bg-background/95" />
+                {days.map((d) => {
+                  const isToday = ymd(d) === todayStr;
+                  return (
+                    <div key={ymd(d)} className={`flex flex-col items-center py-2 ${isToday ? "text-primary" : ""}`}>
+                      <span className="text-[10px] uppercase tracking-wide">{d.toLocaleDateString(undefined, { weekday: "short" })}</span>
+                      <span className={`mt-0.5 inline-flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold ${isToday ? "bg-primary text-primary-foreground" : ""}`}>
+                        {d.getDate()}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
 
-          <div ref={scrollRef} className="relative max-h-[75vh] overflow-y-auto">
-            <div className="grid relative" style={{ gridTemplateColumns: `var(--gutter) repeat(${daysVisible}, 1fr)`, height: totalHeight }}>
-              <div className="relative border-r">
+            <div className="grid relative" style={{ gridTemplateColumns: `var(--gutter) repeat(${daysVisible}, minmax(0, 1fr))`, height: totalHeight }}>
+              <div className="sticky left-0 z-20 border-r bg-background">
                 {HOURS.map((h) => (
                   <div key={h} className="absolute left-0 right-0 pr-1 text-right text-[10px] text-muted-foreground"
                     style={{ top: (h - START_HOUR) * HOUR_HEIGHT - 6 }}>
                     {String(h).padStart(2, "0")}:00
                   </div>
                 ))}
+                {nowTop != null && (
+                  <div
+                    className="absolute right-0.5 z-30 -translate-y-1/2 rounded-full bg-red-500 px-1 py-px text-[10px] font-semibold text-white"
+                    style={{ top: nowTop }}
+                  >
+                    {String(now.getHours()).padStart(2, "0")}:{String(now.getMinutes()).padStart(2, "0")}
+                  </div>
+                )}
               </div>
+              {nowTop != null && (
+                <div
+                  className="pointer-events-none absolute left-0 right-0 z-10 h-px bg-red-500"
+                  style={{ top: nowTop }}
+                />
+              )}
+
 
               {days.map((d) => {
                 const key = ymd(d);
@@ -583,20 +608,10 @@ function BookingsPage() {
                       <div key={h} className="absolute left-0 right-0 border-t border-dashed border-muted"
                         style={{ top: (h - START_HOUR) * HOUR_HEIGHT }} />
                     ))}
-                    {isToday && (() => {
-                      const hr = now.getHours() + now.getMinutes() / 60;
-                      if (hr < START_HOUR || hr > END_HOUR + 1) return null;
-                      const top = (hr - START_HOUR) * HOUR_HEIGHT;
-                      return (
-                        <>
-                          <div className="absolute left-0 right-0 z-10 h-px bg-red-500" style={{ top }} />
-                          <div className="absolute z-10 -translate-y-1/2 rounded-full border border-red-500 bg-background px-1 text-[10px] font-semibold text-red-500"
-                            style={{ top, left: 2 }}>
-                            {String(now.getHours()).padStart(2, "0")}:{String(now.getMinutes()).padStart(2, "0")}
-                          </div>
-                        </>
-                      );
-                    })()}
+                    {isToday && nowTop != null && (
+                      <div className="pointer-events-none absolute left-0 right-0 z-10 h-px bg-red-500" style={{ top: nowTop }} />
+                    )}
+
 
                     {/* Blocked times + appointments share one layout so nothing ever overlaps */}
                     {layoutOverlaps<any>([
@@ -680,7 +695,9 @@ function BookingsPage() {
                 );
               })}
             </div>
+            </div>
           </div>
+
         </Card>
       )}
 
