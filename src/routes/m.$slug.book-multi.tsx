@@ -1463,12 +1463,14 @@ function MultiBookPage() {
                       onChange={setPaymentChoice}
                       accent={brand}
                       depositOverrideCents={(() => {
-                        const overrides = treatments
-                          .map((t) => (t as { deposit_amount?: number | null }).deposit_amount)
-                          .filter((v): v is number => v != null && v > 0);
+                        const values = treatments.map((t) => (t as { deposit_amount?: number | null }).deposit_amount);
+                        // Every treatment explicitly waived (£0) → no deposit at all.
+                        if (values.length > 0 && values.every((v) => v != null && Number(v) <= 0)) return 0;
+                        const overrides = values.filter((v): v is number => v != null && v > 0);
                         if (overrides.length === 0) return null;
                         return Math.round(overrides.reduce((a, b) => a + b, 0) * 100);
                       })()}
+
                       splitInfo={anySplit ? { sessionCount: maxSessions, remainingPerSessionCents: Math.round(remainingPerSession * 100) } : null}
                     />
                   );

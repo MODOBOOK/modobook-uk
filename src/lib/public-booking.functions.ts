@@ -865,11 +865,13 @@ async function maybeCreateBookingCheckout(args: {
   if (!(args.totalAmount > 0)) return null;
 
   // Patient chose to pay in cash at the appointment — skip Stripe only when
-  // this clinic has not made an upfront deposit mandatory. Never trust a stale
+  // this clinic has not made an upfront deposit mandatory (or the treatment
+  // waives the deposit with an explicit £0 override). Never trust a stale
   // client-side cash choice to bypass a required deposit/card capture.
   if (args.choice?.mode === "cash" && !depositRequiredForProfile(p)) return null;
   if (!p.stripe_connect_account_id) return null;
   if (p.stripe_connect_onboarding_status && p.stripe_connect_onboarding_status !== "active") return null;
+
 
 
   const depositEnabled = !!p.payment_deposit_enabled;
@@ -895,8 +897,11 @@ async function maybeCreateBookingCheckout(args: {
       for (const r of rows ?? []) {
         const t = (r as { treatments?: { deposit_amount?: number | null; price?: number | null } | null }).treatments;
         const override = t?.deposit_amount != null ? Math.round(Number(t.deposit_amount) * 100) : null;
-        if (override != null && override > 0) {
-          total += override;
+        if (override != null) {
+          // An explicit override wins — including £0, which waives the deposit
+          // for this treatment entirely.
+          total += Math.max(0, override);
+
         } else if (depositTypeMode === "percent" && depositPct > 0) {
           const priceCents = Math.round(Number(t?.price ?? 0) * 100);
           total += Math.round((priceCents * depositPct) / 100);
@@ -927,9 +932,22 @@ async function maybeCreateBookingCheckout(args: {
     : depositEnabled && (depositPer >= 100 || (depositTypeMode === "percent" && depositPct > 0));
   if (wantsDeposit && depositEnabled) {
     amountCents = await computeDepositTotalCents();
-    if (amountCents < 100) return null;
-    kind = "deposit";
+    if (amountCents < 100) {
+      // Deposit waived (e.g. treatment-level £0 override). Fall back to a full
+      // payment when the patient asked to pay now, otherwise take nothing —
+      // the booking is confirmed and settled in clinic.
+      if (args.choice?.mode === "full" && fullEnabled) {
+        amountCents = Math.round(args.totalAmount * 100);
+        kind = "checkout";
+        if (amountCents < 100) return null;
+      } else {
+        return null;
+      }
+    } else {
+      kind = "deposit";
+    }
   } else if (fullEnabled) {
+
     amountCents = Math.round(args.totalAmount * 100);
     kind = "checkout";
   } else {

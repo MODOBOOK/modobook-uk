@@ -61,15 +61,20 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
 
   const treatmentTotalCents = Math.round(totalAmount * 100);
 
+  // An explicit treatment-level override of £0 waives the deposit entirely for
+  // this treatment — the patient books with no deposit, or pays in full.
+  const depositWaived = depositOverrideCents != null && depositOverrideCents <= 0;
+
   const effectiveDepositCents = useMemo(() => {
     if (!configured) return 0;
+    if (depositWaived) return 0;
     const o = opts as ConfiguredOptions;
     if (depositOverrideCents != null && depositOverrideCents > 0) return depositOverrideCents;
     if (o.depositType === "percent" && o.depositPercent > 0) {
       return Math.round((treatmentTotalCents * o.depositPercent) / 100);
     }
     return o.depositCents;
-  }, [configured, opts, depositOverrideCents, treatmentTotalCents]);
+  }, [configured, opts, depositOverrideCents, depositWaived, treatmentTotalCents]);
 
 
   const availableModes = useMemo(() => {
@@ -79,17 +84,18 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
     // If the deposit equals or exceeds the treatment total, the deposit
     // effectively IS the full payment — hide the deposit option and only
     // offer "Pay in full".
-    const depositMakesSense = o.depositEnabled && effectiveDepositCents >= 100 && effectiveDepositCents < treatmentTotalCents;
-    if (o.requireDepositToConfirm) {
+    const depositMakesSense = !depositWaived && o.depositEnabled && effectiveDepositCents >= 100 && effectiveDepositCents < treatmentTotalCents;
+    if (o.requireDepositToConfirm && !depositWaived) {
       if (depositMakesSense) arr.push("deposit");
       if (o.fullCardEnabled || o.klarnaEnabled || o.clearpayEnabled) arr.push("full");
       return arr;
     }
     if (depositMakesSense) arr.push("deposit");
     if (o.fullCardEnabled || o.klarnaEnabled || o.clearpayEnabled) arr.push("full");
-    if (o.cashEnabled) arr.push("cash");
+    if (o.cashEnabled || depositWaived) arr.push("cash");
     return arr;
-  }, [configured, opts, effectiveDepositCents, treatmentTotalCents]);
+  }, [configured, opts, depositWaived, effectiveDepositCents, treatmentTotalCents]);
+
 
 
   // Methods depend on the selected mode: deposits are always card-only
@@ -120,11 +126,11 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
       return;
     }
     const o = opts as ConfiguredOptions;
-    if (!value && o.requireDepositToConfirm && o.depositEnabled && availableMethods.includes("card")) {
+    if (!value && !depositWaived && o.requireDepositToConfirm && o.depositEnabled && availableMethods.includes("card")) {
       onChange({ mode: "deposit", method: "card" });
       return;
     }
-    if (value?.mode === "deposit" && o.requireDepositToConfirm && o.depositEnabled && availableMethods.includes("card")) {
+    if (value?.mode === "deposit" && !depositWaived && o.requireDepositToConfirm && o.depositEnabled && availableMethods.includes("card")) {
       if (value?.mode !== "deposit" || value.method !== "card") {
         onChange({ mode: "deposit", method: "card" });
       }
@@ -143,13 +149,13 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
     } else if (normalizedMode !== value.mode || chosenMethod !== value.method) {
       onChange({ mode: normalizedMode, method: chosenMethod });
     }
-  }, [value, configured, opts, availableModes, availableMethods, effectiveDepositCents, treatmentTotalCents, onChange]);
+  }, [value, configured, opts, availableModes, availableMethods, effectiveDepositCents, treatmentTotalCents, depositWaived, onChange]);
 
 
   const chosen = useMemo(() => {
     if (!value) return null;
     const o = opts as ConfiguredOptions;
-    if (value.mode === "deposit" && o.requireDepositToConfirm && o.depositEnabled && availableMethods.includes("card")) {
+    if (value.mode === "deposit" && !depositWaived && o.requireDepositToConfirm && o.depositEnabled && availableMethods.includes("card")) {
       return { mode: "deposit" as const, method: "card" as const };
     }
     const mode = availableModes.includes(value.mode) ? value.mode : (availableModes[0] ?? "full");
@@ -157,7 +163,7 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
     // When deposit equals the full price, treat it as a full payment.
     const normalizedMode = mode === "deposit" && effectiveDepositCents === treatmentTotalCents ? "full" : mode;
     return { mode: normalizedMode, method };
-  }, [value, opts, availableModes, availableMethods, effectiveDepositCents, treatmentTotalCents]);
+  }, [value, opts, availableModes, availableMethods, depositWaived, effectiveDepositCents, treatmentTotalCents]);
 
 
   if (!configured || availableModes.length === 0) return null;
@@ -168,7 +174,7 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
   if (treatmentTotalCents <= 0) return null;
 
   const o = opts as ConfiguredOptions;
-  const forceDepositCard = o.requireDepositToConfirm && chosen?.mode === "deposit";
+  const forceDepositCard = !depositWaived && o.requireDepositToConfirm && chosen?.mode === "deposit";
 
   const baseCents = chosen?.mode === "deposit" ? effectiveDepositCents : treatmentTotalCents;
   const pct = !chosen
