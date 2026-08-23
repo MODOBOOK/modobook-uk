@@ -437,6 +437,31 @@ function SettingsPage() {
               </div>
             </div>
           )}
+          <ToggleRow
+            label="Automatic refunds on in-time cancellations"
+            hint="If a patient cancels before your cancel cutoff, anything they paid by card is refunded automatically."
+            checked={s.auto_refund_on_cancel}
+            onChange={(v) => set("auto_refund_on_cancel", v)}
+          />
+          <ToggleRow
+            label="Show a no-refund policy"
+            hint="Displays under your booking & cancellation policy on your booking page."
+            checked={s.no_refund_policy_enabled}
+            onChange={(v) => set("no_refund_policy_enabled", v)}
+          />
+          {s.no_refund_policy_enabled && (
+            <div className="ml-2 rounded-lg border bg-muted/30 p-3">
+              <Label className="text-sm font-medium">No-refund policy wording</Label>
+              <Textarea
+                className="mt-2"
+                rows={3}
+                placeholder="All deposits and payments are non-refundable. If you cancel or reschedule, your payment cannot be returned."
+                value={s.no_refund_policy_text}
+                onChange={(e) => set("no_refund_policy_text", e.target.value)}
+              />
+            </div>
+          )}
+
         </CardContent>
       </Card>
 
