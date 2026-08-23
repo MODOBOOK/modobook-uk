@@ -625,3 +625,68 @@ export async function voidOpenBookingPayments(params: {
     console.error("[voidOpenBookingPayments] list intents failed", e);
   }
 }
+
+// Card capture (no charge): a Stripe Checkout Session in `setup` mode that
+// collects and stores a reusable card against a Customer on the connected
+// account. Used by the "save my card, pay in clinic" booking option so the
+// clinic can charge a no-show / late-cancel fee later, off-session.
+export async function createCardCaptureSession(params: {
+  accountId: string;
+  customerEmail: string;
+  successUrl: string;
+  cancelUrl: string;
+  metadata?: Record<string, string>;
+  expiresInMinutes?: number;
+  idempotencyKey?: string;
+}) {
+  const stripe = getStripe();
+  const minutes = Math.max(30, params.expiresInMinutes ?? 30);
+  const expiresAt = Math.floor(Date.now() / 1000) + minutes * 60;
+
+  // Reuse the patient's existing Customer on this connected account so the
+  // saved card stays on one identity.
+  let customerId: string | null = null;
+  try {
+    const existing = await stripe.customers.list(
+      { email: params.customerEmail, limit: 1 },
+      { stripeAccount: params.accountId },
+    );
+    customerId = existing.data[0]?.id ?? null;
+  } catch {
+    customerId = null;
+  }
+  if (!customerId) {
+    const created = await stripe.customers.create(
+      { email: params.customerEmail },
+      { stripeAccount: params.accountId },
+    );
+    customerId = created.id;
+  }
+
+  return stripe.checkout.sessions.create(
+    {
+      mode: "setup",
+      payment_method_types: ["card"],
+      customer: customerId,
+      success_url: params.successUrl,
+      cancel_url: params.cancelUrl,
+      metadata: params.metadata,
+      setup_intent_data: { metadata: params.metadata },
+      expires_at: expiresAt,
+    },
+    {
+      stripeAccount: params.accountId,
+      ...(params.idempotencyKey ? { idempotencyKey: params.idempotencyKey } : {}),
+    },
+  );
+}
+
+// Retrieve a completed setup-mode Checkout Session with the saved card expanded.
+export async function retrieveSetupSessionWithPaymentMethod(accountId: string, sessionId: string) {
+  const stripe = getStripe();
+  return stripe.checkout.sessions.retrieve(
+    sessionId,
+    { expand: ["setup_intent", "setup_intent.payment_method"] },
+    { stripeAccount: accountId },
+  );
+}

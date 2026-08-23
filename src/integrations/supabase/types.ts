@@ -621,6 +621,9 @@ export type Database = {
           amount_paid_cents: number
           amount_refunded_cents: number
           base_amount: number | null
+          card_capture_agreed_at: string | null
+          card_capture_policy_text: string | null
+          card_captured_at: string | null
           checkout_completed_at: string | null
           checkout_discount_cents: number | null
           checkout_method: string | null
@@ -676,6 +679,9 @@ export type Database = {
           amount_paid_cents?: number
           amount_refunded_cents?: number
           base_amount?: number | null
+          card_capture_agreed_at?: string | null
+          card_capture_policy_text?: string | null
+          card_captured_at?: string | null
           checkout_completed_at?: string | null
           checkout_discount_cents?: number | null
           checkout_method?: string | null
@@ -731,6 +737,9 @@ export type Database = {
           amount_paid_cents?: number
           amount_refunded_cents?: number
           base_amount?: number | null
+          card_capture_agreed_at?: string | null
+          card_capture_policy_text?: string | null
+          card_captured_at?: string | null
           checkout_completed_at?: string | null
           checkout_discount_cents?: number | null
           checkout_method?: string | null
@@ -6460,6 +6469,7 @@ export type Database = {
           booking_smart_times_enabled: boolean
           brand_color: string | null
           cancellation_rules: Json | null
+          card_capture_policy_text: string | null
           cash_only_balance: boolean
           chooser_consultation_treatment_id: string | null
           chooser_consultation_treatment_ids: string[]
@@ -6513,6 +6523,7 @@ export type Database = {
           patient_cancel_cutoff_hours: number | null
           patient_reschedule_cutoff_hours: number | null
           patient_reschedule_max: number | null
+          payment_card_capture_enabled: boolean
           payment_card_full_enabled: boolean
           payment_clearpay_enabled: boolean
           payment_deposit_enabled: boolean
@@ -6590,6 +6601,7 @@ export type Database = {
           booking_smart_times_enabled?: boolean
           brand_color?: string | null
           cancellation_rules?: Json | null
+          card_capture_policy_text?: string | null
           cash_only_balance?: boolean
           chooser_consultation_treatment_id?: string | null
           chooser_consultation_treatment_ids?: string[]
@@ -6643,6 +6655,7 @@ export type Database = {
           patient_cancel_cutoff_hours?: number | null
           patient_reschedule_cutoff_hours?: number | null
           patient_reschedule_max?: number | null
+          payment_card_capture_enabled?: boolean
           payment_card_full_enabled?: boolean
           payment_clearpay_enabled?: boolean
           payment_deposit_enabled?: boolean
@@ -6720,6 +6733,7 @@ export type Database = {
           booking_smart_times_enabled?: boolean
           brand_color?: string | null
           cancellation_rules?: Json | null
+          card_capture_policy_text?: string | null
           cash_only_balance?: boolean
           chooser_consultation_treatment_id?: string | null
           chooser_consultation_treatment_ids?: string[]
@@ -6773,6 +6787,7 @@ export type Database = {
           patient_cancel_cutoff_hours?: number | null
           patient_reschedule_cutoff_hours?: number | null
           patient_reschedule_max?: number | null
+          payment_card_capture_enabled?: boolean
           payment_card_full_enabled?: boolean
           payment_clearpay_enabled?: boolean
           payment_deposit_enabled?: boolean

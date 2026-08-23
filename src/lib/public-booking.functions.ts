@@ -503,9 +503,15 @@ export const getMonthAvailability = createServerFn({ method: "GET" })
 
 
 
+export const DEFAULT_CARD_CAPTURE_POLICY =
+  "I authorise the clinic to securely store my card details and to charge the cancellation or no-show fee set out in their booking policy if I cancel late or do not attend.";
+
 export type PaymentChoice = {
-  mode: "deposit" | "full" | "cash";
+  /** "card_capture" = store the card (no charge now) and pay in clinic. */
+  mode: "deposit" | "full" | "cash" | "card_capture";
   method: "card" | "klarna" | "clearpay";
+  /** Patient ticked the clinic's cancellation / no-show policy. */
+  policyAgreed?: boolean;
 };
 
 // A booking either hands the patient off to Stripe's hosted checkout page,
@@ -532,7 +538,7 @@ export const getPublicPaymentOptions = createServerFn({ method: "GET" })
     const { data: prof } = await supabaseAdmin
       .from("profiles")
       .select(
-        "stripe_connect_account_id,stripe_connect_onboarding_status,payment_card_full_enabled,payment_deposit_enabled,require_deposit_to_confirm,payment_klarna_enabled,payment_clearpay_enabled,payment_pass_fees_to_customer,deposit_amount_cents,deposit_type,deposit_percent,payment_surcharge_card_enabled,payment_surcharge_card_percent,payment_surcharge_bnpl_enabled,payment_surcharge_bnpl_percent,payment_surcharge_deposit_enabled,payment_surcharge_deposit_percent,stripe_fee_pass_to_patient,stripe_fee_bnpl_pass_to_patient,stripe_fee_card_percent,stripe_fee_card_fixed_cents,stripe_fee_bnpl_percent,stripe_fee_bnpl_fixed_cents,allow_pay_in_clinic,cash_only_balance",
+        "stripe_connect_account_id,stripe_connect_onboarding_status,payment_card_full_enabled,payment_deposit_enabled,require_deposit_to_confirm,payment_klarna_enabled,payment_clearpay_enabled,payment_pass_fees_to_customer,deposit_amount_cents,deposit_type,deposit_percent,payment_surcharge_card_enabled,payment_surcharge_card_percent,payment_surcharge_bnpl_enabled,payment_surcharge_bnpl_percent,payment_surcharge_deposit_enabled,payment_surcharge_deposit_percent,stripe_fee_pass_to_patient,stripe_fee_bnpl_pass_to_patient,stripe_fee_card_percent,stripe_fee_card_fixed_cents,stripe_fee_bnpl_percent,stripe_fee_bnpl_fixed_cents,allow_pay_in_clinic,cash_only_balance,payment_card_capture_enabled,card_capture_policy_text",
       )
       .eq("slug", data.slug.toLowerCase())
       .maybeSingle();
@@ -554,6 +560,9 @@ export const getPublicPaymentOptions = createServerFn({ method: "GET" })
       clearpayEnabled: !!prof.payment_clearpay_enabled && !cashOnlyBalance,
       depositEnabled,
       cashEnabled: prof.allow_pay_in_clinic !== false,
+      cardCaptureEnabled: !!(prof as { payment_card_capture_enabled?: boolean }).payment_card_capture_enabled,
+      cardCapturePolicy:
+        ((prof as { card_capture_policy_text?: string | null }).card_capture_policy_text ?? "").trim() || null,
       cashOnlyBalance,
       depositCents: Math.max(0, Number(prof.deposit_amount_cents ?? 0)),
       depositType: ((prof as { deposit_type?: string | null }).deposit_type as "fixed" | "percent" | null) === "percent" ? "percent" as const : "fixed" as const,
@@ -607,7 +616,7 @@ export const requestBooking = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: prof } = await supabaseAdmin
       .from("profiles")
-      .select("auto_confirm_bookings,require_account_to_book,slug,clinic_name,stripe_connect_account_id,stripe_connect_onboarding_status,payment_deposit_enabled,require_deposit_to_confirm,deposit_amount_cents,deposit_type,deposit_percent,payment_card_full_enabled,payment_klarna_enabled,payment_clearpay_enabled,payment_pass_fees_to_customer,payment_surcharge_card_enabled,payment_surcharge_card_percent,payment_surcharge_bnpl_enabled,payment_surcharge_bnpl_percent,payment_surcharge_deposit_enabled,payment_surcharge_deposit_percent,stripe_fee_pass_to_patient,stripe_fee_bnpl_pass_to_patient,stripe_fee_card_percent,stripe_fee_card_fixed_cents,stripe_fee_bnpl_percent,stripe_fee_bnpl_fixed_cents,save_card_on_file")
+      .select("auto_confirm_bookings,require_account_to_book,slug,clinic_name,stripe_connect_account_id,stripe_connect_onboarding_status,payment_deposit_enabled,require_deposit_to_confirm,deposit_amount_cents,deposit_type,deposit_percent,payment_card_full_enabled,payment_klarna_enabled,payment_clearpay_enabled,payment_pass_fees_to_customer,payment_surcharge_card_enabled,payment_surcharge_card_percent,payment_surcharge_bnpl_enabled,payment_surcharge_bnpl_percent,payment_surcharge_deposit_enabled,payment_surcharge_deposit_percent,stripe_fee_pass_to_patient,stripe_fee_bnpl_pass_to_patient,stripe_fee_card_percent,stripe_fee_card_fixed_cents,stripe_fee_bnpl_percent,stripe_fee_bnpl_fixed_cents,save_card_on_file,payment_card_capture_enabled,card_capture_policy_text")
       .eq("id", data.profileId)
       .maybeSingle();
     if (prof?.require_account_to_book && !data.patientUserId) {
@@ -845,7 +854,10 @@ async function maybeCreateBookingCheckout(args: {
     stripe_fee_bnpl_percent?: number | string | null;
     stripe_fee_bnpl_fixed_cents?: number | string | null;
     save_card_on_file?: boolean | null;
+    payment_card_capture_enabled?: boolean | null;
+    card_capture_policy_text?: string | null;
     clinic_name?: string | null;
+
   } | null;
   appointmentIds: string[];
   totalAmount: number;
@@ -871,6 +883,48 @@ async function maybeCreateBookingCheckout(args: {
   if (args.choice?.mode === "cash" && !depositRequiredForProfile(p)) return null;
   if (!p.stripe_connect_account_id) return null;
   if (p.stripe_connect_onboarding_status && p.stripe_connect_onboarding_status !== "active") return null;
+
+  // "Save my card, pay in clinic": capture the card with a £0 Stripe setup
+  // session, record the patient's acceptance of the cancellation policy on the
+  // appointment, and confirm once the card is stored (webhook).
+  if (args.choice?.mode === "card_capture" && p.payment_card_capture_enabled && args.choice.policyAgreed) {
+    const policyText = (p.card_capture_policy_text ?? "").trim() || DEFAULT_CARD_CAPTURE_POLICY;
+    try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      await supabaseAdmin
+        .from("appointments")
+        .update({
+          card_capture_agreed_at: new Date().toISOString(),
+          card_capture_policy_text: policyText,
+        } as never)
+        .in("id", args.appointmentIds);
+    } catch (e) {
+      console.error("[maybeCreateBookingCheckout] recording card-capture consent failed", e);
+    }
+    try {
+      const origin0 = process.env.PUBLIC_APP_URL || process.env.APP_URL || "https://modobook.uk";
+      const { createCardCaptureSession } = await import("./stripe.server");
+      const session = await createCardCaptureSession({
+        accountId: p.stripe_connect_account_id,
+        customerEmail: args.patientEmail,
+        successUrl: `${origin0}/m/${p.slug ?? ""}/account?card_saved=1&session_id={CHECKOUT_SESSION_ID}`,
+        cancelUrl: `${origin0}/m/${p.slug ?? ""}`,
+        metadata: {
+          appointment_ids: args.appointmentIds.join(","),
+          kind: "card_capture",
+          patient_email: args.patientEmail,
+        },
+        idempotencyKey: args.dedupeKey
+          ? `modo:${args.dedupeKey}:card_capture:${Math.floor(Date.now() / (10 * 60 * 1000))}`
+          : undefined,
+      });
+      if (!session.url) return null;
+      return { kind: "hosted", checkoutUrl: session.url };
+    } catch (e) {
+      console.error("[maybeCreateBookingCheckout] card capture session error", e);
+      return null;
+    }
+  }
 
 
 
@@ -1194,7 +1248,7 @@ function bookingNeedsStripePayment(
   // Free bookings (£0) never require a Stripe payment, regardless of choice.
   if (totalAmount != null && !(totalAmount > 0)) return false;
   if (choice?.mode === "cash") return false;
-  if (choice?.mode === "deposit" || choice?.mode === "full") return true;
+  if (choice?.mode === "deposit" || choice?.mode === "full" || choice?.mode === "card_capture") return true;
   if (!profile) return false;
   if (!profile.stripe_connect_account_id) return false;
   if (profile.stripe_connect_onboarding_status && profile.stripe_connect_onboarding_status !== "active") return false;
@@ -1213,9 +1267,21 @@ function depositRequiredForProfile(profile: { payment_deposit_enabled?: boolean 
 }
 
 function normaliseBookingPaymentChoice(
-  profile: { payment_deposit_enabled?: boolean | null; require_deposit_to_confirm?: boolean | null } | null,
+  profile: {
+    payment_deposit_enabled?: boolean | null;
+    require_deposit_to_confirm?: boolean | null;
+    payment_card_capture_enabled?: boolean | null;
+  } | null,
   choice?: PaymentChoice | null,
 ): PaymentChoice | null {
+  // Card capture (no charge now) is only honoured when the clinic offers it
+  // and the patient ticked the cancellation policy.
+  if (choice?.mode === "card_capture") {
+    if (profile?.payment_card_capture_enabled && choice.policyAgreed) {
+      return { mode: "card_capture", method: "card", policyAgreed: true };
+    }
+    return null;
+  }
   // Deposits are mandatory whenever the clinic enables deposits, and deposits
   // must be card-only so Stripe can both charge today and save the card for file.
   if (choice?.mode === "deposit" || (depositRequiredForProfile(profile) && choice?.mode !== "full")) {
@@ -1264,7 +1330,7 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: prof } = await supabaseAdmin
       .from("profiles")
-      .select("auto_confirm_bookings,require_account_to_book,slug,clinic_name,stripe_connect_account_id,stripe_connect_onboarding_status,payment_deposit_enabled,require_deposit_to_confirm,deposit_amount_cents,deposit_type,deposit_percent,payment_card_full_enabled,payment_klarna_enabled,payment_clearpay_enabled,payment_pass_fees_to_customer,payment_surcharge_card_enabled,payment_surcharge_card_percent,payment_surcharge_bnpl_enabled,payment_surcharge_bnpl_percent,payment_surcharge_deposit_enabled,payment_surcharge_deposit_percent,stripe_fee_pass_to_patient,stripe_fee_bnpl_pass_to_patient,stripe_fee_card_percent,stripe_fee_card_fixed_cents,stripe_fee_bnpl_percent,stripe_fee_bnpl_fixed_cents,save_card_on_file")
+      .select("auto_confirm_bookings,require_account_to_book,slug,clinic_name,stripe_connect_account_id,stripe_connect_onboarding_status,payment_deposit_enabled,require_deposit_to_confirm,deposit_amount_cents,deposit_type,deposit_percent,payment_card_full_enabled,payment_klarna_enabled,payment_clearpay_enabled,payment_pass_fees_to_customer,payment_surcharge_card_enabled,payment_surcharge_card_percent,payment_surcharge_bnpl_enabled,payment_surcharge_bnpl_percent,payment_surcharge_deposit_enabled,payment_surcharge_deposit_percent,stripe_fee_pass_to_patient,stripe_fee_bnpl_pass_to_patient,stripe_fee_card_percent,stripe_fee_card_fixed_cents,stripe_fee_bnpl_percent,stripe_fee_bnpl_fixed_cents,save_card_on_file,payment_card_capture_enabled,card_capture_policy_text")
       .eq("id", data.profileId)
       .maybeSingle();
     if (prof?.require_account_to_book && !data.patientUserId) {
