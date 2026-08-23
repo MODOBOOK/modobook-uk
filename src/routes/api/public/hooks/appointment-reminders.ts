@@ -46,7 +46,7 @@ export const Route = createFileRoute('/api/public/hooks/appointment-reminders')(
 
             const { data: appts, error: apptErr } = await supabaseAdmin
               .from('appointments')
-              .select('id, patient_name, patient_email, scheduled_date, start_time, manage_token, profile_id, status, treatments(name), practitioners(name), locations(name, address_line1, city, postcode), profiles(clinic_name, slug)')
+              .select('id, patient_name, patient_email, patient_phone, scheduled_date, start_time, manage_token, profile_id, status, treatments(name), practitioners(name), locations(name, address_line1, city, postcode), profiles(clinic_name, slug)')
               .eq('profile_id', rule.profile_id)
               .in('status', ['confirmed', 'pending'])
               .gte('scheduled_date', startDate)
@@ -59,7 +59,6 @@ export const Route = createFileRoute('/api/public/hooks/appointment-reminders')(
 
             for (const raw of appts ?? []) {
               const a = raw as any
-              if (!a.patient_email) continue
               // Precise time check
               const apptMs = new Date(`${a.scheduled_date}T${a.start_time}:00`).getTime()
               if (Number.isNaN(apptMs) || apptMs < windowStartMs || apptMs > windowEndMs) continue
@@ -83,6 +82,38 @@ export const Route = createFileRoute('/api/public/hooks/appointment-reminders')(
                 ? `${origin}/m/${a.profiles.slug}/manage/${a.manage_token}`
                 : undefined
               const loc = a.locations
+
+              // WhatsApp reminder (per-clinic toggle; no-ops when off / no phone)
+              try {
+                const { sendWhatsApp, buildWhatsAppBody } = await import('@/lib/whatsapp/send.server')
+                await sendWhatsApp({
+                  profileId: a.profile_id,
+                  appointmentId: a.id,
+                  kind: 'appointment-reminder',
+                  toPhone: a.patient_phone,
+                  messageKey: `wa-reminder-${a.id}-${rule.id}`,
+                  body: buildWhatsAppBody('appointment-reminder', {
+                    patientName: a.patient_name,
+                    clinicName: a.profiles?.clinic_name ?? branding.clinicName,
+                    treatmentName: a.treatments?.name,
+                    dateTime: formatBookingDateTime(a.scheduled_date, a.start_time),
+                    locationName: loc?.name,
+                    locationAddress: loc ? [loc.address_line1, loc.city, loc.postcode].filter(Boolean).join(', ') : undefined,
+                    manageUrl,
+                    hoursBefore: rule.hours_before,
+                  }),
+                })
+              } catch (e) {
+                console.error('[whatsapp] appointment reminder failed', e)
+              }
+
+              if (!a.patient_email) {
+                await supabaseAdmin
+                  .from('appointment_reminders_sent')
+                  .insert({ appointment_id: a.id, rule_id: rule.id })
+                  .then(() => {}, () => {})
+                continue
+              }
 
               const res = await tryEnqueueAppEmail({
                 templateName: 'appointment-reminder',

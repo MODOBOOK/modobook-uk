@@ -279,7 +279,7 @@ export async function sendBookingConfirmationEmails(appointmentIds: string[]) {
 
   const { data: appts, error } = await supabaseAdmin
     .from('appointments')
-    .select('id, patient_name, patient_email, scheduled_date, start_time, manage_token, profile_id, treatments(name), practitioners(name), locations(name, address_line1, city, postcode), profiles(clinic_name, slug)')
+    .select('id, patient_name, patient_email, patient_phone, scheduled_date, start_time, manage_token, profile_id, treatments(name), practitioners(name), locations(name, address_line1, city, postcode), profiles(clinic_name, slug)')
     .in('id', appointmentIds)
 
   if (error) throw error
@@ -292,6 +292,7 @@ export async function sendBookingConfirmationEmails(appointmentIds: string[]) {
       id: string
       patient_name: string | null
       patient_email: string | null
+      patient_phone: string | null
       scheduled_date: string
       start_time: string
       manage_token: string | null
@@ -301,8 +302,6 @@ export async function sendBookingConfirmationEmails(appointmentIds: string[]) {
       locations?: { name?: string; address_line1?: string; city?: string; postcode?: string } | null
       profiles?: { clinic_name?: string; slug?: string } | null
     }
-
-    if (!a.patient_email) continue
 
     let branding = brandingCache.get(a.profile_id)
     if (!branding) {
@@ -314,6 +313,33 @@ export async function sendBookingConfirmationEmails(appointmentIds: string[]) {
       ? `${origin}/m/${a.profiles.slug}/manage/${a.manage_token}`
       : undefined
     const loc = a.locations
+
+    // WhatsApp confirmation (per-clinic toggle; no-ops when off / no phone)
+    try {
+      const { sendWhatsApp, buildWhatsAppBody } = await import('@/lib/whatsapp/send.server')
+      const ctx = {
+        patientName: a.patient_name,
+        clinicName: a.profiles?.clinic_name ?? branding.clinicName,
+        treatmentName: a.treatments?.name,
+        dateTime: formatBookingDateTime(a.scheduled_date, a.start_time),
+        locationName: loc?.name,
+        locationAddress: loc ? [loc.address_line1, loc.city, loc.postcode].filter(Boolean).join(', ') : undefined,
+        manageUrl,
+      }
+      await sendWhatsApp({
+        profileId: a.profile_id,
+        appointmentId: a.id,
+        kind: 'booking-confirmation',
+        toPhone: a.patient_phone,
+        messageKey: `wa-confirm-${a.id}`,
+        body: buildWhatsAppBody('booking-confirmation', ctx),
+      })
+    } catch (e) {
+      console.error('[whatsapp] booking confirmation failed', e)
+    }
+
+    if (!a.patient_email) continue
+
     const res = await tryEnqueueAppEmail({
       templateName: 'booking-confirmation',
       recipientEmail: a.patient_email,

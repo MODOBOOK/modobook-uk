@@ -208,9 +208,26 @@ export const cancelAppointmentByToken = createServerFn({ method: "POST" })
         const { tryEnqueueAppEmail, formatBookingDateTime, getPractitionerBranding } = await import("@/lib/email/send.server");
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const { data: apptFull } = await supabaseAdmin
-          .from("appointments").select("profile_id").eq("id", a.id).maybeSingle();
+          .from("appointments").select("profile_id, patient_phone").eq("id", a.id).maybeSingle();
         const branding = await getPractitionerBranding((apptFull as { profile_id?: string } | null)?.profile_id);
         const origin = process.env.PUBLIC_APP_URL || process.env.APP_URL || "https://modobook.uk";
+        try {
+          const { sendWhatsApp, buildWhatsAppBody } = await import("@/lib/whatsapp/send.server");
+          await sendWhatsApp({
+            profileId: (apptFull as { profile_id?: string } | null)?.profile_id ?? null,
+            appointmentId: a.id,
+            kind: "booking-cancellation",
+            toPhone: (apptFull as { patient_phone?: string | null } | null)?.patient_phone,
+            messageKey: `wa-cancel-${a.id}`,
+            body: buildWhatsAppBody("booking-cancellation", {
+              patientName: a.patient_name,
+              clinicName: a.clinic_name ?? branding.clinicName,
+              treatmentName: a.treatment_name,
+              dateTime: a.scheduled_date && a.start_time ? formatBookingDateTime(a.scheduled_date, a.start_time) : null,
+              bookingUrl: a.clinic_slug ? `${origin}/m/${a.clinic_slug}` : origin,
+            }),
+          });
+        } catch (e) { console.error("[cancelAppointmentByToken] whatsapp failed", e); }
         await tryEnqueueAppEmail({
           templateName: "booking-cancellation",
           recipientEmail: a.patient_email,
@@ -307,7 +324,7 @@ export const rescheduleAppointment = createServerFn({ method: "POST" })
 
     const { data: appt, error: aErr } = await supabase
       .from("appointments")
-      .select("id, patient_name, patient_email, scheduled_date, start_time, end_time")
+      .select("id, patient_name, patient_email, patient_phone, scheduled_date, start_time, end_time")
       .eq("id", data.appointmentId)
       .eq("profile_id", profile.id)
       .maybeSingle();
@@ -327,6 +344,28 @@ export const rescheduleAppointment = createServerFn({ method: "POST" })
       .eq("id", data.appointmentId)
       .eq("profile_id", profile.id);
     if (uErr) throw uErr;
+
+    if (data.notifyPatient ?? true) {
+      try {
+        const { formatBookingDateTime, getPractitionerBranding } = await import("@/lib/email/send.server");
+        const { sendWhatsApp, buildWhatsAppBody } = await import("@/lib/whatsapp/send.server");
+        const branding = await getPractitionerBranding(profile.id);
+        await sendWhatsApp({
+          profileId: profile.id,
+          appointmentId: data.appointmentId,
+          kind: "booking-reschedule",
+          toPhone: (appt as { patient_phone?: string | null }).patient_phone,
+          messageKey: `wa-reschedule-${data.appointmentId}-${data.date}-${startHM}`,
+          body: buildWhatsAppBody("booking-reschedule", {
+            patientName: appt.patient_name,
+            clinicName: branding.clinicName,
+            dateTime: formatBookingDateTime(data.date, startHM),
+          }),
+        });
+      } catch (e) {
+        console.error("[rescheduleAppointment] whatsapp failed", e);
+      }
+    }
 
     if ((data.notifyPatient ?? true) && appt.patient_email) {
       try {
