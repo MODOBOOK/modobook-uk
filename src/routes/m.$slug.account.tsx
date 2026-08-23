@@ -20,6 +20,7 @@ import { SafeHtml } from "@/components/SafeHtml";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getMyRewardsForClinic } from "@/lib/rewards.functions";
+import { autoRefundCancelledAppointment } from "@/lib/refunds.functions";
 
 
 export const Route = createFileRoute("/m/$slug/account")({
@@ -406,6 +407,8 @@ function Account() {
     setCancelAgreed(false);
     setCancelTarget(a);
   }
+
+  const autoRefund = useServerFn(autoRefundCancelledAppointment);
 
   async function performCancel(confirmLate: boolean) {
     if (!cancelTarget) return;
