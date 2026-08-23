@@ -659,8 +659,24 @@ function AvailabilityPage() {
 
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-base">Rotas</CardTitle>
-              <CardDescription>Pick a rota to view and edit its shifts and dates.</CardDescription>
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <CardTitle className="text-base">Rotas</CardTitle>
+                  <CardDescription>Pick a rota to view and edit its shifts and dates.</CardDescription>
+                </div>
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    const t = new Date(); t.setDate(t.getDate() + 1);
+                    setNewRotaStart(t.toISOString().slice(0, 10));
+                    setNewRotaEnd("");
+                    setNewRotaRolling(true);
+                    setNewRotaOpen(true);
+                  }}
+                >
+                  <Plus className="mr-2 h-4 w-4" /> Add new rota
+                </Button>
+              </div>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex flex-wrap gap-2">
@@ -676,6 +692,11 @@ function AvailabilityPage() {
                   </Button>
                 ))}
               </div>
+              {isDraftPeriod && (
+                <p className="rounded-md bg-muted/60 p-2 text-xs text-muted-foreground">
+                  This is a blank rota. Set its dates below, then tap a cell in the weekly schedule to add its shifts.
+                </p>
+              )}
               <div className="flex flex-wrap gap-2">
                 <Button
                   size="sm"
