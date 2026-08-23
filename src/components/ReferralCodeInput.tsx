@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { resolveReferralCode } from "@/lib/rewards.functions";
+import { resolveReferralCode, getPublicRewardsOverview } from "@/lib/rewards.functions";
+import { useQuery } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -29,6 +30,14 @@ export function ReferralCodeInput({ clinicSlug, brand }: Props) {
     friendCreditPennies: number;
   } | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // Only show when the clinic has rewards & referrals switched on.
+  const fetchOverview = useServerFn(getPublicRewardsOverview);
+  const overview = useQuery({
+    queryKey: ["public-rewards-visible", clinicSlug],
+    queryFn: () => fetchOverview({ data: { slug: clinicSlug } }),
+    staleTime: 60_000,
+  });
 
   // Prefill from sessionStorage on mount
   useEffect(() => {
@@ -68,6 +77,8 @@ export function ReferralCodeInput({ clinicSlug, brand }: Props) {
     setApplied(null);
     setValue("");
   }
+
+  if (!overview.data || overview.data.visible !== true) return null;
 
   if (applied) {
     return (
