@@ -629,15 +629,33 @@ function AvailabilityPage() {
                   </Button>
                 ))}
               </div>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  size="sm"
+                  variant={!periodEnd ? "secondary" : "outline"}
+                  onClick={() => setPeriodEnd("")}
+                >
+                  Rolling — no end date
+                </Button>
+                <Button
+                  size="sm"
+                  variant={periodEnd ? "secondary" : "outline"}
+                  onClick={() => setPeriodEnd(periodEnd || periodEndDates[0] || today)}
+                >
+                  Fixed end date
+                </Button>
+              </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
                   <Label className="text-xs">Rota starts</Label>
                   <Input type="date" value={periodStart} onChange={(e) => setPeriodStart(e.target.value)} />
                 </div>
-                <div>
-                  <Label className="text-xs">Rota ends</Label>
-                  <Input type="date" value={periodEnd} onChange={(e) => setPeriodEnd(e.target.value)} />
-                </div>
+                {periodEnd !== "" && (
+                  <div>
+                    <Label className="text-xs">Rota ends</Label>
+                    <Input type="date" value={periodEnd} onChange={(e) => setPeriodEnd(e.target.value)} />
+                  </div>
+                )}
               </div>
               {periodEndDates.length > 1 && (
                 <p className="text-xs text-amber-600">
