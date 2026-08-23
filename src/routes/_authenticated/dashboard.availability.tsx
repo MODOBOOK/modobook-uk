@@ -129,6 +129,8 @@ function AvailabilityPage() {
   const delBlT = useServerFn(deleteBlockedTime);
   const getRota = useServerFn(getRotaSettings);
   const setAnchor = useServerFn(setRotaAnchor);
+  const endRota = useServerFn(endCurrentRota);
+  const delPrevRota = useServerFn(deletePreviousRota);
 
   const [rules, setRules] = useState<Rule[]>([]);
   const [overrides, setOverrides] = useState<Override[]>([]);
@@ -139,6 +141,14 @@ function AvailabilityPage() {
   const [anchorDate, setAnchorDate] = useState<string | null>(null);
 
   const [cycleLength, setCycleLength] = useState<number>(1);
+
+  // End-rota flow
+  const [endOpen, setEndOpen] = useState(false);
+  const [endDate, setEndDate] = useState("");
+  const [newStart, setNewStart] = useState("");
+  const [copyForward, setCopyForward] = useState(true);
+  const [endingRota, setEndingRota] = useState(false);
+  const [showPrevious, setShowPrevious] = useState(false);
 
   const [dlgOpen, setDlgOpen] = useState(false);
   const [editing, setEditing] = useState<Rule | null>(null);
