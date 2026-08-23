@@ -1208,6 +1208,51 @@ function AvailabilityPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={newRotaOpen} onOpenChange={setNewRotaOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add a new rota</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Start a blank rota. You'll add its shifts afterwards in the weekly schedule.
+            </p>
+            <div>
+              <Label className="text-sm">Starts on</Label>
+              <Input type="date" className="mt-1" value={newRotaStart} onChange={(e) => setNewRotaStart(e.target.value)} />
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                size="sm"
+                variant={newRotaRolling ? "secondary" : "outline"}
+                onClick={() => { setNewRotaRolling(true); setNewRotaEnd(""); }}
+              >
+                Rolling — no end date
+              </Button>
+              <Button
+                size="sm"
+                variant={!newRotaRolling ? "secondary" : "outline"}
+                onClick={() => { setNewRotaRolling(false); setNewRotaEnd(newRotaEnd || newRotaStart); }}
+              >
+                Fixed end date
+              </Button>
+            </div>
+            {!newRotaRolling && (
+              <div>
+                <Label className="text-sm">Ends on</Label>
+                <Input type="date" className="mt-1" value={newRotaEnd} onChange={(e) => setNewRotaEnd(e.target.value)} />
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <div className="flex justify-end gap-2">
+              <Button variant="ghost" onClick={() => setNewRotaOpen(false)}>Cancel</Button>
+              <Button onClick={createDraftRota}>Create rota</Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
