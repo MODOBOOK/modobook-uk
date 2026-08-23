@@ -218,6 +218,43 @@ function AvailabilityPage() {
     }
   }
 
+  function openEndRota() {
+    const d = new Date();
+    const iso = (dt: Date) => dt.toISOString().slice(0, 10);
+    setEndDate(iso(d));
+    const next = new Date(d); next.setDate(next.getDate() + 1);
+    setNewStart(iso(next));
+    setCopyForward(true);
+    setEndOpen(true);
+  }
+
+  async function confirmEndRota() {
+    if (!endDate) { toast.error("Pick an end date"); return; }
+    if (newStart && newStart <= endDate) { toast.error("The new rota must start after the end date"); return; }
+    setEndingRota(true);
+    try {
+      const res: any = await endRota({
+        data: { end_date: endDate, new_start_date: newStart || null, copy: copyForward && !!newStart },
+      });
+      toast.success(
+        res?.created
+          ? `Rota ended — ${res.created} shift${res.created === 1 ? "" : "s"} copied into the new rota`
+          : "Rota ended — add the shifts for your new rota",
+      );
+      setEndOpen(false);
+      await refresh();
+    } catch (err: any) { toast.error(err?.message ?? "Failed"); }
+    finally { setEndingRota(false); }
+  }
+
+  async function removePreviousRota(endedOn: string) {
+    if (!confirm("Delete this previous rota permanently?")) return;
+    try { await delPrevRota({ data: { effective_to: endedOn } }); await refresh(); toast.success("Previous rota deleted"); }
+    catch (err: any) { toast.error(err?.message ?? "Failed"); }
+  }
+
+
+
   function openAdd(day: number, weekIdx: number) {
     setEditing(null);
     const weeks = Array.from({ length: 4 }, (_, i) => i === weekIdx);
