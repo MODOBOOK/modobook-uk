@@ -164,6 +164,10 @@ export const updateProfile = createServerFn({ method: "POST" })
       email_confirmations_enabled?: boolean;
       sms_reminders_enabled?: boolean;
       whatsapp_reminders_enabled?: boolean;
+      whatsapp_notify_confirmation?: boolean;
+      whatsapp_notify_reminder?: boolean;
+      whatsapp_notify_cancellation?: boolean;
+      whatsapp_notify_rebook?: boolean;
       reminder_hours_before?: number[];
       // Invoice branding
       invoice_bank_name?: string | null;
@@ -265,7 +269,8 @@ export const updateProfile = createServerFn({ method: "POST" })
       "require_medical_forms_before_appt","allow_patient_reschedule","allow_patient_cancel",
       "patient_reschedule_max","patient_reschedule_cutoff_hours","patient_cancel_cutoff_hours","late_cancel_mode",
       "auto_confirm_bookings","email_confirmations_enabled","sms_reminders_enabled",
-      "whatsapp_reminders_enabled","reminder_hours_before",
+      "whatsapp_reminders_enabled","whatsapp_notify_confirmation","whatsapp_notify_reminder",
+      "whatsapp_notify_cancellation","whatsapp_notify_rebook","reminder_hours_before",
       "invoice_bank_name","invoice_account_name","invoice_sort_code",
       "invoice_account_number","invoice_iban","invoice_swift",
       "invoice_payment_reference","invoice_footer_notes","invoice_vat_number",
