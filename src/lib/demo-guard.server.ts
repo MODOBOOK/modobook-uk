@@ -54,3 +54,20 @@ export async function assertNotDemoUser(
 ): Promise<void> {
   if (await isDemoUser(userId)) throw new Error(message);
 }
+
+/**
+ * Demo/tour sessions must never be able to leave a real booking on a real
+ * clinic's calendar. Any patient email in the reserved @modo.demo space is
+ * only allowed to book against the demo clinic itself.
+ */
+export async function assertNotDemoPatientBooking(
+  profileId: string | null | undefined,
+  patientEmail: string | null | undefined,
+): Promise<void> {
+  const email = (patientEmail ?? "").trim().toLowerCase();
+  if (!email.endsWith("@modo.demo")) return;
+  if (await isDemoProfileId(profileId)) return;
+  throw new Error(
+    "Demo accounts can only book inside the MODO demo clinic. Start a free trial to take real bookings.",
+  );
+}

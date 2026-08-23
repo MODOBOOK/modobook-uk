@@ -342,6 +342,11 @@ export const createTrainingBooking = createServerFn({ method: "POST" })
     let appointment_start: string | null = data.preferred_start || null;
     let appointment_end: string | null = null;
 
+    {
+      const { assertNotDemoPatientBooking } = await import("./demo-guard.server");
+      await assertNotDemoPatientBooking(course.profile_id, data.trainee_email);
+    }
+
     // Availability mode: create a real appointment blocking the calendar.
     if (course.scheduling_mode === "availability" && data.appointment_date && data.appointment_start && data.appointment_end) {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
