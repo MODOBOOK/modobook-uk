@@ -51,6 +51,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { NotificationsBell } from "@/components/NotificationsBell";
 import { PlatformBillingGate } from "@/components/PlatformBillingGate";
 import { ComingSoonDialog, type ComingSoonKey } from "@/components/ComingSoonDialog";
+import { ClinicSwitcher } from "@/components/ClinicSwitcher";
+import { canAccessRoute, type ClinicRole } from "@/lib/staff-nav";
 
 
 
@@ -182,10 +184,13 @@ function DashboardLayout() {
             <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">MODO Studio</div>
           </div>
         </div>
+        <ClinicSwitcher />
         <nav className="flex-1 space-y-0.5 overflow-y-auto px-4 py-6">
           {(() => {
             const pilotOn = pilotFeaturesEnabled(profile?.slug);
+            const clinicRole = ((profile as Record<string, unknown>)?.__clinic_role as ClinicRole) ?? "owner";
             const visible = navItems.filter((item) => {
+              if (!canAccessRoute(clinicRole, item.to)) return false;
               // Pilot features stay visible for everyone — non-pilot clinics see
               // a "Soon" chip and get the explainer dialog instead of the page.
               if ((item as { pilot?: boolean }).pilot && !pilotOn) return true;
