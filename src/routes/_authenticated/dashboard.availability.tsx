@@ -158,6 +158,12 @@ function AvailabilityPage() {
   const [periodEnd, setPeriodEnd] = useState("");
   const [periodStart, setPeriodStart] = useState("");
   const [savingPeriod, setSavingPeriod] = useState(false);
+  // A brand-new, still-empty rota the user is building ("" end = rolling)
+  const [draft, setDraft] = useState<{ start: string; end: string } | null>(null);
+  const [newRotaOpen, setNewRotaOpen] = useState(false);
+  const [newRotaStart, setNewRotaStart] = useState("");
+  const [newRotaEnd, setNewRotaEnd] = useState("");
+  const [newRotaRolling, setNewRotaRolling] = useState(true);
 
   const [dlgOpen, setDlgOpen] = useState(false);
   const [editing, setEditing] = useState<Rule | null>(null);
