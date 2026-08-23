@@ -447,7 +447,7 @@ export const getMonthAvailability = createServerFn({ method: "GET" })
 
     const { data: rules } = await sb
       .from("availability_rules")
-      .select("day_of_week,location_id,cycle_length,weeks_mask,effective_from,effective_to")
+      .select("day_of_week,location_id,cycle_length,weeks_mask,effective_from,effective_to,start_time,end_time")
       .eq("profile_id", data.profileId);
     const { data: blocked } = await sb
       .from("blocked_dates")
@@ -486,7 +486,12 @@ export const getMonthAvailability = createServerFn({ method: "GET" })
 
     // Expand rota-aware open dates across the month
     const openDates: string[] = [];
+    const windowsByDate = new Map<string, Array<{ start: number; end: number }>>();
     const monthDays = new Date(Date.UTC(data.year, data.month, 0)).getUTCDate();
+    const toMin = (t: string) => {
+      const [h, m] = String(t).split(":").map(Number);
+      return (h || 0) * 60 + (m || 0);
+    };
     for (let d = 1; d <= monthDays; d++) {
       const dt = new Date(Date.UTC(data.year, data.month - 1, d));
       const iso = dt.toISOString().slice(0, 10);
@@ -494,10 +499,95 @@ export const getMonthAvailability = createServerFn({ method: "GET" })
       const applicable = (rules ?? []).filter(
         (r) => r.day_of_week === dow && matchLoc(r.location_id) && ruleAppliesOnDate(r, iso, anchorIso),
       );
-      if (applicable.length > 0) openDates.push(iso);
+      if (applicable.length > 0) {
+        openDates.push(iso);
+        windowsByDate.set(
+          iso,
+          applicable.map((r) => ({ start: toMin(r.start_time as string), end: toMin(r.end_time as string) })),
+        );
+      }
     }
 
-    return { activeDays, blockedDates, overrideDates, openDates, rotaAnchor: anchorIso };
+    // Fully booked days: every working window on that date is consumed by
+    // existing appointments / blocked times, so there is nothing to offer.
+    const fullDates: string[] = [];
+    try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: profileRow } = await supabaseAdmin
+        .from("profiles")
+        .select("booking_daily_cap")
+        .eq("id", data.profileId)
+        .maybeSingle();
+      const dailyCap = profileRow?.booking_daily_cap ?? null;
+
+      const { data: appts } = await supabaseAdmin
+        .from("appointments")
+        .select("scheduled_date,start_time,end_time,location_id,status,payment_status,payment_hold_expires_at")
+        .eq("profile_id", data.profileId)
+        .gte("scheduled_date", startIso)
+        .lte("scheduled_date", endIso)
+        .neq("status", "cancelled");
+      const nowMs = Date.now();
+      const live = (appts ?? []).filter((a) => {
+        const held = (a as { payment_hold_expires_at?: string | null }).payment_hold_expires_at;
+        const paid = (a as { payment_status?: string }).payment_status === "paid";
+        if (!held || paid || a.status !== "pending") return true;
+        return new Date(held).getTime() > nowMs;
+      });
+
+      const { data: bTimes } = await sb
+        .from("blocked_times")
+        .select("date,start_time,end_time,location_id")
+        .eq("profile_id", data.profileId)
+        .gte("date", startIso)
+        .lte("date", endIso);
+
+      const busyByDate = new Map<string, Array<{ start: number; end: number }>>();
+      const push = (iso: string, s: number, e: number) => {
+        const arr = busyByDate.get(iso) ?? [];
+        arr.push({ start: s, end: e });
+        busyByDate.set(iso, arr);
+      };
+      const countByDate = new Map<string, number>();
+      for (const a of live) {
+        const iso = String(a.scheduled_date);
+        if (!matchLoc((a as { location_id: string | null }).location_id)) continue;
+        countByDate.set(iso, (countByDate.get(iso) ?? 0) + 1);
+        if (a.start_time && a.end_time) push(iso, toMin(a.start_time as string), toMin(a.end_time as string));
+      }
+      for (const b of bTimes ?? []) {
+        if (!matchLoc(b.location_id)) continue;
+        push(String(b.date), toMin(b.start_time as string), toMin(b.end_time as string));
+      }
+
+      const MIN_FREE = 15; // no usable gap left
+      for (const iso of openDates) {
+        if (blockedDates.includes(iso)) continue;
+        if (dailyCap != null && (countByDate.get(iso) ?? 0) >= Number(dailyCap)) {
+          fullDates.push(iso);
+          continue;
+        }
+        const windows = windowsByDate.get(iso) ?? [];
+        const busy = (busyByDate.get(iso) ?? []).slice().sort((x, y) => x.start - y.start);
+        if (busy.length === 0) continue;
+        let free = 0;
+        for (const w of windows) {
+          let cursor = w.start;
+          for (const b of busy) {
+            if (b.end <= cursor || b.start >= w.end) continue;
+            if (b.start > cursor) free += b.start - cursor;
+            cursor = Math.max(cursor, b.end);
+            if (cursor >= w.end) break;
+          }
+          if (cursor < w.end) free += w.end - cursor;
+        }
+        if (free < MIN_FREE) fullDates.push(iso);
+      }
+    } catch (e) {
+      console.error("[getMonthAvailability] fully-booked check failed", e);
+    }
+
+    return { activeDays, blockedDates, overrideDates, openDates, fullDates, rotaAnchor: anchorIso };
   });
 
 

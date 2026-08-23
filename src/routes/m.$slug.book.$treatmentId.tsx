@@ -282,6 +282,8 @@ function BookTreatmentPage() {
     // over a closed/blocked day for the same date.
     if (data.overrideDates.includes(iso)) return false;
     if (data.blockedDates.includes(iso)) return true;
+    // Fully booked days have nothing left to offer — grey them out.
+    if ((data as { fullDates?: string[] }).fullDates?.includes(iso)) return true;
     if (Array.isArray((data as { openDates?: string[] }).openDates)) {
       return !(data as { openDates: string[] }).openDates.includes(iso);
     }
