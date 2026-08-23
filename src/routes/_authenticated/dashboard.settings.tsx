@@ -74,6 +74,9 @@ function SettingsPage() {
     patient_reschedule_cutoff_hours: (profile.patient_reschedule_cutoff_hours as number | null) ?? (24 as number | null),
     patient_cancel_cutoff_hours: (profile.patient_cancel_cutoff_hours as number | null) ?? (24 as number | null),
     late_cancel_mode: ((profile as { late_cancel_mode?: string }).late_cancel_mode as "block" | "warn_agree" | undefined) ?? "block",
+    auto_refund_on_cancel: !!(profile as { auto_refund_on_cancel?: boolean }).auto_refund_on_cancel,
+    no_refund_policy_enabled: !!(profile as { no_refund_policy_enabled?: boolean }).no_refund_policy_enabled,
+    no_refund_policy_text: ((profile as { no_refund_policy_text?: string | null }).no_refund_policy_text ?? "") as string,
     // confirm & reminders
     auto_confirm_bookings: profile.auto_confirm_bookings !== false,
     email_confirmations_enabled: profile.email_confirmations_enabled !== false,
