@@ -307,7 +307,7 @@ export const rescheduleAppointment = createServerFn({ method: "POST" })
 
     const { data: appt, error: aErr } = await supabase
       .from("appointments")
-      .select("id, patient_name, patient_email, scheduled_date, start_time, end_time")
+      .select("id, patient_name, patient_email, patient_phone, scheduled_date, start_time, end_time")
       .eq("id", data.appointmentId)
       .eq("profile_id", profile.id)
       .maybeSingle();
