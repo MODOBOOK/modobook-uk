@@ -447,7 +447,7 @@ export const getMonthAvailability = createServerFn({ method: "GET" })
 
     const { data: rules } = await sb
       .from("availability_rules")
-      .select("day_of_week,location_id,cycle_length,weeks_mask,effective_from,effective_to")
+      .select("day_of_week,location_id,cycle_length,weeks_mask,effective_from,effective_to,start_time,end_time")
       .eq("profile_id", data.profileId);
     const { data: blocked } = await sb
       .from("blocked_dates")
