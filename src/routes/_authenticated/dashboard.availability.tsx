@@ -542,7 +542,10 @@ function AvailabilityPage() {
 
   async function removePeriod() {
     const ids = periodRules.map((r) => r.id);
-    if (!ids.length) return;
+    if (!ids.length) {
+      if (isDraftPeriod) { setDraft(null); setPeriodKey("current"); toast.success("New rota discarded"); }
+      return;
+    }
     if (!confirm(`Delete this rota and all ${ids.length} of its shifts?`)) return;
     try {
       await delPeriod({ data: { ids } });
