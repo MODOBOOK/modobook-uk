@@ -297,15 +297,9 @@ export function buildWhatsAppBody(kind: WhatsAppKind, c: ApptMessageContext): st
   switch (kind) {
     case 'booking-confirmation':
       return line(
-        `Hi ${first}, your booking with ${clinic} is confirmed ✅`,
-        '',
-        `💉 ${treatment}`,
-        c.dateTime ? `🗓 ${c.dateTime}` : null,
-        where,
-        c.manageUrl ? `\nManage or cancel: ${c.manageUrl}` : null,
-        '',
-        SIGN_OFF,
+        `Hi ${first}, you're booked with ${clinic}${c.dateTime ? ` at ${c.dateTime}` : ''}. See you then!`,
       )
+
     case 'appointment-reminder':
       return line(
         `Hi ${first}, a reminder of your appointment at ${clinic}${
