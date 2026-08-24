@@ -165,10 +165,13 @@ function MenuPage() {
   const pilot = pilotFeaturesEnabled(profile.slug);
 
 function comingSoonFor(to: string): ComingSoonKey | null {
+    // Not-yet-built features: coming soon for everyone, including pilot clinics.
+    if (to === "/dashboard/sms-marketing") return "sms-marketing";
+    if (to === "/dashboard/staff-updates") return "staff-updates";
+    // Pilot-rolled features: open for pilot clinics, coming soon for everyone else.
     if (pilot) return null;
     if (to === "/dashboard/associates") return "associates";
     if (to === "/dashboard/notifications/sms") return "sms-reminders";
-    if (to === "/dashboard/sms-marketing") return "sms-marketing";
     return null;
   }
 
