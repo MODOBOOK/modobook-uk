@@ -373,8 +373,8 @@ export function buildWhatsAppBody(kind: WhatsAppKind, c: ApptMessageContext): st
         `Hi ${first}, you're booked with ${clinic}${c.dateTime ? ` at ${c.dateTime}` : ''}${at}. See you then!`,
       )
 
-    // Kept as short as possible (no sign-off, no emoji) to minimise cost.
-case 'appointment-reminder':
+// Kept as short as possible (no sign-off, no emoji) to minimise cost.
+    case 'appointment-reminder':
       // No address here — keeps the reminder short and reduces the chance of
       // a carrier content filter blocking it. The booking confirmation carries
       // the full address instead.
