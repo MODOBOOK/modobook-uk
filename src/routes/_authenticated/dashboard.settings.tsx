@@ -468,12 +468,23 @@ function SettingsPage() {
         </CardContent>
       </Card>
 
-      {/* CONFIRMATIONS & REMINDERS */}
+      {/* PATIENT NOTIFICATIONS */}
+      <div className="pt-2">
+        <h2 className="font-serif text-2xl">Patient notifications</h2>
+        <p className="text-sm text-muted-foreground">
+          What your patients receive automatically — set up email and text separately.
+        </p>
+      </div>
+
+      {/* — EMAIL */}
       <Card>
         <CardHeader>
-          <CardTitle>Confirmations & reminders</CardTitle>
-          <CardDescription>How bookings get confirmed and reminded.</CardDescription>
+          <CardTitle>Email</CardTitle>
+          <CardDescription>
+            Confirmations and reminders sent by email. Available on every plan.
+          </CardDescription>
         </CardHeader>
+
         <CardContent className="space-y-3">
           <ToggleRow
             label="Auto-confirm bookings"
