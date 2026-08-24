@@ -756,10 +756,12 @@ function BookPage() {
 
   const isAvailableAtLocation = (t: Treatment) => {
     if (!locationId) return true;
-    const rows = pricing.filter((p) => p.treatment_id === t.id);
-    if (rows.length === 0) return true;
-    return rows.some((p) => p.location_id === locationId && p.available);
+    // Only an explicit "unavailable" override for THIS location hides a treatment.
+    // Pricing rows for other locations must never remove it from this menu.
+    const row = pricing.find((p) => p.treatment_id === t.id && p.location_id === locationId);
+    return row ? row.available !== false : true;
   };
+
 
   const visibleTreatments = useMemo(
     () =>
