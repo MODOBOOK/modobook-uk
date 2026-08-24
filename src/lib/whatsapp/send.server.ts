@@ -51,6 +51,8 @@ export interface SendWhatsAppInput {
   body: string
   /** Skip the per-clinic toggle check (used by the "send me a test" action). */
   force?: boolean
+  /** Merge values so a clinic's custom template can be rendered instead. */
+  templateCtx?: ApptMessageContext
 }
 
 export interface SendWhatsAppResult {
@@ -99,7 +101,7 @@ export async function getClinicWhatsAppSettings(
   const { data } = await supabaseAdmin
     .from('profiles')
     .select(
-      'slug, clinic_name, whatsapp_reminders_enabled, whatsapp_notify_confirmation, whatsapp_notify_reminder, whatsapp_notify_cancellation, whatsapp_notify_rebook',
+      'slug, clinic_name, sms_templates, sms_channels, whatsapp_reminders_enabled, whatsapp_notify_confirmation, whatsapp_notify_reminder, whatsapp_notify_cancellation, whatsapp_notify_rebook',
     )
     .eq('id', profileId)
     .maybeSingle()
@@ -169,6 +171,37 @@ export async function sendWhatsApp(input: SendWhatsAppInput): Promise<SendWhatsA
       if (key && cfg.settings[key] === false) return { ok: false, skipped: 'kind-disabled' }
     }
 
+
+    // Clinic's own wording + channel choice (text / email / both)
+    let body = input.body
+    if (input.profileId) {
+      const cfg = await getClinicWhatsAppSettings(input.profileId)
+      const { channelFor, renderSmsTemplate, defaultSmsTemplate } = await import(
+        '@/lib/whatsapp/templates'
+      )
+      const key = input.kind as never
+      if (input.kind !== 'test') {
+        const channel = channelFor(
+          (cfg?.settings.sms_channels as Record<string, unknown>) ?? null,
+          key,
+        )
+        if (!input.force && (channel === 'email' || channel === 'off')) {
+          return { ok: false, skipped: 'channel-email-only' }
+        }
+        const custom = (cfg?.settings.sms_templates as Record<string, unknown>)?.[input.kind]
+        if (typeof custom === 'string' && custom.trim() && input.templateCtx) {
+          const c = input.templateCtx
+          body = renderSmsTemplate(custom.trim() || defaultSmsTemplate(key), {
+            name: c.patientName,
+            clinic: c.clinicName ?? cfg?.clinicName,
+            treatment: c.treatmentName,
+            date: c.dateTime,
+            location: c.locationAddress || c.locationName,
+            link: c.bookingUrl || c.manageUrl || c.reviewUrl,
+          })
+        }
+      }
+    }
 
     // Demo clinics never send real messages
     try {
