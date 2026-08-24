@@ -191,7 +191,9 @@ function DashboardLayout() {
             const pilotOn = pilotFeaturesEnabled(profile?.slug);
             const clinicRole = ((profile as Record<string, unknown>)?.__clinic_role as ClinicRole) ?? "owner";
             const visible = navItems.filter((item) => {
-              if (!canAccessRoute(clinicRole, item.to)) return false;
+if (!canAccessRoute(clinicRole, item.to)) return false;
+              // Not-yet-built features (soon: true) stay visible for everyone as a "Soon" chip.
+              if ((item as { soon?: boolean }).soon) return true;
               // Pilot features stay visible for everyone — non-pilot clinics see
               // a "Soon" chip and get the explainer dialog instead of the page.
               if ((item as { pilot?: boolean }).pilot && !pilotOn) return true;
