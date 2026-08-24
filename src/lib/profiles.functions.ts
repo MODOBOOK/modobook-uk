@@ -186,6 +186,9 @@ export const updateProfile = createServerFn({ method: "POST" })
       whatsapp_notify_reminder?: boolean;
       whatsapp_notify_cancellation?: boolean;
       whatsapp_notify_rebook?: boolean;
+      sms_templates?: Record<string, string>;
+      sms_channels?: Record<string, string>;
+
       reminder_hours_before?: number[];
       // Invoice branding
       invoice_bank_name?: string | null;
