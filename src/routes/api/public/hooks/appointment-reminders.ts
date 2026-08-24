@@ -85,14 +85,14 @@ export const Route = createFileRoute('/api/public/hooks/appointment-reminders')(
 
               // WhatsApp reminder (per-clinic toggle; no-ops when off / no phone)
               try {
-                const { sendWhatsApp, buildWhatsAppBody } = await import('@/lib/whatsapp/send.server')
+                const { sendWhatsApp, smsMessage } = await import('@/lib/whatsapp/send.server')
                 await sendWhatsApp({
                   profileId: a.profile_id,
                   appointmentId: a.id,
                   kind: 'appointment-reminder',
                   toPhone: a.patient_phone,
                   messageKey: `wa-reminder-${a.id}-${rule.id}`,
-                  body: buildWhatsAppBody('appointment-reminder', {
+                  ...smsMessage('appointment-reminder', {
                     patientName: a.patient_name,
                     clinicName: a.profiles?.clinic_name ?? branding.clinicName,
                     treatmentName: a.treatments?.name,
