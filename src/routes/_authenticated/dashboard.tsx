@@ -215,19 +215,17 @@ function DashboardLayout() {
                       {section}
                     </p>
                   )}
-                  {(item as { pilot?: boolean }).pilot && !pilotOn ? (
+{(item as { pilot?: boolean }).pilot && !pilotOn ? (
                     <NavSoon
                       icon={item.icon}
                       label={item.label}
                       onClick={() =>
                         setComingSoon(
-                          item.to === "/dashboard/upcoming"
-                            ? "upcoming"
-                            : item.to === "/dashboard/associates"
-                              ? "associates"
-                              : item.to === "/dashboard/packages"
-                                ? "packages"
-                                : "room-rental",
+                          item.to === "/dashboard/associates"
+                            ? "associates"
+                            : item.to === "/dashboard/notifications/sms"
+                              ? "sms-reminders"
+                              : "general",
                         )
                       }
                     />
