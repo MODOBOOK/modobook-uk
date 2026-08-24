@@ -8875,6 +8875,19 @@ export type Database = {
           treatment_name: string
         }[]
       }
+      get_my_referrals: {
+        Args: { p_clinic_profile_id: string }
+        Returns: {
+          code: string
+          created_at: string
+          friend_credit_pennies: number
+          id: string
+          reward_credit_pennies: number
+          reward_points: number
+          rewarded_at: string
+          status: string
+        }[]
+      }
       get_patient_account_profile_by_slug: {
         Args: { p_slug: string }
         Returns: {

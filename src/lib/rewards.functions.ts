@@ -311,15 +311,10 @@ export const getMyRewardsForClinic = createServerFn({ method: "POST" })
           .select("delta")
           .eq("patient_user_id", userId)
           .eq("clinic_profile_id", clinicProfileId),
-        supabase
-          .from("patient_referrals")
-          .select(
-            "id, code, status, reward_credit_pennies, reward_points, friend_credit_pennies, rewarded_at, created_at",
-          )
-          .eq("referrer_user_id", userId)
-          .eq("clinic_profile_id", clinicProfileId)
-          .order("created_at", { ascending: false })
-          .limit(50),
+        supabase.rpc("get_my_referrals", {
+          p_clinic_profile_id: clinicProfileId,
+        }),
+
       ]);
 
     const creditPennies = (creditRows ?? []).reduce(
