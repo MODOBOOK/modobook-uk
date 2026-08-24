@@ -77,8 +77,7 @@ const groups: Group[] = [
       { label: "Welcome & policies", description: "Intro heading, welcome message, deposits, cancellation, T&Cs", to: "/dashboard/policies", icon: Shield, ...T.mocha },
       { label: "Locations", description: "Manage your clinic addresses", to: "/dashboard/locations", icon: MapPin, ...T.cream },
       { label: "Booking profiles", description: "Photos, titles & locations for treating staff", to: "/dashboard/practitioners", icon: Users, ...T.taupe },
-{ label: "Staff", description: "Invite team members & control what they can see", to: "/dashboard/staff", icon: ShieldCheck, ...T.espresso },
-      { label: "Staff updates", description: "Individual rotas & staff payments (commission or own Stripe)", to: "/dashboard/staff-updates", icon: Mail, ...T.sand },
+{ label: "Staff", description: "Invite team members, individual rotas & staff payments", to: "/dashboard/staff", icon: ShieldCheck, ...T.espresso },
     ],
   },
   {
