@@ -30,7 +30,7 @@ export const Route = createFileRoute('/api/public/hooks/review-emails')({
         // scheduled_date within the last 24h, and end_time has passed.
         const { data: rows, error } = await supabaseAdmin
           .from('appointments')
-          .select('id, patient_name, patient_email, scheduled_date, start_time, end_time, profile_id, treatments(name), practitioners(name), profiles(clinic_name, slug)')
+          .select('id, patient_name, patient_email, patient_phone, scheduled_date, start_time, end_time, profile_id, treatments(name), practitioners(name), profiles(clinic_name, slug)')
           .eq('status', 'confirmed')
           .not('patient_email', 'is', null)
           .gte('scheduled_date', lookbackIso)
@@ -52,6 +52,7 @@ export const Route = createFileRoute('/api/public/hooks/review-emails')({
             id: string
             patient_name: string | null
             patient_email: string | null
+            patient_phone?: string | null
             scheduled_date: string
             end_time: string
             profile_id: string
@@ -59,7 +60,6 @@ export const Route = createFileRoute('/api/public/hooks/review-emails')({
             practitioners?: { name?: string } | null
             profiles?: { clinic_name?: string; slug?: string } | null
           }
-          if (!r.patient_email) continue
 
           // Skip if appointment end is still in the future
           if (r.scheduled_date === todayIso && r.end_time > nowTime) { skipped++; continue }
@@ -69,6 +69,29 @@ export const Route = createFileRoute('/api/public/hooks/review-emails')({
             branding = await getPractitionerBranding(r.profile_id)
             brandingCache.set(r.profile_id, branding)
           }
+
+          const reviewUrl = r.profiles?.slug ? `${origin}/m/${r.profiles.slug}/reviews` : origin
+
+          // Short review text (one SMS segment)
+          try {
+            const { sendWhatsApp, buildWhatsAppBody } = await import('@/lib/whatsapp/send.server')
+            await sendWhatsApp({
+              profileId: r.profile_id,
+              appointmentId: r.id,
+              kind: 'review-request',
+              toPhone: r.patient_phone,
+              messageKey: `wa-review-${r.id}`,
+              body: buildWhatsAppBody('review-request', {
+                patientName: r.patient_name,
+                clinicName: r.profiles?.clinic_name ?? branding.clinicName,
+                reviewUrl,
+              }),
+            })
+          } catch (e) {
+            console.error('[review-emails] sms failed', e)
+          }
+
+          if (!r.patient_email) continue
 
           const messageId = `review-${r.id}`
           const result = await tryEnqueueAppEmail({
@@ -80,7 +103,7 @@ export const Route = createFileRoute('/api/public/hooks/review-emails')({
               clinicName: r.profiles?.clinic_name ?? branding.clinicName,
               treatmentName: r.treatments?.name,
               practitionerName: r.practitioners?.name,
-              reviewUrl: r.profiles?.slug ? `${origin}/m/${r.profiles.slug}/reviews` : origin,
+              reviewUrl,
               logoUrl: branding.logoUrl,
               brandColor: branding.brandColor,
             },
