@@ -92,7 +92,7 @@ export async function getClinicWhatsAppSettings(
   const { data } = await supabaseAdmin
     .from('profiles')
     .select(
-      'slug, clinic_name, sms_templates, sms_channels, whatsapp_reminders_enabled, whatsapp_notify_confirmation, whatsapp_notify_reminder, whatsapp_notify_cancellation, whatsapp_notify_rebook',
+      'slug, clinic_name, sms_templates, sms_channels, sms_timings, whatsapp_reminders_enabled, whatsapp_notify_confirmation, whatsapp_notify_reminder, whatsapp_notify_cancellation, whatsapp_notify_rebook',
     )
     .eq('id', profileId)
     .maybeSingle()
@@ -107,6 +107,13 @@ export async function getClinicWhatsAppSettings(
   }
   settingsCache.set(profileId, value)
   return value
+}
+
+/** When each text goes out for this clinic (safe defaults when unset). */
+export async function getSmsTimings(profileId?: string | null) {
+  const { parseSmsTimings } = await import('@/lib/whatsapp/templates')
+  const cfg = await getClinicWhatsAppSettings(profileId)
+  return parseSmsTimings(cfg?.settings.sms_timings)
 }
 
 /** Is this clinic allowed to use SMS at all (pilot allowlist)? */
