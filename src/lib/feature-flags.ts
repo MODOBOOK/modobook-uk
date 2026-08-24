@@ -86,10 +86,11 @@ export function upcomingEnabled(slug?: string | null) {
 }
 
 /**
- * SMS / WhatsApp patient notifications. Live for every clinic — each one
- * turns texts on for themselves in Patient notifications → SMS.
+ * SMS / WhatsApp patient notifications. Pilot only — restricted to the two
+ * pilot clinics while we finish carrier-filter testing. Everyone else sees
+ * "Coming soon" and can never send (even test messages).
  */
-export const WHATSAPP_SLUGS: string[] = [];
+export const WHATSAPP_SLUGS: string[] = ["aestheticsbynurseryan", "aesthetiqbyjen"];
 
 export function whatsappMessagingEnabled(slug?: string | null) {
   return isFeatureLive(WHATSAPP_SLUGS, slug);
