@@ -80,14 +80,17 @@ interface ClinicWhatsAppSettings {
   settings: Record<string, unknown>
 }
 
-const settingsCache = new Map<string, ClinicWhatsAppSettings>()
+// Short TTL so a clinic toggling their text settings sees them apply within
+// seconds rather than for the lifetime of the server instance.
+const SETTINGS_TTL_MS = 15_000
+const settingsCache = new Map<string, { at: number; value: ClinicWhatsAppSettings }>()
 
 export async function getClinicWhatsAppSettings(
   profileId?: string | null,
 ): Promise<ClinicWhatsAppSettings | null> {
   if (!profileId) return null
   const cached = settingsCache.get(profileId)
-  if (cached) return cached
+  if (cached && Date.now() - cached.at < SETTINGS_TTL_MS) return cached.value
   const { supabaseAdmin } = await import('@/integrations/supabase/client.server')
   const { data } = await supabaseAdmin
     .from('profiles')
@@ -105,7 +108,7 @@ export async function getClinicWhatsAppSettings(
     clinicName: (row.clinic_name as string) || 'your clinic',
     settings: row,
   }
-  settingsCache.set(profileId, value)
+  settingsCache.set(profileId, { at: Date.now(), value })
   return value
 }
 
@@ -306,8 +309,17 @@ export async function sendWhatsApp(input: SendWhatsAppInput): Promise<SendWhatsA
 
     let sid: string | undefined
     try {
-      const parsed = JSON.parse(text) as { sid?: string; id?: string | number; ids?: Array<string | number> }
-      sid = parsed.sid ?? (parsed.id != null ? String(parsed.id) : undefined) ?? (parsed.ids?.[0] != null ? String(parsed.ids[0]) : undefined)
+      const parsed = JSON.parse(text) as {
+        sid?: string
+        msg_id?: string | number
+        id?: string | number
+        ids?: Array<string | number>
+      }
+      sid =
+        parsed.sid ??
+        (parsed.msg_id != null ? String(parsed.msg_id) : undefined) ??
+        (parsed.id != null ? String(parsed.id) : undefined) ??
+        (parsed.ids?.[0] != null ? String(parsed.ids[0]) : undefined)
     } catch { /* non-JSON */ }
 
     await mark('sent', { provider_sid: sid ?? null })

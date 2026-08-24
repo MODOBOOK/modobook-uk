@@ -86,14 +86,12 @@ export function upcomingEnabled(slug?: string | null) {
 }
 
 /**
- * SMS / WhatsApp patient notifications. Live for the pilot clinics only —
- * every other clinic sees a "coming soon" card and cannot send. Add slugs
- * here as we roll sending out.
+ * SMS / WhatsApp patient notifications. Live for every clinic — each one
+ * turns texts on for themselves in Patient notifications → SMS.
  */
-export const WHATSAPP_SLUGS: string[] = ["aestheticsbynurseryan", "aesthetiqbyjen"];
+export const WHATSAPP_SLUGS: string[] = [];
 
 export function whatsappMessagingEnabled(slug?: string | null) {
-  if (!slug) return false;
-  return WHATSAPP_SLUGS.includes(slug.toLowerCase());
+  return isFeatureLive(WHATSAPP_SLUGS, slug);
 }
 
