@@ -55,10 +55,10 @@ export const COMING_SOON_FEATURES: Record<
     icon: Megaphone,
     blurb:
       "Send promotional text campaigns to opted-in patients to fill quieter slots and drive repeat bookings.",
-    points: [
+points: [
       "Targeted SMS campaigns to your opted-in patient list",
-      "Personalised with merge tags and track opens and responses",
-      "Branded templates and AI content generation built in",
+      "Free-typed messages you write yourself",
+      "Send to fill quieter slots and drive repeat bookings",
     ],
   },
 };
