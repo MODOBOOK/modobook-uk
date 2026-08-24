@@ -143,7 +143,7 @@ export const Route = createFileRoute('/api/public/hooks/rebook-reminders')({
 
             // WhatsApp version (per-clinic toggle; no-ops when off / no phone)
             try {
-              const { sendWhatsApp, buildWhatsAppBody } = await import('@/lib/whatsapp/send.server')
+              const { sendWhatsApp, smsMessage } = await import('@/lib/whatsapp/send.server')
               const waKind = kind === 'rebook' ? 'rebook-reminder' : 'topup-reminder'
               await sendWhatsApp({
                 profileId: r.profile_id,
@@ -151,7 +151,7 @@ export const Route = createFileRoute('/api/public/hooks/rebook-reminders')({
                 kind: waKind,
                 toPhone: r.patient_phone,
                 messageKey: `wa-${kind}-${r.id}`,
-                body: buildWhatsAppBody(waKind, {
+                ...smsMessage(waKind, {
                   patientName: r.patient_name,
                   clinicName: r.profiles?.clinic_name ?? branding.clinicName,
                   treatmentName: r.treatments?.name,

@@ -77,14 +77,14 @@ export const Route = createFileRoute('/api/public/hooks/review-emails')({
 
           // Short review text (one SMS segment)
           try {
-            const { sendWhatsApp, buildWhatsAppBody } = await import('@/lib/whatsapp/send.server')
+            const { sendWhatsApp, smsMessage } = await import('@/lib/whatsapp/send.server')
             await sendWhatsApp({
               profileId: r.profile_id,
               appointmentId: r.id,
               kind: 'review-request',
               toPhone: r.patient_phone,
               messageKey: `wa-review-${r.id}`,
-              body: buildWhatsAppBody('review-request', {
+              ...smsMessage('review-request', {
                 patientName: r.patient_name,
                 clinicName: r.profiles?.clinic_name ?? branding.clinicName,
                 reviewUrl,

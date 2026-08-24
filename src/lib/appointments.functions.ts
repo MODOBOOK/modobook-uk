@@ -227,14 +227,14 @@ export const cancelAppointmentByToken = createServerFn({ method: "POST" })
         const branding = await getPractitionerBranding((apptFull as { profile_id?: string } | null)?.profile_id);
         const origin = process.env.PUBLIC_APP_URL || process.env.APP_URL || "https://modobook.uk";
         try {
-          const { sendWhatsApp, buildWhatsAppBody } = await import("@/lib/whatsapp/send.server");
+          const { sendWhatsApp, smsMessage } = await import("@/lib/whatsapp/send.server");
           await sendWhatsApp({
             profileId: (apptFull as { profile_id?: string } | null)?.profile_id ?? null,
             appointmentId: a.id,
             kind: "booking-cancellation",
             toPhone: (apptFull as { patient_phone?: string | null } | null)?.patient_phone,
             messageKey: `wa-cancel-${a.id}`,
-            body: buildWhatsAppBody("booking-cancellation", {
+            ...smsMessage("booking-cancellation", {
               patientName: a.patient_name,
               clinicName: a.clinic_name ?? branding.clinicName,
               treatmentName: a.treatment_name,
@@ -363,7 +363,7 @@ export const rescheduleAppointment = createServerFn({ method: "POST" })
     if (data.notifyPatient ?? true) {
       try {
         const { formatBookingDateTime, getPractitionerBranding } = await import("@/lib/email/send.server");
-        const { sendWhatsApp, buildWhatsAppBody } = await import("@/lib/whatsapp/send.server");
+        const { sendWhatsApp, smsMessage } = await import("@/lib/whatsapp/send.server");
         const branding = await getPractitionerBranding(profile.id);
         await sendWhatsApp({
           profileId: profile.id,
@@ -371,7 +371,7 @@ export const rescheduleAppointment = createServerFn({ method: "POST" })
           kind: "booking-reschedule",
           toPhone: (appt as { patient_phone?: string | null }).patient_phone,
           messageKey: `wa-reschedule-${data.appointmentId}-${data.date}-${startHM}`,
-          body: buildWhatsAppBody("booking-reschedule", {
+          ...smsMessage("booking-reschedule", {
             patientName: appt.patient_name,
             clinicName: branding.clinicName,
             dateTime: formatBookingDateTime(data.date, startHM),

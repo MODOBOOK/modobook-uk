@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { SaveReminder } from "@/components/SaveReminder";
 import { sendWhatsAppTest } from "@/lib/whatsapp.functions";
 import { whatsappMessagingEnabled } from "@/lib/feature-flags";
+import { SmsTemplateEditor } from "@/components/settings/SmsTemplateEditor";
 
 
 
@@ -85,6 +86,8 @@ function SettingsPage() {
     whatsapp_notify_reminder: profile.whatsapp_notify_reminder !== false,
     whatsapp_notify_cancellation: profile.whatsapp_notify_cancellation !== false,
     whatsapp_notify_rebook: profile.whatsapp_notify_rebook !== false,
+    sms_templates: ((profile.sms_templates as Record<string, string> | null) ?? {}) as Record<string, string>,
+    sms_channels: ((profile.sms_channels as Record<string, string> | null) ?? {}) as Record<string, string>,
     reminder_hours_before: (profile.reminder_hours_before as number[] | null) ?? [24, 2],
     // invoice branding
     invoice_show_logo: profile.invoice_show_logo !== false,
@@ -537,46 +540,29 @@ function SettingsPage() {
       ) : (
       <Card>
         <CardHeader>
-          <CardTitle>WhatsApp messages</CardTitle>
+          <CardTitle>Text messages</CardTitle>
           <CardDescription>
-            Patients get a WhatsApp from the official MODO business number, on your clinic&rsquo;s
-            behalf. Only patients with a mobile number on file are messaged, and they can reply
-            STOP at any time.
+            Patients get a text from MODO on your clinic&rsquo;s behalf. Choose what goes out by
+            text, email or both, and edit the wording. Only patients with a mobile number on file
+            are texted, and they can reply STOP at any time.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
           <ToggleRow
-            label="WhatsApp notifications"
+            label="Text message notifications"
             hint="Master switch for this clinic. Off by default."
             checked={s.whatsapp_reminders_enabled}
             onChange={(v) => set("whatsapp_reminders_enabled", v)}
           />
           {s.whatsapp_reminders_enabled && (
             <div className="space-y-3 rounded-lg border border-dashed p-3">
-              <ToggleRow
-                label="Booking confirmation"
-                hint="Sent as soon as a booking is made."
-                checked={s.whatsapp_notify_confirmation}
-                onChange={(v) => set("whatsapp_notify_confirmation", v)}
+              <SmsTemplateEditor
+                templates={s.sms_templates}
+                channels={s.sms_channels}
+                onTemplate={(k, v) => set("sms_templates", { ...s.sms_templates, [k]: v })}
+                onChannel={(k, v) => set("sms_channels", { ...s.sms_channels, [k]: v })}
               />
-              <ToggleRow
-                label="Appointment reminder"
-                hint="Follows the same timings as your email reminders above."
-                checked={s.whatsapp_notify_reminder}
-                onChange={(v) => set("whatsapp_notify_reminder", v)}
-              />
-              <ToggleRow
-                label="Cancellations & reschedules"
-                hint="Sent when an appointment is cancelled or moved."
-                checked={s.whatsapp_notify_cancellation}
-                onChange={(v) => set("whatsapp_notify_cancellation", v)}
-              />
-              <ToggleRow
-                label="Rebook & top-up reminders"
-                hint="Mirrors your rebook and top-up email reminders."
-                checked={s.whatsapp_notify_rebook}
-                onChange={(v) => set("whatsapp_notify_rebook", v)}
-              />
+
               <div className="rounded-lg border p-3">
                 <Label className="text-sm font-medium">Send yourself a test</Label>
                 <p className="mb-2 text-xs text-muted-foreground">

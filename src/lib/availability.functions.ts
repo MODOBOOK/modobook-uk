@@ -178,7 +178,7 @@ export const cancelAppointment = createServerFn({ method: "POST" })
         const { data: prof } = await context.supabase
           .from("profiles").select("clinic_name, slug").eq("id", profileId).maybeSingle();
         const { formatBookingDateTime } = await import("@/lib/email/send.server");
-        const { sendWhatsApp, buildWhatsAppBody } = await import("@/lib/whatsapp/send.server");
+        const { sendWhatsApp, smsMessage } = await import("@/lib/whatsapp/send.server");
         const origin = process.env.PUBLIC_APP_URL || process.env.APP_URL || "https://modobook.uk";
         await sendWhatsApp({
           profileId,
@@ -186,7 +186,7 @@ export const cancelAppointment = createServerFn({ method: "POST" })
           kind: "booking-cancellation",
           toPhone: (appt as { patient_phone?: string | null }).patient_phone,
           messageKey: `wa-cancel-${appt.id}`,
-          body: buildWhatsAppBody("booking-cancellation", {
+          ...smsMessage("booking-cancellation", {
             patientName: appt.patient_name,
             clinicName: prof?.clinic_name,
             treatmentName: (appt as { treatments?: { name?: string } | null }).treatments?.name,

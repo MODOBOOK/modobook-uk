@@ -26,17 +26,8 @@ export type WhatsAppKind =
   | 'review-request'
   | 'test'
 
-/** Maps a message kind to the profile column that gates it. */
-const KIND_SETTING: Record<WhatsAppKind, string | null> = {
-  'booking-confirmation': 'whatsapp_notify_confirmation',
-  'appointment-reminder': 'whatsapp_notify_reminder',
-  'booking-cancellation': 'whatsapp_notify_cancellation',
-  'booking-reschedule': 'whatsapp_notify_cancellation',
-  'rebook-reminder': 'whatsapp_notify_rebook',
-  'topup-reminder': 'whatsapp_notify_rebook',
-  'review-request': 'whatsapp_notify_rebook',
-  test: null,
-}
+// Per-message-type control now lives in profiles.sms_channels (text / email /
+// both / off), edited by the clinic in Booking settings.
 
 
 export interface SendWhatsAppInput {
@@ -51,6 +42,8 @@ export interface SendWhatsAppInput {
   body: string
   /** Skip the per-clinic toggle check (used by the "send me a test" action). */
   force?: boolean
+  /** Merge values so a clinic's custom template can be rendered instead. */
+  templateCtx?: ApptMessageContext
 }
 
 export interface SendWhatsAppResult {
@@ -99,7 +92,7 @@ export async function getClinicWhatsAppSettings(
   const { data } = await supabaseAdmin
     .from('profiles')
     .select(
-      'slug, clinic_name, whatsapp_reminders_enabled, whatsapp_notify_confirmation, whatsapp_notify_reminder, whatsapp_notify_cancellation, whatsapp_notify_rebook',
+      'slug, clinic_name, sms_templates, sms_channels, whatsapp_reminders_enabled, whatsapp_notify_confirmation, whatsapp_notify_reminder, whatsapp_notify_cancellation, whatsapp_notify_rebook',
     )
     .eq('id', profileId)
     .maybeSingle()
@@ -165,10 +158,39 @@ export async function sendWhatsApp(input: SendWhatsAppInput): Promise<SendWhatsA
     if (!input.force) {
       const cfg = await getClinicWhatsAppSettings(input.profileId)
       if (!cfg || !cfg.enabled) return { ok: false, skipped: 'clinic-disabled' }
-      const key = KIND_SETTING[input.kind]
-      if (key && cfg.settings[key] === false) return { ok: false, skipped: 'kind-disabled' }
     }
 
+
+    // Clinic's own wording + channel choice (text / email / both)
+    let body = input.body
+    if (input.profileId) {
+      const cfg = await getClinicWhatsAppSettings(input.profileId)
+      const { channelFor, renderSmsTemplate, defaultSmsTemplate } = await import(
+        '@/lib/whatsapp/templates'
+      )
+      const key = input.kind as never
+      if (input.kind !== 'test') {
+        const channel = channelFor(
+          (cfg?.settings.sms_channels as Record<string, unknown>) ?? null,
+          key,
+        )
+        if (!input.force && (channel === 'email' || channel === 'off')) {
+          return { ok: false, skipped: 'channel-email-only' }
+        }
+        const custom = (cfg?.settings.sms_templates as Record<string, unknown>)?.[input.kind]
+        if (typeof custom === 'string' && custom.trim() && input.templateCtx) {
+          const c = input.templateCtx
+          body = renderSmsTemplate(custom.trim() || defaultSmsTemplate(key), {
+            name: c.patientName,
+            clinic: c.clinicName ?? cfg?.clinicName,
+            treatment: c.treatmentName,
+            date: c.dateTime,
+            location: c.locationAddress || c.locationName,
+            link: c.bookingUrl || c.manageUrl || c.reviewUrl,
+          })
+        }
+      }
+    }
 
     // Demo clinics never send real messages
     try {
@@ -192,7 +214,7 @@ export async function sendWhatsApp(input: SendWhatsAppInput): Promise<SendWhatsA
       kind: input.kind,
       to_phone: to,
       message_key: input.messageKey,
-      body: input.body,
+      body,
       status: 'queued',
     } as never)
     if (claimErr) {
@@ -229,7 +251,7 @@ export async function sendWhatsApp(input: SendWhatsAppInput): Promise<SendWhatsA
       // UK networks content-filter SMS containing emoji / unusual symbols
       // (GatewayAPI status 0x1904 "Message filtered by content"), so strip
       // everything back to plain GSM-friendly text for the SMS route.
-      const smsBody = input.body
+      const smsBody = body
         .replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}\u{2190}-\u{21FF}\u{2B00}-\u{2BFF}]/gu, '')
         .replace(/[“”]/g, '"')
         .replace(/[‘’]/g, "'")
@@ -262,7 +284,7 @@ export async function sendWhatsApp(input: SendWhatsAppInput): Promise<SendWhatsA
         body: new URLSearchParams({
           To: `whatsapp:${to}`,
           From: from!.startsWith('whatsapp:') ? from! : `whatsapp:${toE164(from!) ?? from!}`,
-          Body: input.body,
+          Body: body,
         }),
       })
     }
@@ -382,4 +404,13 @@ export function buildWhatsAppBody(kind: WhatsAppKind, c: ApptMessageContext): st
         'If you can read this, WhatsApp notifications are working.',
       )
   }
+}
+
+
+/**
+ * Convenience for call sites: renders the built-in copy and passes the merge
+ * context along so a clinic's own template can replace it at send time.
+ */
+export function smsMessage(kind: WhatsAppKind, ctx: ApptMessageContext) {
+  return { body: buildWhatsAppBody(kind, ctx), templateCtx: ctx }
 }
