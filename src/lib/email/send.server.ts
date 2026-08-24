@@ -50,6 +50,37 @@ export async function enqueueAppEmail(
     return { ok: true, skipped: 'demo-mode' }
   }
 
+  // Channel choice (text / email / both) for the message types a clinic can
+  // configure. Email templates themselves are unchanged — this only decides
+  // whether the email fires when the clinic picked "text only".
+  const CHANNEL_KEYS: Record<string, string> = {
+    'booking-confirmation': 'booking-confirmation',
+    'appointment-reminder': 'appointment-reminder',
+    'booking-cancellation': 'booking-cancellation',
+    'booking-reschedule': 'booking-reschedule',
+    'rebook-reminder': 'rebook-reminder',
+    'topup-reminder': 'topup-reminder',
+    'review-request': 'review-request',
+  }
+  const channelKey = CHANNEL_KEYS[input.templateName as string]
+  if (channelKey && profileIdForDemo) {
+    try {
+      const { data: chProfile } = await supabase
+        .from('profiles')
+        .select('sms_channels')
+        .eq('id', profileIdForDemo)
+        .maybeSingle()
+      const { channelFor } = await import('@/lib/whatsapp/templates')
+      const ch = channelFor(
+        (chProfile as { sms_channels?: Record<string, unknown> } | null)?.sms_channels ?? null,
+        channelKey as never,
+      )
+      if (ch === 'sms' || ch === 'off') {
+        return { ok: true, skipped: `channel-${ch}` }
+      }
+    } catch { /* channel lookup is best-effort */ }
+  }
+
   const messageId = input.messageId || crypto.randomUUID()
 
 
