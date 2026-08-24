@@ -1,4 +1,4 @@
-import { pilotFeaturesEnabled, packagesEnabled, upcomingEnabled } from "@/lib/feature-flags";
+import { pilotFeaturesEnabled } from "@/lib/feature-flags";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -77,7 +77,8 @@ const groups: Group[] = [
       { label: "Welcome & policies", description: "Intro heading, welcome message, deposits, cancellation, T&Cs", to: "/dashboard/policies", icon: Shield, ...T.mocha },
       { label: "Locations", description: "Manage your clinic addresses", to: "/dashboard/locations", icon: MapPin, ...T.cream },
       { label: "Booking profiles", description: "Photos, titles & locations for treating staff", to: "/dashboard/practitioners", icon: Users, ...T.taupe },
-      { label: "Staff", description: "Invite team members & control what they can see", to: "/dashboard/staff", icon: ShieldCheck, ...T.espresso },
+{ label: "Staff", description: "Invite team members & control what they can see", to: "/dashboard/staff", icon: ShieldCheck, ...T.espresso },
+      { label: "Staff updates", description: "Share rota changes, news & updates with your team", to: "/dashboard/staff-updates", icon: Mail, ...T.sand },
     ],
   },
   {
@@ -130,7 +131,8 @@ const groups: Group[] = [
     title: "Communications",
     items: [
       { label: "Emails", description: "Edit wording, set up appointment reminders & more", to: "/dashboard/emails", icon: Mail, ...T.taupe },
-      { label: "Marketing", description: "Send branded campaigns to opted-in patients", to: "/dashboard/marketing", icon: Megaphone, ...T.espresso },
+{ label: "Marketing", description: "Send branded campaigns to opted-in patients", to: "/dashboard/marketing", icon: Megaphone, ...T.espresso },
+      { label: "SMS Marketing", description: "Promotional text campaigns to opted-in patients", to: "/dashboard/sms-marketing", icon: MessageCircle, ...T.cream },
     ],
   },
   {
@@ -164,12 +166,14 @@ function MenuPage() {
 
   const pilot = pilotFeaturesEnabled(profile.slug);
 
-  function comingSoonFor(to: string): ComingSoonKey | null {
+function comingSoonFor(to: string): ComingSoonKey | null {
+    // Not-yet-built features: coming soon for everyone, including pilot clinics.
+    if (to === "/dashboard/sms-marketing") return "sms-marketing";
+    if (to === "/dashboard/staff-updates") return "staff-updates";
+    // Pilot-rolled features: open for pilot clinics, coming soon for everyone else.
     if (pilot) return null;
-    if (to === "/dashboard/upcoming") return upcomingEnabled(profile.slug) ? null : "upcoming";
     if (to === "/dashboard/associates") return "associates";
-    if (to === "/dashboard/packages") return packagesEnabled(profile.slug) ? null : "packages";
-    if (to === "/dashboard/room-rental") return "room-rental";
+    if (to === "/dashboard/notifications/sms") return "sms-reminders";
     return null;
   }
 

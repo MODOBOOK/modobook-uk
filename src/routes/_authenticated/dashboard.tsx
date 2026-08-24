@@ -92,10 +92,11 @@ const navItems = [
   { label: "Discounts", to: "/dashboard/discounts", icon: Percent },
   { label: "Model slots", to: "/dashboard/model-slots", icon: Sparkles },
   { label: "Locations", to: "/dashboard/locations", icon: MapPin },
-  { label: "Staff", to: "/dashboard/staff", icon: Users },
+{ label: "Staff", to: "/dashboard/staff", icon: Users },
+  { label: "Staff updates", to: "/dashboard/staff-updates", icon: Mail, soon: true, soonKey: "staff-updates" as ComingSoonKey },
 
   { section: "Clinic owner" as const, label: "Associates", to: "/dashboard/associates", icon: ShieldCheck, flag: "associates_enabled" as const, pilot: true },
-  { section: "Clinic owner" as const, label: "Room rental", to: "/dashboard/room-rental", icon: DoorOpen, pilot: true },
+  { section: "Clinic owner" as const, label: "Room rental", to: "/dashboard/room-rental", icon: DoorOpen },
 
 
   { label: "Medical forms", to: "/dashboard/medical-forms", icon: FileText },
@@ -114,7 +115,8 @@ const navItems = [
   
   { label: "Reviews", to: "/dashboard/reviews", icon: Star },
   { label: "Referrals & Rewards", to: "/dashboard/rewards", icon: Gift },
-  { label: "Marketing", to: "/dashboard/marketing", icon: Mail },
+{ label: "Marketing", to: "/dashboard/marketing", icon: Mail },
+  { label: "SMS Marketing", to: "/dashboard/sms-marketing", icon: MessageCircle, soon: true, soonKey: "sms-marketing" as ComingSoonKey },
   { label: "Payments", to: "/dashboard/payments", icon: CreditCard },
   { label: "Plan & billing", to: "/dashboard/billing", icon: CreditCard },
   { label: "Invoices", to: "/dashboard/invoices", icon: CreditCard },
@@ -191,7 +193,9 @@ function DashboardLayout() {
             const pilotOn = pilotFeaturesEnabled(profile?.slug);
             const clinicRole = ((profile as Record<string, unknown>)?.__clinic_role as ClinicRole) ?? "owner";
             const visible = navItems.filter((item) => {
-              if (!canAccessRoute(clinicRole, item.to)) return false;
+if (!canAccessRoute(clinicRole, item.to)) return false;
+              // Not-yet-built features (soon: true) stay visible for everyone as a "Soon" chip.
+              if ((item as { soon?: boolean }).soon) return true;
               // Pilot features stay visible for everyone — non-pilot clinics see
               // a "Soon" chip and get the explainer dialog instead of the page.
               if ((item as { pilot?: boolean }).pilot && !pilotOn) return true;
@@ -215,19 +219,27 @@ function DashboardLayout() {
                       {section}
                     </p>
                   )}
-                  {(item as { pilot?: boolean }).pilot && !pilotOn ? (
+{(item as { soon?: boolean }).soon ? (
                     <NavSoon
                       icon={item.icon}
                       label={item.label}
                       onClick={() =>
                         setComingSoon(
-                          item.to === "/dashboard/upcoming"
-                            ? "upcoming"
-                            : item.to === "/dashboard/associates"
-                              ? "associates"
-                              : item.to === "/dashboard/packages"
-                                ? "packages"
-                                : "room-rental",
+                          (item as { soonKey?: ComingSoonKey }).soonKey ?? "general",
+                        )
+                      }
+                    />
+                  ) : (item as { pilot?: boolean }).pilot && !pilotOn ? (
+                    <NavSoon
+                      icon={item.icon}
+                      label={item.label}
+                      onClick={() =>
+                        setComingSoon(
+                          item.to === "/dashboard/associates"
+                            ? "associates"
+                            : item.to === "/dashboard/notifications/sms"
+                              ? "sms-reminders"
+                              : "general",
                         )
                       }
                     />
