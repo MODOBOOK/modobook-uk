@@ -195,13 +195,9 @@ export async function sendWhatsApp(input: SendWhatsAppInput): Promise<SendWhatsA
             clinic: c.clinicName ?? cfg?.clinicName,
             treatment: c.treatmentName,
             date: c.dateTime,
-location:
-              key === 'appointment-reminder' ||
-              key === 'rebook-reminder' ||
-              key === 'topup-reminder'
-                ? undefined
-                : c.locationAddress || c.locationName,
-            link: c.bookingUrl || c.manageUrl || c.reviewUrl,
+            // Addresses and links are never sent by text — UK carriers filter them.
+            location: undefined,
+            link: undefined,
           })
         }
       }
@@ -266,7 +262,8 @@ location:
       // UK networks content-filter SMS containing emoji / unusual symbols
       // (GatewayAPI status 0x1904 "Message filtered by content"), so strip
       // everything back to plain GSM-friendly text for the SMS route.
-      const smsBody = body
+      const { stripSmsUnsafe } = await import('@/lib/whatsapp/templates')
+      const smsBody = stripSmsUnsafe(body)
         .replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}\u{2190}-\u{21FF}\u{2B00}-\u{2BFF}]/gu, '')
         .replace(/[“”]/g, '"')
         .replace(/[‘’]/g, "'")
@@ -362,74 +359,27 @@ export function buildWhatsAppBody(kind: WhatsAppKind, c: ApptMessageContext): st
   const first = (c.patientName ?? '').split(' ')[0] || 'there'
   const clinic = c.clinicName || 'your clinic'
   const treatment = c.treatmentName || 'your appointment'
-  const where = c.locationName
-    ? `📍 ${[c.locationName, c.locationAddress].filter(Boolean).join(' — ')}`
-    : null
-  // Short, single-segment location for SMS: prefer the street address, fall
-  // back to the location name when no address is stored.
-  const shortWhere = [c.locationAddress, c.locationName].find(
-    (v) => typeof v === 'string' && v.trim().length > 0,
-  )
-  const at = shortWhere ? ` at ${String(shortWhere).replace(/\s*\n\s*/g, ', ').trim()}` : ''
+  const when = c.dateTime ? ` on ${c.dateTime}` : ''
 
+  // Texts carry treatment, clinic, date/time only. No addresses, no links —
+  // UK networks content-filter those (GatewayAPI 0x1904).
   switch (kind) {
     case 'booking-confirmation':
-      return line(
-        `Hi ${first}, you're booked with ${clinic}${c.dateTime ? ` at ${c.dateTime}` : ''}${at}. See you then!`,
-      )
-
-// Kept as short as possible (no sign-off, no emoji) to minimise cost.
+      return `Hi ${first}, you're booked in for ${treatment} with ${clinic}${when}. See you then!`
     case 'appointment-reminder':
-      // No address here — keeps the reminder short and reduces the chance of
-      // a carrier content filter blocking it. The booking confirmation carries
-      // the full address instead.
-      return `Hi ${first}, reminder: ${clinic}${c.dateTime ? ` ${c.dateTime}` : ''}. See you then!`
-
+      return `Hi ${first}, reminder: ${treatment} with ${clinic}${when}. See you then!`
     case 'review-request':
-      return `Hi ${first}, your appointment with ${clinic} is complete. Check your emails for your review link and aftercare. Any issues, please contact your practitioner.`
-
-
+      return `Hi ${first}, your appointment with ${clinic} is complete. Check your emails for your review and aftercare. Any issues, please contact your practitioner.`
     case 'booking-cancellation':
-      return line(
-        `Hi ${first}, your appointment with ${clinic} has been cancelled.`,
-        '',
-        `💉 ${treatment}`,
-        c.dateTime ? `🗓 ${c.dateTime}` : null,
-        c.bookingUrl ? `\nRebook any time: ${c.bookingUrl}` : null,
-        '',
-        SIGN_OFF,
-      )
+      return `Hi ${first}, your ${treatment} with ${clinic}${when} has been cancelled. Check your email to rebook.`
     case 'booking-reschedule':
-      return line(
-        `Hi ${first}, your appointment with ${clinic} has been moved.`,
-        '',
-        `💉 ${treatment}`,
-        c.dateTime ? `🗓 New time: ${c.dateTime}` : null,
-        where,
-        c.manageUrl ? `\nView booking: ${c.manageUrl}` : null,
-        '',
-        SIGN_OFF,
-      )
+      return `Hi ${first}, your ${treatment} with ${clinic} has moved${when ? ` to ${c.dateTime}` : ''}. See you then!`
     case 'rebook-reminder':
-      return line(
-        `Hi ${first}, it's about time for your next ${treatment} at ${clinic} ✨`,
-        c.bookingUrl ? `\nBook your slot: ${c.bookingUrl}` : null,
-        '',
-        SIGN_OFF,
-      )
+      return `Hi ${first}, it's about time for your next ${treatment} at ${clinic}. Check your email to book.`
     case 'topup-reminder':
-      return line(
-        `Hi ${first}, your ${treatment} is due a top-up at ${clinic} 💫`,
-        `Keeping on schedule gives the best, most natural results.`,
-        c.bookingUrl ? `\nBook your top-up: ${c.bookingUrl}` : null,
-        '',
-        SIGN_OFF,
-      )
+      return `Hi ${first}, your ${treatment} at ${clinic} is due a top-up. Check your email to book.`
     default:
-      return line(
-        `Test message from MODO for ${clinic} ✅`,
-        'If you can read this, WhatsApp notifications are working.',
-      )
+      return `Test message from MODO for ${clinic}. If you can read this, texts are working.`
   }
 }
 
