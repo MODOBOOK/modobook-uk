@@ -47,7 +47,8 @@ function StaffPage() {
   const listPracts = useServerFn(listPractitioners);
   const fetchSeats = useServerFn(getSeatSummary);
 
-  const [staff, setStaff] = useState<Staff[]>([]);
+const [staff, setStaff] = useState<Staff[]>([]);
+  const [tab, setTab] = useState<"team" | "updates">("team");
   const [practitioners, setPractitioners] = useState<Practitioner[]>([]);
   const [seats, setSeats] = useState<any>(null);
   const [ownerEmail, setOwnerEmail] = useState<string | null>(null);
@@ -123,35 +124,81 @@ function StaffPage() {
 
   const roleInfo = (r: StaffRole) => ROLES.find((x) => x.value === r)!;
 
-  return (
+return (
     <div className="space-y-6 max-w-4xl">
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">Staff</h1>
           <p className="text-muted-foreground">
             Everyone who works at your clinic lives here — each person gets their own login.
-            Only team members with the <strong>Practitioner</strong> role use a paid seat.
           </p>
         </div>
-        <Button onClick={openInvite}><Plus className="h-4 w-4 mr-1" />Add team member</Button>
+        {tab === "team" && <Button onClick={openInvite}><Plus className="h-4 w-4 mr-1" />Add team member</Button>}
       </div>
 
-      {seats && !seats.comped && (
+      <div className="flex gap-1 rounded-full border border-border/60 bg-muted/40 p-1 sm:w-fit">
+        <button
+          type="button"
+          onClick={() => setTab("team")}
+          className={
+            "flex-1 sm:flex-none rounded-full px-4 py-1.5 text-sm font-medium transition " +
+            (tab === "team" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground")
+          }
+        >
+          Team members
+        </button>
+        <button
+          type="button"
+          onClick={() => setTab("updates")}
+          className={
+            "flex-1 sm:flex-none rounded-full px-4 py-1.5 text-sm font-medium transition " +
+            (tab === "updates" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground")
+          }
+        >
+          Staff updates
+        </button>
+      </div>
+
+      {tab === "updates" && (
         <Card>
-          <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4">
-            <div className="text-sm">
-              <p className="font-medium">
-                {seats.practitioners.used} of {seats.practitioners.allowed} treating {seats.practitioners.allowed === 1 ? "seat" : "seats"} used
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Admins, receptionists and viewers are free. Adding another Practitioner adds a seat to your
-                plan automatically from your next billing date.
-              </p>
-            </div>
-            <Button asChild variant="outline" size="sm"><Link to="/dashboard/billing">Billing</Link></Button>
+          <CardHeader>
+            <CardTitle>Staff updates</CardTitle>
+            <CardDescription>
+              Individual rotas and staff payments — so each team member has their own hours and gets paid the way you agree.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="text-sm text-muted-foreground">
+            <p>
+              This is finishing final testing with our pilot clinic and will switch on for your account shortly — no
+              action needed from you.
+            </p>
+            <ul className="mt-4 space-y-2">
+              <li className="flex gap-2"><span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-primary" /><span>Individual rotas per staff member, set separately from the clinic rota</span></li>
+              <li className="flex gap-2"><span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-primary" /><span>Commission-based pay tracked automatically from the treatments they deliver</span></li>
+              <li className="flex gap-2"><span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-primary" /><span>Or let staff connect their own Stripe account so payments go straight to them</span></li>
+            </ul>
           </CardContent>
         </Card>
       )}
+
+{tab === "team" && (
+      <>
+        {seats && !seats.comped && (
+          <Card>
+            <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4">
+              <div className="text-sm">
+                <p className="font-medium">
+                  {seats.practitioners.used} of {seats.practitioners.allowed} treating {seats.practitioners.allowed === 1 ? "seat" : "seats"} used
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Admins, receptionists and viewers are free. Adding another Practitioner adds a seat to your
+                  plan automatically from your next billing date.
+                </p>
+              </div>
+              <Button asChild variant="outline" size="sm"><Link to="/dashboard/billing">Billing</Link></Button>
+            </CardContent>
+          </Card>
+        )}
 
       <Card>
         <CardHeader>
@@ -302,8 +349,10 @@ function StaffPage() {
               {saving ? "Saving…" : editing ? "Save changes" : form.email.trim() ? "Send invite" : "Add team member"}
             </Button>
           </DialogFooter>
-        </DialogContent>
+</DialogContent>
       </Dialog>
+      </>
+      )}
     </div>
   );
 }
