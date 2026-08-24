@@ -35,57 +35,55 @@ export interface SmsTemplateMeta {
   default: string
 }
 
-export const MERGE_TAGS = [
-  '{name}',
-  '{clinic}',
-  '{treatment}',
-  '{date}',
-  '{location}',
-  '{link}',
-] as const
+// Addresses and links are never sent by text (UK carriers content-filter them),
+// so {location} and {link} are no longer offered as merge tags.
+export const MERGE_TAGS = ['{name}', '{clinic}', '{treatment}', '{date}'] as const
 
 export const SMS_TEMPLATES: SmsTemplateMeta[] = [
   {
     key: 'booking-confirmation',
     label: 'Booking confirmation',
     hint: 'Sent as soon as a booking is made.',
-    tags: ['{name}', '{clinic}', '{date}', '{location}'],
-    default: "Hi {name}, you're booked with {clinic} at {date} at {location}. See you then!",
+    tags: ['{name}', '{clinic}', '{treatment}', '{date}'],
+    default: "Hi {name}, you're booked in for {treatment} with {clinic} on {date}. See you then!",
   },
   {
     key: 'appointment-reminder',
     label: 'Appointment reminder',
     hint: 'Follows your email reminder timings.',
-    tags: ['{name}', '{clinic}', '{date}', '{location}'],
-    default: 'Hi {name}, reminder: {clinic} {date} at {location}. See you then!',
+    tags: ['{name}', '{clinic}', '{treatment}', '{date}'],
+    default: 'Hi {name}, reminder: {treatment} with {clinic} on {date}. See you then!',
   },
   {
     key: 'booking-cancellation',
     label: 'Cancellation',
     hint: 'Sent when an appointment is cancelled.',
-    tags: ['{name}', '{clinic}', '{treatment}', '{date}', '{link}'],
-    default: 'Hi {name}, your appointment with {clinic} on {date} has been cancelled. Rebook: {link}',
+    tags: ['{name}', '{clinic}', '{treatment}', '{date}'],
+    default:
+      'Hi {name}, your {treatment} with {clinic} on {date} has been cancelled. Check your email to rebook.',
   },
   {
     key: 'booking-reschedule',
     label: 'Reschedule',
     hint: 'Sent when an appointment is moved.',
-    tags: ['{name}', '{clinic}', '{date}'],
-    default: 'Hi {name}, your appointment with {clinic} has moved to {date}. See you then!',
+    tags: ['{name}', '{clinic}', '{treatment}', '{date}'],
+    default: 'Hi {name}, your {treatment} with {clinic} has moved to {date}. See you then!',
   },
   {
     key: 'rebook-reminder',
     label: 'Rebook reminder',
     hint: 'When a treatment is due again.',
-    tags: ['{name}', '{clinic}', '{treatment}', '{link}'],
-    default: "Hi {name}, it's about time for your next {treatment} at {clinic}. Book: {link}",
+    tags: ['{name}', '{clinic}', '{treatment}'],
+    default:
+      "Hi {name}, it's about time for your next {treatment} at {clinic}. Check your email to book.",
   },
   {
     key: 'topup-reminder',
     label: 'Top-up reminder',
     hint: 'When a treatment is due a top-up.',
-    tags: ['{name}', '{clinic}', '{treatment}', '{link}'],
-    default: 'Hi {name}, your {treatment} at {clinic} is due a top-up. Book: {link}',
+    tags: ['{name}', '{clinic}', '{treatment}'],
+    default:
+      'Hi {name}, your {treatment} at {clinic} is due a top-up. Check your email to book.',
   },
   {
     key: 'review-request',
@@ -96,6 +94,23 @@ export const SMS_TEMPLATES: SmsTemplateMeta[] = [
       'Hi {name}, your appointment with {clinic} is complete. Check your emails for your review link and aftercare. Any issues, please contact your practitioner.',
   },
 ]
+
+/**
+ * Strip anything UK networks content-filter out of SMS: URLs, email addresses
+ * and postcodes. Applied to every outgoing text, including custom templates.
+ */
+export function stripSmsUnsafe(text: string) {
+  return text
+    .replace(/\b(?:https?:\/\/|www\.)\S+/gi, '')
+    .replace(/\b[\w.+-]+@[\w-]+\.[\w.-]+\b/gi, '')
+    .replace(/\b[A-Z]{1,2}\d[A-Z\d]?\s?\d[A-Z]{2}\b/gi, '')
+    .replace(/\b[\w-]+\.(?:com|co\.uk|uk|net|org|io|app|link)\b\/?\S*/gi, '')
+    .replace(/\s+(?:at|from|:)\s*(?=[.,!]|$)/gm, '')
+    .replace(/[ \t]{2,}/g, ' ')
+    .replace(/\s+([.,!])/g, '$1')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+}
 
 export function defaultSmsTemplate(key: SmsTemplateKey) {
   return SMS_TEMPLATES.find((t) => t.key === key)?.default ?? ''
@@ -117,18 +132,20 @@ export function renderSmsTemplate(template: string, values: SmsMergeValues) {
     '{clinic}': values.clinic || 'your clinic',
     '{treatment}': values.treatment || 'your treatment',
     '{date}': values.date || '',
-    '{location}': (values.location || '').replace(/\s*\n\s*/g, ', ').trim(),
-    '{link}': values.link || '',
+    '{location}': '',
+    '{link}': '',
   }
   let out = template
   for (const [tag, val] of Object.entries(map)) {
     out = out.split(tag).join(val)
   }
-  return out
-    .replace(/\s+at\s*(?=[.,!]|$)/gm, '')
-    .replace(/\s{2,}/g, ' ')
-    .replace(/\s+([.,!])/g, '$1')
-    .trim()
+  return stripSmsUnsafe(
+    out
+      .replace(/\s+at\s*(?=[.,!]|$)/gm, '')
+      .replace(/\s{2,}/g, ' ')
+      .replace(/\s+([.,!])/g, '$1')
+      .trim(),
+  )
 }
 
 /** Default channel when a clinic hasn't chosen one. */
