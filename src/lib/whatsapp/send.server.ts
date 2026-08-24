@@ -99,20 +99,36 @@ export async function getClinicWhatsAppSettings(
   const { data } = await supabaseAdmin
     .from('profiles')
     .select(
-      'clinic_name, whatsapp_reminders_enabled, whatsapp_notify_confirmation, whatsapp_notify_reminder, whatsapp_notify_cancellation, whatsapp_notify_rebook',
+      'slug, clinic_name, whatsapp_reminders_enabled, whatsapp_notify_confirmation, whatsapp_notify_reminder, whatsapp_notify_cancellation, whatsapp_notify_rebook',
     )
     .eq('id', profileId)
     .maybeSingle()
   if (!data) return null
   const row = data as Record<string, unknown>
+  const { whatsappMessagingEnabled } = await import('@/lib/feature-flags')
+  const allowed = whatsappMessagingEnabled((row.slug as string) ?? null)
   const value: ClinicWhatsAppSettings = {
-    enabled: !!row.whatsapp_reminders_enabled,
+    enabled: allowed && !!row.whatsapp_reminders_enabled,
     clinicName: (row.clinic_name as string) || 'your clinic',
     settings: row,
   }
   settingsCache.set(profileId, value)
   return value
 }
+
+/** Is this clinic allowed to use SMS at all (pilot allowlist)? */
+export async function clinicSmsAllowed(profileId?: string | null) {
+  if (!profileId) return false
+  const { supabaseAdmin } = await import('@/integrations/supabase/client.server')
+  const { data } = await supabaseAdmin
+    .from('profiles')
+    .select('slug')
+    .eq('id', profileId)
+    .maybeSingle()
+  const { whatsappMessagingEnabled } = await import('@/lib/feature-flags')
+  return whatsappMessagingEnabled((data as { slug?: string } | null)?.slug ?? null)
+}
+
 
 /** Has this patient opted out of WhatsApp at this clinic? */
 async function patientOptedOut(profileId?: string | null, phone?: string | null) {
