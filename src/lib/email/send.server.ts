@@ -360,20 +360,20 @@ export async function sendBookingConfirmationEmails(appointmentIds: string[]) {
       }
       // A clinic can choose to hold the confirmation text back; the
       // appointment-reminders cron picks those up once the delay has passed.
-      if (timings.confirmationDelayMinutes > 0) throw new SkipDelayedConfirmation()
-      await sendWhatsApp({
-        profileId: a.profile_id,
-        appointmentId: a.id,
-        kind: 'booking-confirmation',
-        toPhone: a.patient_phone,
-        messageKey: `wa-confirm-${a.id}`,
-        ...smsMessage('booking-confirmation', ctx),
-      })
-    } catch (e) {
-      if (!(e instanceof SkipDelayedConfirmation)) {
-        console.error('[whatsapp] booking confirmation failed', e)
+      if (timings.confirmationDelayMinutes === 0) {
+        await sendWhatsApp({
+          profileId: a.profile_id,
+          appointmentId: a.id,
+          kind: 'booking-confirmation',
+          toPhone: a.patient_phone,
+          messageKey: `wa-confirm-${a.id}`,
+          ...smsMessage('booking-confirmation', ctx),
+        })
       }
+    } catch (e) {
+      console.error('[whatsapp] booking confirmation failed', e)
     }
+
 
     if (!a.patient_email) continue
 
