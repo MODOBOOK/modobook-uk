@@ -181,22 +181,24 @@ return (
         </Card>
       )}
 
-      {tab === "team" && (
-        <Card>
-          <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4">
-            <div className="text-sm">
-              <p className="font-medium">
-                {seats.practitioners.used} of {seats.practitioners.allowed} treating {seats.practitioners.allowed === 1 ? "seat" : "seats"} used
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Admins, receptionists and viewers are free. Adding another Practitioner adds a seat to your
-                plan automatically from your next billing date.
-              </p>
-            </div>
-            <Button asChild variant="outline" size="sm"><Link to="/dashboard/billing">Billing</Link></Button>
-          </CardContent>
-        </Card>
-      )}
+{tab === "team" && (
+      <>
+        {seats && !seats.comped && (
+          <Card>
+            <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4">
+              <div className="text-sm">
+                <p className="font-medium">
+                  {seats.practitioners.used} of {seats.practitioners.allowed} treating {seats.practitioners.allowed === 1 ? "seat" : "seats"} used
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Admins, receptionists and viewers are free. Adding another Practitioner adds a seat to your
+                  plan automatically from your next billing date.
+                </p>
+              </div>
+              <Button asChild variant="outline" size="sm"><Link to="/dashboard/billing">Billing</Link></Button>
+            </CardContent>
+          </Card>
+        )}
 
       <Card>
         <CardHeader>
