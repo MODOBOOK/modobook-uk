@@ -493,8 +493,15 @@ export async function sendBookingFormRequestEmails(
 export function formatBookingDateTime(date: string, startTime: string): string {
   // "2026-07-12" + "14:30" → "Sun 12 Jul 2026 · 2:30 PM"
   try {
-    const [h, m] = startTime.split(':').map(Number)
-    const d = new Date(`${date}T${startTime}:00`)
+    // start_time can arrive as "14:30" or "14:30:00" — normalise both.
+    const [rawH, rawM] = String(startTime).split(':')
+    const h = Number(rawH)
+    const m = Number(rawM ?? 0)
+    const hhmm = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
+    const d = new Date(`${date}T${hhmm}:00`)
+    if (Number.isNaN(d.getTime()) || Number.isNaN(h) || Number.isNaN(m)) {
+      return `${date} ${startTime}`
+    }
     const fmt = new Intl.DateTimeFormat('en-GB', {
       weekday: 'short',
       day: 'numeric',
