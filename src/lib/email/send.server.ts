@@ -347,7 +347,8 @@ export async function sendBookingConfirmationEmails(appointmentIds: string[]) {
 
     // WhatsApp confirmation (per-clinic toggle; no-ops when off / no phone)
     try {
-      const { sendWhatsApp, smsMessage } = await import('@/lib/whatsapp/send.server')
+      const { sendWhatsApp, smsMessage, getSmsTimings } = await import('@/lib/whatsapp/send.server')
+      const timings = await getSmsTimings(a.profile_id)
       const ctx = {
         patientName: a.patient_name,
         clinicName: a.profiles?.clinic_name ?? branding.clinicName,
@@ -357,17 +358,22 @@ export async function sendBookingConfirmationEmails(appointmentIds: string[]) {
         locationAddress: loc ? [loc.address_line1, loc.city, loc.postcode].filter(Boolean).join(', ') : undefined,
         manageUrl,
       }
-      await sendWhatsApp({
-        profileId: a.profile_id,
-        appointmentId: a.id,
-        kind: 'booking-confirmation',
-        toPhone: a.patient_phone,
-        messageKey: `wa-confirm-${a.id}`,
-        ...smsMessage('booking-confirmation', ctx),
-      })
+      // A clinic can choose to hold the confirmation text back; the
+      // appointment-reminders cron picks those up once the delay has passed.
+      if (timings.confirmationDelayMinutes === 0) {
+        await sendWhatsApp({
+          profileId: a.profile_id,
+          appointmentId: a.id,
+          kind: 'booking-confirmation',
+          toPhone: a.patient_phone,
+          messageKey: `wa-confirm-${a.id}`,
+          ...smsMessage('booking-confirmation', ctx),
+        })
+      }
     } catch (e) {
       console.error('[whatsapp] booking confirmation failed', e)
     }
+
 
     if (!a.patient_email) continue
 

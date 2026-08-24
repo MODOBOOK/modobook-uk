@@ -141,3 +141,77 @@ export function channelFor(
   const v = channels?.[key]
   return v === 'sms' || v === 'email' || v === 'off' || v === 'both' ? v : DEFAULT_CHANNEL
 }
+
+// ---------------------------------------------------------------------------
+// Timings — when each text goes out
+// ---------------------------------------------------------------------------
+
+export interface SmsTimings {
+  /** Minutes to wait after a booking before the confirmation text (0 = instant). */
+  confirmationDelayMinutes: number
+  /** Hours before the appointment to send reminder texts (one text per entry). */
+  reminderHoursBefore: number[]
+  /** Hours after the appointment ends before the review text. */
+  reviewDelayHours: number
+}
+
+export const DEFAULT_SMS_TIMINGS: SmsTimings = {
+  confirmationDelayMinutes: 0,
+  reminderHoursBefore: [24],
+  reviewDelayHours: 2,
+}
+
+export const CONFIRMATION_DELAY_OPTIONS = [
+  { value: 0, label: 'Straight away' },
+  { value: 5, label: '5 minutes after' },
+  { value: 15, label: '15 minutes after' },
+  { value: 60, label: '1 hour after' },
+]
+
+export const REMINDER_HOUR_OPTIONS = [
+  { value: 1, label: '1 hour before' },
+  { value: 2, label: '2 hours before' },
+  { value: 24, label: '24 hours before' },
+  { value: 48, label: '48 hours before' },
+  { value: 72, label: '3 days before' },
+  { value: 168, label: '1 week before' },
+]
+
+export const REVIEW_DELAY_OPTIONS = [
+  { value: 1, label: '1 hour after' },
+  { value: 2, label: '2 hours after' },
+  { value: 4, label: '4 hours after' },
+  { value: 24, label: 'Next day (24h)' },
+]
+
+/** Parse the stored jsonb into safe, bounded values. */
+export function parseSmsTimings(raw: unknown): SmsTimings {
+  const o = (raw ?? {}) as Record<string, unknown>
+  const num = (v: unknown, fallback: number, min: number, max: number) => {
+    const n = Number(v)
+    if (!Number.isFinite(n)) return fallback
+    return Math.min(max, Math.max(min, Math.round(n)))
+  }
+  const hoursRaw = Array.isArray(o.reminderHoursBefore) ? o.reminderHoursBefore : undefined
+  const hours = hoursRaw
+    ? Array.from(
+        new Set(
+          hoursRaw
+            .map((h) => Number(h))
+            .filter((h) => Number.isFinite(h) && h > 0 && h <= 336)
+            .map((h) => Math.round(h)),
+        ),
+      ).sort((a, b) => a - b)
+    : DEFAULT_SMS_TIMINGS.reminderHoursBefore
+  return {
+    confirmationDelayMinutes: num(
+      o.confirmationDelayMinutes,
+      DEFAULT_SMS_TIMINGS.confirmationDelayMinutes,
+      0,
+      1440,
+    ),
+    reminderHoursBefore: hours,
+    reviewDelayHours: num(o.reviewDelayHours, DEFAULT_SMS_TIMINGS.reviewDelayHours, 0, 168),
+  }
+}
+

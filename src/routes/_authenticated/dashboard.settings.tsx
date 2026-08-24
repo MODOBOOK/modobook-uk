@@ -12,6 +12,8 @@ import { SaveReminder } from "@/components/SaveReminder";
 import { sendWhatsAppTest } from "@/lib/whatsapp.functions";
 import { whatsappMessagingEnabled } from "@/lib/feature-flags";
 import { SmsTemplateEditor } from "@/components/settings/SmsTemplateEditor";
+import { SmsTimingEditor } from "@/components/settings/SmsTimingEditor";
+import { parseSmsTimings } from "@/lib/whatsapp/templates";
 
 
 
@@ -88,6 +90,7 @@ function SettingsPage() {
     whatsapp_notify_rebook: profile.whatsapp_notify_rebook !== false,
     sms_templates: ((profile.sms_templates as Record<string, string> | null) ?? {}) as Record<string, string>,
     sms_channels: ((profile.sms_channels as Record<string, string> | null) ?? {}) as Record<string, string>,
+    sms_timings: parseSmsTimings((profile as { sms_timings?: unknown }).sms_timings),
     reminder_hours_before: (profile.reminder_hours_before as number[] | null) ?? [24, 2],
     // invoice branding
     invoice_show_logo: profile.invoice_show_logo !== false,
@@ -568,6 +571,11 @@ function SettingsPage() {
           />
           {s.whatsapp_reminders_enabled && (
             <div className="space-y-3 rounded-lg border border-dashed p-3">
+              <SmsTimingEditor
+                value={s.sms_timings}
+                onChange={(v) => set("sms_timings", v)}
+              />
+
               <SmsTemplateEditor
                 templates={s.sms_templates}
                 channels={s.sms_channels}

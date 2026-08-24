@@ -24,7 +24,8 @@ export const Route = createFileRoute('/api/public/hooks/review-emails')({
         // Look back 36h so we don't miss any appointment that ended recently.
         const lookbackIso = new Date(now.getTime() - 36 * 60 * 60 * 1000).toISOString().slice(0, 10)
         const todayIso = now.toISOString().slice(0, 10)
-        // Send ~2 hours after the appointment ends; this window tolerates cron jitter.
+        // Email review requests go ~2 hours after the appointment ends; the
+        // window tolerates cron jitter. Texts use each clinic's own delay.
         const minEndMs = now.getTime() - 3 * 60 * 60 * 1000
         const maxEndMs = now.getTime() - 90 * 60 * 1000
 
@@ -63,9 +64,36 @@ export const Route = createFileRoute('/api/public/hooks/review-emails')({
             profiles?: { clinic_name?: string; slug?: string } | null
           }
 
-          // Send ~2 hours after the appointment ends (window: 90min–3h ago).
           const endMs = new Date(`${r.scheduled_date}T${r.end_time || '00:00'}Z`).getTime()
-          if (Number.isNaN(endMs) || endMs > maxEndMs || endMs < minEndMs) { skipped++; continue }
+          if (Number.isNaN(endMs)) { skipped++; continue }
+
+          // Review text on the clinic's own delay (defaults to 2 hours).
+          try {
+            const { getSmsTimings } = await import('@/lib/whatsapp/send.server')
+            const timings = await getSmsTimings(r.profile_id)
+            const smsTargetMs = endMs + timings.reviewDelayHours * 60 * 60 * 1000
+            const dueNow = smsTargetMs <= now.getTime() && smsTargetMs > now.getTime() - 90 * 60 * 1000
+            if (dueNow) {
+              const b = await getPractitionerBranding(r.profile_id)
+              const { sendWhatsApp, smsMessage } = await import('@/lib/whatsapp/send.server')
+              await sendWhatsApp({
+                profileId: r.profile_id,
+                appointmentId: r.id,
+                kind: 'review-request',
+                toPhone: r.patient_phone,
+                messageKey: `wa-review-${r.id}`,
+                ...smsMessage('review-request', {
+                  patientName: r.patient_name,
+                  clinicName: r.profiles?.clinic_name ?? b.clinicName,
+                  reviewUrl: r.profiles?.slug ? `${origin}/m/${r.profiles.slug}/reviews` : origin,
+                }),
+              })
+            }
+          } catch (e) {
+            console.error('[review-emails] sms failed', e)
+          }
+
+          if (endMs > maxEndMs || endMs < minEndMs) { skipped++; continue }
 
           let branding = brandingCache.get(r.profile_id)
           if (!branding) {
@@ -74,25 +102,6 @@ export const Route = createFileRoute('/api/public/hooks/review-emails')({
           }
 
           const reviewUrl = r.profiles?.slug ? `${origin}/m/${r.profiles.slug}/reviews` : origin
-
-          // Short review text (one SMS segment)
-          try {
-            const { sendWhatsApp, smsMessage } = await import('@/lib/whatsapp/send.server')
-            await sendWhatsApp({
-              profileId: r.profile_id,
-              appointmentId: r.id,
-              kind: 'review-request',
-              toPhone: r.patient_phone,
-              messageKey: `wa-review-${r.id}`,
-              ...smsMessage('review-request', {
-                patientName: r.patient_name,
-                clinicName: r.profiles?.clinic_name ?? branding.clinicName,
-                reviewUrl,
-              }),
-            })
-          } catch (e) {
-            console.error('[review-emails] sms failed', e)
-          }
 
           if (!r.patient_email) continue
 

@@ -6560,6 +6560,7 @@ export type Database = {
           sms_channels: Json
           sms_reminders_enabled: boolean
           sms_templates: Json
+          sms_timings: Json
           social_links: Json | null
           specialties: string[]
           stripe_connect_account_id: string | null
@@ -6697,6 +6698,7 @@ export type Database = {
           sms_channels?: Json
           sms_reminders_enabled?: boolean
           sms_templates?: Json
+          sms_timings?: Json
           social_links?: Json | null
           specialties?: string[]
           stripe_connect_account_id?: string | null
@@ -6834,6 +6836,7 @@ export type Database = {
           sms_channels?: Json
           sms_reminders_enabled?: boolean
           sms_templates?: Json
+          sms_timings?: Json
           social_links?: Json | null
           specialties?: string[]
           stripe_connect_account_id?: string | null
