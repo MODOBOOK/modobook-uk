@@ -64,8 +64,9 @@ export const Route = createFileRoute('/api/public/hooks/review-emails')({
             profiles?: { clinic_name?: string; slug?: string } | null
           }
 
-          // Skip if appointment end is still in the future
-          if (r.scheduled_date === todayIso && r.end_time > nowTime) { skipped++; continue }
+          // Send ~2 hours after the appointment ends (window: 90min–3h ago).
+          const endMs = new Date(`${r.scheduled_date}T${r.end_time || '00:00'}Z`).getTime()
+          if (Number.isNaN(endMs) || endMs > maxEndMs || endMs < minEndMs) { skipped++; continue }
 
           let branding = brandingCache.get(r.profile_id)
           if (!branding) {
