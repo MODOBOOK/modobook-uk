@@ -9,11 +9,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { SaveReminder } from "@/components/SaveReminder";
-import { sendWhatsAppTest } from "@/lib/whatsapp.functions";
-import { whatsappMessagingEnabled } from "@/lib/feature-flags";
-import { SmsTemplateEditor } from "@/components/settings/SmsTemplateEditor";
-import { SmsTimingEditor } from "@/components/settings/SmsTimingEditor";
-import { parseSmsTimings } from "@/lib/whatsapp/templates";
 
 
 
@@ -80,18 +75,6 @@ function SettingsPage() {
     auto_refund_on_cancel: !!(profile as { auto_refund_on_cancel?: boolean }).auto_refund_on_cancel,
     no_refund_policy_enabled: !!(profile as { no_refund_policy_enabled?: boolean }).no_refund_policy_enabled,
     no_refund_policy_text: ((profile as { no_refund_policy_text?: string | null }).no_refund_policy_text ?? "") as string,
-    // confirm & reminders
-    auto_confirm_bookings: profile.auto_confirm_bookings !== false,
-    email_confirmations_enabled: profile.email_confirmations_enabled !== false,
-    whatsapp_reminders_enabled: !!profile.whatsapp_reminders_enabled,
-    whatsapp_notify_confirmation: profile.whatsapp_notify_confirmation !== false,
-    whatsapp_notify_reminder: profile.whatsapp_notify_reminder !== false,
-    whatsapp_notify_cancellation: profile.whatsapp_notify_cancellation !== false,
-    whatsapp_notify_rebook: profile.whatsapp_notify_rebook !== false,
-    sms_templates: ((profile.sms_templates as Record<string, string> | null) ?? {}) as Record<string, string>,
-    sms_channels: ((profile.sms_channels as Record<string, string> | null) ?? {}) as Record<string, string>,
-    sms_timings: parseSmsTimings((profile as { sms_timings?: unknown }).sms_timings),
-    reminder_hours_before: (profile.reminder_hours_before as number[] | null) ?? [24, 2],
     // invoice branding
     invoice_show_logo: profile.invoice_show_logo !== false,
     invoice_show_bank_details: !!profile.invoice_show_bank_details,
@@ -106,27 +89,7 @@ function SettingsPage() {
     invoice_company_number: (profile.invoice_company_number as string | null) ?? "",
     invoice_footer_notes: (profile.invoice_footer_notes as string | null) ?? "",
   });
-  const [saving, setSaving] = useState(false);
-  const [testPhone, setTestPhone] = useState("");
-  const [testing, setTesting] = useState(false);
-
-  const REMINDER_PRESETS: { value: number; label: string }[] = [
-    { value: 48, label: "2 days before" },
-    { value: 24, label: "1 day before" },
-    { value: 4, label: "4 hours before" },
-    { value: 2, label: "2 hours before" },
-    { value: 1, label: "1 hour before" },
-  ];
-
-  function toggleReminder(hours: number) {
-    setS((p) => {
-      const has = p.reminder_hours_before.includes(hours);
-      const next = has
-        ? p.reminder_hours_before.filter((h) => h !== hours)
-        : [...p.reminder_hours_before, hours].sort((a, b) => b - a);
-      return { ...p, reminder_hours_before: next };
-    });
-  }
+const [saving, setSaving] = useState(false);
 
   function set<K extends keyof typeof s>(key: K, val: (typeof s)[K]) {
     setS((p) => ({ ...p, [key]: val }));
@@ -471,156 +434,7 @@ function SettingsPage() {
         </CardContent>
       </Card>
 
-      {/* PATIENT NOTIFICATIONS */}
-      <div className="pt-2">
-        <h2 className="font-serif text-2xl">Patient notifications</h2>
-        <p className="text-sm text-muted-foreground">
-          What your patients receive automatically — set up email and text separately.
-        </p>
-      </div>
-
-      {/* — EMAIL */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Email</CardTitle>
-          <CardDescription>
-            Confirmations and reminders sent by email. Available on every plan.
-          </CardDescription>
-        </CardHeader>
-
-        <CardContent className="space-y-3">
-          <ToggleRow
-            label="Auto-confirm bookings"
-            hint="Turn off to manually approve every booking."
-            checked={s.auto_confirm_bookings}
-            onChange={(v) => set("auto_confirm_bookings", v)}
-          />
-          <ToggleRow
-            label="Email confirmations"
-            hint="Send confirmation email to patient & practitioner."
-            checked={s.email_confirmations_enabled}
-            onChange={(v) => set("email_confirmations_enabled", v)}
-          />
-          <div className="rounded-lg border p-3">
-            <Label className="text-sm font-medium">Email reminder timing</Label>
-            <p className="mb-3 text-xs text-muted-foreground">
-              Pick when patients should be emailed a reminder before their appointment.
-            </p>
-            <div className="grid gap-2 sm:grid-cols-2">
-              {REMINDER_PRESETS.map((opt) => {
-                const active = s.reminder_hours_before.includes(opt.value);
-                return (
-                  <label
-                    key={opt.value}
-                    className={`flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm transition ${
-                      active ? "border-primary bg-primary/5" : "hover:bg-muted/50"
-                    }`}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={active}
-                      onChange={() => toggleReminder(opt.value)}
-                      className="h-4 w-4"
-                    />
-                    {opt.label}
-                  </label>
-                );
-              })}
-            </div>
-            {s.reminder_hours_before.length === 0 && (
-              <p className="mt-2 text-xs text-muted-foreground italic">No reminders will be sent.</p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* — SMS (pilot clinics only; everyone else sees "coming soon") */}
-      {!whatsappMessagingEnabled(profile.slug as string | null) ? (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            SMS
-            <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-              Coming soon
-            </span>
-          </CardTitle>
-          <CardDescription>
-            Send booking confirmations, reminders and review requests by text from MODO.
-            We&rsquo;re piloting this with a small group of clinics first — it&rsquo;ll be switched
-            on for your account soon.
-          </CardDescription>
-        </CardHeader>
-      </Card>
-      ) : (
-      <Card>
-        <CardHeader>
-          <CardTitle>SMS</CardTitle>
-
-          <CardDescription>
-            Patients get a text from MODO on your clinic&rsquo;s behalf. Choose what goes out by
-            text, email or both, and edit the wording. Only patients with a mobile number on file
-            are texted, and they can reply STOP at any time.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <ToggleRow
-            label="Text message notifications"
-            hint="Master switch for this clinic. Off by default."
-            checked={s.whatsapp_reminders_enabled}
-            onChange={(v) => set("whatsapp_reminders_enabled", v)}
-          />
-          {s.whatsapp_reminders_enabled && (
-            <div className="space-y-3 rounded-lg border border-dashed p-3">
-              <SmsTimingEditor
-                value={s.sms_timings}
-                onChange={(v) => set("sms_timings", v)}
-              />
-
-              <SmsTemplateEditor
-                templates={s.sms_templates}
-                channels={s.sms_channels}
-                onTemplate={(k, v) => set("sms_templates", { ...s.sms_templates, [k]: v })}
-                onChannel={(k, v) => set("sms_channels", { ...s.sms_channels, [k]: v })}
-              />
-
-              <div className="rounded-lg border p-3">
-                <Label className="text-sm font-medium">Send yourself a test</Label>
-                <p className="mb-2 text-xs text-muted-foreground">
-                  Enter your own mobile to check how it looks.
-                </p>
-                <div className="flex gap-2">
-                  <Input
-                    value={testPhone}
-                    onChange={(e) => setTestPhone(e.target.value)}
-                    placeholder="07700 900123"
-                  />
-                  <Button
-                    variant="outline"
-                    disabled={testing || !testPhone.trim()}
-                    onClick={async () => {
-                      setTesting(true);
-                      try {
-                        const r = await sendWhatsAppTest({ data: { phone: testPhone.trim() } });
-                        if (r.ok) toast.success(r.message);
-                        else toast.error(r.message);
-                      } catch (e) {
-                        toast.error(e instanceof Error ? e.message : "Could not send");
-                      } finally {
-                        setTesting(false);
-                      }
-                    }}
-                  >
-                    {testing ? "Sending…" : "Send test"}
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-      )}
-
-      {/* INVOICE & BANK DETAILS */}
+{/* INVOICE & BANK DETAILS */}
       <Card>
         <CardHeader>
           <CardTitle>Invoice & bank details</CardTitle>

@@ -160,6 +160,8 @@ import { Route as AuthenticatedPrescriberRequestsIdRouteImport } from './routes/
 import { Route as AuthenticatedDashboardTrainingBookingsRouteImport } from './routes/_authenticated/dashboard.training.bookings'
 import { Route as AuthenticatedDashboardRxRequestsNewRouteImport } from './routes/_authenticated/dashboard.rx-requests.new'
 import { Route as AuthenticatedDashboardPatientsIdRouteImport } from './routes/_authenticated/dashboard.patients.$id'
+import { Route as AuthenticatedDashboardNotificationsSmsRouteImport } from './routes/_authenticated/dashboard.notifications.sms'
+import { Route as AuthenticatedDashboardNotificationsEmailRouteImport } from './routes/_authenticated/dashboard.notifications.email'
 import { Route as AuthenticatedDashboardMarketingTemplatesRouteImport } from './routes/_authenticated/dashboard.marketing.templates'
 import { Route as AuthenticatedDashboardMarketingSegmentsRouteImport } from './routes/_authenticated/dashboard.marketing.segments'
 import { Route as AuthenticatedDashboardMarketingAutomationsRouteImport } from './routes/_authenticated/dashboard.marketing.automations'
@@ -1015,6 +1017,18 @@ const AuthenticatedDashboardPatientsIdRoute =
     path: '/$id',
     getParentRoute: () => AuthenticatedDashboardPatientsRoute,
   } as any)
+const AuthenticatedDashboardNotificationsSmsRoute =
+  AuthenticatedDashboardNotificationsSmsRouteImport.update({
+    id: '/notifications/sms',
+    path: '/notifications/sms',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardNotificationsEmailRoute =
+  AuthenticatedDashboardNotificationsEmailRouteImport.update({
+    id: '/notifications/email',
+    path: '/notifications/email',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
 const AuthenticatedDashboardMarketingTemplatesRoute =
   AuthenticatedDashboardMarketingTemplatesRouteImport.update({
     id: '/templates',
@@ -1225,6 +1239,8 @@ export interface FileRoutesByFullPath {
   '/dashboard/marketing/automations': typeof AuthenticatedDashboardMarketingAutomationsRoute
   '/dashboard/marketing/segments': typeof AuthenticatedDashboardMarketingSegmentsRoute
   '/dashboard/marketing/templates': typeof AuthenticatedDashboardMarketingTemplatesRoute
+  '/dashboard/notifications/email': typeof AuthenticatedDashboardNotificationsEmailRoute
+  '/dashboard/notifications/sms': typeof AuthenticatedDashboardNotificationsSmsRoute
   '/dashboard/patients/$id': typeof AuthenticatedDashboardPatientsIdRouteWithChildren
   '/dashboard/rx-requests/new': typeof AuthenticatedDashboardRxRequestsNewRoute
   '/dashboard/training/bookings': typeof AuthenticatedDashboardTrainingBookingsRoute
@@ -1381,6 +1397,8 @@ export interface FileRoutesByTo {
   '/dashboard/marketing/automations': typeof AuthenticatedDashboardMarketingAutomationsRoute
   '/dashboard/marketing/segments': typeof AuthenticatedDashboardMarketingSegmentsRoute
   '/dashboard/marketing/templates': typeof AuthenticatedDashboardMarketingTemplatesRoute
+  '/dashboard/notifications/email': typeof AuthenticatedDashboardNotificationsEmailRoute
+  '/dashboard/notifications/sms': typeof AuthenticatedDashboardNotificationsSmsRoute
   '/dashboard/rx-requests/new': typeof AuthenticatedDashboardRxRequestsNewRoute
   '/dashboard/training/bookings': typeof AuthenticatedDashboardTrainingBookingsRoute
   '/prescriber/requests/$id': typeof AuthenticatedPrescriberRequestsIdRoute
@@ -1548,6 +1566,8 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/marketing/automations': typeof AuthenticatedDashboardMarketingAutomationsRoute
   '/_authenticated/dashboard/marketing/segments': typeof AuthenticatedDashboardMarketingSegmentsRoute
   '/_authenticated/dashboard/marketing/templates': typeof AuthenticatedDashboardMarketingTemplatesRoute
+  '/_authenticated/dashboard/notifications/email': typeof AuthenticatedDashboardNotificationsEmailRoute
+  '/_authenticated/dashboard/notifications/sms': typeof AuthenticatedDashboardNotificationsSmsRoute
   '/_authenticated/dashboard/patients/$id': typeof AuthenticatedDashboardPatientsIdRouteWithChildren
   '/_authenticated/dashboard/rx-requests/new': typeof AuthenticatedDashboardRxRequestsNewRoute
   '/_authenticated/dashboard/training/bookings': typeof AuthenticatedDashboardTrainingBookingsRoute
@@ -1716,6 +1736,8 @@ export interface FileRouteTypes {
     | '/dashboard/marketing/automations'
     | '/dashboard/marketing/segments'
     | '/dashboard/marketing/templates'
+    | '/dashboard/notifications/email'
+    | '/dashboard/notifications/sms'
     | '/dashboard/patients/$id'
     | '/dashboard/rx-requests/new'
     | '/dashboard/training/bookings'
@@ -1872,6 +1894,8 @@ export interface FileRouteTypes {
     | '/dashboard/marketing/automations'
     | '/dashboard/marketing/segments'
     | '/dashboard/marketing/templates'
+    | '/dashboard/notifications/email'
+    | '/dashboard/notifications/sms'
     | '/dashboard/rx-requests/new'
     | '/dashboard/training/bookings'
     | '/prescriber/requests/$id'
@@ -2038,6 +2062,8 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/marketing/automations'
     | '/_authenticated/dashboard/marketing/segments'
     | '/_authenticated/dashboard/marketing/templates'
+    | '/_authenticated/dashboard/notifications/email'
+    | '/_authenticated/dashboard/notifications/sms'
     | '/_authenticated/dashboard/patients/$id'
     | '/_authenticated/dashboard/rx-requests/new'
     | '/_authenticated/dashboard/training/bookings'
@@ -3189,6 +3215,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardPatientsIdRouteImport
       parentRoute: typeof AuthenticatedDashboardPatientsRoute
     }
+    '/_authenticated/dashboard/notifications/sms': {
+      id: '/_authenticated/dashboard/notifications/sms'
+      path: '/notifications/sms'
+      fullPath: '/dashboard/notifications/sms'
+      preLoaderRoute: typeof AuthenticatedDashboardNotificationsSmsRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/notifications/email': {
+      id: '/_authenticated/dashboard/notifications/email'
+      path: '/notifications/email'
+      fullPath: '/dashboard/notifications/email'
+      preLoaderRoute: typeof AuthenticatedDashboardNotificationsEmailRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
     '/_authenticated/dashboard/marketing/templates': {
       id: '/_authenticated/dashboard/marketing/templates'
       path: '/templates'
@@ -3490,6 +3530,8 @@ interface AuthenticatedDashboardRouteChildren {
   AuthenticatedDashboardIndexRoute: typeof AuthenticatedDashboardIndexRoute
   AuthenticatedDashboardAssociatesIdRoute: typeof AuthenticatedDashboardAssociatesIdRoute
   AuthenticatedDashboardConsultationsIdRoute: typeof AuthenticatedDashboardConsultationsIdRoute
+  AuthenticatedDashboardNotificationsEmailRoute: typeof AuthenticatedDashboardNotificationsEmailRoute
+  AuthenticatedDashboardNotificationsSmsRoute: typeof AuthenticatedDashboardNotificationsSmsRoute
   AuthenticatedDashboardAssociatesIndexRoute: typeof AuthenticatedDashboardAssociatesIndexRoute
   AuthenticatedDashboardConsultationsIndexRoute: typeof AuthenticatedDashboardConsultationsIndexRoute
 }
@@ -3563,6 +3605,10 @@ const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
       AuthenticatedDashboardAssociatesIdRoute,
     AuthenticatedDashboardConsultationsIdRoute:
       AuthenticatedDashboardConsultationsIdRoute,
+    AuthenticatedDashboardNotificationsEmailRoute:
+      AuthenticatedDashboardNotificationsEmailRoute,
+    AuthenticatedDashboardNotificationsSmsRoute:
+      AuthenticatedDashboardNotificationsSmsRoute,
     AuthenticatedDashboardAssociatesIndexRoute:
       AuthenticatedDashboardAssociatesIndexRoute,
     AuthenticatedDashboardConsultationsIndexRoute:
