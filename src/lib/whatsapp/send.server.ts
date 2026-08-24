@@ -156,6 +156,11 @@ export async function sendWhatsApp(input: SendWhatsAppInput): Promise<SendWhatsA
     const to = toE164(input.toPhone)
     if (!to) return { ok: false, skipped: 'no-phone' }
 
+    // Pilot allowlist: clinics outside it can never send (even test messages)
+    if (input.profileId && !(await clinicSmsAllowed(input.profileId))) {
+      return { ok: false, skipped: 'clinic-not-enabled' }
+    }
+
     // Per-clinic master switch + per-message-type switch
     if (!input.force) {
       const cfg = await getClinicWhatsAppSettings(input.profileId)
@@ -163,6 +168,7 @@ export async function sendWhatsApp(input: SendWhatsAppInput): Promise<SendWhatsA
       const key = KIND_SETTING[input.kind]
       if (key && cfg.settings[key] === false) return { ok: false, skipped: 'kind-disabled' }
     }
+
 
     // Demo clinics never send real messages
     try {
