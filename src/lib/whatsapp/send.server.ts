@@ -286,6 +286,7 @@ export interface ApptMessageContext {
   locationAddress?: string | null
   manageUrl?: string | null
   bookingUrl?: string | null
+  reviewUrl?: string | null
   hoursBefore?: number | null
 }
 
@@ -303,19 +304,17 @@ export function buildWhatsAppBody(kind: WhatsAppKind, c: ApptMessageContext): st
         `Hi ${first}, you're booked with ${clinic}${c.dateTime ? ` at ${c.dateTime}` : ''}. See you then!`,
       )
 
+    // Kept to one SMS segment (no sign-off, no emoji) to minimise cost.
     case 'appointment-reminder':
-      return line(
-        `Hi ${first}, a reminder of your appointment at ${clinic}${
-          c.hoursBefore ? ` in ${c.hoursBefore} ${c.hoursBefore === 1 ? 'hour' : 'hours'}` : ''
-        } ⏰`,
-        '',
-        `💉 ${treatment}`,
-        c.dateTime ? `🗓 ${c.dateTime}` : null,
-        where,
-        c.manageUrl ? `\nNeed to change it? ${c.manageUrl}` : null,
-        '',
-        SIGN_OFF,
-      )
+      return `Hi ${first}, reminder: ${clinic}${c.dateTime ? ` ${c.dateTime}` : ''}${
+        c.locationName ? ` at ${c.locationName}` : ''
+      }. See you then!`
+
+    case 'review-request':
+      return `Hi ${first}, thanks for visiting ${clinic}. Mind leaving us a quick review?${
+        c.reviewUrl ? ` ${c.reviewUrl}` : ''
+      }`
+
     case 'booking-cancellation':
       return line(
         `Hi ${first}, your appointment with ${clinic} has been cancelled.`,
