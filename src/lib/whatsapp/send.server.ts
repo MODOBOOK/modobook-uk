@@ -195,7 +195,12 @@ export async function sendWhatsApp(input: SendWhatsAppInput): Promise<SendWhatsA
             clinic: c.clinicName ?? cfg?.clinicName,
             treatment: c.treatmentName,
             date: c.dateTime,
-            location: c.locationAddress || c.locationName,
+location:
+              key === 'appointment-reminder' ||
+              key === 'rebook-reminder' ||
+              key === 'topup-reminder'
+                ? undefined
+                : c.locationAddress || c.locationName,
             link: c.bookingUrl || c.manageUrl || c.reviewUrl,
           })
         }
@@ -373,9 +378,12 @@ export function buildWhatsAppBody(kind: WhatsAppKind, c: ApptMessageContext): st
         `Hi ${first}, you're booked with ${clinic}${c.dateTime ? ` at ${c.dateTime}` : ''}${at}. See you then!`,
       )
 
-    // Kept as short as possible (no sign-off, no emoji) to minimise cost.
+// Kept as short as possible (no sign-off, no emoji) to minimise cost.
     case 'appointment-reminder':
-      return `Hi ${first}, reminder: ${clinic}${c.dateTime ? ` ${c.dateTime}` : ''}${at}. See you then!`
+      // No address here — keeps the reminder short and reduces the chance of
+      // a carrier content filter blocking it. The booking confirmation carries
+      // the full address instead.
+      return `Hi ${first}, reminder: ${clinic}${c.dateTime ? ` ${c.dateTime}` : ''}. See you then!`
 
     case 'review-request':
       return `Hi ${first}, your appointment with ${clinic} is complete. Check your emails for your review link and aftercare. Any issues, please contact your practitioner.`
