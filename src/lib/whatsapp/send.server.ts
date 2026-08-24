@@ -23,6 +23,7 @@ export type WhatsAppKind =
   | 'booking-reschedule'
   | 'rebook-reminder'
   | 'topup-reminder'
+  | 'review-request'
   | 'test'
 
 /** Maps a message kind to the profile column that gates it. */
@@ -33,8 +34,10 @@ const KIND_SETTING: Record<WhatsAppKind, string | null> = {
   'booking-reschedule': 'whatsapp_notify_cancellation',
   'rebook-reminder': 'whatsapp_notify_rebook',
   'topup-reminder': 'whatsapp_notify_rebook',
+  'review-request': 'whatsapp_notify_rebook',
   test: null,
 }
+
 
 export interface SendWhatsAppInput {
   profileId?: string | null
