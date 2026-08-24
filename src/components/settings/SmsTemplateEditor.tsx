@@ -31,6 +31,11 @@ export function SmsTemplateEditor({
 }) {
   return (
     <div className="space-y-4">
+      <p className="rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-700">
+        No addresses or links in texts. UK networks block messages containing addresses,
+        postcodes or web links, so these are automatically removed before sending. Keep texts to
+        the treatment, clinic name and date/time — full details go out by email.
+      </p>
       {SMS_TEMPLATES.map((t) => {
         const channel = channelFor(channels, t.key);
         const text = templates[t.key] ?? defaultSmsTemplate(t.key);
