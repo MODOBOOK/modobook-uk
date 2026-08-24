@@ -467,26 +467,36 @@ function BroadcastDialog({
           {/* Ready-made branded templates */}
           <div className="rounded-lg border p-3 space-y-2 bg-muted/20">
             <p className="text-sm font-medium">Branded templates</p>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={() => {
-                setSubject(PLATFORM_UPDATES_SUBJECT)
-                setMessage('')
-                setCtaText('')
-                setCtaUrl('')
-                setBlocks([{ type: 'html', html: PLATFORM_UPDATES_HTML, full: true }] as Block[])
-                setPreviewHtml(null)
-                toast.success('Loaded — preview or edit the code below')
-              }}
-            >
-              Product updates announcement
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              {([
+                { label: 'Live tonight (new features)', subject: PLATFORM_LIVE_TONIGHT_SUBJECT, html: PLATFORM_LIVE_TONIGHT_HTML },
+                { label: "What's coming next", subject: PLATFORM_COMING_NEXT_SUBJECT, html: PLATFORM_COMING_NEXT_HTML },
+                { label: 'Product updates announcement', subject: PLATFORM_UPDATES_SUBJECT, html: PLATFORM_UPDATES_HTML },
+              ] as const).map((t) => (
+                <Button
+                  key={t.label}
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setSubject(t.subject)
+                    setMessage('')
+                    setCtaText('')
+                    setCtaUrl('')
+                    setBlocks([{ type: 'html', html: t.html, full: true }] as Block[])
+                    setPreviewHtml(null)
+                    toast.success('Loaded — preview or edit the code below')
+                  }}
+                >
+                  {t.label}
+                </Button>
+              ))}
+            </div>
             <p className="text-xs text-muted-foreground">
-              MODO logo, icon list of what&rsquo;s coming, and a dashboard button. Fully editable before sending.
+              MODO imagery and logo, icon feature list and a dashboard button. Fully editable before sending.
             </p>
           </div>
+
 
           {/* AI composer */}
 
