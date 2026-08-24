@@ -164,12 +164,11 @@ function MenuPage() {
 
   const pilot = pilotFeaturesEnabled(profile.slug);
 
-  function comingSoonFor(to: string): ComingSoonKey | null {
+function comingSoonFor(to: string): ComingSoonKey | null {
     if (pilot) return null;
-    if (to === "/dashboard/upcoming") return upcomingEnabled(profile.slug) ? null : "upcoming";
     if (to === "/dashboard/associates") return "associates";
-    if (to === "/dashboard/packages") return packagesEnabled(profile.slug) ? null : "packages";
-    if (to === "/dashboard/room-rental") return "room-rental";
+    if (to === "/dashboard/notifications/sms") return "sms-reminders";
+    if (to === "/dashboard/sms-marketing") return "sms-marketing";
     return null;
   }
 
