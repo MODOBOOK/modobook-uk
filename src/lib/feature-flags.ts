@@ -86,14 +86,14 @@ export function upcomingEnabled(slug?: string | null) {
 }
 
 /**
- * WhatsApp / SMS patient notifications. Not live at MODO level (no approved
- * sender yet), so the whole section is hidden from every clinic. Add slugs
- * here only once sending is actually switched on.
+ * SMS / WhatsApp patient notifications. Live for the pilot clinics only —
+ * every other clinic sees a "coming soon" card and cannot send. Add slugs
+ * here as we roll sending out.
  */
-export const WHATSAPP_SLUGS: string[] = [];
+export const WHATSAPP_SLUGS: string[] = ["aestheticsbynurseryan", "aesthetiqbyjen"];
 
 export function whatsappMessagingEnabled(slug?: string | null) {
-  if (WHATSAPP_SLUGS.length === 0) return false;
   if (!slug) return false;
   return WHATSAPP_SLUGS.includes(slug.toLowerCase());
 }
+
