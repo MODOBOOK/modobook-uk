@@ -42,13 +42,14 @@ export const COMING_SOON_FEATURES: Record<
     title: "Staff updates",
     icon: Mail,
     blurb:
-      "Keep your whole team in the loop with updates shared to your staff from the dashboard.",
+      "Individual rotas and staff payments — so each team member has their own hours and gets paid the way you agree.",
     points: [
-      "Post updates your staff can see when they log in",
-      "Share rota changes, news and reminders with the team",
-      "Built-in message centre so nothing gets lost in group chats",
+      "Individual rotas per staff member, set separately from the clinic rota",
+      "Commission-based pay tracked automatically from the treatments they deliver",
+      "Or let staff connect their own Stripe account so payments go straight to them",
     ],
   },
+
   "sms-marketing": {
     title: "SMS marketing",
     icon: Megaphone,
