@@ -143,7 +143,7 @@ export function NotificationsBell({ className }: { className?: string }) {
             </div>
           </div>
         ) : (
-          <ScrollArea className="max-h-[26rem]">
+          <ScrollArea className="flex-1 min-h-0">
             <ul className="divide-y">
               {items.map((n) => {
                 const content = (
