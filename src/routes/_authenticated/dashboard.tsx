@@ -217,7 +217,17 @@ if (!canAccessRoute(clinicRole, item.to)) return false;
                       {section}
                     </p>
                   )}
-{(item as { pilot?: boolean }).pilot && !pilotOn ? (
+{(item as { soon?: boolean }).soon ? (
+                    <NavSoon
+                      icon={item.icon}
+                      label={item.label}
+                      onClick={() =>
+                        setComingSoon(
+                          (item as { soonKey?: ComingSoonKey }).soonKey ?? "general",
+                        )
+                      }
+                    />
+                  ) : (item as { pilot?: boolean }).pilot && !pilotOn ? (
                     <NavSoon
                       icon={item.icon}
                       label={item.label}
