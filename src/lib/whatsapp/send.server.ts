@@ -297,23 +297,28 @@ export function buildWhatsAppBody(kind: WhatsAppKind, c: ApptMessageContext): st
   const where = c.locationName
     ? `📍 ${[c.locationName, c.locationAddress].filter(Boolean).join(' — ')}`
     : null
+  // Short, single-segment location for SMS: prefer the street address, fall
+  // back to the location name when no address is stored.
+  const shortWhere = [c.locationAddress, c.locationName].find(
+    (v) => typeof v === 'string' && v.trim().length > 0,
+  )
+  const at = shortWhere ? ` at ${String(shortWhere).replace(/\s*\n\s*/g, ', ').trim()}` : ''
 
   switch (kind) {
     case 'booking-confirmation':
       return line(
-        `Hi ${first}, you're booked with ${clinic}${c.dateTime ? ` at ${c.dateTime}` : ''}. See you then!`,
+        `Hi ${first}, you're booked with ${clinic}${c.dateTime ? ` at ${c.dateTime}` : ''}${at}. See you then!`,
       )
 
-    // Kept to one SMS segment (no sign-off, no emoji) to minimise cost.
+    // Kept as short as possible (no sign-off, no emoji) to minimise cost.
     case 'appointment-reminder':
-      return `Hi ${first}, reminder: ${clinic}${c.dateTime ? ` ${c.dateTime}` : ''}${
-        c.locationName ? ` at ${c.locationName}` : ''
-      }. See you then!`
+      return `Hi ${first}, reminder: ${clinic}${c.dateTime ? ` ${c.dateTime}` : ''}${at}. See you then!`
 
     case 'review-request':
       return `Hi ${first}, thanks for visiting ${clinic}. Mind leaving us a quick review?${
         c.reviewUrl ? ` ${c.reviewUrl}` : ''
       }`
+
 
     case 'booking-cancellation':
       return line(
