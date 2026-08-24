@@ -188,7 +188,7 @@ export const updateProfile = createServerFn({ method: "POST" })
       whatsapp_notify_rebook?: boolean;
       sms_templates?: Record<string, string>;
       sms_channels?: Record<string, string>;
-      sms_timings?: Record<string, unknown>;
+      sms_timings?: Record<string, unknown> | object;
 
       reminder_hours_before?: number[];
       // Invoice branding
