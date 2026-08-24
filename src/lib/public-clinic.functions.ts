@@ -79,8 +79,8 @@ export const getPublicClinic = createServerFn({ method: "GET" })
           .from("treatment_location_pricing")
           .select("*")
           .in("treatment_id", treatmentIds)
-          .eq("available", true)
       : { data: [] as never[] };
+
 
     const { data: builders } = await supabase
       .from("package_builders")
