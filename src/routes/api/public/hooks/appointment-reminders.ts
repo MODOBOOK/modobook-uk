@@ -83,29 +83,8 @@ export const Route = createFileRoute('/api/public/hooks/appointment-reminders')(
                 : undefined
               const loc = a.locations
 
-              // WhatsApp reminder (per-clinic toggle; no-ops when off / no phone)
-              try {
-                const { sendWhatsApp, smsMessage } = await import('@/lib/whatsapp/send.server')
-                await sendWhatsApp({
-                  profileId: a.profile_id,
-                  appointmentId: a.id,
-                  kind: 'appointment-reminder',
-                  toPhone: a.patient_phone,
-                  messageKey: `wa-reminder-${a.id}-${rule.id}`,
-                  ...smsMessage('appointment-reminder', {
-                    patientName: a.patient_name,
-                    clinicName: a.profiles?.clinic_name ?? branding.clinicName,
-                    treatmentName: a.treatments?.name,
-                    dateTime: formatBookingDateTime(a.scheduled_date, a.start_time),
-                    locationName: loc?.name,
-                    locationAddress: loc ? [loc.address_line1, loc.city, loc.postcode].filter(Boolean).join(', ') : undefined,
-                    manageUrl,
-                    hoursBefore: rule.hours_before,
-                  }),
-                })
-              } catch (e) {
-                console.error('[whatsapp] appointment reminder failed', e)
-              }
+              // Texts are handled separately below, on the clinic's own SMS timings.
+
 
               if (!a.patient_email) {
                 await supabaseAdmin
