@@ -222,7 +222,7 @@ export const Route = createFileRoute('/api/public/hooks/appointment-reminders')(
             console.error('[reminders] sms pass failed', e)
           }
 
-          return Response.json({ ok: true, enqueued, texted, rules: rules.length })
+          return Response.json({ ok: true, enqueued, texted, rules: rules?.length ?? 0 })
 
         } catch (e) {
           console.error('[reminders] failed', e)
