@@ -315,9 +315,7 @@ export function buildWhatsAppBody(kind: WhatsAppKind, c: ApptMessageContext): st
       return `Hi ${first}, reminder: ${clinic}${c.dateTime ? ` ${c.dateTime}` : ''}${at}. See you then!`
 
     case 'review-request':
-      return `Hi ${first}, thanks for visiting ${clinic}. Mind leaving us a quick review?${
-        c.reviewUrl ? ` ${c.reviewUrl}` : ''
-      }`
+      return `Hi ${first}, your appointment with ${clinic} is complete. Check your emails for your review link and aftercare. Any issues, please contact your practitioner.`
 
 
     case 'booking-cancellation':
