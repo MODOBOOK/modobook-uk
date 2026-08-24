@@ -1,0 +1,143 @@
+// Shared (client + server safe) definitions for editable SMS templates.
+//
+// Each clinic can override the wording per message type and choose whether
+// that message goes out by text, email, or both. Email templates themselves
+// are untouched — the channel choice only decides whether each channel fires.
+
+export type SmsTemplateKey =
+  | 'booking-confirmation'
+  | 'appointment-reminder'
+  | 'booking-cancellation'
+  | 'booking-reschedule'
+  | 'rebook-reminder'
+  | 'topup-reminder'
+  | 'review-request'
+
+export type MessageChannel = 'sms' | 'email' | 'both' | 'off'
+
+/** One SMS segment for plain GSM text is 160 chars; we warn from 155. */
+export const SMS_SOFT_LIMIT = 155
+export const SMS_SEGMENT_SIZE = 160
+
+export function smsSegments(text: string) {
+  const len = text.length
+  if (len <= SMS_SEGMENT_SIZE) return 1
+  // Concatenated messages carry a header, leaving 153 chars per part.
+  return Math.ceil(len / 153)
+}
+
+export interface SmsTemplateMeta {
+  key: SmsTemplateKey
+  label: string
+  hint: string
+  /** Merge tags that make sense for this message. */
+  tags: string[]
+  default: string
+}
+
+export const MERGE_TAGS = [
+  '{name}',
+  '{clinic}',
+  '{treatment}',
+  '{date}',
+  '{location}',
+  '{link}',
+] as const
+
+export const SMS_TEMPLATES: SmsTemplateMeta[] = [
+  {
+    key: 'booking-confirmation',
+    label: 'Booking confirmation',
+    hint: 'Sent as soon as a booking is made.',
+    tags: ['{name}', '{clinic}', '{date}', '{location}'],
+    default: "Hi {name}, you're booked with {clinic} at {date} at {location}. See you then!",
+  },
+  {
+    key: 'appointment-reminder',
+    label: 'Appointment reminder',
+    hint: 'Follows your email reminder timings.',
+    tags: ['{name}', '{clinic}', '{date}', '{location}'],
+    default: 'Hi {name}, reminder: {clinic} {date} at {location}. See you then!',
+  },
+  {
+    key: 'booking-cancellation',
+    label: 'Cancellation',
+    hint: 'Sent when an appointment is cancelled.',
+    tags: ['{name}', '{clinic}', '{treatment}', '{date}', '{link}'],
+    default: 'Hi {name}, your appointment with {clinic} on {date} has been cancelled. Rebook: {link}',
+  },
+  {
+    key: 'booking-reschedule',
+    label: 'Reschedule',
+    hint: 'Sent when an appointment is moved.',
+    tags: ['{name}', '{clinic}', '{date}'],
+    default: 'Hi {name}, your appointment with {clinic} has moved to {date}. See you then!',
+  },
+  {
+    key: 'rebook-reminder',
+    label: 'Rebook reminder',
+    hint: 'When a treatment is due again.',
+    tags: ['{name}', '{clinic}', '{treatment}', '{link}'],
+    default: "Hi {name}, it's about time for your next {treatment} at {clinic}. Book: {link}",
+  },
+  {
+    key: 'topup-reminder',
+    label: 'Top-up reminder',
+    hint: 'When a treatment is due a top-up.',
+    tags: ['{name}', '{clinic}', '{treatment}', '{link}'],
+    default: 'Hi {name}, your {treatment} at {clinic} is due a top-up. Book: {link}',
+  },
+  {
+    key: 'review-request',
+    label: 'Review request',
+    hint: 'Sent about 2 hours after the appointment.',
+    tags: ['{name}', '{clinic}'],
+    default:
+      'Hi {name}, your appointment with {clinic} is complete. Check your emails for your review link and aftercare. Any issues, please contact your practitioner.',
+  },
+]
+
+export function defaultSmsTemplate(key: SmsTemplateKey) {
+  return SMS_TEMPLATES.find((t) => t.key === key)?.default ?? ''
+}
+
+export interface SmsMergeValues {
+  name?: string | null
+  clinic?: string | null
+  treatment?: string | null
+  date?: string | null
+  location?: string | null
+  link?: string | null
+}
+
+/** Replace merge tags; unresolved tags (and any stray punctuation) are cleaned up. */
+export function renderSmsTemplate(template: string, values: SmsMergeValues) {
+  const map: Record<string, string> = {
+    '{name}': (values.name ?? '').split(' ')[0] || 'there',
+    '{clinic}': values.clinic || 'your clinic',
+    '{treatment}': values.treatment || 'your treatment',
+    '{date}': values.date || '',
+    '{location}': (values.location || '').replace(/\s*\n\s*/g, ', ').trim(),
+    '{link}': values.link || '',
+  }
+  let out = template
+  for (const [tag, val] of Object.entries(map)) {
+    out = out.split(tag).join(val)
+  }
+  return out
+    .replace(/\s+at\s*(?=[.,!]|$)/gm, '')
+    .replace(/\s{2,}/g, ' ')
+    .replace(/\s+([.,!])/g, '$1')
+    .trim()
+}
+
+/** Default channel when a clinic hasn't chosen one. */
+export const DEFAULT_CHANNEL: MessageChannel = 'both'
+
+export function channelFor(
+  channels: Record<string, unknown> | null | undefined,
+  key: SmsTemplateKey,
+): MessageChannel {
+  const v = channels?.[key]
+  return v === 'sms' || v === 'email' || v === 'off' || v === 'both' ? v : DEFAULT_CHANNEL
+}
