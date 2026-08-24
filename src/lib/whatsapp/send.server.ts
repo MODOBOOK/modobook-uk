@@ -26,17 +26,8 @@ export type WhatsAppKind =
   | 'review-request'
   | 'test'
 
-/** Maps a message kind to the profile column that gates it. */
-const KIND_SETTING: Record<WhatsAppKind, string | null> = {
-  'booking-confirmation': 'whatsapp_notify_confirmation',
-  'appointment-reminder': 'whatsapp_notify_reminder',
-  'booking-cancellation': 'whatsapp_notify_cancellation',
-  'booking-reschedule': 'whatsapp_notify_cancellation',
-  'rebook-reminder': 'whatsapp_notify_rebook',
-  'topup-reminder': 'whatsapp_notify_rebook',
-  'review-request': 'whatsapp_notify_rebook',
-  test: null,
-}
+// Per-message-type control now lives in profiles.sms_channels (text / email /
+// both / off), edited by the clinic in Booking settings.
 
 
 export interface SendWhatsAppInput {
@@ -167,8 +158,6 @@ export async function sendWhatsApp(input: SendWhatsAppInput): Promise<SendWhatsA
     if (!input.force) {
       const cfg = await getClinicWhatsAppSettings(input.profileId)
       if (!cfg || !cfg.enabled) return { ok: false, skipped: 'clinic-disabled' }
-      const key = KIND_SETTING[input.kind]
-      if (key && cfg.settings[key] === false) return { ok: false, skipped: 'kind-disabled' }
     }
 
 
