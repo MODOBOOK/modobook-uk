@@ -316,7 +316,7 @@ export async function sendBookingConfirmationEmails(appointmentIds: string[]) {
 
     // WhatsApp confirmation (per-clinic toggle; no-ops when off / no phone)
     try {
-      const { sendWhatsApp, buildWhatsAppBody } = await import('@/lib/whatsapp/send.server')
+      const { sendWhatsApp, smsMessage } = await import('@/lib/whatsapp/send.server')
       const ctx = {
         patientName: a.patient_name,
         clinicName: a.profiles?.clinic_name ?? branding.clinicName,
@@ -332,7 +332,7 @@ export async function sendBookingConfirmationEmails(appointmentIds: string[]) {
         kind: 'booking-confirmation',
         toPhone: a.patient_phone,
         messageKey: `wa-confirm-${a.id}`,
-        body: buildWhatsAppBody('booking-confirmation', ctx),
+        ...smsMessage('booking-confirmation', ctx),
       })
     } catch (e) {
       console.error('[whatsapp] booking confirmation failed', e)
