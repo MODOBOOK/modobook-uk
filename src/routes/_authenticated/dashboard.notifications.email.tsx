@@ -65,11 +65,12 @@ function EmailNotificationsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 pb-24">
+    <div className="mx-auto max-w-4xl space-y-6 pb-24">
       <div>
         <h1 className="font-serif text-3xl">Email notifications</h1>
         <p className="text-sm text-muted-foreground">
-          Confirmations and reminders sent by email to your patients. Available on every plan.
+          Confirmations, reminders and review requests sent by email to your patients — edit the
+          wording and set when each one goes out. Available on every plan.
         </p>
       </div>
       <SaveReminder />
@@ -129,6 +130,8 @@ function EmailNotificationsPage() {
           </div>
         </CardContent>
       </Card>
+
+      <EmailTemplatesPanel />
 
       <div className="sticky bottom-20 z-10 flex justify-end lg:bottom-4">
         <Button onClick={save} disabled={saving} size="lg" className="shadow-luxe">
