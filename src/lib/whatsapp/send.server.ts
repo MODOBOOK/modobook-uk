@@ -99,20 +99,36 @@ export async function getClinicWhatsAppSettings(
   const { data } = await supabaseAdmin
     .from('profiles')
     .select(
-      'clinic_name, whatsapp_reminders_enabled, whatsapp_notify_confirmation, whatsapp_notify_reminder, whatsapp_notify_cancellation, whatsapp_notify_rebook',
+      'slug, clinic_name, whatsapp_reminders_enabled, whatsapp_notify_confirmation, whatsapp_notify_reminder, whatsapp_notify_cancellation, whatsapp_notify_rebook',
     )
     .eq('id', profileId)
     .maybeSingle()
   if (!data) return null
   const row = data as Record<string, unknown>
+  const { whatsappMessagingEnabled } = await import('@/lib/feature-flags')
+  const allowed = whatsappMessagingEnabled((row.slug as string) ?? null)
   const value: ClinicWhatsAppSettings = {
-    enabled: !!row.whatsapp_reminders_enabled,
+    enabled: allowed && !!row.whatsapp_reminders_enabled,
     clinicName: (row.clinic_name as string) || 'your clinic',
     settings: row,
   }
   settingsCache.set(profileId, value)
   return value
 }
+
+/** Is this clinic allowed to use SMS at all (pilot allowlist)? */
+export async function clinicSmsAllowed(profileId?: string | null) {
+  if (!profileId) return false
+  const { supabaseAdmin } = await import('@/integrations/supabase/client.server')
+  const { data } = await supabaseAdmin
+    .from('profiles')
+    .select('slug')
+    .eq('id', profileId)
+    .maybeSingle()
+  const { whatsappMessagingEnabled } = await import('@/lib/feature-flags')
+  return whatsappMessagingEnabled((data as { slug?: string } | null)?.slug ?? null)
+}
+
 
 /** Has this patient opted out of WhatsApp at this clinic? */
 async function patientOptedOut(profileId?: string | null, phone?: string | null) {
@@ -140,6 +156,11 @@ export async function sendWhatsApp(input: SendWhatsAppInput): Promise<SendWhatsA
     const to = toE164(input.toPhone)
     if (!to) return { ok: false, skipped: 'no-phone' }
 
+    // Pilot allowlist: clinics outside it can never send (even test messages)
+    if (input.profileId && !(await clinicSmsAllowed(input.profileId))) {
+      return { ok: false, skipped: 'clinic-not-enabled' }
+    }
+
     // Per-clinic master switch + per-message-type switch
     if (!input.force) {
       const cfg = await getClinicWhatsAppSettings(input.profileId)
@@ -147,6 +168,7 @@ export async function sendWhatsApp(input: SendWhatsAppInput): Promise<SendWhatsA
       const key = KIND_SETTING[input.kind]
       if (key && cfg.settings[key] === false) return { ok: false, skipped: 'kind-disabled' }
     }
+
 
     // Demo clinics never send real messages
     try {

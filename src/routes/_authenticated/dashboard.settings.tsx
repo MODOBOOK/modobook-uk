@@ -517,8 +517,24 @@ function SettingsPage() {
         </CardContent>
       </Card>
 
-      {/* WHATSAPP — hidden until sending is live at MODO level */}
-      {whatsappMessagingEnabled(null) && (
+      {/* SMS — pilot clinics only; everyone else sees "coming soon" */}
+      {!whatsappMessagingEnabled(profile.slug as string | null) ? (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            Text message reminders
+            <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+              Coming soon
+            </span>
+          </CardTitle>
+          <CardDescription>
+            Send booking confirmations, reminders and review requests by SMS from MODO. We&rsquo;re
+            piloting this with a small group of clinics first — it&rsquo;ll be switched on for your
+            account soon.
+          </CardDescription>
+        </CardHeader>
+      </Card>
+      ) : (
       <Card>
         <CardHeader>
           <CardTitle>WhatsApp messages</CardTitle>
