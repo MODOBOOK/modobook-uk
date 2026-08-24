@@ -93,12 +93,12 @@ export function WhatsNewBanner({ slug }: { slug?: string | null }) {
                 </li>
               ))}
             </ul>
-            {!live && (
+            {(
               <Link
                 to="/dashboard/coming-soon"
                 className="mt-3 inline-block text-xs font-medium text-primary underline-offset-4 hover:underline"
               >
-                See what's coming
+                See what's coming next
               </Link>
             )}
           </div>
