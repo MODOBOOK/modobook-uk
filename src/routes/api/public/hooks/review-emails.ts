@@ -21,10 +21,12 @@ export const Route = createFileRoute('/api/public/hooks/review-emails')({
         const { tryEnqueueAppEmail, getPractitionerBranding } = await import('@/lib/email/send.server')
 
         const now = new Date()
-        // Look back 24h so we don't email months-old appointments if the cron was down
-        const lookbackIso = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
+        // Look back 36h so we don't miss any appointment that ended recently.
+        const lookbackIso = new Date(now.getTime() - 36 * 60 * 60 * 1000).toISOString().slice(0, 10)
         const todayIso = now.toISOString().slice(0, 10)
-        const nowTime = now.toISOString().slice(11, 16)
+        // Send ~2 hours after the appointment ends; this window tolerates cron jitter.
+        const minEndMs = now.getTime() - 3 * 60 * 60 * 1000
+        const maxEndMs = now.getTime() - 90 * 60 * 1000
 
         // Fetch candidate appointments: status confirmed, has patient_email,
         // scheduled_date within the last 24h, and end_time has passed.
@@ -61,8 +63,9 @@ export const Route = createFileRoute('/api/public/hooks/review-emails')({
             profiles?: { clinic_name?: string; slug?: string } | null
           }
 
-          // Skip if appointment end is still in the future
-          if (r.scheduled_date === todayIso && r.end_time > nowTime) { skipped++; continue }
+          // Send ~2 hours after the appointment ends (window: 90min–3h ago).
+          const endMs = new Date(`${r.scheduled_date}T${r.end_time || '00:00'}Z`).getTime()
+          if (Number.isNaN(endMs) || endMs > maxEndMs || endMs < minEndMs) { skipped++; continue }
 
           let branding = brandingCache.get(r.profile_id)
           if (!branding) {
