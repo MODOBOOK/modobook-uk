@@ -47,7 +47,8 @@ function StaffPage() {
   const listPracts = useServerFn(listPractitioners);
   const fetchSeats = useServerFn(getSeatSummary);
 
-  const [staff, setStaff] = useState<Staff[]>([]);
+const [staff, setStaff] = useState<Staff[]>([]);
+  const [tab, setTab] = useState<"team" | "updates">("team");
   const [practitioners, setPractitioners] = useState<Practitioner[]>([]);
   const [seats, setSeats] = useState<any>(null);
   const [ownerEmail, setOwnerEmail] = useState<string | null>(null);
