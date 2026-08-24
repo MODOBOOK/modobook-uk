@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { SaveReminder } from "@/components/SaveReminder";
+import { EmailTemplatesPanel } from "@/components/settings/EmailTemplatesPanel";
 
 export const Route = createFileRoute("/_authenticated/dashboard/notifications/email")({
   ssr: false,
