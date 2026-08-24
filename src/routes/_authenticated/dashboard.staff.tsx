@@ -347,8 +347,9 @@ return (
               {saving ? "Saving…" : editing ? "Save changes" : form.email.trim() ? "Send invite" : "Add team member"}
             </Button>
           </DialogFooter>
-        </DialogContent>
+</DialogContent>
       </Dialog>
+      )}
     </div>
   );
 }
