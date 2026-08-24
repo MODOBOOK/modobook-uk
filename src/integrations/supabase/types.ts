@@ -6557,7 +6557,9 @@ export type Database = {
           save_card_on_file: boolean
           show_prices_on_booking: boolean
           slug: string | null
+          sms_channels: Json
           sms_reminders_enabled: boolean
+          sms_templates: Json
           social_links: Json | null
           specialties: string[]
           stripe_connect_account_id: string | null
@@ -6692,7 +6694,9 @@ export type Database = {
           save_card_on_file?: boolean
           show_prices_on_booking?: boolean
           slug?: string | null
+          sms_channels?: Json
           sms_reminders_enabled?: boolean
+          sms_templates?: Json
           social_links?: Json | null
           specialties?: string[]
           stripe_connect_account_id?: string | null
@@ -6827,7 +6831,9 @@ export type Database = {
           save_card_on_file?: boolean
           show_prices_on_booking?: boolean
           slug?: string | null
+          sms_channels?: Json
           sms_reminders_enabled?: boolean
+          sms_templates?: Json
           social_links?: Json | null
           specialties?: string[]
           stripe_connect_account_id?: string | null
