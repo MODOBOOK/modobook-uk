@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { CalendarDays, ShieldCheck, Package, DoorOpen, Sparkles } from "lucide-react";
+import { ShieldCheck, MessageCircle, Mail, Megaphone, Sparkles } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -9,24 +9,12 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
-export type ComingSoonKey = "upcoming" | "associates" | "packages" | "room-rental" | "general";
+export type ComingSoonKey = "associates" | "sms-reminders" | "staff-updates" | "sms-marketing" | "general";
 
 export const COMING_SOON_FEATURES: Record<
   Exclude<ComingSoonKey, "general">,
   { title: string; icon: React.ElementType; blurb: string; points: string[] }
 > = {
-  upcoming: {
-    title: "Upcoming appointments",
-    icon: CalendarDays,
-    blurb:
-      "A dedicated page for everything booked in — far more useful than scrolling the calendar.",
-    points: [
-      "One list of every upcoming appointment with filters by day, location and practitioner",
-      "At-a-glance flags for missing medical or consent forms",
-      "AI brief for each patient — allergies, concerns raised and what they've booked",
-      "Jump straight into the patient record or reschedule in a tap",
-    ],
-  },
   associates: {
     title: "Associates (clinic owner)",
     icon: ShieldCheck,
@@ -39,29 +27,37 @@ export const COMING_SOON_FEATURES: Record<
       "Supervision meeting logs and incident reporting",
     ],
   },
-  packages: {
-    title: "Treatment packages & build your own",
-    icon: Package,
+  "sms-reminders": {
+    title: "SMS reminders",
+    icon: MessageCircle,
     blurb:
-      "Bundle treatments into packages patients buy upfront — plus a 'build your own' option where they pick their own combination.",
+      "Automatic text reminders sent to patients ahead of their appointment so fewer bookings are missed.",
     points: [
-      "Build packages from any of your services with custom session counts",
-      "Build your own: patients choose treatments themselves for a set price or with an automatic discount",
-      "Set expiry windows and sale pricing to drive commitment",
-      "Patients see packages on your booking page alongside treatments",
-      "Track redemptions and remaining sessions automatically",
+      "Choose how far in advance reminders go out — the day before, a few hours before or your own timing",
+      "Patients can reply STOP to opt out of texts at any time",
+      "Works alongside your email reminders for patients who prefer a text",
     ],
   },
-  "room-rental": {
-    title: "Room rental",
-    icon: DoorOpen,
+  "staff-updates": {
+    title: "Staff updates",
+    icon: Mail,
     blurb:
-      "Rent out your treatment rooms by the hour, half day or full day to self-employed practitioners.",
+      "Keep your whole team in the loop with updates shared to your staff from the dashboard.",
     points: [
-      "Set availability and pricing for each room",
-      "Online booking with automatic room allocation",
-      "Built-in invoices sent straight to renters",
-      "See who's in and which room they're using at a glance",
+      "Post updates your staff can see when they log in",
+      "Share rota changes, news and reminders with the team",
+      "Built-in message centre so nothing gets lost in group chats",
+    ],
+  },
+  "sms-marketing": {
+    title: "SMS marketing",
+    icon: Megaphone,
+    blurb:
+      "Send promotional text campaigns to opted-in patients to fill quieter slots and drive repeat bookings.",
+    points: [
+      "Targeted SMS campaigns to your opted-in patient list",
+      "Personalised with merge tags and track opens and responses",
+      "Branded templates and AI content generation built in",
     ],
   },
 };
