@@ -195,7 +195,12 @@ export async function sendWhatsApp(input: SendWhatsAppInput): Promise<SendWhatsA
             clinic: c.clinicName ?? cfg?.clinicName,
             treatment: c.treatmentName,
             date: c.dateTime,
-            location: c.locationAddress || c.locationName,
+location:
+              key === 'appointment-reminder' ||
+              key === 'rebook-reminder' ||
+              key === 'topup-reminder'
+                ? undefined
+                : c.locationAddress || c.locationName,
             link: c.bookingUrl || c.manageUrl || c.reviewUrl,
           })
         }
