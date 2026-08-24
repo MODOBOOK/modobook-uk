@@ -540,11 +540,11 @@ function SettingsPage() {
       ) : (
       <Card>
         <CardHeader>
-          <CardTitle>WhatsApp messages</CardTitle>
+          <CardTitle>Text messages</CardTitle>
           <CardDescription>
-            Patients get a WhatsApp from the official MODO business number, on your clinic&rsquo;s
-            behalf. Only patients with a mobile number on file are messaged, and they can reply
-            STOP at any time.
+            Patients get a text from MODO on your clinic&rsquo;s behalf. Choose what goes out by
+            text, email or both, and edit the wording. Only patients with a mobile number on file
+            are texted, and they can reply STOP at any time.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
