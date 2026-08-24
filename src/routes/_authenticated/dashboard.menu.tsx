@@ -127,7 +127,15 @@ const groups: Group[] = [
     ],
   },
   {
+    title: "Patient notifications",
+    items: [
+      { label: "Email", description: "Confirmations, reminders & review requests by email", to: "/dashboard/notifications/email", icon: Mail, ...T.taupe },
+      { label: "SMS", description: "Text confirmations, reminders & review requests", to: "/dashboard/notifications/sms", icon: MessageCircle, ...T.cream },
+    ],
+  },
+  {
     title: "Communications",
+
     items: [
       { label: "Emails", description: "Edit wording, set up appointment reminders & more", to: "/dashboard/emails", icon: Mail, ...T.taupe },
 { label: "Marketing", description: "Send branded campaigns to opted-in patients", to: "/dashboard/marketing", icon: Megaphone, ...T.espresso },
