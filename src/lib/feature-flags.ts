@@ -19,7 +19,7 @@ export function packageBuilderEnabled(slug?: string | null) {
 }
 
 /** "What's new in MODO" dashboard banner — pilot account only for now. */
-export const WHATS_NEW_SLUGS = ["aestheticsbynurseryan"];
+export const WHATS_NEW_SLUGS: string[] = [];
 
 export function whatsNewEnabled(slug?: string | null) {
   return isFeatureLive(WHATS_NEW_SLUGS, slug);

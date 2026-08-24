@@ -10,15 +10,25 @@ import { COMING_SOON_FEATURES } from "@/components/ComingSoonDialog";
  * Bump this whenever the list below changes — dismissals are keyed by version
  * so a new release shows the banner again.
  */
-export const WHATS_NEW_VERSION = "2026-08-14-v2";
+export const WHATS_NEW_VERSION = "2026-08-24-v3";
 
 type Item = { title: string; body: string; to?: string };
 
 const ITEMS: Item[] = [
   {
+    title: "Brief me — AI patient briefs",
+    body: "Open Upcoming to get an instant AI summary of each patient before they walk in.",
+    to: "/dashboard/upcoming",
+  },
+  {
     title: "Room rental",
-    body: "Rent out spare rooms to self-employed practitioners — now live in MODO.",
+    body: "Rent spare rooms by the hour, half day or full day — with automatic room allocation.",
     to: "/dashboard/room-rental",
+  },
+  {
+    title: "Training link",
+    body: "Your courses now have their own shareable page at /m/your-slug/training, with online booking and payment.",
+    to: "/dashboard/training",
   },
   {
     title: "Build your own package",
@@ -26,9 +36,9 @@ const ITEMS: Item[] = [
     to: "/dashboard/packages",
   },
   {
-    title: "Regulated clinic owner?",
-    body: "Add your practitioners to MODO so they can book rooms and work under your clinic's regulation.",
-    to: "/dashboard/practitioners",
+    title: "New calendar",
+    body: "Cleaner day view with solid colour blocks, no overlaps, a live time line and side-to-side scrolling on mobile.",
+    to: "/dashboard/bookings",
   },
 ];
 
@@ -83,12 +93,12 @@ export function WhatsNewBanner({ slug }: { slug?: string | null }) {
                 </li>
               ))}
             </ul>
-            {!live && (
+            {(
               <Link
                 to="/dashboard/coming-soon"
                 className="mt-3 inline-block text-xs font-medium text-primary underline-offset-4 hover:underline"
               >
-                See what's coming
+                See what's coming next
               </Link>
             )}
           </div>
