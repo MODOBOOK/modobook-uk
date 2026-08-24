@@ -27,15 +27,12 @@ export const Route = createFileRoute('/api/public/hooks/appointment-reminders')(
             .eq('enabled', true)
           if (rulesErr) throw rulesErr
 
-          if (!rules || rules.length === 0) {
-            return Response.json({ ok: true, enqueued: 0, note: 'no rules' })
-          }
-
           let enqueued = 0
           const nowMs = Date.now()
           const brandingCache = new Map<string, any>()
 
-          for (const rule of rules as any[]) {
+          for (const rule of (rules ?? []) as any[]) {
+
             // Window: appointments starting in [hours_before-5min, hours_before+5min]
             const targetMs = nowMs + rule.hours_before * 3600_000
             const windowStartMs = targetMs - 6 * 60_000
