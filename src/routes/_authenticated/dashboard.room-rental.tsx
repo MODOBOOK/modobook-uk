@@ -1,5 +1,4 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { pilotFeaturesEnabled } from "@/lib/feature-flags";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -35,10 +34,6 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/dashboard/room-rental")({
   ssr: false,
-  beforeLoad: ({ context }) => {
-    const slug = (context as { profile?: { slug?: string } })?.profile?.slug;
-    if (!pilotFeaturesEnabled(slug)) throw redirect({ to: "/dashboard/coming-soon" });
-  },
   head: () => ({
     meta: [
       { title: "Room rental · MODO" },
