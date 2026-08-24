@@ -225,7 +225,7 @@ export async function sendWhatsApp(input: SendWhatsAppInput): Promise<SendWhatsA
       kind: input.kind,
       to_phone: to,
       message_key: input.messageKey,
-      body: input.body,
+      body,
       status: 'queued',
     } as never)
     if (claimErr) {
@@ -262,7 +262,7 @@ export async function sendWhatsApp(input: SendWhatsAppInput): Promise<SendWhatsA
       // UK networks content-filter SMS containing emoji / unusual symbols
       // (GatewayAPI status 0x1904 "Message filtered by content"), so strip
       // everything back to plain GSM-friendly text for the SMS route.
-      const smsBody = input.body
+      const smsBody = body
         .replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}\u{2190}-\u{21FF}\u{2B00}-\u{2BFF}]/gu, '')
         .replace(/[“”]/g, '"')
         .replace(/[‘’]/g, "'")
@@ -295,7 +295,7 @@ export async function sendWhatsApp(input: SendWhatsAppInput): Promise<SendWhatsA
         body: new URLSearchParams({
           To: `whatsapp:${to}`,
           From: from!.startsWith('whatsapp:') ? from! : `whatsapp:${toE164(from!) ?? from!}`,
-          Body: input.body,
+          Body: body,
         }),
       })
     }
@@ -415,4 +415,13 @@ export function buildWhatsAppBody(kind: WhatsAppKind, c: ApptMessageContext): st
         'If you can read this, WhatsApp notifications are working.',
       )
   }
+}
+
+
+/**
+ * Convenience for call sites: renders the built-in copy and passes the merge
+ * context along so a clinic's own template can replace it at send time.
+ */
+export function smsMessage(kind: WhatsAppKind, ctx: ApptMessageContext) {
+  return { body: buildWhatsAppBody(kind, ctx), templateCtx: ctx }
 }
