@@ -188,6 +188,7 @@ export const updateProfile = createServerFn({ method: "POST" })
       whatsapp_notify_rebook?: boolean;
       sms_templates?: Record<string, string>;
       sms_channels?: Record<string, string>;
+      sms_timings?: Record<string, unknown>;
 
       reminder_hours_before?: number[];
       // Invoice branding
@@ -294,7 +295,7 @@ export const updateProfile = createServerFn({ method: "POST" })
       "auto_confirm_bookings","email_confirmations_enabled","sms_reminders_enabled",
       "whatsapp_reminders_enabled","whatsapp_notify_confirmation","whatsapp_notify_reminder",
       "whatsapp_notify_cancellation","whatsapp_notify_rebook","reminder_hours_before",
-      "sms_templates","sms_channels",
+      "sms_templates","sms_channels","sms_timings",
       "invoice_bank_name","invoice_account_name","invoice_sort_code",
       "invoice_account_number","invoice_iban","invoice_swift",
       "invoice_payment_reference","invoice_footer_notes","invoice_vat_number",
