@@ -336,12 +336,6 @@ export async function sendWhatsApp(input: SendWhatsAppInput): Promise<SendWhatsA
 // Message copy
 // ---------------------------------------------------------------------------
 
-const SIGN_OFF = 'Sent by MODO on behalf of your clinic. Reply STOP to opt out.'
-
-function line(...parts: Array<string | undefined | null>) {
-  return parts.filter(Boolean).join('\n')
-}
-
 export interface ApptMessageContext {
   patientName?: string | null
   clinicName?: string | null
