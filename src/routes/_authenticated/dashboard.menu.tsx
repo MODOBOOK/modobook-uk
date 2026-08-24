@@ -131,7 +131,8 @@ const groups: Group[] = [
     title: "Communications",
     items: [
       { label: "Emails", description: "Edit wording, set up appointment reminders & more", to: "/dashboard/emails", icon: Mail, ...T.taupe },
-      { label: "Marketing", description: "Send branded campaigns to opted-in patients", to: "/dashboard/marketing", icon: Megaphone, ...T.espresso },
+{ label: "Marketing", description: "Send branded campaigns to opted-in patients", to: "/dashboard/marketing", icon: Megaphone, ...T.espresso },
+      { label: "SMS Marketing", description: "Promotional text campaigns to opted-in patients", to: "/dashboard/sms-marketing", icon: MessageCircle, ...T.cream },
     ],
   },
   {
