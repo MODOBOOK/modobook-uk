@@ -112,7 +112,7 @@ export function NotificationsBell({ className }: { className?: string }) {
           )}
         </button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-[22rem] p-0" sideOffset={8}>
+      <PopoverContent align="end" className="w-[22rem] max-h-[calc(100dvh-4rem)] overflow-hidden p-0 flex flex-col" sideOffset={8}>
         <div className="flex items-center justify-between border-b px-4 py-3">
           <div>
             <div className="font-serif text-base leading-tight">Notifications</div>
@@ -143,7 +143,7 @@ export function NotificationsBell({ className }: { className?: string }) {
             </div>
           </div>
         ) : (
-          <ScrollArea className="max-h-[26rem]">
+          <ScrollArea className="flex-1 min-h-0">
             <ul className="divide-y">
               {items.map((n) => {
                 const content = (
