@@ -128,6 +128,13 @@ function Account() {
         return;
       }
 
+      const signedInEmail = (sess.session.user.email ?? "").trim().toLowerCase();
+      if (signedInEmail.endsWith("@modo.demo") && slug !== "demo-clinic") {
+        await supabase.auth.signOut({ scope: "local" });
+        navigate({ to: "/m/$slug/auth", params: { slug }, search: { redirect: `/m/${slug}/account` }, replace: true });
+        return;
+      }
+
       // Public profile + rules (via security-definer RPC — profiles has no
       // anon/authenticated SELECT policy, so a direct select would return null).
       const { data: profRows } = await supabase.rpc(
@@ -144,7 +151,7 @@ function Account() {
       // them to explicitly register with THIS clinic.
       const { data: existingLink } = await supabase.rpc("current_patient_client_id", { _profile_id: prof.id });
       if (!existingLink) {
-        const sessionEmail = (sess.session.user.email ?? "").toLowerCase();
+        const sessionEmail = signedInEmail;
         const { data: priorAppts } = await supabase
           .from("appointments")
           .select("id")
@@ -186,7 +193,7 @@ function Account() {
       // These are Stripe checkout holds; until Stripe confirms payment the
       // appointment shouldn't appear on the patient's account.
       
-      const myEmail = (sess.session.user.email ?? "").toLowerCase();
+      const myEmail = signedInEmail;
       const { data: apptRows } = await supabase
         .from("appointments")
         .select("id, scheduled_date, start_time, end_time, status, payment_status, amount_paid_cents, payment_hold_expires_at, total_amount, treatment_id, reschedule_count, treatment_name_snapshot, patient_user_id, patient_email, treatments(name), locations(name)")
