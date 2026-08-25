@@ -52,6 +52,7 @@ export function CourseGroupRow({
   onToggle: (id: string) => void;
 }) {
   const [open, setOpen] = useState(false);
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const sorted = [...options].sort((a, b) => a.session_count - b.session_count || a.price - b.price);
   const single = sorted.find((o) => o.session_count <= 1) ?? sorted[0];
   const chosen = sorted.filter((o) => isSelected(o.id));
@@ -66,17 +67,24 @@ export function CourseGroupRow({
     return `${days} day${days === 1 ? "" : "s"} apart`;
   };
   const recommended = sorted.find((o) => o.recommended);
+  const detailOption = single;
+  const detailPicture = sorted.find((o) => o.picture_url)?.picture_url ?? null;
+  const hasLongDescription = (detailOption?.description ?? "").length > 0 || !!detailPicture;
 
   return (
     <>
-      <button
-        type="button"
+      <div
+        role="button"
+        tabIndex={0}
         onClick={() => setOpen(true)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") setOpen(true);
+        }}
         className="w-full rounded-xl border p-3 text-left shadow-sm transition hover:shadow"
         style={{ backgroundColor: cardBg, borderColor: chosen.length ? brand : cardBorder }}
       >
         <div className="flex items-start gap-3">
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <div className={`leading-tight ${bold ? "font-bold" : "font-medium"}`} style={{ color: nameColor }}>
               {groupName}
             </div>
@@ -105,10 +113,26 @@ export function CourseGroupRow({
             )}
           </div>
         </div>
-        <div className="mt-2 text-xs font-semibold" style={{ color: brand }}>
-          Choose your sessions →
+        <div className="mt-2 flex items-center justify-between">
+          <div className="text-xs font-semibold" style={{ color: brand }}>
+            Choose your sessions →
+          </div>
+          {hasLongDescription && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setDetailsOpen(true);
+              }}
+              className="inline-flex items-center gap-1 text-xs font-semibold underline underline-offset-4 opacity-80 hover:opacity-100"
+              style={{ color: brand }}
+            >
+              <Info className="h-3 w-3" />
+              Read more
+            </button>
+          )}
         </div>
-      </button>
+      </div>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-h-[85vh] w-[calc(100vw-1.5rem)] max-w-lg overflow-y-auto p-4 sm:p-6">
