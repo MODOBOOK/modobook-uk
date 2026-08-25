@@ -91,6 +91,7 @@ type TreatmentForm = {
   discount_show_was_now: boolean;
   discount_label: string | null;
   course_group: string | null;
+  course_groups: string[];
   course_recommended: boolean;
   session_count: number;
   allow_split_payment: boolean;
