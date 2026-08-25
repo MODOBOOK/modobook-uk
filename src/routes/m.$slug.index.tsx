@@ -670,6 +670,7 @@ function BookPage() {
                 duration: durationFor(o),
                 session_count: (o as { session_count?: number }).session_count ?? 1,
                 allow_split_payment: Boolean((o as { allow_split_payment?: boolean }).allow_split_payment),
+                interval_days: (o as { session_interval_days?: number | null }).session_interval_days ?? null,
                 recommended: Boolean((o as { course_recommended?: boolean }).course_recommended),
                 description: o.description,
                 full: capFor(o)?.full ?? false,
