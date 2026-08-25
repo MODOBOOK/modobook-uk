@@ -33,7 +33,6 @@ export function CoursePickerCard({
   imageUrl,
   options,
   slug,
-  treatmentId,
   brand,
   accent,
   locationId,
@@ -42,7 +41,6 @@ export function CoursePickerCard({
   imageUrl: string | null;
   options: CourseOption[];
   slug: string;
-  treatmentId: string;
   brand: string;
   accent: string;
   locationId?: string | null;
@@ -166,7 +164,6 @@ export function CoursePickerCard({
               You can book your remaining sessions after your first appointment.
             </p>
           </div>
-          <p className="sr-only">{treatmentId}</p>
         </DialogContent>
       </Dialog>
     </>
