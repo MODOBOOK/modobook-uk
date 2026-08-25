@@ -132,7 +132,7 @@ export function renderSmsTemplate(template: string, values: SmsMergeValues) {
     '{clinic}': values.clinic || 'your clinic',
     '{treatment}': values.treatment || 'your treatment',
     '{date}': values.date || '',
-    '{location}': '',
+    '{location}': (values.location ?? '').trim(),
     '{link}': '',
   }
   let out = template
