@@ -52,6 +52,7 @@ import type { Database } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 import { SafeHtml } from "@/components/SafeHtml";
 import { PackageBuilderCard, type PublicBuilder } from "@/components/PackageBuilderCard";
+import { CoursePickerCard } from "@/components/CoursePickerCard";
 import { packageBuilderEnabled, linkButtonEnabled, treatmentLeafletsEnabled } from "@/lib/feature-flags";
 import { getLeafletSignedUrl } from "@/lib/leaflets.functions";
 import { resolveDisplayNames } from "@/lib/display-name";
