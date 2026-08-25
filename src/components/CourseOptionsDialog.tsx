@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { createCourseTreatmentOption, updateTreatment } from "@/lib/treatments.functions";
 import {
@@ -38,6 +38,17 @@ function groupsOf(t: CourseTreatment): string[] {
   return single ? [single] : [];
 }
 
+function isSessionLabel(value: string) {
+  return /^(?:single|\d+)\s+sessions?(?:\s|$)/i.test(value.trim());
+}
+
+function baseTreatmentName(name: string) {
+  return name
+    .replace(/\s*[—-]\s*(?:single|\d+)\s+sessions?$/i, "")
+    .replace(/\s+(?:single|\d+)\s+sessions?$/i, "")
+    .trim();
+}
+
 type Draft = {
   id: string;
   sessions: string;
@@ -73,7 +84,7 @@ export function CourseOptionsDialog({
 }: {
   treatment: CourseTreatment;
   allTreatments: CourseTreatment[];
-  onSaved: () => void;
+  onSaved: () => void | Promise<void>;
 }) {
   const createOption = useServerFn(createCourseTreatmentOption);
   const update = useServerFn(updateTreatment);
@@ -86,18 +97,28 @@ export function CourseOptionsDialog({
   const [newRecommended, setNewRecommended] = useState(false);
 
   const groupName = useMemo(() => {
-    const existing = groupsOf(treatment)[0];
-    if (existing && !/^\d+\s+sessions?(?:\s|$)/i.test(existing)) return existing;
-    return treatment.name.replace(/\s*[—-]\s*\d+\s+sessions?$/i, "").trim();
+    const existing = groupsOf(treatment).find((group) => !isSessionLabel(group));
+    return existing || baseTreatmentName(treatment.name);
   }, [treatment]);
 
-  const options = useMemo(() => {
+  const matchingOptions = useMemo(() => {
     const inGroup = allTreatments.filter((t) => groupsOf(t).includes(groupName));
     const list = inGroup.length ? inGroup : [treatment];
     return [...list].sort(
       (a, b) => (a.session_count ?? 1) - (b.session_count ?? 1) || a.price - b.price,
     );
   }, [allTreatments, groupName, treatment]);
+  const [options, setOptions] = useState<CourseTreatment[]>(matchingOptions);
+
+  useEffect(() => {
+    setOptions((current) => {
+      const byId = new Map(current.map((option) => [option.id, option]));
+      for (const option of matchingOptions) byId.set(option.id, option);
+      return [...byId.values()].sort(
+        (a, b) => (a.session_count ?? 1) - (b.session_count ?? 1) || a.price - b.price,
+      );
+    });
+  }, [matchingOptions]);
 
   const [drafts, setDrafts] = useState<Record<string, Draft>>({});
   const draftFor = (t: CourseTreatment) => drafts[t.id] ?? draftFrom(t);
@@ -131,8 +152,24 @@ export function CourseOptionsDialog({
           course_groups: [groupName],
         },
       });
+      setOptions((current) =>
+        current.map((option) =>
+          option.id === t.id
+            ? {
+                ...option,
+                price,
+                session_count: sessions,
+                allow_split_payment: sessions > 1 ? d.split : false,
+                session_interval_days: weeks > 0 ? Math.round(weeks * 7) : null,
+                course_recommended: d.recommended,
+                course_group: groupName,
+                course_groups: [groupName],
+              }
+            : option,
+        ),
+      );
       toast.success(`${sessions} session option saved`);
-      onSaved();
+      await onSaved();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to save option");
     } finally {
@@ -144,8 +181,9 @@ export function CourseOptionsDialog({
     if (!confirm("Remove this option from the course? The treatment itself stays.")) return;
     try {
       await update({ data: { id: t.id, course_group: null, course_groups: [] } });
+      setOptions((current) => current.filter((option) => option.id !== t.id));
       toast.success("Option removed from course");
-      onSaved();
+      await onSaved();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to remove option");
     }
@@ -163,9 +201,13 @@ export function CourseOptionsDialog({
       toast.error("Enter a valid number of weeks");
       return;
     }
+    if (options.some((option) => (option.session_count ?? 1) === sessions)) {
+      toast.error(`A ${sessions}-session option already exists. Edit its price above.`);
+      return;
+    }
     setAdding(true);
     try {
-      await createOption({
+      const created = await createOption({
         data: {
           baseTreatmentId: treatment.id,
           groupName,
@@ -176,9 +218,24 @@ export function CourseOptionsDialog({
           recommended: newRecommended,
         },
       });
+      const createdOption = created as CourseTreatment;
+      setOptions((current) =>
+        [...current.map((option) =>
+          option.id === treatment.id
+            ? { ...option, course_group: groupName, course_groups: [groupName] }
+            : option,
+        ), createdOption].sort(
+          (a, b) => (a.session_count ?? 1) - (b.session_count ?? 1) || a.price - b.price,
+        ),
+      );
+      setDrafts((current) => ({ ...current, [createdOption.id]: draftFrom(createdOption) }));
       toast.success(`${sessions} session option added`);
-      setOpen(false);
-      onSaved();
+      setNewSessions(String(sessions + 1));
+      setNewPrice("");
+      setNewWeeks("");
+      setNewSplit(false);
+      setNewRecommended(false);
+      await onSaved();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to add option");
     } finally {
