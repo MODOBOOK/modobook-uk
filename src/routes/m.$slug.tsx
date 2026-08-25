@@ -26,7 +26,7 @@ export const Route = createFileRoute("/m/$slug")({
       } catch (err) {
         lastError = err;
         const message = (err as Error)?.message ?? "";
-        if (message.includes("not found")) throw err;
+        if (message.toLowerCase().includes("not found")) throw notFound();
         await new Promise((r) => setTimeout(r, 400 * (attempt + 1)));
       }
     }
