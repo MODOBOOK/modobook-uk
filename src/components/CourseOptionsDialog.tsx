@@ -86,9 +86,39 @@ export function CourseOptionsDialog({
   allTreatments: CourseTreatment[];
   onSaved: () => void | Promise<void>;
 }) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button size="sm" variant="outline">
+          <Layers className="mr-1.5 h-4 w-4" /> Course options
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-h-[85vh] w-[calc(100vw-1.5rem)] max-w-2xl overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Course options</DialogTitle>
+          <DialogDescription>
+            Each session amount has its own price, payment setting and spacing.
+          </DialogDescription>
+        </DialogHeader>
+        <CourseOptionsEditor treatment={treatment} allTreatments={allTreatments} onSaved={onSaved} />
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+export function CourseOptionsEditor({
+  treatment,
+  allTreatments,
+  onSaved,
+}: {
+  treatment: CourseTreatment;
+  allTreatments: CourseTreatment[];
+  onSaved: () => void | Promise<void>;
+}) {
   const createOption = useServerFn(createCourseTreatmentOption);
   const update = useServerFn(updateTreatment);
-  const [open, setOpen] = useState(false);
   const [adding, setAdding] = useState(false);
   const [newSessions, setNewSessions] = useState("3");
   const [newPrice, setNewPrice] = useState("");
@@ -102,7 +132,10 @@ export function CourseOptionsDialog({
   }, [treatment]);
 
   const matchingOptions = useMemo(() => {
-    const inGroup = allTreatments.filter((t) => groupsOf(t).includes(groupName));
+    const inGroup = allTreatments.filter((t) => {
+      const explicitGroup = groupsOf(t).find((group) => !isSessionLabel(group));
+      return (explicitGroup || baseTreatmentName(t.name)) === groupName && groupsOf(t).length > 0;
+    });
     const list = inGroup.length ? inGroup : [treatment];
     return [...list].sort(
       (a, b) => (a.session_count ?? 1) - (b.session_count ?? 1) || a.price - b.price,
@@ -244,20 +277,13 @@ export function CourseOptionsDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button size="sm" variant="outline">
-          <Layers className="mr-1.5 h-4 w-4" /> Course options
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="max-h-[85vh] w-[calc(100vw-1.5rem)] max-w-2xl overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Course options — {groupName}</DialogTitle>
-          <DialogDescription>
-            Every box below is a separate patient choice with its own price and payment settings.
-          </DialogDescription>
-        </DialogHeader>
-
+    <div className="space-y-4">
+      <div className="rounded-md border bg-muted/30 p-3">
+        <p className="text-sm font-semibold">{groupName}</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Each box below is a separate choice shown to patients. Edit and save each option independently.
+        </p>
+      </div>
         <div className="space-y-3">
           {options.map((o) => {
             const d = draftFor(o);
@@ -265,7 +291,7 @@ export function CourseOptionsDialog({
             const price = Number(d.price) || 0;
             const per = price / Math.max(1, sessions);
             return (
-              <div key={o.id} className="rounded-xl border p-3">
+              <div key={o.id} className="rounded-md border bg-background p-3">
                 <div className="mb-2 flex items-center justify-between gap-2">
                   <div className="min-w-0">
                     <p className="truncate text-sm font-semibold">{o.name}</p>
@@ -375,8 +401,7 @@ export function CourseOptionsDialog({
             <Plus className="mr-1.5 h-4 w-4" /> {adding ? "Adding…" : "Add this session option"}
           </Button>
         </div>
-      </DialogContent>
-    </Dialog>
+    </div>
   );
 }
 
