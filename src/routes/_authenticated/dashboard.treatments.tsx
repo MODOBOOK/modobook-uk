@@ -64,6 +64,12 @@ type Treatment = {
   prescriber_note?: string | null;
   booking_cap?: number | null;
   color?: string | null;
+  course_group?: string | null;
+  course_groups?: string[] | null;
+  course_recommended?: boolean | null;
+  session_count?: number | null;
+  allow_split_payment?: boolean | null;
+  session_interval_days?: number | null;
 };
 
 
@@ -406,19 +412,26 @@ function TreatmentsPage() {
                     <CardHeader className="flex flex-row items-start justify-between gap-2 space-y-0">
                       <div>
                         <CardTitle className="text-base">{t.name}</CardTitle>
-                        <p className="text-sm text-muted-foreground">£{t.price} · {t.duration} min</p>
+                        <p className="text-sm text-muted-foreground">
+                          £{t.price} · {t.duration} min
+                          {(t.course_groups?.length || t.course_group) ? ` · ${t.session_count ?? 1} session${(t.session_count ?? 1) === 1 ? "" : "s"}` : ""}
+                        </p>
+                        {(t.course_groups?.length || t.course_group) && (
+                          <p className="mt-1 text-xs font-medium text-primary">
+                            {t.allow_split_payment && (t.session_count ?? 1) > 1 ? "Split payment enabled" : "Paid in full"}
+                          </p>
+                        )}
                       </div>
                       <div className="flex gap-1">
                         <Button size="icon" variant="ghost" onClick={() => { setEditing(t); setOpen(true); }}>
                           <Pencil className="h-4 w-4" />
                         </Button>
                         <Button
-                          size="icon"
-                          variant="ghost"
-                          title="Add another course option (sessions)"
+                          size="sm"
+                          variant="outline"
                           onClick={() => handleDuplicateOption(t)}
                         >
-                          <Copy className="h-4 w-4" />
+                          <Copy className="mr-1.5 h-4 w-4" /> Add course option
                         </Button>
                         <Button size="icon" variant="ghost" onClick={() => handleDelete(t.id)}>
                           <Trash2 className="h-4 w-4" />
@@ -780,7 +793,7 @@ function TreatmentDialog({
             <Input type="number" value={duration} onChange={(e) => setDuration(Number(e.target.value))} />
           </div>
           <div>
-            <Label>Price (£)</Label>
+            <Label>{courseGroups.length > 0 ? "Total price for this course option (£)" : "Price (£)"}</Label>
             <Input
               type="number"
               value={price}
@@ -887,12 +900,74 @@ function TreatmentDialog({
         </div>
 
 
-        {/* Sessions & split payment */}
-        <div className="rounded-md border p-3 space-y-3">
-          <Label className="m-0">Sessions & payment</Label>
+        {/* Course options, sessions & split payment */}
+        <div className="rounded-md border border-primary/30 bg-primary/5 p-3 space-y-3">
+          <div>
+            <Label className="m-0">Course option setup</Label>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Give related options the same course group. Each treatment keeps its own total price, session amount, payment choice and spacing.
+            </p>
+          </div>
+          <div>
+            <Label className="text-xs text-muted-foreground">Course group</Label>
+            <div className="flex gap-2">
+              <Input
+                placeholder="e.g. Polynucleotides course"
+                value={courseGroupDraft}
+                onChange={(e) => setCourseGroupDraft(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    const v = courseGroupDraft.trim();
+                    if (v && !courseGroups.includes(v)) setCourseGroups([...courseGroups, v]);
+                    setCourseGroupDraft("");
+                  }
+                }}
+              />
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => {
+                  const v = courseGroupDraft.trim();
+                  if (v && !courseGroups.includes(v)) setCourseGroups([...courseGroups, v]);
+                  setCourseGroupDraft("");
+                }}
+              >
+                Add
+              </Button>
+            </div>
+            {courseGroups.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {courseGroups.map((g) => (
+                  <Button
+                    key={g}
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setCourseGroups(courseGroups.filter((x) => x !== g))}
+                    className="h-7 rounded-full px-2 text-xs"
+                  >
+                    {g} <X className="ml-1 h-3 w-3 opacity-60" />
+                  </Button>
+                ))}
+              </div>
+            )}
+          </div>
+          <div>
+            <Label className="text-xs text-muted-foreground">Total price for this option (£)</Label>
+            <Input
+              type="number"
+              min={0}
+              step="0.01"
+              value={price}
+              onChange={(e) => setPrice(Number(e.target.value))}
+              disabled={priceMode === "poa" || priceMode === "free"}
+            />
+            <p className="mt-1 text-[11px] text-muted-foreground">This is the price shown beside this session option in the patient pop-up.</p>
+          </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label className="text-xs text-muted-foreground">Number of sessions</Label>
+              <Label className="text-xs text-muted-foreground">Sessions in this option</Label>
               <Input
                 type="number"
                 min={1}
@@ -967,59 +1042,18 @@ function TreatmentDialog({
             />
             <span>Allow patients to split payment across each session</span>
           </label>
+          {allowSplit && sessionCount > 1 && (
+            <p className="text-xs font-medium text-primary">
+              Patients pay £{(price / sessionCount).toFixed(2)} per session.
+            </p>
+          )}
           {sessionCount < 2 && (
             <p className="text-xs text-muted-foreground">Set 2 or more sessions to enable split payments.</p>
           )}
-          <div className="pt-2 border-t">
-            <Label className="text-xs text-muted-foreground">Course group (optional)</Label>
-            <div className="flex gap-2">
-              <Input
-                placeholder="e.g. Face + Under Eyes"
-                value={courseGroupDraft}
-                onChange={(e) => setCourseGroupDraft(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    const v = courseGroupDraft.trim();
-                    if (v && !courseGroups.includes(v)) setCourseGroups([...courseGroups, v]);
-                    setCourseGroupDraft("");
-                  }
-                }}
-              />
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => {
-                  const v = courseGroupDraft.trim();
-                  if (v && !courseGroups.includes(v)) setCourseGroups([...courseGroups, v]);
-                  setCourseGroupDraft("");
-                }}
-              >
-                Add
-              </Button>
-            </div>
-            {courseGroups.length > 0 && (
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {courseGroups.map((g) => (
-                  <button
-                    key={g}
-                    type="button"
-                    onClick={() => setCourseGroups(courseGroups.filter((x) => x !== g))}
-                    className="rounded-full border px-2 py-0.5 text-xs hover:bg-muted"
-                  >
-                    {g} <span className="opacity-60">×</span>
-                  </button>
-                ))}
-              </div>
-            )}
-            <p className="mt-1 text-[11px] text-muted-foreground">
-              Add this treatment to one or more course groups. Every treatment sharing a group name shows as one tidy item on your booking page, and the pop-up lets the patient pick as many session options as they want.
-            </p>
-            <label className="mt-2 flex items-center gap-2 text-sm">
-              <Switch checked={courseRecommended} onCheckedChange={setCourseRecommended} disabled={courseGroups.length === 0} />
-              <span>Mark this option as “Recommended” in the pop-up</span>
-            </label>
-          </div>
+          <label className="flex items-center gap-2 border-t pt-3 text-sm">
+            <Switch checked={courseRecommended} onCheckedChange={setCourseRecommended} disabled={courseGroups.length === 0} />
+            <span>Mark this session option as “Recommended” in the pop-up</span>
+          </label>
           <div className="pt-2 border-t">
             <Label className="text-xs text-muted-foreground">Deposit for this treatment (£)</Label>
             <Input
