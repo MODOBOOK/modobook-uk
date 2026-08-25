@@ -24,7 +24,6 @@ import { autoRefundCancelledAppointment } from "@/lib/refunds.functions";
 
 
 export const Route = createFileRoute("/m/$slug/account")({
-  ssr: false,
   component: Account,
 });
 
@@ -65,6 +64,7 @@ type Profile = {
 function Account() {
   const { slug } = useParams({ from: "/m/$slug/account" });
   const navigate = useNavigate();
+  const autoRefund = useServerFn(autoRefundCancelledAppointment);
 
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -407,8 +407,6 @@ function Account() {
     setCancelAgreed(false);
     setCancelTarget(a);
   }
-
-  const autoRefund = useServerFn(autoRefundCancelledAppointment);
 
   async function performCancel(confirmLate: boolean) {
     if (!cancelTarget) return;
