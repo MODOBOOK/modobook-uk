@@ -203,6 +203,16 @@ export const linkReferralToAppointment = createServerFn({ method: "POST" })
       .maybeSingle();
     if (!appt) return { ok: false, reason: "no_appointment" };
 
+    // A referral code only works at the clinic the referrer is registered with.
+    const { data: apptClinic } = await supabase
+      .from("profiles")
+      .select("user_id")
+      .eq("id", appt.profile_id)
+      .maybeSingle();
+    if (!apptClinic || apptClinic.user_id !== codeRow.clinic_profile_id) {
+      return { ok: false, reason: "wrong_clinic" };
+    }
+
     // Get clinic settings snapshot for rewards
     const { data: settings } = await supabase
       .from("clinic_referral_settings")
