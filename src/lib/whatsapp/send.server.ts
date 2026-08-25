@@ -195,8 +195,8 @@ export async function sendWhatsApp(input: SendWhatsAppInput): Promise<SendWhatsA
             clinic: c.clinicName ?? cfg?.clinicName,
             treatment: c.treatmentName,
             date: c.dateTime,
-            // Addresses and links are never sent by text — UK carriers filter them.
-            location: undefined,
+            // Location name only — full addresses and links are never texted.
+            location: c.locationName,
             link: undefined,
           })
         }
