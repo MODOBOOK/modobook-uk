@@ -250,7 +250,6 @@ export function CourseGroupRow({
               Available options
             </h4>
             {sorted.map((o) => {
-              const perSession = o.price / Math.max(1, o.session_count);
               return (
                 <div
                   key={o.id}
