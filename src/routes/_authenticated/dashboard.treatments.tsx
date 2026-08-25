@@ -30,6 +30,7 @@ import { Copy, Plus, Trash2, Pencil, FileText, X, Tag, PlusCircle, Sparkles, Loa
 import { SearchableMultiPicker } from "@/components/ui/searchable-multi-picker";
 import { BulkRebookRemindersDialog } from "@/components/BulkRebookRemindersDialog";
 import { generateTreatmentDescription } from "@/lib/ai-treatment-description.functions";
+import { CourseOptionsDialog } from "@/components/CourseOptionsDialog";
 
 
 export const Route = createFileRoute("/_authenticated/dashboard/treatments")({
@@ -426,13 +427,11 @@ function TreatmentsPage() {
                         <Button size="icon" variant="ghost" onClick={() => { setEditing(t); setOpen(true); }}>
                           <Pencil className="h-4 w-4" />
                         </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleDuplicateOption(t)}
-                        >
-                          <Copy className="mr-1.5 h-4 w-4" /> Add course option
-                        </Button>
+                        <CourseOptionsDialog
+                          treatment={t}
+                          allTreatments={items}
+                          onSaved={load}
+                        />
                         <Button size="icon" variant="ghost" onClick={() => handleDelete(t.id)}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
