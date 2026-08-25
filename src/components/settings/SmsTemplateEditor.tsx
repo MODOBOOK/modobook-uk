@@ -32,10 +32,12 @@ export function SmsTemplateEditor({
   return (
     <div className="space-y-4">
       <p className="rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-700">
-        No street addresses or links in texts. UK networks block messages containing full
-        addresses, postcodes or web links, so these are automatically removed before sending.
-        {" "}<code>{"{location}"}</code> inserts the location name only — full details go out by email.
+        Web links are never sent by text — UK networks block them.{" "}
+        <code>{"{location}"}</code> inserts the location name, and{" "}
+        <code>{"{address}"}</code> the full address. The address is only allowed on booking
+        confirmations, reminders and reschedules; on other messages it's removed automatically.
       </p>
+
       {SMS_TEMPLATES.map((t) => {
         const channel = channelFor(channels, t.key);
         const text = templates[t.key] ?? defaultSmsTemplate(t.key);
