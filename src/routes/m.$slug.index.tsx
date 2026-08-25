@@ -2094,9 +2094,50 @@ function BookPage() {
                       {packagesTabBuilders.map(renderBuilder)}
                     </div>
                   )}
+                  {courseGroups.length > 0 && (
+                    <div className="mb-4 grid gap-3 sm:grid-cols-2">
+                      {courseGroups.map((g) => {
+                        const t = treatments.find((x) => x.id === g.treatmentId);
+                        const first = g.items[0] as unknown as { image_url?: string | null };
+                        return (
+                          <CoursePickerCard
+                            key={g.treatmentId}
+                            treatmentName={t?.name ?? (g.items[0] as { name: string }).name}
+                            imageUrl={
+                              (g.items.find((i) => (i as unknown as { image_url?: string | null }).image_url) as
+                                | { image_url?: string | null }
+                                | undefined)?.image_url ?? first?.image_url ?? null
+                            }
+                            options={g.items.map((p) => {
+                              const pk = p as unknown as {
+                                id: string; name: string; description?: string | null; price?: number | null;
+                                session_count?: number | null; duration_minutes?: number | null;
+                                compare_at_price?: number | null; allow_split_payment?: boolean | null;
+                              };
+                              return {
+                                id: pk.id,
+                                name: pk.name,
+                                description: pk.description ?? null,
+                                price: Number(pk.price ?? 0),
+                                session_count: Number(pk.session_count ?? 1),
+                                duration_minutes: pk.duration_minutes ?? null,
+                                compare_at_price: pk.compare_at_price ?? null,
+                                allow_split_payment: Boolean(pk.allow_split_payment),
+                              };
+                            })}
+                            slug={slug}
+                            brand={brand}
+                            accent={accent}
+                            locationId={locationId}
+                          />
+                        );
+                      })}
+                    </div>
+                  )}
                   {(() => {
+                    const visiblePackages = standalonePackages;
                     if (visiblePackages.length === 0) {
-                      return packagesTabBuilders.length > 0 ? null : <p className="opacity-70">No packages available.</p>;
+                      return packagesTabBuilders.length > 0 || courseGroups.length > 0 ? null : <p className="opacity-70">No packages available.</p>;
                     }
                     const renderPackageCard = (p: (typeof visiblePackages)[number]) => {
                       const pkg = p as Package & {
