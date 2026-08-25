@@ -26,10 +26,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { Copy, Plus, Trash2, Pencil, FileText, X, Tag, PlusCircle, Sparkles, Loader2 } from "lucide-react";
+import { Plus, Trash2, Pencil, FileText, X, Tag, PlusCircle, Sparkles, Loader2 } from "lucide-react";
 import { SearchableMultiPicker } from "@/components/ui/searchable-multi-picker";
 import { BulkRebookRemindersDialog } from "@/components/BulkRebookRemindersDialog";
 import { generateTreatmentDescription } from "@/lib/ai-treatment-description.functions";
+import { CourseOptionsDialog } from "@/components/CourseOptionsDialog";
 
 
 export const Route = createFileRoute("/_authenticated/dashboard/treatments")({
@@ -241,69 +242,6 @@ function TreatmentsPage() {
   }
 
 
-  async function handleDuplicateOption(t: Treatment) {
-    const raw = prompt("How many sessions should this course option include?", "3");
-    if (!raw) return;
-    const sessions = Math.max(1, Math.floor(Number(raw)));
-    if (!Number.isFinite(sessions)) return;
-    const priceRaw = prompt(`Price for the ${sessions}-session option (\u00a3)`, String(Number(t.price) * sessions));
-    if (priceRaw === null) return;
-    const newPrice = Math.max(0, Number(priceRaw));
-    if (!Number.isFinite(newPrice)) {
-      toast.error("Enter a valid course price");
-      return;
-    }
-    const allowSplit = sessions > 1
-      ? confirm("Allow this option to be paid in split payments?")
-      : false;
-    const intervalRaw = sessions > 1
-      ? prompt("How many weeks apart should each session be? Leave blank if not needed.", "4")
-      : null;
-    if (intervalRaw === null) return;
-    const intervalWeeks = intervalRaw?.trim() ? Math.max(0, Number(intervalRaw)) : 0;
-    if (!Number.isFinite(intervalWeeks)) {
-      toast.error("Enter a valid number of weeks between sessions");
-      return;
-    }
-    const recommended = confirm(`Mark the ${sessions}-session option as recommended?`);
-    const groups = (() => {
-      const arr = (t as { course_groups?: string[] | null }).course_groups ?? [];
-      if (arr.length > 0) return arr;
-      const single = (t as { course_group?: string | null }).course_group?.trim();
-      return single ? [single] : [t.name];
-    })();
-    try {
-      const created = await create({
-        data: {
-          name: `${t.name} \u2014 ${sessions} session${sessions === 1 ? "" : "s"}`,
-          duration: t.duration,
-          price: newPrice,
-          description: t.description ?? undefined,
-          category_id: t.category_id,
-          active: true,
-        },
-      });
-      const id = (created as { id: string }).id;
-      await update({
-        data: {
-          id,
-          course_group: groups[0] ?? null,
-          course_groups: groups,
-          session_count: sessions,
-          allow_split_payment: allowSplit,
-          session_interval_days: intervalWeeks > 0 ? intervalWeeks * 7 : null,
-          course_recommended: recommended,
-        },
-      });
-      // make sure the original is in the same group so they collapse into one row
-      await update({ data: { id: t.id, course_group: groups[0] ?? null, course_groups: groups } });
-      toast.success("Course option added");
-      load();
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Failed to add option");
-    }
-  }
-
   async function handleDelete(id: string) {
     if (!confirm("Delete this treatment?")) return;
     try {
@@ -426,13 +364,11 @@ function TreatmentsPage() {
                         <Button size="icon" variant="ghost" onClick={() => { setEditing(t); setOpen(true); }}>
                           <Pencil className="h-4 w-4" />
                         </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleDuplicateOption(t)}
-                        >
-                          <Copy className="mr-1.5 h-4 w-4" /> Add course option
-                        </Button>
+                        <CourseOptionsDialog
+                          treatment={t}
+                          allTreatments={items}
+                          onSaved={load}
+                        />
                         <Button size="icon" variant="ghost" onClick={() => handleDelete(t.id)}>
                           <Trash2 className="h-4 w-4" />
                         </Button>

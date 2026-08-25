@@ -114,8 +114,14 @@ export function CourseGroupRow({
           </div>
         </div>
         <div className="mt-2 flex items-center justify-between">
-          <div className="text-xs font-semibold" style={{ color: brand }}>
-            Choose your sessions →
+          <div className="flex items-baseline gap-2">
+            <div
+              className="text-sm font-extrabold uppercase tracking-wide"
+              style={{ color: brand }}
+            >
+              Choose amount
+            </div>
+            <span className="text-[11px] opacity-70">Choose your sessions →</span>
           </div>
           {hasLongDescription && (
             <button
