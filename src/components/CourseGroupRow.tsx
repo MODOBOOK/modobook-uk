@@ -106,10 +106,10 @@ export function CourseGroupRow({
             )}
           </div>
           <div className="shrink-0 text-right leading-tight">
-            <div className="text-[11px] uppercase tracking-wide opacity-60">From</div>
             <div className={`whitespace-nowrap ${bold ? "font-bold" : "font-semibold"}`} style={{ color: priceColor }}>
               £{from.toFixed(2)}
             </div>
+            <div className="text-[10px] uppercase tracking-wide opacity-60">choose amount</div>
           </div>
         </div>
         <div className="mt-2 text-xs font-semibold" style={{ color: brand }}>
