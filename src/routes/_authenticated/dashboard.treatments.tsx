@@ -26,7 +26,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Trash2, Pencil, FileText, X, Tag, PlusCircle, Sparkles, Loader2 } from "lucide-react";
+import { Copy, Plus, Trash2, Pencil, FileText, X, Tag, PlusCircle, Sparkles, Loader2 } from "lucide-react";
 import { SearchableMultiPicker } from "@/components/ui/searchable-multi-picker";
 import { BulkRebookRemindersDialog } from "@/components/BulkRebookRemindersDialog";
 import { generateTreatmentDescription } from "@/lib/ai-treatment-description.functions";
@@ -91,6 +91,7 @@ type TreatmentForm = {
   discount_show_was_now: boolean;
   discount_label: string | null;
   course_group: string | null;
+  course_groups: string[];
   course_recommended: boolean;
   session_count: number;
   allow_split_payment: boolean;
@@ -234,6 +235,50 @@ function TreatmentsPage() {
   }
 
 
+  async function handleDuplicateOption(t: Treatment) {
+    const raw = prompt("How many sessions should this course option include?", "3");
+    if (!raw) return;
+    const sessions = Math.max(1, Math.floor(Number(raw)));
+    if (!Number.isFinite(sessions)) return;
+    const priceRaw = prompt(`Price for the ${sessions}-session option (\u00a3)`, String(Number(t.price) * sessions));
+    if (priceRaw === null) return;
+    const newPrice = Math.max(0, Number(priceRaw));
+    const groups = (() => {
+      const arr = (t as { course_groups?: string[] | null }).course_groups ?? [];
+      if (arr.length > 0) return arr;
+      const single = (t as { course_group?: string | null }).course_group?.trim();
+      return single ? [single] : [t.name];
+    })();
+    try {
+      const created = await create({
+        data: {
+          name: `${t.name} \u2014 ${sessions} session${sessions === 1 ? "" : "s"}`,
+          duration: t.duration,
+          price: newPrice,
+          description: t.description ?? undefined,
+          category_id: t.category_id,
+          active: true,
+        },
+      });
+      const id = (created as { id: string }).id;
+      await update({
+        data: {
+          id,
+          course_group: groups[0] ?? null,
+          course_groups: groups,
+          session_count: sessions,
+          allow_split_payment: sessions > 1,
+        },
+      });
+      // make sure the original is in the same group so they collapse into one row
+      await update({ data: { id: t.id, course_group: groups[0] ?? null, course_groups: groups } });
+      toast.success("Course option added");
+      load();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to add option");
+    }
+  }
+
   async function handleDelete(id: string) {
     if (!confirm("Delete this treatment?")) return;
     try {
@@ -348,6 +393,14 @@ function TreatmentsPage() {
                         <Button size="icon" variant="ghost" onClick={() => { setEditing(t); setOpen(true); }}>
                           <Pencil className="h-4 w-4" />
                         </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          title="Add another course option (sessions)"
+                          onClick={() => handleDuplicateOption(t)}
+                        >
+                          <Copy className="h-4 w-4" />
+                        </Button>
                         <Button size="icon" variant="ghost" onClick={() => handleDelete(t.id)}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -436,9 +489,14 @@ function TreatmentDialog({
   const [allowSplit, setAllowSplit] = useState<boolean>(
     (treatment as { allow_split_payment?: boolean } | null)?.allow_split_payment ?? false,
   );
-  const [courseGroup, setCourseGroup] = useState<string>(
-    (treatment as { course_group?: string | null } | null)?.course_group ?? "",
-  );
+  const initialGroups = (() => {
+    const arr = (treatment as { course_groups?: string[] | null } | null)?.course_groups ?? [];
+    if (arr.length > 0) return arr;
+    const single = (treatment as { course_group?: string | null } | null)?.course_group?.trim();
+    return single ? [single] : [];
+  })();
+  const [courseGroups, setCourseGroups] = useState<string[]>(initialGroups);
+  const [courseGroupDraft, setCourseGroupDraft] = useState<string>("");
   const [courseRecommended, setCourseRecommended] = useState<boolean>(
     (treatment as { course_recommended?: boolean } | null)?.course_recommended ?? false,
   );
@@ -556,9 +614,11 @@ function TreatmentDialog({
     setDiscountLabel(treatment?.discount_label ?? "");
     setSessionCount((treatment as { session_count?: number } | null)?.session_count ?? 1);
     setAllowSplit((treatment as { allow_split_payment?: boolean } | null)?.allow_split_payment ?? false);
-    setCourseGroup((treatment as { course_group?: string | null } | null)?.course_group ?? "");
+    const groupsArr = (treatment as { course_groups?: string[] | null } | null)?.course_groups ?? [];
+    const singleGroup = (treatment as { course_group?: string | null } | null)?.course_group?.trim();
+    setCourseGroups(groupsArr.length > 0 ? groupsArr : singleGroup ? [singleGroup] : []);
+    setCourseGroupDraft("");
     setCourseRecommended((treatment as { course_recommended?: boolean } | null)?.course_recommended ?? false);
-    setCourseGroup((treatment as { course_group?: string | null } | null)?.course_group ?? "");
     setRebookDays(
       (treatment as { rebook_reminder_days?: number | null } | null)?.rebook_reminder_days != null
         ? String((treatment as { rebook_reminder_days?: number | null }).rebook_reminder_days)
@@ -893,16 +953,51 @@ function TreatmentDialog({
           )}
           <div className="pt-2 border-t">
             <Label className="text-xs text-muted-foreground">Course group (optional)</Label>
-            <Input
-              placeholder="e.g. Face + Under Eyes"
-              value={courseGroup}
-              onChange={(e) => setCourseGroup(e.target.value)}
-            />
+            <div className="flex gap-2">
+              <Input
+                placeholder="e.g. Face + Under Eyes"
+                value={courseGroupDraft}
+                onChange={(e) => setCourseGroupDraft(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    const v = courseGroupDraft.trim();
+                    if (v && !courseGroups.includes(v)) setCourseGroups([...courseGroups, v]);
+                    setCourseGroupDraft("");
+                  }
+                }}
+              />
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => {
+                  const v = courseGroupDraft.trim();
+                  if (v && !courseGroups.includes(v)) setCourseGroups([...courseGroups, v]);
+                  setCourseGroupDraft("");
+                }}
+              >
+                Add
+              </Button>
+            </div>
+            {courseGroups.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {courseGroups.map((g) => (
+                  <button
+                    key={g}
+                    type="button"
+                    onClick={() => setCourseGroups(courseGroups.filter((x) => x !== g))}
+                    className="rounded-full border px-2 py-0.5 text-xs hover:bg-muted"
+                  >
+                    {g} <span className="opacity-60">×</span>
+                  </button>
+                ))}
+              </div>
+            )}
             <p className="mt-1 text-[11px] text-muted-foreground">
-              Give the same course group name to your 1 / 3 / 6 session versions of a treatment. They'll show as one tidy item on your booking page and open a pop-up where the client picks the option.
+              Add this treatment to one or more course groups. Every treatment sharing a group name shows as one tidy item on your booking page, and the pop-up lets the patient pick as many session options as they want.
             </p>
             <label className="mt-2 flex items-center gap-2 text-sm">
-              <Switch checked={courseRecommended} onCheckedChange={setCourseRecommended} disabled={!courseGroup.trim()} />
+              <Switch checked={courseRecommended} onCheckedChange={setCourseRecommended} disabled={courseGroups.length === 0} />
               <span>Mark this option as “Recommended” in the pop-up</span>
             </label>
           </div>
@@ -1260,7 +1355,8 @@ function TreatmentDialog({
               discount_ends_at: discountEndsAt ? new Date(discountEndsAt).toISOString() : null,
               discount_show_was_now: discountShowWasNow,
               discount_label: discountLabel || null,
-              course_group: courseGroup.trim() || null,
+              course_group: courseGroups[0] ?? null,
+              course_groups: courseGroups,
               course_recommended: courseRecommended,
               session_count: sessionCount,
               allow_split_payment: allowSplit && sessionCount >= 2,

@@ -111,8 +111,8 @@ export function CourseGroupRow({
               Choose your sessions
             </DialogTitle>
             <DialogDescription className="text-sm">
-              {groupName}
-              {recommended ? ` — we recommend ${recommended.session_count} sessions for best results.` : ""}
+              {groupName} — pick as many options as you like.
+              {recommended ? ` We recommend ${recommended.session_count} sessions for best results.` : ""}
             </DialogDescription>
           </DialogHeader>
 

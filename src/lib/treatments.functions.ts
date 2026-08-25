@@ -60,6 +60,7 @@ export const createTreatment = createServerFn({ method: "POST" })
       session_count?: number;
       allow_split_payment?: boolean;
       course_group?: string | null;
+      course_groups?: string[];
       course_recommended?: boolean;
       rebook_reminder_days?: number | null;
       topup_reminder_days?: number | null;
@@ -97,6 +98,7 @@ export const createTreatment = createServerFn({ method: "POST" })
         category_id: data.category_id ?? null,
         active: data.active ?? true,
         course_group: data.course_group ?? null,
+        course_groups: data.course_groups ?? [],
         course_recommended: data.course_recommended ?? false,
         session_count: data.session_count ?? 1,
         allow_split_payment: data.allow_split_payment ?? false,
@@ -136,6 +138,7 @@ export const updateTreatment = createServerFn({ method: "POST" })
       session_count?: number;
       allow_split_payment?: boolean;
       course_group?: string | null;
+      course_groups?: string[];
       course_recommended?: boolean;
       rebook_reminder_days?: number | null;
       topup_reminder_days?: number | null;
@@ -187,6 +190,7 @@ export const updateTreatment = createServerFn({ method: "POST" })
     if (data.deductible_window_days !== undefined) update.deductible_window_days = data.deductible_window_days;
     if (data.category_id !== undefined) update.category_id = data.category_id;
     if (data.course_group !== undefined) update.course_group = data.course_group;
+    if (data.course_groups !== undefined) update.course_groups = data.course_groups;
     if (data.course_recommended !== undefined) update.course_recommended = data.course_recommended;
     if (data.session_count !== undefined) update.session_count = data.session_count;
     if (data.allow_split_payment !== undefined) update.allow_split_payment = data.allow_split_payment;
