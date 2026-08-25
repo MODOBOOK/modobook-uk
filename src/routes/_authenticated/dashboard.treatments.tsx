@@ -552,6 +552,7 @@ function TreatmentDialog({
     setSessionCount((treatment as { session_count?: number } | null)?.session_count ?? 1);
     setAllowSplit((treatment as { allow_split_payment?: boolean } | null)?.allow_split_payment ?? false);
     setCourseGroup((treatment as { course_group?: string | null } | null)?.course_group ?? "");
+    setCourseGroup((treatment as { course_group?: string | null } | null)?.course_group ?? "");
     setRebookDays(
       (treatment as { rebook_reminder_days?: number | null } | null)?.rebook_reminder_days != null
         ? String((treatment as { rebook_reminder_days?: number | null }).rebook_reminder_days)
