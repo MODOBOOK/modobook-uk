@@ -238,6 +238,7 @@ export const cancelAppointmentByToken = createServerFn({ method: "POST" })
               patientName: a.patient_name,
               clinicName: a.clinic_name ?? branding.clinicName,
               treatmentName: a.treatment_name,
+              locationName: (apptFull as { locations?: { name?: string } | null } | null)?.locations?.name,
               dateTime: a.scheduled_date && a.start_time ? formatBookingDateTime(a.scheduled_date, a.start_time) : null,
               bookingUrl: a.clinic_slug ? `${origin}/m/${a.clinic_slug}` : origin,
             }),
