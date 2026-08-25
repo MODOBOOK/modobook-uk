@@ -101,7 +101,7 @@ export const Route = createFileRoute('/api/public/hooks/appointment-reminders')(
                   clinicName: a.profiles?.clinic_name ?? branding.clinicName,
                   treatmentName: a.treatments?.name ?? 'your treatment',
                   practitionerName: a.practitioners?.name,
-                  locationName: loc?.name,
+                  locationName: loc?.name ?? loc?.city ?? undefined,
                   locationAddress: loc ? [loc.address_line1, loc.city, loc.postcode].filter(Boolean).join(', ') : undefined,
                   dateTime: formatBookingDateTime(a.scheduled_date, a.start_time),
                   hoursBefore: rule.hours_before,
@@ -150,7 +150,7 @@ export const Route = createFileRoute('/api/public/hooks/appointment-reminders')(
                 clinicName: a.profiles?.clinic_name,
                 treatmentName: a.treatments?.name,
                 dateTime: formatBookingDateTime(a.scheduled_date, a.start_time),
-                locationName: loc?.name,
+                locationName: loc?.name ?? loc?.city ?? undefined,
                 locationAddress: loc
                   ? [loc.address_line1, loc.city, loc.postcode].filter(Boolean).join(', ')
                   : undefined,

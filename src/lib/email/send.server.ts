@@ -354,7 +354,7 @@ export async function sendBookingConfirmationEmails(appointmentIds: string[]) {
         clinicName: a.profiles?.clinic_name ?? branding.clinicName,
         treatmentName: a.treatments?.name,
         dateTime: formatBookingDateTime(a.scheduled_date, a.start_time),
-        locationName: loc?.name,
+        locationName: loc?.name ?? loc?.city ?? undefined,
         locationAddress: loc ? [loc.address_line1, loc.city, loc.postcode].filter(Boolean).join(', ') : undefined,
         manageUrl,
       }
@@ -387,7 +387,7 @@ export async function sendBookingConfirmationEmails(appointmentIds: string[]) {
         clinicName: a.profiles?.clinic_name ?? branding.clinicName,
         treatmentName: a.treatments?.name ?? 'your treatment',
         practitionerName: a.practitioners?.name,
-        locationName: loc?.name,
+        locationName: loc?.name ?? loc?.city ?? undefined,
         locationAddress: loc ? [loc.address_line1, loc.city, loc.postcode].filter(Boolean).join(', ') : undefined,
         dateTime: formatBookingDateTime(a.scheduled_date, a.start_time),
         manageUrl,
