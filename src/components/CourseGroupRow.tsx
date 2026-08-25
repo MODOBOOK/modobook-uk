@@ -19,6 +19,7 @@ export type CourseOption = {
   interval_days?: number | null;
   recommended?: boolean;
   description?: string | null;
+  picture_url?: string | null;
   full?: boolean;
 };
 
