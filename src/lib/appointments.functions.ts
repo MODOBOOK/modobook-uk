@@ -373,6 +373,7 @@ export const rescheduleAppointment = createServerFn({ method: "POST" })
           messageKey: `wa-reschedule-${data.appointmentId}-${data.date}-${startHM}`,
           ...smsMessage("booking-reschedule", {
             patientName: appt.patient_name,
+            locationName: (appt as { locations?: { name?: string } | null }).locations?.name,
             clinicName: branding.clinicName,
             dateTime: formatBookingDateTime(data.date, startHM),
           }),
