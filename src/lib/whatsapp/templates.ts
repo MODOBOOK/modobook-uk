@@ -35,55 +35,55 @@ export interface SmsTemplateMeta {
   default: string
 }
 
-// Addresses and links are never sent by text (UK carriers content-filter them),
-// so {location} and {link} are no longer offered as merge tags.
-export const MERGE_TAGS = ['{name}', '{clinic}', '{treatment}', '{date}'] as const
+// Full addresses and links are never sent by text (UK carriers content-filter
+// them), so {link} isn't offered. {location} inserts the location name only.
+export const MERGE_TAGS = ['{name}', '{clinic}', '{location}', '{date}'] as const
 
 export const SMS_TEMPLATES: SmsTemplateMeta[] = [
   {
     key: 'booking-confirmation',
     label: 'Booking confirmation',
     hint: 'Sent as soon as a booking is made.',
-    tags: ['{name}', '{clinic}', '{treatment}', '{date}'],
-    default: "Hi {name}, you're booked in for {treatment} with {clinic} on {date}. See you then!",
+    tags: ['{name}', '{clinic}', '{location}', '{date}'],
+    default: "Hi {name}, you're booked in with {clinic} at {location} on {date}.",
   },
   {
     key: 'appointment-reminder',
     label: 'Appointment reminder',
     hint: 'Follows your email reminder timings.',
-    tags: ['{name}', '{clinic}', '{treatment}', '{date}'],
-    default: 'Hi {name}, reminder: {treatment} with {clinic} on {date}. See you then!',
+    tags: ['{name}', '{clinic}', '{location}', '{date}'],
+    default: 'Hi {name}, reminder: your appointment with {clinic} at {location} on {date}.',
   },
   {
     key: 'booking-cancellation',
     label: 'Cancellation',
     hint: 'Sent when an appointment is cancelled.',
-    tags: ['{name}', '{clinic}', '{treatment}', '{date}'],
+    tags: ['{name}', '{clinic}', '{location}', '{date}'],
     default:
-      'Hi {name}, your {treatment} with {clinic} on {date} has been cancelled. Check your email to rebook.',
+      'Hi {name}, your appointment with {clinic} at {location} on {date} has been cancelled. Check your email to rebook.',
   },
   {
     key: 'booking-reschedule',
     label: 'Reschedule',
     hint: 'Sent when an appointment is moved.',
-    tags: ['{name}', '{clinic}', '{treatment}', '{date}'],
-    default: 'Hi {name}, your {treatment} with {clinic} has moved to {date}. See you then!',
+    tags: ['{name}', '{clinic}', '{location}', '{date}'],
+    default: 'Hi {name}, your appointment with {clinic} at {location} has moved to {date}.',
   },
   {
     key: 'rebook-reminder',
     label: 'Rebook reminder',
     hint: 'When a treatment is due again.',
-    tags: ['{name}', '{clinic}', '{treatment}'],
+    tags: ['{name}', '{clinic}', '{location}'],
     default:
-      "Hi {name}, it's about time for your next {treatment} at {clinic}. Check your email to book.",
+      "Hi {name}, it's about time for your next appointment with {clinic} at {location}. Check your email to book.",
   },
   {
     key: 'topup-reminder',
     label: 'Top-up reminder',
     hint: 'When a treatment is due a top-up.',
-    tags: ['{name}', '{clinic}', '{treatment}'],
+    tags: ['{name}', '{clinic}', '{location}'],
     default:
-      'Hi {name}, your {treatment} at {clinic} is due a top-up. Check your email to book.',
+      'Hi {name}, your treatment with {clinic} at {location} is due a top-up. Check your email to book.',
   },
   {
     key: 'review-request',
