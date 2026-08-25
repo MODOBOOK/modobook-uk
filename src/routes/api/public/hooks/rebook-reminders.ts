@@ -156,6 +156,11 @@ export const Route = createFileRoute('/api/public/hooks/rebook-reminders')({
                   patientName: r.patient_name,
                   clinicName: r.profiles?.clinic_name ?? branding.clinicName,
                   treatmentName: r.treatments?.name,
+                  locationName:
+                    (r as { locations?: { name?: string | null; city?: string | null } | null })
+                      .locations?.name ??
+                    (r as { locations?: { city?: string | null } | null }).locations?.city ??
+                    null,
                   bookingUrl,
                 }),
               })
