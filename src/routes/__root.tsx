@@ -15,6 +15,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "@/components/ui/sonner";
 import { CookieConsent } from "@/components/CookieConsent";
 
+// One-time safety reset after the August patient-portal identity incident.
+// A genuine sign-in updates last_sign_in_at, so users are only asked once.
+const GLOBAL_SESSION_RESET_AT = Date.parse("2026-08-25T11:18:00Z");
+
 function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -173,6 +177,26 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
+  useEffect(() => {
+    let active = true;
+
+    void supabase.auth.getSession().then(async ({ data }) => {
+      const session = data.session;
+      if (!active || !session) return;
+
+      const lastSignInAt = Date.parse(session.user.last_sign_in_at ?? "");
+      if (Number.isFinite(lastSignInAt) && lastSignInAt > GLOBAL_SESSION_RESET_AT) return;
+
+      await queryClient.cancelQueries();
+      queryClient.clear();
+      await supabase.auth.signOut({ scope: "local" });
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [queryClient]);
+
   // Wildcard subdomain routing:
   //   {slug}.modobook.co.uk → /m/{slug}
   //   {slug}.modobook.app   → /m/{slug}
@@ -201,7 +225,8 @@ function RootComponent() {
   useEffect(() => {
     const { data: listener } = supabase.auth.onAuthStateChange((event) => {
       if (event === "SIGNED_OUT") {
-        window.location.href = "/auth";
+        const clinic = window.location.pathname.match(/^\/m\/([^/?#]+)/)?.[1];
+        window.location.href = clinic ? `/m/${clinic}/auth` : "/auth";
         return;
       }
       if (event === "SIGNED_IN" || event === "USER_UPDATED") {
