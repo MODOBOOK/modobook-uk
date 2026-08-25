@@ -53,11 +53,7 @@ export const getPractitionerReviews = createServerFn({ method: "GET" })
     if (!profile) throw new Error("Practitioner not found");
 
     const { data: patientReviews } = await supabase
-      .from("patient_reviews")
-      .select("id, rating, title, body, created_at, reviewer_name")
-      .eq("profile_id", profile.id)
-      .eq("approved", true)
-      .order("created_at", { ascending: false });
+      .rpc("get_public_patient_reviews", { p_profile_id: profile.id });
 
     const { data: testimonials } = await supabase
       .from("clinic_testimonials")

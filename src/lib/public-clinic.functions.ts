@@ -100,10 +100,7 @@ export const getPublicClinic = createServerFn({ method: "GET" })
       .maybeSingle();
 
     const { data: reviews } = await supabase
-      .from("patient_reviews")
-      .select("id, rating")
-      .eq("profile_id", profile.id)
-      .eq("approved", true);
+      .rpc("get_public_patient_reviews", { p_profile_id: profile.id });
 
     const reviewsCombined = [
       ...(reviews ?? []),
