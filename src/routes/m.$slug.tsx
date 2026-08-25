@@ -1,4 +1,4 @@
-import { createFileRoute, Link, Outlet, useParams } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, notFound, useParams } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getPractitionerBio } from "@/lib/practitioner-public.functions";
@@ -15,12 +15,39 @@ import { Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/m/$slug")({
   loader: async ({ params }) => {
-    const { profile, theme } = await getPractitionerBio({ data: { slug: params.slug } });
-    return { profile, theme, slug: params.slug };
+    // In-app browsers (Instagram, Facebook) drop the occasional request, which
+    // used to bubble up as the full-page "This page didn't load" screen and
+    // locked patients out of signing in. Retry transient failures first.
+    let lastError: unknown;
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      try {
+        const { profile, theme } = await getPractitionerBio({ data: { slug: params.slug } });
+        return { profile, theme, slug: params.slug };
+      } catch (err) {
+        lastError = err;
+        const message = (err as Error)?.message ?? "";
+        if (message.toLowerCase().includes("not found")) throw notFound();
+        await new Promise((r) => setTimeout(r, 400 * (attempt + 1)));
+      }
+    }
+    throw lastError;
   },
   pendingComponent: () => (
     <div className="flex min-h-screen items-center justify-center">
       <Loader2 className="h-8 w-8 animate-spin text-primary" />
+    </div>
+  ),
+  errorComponent: ({ reset }) => (
+    <div className="flex min-h-screen flex-col items-center justify-center px-6 text-center">
+      <h1 className="text-xl font-semibold">We couldn't load this page</h1>
+      <p className="mt-2 max-w-sm text-sm text-muted-foreground">
+        Your connection dropped for a moment. Tap retry — if you're in the Instagram browser,
+        opening the link in Safari or Chrome is more reliable.
+      </p>
+      <div className="mt-6 flex flex-wrap justify-center gap-2">
+        <Button onClick={() => reset()}>Retry</Button>
+        <Button variant="outline" onClick={() => window.location.reload()}>Reload page</Button>
+      </div>
     </div>
   ),
   notFoundComponent: () => (
@@ -30,6 +57,7 @@ export const Route = createFileRoute("/m/$slug")({
       <Link to="/" className="mt-6"><Button>Go home</Button></Link>
     </div>
   ),
+
   head: ({ loaderData }) => ({
     meta: (() => {
       const headerName = loaderData?.profile ? resolveDisplayNames(loaderData.profile).primary : "Clinic";
