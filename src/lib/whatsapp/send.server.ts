@@ -175,7 +175,7 @@ export async function sendWhatsApp(input: SendWhatsAppInput): Promise<SendWhatsA
     let body = input.body
     if (input.profileId) {
       const cfg = await getClinicWhatsAppSettings(input.profileId)
-      const { channelFor, renderSmsTemplate, defaultSmsTemplate } = await import(
+      const { channelFor, renderSmsTemplate, defaultSmsTemplate, allowsAddress } = await import(
         '@/lib/whatsapp/templates'
       )
       const key = input.kind as never
@@ -190,15 +190,20 @@ export async function sendWhatsApp(input: SendWhatsAppInput): Promise<SendWhatsA
         const custom = (cfg?.settings.sms_templates as Record<string, unknown>)?.[input.kind]
         if (typeof custom === 'string' && custom.trim() && input.templateCtx) {
           const c = input.templateCtx
-          body = renderSmsTemplate(custom.trim() || defaultSmsTemplate(key), {
-            name: c.patientName,
-            clinic: c.clinicName ?? cfg?.clinicName,
-            treatment: c.treatmentName,
-            date: c.dateTime,
-            // Location name only — full addresses and links are never texted.
-            location: c.locationName,
-            link: undefined,
-          })
+          body = renderSmsTemplate(
+            custom.trim() || defaultSmsTemplate(key),
+            {
+              name: c.patientName,
+              clinic: c.clinicName ?? cfg?.clinicName,
+              treatment: c.treatmentName,
+              date: c.dateTime,
+              location: c.locationName,
+              // Address only on the messages a patient needs it for.
+              address: c.locationAddress,
+              link: undefined,
+            },
+            { keepAddress: allowsAddress(input.kind) },
+          )
         }
       }
     }
@@ -264,8 +269,8 @@ export async function sendWhatsApp(input: SendWhatsAppInput): Promise<SendWhatsA
       // UK networks content-filter SMS containing emoji / unusual symbols
       // (GatewayAPI status 0x1904 "Message filtered by content"), so strip
       // everything back to plain GSM-friendly text for the SMS route.
-      const { stripSmsUnsafe } = await import('@/lib/whatsapp/templates')
-      const smsBody = stripSmsUnsafe(body)
+      const { stripSmsUnsafe, allowsAddress } = await import('@/lib/whatsapp/templates')
+      const smsBody = stripSmsUnsafe(body, { keepAddress: allowsAddress(input.kind) })
         .replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}\u{2190}-\u{21FF}\u{2B00}-\u{2BFF}]/gu, '')
         .replace(/[“”]/g, '"')
         .replace(/[‘’]/g, "'")
@@ -354,24 +359,26 @@ export interface ApptMessageContext {
 export function buildWhatsAppBody(kind: WhatsAppKind, c: ApptMessageContext): string {
   const first = (c.patientName ?? '').split(' ')[0] || 'there'
   const clinic = c.clinicName || 'your clinic'
-  // Location name only (never the address — UK networks filter postcodes).
+  // Location name always; full address only on the messages that need it.
   const site = (c.locationName ?? '').trim()
   const at = site ? ` at ${site}` : ''
   const when = c.dateTime ? ` on ${c.dateTime}` : ''
+  const addr = (c.locationAddress ?? '').trim()
+  const where = addr ? ` ${addr}.` : ''
 
-  // Texts carry clinic, location name and date/time. No addresses, no links —
-  // UK networks content-filter those (GatewayAPI 0x1904).
+  // Texts carry clinic, location and date/time. Confirmations, reminders and
+  // reschedules also carry the address. Links are never sent.
   switch (kind) {
     case 'booking-confirmation':
-      return `Hi ${first}, you're booked in with ${clinic}${at}${when}.`
+      return `Hi ${first}, you're booked in with ${clinic}${at}${when}.${where}`
     case 'appointment-reminder':
-      return `Hi ${first}, reminder: your appointment with ${clinic}${at}${when}.`
+      return `Hi ${first}, reminder: your appointment with ${clinic}${at}${when}.${where}`
     case 'review-request':
       return `Hi ${first}, your appointment with ${clinic} is complete. Check your emails for your review and aftercare. Any issues, please contact your practitioner.`
     case 'booking-cancellation':
       return `Hi ${first}, your appointment with ${clinic}${at}${when} has been cancelled. Check your email to rebook.`
     case 'booking-reschedule':
-      return `Hi ${first}, your appointment with ${clinic}${at} has moved${when ? ` to ${c.dateTime}` : ''}.`
+      return `Hi ${first}, your appointment with ${clinic}${at} has moved${when ? ` to ${c.dateTime}` : ''}.${where}`
     case 'rebook-reminder':
       return `Hi ${first}, it's about time for your next appointment with ${clinic}${at}. Check your email to book.`
     case 'topup-reminder':
