@@ -90,6 +90,7 @@ type TreatmentForm = {
   discount_ends_at: string | null;
   discount_show_was_now: boolean;
   discount_label: string | null;
+  course_group: string | null;
   session_count: number;
   allow_split_payment: boolean;
   rebook_reminder_days: number | null;
