@@ -347,8 +347,9 @@ function TreatmentsPage() {
               <div className="grid gap-3 md:grid-cols-2">
                 {treatments.map((t) => (
                   <Card key={t.id}>
-                    <CardHeader className="flex flex-row items-start justify-between gap-2 space-y-0">
-                      <div>
+                    <CardHeader className="space-y-3">
+                      <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
                         <CardTitle className="text-base">{t.name}</CardTitle>
                         <p className="text-sm text-muted-foreground">
                           £{t.price} · {t.duration} min
@@ -360,19 +361,20 @@ function TreatmentsPage() {
                           </p>
                         )}
                       </div>
-                      <div className="flex gap-1">
+                      <div className="flex shrink-0 gap-1">
                         <Button size="icon" variant="ghost" onClick={() => { setEditing(t); setOpen(true); }}>
                           <Pencil className="h-4 w-4" />
                         </Button>
-                        <CourseOptionsDialog
-                          treatment={t}
-                          allTreatments={items}
-                          onSaved={load}
-                        />
                         <Button size="icon" variant="ghost" onClick={() => handleDelete(t.id)}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
+                      </div>
+                      <CourseOptionsDialog
+                        treatment={t}
+                        allTreatments={items}
+                        onSaved={load}
+                      />
                     </CardHeader>
                     {t.description && (
                       <CardContent className="text-sm text-muted-foreground">{t.description}</CardContent>

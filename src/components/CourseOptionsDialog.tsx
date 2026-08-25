@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { createTreatment, updateTreatment } from "@/lib/treatments.functions";
+import { createCourseTreatmentOption, updateTreatment } from "@/lib/treatments.functions";
 import {
   Dialog,
   DialogContent,
@@ -75,12 +75,21 @@ export function CourseOptionsDialog({
   allTreatments: CourseTreatment[];
   onSaved: () => void;
 }) {
-  const create = useServerFn(createTreatment);
+  const createOption = useServerFn(createCourseTreatmentOption);
   const update = useServerFn(updateTreatment);
   const [open, setOpen] = useState(false);
   const [adding, setAdding] = useState(false);
+  const [newSessions, setNewSessions] = useState("3");
+  const [newPrice, setNewPrice] = useState("");
+  const [newWeeks, setNewWeeks] = useState("");
+  const [newSplit, setNewSplit] = useState(false);
+  const [newRecommended, setNewRecommended] = useState(false);
 
-  const groupName = useMemo(() => groupsOf(treatment)[0] ?? treatment.name, [treatment]);
+  const groupName = useMemo(() => {
+    const existing = groupsOf(treatment)[0];
+    if (existing && !/^\d+\s+sessions?(?:\s|$)/i.test(existing)) return existing;
+    return treatment.name.replace(/\s*[—-]\s*\d+\s+sessions?$/i, "").trim();
+  }, [treatment]);
 
   const options = useMemo(() => {
     const inGroup = allTreatments.filter((t) => groupsOf(t).includes(groupName));
@@ -143,38 +152,32 @@ export function CourseOptionsDialog({
   }
 
   async function addOption() {
-    const base = options[0] ?? treatment;
-    const maxSessions = Math.max(...options.map((o) => o.session_count ?? 1), 1);
-    const sessions = maxSessions + 1;
+    const sessions = Math.max(1, Math.floor(Number(newSessions) || 1));
+    const price = Number(newPrice);
+    const weeks = newWeeks.trim() ? Number(newWeeks) : 0;
+    if (!Number.isFinite(price) || price < 0) {
+      toast.error("Enter the total price for this option");
+      return;
+    }
+    if (!Number.isFinite(weeks) || weeks < 0) {
+      toast.error("Enter a valid number of weeks");
+      return;
+    }
     setAdding(true);
     try {
-      const created = await create({
+      await createOption({
         data: {
-          name: `${groupName} — ${sessions} sessions`,
-          duration: base.duration,
-          price: Number(base.price) * sessions,
-          description: base.description ?? undefined,
-          category_id: base.category_id,
-          active: true,
+          baseTreatmentId: treatment.id,
+          groupName,
+          sessions,
+          price,
+          split: newSplit,
+          intervalDays: weeks > 0 ? Math.round(weeks * 7) : null,
+          recommended: newRecommended,
         },
       });
-      const id = (created as { id: string }).id;
-      await update({
-        data: {
-          id,
-          course_group: groupName,
-          course_groups: [groupName],
-          session_count: sessions,
-          allow_split_payment: true,
-          session_interval_days: base.session_interval_days ?? null,
-          course_recommended: false,
-        },
-      });
-      // make sure the base treatment is grouped too so they collapse into one row
-      if (!groupsOf(treatment).includes(groupName)) {
-        await update({ data: { id: treatment.id, course_group: groupName, course_groups: [groupName] } });
-      }
-      toast.success("Course option added — set its price below");
+      toast.success(`${sessions} session option added`);
+      setOpen(false);
       onSaved();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to add option");
@@ -194,8 +197,7 @@ export function CourseOptionsDialog({
         <DialogHeader>
           <DialogTitle>Course options — {groupName}</DialogTitle>
           <DialogDescription>
-            Each session amount loads separately. Set its own price, split payment and spacing.
-            Patients see “Choose amount” on the menu and pick an option in the pop-up.
+            Every box below is a separate patient choice with its own price and payment settings.
           </DialogDescription>
         </DialogHeader>
 
@@ -283,9 +285,39 @@ export function CourseOptionsDialog({
           })}
         </div>
 
-        <Button variant="outline" disabled={adding} onClick={addOption}>
-          <Plus className="mr-1.5 h-4 w-4" /> {adding ? "Adding…" : "Add another session option"}
-        </Button>
+        <div className="space-y-3 rounded-md border border-primary/30 bg-primary/5 p-3">
+          <div>
+            <p className="text-sm font-semibold">Add another session option</p>
+            <p className="text-xs text-muted-foreground">Set everything now; the new option will use the same treatment details and locations.</p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="space-y-1">
+              <Label className="text-xs">Number of sessions</Label>
+              <Input type="number" min={1} value={newSessions} onChange={(e) => setNewSessions(e.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Total price (£)</Label>
+              <Input type="number" min={0} step="0.01" placeholder="e.g. 750" value={newPrice} onChange={(e) => setNewPrice(e.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Weeks apart</Label>
+              <Input type="number" min={0} placeholder="e.g. 4" value={newWeeks} onChange={(e) => setNewWeeks(e.target.value)} />
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-4">
+            <label className="flex items-center gap-2 text-sm">
+              <Switch checked={newSplit && Number(newSessions) > 1} disabled={Number(newSessions) <= 1} onCheckedChange={setNewSplit} />
+              Split payment
+            </label>
+            <label className="flex items-center gap-2 text-sm">
+              <Switch checked={newRecommended} onCheckedChange={setNewRecommended} />
+              Recommended
+            </label>
+          </div>
+          <Button className="w-full" disabled={adding || !newPrice.trim()} onClick={addOption}>
+            <Plus className="mr-1.5 h-4 w-4" /> {adding ? "Adding…" : "Add this session option"}
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );
