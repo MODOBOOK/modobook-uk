@@ -190,6 +190,7 @@ export const cancelAppointment = createServerFn({ method: "POST" })
             patientName: appt.patient_name,
             clinicName: prof?.clinic_name,
             treatmentName: (appt as { treatments?: { name?: string } | null }).treatments?.name,
+            locationName: (appt as { locations?: { name?: string } | null }).locations?.name,
             dateTime: formatBookingDateTime(appt.scheduled_date as string, appt.start_time as string),
             bookingUrl: prof?.slug ? `${origin}/m/${prof.slug}` : origin,
           }),

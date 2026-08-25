@@ -195,8 +195,8 @@ export async function sendWhatsApp(input: SendWhatsAppInput): Promise<SendWhatsA
             clinic: c.clinicName ?? cfg?.clinicName,
             treatment: c.treatmentName,
             date: c.dateTime,
-            // Addresses and links are never sent by text — UK carriers filter them.
-            location: undefined,
+            // Location name only — full addresses and links are never texted.
+            location: c.locationName,
             link: undefined,
           })
         }
@@ -354,26 +354,28 @@ export interface ApptMessageContext {
 export function buildWhatsAppBody(kind: WhatsAppKind, c: ApptMessageContext): string {
   const first = (c.patientName ?? '').split(' ')[0] || 'there'
   const clinic = c.clinicName || 'your clinic'
-  const treatment = c.treatmentName || 'your appointment'
+  // Location name only (never the address — UK networks filter postcodes).
+  const site = (c.locationName ?? '').trim()
+  const at = site ? ` at ${site}` : ''
   const when = c.dateTime ? ` on ${c.dateTime}` : ''
 
-  // Texts carry treatment, clinic, date/time only. No addresses, no links —
+  // Texts carry clinic, location name and date/time. No addresses, no links —
   // UK networks content-filter those (GatewayAPI 0x1904).
   switch (kind) {
     case 'booking-confirmation':
-      return `Hi ${first}, you're booked in for ${treatment} with ${clinic}${when}. See you then!`
+      return `Hi ${first}, you're booked in with ${clinic}${at}${when}.`
     case 'appointment-reminder':
-      return `Hi ${first}, reminder: ${treatment} with ${clinic}${when}. See you then!`
+      return `Hi ${first}, reminder: your appointment with ${clinic}${at}${when}.`
     case 'review-request':
       return `Hi ${first}, your appointment with ${clinic} is complete. Check your emails for your review and aftercare. Any issues, please contact your practitioner.`
     case 'booking-cancellation':
-      return `Hi ${first}, your ${treatment} with ${clinic}${when} has been cancelled. Check your email to rebook.`
+      return `Hi ${first}, your appointment with ${clinic}${at}${when} has been cancelled. Check your email to rebook.`
     case 'booking-reschedule':
-      return `Hi ${first}, your ${treatment} with ${clinic} has moved${when ? ` to ${c.dateTime}` : ''}. See you then!`
+      return `Hi ${first}, your appointment with ${clinic}${at} has moved${when ? ` to ${c.dateTime}` : ''}.`
     case 'rebook-reminder':
-      return `Hi ${first}, it's about time for your next ${treatment} at ${clinic}. Check your email to book.`
+      return `Hi ${first}, it's about time for your next appointment with ${clinic}${at}. Check your email to book.`
     case 'topup-reminder':
-      return `Hi ${first}, your ${treatment} at ${clinic} is due a top-up. Check your email to book.`
+      return `Hi ${first}, your treatment with ${clinic}${at} is due a top-up. Check your email to book.`
     default:
       return `Test message from MODO for ${clinic}. If you can read this, texts are working.`
   }

@@ -223,7 +223,7 @@ export const cancelAppointmentByToken = createServerFn({ method: "POST" })
         const { tryEnqueueAppEmail, formatBookingDateTime, getPractitionerBranding } = await import("@/lib/email/send.server");
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const { data: apptFull } = await supabaseAdmin
-          .from("appointments").select("profile_id, patient_phone").eq("id", a.id).maybeSingle();
+          .from("appointments").select("profile_id, patient_phone, locations(name)").eq("id", a.id).maybeSingle();
         const branding = await getPractitionerBranding((apptFull as { profile_id?: string } | null)?.profile_id);
         const origin = process.env.PUBLIC_APP_URL || process.env.APP_URL || "https://modobook.uk";
         try {
@@ -238,6 +238,7 @@ export const cancelAppointmentByToken = createServerFn({ method: "POST" })
               patientName: a.patient_name,
               clinicName: a.clinic_name ?? branding.clinicName,
               treatmentName: a.treatment_name,
+              locationName: (apptFull as { locations?: { name?: string } | null } | null)?.locations?.name,
               dateTime: a.scheduled_date && a.start_time ? formatBookingDateTime(a.scheduled_date, a.start_time) : null,
               bookingUrl: a.clinic_slug ? `${origin}/m/${a.clinic_slug}` : origin,
             }),
@@ -339,7 +340,7 @@ export const rescheduleAppointment = createServerFn({ method: "POST" })
 
     const { data: appt, error: aErr } = await supabase
       .from("appointments")
-      .select("id, patient_name, patient_email, patient_phone, scheduled_date, start_time, end_time")
+      .select("id, patient_name, patient_email, patient_phone, scheduled_date, start_time, end_time, locations(name)")
       .eq("id", data.appointmentId)
       .eq("profile_id", profile.id)
       .maybeSingle();
@@ -373,6 +374,7 @@ export const rescheduleAppointment = createServerFn({ method: "POST" })
           messageKey: `wa-reschedule-${data.appointmentId}-${data.date}-${startHM}`,
           ...smsMessage("booking-reschedule", {
             patientName: appt.patient_name,
+            locationName: (appt as { locations?: { name?: string } | null }).locations?.name,
             clinicName: branding.clinicName,
             dateTime: formatBookingDateTime(data.date, startHM),
           }),
