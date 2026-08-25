@@ -611,6 +611,30 @@ function BookPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [packages, categories, nowTs],
   );
+  // Courses = several packages that are just N sessions of the SAME treatment.
+  // Instead of one card each (cluttered), group them into a single card whose
+  // dialog lets the client pick the course length.
+  const { courseGroups, standalonePackages } = useMemo(() => {
+    const groups = new Map<string, typeof visiblePackages>();
+    const rest: typeof visiblePackages = [];
+    for (const p of visiblePackages) {
+      const pk = p as unknown as { treatment_ids?: string[] | null; treatment_id?: string | null; session_count?: number | null };
+      const ids = (pk.treatment_ids ?? (pk.treatment_id ? [pk.treatment_id] : [])).filter(Boolean) as string[];
+      const distinct = Array.from(new Set(ids));
+      if (distinct.length === 1 && (pk.session_count ?? 1) > 1) {
+        const key = distinct[0]!;
+        groups.set(key, [...(groups.get(key) ?? []), p]);
+      } else {
+        rest.push(p);
+      }
+    }
+    const courses: { treatmentId: string; items: typeof visiblePackages }[] = [];
+    for (const [treatmentId, items] of groups) {
+      if (items.length > 1) courses.push({ treatmentId, items });
+      else rest.push(...items);
+    }
+    return { courseGroups: courses, standalonePackages: rest };
+  }, [visiblePackages]);
   const buildersEnabled = packageBuilderEnabled(slug);
   const activeBuilders = (buildersEnabled ? (packageBuilders ?? []) : []).filter(
     (b) => (b.items ?? []).length > 0 && catWindowLive(b.category_id),
