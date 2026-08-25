@@ -8932,6 +8932,17 @@ export type Database = {
         }[]
       }
       get_plan_by_token: { Args: { _token: string }; Returns: Json }
+      get_public_patient_reviews: {
+        Args: { p_profile_id: string }
+        Returns: {
+          body: string
+          created_at: string
+          id: string
+          rating: number
+          reviewer_name: string
+          title: string
+        }[]
+      }
       get_public_profile_by_slug: {
         Args: { p_slug: string }
         Returns: {
