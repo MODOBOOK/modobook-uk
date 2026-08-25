@@ -136,6 +136,8 @@ export function renderSmsTemplate(template: string, values: SmsMergeValues) {
     '{link}': '',
   }
   let out = template
+  // Drop "at {location}" entirely when there is no location for the booking.
+  if (!map['{location}']) out = out.replace(/\s*\bat\s+\{location\}/gi, '')
   for (const [tag, val] of Object.entries(map)) {
     out = out.split(tag).join(val)
   }
