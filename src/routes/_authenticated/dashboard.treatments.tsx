@@ -243,6 +243,23 @@ function TreatmentsPage() {
     const priceRaw = prompt(`Price for the ${sessions}-session option (\u00a3)`, String(Number(t.price) * sessions));
     if (priceRaw === null) return;
     const newPrice = Math.max(0, Number(priceRaw));
+    if (!Number.isFinite(newPrice)) {
+      toast.error("Enter a valid course price");
+      return;
+    }
+    const allowSplit = sessions > 1
+      ? confirm("Allow this option to be paid in split payments?")
+      : false;
+    const intervalRaw = sessions > 1
+      ? prompt("How many weeks apart should each session be? Leave blank if not needed.", "4")
+      : null;
+    if (intervalRaw === null) return;
+    const intervalWeeks = intervalRaw?.trim() ? Math.max(0, Number(intervalRaw)) : 0;
+    if (!Number.isFinite(intervalWeeks)) {
+      toast.error("Enter a valid number of weeks between sessions");
+      return;
+    }
+    const recommended = confirm(`Mark the ${sessions}-session option as recommended?`);
     const groups = (() => {
       const arr = (t as { course_groups?: string[] | null }).course_groups ?? [];
       if (arr.length > 0) return arr;
@@ -267,7 +284,9 @@ function TreatmentsPage() {
           course_group: groups[0] ?? null,
           course_groups: groups,
           session_count: sessions,
-          allow_split_payment: sessions > 1,
+          allow_split_payment: allowSplit,
+          session_interval_days: intervalWeeks > 0 ? intervalWeeks * 7 : null,
+          course_recommended: recommended,
         },
       });
       // make sure the original is in the same group so they collapse into one row

@@ -35,7 +35,6 @@ export function CourseGroupRow({
   cardBg,
   cardBorder,
   nameColor,
-  priceColor,
   bold,
   isSelected,
   onToggle,
@@ -54,7 +53,6 @@ export function CourseGroupRow({
   const [open, setOpen] = useState(false);
   const sorted = [...options].sort((a, b) => a.session_count - b.session_count || a.price - b.price);
   const single = sorted.find((o) => o.session_count <= 1) ?? sorted[0];
-  const from = Math.min(...sorted.map((o) => o.price));
   const chosen = sorted.filter((o) => isSelected(o.id));
   const blurb = single?.description ?? sorted.find((o) => o.description)?.description ?? null;
   const anySplit = sorted.some((o) => o.allow_split_payment && o.session_count > 1);
@@ -76,7 +74,7 @@ export function CourseGroupRow({
         className="w-full rounded-xl border p-3 text-left shadow-sm transition hover:shadow"
         style={{ backgroundColor: cardBg, borderColor: chosen.length ? brand : cardBorder }}
       >
-        <div className="flex items-start justify-between gap-3">
+        <div className="flex items-start gap-3">
           <div className="min-w-0">
             <div className={`leading-tight ${bold ? "font-bold" : "font-medium"}`} style={{ color: nameColor }}>
               {groupName}
@@ -104,12 +102,6 @@ export function CourseGroupRow({
                 Added: {chosen.map((c) => `${c.session_count} session${c.session_count === 1 ? "" : "s"}`).join(", ")}
               </div>
             )}
-          </div>
-          <div className="shrink-0 text-right leading-tight">
-            <div className={`whitespace-nowrap ${bold ? "font-bold" : "font-semibold"}`} style={{ color: priceColor }}>
-              £{from.toFixed(2)}
-            </div>
-            <div className="text-[10px] uppercase tracking-wide opacity-60">choose amount</div>
           </div>
         </div>
         <div className="mt-2 text-xs font-semibold" style={{ color: brand }}>
