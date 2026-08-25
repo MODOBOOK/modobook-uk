@@ -237,7 +237,9 @@ export async function sendWhatsApp(input: SendWhatsAppInput): Promise<SendWhatsA
     const gatewayApiKey = process.env['GATEWAYAPI_API_KEY']
     const twilioKey = process.env['TWILIO_API_KEY']
     const from = process.env['MODO_WHATSAPP_FROM']
-    const smsSender = (process.env['MODO_SMS_SENDER'] || 'MODO').slice(0, 11)
+    // Always identify SMS as MODO. Never allow an environment override to
+    // replace this with a phone number or clinic-specific sender.
+    const smsSender = 'MODO'
 
     async function mark(status: string, patch: Record<string, unknown> = {}) {
       await supabaseAdmin
