@@ -886,17 +886,16 @@ function TreatmentDialog({
               />
               <p className="mt-1 text-[11px] text-muted-foreground">Emails the patient a "time to rebook" reminder this many days after their appointment. Leave blank to use the category default.</p>
             </div>
-          </div>
             <div>
-            <Label className="text-xs text-muted-foreground">Top-up reminder — days after</Label>
-            <Input
-              type="number"
-              min={0}
-              placeholder="e.g. 30"
-              value={topupDays}
-              onChange={(e) => setTopupDays(e.target.value)}
-            />
-            <p className="mt-1 text-[11px] text-muted-foreground">Optional shorter reminder (e.g. filler top-up) sent before the full rebook. Leave blank to skip or use category default.</p>
+              <Label className="text-xs text-muted-foreground">Top-up reminder — days after</Label>
+              <Input
+                type="number"
+                min={0}
+                placeholder="e.g. 30"
+                value={topupDays}
+                onChange={(e) => setTopupDays(e.target.value)}
+              />
+              <p className="mt-1 text-[11px] text-muted-foreground">Optional shorter reminder (e.g. filler top-up) sent before the full rebook. Leave blank to skip or use category default.</p>
             </div>
           </div>
         </div>
