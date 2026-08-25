@@ -24,7 +24,6 @@ import { autoRefundCancelledAppointment } from "@/lib/refunds.functions";
 
 
 export const Route = createFileRoute("/m/$slug/account")({
-  ssr: false,
   component: Account,
 });
 
