@@ -7,7 +7,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Check, Clock, Sparkles } from "lucide-react";
+import { Check, Clock, Sparkles, Info } from "lucide-react";
 
 export type CourseOption = {
   id: string;
