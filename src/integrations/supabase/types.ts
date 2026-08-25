@@ -8804,6 +8804,10 @@ export type Database = {
         Args: { p_display_name: string; p_kind: string }
         Returns: string
       }
+      ensure_patient_referral_code: {
+        Args: { p_clinic_profile_id: string; p_patient_user_id: string }
+        Returns: string
+      }
       get_about_page_by_slug: { Args: { p_slug: string }; Returns: Json }
       get_appointment_by_manage_token: {
         Args: { p_token: string }
