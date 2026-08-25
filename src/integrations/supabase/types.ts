@@ -8447,6 +8447,7 @@ export type Database = {
           color: string | null
           consent_form_url: string | null
           course_group: string | null
+          course_recommended: boolean
           created_at: string
           deductible_against: string[] | null
           deductible_window_days: number | null
@@ -8497,6 +8498,7 @@ export type Database = {
           color?: string | null
           consent_form_url?: string | null
           course_group?: string | null
+          course_recommended?: boolean
           created_at?: string
           deductible_against?: string[] | null
           deductible_window_days?: number | null
@@ -8547,6 +8549,7 @@ export type Database = {
           color?: string | null
           consent_form_url?: string | null
           course_group?: string | null
+          course_recommended?: boolean
           created_at?: string
           deductible_against?: string[] | null
           deductible_window_days?: number | null

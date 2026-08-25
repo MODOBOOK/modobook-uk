@@ -91,6 +91,7 @@ type TreatmentForm = {
   discount_show_was_now: boolean;
   discount_label: string | null;
   course_group: string | null;
+  course_recommended: boolean;
   session_count: number;
   allow_split_payment: boolean;
   rebook_reminder_days: number | null;
@@ -438,6 +439,9 @@ function TreatmentDialog({
   const [courseGroup, setCourseGroup] = useState<string>(
     (treatment as { course_group?: string | null } | null)?.course_group ?? "",
   );
+  const [courseRecommended, setCourseRecommended] = useState<boolean>(
+    (treatment as { course_recommended?: boolean } | null)?.course_recommended ?? false,
+  );
   const [rebookDays, setRebookDays] = useState<string>(
     (treatment as { rebook_reminder_days?: number | null } | null)?.rebook_reminder_days != null
       ? String((treatment as { rebook_reminder_days?: number | null }).rebook_reminder_days)
@@ -553,6 +557,7 @@ function TreatmentDialog({
     setSessionCount((treatment as { session_count?: number } | null)?.session_count ?? 1);
     setAllowSplit((treatment as { allow_split_payment?: boolean } | null)?.allow_split_payment ?? false);
     setCourseGroup((treatment as { course_group?: string | null } | null)?.course_group ?? "");
+    setCourseRecommended((treatment as { course_recommended?: boolean } | null)?.course_recommended ?? false);
     setCourseGroup((treatment as { course_group?: string | null } | null)?.course_group ?? "");
     setRebookDays(
       (treatment as { rebook_reminder_days?: number | null } | null)?.rebook_reminder_days != null
@@ -896,6 +901,10 @@ function TreatmentDialog({
             <p className="mt-1 text-[11px] text-muted-foreground">
               Give the same course group name to your 1 / 3 / 6 session versions of a treatment. They'll show as one tidy item on your booking page and open a pop-up where the client picks the option.
             </p>
+            <label className="mt-2 flex items-center gap-2 text-sm">
+              <Switch checked={courseRecommended} onCheckedChange={setCourseRecommended} disabled={!courseGroup.trim()} />
+              <span>Mark this option as “Recommended” in the pop-up</span>
+            </label>
           </div>
           <div className="pt-2 border-t">
             <Label className="text-xs text-muted-foreground">Deposit for this treatment (£)</Label>
@@ -1252,6 +1261,7 @@ function TreatmentDialog({
               discount_show_was_now: discountShowWasNow,
               discount_label: discountLabel || null,
               course_group: courseGroup.trim() || null,
+              course_recommended: courseRecommended,
               session_count: sessionCount,
               allow_split_payment: allowSplit && sessionCount >= 2,
               rebook_reminder_days: rebookDays === "" ? null : Number(rebookDays),
