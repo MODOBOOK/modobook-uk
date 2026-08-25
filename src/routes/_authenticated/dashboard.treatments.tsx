@@ -90,6 +90,7 @@ type TreatmentForm = {
   discount_ends_at: string | null;
   discount_show_was_now: boolean;
   discount_label: string | null;
+  course_group: string | null;
   session_count: number;
   allow_split_payment: boolean;
   rebook_reminder_days: number | null;
@@ -434,6 +435,9 @@ function TreatmentDialog({
   const [allowSplit, setAllowSplit] = useState<boolean>(
     (treatment as { allow_split_payment?: boolean } | null)?.allow_split_payment ?? false,
   );
+  const [courseGroup, setCourseGroup] = useState<string>(
+    (treatment as { course_group?: string | null } | null)?.course_group ?? "",
+  );
   const [rebookDays, setRebookDays] = useState<string>(
     (treatment as { rebook_reminder_days?: number | null } | null)?.rebook_reminder_days != null
       ? String((treatment as { rebook_reminder_days?: number | null }).rebook_reminder_days)
@@ -548,6 +552,8 @@ function TreatmentDialog({
     setDiscountLabel(treatment?.discount_label ?? "");
     setSessionCount((treatment as { session_count?: number } | null)?.session_count ?? 1);
     setAllowSplit((treatment as { allow_split_payment?: boolean } | null)?.allow_split_payment ?? false);
+    setCourseGroup((treatment as { course_group?: string | null } | null)?.course_group ?? "");
+    setCourseGroup((treatment as { course_group?: string | null } | null)?.course_group ?? "");
     setRebookDays(
       (treatment as { rebook_reminder_days?: number | null } | null)?.rebook_reminder_days != null
         ? String((treatment as { rebook_reminder_days?: number | null }).rebook_reminder_days)
@@ -880,6 +886,17 @@ function TreatmentDialog({
           {sessionCount < 2 && (
             <p className="text-xs text-muted-foreground">Set 2 or more sessions to enable split payments.</p>
           )}
+          <div className="pt-2 border-t">
+            <Label className="text-xs text-muted-foreground">Course group (optional)</Label>
+            <Input
+              placeholder="e.g. Face + Under Eyes"
+              value={courseGroup}
+              onChange={(e) => setCourseGroup(e.target.value)}
+            />
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              Give the same course group name to your 1 / 3 / 6 session versions of a treatment. They'll show as one tidy item on your booking page and open a pop-up where the client picks the option.
+            </p>
+          </div>
           <div className="pt-2 border-t">
             <Label className="text-xs text-muted-foreground">Deposit for this treatment (£)</Label>
             <Input
@@ -1234,6 +1251,7 @@ function TreatmentDialog({
               discount_ends_at: discountEndsAt ? new Date(discountEndsAt).toISOString() : null,
               discount_show_was_now: discountShowWasNow,
               discount_label: discountLabel || null,
+              course_group: courseGroup.trim() || null,
               session_count: sessionCount,
               allow_split_payment: allowSplit && sessionCount >= 2,
               rebook_reminder_days: rebookDays === "" ? null : Number(rebookDays),
