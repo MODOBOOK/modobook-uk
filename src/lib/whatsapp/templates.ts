@@ -35,24 +35,36 @@ export interface SmsTemplateMeta {
   default: string
 }
 
-// Full addresses and links are never sent by text (UK carriers content-filter
-// them), so {link} isn't offered. {location} inserts the location name only.
-export const MERGE_TAGS = ['{name}', '{clinic}', '{location}', '{date}'] as const
+// Links are never sent by text (UK carriers content-filter them), so {link}
+// isn't offered. {location} inserts the location name; {address} inserts the
+// full address and is only used on messages the patient needs it for.
+export const MERGE_TAGS = ['{name}', '{clinic}', '{location}', '{address}', '{date}'] as const
+
+/** Messages where the full address is allowed (the patient needs to travel). */
+export const ADDRESS_KINDS: SmsTemplateKey[] = [
+  'booking-confirmation',
+  'appointment-reminder',
+  'booking-reschedule',
+]
+
+export function allowsAddress(key: string) {
+  return (ADDRESS_KINDS as string[]).includes(key)
+}
 
 export const SMS_TEMPLATES: SmsTemplateMeta[] = [
   {
     key: 'booking-confirmation',
     label: 'Booking confirmation',
     hint: 'Sent as soon as a booking is made.',
-    tags: ['{name}', '{clinic}', '{location}', '{date}'],
-    default: "Hi {name}, you're booked in with {clinic} at {location} on {date}.",
+    tags: ['{name}', '{clinic}', '{location}', '{address}', '{date}'],
+    default: "Hi {name}, you're booked in with {clinic} at {location} on {date}. {address}",
   },
   {
     key: 'appointment-reminder',
     label: 'Appointment reminder',
     hint: 'Follows your email reminder timings.',
-    tags: ['{name}', '{clinic}', '{location}', '{date}'],
-    default: 'Hi {name}, reminder: your appointment with {clinic} at {location} on {date}.',
+    tags: ['{name}', '{clinic}', '{location}', '{address}', '{date}'],
+    default: 'Hi {name}, reminder: your appointment with {clinic} at {location} on {date}. {address}',
   },
   {
     key: 'booking-cancellation',
@@ -66,8 +78,8 @@ export const SMS_TEMPLATES: SmsTemplateMeta[] = [
     key: 'booking-reschedule',
     label: 'Reschedule',
     hint: 'Sent when an appointment is moved.',
-    tags: ['{name}', '{clinic}', '{location}', '{date}'],
-    default: 'Hi {name}, your appointment with {clinic} at {location} has moved to {date}.',
+    tags: ['{name}', '{clinic}', '{location}', '{address}', '{date}'],
+    default: 'Hi {name}, your appointment with {clinic} at {location} has moved to {date}. {address}',
   },
   {
     key: 'rebook-reminder',
@@ -96,14 +108,16 @@ export const SMS_TEMPLATES: SmsTemplateMeta[] = [
 ]
 
 /**
- * Strip anything UK networks content-filter out of SMS: URLs, email addresses
- * and postcodes. Applied to every outgoing text, including custom templates.
+ * Strip anything UK networks content-filter out of SMS: URLs and email
+ * addresses (always), plus postcodes unless the message is one that needs the
+ * address (booking confirmation / reminder / reschedule).
  */
-export function stripSmsUnsafe(text: string) {
-  return text
+export function stripSmsUnsafe(text: string, opts?: { keepAddress?: boolean }) {
+  let out = text
     .replace(/\b(?:https?:\/\/|www\.)\S+/gi, '')
     .replace(/\b[\w.+-]+@[\w-]+\.[\w.-]+\b/gi, '')
-    .replace(/\b[A-Z]{1,2}\d[A-Z\d]?\s?\d[A-Z]{2}\b/gi, '')
+  if (!opts?.keepAddress) out = out.replace(/\b[A-Z]{1,2}\d[A-Z\d]?\s?\d[A-Z]{2}\b/gi, '')
+  return out
     .replace(/\b[\w-]+\.(?:com|co\.uk|uk|net|org|io|app|link)\b\/?\S*/gi, '')
     .replace(/\s+(?:at|from|:)\s*(?=[.,!]|$)/gm, '')
     .replace(/[ \t]{2,}/g, ' ')
@@ -122,17 +136,23 @@ export interface SmsMergeValues {
   treatment?: string | null
   date?: string | null
   location?: string | null
+  address?: string | null
   link?: string | null
 }
 
 /** Replace merge tags; unresolved tags (and any stray punctuation) are cleaned up. */
-export function renderSmsTemplate(template: string, values: SmsMergeValues) {
+export function renderSmsTemplate(
+  template: string,
+  values: SmsMergeValues,
+  opts?: { keepAddress?: boolean },
+) {
   const map: Record<string, string> = {
     '{name}': (values.name ?? '').split(' ')[0] || 'there',
     '{clinic}': values.clinic || 'your clinic',
     '{treatment}': values.treatment || 'your treatment',
     '{date}': values.date || '',
     '{location}': (values.location ?? '').trim(),
+    '{address}': opts?.keepAddress ? (values.address ?? '').trim() : '',
     '{link}': '',
   }
   let out = template
@@ -147,6 +167,7 @@ export function renderSmsTemplate(template: string, values: SmsMergeValues) {
       .replace(/\s{2,}/g, ' ')
       .replace(/\s+([.,!])/g, '$1')
       .trim(),
+    { keepAddress: opts?.keepAddress },
   )
 }
 

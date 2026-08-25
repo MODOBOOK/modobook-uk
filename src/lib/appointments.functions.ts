@@ -340,7 +340,7 @@ export const rescheduleAppointment = createServerFn({ method: "POST" })
 
     const { data: appt, error: aErr } = await supabase
       .from("appointments")
-      .select("id, patient_name, patient_email, patient_phone, scheduled_date, start_time, end_time, locations(name)")
+      .select("id, patient_name, patient_email, patient_phone, scheduled_date, start_time, end_time, locations(name, address_line1, city, postcode)")
       .eq("id", data.appointmentId)
       .eq("profile_id", profile.id)
       .maybeSingle();
@@ -375,6 +375,12 @@ export const rescheduleAppointment = createServerFn({ method: "POST" })
           ...smsMessage("booking-reschedule", {
             patientName: appt.patient_name,
             locationName: (appt as { locations?: { name?: string } | null }).locations?.name,
+            locationAddress: (() => {
+              const l = (appt as {
+                locations?: { address_line1?: string; city?: string; postcode?: string } | null
+              }).locations
+              return l ? [l.address_line1, l.city, l.postcode].filter(Boolean).join(', ') : undefined
+            })(),
             clinicName: branding.clinicName,
             dateTime: formatBookingDateTime(data.date, startHM),
           }),
