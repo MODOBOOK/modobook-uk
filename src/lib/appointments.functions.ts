@@ -223,7 +223,7 @@ export const cancelAppointmentByToken = createServerFn({ method: "POST" })
         const { tryEnqueueAppEmail, formatBookingDateTime, getPractitionerBranding } = await import("@/lib/email/send.server");
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const { data: apptFull } = await supabaseAdmin
-          .from("appointments").select("profile_id, patient_phone").eq("id", a.id).maybeSingle();
+          .from("appointments").select("profile_id, patient_phone, locations(name)").eq("id", a.id).maybeSingle();
         const branding = await getPractitionerBranding((apptFull as { profile_id?: string } | null)?.profile_id);
         const origin = process.env.PUBLIC_APP_URL || process.env.APP_URL || "https://modobook.uk";
         try {
