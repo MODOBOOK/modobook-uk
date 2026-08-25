@@ -52,7 +52,7 @@ import type { Database } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 import { SafeHtml } from "@/components/SafeHtml";
 import { PackageBuilderCard, type PublicBuilder } from "@/components/PackageBuilderCard";
-import { CoursePickerCard } from "@/components/CoursePickerCard";
+import { CourseGroupRow } from "@/components/CourseGroupRow";
 import { packageBuilderEnabled, linkButtonEnabled, treatmentLeafletsEnabled } from "@/lib/feature-flags";
 import { getLeafletSignedUrl } from "@/lib/leaflets.functions";
 import { resolveDisplayNames } from "@/lib/display-name";
@@ -617,6 +617,80 @@ function BookPage() {
     (b) => (b.items ?? []).length > 0 && catWindowLive(b.category_id),
   );
   const packagesTabBuilders = activeBuilders.filter((b) => b.show_in_packages !== false);
+  // Course groups: treatments sharing a "course_group" name (e.g. 1 / 3 / 6
+  // sessions of the same treatment) collapse into one row with a pop-up picker.
+  const coursesEnabled = coursePickerEnabled(slug);
+  const renderTreatmentList = (list: Treatment[]): ReactNode => {
+    const groups = new Map<string, Treatment[]>();
+    if (coursesEnabled) {
+      for (const t of list) {
+        const g = ((t as { course_group?: string | null }).course_group ?? "").trim();
+        if (!g) continue;
+        const arr = groups.get(g) ?? [];
+        arr.push(t);
+        groups.set(g, arr);
+      }
+      for (const [g, arr] of Array.from(groups.entries())) {
+        if (arr.length < 2) groups.delete(g);
+      }
+    }
+    const done = new Set<string>();
+    const out: ReactNode[] = [];
+    for (const t of list) {
+      const g = ((t as { course_group?: string | null }).course_group ?? "").trim();
+      if (g && groups.has(g)) {
+        if (done.has(g)) continue;
+        done.add(g);
+        const arr = groups.get(g)!;
+        out.push(
+          <CourseGroupRow
+            key={`course-${g}`}
+            groupName={g}
+            brand={brand}
+            cardBg={menuCardBg}
+            cardBorder={menuCardBorder}
+            nameColor={menuNameColor}
+            priceColor={menuPriceColor}
+            bold={menuTreatmentBold}
+            isSelected={isSelected}
+            onToggle={toggleSelect}
+            options={arr.map((o) => ({
+              id: o.id,
+              name: o.name,
+              price: priceFor(o),
+              duration: durationFor(o),
+              session_count: (o as { session_count?: number }).session_count ?? 1,
+              allow_split_payment: Boolean((o as { allow_split_payment?: boolean }).allow_split_payment),
+              description: o.description,
+              full: capFor(o)?.full ?? false,
+            }))}
+          />,
+        );
+        continue;
+      }
+      out.push(
+        <TreatmentRow
+          key={t.id}
+          t={t}
+          slug={slug}
+          price={priceFor(t)}
+          duration={durationFor(t)}
+          brand={brand}
+          selected={isSelected(t.id)}
+          onToggle={() => toggleSelect(t.id)}
+          cardBg={menuCardBg}
+          cardBorder={menuCardBorder}
+          nameColor={menuNameColor}
+          priceColor={menuPriceColor}
+          size={menuSize}
+          bold={menuTreatmentBold}
+          capInfo={capFor(t)}
+        />,
+      );
+    }
+    return <>{out}</>;
+  };
+
   const menuBuilders = activeBuilders.filter((b) => Boolean(b.category_id));
   // Builders with no category still show at the top of the Treatments tab
   const uncategorisedMenuBuilders = activeBuilders.filter(
@@ -2012,6 +2086,7 @@ function BookPage() {
                             headingFont={headingFont}
                             capFor={capFor}
                             catCountdown={(id) => countdownLabel(catEndsAt(id))}
+                            renderTreatments={renderTreatmentList}
                             categoryExtra={(id) => {
                               const bs = menuBuilders.filter((b) => b.category_id === id);
                               if (bs.length === 0) return null;
@@ -2031,26 +2106,7 @@ function BookPage() {
                                 Other treatments
                               </h3>
                             )}
-                            {tree.uncategorised.map((t) => (
-                              <TreatmentRow
-                                key={t.id}
-                                t={t}
-                                slug={slug}
-                                price={priceFor(t)}
-                                duration={durationFor(t)}
-                                brand={brand}
-                                selected={isSelected(t.id)}
-                                onToggle={() => toggleSelect(t.id)}
-                                cardBg={menuCardBg}
-                                cardBorder={menuCardBorder}
-                                nameColor={menuNameColor}
-                                priceColor={menuPriceColor}
-                                size={menuSize}
-                                bold={menuTreatmentBold}
-                                capInfo={capFor(t)}
-                              />
-
-                            ))}
+                            {renderTreatmentList(tree.uncategorised)}
                           </div>
                         )}
                       </div>
@@ -2839,6 +2895,7 @@ function CategoryTree({
   capFor,
   catCountdown,
   categoryExtra,
+  renderTreatments,
 }: {
   nodes: CatNode[];
   slug: string;
@@ -2861,7 +2918,7 @@ function CategoryTree({
   capFor: (t: Treatment) => { cap: number; count: number; left: number; full: boolean } | null;
   catCountdown?: (id: string) => string | null;
   categoryExtra?: (id: string) => ReactNode;
-
+  renderTreatments?: (list: Treatment[]) => ReactNode;
 }) {
   const hasExtra = (n: CatNode): boolean => {
     const own = categoryExtra?.(n.id);
@@ -2947,28 +3004,31 @@ function CategoryTree({
                     capFor={capFor}
                     catCountdown={catCountdown}
                     categoryExtra={categoryExtra}
+                    renderTreatments={renderTreatments}
                   />
 
                 )}
-                {node.treatments.map((t) => (
-                  <TreatmentRow
-                    key={t.id}
-                    t={t}
-                    slug={slug}
-                    price={priceFor(t)}
-                    duration={durationFor(t)}
-                    brand={brand}
-                    selected={isSelected(t.id)}
-                    onToggle={() => toggleSelect(t.id)}
-                    cardBg={cardBg}
-                    cardBorder={cardBorder}
-                    nameColor={nameColor}
-                    priceColor={priceColor}
-                    size={size}
-                    bold={bold}
-                    capInfo={capFor(t)}
-                  />
-                ))}
+                {renderTreatments
+                  ? renderTreatments(node.treatments)
+                  : node.treatments.map((t) => (
+                      <TreatmentRow
+                        key={t.id}
+                        t={t}
+                        slug={slug}
+                        price={priceFor(t)}
+                        duration={durationFor(t)}
+                        brand={brand}
+                        selected={isSelected(t.id)}
+                        onToggle={() => toggleSelect(t.id)}
+                        cardBg={cardBg}
+                        cardBorder={cardBorder}
+                        nameColor={nameColor}
+                        priceColor={priceColor}
+                        size={size}
+                        bold={bold}
+                        capInfo={capFor(t)}
+                      />
+                    ))}
 
               </AccordionContent>
             </AccordionItem>

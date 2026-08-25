@@ -96,3 +96,10 @@ export function whatsappMessagingEnabled(slug?: string | null) {
   return isFeatureLive(WHATSAPP_SLUGS, slug);
 }
 
+
+/** Course pop-up picker on the public menu (grouped session options). */
+export const COURSE_PICKER_SLUGS = ["aestheticsbynurseryan"];
+
+export function coursePickerEnabled(slug?: string | null) {
+  return isFeatureLive(COURSE_PICKER_SLUGS, slug);
+}
