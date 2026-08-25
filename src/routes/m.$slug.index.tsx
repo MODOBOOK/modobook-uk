@@ -673,6 +673,7 @@ function BookPage() {
                 interval_days: (o as { session_interval_days?: number | null }).session_interval_days ?? null,
                 recommended: Boolean((o as { course_recommended?: boolean }).course_recommended),
                 description: o.description,
+                picture_url: (o as { picture_url?: string | null }).picture_url ?? null,
                 full: capFor(o)?.full ?? false,
               }))}
             />,

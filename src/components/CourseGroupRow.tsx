@@ -7,7 +7,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Check, Clock, Sparkles } from "lucide-react";
+import { Check, Clock, Sparkles, Info } from "lucide-react";
 
 export type CourseOption = {
   id: string;
@@ -19,6 +19,7 @@ export type CourseOption = {
   interval_days?: number | null;
   recommended?: boolean;
   description?: string | null;
+  picture_url?: string | null;
   full?: boolean;
 };
 
@@ -51,6 +52,7 @@ export function CourseGroupRow({
   onToggle: (id: string) => void;
 }) {
   const [open, setOpen] = useState(false);
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const sorted = [...options].sort((a, b) => a.session_count - b.session_count || a.price - b.price);
   const single = sorted.find((o) => o.session_count <= 1) ?? sorted[0];
   const chosen = sorted.filter((o) => isSelected(o.id));
@@ -65,17 +67,24 @@ export function CourseGroupRow({
     return `${days} day${days === 1 ? "" : "s"} apart`;
   };
   const recommended = sorted.find((o) => o.recommended);
+  const detailOption = single;
+  const detailPicture = sorted.find((o) => o.picture_url)?.picture_url ?? null;
+  const hasLongDescription = (detailOption?.description ?? "").length > 0 || !!detailPicture;
 
   return (
     <>
-      <button
-        type="button"
+      <div
+        role="button"
+        tabIndex={0}
         onClick={() => setOpen(true)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") setOpen(true);
+        }}
         className="w-full rounded-xl border p-3 text-left shadow-sm transition hover:shadow"
         style={{ backgroundColor: cardBg, borderColor: chosen.length ? brand : cardBorder }}
       >
         <div className="flex items-start gap-3">
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <div className={`leading-tight ${bold ? "font-bold" : "font-medium"}`} style={{ color: nameColor }}>
               {groupName}
             </div>
@@ -104,10 +113,26 @@ export function CourseGroupRow({
             )}
           </div>
         </div>
-        <div className="mt-2 text-xs font-semibold" style={{ color: brand }}>
-          Choose your sessions →
+        <div className="mt-2 flex items-center justify-between">
+          <div className="text-xs font-semibold" style={{ color: brand }}>
+            Choose your sessions →
+          </div>
+          {hasLongDescription && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setDetailsOpen(true);
+              }}
+              className="inline-flex items-center gap-1 text-xs font-semibold underline underline-offset-4 opacity-80 hover:opacity-100"
+              style={{ color: brand }}
+            >
+              <Info className="h-3 w-3" />
+              Read more
+            </button>
+          )}
         </div>
-      </button>
+      </div>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-h-[85vh] w-[calc(100vw-1.5rem)] max-w-lg overflow-y-auto p-4 sm:p-6">
@@ -188,6 +213,81 @@ export function CourseGroupRow({
 
           <Button className="w-full modo-btn" onClick={() => setOpen(false)}>
             {chosen.length ? "Done — keep browsing" : "Close"}
+          </Button>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
+        <DialogContent className="max-h-[85vh] w-[calc(100vw-1.5rem)] max-w-lg overflow-y-auto p-4 sm:p-6">
+          <DialogHeader className="text-left">
+            <DialogTitle className="text-base sm:text-lg" style={{ color: brand }}>
+              {groupName}
+            </DialogTitle>
+            <DialogDescription className="text-sm">
+              Course information and available session options.
+            </DialogDescription>
+          </DialogHeader>
+
+          {detailPicture && (
+            <div className="overflow-hidden rounded-xl bg-muted">
+              <img
+                src={detailPicture}
+                alt={groupName}
+                className="max-h-64 w-full object-cover"
+                loading="lazy"
+              />
+            </div>
+          )}
+
+          {detailOption?.description && (
+            <div className="whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
+              {detailOption.description}
+            </div>
+          )}
+
+          <div className="space-y-2">
+            <h4 className="text-sm font-semibold" style={{ color: nameColor }}>
+              Available options
+            </h4>
+            {sorted.map((o) => {
+              return (
+                <div
+                  key={o.id}
+                  className="flex items-center justify-between rounded-xl border p-3 text-sm"
+                  style={{ borderColor: `${brand}26` }}
+                >
+                  <div className="min-w-0">
+                    <div className="font-semibold">
+                      {o.session_count} session{o.session_count === 1 ? "" : "s"}
+                      {o.recommended && (
+                        <span
+                          className="ml-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white"
+                          style={{ backgroundColor: brand }}
+                        >
+                          <Sparkles className="h-3 w-3" /> Recommended
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-xs opacity-70">
+                      {o.duration ? `${o.duration} min each` : null}
+                      {spacingLabel(o.interval_days) ? ` · ${spacingLabel(o.interval_days)}` : ""}
+                    </div>
+                    {o.allow_split_payment && o.session_count > 1 && (
+                      <div className="mt-0.5 text-xs font-medium" style={{ color: brand }}>
+                        Split payment available
+                      </div>
+                    )}
+                  </div>
+                  <div className="shrink-0 font-bold" style={{ color: brand }}>
+                    £{o.price.toFixed(2)}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <Button className="w-full modo-btn" onClick={() => { setDetailsOpen(false); setOpen(true); }}>
+            Choose your sessions
           </Button>
         </DialogContent>
       </Dialog>
