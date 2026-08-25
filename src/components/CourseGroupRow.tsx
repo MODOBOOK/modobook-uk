@@ -216,6 +216,82 @@ export function CourseGroupRow({
           </Button>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
+        <DialogContent className="max-h-[85vh] w-[calc(100vw-1.5rem)] max-w-lg overflow-y-auto p-4 sm:p-6">
+          <DialogHeader className="text-left">
+            <DialogTitle className="text-base sm:text-lg" style={{ color: brand }}>
+              {groupName}
+            </DialogTitle>
+            <DialogDescription className="text-sm">
+              Course information and available session options.
+            </DialogDescription>
+          </DialogHeader>
+
+          {detailPicture && (
+            <div className="overflow-hidden rounded-xl bg-muted">
+              <img
+                src={detailPicture}
+                alt={groupName}
+                className="max-h-64 w-full object-cover"
+                loading="lazy"
+              />
+            </div>
+          )}
+
+          {detailOption?.description && (
+            <div className="whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
+              {detailOption.description}
+            </div>
+          )}
+
+          <div className="space-y-2">
+            <h4 className="text-sm font-semibold" style={{ color: nameColor }}>
+              Available options
+            </h4>
+            {sorted.map((o) => {
+              const perSession = o.price / Math.max(1, o.session_count);
+              return (
+                <div
+                  key={o.id}
+                  className="flex items-center justify-between rounded-xl border p-3 text-sm"
+                  style={{ borderColor: `${brand}26` }}
+                >
+                  <div className="min-w-0">
+                    <div className="font-semibold">
+                      {o.session_count} session{o.session_count === 1 ? "" : "s"}
+                      {o.recommended && (
+                        <span
+                          className="ml-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white"
+                          style={{ backgroundColor: brand }}
+                        >
+                          <Sparkles className="h-3 w-3" /> Recommended
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-xs opacity-70">
+                      {o.duration ? `${o.duration} min each` : null}
+                      {spacingLabel(o.interval_days) ? ` · ${spacingLabel(o.interval_days)}` : ""}
+                    </div>
+                    {o.allow_split_payment && o.session_count > 1 && (
+                      <div className="mt-0.5 text-xs font-medium" style={{ color: brand }}>
+                        Split payment available
+                      </div>
+                    )}
+                  </div>
+                  <div className="shrink-0 font-bold" style={{ color: brand }}>
+                    £{o.price.toFixed(2)}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <Button className="w-full modo-btn" onClick={() => { setDetailsOpen(false); setOpen(true); }}>
+            Choose your sessions
+          </Button>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
