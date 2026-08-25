@@ -26,7 +26,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Trash2, Pencil, FileText, X, Tag, PlusCircle, Sparkles, Loader2 } from "lucide-react";
+import { Copy, Plus, Trash2, Pencil, FileText, X, Tag, PlusCircle, Sparkles, Loader2 } from "lucide-react";
 import { SearchableMultiPicker } from "@/components/ui/searchable-multi-picker";
 import { BulkRebookRemindersDialog } from "@/components/BulkRebookRemindersDialog";
 import { generateTreatmentDescription } from "@/lib/ai-treatment-description.functions";
@@ -235,6 +235,50 @@ function TreatmentsPage() {
   }
 
 
+  async function handleDuplicateOption(t: Treatment) {
+    const raw = prompt("How many sessions should this course option include?", "3");
+    if (!raw) return;
+    const sessions = Math.max(1, Math.floor(Number(raw)));
+    if (!Number.isFinite(sessions)) return;
+    const priceRaw = prompt(`Price for the ${sessions}-session option (\u00a3)`, String(Number(t.price) * sessions));
+    if (priceRaw === null) return;
+    const newPrice = Math.max(0, Number(priceRaw));
+    const groups = (() => {
+      const arr = (t as { course_groups?: string[] | null }).course_groups ?? [];
+      if (arr.length > 0) return arr;
+      const single = (t as { course_group?: string | null }).course_group?.trim();
+      return single ? [single] : [t.name];
+    })();
+    try {
+      const created = await create({
+        data: {
+          name: `${t.name} \u2014 ${sessions} session${sessions === 1 ? "" : "s"}`,
+          duration: t.duration,
+          price: newPrice,
+          description: t.description ?? undefined,
+          category_id: t.category_id,
+          active: true,
+        },
+      });
+      const id = (created as { id: string }).id;
+      await update({
+        data: {
+          id,
+          course_group: groups[0] ?? null,
+          course_groups: groups,
+          session_count: sessions,
+          allow_split_payment: sessions > 1,
+        },
+      });
+      // make sure the original is in the same group so they collapse into one row
+      await update({ data: { id: t.id, course_group: groups[0] ?? null, course_groups: groups } });
+      toast.success("Course option added");
+      load();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to add option");
+    }
+  }
+
   async function handleDelete(id: string) {
     if (!confirm("Delete this treatment?")) return;
     try {
@@ -348,6 +392,14 @@ function TreatmentsPage() {
                       <div className="flex gap-1">
                         <Button size="icon" variant="ghost" onClick={() => { setEditing(t); setOpen(true); }}>
                           <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          title="Add another course option (sessions)"
+                          onClick={() => handleDuplicateOption(t)}
+                        >
+                          <Copy className="h-4 w-4" />
                         </Button>
                         <Button size="icon" variant="ghost" onClick={() => handleDelete(t.id)}>
                           <Trash2 className="h-4 w-4" />
