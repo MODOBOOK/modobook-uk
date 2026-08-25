@@ -40,6 +40,7 @@ export const Route = createFileRoute('/api/public/hooks/rebook-reminders')({
             id, patient_name, patient_email, patient_phone, scheduled_date, profile_id,
             treatments(name, rebook_reminder_days, topup_reminder_days, category_id),
             practitioners(name),
+            locations(name, city),
             profiles(clinic_name, slug)
           `)
           .eq('status', 'confirmed')
