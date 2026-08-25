@@ -622,13 +622,21 @@ function BookPage() {
   const coursesEnabled = coursePickerEnabled(slug);
   const renderTreatmentList = (list: Treatment[]): ReactNode => {
     const groups = new Map<string, Treatment[]>();
+    const groupsOf = (t: Treatment): string[] => {
+      const many = ((t as { course_groups?: string[] | null }).course_groups ?? [])
+        .map((g) => (g ?? "").trim())
+        .filter(Boolean);
+      if (many.length > 0) return many;
+      const single = ((t as { course_group?: string | null }).course_group ?? "").trim();
+      return single ? [single] : [];
+    };
     if (coursesEnabled) {
       for (const t of list) {
-        const g = ((t as { course_group?: string | null }).course_group ?? "").trim();
-        if (!g) continue;
-        const arr = groups.get(g) ?? [];
-        arr.push(t);
-        groups.set(g, arr);
+        for (const g of groupsOf(t)) {
+          const arr = groups.get(g) ?? [];
+          arr.push(t);
+          groups.set(g, arr);
+        }
       }
       for (const [g, arr] of Array.from(groups.entries())) {
         if (arr.length < 2) groups.delete(g);
@@ -637,36 +645,38 @@ function BookPage() {
     const done = new Set<string>();
     const out: ReactNode[] = [];
     for (const t of list) {
-      const g = ((t as { course_group?: string | null }).course_group ?? "").trim();
-      if (g && groups.has(g)) {
-        if (done.has(g)) continue;
-        done.add(g);
-        const arr = groups.get(g)!;
-        out.push(
-          <CourseGroupRow
-            key={`course-${g}`}
-            groupName={g}
-            brand={brand}
-            cardBg={menuCardBg}
-            cardBorder={menuCardBorder}
-            nameColor={menuNameColor}
-            priceColor={menuPriceColor}
-            bold={menuTreatmentBold}
-            isSelected={isSelected}
-            onToggle={toggleSelect}
-            options={arr.map((o) => ({
-              id: o.id,
-              name: o.name,
-              price: priceFor(o),
-              duration: durationFor(o),
-              session_count: (o as { session_count?: number }).session_count ?? 1,
-              allow_split_payment: Boolean((o as { allow_split_payment?: boolean }).allow_split_payment),
-              recommended: Boolean((o as { course_recommended?: boolean }).course_recommended),
-              description: o.description,
-              full: capFor(o)?.full ?? false,
-            }))}
-          />,
-        );
+      const gs = groupsOf(t).filter((g) => groups.has(g));
+      if (gs.length > 0) {
+        for (const g of gs) {
+          if (done.has(g)) continue;
+          done.add(g);
+          const arr = groups.get(g)!;
+          out.push(
+            <CourseGroupRow
+              key={`course-${g}`}
+              groupName={g}
+              brand={brand}
+              cardBg={menuCardBg}
+              cardBorder={menuCardBorder}
+              nameColor={menuNameColor}
+              priceColor={menuPriceColor}
+              bold={menuTreatmentBold}
+              isSelected={isSelected}
+              onToggle={toggleSelect}
+              options={arr.map((o) => ({
+                id: o.id,
+                name: o.name,
+                price: priceFor(o),
+                duration: durationFor(o),
+                session_count: (o as { session_count?: number }).session_count ?? 1,
+                allow_split_payment: Boolean((o as { allow_split_payment?: boolean }).allow_split_payment),
+                recommended: Boolean((o as { course_recommended?: boolean }).course_recommended),
+                description: o.description,
+                full: capFor(o)?.full ?? false,
+              }))}
+            />,
+          );
+        }
         continue;
       }
       out.push(
