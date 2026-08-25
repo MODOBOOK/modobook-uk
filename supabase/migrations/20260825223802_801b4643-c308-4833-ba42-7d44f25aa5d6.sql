@@ -1,0 +1,1 @@
+ALTER TABLE public.treatments ADD COLUMN IF NOT EXISTS course_groups text[] NOT NULL DEFAULT '{}'::text[];
