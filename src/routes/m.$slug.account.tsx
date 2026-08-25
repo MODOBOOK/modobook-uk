@@ -227,7 +227,7 @@ function Account() {
 
         const { data: payRows } = await supabase
           .from("payments")
-          .select("id, amount, currency, status, created_at, appointment_id")
+          .select("id, amount, status, created_at, appointment_id")
           .in("appointment_id", apptIds)
           .order("created_at", { ascending: false });
         setPayments((payRows ?? []) as any);
@@ -687,7 +687,7 @@ function Account() {
                     {payments.map((p) => (
                       <div key={p.id} className="flex items-center justify-between rounded-md border p-3 text-sm">
                         <div>
-                          <div className="font-medium">£{((p.amount ?? 0) / 100).toFixed(2)} {(p.currency || "GBP").toUpperCase()}</div>
+                          <div className="font-medium">£{((p.amount ?? 0) / 100).toFixed(2)} GBP</div>
                           <div className="text-xs text-muted-foreground">{new Date(p.created_at).toLocaleString()}</div>
                         </div>
                         <Badge variant={p.status === "succeeded" ? "default" : "secondary"}>{p.status}</Badge>
