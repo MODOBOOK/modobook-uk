@@ -103,7 +103,7 @@ export const getPublicClinic = createServerFn({ method: "GET" })
       .rpc("get_public_patient_reviews", { p_profile_id: profile.id });
 
     const reviewsCombined = [
-      ...(reviews ?? []),
+      ...(((reviews ?? []) as { id: string; rating: number }[]).map((r) => ({ id: r.id, rating: r.rating }))),
       ...((testimonials ?? []) as { id: string; rating: number | null }[]).map((t) => ({
         id: t.id,
         rating: t.rating ?? 5,
