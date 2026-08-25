@@ -16,6 +16,7 @@ export type CourseOption = {
   duration: number;
   session_count: number;
   allow_split_payment: boolean;
+  interval_days?: number | null;
   recommended?: boolean;
   description?: string | null;
   full?: boolean;
@@ -57,6 +58,14 @@ export function CourseGroupRow({
   const chosen = sorted.filter((o) => isSelected(o.id));
   const blurb = single?.description ?? sorted.find((o) => o.description)?.description ?? null;
   const anySplit = sorted.some((o) => o.allow_split_payment && o.session_count > 1);
+  const spacingLabel = (days?: number | null) => {
+    if (!days || days <= 0) return null;
+    if (days % 7 === 0) {
+      const w = days / 7;
+      return `${w} week${w === 1 ? "" : "s"} apart`;
+    }
+    return `${days} day${days === 1 ? "" : "s"} apart`;
+  };
   const recommended = sorted.find((o) => o.recommended);
 
   return (
@@ -80,6 +89,10 @@ export function CourseGroupRow({
                 </span>
               ) : null}
               <span>· {sorted.map((o) => o.session_count).join(" / ")} sessions available</span>
+              {(() => {
+                const sp = sorted.map((o) => spacingLabel(o.interval_days)).find(Boolean);
+                return sp ? <span>· {sp}</span> : null;
+              })()}
               {anySplit && (
                 <span className="rounded-full bg-emerald-100 px-2 py-0.5 font-semibold text-emerald-700">
                   Split payment
@@ -152,11 +165,17 @@ export function CourseGroupRow({
                         {o.full ? " · fully booked" : ""}
                       </div>
                       {o.session_count > 1 && (
-                        <p className="mt-1 text-xs opacity-70">£{perSession.toFixed(2)} per session</p>
+                        <p className="mt-1 text-xs opacity-70">
+                          £{perSession.toFixed(2)} per session
+                          {spacingLabel(o.interval_days) ? ` · ${spacingLabel(o.interval_days)}` : ""}
+                        </p>
+                      )}
+                      {!o.allow_split_payment && o.session_count > 1 && (
+                        <p className="mt-0.5 text-xs opacity-70">Paid in full up front</p>
                       )}
                       {o.allow_split_payment && o.session_count > 1 && (
                         <p className="mt-0.5 text-xs font-medium" style={{ color: brand }}>
-                          Split payment available — pay per session
+                          Split payment available — £{perSession.toFixed(2)} per session, paid as you go
                         </p>
                       )}
                     </div>
