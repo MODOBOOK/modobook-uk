@@ -233,6 +233,83 @@ export const updateTreatment = createServerFn({ method: "POST" })
     return treatment;
   });
 
+export const createCourseTreatmentOption = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    (input: {
+      baseTreatmentId: string;
+      groupName: string;
+      sessions: number;
+      price: number;
+      split: boolean;
+      intervalDays: number | null;
+      recommended: boolean;
+    }) => input,
+  )
+  .handler(async ({ data, context }) => {
+    const profileId = await __activeProfileId(context.supabase, context.userId);
+    const sessions = Math.max(1, Math.floor(data.sessions));
+    const price = Number(data.price);
+    const groupName = data.groupName.trim();
+    if (!groupName) throw new Error("Enter a course name");
+    if (!Number.isFinite(price) || price < 0) throw new Error("Enter a valid price");
+
+    const { data: base, error: baseError } = await context.supabase
+      .from("treatments")
+      .select("*")
+      .eq("id", data.baseTreatmentId)
+      .eq("profile_id", profileId)
+      .single();
+    if (baseError || !base) throw baseError ?? new Error("Treatment not found");
+
+    const { id: _id, created_at: _createdAt, updated_at: _updatedAt, ...copy } = base;
+    const { data: created, error: createError } = await context.supabase
+      .from("treatments")
+      .insert({
+        ...copy,
+        name: `${groupName} — ${sessions} session${sessions === 1 ? "" : "s"}`,
+        price,
+        course_group: groupName,
+        course_groups: [groupName],
+        session_count: sessions,
+        allow_split_payment: sessions > 1 && data.split,
+        session_interval_days: sessions > 1 ? data.intervalDays : null,
+        course_recommended: data.recommended,
+      })
+      .select()
+      .single();
+    if (createError || !created) throw createError ?? new Error("Could not create course option");
+
+    const { error: baseGroupError } = await context.supabase
+      .from("treatments")
+      .update({ course_group: groupName, course_groups: [groupName] })
+      .eq("id", base.id)
+      .eq("profile_id", profileId);
+    if (baseGroupError) throw baseGroupError;
+
+    const { data: locationRows, error: locationError } = await context.supabase
+      .from("treatment_location_pricing")
+      .select("location_id, price_cents, duration_minutes, available")
+      .eq("treatment_id", base.id);
+    if (locationError) throw locationError;
+    if (locationRows?.length) {
+      const { error: copyLocationError } = await context.supabase
+        .from("treatment_location_pricing")
+        .insert(
+          locationRows.map((row) => ({
+            treatment_id: created.id,
+            location_id: row.location_id,
+            price_cents: null,
+            duration_minutes: row.duration_minutes,
+            available: row.available,
+          })),
+        );
+      if (copyLocationError) throw copyLocationError;
+    }
+
+    return created;
+  });
+
 
 export const deleteTreatment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

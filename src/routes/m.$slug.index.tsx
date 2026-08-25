@@ -638,9 +638,6 @@ function BookPage() {
           groups.set(g, arr);
         }
       }
-      for (const [g, arr] of Array.from(groups.entries())) {
-        if (arr.length < 2) groups.delete(g);
-      }
     }
     const done = new Set<string>();
     const out: ReactNode[] = [];
