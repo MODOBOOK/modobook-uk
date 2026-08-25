@@ -30,7 +30,7 @@ import { Plus, Trash2, Pencil, FileText, X, Tag, PlusCircle, Sparkles, Loader2 }
 import { SearchableMultiPicker } from "@/components/ui/searchable-multi-picker";
 import { BulkRebookRemindersDialog } from "@/components/BulkRebookRemindersDialog";
 import { generateTreatmentDescription } from "@/lib/ai-treatment-description.functions";
-import { CourseOptionsDialog } from "@/components/CourseOptionsDialog";
+import { CourseOptionsDialog, CourseOptionsEditor } from "@/components/CourseOptionsDialog";
 
 
 export const Route = createFileRoute("/_authenticated/dashboard/treatments")({
@@ -205,7 +205,18 @@ function TreatmentsPage() {
 
   async function handleSave(form: TreatmentForm) {
     try {
-      const { consent_ids, addons, aftercare_template_ids, ...rest } = form;
+      const {
+        consent_ids,
+        addons,
+        aftercare_template_ids,
+        course_group: _courseGroup,
+        course_groups: _courseGroups,
+        course_recommended: _courseRecommended,
+        session_count: _sessionCount,
+        allow_split_payment: _allowSplitPayment,
+        session_interval_days: _sessionIntervalDays,
+        ...rest
+      } = form;
       let id: string;
       if (editing) {
         await update({ data: { id: editing.id, ...rest } });
@@ -838,81 +849,32 @@ function TreatmentDialog({
         </div>
 
 
-        {/* Course options, sessions & split payment */}
-        <div className="rounded-md border border-primary/30 bg-primary/5 p-3 space-y-3">
-          <div>
-            <Label className="m-0">Course option setup</Label>
+        {treatment ? (
+          <div className="space-y-3 rounded-md border border-primary/30 bg-primary/5 p-3">
+            <div>
+              <Label className="m-0">Course session options</Label>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Add each session amount separately. Every option has its own total price, split-payment choice and spacing.
+              </p>
+            </div>
+            <CourseOptionsEditor
+              treatment={treatment}
+              allTreatments={allTreatments}
+              onSaved={() => undefined}
+            />
+          </div>
+        ) : (
+          <div className="rounded-md border bg-muted/30 p-3">
+            <Label className="m-0">Course session options</Label>
             <p className="mt-1 text-xs text-muted-foreground">
-              Give related options the same course group. Each treatment keeps its own total price, session amount, payment choice and spacing.
+              Save this treatment first, then reopen it to add separate session amounts and prices.
             </p>
           </div>
-          <div>
-            <Label className="text-xs text-muted-foreground">Course group</Label>
-            <div className="flex gap-2">
-              <Input
-                placeholder="e.g. Polynucleotides course"
-                value={courseGroupDraft}
-                onChange={(e) => setCourseGroupDraft(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    const v = courseGroupDraft.trim();
-                    if (v && !courseGroups.includes(v)) setCourseGroups([...courseGroups, v]);
-                    setCourseGroupDraft("");
-                  }
-                }}
-              />
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => {
-                  const v = courseGroupDraft.trim();
-                  if (v && !courseGroups.includes(v)) setCourseGroups([...courseGroups, v]);
-                  setCourseGroupDraft("");
-                }}
-              >
-                Add
-              </Button>
-            </div>
-            {courseGroups.length > 0 && (
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {courseGroups.map((g) => (
-                  <Button
-                    key={g}
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setCourseGroups(courseGroups.filter((x) => x !== g))}
-                    className="h-7 rounded-full px-2 text-xs"
-                  >
-                    {g} <X className="ml-1 h-3 w-3 opacity-60" />
-                  </Button>
-                ))}
-              </div>
-            )}
-          </div>
-          <div>
-            <Label className="text-xs text-muted-foreground">Total price for this option (£)</Label>
-            <Input
-              type="number"
-              min={0}
-              step="0.01"
-              value={price}
-              onChange={(e) => setPrice(Number(e.target.value))}
-              disabled={priceMode === "poa" || priceMode === "free"}
-            />
-            <p className="mt-1 text-[11px] text-muted-foreground">This is the price shown beside this session option in the patient pop-up.</p>
-          </div>
+        )}
+
+        <div className="rounded-md border p-3 space-y-3">
+          <Label className="m-0">Patient reminders</Label>
           <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label className="text-xs text-muted-foreground">Sessions in this option</Label>
-              <Input
-                type="number"
-                min={1}
-                value={sessionCount}
-                onChange={(e) => setSessionCount(Math.max(1, Number(e.target.value) || 1))}
-              />
-            </div>
             <div>
               <Label className="text-xs text-muted-foreground">Rebook reminder — days after</Label>
               <Input
@@ -924,75 +886,21 @@ function TreatmentDialog({
               />
               <p className="mt-1 text-[11px] text-muted-foreground">Emails the patient a "time to rebook" reminder this many days after their appointment. Leave blank to use the category default.</p>
             </div>
-          </div>
-          <div>
-            <Label className="text-xs text-muted-foreground">Top-up reminder — days after</Label>
-            <Input
-              type="number"
-              min={0}
-              placeholder="e.g. 30"
-              value={topupDays}
-              onChange={(e) => setTopupDays(e.target.value)}
-            />
-            <p className="mt-1 text-[11px] text-muted-foreground">Optional shorter reminder (e.g. filler top-up) sent before the full rebook. Leave blank to skip or use category default.</p>
-          </div>
-          <div className={`space-y-1.5 ${sessionCount > 1 ? "" : "opacity-60"}`}>
-            <Label className="text-xs text-muted-foreground">How far apart should sessions be?</Label>
-            <div className="flex gap-2">
+            <div>
+              <Label className="text-xs text-muted-foreground">Top-up reminder — days after</Label>
               <Input
                 type="number"
-                min={1}
-                placeholder={sessionIntervalUnit === "weeks" ? "e.g. 2" : "e.g. 14"}
-                value={sessionIntervalValue}
-                onChange={(e) => setSessionIntervalValue(e.target.value)}
-                disabled={sessionCount < 2}
+                min={0}
+                placeholder="e.g. 30"
+                value={topupDays}
+                onChange={(e) => setTopupDays(e.target.value)}
               />
-              <div className="inline-flex shrink-0 rounded-md border bg-background p-0.5">
-                <button
-                  type="button"
-                  onClick={() => setSessionIntervalUnit("days")}
-                  disabled={sessionCount < 2}
-                  className={`rounded px-3 py-1 text-xs ${sessionIntervalUnit === "days" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
-                >
-                  Days
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSessionIntervalUnit("weeks")}
-                  disabled={sessionCount < 2}
-                  className={`rounded px-3 py-1 text-xs ${sessionIntervalUnit === "weeks" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
-                >
-                  Weeks
-                </button>
-              </div>
+              <p className="mt-1 text-[11px] text-muted-foreground">Optional shorter reminder (e.g. filler top-up) sent before the full rebook. Leave blank to skip or use category default.</p>
             </div>
-            <p className="text-[11px] text-muted-foreground">
-              {sessionCount > 1
-                ? "This spacing is shown to patients on the booking page."
-                : "Set Number of sessions to 2+ to show spacing to patients."}
-            </p>
           </div>
-          <label className="flex items-center gap-2 text-sm">
-            <Switch
-              checked={allowSplit}
-              onCheckedChange={setAllowSplit}
-              disabled={sessionCount < 2}
-            />
-            <span>Allow patients to split payment across each session</span>
-          </label>
-          {allowSplit && sessionCount > 1 && (
-            <p className="text-xs font-medium text-primary">
-              Patients pay £{(price / sessionCount).toFixed(2)} per session.
-            </p>
-          )}
-          {sessionCount < 2 && (
-            <p className="text-xs text-muted-foreground">Set 2 or more sessions to enable split payments.</p>
-          )}
-          <label className="flex items-center gap-2 border-t pt-3 text-sm">
-            <Switch checked={courseRecommended} onCheckedChange={setCourseRecommended} disabled={courseGroups.length === 0} />
-            <span>Mark this session option as “Recommended” in the pop-up</span>
-          </label>
-          <div className="pt-2 border-t">
+        </div>
+
+        <div className="rounded-md border p-3">
             <Label className="text-xs text-muted-foreground">Deposit for this treatment (£)</Label>
             <Input
               type="number"
@@ -1005,7 +913,6 @@ function TreatmentDialog({
             <p className="mt-1 text-[11px] text-muted-foreground">
               Overrides the default deposit set in Settings → Payments for this treatment only. Requires deposit payments to be enabled.
             </p>
-          </div>
         </div>
 
 
