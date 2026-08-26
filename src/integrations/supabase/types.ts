@@ -8449,6 +8449,7 @@ export type Database = {
           course_cta_label: string | null
           course_group: string | null
           course_groups: string[]
+          course_option_label: string | null
           course_recommended: boolean
           course_unit_label: string | null
           created_at: string
@@ -8503,6 +8504,7 @@ export type Database = {
           course_cta_label?: string | null
           course_group?: string | null
           course_groups?: string[]
+          course_option_label?: string | null
           course_recommended?: boolean
           course_unit_label?: string | null
           created_at?: string
@@ -8557,6 +8559,7 @@ export type Database = {
           course_cta_label?: string | null
           course_group?: string | null
           course_groups?: string[]
+          course_option_label?: string | null
           course_recommended?: boolean
           course_unit_label?: string | null
           created_at?: string
