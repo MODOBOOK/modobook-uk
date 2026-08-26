@@ -799,8 +799,19 @@ export const requestBooking = createServerFn({ method: "POST" })
       payment_status: "pending",
       base_amount: data.basePrice,
       total_amount: data.basePrice,
+      model_slot_id: data.modelSlotId ?? null,
     });
     if (error) throw new Error(error.message);
+
+    // Claim the model slot so it disappears from public listings.
+    if (data.modelSlotId) {
+      await supabaseAdmin
+        .from("model_slots")
+        .update({ booked_appointment_id: id } as never)
+        .eq("id", data.modelSlotId)
+        .eq("profile_id", data.profileId)
+        .is("booked_appointment_id", null);
+    }
 
 
     // Create one appointment_consent row per consent template attached to the treatment
