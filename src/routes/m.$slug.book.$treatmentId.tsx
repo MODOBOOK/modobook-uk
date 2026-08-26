@@ -94,7 +94,7 @@ function BookTreatmentPage() {
   const duration = treatment.duration ?? 30;
   const basePrice = Number(treatment.price ?? 0);
   const pricing = treatmentPricing(treatment as never, basePrice);
-  const price = pricing.price;
+  const listPrice = pricing.price;
 
   const theme = ctx.theme;
   const brand = theme?.primary_color || ctx.brandColor || "#1f2a44";
