@@ -700,6 +700,7 @@ export const requestBooking = createServerFn({ method: "POST" })
       patientUserId?: string | null;
       practitionerId?: string | null;
       paymentChoice?: PaymentChoice | null;
+      modelSlotId?: string | null;
     }) => input,
   )
 
