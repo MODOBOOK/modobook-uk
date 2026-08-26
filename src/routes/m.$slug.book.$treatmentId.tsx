@@ -427,23 +427,9 @@ function BookTreatmentPage() {
     setSubmitting(true);
     try {
       const endMin = toMinutes(slot) + duration;
-      let endTimeStr = fromMinutes(endMin);
+      const endTimeStr = fromMinutes(endMin);
+      // `price` already reflects the selected model slot's pricing.
       let effectivePrice = price;
-      if (modelMode) {
-        const slotMin = toMinutes(slot);
-        const ms = modelSlotsForLoc.find((s) => {
-          if (s.slot_date !== date) return false;
-          const a = toMinutes(s.start_time);
-          const b = toMinutes(s.end_time);
-          return slotMin >= a && slotMin + duration <= b;
-        });
-        if (ms) {
-          endTimeStr = fromMinutes(slotMin + duration);
-          effectivePrice = ms.price_mode === "fixed"
-            ? Number(ms.price_value)
-            : Math.max(0, price * (1 - Number(ms.price_value) / 100));
-        }
-      }
 
       // Apply promo code (only if it covers this treatment)
       let discountOff = 0;
