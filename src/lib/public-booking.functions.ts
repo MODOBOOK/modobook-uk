@@ -1393,6 +1393,8 @@ function normaliseBookingPaymentChoice(
     }
     return null;
   }
+  // Cash at the appointment: nothing is taken online and no card is stored.
+  if (choice?.mode === "cash") return choice;
   // Deposits are mandatory whenever the clinic enables deposits, and deposits
   // must be card-only so Stripe can both charge today and save the card for file.
   if (choice?.mode === "deposit" || (depositRequiredForProfile(profile) && choice?.mode !== "full")) {
