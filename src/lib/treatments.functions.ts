@@ -64,6 +64,7 @@ export const createTreatment = createServerFn({ method: "POST" })
       course_recommended?: boolean;
       course_unit_label?: string | null;
       course_cta_label?: string | null;
+      course_option_label?: string | null;
       rebook_reminder_days?: number | null;
       topup_reminder_days?: number | null;
       session_interval_days?: number | null;
@@ -102,6 +103,7 @@ export const createTreatment = createServerFn({ method: "POST" })
         course_group: data.course_group ?? null,
         course_groups: data.course_groups ?? [],
         course_recommended: data.course_recommended ?? false,
+        course_option_label: data.course_option_label ?? null,
         session_count: data.session_count ?? 1,
         allow_split_payment: data.allow_split_payment ?? false,
         rebook_reminder_days: data.rebook_reminder_days ?? null,
@@ -144,6 +146,7 @@ export const updateTreatment = createServerFn({ method: "POST" })
       course_recommended?: boolean;
       course_unit_label?: string | null;
       course_cta_label?: string | null;
+      course_option_label?: string | null;
       rebook_reminder_days?: number | null;
       topup_reminder_days?: number | null;
       session_interval_days?: number | null;
@@ -198,6 +201,7 @@ export const updateTreatment = createServerFn({ method: "POST" })
     if (data.course_recommended !== undefined) update.course_recommended = data.course_recommended;
     if (data.course_unit_label !== undefined) update.course_unit_label = data.course_unit_label;
     if (data.course_cta_label !== undefined) update.course_cta_label = data.course_cta_label;
+    if (data.course_option_label !== undefined) update.course_option_label = data.course_option_label;
     if (data.session_count !== undefined) update.session_count = data.session_count;
     if (data.allow_split_payment !== undefined) update.allow_split_payment = data.allow_split_payment;
     if (data.rebook_reminder_days !== undefined) update.rebook_reminder_days = data.rebook_reminder_days;
@@ -246,6 +250,7 @@ export const createCourseTreatmentOption = createServerFn({ method: "POST" })
       baseTreatmentId: string;
       groupName: string;
       sessions: number;
+      optionLabel: string;
       price: number;
       split: boolean;
       intervalDays: number | null;
@@ -257,7 +262,9 @@ export const createCourseTreatmentOption = createServerFn({ method: "POST" })
     const sessions = Math.max(1, Math.floor(data.sessions));
     const price = Number(data.price);
     const groupName = data.groupName.trim();
+    const optionLabel = data.optionLabel.trim();
     if (!groupName) throw new Error("Enter a course name");
+    if (!optionLabel) throw new Error("Enter an option name");
     if (!Number.isFinite(price) || price < 0) throw new Error("Enter a valid price");
 
     const { data: base, error: baseError } = await context.supabase
@@ -274,6 +281,7 @@ export const createCourseTreatmentOption = createServerFn({ method: "POST" })
       .insert({
         ...copy,
         name: `${groupName} — ${sessions} session${sessions === 1 ? "" : "s"}`,
+        course_option_label: optionLabel,
         price,
         course_group: groupName,
         course_groups: [groupName],

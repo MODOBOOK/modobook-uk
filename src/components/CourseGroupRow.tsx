@@ -23,6 +23,7 @@ export type CourseOption = {
   full?: boolean;
   unit_label?: string | null;
   cta_label?: string | null;
+  option_label?: string | null;
 };
 
 function treatmentName(name: string) {
@@ -32,7 +33,9 @@ function treatmentName(name: string) {
     .trim();
 }
 
-function optionName(name: string, groupName: string, sessionCount: number, unit: string) {
+function optionName(name: string, groupName: string, sessionCount: number, unit: string, optionLabel?: string | null) {
+  const savedLabel = (optionLabel ?? "").trim();
+  if (savedLabel) return savedLabel;
   const trimmed = name.trim();
   const prefixPattern = new RegExp(`^${groupName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*[—-]\\s*`, "i");
   const enteredName = trimmed.replace(prefixPattern, "").trim();
@@ -159,7 +162,7 @@ export function CourseGroupRow({
           {blurb && <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-muted-foreground">{blurb}</p>}
           {chosen.length > 0 && (
             <div className="mt-1.5 text-sm font-semibold" style={{ color: brand }}>
-              Added: {chosen.map((c) => optionName(c.name, groupName, c.session_count, unitPlural)).join(", ")}
+              Added: {chosen.map((c) => optionName(c.name, groupName, c.session_count, unitPlural, c.option_label)).join(", ")}
             </div>
           )}
           {hasLongDescription && (
@@ -186,7 +189,7 @@ export function CourseGroupRow({
             </DialogTitle>
             <DialogDescription className="text-sm">
               {displayName} — pick as many options as you like.
-              {recommended ? ` We recommend ${optionName(recommended.name, groupName, recommended.session_count, unitPlural)} for best results.` : ""}
+              {recommended ? ` We recommend ${optionName(recommended.name, groupName, recommended.session_count, unitPlural, recommended.option_label)} for best results.` : ""}
             </DialogDescription>
           </DialogHeader>
 
@@ -218,7 +221,7 @@ export function CourseGroupRow({
                     <div className="min-w-0">
                       <div className="flex items-center gap-1.5 text-sm font-semibold">
                         {active && <Check className="h-3.5 w-3.5" style={{ color: brand }} />}
-                        {optionName(o.name, groupName, o.session_count, unitPlural)}
+                        {optionName(o.name, groupName, o.session_count, unitPlural, o.option_label)}
                       </div>
                       <div className="text-xs opacity-70">
                         {o.duration ? `${o.duration} min each` : ""}
@@ -301,7 +304,7 @@ export function CourseGroupRow({
                 >
                   <div className="min-w-0">
                     <div className="font-semibold">
-                      {optionName(o.name, groupName, o.session_count, unitPlural)}
+                      {optionName(o.name, groupName, o.session_count, unitPlural, o.option_label)}
                       {o.recommended && (
                         <span
                           className="ml-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white"
