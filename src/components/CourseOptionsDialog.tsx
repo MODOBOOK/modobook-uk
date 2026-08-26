@@ -49,6 +49,47 @@ function baseTreatmentName(name: string) {
     .trim();
 }
 
+const SESSION_WORDS: Record<string, number> = {
+  single: 1,
+  one: 1,
+  two: 2,
+  three: 3,
+  four: 4,
+  five: 5,
+  six: 6,
+  seven: 7,
+  eight: 8,
+  nine: 9,
+  ten: 10,
+  eleven: 11,
+  twelve: 12,
+  thirteen: 13,
+  fourteen: 14,
+  fifteen: 15,
+  sixteen: 16,
+  seventeen: 17,
+  eighteen: 18,
+  nineteen: 19,
+  twenty: 20,
+};
+
+function sessionCountFromLabel(value: string): number | null {
+  const numeric = value.match(/\d+/)?.[0];
+  if (numeric) return Math.max(1, Math.floor(Number(numeric)));
+  const words = value.toLowerCase().match(/[a-z]+/g) ?? [];
+  for (const word of words) {
+    if (SESSION_WORDS[word]) return SESSION_WORDS[word];
+  }
+  return null;
+}
+
+function sessionLabelFrom(t: CourseTreatment): string {
+  const suffix = t.name.split(/\s+—\s+/).at(-1)?.trim();
+  if (suffix && suffix !== t.name && sessionCountFromLabel(suffix)) return suffix;
+  const count = t.session_count ?? 1;
+  return `${count} session${count === 1 ? "" : "s"}`;
+}
+
 type Draft = {
   id: string;
   sessions: string;
@@ -63,7 +104,7 @@ function draftFrom(t: CourseTreatment): Draft {
   const days = t.session_interval_days ?? 0;
   return {
     id: t.id,
-    sessions: String(t.session_count ?? 1),
+    sessions: sessionLabelFrom(t),
     price: String(t.price ?? 0),
     weeks: days > 0 ? String(Math.round(days / 7)) : "",
     split: Boolean(t.allow_split_payment),
@@ -158,7 +199,12 @@ export function CourseOptionsEditor({
 
   async function saveOption(t: CourseTreatment) {
     const d = draftFor(t);
-    const sessions = Math.max(1, Math.floor(Number(d.sessions) || 1));
+    const sessionLabel = d.sessions.trim();
+    const sessions = sessionCountFromLabel(sessionLabel);
+    if (!sessionLabel || !sessions) {
+      toast.error("Include a session amount, such as ‘Three sessions’ or ‘Course of 3’");
+      return;
+    }
     const price = Number(d.price);
     if (!Number.isFinite(price) || price < 0) {
       toast.error("Enter a valid price");
@@ -183,6 +229,11 @@ export function CourseOptionsEditor({
             recommended: d.recommended,
           },
         }) as CourseTreatment;
+        const savedName = `${groupName} — ${sessionLabel}`;
+        if (created.name !== savedName) {
+          await update({ data: { id: created.id, name: savedName } });
+          created.name = savedName;
+        }
         setOptions((current) => current
           .map((option) => option.id === t.id ? created : option)
           .sort((a, b) => (a.session_count ?? 1) - (b.session_count ?? 1) || a.price - b.price));
@@ -204,6 +255,7 @@ export function CourseOptionsEditor({
       await update({
         data: {
           id: t.id,
+          name: `${groupName} — ${sessionLabel}`,
           price,
           session_count: sessions,
           allow_split_payment: sessions > 1 ? d.split : false,
@@ -218,6 +270,7 @@ export function CourseOptionsEditor({
           option.id === t.id
             ? {
                 ...option,
+                 name: `${groupName} — ${sessionLabel}`,
                 price,
                 session_count: sessions,
                 allow_split_payment: sessions > 1 ? d.split : false,
@@ -260,7 +313,12 @@ export function CourseOptionsEditor({
   }
 
   function addOption() {
-    const sessions = Math.max(1, Math.floor(Number(newSessions) || 1));
+    const sessionLabel = newSessions.trim();
+    const sessions = sessionCountFromLabel(sessionLabel);
+    if (!sessionLabel || !sessions) {
+      toast.error("Include a session amount, such as ‘Three sessions’ or ‘Course of 3’");
+      return;
+    }
     if (options.some((option) => (option.session_count ?? 1) === sessions)) {
       toast.error(`A ${sessions}-session option already exists. Edit its price above.`);
       return;
@@ -269,7 +327,7 @@ export function CourseOptionsEditor({
     const option: CourseTreatment = {
       ...treatment,
       id,
-      name: `${groupName} — ${sessions} sessions`,
+      name: `${groupName} — ${sessionLabel}`,
       price: 0,
       session_count: sessions,
       allow_split_payment: false,
@@ -281,7 +339,7 @@ export function CourseOptionsEditor({
     setOptions((current) => [...current, option].sort(
       (a, b) => (a.session_count ?? 1) - (b.session_count ?? 1) || a.price - b.price,
     ));
-    setDrafts((current) => ({ ...current, [id]: draftFrom(option) }));
+    setDrafts((current) => ({ ...current, [id]: { ...draftFrom(option), sessions: sessionLabel } }));
     setExpandedIds((current) => new Set(current).add(id));
     setNewSessions(String(sessions + 1));
   }
@@ -296,13 +354,12 @@ export function CourseOptionsEditor({
       </div>
       <div className="flex items-end gap-2">
         <div className="min-w-0 flex-1 space-y-1">
-          <Label className="text-xs">Number of sessions</Label>
+          <Label className="text-xs">Session option</Label>
           <Input
             type="text"
-            inputMode="numeric"
-            pattern="[0-9]*"
+            placeholder="e.g. Three sessions"
             value={newSessions}
-            onChange={(e) => setNewSessions(e.target.value.replace(/\D/g, ""))}
+            onChange={(e) => setNewSessions(e.target.value)}
           />
         </div>
         <Button type="button" onClick={addOption}>
@@ -313,7 +370,7 @@ export function CourseOptionsEditor({
       <div className="space-y-2">
         {options.map((o) => {
           const d = draftFor(o);
-          const sessions = Math.max(1, Math.floor(Number(d.sessions) || 1));
+          const sessions = sessionCountFromLabel(d.sessions) ?? o.session_count ?? 1;
           const price = Number(d.price) || 0;
           const per = price / Math.max(1, sessions);
           const expanded = expandedIds.has(o.id);
@@ -331,7 +388,7 @@ export function CourseOptionsEditor({
               >
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
-                    <p className="font-semibold">{sessions} session{sessions === 1 ? "" : "s"}</p>
+                    <p className="font-semibold">{d.sessions || `${sessions} sessions`}</p>
                     {d.recommended && (
                       <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary-foreground">
                         <Sparkles className="h-3 w-3" /> Recommended
@@ -349,13 +406,12 @@ export function CourseOptionsEditor({
                 <div className="space-y-3 border-t p-3">
                   <div className="grid gap-3 sm:grid-cols-3">
                     <div className="space-y-1">
-                      <Label className="text-xs">Sessions</Label>
+                      <Label className="text-xs">Session option</Label>
                       <Input
                         type="text"
-                        inputMode="numeric"
-                        pattern="[0-9]*"
+                        placeholder="e.g. Course of three"
                         value={d.sessions}
-                        onChange={(e) => patch(o.id, o, { sessions: e.target.value.replace(/\D/g, "") })}
+                        onChange={(e) => patch(o.id, o, { sessions: e.target.value })}
                       />
                     </div>
                     <div className="space-y-1">
