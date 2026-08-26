@@ -700,6 +700,7 @@ export const requestBooking = createServerFn({ method: "POST" })
       patientUserId?: string | null;
       practitionerId?: string | null;
       paymentChoice?: PaymentChoice | null;
+      modelSlotId?: string | null;
     }) => input,
   )
 
@@ -798,8 +799,19 @@ export const requestBooking = createServerFn({ method: "POST" })
       payment_status: "pending",
       base_amount: data.basePrice,
       total_amount: data.basePrice,
+      model_slot_id: data.modelSlotId ?? null,
     });
     if (error) throw new Error(error.message);
+
+    // Claim the model slot so it disappears from public listings.
+    if (data.modelSlotId) {
+      await supabaseAdmin
+        .from("model_slots")
+        .update({ booked_appointment_id: id } as never)
+        .eq("id", data.modelSlotId)
+        .eq("profile_id", data.profileId)
+        .is("booked_appointment_id", null);
+    }
 
 
     // Create one appointment_consent row per consent template attached to the treatment
@@ -1054,20 +1066,31 @@ async function maybeCreateBookingCheckout(args: {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       const { data: rows } = await supabaseAdmin
         .from("appointments")
-        .select("treatments(deposit_amount, price)")
+        .select("total_amount, model_slot_id, treatments(deposit_amount, price)")
         .in("id", args.appointmentIds);
       let total = 0;
       for (const r of rows ?? []) {
-        const t = (r as { treatments?: { deposit_amount?: number | null; price?: number | null } | null }).treatments;
+        const row = r as {
+          total_amount?: number | null;
+          model_slot_id?: string | null;
+          treatments?: { deposit_amount?: number | null; price?: number | null } | null;
+        };
+        const t = row.treatments;
         const override = t?.deposit_amount != null ? Math.round(Number(t.deposit_amount) * 100) : null;
-        if (override != null) {
+        // Model slots are priced separately (fixed £ or % off), so a treatment
+        // level deposit override must not apply to them.
+        if (override != null && !row.model_slot_id) {
           // An explicit override wins — including £0, which waives the deposit
           // for this treatment entirely.
           total += Math.max(0, override);
 
         } else if (depositTypeMode === "percent" && depositPct > 0) {
-          const priceCents = Math.round(Number(t?.price ?? 0) * 100);
-          total += Math.round((priceCents * depositPct) / 100);
+          // Use the amount actually booked (model-slot / discounted price) and
+          // only fall back to the treatment list price when it is missing.
+          const bookedCents = row.total_amount != null
+            ? Math.round(Number(row.total_amount) * 100)
+            : Math.round(Number(t?.price ?? 0) * 100);
+          total += Math.round((bookedCents * depositPct) / 100);
         } else {
           total += depositPer;
         }

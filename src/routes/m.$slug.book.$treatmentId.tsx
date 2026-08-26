@@ -94,7 +94,7 @@ function BookTreatmentPage() {
   const duration = treatment.duration ?? 30;
   const basePrice = Number(treatment.price ?? 0);
   const pricing = treatmentPricing(treatment as never, basePrice);
-  const price = pricing.price;
+  const listPrice = pricing.price;
 
   const theme = ctx.theme;
   const brand = theme?.primary_color || ctx.brandColor || "#1f2a44";
@@ -139,6 +139,25 @@ function BookTreatmentPage() {
   const [month, setMonth] = useState<Date>(modelMode ? fromIsoDate(firstModelDate) : fromIsoDate(today));
 
   const [slot, setSlot] = useState<string | null>(null);
+
+  // Model slots can be priced differently to the standard treatment price
+  // (fixed £ or % off). Resolve the slot the patient is actually booking so the
+  // model price is what we show *and* what we charge at checkout.
+  const activeModelSlot = useMemo(() => {
+    if (!modelMode) return null;
+    const onDate = modelSlotsForLoc.filter((s) => s.slot_date === date);
+    if (onDate.length === 0) return null;
+    if (!slot) return onDate[0];
+    const m = toMinutes(slot);
+    return onDate.find((s) => m >= toMinutes(s.start_time) && m < toMinutes(s.end_time)) ?? onDate[0];
+  }, [modelMode, modelSlotsForLoc, date, slot]);
+
+  const price = useMemo(() => {
+    if (!activeModelSlot) return listPrice;
+    return activeModelSlot.price_mode === "fixed"
+      ? Math.max(0, Number(activeModelSlot.price_value))
+      : Math.max(0, listPrice * (1 - Number(activeModelSlot.price_value) / 100));
+  }, [activeModelSlot, listPrice]);
   const [confirmed, setConfirmed] = useState<
     {
       id: string;
@@ -408,23 +427,9 @@ function BookTreatmentPage() {
     setSubmitting(true);
     try {
       const endMin = toMinutes(slot) + duration;
-      let endTimeStr = fromMinutes(endMin);
+      const endTimeStr = fromMinutes(endMin);
+      // `price` already reflects the selected model slot's pricing.
       let effectivePrice = price;
-      if (modelMode) {
-        const slotMin = toMinutes(slot);
-        const ms = modelSlotsForLoc.find((s) => {
-          if (s.slot_date !== date) return false;
-          const a = toMinutes(s.start_time);
-          const b = toMinutes(s.end_time);
-          return slotMin >= a && slotMin + duration <= b;
-        });
-        if (ms) {
-          endTimeStr = fromMinutes(slotMin + duration);
-          effectivePrice = ms.price_mode === "fixed"
-            ? Number(ms.price_value)
-            : Math.max(0, price * (1 - Number(ms.price_value) / 100));
-        }
-      }
 
       // Apply promo code (only if it covers this treatment)
       let discountOff = 0;
@@ -477,6 +482,7 @@ function BookTreatmentPage() {
           patientUserId: patientUserId,
           practitionerId: (typeof window !== "undefined" ? window.sessionStorage.getItem(`modo:practitionerId:${slug}`) : null) || null,
           paymentChoice,
+          modelSlotId: activeModelSlot?.id ?? null,
 
 
 
