@@ -29,6 +29,8 @@ export type CourseTreatment = {
   session_count?: number | null;
   allow_split_payment?: boolean | null;
   session_interval_days?: number | null;
+  course_unit_label?: string | null;
+  course_cta_label?: string | null;
 };
 
 function groupsOf(t: CourseTreatment): string[] {
@@ -161,6 +163,11 @@ export function CourseOptionsEditor({
   const createOption = useServerFn(createCourseTreatmentOption);
   const update = useServerFn(updateTreatment);
   const [newSessions, setNewSessions] = useState("3");
+  const [unitLabel, setUnitLabel] = useState(
+    (treatment.course_unit_label ?? "").trim() || "sessions",
+  );
+  const [ctaLabel, setCtaLabel] = useState((treatment.course_cta_label ?? "").trim());
+  const [savingWording, setSavingWording] = useState(false);
 
   const groupName = useMemo(() => {
     const existing = groupsOf(treatment).find((group) => !isSessionLabel(group));
@@ -344,6 +351,30 @@ export function CourseOptionsEditor({
     setNewSessions(String(sessions + 1));
   }
 
+  async function saveWording() {
+    const unit = unitLabel.trim() || "sessions";
+    const cta = ctaLabel.trim();
+    setSavingWording(true);
+    try {
+      await Promise.all(
+        options
+          .filter((o) => !o.id.startsWith("new-"))
+          .map((o) => update({ data: { id: o.id, course_unit_label: unit, course_cta_label: cta || null } })),
+      );
+      setOptions((current) =>
+        current.map((o) => ({ ...o, course_unit_label: unit, course_cta_label: cta || null })),
+      );
+      toast.success("Wording saved");
+      await onSaved();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to save wording");
+    } finally {
+      setSavingWording(false);
+    }
+  }
+
+  const unitPreview = unitLabel.trim() || "sessions";
+
   return (
     <div className="space-y-4">
       <div className="rounded-md border bg-muted/30 p-3">
@@ -351,6 +382,34 @@ export function CourseOptionsEditor({
         <p className="mt-1 text-xs text-muted-foreground">
           Add a session amount, then open its section to set the price, payment choice and spacing.
         </p>
+      </div>
+
+      <div className="space-y-3 rounded-md border p-3">
+        <p className="text-sm font-semibold">Wording</p>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="space-y-1">
+            <Label className="text-xs">What are you selling?</Label>
+            <Input
+              value={unitLabel}
+              onChange={(e) => setUnitLabel(e.target.value)}
+              placeholder="sessions, areas, mls"
+            />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Button / pop-up title</Label>
+            <Input
+              value={ctaLabel}
+              onChange={(e) => setCtaLabel(e.target.value)}
+              placeholder={`Choose your ${unitPreview}`}
+            />
+          </div>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Clients will see “{ctaLabel.trim() || `Choose your ${unitPreview}`}” on the treatment and in the pop-up.
+        </p>
+        <Button type="button" size="sm" variant="outline" onClick={saveWording} disabled={savingWording}>
+          <Save className="mr-1.5 h-4 w-4" /> {savingWording ? "Saving…" : "Save wording"}
+        </Button>
       </div>
       <div className="flex items-end gap-2">
         <div className="min-w-0 flex-1 space-y-1">

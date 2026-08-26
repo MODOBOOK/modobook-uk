@@ -686,6 +686,8 @@ function BookPage() {
                 description: o.description,
                 picture_url: (o as { picture_url?: string | null }).picture_url ?? null,
                 full: capFor(o)?.full ?? false,
+                unit_label: (o as { course_unit_label?: string | null }).course_unit_label ?? null,
+                cta_label: (o as { course_cta_label?: string | null }).course_cta_label ?? null,
               }))}
             />,
           );
