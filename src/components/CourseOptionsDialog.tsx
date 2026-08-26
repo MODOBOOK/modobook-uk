@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Layers, Plus, Save, Sparkles, Unlink } from "lucide-react";
+import { ChevronDown, ChevronUp, Layers, Plus, Save, Sparkles, Unlink } from "lucide-react";
 
 export type CourseTreatment = {
   id: string;
@@ -119,12 +119,7 @@ export function CourseOptionsEditor({
 }) {
   const createOption = useServerFn(createCourseTreatmentOption);
   const update = useServerFn(updateTreatment);
-  const [adding, setAdding] = useState(false);
   const [newSessions, setNewSessions] = useState("3");
-  const [newPrice, setNewPrice] = useState("");
-  const [newWeeks, setNewWeeks] = useState("");
-  const [newSplit, setNewSplit] = useState(false);
-  const [newRecommended, setNewRecommended] = useState(false);
 
   const groupName = useMemo(() => {
     const existing = groupsOf(treatment).find((group) => !isSessionLabel(group));
@@ -142,6 +137,9 @@ export function CourseOptionsEditor({
     );
   }, [allTreatments, groupName, treatment]);
   const [options, setOptions] = useState<CourseTreatment[]>(matchingOptions);
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(
+    () => new Set(matchingOptions.slice(0, 1).map((option) => option.id)),
+  );
 
   useEffect(() => {
     setOptions((current) => {
@@ -173,6 +171,36 @@ export function CourseOptionsEditor({
     }
     patch(t.id, t, { saving: true });
     try {
+      if (t.id.startsWith("new-")) {
+        const created = await createOption({
+          data: {
+            baseTreatmentId: treatment.id,
+            groupName,
+            sessions,
+            price,
+            split: sessions > 1 ? d.split : false,
+            intervalDays: weeks > 0 ? Math.round(weeks * 7) : null,
+            recommended: d.recommended,
+          },
+        }) as CourseTreatment;
+        setOptions((current) => current
+          .map((option) => option.id === t.id ? created : option)
+          .sort((a, b) => (a.session_count ?? 1) - (b.session_count ?? 1) || a.price - b.price));
+        setExpandedIds((current) => {
+          const next = new Set(current);
+          next.delete(t.id);
+          next.add(created.id);
+          return next;
+        });
+        setDrafts((current) => {
+          const next = { ...current, [created.id]: draftFrom(created) };
+          delete next[t.id];
+          return next;
+        });
+        toast.success(`${sessions} session option saved`);
+        await onSaved();
+        return;
+      }
       await update({
         data: {
           id: t.id,
@@ -211,6 +239,15 @@ export function CourseOptionsEditor({
   }
 
   async function removeFromCourse(t: CourseTreatment) {
+    if (t.id.startsWith("new-")) {
+      setOptions((current) => current.filter((option) => option.id !== t.id));
+      setExpandedIds((current) => {
+        const next = new Set(current);
+        next.delete(t.id);
+        return next;
+      });
+      return;
+    }
     if (!confirm("Remove this option from the course? The treatment itself stays.")) return;
     try {
       await update({ data: { id: t.id, course_group: null, course_groups: [] } });
@@ -222,58 +259,31 @@ export function CourseOptionsEditor({
     }
   }
 
-  async function addOption() {
+  function addOption() {
     const sessions = Math.max(1, Math.floor(Number(newSessions) || 1));
-    const price = Number(newPrice);
-    const weeks = newWeeks.trim() ? Number(newWeeks) : 0;
-    if (!Number.isFinite(price) || price < 0) {
-      toast.error("Enter the total price for this option");
-      return;
-    }
-    if (!Number.isFinite(weeks) || weeks < 0) {
-      toast.error("Enter a valid number of weeks");
-      return;
-    }
     if (options.some((option) => (option.session_count ?? 1) === sessions)) {
       toast.error(`A ${sessions}-session option already exists. Edit its price above.`);
       return;
     }
-    setAdding(true);
-    try {
-      const created = await createOption({
-        data: {
-          baseTreatmentId: treatment.id,
-          groupName,
-          sessions,
-          price,
-          split: newSplit,
-          intervalDays: weeks > 0 ? Math.round(weeks * 7) : null,
-          recommended: newRecommended,
-        },
-      });
-      const createdOption = created as CourseTreatment;
-      setOptions((current) =>
-        [...current.map((option) =>
-          option.id === treatment.id
-            ? { ...option, course_group: groupName, course_groups: [groupName] }
-            : option,
-        ), createdOption].sort(
-          (a, b) => (a.session_count ?? 1) - (b.session_count ?? 1) || a.price - b.price,
-        ),
-      );
-      setDrafts((current) => ({ ...current, [createdOption.id]: draftFrom(createdOption) }));
-      toast.success(`${sessions} session option added`);
-      setNewSessions(String(sessions + 1));
-      setNewPrice("");
-      setNewWeeks("");
-      setNewSplit(false);
-      setNewRecommended(false);
-      await onSaved();
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Failed to add option");
-    } finally {
-      setAdding(false);
-    }
+    const id = `new-${Date.now()}`;
+    const option: CourseTreatment = {
+      ...treatment,
+      id,
+      name: `${groupName} — ${sessions} sessions`,
+      price: 0,
+      session_count: sessions,
+      allow_split_payment: false,
+      session_interval_days: null,
+      course_recommended: false,
+      course_group: groupName,
+      course_groups: [groupName],
+    };
+    setOptions((current) => [...current, option].sort(
+      (a, b) => (a.session_count ?? 1) - (b.session_count ?? 1) || a.price - b.price,
+    ));
+    setDrafts((current) => ({ ...current, [id]: draftFrom(option) }));
+    setExpandedIds((current) => new Set(current).add(id));
+    setNewSessions(String(sessions + 1));
   }
 
   return (
@@ -281,126 +291,94 @@ export function CourseOptionsEditor({
       <div className="rounded-md border bg-muted/30 p-3">
         <p className="text-sm font-semibold">{groupName}</p>
         <p className="mt-1 text-xs text-muted-foreground">
-          Each box below is a separate choice shown to patients. Edit and save each option independently.
+          Add a session amount, then open its section to set the price, payment choice and spacing.
         </p>
       </div>
-        <div className="space-y-3">
-          {options.map((o) => {
-            const d = draftFor(o);
-            const sessions = Math.max(1, Math.floor(Number(d.sessions) || 1));
-            const price = Number(d.price) || 0;
-            const per = price / Math.max(1, sessions);
-            return (
-              <div key={o.id} className="rounded-md border bg-background p-3">
-                <div className="mb-2 flex items-center justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold">{o.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      £{per.toFixed(2)} per session · {o.duration} min each
-                    </p>
-                  </div>
-                  {d.recommended && (
-                    <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary-foreground">
-                      <Sparkles className="h-3 w-3" /> Recommended
-                    </span>
-                  )}
-                </div>
-
-                <div className="grid gap-3 sm:grid-cols-3">
-                  <div className="space-y-1">
-                    <Label className="text-xs">Sessions</Label>
-                    <Input
-                      type="number"
-                      min={1}
-                      value={d.sessions}
-                      onChange={(e) => patch(o.id, o, { sessions: e.target.value })}
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">Total price (£)</Label>
-                    <Input
-                      type="number"
-                      min={0}
-                      step="0.01"
-                      value={d.price}
-                      onChange={(e) => patch(o.id, o, { price: e.target.value })}
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">Weeks apart</Label>
-                    <Input
-                      type="number"
-                      min={0}
-                      placeholder="e.g. 4"
-                      value={d.weeks}
-                      onChange={(e) => patch(o.id, o, { weeks: e.target.value })}
-                    />
-                  </div>
-                </div>
-
-                <div className="mt-3 flex flex-wrap items-center gap-4">
-                  <label className="flex items-center gap-2 text-sm">
-                    <Switch
-                      checked={d.split && sessions > 1}
-                      disabled={sessions <= 1}
-                      onCheckedChange={(v) => patch(o.id, o, { split: v })}
-                    />
-                    Split payment
-                  </label>
-                  <label className="flex items-center gap-2 text-sm">
-                    <Switch
-                      checked={d.recommended}
-                      onCheckedChange={(v) => patch(o.id, o, { recommended: v })}
-                    />
-                    Recommended
-                  </label>
-                  <div className="ml-auto flex items-center gap-2">
-                    <Button size="sm" variant="ghost" onClick={() => removeFromCourse(o)}>
-                      <Unlink className="mr-1.5 h-4 w-4" /> Remove
-                    </Button>
-                    <Button size="sm" disabled={d.saving} onClick={() => saveOption(o)}>
-                      <Save className="mr-1.5 h-4 w-4" /> {d.saving ? "Saving…" : "Save"}
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+      <div className="flex items-end gap-2">
+        <div className="min-w-0 flex-1 space-y-1">
+          <Label className="text-xs">Number of sessions</Label>
+          <Input type="number" min={1} value={newSessions} onChange={(e) => setNewSessions(e.target.value)} />
         </div>
+        <Button type="button" onClick={addOption}>
+          <Plus className="mr-1.5 h-4 w-4" /> Add
+        </Button>
+      </div>
 
-        <div className="space-y-3 rounded-md border border-primary/30 bg-primary/5 p-3">
-          <div>
-            <p className="text-sm font-semibold">Add another session option</p>
-            <p className="text-xs text-muted-foreground">Set everything now; the new option will use the same treatment details and locations.</p>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-3">
-            <div className="space-y-1">
-              <Label className="text-xs">Number of sessions</Label>
-              <Input type="number" min={1} value={newSessions} onChange={(e) => setNewSessions(e.target.value)} />
+      <div className="space-y-2">
+        {options.map((o) => {
+          const d = draftFor(o);
+          const sessions = Math.max(1, Math.floor(Number(d.sessions) || 1));
+          const price = Number(d.price) || 0;
+          const per = price / Math.max(1, sessions);
+          const expanded = expandedIds.has(o.id);
+          return (
+            <div key={o.id} className="overflow-hidden rounded-md border bg-background">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => setExpandedIds((current) => {
+                  const next = new Set(current);
+                  if (next.has(o.id)) next.delete(o.id); else next.add(o.id);
+                  return next;
+                })}
+                className="h-auto w-full justify-between gap-3 rounded-none p-3 text-left hover:bg-muted/50"
+              >
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="font-semibold">{sessions} session{sessions === 1 ? "" : "s"}</p>
+                    {d.recommended && (
+                      <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary-foreground">
+                        <Sparkles className="h-3 w-3" /> Recommended
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {price > 0 ? `£${price.toFixed(2)} total · £${per.toFixed(2)} per session` : "Open to add price and details"}
+                  </p>
+                </div>
+                {expanded ? <ChevronUp className="h-5 w-5 shrink-0" /> : <ChevronDown className="h-5 w-5 shrink-0" />}
+              </Button>
+
+              {expanded && (
+                <div className="space-y-3 border-t p-3">
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <div className="space-y-1">
+                      <Label className="text-xs">Sessions</Label>
+                      <Input type="number" min={1} value={d.sessions} onChange={(e) => patch(o.id, o, { sessions: e.target.value })} />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Total price (£)</Label>
+                      <Input type="number" min={0} step="0.01" value={d.price} onChange={(e) => patch(o.id, o, { price: e.target.value })} />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Weeks apart</Label>
+                      <Input type="number" min={0} placeholder="e.g. 4" value={d.weeks} onChange={(e) => patch(o.id, o, { weeks: e.target.value })} />
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-4">
+                    <label className="flex items-center gap-2 text-sm">
+                      <Switch checked={d.split && sessions > 1} disabled={sessions <= 1} onCheckedChange={(v) => patch(o.id, o, { split: v })} />
+                      Split payment
+                    </label>
+                    <label className="flex items-center gap-2 text-sm">
+                      <Switch checked={d.recommended} onCheckedChange={(v) => patch(o.id, o, { recommended: v })} />
+                      Recommended
+                    </label>
+                    <div className="ml-auto flex items-center gap-2">
+                      <Button type="button" size="sm" variant="ghost" onClick={() => removeFromCourse(o)}>
+                        <Unlink className="mr-1.5 h-4 w-4" /> Remove
+                      </Button>
+                      <Button type="button" size="sm" disabled={d.saving} onClick={() => saveOption(o)}>
+                        <Save className="mr-1.5 h-4 w-4" /> {d.saving ? "Saving…" : "Save option"}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
-            <div className="space-y-1">
-              <Label className="text-xs">Total price (£)</Label>
-              <Input type="number" min={0} step="0.01" placeholder="e.g. 750" value={newPrice} onChange={(e) => setNewPrice(e.target.value)} />
-            </div>
-            <div className="space-y-1">
-              <Label className="text-xs">Weeks apart</Label>
-              <Input type="number" min={0} placeholder="e.g. 4" value={newWeeks} onChange={(e) => setNewWeeks(e.target.value)} />
-            </div>
-          </div>
-          <div className="flex flex-wrap gap-4">
-            <label className="flex items-center gap-2 text-sm">
-              <Switch checked={newSplit && Number(newSessions) > 1} disabled={Number(newSessions) <= 1} onCheckedChange={setNewSplit} />
-              Split payment
-            </label>
-            <label className="flex items-center gap-2 text-sm">
-              <Switch checked={newRecommended} onCheckedChange={setNewRecommended} />
-              Recommended
-            </label>
-          </div>
-          <Button className="w-full" disabled={adding || !newPrice.trim()} onClick={addOption}>
-            <Plus className="mr-1.5 h-4 w-4" /> {adding ? "Adding…" : "Add this session option"}
-          </Button>
-        </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
