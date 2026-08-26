@@ -333,8 +333,9 @@ export function CourseOptionsEditor({
       toast.error("Include a session amount, such as ‘Three sessions’ or ‘Course of 3’");
       return;
     }
-    if (options.some((option) => (option.session_count ?? 1) === sessions)) {
-      toast.error(`A ${sessions}-session option already exists. Edit its price above.`);
+    const norm = (v: string) => v.trim().toLowerCase();
+    if (options.some((option) => norm(sessionLabelFrom(option)) === norm(sessionLabel))) {
+      toast.error("An option with that exact name already exists. Give this one a different name.");
       return;
     }
     const id = `new-${Date.now()}`;
@@ -355,7 +356,7 @@ export function CourseOptionsEditor({
     ));
     setDrafts((current) => ({ ...current, [id]: { ...draftFrom(option), sessions: sessionLabel } }));
     setExpandedIds((current) => new Set(current).add(id));
-    setNewSessions(String(sessions + 1));
+    setNewSessions("");
   }
 
   async function saveWording() {
