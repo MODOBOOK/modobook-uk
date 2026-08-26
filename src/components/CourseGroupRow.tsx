@@ -7,7 +7,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Check, Clock, Sparkles } from "lucide-react";
+import { Check, Sparkles } from "lucide-react";
 
 export type CourseOption = {
   id: string;
@@ -43,6 +43,8 @@ export function CourseGroupRow({
   cardBg,
   cardBorder,
   nameColor,
+  priceColor,
+  size,
   bold,
   isSelected,
   onToggle,
@@ -54,6 +56,7 @@ export function CourseGroupRow({
   cardBorder: string;
   nameColor: string;
   priceColor: string;
+  size: "sm" | "md" | "lg";
   bold: boolean;
   isSelected: (id: string) => boolean;
   onToggle: (id: string) => void;
@@ -78,6 +81,10 @@ export function CourseGroupRow({
   const detailOption = single;
   const detailPicture = sorted.find((o) => o.picture_url)?.picture_url ?? null;
   const hasLongDescription = (detailOption?.description ?? "").length > 0 || !!detailPicture;
+  const padding = size === "lg" ? "p-4 sm:p-5" : size === "md" ? "p-4" : "p-3.5";
+  const nameSize = size === "lg" ? "text-lg sm:text-xl" : size === "md" ? "text-base sm:text-lg" : "text-[15px] sm:text-base";
+  const actionSize = size === "lg" ? "text-lg" : size === "md" ? "text-base" : "text-[15px]";
+  const checkSize = size === "lg" ? "h-6 w-6" : "h-5 w-5";
 
   return (
     <>
@@ -88,48 +95,55 @@ export function CourseGroupRow({
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") setOpen(true);
         }}
-        className="w-full rounded-xl border p-3 text-left shadow-sm transition hover:shadow"
-        style={{ backgroundColor: cardBg, borderColor: chosen.length ? brand : cardBorder }}
+        className={`group flex w-full items-start gap-3 rounded-xl border text-left transition hover:shadow-sm ${padding}`}
+        style={{
+          backgroundColor: cardBg,
+          borderColor: chosen.length ? brand : cardBorder,
+          boxShadow: chosen.length ? `0 0 0 1.5px ${brand}` : undefined,
+        }}
       >
-        <div className="flex items-start gap-3">
-          <div className="min-w-0 flex-1">
-            <div className={`leading-tight ${bold ? "font-bold" : "font-medium"}`} style={{ color: nameColor }}>
+        <span
+          className={`mt-0.5 flex shrink-0 items-center justify-center rounded-full border-2 ${checkSize}`}
+          style={chosen.length
+            ? { backgroundColor: brand, borderColor: brand, color: "white" }
+            : { borderColor: `${brand}66` }}
+          aria-hidden="true"
+        >
+          {chosen.length > 0 && <Check className="h-3 w-3" />}
+        </span>
+
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start justify-between gap-3">
+            <div className={`min-w-0 flex-1 leading-tight ${nameSize} ${bold ? "font-bold" : "font-medium"}`} style={{ color: nameColor }}>
               {displayName}
             </div>
-            {blurb && <p className="mt-1 text-xs opacity-70 line-clamp-2">{blurb}</p>}
-            <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
-              {single?.duration ? (
-                <span className="inline-flex items-center gap-1">
-                  <Clock className="h-3 w-3" /> {single.duration} min
-                </span>
-              ) : null}
-              <span>· {sorted.map((o) => o.session_count).join(" / ")} sessions available</span>
-              {(() => {
-                const sp = sorted.map((o) => spacingLabel(o.interval_days)).find(Boolean);
-                return sp ? <span>· {sp}</span> : null;
-              })()}
-              {anySplit && (
-                <span className="rounded-full bg-emerald-100 px-2 py-0.5 font-semibold text-emerald-700">
-                  Split payment
-                </span>
-              )}
+            <div className={`shrink-0 text-right font-bold leading-tight ${actionSize}`} style={{ color: priceColor }}>
+              <span className="block">Choose your</span>
+              <span className="block">sessions</span>
             </div>
-            {chosen.length > 0 && (
-              <div className="mt-1.5 text-xs font-semibold" style={{ color: brand }}>
-                Added: {chosen.map((c) => `${c.session_count} session${c.session_count === 1 ? "" : "s"}`).join(", ")}
-              </div>
+          </div>
+
+          <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
+            {single?.duration ? <span>{single.duration} min</span> : null}
+            <span
+              className="rounded-full px-2 py-0.5 text-xs font-semibold"
+              style={{ backgroundColor: `${brand}1a`, color: brand }}
+            >
+              {sorted.map((o) => o.session_count).join(" / ")} sessions available
+            </span>
+            {anySplit && (
+              <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">
+                Split payment available
+              </span>
             )}
           </div>
-        </div>
-        <div className="mt-2 flex items-center justify-between">
-          <div className="flex items-baseline gap-2">
-            <div
-              className="text-sm font-bold"
-              style={{ color: brand }}
-            >
-              Choose your sessions
+
+          {blurb && <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-muted-foreground">{blurb}</p>}
+          {chosen.length > 0 && (
+            <div className="mt-1.5 text-sm font-semibold" style={{ color: brand }}>
+              Added: {chosen.map((c) => `${c.session_count} session${c.session_count === 1 ? "" : "s"}`).join(", ")}
             </div>
-          </div>
+          )}
           {hasLongDescription && (
             <button
               type="button"
@@ -137,7 +151,7 @@ export function CourseGroupRow({
                 e.stopPropagation();
                 setDetailsOpen(true);
               }}
-              className="text-sm font-semibold"
+              className="mt-1.5 text-sm font-semibold"
               style={{ color: brand }}
             >
               Read more
