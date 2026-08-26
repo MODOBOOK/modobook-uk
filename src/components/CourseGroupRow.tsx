@@ -7,7 +7,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Check, Clock, Sparkles, Info } from "lucide-react";
+import { Check, Clock, Sparkles } from "lucide-react";
 
 export type CourseOption = {
   id: string;
@@ -22,6 +22,13 @@ export type CourseOption = {
   picture_url?: string | null;
   full?: boolean;
 };
+
+function treatmentName(name: string) {
+  return name
+    .replace(/\s*[—-]\s*(?:single|\d+)\s+sessions?$/i, "")
+    .replace(/\s+(?:single|\d+)\s+sessions?$/i, "")
+    .trim();
+}
 
 /**
  * One menu row for a treatment offered as a course (1 / 3 / 6 sessions).
@@ -55,6 +62,7 @@ export function CourseGroupRow({
   const [detailsOpen, setDetailsOpen] = useState(false);
   const sorted = [...options].sort((a, b) => a.session_count - b.session_count || a.price - b.price);
   const single = sorted.find((o) => o.session_count <= 1) ?? sorted[0];
+  const displayName = treatmentName(single?.name ?? "") || groupName;
   const chosen = sorted.filter((o) => isSelected(o.id));
   const blurb = single?.description ?? sorted.find((o) => o.description)?.description ?? null;
   const anySplit = sorted.some((o) => o.allow_split_payment && o.session_count > 1);
@@ -86,7 +94,7 @@ export function CourseGroupRow({
         <div className="flex items-start gap-3">
           <div className="min-w-0 flex-1">
             <div className={`leading-tight ${bold ? "font-bold" : "font-medium"}`} style={{ color: nameColor }}>
-              {groupName}
+              {displayName}
             </div>
             {blurb && <p className="mt-1 text-xs opacity-70 line-clamp-2">{blurb}</p>}
             <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
@@ -116,12 +124,11 @@ export function CourseGroupRow({
         <div className="mt-2 flex items-center justify-between">
           <div className="flex items-baseline gap-2">
             <div
-              className="text-sm font-extrabold uppercase tracking-wide"
+              className="text-sm font-bold"
               style={{ color: brand }}
             >
-              Choose amount
+              Choose your sessions
             </div>
-            <span className="text-[11px] opacity-70">Choose your sessions →</span>
           </div>
           {hasLongDescription && (
             <button
@@ -130,10 +137,9 @@ export function CourseGroupRow({
                 e.stopPropagation();
                 setDetailsOpen(true);
               }}
-              className="inline-flex items-center gap-1 text-xs font-semibold underline underline-offset-4 opacity-80 hover:opacity-100"
+              className="text-sm font-semibold"
               style={{ color: brand }}
             >
-              <Info className="h-3 w-3" />
               Read more
             </button>
           )}
@@ -147,7 +153,7 @@ export function CourseGroupRow({
               Choose your sessions
             </DialogTitle>
             <DialogDescription className="text-sm">
-              {groupName} — pick as many options as you like.
+              {displayName} — pick as many options as you like.
               {recommended ? ` We recommend ${recommended.session_count} sessions for best results.` : ""}
             </DialogDescription>
           </DialogHeader>
@@ -227,7 +233,7 @@ export function CourseGroupRow({
         <DialogContent className="max-h-[85vh] w-[calc(100vw-1.5rem)] max-w-lg overflow-y-auto p-4 sm:p-6">
           <DialogHeader className="text-left">
             <DialogTitle className="text-base sm:text-lg" style={{ color: brand }}>
-              {groupName}
+              {displayName}
             </DialogTitle>
             <DialogDescription className="text-sm">
               Course information and available session options.
@@ -238,7 +244,7 @@ export function CourseGroupRow({
             <div className="overflow-hidden rounded-xl bg-muted">
               <img
                 src={detailPicture}
-                alt={groupName}
+                alt={displayName}
                 className="max-h-64 w-full object-cover"
                 loading="lazy"
               />

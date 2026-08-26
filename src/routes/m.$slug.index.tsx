@@ -121,6 +121,17 @@ function formatTreatmentSessions(t: Treatment) {
   return `${sessions} sessions${spacing ? ` · ${spacing}` : ""}`;
 }
 
+function isCourseSessionLabel(value: string) {
+  return /^(?:single|\d+)\s+sessions?(?:\s|$)/i.test(value.trim());
+}
+
+function courseTreatmentName(name: string) {
+  return name
+    .replace(/\s*[—-]\s*(?:single|\d+)\s+sessions?$/i, "")
+    .replace(/\s+(?:single|\d+)\s+sessions?$/i, "")
+    .trim();
+}
+
 function textToParagraphHtml(text: string) {
   return text
     .split(/\n{2,}/)
@@ -626,9 +637,11 @@ function BookPage() {
       const many = ((t as { course_groups?: string[] | null }).course_groups ?? [])
         .map((g) => (g ?? "").trim())
         .filter(Boolean);
-      if (many.length > 0) return many;
+      const namedGroups = many.filter((g) => !isCourseSessionLabel(g));
+      if (namedGroups.length > 0) return namedGroups;
       const single = ((t as { course_group?: string | null }).course_group ?? "").trim();
-      return single ? [single] : [];
+      if (single && !isCourseSessionLabel(single)) return [single];
+      return many.length > 0 || single ? [courseTreatmentName(t.name)] : [];
     };
     if (coursesEnabled) {
       for (const t of list) {
