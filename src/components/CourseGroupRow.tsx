@@ -21,6 +21,8 @@ export type CourseOption = {
   description?: string | null;
   picture_url?: string | null;
   full?: boolean;
+  unit_label?: string | null;
+  cta_label?: string | null;
 };
 
 function treatmentName(name: string) {
@@ -63,6 +65,15 @@ export function CourseGroupRow({
 }) {
   const [open, setOpen] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const unitRaw = (options.find((o) => (o.unit_label ?? "").trim())?.unit_label ?? "sessions").trim();
+  const unitPlural = unitRaw || "sessions";
+  const unitSingular = unitPlural.replace(/s$/i, "") || unitPlural;
+  const unitOf = (n: number) => (n === 1 ? unitSingular : unitPlural);
+  const ctaRaw = (options.find((o) => (o.cta_label ?? "").trim())?.cta_label ?? "").trim();
+  const cta = ctaRaw || `Choose your ${unitPlural}`;
+  const ctaWords = cta.split(" ");
+  const ctaTail = ctaWords.length > 1 ? ctaWords.pop()! : "";
+  const ctaHead = ctaWords.join(" ");
   const sorted = [...options].sort((a, b) => a.session_count - b.session_count || a.price - b.price);
   const single = sorted.find((o) => o.session_count <= 1) ?? sorted[0];
   const displayName = treatmentName(single?.name ?? "") || groupName;
@@ -118,8 +129,8 @@ export function CourseGroupRow({
               {displayName}
             </div>
             <div className={`shrink-0 text-right font-bold leading-tight ${actionSize}`} style={{ color: priceColor }}>
-              <span className="block">Choose your</span>
-              <span className="block">sessions</span>
+              <span className="block">{ctaHead}</span>
+              {ctaTail && <span className="block">{ctaTail}</span>}
             </div>
           </div>
 
@@ -129,7 +140,7 @@ export function CourseGroupRow({
               className="rounded-full px-2 py-0.5 text-xs font-semibold"
               style={{ backgroundColor: `${brand}1a`, color: brand }}
             >
-              {sorted.map((o) => o.session_count).join(" / ")} sessions available
+              {sorted.map((o) => o.session_count).join(" / ")} {unitPlural} available
             </span>
             {anySplit && (
               <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">
@@ -141,7 +152,7 @@ export function CourseGroupRow({
           {blurb && <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-muted-foreground">{blurb}</p>}
           {chosen.length > 0 && (
             <div className="mt-1.5 text-sm font-semibold" style={{ color: brand }}>
-              Added: {chosen.map((c) => `${c.session_count} session${c.session_count === 1 ? "" : "s"}`).join(", ")}
+              Added: {chosen.map((c) => `${c.session_count} ${unitOf(c.session_count)}`).join(", ")}
             </div>
           )}
           {hasLongDescription && (
@@ -164,11 +175,11 @@ export function CourseGroupRow({
         <DialogContent className="max-h-[85vh] w-[calc(100vw-1.5rem)] max-w-lg overflow-y-auto p-4 sm:p-6">
           <DialogHeader className="text-left">
             <DialogTitle className="text-base sm:text-lg" style={{ color: brand }}>
-              Choose your sessions
+              {cta}
             </DialogTitle>
             <DialogDescription className="text-sm">
               {displayName} — pick as many options as you like.
-              {recommended ? ` We recommend ${recommended.session_count} sessions for best results.` : ""}
+              {recommended ? ` We recommend ${recommended.session_count} ${unitOf(recommended.session_count)} for best results.` : ""}
             </DialogDescription>
           </DialogHeader>
 
@@ -200,7 +211,7 @@ export function CourseGroupRow({
                     <div className="min-w-0">
                       <div className="flex items-center gap-1.5 text-sm font-semibold">
                         {active && <Check className="h-3.5 w-3.5" style={{ color: brand }} />}
-                        {o.session_count} session{o.session_count === 1 ? "" : "s"}
+                        {o.session_count} {unitOf(o.session_count)}
                       </div>
                       <div className="text-xs opacity-70">
                         {o.name}
@@ -209,7 +220,7 @@ export function CourseGroupRow({
                       </div>
                       {o.session_count > 1 && (
                         <p className="mt-1 text-xs opacity-70">
-                          £{perSession.toFixed(2)} per session
+                          £{perSession.toFixed(2)} per {unitSingular}
                           {spacingLabel(o.interval_days) ? ` · ${spacingLabel(o.interval_days)}` : ""}
                         </p>
                       )}
@@ -218,7 +229,7 @@ export function CourseGroupRow({
                       )}
                       {o.allow_split_payment && o.session_count > 1 && (
                         <p className="mt-0.5 text-xs font-medium" style={{ color: brand }}>
-                          Split payment available — £{perSession.toFixed(2)} per session, paid as you go
+                          Split payment available — £{perSession.toFixed(2)} per {unitSingular}, paid as you go
                         </p>
                       )}
                     </div>
@@ -284,7 +295,7 @@ export function CourseGroupRow({
                 >
                   <div className="min-w-0">
                     <div className="font-semibold">
-                      {o.session_count} session{o.session_count === 1 ? "" : "s"}
+                      {o.session_count} {unitOf(o.session_count)}
                       {o.recommended && (
                         <span
                           className="ml-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white"
