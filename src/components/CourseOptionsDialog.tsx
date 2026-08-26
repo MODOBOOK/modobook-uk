@@ -297,7 +297,13 @@ export function CourseOptionsEditor({
       <div className="flex items-end gap-2">
         <div className="min-w-0 flex-1 space-y-1">
           <Label className="text-xs">Number of sessions</Label>
-          <Input type="number" min={1} value={newSessions} onChange={(e) => setNewSessions(e.target.value)} />
+          <Input
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            value={newSessions}
+            onChange={(e) => setNewSessions(e.target.value.replace(/\D/g, ""))}
+          />
         </div>
         <Button type="button" onClick={addOption}>
           <Plus className="mr-1.5 h-4 w-4" /> Add
@@ -344,7 +350,13 @@ export function CourseOptionsEditor({
                   <div className="grid gap-3 sm:grid-cols-3">
                     <div className="space-y-1">
                       <Label className="text-xs">Sessions</Label>
-                      <Input type="number" min={1} value={d.sessions} onChange={(e) => patch(o.id, o, { sessions: e.target.value })} />
+                      <Input
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        value={d.sessions}
+                        onChange={(e) => patch(o.id, o, { sessions: e.target.value.replace(/\D/g, "") })}
+                      />
                     </div>
                     <div className="space-y-1">
                       <Label className="text-xs">Total price (£)</Label>
