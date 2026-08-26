@@ -32,6 +32,13 @@ function treatmentName(name: string) {
     .trim();
 }
 
+function optionName(name: string, groupName: string, sessionCount: number, unit: string) {
+  const trimmed = name.trim();
+  const prefixPattern = new RegExp(`^${groupName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*[—-]\\s*`, "i");
+  const enteredName = trimmed.replace(prefixPattern, "").trim();
+  return enteredName || `${sessionCount} ${sessionCount === 1 ? unit.replace(/s$/i, "") || unit : unit}`;
+}
+
 /**
  * One menu row for a treatment offered as a course (1 / 3 / 6 sessions).
  * The row carries the treatment info; the pop-up is purely "choose your
@@ -72,7 +79,7 @@ export function CourseGroupRow({
   const ctaRaw = (options.find((o) => (o.cta_label ?? "").trim())?.cta_label ?? "").trim();
   const cta = ctaRaw || `Choose your ${unitPlural}`;
   const ctaWords = cta.split(" ");
-  const ctaTail = ctaWords.length > 1 ? ctaWords.pop()! : "";
+  const ctaTail = ctaWords.length > 1 ? (ctaWords.pop() ?? "") : "";
   const ctaHead = ctaWords.join(" ");
   const sorted = [...options].sort((a, b) => a.session_count - b.session_count || a.price - b.price);
   const single = sorted.find((o) => o.session_count <= 1) ?? sorted[0];
@@ -152,7 +159,7 @@ export function CourseGroupRow({
           {blurb && <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-muted-foreground">{blurb}</p>}
           {chosen.length > 0 && (
             <div className="mt-1.5 text-sm font-semibold" style={{ color: brand }}>
-              Added: {chosen.map((c) => `${c.session_count} ${unitOf(c.session_count)}`).join(", ")}
+              Added: {chosen.map((c) => optionName(c.name, groupName, c.session_count, unitPlural)).join(", ")}
             </div>
           )}
           {hasLongDescription && (
@@ -179,7 +186,7 @@ export function CourseGroupRow({
             </DialogTitle>
             <DialogDescription className="text-sm">
               {displayName} — pick as many options as you like.
-              {recommended ? ` We recommend ${recommended.session_count} ${unitOf(recommended.session_count)} for best results.` : ""}
+              {recommended ? ` We recommend ${optionName(recommended.name, groupName, recommended.session_count, unitPlural)} for best results.` : ""}
             </DialogDescription>
           </DialogHeader>
 
@@ -211,11 +218,10 @@ export function CourseGroupRow({
                     <div className="min-w-0">
                       <div className="flex items-center gap-1.5 text-sm font-semibold">
                         {active && <Check className="h-3.5 w-3.5" style={{ color: brand }} />}
-                        {o.session_count} {unitOf(o.session_count)}
+                        {optionName(o.name, groupName, o.session_count, unitPlural)}
                       </div>
                       <div className="text-xs opacity-70">
-                        {o.name}
-                        {o.duration ? ` · ${o.duration} min each` : ""}
+                        {o.duration ? `${o.duration} min each` : ""}
                         {o.full ? " · fully booked" : ""}
                       </div>
                       {o.session_count > 1 && (
@@ -295,7 +301,7 @@ export function CourseGroupRow({
                 >
                   <div className="min-w-0">
                     <div className="font-semibold">
-                      {o.session_count} {unitOf(o.session_count)}
+                      {optionName(o.name, groupName, o.session_count, unitPlural)}
                       {o.recommended && (
                         <span
                           className="ml-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white"
