@@ -139,6 +139,25 @@ function BookTreatmentPage() {
   const [month, setMonth] = useState<Date>(modelMode ? fromIsoDate(firstModelDate) : fromIsoDate(today));
 
   const [slot, setSlot] = useState<string | null>(null);
+
+  // Model slots can be priced differently to the standard treatment price
+  // (fixed £ or % off). Resolve the slot the patient is actually booking so the
+  // model price is what we show *and* what we charge at checkout.
+  const activeModelSlot = useMemo(() => {
+    if (!modelMode) return null;
+    const onDate = modelSlotsForLoc.filter((s) => s.slot_date === date);
+    if (onDate.length === 0) return null;
+    if (!slot) return onDate[0];
+    const m = toMinutes(slot);
+    return onDate.find((s) => m >= toMinutes(s.start_time) && m < toMinutes(s.end_time)) ?? onDate[0];
+  }, [modelMode, modelSlotsForLoc, date, slot]);
+
+  const price = useMemo(() => {
+    if (!activeModelSlot) return listPrice;
+    return activeModelSlot.price_mode === "fixed"
+      ? Math.max(0, Number(activeModelSlot.price_value))
+      : Math.max(0, listPrice * (1 - Number(activeModelSlot.price_value) / 100));
+  }, [activeModelSlot, listPrice]);
   const [confirmed, setConfirmed] = useState<
     {
       id: string;
