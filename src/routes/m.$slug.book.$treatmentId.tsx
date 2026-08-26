@@ -482,6 +482,7 @@ function BookTreatmentPage() {
           patientUserId: patientUserId,
           practitionerId: (typeof window !== "undefined" ? window.sessionStorage.getItem(`modo:practitionerId:${slug}`) : null) || null,
           paymentChoice,
+          modelSlotId: activeModelSlot?.id ?? null,
 
 
 
