@@ -237,10 +237,15 @@ export function CourseOptionsEditor({
           },
         }) as CourseTreatment;
         const savedName = `${groupName} — ${sessionLabel}`;
-        if (created.name !== savedName) {
-          await update({ data: { id: created.id, name: savedName } });
-          created.name = savedName;
-        }
+        await update({
+          data: {
+            id: created.id,
+            name: savedName,
+            course_unit_label: unitLabel.trim() || "sessions",
+            course_cta_label: ctaLabel.trim() || null,
+          },
+        });
+        created.name = savedName;
         setOptions((current) => current
           .map((option) => option.id === t.id ? created : option)
           .sort((a, b) => (a.session_count ?? 1) - (b.session_count ?? 1) || a.price - b.price));
@@ -270,6 +275,8 @@ export function CourseOptionsEditor({
           course_recommended: d.recommended,
           course_group: groupName,
           course_groups: [groupName],
+          course_unit_label: unitLabel.trim() || "sessions",
+          course_cta_label: ctaLabel.trim() || null,
         },
       });
       setOptions((current) =>
