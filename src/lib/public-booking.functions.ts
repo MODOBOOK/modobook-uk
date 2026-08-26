@@ -1077,20 +1077,18 @@ async function maybeCreateBookingCheckout(args: {
         };
         const t = row.treatments;
         const override = t?.deposit_amount != null ? Math.round(Number(t.deposit_amount) * 100) : null;
-        // Model slots are priced separately (fixed £ or % off), so a treatment
-        // level deposit override must not apply to them.
-        if (override != null && !row.model_slot_id) {
+        if (override != null) {
           // An explicit override wins — including £0, which waives the deposit
           // for this treatment entirely.
           total += Math.max(0, override);
 
         } else if (depositTypeMode === "percent" && depositPct > 0) {
-          // Use the amount actually booked (model-slot / discounted price) and
-          // only fall back to the treatment list price when it is missing.
-          const bookedCents = row.total_amount != null
+          // Standard bookings: % of the treatment price, exactly as before.
+          // Model slots are priced separately, so they use the booked amount.
+          const baseCents = row.model_slot_id && row.total_amount != null
             ? Math.round(Number(row.total_amount) * 100)
             : Math.round(Number(t?.price ?? 0) * 100);
-          total += Math.round((bookedCents * depositPct) / 100);
+          total += Math.round((baseCents * depositPct) / 100);
         } else {
           total += depositPer;
         }
