@@ -31,6 +31,7 @@ export type CourseTreatment = {
   session_interval_days?: number | null;
   course_unit_label?: string | null;
   course_cta_label?: string | null;
+  course_option_label?: string | null;
 };
 
 function groupsOf(t: CourseTreatment): string[] {
@@ -86,6 +87,8 @@ function sessionCountFromLabel(value: string): number | null {
 }
 
 function sessionLabelFrom(t: CourseTreatment): string {
+  const savedLabel = (t.course_option_label ?? "").trim();
+  if (savedLabel) return savedLabel;
   const suffix = t.name.split(/\s+—\s+/).at(-1)?.trim();
   if (suffix && suffix !== t.name && sessionCountFromLabel(suffix)) return suffix;
   const count = t.session_count ?? 1;
@@ -230,6 +233,7 @@ export function CourseOptionsEditor({
             baseTreatmentId: treatment.id,
             groupName,
             sessions,
+            optionLabel: sessionLabel,
             price,
             split: sessions > 1 ? d.split : false,
             intervalDays: weeks > 0 ? Math.round(weeks * 7) : null,
@@ -241,6 +245,7 @@ export function CourseOptionsEditor({
           data: {
             id: created.id,
             name: savedName,
+            course_option_label: sessionLabel,
             course_unit_label: unitLabel.trim() || "sessions",
             course_cta_label: ctaLabel.trim() || null,
           },
@@ -268,6 +273,7 @@ export function CourseOptionsEditor({
         data: {
           id: t.id,
           name: `${groupName} — ${sessionLabel}`,
+          course_option_label: sessionLabel,
           price,
           session_count: sessions,
           allow_split_payment: sessions > 1 ? d.split : false,
@@ -285,6 +291,7 @@ export function CourseOptionsEditor({
             ? {
                 ...option,
                  name: `${groupName} — ${sessionLabel}`,
+                course_option_label: sessionLabel,
                 price,
                 session_count: sessions,
                 allow_split_payment: sessions > 1 ? d.split : false,
@@ -343,6 +350,7 @@ export function CourseOptionsEditor({
       ...treatment,
       id,
       name: `${groupName} — ${sessionLabel}`,
+      course_option_label: sessionLabel,
       price: 0,
       session_count: sessions,
       allow_split_payment: false,
