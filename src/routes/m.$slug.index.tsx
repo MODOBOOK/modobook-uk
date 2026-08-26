@@ -670,6 +670,7 @@ function BookPage() {
               cardBorder={menuCardBorder}
               nameColor={menuNameColor}
               priceColor={menuPriceColor}
+              size={menuSize}
               bold={menuTreatmentBold}
               isSelected={isSelected}
               onToggle={toggleSelect}
