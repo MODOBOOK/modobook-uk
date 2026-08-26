@@ -313,14 +313,15 @@ export function CourseOptionsEditor({
           const expanded = expandedIds.has(o.id);
           return (
             <div key={o.id} className="overflow-hidden rounded-md border bg-background">
-              <button
+              <Button
                 type="button"
+                variant="ghost"
                 onClick={() => setExpandedIds((current) => {
                   const next = new Set(current);
                   if (next.has(o.id)) next.delete(o.id); else next.add(o.id);
                   return next;
                 })}
-                className="flex w-full items-center justify-between gap-3 p-3 text-left"
+                className="h-auto w-full justify-between gap-3 rounded-none p-3 text-left hover:bg-muted/50"
               >
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
@@ -336,7 +337,7 @@ export function CourseOptionsEditor({
                   </p>
                 </div>
                 {expanded ? <ChevronUp className="h-5 w-5 shrink-0" /> : <ChevronDown className="h-5 w-5 shrink-0" />}
-              </button>
+              </Button>
 
               {expanded && (
                 <div className="space-y-3 border-t p-3">
