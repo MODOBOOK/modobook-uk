@@ -1643,6 +1643,23 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
       cursor = end;
     }
 
+    if (
+      await lostBookingRace({
+        admin: supabaseAdmin,
+        profileId: data.profileId,
+        date: data.date,
+        ranges: multiRanges,
+        ownIds: created.map((c) => c.id),
+      })
+    ) {
+      await supabaseAdmin
+        .from("appointments")
+        .update({ status: "cancelled", payment_hold_expires_at: null } as never)
+        .in("id", created.map((c) => c.id));
+      throw new Error(SLOT_TAKEN_MESSAGE);
+    }
+
+
     // The DB trigger create_appointment_medical_forms generated rows on insert;
     // return their tokens so the confirmation page can link the patient straight
     // into completing them.
