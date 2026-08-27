@@ -778,6 +778,17 @@ export const requestBooking = createServerFn({ method: "POST" })
     }
 
 
+    // Double-booking guard: re-check the slot on the server (browser
+    // availability can be stale) before writing the appointment.
+    const { assertSlotAvailable, lostBookingRace } = await import("./booking-conflict.server");
+    const slotRanges = [{ start: data.startTime, end: data.endTime }];
+    await assertSlotAvailable({
+      admin: supabaseAdmin,
+      profileId: data.profileId,
+      date: data.date,
+      ranges: slotRanges,
+    });
+
     const id = crypto.randomUUID();
     const { error } = await sb.from("appointments").insert({
       id,
@@ -802,6 +813,26 @@ export const requestBooking = createServerFn({ method: "POST" })
       model_slot_id: data.modelSlotId ?? null,
     });
     if (error) throw new Error(error.message);
+
+    // Race check: if a competing booking for the same slot was created first,
+    // roll ours back rather than leaving the clinic double-booked.
+    if (
+      await lostBookingRace({
+        admin: supabaseAdmin,
+        profileId: data.profileId,
+        date: data.date,
+        ranges: slotRanges,
+        ownIds: [id],
+      })
+    ) {
+      await supabaseAdmin
+        .from("appointments")
+        .update({ status: "cancelled", payment_hold_expires_at: null } as never)
+        .eq("id", id);
+      const { SLOT_TAKEN_MESSAGE } = await import("./booking-conflict.server");
+      throw new Error(SLOT_TAKEN_MESSAGE);
+    }
+
 
     // Claim the model slot so it disappears from public listings.
     if (data.modelSlotId) {
@@ -1534,10 +1565,29 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
       }
     }
 
+    // Double-booking guard for the whole chain of back-to-back appointments.
+    const { assertSlotAvailable, lostBookingRace, SLOT_TAKEN_MESSAGE } = await import("./booking-conflict.server");
+    const multiRanges: { start: string; end: string }[] = [];
+    {
+      let c = data.startTime;
+      for (const b of data.bookings) {
+        const e = addMinutesToTime(c, b.durationMin);
+        multiRanges.push({ start: c, end: e });
+        c = e;
+      }
+    }
+    await assertSlotAvailable({
+      admin: supabaseAdmin,
+      profileId: data.profileId,
+      date: data.date,
+      ranges: multiRanges,
+    });
+
     let cursor = data.startTime;
     const created: { id: string; treatmentId: string }[] = [];
     const consents: { token: string; consent_template_id: string }[] = [];
     for (const b of data.bookings) {
+
       const id = crypto.randomUUID();
       const end = addMinutesToTime(cursor, b.durationMin);
       const sessionCount = Math.max(1, Number(b.sessionCount ?? 1));
@@ -1592,6 +1642,23 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
 
       cursor = end;
     }
+
+    if (
+      await lostBookingRace({
+        admin: supabaseAdmin,
+        profileId: data.profileId,
+        date: data.date,
+        ranges: multiRanges,
+        ownIds: created.map((c) => c.id),
+      })
+    ) {
+      await supabaseAdmin
+        .from("appointments")
+        .update({ status: "cancelled", payment_hold_expires_at: null } as never)
+        .in("id", created.map((c) => c.id));
+      throw new Error(SLOT_TAKEN_MESSAGE);
+    }
+
 
     // The DB trigger create_appointment_medical_forms generated rows on insert;
     // return their tokens so the confirmation page can link the patient straight
