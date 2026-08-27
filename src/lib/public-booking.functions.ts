@@ -778,6 +778,17 @@ export const requestBooking = createServerFn({ method: "POST" })
     }
 
 
+    // Double-booking guard: re-check the slot on the server (browser
+    // availability can be stale) before writing the appointment.
+    const { assertSlotAvailable, lostBookingRace } = await import("./booking-conflict.server");
+    const slotRanges = [{ start: data.startTime, end: data.endTime }];
+    await assertSlotAvailable({
+      admin: supabaseAdmin,
+      profileId: data.profileId,
+      date: data.date,
+      ranges: slotRanges,
+    });
+
     const id = crypto.randomUUID();
     const { error } = await sb.from("appointments").insert({
       id,
@@ -802,6 +813,26 @@ export const requestBooking = createServerFn({ method: "POST" })
       model_slot_id: data.modelSlotId ?? null,
     });
     if (error) throw new Error(error.message);
+
+    // Race check: if a competing booking for the same slot was created first,
+    // roll ours back rather than leaving the clinic double-booked.
+    if (
+      await lostBookingRace({
+        admin: supabaseAdmin,
+        profileId: data.profileId,
+        date: data.date,
+        ranges: slotRanges,
+        ownIds: [id],
+      })
+    ) {
+      await supabaseAdmin
+        .from("appointments")
+        .update({ status: "cancelled", payment_hold_expires_at: null } as never)
+        .eq("id", id);
+      const { SLOT_TAKEN_MESSAGE } = await import("./booking-conflict.server");
+      throw new Error(SLOT_TAKEN_MESSAGE);
+    }
+
 
     // Claim the model slot so it disappears from public listings.
     if (data.modelSlotId) {
