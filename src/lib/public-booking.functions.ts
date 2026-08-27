@@ -1565,10 +1565,29 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
       }
     }
 
+    // Double-booking guard for the whole chain of back-to-back appointments.
+    const { assertSlotAvailable, lostBookingRace, SLOT_TAKEN_MESSAGE } = await import("./booking-conflict.server");
+    const multiRanges: { start: string; end: string }[] = [];
+    {
+      let c = data.startTime;
+      for (const b of data.bookings) {
+        const e = addMinutesToTime(c, b.durationMin);
+        multiRanges.push({ start: c, end: e });
+        c = e;
+      }
+    }
+    await assertSlotAvailable({
+      admin: supabaseAdmin,
+      profileId: data.profileId,
+      date: data.date,
+      ranges: multiRanges,
+    });
+
     let cursor = data.startTime;
     const created: { id: string; treatmentId: string }[] = [];
     const consents: { token: string; consent_template_id: string }[] = [];
     for (const b of data.bookings) {
+
       const id = crypto.randomUUID();
       const end = addMinutesToTime(cursor, b.durationMin);
       const sessionCount = Math.max(1, Number(b.sessionCount ?? 1));
