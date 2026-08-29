@@ -98,6 +98,7 @@ function sessionLabelFrom(t: CourseTreatment): string {
 type Draft = {
   id: string;
   sessions: string;
+  count: string;
   price: string;
   weeks: string;
   split: boolean;
@@ -110,6 +111,7 @@ function draftFrom(t: CourseTreatment): Draft {
   return {
     id: t.id,
     sessions: sessionLabelFrom(t),
+    count: String(t.session_count ?? sessionCountFromLabel(sessionLabelFrom(t)) ?? 1),
     price: String(t.price ?? 0),
     weeks: days > 0 ? String(Math.round(days / 7)) : "",
     split: Boolean(t.allow_split_payment),
@@ -165,7 +167,8 @@ export function CourseOptionsEditor({
 }) {
   const createOption = useServerFn(createCourseTreatmentOption);
   const update = useServerFn(updateTreatment);
-  const [newSessions, setNewSessions] = useState("3");
+  const [newSessions, setNewSessions] = useState("3 sessions");
+  const [newCount, setNewCount] = useState("3");
   const [unitLabel, setUnitLabel] = useState(
     (treatment.course_unit_label ?? "").trim() || "sessions",
   );
@@ -210,7 +213,8 @@ export function CourseOptionsEditor({
   async function saveOption(t: CourseTreatment) {
     const d = draftFor(t);
     const sessionLabel = d.sessions.trim();
-    const sessions = sessionCountFromLabel(sessionLabel) ?? 1;
+    const countNum = Math.floor(Number(d.count));
+    const sessions = Number.isFinite(countNum) && countNum >= 1 ? countNum : (sessionCountFromLabel(sessionLabel) ?? 1);
     if (!sessionLabel) {
       toast.error("Give this option a name");
       return;
@@ -335,7 +339,8 @@ export function CourseOptionsEditor({
 
   function addOption() {
     const sessionLabel = newSessions.trim();
-    const sessions = sessionCountFromLabel(sessionLabel) ?? 1;
+    const countNum = Math.floor(Number(newCount));
+    const sessions = Number.isFinite(countNum) && countNum >= 1 ? countNum : (sessionCountFromLabel(sessionLabel) ?? 1);
     if (!sessionLabel) {
       toast.error("Give this option a name");
       return;
@@ -429,12 +434,22 @@ export function CourseOptionsEditor({
       </div>
       <div className="flex items-end gap-2">
         <div className="min-w-0 flex-1 space-y-1">
-          <Label className="text-xs">Session option</Label>
+          <Label className="text-xs">Option name</Label>
           <Input
             type="text"
             placeholder="e.g. Premium, Three sessions"
             value={newSessions}
             onChange={(e) => setNewSessions(e.target.value)}
+          />
+        </div>
+        <div className="w-24 shrink-0 space-y-1">
+          <Label className="text-xs">Sessions</Label>
+          <Input
+            type="number"
+            min={1}
+            step={1}
+            value={newCount}
+            onChange={(e) => setNewCount(e.target.value)}
           />
         </div>
         <Button type="button" onClick={addOption}>
@@ -445,7 +460,8 @@ export function CourseOptionsEditor({
       <div className="space-y-2">
         {options.map((o) => {
           const d = draftFor(o);
-          const sessions = sessionCountFromLabel(d.sessions) ?? o.session_count ?? 1;
+          const countNum = Math.floor(Number(d.count));
+          const sessions = Number.isFinite(countNum) && countNum >= 1 ? countNum : (sessionCountFromLabel(d.sessions) ?? o.session_count ?? 1);
           const price = Number(d.price) || 0;
           const per = price / Math.max(1, sessions);
           const expanded = expandedIds.has(o.id);
@@ -479,14 +495,24 @@ export function CourseOptionsEditor({
 
               {expanded && (
                 <div className="space-y-3 border-t p-3">
-                  <div className="grid gap-3 sm:grid-cols-3">
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                     <div className="space-y-1">
-                      <Label className="text-xs">Session option</Label>
+                      <Label className="text-xs">Option name</Label>
                       <Input
                         type="text"
                         placeholder="e.g. Course of three"
                         value={d.sessions}
                         onChange={(e) => patch(o.id, o, { sessions: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">No. of sessions</Label>
+                      <Input
+                        type="number"
+                        min={1}
+                        step={1}
+                        value={d.count}
+                        onChange={(e) => patch(o.id, o, { count: e.target.value })}
                       />
                     </div>
                     <div className="space-y-1">

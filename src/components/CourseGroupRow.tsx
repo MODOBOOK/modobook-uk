@@ -146,12 +146,6 @@ export function CourseGroupRow({
 
           <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
             {single?.duration ? <span>{single.duration} min</span> : null}
-            <span
-              className="rounded-full px-2 py-0.5 text-xs font-semibold"
-              style={{ backgroundColor: `${brand}1a`, color: brand }}
-            >
-              {sorted.map((o) => o.session_count).join(" / ")} {unitPlural} available
-            </span>
             {anySplit && (
               <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">
                 Split payment available
