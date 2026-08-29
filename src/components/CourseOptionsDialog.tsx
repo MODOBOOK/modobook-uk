@@ -167,7 +167,8 @@ export function CourseOptionsEditor({
 }) {
   const createOption = useServerFn(createCourseTreatmentOption);
   const update = useServerFn(updateTreatment);
-  const [newSessions, setNewSessions] = useState("3");
+  const [newSessions, setNewSessions] = useState("3 sessions");
+  const [newCount, setNewCount] = useState("3");
   const [unitLabel, setUnitLabel] = useState(
     (treatment.course_unit_label ?? "").trim() || "sessions",
   );
