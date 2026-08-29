@@ -339,7 +339,8 @@ export function CourseOptionsEditor({
 
   function addOption() {
     const sessionLabel = newSessions.trim();
-    const sessions = sessionCountFromLabel(sessionLabel) ?? 1;
+    const countNum = Math.floor(Number(newCount));
+    const sessions = Number.isFinite(countNum) && countNum >= 1 ? countNum : (sessionCountFromLabel(sessionLabel) ?? 1);
     if (!sessionLabel) {
       toast.error("Give this option a name");
       return;
