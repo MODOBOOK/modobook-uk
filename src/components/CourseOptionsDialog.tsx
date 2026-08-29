@@ -494,14 +494,24 @@ export function CourseOptionsEditor({
 
               {expanded && (
                 <div className="space-y-3 border-t p-3">
-                  <div className="grid gap-3 sm:grid-cols-3">
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                     <div className="space-y-1">
-                      <Label className="text-xs">Session option</Label>
+                      <Label className="text-xs">Option name</Label>
                       <Input
                         type="text"
                         placeholder="e.g. Course of three"
                         value={d.sessions}
                         onChange={(e) => patch(o.id, o, { sessions: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">No. of sessions</Label>
+                      <Input
+                        type="number"
+                        min={1}
+                        step={1}
+                        value={d.count}
+                        onChange={(e) => patch(o.id, o, { count: e.target.value })}
                       />
                     </div>
                     <div className="space-y-1">
