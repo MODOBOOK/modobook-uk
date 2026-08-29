@@ -212,7 +212,8 @@ export function CourseOptionsEditor({
   async function saveOption(t: CourseTreatment) {
     const d = draftFor(t);
     const sessionLabel = d.sessions.trim();
-    const sessions = sessionCountFromLabel(sessionLabel) ?? 1;
+    const countNum = Math.floor(Number(d.count));
+    const sessions = Number.isFinite(countNum) && countNum >= 1 ? countNum : (sessionCountFromLabel(sessionLabel) ?? 1);
     if (!sessionLabel) {
       toast.error("Give this option a name");
       return;
