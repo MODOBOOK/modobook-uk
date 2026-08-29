@@ -432,7 +432,7 @@ export function CourseOptionsEditor({
           <Label className="text-xs">Session option</Label>
           <Input
             type="text"
-            placeholder="e.g. Three sessions"
+            placeholder="e.g. Premium, Three sessions"
             value={newSessions}
             onChange={(e) => setNewSessions(e.target.value)}
           />
