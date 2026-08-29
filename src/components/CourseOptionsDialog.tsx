@@ -460,7 +460,8 @@ export function CourseOptionsEditor({
       <div className="space-y-2">
         {options.map((o) => {
           const d = draftFor(o);
-          const sessions = sessionCountFromLabel(d.sessions) ?? o.session_count ?? 1;
+          const countNum = Math.floor(Number(d.count));
+          const sessions = Number.isFinite(countNum) && countNum >= 1 ? countNum : (sessionCountFromLabel(d.sessions) ?? o.session_count ?? 1);
           const price = Number(d.price) || 0;
           const per = price / Math.max(1, sessions);
           const expanded = expandedIds.has(o.id);
