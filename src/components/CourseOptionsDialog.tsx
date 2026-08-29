@@ -210,9 +210,9 @@ export function CourseOptionsEditor({
   async function saveOption(t: CourseTreatment) {
     const d = draftFor(t);
     const sessionLabel = d.sessions.trim();
-    const sessions = sessionCountFromLabel(sessionLabel);
-    if (!sessionLabel || !sessions) {
-      toast.error("Include a session amount, such as ‘Three sessions’ or ‘Course of 3’");
+    const sessions = sessionCountFromLabel(sessionLabel) ?? 1;
+    if (!sessionLabel) {
+      toast.error("Give this option a name");
       return;
     }
     const price = Number(d.price);
@@ -335,9 +335,9 @@ export function CourseOptionsEditor({
 
   function addOption() {
     const sessionLabel = newSessions.trim();
-    const sessions = sessionCountFromLabel(sessionLabel);
-    if (!sessionLabel || !sessions) {
-      toast.error("Include a session amount, such as ‘Three sessions’ or ‘Course of 3’");
+    const sessions = sessionCountFromLabel(sessionLabel) ?? 1;
+    if (!sessionLabel) {
+      toast.error("Give this option a name");
       return;
     }
     const norm = (v: string) => v.trim().toLowerCase();
