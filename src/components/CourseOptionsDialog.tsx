@@ -434,12 +434,22 @@ export function CourseOptionsEditor({
       </div>
       <div className="flex items-end gap-2">
         <div className="min-w-0 flex-1 space-y-1">
-          <Label className="text-xs">Session option</Label>
+          <Label className="text-xs">Option name</Label>
           <Input
             type="text"
             placeholder="e.g. Premium, Three sessions"
             value={newSessions}
             onChange={(e) => setNewSessions(e.target.value)}
+          />
+        </div>
+        <div className="w-24 shrink-0 space-y-1">
+          <Label className="text-xs">Sessions</Label>
+          <Input
+            type="number"
+            min={1}
+            step={1}
+            value={newCount}
+            onChange={(e) => setNewCount(e.target.value)}
           />
         </div>
         <Button type="button" onClick={addOption}>
