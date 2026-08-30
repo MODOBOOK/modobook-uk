@@ -30,6 +30,10 @@ function treatmentName(name: string) {
   return name
     .replace(/\s*[—-]\s*(?:single|\d+)\s+sessions?$/i, "")
     .replace(/\s+(?:single|\d+)\s+sessions?$/i, "")
+    // Strip unit-count suffixes like "— 1 Vial x", "- 2 areas x", "1 vial x"
+    .replace(/\s*[—-]\s*\d+\s+[a-z]+\s*x\s*$/i, "")
+    .replace(/\s+\d+\s+[a-z]+\s*x\s*$/i, "")
+    .replace(/\s*x\s*$/i, "")
     .trim();
 }
 
