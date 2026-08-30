@@ -94,6 +94,8 @@ export function CourseGroupRow({
   const chosen = sorted.filter((o) => isSelected(o.id));
   const blurb = single?.description ?? sorted.find((o) => o.description)?.description ?? null;
   const anySplit = sorted.some((o) => o.allow_split_payment && o.session_count > 1);
+  const bookable = sorted.filter((o) => !o.full);
+  const fromPrice = (bookable.length ? bookable : sorted).reduce((min, o) => Math.min(min, o.price), Number.POSITIVE_INFINITY);
   const spacingLabel = (days?: number | null) => {
     if (!days || days <= 0) return null;
     if (days % 7 === 0) {
@@ -143,8 +145,13 @@ export function CourseGroupRow({
               {displayName}
             </div>
             <div className={`shrink-0 text-right font-bold leading-tight ${actionSize}`} style={{ color: priceColor }}>
-              <span className="block">{ctaHead}</span>
-              {ctaTail && <span className="block">{ctaTail}</span>}
+              {Number.isFinite(fromPrice) && (
+                <span className="block">
+                  <span className="text-xs font-semibold opacity-70">from </span>£{fromPrice.toFixed(2)}
+                </span>
+              )}
+              <span className="block text-sm font-semibold opacity-80">{ctaHead}</span>
+              {ctaTail && <span className="block text-sm font-semibold opacity-80">{ctaTail}</span>}
             </div>
           </div>
 
