@@ -782,12 +782,17 @@ export const requestBooking = createServerFn({ method: "POST" })
     // availability can be stale) before writing the appointment.
     const { assertSlotAvailable, lostBookingRace } = await import("./booking-conflict.server");
     const slotRanges = [{ start: data.startTime, end: data.endTime }];
-    await assertSlotAvailable({
-      admin: supabaseAdmin,
-      profileId: data.profileId,
-      date: data.date,
-      ranges: slotRanges,
-    });
+    // Model slots are explicitly advertised by the practitioner, so they are
+    // not re-checked against the normal diary here.
+    if (!data.modelSlotId) {
+      await assertSlotAvailable({
+        admin: supabaseAdmin,
+        profileId: data.profileId,
+        date: data.date,
+        ranges: slotRanges,
+        locationId: data.locationId ?? null,
+      });
+    }
 
     const id = crypto.randomUUID();
     const { error } = await sb.from("appointments").insert({
@@ -823,6 +828,7 @@ export const requestBooking = createServerFn({ method: "POST" })
         date: data.date,
         ranges: slotRanges,
         ownIds: [id],
+        locationId: data.locationId ?? null,
       })
     ) {
       await supabaseAdmin
@@ -1581,6 +1587,7 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
       profileId: data.profileId,
       date: data.date,
       ranges: multiRanges,
+      locationId: data.locationId ?? null,
     });
 
     let cursor = data.startTime;
@@ -1650,6 +1657,7 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
         date: data.date,
         ranges: multiRanges,
         ownIds: created.map((c) => c.id),
+        locationId: data.locationId ?? null,
       })
     ) {
       await supabaseAdmin

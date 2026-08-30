@@ -33,7 +33,9 @@ function treatmentName(name: string) {
     // Strip unit-count suffixes like "— 1 Vial x", "- 2 areas x", "1 vial x"
     .replace(/\s*[—-]\s*\d+\s+[a-z]+\s*x\s*$/i, "")
     .replace(/\s+\d+\s+[a-z]+\s*x\s*$/i, "")
-    .replace(/\s*x\s*$/i, "")
+    // Only strip a standalone trailing "x" (e.g. "Sculptra x"), never the last
+    // letter of a word like "Botox" or "Dermalux".
+    .replace(/\s+x\s*$/i, "")
     .trim();
 }
 

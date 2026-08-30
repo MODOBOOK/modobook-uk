@@ -19,6 +19,7 @@ type ApptRow = {
   id: string;
   start_time: string;
   end_time: string;
+  location_id: string | null;
   status: string | null;
   payment_status: string | null;
   payment_hold_expires_at: string | null;
@@ -30,6 +31,7 @@ async function loadBusy(
   profileId: string,
   date: string,
   excludeIds: string[],
+  locationId?: string | null,
 ) {
   const { data: profileRow } = await admin
     .from("profiles")
@@ -41,7 +43,7 @@ async function loadBusy(
 
   const { data: rows } = await admin
     .from("appointments")
-    .select("id,start_time,end_time,status,payment_status,payment_hold_expires_at,created_at")
+    .select("id,start_time,end_time,location_id,status,payment_status,payment_hold_expires_at,created_at")
     .eq("profile_id", profileId)
     .eq("scheduled_date", date)
     .neq("status", "cancelled");
@@ -49,6 +51,9 @@ async function loadBusy(
   const now = Date.now();
   return ((rows ?? []) as ApptRow[])
     .filter((r) => !excludeIds.includes(r.id))
+    // A booking at another location does not block this one (mirrors the
+    // location-aware availability the patient was shown).
+    .filter((r) => !locationId || !r.location_id || r.location_id === locationId)
     .filter((r) => {
       // An unpaid pending booking whose Stripe hold has expired no longer
       // blocks the slot (mirrors getDayAvailability).
@@ -79,8 +84,9 @@ export async function assertSlotAvailable(args: {
   date: string;
   ranges: TimeRange[];
   excludeIds?: string[];
+  locationId?: string | null;
 }) {
-  const busy = await loadBusy(args.admin, args.profileId, args.date, args.excludeIds ?? []);
+  const busy = await loadBusy(args.admin, args.profileId, args.date, args.excludeIds ?? [], args.locationId);
   const clash = busy.some((b) => args.ranges.some((r) => overlaps(b, r)));
   if (clash) throw new Error(SLOT_TAKEN_MESSAGE);
 }
@@ -96,8 +102,9 @@ export async function lostBookingRace(args: {
   ranges: TimeRange[];
   ownIds: string[];
   ownCreatedAt?: string;
+  locationId?: string | null;
 }) {
-  const busy = await loadBusy(args.admin, args.profileId, args.date, args.ownIds);
+  const busy = await loadBusy(args.admin, args.profileId, args.date, args.ownIds, args.locationId);
   const ours = args.ownCreatedAt ? new Date(args.ownCreatedAt).getTime() : Date.now();
   return busy.some(
     (b) =>
