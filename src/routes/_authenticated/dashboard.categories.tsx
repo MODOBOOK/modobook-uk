@@ -256,8 +256,8 @@ function CategoryDialog({
   cat?: Cat;
   onSubmit: (values: {
     name: string;
-    description?: string;
-    icon?: string;
+    description?: string | null;
+    icon?: string | null;
     rebook_reminder_days?: number | null;
     topup_reminder_days?: number | null;
   }) => Promise<void>;
@@ -368,8 +368,8 @@ function CategoryDialog({
               setSaving(true);
               await onSubmit({
                 name: name.trim(),
-                description: description.trim() || undefined,
-                icon: icon.trim() || undefined,
+                description: description.trim() || null,
+                icon: icon.trim() || null,
                 rebook_reminder_days: rebookDays.trim() === "" ? null : Number(rebookDays),
                 topup_reminder_days: topupDays.trim() === "" ? null : Number(topupDays),
               });

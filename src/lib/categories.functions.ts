@@ -102,8 +102,8 @@ export const createCategory = createServerFn({ method: "POST" })
     (input: {
       name: string;
       parent_id?: string | null;
-      description?: string;
-      icon?: string;
+      description?: string | null;
+      icon?: string | null;
       sort_order?: number;
       coming_soon_at?: string | null;
       rebook_reminder_days?: number | null;
