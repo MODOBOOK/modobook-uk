@@ -94,6 +94,8 @@ export function CourseGroupRow({
   const chosen = sorted.filter((o) => isSelected(o.id));
   const blurb = single?.description ?? sorted.find((o) => o.description)?.description ?? null;
   const anySplit = sorted.some((o) => o.allow_split_payment && o.session_count > 1);
+  const bookable = sorted.filter((o) => !o.full);
+  const fromPrice = (bookable.length ? bookable : sorted).reduce((min, o) => Math.min(min, o.price), Number.POSITIVE_INFINITY);
   const spacingLabel = (days?: number | null) => {
     if (!days || days <= 0) return null;
     if (days % 7 === 0) {
