@@ -1163,7 +1163,7 @@ function BookPage() {
                     />
                   ) : (
                     <h1
-                      className="font-light leading-[0.92] tracking-tight break-words hyphens-auto text-[clamp(2.25rem,11vw,3.5rem)] sm:text-[clamp(2rem,5.2vw,5.5rem)]"
+                      className="font-light leading-[0.95] tracking-tight [overflow-wrap:normal] hyphens-none text-balance text-[clamp(1.75rem,8.5vw,3rem)] sm:text-[clamp(2rem,4.5vw,5rem)]"
                       style={{
                         fontFamily: nameFont,
                         color: heroTextColor,
